@@ -1,0 +1,34 @@
+[agents]
+enabled = true
+max_threads = 4
+max_depth = 1
+default_subagent_model = "gpt-5.6-luna"
+default_subagent_reasoning_effort = "high"
+
+[agents.orchestrator]
+description = "Huvudansvarig. Planerar, prioriterar och delegerar. Har sista ordet."
+config_file = "agents/orchestrator.toml"
+
+[agents.product]
+description = "Produktägare. Fokus på användarvärde, prioriteter och scope."
+config_file = "agents/product.toml"
+
+[agents.architect]
+description = "Systemarkitekt. Ansvarar för tekniska beslut och långsiktig hållbarhet."
+config_file = "agents/architect.toml"
+
+[agents.worker]
+description = "Generell implementatör. Bra på tydligt avgränsade uppgifter."
+config_file = "agents/worker.toml"
+
+[agents.frontend]
+description = "Frontend-specialist. UI/UX och mobilupplevelse."
+config_file = "agents/frontend.toml"
+
+[agents.reviewer]
+description = "Kod- och kvalitetsgranskare. Sträng men rättvis."
+config_file = "agents/reviewer.toml"
+
+[agents.critic]
+description = "Devil's advocate. Letar efter svagheter, risker och dåliga antaganden."
+config_file = "agents/critic.toml"
