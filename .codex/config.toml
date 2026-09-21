@@ -1,34 +1,16 @@
+# Tassla – Codex project config
+# Active subagents live in .codex/agents/*.toml (one file per agent).
+# Staged phase-1 agents live in .codex/agents-later/ and are NOT loaded until moved.
+
+# The main session is the orchestrator. Sol is a good default;
+# switch to gpt-6-astra for big architecture sessions.
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
+
 [agents]
-enabled = true
-max_threads = 4
-max_depth = 1
-default_subagent_model = "gpt-5.6-luna"
-default_subagent_reasoning_effort = "high"
+max_threads = 4   # concurrent agent threads (default 6)
+max_depth = 1     # the main session can spawn agents; they cannot spawn further
 
-[agents.orchestrator]
-description = "Huvudansvarig. Planerar, prioriterar och delegerar. Har sista ordet."
-config_file = "agents/orchestrator.toml"
-
-[agents.product]
-description = "Produktägare. Fokus på användarvärde, prioriteter och scope."
-config_file = "agents/product.toml"
-
-[agents.architect]
-description = "Systemarkitekt. Ansvarar för tekniska beslut och långsiktig hållbarhet."
-config_file = "agents/architect.toml"
-
-[agents.worker]
-description = "Generell implementatör. Bra på tydligt avgränsade uppgifter."
-config_file = "agents/worker.toml"
-
-[agents.frontend]
-description = "Frontend-specialist. UI/UX och mobilupplevelse."
-config_file = "agents/frontend.toml"
-
-[agents.reviewer]
-description = "Kod- och kvalitetsgranskare. Sträng men rättvis."
-config_file = "agents/reviewer.toml"
-
-[agents.critic]
-description = "Devil's advocate. Letar efter svagheter, risker och dåliga antaganden."
-config_file = "agents/critic.toml"
+# If subagents are not available in your Codex version, try enabling:
+# [features]
+# multi_agent = true
