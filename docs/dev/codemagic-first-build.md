@@ -15,4 +15,15 @@ Google: inloggning/avbryt/nytt försök, kall och varm callback. Före första s
 
 Spara byggnummer, genomförda steg och fel i APP-03-rapporten. Certifikat, signering, faktisk Google-retur och backendbehörighet kan inte godkännas av lokal export. Offentlig release har separat granskning av butikskrav, integritet och kontoradering.
 
+## Om certifikatet saknas
+Eriks bilder 2026-10-04 visar ansluten GitHub/Apple API-integration och hämtad app_store-profil för rätt bundle-ID, men Certificate: Not uploaded. Det betyder att Codemagic inte har ett matchande signeringscertifikat. API-nyckeln ger åtkomst till Apple; den är inte signeringsidentiteten.
+
+Försök först iOS certificates → Fetch certificate för ett tidigare Codemagic-genererat distributionscertifikat. Om detta inte går: återanvänd originalets .p12 med privat nyckel och lösenord från den tidigare byggmiljön. En .cer från Apple-portalen innehåller inte den privata nyckeln. Om uppladdat certifikat inte matchar profilen, uppdatera profilen i Apple Developer med rätt certifikat och hämta den igen.
+
+Eriks nästa bild visar tre certifikat under Unavailable och ingen Codemagic-genererad identitet tillgänglig för nedladdning. Hitta då den tidigare miljö som har privata nyckeln (till exempel EAS, annan Codemagic-kontext eller Mac/Xcode) och dess exporterade .p12. En ny API-nyckel skapar inte den saknade privata signeringsnyckeln. Distribution identity tillhör Apple-teamet och kan användas för flera appar; Tasslas provisioningprofil måste innehålla samma certifikat. [Apple certifikatöversikt](https://developer.apple.com/help/account/certificates/certificates-overview).
+
+Fel vid nytt certifikat: redan current Distribution certificate/pending request kan bero på nådd certifikatgräns. Återkalla inte gamla certifikat som rutinåtgärd; kontrollera först vilka andra appar/byggmiljöer som använder dem. Saknad privat nyckel kan kräva ersättningscertifikat och regenererad profil, men det är ett separat ägarbeslut efter inventering. Inga certifikat har återkallats av Codex.
+
+Källa: [Codemagic certifikat/profiler](https://docs.codemagic.io/yaml-quick-start/building-a-native-ios-app/) och [Not uploaded-felsökning](https://docs.codemagic.io/troubleshooting/common-ios-issues/).
+
 Underlag kontrollerat 2026-10-04: [Codemagic React Native/YAML](https://docs.codemagic.io/yaml-quick-start/building-a-react-native-app/), [första signerade bygge](https://docs.codemagic.io/yaml-quick-start/first-signed-build/), [Supabase Google](https://supabase.com/docs/guides/auth/social-login/auth-google), [mobilcallback](https://supabase.com/docs/guides/auth/native-mobile-deep-linking).

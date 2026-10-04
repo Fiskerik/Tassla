@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   brandMark: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.accent, alignSelf: 'center' },
   brandMarkText: { color: theme.colors.onAccent, fontSize: 24, fontWeight: '800' },
   brandName: { color: theme.colors.accent, fontSize: 15, fontWeight: '800', letterSpacing: 1.4, textAlign: 'center', marginTop: 7 },
-  heading: { marginTop: 54, marginBottom: 28 },
+  heading: { marginTop: 36, marginBottom: 24 },
   title: { color: theme.colors.text, fontSize: 30, fontWeight: '800', lineHeight: 38, letterSpacing: -0.6 },
   description: { color: theme.colors.mutedText, fontSize: 17, lineHeight: 25, marginTop: 12 },
   fieldGroup: { marginBottom: 18 },

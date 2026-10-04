@@ -1,8 +1,10 @@
 import { AppState, Platform } from 'react-native';
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import * as Linking from 'expo-linking';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
-import { AUTH_CALLBACK_URL } from '../../data/auth-callback';
-import { getSupabaseClient } from '../../data/supabase';
+import { AUTH_CALLBACK_URL, isTrustedGoogleOAuthUrl } from '../../data/auth-callback';
+import { verifyPkceWebCrypto } from '../../data/pkce-crypto';
+import { getSupabaseClient, getSupabaseProjectUrl } from '../../data/supabase';
 
 type AuthStatus = 'loading' | 'signedOut' | 'signedIn' | 'unavailable';
 
@@ -10,6 +12,9 @@ interface AuthContextValue {
   client: SupabaseClient | null;
   session: Session | null;
   status: AuthStatus;
+  googlePending: boolean;
+  signInWithGoogle(): Promise<boolean>;
+  cancelGoogleSignIn(): void;
   sendMagicLink(email: string): Promise<boolean>;
   signOut(): Promise<boolean>;
 }
@@ -26,6 +31,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<AuthStatus>(clientResult.unavailable ? 'unavailable' : 'loading');
+  const [googlePending, setGooglePending] = useState(false);
+  const authAttemptInFlight = useRef(false);
+  const googleBrowserPending = useRef(false);
   const client = clientResult.client;
 
   useEffect(() => {
@@ -35,6 +43,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = client.auth.onAuthStateChange((_event, nextSession) => {
       authEvents += 1;
       if (!mounted) return;
+      if (nextSession && googleBrowserPending.current) {
+        googleBrowserPending.current = false;
+        authAttemptInFlight.current = false;
+        setGooglePending(false);
+      }
       setSession(nextSession);
       setStatus(nextSession ? 'signedIn' : 'signedOut');
     });
@@ -82,20 +95,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     client,
     session,
     status,
+    googlePending,
+    async signInWithGoogle() {
+      if (!client || authAttemptInFlight.current) return false;
+      authAttemptInFlight.current = true;
+      try {
+        await verifyPkceWebCrypto();
+        const { data, error } = await client.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: AUTH_CALLBACK_URL, skipBrowserRedirect: true },
+        });
+        if (error || !data.url || !isTrustedGoogleOAuthUrl(data.url, getSupabaseProjectUrl())) return false;
+        googleBrowserPending.current = true;
+        setGooglePending(true);
+        await Linking.openURL(data.url);
+        return true;
+      } catch {
+        googleBrowserPending.current = false;
+        setGooglePending(false);
+        return false;
+      } finally {
+        if (!googleBrowserPending.current) authAttemptInFlight.current = false;
+      }
+    },
+    cancelGoogleSignIn() {
+      if (!googleBrowserPending.current) return;
+      googleBrowserPending.current = false;
+      authAttemptInFlight.current = false;
+      setGooglePending(false);
+    },
     async sendMagicLink(email) {
-      if (!client) return false;
-      const { error } = await client.auth.signInWithOtp({
-        email: email.trim(),
-        options: { emailRedirectTo: AUTH_CALLBACK_URL, shouldCreateUser: true },
-      });
-      return !error;
+      if (!client || authAttemptInFlight.current) return false;
+      authAttemptInFlight.current = true;
+      try {
+        await verifyPkceWebCrypto();
+        const { error } = await client.auth.signInWithOtp({
+          email: email.trim(),
+          options: { emailRedirectTo: AUTH_CALLBACK_URL, shouldCreateUser: true },
+        });
+        return !error;
+      } catch {
+        return false;
+      } finally {
+        authAttemptInFlight.current = false;
+      }
     },
     async signOut() {
       if (!client) return false;
       const { error } = await client.auth.signOut();
       return !error;
     },
-  }), [client, session, status]);
+  }), [client, googlePending, session, status]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

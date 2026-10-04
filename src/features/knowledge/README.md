@@ -1,5 +1,5 @@
 # Kunskap
 
-`KnowledgeScreen.tsx` är en visuell grund som nås från Mer i `DevelopmentPreview.tsx`. Den visar ett tomläge och en tillbaka-knapp; inget artikelbibliotek eller publicerat innehåll hämtas.
+`KnowledgeScreen.tsx` visar enbart publicerat ålders- och rasrelevant innehåll som arbetsytan redan hämtat från Supabase. Artikeltext renderas som vanlig text, inte HTML. Om urvalet är tomt visas ett ärligt tomläge. Lokal preview skickar inget nätverksanrop och visar ingen artikeltext.
 
-Skärmen får inga hund- eller backenduppgifter och gör inga auth-, nätverks- eller lagringsanrop. Kör `pnpm start:preview` för lokal preview och `pnpm check` för typkontroll, lint och tester. Innehållsurval, källgranskning och publicering ingår inte i uppgiften.
+Hälsotexter behöver granskas innan publicering. Kör `pnpm check` för typkontroll, lint och tester; innehållsurvalet kräver en konfigurerad utvecklingsmiljö med publicerade versioner.

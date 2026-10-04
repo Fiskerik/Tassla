@@ -19,11 +19,27 @@ export function LogScreen({
   onAdd,
   onUpdate,
   onDelete,
+  mode = 'preview',
+  busy = false,
+  statusMessage,
+  statusError = false,
+  onRetryPending,
+  hasMore = false,
+  loadingMore = false,
+  onLoadMore,
 }: {
   events: readonly LogEvent[];
   onAdd: (type: LogEventType) => void;
-  onUpdate: (id: string, changes: LogEventChanges) => boolean;
-  onDelete: (id: string) => void;
+  onUpdate: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
+  onDelete: (id: string) => void | Promise<void>;
+  mode?: 'preview' | 'cloud';
+  busy?: boolean;
+  statusMessage?: string;
+  statusError?: boolean;
+  onRetryPending?: () => void;
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const editingEvent = events.find((event) => event.id === editingId) ?? null;
@@ -32,7 +48,7 @@ export function LogScreen({
   function confirmDelete(event: LogEvent) {
     Alert.alert(
       'Radera loggpost?',
-      'Posten tas bort från den här tillfälliga förhandsvisningen.',
+      mode === 'cloud' ? 'Posten tas bort från hundens logg.' : 'Posten tas bort från den här tillfälliga förhandsvisningen.',
       [
         { text: 'Avbryt', style: 'cancel' },
         { text: 'Radera', style: 'destructive', onPress: () => onDelete(event.id) },
@@ -42,7 +58,7 @@ export function LogScreen({
 
   return (
     <View>
-      <PageHeading title="Vardagslogg" description="Lägg till en liten händelse eller rätta en exempelpost." />
+      <PageHeading title="Vardagslogg" description={mode === 'cloud' ? 'Lägg till en händelse eller rätta något i hundens vardag.' : 'Lägg till en liten händelse eller rätta en exempelpost.'} />
       <Text style={styles.sectionTitle} accessibilityRole="header">Snabb logg</Text>
       <View style={styles.quickGrid}>
         {LOG_EVENT_TYPES.map((type) => (
@@ -50,23 +66,30 @@ export function LogScreen({
             key={type}
             accessibilityRole="button"
             accessibilityLabel={`Lägg till ${LOG_EVENT_LABELS[type]}`}
+            disabled={busy}
             onPress={() => onAdd(type)}
-            style={({ pressed }) => [styles.quickButton, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.quickButton, busy && styles.disabled, pressed && !busy && styles.pressed]}
           >
             <View style={styles.quickMark}><Text style={styles.quickMarkText}>{quickMark[type]}</Text></View>
             <Text style={styles.quickLabel}>{LOG_EVENT_LABELS[type]}</Text>
           </Pressable>
         ))}
       </View>
-      <MessageCard>Exempelposter är märkta. Nya poster finns bara i minnet och försvinner när appen stängs.</MessageCard>
+      <MessageCard>{mode === 'cloud'
+        ? 'Loggen hämtas från ditt konto. Ändringar visas som sparade först när servern har bekräftat dem.'
+        : 'Exempelposter är märkta. Nya poster finns bara i minnet och försvinner när appen stängs.'}</MessageCard>
+      {statusMessage ? <>
+        <MessageCard tone={statusError ? 'error' : 'neutral'}>{statusMessage}</MessageCard>
+        {statusError && onRetryPending && <PrimaryButton title="Kontrollera status" disabled={busy} onPress={onRetryPending} />}
+      </> : null}
+      {mode === 'cloud' && busy && <MessageCard>Sparar och kontrollerar ändringen…</MessageCard>}
       {editingEvent && (
         <LogEventEditor
           key={editingEvent.id}
           event={editingEvent}
           onCancel={() => setEditingId(null)}
-          onSave={(changes) => {
-            if (onUpdate(editingEvent.id, changes)) setEditingId(null);
-          }}
+          onSave={(changes) => onUpdate(editingEvent.id, changes)}
+          onSaved={() => setEditingId(null)}
         />
       )}
       <Text style={styles.sectionTitle} accessibilityRole="header">Logghistorik</Text>
@@ -83,13 +106,13 @@ export function LogScreen({
                   <View style={styles.eventTitleRow}>
                     <Text style={styles.eventTitle}>{LOG_EVENT_LABELS[event.type]}</Text>
                     <Text style={event.origin === 'example' ? styles.exampleLabel : styles.testLabel}>
-                      {event.origin === 'example' ? 'EXEMPEL' : 'TESTPOST'}
+                      {mode === 'cloud' ? 'SPARAD' : event.origin === 'example' ? 'EXEMPEL' : 'TESTPOST'}
                     </Text>
                   </View>
                   {event.note && <Text style={styles.eventNote}>{event.note}</Text>}
                   <View style={styles.eventActions}>
-                    <QuietButton title="Ändra" onPress={() => setEditingId(event.id)} />
-                    <QuietButton title="Radera" onPress={() => confirmDelete(event)} />
+                    <QuietButton title="Ändra" disabled={busy} onPress={() => setEditingId(event.id)} />
+                    <QuietButton title="Radera" disabled={busy} onPress={() => confirmDelete(event)} />
                   </View>
                 </View>
               </View>
@@ -97,6 +120,7 @@ export function LogScreen({
           })}
         </View>
       ))}
+      {mode === 'cloud' && hasMore && <PrimaryButton title={loadingMore ? 'Hämtar…' : 'Visa äldre poster'} disabled={loadingMore || busy} onPress={onLoadMore ?? (() => undefined)} />}
       <View style={styles.footerSpace} />
     </View>
   );
@@ -105,10 +129,12 @@ export function LogScreen({
 function LogEventEditor({
   event,
   onSave,
+  onSaved,
   onCancel,
 }: {
   event: LogEvent;
-  onSave: (changes: LogEventChanges) => void;
+  onSave: (changes: LogEventChanges) => boolean | Promise<boolean>;
+  onSaved: () => void;
   onCancel: () => void;
 }) {
   const initial = localDateTimeParts(event.occurredAt);
@@ -117,11 +143,13 @@ function LogEventEditor({
   const [time, setTime] = useState(initial.time);
   const [note, setNote] = useState(event.note ?? '');
   const [saveError, setSaveError] = useState('');
+  const [saving, setSaving] = useState(false);
   const timestamp = parseLocalDateTime(date, time, new Date());
   const noteLength = Array.from(note).length;
   const valid = Boolean(timestamp) && noteLength <= 500;
 
-  function save() {
+  async function save() {
+    if (saving) return;
     const occurredAt = parseLocalDateTime(date, time, new Date());
     if (!occurredAt) {
       setSaveError('Ange ett giltigt datum och en tid som inte ligger i framtiden.');
@@ -132,7 +160,12 @@ function LogEventEditor({
       return;
     }
     setSaveError('');
-    onSave({ type, occurredAt, note });
+    setSaving(true);
+    try {
+      if (await onSave({ type, occurredAt, note })) onSaved();
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -179,7 +212,7 @@ function LogEventEditor({
       </View>
       {saveError ? <MessageCard tone="error">{saveError}</MessageCard> : null}
       {!valid && !saveError && <MessageCard tone="error">Kontrollera datum, tid och notering.</MessageCard>}
-      <PrimaryButton title="Spara ändring" disabled={!valid} onPress={save} />
+      <PrimaryButton title={saving ? 'Sparar…' : 'Spara ändring'} disabled={!valid || saving} onPress={() => { void save(); }} />
       <QuietButton title="Avbryt" onPress={onCancel} />
     </View>
   );
@@ -240,5 +273,6 @@ const styles = StyleSheet.create({
   characterCount: { color: theme.colors.mutedText, fontSize: 12, textAlign: 'right', marginTop: 5 },
   tooManyCharacters: { color: theme.colors.error, fontWeight: '700' },
   pressed: { opacity: 0.72 },
+  disabled: { opacity: 0.55 },
   footerSpace: { height: 8 },
 });

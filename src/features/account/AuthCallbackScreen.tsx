@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLinkingURL } from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { AppScreen, MessageCard, PageHeading, PrimaryButton } from '../../components/AppPrimitives';
-import { readAuthCode } from '../../data/auth-callback';
+import { readAuthCode, shouldExchangeAuthCode } from '../../data/auth-callback';
 import { DEV_PREVIEW_ENABLED } from './preview-policy';
 import { useAuth } from './AuthProvider';
 
@@ -23,27 +23,38 @@ function PreviewCallbackGuard() {
 function ProductAuthCallbackScreen() {
   const url = useLinkingURL();
   const router = useRouter();
-  const { client } = useAuth();
-  const handled = useRef(false);
-  const [exchangeError, setExchangeError] = useState(false);
+  const { cancelGoogleSignIn, client } = useAuth();
+  const inFlightCode = useRef<string | null>(null);
+  const failedCode = useRef<string | null>(null);
+  const exchangedCode = useRef<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const [failedCodeForDisplay, setFailedCodeForDisplay] = useState<string | null>(null);
   const code = url ? readAuthCode(url) : null;
   const invalidCallback = url !== null && (!code || !client);
 
   useEffect(() => {
-    if (!url || handled.current) return;
-    handled.current = true;
-    const authCode = readAuthCode(url);
-    if (!authCode || !client) return;
-    void client.auth.exchangeCodeForSession(authCode).then(({ error }) => {
+    if (!client || !shouldExchangeAuthCode(code, inFlightCode.current, failedCode.current, exchangedCode.current)) return;
+    inFlightCode.current = code;
+    void client.auth.exchangeCodeForSession(code).then(({ error }) => {
       if (error) {
-        setExchangeError(true);
+        failedCode.current = code;
+        setFailedCodeForDisplay(code);
+        cancelGoogleSignIn();
         return;
       }
+      exchangedCode.current = code;
       router.replace('/');
-    }).catch(() => setExchangeError(true));
-  }, [client, router, url]);
+    }).catch(() => {
+      failedCode.current = code;
+      setFailedCodeForDisplay(code);
+      cancelGoogleSignIn();
+    }).finally(() => {
+      if (inFlightCode.current === code) inFlightCode.current = null;
+      setAttempt((current) => current + 1);
+    });
+  }, [attempt, cancelGoogleSignIn, client, code, router]);
 
-  const error = invalidCallback || exchangeError;
+  const error = invalidCallback || Boolean(code && failedCodeForDisplay === code);
 
   return (
     <AppScreen>
@@ -52,7 +63,7 @@ function ProductAuthCallbackScreen() {
         description={error ? 'Länken kan ha gått ut eller vara ogiltig. Gå tillbaka och be om en ny.' : 'Vi öppnar din trygga plats för livet med hund.'}
       />
       {!error && <MessageCard>{url ? 'Vi slutför inloggningen…' : 'Vänta medan länken öppnas…'}</MessageCard>}
-      {error && <PrimaryButton title="Till inloggningen" onPress={() => router.replace('/')} />}
+      {error && <PrimaryButton title="Till inloggningen" onPress={() => { cancelGoogleSignIn(); router.replace('/'); }} />}
     </AppScreen>
   );
 }

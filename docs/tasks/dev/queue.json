@@ -1,5 +1,5 @@
 {
-  "segment": "FOUNDATION + APP-01: plan v2 och paket godkända av Erik 2026-10-04",
+  "segment": "FOUNDATION, APP-01/02/03: Erik-godkända lokala appsegment; APP-03 mandat och tre paket godkända 2026-10-04, extern TestFlight-verifiering separat",
   "segment_approved_by_erik": true,
   "tasks": [
     {
@@ -379,7 +379,7 @@
       "id": "APP-03-LOCAL",
       "title": "Google, real owner workspace, Codemagic and vision UI",
       "mvp_requirement": "docs/mvp.md: profile/log/training/six screens; Erik integration/design request 2026-10-04",
-      "plan": "docs/tasks/dev/app-03.md v1",
+      "plan": "docs/tasks/dev/app-03.md v1 + docs/tasks/dev/app-03-correction-1.md, Erik-approved correction 2026-10-04",
       "write_paths": [
         "app",
         "src",
@@ -405,7 +405,7 @@
       "depends_on": [
         "APP-02-LOCAL"
       ],
-      "status": "implementing",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -418,9 +418,63 @@
           "to": "implementing",
           "actor": "implementer",
           "evidence": "Luna implementation A auth/build, B real data workspace, C vision UI; bounded checkpoints and no external account actions."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Luna A/B/C complete with moduleguides; reported check38/38 and diffcheck PASS, A/B Astra security/testreview PASS. Independent QA/source review and root iOS export next; external phone separate."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS fullcheck38/38 zeroSkipped and diffcheck; source owner-change/retry/progression/nav no blockers. Critic PROCEED 5nav; root iOSexportPASS, Astra A/B security/tests and CplanAPPROVE. SourceReviewer final next, phone/RLS separate."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer BLOCK localhandoff: fetchBreeds has no request deadline so ProfileScreen can hang before owner setup; correction1 existing12secdeadline+regression proposed. Human approval pending per AGENTS. Prior38check/export PASS not acceptance."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Erik explicitly approved correction1: Ja ratta och granska igen; scope fetchBreeds existing12sec deadline + actualSDK regression only."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Astra APPROVE exact app-03-correction-1.md, bounded deadline+AbortSignal, no packages/schema or broader changes."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Luna source writer only app-data.ts, QA only tests/app-data.test.mjs. Repeat check/export and Reviewer rereview before localhandoff."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction1 only fetchBreeds bounded12sec AbortSignal; writer type/lint/diffPASS. QA actualfunction tests39PASS deadlineabort, preserving prior RPC test next. Root refreshed iOSexportPASS. Independent Reviewer rereview remains."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Correction1 QA PASS full40/40, focusedapp-data3/3, lint/type/diffPASS; priorRPCabort test retained plusactualfetchBreeds deadline test. Root updatediOSexportPASS. Independent testreview and Reviewer rereview next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS after Erik-approved correction1; fetchBreeds bounded+actualSDK timeout test, full40/40 and diffPASS. Independent Astra security/testreview correction1PASS; updatediOSexportPASS. LOCAL only; Codemagic certificate privatekey and actual TestFlight/Google/RLS pending owner."
         }
       ],
-      "next_step": "Luna implementation A auth/build, B real data workspace, C vision UI; bounded checkpoints and no external account actions."
+      "next_step": "Reviewer PASS after Erik-approved correction1; fetchBreeds bounded+actualSDK timeout test, full40/40 and diffPASS. Independent Astra security/testreview correction1PASS; updatediOSexportPASS. LOCAL only; Codemagic certificate privatekey and actual TestFlight/Google/RLS pending owner."
     }
   ]
 }

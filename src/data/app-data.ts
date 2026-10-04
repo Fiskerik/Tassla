@@ -47,9 +47,14 @@ export async function fetchOwnedDog(client: SupabaseClient): Promise<OwnedDog | 
 }
 
 export async function fetchBreeds(client: SupabaseClient): Promise<BreedOption[]> {
-  const { data, error } = await client.from('breeds').select('id,name').order('name');
-  if (error || !data) throw new Error('Could not load breeds');
-  return data;
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.from('breeds')
+      .select('id,name')
+      .order('name')
+      .abortSignal(signal);
+    if (error || !data) throw new Error('Could not load breeds');
+    return data;
+  });
 }
 
 export async function createDog(

@@ -1,7 +1,7 @@
-# Hem och previewskal
+# Hem och arbetsyta
 
-`AppFlow.tsx` är ingången till det inloggade produktflödet och grinden till utvecklingspreviewn. `DevelopmentPreview.tsx` äger previewnavigationen, den syntetiska hunden, redigerbara profilen, loggen och träningsprogressionen i React-minnet. Värdena överlever sidbyten och nollställs när appen startas om. `PreviewHomeScreen.tsx` visar hunden, ett ärligt tomläge för publicerat innehåll och en genväg till nästa steg att registrera.
+`AppFlow.tsx` väljer lokal utvecklingspreview eller, i normalflödet, inloggning och hundprofil. `ProductWorkspace.tsx` är den inloggade arbetsytan: Hem, Logg, Träning och Hälsa ligger i fast bottennavigation. Mer öppnar Kunskap, Tassla-pass och hundprofil. Arbetsytan är nycklad per hund, serialiserar loggläsningar och ignorerar gamla svar vid avmontering.
 
-I det inloggade flödet läser `AppFlow.tsx` sessionen från `AuthProvider`, hämtar ägarens hund och hämtar publicerat innehåll via `src/data/app-data.ts`. Previewskärmarna använder inte Supabase, auth, beständig lagring eller nätverksanrop. De fyra flikarna är Hem, Logg, Träning och Mer. Mer öppnar de visuella grunderna för Hälsa, Kunskap och Tassla-pass.
+Hem och Kunskap visar enbart ålders- och rasrelevant publicerat innehåll från Supabase. Hem visar även senaste loggposten och nästa registrerbara steg från en publicerad träningsversion. Ingen exempelhund eller lokalt träningsprogram används som reserv när nätdata saknas. Den dekorativa hundbilden är inte hundens profilfoto. `HealthScreen` och `PassportScreen` är avsiktliga tomma grunder.
 
-Starta lokal preview med `pnpm start:preview`; kör `pnpm check` för typkontroll, lint och tester. Previewn använder bara syntetiska uppgifter. Serverinnehåll visas bara i det inloggade flödet, och de tre underskärmarna saknar aktiv funktionsdata.
+`DevelopmentPreview.tsx` är en separat flaggad, RAM-baserad förhandsvisning med syntetiska uppgifter; den gör inga Supabase-anrop. Kör `pnpm start:preview` för den och `pnpm check` för typkontroll, lint och tester. En signerad Google-retur, faktisk backendpolicy och iOS-byggresa behöver separat enhetsverifiering.

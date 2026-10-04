@@ -1,7 +1,7 @@
 # Träning
 
-`training-model.ts` håller de två internt granskade texterna och en ren, fristående modell för registrering per hund, programversion och stabilt steg-ID. `TrainingScreen.tsx` visar program, stopptext, källa, begränsningar, bekräftelse och återställning.
+`PublishedTrainingScreen.tsx` visar publicerade program, programmets hela text och källor före stegen, kontoägd registrering och bekräftad återställning. `ProductWorkspace.tsx` läser via `src/data/workspace-data.ts`: endast publicerade versioner/steg och aktuell hunds `training_progress`. En startad och fortfarande publicerad version återupptas framför en nyare version; indragna eller saknade versioner redovisas som pausad historik.
 
-`DevelopmentPreview` äger progressionen i RAM så att den överlever sidbyten. Endast nästa ej registrerade steg kan markeras; efter markeringen krävs ett separat tryck för att fortsätta. Programmet påstår inte att hunden behärskar ett beteende och ökar inte svårigheten. Allt nollställs när appen startas om.
+Ett steg sparas med riktiga versions- och steg-UUID genom insert/select. Nästa steg väntar på ett separat knapptryck efter bekräftelse. Återställning använder bekräftelse och delete; ingen upsert/update-grant eller automatisk svårighetsökning används. Registrering beskriver ägarens markering, inte hundens färdighet.
 
-Texten är intern för lokal granskning, inte veterinärgranskad eller publiceringsgodkänd. Programmet om nya intryck är uttryckligen för valpar och inte behandling för vuxna hundars rädsla. Inga råd gäller vaccination, exponeringstider eller dosering. Kör `pnpm check`; ingen serverlagring eller verklig träningsverifiering ingår.
+`TrainingScreen.tsx` och `training-model.ts` är bara för lokal preview och dess internt granskade syntetiska text. Normalflödet har inget program som reserv när publicerat innehåll saknas. Kör `pnpm check`; verklig RLS-åtkomst och publicerat datainnehåll behöver separat miljötest.

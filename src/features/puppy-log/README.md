@@ -1,7 +1,7 @@
 # Vardagslogg
 
-`LogScreen.tsx` visar snabbregistrering, grupperad lokal historik och redigering. `log-model.ts` innehåller den rena domänmodellen för de sex loggtyperna, lokal datum/tid-validering och immutabla liständringar.
+`LogScreen.tsx` visar sex snabbval, lokal datumgruppering, historik, redigering och bekräftad radering. I det inloggade flödet äger `ProductWorkspace.tsx` vydata och använder `src/data/workspace-data.ts` för att läsa högst 40 poster åt gången och hämta äldre poster vid behov. Endast de sex vardagstyperna visas; hälsoposter med datum utan klockslag ingår inte i den här loggen.
 
-`DevelopmentPreview` äger loggposterna i minnet och behåller dem när användaren byter skärm. Exempelposter är märkta och ändringar försvinner när appen startas om. Modulen gör inga nätverks-, lagrings- eller serveranrop och visar ingen synkstatus.
+En ny post får ett `expo-crypto` UUID innan nätverksanropet. Vid okänt resultat läses samma ID först; om posten saknas kan samma ID försöka sparas igen. Rättning och radering verifieras genom återläsning. Osäker status visas öppet och sparas inte optimistiskt i historiken. Läshämtningar serialiseras och sorteras med en unik ID-tiebreaker; offset kan ändå flyttas om en annan enhet lägger till poster mitt i sidläsningen. `log-model.ts` är fortsatt en ren lokal-previewmodell.
 
-Kör `pnpm check` för projektets typning, lint och testsvit. Modellen är fristående från React Native så QA kan testa den separat.
+Previewposter ligger i RAM och är märkta; produktposter kommer från den inloggade hundens RLS-skyddade `dog_events`. Inga offlineköer finns. Kör `pnpm check`; riktig kontobehörighet och nätverksresa kräver utvecklingsmiljötest.
