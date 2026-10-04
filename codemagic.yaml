@@ -22,10 +22,9 @@ workflows:
       - name: Install locked dependencies
         script: |
           set -eu
-          npm install --global pnpm@11.19.0
-          pnpm install --frozen-lockfile
+          npx --yes pnpm@11.19.0 install --frozen-lockfile
       - name: Check application
-        script: pnpm check
+        script: npx --yes pnpm@11.19.0 check
       - name: Verify public app configuration
         script: |
           node -e 'for (const key of ["EXPO_PUBLIC_SUPABASE_URL", "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY"]) { if (!process.env[key]) throw new Error("Missing " + key); }'

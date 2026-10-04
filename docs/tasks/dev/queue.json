@@ -475,6 +475,61 @@
         }
       ],
       "next_step": "Reviewer PASS after Erik-approved correction1; fetchBreeds bounded+actualSDK timeout test, full40/40 and diffPASS. Independent Astra security/testreview correction1PASS; updatediOSexportPASS. LOCAL only; Codemagic certificate privatekey and actual TestFlight/Google/RLS pending owner."
+    },
+    {
+      "id": "CI-01",
+      "title": "Fix Codemagic pnpm executable collision",
+      "mvp_requirement": "APP-03 approved Codemagic integration",
+      "plan": "docs/tasks/dev/ci-01.md v1",
+      "write_paths": [
+        "codemagic.yaml"
+      ],
+      "acceptance": [
+        "Pinned pnpm 11.19.0 without global overwrite",
+        "Frozen lockfile retained",
+        "Local check and independent review"
+      ],
+      "checks": [
+        "pnpm.cmd check",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "APP-03-LOCAL"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE CI-01 v1 by architecture_astra; saved in docs/tasks/dev/ci-01.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Assigned app_implementer_luna exact two-command CI fix; no dependencies or cloud operations"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "app_implementer_luna completed exact CI diff; local pnpm check 40/40 PASS, diff check PASS; QA assigned"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent app_qa_luna QA PASS: check 40/40, diff check, exact pinned commands verified; Mac cloud separate"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Source Reviewer PASS local CI configuration; docs/tasks/dev/ci-01.md. Erik push and select new revision; cloud signing/TestFlight unverified"
+        }
+      ],
+      "next_step": "Independent Source Reviewer PASS local CI configuration; docs/tasks/dev/ci-01.md. Erik push and select new revision; cloud signing/TestFlight unverified"
     }
   ]
 }
