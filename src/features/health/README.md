@@ -1,0 +1,5 @@
+# Hälsa
+
+`HealthScreen.tsx` är en visuell grund som nås från Mer i `DevelopmentPreview.tsx`. Den visar ett tomläge och en tillbaka-knapp; inga hälsouppgifter, råd, vårdscheman eller påminnelser visas.
+
+Skärmen får inga hund- eller backenduppgifter och gör inga auth-, nätverks- eller lagringsanrop. Kör `pnpm start:preview` för lokal preview och `pnpm check` för typkontroll, lint och tester. Hälsoregistrering och medicinskt innehåll kräver en separat godkänd uppgift och lämplig granskning.

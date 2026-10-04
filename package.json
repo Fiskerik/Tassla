@@ -1,0 +1,42 @@
+{
+  "name": "tassla",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "start:preview": "node tools/start-preview.cjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint app src tests",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "bundle:ios": "expo export --platform ios --output-dir dist/ios"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "15.0.2",
+    "@supabase/supabase-js": "^2.117.2",
+    "expo": "57.0.26",
+    "expo-constants": "~57.0.20",
+    "expo-crypto": "~57.0.3",
+    "expo-font": "~57.0.4",
+    "expo-linking": "~57.0.11",
+    "expo-router": "~57.0.24",
+    "expo-secure-store": "~57.0.4",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.2",
+    "react-native-url-polyfill": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.18",
+    "eslint": "^9.39.4",
+    "eslint-config-expo": "~57.0.2",
+    "typescript": "~6.0.3"
+  }
+}

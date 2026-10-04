@@ -1,14 +1,14 @@
 # Tassla – Codex project config
 # Active subagents live in .codex/agents/*.toml (one file per agent).
-# Staged phase-1 agents live in .codex/agents-later/ and are NOT loaded until moved.
+# Dev roles are configured in agents/; app work is gated by approved segment and plan.
 
 # The main session is the orchestrator. Sol is a good default;
-# switch to gpt-6-astra for big architecture sessions.
+# Choose stronger models explicitly only when needed.
 model = "gpt-5.6-sol"
-model_reasoning_effort = "high"
+model_reasoning_effort = "medium"
 
 [agents]
-max_threads = 4   # concurrent agent threads (default 6)
+max_concurrent_threads_per_session = 2 # at most two spawned agents
 max_depth = 1     # the main session can spawn agents; they cannot spawn further
 
 # If subagents are not available in your Codex version, try enabling:

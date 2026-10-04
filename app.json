@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "Tassla", "slug": "tassla", "version": "0.1.0", "scheme": "tassla",
+    "orientation": "portrait", "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "com.erimaliab.tassla", "supportsTablet": false,
+      "infoPlist": { "ITSAppUsesNonExemptEncryption": false }
+    },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "experiments": { "typedRoutes": true }
+  }
+}

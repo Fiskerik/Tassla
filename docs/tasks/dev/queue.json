@@ -1,0 +1,426 @@
+{
+  "segment": "FOUNDATION + APP-01: plan v2 och paket godkända av Erik 2026-10-04",
+  "segment_approved_by_erik": true,
+  "tasks": [
+    {
+      "id": "FOUNDATION-PREP",
+      "title": "Förbered schema, källgrund och installationsguide",
+      "mvp_requirement": "docs/mvp.md: sex användarytor och tekniska krav",
+      "plan": "docs/tasks/dev/foundation.md v1",
+      "write_paths": [
+        "src",
+        "app/README.md",
+        "supabase",
+        "tests",
+        "README.md",
+        ".env.example",
+        ".gitignore"
+      ],
+      "acceptance": [
+        "Förberedelsefiler överensstämmer med arkitektur",
+        "Rättighetsgranskning och dokumenterade verkliga lokala kontroller",
+        "SQL-runtime ej presenterad som verifierad"
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/domain.test.mjs",
+        "git diff --check",
+        "Manuell statisk granskning och filformatskontroll; SQL-runtime NOT TESTABLE"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE FOUNDATION plan v1, sparat i docs/tasks/dev/foundation.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Huvudsessionen skrev förberedelseartefakter inom Eriks uttryckliga mandat; ingen separat Luna-körning"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Node 3/3 och formatkontroller körda; SQL-runtime ej tillgänglig"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende QA granskat kontrakt/test; preparation-only, ej SQL-integration; typbytesfel rättat"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "PASS endast förberedelseöverlämning efter omgranskning; självständigt Node 3/3. Rapport i docs/tasks/dev/rapport.md"
+        }
+      ],
+      "next_step": "Erik kör SQL i ny utvecklingsmiljö; integration har separat uppgift och är inte godkänd"
+    },
+    {
+      "id": "FOUNDATION-DB-VERIFY",
+      "title": "Verifiera migration och RLS i verklig Supabase-utvecklingsmiljö",
+      "mvp_requirement": "docs/mvp.md: tekniska krav och datamodell",
+      "plan": "docs/tasks/dev/foundation.md v1; docs/dev/supabase-setup.md",
+      "write_paths": [
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Migration lyckas i ny databas",
+        "SQL-test lyckas och återställer syntetiska data",
+        "Verkliga resultat sparade"
+      ],
+      "checks": [
+        "Supabase SQL Editor: migrations/202610040001_foundation.sql",
+        "Supabase SQL Editor: tests/foundation.sql"
+      ],
+      "depends_on": [
+        "FOUNDATION-PREP"
+      ],
+      "status": "planned",
+      "history": [
+        {
+          "from": "planned",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Ingen PostgreSQL/Supabase-miljö tillgänglig; Erik skapar projektet och kör angiven SQL. NOT TESTABLE här"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Erik visar lyckat foundation-test med rollback; .env uppges uppdaterad. Resultat sparat i rapport.md. Ingen självständig omkörning av Codex"
+        }
+      ],
+      "next_step": "Granska och registrera Eriks exekveringsunderlag; nästa appuppgift behöver versionsplan och OTP-konfiguration. Kör inte migrationen igen"
+    },
+    {
+      "id": "APP-01-LOCAL",
+      "title": "Första lokala appflödet; checkpoints A–D",
+      "mvp_requirement": "docs/mvp.md: tekniska krav, hundprofil och Hem",
+      "plan": "docs/tasks/dev/app-01.md v2",
+      "write_paths": [
+        "app",
+        "src",
+        "tests",
+        "package.json",
+        "pnpm-lock.yaml",
+        "pnpm-workspace.yaml",
+        "app.json",
+        "tsconfig.json",
+        "eslint.config.js",
+        "expo-env.d.ts",
+        "codemagic.yaml",
+        "docs/dev/app-start.md"
+      ],
+      "acceptance": [
+        "Faktiska kontrakt/auth; inga påhittade API:er",
+        "pnpm check och iOS-bundle; QA/Reviewer/Security",
+        "Telefonintegration uttryckligt separat"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "Expo install --check"
+      ],
+      "depends_on": [
+        "FOUNDATION-PREP"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v2; app-01.md",
+          "from": "planned"
+        },
+        {
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik godkänner; Luna high skriver src B/C; koordinator config A och docs. Checkpoint B finns; A kompatibilitetscheck passerar.",
+          "from": "ready"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Luna high source stable; pnpm check typecheck/lint/domain 3/3 PASS. QA Luna high started, tests only. B/C source guides updated; iOS export first pass; phone separate."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "QA FAIL: partial SecureStore deletion leaves chunks; profile edits clear unknown save status; RPC/recovery missing deadline. Correction 1 assigned Luna implementer; test reproduction twice. Phone NOT TESTABLE."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction 1 bounded to QA findings, app-01-report.md; same APP-01 v2 scope. Implementer paused for TechLead review."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "TechLead architecture_astra APPROVE correctionplan1; actual abortSignal fetch verified, deletion test independently reviewed; busy/ref finally, abort unknown not rollback."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Luna high implements correctionplan1 only in src, same Erik-approved APP-01 v2/packages."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction1 Luna: pnpm check typecheck/lint 9/9 PASS; source stable; QA independently reruns. Cleanup holes/unknown save/deadline fixes implemented."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA correction1 PASS: pnpm check typecheck/lint10/10; partial cleanup, unknownsave static, actualSupabase customfetch deadline tested. Device/realDB NOT TESTABLE. Reviewer source and independent tests/Security delta review dispatched."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer Luna PASS localhandoff, tests independently Astra-reviewed; Security correctedstorage PASS. Main check type/lint10/10 and iOSexport PASS; report app-01-report.md. PHONE remains planned NOT TESTABLE."
+        }
+      ],
+      "next_step": "Reviewer Luna PASS localhandoff, tests independently Astra-reviewed; Security correctedstorage PASS. Main check type/lint10/10 and iOSexport PASS; report app-01-report.md. PHONE remains planned NOT TESTABLE."
+    },
+    {
+      "id": "APP-01-PHONE",
+      "title": "Signerad iPhone och verklig auth/dataintegration",
+      "mvp_requirement": "docs/mvp.md: inloggning och hundprofil",
+      "plan": "docs/tasks/dev/app-01.md v2; docs/dev/app-start.md",
+      "write_paths": [
+        "docs/tasks/dev/app-01-phone.md"
+      ],
+      "acceptance": [
+        "Signerad app; callback kall/varm start",
+        "Samma hund efter omstart/återinloggning",
+        "Utloggning/kontobyte och fel korrekt"
+      ],
+      "checks": [
+        "Manuell telefonchecklista docs/dev/app-start.md"
+      ],
+      "depends_on": [
+        "APP-01-LOCAL"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Erik tillåter callback och startar Codemagic/TestFlight manuellt efter lokala kontroller."
+    },
+    {
+      "id": "DEV-PREVIEW-01",
+      "title": "Local development preview without app login",
+      "mvp_requirement": "docs/mvp.md: Home and dog profile; explicit owner preview request 2026-10-04",
+      "plan": "docs/tasks/dev/dev-preview-01.md v1",
+      "write_paths": [
+        "src",
+        "app",
+        "tools/start-preview.cjs",
+        "package.json",
+        "tests"
+      ],
+      "acceptance": [
+        "Exact dev flag + __DEV__; release still auth",
+        "No AuthProvider/client/session/network in preview",
+        "Synthetic local profile/Home; honest RAM-only status",
+        "QA/Reviewer/Security local verification"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "APP-01-LOCAL"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Astra APPROVE exact v1 and Luna Critic PROCEED; saved dev-preview-01.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik authorizes local preview without login; Luna high source implementation, no dependencies."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Luna source stable; commonpolicy provider/callback RAM preview/startscript. Astra Security PASS static; QA tests next, phone NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA Luna PASS localcriteria type/lint13/13, sourceboundary static; iOSexport and rootcheck PASS. Reviewer and independent testreview pending."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Luna sourceReviewer PASS, independent Astra testreview PASS, Security PASS; root check13/13 and iOSexport/startscript-help PASS. Report dev-preview-01-report.md. Erik phonepreview next; actualauth deferred."
+        }
+      ],
+      "next_step": "Luna sourceReviewer PASS, independent Astra testreview PASS, Security PASS; root check13/13 and iOSexport/startscript-help PASS. Report dev-preview-01-report.md. Erik phonepreview next; actualauth deferred."
+    },
+    {
+      "id": "APP-02-LOCAL",
+      "title": "Six MVP screen foundations, local daily log and training",
+      "mvp_requirement": "docs/mvp.md: six screens, daily log and guiding training flows; Erik local preview mandate 2026-10-04",
+      "plan": "docs/tasks/dev/app-02.md v1; docs/tasks/dev/app-02-content.md",
+      "write_paths": [
+        "src/features/home",
+        "src/features/puppy-log",
+        "src/features/training",
+        "src/features/health",
+        "src/features/knowledge",
+        "src/features/passport",
+        "src/components",
+        "tests"
+      ],
+      "acceptance": [
+        "Six reachable MVP screens, honest local-only preview",
+        "Daily log quick add/history/edit/delete, dog identity and valid timestamps",
+        "Two reviewed demo programs, version-bound progress and return across screen switches",
+        "Independent QA/reviewer/security local checks; phone separate"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios with dotenv disabled",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "DEV-PREVIEW-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Astra APPROVE exact v1, Luna Critic PROCEED, dog_expert internalcontentreview saved; app-02.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik mandate six MVP screen foundations and local log/training; Luna high starts checkpointA, then B/C sequentially."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Luna checkpointsA/B/C finalsource stable; check25/25 and cleanup PASS. QA final and independent Security/testreview, phone separate."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "QA documentation mismatch only: four moduleguides contain obsolete noUI/noProgress/PDF paragraphs. Correction1 sameplan sourceunchanged."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction1 limited four src moduleREADME updates, no code/test/planbehavior change; TechLead review next."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Astra APPROVE correction1 fourREADME only; priorcode Security/tests remainvalid."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Luna corrects fourobsolete moduleguides only; code/source/tests unchanged."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction1 fourREADME cleaned only, no code/tests changes; diffcheck PASS, prior25check/export valid. QA finalreread next."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA Luna PASS final25/25 and correctedfourguides; UIstate/provider/static verified, phone NOTTESTABLE. SourceReviewer next; Astra independenttests/SecurityPASS."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Luna SourceReviewer PASS localhandoff afterQA25/25; independent Astra Security/testreviewPASS. Root25/25 StockholmTZ and iOSexportPASS. Fourguides correction done; reportapp-02-report.md. Erik phonepreview next."
+        }
+      ],
+      "next_step": "Luna SourceReviewer PASS localhandoff afterQA25/25; independent Astra Security/testreviewPASS. Root25/25 StockholmTZ and iOSexportPASS. Fourguides correction done; reportapp-02-report.md. Erik phonepreview next."
+    },
+    {
+      "id": "APP-03-LOCAL",
+      "title": "Google, real owner workspace, Codemagic and vision UI",
+      "mvp_requirement": "docs/mvp.md: profile/log/training/six screens; Erik integration/design request 2026-10-04",
+      "plan": "docs/tasks/dev/app-03.md v1",
+      "write_paths": [
+        "app",
+        "src",
+        "codemagic.yaml",
+        "package.json",
+        "pnpm-lock.yaml",
+        "app.json",
+        "tests",
+        "assets"
+      ],
+      "acceptance": [
+        "Normal app never falls back to synthetic owner data",
+        "Google PKCE/auth retry and real Supabase workspace",
+        "Vision-based native icons/photos/card hierarchy",
+        "Independent QA/reviewer/security; TestFlight/device results separate"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios without dotenv",
+        "Expo version check",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "APP-02-LOCAL"
+      ],
+      "status": "implementing",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Astra APPROVE updated APP03 v1 with Compliance and Critic PROCEED; Erik approved three packages, installed. External userID and TestFlight gates documented."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Luna implementation A auth/build, B real data workspace, C vision UI; bounded checkpoints and no external account actions."
+        }
+      ],
+      "next_step": "Luna implementation A auth/build, B real data workspace, C vision UI; bounded checkpoints and no external account actions."
+    }
+  ]
+}

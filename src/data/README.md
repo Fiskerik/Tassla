@@ -1,0 +1,6 @@
+# Dataåtkomst
+`supabase.ts` skapar den delade klienten från de publika Expo-variablerna och ger Auth en PKCE-konfigurerad, beständig session. `secure-session-storage.ts` anpassar Expo SecureStore till Supabases nyckel/värde-kontrakt; den rena hjälpen `chunked-storage.ts` delar sessioner i UTF-8-bytebegränsade delar och växlar index först när en ny uppsättning är färdig. `app-data.ts` läser ägarens hund, raser och publicerat Hem-innehåll och anropar `create_dog` enligt SQL-kontraktet.
+
+Flöde: Supabase Auth → SecureStore-session → RLS-skyddad läsning av hund/ras/innehåll → `select-content.ts` väljer aktuell publicerad version. Hund skapas atomärt genom `create_dog`; klienten skriver aldrig medlemskap direkt. Den faktiska databaskällan är `supabase/migrations/202610040001_foundation.sql`.
+
+Kontroll: `pnpm check` kör TypeScript, lint och domäntester. `chunked-storage.ts` kan provas med en injicerad minnesadapter utan Expo-native runtime. Begränsningar: faktisk Supabase-auth, callback på signerad iPhone och innehållshämtning kräver godkänd utvecklingsmiljö och ännu separat verifiering; ingen cache eller offlinekö finns. Använd endast den publika publishable keyn i Expo-konfigurationen, aldrig service-role-nyckel.

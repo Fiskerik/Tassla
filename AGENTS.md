@@ -13,12 +13,25 @@ The app is free for users. Revenue comes from partners, in five legs (see `docs/
 - Content is the product. Every login shows new content fitted to the puppy's age, needs and breed. Health content is checked by `dog_expert` before it is published.
 
 ## Current phase: 0 – Discovery
-- Stack: **not decided**. No app code exists.
-- In this phase: no app code, no scaffolding, no dependencies. Outputs are documents in `docs/`.
-- Active agents: `product`, `architect`, `critic`, `dog_expert`, `compliance` (see `.codex/agents/`).
+- Stack, six-screen MVP and Architecture approved by Erik on 2026-10-04: Expo/React Native/TypeScript/Expo Router, Supabase, Codemagic. Erik separately authorized project files and SQL foundation; see docs/tasks/dev/foundation.md. APP-01 plan v2 and listed packages were also approved through “godkänner”; local app implementation is authorized. Phone auth tests, external builds and pilot remain separate manual steps. Explicitly unresolved options remain open.
+- In this phase: no app code or scaffolding. Outputs are documents in `docs/`. Human-approved exception: SDK infrastructure in `test_agent.py`, `run_team.py` and `tassla_team/`; no new dependencies without approval.
+- Additional explicit owner exception 2026-10-04: foundation source/contracts/module guides and Supabase schema/test files, without dependency installation or external resources. This does not approve a pilot, real data processing or all implementation segments.
+- Configured agents: `product`, `architect`, `critic`, `dog_expert`, `compliance`, `implementer`, `qa`, `reviewer`, `security` in `.codex/agents/`. Dev definitions are available, but app work requires an approved segment and plan; Discovery restrictions still apply.
 - Phase 0 is done when the human has approved `docs/vision.md`, `docs/revenue.md` and `docs/mvp.md`, and accepted `docs/decisions/0001-stack.md`.
 - Then start phase 1: fill in **Commands** and **Ownership** below and activate the staged agents:
-  `git mv .codex/agents-later/*.toml .codex/agents/`
+  Dev definitions are already configured; authorize the segment and complete task contracts before app work.
+
+## AI organisation and runtime
+- AI Chief of Staff coordinates Product and Commercial; the human owns final decisions.
+- Product: Head of Product, Growth & Distribution, Customer/Product Critic.
+- Commercial: Commercial Lead, Partnerships, Market Intelligence, Commercial Analyst.
+- Dev: Erik leads AI Tech Lead, Codex implementation and QA. Chief of Staff does not own technical decisions.
+- `.codex/agents/` contains Codex roles: `product` (Head of Product), `critic` (Customer/Product Critic), `architect` (AI Tech Lead), plus on-demand `dog_expert` and `compliance`.
+- Dev roles are configured in `.codex/agents/`: implementer, QA and reviewer use GPT-6 Luna high. Architect and security retain their review models. No unsupported ultra setting. App implementation is gated by `docs/dev/workflow.md` and `docs/tasks/dev/queue.json`.
+- `.codex/archive/original-agents/` preserves original definitions, including the retired orchestrator and separate frontend role. Do not activate archive files.
+- TOML definitions are not SDK agents. `run_team.py` uses Chief of Staff routing and the complete SDK hierarchy in `tassla_team/organisation.py`. Select only materially relevant teams and specialists; maximum two teams and two specialists per team. Dev SDK roles advise Erik, without code execution. `--chat` retains bounded in-memory history. `test_agent.py` remains a separate fixed Product/Growth smoke test with optional Critic. See `docs/ai-team.md`.
+- Initial SDK tests use short context, bounded output, at most one Growth run and no research. Log usage across Product and Growth. Never run paid API tests unless the human asks.
+- Internal delegation is allowed within an assigned task. No access to email or messaging accounts and no external messages, including through shell, browser or MCP. Prepare drafts for the human. SDK agents receive only explicitly allowed internal tools; no communication connectors, credentials, generic network or shell tools.
 
 ## Source of truth
 - `docs/vision.md` – idea, problem, target user, principles, non-goals, open questions
@@ -29,14 +42,22 @@ The app is free for users. Revenue comes from partners, in five legs (see `docs/
 Read-only agents cannot write files. They return text; the main session saves it to `docs/`.
 
 ## Principles
+- All AI agents must act within applicable EU law and relevant national law (Sweden initially). Verify current official sources and applicability for legal/regulatory decisions; distinguish enacted applicable rules from proposals and future requirements. Flag uncertainty and never claim legal certification or guaranteed compliance. Refer material unresolved issues to compliance and Erik/legal counsel before affected implementation or release. App-store rules are separate contractual requirements, not EU law.
+- Use synthetic data for agent development by default. Never expose real user/owner data, credentials or production exports to AI tools without an explicitly approved lawful processing arrangement. GDPR review includes purpose/legal basis, minimisation, information, rights/deletion, retention, controller/processor roles, vendor agreements, transfers and security; EU hosting alone does not establish compliance. Assess other rules (privacy/tracking, advertising, consumer protection, accessibility and AI Act) only where applicable.
+- Before substantial work, define numbered subtasks with owner, dependencies, affected files, acceptance criteria and verification. Work on one by default, at most two simultaneously; never overlap writing ownership. Save the plan in `docs/tasks/`. After each subtask save completed changes, verification, open issues and exact next step. On interruption resume the first unfinished subtask from its saved checkpoint; do not restart the whole task. This is a work procedure, not an automatic scheduler or a guarantee of uninterrupted execution.
 - Be direct and honest. Flag uncertainty. Disagree with evidence, not with attitude. No flattery.
 - The user is a new dog owner: stressed, unsure, short on time. Simple beats complete.
 - Animal welfare and safety come before features and before revenue.
 - MVP first. Every feature must trace to a user problem in `docs/vision.md`.
 - Prefer boring, proven technology. Assume a very small team (1–2 people plus agents) unless docs say otherwise.
+- App design: a distinctive bold-but-clean palette and clear typography reflecting Tassla's reassuring, warm personality; no generic Tailwind/Bootstrap or ready-made theme appearance. Use consistent design tokens, purposeful screen transitions and satisfying pressed-state feedback. Use custom CSS animations where web technology applies, and platform-appropriate animation in the native app. Respect reduced motion, readability, contrast and responsiveness; do not add animation dependencies without approval. See docs/dev/ui-and-code-standards.md.
+- Write modular single-responsibility functions and follow standard modern conventions for the chosen language/framework. Use current official documentation compatible with installed versions; do not copy obsolete patterns or silently upgrade dependencies. After each substantial implementation subtask, perform a bounded readability/cleanup pass before QA: consistent naming, unnecessary functionality, unused imports/variables/files, duplication and stale comments/docs. Verify references before removal, preserve approved behaviour, rerun relevant checks after changes, and record the result (including when no refactor is needed). No unrelated refactoring.
+- Keep implementation as simple as the approved requirement allows. No speculative frameworks, abstractions, configuration or unrelated refactoring. Use clear names and short plain-English comments only for non-obvious intent, constraints or trade-offs; do not narrate obvious code or leave large commented-out blocks. Each implemented feature/module must have a short maintained README or linked guide explaining purpose, entry points, data flow, setup, verification and limitations for a new developer. Prefer this guide to long inline explanations; no README per trivial file.
+- Reviewers must verify changed imports, functions, methods, parameters and external APIs against actual repository definitions and the installed dependency version (and official documentation when needed). Reject invented APIs, fabricated implementations and placeholders presented as working features. Typechecking alone or tests mocking the same invented API do not prove correctness; verify relevant real integration behaviour or mark NOT TESTABLE and block affected acceptance.
 
 ## Orchestration
-The main session is the orchestrator. Subagents only start when asked to, so follow this table and spawn the listed agents by name.
+Follow `docs/dev/workflow.md` for development. Before implementation, obtain and save architect APPROVE for the exact task plan and an Erik-approved segment mandate. Never fabricate approvals or test results. Use `tools/dev_flow.py` to validate and checkpoint queue transitions. One active task by default, maximum two with disjoint write ownership. QA and independent reviewer must pass before DONE; relevant security review is also required. A changed plan needs renewed approval. At most two correction attempts before escalation. Save questions and decisions after each task and a final report for Erik. This queue is not a scheduler and does not execute agents automatically.
+The main Codex session coordinates Dev work under Erik. Use the following specialists for relevant substantive work, not for routine formatting or the SDK infrastructure smoke test. Send only relevant context; avoid repetitive debate.
 
 | Situation | Spawn (in order) |
 |---|---|
@@ -45,8 +66,9 @@ The main session is the orchestrator. Subagents only start when asked to, so fol
 | Health, training, behaviour or safety content | `dog_expert`, before it enters `docs/mvp.md` or the app |
 | Feeding, special-diet or sponsored food content | `dog_expert`, then `compliance` |
 | Partner, affiliate, sponsored or insurance feature; vet Q&A; data shared between owners, kennels and partners | `compliance`, then `critic` |
+| New/changed personal-data purpose, auth/data architecture, analytics/tracking, AI vendor/data use, applicable legal duty or EU pilot/release readiness | `compliance` before affected implementation; `security` for technical controls; unresolved material findings go to Erik |
 | A plan or spec is about to be accepted | `critic` (always) |
-| Phase 1: an implementation task is specified | `implementer` or `frontend`, then `qa`, then `reviewer` |
+| Phase 1: an implementation task is specified | `implementer` (including UI), then `qa`, then `reviewer` |
 | Phase 1: change touches auth, personal data, permissions, storage, networking or a third-party SDK | `security`, before merge |
 
 Rules:
@@ -66,16 +88,16 @@ Rules:
 5. `architect` proposes `docs/decisions/0001-stack.md` (React Native/Expo vs Flutter vs native; backend; auth; hosting) and `docs/decisions/0002-content-and-kennel-model.md` (content engine, kennel/breed/litter data model, partner adapters). Then `critic`.
 
 ## Commands (fill in when phase 1 starts)
-- install: TBD
-- dev: TBD
-- check (typecheck + lint + tests): TBD
-- build: TBD
+- install: `pnpm install --frozen-lockfile` (pnpm 11.19.0; Node 24 recommended)
+- dev: `pnpm start`
+- check: `pnpm check` (typecheck, lint, Node tests) and `git diff --check`. SQL integration requires `supabase/tests/foundation.sql` in a development database.
+- build: `pnpm bundle:ios`; signed build separately through Codemagic/TestFlight
 
 ## Ownership (fill in with real paths when phase 1 starts)
 | Area | Owner |
 |---|---|
 | `docs/`, `AGENTS.md`, `.codex/` | main session (human approves) |
-| UI: screens, components, navigation | `frontend` |
+| UI: screens, components, navigation | `implementer` |
 | Non-UI code: data, API, tooling, config | `implementer` |
 | Tests | `qa` |
 
