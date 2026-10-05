@@ -530,6 +530,65 @@
         }
       ],
       "next_step": "Independent Source Reviewer PASS local CI configuration; docs/tasks/dev/ci-01.md. Erik push and select new revision; cloud signing/TestFlight unverified"
+    },
+    {
+      "id": "CI-02",
+      "title": "Align Expo 57 native animation packages for iOS build",
+      "mvp_requirement": "APP-03 Codemagic build integration",
+      "plan": "docs/tasks/dev/ci-02.md v1",
+      "write_paths": [
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml"
+      ],
+      "acceptance": [
+        "Reanimated exactly matches installed Expo bundledNativeModules.json",
+        "Worklets remains Expo bundled 0.10.1 and compatibility is verified",
+        "frozen install, project check and iOS JS export pass",
+        "No claim of Mac CocoaPods or Codemagic cloud validation"
+      ],
+      "checks": [
+        "pnpm install --frozen-lockfile",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "CI-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Astra APPROVE and Critic PROCEED for plan v1; both recorded in docs/tasks/dev/ci-02.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Astra approved and Critic proceed; CI-02 implementation started with two-file write ownership"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementer finished approved two-file pin; frozen install, 40/40 check, iOS JS export and diff check PASS; checkpoint docs/tasks/dev/ci-02.md"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS; Source Reviewer PASS; Security PASS, all saved in docs/tasks/dev/ci-02.md"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent reviewer PASS for reviewed local handoff per docs/tasks/dev/ci-02.md; Codemagic macOS test remains Eriks next step"
+        }
+      ],
+      "next_step": "Independent reviewer PASS for reviewed local handoff per docs/tasks/dev/ci-02.md; Codemagic macOS test remains Eriks next step"
     }
   ]
 }
