@@ -1,5 +1,9 @@
 # Tassla-pass
 
-`PassportScreen.tsx` är nåbar från Mer i både arbetsytan och lokal preview. Den visar en visuell tom grund; ingen hundrapport, export eller PDF skapas. Skärmen tar ingen hund- eller backenddata och gör inga auth-, nätverks- eller lagringsanrop.
+`ProductWorkspace.tsx` passes the current owned dog and the already loaded confirmed weight/performed health rows to `PassportScreen.tsx`. The screen fetches the human-readable breed name, then blocks a selected section until its saved data is ready and has no busy, pending, or conflicting write. It never fetches health data specifically for export. The local `DevelopmentPreview.tsx` renders an empty, non-exportable preview without synthetic dog data.
 
-Kör `pnpm start:preview` för lokal preview och `pnpm check` för typkontroll, lint och tester. Rapportfält och exportformat kräver en separat godkänd uppgift.
+`passport-model.ts` projects only the selected profile name/breed/birth date, latest weight by date and ID descending, and performed vaccination/veterinary rows by date and ID descending. Planned events and internal IDs are omitted. At most 50 loaded performed rows are included, and the preview/PDF disclose that older rows may be missing due to the server history cap. The same immutable snapshot feeds both preview and HTML. All owner-provided text is escaped; the HTML uses inline styling only and no remote resources or scripts. Tassla-pass is owner-recorded information, not an official journal, identity document, or vaccination certificate.
+
+`passport-export.ts` runs only after the owner's explicit action. It uses Expo Print to create a local PDF, moves it to a Tassla-prefixed file directly in app cache, checks dog/account lifetime after each async stage and immediately before opening the native share sheet, and deletes its exact generated files on every exit. Startup cleanup scans only direct app-cache files with the Tassla prefix and skips active exports. A resolved share promise is reported only as “Delningsdialogen har stängts”; it does not establish delivery. Real device PDF rendering and native sharing remain NOT TESTABLE by local typecheck/lint.
+
+Installed Expo versions: `expo-print ~57.0.2`, `expo-sharing ~57.0.22`, and `expo-file-system ~57.0.7`. Run `pnpm check` for typecheck, lint, and tests.

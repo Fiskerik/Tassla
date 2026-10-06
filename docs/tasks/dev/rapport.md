@@ -113,3 +113,8 @@ Final QA51/51 fokuserat, pnpmcheck211/211 TypeScript/lint/tests PASS, diffcheckP
 
 ## P05 slutcheckpoint — 2026-10-06
 Luna medium QA12/12 fokuserat, full223/223 inklusive typecheck/lint PASS, iOSexport efter lokal EPERM-elevation och diffcheckPASS. p04_final_review oberoende renewed ReviewerPASS/statiskSecurityPASS, fixturemetadata-granskning bevarade assertions. Guidemarkörer renderas nu som native läsblock; Home plainpreview delar exakt fetchedversion, state/sourceURL/sluggrindkontroller verifierade lokalt. P04-råd fortfarande draft/humanpending. Release-log P05-CONTENT-UI.md aktuell. Nästa P06 enligt approved passport-pdfv2.
+
+Erik bekräftade 2026-10-06 att mänsklig sakgranskning ännu inte är utförd. Innehållsutkast väntar fortsatt; oberoende tekniska MVP-paket fortsätter.
+
+## P06 slutcheckpoint — 2026-10-06
+Luna medium QA30/30, full253/253 inklusive typecheck/lint PASS, iOSexportPASS efter lokal EPERM-elevation, diffPASS. Renewed independent ReviewerPASS/staticSecurityPASS. Identisk preview/PDFsnapshot, valbara sparade fält, explicit lokal systemdelning och strikt cache/Print→ägt cacheprefix med best-effort cleanup. Native fysisk rendering/delning ej utförd; human contentreview fortsatt pending. Release-log P06-PASSPORT.md aktuell. Nästa P07exaktv3 faktisk ArchitectAPPROVE/CriticPROCEED/SecurityAPPROVE/ComplianceAPPROVE(localpurpose only).

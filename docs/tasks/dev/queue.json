@@ -1180,6 +1180,73 @@
         }
       ],
       "next_step": "Independent renewedReviewerPASS staticSecurityPASS; exactfixtureassertionsunchanged; release-log saved"
+    },
+    {
+      "id": "MVP-P06-PASSPORT",
+      "title": "Saved passport snapshot PDF and owner-initiated local sharing",
+      "mvp_requirement": "docs/mvp.md Tassla pass export",
+      "plan": "docs/tasks/dev/passport-pdf.md v3",
+      "write_paths": [
+        "src/features/passport/PassportScreen.tsx",
+        "src/features/passport/passport-model.ts",
+        "src/features/passport/passport-export.ts",
+        "src/features/passport/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "package.json",
+        "pnpm-lock.yaml",
+        "app.json",
+        "tests/passport.test.mjs",
+        "tests/README.md",
+        "src/features/home/AppFlow.tsx"
+      ],
+      "acceptance": [
+        "Identical saved snapshot preview and PDF with selected fields and cap notice",
+        "Owner action only, actual native APIs guarded lifetime and owned cache cleanup"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "Reviewer and static Security",
+        "Native PDF/render/share marked untested unless actually run"
+      ],
+      "depends_on": [
+        "MVP-P05-CONTENT-UI"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Actual passportv2 Architect APPROVE CriticPROCEED SecuritycontractAPPROVE savedplan"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik fullMVP Luna medium PDF fields sharing dependencies approved; P05 local ee4bda8 done; start exact snapshot/adapter"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Actual v3 sourcefreeze AppFlow startup and snapshot date parity; author typecheck lint diffPASS; QA focused23PASS full/export and independent review next"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "ActualQA30focused full253 TypeScript lintPASS ios exportPASS diffPASS; nativePDFshare untested"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Actualrenewed ReviewerPASS staticSecurityPASS strictPrintpath; finalQA253 release-log saved; P07 next"
+        }
+      ],
+      "next_step": "Actualrenewed ReviewerPASS staticSecurityPASS strictPrintpath; finalQA253 release-log saved; P07 next"
     }
   ]
 }

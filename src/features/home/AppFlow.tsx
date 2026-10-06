@@ -8,8 +8,10 @@ import { ProfileScreen } from '../onboarding/ProfileScreen';
 import { DevelopmentPreview } from './DevelopmentPreview';
 import { ProductWorkspace } from './ProductWorkspace';
 import { useAuth } from '../account/AuthProvider';
+import { cleanupStalePassportFiles } from '../passport/passport-export';
 
 export function AppFlow() {
+  useEffect(() => { cleanupStalePassportFiles(); }, []);
   return DEV_PREVIEW_ENABLED ? <DevelopmentPreview /> : <AuthenticatedAppFlow />;
 }
 

@@ -199,6 +199,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   useLayoutEffect(() => {
     profileLifetime.current = currentProfileLifetime;
   }, [currentProfileLifetime]);
+  const isPassportLifetimeCurrent = useCallback((lifetime: string) => (
+    mounted.current && profileLifetime.current === lifetime
+  ), []);
 
   useEffect(() => {
     void AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => undefined);
@@ -1495,7 +1498,26 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       })}
       onRetry={() => { void retryContent(); }}
     />;
-    if (page === 'passport') return <PassportScreen onBack={() => setPage('more')} />;
+    if (page === 'passport') return <PassportScreen
+      onBack={() => setPage('more')}
+      client={client}
+      dog={dog}
+      lifetime={currentProfileLifetime}
+      isLifetimeCurrent={isPassportLifetimeCurrent}
+      weights={healthWeights}
+      weightLoadState={healthState}
+      weightBusy={healthBusy}
+      weightPending={healthPending}
+      onRetryWeights={() => { void retryHealthMutation(); }}
+      history={healthHistory}
+      historyLoadState={healthHistoryState}
+      historyBusy={healthHistoryBusy}
+      historyPending={healthHistoryPending}
+      onRetryHistory={() => { void retryHealthHistory(); }}
+      profileBusy={profileBusy}
+      profilePending={profilePending}
+      profileConflict={Boolean(profileConflict)}
+    />;
     if (onDogUpdated) return <EditDogProfileScreen key={`${dog.id}:${dog.name}:${dog.breed_id}:${dog.birth_date}`}
       client={client} dog={dog} busy={profileBusy} pending={profilePending} statusMessage={profileMessage}
       statusError={profileMessageError} conflict={profileConflict ?? undefined}
