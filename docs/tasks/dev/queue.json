@@ -1,5 +1,5 @@
 {
-  "segment": "FOUNDATION, APP-01/02/03: Erik-godkända lokala appsegment; APP-03 mandat och tre paket godkända 2026-10-04, extern TestFlight-verifiering separat",
+  "segment": "FOUNDATION, APP-01/02/03: Erik-godkända lokala appsegment; APP-03 mandat och tre paket godkända 2026-10-04, extern TestFlight-verifiering separat; APP-05 lokal implementation uttryckligen beställd 2026-10-06, verklig beta/databehandling separat grind",
   "segment_approved_by_erik": true,
   "tasks": [
     {
@@ -722,7 +722,7 @@
       "id": "APP-05-B1-WEIGHT",
       "title": "Health B1: owner-registered weight history",
       "mvp_requirement": "docs/mvp.md > Måste med: produkt-MVP > Skärm 4. Hälsa – enkel ägarregistrerad översikt",
-      "plan": "docs/tasks/dev/app-05.md v3",
+      "plan": "docs/tasks/dev/app-05.md v4",
       "write_paths": [
         "src/features/health/HealthScreen.tsx",
         "src/features/health/README.md",
@@ -744,11 +744,42 @@
         "git diff --check"
       ],
       "depends_on": [
-        "APP-04A-PHONE"
+        "APP-04A-UX"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Erik must complete APP-04A-PHONE and decide data purpose/preliminary legal basis; Compliance CHANGES and Architect review v3 remain before implementation"
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect app05_architect APPROVE v4, Critic PROCEED och Compliance lokal syntetisk kod APPROVE; sparat i app-05.md. Beta separat BLOCK."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Eriks uttryckliga implementationsmandat 2026-10-06; Luna high implementerar v4 endast tilldelade appfiler, lokal syntetisk testning utan betaaktivering."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Luna high implementer checkpoint: vikt-CRUD komplett, bounded cleanup, pnpm typecheck/lint och diffcheck PASS; QA kör full svit/export, faktisk telefon/RLS separat NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende Luna high QA PASS: TZ=Europe/Stockholm pnpm check 64/64 utan skip, iOS-export och diffcheck PASS. SDK-kontrakt och extraherade UI-handlerbeteenden; riktig RLS/telefon NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer app05_reviewer PASS och Security app05_security PASS lokal slice; QA64/64 samt export/diffcheckPASS sparade app-05.md. Faktisk RLS/telefon och verklig beta separat spärrade. Durable docs checkpoint följer."
+        }
+      ],
+      "next_step": "Independent Reviewer app05_reviewer PASS och Security app05_security PASS lokal slice; QA64/64 samt export/diffcheckPASS sparade app-05.md. Faktisk RLS/telefon och verklig beta separat spärrade. Durable docs checkpoint följer."
     },
     {
       "id": "APP-05-PHONE-DB",
@@ -773,6 +804,64 @@
       "status": "planned",
       "history": [],
       "next_step": "Requires separate Erik mandate and development Supabase access after APP-05-B1 local PASS"
+    },
+    {
+      "id": "MVP-CONTENT-INVENTORY",
+      "title": "Editorial MVP content inventory, metadata only",
+      "mvp_requirement": "docs/mvp.md > Måste med > Skärm 3/5; mvp-population-2026-10-06.md slice 1",
+      "plan": "docs/tasks/dev/mvp-content-inventory.md v1",
+      "write_paths": [
+        "docs/content/mvp-content-inventory.json",
+        "docs/content/README.md",
+        "tools/validate_content_inventory.py"
+      ],
+      "acceptance": [
+        "Eight proposed metadata candidates only; no advice, fabricated sources or database/publication fields",
+        "Closed structure, unique ids, integer age windows and explicit expert/source/pilot gates",
+        "Validator accepts original and rejects five documented malformed fixture categories"
+      ],
+      "checks": [
+        "python tools/validate_content_inventory.py",
+        "Independent temporary negative fixtures",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "APP-05-B1-WEIGHT"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "app05_architect APPROVE v1, Critic changes included; exact metadata scope recorded in mvp-content-inventory.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik requested continuation per MVP-population; APP05 done checkpoint; Luna high owns only inventory JSON, README, stdlib validator."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Luna high inventory implementation frozen: eight proposed metadata records, closed stdlib validator/README, validator and diffcheck PASS; independent negative-fixture QA pending."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent Luna high QA PASS original and ten isolated malformed fixtures through import+CLI; diffcheck PASS. Structure only, no factual review or publication claims."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS no findings, QA original and ten malformed fixturesPASS; durable plan/report evidence saved. Editorial metadata only, no publication."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS no findings, QA original and ten malformed fixturesPASS; durable plan/report evidence saved. Editorial metadata only, no publication."
     }
   ]
 }

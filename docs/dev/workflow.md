@@ -3,7 +3,7 @@
 ## Mandat
 Codex huvudsession är koordinator. Erik godkänner segmentets mål, MVP-scope, stack, tillåtna dependencies, dataändamål och kostnadsram före implementation. Godkännande av detta arbetsflöde är inte godkännande av ett appsegment.
 
-Tech Lead (`architect`) granskar varje implementationplan före kodändringar. APP-04 använde GPT-5.6 Luna medium enligt Eriks beslut 2026-10-05; APP-05 använder GPT-6 Luna medium enligt Eriks beslut 2026-10-06. Tech Lead och Security behåller sina starkare granskningsmodeller. Modeller anges i rollfiler, inte bara i en startprompt.
+Tech Lead (`architect`) granskar varje implementationplan före kodändringar. APP-04 använde GPT-5.6 Luna medium enligt Eriks beslut 2026-10-05; APP-05 använder GPT-6 Luna high enligt Eriks implementationsbesked 2026-10-06. Tech Lead och Security behåller sina starkare granskningsmodeller. Modeller anges i rollfiler, inte bara i en startprompt.
 
 ## Uppgiftskö
 `docs/tasks/dev/queue.json` är en hållbar lokal kö. `python tools/dev_flow.py status` visar läget och `validate` kontrollerar köregler. Verktyget kör inga modeller, tester eller shellkommandon. Det är ett checkpointverktyg för Codex-koordinatorn, inte en nattlig scheduler.

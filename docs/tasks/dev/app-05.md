@@ -1,6 +1,20 @@
 # APP-05 – Hälsa B1: viktresa
 
-Planutkast v3, 2026-10-06. Erik har bett om mer funktionalitet med GPT-6 Luna Medium för implementation. Detta är nästa kodslice efter den separata fysiska APP-04A-PHONE-grinden. Ingen implementation är godkänd eller påbörjad.
+Plan v4, 2026-10-06. Erik har uttryckligen begärt implementation av APP-05 och fortsatt arbete enligt rotfilen `mvp-population-2026-10-06.md`, med GPT-6 Luna high direkt i befintlig checkout. Planreview återstår före kod. APP-04A-PHONE är användarrapporterat passerad enligt rotfilen; build/version och detaljer saknas, telefonprovet upprepas inte enbart på grund av gammal köstatus.
+
+## Mandat och ändring från v3
+
+Eriks besked i denna session: ”Implementera APP-05 och fortsätt enligt MVP-population-2026-10-06.md. Använd GPT-6 Luna, high. Arbeta direkt i detta repository.” Därefter: ”Nej, jag vill att mina betatestare ska kunna lägga in dummydata initialt. Innan release av app i App Store så rensar jag databasen på det istället”. Detta ger segmentmandat och avsett funktionsändamål, men betyder inte att extern beta är aktiverad eller dataskyddsbesluten är klara.
+
+Compliance-agent `app05_compliance` bedömde CHANGES: lokal CRUD-kod och syntetiska tester kan genomföras nu; verkliga betakonton är en separat aktiveringsgrind. Ingen rättslig grund behövs för rent syntetiska lokala tester. Påhittade vikter kopplade till verkliga konton är däremot personuppgiftsbehandling och rensning före release löser inte betaperiodens ansvar. Före verklig beta kvarstår ansvarig, preliminär rättslig grund, information, gallring/backuper och Supabase DPA/region/underbiträden. Agentens källhämtning nekades med HTTP 403; rättskällorna är inte live-verifierade i denna session och bedömningen är inte juridisk certifiering.
+
+V4 separerar kodimplementation från betaaktivering. Äldre förbud mot kod i planeringscheckpointen ersätts av Eriks nya uttryckliga implementationsbegäran med denna avgränsning. Ingen deployment, verklig data, pilot eller App Store-release görs här. Kön använder APP-04A-UX som maskinellt kodberoende; PHONE:s användarrapporterade resultat dokumenteras här utan att fabricera detaljer eller oberoende QA. Den befintliga PHONE-taskens status lämnas oförändrad tills dess evidenscheckpoint kompletterats.
+
+## Numrerade checkpointdelar inom en komplett B1-slice
+
+1. **Datakontrakt och åtkomst — Implementer.** `src/data/workspace-data.ts`: separata vikttyper, strikt kalenderdatum/kg-validering före SDK, historikläsning och CRUD med återläsning. Beroende: befintligt schema och APP-04A-UX. Acceptans: hund-/typisolering, datum/id-sortering och saved/failed/unknown. QA verifierar installerad Supabase-klient via syntetisk fetch i `tests/health-weight.test.mjs`; ingen verklig RLS hävdas.
+2. **Komplett viktresa — Implementer.** `HealthScreen.tsx`, `ProductWorkspace.tsx`, hälsans README: laddar/tomt/fel/historik, skapa/rätta/radera med bekräftelse och synkron dubbeltrycksspärr. Beroende: del 1. Acceptans: hela CRUD-flödet, korrekt okänd status och aktuell hund; preview och vardagslogg behåller befintligt beteende. Verifiering: typkontroll och QA:s data-/UI-kontrakt.
+3. **Avgränsad städning och oberoende verifiering — Implementer → QA → Reviewer/Security; koordinator sparar.** Beroende: komplett del 2. `pnpm check`, `pnpm bundle:ios`, `git diff --check`, beteendetester och fryst diff-review. Rapport/köcheckpoint sparas innan nästa slice. Telefon och faktisk databas är separata NOT TESTABLE-resultat, inte lokal PASS-evidens.
 
 ## Scope
 
@@ -35,9 +49,9 @@ Bygg endast en komplett ägarregistrerad viktresa: visa historik, lägg till, r�
 
 ## Checks och grindar
 
-- Före implementation: APP-04A-PHONE måste ha verkligt resultat och Erik måste godkänna ändamålet samt preliminär rättslig grund för intern syntetisk-/utvecklingsanvändning. Compliance-grindar för verklig data och release kvarstår.
+- Före implementation: APP-04A-PHONE återges som användarrapporterat passerad; lokal implementation/testning använder enbart syntetiska uppgifter. Compliance-grindarna ovan gäller före verkliga betakonton, verklig data och release.
 - Architect godkänner exakt plan. Critic granskar användarvärde/scope. Security granskar data-/skrivytan före merge.
-- Implementering körs med GPT-6 Luna Medium. QA och Reviewer använder samma modellnivå för detta segment.
+- Implementering körs med GPT-6 Luna high. QA och Reviewer använder samma modellnivå för detta segment; Architect/Security behåller sina granskningsmodeller.
 - Kör `pnpm check`, `pnpm bundle:ios`, `git diff --check`; SQL/RLS-runtime är separat och NOT TESTABLE utan utvecklingsdatabas.
 - Efter implementation: bounded cleanup → QA → Reviewer/Security → checkpoint. Nästa APP-04B2 får inte starta före PASS.
 
@@ -50,3 +64,25 @@ Bygg endast en komplett ägarregistrerad viktresa: visa historik, lägg till, r�
 - Enheten är kg i denna slice; ingen lokaliserad enhetsväxling byggs.
 - Värdena är ägarregistrerade och inte verifierad journal. Ändrad datalagring eller delning kräver ny compliance-/securitygrind.
 - Förhandsvisningen fortsätter visa ett ärligt tomt Hälsa-läge utan Supabase-anrop; B1 ändrar endast det inloggade workspace-flödet och `DevelopmentPreview.tsx` behöver inte ändras.
+
+## Compliance-underlag v4, 2026-10-06
+
+Oberoende agent `app05_compliance` gav **APPROVE för lokal full CRUD-kod med syntetiska tester efter v4-planjusteringen**, **BLOCK för verkliga betakonton** tills de befintliga grindarna är klara. GDPR artikel 6.1(b) föreslogs preliminärt för den aktivt begärda viktloggstjänsten, men Erik har inte valt rättslig grund och ingen agent gör det åt honom. Hundvikten är inte i sig artikel 9-hälsodata om en människa; verkligt konto/ägarkoppling gör ändå behandlingen relevant för GDPR. Feedback, diagnostik och analys ingår inte.
+
+Före beta: namnge personuppgiftsansvarig, välj preliminär rättslig grund, ge artikel 13-information, dokumentera radering av beta-/inaktiva konton och backuper samt verifiera Supabase DPA, faktisk region, underbiträden och överföringar. APP-05-PHONE-DB behöver faktiskt verifiera CRUD/RLS med två syntetiska konton och telefonform. Jurist behövs om biträdes-/överföringsvillkoren förblir oklara. Referenser: GDPR artiklar 6/13 och repositoryts officiella källunderlag i `docs/dev/compliance.md`, senast kontrollerat 2026-10-04. Försök till aktuell kontroll av EUR-Lex/IMY/Supabase den 2026-10-06 nekades med HTTP 403; ingen live-verifiering eller juridisk certifiering påstås.
+
+## Critic v4, 2026-10-06
+
+Oberoende `app05_critic`: **PROCEED**, inga betydande invändningar. Full CRUD följer explicit viktkravet i `docs/mvp.md`; korrigering/radering är motiverad för felinmatningar. Enkel datum/kg-inmatning och tydliga statuslägen håller scopet litet. Manuell vikthistoriks återkommande värde utan trendvy är ett produktantagande att pröva i senare godkänd beta, ingen blockerare för den redan beslutade MVP-funktionen.
+
+## Architect v4, 2026-10-06
+
+Oberoende `app05_architect`: **APPROVE — APP-05-B1-WEIGHT plan v4**. Mandat, MVP-spårning, ägarskap, APP-04A-UX-kodberoende och syntetisk lokal CRUD-avgränsning är konsekventa. Viktkontraktet ska hållas separat, datum/kg valideras före SDK, läs-/skrivväg filtrera aktuell hund och `weight`, sorteringen ha deterministiskt id och insert använda stabilt UUID för reconciliation. Alla mutationer kräver synkron in-flight guard. `actor_id` förblir schema/default/RLS-ansvar och exponeras/muteras inte av UI. Fetch-tester styrker SDK-kontrakt, inte RLS. Verklig beta förblir spärrad enligt Compliance och PHONE beskrivs enbart som användarrapporterat passerad.
+
+## Slutgranskning och lokal leverans, 2026-10-06
+
+- QA `app05_qa`: **PASS lokal slice**, `TZ=Europe/Stockholm pnpm check` 64/64 utan skip, iOS-export och `git diff --check` PASS. Installerad SDK med kontrollerad fetch samt faktiska workspace-handlers i isolerad TypeScript-harness; ingen renderad telefonintegration hävdas.
+- Reviewer `app05_reviewer`: **PASS**, inga blockerande/major/minor fynd. Importer och metoder verifierades mot installerade Supabase PostgREST 2.117.2 och Expo Crypto (`abortSignal`, `maybeSingle`, `randomUUID`). Granskaren återanvände tydligt angiven QA-evidens, utan att hävda egen omkörning.
+- Security `app05_security`: **PASS lokal kod**, inga security-fynd. Fokuserade tester 20/20, egen `pnpm exec tsc --noEmit` och scoped diffcheck PASS. Schema/default/RLS-granskning, hund-/typ-/id-filter, tillåtna payloadfält, preimage-kontroll vid retry, synkrona spärrar och session-/hundnycklad avmontering verifierades statiskt. Verklig beta/release förblir BLOCK.
+
+APP-05-B1 är färdig som lokal kodleverans; faktisk Supabase/RLS och telefonform är fortfarande NOT TESTABLE här. Historiken saknar sidladdning och begränsas av projektets PostgREST-svarsgräns, dokumenterat i hälsans README. Ingen deployment, databasrensning eller GitHub-push utförd. Före nästa app-/cloud-hälsoslice krävs separat exakt plan och granskning; före beta även besluten och APP-05-PHONE-DB ovan.

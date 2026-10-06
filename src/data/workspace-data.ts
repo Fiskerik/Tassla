@@ -6,6 +6,7 @@ import type { OwnedDog } from './app-data';
 export const WORKSPACE_PAGE_SIZE = 40;
 const DEFAULT_REQUEST_TIMEOUT_MS = 12_000;
 const EVENT_COLUMNS = 'id,dog_id,event_type,occurred_at,occurred_on,weight_kg,duration_minutes,description';
+const HEALTH_WEIGHT_COLUMNS = 'id,dog_id,actor_id,occurred_on,weight_kg';
 
 export interface DogEventRecord {
   id: string;
@@ -32,6 +33,26 @@ export interface DogEventChanges {
   occurred_at: string;
   duration_minutes: number | null;
   description: string | null;
+}
+
+export interface HealthWeightRecord {
+  id: string;
+  dog_id: string;
+  actor_id: string;
+  occurred_on: string;
+  weight_kg: number;
+}
+
+export interface HealthWeightOperation {
+  id: string;
+  dog_id: string;
+  occurred_on: string;
+  weight_kg: number;
+}
+
+export interface HealthWeightChanges {
+  occurred_on: string;
+  weight_kg: number;
 }
 
 export type WriteOutcome<T> = { status: 'saved'; value: T } | { status: 'failed' | 'unknown' };
@@ -232,6 +253,165 @@ export async function deleteDogEvent(
 
   try {
     const found = await fetchDogEventById(client, dogId, id, timeoutMs);
+    if (!found) return { status: 'saved', value: null };
+    return isDefiniteClientRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
+  } catch {
+    return { status: 'unknown' };
+  }
+}
+
+export function isValidHealthWeightDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(`${value}T00:00:00.000Z`);
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return false;
+  const today = new Date();
+  const todayText = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  return value <= todayText;
+}
+
+export function isValidHealthWeightKg(value: number): boolean {
+  return Number.isFinite(value) && value > 0 && value <= 200
+    && Number(value.toFixed(3)) === value;
+}
+
+export async function fetchHealthWeights(
+  client: SupabaseClient,
+  dogId: string,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  parentSignal?: AbortSignal,
+): Promise<HealthWeightRecord[]> {
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.from('dog_events')
+      .select(HEALTH_WEIGHT_COLUMNS)
+      .eq('dog_id', dogId)
+      .eq('event_type', 'weight')
+      .order('occurred_on', { ascending: false })
+      .order('id', { ascending: false })
+      .abortSignal(signal);
+    if (error || !Array.isArray(data) || !data.every(isHealthWeightRecord)) throw new Error('Could not load health weights');
+    return data;
+  }, timeoutMs, parentSignal);
+}
+
+export async function fetchHealthWeightById(
+  client: SupabaseClient,
+  dogId: string,
+  id: string,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<HealthWeightRecord | null> {
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.from('dog_events')
+      .select(HEALTH_WEIGHT_COLUMNS)
+      .eq('dog_id', dogId)
+      .eq('event_type', 'weight')
+      .eq('id', id)
+      .abortSignal(signal)
+      .maybeSingle();
+    if (error) throw new Error('Could not check health weight status');
+    if (data === null) return null;
+    if (!isHealthWeightRecord(data)) throw new Error('Health weight response did not match the database contract');
+    return data;
+  }, timeoutMs);
+}
+
+export async function insertHealthWeight(
+  client: SupabaseClient,
+  operation: HealthWeightOperation,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<WriteOutcome<HealthWeightRecord>> {
+  if (!isValidHealthWeightDate(operation.occurred_on) || !isValidHealthWeightKg(operation.weight_kg)) return { status: 'failed' };
+  const payload = {
+    id: operation.id,
+    dog_id: operation.dog_id,
+    event_type: 'weight' as const,
+    occurred_on: operation.occurred_on,
+    weight_kg: operation.weight_kg,
+  };
+  let failure: unknown = null;
+  try {
+    const result = await withRequestDeadline(async (signal) => await client.from('dog_events')
+      .insert(payload)
+      .abortSignal(signal)
+      .select(HEALTH_WEIGHT_COLUMNS)
+      .single(), timeoutMs);
+    if (!result.error && isHealthWeightRecord(result.data) && matchesHealthWeight(result.data, operation)) return { status: 'saved', value: result.data };
+    failure = result.error ?? new Error('Empty health weight insert response');
+  } catch (error) {
+    failure = error;
+  }
+
+  try {
+    const found = await fetchHealthWeightById(client, operation.dog_id, operation.id, timeoutMs);
+    if (found && matchesHealthWeight(found, operation)) return { status: 'saved', value: found };
+    return isDefiniteClientRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
+  } catch {
+    return { status: 'unknown' };
+  }
+}
+
+export async function updateHealthWeight(
+  client: SupabaseClient,
+  dogId: string,
+  id: string,
+  changes: HealthWeightChanges,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<WriteOutcome<HealthWeightRecord>> {
+  if (!isValidHealthWeightDate(changes.occurred_on) || !isValidHealthWeightKg(changes.weight_kg)) return { status: 'failed' };
+  const payload = { occurred_on: changes.occurred_on, weight_kg: changes.weight_kg };
+  let failure: unknown = null;
+  try {
+    const result = await withRequestDeadline(async (signal) => await client.from('dog_events')
+      .update(payload)
+      .eq('dog_id', dogId)
+      .eq('event_type', 'weight')
+      .eq('id', id)
+      .abortSignal(signal)
+      .select(HEALTH_WEIGHT_COLUMNS)
+      .maybeSingle(), timeoutMs);
+    if (!result.error && isHealthWeightRecord(result.data) && matchesHealthWeight(result.data, { id, dog_id: dogId, ...changes })) return { status: 'saved', value: result.data };
+    failure = result.error ?? new Error('Empty health weight update response');
+  } catch (error) {
+    failure = error;
+  }
+
+  try {
+    const found = await fetchHealthWeightById(client, dogId, id, timeoutMs);
+    if (found && matchesHealthWeight(found, { id, dog_id: dogId, ...changes })) return { status: 'saved', value: found };
+    return isDefiniteClientRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
+  } catch {
+    return { status: 'unknown' };
+  }
+}
+
+export async function deleteHealthWeight(
+  client: SupabaseClient,
+  dogId: string,
+  id: string,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<WriteOutcome<null>> {
+  let failure: unknown = null;
+  try {
+    const result = await withRequestDeadline(async (signal) => await client.from('dog_events')
+      .delete()
+      .eq('dog_id', dogId)
+      .eq('event_type', 'weight')
+      .eq('id', id)
+      .abortSignal(signal)
+      .select('id')
+      .maybeSingle(), timeoutMs);
+    if (!result.error && result.data && typeof result.data.id === 'string') return { status: 'saved', value: null };
+    if (!result.error && result.data === null) {
+      const stillThere = await fetchHealthWeightById(client, dogId, id, timeoutMs);
+      return stillThere ? { status: 'unknown' } : { status: 'saved', value: null };
+    }
+    failure = result.error ?? new Error('Empty health weight delete response');
+  } catch (error) {
+    failure = error;
+  }
+
+  try {
+    const found = await fetchHealthWeightById(client, dogId, id, timeoutMs);
     if (!found) return { status: 'saved', value: null };
     return isDefiniteClientRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
   } catch {
@@ -460,6 +640,14 @@ function isDogEventRecord(value: unknown): value is DogEventRecord {
     && (row.description === null || typeof row.description === 'string' && Array.from(row.description).length <= 500);
 }
 
+function isHealthWeightRecord(value: unknown): value is HealthWeightRecord {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return typeof row.id === 'string' && typeof row.dog_id === 'string' && typeof row.actor_id === 'string'
+    && typeof row.occurred_on === 'string' && isValidHealthWeightDate(row.occurred_on)
+    && typeof row.weight_kg === 'number' && isValidHealthWeightKg(row.weight_kg);
+}
+
 function isPublishedVersionRow(value: unknown): value is PublishedVersionRow {
   if (!value || typeof value !== 'object') return false;
   const row = value as Record<string, unknown>;
@@ -497,6 +685,14 @@ function isDisplayableContentType(value: string | undefined): value is 'article'
 function matchesChanges(event: DogEventRecord, changes: DogEventChanges): boolean {
   return event.event_type === changes.event_type && Date.parse(event.occurred_at) === Date.parse(changes.occurred_at)
     && event.duration_minutes === changes.duration_minutes && event.description === changes.description;
+}
+
+function matchesHealthWeight(
+  record: HealthWeightRecord,
+  expected: Pick<HealthWeightOperation, 'id' | 'dog_id' | 'occurred_on' | 'weight_kg'>,
+): boolean {
+  return record.id === expected.id && record.dog_id === expected.dog_id
+    && record.occurred_on === expected.occurred_on && record.weight_kg === expected.weight_kg;
 }
 
 function isDefiniteClientRejection(error: unknown): boolean {

@@ -8,16 +8,26 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { AppScreen, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import {
   deleteDogEvent,
+  deleteHealthWeight,
   deleteTrainingProgress,
   fetchDogEventById,
   fetchDogEvents,
+  fetchHealthWeightById,
+  fetchHealthWeights,
   fetchHomeContent,
   fetchTrainingWorkspace,
+  isValidHealthWeightDate,
+  isValidHealthWeightKg,
   insertDogEvent,
+  insertHealthWeight,
   insertTrainingProgress,
   updateDogEvent,
+  updateHealthWeight,
   type DogEventOperation,
   type DogEventRecord,
+  type HealthWeightChanges,
+  type HealthWeightOperation,
+  type HealthWeightRecord,
   type PublishedTrainingProgram,
   type PausedTrainingProgress,
   type WriteOutcome,
@@ -38,6 +48,10 @@ type PendingLogMutation =
   | { kind: 'insert'; operation: DogEventOperation }
   | { kind: 'update'; id: string; changes: { event_type: LogEventType; occurred_at: string; duration_minutes: number | null; description: string | null } }
   | { kind: 'delete'; id: string };
+type PendingHealthMutation =
+  | { kind: 'insert'; operation: HealthWeightOperation }
+  | { kind: 'update'; id: string; previous: HealthWeightRecord; changes: HealthWeightChanges }
+  | { kind: 'delete'; id: string; previous: HealthWeightRecord };
 
 const PAGE_SIZE = 40;
 
@@ -56,6 +70,13 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
   const [logBusy, setLogBusy] = useState(false);
   const [logMessage, setLogMessage] = useState('');
   const [logMessageError, setLogMessageError] = useState(false);
+  const [healthWeights, setHealthWeights] = useState<HealthWeightRecord[]>([]);
+  const healthWeightRows = useRef<HealthWeightRecord[]>([]);
+  const [healthState, setHealthState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [healthBusy, setHealthBusy] = useState(false);
+  const [healthPending, setHealthPending] = useState(false);
+  const [healthMessage, setHealthMessage] = useState('');
+  const [healthMessageError, setHealthMessageError] = useState(false);
   const [training, setTraining] = useState<{ programs: PublishedTrainingProgram[]; paused: PausedTrainingProgress[] }>({ programs: [], paused: [] });
   const [trainingState, setTrainingState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [trainingError, setTrainingError] = useState('');
@@ -65,9 +86,12 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
   const signOutInFlight = useRef(false);
   const pendingLogMutation = useRef<PendingLogMutation | null>(null);
   const logMutationInFlight = useRef(false);
+  const pendingHealthMutation = useRef<PendingHealthMutation | null>(null);
+  const healthMutationInFlight = useRef(false);
   const trainingMutationInFlight = useRef(false);
   const mounted = useRef(false);
   const eventReadQueue = useRef<Promise<void>>(Promise.resolve());
+  const healthReadQueue = useRef<Promise<void>>(Promise.resolve());
   const loadMoreInFlight = useRef(false);
   const { signOut } = useAuth();
   const age = ageInWeeks(dog.birth_date, localDate());
@@ -104,6 +128,20 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
     setLogState('ready');
   }, [client, dog.id, serializeEventRead]);
 
+  const serializeHealthRead = useCallback(<T,>(read: () => Promise<T>): Promise<T> => {
+    const request = healthReadQueue.current.catch(() => undefined).then(read);
+    healthReadQueue.current = request.then(() => undefined, () => undefined);
+    return request;
+  }, []);
+
+  const reloadHealthWeights = useCallback(async (signal?: AbortSignal) => {
+    const rows = await serializeHealthRead(() => fetchHealthWeights(client, dog.id, undefined, signal));
+    if (!mounted.current || signal?.aborted) return;
+    healthWeightRows.current = rows;
+    setHealthWeights(rows);
+    setHealthState('ready');
+  }, [client, dog.id, serializeHealthRead]);
+
   const reloadTraining = useCallback(async (signal?: AbortSignal) => {
     const result = await fetchTrainingWorkspace(client, dog, age, undefined, signal);
     if (!mounted.current || signal?.aborted) return;
@@ -130,6 +168,14 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
     }).catch(() => {
       if (!controller.signal.aborted && mounted.current) setLogState('error');
     });
+    void serializeHealthRead(() => fetchHealthWeights(client, dog.id, undefined, controller.signal)).then((rows) => {
+      if (controller.signal.aborted || !mounted.current) return;
+      healthWeightRows.current = rows;
+      setHealthWeights(rows);
+      setHealthState('ready');
+    }).catch(() => {
+      if (!controller.signal.aborted && mounted.current) setHealthState('error');
+    });
     void fetchTrainingWorkspace(client, dog, age, undefined, controller.signal).then((result) => {
       if (controller.signal.aborted || !mounted.current) return;
       setTraining(result);
@@ -144,7 +190,7 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
       mounted.current = false;
       controller.abort();
     };
-  }, [age, client, dog, serializeEventRead]);
+  }, [age, client, dog, serializeEventRead, serializeHealthRead]);
 
   const displayEvents = useMemo(() => events.map(toLogEvent), [events]);
   const latestEvent = events[0];
@@ -299,6 +345,147 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
         setLogMessage('Loggen kunde inte kontrolleras. Försök igen.');
         setLogMessageError(true);
       }
+    }
+  }
+
+  async function markHealthMutationSaved(mutation: PendingHealthMutation, value: HealthWeightRecord | null): Promise<void> {
+    pendingHealthMutation.current = null;
+    setHealthPending(false);
+    const mutationId = mutation.kind === 'insert' ? mutation.operation.id : mutation.id;
+    const previous = healthWeightRows.current;
+    const next = mutation.kind === 'delete'
+      ? previous.filter((row) => row.id !== mutationId)
+      : value
+        ? [value, ...previous.filter((row) => row.id !== mutationId)]
+          .sort((a, b) => b.occurred_on.localeCompare(a.occurred_on) || b.id.localeCompare(a.id))
+        : previous;
+    healthWeightRows.current = next;
+    setHealthWeights(next);
+    setHealthMessage('Ändringen är sparad.');
+    setHealthMessageError(false);
+    try {
+      await reloadHealthWeights();
+    } catch {
+      if (mounted.current) setHealthMessage('Ändringen är sparad, men vikthistoriken kunde inte uppdateras.');
+    }
+  }
+
+  async function runHealthMutation(mutation: PendingHealthMutation, retry = false): Promise<boolean> {
+    if (healthMutationInFlight.current) return false;
+    if (pendingHealthMutation.current && !retry) {
+      setHealthMessage('Kontrollera den föregående ändringens status innan du gör en ny.');
+      setHealthMessageError(true);
+      return false;
+    }
+    healthMutationInFlight.current = true;
+    setHealthBusy(true);
+    setHealthMessage('');
+    setHealthMessageError(false);
+    let outcome: WriteOutcome<HealthWeightRecord | null>;
+    try {
+      if (mutation.kind === 'insert') outcome = await insertHealthWeight(client, mutation.operation);
+      else if (mutation.kind === 'update') outcome = await updateHealthWeight(client, dog.id, mutation.id, mutation.changes);
+      else outcome = await deleteHealthWeight(client, dog.id, mutation.id);
+      if (!mounted.current) return false;
+      if (outcome.status === 'saved') {
+        await markHealthMutationSaved(mutation, outcome.value);
+        return true;
+      }
+      if (outcome.status === 'unknown') {
+        pendingHealthMutation.current = mutation;
+        setHealthPending(true);
+        setHealthMessage('Sparstatus är osäker. Kontrollera samma ändring innan du försöker igen.');
+        setHealthMessageError(true);
+        return false;
+      }
+      pendingHealthMutation.current = null;
+      setHealthPending(false);
+      setHealthMessage('Ändringen kunde inte sparas. Kontrollera anslutningen och försök igen.');
+      setHealthMessageError(true);
+      return false;
+    } catch {
+      if (!mounted.current) return false;
+      pendingHealthMutation.current = mutation;
+      setHealthPending(true);
+      setHealthMessage('Sparstatus är osäker. Kontrollera samma ändring innan du försöker igen.');
+      setHealthMessageError(true);
+      return false;
+    } finally {
+      healthMutationInFlight.current = false;
+      if (mounted.current) setHealthBusy(false);
+    }
+  }
+
+  async function saveHealthWeight(id: string | null, occurredOn: string, weightKg: number): Promise<boolean> {
+    if (healthMutationInFlight.current || pendingHealthMutation.current || healthState !== 'ready') return false;
+    if (!isValidHealthWeightDate(occurredOn) || !isValidHealthWeightKg(weightKg)) return false;
+    let mutation: PendingHealthMutation;
+    if (id === null) {
+      mutation = { kind: 'insert', operation: { id: ExpoCrypto.randomUUID(), dog_id: dog.id, occurred_on: occurredOn, weight_kg: weightKg } };
+    } else {
+      const previous = healthWeightRows.current.find((row) => row.id === id);
+      if (!previous) return false;
+      mutation = { kind: 'update', id, previous, changes: { occurred_on: occurredOn, weight_kg: weightKg } };
+    }
+    return runHealthMutation(mutation);
+  }
+
+  async function removeHealthWeight(id: string): Promise<boolean> {
+    if (healthMutationInFlight.current || pendingHealthMutation.current || healthState !== 'ready') return false;
+    const previous = healthWeightRows.current.find((row) => row.id === id);
+    if (!previous) return false;
+    const mutation: PendingHealthMutation = { kind: 'delete', id, previous };
+    return runHealthMutation(mutation);
+  }
+
+  async function retryHealthMutation() {
+    if (healthMutationInFlight.current) return;
+    const mutation = pendingHealthMutation.current;
+    if (mutation) {
+      healthMutationInFlight.current = true;
+      setHealthBusy(true);
+      setHealthMessage('Kontrollerar sparstatus…');
+      setHealthMessageError(false);
+      let retrySameOperation = false;
+      try {
+        const id = mutation.kind === 'insert' ? mutation.operation.id : mutation.id;
+        const current = await fetchHealthWeightById(client, dog.id, id);
+        if (!mounted.current) return;
+        if (mutation.kind === 'insert') {
+          if (current && sameHealthWeight(current, mutation.operation)) await markHealthMutationSaved(mutation, current);
+          else if (!current) retrySameOperation = true;
+          else setHealthMessage('Postens status är fortfarande osäker. Ingen ny post har skapats.');
+        } else if (mutation.kind === 'update') {
+          if (current && sameHealthWeight(current, { id: mutation.id, dog_id: dog.id, ...mutation.changes })) {
+            await markHealthMutationSaved(mutation, current);
+          } else if (current && sameHealthWeight(current, mutation.previous)) retrySameOperation = true;
+          else setHealthMessage('Posten har ändrats sedan försöket. Kontrollera historiken innan du gör en ny rättning.');
+        } else if (!current) await markHealthMutationSaved(mutation, null);
+        else if (sameHealthWeight(current, mutation.previous)) retrySameOperation = true;
+        else setHealthMessage('Posten har ändrats sedan försöket. Kontrollera historiken innan du försöker igen.');
+        if (!retrySameOperation && pendingHealthMutation.current) setHealthMessageError(true);
+      } catch {
+        if (mounted.current) {
+          setHealthMessage('Sparstatus kunde inte kontrolleras. Försök kontrollera igen när anslutningen fungerar.');
+          setHealthMessageError(true);
+        }
+      } finally {
+        healthMutationInFlight.current = false;
+        if (mounted.current) setHealthBusy(false);
+      }
+      if (retrySameOperation && mounted.current) await runHealthMutation(mutation, true);
+      return;
+    }
+    setHealthState('loading');
+    setHealthMessage('');
+    setHealthMessageError(false);
+    try {
+      await reloadHealthWeights();
+    } catch {
+      if (!mounted.current) return;
+      setHealthState('error');
+      setHealthMessage('Vikthistoriken kunde inte hämtas.');
+      setHealthMessageError(true);
     }
   }
 
@@ -472,7 +659,20 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
         onRetry={() => { void retryTraining(); }} />}
     </>;
     if (page === 'more') return <MorePage onNavigate={setPage} signOutError={signOutError} signingOut={signingOut} onSignOut={confirmSignOut} />;
-    if (page === 'health') return <HealthScreen onBack={() => setPage('more')} />;
+    if (page === 'health') return <HealthScreen
+      onBack={() => setPage('more')}
+      records={healthWeights}
+      loadState={healthState}
+      busy={healthBusy}
+      blocked={healthBusy || healthPending}
+      pendingStatus={healthPending}
+      statusMessage={healthMessage}
+      statusError={healthMessageError}
+      onRetry={() => { void retryHealthMutation(); }}
+      onRetryPending={() => { void retryHealthMutation(); }}
+      onSave={saveHealthWeight}
+      onDelete={removeHealthWeight}
+    />;
     if (page === 'knowledge') return <KnowledgeScreen onBack={() => setPage('more')} items={content.filter((item) => item.contentType !== 'training_program')} />;
     if (page === 'passport') return <PassportScreen onBack={() => setPage('more')} />;
     return <DogProfilePage dog={dog} onBack={() => setPage('more')} />;
@@ -608,6 +808,14 @@ function BottomNavigation({ page, onNavigate }: { page: ProductPage; onNavigate:
 
 function toLogEvent(row: DogEventRecord): LogEvent {
   return { id: row.id, dogId: row.dog_id, type: row.event_type, occurredAt: row.occurred_at, note: row.description, origin: 'local-test' };
+}
+
+function sameHealthWeight(
+  current: HealthWeightRecord,
+  expected: Pick<HealthWeightRecord, 'id' | 'dog_id' | 'occurred_on' | 'weight_kg'>,
+): boolean {
+  return current.id === expected.id && current.dog_id === expected.dog_id
+    && current.occurred_on === expected.occurred_on && current.weight_kg === expected.weight_kg;
 }
 
 function formatDogAge(birthDate: string, weeks: number): string {

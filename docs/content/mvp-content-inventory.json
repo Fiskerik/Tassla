@@ -1,0 +1,102 @@
+{
+  "inventory_version": 1,
+  "scope": "editorial_metadata_only",
+  "items": [
+    {
+      "id": "before-homecoming",
+      "title": "Förberedelser före valpen flyttar hem",
+      "topic": "pre_home",
+      "content_type": "checklist",
+      "age_window_weeks": { "min": 0, "max": 0 },
+      "status": "proposed",
+      "sources": [],
+      "review_evidence": [],
+      "review_required": [],
+      "blocked_by": ["source_selection", "pilot_selection"]
+    },
+    {
+      "id": "first-week-home",
+      "title": "Första veckan hemma",
+      "topic": "first_week_home",
+      "content_type": "guide",
+      "age_window_weeks": { "min": 0, "max": 12 },
+      "status": "proposed",
+      "sources": [],
+      "review_evidence": [],
+      "review_required": [],
+      "blocked_by": ["source_selection", "pilot_selection"]
+    },
+    {
+      "id": "daily-log-routines",
+      "title": "Vardagslogg och rutiner",
+      "topic": "daily_log_routines",
+      "content_type": "article",
+      "age_window_weeks": { "min": 0, "max": 52 },
+      "status": "proposed",
+      "sources": [],
+      "review_evidence": [],
+      "review_required": [],
+      "blocked_by": ["source_selection", "pilot_selection"]
+    },
+    {
+      "id": "handling",
+      "title": "Trygg hantering och samarbete",
+      "topic": "handling",
+      "content_type": "guide",
+      "age_window_weeks": { "min": 0, "max": 26 },
+      "status": "proposed",
+      "sources": [],
+      "review_evidence": [],
+      "review_required": ["dog_expert"],
+      "blocked_by": ["source_selection", "pilot_selection", "expert_review"]
+    },
+    {
+      "id": "environment-safety",
+      "title": "Trygghet i nya miljöer",
+      "topic": "environment_safety",
+      "content_type": "guide",
+      "age_window_weeks": { "min": 0, "max": 26 },
+      "status": "proposed",
+      "sources": [],
+      "review_evidence": [],
+      "review_required": ["dog_expert"],
+      "blocked_by": ["source_selection", "pilot_selection", "expert_review"]
+    },
+    {
+      "id": "being-alone",
+      "title": "Ensamhet som framtida innehållsområde",
+      "topic": "being_alone",
+      "content_type": "training_program",
+      "age_window_weeks": { "min": 0, "max": 26 },
+      "status": "proposed",
+      "sources": [],
+      "review_evidence": [],
+      "review_required": ["dog_expert"],
+      "blocked_by": ["source_selection", "pilot_selection", "expert_review"]
+    },
+    {
+      "id": "weight-history",
+      "title": "Ägarregistrerad vikthistorik",
+      "topic": "weight_history",
+      "content_type": "guide",
+      "age_window_weeks": { "min": 0, "max": 52 },
+      "status": "proposed",
+      "sources": [],
+      "review_evidence": [],
+      "review_required": ["dog_expert"],
+      "blocked_by": ["source_selection", "pilot_selection", "expert_review"]
+    },
+    {
+      "id": "health-event-history",
+      "title": "Registrering av vaccinationer och veterinärhändelser",
+      "topic": "health_events",
+      "content_type": "guide",
+      "age_window_weeks": { "min": 0, "max": 52 },
+      "status": "proposed",
+      "sources": [],
+      "review_evidence": [],
+      "review_required": ["dog_expert"],
+      "blocked_by": ["source_selection", "pilot_selection", "expert_review"]
+    }
+  ]
+}
