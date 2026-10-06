@@ -8,6 +8,11 @@ import { getSupabaseClient, getSupabaseProjectUrl } from '../../data/supabase';
 
 type AuthStatus = 'loading' | 'signedOut' | 'signedIn' | 'unavailable';
 
+export interface SignOutResult {
+  localSessionCleared: boolean;
+  serverRevocationConfirmed: boolean;
+}
+
 interface AuthContextValue {
   client: SupabaseClient | null;
   session: Session | null;
@@ -16,7 +21,8 @@ interface AuthContextValue {
   signInWithGoogle(): Promise<boolean>;
   cancelGoogleSignIn(): void;
   sendMagicLink(email: string): Promise<boolean>;
-  signOut(): Promise<boolean>;
+  signOut(): Promise<SignOutResult>;
+  signOutWarning: string | null;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -32,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<AuthStatus>(clientResult.unavailable ? 'unavailable' : 'loading');
   const [googlePending, setGooglePending] = useState(false);
+  const [signOutWarning, setSignOutWarning] = useState<string | null>(null);
   const authAttemptInFlight = useRef(false);
   const googleBrowserPending = useRef(false);
   const client = clientResult.client;
@@ -50,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       setSession(nextSession);
       setStatus(nextSession ? 'signedIn' : 'signedOut');
+      if (nextSession) setSignOutWarning(null);
     });
 
     const revisionAtRead = authEvents;
@@ -140,12 +148,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         authAttemptInFlight.current = false;
       }
     },
-    async signOut() {
-      if (!client) return false;
-      const { error } = await client.auth.signOut();
-      return !error;
+    async signOut(): Promise<SignOutResult> {
+      if (!client) return { localSessionCleared: false, serverRevocationConfirmed: false };
+      setSignOutWarning(null);
+      let serverRevocationConfirmed = false;
+      try {
+        const { error } = await client.auth.signOut();
+        serverRevocationConfirmed = !error;
+      } catch {
+        serverRevocationConfirmed = false;
+      }
+
+      let localSessionCleared = false;
+      try {
+        const { data, error } = await client.auth.getSession();
+        localSessionCleared = !error && !data.session;
+      } catch {
+        localSessionCleared = false;
+      }
+      if (localSessionCleared && !serverRevocationConfirmed) {
+        setSignOutWarning('Du är utloggad på den här enheten. Servern kunde inte bekräfta att sessionen har återkallats.');
+      }
+      return { localSessionCleared, serverRevocationConfirmed };
     },
-  }), [client, googlePending, session, status]);
+    signOutWarning,
+  }), [client, googlePending, session, signOutWarning, status]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

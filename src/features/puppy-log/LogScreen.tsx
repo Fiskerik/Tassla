@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { FormField, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { theme } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
@@ -190,10 +190,10 @@ function LogEventEditor({
       </View>
       <View style={styles.dateTimeRow}>
         <View style={styles.dateField}>
-          <FormField autoCapitalize="none" keyboardType="numbers-and-punctuation" label="Datum" onChangeText={setDate} placeholder="ÅÅÅÅ-MM-DD" value={date} />
+          <FormField autoCapitalize="none" keyboardType="numbers-and-punctuation" label="Datum" onChangeText={setDate} onSubmitEditing={() => Keyboard.dismiss()} placeholder="ÅÅÅÅ-MM-DD" returnKeyType="done" value={date} />
         </View>
         <View style={styles.timeField}>
-          <FormField autoCapitalize="none" keyboardType="numbers-and-punctuation" label="Tid" onChangeText={setTime} placeholder="HH:MM" value={time} />
+          <FormField autoCapitalize="none" keyboardType="numbers-and-punctuation" label="Tid" onChangeText={setTime} onSubmitEditing={() => Keyboard.dismiss()} placeholder="HH:MM" returnKeyType="done" value={time} />
         </View>
       </View>
       <View style={styles.noteGroup}>
@@ -208,6 +208,7 @@ function LogEventEditor({
           style={styles.noteInput}
           value={note}
         />
+        <QuietButton title="Stäng tangentbord" onPress={() => Keyboard.dismiss()} />
         <Text style={[styles.characterCount, noteLength > 500 && styles.tooManyCharacters]}>{noteLength}/500</Text>
       </View>
       {saveError ? <MessageCard tone="error">{saveError}</MessageCard> : null}

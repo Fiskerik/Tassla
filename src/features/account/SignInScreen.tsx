@@ -5,7 +5,7 @@ import { theme } from '../../theme/tokens';
 import { useAuth } from './AuthProvider';
 
 export function SignInScreen() {
-  const { cancelGoogleSignIn, googlePending, sendMagicLink, signInWithGoogle, status } = useAuth();
+  const { cancelGoogleSignIn, googlePending, sendMagicLink, signInWithGoogle, signOutWarning, status } = useAuth();
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<'sent' | 'error' | 'google-opened' | 'google-error' | null>(null);
@@ -50,6 +50,7 @@ export function SignInScreen() {
         title="Välkommen till Tassla"
         description="Logga in med Google eller få en säker inloggningslänk via e-post."
       />
+      {signOutWarning && <MessageCard tone="error">{signOutWarning}</MessageCard>}
       <PrimaryButton title={busy ? 'Öppnar Google…' : 'Fortsätt med Google'} disabled={busy || googlePending || status === 'unavailable'} onPress={() => { void requestGoogle(); }} />
       {googlePending && <MessageCard>Google-inloggningen väntar på att du återvänder från webbläsaren. Om du har avbrutit kan du stänga försöket här.</MessageCard>}
       {googlePending && <PrimaryButton title="Avbryt Google-inloggning" onPress={cancelGoogleSignIn} />}

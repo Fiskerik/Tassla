@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="1110" viewBox="0 0 1640 1110" role="img" aria-labelledby="title desc">
+  <title id="title">Tassla MVP – visuellt Gantt-schema</title>
+  <desc id="desc">Målplan från 5 oktober 2026 till 25 januari 2027. Visar klart arbete, mänskliga beslut och intervjuer, blockerad Codemagic-byggning, MVP-implementation, QA, pilot och D30-uppföljning.</desc>
+  <defs>
+    <pattern id="blocked" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="10" height="10" fill="#FFF1F0"/>
+      <rect width="3" height="10" fill="#E96A61" opacity=".55"/>
+    </pattern>
+    <style>
+      text { font-family: Inter, "Segoe UI", Arial, sans-serif; fill: #243043; }
+      .title { font-size: 27px; font-weight: 700; }
+      .sub { font-size: 14px; fill: #596579; }
+      .legend { font-size: 13px; }
+      .week { font-size: 12px; font-weight: 600; fill: #647084; }
+      .label { font-size: 13px; }
+      .group { font-size: 13px; font-weight: 700; letter-spacing: .5px; }
+      .small { font-size: 11px; fill: #596579; }
+    </style>
+  </defs>
+  <rect width="1640" height="1110" fill="#F7F8FA"/>
+  <text x="38" y="42" class="title">Tassla MVP – målplan från 5 oktober 2026</text>
+  <text x="38" y="67" class="sub">Måldatum, inte löfte. Bygg och efterföljande datum flyttas om krediter, beslut eller granskningar dröjer.</text>
+
+  <rect x="40" y="88" width="16" height="16" rx="4" fill="#35A77A"/><text x="63" y="101" class="legend">Klart</text>
+  <rect x="135" y="88" width="16" height="16" rx="4" fill="#6A78C8"/><text x="158" y="101" class="legend">Planerat arbete</text>
+  <rect x="285" y="88" width="16" height="16" rx="4" fill="#E8A63A"/><text x="308" y="101" class="legend">Erik / mänsklig input</text>
+  <rect x="474" y="88" width="16" height="16" rx="4" fill="url(#blocked)" stroke="#D85650"/><text x="497" y="101" class="legend">Blockerat – Codemagic-krediter</text>
+  <path d="M755 96 l8 -8 8 8 -8 8z" fill="#243043"/><text x="778" y="101" class="legend">Milstolpe</text>
+
+  <rect x="360" y="132" width="1120" height="911" rx="8" fill="#FFFFFF" stroke="#DDE2E8"/>
+  <text x="38" y="153" class="small">ARBETE / CHECKPUNKT</text>
+  <text x="360" y="121" class="small">2026</text>
+  <text x="1360" y="121" class="small">2027</text>
+
+  <!-- Weekly grid: week 1 starts Monday 5 Oct 2026; 16 weeks shown. -->
+  <g stroke="#E7EAF0" stroke-width="1">
+    <path d="M360 132V1043 M430 132V1043 M500 132V1043 M570 132V1043 M640 132V1043 M710 132V1043 M780 132V1043 M850 132V1043 M920 132V1043 M990 132V1043 M1060 132V1043 M1130 132V1043 M1200 132V1043 M1270 132V1043 M1340 132V1043 M1410 132V1043 M1480 132V1043"/>
+  </g>
+  <g class="week" text-anchor="middle">
+    <text x="395" y="153">5 okt</text><text x="465" y="153">12 okt</text><text x="535" y="153">19 okt</text><text x="605" y="153">26 okt</text>
+    <text x="675" y="153">2 nov</text><text x="745" y="153">9 nov</text><text x="815" y="153">16 nov</text><text x="885" y="153">23 nov</text>
+    <text x="955" y="153">30 nov</text><text x="1025" y="153">7 dec</text><text x="1095" y="153">14 dec</text><text x="1165" y="153">21 dec</text>
+    <text x="1235" y="153">28 dec</text><text x="1305" y="153">4 jan</text><text x="1375" y="153">11 jan</text><text x="1445" y="153">18 jan</text>
+  </g>
+
+  <!-- Completed -->
+  <rect x="20" y="170" width="1460" height="27" rx="5" fill="#E8F4EE"/>
+  <text x="38" y="188" class="group" fill="#247A57">KLART TILL 5 OKTOBER</text>
+  <g class="label">
+    <text x="38" y="219">MVP-scope, stack, arkitektur och DB-grund</text>
+    <text x="38" y="245">Expo-grund och sex skärmramar lokalt</text>
+    <text x="38" y="271">Auth/Codemagic-konfiguration och lokala kontroller</text>
+  </g>
+  <g fill="#35A77A">
+    <rect x="362" y="204" width="112" height="17" rx="8"/><rect x="362" y="230" width="112" height="17" rx="8"/><rect x="362" y="256" width="112" height="17" rx="8"/>
+  </g>
+  <text x="482" y="217" class="small">4–5 okt · live-RLS och telefon ej verifierade</text>
+
+  <!-- Discovery -->
+  <rect x="20" y="287" width="1460" height="27" rx="5" fill="#FFF4DD"/>
+  <text x="38" y="305" class="group" fill="#8A5C12">UPPTÄCKT OCH ÄGARINPUT</text>
+  <g class="label">
+    <text x="38" y="336">Beslut om intervjudata innan insamling</text>
+    <text x="38" y="362">Ägarintervjuer (6–8) och uppfödarintervjuer (2–3)</text>
+    <text x="38" y="388">100 offentliga kullkällor + guide/manus/material</text>
+    <text x="38" y="414">Beslut: innehåll, PDF, notiser, offline och mått</text>
+  </g>
+  <g fill="#E8A63A">
+    <rect x="362" y="321" width="64" height="17" rx="8"/><rect x="432" y="347" width="175" height="17" rx="8"/>
+    <rect x="369" y="373" width="210" height="17" rx="8"/><rect x="607" y="399" width="105" height="17" rx="8"/>
+  </g>
+
+  <!-- Build and data gates -->
+  <rect x="20" y="430" width="1460" height="27" rx="5" fill="#FBE8E7"/>
+  <text x="38" y="448" class="group" fill="#A63D37">SIGNERAT BYGGE OCH BACKENDGRIND</text>
+  <g class="label">
+    <text x="38" y="479">Codemagic-krediter + kör CI-02</text>
+    <text x="38" y="505">Fysisk iPhone: Google OAuth + e-postlänk</text>
+    <text x="38" y="531">Supabase RLS: isolering mellan två ägare</text>
+    <text x="38" y="557">Integritet, radering och Apple-inloggningsgrind</text>
+  </g>
+  <rect x="362" y="464" width="140" height="17" rx="8" fill="url(#blocked)" stroke="#D85650"/>
+  <text x="510" y="477" class="small">Kräver krediter; inget nytt molnbygge bekräftat</text>
+  <rect x="502" y="490" width="105" height="17" rx="8" fill="#6A78C8"/>
+  <rect x="537" y="516" width="105" height="17" rx="8" fill="#6A78C8"/>
+  <rect x="502" y="542" width="175" height="17" rx="8" fill="#E8A63A"/>
+
+  <!-- MVP implementation -->
+  <rect x="20" y="573" width="1460" height="27" rx="5" fill="#E9ECFA"/>
+  <text x="38" y="591" class="group" fill="#4654A4">MVP-FUNKTIONER OCH INNEHÅLL</text>
+  <g class="label">
+    <text x="38" y="622">Beslutade små segment + Tech Lead-granskning</text>
+    <text x="38" y="648">Träning (2–3 flöden) + granskat kunskapsurval</text>
+    <text x="38" y="674">Hälsa: ägarregistrerade händelser</text>
+    <text x="38" y="700">Tassla-pass: beslutade fält och PDF</text>
+    <text x="38" y="726">Hem: relevant innehåll efter ålder/ras</text>
+    <text x="38" y="752">Notiser, uppfödar-QR och minimal mätning</text>
+  </g>
+  <g fill="#6A78C8">
+    <rect x="642" y="607" width="70" height="17" rx="8"/>
+    <rect x="712" y="633" width="140" height="17" rx="8"/>
+    <rect x="782" y="659" width="105" height="17" rx="8"/>
+    <rect x="782" y="685" width="105" height="17" rx="8"/>
+    <rect x="852" y="711" width="105" height="17" rx="8"/>
+    <rect x="852" y="737" width="105" height="17" rx="8"/>
+  </g>
+
+  <!-- QA / pilot -->
+  <rect x="20" y="769" width="1460" height="27" rx="5" fill="#E8F4EE"/>
+  <text x="38" y="787" class="group" fill="#247A57">QA, TESTFLIGHT OCH PILOT</text>
+  <g class="label">
+    <text x="38" y="818">End-to-end-, säkerhets- och tillgänglighets-QA</text>
+    <text x="38" y="844">Användbarhetspass (3–5) och rättningar</text>
+    <text x="38" y="870">Apple-grind, TestFlight och Eriks acceptans</text>
+    <text x="38" y="896">Pilot, support och feltriage</text>
+    <text x="38" y="922">Kohortuppföljning D1 / D7 / D30</text>
+    <text x="38" y="948">Läranderapport och fortsätt/revidera-beslut</text>
+  </g>
+  <g fill="#6A78C8">
+    <rect x="922" y="803" width="140" height="17" rx="8"/>
+    <rect x="992" y="829" width="70" height="17" rx="8"/>
+    <rect x="1062" y="855" width="70" height="17" rx="8"/>
+    <rect x="1132" y="881" width="280" height="17" rx="8" opacity=".7"/>
+    <rect x="1132" y="907" width="350" height="17" rx="8" opacity=".7"/>
+  </g>
+  <path d="M1138 939 l9 9 -9 9 -9 -9z" fill="#243043"/>
+  <text x="1155" y="953" class="small">Målrapport ca. 12–15 veckor från start*</text>
+
+  <line x1="362" y1="165" x2="362" y2="958" stroke="#243043" stroke-width="2" stroke-dasharray="4 4" opacity=".7"/>
+  <text x="370" y="1032" class="small">* Första D30-resultatet kräver att deltagarnas egna 30-dagarsfönster har löpt ut. Jul/nyår, Apple-granskning och rekrytering kan flytta kalendern.</text>
+  <text x="38" y="1076" class="small">Varje kodsegment: plan → implementera → verifiera → städa → granska → checkpoint → nästa del.</text>
+</svg>

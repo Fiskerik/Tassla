@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Alert, Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { ComponentProps } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
@@ -62,6 +62,7 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
   const [busyStepKey, setBusyStepKey] = useState<string | null>(null);
   const [signOutError, setSignOutError] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const signOutInFlight = useRef(false);
   const pendingLogMutation = useRef<PendingLogMutation | null>(null);
   const logMutationInFlight = useRef(false);
   const trainingMutationInFlight = useRef(false);
@@ -403,17 +404,27 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
   }
 
   async function handleSignOut() {
-    if (signingOut) return;
+    if (signOutInFlight.current) return;
+    signOutInFlight.current = true;
     setSigningOut(true);
-    let success = false;
+    let result = { localSessionCleared: false, serverRevocationConfirmed: false };
     try {
-      success = await signOut();
+      result = await signOut();
     } catch {
-      success = false;
+      result = { localSessionCleared: false, serverRevocationConfirmed: false };
     } finally {
       if (mounted.current) setSigningOut(false);
+      signOutInFlight.current = false;
     }
-    if (mounted.current) setSignOutError(!success);
+    if (mounted.current) setSignOutError(!result.localSessionCleared);
+  }
+
+  function confirmSignOut() {
+    if (signingOut) return;
+    Alert.alert('Logga ut?', 'Du kan logga in igen när du vill.', [
+      { text: 'Avbryt', style: 'cancel' },
+      { text: 'Bekräfta', style: 'destructive', onPress: () => { void handleSignOut(); } },
+    ]);
   }
 
   if (!fontsLoaded && !fontError) return <AppScreen><MessageCard>Laddar Tasslas ikoner…</MessageCard></AppScreen>;
@@ -434,11 +445,8 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
       content={content}
       contentState={contentState}
       trainingState={trainingState}
-      signOutError={signOutError}
-      signingOut={signingOut}
       onGo={setPage}
       onRetryContent={() => { void retryContent(); }}
-      onSignOut={() => { void handleSignOut(); }}
     />;
     if (page === 'log') return <>
       {logState === 'loading' && <PageHeading title="Vardagslogg" description="Hämtar hundens logg…" />}
@@ -463,7 +471,7 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
         onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
         onRetry={() => { void retryTraining(); }} />}
     </>;
-    if (page === 'more') return <MorePage onNavigate={setPage} />;
+    if (page === 'more') return <MorePage onNavigate={setPage} signOutError={signOutError} signingOut={signingOut} onSignOut={confirmSignOut} />;
     if (page === 'health') return <HealthScreen onBack={() => setPage('more')} />;
     if (page === 'knowledge') return <KnowledgeScreen onBack={() => setPage('more')} items={content.filter((item) => item.contentType !== 'training_program')} />;
     if (page === 'passport') return <PassportScreen onBack={() => setPage('more')} />;
@@ -473,7 +481,7 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
 
 function HomePage({
   dog, ageWeeks, latestEvent, nextProgram, nextStep, content, contentState, trainingState,
-  signOutError, signingOut, onGo, onRetryContent, onSignOut,
+  onGo, onRetryContent,
 }: {
   dog: OwnedDog;
   ageWeeks: number;
@@ -483,11 +491,8 @@ function HomePage({
   content: HomeContent[];
   contentState: 'loading' | 'ready' | 'error';
   trainingState: 'loading' | 'ready' | 'error';
-  signOutError: boolean;
-  signingOut: boolean;
   onGo: (page: ProductPage) => void;
   onRetryContent: () => void;
-  onSignOut: () => void;
 }) {
   return <View>
     <View style={styles.homeHeader}>
@@ -539,17 +544,17 @@ function HomePage({
       <Shortcut icon="school-outline" label="Träning" onPress={() => onGo('training')} />
       <Shortcut icon="ellipsis-horizontal-circle-outline" label="Mer" onPress={() => onGo('more')} />
     </View>
-    {signOutError && <MessageCard tone="error">Det gick inte att logga ut just nu. Försök igen.</MessageCard>}
-    <QuietButton title={signingOut ? 'Loggar ut…' : 'Logga ut'} disabled={signingOut} onPress={onSignOut} />
   </View>;
 }
 
-function MorePage({ onNavigate }: { onNavigate: (page: ProductPage) => void }) {
+function MorePage({ onNavigate, signOutError, signingOut, onSignOut }: { onNavigate: (page: ProductPage) => void; signOutError: boolean; signingOut: boolean; onSignOut: () => void }) {
   return <View>
     <PageHeading title="Mer" description="Fler delar av hundens resa, samlade på ett ställe." />
     <MenuRow icon="book-outline" title="Kunskap" detail="Publicerade guider och checklistor" onPress={() => onNavigate('knowledge')} />
     <MenuRow icon="id-card-outline" title="Tassla-pass" detail="En ärlig överblick, utan export" onPress={() => onNavigate('passport')} />
     <MenuRow icon="paw-outline" title="Hundprofil" detail="Din hunds uppgifter" onPress={() => onNavigate('profile')} />
+    {signOutError && <MessageCard tone="error">Det gick inte att logga ut just nu. Försök igen.</MessageCard>}
+    <QuietButton title={signingOut ? 'Loggar ut…' : 'Logga ut'} disabled={signingOut} onPress={onSignOut} />
   </View>;
 }
 

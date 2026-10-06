@@ -23,3 +23,13 @@ Uppdatering från Erik: migrations-/foundationtest slutfört i Supabase; skärmb
 Eriks uppsättning och testresultat finns nu rapporterade; kör inte den initiala migrationen igen. Spara skärmbilden som ägarens verifieringsunderlag. Nästa manuella steg är OTP-mejlmallen enligt 0003-auth.md; sedan återstår konkret Expo-plan och fungerande appflöde. Lägg bara URL/publishable key i befintlig .env; inga privilegierade nycklar i app.
 
 Sedan konkret Expo-plan med godkända versionskompatibla paket, install/check-kommandon och konto/profil/Hem-flöde. Inloggningsmetod och publiceringsprocess behöver väljas före berörd implementation; inga verkliga uppgifter före nödvändiga databeslut.
+
+## APP-04A-UX – lokal leverans 2026-10-05
+
+Erik godkände APP-04A som första segment och GPT-5.6 Luna Medium för utförandet. Scope var utloggning under Mer samt tangentbordsanpassning i login, profil och loggredigering. Luna implementerade inom godkända app-/README-paths. Fysisk tangentbords-, VoiceOver-, stortext-, bottennavigation- och TestFlight-verifiering är separat APP-04A-PHONE och fortfarande NOT TESTABLE.
+
+Första lokala leveransen blockerades av Reviewer/Security: auth-kontraktstester saknades och React-state garanterade inte synkront ett enda utloggningsanrop. Korrigering v8 godkändes av Architect. Auth-resultatet skiljer `localSessionCleared` från `serverRevocationConfirmed`; signed-out-varning visas när lokal rensning lyckas men serverrevokering inte bekräftas. Om lokal rensning misslyckas stannar användaren kvar och kan försöka igen. QA lade till installerade Supabase Auth/storage/fetch-kontraktstester.
+
+Verifiering: `pnpm check` 44/44 PASS, `pnpm bundle:ios` PASS och `git diff --check` PASS. QA PASS, oberoende Reviewer PASS och Security PASS. Security noterade endast ett icke-blockerande framtida regressionstest för partiell SecureStore-rensning över AuthProvider; befintliga storage-tester täcker lagringsmodulen separat. Ingen ny dependency, datainsamling, permission, analytics eller extern datadelning.
+
+Nästa steg är separat Erik-mandat och signerad build för APP-04A-PHONE. Starta inte Hälsa eller profil före den fysiska UX-grinden enligt beslutad ordning.

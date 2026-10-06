@@ -8,4 +8,6 @@
 
 `preview-policy.test.mjs` täcker den exakta flagg-/utvecklingslägesmatrisen, den installerade Expo CLI-sökvägen, argumentöverföring och kopiering av barnprocessens miljö utan att starta servern. Previewns profilvalidering, root/AppFlow-providergräns, callback-guard och övriga UI-/navigationskopplingar är statiskt granskade; de har ingen renderer- eller enhetstestmiljö här. Åldershjälpens ogiltiga och framtida datum täcks av `domain.test.mjs`.
 
+`app-screen-ux.test.mjs` använder installerad `@supabase/supabase-js`/Auth 2.117.2 med syntetisk lokal session, lokal storage och kontrollerad `fetch`. Den verifierar noll auth-anrop vid Avbryt, en begäran vid samtidiga bekräftelser, separat serverfel/lokal sessionsrensning, kvarvarande signed-out-varning genom arbetsytans unmount och retry när lokal rensning misslyckas. Källkopplingar används för React-spärren och varningens ägarskap eftersom ingen React-Native-renderer eller fysisk enhet finns i denna lokala testmiljö.
+
 Fysisk UI-/telefonkontroll av navigation, tangentbord/stor text, bekräftelsedialoger, animationer och appomstart kan inte göras med Node-testerna. Supabase-integrationen, RLS/ägarsisolering, e-postleverans och signerad iPhone-callback kan inte verifieras här. Foundation-testet finns separat i `supabase/tests/foundation.sql` och kräver en Supabase-utvecklingsdatabas.

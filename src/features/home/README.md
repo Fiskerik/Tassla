@@ -1,4 +1,5 @@
 # Hem och arbetsyta
+APP-04A: Utloggning finns under Mer, kräver bekräftelse, blockerar dubbeltryck och kan återförsökas om lokal sessionsrensning inte kan bekräftas. Om lokal session rensas men serverrevokering inte bekräftas visas varningen på signed-out-vyn och ingen retry finns kvar under Mer. Fysisk tangentbords-, VoiceOver- och bottennavigationstestning är NOT TESTABLE lokalt.
 
 `AppFlow.tsx` väljer lokal utvecklingspreview eller, i normalflödet, inloggning och hundprofil. `ProductWorkspace.tsx` är den inloggade arbetsytan: Hem, Logg, Träning och Hälsa ligger i fast bottennavigation. Mer öppnar Kunskap, Tassla-pass och hundprofil. Arbetsytan är nycklad per hund, serialiserar loggläsningar och ignorerar gamla svar vid avmontering.
 

@@ -1,4 +1,5 @@
 # Hundprofil och onboarding
+APP-04A: Profilens textfält använder keyboard-aware scrollning, dragavvisning och Klar.
 
 `dog.ts` validerar kalenderdatum och räknar hela åldersveckor. `ProfileScreen.tsx` hämtar rasval, validerar namn/födelsedatum och skapar hunden genom `create_dog`. När hunden finns visar `ProductWorkspace.tsx` en läsbar sammanfattning under Mer; profilredigering ingår inte ännu.
 

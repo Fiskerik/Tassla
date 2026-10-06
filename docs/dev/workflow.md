@@ -3,21 +3,24 @@
 ## Mandat
 Codex huvudsession är koordinator. Erik godkänner segmentets mål, MVP-scope, stack, tillåtna dependencies, dataändamål och kostnadsram före implementation. Godkännande av detta arbetsflöde är inte godkännande av ett appsegment.
 
-Tech Lead (`architect`) granskar varje implementationplan före kodändringar. `implementer`, `qa` och `reviewer` använder GPT-6 Luna high. Vid dokumenterat svårt problem kan Erik ange xhigh/max för en avgränsad körning; ingen automatisk eskalering eller ultra. Tech Lead och Security behåller sina starkare granskningsmodeller. Modeller anges i rollfiler, inte bara i en startprompt.
+Tech Lead (`architect`) granskar varje implementationplan före kodändringar. APP-04 använde GPT-5.6 Luna medium enligt Eriks beslut 2026-10-05; APP-05 använder GPT-6 Luna medium enligt Eriks beslut 2026-10-06. Tech Lead och Security behåller sina starkare granskningsmodeller. Modeller anges i rollfiler, inte bara i en startprompt.
 
 ## Uppgiftskö
 `docs/tasks/dev/queue.json` är en hållbar lokal kö. `python tools/dev_flow.py status` visar läget och `validate` kontrollerar köregler. Verktyget kör inga modeller, tester eller shellkommandon. Det är ett checkpointverktyg för Codex-koordinatorn, inte en nattlig scheduler.
 
 Varje task innehåller: id, title, mvp_requirement (exakt sektion), plan (filreferens och version), write_paths (konkreta filer/mappar, inga globbar), acceptance, checks (faktiska kommandon), depends_on, status, history, next_step. Segmentgodkännande får bara registreras efter ett uttryckligt Erik-besked, med dess källa i segmentets planfil. APP-01 har nu mandat; delstegen A–D följs med checkpoints inom segmentet. Telefonverifiering registreras separat och kräver verkligt resultat.
 
-## Körning en del i taget
-1. Koordinatorn läser kön och senaste checkpoint, väljer första ofärdiga uppgift vars beroenden är klara. En aktiv deluppgift som standard, högst två totalt. Separerade worktrees behövs för parallella skrivare.
+## Små deluppgifter och checkpointad körning
+Stora eller otydliga uppdrag får inte bli monolitiska koduppgifter. Dela dem före implementation i små, självständigt avslutningsbara vertikala delar. Varje del ska ha ett tydligt mål, avgränsat scope, berörda filer, beroenden, acceptanskriterium och konkret verifiering. Välj minsta logiska första del och redovisa vad som återstår; börja inte samtidigt på många features.
+
+1. Koordinatorn läser kön och senaste checkpoint, väljer första ofärdiga del vars beroenden är klara. En aktiv deluppgift som standard, högst två totalt. Separerade worktrees behövs för parallella skrivare.
 2. Implementer lämnar en kort plan utan appkod. Architect granskar planen och returnerar APPROVE / CHANGES / BLOCK med task-ID och planversion. Koordinatorn sparar underlaget och registrerar `planned → ready` enbart vid APPROVE. Substantiella produkt-/arkitekturplaner behöver även Critic enligt AGENTS.md. STOP kan inte kringgås.
 3. Efter Erik-godkänt segment registreras `ready → implementing`. Implementer ändrar bara tilldelade filer inom godkänt mandat.
-4. Efter varje större implementationdel gör Implementer en avgränsad läsbarhets- och städgranskning enligt docs/dev/ui-and-code-standards.md, förenklar där det behövs och kör relevanta kontroller igen efter ändringar. Spara resultat, antaganden och kontroller; `implementing → qa`. QA verifierar acceptanskriterier mot faktiska kommandon, aldrig enbart implementerns påståenden.
+4. Implementera endast aktuell del. Den ska lämna repot i fungerande skick; sprid inte halvfärdiga ändringar över andra deluppgifter. Efter implementation gör Implementer en avgränsad läsbarhets- och städgranskning enligt docs/dev/ui-and-code-standards.md, förenklar där det behövs och kör relevanta kontroller igen efter ändringar. Spara resultat, antaganden och kontroller; `implementing → qa`. QA verifierar acceptanskriterier mot faktiska kommandon, aldrig enbart implementerns påståenden.
 5. Vid QA PASS: `qa → review`. Reviewer granskar den stabila diffen; Security används vid auth/data/nätverk. Vid PASS och relevanta säkerhetsgranskningar utan blockerare: `review → done`. NOT TESTABLE är inte PASS.
-6. Vid fel: `blocked`, spara problemet. Koordinatorn kan återföra till `planned` med korrigeringsplan; den granskas igen. Högst två korrigeringsförsök per problem innan frågan lämnas till Erik. Reviewer BLOCK och Critic STOP får inte överprövas av agenter.
-7. Spara checkpoint innan nästa task. Ändrad plan gör föregående godkännande ogiltigt och kräver ny planreview. Vid avbrott fortsätt från ofärdig task efter inspektion av faktisk diff; starta inte om segmentet.
+6. Efter genomförd QA/review sparas en hållbar checkpoint för deluppgiften: commit när taskens mandat och repots läge medger det, annars en tydlig dokumenterad checkpoint med verifierat diff-/köstatus och exakt nästa steg. Nästa del startar först därefter. Innan en dyr fas som arkitekturändring, datamigrering eller bred implementation påbörjas ska föregående del vara färdig, verifierad och checkpointad. Vid blockerad commit/checkpoint ska orsaken dokumenteras och inget arbete låtsas vara avslutat.
+7. Vid fel: `blocked`, spara problemet. Koordinatorn kan återföra till `planned` med korrigeringsplan; den granskas igen. Högst två korrigeringsförsök per problem innan frågan lämnas till Erik. Reviewer BLOCK och Critic STOP får inte överprövas av agenter.
+8. Ändrad plan gör föregående godkännande ogiltigt och kräver ny planreview. Vid avbrott fortsätt från ofärdig del efter inspektion av faktisk diff; starta inte om segmentet. Håll arbetet token-/credit-medvetet: använd redan insamlad relevant kontext, undvik upprepade helrepoläsningar och breda sökningar när en riktad kontroll räcker, och gör inga orelaterade refactors.
 
 Exempel på checkpointövergång: `python tools/dev_flow.py transition TASK-ID ready --actor architect --evidence "APPROVE för plan v1; review sparad i docs/tasks/dev/TASK-ID.md"`.
 

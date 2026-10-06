@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppScreen, FormField, MessageCard, PageHeading, PrimaryButton } from '../../components/AppPrimitives';
 import { createDog, fetchBreeds, fetchOwnedDog, type BreedOption, type OwnedDog } from '../../data/app-data';
 import { theme } from '../../theme/tokens';
@@ -90,7 +90,7 @@ export function ProfileScreen({ client, onCreated }: { client: SupabaseClient; o
         title="Berätta om din hund"
         description="Det hjälper oss att visa innehåll som passar just er."
       />
-      <FormField label="Hundens namn" onChangeText={(value) => { setName(value); markEdited(); }} placeholder="Till exempel Nala" value={name} />
+      <FormField label="Hundens namn" onChangeText={(value) => { setName(value); markEdited(); }} onSubmitEditing={() => Keyboard.dismiss()} placeholder="Till exempel Nala" returnKeyType="done" value={name} />
       <Text style={styles.label}>Ras</Text>
       {breedsState === 'loading' && <MessageCard>Hämtar raslistan…</MessageCard>}
       {breedsState === 'error' && <>
@@ -121,7 +121,9 @@ export function ProfileScreen({ client, onCreated }: { client: SupabaseClient; o
         autoComplete="off"
         label="Födelsedatum"
         onChangeText={(value) => { setBirthDate(value); markEdited(); }}
+        onSubmitEditing={() => Keyboard.dismiss()}
         placeholder="ÅÅÅÅ-MM-DD"
+        returnKeyType="done"
         value={birthDate}
       />
       {saveState === 'error' && <MessageCard tone="error">Profilen kunde inte sparas. Kontrollera uppgifterna och anslutningen innan du försöker igen.</MessageCard>}

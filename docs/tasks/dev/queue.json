@@ -589,6 +589,190 @@
         }
       ],
       "next_step": "Independent reviewer PASS for reviewed local handoff per docs/tasks/dev/ci-02.md; Codemagic macOS test remains Eriks next step"
+    },
+    {
+      "id": "APP-04A-UX",
+      "title": "Make sign-out discoverable and keep form actions reachable above the keyboard",
+      "mvp_requirement": "docs/mvp.md > Måste med: produkt-MVP > Stöd: hundprofil och onboarding; Eriks UX-begäran 2026-10-05: utloggning och tangentbordsåtkomst",
+      "plan": "docs/tasks/dev/app-04.md v8",
+      "write_paths": [
+        "src/components/AppPrimitives.tsx",
+        "src/components/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/README.md",
+        "src/features/account/SignInScreen.tsx",
+        "src/features/account/README.md",
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/onboarding/README.md",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/README.md",
+        "tests/app-screen-ux.test.mjs",
+        "tests/README.md"
+      ],
+      "acceptance": [
+        "Sign-out is under More and removed from Home; cancel keeps the session; confirm calls once; pending blocks duplicate taps; signed-out warning is shown when local clear succeeds but server revocation is unconfirmed, while local-clear failure stays retryable",
+        "Named forms use installed React Native keyboard-aware layout and correctly wired drag-dismiss, supported Done actions and accessible multiline dismissal without a new dependency",
+        "Static contract tests cover cancel, single confirm, pending double-tap protection, localSessionCleared/serverRevocationConfirmed results, signed-out warning persistence and local-clear failure retry",
+        "Keyboard runtime, VoiceOver and physical bottom-navigation behavior remain explicitly NOT TESTABLE until APP-04A-PHONE"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "Static source-contract review; physical keyboard behavior explicitly NOT TESTABLE"
+      ],
+      "depends_on": [
+        "APP-03-LOCAL"
+      ],
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE APP-04A-UX plan v6; Erik mandate and GPT-5.6 Luna medium saved in docs/tasks/dev/app-04.md. Formal dev_flow command unavailable because local Python runtime is missing."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "GPT-5.6 Luna medium implementation started for APP-04A-UX exact scope; no other task active"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "APP-04A-UX source cleanup complete; pnpm check 40 tests, pnpm bundle:ios and git diff --check PASS. Physical UX remains NOT TESTABLE in APP-04A-PHONE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: static auth/keyboard contract review; pnpm check 40, iOS bundle and git diff --check PASS. Physical iPhone UX explicitly NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer BLOCK: missing tests/app-screen-ux.test.mjs and Security BLOCK found synchronous guard/auth result semantics."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction plan v8 replaces impossible post-signout retry with truthful localSessionCleared/serverRevocationConfirmed result and signed-out warning; Architect re-review required."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE correction plan v8: structured auth result, synchronous single-call guard, signed-out warning and local retry semantics are consistent; physical UX remains APP-04A-PHONE."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "GPT-5.6 Luna medium correction run started for APP-04A-UX v8 only."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction v8 implemented within approved paths; pnpm check 40, iOS bundle and git diff --check PASS. Auth result/local session semantics updated; QA tests still required."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Correction QA PASS: 4/4 focused installed-Supabase auth tests; pnpm check 44/44, iOS bundle and git diff --check PASS. Physical UX remains NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Final Reviewer PASS and Security PASS for correction v8. pnpm check 44/44, iOS bundle and git diff --check PASS. Report saved in docs/tasks/dev/rapport.md; physical APP-04A-PHONE remains separate NOT TESTABLE grind."
+        }
+      ],
+      "status": "done",
+      "next_step": "Erik grants APP-04A-PHONE and runs signed TestFlight UX checklist before APP-04B1"
+    },
+    {
+      "id": "APP-04A-PHONE",
+      "title": "Verify APP-04A keyboard and sign-out UX on a small signed iPhone build",
+      "mvp_requirement": "docs/mvp.md > Måste med: produkt-MVP > Stöd: hundprofil och onboarding; Eriks UX-begäran 2026-10-05: utloggning och tangentbordsåtkomst",
+      "plan": "docs/tasks/dev/app-04.md v6",
+      "write_paths": [
+        "docs/tasks/dev/app-04-phone.md"
+      ],
+      "acceptance": [
+        "Login, onboarding profile and log editor actions remain reachable with the keyboard open on a small iPhone",
+        "Drag dismiss, supported Done action, multiline dismiss path, large text, VoiceOver focus and bottom navigation are physically checked",
+        "Physical sign-out cancel, confirm and pending/double-tap behavior are recorded without exposing personal data; controlled failure/retry is verified locally in APP-04A-UX"
+      ],
+      "checks": [
+        "Manual signed iPhone/TestFlight checklist from docs/tasks/dev/app-04.md"
+      ],
+      "depends_on": [
+        "APP-04A-UX"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Requires separate Erik mandate for a new signed build/TestFlight verification after APP-04A-UX is done"
+    },
+    {
+      "id": "APP-05-B1-WEIGHT",
+      "title": "Health B1: owner-registered weight history",
+      "mvp_requirement": "docs/mvp.md > Måste med: produkt-MVP > Skärm 4. Hälsa – enkel ägarregistrerad översikt",
+      "plan": "docs/tasks/dev/app-05.md v3",
+      "write_paths": [
+        "src/features/health/HealthScreen.tsx",
+        "src/features/health/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/data/workspace-data.ts",
+        "tests/health-weight.test.mjs",
+        "tests/README.md",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Owner can create, read, edit and delete multiple owner-registered weight records with date and kg, shown as stable sorted history",
+        "Loading, empty, error, confirmed/failed/unknown save and duplicate-submit states are explicit",
+        "No clinical advice, goals, trends, care schedules or partner sharing are introduced",
+        "Physical phone and real Supabase/RLS remain NOT TESTABLE unless actually run"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "APP-04A-PHONE"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Erik must complete APP-04A-PHONE and decide data purpose/preliminary legal basis; Compliance CHANGES and Architect review v3 remain before implementation"
+    },
+    {
+      "id": "APP-05-PHONE-DB",
+      "title": "Verify health weight form on phone and real Supabase/RLS",
+      "mvp_requirement": "docs/mvp.md > Måste med: produkt-MVP > Skärm 4. Hälsa – enkel ägarregistrerad översikt",
+      "plan": "docs/tasks/dev/app-05.md v3",
+      "write_paths": [
+        "docs/tasks/dev/app-05-phone-db.md"
+      ],
+      "acceptance": [
+        "Physical weight form keyboard, decimal input, edit/delete confirmation and accessibility are recorded",
+        "Two synthetic accounts verify weight read/insert/update/delete ownership, actor handling and old-session behavior in development Supabase",
+        "Any remaining limitation is recorded as NOT TESTABLE; no real owner data is used"
+      ],
+      "checks": [
+        "Manual signed iPhone/TestFlight checklist",
+        "Supabase SQL/SDK development verification with synthetic accounts"
+      ],
+      "depends_on": [
+        "APP-05-B1-WEIGHT"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Requires separate Erik mandate and development Supabase access after APP-05-B1 local PASS"
     }
   ]
 }

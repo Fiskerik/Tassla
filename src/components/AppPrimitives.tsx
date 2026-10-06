@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AccessibilityInfo, Keyboard, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 import { theme } from '../theme/tokens';
@@ -8,13 +8,15 @@ export function AppScreen({ children, footer }: { children: ReactNode; footer?: 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.screenLayout}>
-        <ScrollView style={styles.scrollArea} contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
-          <View style={styles.brandMark} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <Text style={styles.brandMarkText}>T</Text>
-          </View>
-          <Text style={styles.brandName}>tassla</Text>
-          {children}
-        </ScrollView>
+        <KeyboardAvoidingView style={styles.keyboardLayout} behavior="padding">
+          <ScrollView style={styles.scrollArea} contentContainerStyle={styles.page} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled">
+            <View style={styles.brandMark} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              <Text style={styles.brandMarkText}>T</Text>
+            </View>
+            <Text style={styles.brandName}>tassla</Text>
+            {children}
+          </ScrollView>
+        </KeyboardAvoidingView>
         {footer && <View style={styles.footer}>{footer}</View>}
       </View>
     </SafeAreaView>
@@ -110,7 +112,10 @@ export function FormField({
         autoComplete={autoComplete}
         keyboardType={keyboardType}
         onChangeText={onChangeText}
-        onSubmitEditing={onSubmitEditing}
+        onSubmitEditing={() => {
+          onSubmitEditing?.();
+          if (returnKeyType === 'done') Keyboard.dismiss();
+        }}
         placeholder={placeholder}
         placeholderTextColor={theme.colors.mutedText}
         returnKeyType={returnKeyType}
@@ -133,6 +138,7 @@ export function MessageCard({ children, tone = 'neutral' }: { children: ReactNod
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: theme.colors.background },
   screenLayout: { flex: 1, width: '100%', maxWidth: 560, alignSelf: 'center' },
+  keyboardLayout: { flex: 1 },
   scrollArea: { flex: 1 },
   page: { flexGrow: 1, width: '100%', maxWidth: 560, alignSelf: 'center', paddingHorizontal: 24, paddingTop: 20, paddingBottom: 48 },
   footer: { borderTopWidth: 1, borderTopColor: theme.colors.border, backgroundColor: theme.colors.surface },
