@@ -102,3 +102,8 @@ Rättade utvecklingsfel: radering måste matcha requested ID eller kontrollera t
 
 ## Slutcheckpoint APP-04C — lokalt klart
 Luna medium b2_contract implementation; correction1 reviewer BLOCK saved-besked vid osparat utkast åtgärdad och next_reviews renewed Reviewer PASS/Security local PASS. Independent QA profile_contract: profile 27/27, full pnpm check 129/129 inklusive type/lint, iOS-export PASS (dist/ios verifierad inom repo, eskalerad skrivning efter EPERM), diffcheck PASS. Faktiska SDK/localfetch, workspacehandlers/comparator och editorns statusuttryck provade; inga nya appdefekter observerade. Native/deployed RLS ej testade och inte påstådda PASS. Nästa P03 efter denna hållbara checkpoint, ingen PHONE-grind.
+
+Lokal Git-checkpoint 4bbdb1b sparar B2 och APP-04C plus samlad MVP-plan, 129/129 QA och release-loggar. Inte pushat. P03 startas från denna verifierade bas.
+
+## P03 slutcheckpoint — 2026-10-06
+Luna medium Implementer source stable correction1; QA profile_contract 31/31 fokuserat, pnpm check 160/160, iOS-export PASS efter lokal EPERM-elevation, diffcheck PASS. next_reviews oberoende Reviewer PASS och statisk Security PASS. Oförändrat passerat datum tillåts vid anteckningsändring; separat planerad historik med immutable identitet/RLS och säker retry/lifetime. SQL tvåägarprov endast förberett; server/RLS och fysisk telefon ej testade. Release-log docs/releases/P03-PLANNED-HEALTH.md uppdaterad. Nästa P04 exakt v2 kontrakt granskas; inga nya rutinmässiga TestFlight-stopp.

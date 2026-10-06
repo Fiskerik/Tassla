@@ -985,6 +985,71 @@
         }
       ],
       "next_step": "Renewed independent Reviewer PASS and local Security PASS; QA evidence and release-log checkpoint saved; next P03"
+    },
+    {
+      "id": "MVP-P03-PLANNED-HEALTH",
+      "title": "Owner-entered planned health dates separate from performed history",
+      "mvp_requirement": "docs/mvp.md: Skärm 4 Hälsa kommande händelser",
+      "plan": "docs/tasks/dev/planned-health.md v2",
+      "write_paths": [
+        "supabase/migrations/202610060001_planned_health.sql",
+        "supabase/README.md",
+        "src/data/workspace-data.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/health/HealthScreen.tsx",
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/features/health/README.md",
+        "tests/planned-health.test.mjs",
+        "tests/README.md",
+        "supabase/tests/planned-health.sql"
+      ],
+      "acceptance": [
+        "Separate planned CRUD with immutable type, local dates and owner controls",
+        "Overdue unchanged date edits permitted, safe retry/lifetime, no clinical intervals"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "Prepared synthetic two-owner SQL probe; live SQL NOT TESTABLE without dev DB"
+      ],
+      "depends_on": [
+        "APP-04C-PROFILE"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Actual exact v2 Architect APPROVE Critic PROCEED Security local contract APPROVE saved planned-health.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik full MVP Luna medium mandate; P02 done and local commit4bbdb1b; local source migration no remote DB"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Stable P03 correction1 source; typecheck lint diff-check PASS; QA and independent final review requested"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Actual QA full160 focused31 ios export diffcheck PASS; SQL only prepared"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS static Security PASS saved rapport release-log; next P04"
+        }
+      ],
+      "next_step": "Independent Reviewer PASS static Security PASS saved rapport release-log; next P04"
     }
   ]
 }

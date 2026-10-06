@@ -10,6 +10,7 @@ import {
   deleteDogEvent,
   deleteHealthWeight,
   deleteHealthHistory,
+  deletePlannedHealth,
   deleteTrainingProgress,
   fetchDogEventById,
   fetchDogEvents,
@@ -17,19 +18,25 @@ import {
   fetchHealthWeights,
   fetchHealthHistory,
   fetchHealthHistoryById,
+  fetchPlannedHealth,
+  fetchPlannedHealthById,
   fetchHomeContent,
   fetchTrainingWorkspace,
   isValidHealthWeightDate,
   isValidHealthWeightKg,
   isValidHealthHistoryDate,
+  isValidPlannedHealthDate,
   normalizeHealthHistoryDescription,
+  normalizePlannedHealthDescription,
   insertDogEvent,
   insertHealthWeight,
   insertHealthHistory,
+  insertPlannedHealth,
   insertTrainingProgress,
   updateDogEvent,
   updateHealthWeight,
   updateHealthHistory,
+  updatePlannedHealth,
   type DogEventOperation,
   type DogEventRecord,
   type HealthWeightChanges,
@@ -39,6 +46,10 @@ import {
   type HealthHistoryOperation,
   type HealthHistoryRecord,
   type HealthHistoryType,
+  type PlannedHealthChanges,
+  type PlannedHealthOperation,
+  type PlannedHealthRecord,
+  type PlannedHealthType,
   type PublishedTrainingProgram,
   type PausedTrainingProgress,
   type WriteOutcome,
@@ -54,6 +65,7 @@ import {
 } from '../../data/app-data';
 import { ageInWeeks, localDate } from '../onboarding/dog';
 import { HealthScreen } from '../health/HealthScreen';
+import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
 import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
 import { LogScreen } from '../puppy-log/LogScreen';
@@ -63,7 +75,7 @@ import { PublishedTrainingScreen } from '../training/PublishedTrainingScreen';
 import { theme } from '../../theme/tokens';
 import { useAuth } from '../account/AuthProvider';
 
-type ProductPage = 'home' | 'log' | 'training' | 'more' | 'health' | 'knowledge' | 'passport' | 'profile';
+type ProductPage = 'home' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile';
 type PendingLogMutation =
   | { kind: 'insert'; operation: DogEventOperation }
   | { kind: 'update'; id: string; changes: { event_type: LogEventType; occurred_at: string; duration_minutes: number | null; description: string | null } }
@@ -76,6 +88,10 @@ type PendingHealthHistoryMutation =
   | { kind: 'insert'; operation: HealthHistoryOperation; lifetime: string }
   | { kind: 'update'; id: string; eventType: HealthHistoryType; previous: HealthHistoryRecord; changes: HealthHistoryChanges; lifetime: string }
   | { kind: 'delete'; id: string; eventType: HealthHistoryType; previous: HealthHistoryRecord; lifetime: string };
+type PendingPlannedHealthMutation =
+  | { kind: 'insert'; operation: PlannedHealthOperation; lifetime: string }
+  | { kind: 'update'; id: string; previous: PlannedHealthRecord; changes: PlannedHealthChanges; localToday: string; lifetime: string }
+  | { kind: 'delete'; id: string; previous: PlannedHealthRecord; lifetime: string };
 type PendingProfileMutation = { previous: OwnedDog; changes: OwnedDogProfileChanges; knownBreeds: readonly BreedOption[]; lifetime: string };
 
 const PAGE_SIZE = 40;
@@ -111,6 +127,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [healthHistoryMessage, setHealthHistoryMessage] = useState('');
   const [healthHistoryMessageError, setHealthHistoryMessageError] = useState(false);
   const [healthHistoryConflict, setHealthHistoryConflict] = useState<{ lifetime: string; mutationId: string; current: HealthHistoryRecord | null } | null>(null);
+  const [plannedHealth, setPlannedHealth] = useState<PlannedHealthRecord[]>([]);
+  const plannedHealthRows = useRef<PlannedHealthRecord[]>([]);
+  const [plannedHealthState, setPlannedHealthState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [plannedHealthBusy, setPlannedHealthBusy] = useState(false);
+  const [plannedHealthPending, setPlannedHealthPending] = useState(false);
+  const [plannedHealthMessage, setPlannedHealthMessage] = useState('');
+  const [plannedHealthMessageError, setPlannedHealthMessageError] = useState(false);
+  const [plannedHealthConflict, setPlannedHealthConflict] = useState<{ lifetime: string; mutationId: string; current: PlannedHealthRecord | null } | null>(null);
   const [profileBusy, setProfileBusy] = useState(false);
   const [profilePending, setProfilePending] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
@@ -131,6 +155,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const pendingHealthHistoryMutation = useRef<PendingHealthHistoryMutation | null>(null);
   const healthHistoryMutationInFlight = useRef(false);
   const healthHistoryFlightToken = useRef<object | null>(null);
+  const pendingPlannedHealthMutation = useRef<PendingPlannedHealthMutation | null>(null);
+  const plannedHealthMutationInFlight = useRef(false);
+  const plannedHealthFlightToken = useRef<object | null>(null);
   const pendingProfileMutation = useRef<PendingProfileMutation | null>(null);
   const profileMutationInFlight = useRef(false);
   const trainingMutationInFlight = useRef(false);
@@ -138,16 +165,23 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const eventReadQueue = useRef<Promise<void>>(Promise.resolve());
   const healthReadQueue = useRef<Promise<void>>(Promise.resolve());
   const healthHistoryReadQueue = useRef<Promise<void>>(Promise.resolve());
+  const plannedHealthReadQueue = useRef<Promise<void>>(Promise.resolve());
   const loadMoreInFlight = useRef(false);
   const { signOut, session } = useAuth();
   const age = ageInWeeks(dog.birth_date, localDate());
   const currentHealthHistoryLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const healthHistoryLifetime = useRef('');
   const previousHealthHistoryLifetime = useRef('');
+  const currentPlannedHealthLifetime = currentHealthHistoryLifetime;
+  const plannedHealthLifetime = useRef('');
+  const previousPlannedHealthLifetime = useRef('');
 
   useLayoutEffect(() => {
     healthHistoryLifetime.current = currentHealthHistoryLifetime;
   }, [currentHealthHistoryLifetime]);
+  useLayoutEffect(() => {
+    plannedHealthLifetime.current = currentPlannedHealthLifetime;
+  }, [currentPlannedHealthLifetime]);
   const currentProfileLifetime = currentHealthHistoryLifetime;
   const profileLifetime = useRef('');
   const previousProfileLifetime = useRef('');
@@ -224,6 +258,20 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     setHealthHistoryState('ready');
   }, [client, dog.id, serializeHealthHistoryRead]);
 
+  const serializePlannedHealthRead = useCallback(<T,>(read: () => Promise<T>): Promise<T> => {
+    const request = plannedHealthReadQueue.current.catch(() => undefined).then(read);
+    plannedHealthReadQueue.current = request.then(() => undefined, () => undefined);
+    return request;
+  }, []);
+
+  const reloadPlannedHealth = useCallback(async (lifetime = plannedHealthLifetime.current, signal?: AbortSignal) => {
+    const rows = await serializePlannedHealthRead(() => fetchPlannedHealth(client, dog.id, undefined, signal));
+    if (!mounted.current || signal?.aborted || plannedHealthLifetime.current !== lifetime) return;
+    plannedHealthRows.current = rows;
+    setPlannedHealth(rows);
+    setPlannedHealthState('ready');
+  }, [client, dog.id, serializePlannedHealthRead]);
+
   const reloadTraining = useCallback(async (signal?: AbortSignal) => {
     const generation = trainingGeneration.current;
     const result = await fetchTrainingWorkspace(client, dog, age, undefined, signal);
@@ -259,6 +307,19 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       setHealthHistoryMessage('');
       setHealthHistoryMessageError(false);
     }
+    if (previousPlannedHealthLifetime.current !== currentPlannedHealthLifetime) {
+      previousPlannedHealthLifetime.current = currentPlannedHealthLifetime;
+      pendingPlannedHealthMutation.current = null;
+      plannedHealthMutationInFlight.current = false;
+      plannedHealthFlightToken.current = null;
+      plannedHealthRows.current = [];
+      setPlannedHealth([]);
+      setPlannedHealthState('loading');
+      setPlannedHealthPending(false);
+      setPlannedHealthConflict(null);
+      setPlannedHealthMessage('');
+      setPlannedHealthMessageError(false);
+    }
     const controller = new AbortController();
     void serializeEventRead(() => fetchDogEvents(client, dog.id, 0, PAGE_SIZE, undefined, controller.signal)).then((rows) => {
       if (controller.signal.aborted || !mounted.current) return;
@@ -286,11 +347,20 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }).catch(() => {
       if (!controller.signal.aborted && mounted.current && healthHistoryLifetime.current === historyLifetime) setHealthHistoryState('error');
     });
+    const planLifetime = plannedHealthLifetime.current;
+    void serializePlannedHealthRead(() => fetchPlannedHealth(client, dog.id, undefined, controller.signal)).then((rows) => {
+      if (controller.signal.aborted || !mounted.current || plannedHealthLifetime.current !== planLifetime) return;
+      plannedHealthRows.current = rows;
+      setPlannedHealth(rows);
+      setPlannedHealthState('ready');
+    }).catch(() => {
+      if (!controller.signal.aborted && mounted.current && plannedHealthLifetime.current === planLifetime) setPlannedHealthState('error');
+    });
     return () => {
       mounted.current = false;
       controller.abort();
     };
-  }, [client, currentHealthHistoryLifetime, currentProfileLifetime, dog.id, serializeEventRead, serializeHealthRead, serializeHealthHistoryRead]);
+  }, [client, currentHealthHistoryLifetime, currentPlannedHealthLifetime, currentProfileLifetime, dog.id, serializeEventRead, serializeHealthRead, serializeHealthHistoryRead, serializePlannedHealthRead]);
 
   useEffect(() => {
     const generation = ++contentGeneration.current;
@@ -952,6 +1022,224 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
+  async function markPlannedHealthSaved(mutation: PendingPlannedHealthMutation, value: PlannedHealthRecord | null): Promise<void> {
+    const lifetime = mutation.lifetime;
+    if (!mounted.current || plannedHealthLifetime.current !== lifetime) return;
+    pendingPlannedHealthMutation.current = null;
+    setPlannedHealthPending(false);
+    setPlannedHealthConflict(null);
+    const mutationId = mutation.kind === 'insert' ? mutation.operation.id : mutation.id;
+    const next = mutation.kind === 'delete'
+      ? plannedHealthRows.current.filter((row) => row.id !== mutationId)
+      : value
+        ? [value, ...plannedHealthRows.current.filter((row) => row.id !== mutationId)]
+          .sort((a, b) => a.due_on.localeCompare(b.due_on) || a.id.localeCompare(b.id))
+        : plannedHealthRows.current;
+    plannedHealthRows.current = next;
+    setPlannedHealth(next);
+    setPlannedHealthMessage('Ändringen är sparad.');
+    setPlannedHealthMessageError(false);
+    try {
+      await reloadPlannedHealth(lifetime);
+      if (!mounted.current || plannedHealthLifetime.current !== lifetime) return;
+    } catch {
+      if (mounted.current && plannedHealthLifetime.current === lifetime) {
+        setPlannedHealthMessage('Ändringen är sparad, men listan kunde inte uppdateras.');
+      }
+    }
+  }
+
+  async function runPlannedHealthMutation(mutation: PendingPlannedHealthMutation, retry = false): Promise<boolean> {
+    const isCurrent = () => mounted.current && plannedHealthLifetime.current === mutation.lifetime;
+    if (!isCurrent() || plannedHealthMutationInFlight.current) return false;
+    if (pendingPlannedHealthMutation.current && !retry) {
+      setPlannedHealthMessage('Kontrollera föregående ändring innan du gör en ny.');
+      setPlannedHealthMessageError(true);
+      return false;
+    }
+    plannedHealthMutationInFlight.current = true;
+    const flightToken = {};
+    plannedHealthFlightToken.current = flightToken;
+    setPlannedHealthBusy(true);
+    setPlannedHealthMessage('');
+    setPlannedHealthMessageError(false);
+    setPlannedHealthConflict(null);
+    try {
+      let outcome: WriteOutcome<PlannedHealthRecord | null>;
+      if (mutation.kind === 'insert') outcome = await insertPlannedHealth(client, mutation.operation);
+      else if (mutation.kind === 'update') outcome = await updatePlannedHealth(client, dog.id, mutation.id, mutation.previous, mutation.changes, mutation.localToday);
+      else outcome = await deletePlannedHealth(client, dog.id, mutation.id, mutation.previous);
+      if (!isCurrent()) return false;
+      if (outcome.status === 'saved') {
+        await markPlannedHealthSaved(mutation, outcome.value);
+        if (!isCurrent()) return false;
+        return true;
+      }
+      if (outcome.status === 'unknown') {
+        pendingPlannedHealthMutation.current = mutation;
+        setPlannedHealthPending(true);
+        setPlannedHealthMessage('Sparstatus är osäker. Kontrollera samma ändring innan du försöker igen.');
+        setPlannedHealthMessageError(true);
+        return false;
+      }
+      pendingPlannedHealthMutation.current = null;
+      setPlannedHealthPending(false);
+      setPlannedHealthMessage('Ändringen kunde inte sparas. Kontrollera uppgifterna och försök igen.');
+      setPlannedHealthMessageError(true);
+      return false;
+    } catch {
+      if (!isCurrent()) return false;
+      pendingPlannedHealthMutation.current = mutation;
+      setPlannedHealthPending(true);
+      setPlannedHealthMessage('Sparstatus är osäker. Kontrollera samma ändring innan du försöker igen.');
+      setPlannedHealthMessageError(true);
+      return false;
+    } finally {
+      if (plannedHealthFlightToken.current === flightToken) {
+        plannedHealthFlightToken.current = null;
+        plannedHealthMutationInFlight.current = false;
+        if (isCurrent()) setPlannedHealthBusy(false);
+      }
+    }
+  }
+
+  function savePlannedHealth(id: string | null, eventType: PlannedHealthType, dueOn: string, note: string): Promise<boolean> {
+    const lifetime = plannedHealthLifetime.current;
+    if (plannedHealthMutationInFlight.current || pendingPlannedHealthMutation.current || plannedHealthState !== 'ready') return Promise.resolve(false);
+    const localToday = localDate();
+    const previous = id === null ? null : plannedHealthRows.current.find((row) => row.id === id && row.event_type === eventType) ?? null;
+    if ((id !== null && !previous) || (!isValidPlannedHealthDate(dueOn, localToday) && dueOn !== previous?.due_on)) return Promise.resolve(false);
+    const description = normalizePlannedHealthDescription(note);
+    if (description === undefined || (eventType !== 'vaccination' && eventType !== 'vet_visit')) return Promise.resolve(false);
+    if (id === null) {
+      const operation: PlannedHealthOperation = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, event_type: eventType, due_on: dueOn, description, local_today: localToday };
+      return runPlannedHealthMutation({ kind: 'insert', operation, lifetime });
+    }
+    if (!previous) return Promise.resolve(false);
+    return runPlannedHealthMutation({ kind: 'update', id, previous, changes: { due_on: dueOn, description }, localToday, lifetime });
+  }
+
+  function removePlannedHealth(id: string): Promise<boolean> {
+    const lifetime = plannedHealthLifetime.current;
+    if (plannedHealthMutationInFlight.current || pendingPlannedHealthMutation.current || plannedHealthState !== 'ready') return Promise.resolve(false);
+    const previous = plannedHealthRows.current.find((row) => row.id === id);
+    if (!previous) return Promise.resolve(false);
+    return runPlannedHealthMutation({ kind: 'delete', id, previous, lifetime });
+  }
+
+  async function resolvePlannedHealthConflict() {
+    const conflict = plannedHealthConflict;
+    const pending = pendingPlannedHealthMutation.current;
+    if (!conflict || !pending || conflict.lifetime !== plannedHealthLifetime.current || conflict.lifetime !== pending.lifetime
+      || plannedHealthMutationInFlight.current) return;
+    plannedHealthMutationInFlight.current = true;
+    const lifetime = pending.lifetime;
+    const flightToken = {};
+    plannedHealthFlightToken.current = flightToken;
+    setPlannedHealthBusy(true);
+    try {
+      const current = await fetchPlannedHealthById(client, dog.id, conflict.mutationId);
+      if (!mounted.current || plannedHealthLifetime.current !== lifetime) return;
+      if (!samePlannedHealthSnapshot(current, conflict.current)) {
+        setPlannedHealthConflict({ lifetime, mutationId: conflict.mutationId, current });
+        setPlannedHealthMessage('Planen ändrades igen. Granska den senast sparade versionen innan du börjar om.');
+        setPlannedHealthMessageError(true);
+        return;
+      }
+      const remaining = plannedHealthRows.current.filter((row) => row.id !== conflict.mutationId);
+      const next = current ? [...remaining, current].sort((a, b) => a.due_on.localeCompare(b.due_on) || a.id.localeCompare(b.id)) : remaining;
+      plannedHealthRows.current = next;
+      setPlannedHealth(next);
+      pendingPlannedHealthMutation.current = null;
+      setPlannedHealthPending(false);
+      setPlannedHealthConflict(null);
+      setPlannedHealthMessage('Den aktuella sparade listan används. Du kan nu börja om.');
+      setPlannedHealthMessageError(false);
+    } catch {
+      if (mounted.current && plannedHealthLifetime.current === lifetime) {
+        setPlannedHealthMessage('Den aktuella planen kunde inte hämtas. Den väntande ändringen finns kvar.');
+        setPlannedHealthMessageError(true);
+      }
+    } finally {
+      if (plannedHealthFlightToken.current === flightToken) {
+        plannedHealthFlightToken.current = null;
+        plannedHealthMutationInFlight.current = false;
+        if (mounted.current && plannedHealthLifetime.current === lifetime) setPlannedHealthBusy(false);
+      }
+    }
+  }
+
+  async function retryPlannedHealth() {
+    if (plannedHealthMutationInFlight.current) return;
+    const mutation = pendingPlannedHealthMutation.current;
+    if (!mutation) {
+      const lifetime = plannedHealthLifetime.current;
+      setPlannedHealthState('loading');
+      setPlannedHealthMessage('');
+      setPlannedHealthMessageError(false);
+      try {
+        await reloadPlannedHealth(lifetime);
+      } catch {
+        if (mounted.current && plannedHealthLifetime.current === lifetime) {
+          setPlannedHealthState('error');
+          setPlannedHealthMessage('Planerna kunde inte hämtas.');
+          setPlannedHealthMessageError(true);
+        }
+      }
+      return;
+    }
+    const isCurrent = () => mounted.current && plannedHealthLifetime.current === mutation.lifetime;
+    if (!isCurrent()) return;
+    plannedHealthMutationInFlight.current = true;
+    const flightToken = {};
+    plannedHealthFlightToken.current = flightToken;
+    setPlannedHealthBusy(true);
+    setPlannedHealthMessage('Kontrollerar sparstatus…');
+    setPlannedHealthMessageError(false);
+    let retrySameOperation = false;
+    try {
+      const id = mutation.kind === 'insert' ? mutation.operation.id : mutation.id;
+      const current = await fetchPlannedHealthById(client, dog.id, id);
+      if (!isCurrent()) return;
+      if (mutation.kind === 'insert') {
+        if (current && samePlannedHealth(current, mutation.operation)) await markPlannedHealthSaved(mutation, current);
+        else if (!current) retrySameOperation = true;
+        else {
+          setPlannedHealthConflict({ lifetime: mutation.lifetime, mutationId: id, current });
+          setPlannedHealthMessage('En annan plan finns med samma id. Granska den innan du fortsätter.');
+        }
+      } else if (mutation.kind === 'update') {
+        if (current && samePlannedHealth(current, { id, dog_id: dog.id, event_type: mutation.previous.event_type, ...mutation.changes })) {
+          await markPlannedHealthSaved(mutation, current);
+        } else if (current && samePlannedHealth(current, mutation.previous)) retrySameOperation = true;
+        else {
+          setPlannedHealthConflict({ lifetime: mutation.lifetime, mutationId: id, current });
+          setPlannedHealthMessage(current ? 'Planen har ändrats sedan försöket. Granska den aktuella versionen.' : 'Planen finns inte längre. Bekräfta den aktuella listan innan du börjar om.');
+        }
+      } else if (!current) await markPlannedHealthSaved(mutation, null);
+      else if (samePlannedHealth(current, mutation.previous)) retrySameOperation = true;
+      else {
+        setPlannedHealthConflict({ lifetime: mutation.lifetime, mutationId: id, current });
+        setPlannedHealthMessage('Planen har ändrats sedan försöket. Granska den aktuella versionen.');
+      }
+      if (!isCurrent()) return;
+      if (!retrySameOperation && pendingPlannedHealthMutation.current) setPlannedHealthMessageError(true);
+    } catch {
+      if (isCurrent()) {
+        setPlannedHealthMessage('Sparstatus kunde inte kontrolleras. Försök igen när anslutningen fungerar.');
+        setPlannedHealthMessageError(true);
+      }
+    } finally {
+      if (plannedHealthFlightToken.current === flightToken) {
+        plannedHealthFlightToken.current = null;
+        plannedHealthMutationInFlight.current = false;
+        if (isCurrent()) setPlannedHealthBusy(false);
+      }
+    }
+    if (!isCurrent()) return;
+    if (retrySameOperation) await runPlannedHealthMutation(mutation, true);
+  }
+
   async function retryContent() {
     const generation = ++contentGeneration.current;
     const selectionKey = currentSelectionKey;
@@ -1164,6 +1452,22 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       onResolveHistoryConflict={resolveHealthHistoryConflict}
       onSaveHistory={saveHealthHistory}
       onDeleteHistory={removeHealthHistory}
+      onOpenPlannedHealth={() => setPage('planned-health')}
+    />;
+    if (page === 'planned-health') return <PlannedHealthScreen
+      key={JSON.stringify(plannedHealth.map(({ id, event_type, due_on, description }) => [id, event_type, due_on, description]))}
+      onBack={() => setPage('health')}
+      records={plannedHealth}
+      loadState={plannedHealthState}
+      busy={plannedHealthBusy}
+      pending={plannedHealthPending}
+      statusMessage={plannedHealthMessage}
+      statusError={plannedHealthMessageError}
+      conflict={plannedHealthConflict?.lifetime === currentPlannedHealthLifetime ? plannedHealthConflict : null}
+      onRetry={() => { void retryPlannedHealth(); }}
+      onResolveConflict={() => { void resolvePlannedHealthConflict(); }}
+      onSave={savePlannedHealth}
+      onDelete={removePlannedHealth}
     />;
     if (page === 'knowledge') return <KnowledgeScreen onBack={() => setPage('more')} items={content.filter((item) => item.contentType !== 'training_program')} />;
     if (page === 'passport') return <PassportScreen onBack={() => setPage('more')} />;
@@ -1321,6 +1625,19 @@ function sameHealthHistory(
 ): boolean {
   return current.id === expected.id && current.dog_id === expected.dog_id && current.event_type === expected.event_type
     && current.occurred_on === expected.occurred_on && current.description === expected.description;
+}
+
+function samePlannedHealth(
+  record: PlannedHealthRecord,
+  expected: Pick<PlannedHealthOperation, 'id' | 'dog_id' | 'event_type' | 'due_on' | 'description'>,
+): boolean {
+  return record.id === expected.id && record.dog_id === expected.dog_id && record.event_type === expected.event_type
+    && record.due_on === expected.due_on && record.description === expected.description;
+}
+
+function samePlannedHealthSnapshot(left: PlannedHealthRecord | null, right: PlannedHealthRecord | null): boolean {
+  if (left === null || right === null) return left === right;
+  return samePlannedHealth(left, right) && left.created_at === right.created_at;
 }
 
 function sameOwnedDogProfile(

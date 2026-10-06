@@ -8,6 +8,7 @@ const DEFAULT_REQUEST_TIMEOUT_MS = 12_000;
 const EVENT_COLUMNS = 'id,dog_id,event_type,occurred_at,occurred_on,weight_kg,duration_minutes,description';
 const HEALTH_WEIGHT_COLUMNS = 'id,dog_id,actor_id,occurred_on,weight_kg';
 const HEALTH_HISTORY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,description';
+const PLANNED_HEALTH_COLUMNS = 'id,dog_id,event_type,due_on,description,created_at';
 
 export interface DogEventRecord {
   id: string;
@@ -77,6 +78,31 @@ export interface HealthHistoryOperation {
 
 export interface HealthHistoryChanges {
   occurred_on: string;
+  description: string | null;
+}
+
+export type PlannedHealthType = 'vaccination' | 'vet_visit';
+
+export interface PlannedHealthRecord {
+  id: string;
+  dog_id: string;
+  event_type: PlannedHealthType;
+  due_on: string;
+  description: string | null;
+  created_at: string;
+}
+
+export interface PlannedHealthOperation {
+  id: string;
+  dog_id: string;
+  event_type: PlannedHealthType;
+  due_on: string;
+  description: string | null;
+  local_today: string;
+}
+
+export interface PlannedHealthChanges {
+  due_on: string;
   description: string | null;
 }
 
@@ -599,6 +625,144 @@ export async function deleteHealthHistory(
   } catch { return { status: 'unknown' }; }
 }
 
+export function isValidPlannedHealthDate(value: string, localToday: string): boolean {
+  return isCalendarDate(value) && isCalendarDate(localToday) && value >= localToday;
+}
+
+export function normalizePlannedHealthDescription(value: string | null | undefined): string | null | undefined {
+  if (value === null || value === undefined) return null;
+  const trimmed = value.trim();
+  if (Array.from(trimmed).length > 500) return undefined;
+  return trimmed || null;
+}
+
+export async function fetchPlannedHealth(
+  client: SupabaseClient,
+  dogId: string,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  parentSignal?: AbortSignal,
+): Promise<PlannedHealthRecord[]> {
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.from('dog_health_plans')
+      .select(PLANNED_HEALTH_COLUMNS)
+      .eq('dog_id', dogId)
+      .order('due_on', { ascending: true })
+      .order('id', { ascending: true })
+      .limit(WORKSPACE_PAGE_SIZE)
+      .abortSignal(signal);
+    if (error || !Array.isArray(data) || !data.every(isPlannedHealthRecord)
+      || data.some((row) => row.dog_id !== dogId)) throw new Error('Could not load planned health');
+    return data;
+  }, timeoutMs, parentSignal);
+}
+
+export async function fetchPlannedHealthById(
+  client: SupabaseClient,
+  dogId: string,
+  id: string,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<PlannedHealthRecord | null> {
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.from('dog_health_plans')
+      .select(PLANNED_HEALTH_COLUMNS).eq('dog_id', dogId).eq('id', id)
+      .abortSignal(signal).maybeSingle();
+    if (error) throw new Error('Could not check planned health status');
+    if (data === null) return null;
+    if (!isPlannedHealthRecord(data) || data.dog_id !== dogId || data.id !== id) {
+      throw new Error('Planned health response did not match the database contract');
+    }
+    return data;
+  }, timeoutMs);
+}
+
+export async function insertPlannedHealth(
+  client: SupabaseClient,
+  operation: PlannedHealthOperation,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<WriteOutcome<PlannedHealthRecord>> {
+  const description = normalizePlannedHealthDescription(operation.description);
+  if (!isPlannedHealthType(operation.event_type) || !isValidPlannedHealthDate(operation.due_on, operation.local_today)
+    || description === undefined) return { status: 'failed' };
+  const expected = { ...operation, description };
+  const payload = { id: operation.id, dog_id: operation.dog_id, event_type: operation.event_type, due_on: operation.due_on, description };
+  let failure: unknown = null;
+  try {
+    const result = await withRequestDeadline(async (signal) => await client.from('dog_health_plans')
+      .insert(payload).abortSignal(signal).select(PLANNED_HEALTH_COLUMNS).single(), timeoutMs);
+    if (!result.error && isPlannedHealthRecord(result.data) && matchesPlannedHealth(result.data, expected)) {
+      return { status: 'saved', value: result.data };
+    }
+    failure = result.error ?? new Error('Empty planned health insert response');
+  } catch (error) { failure = error; }
+  try {
+    const found = await fetchPlannedHealthById(client, operation.dog_id, operation.id, timeoutMs);
+    if (found && matchesPlannedHealth(found, expected)) return { status: 'saved', value: found };
+    return isDefiniteClientRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
+  } catch { return { status: 'unknown' }; }
+}
+
+export async function updatePlannedHealth(
+  client: SupabaseClient,
+  dogId: string,
+  id: string,
+  previous: Pick<PlannedHealthRecord, 'event_type' | 'due_on' | 'description'>,
+  changes: PlannedHealthChanges,
+  localToday: string,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<WriteOutcome<PlannedHealthRecord>> {
+  const description = normalizePlannedHealthDescription(changes.description);
+  const allowedDate = changes.due_on === previous.due_on || isValidPlannedHealthDate(changes.due_on, localToday);
+  if (!isPlannedHealthType(previous.event_type) || !isCalendarDate(localToday) || !allowedDate || description === undefined) {
+    return { status: 'failed' };
+  }
+  const normalizedChanges = { due_on: changes.due_on, description };
+  let failure: unknown = null;
+  try {
+    let query = client.from('dog_health_plans').update(normalizedChanges)
+      .eq('dog_id', dogId).eq('id', id).eq('event_type', previous.event_type).eq('due_on', previous.due_on);
+    query = previous.description === null ? query.is('description', null) : query.eq('description', previous.description);
+    const result = await withRequestDeadline(async (signal) => await query.abortSignal(signal)
+      .select(PLANNED_HEALTH_COLUMNS).maybeSingle(), timeoutMs);
+    if (!result.error && isPlannedHealthRecord(result.data)
+      && matchesPlannedHealth(result.data, { id, dog_id: dogId, event_type: previous.event_type, ...normalizedChanges })) {
+      return { status: 'saved', value: result.data };
+    }
+    failure = result.error ?? new Error('Empty planned health update response');
+  } catch (error) { failure = error; }
+  try {
+    const found = await fetchPlannedHealthById(client, dogId, id, timeoutMs);
+    if (found && matchesPlannedHealth(found, { id, dog_id: dogId, event_type: previous.event_type, ...normalizedChanges })) return { status: 'saved', value: found };
+    return isDefiniteClientRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
+  } catch { return { status: 'unknown' }; }
+}
+
+export async function deletePlannedHealth(
+  client: SupabaseClient,
+  dogId: string,
+  id: string,
+  previous: Pick<PlannedHealthRecord, 'event_type' | 'due_on' | 'description'>,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<WriteOutcome<null>> {
+  let failure: unknown = null;
+  try {
+    let query = client.from('dog_health_plans').delete()
+      .eq('dog_id', dogId).eq('id', id).eq('event_type', previous.event_type).eq('due_on', previous.due_on);
+    query = previous.description === null ? query.is('description', null) : query.eq('description', previous.description);
+    const result = await withRequestDeadline(async (signal) => await query.abortSignal(signal).select('id').maybeSingle(), timeoutMs);
+    if (!result.error && result.data?.id === id) return { status: 'saved', value: null };
+    if (!result.error && result.data === null) {
+      const current = await fetchPlannedHealthById(client, dogId, id, timeoutMs);
+      return current ? { status: 'unknown' } : { status: 'saved', value: null };
+    }
+    failure = result.error ?? new Error('Empty planned health delete response');
+  } catch (error) { failure = error; }
+  try {
+    const found = await fetchPlannedHealthById(client, dogId, id, timeoutMs);
+    if (!found) return { status: 'saved', value: null };
+    return isDefiniteClientRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
+  } catch { return { status: 'unknown' }; }
+}
+
 export async function fetchPublishedContentVersions(
   client: SupabaseClient,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
@@ -841,6 +1005,26 @@ function isHealthHistoryRecord(value: unknown): value is HealthHistoryRecord {
     && (row.description === null || typeof row.description === 'string' && Array.from(row.description).length <= 500);
 }
 
+function isPlannedHealthType(value: unknown): value is PlannedHealthType {
+  return value === 'vaccination' || value === 'vet_visit';
+}
+
+function isCalendarDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
+function isPlannedHealthRecord(value: unknown): value is PlannedHealthRecord {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return typeof row.id === 'string' && typeof row.dog_id === 'string'
+    && isPlannedHealthType(row.event_type) && typeof row.due_on === 'string' && isCalendarDate(row.due_on)
+    && (row.description === null || typeof row.description === 'string' && Array.from(row.description).length <= 500)
+    && typeof row.created_at === 'string' && Number.isFinite(Date.parse(row.created_at));
+}
+
 function isPublishedVersionRow(value: unknown): value is PublishedVersionRow {
   if (!value || typeof value !== 'object') return false;
   const row = value as Record<string, unknown>;
@@ -894,6 +1078,14 @@ function matchesHealthHistory(
 ): boolean {
   return record.id === expected.id && record.dog_id === expected.dog_id && record.event_type === expected.event_type
     && record.occurred_on === expected.occurred_on && record.description === expected.description;
+}
+
+function matchesPlannedHealth(
+  record: PlannedHealthRecord,
+  expected: Pick<PlannedHealthOperation, 'id' | 'dog_id' | 'event_type' | 'due_on' | 'description'>,
+): boolean {
+  return record.id === expected.id && record.dog_id === expected.dog_id && record.event_type === expected.event_type
+    && record.due_on === expected.due_on && record.description === expected.description;
 }
 
 function isDefiniteClientRejection(error: unknown): boolean {

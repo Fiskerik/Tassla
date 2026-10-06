@@ -135,3 +135,6 @@ Erik: ”Ok, starta implementeringen uppifrån och ner. Använd Luna medel”. H
 
 ## Bilder och ikoner — Eriks genomförandekrav 2026-10-06
 Varje paket har en UI-designcheckpunkt: använd passande bilder/illustrationer och ikoner där de hjälper förståelse och gör upplevelsen trevlig. Återanvänd Tasslas befintliga dog-welcome/dog-resting och Ionicons samt theme tokens där de passar; nya bilder ska vara lämpliga och ha spårbar källa/generation. Lugn hierarki, tydliga kort/status, textetiketter till handlingar, skärmläsarfallback, stor text, reducerad rörelse och laddningsprestanda. Undvik att dekor döljer formulär eller sparstatus. Kontroller får inte bara kommunicera med ikon/färg. Ingår i cleanup/QA/review, inte ett separat kosmetiskt slutprojekt.
+
+## Fastställd betakontakt och gallring — Eriks svar 2026-10-06
+Ansvarig: EriMali AB. Postadress: Stenvallavägen 1, 18634 Vallentuna. Support: erimali.ab@gmail.com. Betakonton och hunddata gallras 30 dagar efter avslutad beta. Detta ersätter tidigare obesvarade frågor och förslag ovan. Faktisk leverantörs-/backuphantering och verifierbar radering dokumenteras i betapaketet; uppgifterna i sig bevisar inte genomförd gallring eller rättslig granskning.

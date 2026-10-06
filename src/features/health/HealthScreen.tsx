@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Alert, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { isValidHealthWeightDate, isValidHealthWeightKg, type HealthHistoryRecord, type HealthHistoryType, type HealthWeightRecord } from '../../data/workspace-data';
 import { HealthHistoryScreen } from './HealthHistoryScreen';
@@ -32,6 +33,7 @@ export function HealthScreen({
   onResolveHistoryConflict,
   onSaveHistory,
   onDeleteHistory,
+  onOpenPlannedHealth,
 }: {
   onBack: () => void;
   records?: readonly HealthWeightRecord[];
@@ -56,6 +58,7 @@ export function HealthScreen({
   onResolveHistoryConflict?: () => void;
   onSaveHistory?: (id: string | null, type: HealthHistoryType, date: string, note: string) => Promise<boolean>;
   onDeleteHistory?: (id: string) => Promise<boolean>;
+  onOpenPlannedHealth?: () => void;
 }) {
   const cloudRecords = records ?? [];
   const cloudLoadState = loadState ?? 'ready';
@@ -130,6 +133,16 @@ export function HealthScreen({
       <PageHeading title="Hälsa" description="Håll ordning på hundens vikt över tid." />
       <Text style={styles.sectionTitle} accessibilityRole="header">Viktresa</Text>
       <MessageCard>Vikterna är ägarregistrerade uppgifter, inte en verifierad journal. Tassla tolkar inte viktförändringar.</MessageCard>
+      {onOpenPlannedHealth && <View style={styles.plannedCard}>
+        <View style={styles.plannedIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          <Ionicons name="calendar-outline" size={21} color={theme.colors.accent} />
+        </View>
+        <View style={styles.plannedCopy}>
+          <Text style={styles.cardTitle}>Planerade hälsohändelser</Text>
+          <Text style={styles.cardBody}>Håll vaccinationer och veterinärbesök åtskilda från det som redan har hänt.</Text>
+        </View>
+        <PrimaryButton title="Öppna planer" onPress={onOpenPlannedHealth} />
+      </View>}
       {cloudLoadState === 'loading' && <MessageCard>Hämtar hundens vikthistorik…</MessageCard>}
       {cloudLoadState === 'error' && <>
         <MessageCard tone="error">Vikthistoriken kunde inte hämtas.</MessageCard>
@@ -221,6 +234,9 @@ const styles = StyleSheet.create({
   label: { color: theme.colors.text, fontSize: 15, fontWeight: '700', marginBottom: 7 },
   input: { minHeight: 54, paddingHorizontal: 14, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, fontSize: 17 },
   recordCard: { marginTop: 10, padding: 16, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+  plannedCard: { marginTop: 13, padding: 15, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: '#F1F5F0' },
+  plannedIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#E5EFE8', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  plannedCopy: { marginBottom: 8 },
   recordHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   recordWeight: { color: theme.colors.text, fontSize: 21, fontWeight: '800' },
   ownerLabel: { color: theme.colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 0.6 },
