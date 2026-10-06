@@ -172,7 +172,7 @@ test('signed-out warning is owned by AuthProvider and survives workspace unmount
   assert.match(workspace, /if \(signOutInFlight\.current\) return;/);
   assert.match(workspace, /\{ text: 'Avbryt', style: 'cancel' \}/);
   assert.match(workspace, /\{ text: 'Bekräfta', style: 'destructive'/);
-  assert.match(workspace, /const \{ signOut \} = useAuth\(\);/);
+  assert.match(workspace, /const \{[^}]*\bsignOut\b[^}]*\} = useAuth\(\);/);
   assert.match(workspace, /setSignOutError\(!result\.localSessionCleared\)/);
   assert.match(workspace, /signOutError/);
   assert.match(signIn, /signOutWarning &&/);

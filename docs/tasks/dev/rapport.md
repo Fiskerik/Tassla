@@ -79,3 +79,26 @@ Den beständiga checkpointen består av den verifierade lokala diffen, taskplane
 Åtta ämnesförslag finns i `docs/content/mvp-content-inventory.json`, alla `proposed`, med tomma källor/evidens och explicita käll-/pilot-/expertgrindar. README förklarar redaktionella åldersfönster och att filen inte är publicerbar/importerbar. `tools/validate_content_inventory.py` använder enbart Python-stdlib och verifierar ett slutet metadataformat. Architect APPROVE; Critic PROCEED WITH CHANGES, införda före implementation; QA och Reviewer PASS. Originalet passerar och tio isolerade felaktiga fixtures underkänns. Ingen app-/SQL-ändring eller rådtext i denna slice. Detaljer i `mvp-content-inventory.md`.
 
 APP-05 och metadata-slicen är färdiga lokalt. Verklig beta är inte aktiverad: kvarvarande uppgifter är ansvarig/rättslig grund/information/gallring/Supabase-underlag och faktisk APP-05-PHONE-DB. Fråga om redan beslutade beta-/gallrings-/Supabaseuppgifter skickad till Erik; inget obesvarat besked räknas som godkännande. Fortsatt implementation av vaccinations-/veterinärhistorik behöver separat exakt plan och relevanta granskningar. Content-fulltext/källurval kräver sakgranskning; inga källor eller publiceringsbeslut har hittats på.
+
+### 2026-10-06 — B2-förberedelse och release-log
+Erik begärde förberedelse av APP-04B2 och obligatorisk release-log per paket. app-04b2.md v1 är förberedd, inte implementationsgodkänd. Regeln är sparad i AGENTS.md, workflow.md och taskmallen. Loggar finns i docs/releases/APP-05.md och APP-04B2.md. GitHub saknar Releases; senaste pushade commit e5327d1 verifierad via API. Tidigare uppgift om saknad push är inaktuell. Nästa steg: APP-05-PHONE-DB, exakt B2-planreview och därefter implementation enligt mandat. Inga app-/databasändringar eller nya appkontroller i denna dokumentationsuppgift.
+
+### 2026-10-06 — hela MVP:n: planering och ändrad telefonpolicy
+Erik beställer hela MVP:n till betaredo app, först samlad paketplan/checkpunkter. Plan i mvp-beta-delivery.md v1 och logg i docs/releases/MVP-BETA.md. Vikt/tangentbord användarrapporterat PASS, build okänd. TestFlight är inte längre grind efter varje paket; Erik väljer kritiska prov. RLS ej verifierat genom beskedet. Produktfrågor skickade; planreview nästa steg. Ingen ny appkod i detta planeringssteg.
+
+Architect APPROVE samlad MVP-plan. Critic CHANGES; loggflöden, verklig pilot-QR, full engagemangsmätning och innehållsformat/åldersurval införda i plan v2. Förnyad Critic-kontroll följer.
+
+## Betabeslut från Erik — 2026-10-06
+Ansvarig: EriMali AB. Angiven postadress för support: Stenvallavägen 1. Gallringstid: betakonton och hunddata raderas 30 dagar efter avslutad beta. Postnummer/ort och support-e-post efterfrågade, inte kända. Backup-/loggretention och faktisk teknisk radering dokumenteras i P10; användarens gallringsbeslut är inte bevis att leverantörens backuper redan följer det. Lokal implementation behöver inte vänta på adresskompletteringen.
+
+Kompletterad betakontakt enligt Erik: EriMali AB, Stenvallavägen 1, 18634 Vallentuna. Support: erimali.ab@gmail.com. Gallring 30 dagar efter avslutad beta. Dessa uppgifter används i P10:s information/support; inga meddelanden skickas genom detta beslut.
+
+### Genomförande startat — P01 APP-04B2
+Mandat Luna medel registrerat; 64/64 baslinjetester PASS. Exakt B2 v2 Architect APPROVE/Critic PROCEED/local data review APPROVE. Queue implementing. QA-data 33/33 efter upptäckt/rättat delete-id-fel. UI/workspace och slut-QA pågår; inte leverans-PASS ännu. P02/P03 exakta kontrakt förberedda och granskade inför senare start.
+
+## Slutcheckpoint — APP-04B2 lokalt klart
+Luna medium implementation. Independent QA profile_contract: health-history 38/38; pnpm check 102/102 inkl tsc/lint; pnpm bundle:ios PASS via godkänd filskrivningseskalering efter sandbox EPERM; git diff --check PASS. Reviewer b2_reviewplan PASS stable source; Security PASS lokal syntetisk utveckling, inga kvarstående fynd. Befintlig statisk authassertion justerad för sessionfält, runtime authtester fortsatt verifierade.
+Rättade utvecklingsfel: radering måste matcha requested ID eller kontrollera target separat; formulär återställs efter direkt/reconciled radering och accepterad konflikt. Detta är inte fel i tidigare release. Native/RLS ej körda här och inte påstådda PASS. Inga dependencies/migration eller betaaktivering i B2. Nästa paket APP-04C kan starta direkt enligt Eriks telefonpolicy.
+
+## Slutcheckpoint APP-04C — lokalt klart
+Luna medium b2_contract implementation; correction1 reviewer BLOCK saved-besked vid osparat utkast åtgärdad och next_reviews renewed Reviewer PASS/Security local PASS. Independent QA profile_contract: profile 27/27, full pnpm check 129/129 inklusive type/lint, iOS-export PASS (dist/ios verifierad inom repo, eskalerad skrivning efter EPERM), diffcheck PASS. Faktiska SDK/localfetch, workspacehandlers/comparator och editorns statusuttryck provade; inga nya appdefekter observerade. Native/deployed RLS ej testade och inte påstådda PASS. Nästa P03 efter denna hållbara checkpoint, ingen PHONE-grind.

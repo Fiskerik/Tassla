@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Alert, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
 import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
-import { isValidHealthWeightDate, isValidHealthWeightKg, type HealthWeightRecord } from '../../data/workspace-data';
+import { isValidHealthWeightDate, isValidHealthWeightKg, type HealthHistoryRecord, type HealthHistoryType, type HealthWeightRecord } from '../../data/workspace-data';
+import { HealthHistoryScreen } from './HealthHistoryScreen';
 import { localDate } from '../onboarding/dog';
 import { theme } from '../../theme/tokens';
 
@@ -20,6 +21,17 @@ export function HealthScreen({
   onRetryPending,
   onSave,
   onDelete,
+  historyRecords,
+  historyLoadState,
+  historyBusy,
+  historyPending,
+  historyMessage,
+  historyMessageError,
+  historyConflict,
+  onRetryHistory,
+  onResolveHistoryConflict,
+  onSaveHistory,
+  onDeleteHistory,
 }: {
   onBack: () => void;
   records?: readonly HealthWeightRecord[];
@@ -33,6 +45,17 @@ export function HealthScreen({
   onRetryPending?: () => void;
   onSave?: (id: string | null, occurredOn: string, weightKg: number) => Promise<boolean>;
   onDelete?: (id: string) => Promise<boolean>;
+  historyRecords?: readonly HealthHistoryRecord[];
+  historyLoadState?: LoadState;
+  historyBusy?: boolean;
+  historyPending?: boolean;
+  historyMessage?: string;
+  historyMessageError?: boolean;
+  historyConflict?: { current: HealthHistoryRecord | null } | null;
+  onRetryHistory?: () => void;
+  onResolveHistoryConflict?: () => void;
+  onSaveHistory?: (id: string | null, type: HealthHistoryType, date: string, note: string) => Promise<boolean>;
+  onDeleteHistory?: (id: string) => Promise<boolean>;
 }) {
   const cloudRecords = records ?? [];
   const cloudLoadState = loadState ?? 'ready';
@@ -171,6 +194,11 @@ export function HealthScreen({
           </View>
         ))}
       </>}
+      <HealthHistoryScreen key={JSON.stringify(historyRecords?.map(({ id, event_type, occurred_on, description }) => [id, event_type, occurred_on, description]))}
+        records={historyRecords} loadState={historyLoadState} busy={historyBusy}
+        pending={historyPending} statusMessage={historyMessage} statusError={historyMessageError}
+        conflict={historyConflict} onRetry={onRetryHistory} onResolveConflict={onResolveHistoryConflict}
+        onSave={onSaveHistory} onDelete={onDeleteHistory} />
     </View>
   );
 }

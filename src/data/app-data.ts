@@ -8,10 +8,18 @@ export interface OwnedDog {
   birth_date: string;
 }
 
+export interface OwnedDogProfileChanges {
+  name: string;
+  breed_id: string;
+  birth_date: string;
+}
+
 export interface BreedOption {
   id: string;
   name: string;
 }
+
+export type DogProfileWriteOutcome = { status: 'saved'; value: OwnedDog } | { status: 'failed' | 'unknown' };
 
 export interface HomeContent {
   id: string;
@@ -42,8 +50,81 @@ export async function fetchOwnedDog(client: SupabaseClient): Promise<OwnedDog | 
       .abortSignal(signal)
       .maybeSingle();
     if (error) throw new Error('Could not load the dog profile');
+    if (data === null) return null;
+    if (!isOwnedDog(data)) throw new Error('Dog profile response did not match the database contract');
     return data;
   });
+}
+
+export async function fetchOwnedDogById(client: SupabaseClient, dogId: string): Promise<OwnedDog | null> {
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.from('dogs')
+      .select('id,name,breed_id,birth_date')
+      .eq('id', dogId)
+      .abortSignal(signal)
+      .maybeSingle();
+    if (error) throw new Error('Could not check dog profile status');
+    if (data === null) return null;
+    if (!isOwnedDog(data) || data.id !== dogId) throw new Error('Dog profile status did not match the database contract');
+    return data;
+  });
+}
+
+export function normalizeDogProfileName(value: string): string | undefined {
+  const normalized = value.trim();
+  const length = Array.from(normalized).length;
+  return length >= 1 && length <= 80 ? normalized : undefined;
+}
+
+export function isValidDogBirthDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const time = Date.parse(`${value}T00:00:00Z`);
+  if (!Number.isFinite(time) || new Date(time).toISOString().slice(0, 10) !== value) return false;
+  const today = new Date();
+  const todayText = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  return value <= todayText;
+}
+
+export async function updateOwnedDog(
+  client: SupabaseClient,
+  dogId: string,
+  previous: OwnedDog,
+  changes: OwnedDogProfileChanges,
+  knownBreeds: readonly BreedOption[],
+): Promise<DogProfileWriteOutcome> {
+  const name = normalizeDogProfileName(changes.name);
+  if (previous.id !== dogId || !name || !isValidDogBirthDate(changes.birth_date)
+    || !knownBreeds.some((breed) => breed.id === changes.breed_id)) {
+    return { status: 'failed' };
+  }
+  const desired = { id: dogId, name, breed_id: changes.breed_id, birth_date: changes.birth_date };
+  let failure: unknown = null;
+  try {
+    const result = await withRequestDeadline(async (signal) => await client.from('dogs')
+      .update({ name, breed_id: changes.breed_id, birth_date: changes.birth_date })
+      .eq('id', dogId)
+      .eq('name', previous.name)
+      .eq('breed_id', previous.breed_id)
+      .eq('birth_date', previous.birth_date)
+      .abortSignal(signal)
+      .select('id,name,breed_id,birth_date')
+      .maybeSingle());
+    if (!result.error && isOwnedDog(result.data) && matchesDogProfile(result.data, desired)) {
+      return { status: 'saved', value: result.data };
+    }
+    failure = result.error ?? new Error('Dog profile update did not return the requested profile');
+  } catch (error) {
+    failure = error;
+  }
+
+  try {
+    const current = await fetchOwnedDogById(client, dogId);
+    if (current && matchesDogProfile(current, desired)) return { status: 'saved', value: current };
+    if (current && matchesDogProfile(current, previous) && isDefiniteClientRejection(failure)) return { status: 'failed' };
+    return { status: 'unknown' };
+  } catch {
+    return { status: 'unknown' };
+  }
 }
 
 export async function fetchBreeds(client: SupabaseClient): Promise<BreedOption[]> {
@@ -80,6 +161,27 @@ async function withRequestDeadline<T>(request: (signal: AbortSignal) => Promise<
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function isOwnedDog(value: unknown): value is OwnedDog {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return typeof row.id === 'string' && row.id.length > 0
+    && typeof row.name === 'string' && normalizeDogProfileName(row.name) === row.name
+    && typeof row.breed_id === 'string' && row.breed_id.length > 0
+    && typeof row.birth_date === 'string' && isValidDogBirthDate(row.birth_date);
+}
+
+function matchesDogProfile(current: OwnedDog, expected: OwnedDogProfileChanges & Pick<OwnedDog, 'id'>): boolean {
+  return current.id === expected.id && current.name === expected.name
+    && current.breed_id === expected.breed_id && current.birth_date === expected.birth_date;
+}
+
+function isDefiniteClientRejection(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const record = error as Record<string, unknown>;
+  if (typeof record.status === 'number' && record.status >= 400 && record.status < 500) return true;
+  return typeof record.code === 'string' && (/^[0-9A-Z]{5}$/.test(record.code) || /^PGRST\d{3}$/.test(record.code));
 }
 
 export async function fetchHomeContent(client: SupabaseClient, dog: OwnedDog, ageWeeks: number): Promise<HomeContent[]> {

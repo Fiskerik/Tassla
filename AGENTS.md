@@ -112,3 +112,26 @@ Rules:
 ## Language and style
 - Talk to the human in Swedish. Keep answers short. Propose alternatives when something looks wrong.
 - Code, identifiers, code comments and commit messages: English. Documents in `docs/`: Swedish.
+
+## Release-log för varje arbetspaket (Eriks beslut 2026-10-06)
+För varje paket/sprint ska koordinatorn före start skapa och efter varje checkpoint uppdatera en release-log i docs/releases/<paket-id>.md. Ett paket får inte rapporteras färdigt utan aktuell logg.
+Loggen ska alltid innehålla: Major changes (nya större användarflöden), Minor changes (mindre förbättringar), Bug-fixes (rättat fel och före/efter), Verifiering och kända begränsningar, samt Nästa sprint/paket med planerade funktioner, beroenden och checkpunkter. Skriv ”Inga” när en kategori saknar ändringar. Kategorierna är produktbeskrivningar, inte automatiska SemVer-beslut.
+Ange datum, paket-ID, status och jämförelsebas (release/tag eller exakt commitintervall), leveranscommit och TestFlight-version/build när känd. Skilj planerat, implementerat, lokalt verifierat, pushat och tillgängligt i TestFlight/publicerad release. Okänd build anges som okänd. Saknas GitHub Release ska detta sägas och en dokumenterad commitbas användas. Planerade ändringar får aldrig listas som implementerade. Utvecklingsfel som rättats innan leverans märks som sådana; kalla dem inte fel i en tidigare release utan evidens. Länka loggen från taskplan och rapport och sammanfatta den för Erik efter varje paket. Skapa/pusha/publicera inte GitHub Release automatiskt genom detta krav.
+
+## MVP-slutförande och TestFlight-policy — Eriks beslut 2026-10-06
+Erik har beställt planering och därefter färdigställande av hela godkända MVP:n till betaredo app. Första steg är samlad paketplan, checkpunkter och öppna detaljbeslut före genomförandet.
+TestFlight/fysiskt telefonprov är inte en obligatorisk grind efter varje paket och ska inte blockera nästa lokala paket. Erik avgör när sådana prov behövs för kritiska delar. Koordinatorn får rekommendera prov och redovisa kvarstående verifieringsluckor, men inte införa nya automatiska telefonstopp. Lokal check, relevant QA, oberoende review och checkpoint/release-log kvarstår. Verklig databas/RLS, signerad build och distribution är separata kontroller; avsaknad av telefonprov får inte rapporteras som PASS.
+Erik rapporterar nu att viktdelen fungerar bra och tangentbordet beter sig bra. Registrera det som användarrapporterat PASS; build/version är okänd och beskedet bevisar inte oberoende RLS-prov.
+Denna uttryckliga policy ersätter äldre krav på PHONE-grind mellan varje paket i AGENTS.md, workflow, APP-04/05, app-04b2.md och MVP-population. Öppna detaljbeslut om notifieringar, PDF, innehåll och faktisk betadatabehandling behöver lösas; de stoppar endast berört arbete. Ingen automatisk publicering eller insamling av verkliga uppgifter genom planeringsmandatet.
+
+## Eriks detaljbeslut — 2026-10-06, efter plan v1
+- Godkänt: lokala telefonnotiser för ägarvalda datum och träningspåminnelser; PDF med namn, ras, födelsedatum, vikt, vaccinationer och veterinärhändelser, förhandsgranskning och ägarinitierad delning; behövliga Expo-paket för notiser/PDF/delning. Kompatibla exakta versioner väljs i implementationplan, inga orelaterade dependencies.
+- Betan använder egna konton och sparade uppgifter. Erik kommer ange ansvarig/support/gallring; detta är ännu obesvarat och hindrar endast berörd aktivering, inte oberoende lokal utveckling med syntetiska data.
+- Godkänt: förbered källbelagda utkast till 3 träningsflöden och 8 guider/checklistor. Erik ordnar sakgranskare. Utkast är inte publicerat/granskat innehåll.
+- Föreslagen gallring 30 dagar efter avslutad beta har skickats som fråga, är inte ett fattat beslut.
+
+## Genomförandemandat 2026-10-06 — Luna medel
+Erik: ”Ok, starta implementeringen uppifrån och ner. Använd Luna medel”. Hela samlade MVP-planens paket är beställda i ordning, med exakta interna kontrakt/review före varje paket. Implementer, QA och Reviewer använder gpt-6-luna medium från detta besked; det ersätter tidigare high för APP-05 och äldre modellbeslut för aktuellt genomförande. Architect/Compliance/Security behåller sina reviewroller. Ingen ny fråga om segmentmandat behövs för funktioner inom denna godkända MVP-plan. Lokal utveckling med syntetiska data fortsätter utan rutinmässig TestFlight-grind; Erik beslutar kritiska telefonprov och faktisk distribution.
+
+## Bilder och ikoner — Eriks genomförandekrav 2026-10-06
+Varje paket har en UI-designcheckpunkt: använd passande bilder/illustrationer och ikoner där de hjälper förståelse och gör upplevelsen trevlig. Återanvänd Tasslas befintliga dog-welcome/dog-resting och Ionicons samt theme tokens där de passar; nya bilder ska vara lämpliga och ha spårbar källa/generation. Lugn hierarki, tydliga kort/status, textetiketter till handlingar, skärmläsarfallback, stor text, reducerad rörelse och laddningsprestanda. Undvik att dekor döljer formulär eller sparstatus. Kontroller får inte bara kommunicera med ikon/färg. Ingår i cleanup/QA/review, inte ett separat kosmetiskt slutprojekt.

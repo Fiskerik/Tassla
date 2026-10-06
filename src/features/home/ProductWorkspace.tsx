@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Alert, Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { ComponentProps } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -9,32 +9,52 @@ import { AppScreen, MessageCard, PageHeading, PrimaryButton, QuietButton } from 
 import {
   deleteDogEvent,
   deleteHealthWeight,
+  deleteHealthHistory,
   deleteTrainingProgress,
   fetchDogEventById,
   fetchDogEvents,
   fetchHealthWeightById,
   fetchHealthWeights,
+  fetchHealthHistory,
+  fetchHealthHistoryById,
   fetchHomeContent,
   fetchTrainingWorkspace,
   isValidHealthWeightDate,
   isValidHealthWeightKg,
+  isValidHealthHistoryDate,
+  normalizeHealthHistoryDescription,
   insertDogEvent,
   insertHealthWeight,
+  insertHealthHistory,
   insertTrainingProgress,
   updateDogEvent,
   updateHealthWeight,
+  updateHealthHistory,
   type DogEventOperation,
   type DogEventRecord,
   type HealthWeightChanges,
   type HealthWeightOperation,
   type HealthWeightRecord,
+  type HealthHistoryChanges,
+  type HealthHistoryOperation,
+  type HealthHistoryRecord,
+  type HealthHistoryType,
   type PublishedTrainingProgram,
   type PausedTrainingProgress,
   type WriteOutcome,
 } from '../../data/workspace-data';
-import type { HomeContent, OwnedDog } from '../../data/app-data';
+import {
+  fetchOwnedDogById,
+  updateOwnedDog,
+  type BreedOption,
+  type DogProfileWriteOutcome,
+  type HomeContent,
+  type OwnedDog,
+  type OwnedDogProfileChanges,
+} from '../../data/app-data';
 import { ageInWeeks, localDate } from '../onboarding/dog';
 import { HealthScreen } from '../health/HealthScreen';
+import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
 import { LogScreen } from '../puppy-log/LogScreen';
 import { type LogEvent, type LogEventChanges, type LogEventType } from '../puppy-log/log-model';
@@ -52,16 +72,22 @@ type PendingHealthMutation =
   | { kind: 'insert'; operation: HealthWeightOperation }
   | { kind: 'update'; id: string; previous: HealthWeightRecord; changes: HealthWeightChanges }
   | { kind: 'delete'; id: string; previous: HealthWeightRecord };
+type PendingHealthHistoryMutation =
+  | { kind: 'insert'; operation: HealthHistoryOperation; lifetime: string }
+  | { kind: 'update'; id: string; eventType: HealthHistoryType; previous: HealthHistoryRecord; changes: HealthHistoryChanges; lifetime: string }
+  | { kind: 'delete'; id: string; eventType: HealthHistoryType; previous: HealthHistoryRecord; lifetime: string };
+type PendingProfileMutation = { previous: OwnedDog; changes: OwnedDogProfileChanges; knownBreeds: readonly BreedOption[]; lifetime: string };
 
 const PAGE_SIZE = 40;
 
-export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog: OwnedDog }) {
+export function ProductWorkspace({ client, dog, onDogUpdated }: { client: SupabaseClient; dog: OwnedDog; onDogUpdated?: (updated: OwnedDog) => void }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
   const [page, setPage] = useState<ProductPage>('home');
   const [reduceMotion, setReduceMotion] = useState(true);
   const [pageOpacity] = useState(() => new Animated.Value(1));
   const [content, setContent] = useState<HomeContent[]>([]);
   const [contentState, setContentState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [contentSelectionKey, setContentSelectionKey] = useState<string | null>(null);
   const [events, setEvents] = useState<DogEventRecord[]>([]);
   const eventRows = useRef<DogEventRecord[]>([]);
   const [logState, setLogState] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -77,8 +103,22 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
   const [healthPending, setHealthPending] = useState(false);
   const [healthMessage, setHealthMessage] = useState('');
   const [healthMessageError, setHealthMessageError] = useState(false);
+  const [healthHistory, setHealthHistory] = useState<HealthHistoryRecord[]>([]);
+  const healthHistoryRows = useRef<HealthHistoryRecord[]>([]);
+  const [healthHistoryState, setHealthHistoryState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [healthHistoryBusy, setHealthHistoryBusy] = useState(false);
+  const [healthHistoryPending, setHealthHistoryPending] = useState(false);
+  const [healthHistoryMessage, setHealthHistoryMessage] = useState('');
+  const [healthHistoryMessageError, setHealthHistoryMessageError] = useState(false);
+  const [healthHistoryConflict, setHealthHistoryConflict] = useState<{ lifetime: string; mutationId: string; current: HealthHistoryRecord | null } | null>(null);
+  const [profileBusy, setProfileBusy] = useState(false);
+  const [profilePending, setProfilePending] = useState(false);
+  const [profileMessage, setProfileMessage] = useState('');
+  const [profileMessageError, setProfileMessageError] = useState(false);
+  const [profileConflict, setProfileConflict] = useState<OwnedDog | null>(null);
   const [training, setTraining] = useState<{ programs: PublishedTrainingProgram[]; paused: PausedTrainingProgress[] }>({ programs: [], paused: [] });
   const [trainingState, setTrainingState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [trainingSelectionKey, setTrainingSelectionKey] = useState<string | null>(null);
   const [trainingError, setTrainingError] = useState('');
   const [busyStepKey, setBusyStepKey] = useState<string | null>(null);
   const [signOutError, setSignOutError] = useState(false);
@@ -88,13 +128,41 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
   const logMutationInFlight = useRef(false);
   const pendingHealthMutation = useRef<PendingHealthMutation | null>(null);
   const healthMutationInFlight = useRef(false);
+  const pendingHealthHistoryMutation = useRef<PendingHealthHistoryMutation | null>(null);
+  const healthHistoryMutationInFlight = useRef(false);
+  const healthHistoryFlightToken = useRef<object | null>(null);
+  const pendingProfileMutation = useRef<PendingProfileMutation | null>(null);
+  const profileMutationInFlight = useRef(false);
   const trainingMutationInFlight = useRef(false);
   const mounted = useRef(false);
   const eventReadQueue = useRef<Promise<void>>(Promise.resolve());
   const healthReadQueue = useRef<Promise<void>>(Promise.resolve());
+  const healthHistoryReadQueue = useRef<Promise<void>>(Promise.resolve());
   const loadMoreInFlight = useRef(false);
-  const { signOut } = useAuth();
+  const { signOut, session } = useAuth();
   const age = ageInWeeks(dog.birth_date, localDate());
+  const currentHealthHistoryLifetime = `${dog.id}:${session?.user.id ?? ''}`;
+  const healthHistoryLifetime = useRef('');
+  const previousHealthHistoryLifetime = useRef('');
+
+  useLayoutEffect(() => {
+    healthHistoryLifetime.current = currentHealthHistoryLifetime;
+  }, [currentHealthHistoryLifetime]);
+  const currentProfileLifetime = currentHealthHistoryLifetime;
+  const profileLifetime = useRef('');
+  const previousProfileLifetime = useRef('');
+  const contentGeneration = useRef(0);
+  const trainingGeneration = useRef(0);
+  const currentSelectionKey = `${dog.id}:${dog.breed_id}:${age}`;
+  const currentSelectionKeyRef = useRef(currentSelectionKey);
+
+  useLayoutEffect(() => {
+    currentSelectionKeyRef.current = currentSelectionKey;
+  }, [currentSelectionKey]);
+
+  useLayoutEffect(() => {
+    profileLifetime.current = currentProfileLifetime;
+  }, [currentProfileLifetime]);
 
   useEffect(() => {
     void AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => undefined);
@@ -142,23 +210,56 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
     setHealthState('ready');
   }, [client, dog.id, serializeHealthRead]);
 
+  const serializeHealthHistoryRead = useCallback(<T,>(read: () => Promise<T>): Promise<T> => {
+    const request = healthHistoryReadQueue.current.catch(() => undefined).then(read);
+    healthHistoryReadQueue.current = request.then(() => undefined, () => undefined);
+    return request;
+  }, []);
+
+  const reloadHealthHistory = useCallback(async (lifetime = healthHistoryLifetime.current, signal?: AbortSignal) => {
+    const rows = await serializeHealthHistoryRead(() => fetchHealthHistory(client, dog.id, undefined, signal));
+    if (!mounted.current || signal?.aborted || healthHistoryLifetime.current !== lifetime) return;
+    healthHistoryRows.current = rows;
+    setHealthHistory(rows);
+    setHealthHistoryState('ready');
+  }, [client, dog.id, serializeHealthHistoryRead]);
+
   const reloadTraining = useCallback(async (signal?: AbortSignal) => {
+    const generation = trainingGeneration.current;
     const result = await fetchTrainingWorkspace(client, dog, age, undefined, signal);
-    if (!mounted.current || signal?.aborted) return;
+    if (!mounted.current || signal?.aborted || trainingGeneration.current !== generation || currentSelectionKeyRef.current !== currentSelectionKey) return false;
     setTraining(result);
+    setTrainingSelectionKey(currentSelectionKey);
     setTrainingState('ready');
-  }, [age, client, dog]);
+    return true;
+  }, [age, client, currentSelectionKey, dog]);
 
   useEffect(() => {
     mounted.current = true;
+    if (previousProfileLifetime.current !== currentProfileLifetime) {
+      previousProfileLifetime.current = currentProfileLifetime;
+      pendingProfileMutation.current = null;
+      profileMutationInFlight.current = false;
+      setProfilePending(false);
+      setProfileMessage('');
+      setProfileMessageError(false);
+      setProfileConflict(null);
+    }
+    const currentHistoryLifetime = currentHealthHistoryLifetime;
+    if (previousHealthHistoryLifetime.current !== currentHistoryLifetime) {
+      previousHealthHistoryLifetime.current = currentHistoryLifetime;
+      pendingHealthHistoryMutation.current = null;
+      healthHistoryMutationInFlight.current = false;
+      healthHistoryFlightToken.current = null;
+      healthHistoryRows.current = [];
+      setHealthHistory([]);
+      setHealthHistoryState('loading');
+      setHealthHistoryPending(false);
+      setHealthHistoryConflict(null);
+      setHealthHistoryMessage('');
+      setHealthHistoryMessageError(false);
+    }
     const controller = new AbortController();
-    void fetchHomeContent(client, dog, age, undefined, controller.signal).then((items) => {
-      if (controller.signal.aborted || !mounted.current) return;
-      setContent(items);
-      setContentState('ready');
-    }).catch(() => {
-      if (!controller.signal.aborted && mounted.current) setContentState('error');
-    });
     void serializeEventRead(() => fetchDogEvents(client, dog.id, 0, PAGE_SIZE, undefined, controller.signal)).then((rows) => {
       if (controller.signal.aborted || !mounted.current) return;
       eventRows.current = rows;
@@ -176,26 +277,197 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
     }).catch(() => {
       if (!controller.signal.aborted && mounted.current) setHealthState('error');
     });
-    void fetchTrainingWorkspace(client, dog, age, undefined, controller.signal).then((result) => {
-      if (controller.signal.aborted || !mounted.current) return;
-      setTraining(result);
-      setTrainingState('ready');
+    const historyLifetime = healthHistoryLifetime.current;
+    void serializeHealthHistoryRead(() => fetchHealthHistory(client, dog.id, undefined, controller.signal)).then((rows) => {
+      if (controller.signal.aborted || !mounted.current || healthHistoryLifetime.current !== historyLifetime) return;
+      healthHistoryRows.current = rows;
+      setHealthHistory(rows);
+      setHealthHistoryState('ready');
     }).catch(() => {
-      if (!controller.signal.aborted && mounted.current) {
-        setTrainingError('Publicerat träningsinnehåll kunde inte hämtas. Inga exempelprogram visas.');
-        setTrainingState('error');
-      }
+      if (!controller.signal.aborted && mounted.current && healthHistoryLifetime.current === historyLifetime) setHealthHistoryState('error');
     });
     return () => {
       mounted.current = false;
       controller.abort();
     };
-  }, [age, client, dog, serializeEventRead, serializeHealthRead]);
+  }, [client, currentHealthHistoryLifetime, currentProfileLifetime, dog.id, serializeEventRead, serializeHealthRead, serializeHealthHistoryRead]);
+
+  useEffect(() => {
+    const generation = ++contentGeneration.current;
+    const controller = new AbortController();
+    void fetchHomeContent(client, dog, age, undefined, controller.signal).then((items) => {
+      if (!mounted.current || controller.signal.aborted || contentGeneration.current !== generation || currentSelectionKeyRef.current !== currentSelectionKey) return;
+      setContent(items);
+      setContentSelectionKey(currentSelectionKey);
+      setContentState('ready');
+    }).catch(() => {
+      if (!mounted.current || controller.signal.aborted || contentGeneration.current !== generation || currentSelectionKeyRef.current !== currentSelectionKey) return;
+      setContent([]);
+      setContentSelectionKey(currentSelectionKey);
+      setContentState('error');
+    });
+
+    const trainingRevision = ++trainingGeneration.current;
+    void fetchTrainingWorkspace(client, dog, age, undefined, controller.signal).then((result) => {
+      if (!mounted.current || controller.signal.aborted || trainingGeneration.current !== trainingRevision || currentSelectionKeyRef.current !== currentSelectionKey) return;
+      setTraining(result);
+      setTrainingSelectionKey(currentSelectionKey);
+      setTrainingError('');
+      setTrainingState('ready');
+    }).catch(() => {
+      if (!mounted.current || controller.signal.aborted || trainingGeneration.current !== trainingRevision || currentSelectionKeyRef.current !== currentSelectionKey) return;
+      setTraining({ programs: [], paused: [] });
+      setTrainingSelectionKey(currentSelectionKey);
+      setTrainingError('Publicerat träningsinnehåll kunde inte hämtas. Inga exempelprogram visas.');
+      setTrainingState('error');
+    });
+    return () => controller.abort();
+  }, [age, client, currentSelectionKey, dog]);
+
+  const visibleContent = contentSelectionKey === currentSelectionKey ? content : [];
+  const visibleContentState = contentSelectionKey === currentSelectionKey ? contentState : 'loading';
+  const visibleTrainingState = trainingSelectionKey === currentSelectionKey ? trainingState : 'loading';
 
   const displayEvents = useMemo(() => events.map(toLogEvent), [events]);
   const latestEvent = events[0];
   const nextProgram = training.programs.find((program) => program.steps.some((step) => !program.completedStepIds.includes(step.id)));
   const nextStep = nextProgram?.steps.find((step) => !nextProgram.completedStepIds.includes(step.id));
+
+  async function markProfileSaved(value: OwnedDog, lifetime: string): Promise<boolean> {
+    if (!mounted.current || profileLifetime.current !== lifetime || value.id !== dog.id) return false;
+    pendingProfileMutation.current = null;
+    setProfilePending(false);
+    setProfileConflict(null);
+    setProfileMessage('Hundprofilen är sparad.');
+    setProfileMessageError(false);
+    onDogUpdated?.(value);
+    return true;
+  }
+
+  async function runProfileMutation(mutation: PendingProfileMutation, retry = false): Promise<boolean> {
+    const isCurrent = () => mounted.current && profileLifetime.current === mutation.lifetime;
+    if (!isCurrent() || profileMutationInFlight.current) return false;
+    if (pendingProfileMutation.current && !retry) {
+      setProfileMessage('Kontrollera föregående profiländring innan du gör en ny.');
+      setProfileMessageError(true);
+      return false;
+    }
+    profileMutationInFlight.current = true;
+    setProfileBusy(true);
+    setProfileMessage('');
+    setProfileMessageError(false);
+    setProfileConflict(null);
+    try {
+      const outcome: DogProfileWriteOutcome = await updateOwnedDog(
+        client, mutation.previous.id, mutation.previous, mutation.changes, mutation.knownBreeds,
+      );
+      if (!isCurrent()) return false;
+      if (outcome.status === 'saved') return await markProfileSaved(outcome.value, mutation.lifetime);
+      if (outcome.status === 'unknown') {
+        pendingProfileMutation.current = mutation;
+        setProfilePending(true);
+        setProfileMessage('Sparstatus är osäker. Kontrollera samma profiländring innan du gör något nytt.');
+        setProfileMessageError(true);
+        return false;
+      }
+      pendingProfileMutation.current = null;
+      setProfilePending(false);
+      setProfileMessage('Profilen kunde inte sparas. Kontrollera uppgifterna och anslutningen och försök igen.');
+      setProfileMessageError(true);
+      return false;
+    } catch {
+      if (!isCurrent()) return false;
+      pendingProfileMutation.current = mutation;
+      setProfilePending(true);
+      setProfileMessage('Sparstatus är osäker. Kontrollera samma profiländring innan du gör något nytt.');
+      setProfileMessageError(true);
+      return false;
+    } finally {
+      profileMutationInFlight.current = false;
+      if (isCurrent()) setProfileBusy(false);
+    }
+  }
+
+  function saveDogProfile(changes: OwnedDogProfileChanges, knownBreeds: readonly BreedOption[]): Promise<boolean> {
+    if (profileMutationInFlight.current || pendingProfileMutation.current || !onDogUpdated) return Promise.resolve(false);
+    const mutation: PendingProfileMutation = {
+      previous: dog,
+      changes: { ...changes, name: changes.name.trim() },
+      knownBreeds: [...knownBreeds],
+      lifetime: profileLifetime.current,
+    };
+    return runProfileMutation(mutation);
+  }
+
+  async function retryProfileStatus() {
+    if (profileMutationInFlight.current) return;
+    const mutation = pendingProfileMutation.current;
+    if (!mutation) return;
+    const isCurrent = () => mounted.current && profileLifetime.current === mutation.lifetime;
+    if (!isCurrent()) return;
+    profileMutationInFlight.current = true;
+    setProfileBusy(true);
+    setProfileMessage('Kontrollerar sparstatus…');
+    setProfileMessageError(false);
+    setProfileConflict(null);
+    let retrySameIntent = false;
+    try {
+      const current = await fetchOwnedDogById(client, mutation.previous.id);
+      if (!isCurrent()) return;
+      if (!current) {
+        setProfileMessage('Hundprofilen kunde inte hittas. Den väntande ändringen är kvar; försök kontrollera igen.');
+        setProfileMessageError(true);
+      } else if (sameOwnedDogProfile(current, mutation.changes, mutation.previous.id)) {
+        await markProfileSaved(current, mutation.lifetime);
+      } else if (sameOwnedDogProfile(current, mutation.previous, mutation.previous.id)) {
+        retrySameIntent = true;
+      } else {
+        setProfileConflict(current);
+        setProfileMessage('Profilen har ändrats sedan försöket. Granska den aktuella versionen.');
+        setProfileMessageError(true);
+      }
+      if (!isCurrent()) return;
+    } catch {
+      if (isCurrent()) {
+        setProfileMessage('Sparstatus kunde inte kontrolleras. Försök igen när anslutningen fungerar.');
+        setProfileMessageError(true);
+      }
+    } finally {
+      profileMutationInFlight.current = false;
+      if (isCurrent()) setProfileBusy(false);
+    }
+    if (!isCurrent()) return;
+    if (retrySameIntent) await runProfileMutation(mutation, true);
+  }
+
+  async function acceptCurrentProfile() {
+    const mutation = pendingProfileMutation.current;
+    if (!mutation || profileMutationInFlight.current || !profileConflict) return;
+    const isCurrent = () => mounted.current && profileLifetime.current === mutation.lifetime;
+    if (!isCurrent()) return;
+    profileMutationInFlight.current = true;
+    setProfileBusy(true);
+    setProfileMessage('Kontrollerar aktuell profil…');
+    setProfileMessageError(false);
+    try {
+      const current = await fetchOwnedDogById(client, mutation.previous.id);
+      if (!isCurrent()) return;
+      if (!current) {
+        setProfileMessage('Hundprofilen kunde inte hittas. Den väntande ändringen är kvar.');
+        setProfileMessageError(true);
+        return;
+      }
+      await markProfileSaved(current, mutation.lifetime);
+    } catch {
+      if (isCurrent()) {
+        setProfileMessage('Den aktuella profilen kunde inte hämtas. Den väntande ändringen är kvar.');
+        setProfileMessageError(true);
+      }
+    } finally {
+      profileMutationInFlight.current = false;
+      if (isCurrent()) setProfileBusy(false);
+    }
+  }
 
   async function loadMoreEvents() {
     if (loadMoreInFlight.current || loadingMore || !hasMore) return;
@@ -489,15 +761,215 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
     }
   }
 
+  async function markHealthHistorySaved(mutation: PendingHealthHistoryMutation, value: HealthHistoryRecord | null): Promise<void> {
+    const lifetime = mutation.lifetime;
+    if (!mounted.current || healthHistoryLifetime.current !== lifetime) return;
+    pendingHealthHistoryMutation.current = null;
+    setHealthHistoryPending(false);
+    setHealthHistoryConflict(null);
+    const mutationId = mutation.kind === 'insert' ? mutation.operation.id : mutation.id;
+    const next = mutation.kind === 'delete'
+      ? healthHistoryRows.current.filter((row) => row.id !== mutationId)
+      : value
+        ? [value, ...healthHistoryRows.current.filter((row) => row.id !== mutationId)]
+          .sort((a, b) => b.occurred_on.localeCompare(a.occurred_on) || b.id.localeCompare(a.id))
+        : healthHistoryRows.current;
+    healthHistoryRows.current = next;
+    setHealthHistory(next);
+    setHealthHistoryMessage('Ändringen är sparad.');
+    setHealthHistoryMessageError(false);
+    try {
+      await reloadHealthHistory(lifetime);
+      if (!mounted.current || healthHistoryLifetime.current !== lifetime) return;
+    } catch {
+      if (mounted.current && healthHistoryLifetime.current === lifetime) {
+        setHealthHistoryMessage('Ändringen är sparad, men historiken kunde inte uppdateras.');
+      }
+    }
+  }
+
+  async function runHealthHistoryMutation(mutation: PendingHealthHistoryMutation, retry = false): Promise<boolean> {
+    const isCurrent = () => mounted.current && healthHistoryLifetime.current === mutation.lifetime;
+    if (!isCurrent() || healthHistoryMutationInFlight.current) return false;
+    if (pendingHealthHistoryMutation.current && !retry) {
+      setHealthHistoryMessage('Kontrollera föregående ändring innan du gör en ny.');
+      setHealthHistoryMessageError(true);
+      return false;
+    }
+    healthHistoryMutationInFlight.current = true;
+    const flightToken = {};
+    healthHistoryFlightToken.current = flightToken;
+    setHealthHistoryBusy(true);
+    setHealthHistoryMessage('');
+    setHealthHistoryMessageError(false);
+    setHealthHistoryConflict(null);
+    try {
+      let outcome: WriteOutcome<HealthHistoryRecord | null>;
+      if (mutation.kind === 'insert') outcome = await insertHealthHistory(client, mutation.operation);
+      else if (mutation.kind === 'update') outcome = await updateHealthHistory(client, dog.id, mutation.eventType, mutation.id, mutation.previous, mutation.changes);
+      else outcome = await deleteHealthHistory(client, dog.id, mutation.eventType, mutation.id, mutation.previous);
+      if (!isCurrent()) return false;
+      if (outcome.status === 'saved') {
+        await markHealthHistorySaved(mutation, outcome.value);
+        if (!isCurrent()) return false;
+        return true;
+      }
+      if (outcome.status === 'unknown') {
+        pendingHealthHistoryMutation.current = mutation;
+        setHealthHistoryPending(true);
+        setHealthHistoryMessage('Sparstatus är osäker. Kontrollera samma ändring innan du försöker igen.');
+        setHealthHistoryMessageError(true);
+        return false;
+      }
+      pendingHealthHistoryMutation.current = null;
+      setHealthHistoryPending(false);
+      setHealthHistoryMessage('Ändringen kunde inte sparas. Kontrollera anslutningen och försök igen.');
+      setHealthHistoryMessageError(true);
+      return false;
+    } catch {
+      if (!isCurrent()) return false;
+      pendingHealthHistoryMutation.current = mutation;
+      setHealthHistoryPending(true);
+      setHealthHistoryMessage('Sparstatus är osäker. Kontrollera samma ändring innan du försöker igen.');
+      setHealthHistoryMessageError(true);
+      return false;
+    } finally {
+      if (healthHistoryFlightToken.current === flightToken) {
+        healthHistoryFlightToken.current = null;
+        healthHistoryMutationInFlight.current = false;
+        if (isCurrent()) setHealthHistoryBusy(false);
+      }
+    }
+  }
+
+  function saveHealthHistory(id: string | null, eventType: HealthHistoryType, occurredOn: string, note: string): Promise<boolean> {
+    const lifetime = healthHistoryLifetime.current;
+    if (healthHistoryMutationInFlight.current || pendingHealthHistoryMutation.current || healthHistoryState !== 'ready') return Promise.resolve(false);
+    if (!isValidHealthHistoryDate(occurredOn)) return Promise.resolve(false);
+    const description = normalizeHealthHistoryDescription(note);
+    if (description === undefined || (eventType !== 'vaccination' && eventType !== 'vet_visit')) return Promise.resolve(false);
+    if (id === null) {
+      const operation: HealthHistoryOperation = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, event_type: eventType, occurred_on: occurredOn, description };
+      return runHealthHistoryMutation({ kind: 'insert', operation, lifetime });
+    }
+    const previous = healthHistoryRows.current.find((row) => row.id === id && row.event_type === eventType);
+    if (!previous) return Promise.resolve(false);
+    return runHealthHistoryMutation({ kind: 'update', id, eventType, previous, changes: { occurred_on: occurredOn, description }, lifetime });
+  }
+
+  function removeHealthHistory(id: string): Promise<boolean> {
+    const lifetime = healthHistoryLifetime.current;
+    if (healthHistoryMutationInFlight.current || pendingHealthHistoryMutation.current || healthHistoryState !== 'ready') return Promise.resolve(false);
+    const previous = healthHistoryRows.current.find((row) => row.id === id);
+    if (!previous) return Promise.resolve(false);
+    return runHealthHistoryMutation({ kind: 'delete', id, eventType: previous.event_type, previous, lifetime });
+  }
+
+  function resolveHealthHistoryConflict() {
+    const conflict = healthHistoryConflict;
+    const pending = pendingHealthHistoryMutation.current;
+    if (!conflict || !pending || conflict.lifetime !== healthHistoryLifetime.current || conflict.lifetime !== pending.lifetime) return;
+    const rows = healthHistoryRows.current.filter((row) => row.id !== conflict.mutationId);
+    const next = conflict.current ? [conflict.current, ...rows]
+      .sort((a, b) => b.occurred_on.localeCompare(a.occurred_on) || b.id.localeCompare(a.id)) : rows;
+    healthHistoryRows.current = next;
+    setHealthHistory(next);
+    pendingHealthHistoryMutation.current = null;
+    setHealthHistoryPending(false);
+    setHealthHistoryConflict(null);
+    setHealthHistoryMessage('Visad aktuell historik används. Du kan nu börja om.');
+    setHealthHistoryMessageError(false);
+  }
+
+  async function retryHealthHistory() {
+    if (healthHistoryMutationInFlight.current) return;
+    const mutation = pendingHealthHistoryMutation.current;
+    if (mutation) {
+      const isCurrent = () => mounted.current && healthHistoryLifetime.current === mutation.lifetime;
+      if (!isCurrent()) return;
+      healthHistoryMutationInFlight.current = true;
+      const flightToken = {};
+      healthHistoryFlightToken.current = flightToken;
+      setHealthHistoryBusy(true);
+      setHealthHistoryMessage('Kontrollerar sparstatus…');
+      setHealthHistoryMessageError(false);
+      let retrySameOperation = false;
+      try {
+        const id = mutation.kind === 'insert' ? mutation.operation.id : mutation.id;
+        const current = await fetchHealthHistoryById(client, dog.id, mutation.kind === 'insert' ? mutation.operation.event_type : mutation.eventType, id);
+        if (!isCurrent()) return;
+        if (mutation.kind === 'insert') {
+          if (current && sameHealthHistory(current, mutation.operation)) await markHealthHistorySaved(mutation, current);
+          else if (!current) retrySameOperation = true;
+          else {
+            setHealthHistoryConflict({ lifetime: mutation.lifetime, mutationId: id, current });
+            setHealthHistoryMessage('En annan post finns med samma id. Granska den innan du fortsätter.');
+          }
+        } else if (mutation.kind === 'update') {
+          if (current && sameHealthHistory(current, { id: mutation.id, dog_id: dog.id, event_type: mutation.eventType, ...mutation.changes })) {
+            await markHealthHistorySaved(mutation, current);
+          } else if (current && sameHealthHistory(current, mutation.previous)) retrySameOperation = true;
+          else {
+            setHealthHistoryConflict({ lifetime: mutation.lifetime, mutationId: id, current });
+            setHealthHistoryMessage(current ? 'Posten har ändrats sedan försöket. Granska den aktuella versionen.' : 'Posten finns inte längre. Bekräfta att du vill släppa den väntande rättningen.');
+          }
+        } else if (!current) await markHealthHistorySaved(mutation, null);
+        else if (sameHealthHistory(current, mutation.previous)) retrySameOperation = true;
+        else {
+          setHealthHistoryConflict({ lifetime: mutation.lifetime, mutationId: id, current });
+          setHealthHistoryMessage('Posten har ändrats sedan försöket. Granska den aktuella versionen.');
+        }
+        if (!isCurrent()) return;
+        if (!retrySameOperation && pendingHealthHistoryMutation.current) setHealthHistoryMessageError(true);
+      } catch {
+        if (isCurrent()) {
+          setHealthHistoryMessage('Sparstatus kunde inte kontrolleras. Försök igen när anslutningen fungerar.');
+          setHealthHistoryMessageError(true);
+        }
+      } finally {
+        if (healthHistoryFlightToken.current === flightToken) {
+          healthHistoryFlightToken.current = null;
+          healthHistoryMutationInFlight.current = false;
+          if (isCurrent()) setHealthHistoryBusy(false);
+        }
+      }
+      if (!isCurrent()) return;
+      if (retrySameOperation) await runHealthHistoryMutation(mutation, true);
+      return;
+    }
+    const lifetime = healthHistoryLifetime.current;
+    setHealthHistoryState('loading');
+    setHealthHistoryMessage('');
+    setHealthHistoryMessageError(false);
+    try {
+      await reloadHealthHistory(lifetime);
+    } catch {
+      if (mounted.current && healthHistoryLifetime.current === lifetime) {
+        setHealthHistoryState('error');
+        setHealthHistoryMessage('Historiken kunde inte hämtas.');
+        setHealthHistoryMessageError(true);
+      }
+    }
+  }
+
   async function retryContent() {
+    const generation = ++contentGeneration.current;
+    const selectionKey = currentSelectionKey;
+    setContent([]);
+    setContentSelectionKey(null);
     setContentState('loading');
     try {
       const items = await fetchHomeContent(client, dog, age);
-      if (!mounted.current) return;
+      if (!mounted.current || contentGeneration.current !== generation || currentSelectionKeyRef.current !== selectionKey) return;
       setContent(items);
+      setContentSelectionKey(currentSelectionKey);
       setContentState('ready');
     } catch {
-      if (mounted.current) setContentState('error');
+      if (mounted.current && contentGeneration.current === generation && currentSelectionKeyRef.current === selectionKey) {
+        setContent([]);
+        setContentSelectionKey(selectionKey);
+        setContentState('error');
+      }
     }
   }
 
@@ -511,12 +983,21 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
   }
 
   async function retryTraining() {
+    const generation = ++trainingGeneration.current;
+    const selectionKey = currentSelectionKey;
+    setTraining({ programs: [], paused: [] });
+    setTrainingSelectionKey(null);
     setTrainingState('loading');
     try {
-      await reloadTraining();
-      if (mounted.current) setTrainingError('');
+      const loaded = await reloadTraining();
+      if (!mounted.current || trainingGeneration.current !== generation) return;
+      if (loaded) setTrainingError('');
     } catch {
-      if (mounted.current) setTrainingState('error');
+      if (mounted.current && trainingGeneration.current === generation && currentSelectionKeyRef.current === selectionKey) {
+        setTraining({ programs: [], paused: [] });
+        setTrainingSelectionKey(selectionKey);
+        setTrainingState('error');
+      }
     }
   }
 
@@ -629,9 +1110,9 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
       latestEvent={latestEvent ? toLogEvent(latestEvent) : null}
       nextProgram={nextProgram ?? null}
       nextStep={nextStep ?? null}
-      content={content}
-      contentState={contentState}
-      trainingState={trainingState}
+      content={visibleContent}
+      contentState={visibleContentState}
+      trainingState={visibleTrainingState}
       onGo={setPage}
       onRetryContent={() => { void retryContent(); }}
     />;
@@ -647,13 +1128,13 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
         onLoadMore={() => { void loadMoreEvents(); }} />}
     </>;
     if (page === 'training') return <>
-      {trainingState === 'loading' && <PageHeading title="Träning" description="Hämtar publicerade program…" />}
-      {trainingState === 'error' && <>
+      {visibleTrainingState === 'loading' && <PageHeading title="Träning" description="Hämtar publicerade program…" />}
+      {visibleTrainingState === 'error' && <>
         <PageHeading title="Träning" description="Programmen kunde inte hämtas." />
         <MessageCard tone="error">{trainingError}</MessageCard>
         <PrimaryButton title="Försök igen" onPress={() => { void retryTraining(); }} />
       </>}
-      {trainingState === 'ready' && <PublishedTrainingScreen programs={training.programs} paused={training.paused}
+      {visibleTrainingState === 'ready' && <PublishedTrainingScreen programs={training.programs} paused={training.paused}
         busyStepKey={busyStepKey} error={trainingError} onCompleteStep={completeStep}
         onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
         onRetry={() => { void retryTraining(); }} />}
@@ -672,9 +1153,25 @@ export function ProductWorkspace({ client, dog }: { client: SupabaseClient; dog:
       onRetryPending={() => { void retryHealthMutation(); }}
       onSave={saveHealthWeight}
       onDelete={removeHealthWeight}
+      historyRecords={healthHistory}
+      historyLoadState={healthHistoryState}
+      historyBusy={healthHistoryBusy}
+      historyPending={healthHistoryPending}
+      historyMessage={healthHistoryMessage}
+      historyMessageError={healthHistoryMessageError}
+      historyConflict={healthHistoryConflict?.lifetime === currentHealthHistoryLifetime ? healthHistoryConflict : null}
+      onRetryHistory={() => { void retryHealthHistory(); }}
+      onResolveHistoryConflict={resolveHealthHistoryConflict}
+      onSaveHistory={saveHealthHistory}
+      onDeleteHistory={removeHealthHistory}
     />;
     if (page === 'knowledge') return <KnowledgeScreen onBack={() => setPage('more')} items={content.filter((item) => item.contentType !== 'training_program')} />;
     if (page === 'passport') return <PassportScreen onBack={() => setPage('more')} />;
+    if (onDogUpdated) return <EditDogProfileScreen key={`${dog.id}:${dog.name}:${dog.breed_id}:${dog.birth_date}`}
+      client={client} dog={dog} busy={profileBusy} pending={profilePending} statusMessage={profileMessage}
+      statusError={profileMessageError} conflict={profileConflict ?? undefined}
+      onBack={() => setPage('more')} onSave={saveDogProfile}
+      onRetryStatus={() => { void retryProfileStatus(); }} onAcceptCurrent={() => { void acceptCurrentProfile(); }} />;
     return <DogProfilePage dog={dog} onBack={() => setPage('more')} />;
   }
 }
@@ -816,6 +1313,23 @@ function sameHealthWeight(
 ): boolean {
   return current.id === expected.id && current.dog_id === expected.dog_id
     && current.occurred_on === expected.occurred_on && current.weight_kg === expected.weight_kg;
+}
+
+function sameHealthHistory(
+  current: HealthHistoryRecord,
+  expected: Pick<HealthHistoryRecord, 'id' | 'dog_id' | 'event_type' | 'occurred_on' | 'description'>,
+): boolean {
+  return current.id === expected.id && current.dog_id === expected.dog_id && current.event_type === expected.event_type
+    && current.occurred_on === expected.occurred_on && current.description === expected.description;
+}
+
+function sameOwnedDogProfile(
+  current: OwnedDog,
+  expected: Pick<OwnedDog, 'name' | 'breed_id' | 'birth_date'>,
+  id: string,
+): boolean {
+  return current.id === id && current.name === expected.name
+    && current.breed_id === expected.breed_id && current.birth_date === expected.birth_date;
 }
 
 function formatDogAge(birthDate: string, weeks: number): string {

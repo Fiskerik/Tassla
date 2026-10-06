@@ -45,5 +45,5 @@ function DogWorkspace({ client }: { client: SupabaseClient }) {
     <PrimaryButton title="Försök igen" onPress={() => { setState('loading'); setAttempt((count) => count + 1); }} />
   </AppScreen>;
   if (state === 'missing') return <ProfileScreen client={client} onCreated={(created) => { setDog(created); setState('ready'); }} />;
-  return dog ? <ProductWorkspace key={dog.id} client={client} dog={dog} /> : <AppScreen><MessageCard>Öppnar hundens plats…</MessageCard></AppScreen>;
+  return dog ? <ProductWorkspace key={dog.id} client={client} dog={dog} onDogUpdated={setDog} /> : <AppScreen><MessageCard>Öppnar hundens plats…</MessageCard></AppScreen>;
 }

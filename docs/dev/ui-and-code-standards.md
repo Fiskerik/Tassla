@@ -24,3 +24,6 @@ Gör städningen inom samma godkända deluppgift före QA och Reviewer, även vi
 4. Uppdatera guide och kör relevanta kontroller efter sista ändringen. Spara vad som förenklats/tas bort, verifiering och kvarstående osäkerheter i checkpoint. Om koden redan är enkel: dokumentera genomförd kontroll utan konstgjord refaktorering.
 
 Reviewer kontrollerar dessa regler på den slutliga diffen. QA verifierar beteende och relevanta UI-tillstånd; oanvänd kod får inte döljas genom att bara stänga av kontroller.
+
+## Bilder och ikoner — Eriks genomförandekrav 2026-10-06
+Varje paket har en UI-designcheckpunkt: använd passande bilder/illustrationer och ikoner där de hjälper förståelse och gör upplevelsen trevlig. Återanvänd Tasslas befintliga dog-welcome/dog-resting och Ionicons samt theme tokens där de passar; nya bilder ska vara lämpliga och ha spårbar källa/generation. Lugn hierarki, tydliga kort/status, textetiketter till handlingar, skärmläsarfallback, stor text, reducerad rörelse och laddningsprestanda. Undvik att dekor döljer formulär eller sparstatus. Kontroller får inte bara kommunicera med ikon/färg. Ingår i cleanup/QA/review, inte ett separat kosmetiskt slutprojekt.

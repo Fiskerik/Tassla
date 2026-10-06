@@ -7,6 +7,7 @@ export const WORKSPACE_PAGE_SIZE = 40;
 const DEFAULT_REQUEST_TIMEOUT_MS = 12_000;
 const EVENT_COLUMNS = 'id,dog_id,event_type,occurred_at,occurred_on,weight_kg,duration_minutes,description';
 const HEALTH_WEIGHT_COLUMNS = 'id,dog_id,actor_id,occurred_on,weight_kg';
+const HEALTH_HISTORY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,description';
 
 export interface DogEventRecord {
   id: string;
@@ -53,6 +54,30 @@ export interface HealthWeightOperation {
 export interface HealthWeightChanges {
   occurred_on: string;
   weight_kg: number;
+}
+
+export type HealthHistoryType = 'vaccination' | 'vet_visit';
+
+export interface HealthHistoryRecord {
+  id: string;
+  dog_id: string;
+  actor_id: string;
+  event_type: HealthHistoryType;
+  occurred_on: string;
+  description: string | null;
+}
+
+export interface HealthHistoryOperation {
+  id: string;
+  dog_id: string;
+  event_type: HealthHistoryType;
+  occurred_on: string;
+  description: string | null;
+}
+
+export interface HealthHistoryChanges {
+  occurred_on: string;
+  description: string | null;
 }
 
 export type WriteOutcome<T> = { status: 'saved'; value: T } | { status: 'failed' | 'unknown' };
@@ -419,6 +444,161 @@ export async function deleteHealthWeight(
   }
 }
 
+export function isValidHealthHistoryDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(`${value}T00:00:00.000Z`);
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return false;
+  const today = new Date();
+  const todayText = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  return value <= todayText;
+}
+
+export function normalizeHealthHistoryDescription(value: string | null | undefined): string | null | undefined {
+  if (value === null || value === undefined) return null;
+  const trimmed = value.trim();
+  if (Array.from(trimmed).length > 500) return undefined;
+  return trimmed || null;
+}
+
+export async function fetchHealthHistory(
+  client: SupabaseClient,
+  dogId: string,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  parentSignal?: AbortSignal,
+): Promise<HealthHistoryRecord[]> {
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.from('dog_events')
+      .select(HEALTH_HISTORY_COLUMNS)
+      .eq('dog_id', dogId)
+      .in('event_type', ['vaccination', 'vet_visit'])
+      .order('occurred_on', { ascending: false })
+      .order('id', { ascending: false })
+      .abortSignal(signal);
+    if (error || !Array.isArray(data) || !data.every(isHealthHistoryRecord)
+      || data.some((row) => row.dog_id !== dogId)) throw new Error('Could not load health history');
+    return data;
+  }, timeoutMs, parentSignal);
+}
+
+export async function fetchHealthHistoryById(
+  client: SupabaseClient,
+  dogId: string,
+  eventType: HealthHistoryType,
+  id: string,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<HealthHistoryRecord | null> {
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.from('dog_events')
+      .select(HEALTH_HISTORY_COLUMNS)
+      .eq('dog_id', dogId)
+      .eq('event_type', eventType)
+      .eq('id', id)
+      .abortSignal(signal)
+      .maybeSingle();
+    if (error) throw new Error('Could not check health history status');
+    if (data === null) return null;
+    if (!isHealthHistoryRecord(data) || data.dog_id !== dogId || data.event_type !== eventType || data.id !== id) {
+      throw new Error('Health history response did not match the database contract');
+    }
+    return data;
+  }, timeoutMs);
+}
+
+export async function insertHealthHistory(
+  client: SupabaseClient,
+  operation: HealthHistoryOperation,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<WriteOutcome<HealthHistoryRecord>> {
+  const description = normalizeHealthHistoryDescription(operation.description);
+  if (!isValidHealthHistoryDate(operation.occurred_on) || description === undefined
+    || !isHealthHistoryType(operation.event_type)) return { status: 'failed' };
+  const normalized = { ...operation, description };
+  const payload = {
+    id: operation.id,
+    dog_id: operation.dog_id,
+    event_type: operation.event_type,
+    occurred_on: operation.occurred_on,
+    description,
+  };
+  let failure: unknown = null;
+  try {
+    const result = await withRequestDeadline(async (signal) => await client.from('dog_events')
+      .insert(payload).abortSignal(signal).select(HEALTH_HISTORY_COLUMNS).single(), timeoutMs);
+    if (!result.error && isHealthHistoryRecord(result.data) && matchesHealthHistory(result.data, normalized)) {
+      return { status: 'saved', value: result.data };
+    }
+    failure = result.error ?? new Error('Empty health history insert response');
+  } catch (error) { failure = error; }
+  try {
+    const found = await fetchHealthHistoryById(client, operation.dog_id, operation.event_type, operation.id, timeoutMs);
+    if (found && matchesHealthHistory(found, normalized)) return { status: 'saved', value: found };
+    return isDefiniteClientRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
+  } catch { return { status: 'unknown' }; }
+}
+
+export async function updateHealthHistory(
+  client: SupabaseClient,
+  dogId: string,
+  eventType: HealthHistoryType,
+  id: string,
+  previous: Pick<HealthHistoryRecord, 'occurred_on' | 'description'>,
+  changes: HealthHistoryChanges,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<WriteOutcome<HealthHistoryRecord>> {
+  const description = normalizeHealthHistoryDescription(changes.description);
+  if (!isValidHealthHistoryDate(changes.occurred_on) || description === undefined || !isHealthHistoryType(eventType)) return { status: 'failed' };
+  const normalizedChanges = { ...changes, description };
+  const payload = { occurred_on: changes.occurred_on, description };
+  let failure: unknown = null;
+  try {
+    let query = client.from('dog_events').update(payload)
+      .eq('dog_id', dogId).eq('event_type', eventType).eq('id', id)
+      .eq('occurred_on', previous.occurred_on);
+    query = previous.description === null ? query.is('description', null) : query.eq('description', previous.description);
+    const result = await withRequestDeadline(async (signal) => await query.abortSignal(signal)
+      .select(HEALTH_HISTORY_COLUMNS).maybeSingle(), timeoutMs);
+    if (!result.error && isHealthHistoryRecord(result.data) && matchesHealthHistory(result.data, { id, dog_id: dogId, event_type: eventType, ...normalizedChanges })) {
+      return { status: 'saved', value: result.data };
+    }
+    failure = result.error ?? new Error('Empty health history update response');
+  } catch (error) { failure = error; }
+  try {
+    const found = await fetchHealthHistoryById(client, dogId, eventType, id, timeoutMs);
+    if (found && matchesHealthHistory(found, { id, dog_id: dogId, event_type: eventType, ...normalizedChanges })) return { status: 'saved', value: found };
+    return isDefiniteClientRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
+  } catch { return { status: 'unknown' }; }
+}
+
+export async function deleteHealthHistory(
+  client: SupabaseClient,
+  dogId: string,
+  eventType: HealthHistoryType,
+  id: string,
+  previous: Pick<HealthHistoryRecord, 'occurred_on' | 'description'>,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<WriteOutcome<null>> {
+  let failure: unknown = null;
+  try {
+    let query = client.from('dog_events').delete()
+      .eq('dog_id', dogId).eq('event_type', eventType).eq('id', id)
+      .eq('occurred_on', previous.occurred_on);
+    query = previous.description === null ? query.is('description', null) : query.eq('description', previous.description);
+    const result = await withRequestDeadline(async (signal) => await query.abortSignal(signal).select('id').maybeSingle(), timeoutMs);
+    if (!result.error && result.data && result.data.id === id) return { status: 'saved', value: null };
+    if (!result.error && result.data === null) {
+      const current = await fetchHealthHistoryById(client, dogId, eventType, id, timeoutMs);
+      return current ? { status: 'unknown' } : { status: 'saved', value: null };
+    }
+    failure = result.error ?? new Error('Empty health history delete response');
+  } catch (error) { failure = error; }
+  try {
+    const found = await fetchHealthHistoryById(client, dogId, eventType, id, timeoutMs);
+    if (!found) return { status: 'saved', value: null };
+    return isDefiniteClientRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
+  } catch { return { status: 'unknown' }; }
+}
+
 export async function fetchPublishedContentVersions(
   client: SupabaseClient,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
@@ -648,6 +828,19 @@ function isHealthWeightRecord(value: unknown): value is HealthWeightRecord {
     && typeof row.weight_kg === 'number' && isValidHealthWeightKg(row.weight_kg);
 }
 
+function isHealthHistoryType(value: unknown): value is HealthHistoryType {
+  return value === 'vaccination' || value === 'vet_visit';
+}
+
+function isHealthHistoryRecord(value: unknown): value is HealthHistoryRecord {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return typeof row.id === 'string' && typeof row.dog_id === 'string' && typeof row.actor_id === 'string'
+    && isHealthHistoryType(row.event_type) && typeof row.occurred_on === 'string'
+    && isValidHealthHistoryDate(row.occurred_on)
+    && (row.description === null || typeof row.description === 'string' && Array.from(row.description).length <= 500);
+}
+
 function isPublishedVersionRow(value: unknown): value is PublishedVersionRow {
   if (!value || typeof value !== 'object') return false;
   const row = value as Record<string, unknown>;
@@ -693,6 +886,14 @@ function matchesHealthWeight(
 ): boolean {
   return record.id === expected.id && record.dog_id === expected.dog_id
     && record.occurred_on === expected.occurred_on && record.weight_kg === expected.weight_kg;
+}
+
+function matchesHealthHistory(
+  record: HealthHistoryRecord,
+  expected: Pick<HealthHistoryOperation, 'id' | 'dog_id' | 'event_type' | 'occurred_on' | 'description'>,
+): boolean {
+  return record.id === expected.id && record.dog_id === expected.dog_id && record.event_type === expected.event_type
+    && record.occurred_on === expected.occurred_on && record.description === expected.description;
 }
 
 function isDefiniteClientRejection(error: unknown): boolean {

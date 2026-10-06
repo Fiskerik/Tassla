@@ -1,5 +1,5 @@
 {
-  "segment": "FOUNDATION, APP-01/02/03: Erik-godkända lokala appsegment; APP-03 mandat och tre paket godkända 2026-10-04, extern TestFlight-verifiering separat; APP-05 lokal implementation uttryckligen beställd 2026-10-06, verklig beta/databehandling separat grind",
+  "segment": "Full MVP beta delivery: Erik authorized implementation 2026-10-06, Luna medium; phone tests chosen by Erik, real beta activation separate",
   "segment_approved_by_erik": true,
   "tasks": [
     {
@@ -862,6 +862,129 @@
         }
       ],
       "next_step": "Independent Reviewer PASS no findings, QA original and ten malformed fixturesPASS; durable plan/report evidence saved. Editorial metadata only, no publication."
+    },
+    {
+      "id": "APP-04B2-HISTORY",
+      "title": "Health B2: performed vaccination and veterinary history",
+      "mvp_requirement": "docs/mvp.md: Skärm 4 Hälsa",
+      "plan": "docs/tasks/dev/app-04b2.md v2",
+      "write_paths": [
+        "src/data/workspace-data.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/health/HealthScreen.tsx",
+        "src/features/health/HealthHistoryScreen.tsx",
+        "src/features/health/README.md",
+        "tests/health-history.test.mjs",
+        "tests/README.md",
+        "tests/app-screen-ux.test.mjs"
+      ],
+      "acceptance": [
+        "Complete owner-history CRUD with guarded writes, immutable type and safe retry",
+        "Local QA/review checkpoint; native/RLS separately disclosed"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "APP-05-B1-WEIGHT"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact v2 saved in app-04b2.md; Critic PROCEED and local synthetic data review APPROVE"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik full MVP implementation mandate 2026-10-06; Luna medium starts DATA then WORKSPACE UI cleanup"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Luna medium stable code and bounded cleanup; typecheck lint scoped diffcheck PASS; independent QA now tests final source"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS 102/102 full check, 38/38 focused, ios export/diffcheck PASS; actual evidence saved"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer source PASS and local Security PASS, QA passed; app-04b2.md and release-log checkpoint saved; next APP-04C"
+        }
+      ],
+      "next_step": "Independent Reviewer source PASS and local Security PASS, QA passed; app-04b2.md and release-log checkpoint saved; next APP-04C"
+    },
+    {
+      "id": "APP-04C-PROFILE",
+      "title": "Edit dog profile and refresh derived content",
+      "mvp_requirement": "docs/mvp.md: Stöd hundprofil och onboarding",
+      "plan": "docs/tasks/dev/app-04c.md v2",
+      "write_paths": [
+        "src/data/app-data.ts",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/home/AppFlow.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/onboarding/README.md",
+        "tests/profile-edit.test.mjs",
+        "tests/README.md"
+      ],
+      "acceptance": [
+        "Confirmed same-ID profile edit updates age/content safely",
+        "Pending survives navigation and safe preimage retry with lifecycle checks"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "APP-04B2-HISTORY"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Actual Architect APPROVE/Critic PROCEED exact v2 plus local security contract APPROVE saved app-04c.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik full MVP Luna medium mandate; B2 PASS durable checkpoint complete; start P02 DATA WORKSPACE UI cleanup"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Luna medium stable source, typecheck lint diffcheck PASS; independent final QA/review now"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Final QA after correction1 PASS 129/129 full, 27/27 focused, ios export diffcheck PASS"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Renewed independent Reviewer PASS and local Security PASS; QA evidence and release-log checkpoint saved; next P03"
+        }
+      ],
+      "next_step": "Renewed independent Reviewer PASS and local Security PASS; QA evidence and release-log checkpoint saved; next P03"
     }
   ]
 }
