@@ -19,7 +19,7 @@ SOURCE_FIELDS = {"id", "url", "title", "accessed_on", "scope"}
 ITEM_FIELDS = {"id", "slug", "content_type", "versions"}
 VERSION_FIELDS = {
     "id", "version", "title", "body", "min_age_weeks", "max_age_weeks",
-    "status", "breed_targets", "claim_trace", "review", "training_steps",
+    "status", "breed_targets", "claim_trace", "body_claim_refs", "review", "training_steps",
 }
 CLAIM_SOURCE_FIELDS = {"claim_id", "text", "source_refs"}
 CLAIM_UNVERIFIED_FIELDS = {"claim_id", "text", "unverified"}
@@ -50,6 +50,19 @@ IDENTITIES = {
 VERSION_ONE_IDS = {
     slug: f"62000000-0000-4000-8000-{index:012d}"
     for index, slug in enumerate(IDENTITIES, start=1)
+}
+AGE_WINDOWS = {
+    "before-homecoming": (0, 0),
+    "first-week": (8, 12),
+    "daily-log-routines": (0, None),
+    "handling-guide": (13, 16),
+    "environment-checklist": (17, 26),
+    "being-alone-guide": (27, 52),
+    "weight-history-guide": (0, None),
+    "health-records-guide": (0, None),
+    "handling-program": (8, None),
+    "environment-program": (8, None),
+    "being-alone-program": (8, None),
 }
 UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
 DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -258,6 +271,12 @@ def validate_bundle(bundle: Any, publication_check: bool = False) -> dict[str, i
                 fail(f"{version_label}.min_age_weeks must be a non-negative integer")
             if maximum is not None and (type(maximum) is not int or maximum < minimum):
                 fail(f"{version_label}.max_age_weeks must be null or an integer >= min_age_weeks")
+            if (minimum, maximum) != AGE_WINDOWS[slug]:
+                expected_minimum, expected_maximum = AGE_WINDOWS[slug]
+                fail(
+                    f"{version_label} age window must be {expected_minimum}.."
+                    f"{expected_maximum if expected_maximum is not None else 'null'} for {slug}"
+                )
             targets = version["breed_targets"]
             if not isinstance(targets, list) or any(not isinstance(target, str) or not target.strip() for target in targets):
                 fail(f"{version_label}.breed_targets must be an array of non-empty breed ids")
@@ -273,6 +292,14 @@ def validate_bundle(bundle: Any, publication_check: bool = False) -> dict[str, i
                 if claim_id in claim_ids:
                     fail(f"duplicate claim_id in {version_label}: {claim_id}")
                 claim_ids.add(claim_id)
+
+            body_refs = version["body_claim_refs"]
+            if not isinstance(body_refs, list) or not body_refs:
+                fail(f"{version_label}.body_claim_refs must be a non-empty array")
+            if any(not isinstance(ref, str) or ref not in claim_ids for ref in body_refs):
+                fail(f"{version_label}.body_claim_refs must reference claim_trace ids")
+            if len(set(body_refs)) != len(body_refs):
+                fail(f"{version_label}.body_claim_refs must not contain duplicates")
 
             review = require_object(version["review"], REVIEW_FIELDS, f"{version_label}.review")
             expert_required = slug in ADVICE_SLUGS
@@ -305,8 +332,8 @@ def validate_bundle(bundle: Any, publication_check: bool = False) -> dict[str, i
                 require_text(step["title"], f"{step_label}.title", 160)
                 require_text(step["instruction"], f"{step_label}.instruction")
                 refs = step["claim_refs"]
-                if not isinstance(refs, list) or any(not isinstance(ref, str) or ref not in claim_ids for ref in refs):
-                    fail(f"{step_label}.claim_refs must reference claim_trace ids")
+                if not isinstance(refs, list) or not refs or any(not isinstance(ref, str) or ref not in claim_ids for ref in refs):
+                    fail(f"{step_label}.claim_refs must be a non-empty list referencing claim_trace ids")
                 if len(set(refs)) != len(refs):
                     fail(f"{step_label}.claim_refs must not contain duplicates")
                 step_total += 1

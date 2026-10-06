@@ -1079,7 +1079,7 @@
       "depends_on": [
         "MVP-P03-PLANNED-HEALTH"
       ],
-      "status": "implementing",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -1092,9 +1092,27 @@
           "to": "implementing",
           "actor": "implementer",
           "evidence": "Erik full MVP mandate Luna medium; P03 local commit88b2ed8 done; start content draft checkpoint"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Actual sourcefreeze bundle11 versions11 steps9 sources12; validator parity122 syntax diff PASS; publicationgate fails expected pending humanreview; independent finalQA/review now"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Actual final QA51focused full211 diffPASS; prioriosPASS unchangednative; SQLstatic only"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent renewedReviewerPASS staticSecurityPASS; actualsourceexpertreview humanpending; localdraftpackage release-log saved"
         }
       ],
-      "next_step": "Erik full MVP mandate Luna medium; P03 local commit88b2ed8 done; start content draft checkpoint"
+      "next_step": "Independent renewedReviewerPASS staticSecurityPASS; actualsourceexpertreview humanpending; localdraftpackage release-log saved"
     }
   ]
 }
