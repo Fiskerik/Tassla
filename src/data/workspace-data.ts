@@ -8,7 +8,7 @@ const DEFAULT_REQUEST_TIMEOUT_MS = 12_000;
 const EVENT_COLUMNS = 'id,dog_id,event_type,occurred_at,occurred_on,weight_kg,duration_minutes,description';
 const HEALTH_WEIGHT_COLUMNS = 'id,dog_id,actor_id,occurred_on,weight_kg';
 const HEALTH_HISTORY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,description';
-const PLANNED_HEALTH_COLUMNS = 'id,dog_id,event_type,due_on,description,created_at';
+const PLANNED_HEALTH_COLUMNS = 'id,dog_id,event_type,due_on,description,created_at,reminder_enabled,reminder_minutes';
 
 export interface DogEventRecord {
   id: string;
@@ -90,6 +90,8 @@ export interface PlannedHealthRecord {
   due_on: string;
   description: string | null;
   created_at: string;
+  reminder_enabled: boolean;
+  reminder_minutes: number | null;
 }
 
 export interface PlannedHealthOperation {
@@ -99,12 +101,19 @@ export interface PlannedHealthOperation {
   due_on: string;
   description: string | null;
   local_today: string;
+  reminder_enabled: boolean;
+  reminder_minutes: number | null;
 }
 
 export interface PlannedHealthChanges {
   due_on: string;
   description: string | null;
+  reminder_enabled: boolean;
+  reminder_minutes: number | null;
 }
+
+export const PLANNED_REMINDER_PAGE_SIZE = 40;
+export interface PlannedReminderSelection { records: PlannedHealthRecord[]; overCap: boolean; }
 
 export type WriteOutcome<T> = { status: 'saved'; value: T } | { status: 'failed' | 'unknown' };
 
@@ -657,6 +666,36 @@ export async function fetchPlannedHealth(
   }, timeoutMs, parentSignal);
 }
 
+export async function fetchFuturePlannedHealthReminders(
+  client: SupabaseClient, dogId: string, localToday: string,
+  isFutureFireTime: (record: PlannedHealthRecord) => boolean, isCurrent: () => boolean,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<PlannedReminderSelection | null> {
+  if (!isCalendarDate(localToday)) throw new Error('Invalid local date for planned reminders');
+  const candidates = new Map<string, PlannedHealthRecord>();
+  for (let offset = 0; ; offset += PLANNED_REMINDER_PAGE_SIZE) {
+    if (!isCurrent()) return null;
+    const page = await withRequestDeadline(async (signal) => {
+      const { data, error } = await client.from('dog_health_plans')
+        .select(PLANNED_HEALTH_COLUMNS).eq('dog_id', dogId).eq('reminder_enabled', true)
+        .gte('due_on', localToday).order('due_on', { ascending: true })
+        .order('reminder_minutes', { ascending: true }).order('id', { ascending: true })
+        .range(offset, offset + PLANNED_REMINDER_PAGE_SIZE - 1).abortSignal(signal);
+      if (error || !Array.isArray(data) || !data.every(isPlannedHealthRecord)
+        || data.some((row) => row.dog_id !== dogId || !row.reminder_enabled || row.due_on < localToday)) {
+        throw new Error('Could not load planned reminders');
+      }
+      return data;
+    }, timeoutMs);
+    if (!isCurrent()) return null;
+    for (const record of page) if (!candidates.has(record.id) && isFutureFireTime(record)) candidates.set(record.id, record);
+    if (candidates.size > PLANNED_REMINDER_PAGE_SIZE || page.length < PLANNED_REMINDER_PAGE_SIZE) break;
+  }
+  const sorted = [...candidates.values()].sort((left, right) => left.due_on.localeCompare(right.due_on)
+    || (left.reminder_minutes ?? 0) - (right.reminder_minutes ?? 0) || left.id.localeCompare(right.id));
+  return { records: sorted.slice(0, PLANNED_REMINDER_PAGE_SIZE), overCap: sorted.length > PLANNED_REMINDER_PAGE_SIZE };
+}
+
 export async function fetchPlannedHealthById(
   client: SupabaseClient,
   dogId: string,
@@ -683,9 +722,10 @@ export async function insertPlannedHealth(
 ): Promise<WriteOutcome<PlannedHealthRecord>> {
   const description = normalizePlannedHealthDescription(operation.description);
   if (!isPlannedHealthType(operation.event_type) || !isValidPlannedHealthDate(operation.due_on, operation.local_today)
-    || description === undefined) return { status: 'failed' };
+    || description === undefined || typeof operation.reminder_enabled !== 'boolean'
+    || !isValidReminderMinutes(operation.reminder_minutes) || operation.reminder_enabled && operation.reminder_minutes === null) return { status: 'failed' };
   const expected = { ...operation, description };
-  const payload = { id: operation.id, dog_id: operation.dog_id, event_type: operation.event_type, due_on: operation.due_on, description };
+  const payload = { id: operation.id, dog_id: operation.dog_id, event_type: operation.event_type, due_on: operation.due_on, description, reminder_enabled: operation.reminder_enabled, reminder_minutes: operation.reminder_minutes };
   let failure: unknown = null;
   try {
     const result = await withRequestDeadline(async (signal) => await client.from('dog_health_plans')
@@ -706,7 +746,7 @@ export async function updatePlannedHealth(
   client: SupabaseClient,
   dogId: string,
   id: string,
-  previous: Pick<PlannedHealthRecord, 'event_type' | 'due_on' | 'description'>,
+  previous: Pick<PlannedHealthRecord, 'event_type' | 'due_on' | 'description' | 'reminder_enabled' | 'reminder_minutes'>,
   changes: PlannedHealthChanges,
   localToday: string,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
@@ -716,12 +756,16 @@ export async function updatePlannedHealth(
   if (!isPlannedHealthType(previous.event_type) || !isCalendarDate(localToday) || !allowedDate || description === undefined) {
     return { status: 'failed' };
   }
-  const normalizedChanges = { due_on: changes.due_on, description };
+  if (typeof changes.reminder_enabled !== 'boolean' || !isValidReminderMinutes(changes.reminder_minutes)
+    || changes.reminder_enabled && changes.reminder_minutes === null) return { status: 'failed' };
+  const normalizedChanges = { due_on: changes.due_on, description, reminder_enabled: changes.reminder_enabled, reminder_minutes: changes.reminder_minutes };
   let failure: unknown = null;
   try {
     let query = client.from('dog_health_plans').update(normalizedChanges)
       .eq('dog_id', dogId).eq('id', id).eq('event_type', previous.event_type).eq('due_on', previous.due_on);
     query = previous.description === null ? query.is('description', null) : query.eq('description', previous.description);
+    query = query.eq('reminder_enabled', previous.reminder_enabled);
+    query = previous.reminder_minutes === null ? query.is('reminder_minutes', null) : query.eq('reminder_minutes', previous.reminder_minutes);
     const result = await withRequestDeadline(async (signal) => await query.abortSignal(signal)
       .select(PLANNED_HEALTH_COLUMNS).maybeSingle(), timeoutMs);
     if (!result.error && isPlannedHealthRecord(result.data)
@@ -741,7 +785,7 @@ export async function deletePlannedHealth(
   client: SupabaseClient,
   dogId: string,
   id: string,
-  previous: Pick<PlannedHealthRecord, 'event_type' | 'due_on' | 'description'>,
+  previous: Pick<PlannedHealthRecord, 'event_type' | 'due_on' | 'description' | 'reminder_enabled' | 'reminder_minutes'>,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
 ): Promise<WriteOutcome<null>> {
   let failure: unknown = null;
@@ -749,6 +793,8 @@ export async function deletePlannedHealth(
     let query = client.from('dog_health_plans').delete()
       .eq('dog_id', dogId).eq('id', id).eq('event_type', previous.event_type).eq('due_on', previous.due_on);
     query = previous.description === null ? query.is('description', null) : query.eq('description', previous.description);
+    query = query.eq('reminder_enabled', previous.reminder_enabled);
+    query = previous.reminder_minutes === null ? query.is('reminder_minutes', null) : query.eq('reminder_minutes', previous.reminder_minutes);
     const result = await withRequestDeadline(async (signal) => await query.abortSignal(signal).select('id').maybeSingle(), timeoutMs);
     if (!result.error && result.data?.id === id) return { status: 'saved', value: null };
     if (!result.error && result.data === null) {
@@ -1018,13 +1064,19 @@ function isCalendarDate(value: string): boolean {
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }
 
+function isValidReminderMinutes(value: unknown): value is number | null {
+  return value === null || typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 1439;
+}
+
 function isPlannedHealthRecord(value: unknown): value is PlannedHealthRecord {
   if (!value || typeof value !== 'object') return false;
   const row = value as Record<string, unknown>;
   return typeof row.id === 'string' && typeof row.dog_id === 'string'
     && isPlannedHealthType(row.event_type) && typeof row.due_on === 'string' && isCalendarDate(row.due_on)
     && (row.description === null || typeof row.description === 'string' && Array.from(row.description).length <= 500)
-    && typeof row.created_at === 'string' && Number.isFinite(Date.parse(row.created_at));
+    && typeof row.created_at === 'string' && Number.isFinite(Date.parse(row.created_at))
+    && typeof row.reminder_enabled === 'boolean' && isValidReminderMinutes(row.reminder_minutes)
+    && (!row.reminder_enabled || row.reminder_minutes !== null);
 }
 
 function isPublishedVersionRow(value: unknown): value is PublishedVersionRow {
@@ -1086,10 +1138,11 @@ function matchesHealthHistory(
 
 function matchesPlannedHealth(
   record: PlannedHealthRecord,
-  expected: Pick<PlannedHealthOperation, 'id' | 'dog_id' | 'event_type' | 'due_on' | 'description'>,
+  expected: Pick<PlannedHealthOperation, 'id' | 'dog_id' | 'event_type' | 'due_on' | 'description' | 'reminder_enabled' | 'reminder_minutes'>,
 ): boolean {
   return record.id === expected.id && record.dog_id === expected.dog_id && record.event_type === expected.event_type
-    && record.due_on === expected.due_on && record.description === expected.description;
+    && record.due_on === expected.due_on && record.description === expected.description
+    && record.reminder_enabled === expected.reminder_enabled && record.reminder_minutes === expected.reminder_minutes;
 }
 
 function isDefiniteClientRejection(error: unknown): boolean {

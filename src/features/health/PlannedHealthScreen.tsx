@@ -8,6 +8,7 @@ import {
   type PlannedHealthRecord,
   type PlannedHealthType,
 } from '../../data/workspace-data';
+import { createLocalFireTime } from '../../notifications/notification-model';
 import { localDate } from '../onboarding/dog';
 import { theme } from '../../theme/tokens';
 
@@ -21,6 +22,7 @@ export function PlannedHealthScreen({
   pending = false,
   statusMessage = '',
   statusError = false,
+  reminderSummary = '',
   conflict,
   onRetry,
   onResolveConflict,
@@ -34,16 +36,19 @@ export function PlannedHealthScreen({
   pending?: boolean;
   statusMessage?: string;
   statusError?: boolean;
+  reminderSummary?: string;
   conflict?: { current: PlannedHealthRecord | null } | null;
   onRetry: () => void;
   onResolveConflict: () => void;
-  onSave: (id: string | null, type: PlannedHealthType, dueOn: string, note: string) => Promise<boolean>;
+  onSave: (id: string | null, type: PlannedHealthType, dueOn: string, note: string, reminderEnabled: boolean, reminderMinutes: number | null) => Promise<boolean>;
   onDelete: (id: string) => Promise<boolean>;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [type, setType] = useState<PlannedHealthType>('vaccination');
   const [dueOn, setDueOn] = useState(localDate());
   const [note, setNote] = useState('');
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderTime, setReminderTime] = useState('09:00');
   const [formError, setFormError] = useState('');
   const today = localDate();
   const blocked = busy || pending;
@@ -54,6 +59,8 @@ export function PlannedHealthScreen({
     setType('vaccination');
     setDueOn(localDate());
     setNote('');
+    setReminderEnabled(false);
+    setReminderTime('09:00');
     setFormError('');
     Keyboard.dismiss();
   }
@@ -63,6 +70,8 @@ export function PlannedHealthScreen({
     setType(record.event_type);
     setDueOn(record.due_on);
     setNote(record.description ?? '');
+    setReminderEnabled(record.reminder_enabled);
+    setReminderTime(formatTime(record.reminder_minutes ?? 9 * 60));
     setFormError('');
   }
 
@@ -78,7 +87,12 @@ export function PlannedHealthScreen({
       setFormError('Anteckningen får innehålla högst 500 tecken.');
       return;
     }
-    if (await onSave(editingId, type, normalizedDate, normalizedNote ?? '')) resetForm();
+    const minutes = parseTime(reminderTime);
+    if (reminderEnabled && minutes === null) {
+      setFormError('Ange en giltig påminnelsetid mellan 00:00 och 23:59.');
+      return;
+    }
+    if (await onSave(editingId, type, normalizedDate, normalizedNote ?? '', reminderEnabled, reminderEnabled ? minutes : null)) resetForm();
   }
 
   function confirmDelete(record: PlannedHealthRecord) {
@@ -108,7 +122,8 @@ export function PlannedHealthScreen({
       </View>
     </View>
     <MessageCard>Planerna är ägarregistrerade och är inte en verifierad journal eller vårdrekommendation. Genomförda händelser läggs separat i hälsans historik.</MessageCard>
-    <MessageCard>Datum som passerat ligger kvar som planerade tills du själv ändrar eller tar bort dem. Tassla skickar inga notiser.</MessageCard>
+    <MessageCard>Datum som passerat ligger kvar som planerade tills du själv ändrar eller tar bort dem. Lokala påminnelser är frivilliga och styrs även av enhetens tillstånd.</MessageCard>
+    {reminderSummary ? <MessageCard>{reminderSummary}</MessageCard> : null}
 
     {statusMessage ? <>
       <MessageCard tone={statusError ? 'error' : 'neutral'}>{statusMessage}</MessageCard>
@@ -147,6 +162,25 @@ export function PlannedHealthScreen({
               placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.dateInput} value={dueOn} />
           </View>
         </View>
+        <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: reminderEnabled, disabled: blocked }} disabled={blocked}
+          onPress={() => setReminderEnabled((value) => !value)} style={styles.reminderChoice}>
+          <View style={[styles.reminderCheck, reminderEnabled && styles.reminderCheckSelected]}>
+            {reminderEnabled && <Ionicons name="checkmark" size={17} color={theme.colors.onAccent} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />}
+          </View>
+          <View style={styles.reminderCopy}>
+            <Text style={styles.label}>Påminn mig lokalt</Text>
+            <Text style={styles.reminderHint}>Visas bara om både planvalet och enhetens Tassla-val tillåter det.</Text>
+          </View>
+        </Pressable>
+        {reminderEnabled && <View style={styles.field}>
+          <Text style={styles.label}>Påminnelsetid, lokal tid</Text>
+          <View style={styles.dateInputWrap}>
+            <Ionicons name="time-outline" size={18} color={theme.colors.mutedText} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+            <TextInput accessibilityLabel="Påminnelsetid, timmar och minuter" editable={!blocked} keyboardType="numbers-and-punctuation" maxLength={5}
+              onChangeText={setReminderTime} onSubmitEditing={() => Keyboard.dismiss()} placeholder="09:00"
+              placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.dateInput} value={reminderTime} />
+          </View>
+        </View>}
         <View style={styles.field}>
           <Text style={styles.label}>Kort anteckning (frivillig)</Text>
           <TextInput accessibilityLabel="Kort anteckning, högst 500 tecken" editable={!blocked} multiline
@@ -184,6 +218,7 @@ export function PlannedHealthScreen({
           <Text style={styles.recordDate}>{record.due_on}</Text>
           {record.description ? <Text style={styles.recordNote}>{record.description}</Text> : null}
           <Text style={styles.ownerLabel}>ÄGARREGISTRERAD PLAN</Text>
+          <Text style={styles.reminderRow}>{reminderLabel(record.reminder_enabled, record.due_on, record.reminder_minutes)}</Text>
           <View style={styles.actions}>
             <QuietButton title="Ändra" disabled={blocked} onPress={() => edit(record)} />
             <QuietButton title="Ta bort" disabled={blocked} onPress={() => confirmDelete(record)} />
@@ -220,6 +255,12 @@ const styles = StyleSheet.create({
   typeChoicePressed: { opacity: 0.78 },
   typeChoiceText: { color: theme.colors.mutedText, fontSize: 14, fontWeight: '700' },
   typeChoiceTextSelected: { color: theme.colors.accent },
+  reminderChoice: { flexDirection: 'row', alignItems: 'center', gap: 11, padding: 12, marginBottom: 14, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.button, backgroundColor: '#F5F8F4' },
+  reminderCheck: { width: 26, height: 26, borderRadius: 7, borderWidth: 2, borderColor: theme.colors.mutedText, alignItems: 'center', justifyContent: 'center' },
+  reminderCheckSelected: { backgroundColor: theme.colors.accent, borderColor: theme.colors.accent },
+  reminderCopy: { flex: 1 },
+  reminderHint: { color: theme.colors.mutedText, fontSize: 13, lineHeight: 18 },
+  reminderRow: { color: theme.colors.mutedText, fontSize: 13, lineHeight: 18, marginTop: 5 },
   field: { marginBottom: 14 },
   label: { color: theme.colors.text, fontSize: 15, fontWeight: '700', marginBottom: 7 },
   dateInputWrap: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 14, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
@@ -247,3 +288,20 @@ const styles = StyleSheet.create({
   ownerLabel: { color: theme.colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 0.6, marginTop: 8 },
   actions: { flexDirection: 'row', justifyContent: 'flex-start', gap: 8, marginTop: 8 },
 });
+
+function parseTime(value: string): number | null {
+  const match = /^(d{2}):(d{2})$/.exec(value.trim());
+  if (!match) return null;
+  const hours = Number(match[1]), minutes = Number(match[2]);
+  return hours < 24 && minutes < 60 ? hours * 60 + minutes : null;
+}
+function formatTime(minutes: number): string {
+  return Math.floor(minutes / 60).toString().padStart(2, '0') + ':' + (minutes % 60).toString().padStart(2, '0');
+}
+function reminderLabel(enabled: boolean, dueOn: string, minutes: number | null): string {
+  if (!enabled || minutes === null) return 'Påminnelse av';
+  const local = createLocalFireTime(dueOn, minutes);
+  if (local.status === 'passed-time') return 'Påminnelsetiden har passerat';
+  if (local.status === 'unrepresentable') return 'Tiden kan inte schemaläggas den här dagen';
+  return 'Vald tid ' + formatTime(minutes) + ' · schemaläggs bara om enhetens val tillåter det';
+}

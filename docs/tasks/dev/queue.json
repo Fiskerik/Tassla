@@ -1247,6 +1247,65 @@
         }
       ],
       "next_step": "Actualrenewed ReviewerPASS staticSecurityPASS strictPrintpath; finalQA253 release-log saved; P07 next"
+    },
+    {
+      "id": "MVP-P07-REMINDERS",
+      "title": "Owner opt-in local health and training reminders",
+      "mvp_requirement": "docs/mvp.md planned reminders",
+      "plan": "docs/tasks/dev/local-reminders.md v3 + exact native v4",
+      "write_paths": [
+        "supabase/migrations/202610060002_plan_reminders.sql",
+        "supabase/README.md",
+        "src/data/workspace-data.ts",
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/features/health/README.md",
+        "src/notifications/notification-model.ts",
+        "src/notifications/notification-service.ts",
+        "src/notifications/notification-storage.ts",
+        "src/notifications/README.md",
+        "src/features/notifications/NotificationSettingsScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/AppFlow.tsx",
+        "src/features/account/AuthProvider.tsx",
+        "src/features/account/README.md",
+        "package.json",
+        "pnpm-lock.yaml",
+        "app.json",
+        "tests/notifications.test.mjs",
+        "tests/README.md",
+        "supabase/tests/plan-reminders.sql",
+        "tests/planned-health.test.mjs"
+      ],
+      "acceptance": [
+        "Future local reminders filtered before40cap, truthful status default-off master",
+        "Installed guarded lifecycle generic content own cancel safe taps"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "Reviewer Security",
+        "Prepared SQL probe only"
+      ],
+      "depends_on": [
+        "MVP-P06-PASSPORT"
+      ],
+      "status": "implementing",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Actualexactv3 ArchitectAPPROVE CriticPROCEED SecurityAPPROVE ComplianceAPPROVE(localpurposeonly) savedplan"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik fullMVP Luna medium reminders depsapproved; P06done47e5a19; startcheckpointDATA"
+        }
+      ],
+      "next_step": "Erik fullMVP Luna medium reminders depsapproved; P06done47e5a19; startcheckpointDATA"
     }
   ]
 }

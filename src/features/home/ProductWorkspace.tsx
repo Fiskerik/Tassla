@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, Alert, Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Alert, Animated, AppState, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { ComponentProps } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
@@ -19,6 +19,7 @@ import {
   fetchHealthHistory,
   fetchHealthHistoryById,
   fetchPlannedHealth,
+  fetchFuturePlannedHealthReminders,
   fetchPlannedHealthById,
   fetchHomeContent,
   fetchTrainingWorkspace,
@@ -75,8 +76,11 @@ import { PassportScreen } from '../passport/PassportScreen';
 import { PublishedTrainingScreen } from '../training/PublishedTrainingScreen';
 import { theme } from '../../theme/tokens';
 import { useAuth } from '../account/AuthProvider';
+import { NotificationSettingsScreen } from '../notifications/NotificationSettingsScreen';
+import { futureFireTimeForPlan, type NotificationPreferences } from '../../notifications/notification-model';
+import { reminderService, type ReminderContext, type ReminderReconcileResult } from '../../notifications/notification-service';
 
-type ProductPage = 'home' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile';
+type ProductPage = 'home' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings';
 type PendingLogMutation =
   | { kind: 'insert'; operation: DogEventOperation }
   | { kind: 'update'; id: string; changes: { event_type: LogEventType; occurred_at: string; duration_minutes: number | null; description: string | null } }
@@ -137,6 +141,16 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [plannedHealthMessage, setPlannedHealthMessage] = useState('');
   const [plannedHealthMessageError, setPlannedHealthMessageError] = useState(false);
   const [plannedHealthConflict, setPlannedHealthConflict] = useState<{ lifetime: string; mutationId: string; current: PlannedHealthRecord | null } | null>(null);
+  const notificationContextRef = useRef<ReminderContext | null>(null);
+  const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>({ version: 1, enabled: false, trainingEnabled: false, trainingMinutes: 540 });
+  const [notificationPreferencesReady, setNotificationPreferencesReady] = useState(false);
+  const [notificationStorageError, setNotificationStorageError] = useState(false);
+  const [notificationBusy, setNotificationBusy] = useState(false);
+  const [notificationSaved, setNotificationSaved] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationMessageError, setNotificationMessageError] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<'unknown' | 'granted' | 'denied'>('unknown');
+  const [reminderResult, setReminderResult] = useState<ReminderReconcileResult | null>(null);
   const [profileBusy, setProfileBusy] = useState(false);
   const [profilePending, setProfilePending] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
@@ -276,6 +290,49 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     setPlannedHealth(rows);
     setPlannedHealthState('ready');
   }, [client, dog.id, serializePlannedHealthRead]);
+  const refreshLocalReminders = useCallback(async () => {
+    const context = notificationContextRef.current;
+    if (!context || !notificationPreferencesReady || !reminderService.isCurrent(context)) return;
+    const pendingMutation = pendingPlannedHealthMutation.current;
+    if (plannedHealthBusy && !pendingMutation) return;
+    if (notificationPreferences.enabled && plannedHealthState !== 'ready') return;
+    const blockedPlanIds = new Set<string>();
+    if (pendingMutation) blockedPlanIds.add(pendingMutation.kind === 'insert' ? pendingMutation.operation.id : pendingMutation.id);
+    const now = new Date();
+    let plans: PlannedHealthRecord[] = [];
+    let overCap = false;
+    try {
+      if (notificationPreferences.enabled) {
+        const selection = await fetchFuturePlannedHealthReminders(client, dog.id, localDate(), (record) => {
+          if (blockedPlanIds.has(record.id)) return false;
+          return futureFireTimeForPlan(record, now).status === 'scheduled';
+        }, () => mounted.current && reminderService.isCurrent(context));
+        if (!selection || !mounted.current || !reminderService.isCurrent(context)) return;
+        plans = selection.records;
+        overCap = selection.overCap;
+      }
+      const result = await reminderService.reconcile({ ...context, preferences: notificationPreferences, plans, now, overCap, blockedPlanIds });
+      if (!mounted.current || !reminderService.isCurrent(context)) return;
+      setReminderResult(result);
+      if (result.status === 'permission-denied') setNotificationPermission('denied');
+      else if (result.status === 'scheduled' || result.status === 'over-cap' || result.status === 'off') setNotificationPermission('granted');
+      if (result.status === 'failed') {
+        setNotificationMessage('Enhetens påminnelser kunde inte uppdateras. Kontrollera inställningarna och försök igen.');
+        setNotificationMessageError(true);
+      } else if (result.status === 'unknown') {
+        setNotificationMessage('En plan har osäker sparstatus. Den schemaläggs inte förrän du har kontrollerat ändringen.');
+        setNotificationMessageError(true);
+      } else {
+        setNotificationMessage('');
+        setNotificationMessageError(false);
+      }
+    } catch {
+      if (!mounted.current || !reminderService.isCurrent(context)) return;
+      setReminderResult({ status: 'failed', scheduledCount: 0, overCap: false, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'local' });
+      setNotificationMessage('Påminnelserna kunde inte stämmas av. Försök igen när anslutningen fungerar.');
+      setNotificationMessageError(true);
+    }
+  }, [client, dog.id, notificationPreferences, notificationPreferencesReady, plannedHealthBusy, plannedHealthState]);
 
   const reloadTraining = useCallback(async (signal?: AbortSignal) => {
     const generation = trainingGeneration.current;
@@ -286,6 +343,39 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     setTrainingState('ready');
     return true;
   }, [age, client, currentSelectionKey, dog]);
+
+  useEffect(() => {
+    const ownerId = session?.user.id;
+    const context = ownerId ? reminderService.setActiveContext(ownerId, dog.id) : null;
+    notificationContextRef.current = context;
+    if (!ownerId || !context) return;
+    let active = true;
+    void reminderService.loadPreferences(ownerId).then((preferences) => {
+      if (!active || !reminderService.isCurrent(context)) return;
+      setNotificationPreferences(preferences);
+      setNotificationPreferencesReady(true);
+      setNotificationSaved(false);
+    }).catch(() => {
+      if (!active || !reminderService.isCurrent(context)) return;
+      setNotificationPreferences({ version: 1, enabled: false, trainingEnabled: false, trainingMinutes: 540 });
+      setNotificationPreferencesReady(true);
+      setNotificationStorageError(true);
+    });
+    return () => {
+      active = false;
+      notificationContextRef.current = null;
+      reminderService.setActiveContext(null, null);
+      void reminderService.cleanupOwner(ownerId);
+    };
+  }, [dog.id, session?.user.id]);
+
+  useEffect(() => { void refreshLocalReminders(); }, [refreshLocalReminders, plannedHealth, plannedHealthPending, plannedHealthState]);
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void refreshLocalReminders();
+    });
+    return () => subscription.remove();
+  }, [refreshLocalReminders]);
 
   useEffect(() => {
     mounted.current = true;
@@ -1112,7 +1202,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
-  function savePlannedHealth(id: string | null, eventType: PlannedHealthType, dueOn: string, note: string): Promise<boolean> {
+  function savePlannedHealth(id: string | null, eventType: PlannedHealthType, dueOn: string, note: string, reminderEnabled?: boolean, reminderMinutes?: number | null): Promise<boolean> {
     const lifetime = plannedHealthLifetime.current;
     if (plannedHealthMutationInFlight.current || pendingPlannedHealthMutation.current || plannedHealthState !== 'ready') return Promise.resolve(false);
     const localToday = localDate();
@@ -1120,12 +1210,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     if ((id !== null && !previous) || (!isValidPlannedHealthDate(dueOn, localToday) && dueOn !== previous?.due_on)) return Promise.resolve(false);
     const description = normalizePlannedHealthDescription(note);
     if (description === undefined || (eventType !== 'vaccination' && eventType !== 'vet_visit')) return Promise.resolve(false);
+    const enabled = reminderEnabled ?? previous?.reminder_enabled ?? false;
+    const minutes = reminderMinutes === undefined ? previous?.reminder_minutes ?? null : reminderMinutes;
+    if (enabled && minutes === null) return Promise.resolve(false);
     if (id === null) {
-      const operation: PlannedHealthOperation = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, event_type: eventType, due_on: dueOn, description, local_today: localToday };
+      const operation: PlannedHealthOperation = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, event_type: eventType, due_on: dueOn, description, local_today: localToday, reminder_enabled: enabled, reminder_minutes: minutes };
       return runPlannedHealthMutation({ kind: 'insert', operation, lifetime });
     }
     if (!previous) return Promise.resolve(false);
-    return runPlannedHealthMutation({ kind: 'update', id, previous, changes: { due_on: dueOn, description }, localToday, lifetime });
+    return runPlannedHealthMutation({ kind: 'update', id, previous, changes: { due_on: dueOn, description, reminder_enabled: enabled, reminder_minutes: minutes }, localToday, lifetime });
   }
 
   function removePlannedHealth(id: string): Promise<boolean> {
@@ -1444,7 +1537,34 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     if (page === 'more') return <MorePage onNavigate={(nextPage) => {
       if (nextPage === 'knowledge') setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId: null, returnPage: 'more' });
       setPage(nextPage);
-    }} signOutError={signOutError} signingOut={signingOut} onSignOut={confirmSignOut} />;
+    }} signOutError={signOutError} signingOut={signingOut} onSignOut={confirmSignOut} onOpenNotifications={() => { setNotificationSaved(false); setPage('notification-settings'); }} />;
+    if (page === 'notification-settings') return <NotificationSettingsScreen
+      key={JSON.stringify(notificationPreferences)} onBack={() => setPage('more')} preferences={notificationPreferences}
+      saved={notificationSaved && !notificationStorageError} busy={notificationBusy || !notificationPreferencesReady}
+      statusMessage={notificationStorageError ? 'Påminnelsevalen kunde inte läsas säkert. Inga nya påminnelser schemaläggs.' : notificationMessage}
+      statusError={notificationStorageError || notificationMessageError} permissionState={notificationPermission}
+      onSave={async (preferences) => {
+        const context = notificationContextRef.current;
+        if (!context || notificationBusy) return false;
+        setNotificationBusy(true); setNotificationSaved(false); setNotificationMessage(''); setNotificationMessageError(false);
+        try {
+          await reminderService.savePreferences(context.ownerId, preferences);
+          if (!reminderService.isCurrent(context)) return false;
+          setNotificationPreferences(preferences); setNotificationSaved(true); setNotificationStorageError(false);
+          return true;
+        } catch {
+          if (reminderService.isCurrent(context)) { setNotificationMessage('Valen kunde inte sparas säkert. Kontrollera lagringen och försök igen.'); setNotificationMessageError(true); }
+          return false;
+        } finally { if (reminderService.isCurrent(context)) setNotificationBusy(false); }
+      }}
+      onRequestPermission={async () => {
+        const context = notificationContextRef.current;
+        if (!context) return 'unknown';
+        const result = await reminderService.requestPermission(context);
+        if (reminderService.isCurrent(context)) setNotificationPermission(result);
+        return result;
+      }}
+    />;
     if (page === 'health') return <HealthScreen
       onBack={() => setPage('more')}
       records={healthWeights}
@@ -1480,6 +1600,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       pending={plannedHealthPending}
       statusMessage={plannedHealthMessage}
       statusError={plannedHealthMessageError}
+      reminderSummary={reminderStatusSummary(reminderResult, notificationPreferences, notificationPermission)}
       conflict={plannedHealthConflict?.lifetime === currentPlannedHealthLifetime ? plannedHealthConflict : null}
       onRetry={() => { void retryPlannedHealth(); }}
       onResolveConflict={() => { void resolvePlannedHealthConflict(); }}
@@ -1601,12 +1722,13 @@ function HomePage({
   </View>;
 }
 
-function MorePage({ onNavigate, signOutError, signingOut, onSignOut }: { onNavigate: (page: ProductPage) => void; signOutError: boolean; signingOut: boolean; onSignOut: () => void }) {
+function MorePage({ onNavigate, signOutError, signingOut, onSignOut, onOpenNotifications }: { onNavigate: (page: ProductPage) => void; signOutError: boolean; signingOut: boolean; onSignOut: () => void; onOpenNotifications: () => void }) {
   return <View>
     <PageHeading title="Mer" description="Fler delar av hundens resa, samlade på ett ställe." />
     <MenuRow icon="book-outline" title="Kunskap" detail="Publicerade guider och checklistor" onPress={() => onNavigate('knowledge')} />
     <MenuRow icon="id-card-outline" title="Tassla-pass" detail="En ärlig överblick, utan export" onPress={() => onNavigate('passport')} />
     <MenuRow icon="paw-outline" title="Hundprofil" detail="Din hunds uppgifter" onPress={() => onNavigate('profile')} />
+    <MenuRow icon="notifications-outline" title="Påminnelser" detail="Lokala val och enhetens tillstånd" onPress={onOpenNotifications} />
     {signOutError && <MessageCard tone="error">Det gick inte att logga ut just nu. Försök igen.</MessageCard>}
     <QuietButton title={signingOut ? 'Loggar ut…' : 'Logga ut'} disabled={signingOut} onPress={onSignOut} />
   </View>;
@@ -1660,6 +1782,16 @@ function BottomNavigation({ page, onNavigate }: { page: ProductPage; onNavigate:
   </View>;
 }
 
+function reminderStatusSummary(result: ReminderReconcileResult | null, preferences: NotificationPreferences, permission: 'unknown' | 'granted' | 'denied'): string {
+  if (!preferences.enabled) return 'Påminnelser av på den här enheten. Sparade planval finns kvar.';
+  if (permission === 'denied' || result?.status === 'permission-denied') return 'Enheten nekar notiser; Tassla fungerar ändå.';
+  if (result?.status === 'unknown') return 'En plan har osäker sparstatus och väntar på kontroll.';
+  if (result?.status === 'failed') return 'Påminnelserna kunde inte stämmas av.';
+  if (result?.status === 'over-cap') return 'Schemalagda högst 40 planer och en träningspåminnelse. Ytterligare planer schemaläggs inte.';
+  if (result?.status === 'scheduled') return result.scheduledCount + ' lokala påminnelser schemalagda i ' + result.timezone + '. Schemaläggning är ingen leveransbekräftelse.';
+  return 'Påminnelsernas status kontrolleras.';
+}
+
 function toLogEvent(row: DogEventRecord): LogEvent {
   return { id: row.id, dogId: row.dog_id, type: row.event_type, occurredAt: row.occurred_at, note: row.description, origin: 'local-test' };
 }
@@ -1682,10 +1814,11 @@ function sameHealthHistory(
 
 function samePlannedHealth(
   record: PlannedHealthRecord,
-  expected: Pick<PlannedHealthOperation, 'id' | 'dog_id' | 'event_type' | 'due_on' | 'description'>,
+  expected: Pick<PlannedHealthOperation, 'id' | 'dog_id' | 'event_type' | 'due_on' | 'description' | 'reminder_enabled' | 'reminder_minutes'>,
 ): boolean {
   return record.id === expected.id && record.dog_id === expected.dog_id && record.event_type === expected.event_type
-    && record.due_on === expected.due_on && record.description === expected.description;
+    && record.due_on === expected.due_on && record.description === expected.description
+    && record.reminder_enabled === expected.reminder_enabled && record.reminder_minutes === expected.reminder_minutes;
 }
 
 function samePlannedHealthSnapshot(left: PlannedHealthRecord | null, right: PlannedHealthRecord | null): boolean {

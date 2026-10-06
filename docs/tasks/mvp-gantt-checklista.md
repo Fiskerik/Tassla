@@ -8,6 +8,19 @@
 
 Planen räknar med en eller högst två aktiva deluppgifter åt gången, cirka 20–30 fokuserade agenttimmar per vecka när arbetet kan köras, mänskliga svar inom 24–48 timmar och inga nya funktioner utanför godkänd MVP. Uppskattningen är inte en garanti. Erik har uppgett att Codemagic-krediterna är slut; därför är första nya signerade iPhone-bygget en **blockerad grind** och alla beroende datum nedan är preliminära. Återstående arbete uppskattades tidigare till 122–206 agenttimmar, med cirka 7–9 veckor till pilotbar hel MVP och 12–15 veckor till första D30-beslut när arbetet kan fortgå.
 
+## Aktuell genomförandestatus — 2026-10-06
+Den äldre daterade tidslinjen nedan är ett historiskt estimat. Eriks nya beställning och telefonpolicy i [samlad paketplan](dev/mvp-beta-delivery.md) gäller framför tidigare interpaketgrindar: Erik väljer kritiska telefonprov, lokal implementation fortsätter utan automatiskt TestFlight-stopp. Ingen ny pilotdag kan härledas enbart från lokal kodstatus.
+
+| Paket | Faktisk status |
+|---|---|
+| P01 utförd hälsa, P02 profil, P03 planerad hälsa | Lokalt klara och granskade |
+| P04 innehåll | Utkast/importverktyg klara; mänsklig sakgranskning/publicering väntar |
+| P05 Hem/Kunskap, P06 PDF-pass | Lokalt klara; senaste fullcheck253 och iOS-export PASS |
+| P07 påminnelser | DATAQA klar; NATIVE/storage/UI och slutkontroll pågår |
+| P08 QR, P09 mätning, P10 beta-konto | Förberedelser; verkliga betauppgifter/databeslut återstår |
+| P11 samlad beta-QA | Efter funktionerna; verklig backend/RLS, signerad kandidat och Eriks distributionsbeslut återstår |
+
+[Release-log per paket](../releases/MVP-BETA.md) beskriver implementerat, verifierat och nästa steg. Ogranskade råd publiceras inte. D30-utvärdering börjar först efter verklig aktivering och är inte en bygggrind.
 ## Gantt-schema
 
 Heldragna datum är målintervall, inte utfästelser om att arbete sker automatiskt. Uppgifter med beroende på iPhone-bygget startar först efter att Codemagic-krediter finns och bygget faktiskt lyckats. Den visuella tidslinjen finns nedan; checklisterna och grindarna följer efter den.
@@ -99,3 +112,4 @@ Heldragna datum är målintervall, inte utfästelser om att arbete sker automati
 ## Klart betyder
 
 Pilotbar MVP betyder att godkända `docs/mvp.md`-områden fungerar på en signerad fysisk iPhone, dataisolering/radering har verifierats, minimalt granskat innehåll finns, uppfödarvägen och mätningen fungerar, QA/Security/Reviewer har godkänt och Erik har accepterat pilotgrinden. D30-lärande betyder dessutom att det individuella 30-dagarsfönstret faktiskt är avslutat. En lyckad lokal typkontroll eller grön CI-jobb ensam uppfyller inte detta.
+
