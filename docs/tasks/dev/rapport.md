@@ -110,3 +110,6 @@ Luna medium Implementer source stable correction1; QA profile_contract 31/31 fok
 
 ## P04 final v5 checkpoint — 2026-10-06
 Final QA51/51 fokuserat, pnpmcheck211/211 TypeScript/lint/tests PASS, diffcheckPASS. iOSexport redanPASS efter lokalpermissionretry före metadatafix; inga native/sourceUIändringar därefter. p04_final_review Luna medium renewed ReviewerPASS/statiskSecurityPASS. dog_expert faktisk förgranskning inga materiella blockerare; exakta sista valp→hund-korrigeringen verifierad i body. Mänskligreviewpending, draftimport aldrigkörd. Utformad läsbar granskningsfil docs/content/mvp-content-review-v1.md och expertunderlag p04-dog-expert-review.md. P04 lokal leverans färdig; publicerat innehåll/granskarapproval återstår inför beta. Nästa P05 enligt reviewad exaktplanv2.
+
+## P05 slutcheckpoint — 2026-10-06
+Luna medium QA12/12 fokuserat, full223/223 inklusive typecheck/lint PASS, iOSexport efter lokal EPERM-elevation och diffcheckPASS. p04_final_review oberoende renewed ReviewerPASS/statiskSecurityPASS, fixturemetadata-granskning bevarade assertions. Guidemarkörer renderas nu som native läsblock; Home plainpreview delar exakt fetchedversion, state/sourceURL/sluggrindkontroller verifierade lokalt. P04-råd fortfarande draft/humanpending. Release-log P05-CONTENT-UI.md aktuell. Nästa P06 enligt approved passport-pdfv2.

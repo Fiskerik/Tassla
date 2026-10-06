@@ -74,3 +74,14 @@ Samma exakta source/testowners som v4, inga dependencies/SQLexekvering. SQL rege
 Faktisk v5 kontraktreview 2026-10-06 p04_final_review Luna medium, read-only i rollordning: Architect APPROVE; Critic PROCEED. Explicit lokal body/step-claimmapping, manuell faktatäckning/källstöd och draftgrind godkända. Ingen sourceReviewer PASS ännu; authorcorrection följt av renewed source review.
 
 P04 slutcheckpoint: faktiskQA51/51/211fullPASS, export/diffPASS, renewedReviewer/statiskSecurityPASS. Läsbart humanreviewunderlag mvp-content-review-v1.md. Draftstatusochhumanpendingärkvar; detta är lokal leverans, inte publicerat råd. Nästa P05implementeringeftercommit.
+
+## P05 exakt v3 — läsbar guideformatering, inväntar förnyad review
+Faktisk sourceReviewer CHANGES: P04 body innehåller begränsade Markdownrubriker/listor som nu visas bokstavligt i Text både Hem/Kunskap. Korrigering inom designkravet: ny explicit implementerfil src/features/knowledge/guide-body.ts, ren liten parser för befintliga ##/###-rubriker, listpunkter och stycken (ingen HTML, full Markdownmotor eller dependency). Native Knowledge visar separata läsbara heading/list/paragraph-block med stor-textflöde och textetiketter; källa/råd får inte ändras. Hem använder en vanlig textintroduktion från samma body utan bokstavliga Markdownmarkörer; exakt version/body bevaras, samma Läs i Kunskap-handling.
+Implementer övriga P05-filer oförändrade. QA befintlig tests/content-delivery.test.mjs kompletteras med faktisk helper/formatter, kanonisk checklist-body/rubrik/stycke/UTF8/tom/ren text och actualrenderblock-användning. Ingen HTMLexekvering/länkautomation. Typecheck/lint/fullcheck/export/diff och renewedReviewer efter källfrysning. Detta är sourcecorrection2 (tidigare correction1 statusguard); inga orelaterade ändringar.
+
+Faktisk P05 v3 review p04_final_review Luna medium: Architect APPROVE; Critic PROCEED. Begränsad ren parser och native läsblock/plaintextintroduktion godkända. QA actualhelper/canonicalbody/actualscreenuse före renewedReviewer; ingen HTML/dependency. Implementer får guide-body.ts enligt explicit lista.
+
+## P05 nödvändig QA-fixtureunderhåll
+Finalcheck222/223, enda failure tidigare training progression versionRow fixture saknar nu obligatorisk published-status/slug. QA extra explicit fil tests/workspace-data.test.mjs tillåten endast för att lägga korrekta metadata i versionRow; befintliga progressionstester/assertions oförändrade. Ingen produktändring eller försvagning av krav. Slutcheck körs efter fixturefix, exakt resultat dokumenteras.
+
+P05 finalcheckpoint: faktiskt12focused/full223 PASS, export/diffPASS, renewedReviewer/staticSecurityPASS. Release-log P05-CONTENT-UI.md uppdaterad; sourcev3formatting and necessaryfixturemetadata done. Nästa P06 efter lokalcommit.

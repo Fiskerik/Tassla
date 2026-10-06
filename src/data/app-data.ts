@@ -22,10 +22,14 @@ export interface BreedOption {
 export type DogProfileWriteOutcome = { status: 'saved'; value: OwnedDog } | { status: 'failed' | 'unknown' };
 
 export interface HomeContent {
+  /** Published content-version ID; stable for the selected version. */
   id: string;
+  contentId: string;
+  version: number;
   title: string;
   body: string;
   contentType: 'article' | 'guide' | 'checklist' | 'training_program';
+  sources: readonly string[];
 }
 
 const DOG_REQUEST_DEADLINE_MS = 12_000;
@@ -34,11 +38,13 @@ interface ContentVersionRow {
   id: string;
   content_id: string;
   version: number;
+  status: string;
   title: string;
   body: string;
   min_age_weeks: number;
   max_age_weeks: number | null;
-  content_items: { content_type: string };
+  sources: string[];
+  content_items: { slug: string; content_type: string };
   content_breed_targets: { breed_id: string }[];
 }
 
@@ -187,7 +193,7 @@ function isDefiniteClientRejection(error: unknown): boolean {
 export async function fetchHomeContent(client: SupabaseClient, dog: OwnedDog, ageWeeks: number): Promise<HomeContent[]> {
   const { data, error } = await client
     .from('content_versions')
-    .select('id,content_id,version,title,body,min_age_weeks,max_age_weeks,content_items!inner(content_type),content_breed_targets(breed_id)')
+    .select('id,content_id,version,status,title,body,min_age_weeks,max_age_weeks,sources,content_items!inner(slug,content_type),content_breed_targets(breed_id)')
     .eq('status', 'published')
     .lte('min_age_weeks', ageWeeks)
     .or(`max_age_weeks.is.null,max_age_weeks.gte.${ageWeeks}`);
@@ -198,7 +204,8 @@ export async function fetchHomeContent(client: SupabaseClient, dog: OwnedDog, ag
     throw new Error('Published content response did not match the database contract');
   }
 
-  const versions = rows.map((item) => ({
+  const selectableRows = rows.filter((item) => item.content_items.slug !== 'before-homecoming');
+  const versions = selectableRows.map((item) => ({
     id: item.id,
     contentId: item.content_id,
     version: item.version,
@@ -208,13 +215,13 @@ export async function fetchHomeContent(client: SupabaseClient, dog: OwnedDog, ag
     breedIds: item.content_breed_targets.map((target) => target.breed_id),
   }));
   const selected = selectContent(versions, ageWeeks, dog.breed_id);
-  const byId = new Map(rows.map((item) => [item.id, item]));
+  const byId = new Map(selectableRows.map((item) => [item.id, item]));
 
   return selected.flatMap((version) => {
     const item = byId.get(version.id);
     const contentType = item?.content_items.content_type;
     if (!item || !contentType || !isContentType(contentType)) return [];
-    return [{ id: item.id, title: item.title, body: item.body, contentType }];
+    return [{ id: item.id, contentId: item.content_id, version: item.version, title: item.title, body: item.body, contentType, sources: item.sources }];
   });
 }
 
@@ -226,11 +233,15 @@ function isContentVersionRow(value: unknown): value is ContentVersionRow {
   return typeof row.id === 'string'
     && typeof row.content_id === 'string'
     && typeof row.version === 'number'
+    && row.status === 'published'
     && typeof row.title === 'string'
     && typeof row.body === 'string'
     && typeof row.min_age_weeks === 'number'
     && (typeof row.max_age_weeks === 'number' || row.max_age_weeks === null)
+    && Array.isArray(row.sources) && row.sources.every((source) => typeof source === 'string')
     && !!parent && typeof parent === 'object' && !Array.isArray(parent)
+    && typeof (parent as Record<string, unknown>).slug === 'string'
+    && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test((parent as Record<string, unknown>).slug as string)
     && typeof (parent as Record<string, unknown>).content_type === 'string'
     && Array.isArray(targets)
     && targets.every((target) => !!target && typeof target === 'object'

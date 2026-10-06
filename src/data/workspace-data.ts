@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { selectContent } from '../content/select-content';
 import { LOG_EVENT_TYPES, type LogEventType } from '../features/puppy-log/log-model';
-import type { OwnedDog } from './app-data';
+import type { HomeContent, OwnedDog } from './app-data';
 
 export const WORKSPACE_PAGE_SIZE = 40;
 const DEFAULT_REQUEST_TIMEOUT_MS = 12_000;
@@ -135,12 +135,13 @@ interface PublishedVersionRow {
   id: string;
   content_id: string;
   version: number;
+  status: string;
   title: string;
   body: string;
   min_age_weeks: number;
   max_age_weeks: number | null;
   sources: string[];
-  content_items: { content_type: string };
+  content_items: { slug: string; content_type: string };
   content_breed_targets: { breed_id: string }[];
 }
 
@@ -770,7 +771,7 @@ export async function fetchPublishedContentVersions(
 ): Promise<PublishedVersionRow[]> {
   return withRequestDeadline(async (signal) => {
     const { data, error } = await client.from('content_versions')
-      .select('id,content_id,version,title,body,min_age_weeks,max_age_weeks,sources,content_items!inner(content_type),content_breed_targets(breed_id)')
+      .select('id,content_id,version,status,title,body,min_age_weeks,max_age_weeks,sources,content_items!inner(slug,content_type),content_breed_targets(breed_id)')
       .eq('status', 'published')
       .abortSignal(signal);
     const rows: unknown = data;
@@ -785,9 +786,10 @@ export async function fetchHomeContent(
   ageWeeks: number,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   parentSignal?: AbortSignal,
-): Promise<{ id: string; title: string; body: string; contentType: 'article' | 'guide' | 'checklist' | 'training_program' }[]> {
+): Promise<HomeContent[]> {
   const rows = await fetchPublishedContentVersions(client, timeoutMs, parentSignal);
-  const selected = selectContent(rows.map((item) => ({
+  const selectableRows = rows.filter((item) => item.content_items.slug !== 'before-homecoming');
+  const selected = selectContent(selectableRows.map((item) => ({
     id: item.id,
     contentId: item.content_id,
     version: item.version,
@@ -796,12 +798,12 @@ export async function fetchHomeContent(
     maxAgeWeeks: item.max_age_weeks,
     breedIds: item.content_breed_targets.map((target) => target.breed_id),
   })), ageWeeks, dog.breed_id);
-  const byId = new Map(rows.map((item) => [item.id, item]));
+  const byId = new Map(selectableRows.map((item) => [item.id, item]));
   return selected.flatMap(({ id }) => {
     const row = byId.get(id);
     const contentType = row?.content_items.content_type;
     if (!row || !isDisplayableContentType(contentType)) return [];
-    return [{ id: row.id, title: row.title, body: row.body, contentType }];
+    return [{ id: row.id, contentId: row.content_id, version: row.version, title: row.title, body: row.body, contentType, sources: row.sources }];
   });
 }
 
@@ -1031,11 +1033,13 @@ function isPublishedVersionRow(value: unknown): value is PublishedVersionRow {
   const parent = row.content_items;
   const targets = row.content_breed_targets;
   return typeof row.id === 'string' && typeof row.content_id === 'string'
-    && typeof row.version === 'number' && typeof row.title === 'string' && typeof row.body === 'string'
+    && typeof row.version === 'number' && row.status === 'published' && typeof row.title === 'string' && typeof row.body === 'string'
     && typeof row.min_age_weeks === 'number'
     && (typeof row.max_age_weeks === 'number' || row.max_age_weeks === null)
     && Array.isArray(row.sources) && row.sources.every((source) => typeof source === 'string')
     && Boolean(parent) && typeof parent === 'object' && !Array.isArray(parent)
+    && typeof (parent as Record<string, unknown>).slug === 'string'
+    && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test((parent as Record<string, unknown>).slug as string)
     && typeof (parent as Record<string, unknown>).content_type === 'string'
     && Array.isArray(targets) && targets.every((target) => Boolean(target) && typeof target === 'object'
       && typeof (target as Record<string, unknown>).breed_id === 'string');

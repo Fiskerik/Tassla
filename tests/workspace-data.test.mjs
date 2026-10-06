@@ -400,12 +400,13 @@ function versionRow({ id, contentId, version, title }) {
     id,
     content_id: contentId,
     version,
+    status: 'published',
     title,
     body: 'Introduktion, stopp och begränsningar.',
     min_age_weeks: 0,
     max_age_weeks: null,
     sources: ['https://example.test/source'],
-    content_items: { content_type: 'training_program' },
+    content_items: { slug: 'handling-program', content_type: 'training_program' },
     content_breed_targets: [],
   };
 }

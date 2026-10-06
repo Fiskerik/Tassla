@@ -68,6 +68,7 @@ import { HealthScreen } from '../health/HealthScreen';
 import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
 import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
+import { getGuidePreviewText } from '../knowledge/guide-body';
 import { LogScreen } from '../puppy-log/LogScreen';
 import { type LogEvent, type LogEventChanges, type LogEventType } from '../puppy-log/log-model';
 import { PassportScreen } from '../passport/PassportScreen';
@@ -104,6 +105,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [content, setContent] = useState<HomeContent[]>([]);
   const [contentState, setContentState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [contentSelectionKey, setContentSelectionKey] = useState<string | null>(null);
+  const [knowledgeFocus, setKnowledgeFocus] = useState<{ selectionKey: string; contentId: string | null; returnPage: 'home' | 'more' } | null>(null);
   const [events, setEvents] = useState<DogEventRecord[]>([]);
   const eventRows = useRef<DogEventRecord[]>([]);
   const [logState, setLogState] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -397,6 +399,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const visibleContent = contentSelectionKey === currentSelectionKey ? content : [];
   const visibleContentState = contentSelectionKey === currentSelectionKey ? contentState : 'loading';
   const visibleTrainingState = trainingSelectionKey === currentSelectionKey ? trainingState : 'loading';
+  const visibleGuideContent = visibleContent.filter((item) => item.contentType !== 'training_program');
+  const focusedKnowledgeContentId = knowledgeFocus?.selectionKey === currentSelectionKey
+    && visibleGuideContent.some((item) => item.id === knowledgeFocus.contentId)
+    ? knowledgeFocus.contentId : null;
 
   const displayEvents = useMemo(() => events.map(toLogEvent), [events]);
   const latestEvent = events[0];
@@ -1394,14 +1400,19 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   function renderPage() {
     if (page === 'home') return <HomePage
       dog={dog}
+      iconsLoaded={fontsLoaded}
       ageWeeks={age}
       latestEvent={latestEvent ? toLogEvent(latestEvent) : null}
       nextProgram={nextProgram ?? null}
       nextStep={nextStep ?? null}
-      content={visibleContent}
+      content={visibleGuideContent}
       contentState={visibleContentState}
       trainingState={visibleTrainingState}
       onGo={setPage}
+      onOpenContent={(contentId) => {
+        setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId, returnPage: 'home' });
+        setPage('knowledge');
+      }}
       onRetryContent={() => { void retryContent(); }}
     />;
     if (page === 'log') return <>
@@ -1427,7 +1438,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
         onRetry={() => { void retryTraining(); }} />}
     </>;
-    if (page === 'more') return <MorePage onNavigate={setPage} signOutError={signOutError} signingOut={signingOut} onSignOut={confirmSignOut} />;
+    if (page === 'more') return <MorePage onNavigate={(nextPage) => {
+      if (nextPage === 'knowledge') setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId: null, returnPage: 'more' });
+      setPage(nextPage);
+    }} signOutError={signOutError} signingOut={signingOut} onSignOut={confirmSignOut} />;
     if (page === 'health') return <HealthScreen
       onBack={() => setPage('more')}
       records={healthWeights}
@@ -1469,7 +1483,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       onSave={savePlannedHealth}
       onDelete={removePlannedHealth}
     />;
-    if (page === 'knowledge') return <KnowledgeScreen onBack={() => setPage('more')} items={content.filter((item) => item.contentType !== 'training_program')} />;
+    if (page === 'knowledge') return <KnowledgeScreen
+      onBack={() => setPage(knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : 'more')}
+      items={visibleGuideContent}
+      contentState={visibleContentState}
+      focusedContentId={focusedKnowledgeContentId}
+      onSelectContent={(contentId) => setKnowledgeFocus({
+        selectionKey: currentSelectionKey,
+        contentId,
+        returnPage: knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : 'more',
+      })}
+      onRetry={() => { void retryContent(); }}
+    />;
     if (page === 'passport') return <PassportScreen onBack={() => setPage('more')} />;
     if (onDogUpdated) return <EditDogProfileScreen key={`${dog.id}:${dog.name}:${dog.breed_id}:${dog.birth_date}`}
       client={client} dog={dog} busy={profileBusy} pending={profilePending} statusMessage={profileMessage}
@@ -1482,9 +1507,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
 
 function HomePage({
   dog, ageWeeks, latestEvent, nextProgram, nextStep, content, contentState, trainingState,
-  onGo, onRetryContent,
+  iconsLoaded, onGo, onOpenContent, onRetryContent,
 }: {
   dog: OwnedDog;
+  iconsLoaded: boolean;
   ageWeeks: number;
   latestEvent: LogEvent | null;
   nextProgram: PublishedTrainingProgram | null;
@@ -1493,6 +1519,7 @@ function HomePage({
   contentState: 'loading' | 'ready' | 'error';
   trainingState: 'loading' | 'ready' | 'error';
   onGo: (page: ProductPage) => void;
+  onOpenContent: (contentId: string) => void;
   onRetryContent: () => void;
 }) {
   return <View>
@@ -1517,9 +1544,13 @@ function HomePage({
     </>}
     {contentState === 'ready' && content.length === 0 && <MessageCard>Det finns inget publicerat innehåll för {dog.name}s ålder och ras ännu. Nya guider visas här när de är klara.</MessageCard>}
     {contentState === 'ready' && content.slice(0, 2).map((item) => <View key={item.id} style={styles.contentCard}>
-      <Text style={styles.cardEyebrow}>{contentTypeLabel(item.contentType)}</Text>
+      <View style={styles.contentCardHeading}>
+        {iconsLoaded && <Ionicons name={item.contentType === 'checklist' ? 'checkbox-outline' : 'book-outline'} size={19} color={theme.colors.accent} />}
+        <Text style={styles.cardEyebrow}>{contentTypeLabel(item.contentType)}</Text>
+      </View>
       <Text style={styles.contentTitle}>{item.title}</Text>
-      <Text style={styles.contentBody}>{item.body}</Text>
+      <Text style={styles.contentBody} numberOfLines={3} ellipsizeMode="tail">{getGuidePreviewText(item.body)}</Text>
+      <QuietButton title="Läs i Kunskap" onPress={() => onOpenContent(item.id)} />
     </View>)}
     <View style={styles.sectionHeading}><Text style={styles.sectionTitle} accessibilityRole="header">Hundens vardag</Text><Ionicons name="calendar-outline" size={22} color={theme.colors.accent} /></View>
     <View style={styles.summaryCard}>
@@ -1684,6 +1715,7 @@ const styles = StyleSheet.create({
   sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 10 },
   sectionTitle: { color: theme.colors.text, fontSize: 20, fontWeight: '800' },
   contentCard: { borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, padding: 17, marginTop: 8 },
+  contentCardHeading: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   cardEyebrow: { color: theme.colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 0.9, marginBottom: 7 },
   contentTitle: { color: theme.colors.text, fontSize: 18, lineHeight: 24, fontWeight: '800' },
   contentBody: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 21, marginTop: 7 },

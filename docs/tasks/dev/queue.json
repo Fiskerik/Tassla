@@ -1113,6 +1113,73 @@
         }
       ],
       "next_step": "Independent renewedReviewerPASS staticSecurityPASS; actualsourceexpertreview humanpending; localdraftpackage release-log saved"
+    },
+    {
+      "id": "MVP-P05-CONTENT-UI",
+      "title": "Relevant Home and Knowledge with shared published versions",
+      "mvp_requirement": "docs/mvp.md Home Knowledge training continuity",
+      "plan": "docs/tasks/dev/mvp-content-delivery.md P05 v3",
+      "write_paths": [
+        "src/data/workspace-data.ts",
+        "src/data/app-data.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/source-links.ts",
+        "src/features/home/README.md",
+        "src/features/knowledge/README.md",
+        "src/data/README.md",
+        "tests/content-delivery.test.mjs",
+        "tests/README.md",
+        "src/features/knowledge/guide-body.ts",
+        "tests/workspace-data.test.mjs"
+      ],
+      "acceptance": [
+        "Same fetched version and sources Home Knowledge with explicit states",
+        "Before-homecoming excluded before age selection; preserved progress; safe HTTPS intentional links"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "Independent Reviewer"
+      ],
+      "depends_on": [
+        "MVP-P04-CONTENT"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Actual next_reviews Architect APPROVE Critic PROCEED exactv2 plus explicit source-links helper saved plan"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik full MVP Luna medium mandate; P04 done local1d9de3f; start runtime data then UI design checkpoint"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Actual P05 finalfreeze after status integrity correction; typecheck lint diffPASS; independent QA Reviewer now"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Actualfocused12 full223 ios export diffPASS; native/liveDBunverified"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent renewedReviewerPASS staticSecurityPASS; exactfixtureassertionsunchanged; release-log saved"
+        }
+      ],
+      "next_step": "Independent renewedReviewerPASS staticSecurityPASS; exactfixtureassertionsunchanged; release-log saved"
     }
   ]
 }
