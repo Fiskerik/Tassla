@@ -22,3 +22,39 @@ P03 lokal slutreview PASS; P04 implementation börjar först efter full QA och b
 5. Åldersfaser 8–12/13–16/17–26/27–52, yngre/äldre fallback dokumenteras utan påhittad individuell kalender; inga kliniska doser eller fasta ensamhetsminuter. Bilder/ikoner i P05 UI; textstruktur ska vara lättläst och användbar där.
 Acceptans: elva fullständiga källbelagda utkast med granskningsunderlag, lokalt verifierat verktyg och granskad draft-import. Innehållspublicering återstår tills faktisk sakgranskning; fortsatta tekniska paket får fortsätta inom redan godkänd plan.
 P05 eget exakt kontrakt och review efter P04 checkpoint: Hem/Kunskap delar publicerad version, nästa sparade träningssteg, bevarad versionsbunden progression, ärliga tom-/felllägen och dekorativa assets. Föreslagna filer app-data.ts, ProductWorkspace.tsx, KnowledgeScreen.tsx; slutlig lista låses då.
+
+## P04 kontrakt v3 — precisering efter faktisk Architect CHANGES
+Identiteter låses till exakt 11 content_items, en oföränderlig typ per slug:
+- before-homecoming: checklist, context=onboarding-only
+- first-week: article
+- daily-log-routines: article (appguide)
+- handling-guide: article
+- environment-checklist: checklist
+- being-alone-guide: article (separat kort guide, inte programmet)
+- weight-history-guide: article (appguide)
+- health-records-guide: article (appguide)
+- handling-program: training_program
+- environment-program: training_program
+- being-alone-program: training_program
+Befintliga inventeringsslugs/types bevaras i inventeringen; dessa draftidentiteter är separat explicit leveranslista och får inte ändra en redan använd content_item-typ. Implementer verifierar UUID-mapping mot schema/inventering och avbryter vid kollision.
+`before-homecoming` lagras med onboarding-only i bundle; schema saknar context. SQL bevarar exakt slug. P05 måste filtrera bort denna slug innan vanlig åldersbaserad Hem/Kunskap-selection även vid verklig ålder 0; exponering endast genom onboarding. Utkast får aldrig läcka till runtime.
+Varje sakpåstående i bundle har claim-id/text/source_refs eller explicit unverified-markering. Källregister har källa-id, URL, titel, accessdatum och tillämpningsavgränsning. Body/programinstruktion använder motsvarande claim-id i granskningsmetadata så underlaget kan sakgranskas. Validator kräver existerande source_refs eller unverified, kontrollerar struktur men intygar inte att källa stödjer påståendet. Publication-check avvisar kvarvarande unverified och saknad faktisk review. Ren appfunktion kopplas till repo-guide/källfil och lokal verifiering; ingen påhittad extern källa.
+V2 övriga owners/filer/checkpunkter gäller. V3 inväntar förnyad Architect/Critic innan implementation.
+
+## Faktisk kontraktreview v3
+2026-10-06 next_reviews Luna medium: Architect APPROVE; Critic PROCEED. Godkänner P04 draft bundle/import-kontrakt. P05 måste implementera/testa before-homecoming-exkludering innan runtimeexponering. Ingen faktisk innehållssakgranskning, publicering eller databasexekvering genom detta besked.
+
+## P05 kontraktsförberedelse — ej godkänt för implementation ännu
+Runtime-väg verifierad: ProductWorkspace importerar fetchHomeContent från workspace-data.ts, inte äldre funktionen i app-data.ts. P05 måste ändra runtimevägen. Föreslagen exakt lista: src/data/workspace-data.ts (publicerad slug/sources och onboarding-exkludering före selection), src/data/app-data.ts (HomeContent typ vid behov, och konsekvent äldre läsväg om använd), src/features/home/ProductWorkspace.tsx (kortlänk till Kunskap, samma versionsdata), src/features/knowledge/KnowledgeScreen.tsx (källor, lugna läskort), src/features/home/README.md, src/features/knowledge/README.md, src/data/README.md. QA tests/content-delivery.test.mjs/tests README. Faktiskt slutkontrakt måste reviewas efter P04.
+Hem visar relevant icke-programkort och enkel Öppna guide-handling, nästa sparade träningssteg bevaras. Kunskap använder samma valda versions-ID och visar verkliga källor som text/länkar med användarinitierad öppning och godkända URL-protokoll. Loading/error får inte maskeras som tom publicerad lista. before-homecoming exkluderas från vanlig åldersselection oavsett ålder, onboardingexponering separat och endast published. Ingen ny dependency. Befintliga dog-welcome/dog-resting och Ionicons/decorativ alttext används sparsamt; läsbarhet/stor text viktigare än bildmängd. Progression och paused history kopplas inte om till annan version. Utkast får inte visas genom fallback.
+
+## P05 exakt kontrakt v2 — reviewändringar införda, inväntar förnyad review
+1. workspace-data.ts väljer content_items.slug för varje published row; saknad/ogiltig slugmetadata avvisas som kontraktfel. Filtrera exakt before-homecoming före vanlig selectContent, oavsett ålder 0. Ingen ny onboardingyta i P05; onboardinginnehåll förblir exkluderat tills separat befintligt onboardingkontrakt medger exponering.
+2. HomeContent i app-data.ts kompletteras med contentId, version och sources (readonly string[]) utöver befintligt version-ID id/title/body/type; actual runtime retur från workspace-data matchar. Äldre läsväg app-data uppdateras till samma säkra metadata/published-filter om den behålls. Hem visar icke-training kort, Öppna guide väljer exakt redan hämtat item.id; Kunskap får samma array och valt ID, ingen navigation-refetch/reselection. Vid profilvalets generationbyte invalideras stale valt ID.
+3. KnowledgeScreen får contentState/loading/ready/error och onRetryContent. Loading/error med retry skilda från ready-empty. Kunskap visar bara icke-training och alltid sources för faktisk version. Samma data/ID som Hem; scroll/vald guide enkel utan extra navigator.
+4. Source URL endast explicit https med URL-parsing; övriga källreferenser vanlig text. React Native Linking öppnar endast vid användartryck. Fånga öppningsfel och visa begripligt status; inga html/automatiska externa öppningar. Appguide repo-källor förblir text.
+5. QA tests/content-delivery.test.mjs med faktiskt SDK fetch/selection och extraherade faktiska renderuttryck/handlers där miljön tillåter: age0/sluggate/malformed slug/draftgrind, samma content+version ID, training exkludering, loading/error/ready-empty, javascript/file/malformed/https link behavior. Befintliga progressionstester måste förbli PASS. Ingen ändring av training progress/paused IDs.
+6. Exakt implementerlista: src/data/workspace-data.ts, src/data/app-data.ts, src/features/home/ProductWorkspace.tsx, src/features/knowledge/KnowledgeScreen.tsx, src/features/home/README.md, src/features/knowledge/README.md, src/data/README.md. QA-lista tests/content-delivery.test.mjs/tests/README.md. Theme/Ionicons och befintliga hundillustrationer, textetiketter/stor text/ärliga statuser. Ingen dependency/schemaändring. Cleanup/check/export/diff/Reviewer före done, nativevisning separat ej testad.
+P04 måste vara beständigt verifierat först. Faktisk Architect CHANGES/Critic PROCEED WITH CHANGES på tidigare förberedelse är införd ovan, inte ännu slutapproval.
+
+Faktisk P05 v2 review 2026-10-06 next_reviews Luna medium: Architect APPROVE, Critic PROCEED. QA måste köra verklig URL-eligibility/open handler, inte enbart textassertions. Vid behov explicit extra implementerfil src/features/knowledge/source-links.ts för liten ren HTTPS-parser som används av verklig handler; ingen ny dependency/abstraktionsplattform. P04 beständig checkpoint kvarstår innan implementation.

@@ -1,0 +1,569 @@
+{
+  "schema_version": 1,
+  "bundle_id": "mvp-content-bundle-v1",
+  "status": "draft",
+  "sources": [
+    {
+      "id": "avsab-humane-training-2021",
+      "url": "https://avsab.org/wp-content/uploads/2021/08/AVSAB-Humane-Dog-Training-Position-Statement-2021.pdf",
+      "title": "Position Statement on Humane Dog Training",
+      "accessed_on": "2026-10-06",
+      "scope": "AVSAB veterinary behavior society position; supports reward-based teaching, environmental management, and gradual safe exposure. Not an individual treatment plan."
+    },
+    {
+      "id": "avsab-puppy-socialization-2024",
+      "url": "https://avsab.org/wp-content/uploads/2024/12/Puppy-Socialization-Position-Statement-FINAL.pdf",
+      "title": "Puppy Socialization Position Statement",
+      "accessed_on": "2026-10-06",
+      "scope": "AVSAB position supports positive, appropriate experiences and safe rest/confinement; does not establish Swedish vaccination or infection-control instructions."
+    },
+    {
+      "id": "rspca-puppy-care",
+      "url": "https://www.rspca.org.uk/adviceandwelfare/pets/dogs/health/puppycare",
+      "title": "Caring For Your Puppy - 6 weeks to 12 months",
+      "accessed_on": "2026-10-06",
+      "scope": "RSPCA general puppy care; supports quiet rest space, removing hazards, familiar bedding, routine and gradual positive experiences. UK context; no UK-specific healthcare advice is applied."
+    },
+    {
+      "id": "rspca-dog-body-language",
+      "url": "https://www.rspca.org.uk/adviceandwelfare/pets/dogs/behaviour/understanding",
+      "title": "Understanding Your Dog's Body Language",
+      "accessed_on": "2026-10-06",
+      "scope": "RSPCA general descriptions of relaxed/worried body-language examples and referral to a vet/clinical behaviourist for concerns; signals are not a diagnosis."
+    },
+    {
+      "id": "bluecross-alone-puppies",
+      "url": "https://www.bluecross.org.uk/advice/dog/behaviour-and-training/preventing-separation-anxiety-in-puppies",
+      "title": "Preventing separation anxiety in puppies",
+      "accessed_on": "2026-10-06",
+      "scope": "Blue Cross practical puppy-alone introduction: positive familiar area, small individual steps, return before anxiety, reduce challenge if worried. No fixed schedule or guaranteed prevention is claimed."
+    },
+    {
+      "id": "app-daily-log-readme",
+      "url": "repo://src/features/puppy-log/README.md",
+      "title": "Tassla Vardagslogg feature guide",
+      "accessed_on": "2026-10-06",
+      "scope": "Repository evidence for current app interactions and limits only; not an external dog-care authority."
+    },
+    {
+      "id": "app-daily-log-screen",
+      "url": "repo://src/features/puppy-log/LogScreen.tsx",
+      "title": "Tassla LogScreen implementation",
+      "accessed_on": "2026-10-06",
+      "scope": "Repository evidence for current app interactions only; no claim about advice, pattern detection, or clinical interpretation."
+    },
+    {
+      "id": "app-health-readme",
+      "url": "repo://src/features/health/README.md",
+      "title": "Tassla Hälsa feature guide",
+      "accessed_on": "2026-10-06",
+      "scope": "Repository evidence for current owner-entered weight and health-history interactions and explicit limits only."
+    },
+    {
+      "id": "app-health-screen",
+      "url": "repo://src/features/health/HealthScreen.tsx",
+      "title": "Tassla HealthScreen implementation",
+      "accessed_on": "2026-10-06",
+      "scope": "Repository evidence for current weight-entry and display behavior only; no weight interpretation claim."
+    },
+    {
+      "id": "app-health-history-screen",
+      "url": "repo://src/features/health/HealthHistoryScreen.tsx",
+      "title": "Tassla HealthHistoryScreen implementation",
+      "accessed_on": "2026-10-06",
+      "scope": "Repository evidence for current performed-vaccination/veterinary-event history behavior only; no medical schedule or advice."
+    }
+  ],
+  "items": [
+    {
+      "id": "61000000-0000-4000-8000-000000000001",
+      "slug": "before-homecoming",
+      "content_type": "checklist",
+      "context": "onboarding-only",
+      "versions": [
+        {
+          "id": "62000000-0000-4000-8000-000000000001",
+          "version": 1,
+          "title": "Förbered hemmet före valpens ankomst",
+          "body": "## En lugn start\n\n- Ordna en lugn viloplats där valpen kan få vara ostörd.\n- Gå igenom valpens rum och plocka undan sådant som kan skada valpen eller som du inte vill att den tuggar på.\n- Förbered några enkla saker för vila och lek.\n- Fråga uppfödaren om valpen har en filt eller annan trygg sak hemifrån som kan följa med.\n- Bestäm i förväg vilka vuxna i hemmet som ansvarar för mat, rastning och vila de första dagarna.\n\nDet här är en förberedelselista före hemkomst. Den är inte en valpålder eller ett träningsschema.",
+          "min_age_weeks": 0,
+          "max_age_weeks": 0,
+          "status": "draft",
+          "breed_targets": [],
+          "claim_trace": [
+            {
+              "claim_id": "bhc-quiet-rest",
+              "text": "En ostörd, lugn viloplats och att ta bort sådant valpen kan skada sig på ingår i grundläggande förberedelser.",
+              "source_refs": ["rspca-puppy-care"]
+            },
+            {
+              "claim_id": "bhc-familiar-item",
+              "text": "En filt eller sak från valpens tidigare hem kan ge något bekant i den nya viloplatsen.",
+              "source_refs": ["rspca-puppy-care"]
+            }
+          ],
+          "review": {
+            "dog_expert": {"status": "pending", "evidence": []},
+            "human_reviewer": {"status": "pending", "evidence": []}
+          },
+          "training_steps": []
+        }
+      ]
+    },
+    {
+      "id": "61000000-0000-4000-8000-000000000002",
+      "slug": "first-week",
+      "content_type": "article",
+      "versions": [
+        {
+          "id": "62000000-0000-4000-8000-000000000002",
+          "version": 1,
+          "title": "Första veckan hemma",
+          "body": "## Börja lugnt\n\nLåt valpen få tid att landa. Visa var den kan vila och låt vilan vara ostörd. Håll de första dagarna förutsägbara och introducera hemmet och vardagens ljud i små, positiva möten.\n\nSe vad valpen själv väljer att närma sig. Gör pauser och låt den gå undan. Belöna lugnt sådant du gärna vill se mer av, till exempel att valpen undersöker något i egen takt eller kommer till dig.\n\nValpar behöver också återhämtning. Avsluta möten och aktiviteter medan valpen fortfarande verkar bekväm. Kroppsspråk är individuellt och enstaka signaler säger inte allt.\n\nTassla ger allmän vägledning, inte veterinärmedicinska råd. Fråga din veterinär om du behöver råd om just din valps hälsa eller smittskydd.",
+          "min_age_weeks": 8,
+          "max_age_weeks": 12,
+          "status": "draft",
+          "breed_targets": [],
+          "claim_trace": [
+            {
+              "claim_id": "fw-rest",
+              "text": "Valpar behöver regelbunden ostörd vila när de kommer hem.",
+              "source_refs": ["rspca-puppy-care"]
+            },
+            {
+              "claim_id": "fw-positive-intro",
+              "text": "Introduktion till nya vardagserfarenheter ska ske positivt och gradvis.",
+              "source_refs": ["rspca-puppy-care", "avsab-puppy-socialization-2024"]
+            },
+            {
+              "claim_id": "fw-reward",
+              "text": "Belöna önskade beteenden i stället för att straffa fel.",
+              "source_refs": ["avsab-humane-training-2021"]
+            }
+          ],
+          "review": {
+            "dog_expert": {"status": "pending", "evidence": []},
+            "human_reviewer": {"status": "pending", "evidence": []}
+          },
+          "training_steps": []
+        }
+      ]
+    },
+    {
+      "id": "61000000-0000-4000-8000-000000000003",
+      "slug": "daily-log-routines",
+      "content_type": "article",
+      "versions": [
+        {
+          "id": "62000000-0000-4000-8000-000000000003",
+          "version": 1,
+          "title": "Vardagslogg och rutiner i Tassla",
+          "body": "## Så använder du vardagsloggen\n\nTryck på en snabbknapp för att lägga till kiss, bajs, mat, sömn, vaken eller promenad. En post får datum och tid och kan ha en kort, frivillig anteckning.\n\nI logghistoriken kan du se poster grupperade efter dag. Du kan ändra eller radera en post och, när det finns äldre poster, hämta fler. Hälsoposter som vikt och veterinärbesök visas under Hälsa i stället.\n\nLoggen hjälper dig att hålla reda på det du själv registrerar. Den tolkar inte valpens behov och upptäcker inte mönster åt dig.",
+          "min_age_weeks": 8,
+          "max_age_weeks": 52,
+          "status": "draft",
+          "breed_targets": [],
+          "claim_trace": [
+            {
+              "claim_id": "dl-events",
+              "text": "Vardagsloggen har snabbvalen kiss, bajs, mat, sömn, vaken och promenad.",
+              "source_refs": ["app-daily-log-readme", "app-daily-log-screen"]
+            },
+            {
+              "claim_id": "dl-history",
+              "text": "En loggpost kan redigeras eller raderas; äldre poster kan hämtas vid behov.",
+              "source_refs": ["app-daily-log-readme", "app-daily-log-screen"]
+            },
+            {
+              "claim_id": "dl-no-interpretation",
+              "text": "Loggen gör ingen mönsteranalys eller bedömning av valpens behov.",
+              "source_refs": ["app-daily-log-readme"]
+            }
+          ],
+          "review": {
+            "dog_expert": {"status": "not_required", "evidence": []},
+            "human_reviewer": {"status": "pending", "evidence": []}
+          },
+          "training_steps": []
+        }
+      ]
+    },
+    {
+      "id": "61000000-0000-4000-8000-000000000004",
+      "slug": "handling-guide",
+      "content_type": "article",
+      "versions": [
+        {
+          "id": "62000000-0000-4000-8000-000000000004",
+          "version": 1,
+          "title": "Trygg hantering börjar med valpens ja",
+          "body": "## Kort, lugnt och frivilligt\n\nLåt valpen först se och nosa på handen. Belöna lugn nyfikenhet. Om valpen är bekväm kan du prova en mycket kort beröring på en plats den verkar acceptera och sedan pausa.\n\nLåt valpen välja om den vill stanna kvar. Tvinga inte fram beröring eller fasthållning för att genomföra övningen. Målet här är en trygg vardagsvana, inte att utföra en undersökning eller behandling.\n\nVänd bort huvudet, slicka sig om munnen, gäspa, krypa undan eller försöka gå därifrån kan vara tecken på obehag. Sluta då, ge utrymme och gör nästa försök lättare. Om rädsla eller svår hantering återkommer, be veterinär om hjälp att hitta rätt stöd.",
+          "min_age_weeks": 8,
+          "max_age_weeks": 52,
+          "status": "draft",
+          "breed_targets": [],
+          "claim_trace": [
+            {
+              "claim_id": "hg-reward",
+              "text": "Belöningsbaserad träning rekommenderas framför aversiva metoder.",
+              "source_refs": ["avsab-humane-training-2021"]
+            },
+            {
+              "claim_id": "hg-discomfort",
+              "text": "Att vända bort blicken, slicka sig om munnen, gäspa, sänka kroppen eller gå undan kan signalera oro; signaler ska läsas i sammanhang.",
+              "source_refs": ["rspca-dog-body-language"]
+            },
+            {
+              "claim_id": "hg-help",
+              "text": "Vid återkommande oro eller beteendebekymmer rekommenderas professionell vägledning.",
+              "source_refs": ["rspca-dog-body-language", "avsab-humane-training-2021"]
+            }
+          ],
+          "review": {
+            "dog_expert": {"status": "pending", "evidence": []},
+            "human_reviewer": {"status": "pending", "evidence": []}
+          },
+          "training_steps": []
+        }
+      ]
+    },
+    {
+      "id": "61000000-0000-4000-8000-000000000005",
+      "slug": "environment-checklist",
+      "content_type": "checklist",
+      "versions": [
+        {
+          "id": "62000000-0000-4000-8000-000000000005",
+          "version": 1,
+          "title": "Trygghet i nya miljöer",
+          "body": "## Innan ni utforskar\n\n- Börja på en lugn plats där valpen kan vila och själv välja att närma sig.\n- Plocka undan sådant som kan skada valpen eller som du inte vill att den tuggar på.\n- Introducera en ny vardagssak i taget på ett avstånd där valpen fortfarande verkar bekväm.\n- Låt valpen titta, nosa eller gå undan; belöna frivillig nyfikenhet och lugn kontakt.\n- Avsluta och skapa mer avstånd om valpen verkar orolig. Försök senare från ett lättare läge.\n\nSocialisering betyder trygga, positiva erfarenheter, inte att valpen måste hälsa på allt.",
+          "min_age_weeks": 8,
+          "max_age_weeks": 52,
+          "status": "draft",
+          "breed_targets": [],
+          "claim_trace": [
+            {
+              "claim_id": "ec-gradual",
+              "text": "Valpar bör få positiva, gradvisa erfarenheter och tillgång till trygg vila.",
+              "source_refs": ["avsab-puppy-socialization-2024", "rspca-puppy-care"]
+            },
+            {
+              "claim_id": "ec-manage",
+              "text": "Arrangera miljön för att förebygga problem och undvik exponering som gör hunden rädd.",
+              "source_refs": ["avsab-humane-training-2021"]
+            }
+          ],
+          "review": {
+            "dog_expert": {"status": "pending", "evidence": []},
+            "human_reviewer": {"status": "pending", "evidence": []}
+          },
+          "training_steps": []
+        }
+      ]
+    },
+    {
+      "id": "61000000-0000-4000-8000-000000000006",
+      "slug": "being-alone-guide",
+      "content_type": "article",
+      "versions": [
+        {
+          "id": "62000000-0000-4000-8000-000000000006",
+          "version": 1,
+          "title": "Hjälp valpen att vara själv en liten stund",
+          "body": "## Börja med trygghet hemma\n\nVälj en lugn plats där valpen kan vila och ha vatten. Låt platsen vara trevlig även när du är hemma, så att den inte bara förknippas med att du går.\n\nBörja med lite avstånd medan du fortfarande är hemma. Håll övningen så enkel att valpen kan vara lugn och återvänd innan den blir orolig. Gör det gradvis och utifrån just din valps reaktion; det finns ingen minutplan som passar alla.\n\nOm valpen verkar orolig, gör det lättare nästa gång och återgå till det senaste läge där den var lugn. Om oron kvarstår eller är kraftig, be veterinär om råd. Den här guiden förebygger inte eller behandlar garanterat separationsrelaterade problem.",
+          "min_age_weeks": 8,
+          "max_age_weeks": 52,
+          "status": "draft",
+          "breed_targets": [],
+          "claim_trace": [
+            {
+              "claim_id": "ba-safe-area",
+              "text": "En vald plats bör vara positiv även när ägaren är hemma; valpen ska först klara korta avstånd med ägaren i närheten.",
+              "source_refs": ["bluecross-alone-puppies"]
+            },
+            {
+              "claim_id": "ba-backoff",
+              "text": "Öka gradvis efter individen och backa om hunden visar oro.",
+              "source_refs": ["bluecross-alone-puppies"]
+            },
+            {
+              "claim_id": "ba-help",
+              "text": "Vid kvarstående eller kraftig oro behövs professionell vägledning; guiden garanterar inte prevention eller behandling.",
+              "source_refs": ["bluecross-alone-puppies"]
+            }
+          ],
+          "review": {
+            "dog_expert": {"status": "pending", "evidence": []},
+            "human_reviewer": {"status": "pending", "evidence": []}
+          },
+          "training_steps": []
+        }
+      ]
+    },
+    {
+      "id": "61000000-0000-4000-8000-000000000007",
+      "slug": "weight-history-guide",
+      "content_type": "article",
+      "versions": [
+        {
+          "id": "62000000-0000-4000-8000-000000000007",
+          "version": 1,
+          "title": "Så fungerar vikthistoriken",
+          "body": "## Lägg till en viktpost\n\nUnder Hälsa kan du registrera hundens vikt i kilo och ange datum. Du kan rätta eller radera en post och se dina registrerade vikter i datumordning.\n\nUppgifterna är ägarregistrerade. Tassla kontrollerar inte om vikten är lämplig, tolkar inte förändringar och ersätter inte en veterinärjournal. Vid frågor om valpens vikt eller tillväxt kan du kontakta veterinär.",
+          "min_age_weeks": 8,
+          "max_age_weeks": 52,
+          "status": "draft",
+          "breed_targets": [],
+          "claim_trace": [
+            {
+              "claim_id": "wh-record",
+              "text": "Ägaren kan registrera vikt och datum, rätta eller radera posten och se viktposter i historik.",
+              "source_refs": ["app-health-readme", "app-health-screen"]
+            },
+            {
+              "claim_id": "wh-limit",
+              "text": "Vikten är ägarregistrerad och appen tolkar inte viktförändringar.",
+              "source_refs": ["app-health-readme", "app-health-screen"]
+            },
+            {
+              "claim_id": "wh-vet",
+              "text": "Den som är orolig för valpens tillväxt kan kontakta veterinär.",
+              "source_refs": ["rspca-puppy-care"]
+            }
+          ],
+          "review": {
+            "dog_expert": {"status": "not_required", "evidence": []},
+            "human_reviewer": {"status": "pending", "evidence": []}
+          },
+          "training_steps": []
+        }
+      ]
+    },
+    {
+      "id": "61000000-0000-4000-8000-000000000008",
+      "slug": "health-records-guide",
+      "content_type": "article",
+      "versions": [
+        {
+          "id": "62000000-0000-4000-8000-000000000008",
+          "version": 1,
+          "title": "Registrera en utförd vaccination eller ett veterinärbesök",
+          "body": "## Din egen historik\n\nI Hälsa kan du lägga till en post för en vaccination som redan har utförts eller ett veterinärbesök som redan har ägt rum. Ange datum och lägg vid behov till en kort anteckning. Du kan senare ändra eller radera posten.\n\nUppgifterna är registrerade av dig. De är inte en verifierad journal, ett officiellt vaccinationskort eller ett råd om när nästa vårdbesök ska ske. Fråga veterinär om vaccinationer, symtom eller vård.",
+          "min_age_weeks": 8,
+          "max_age_weeks": 52,
+          "status": "draft",
+          "breed_targets": [],
+          "claim_trace": [
+            {
+              "claim_id": "hr-event",
+              "text": "Hälsans historik registrerar redan utförda vaccinationer och veterinärbesök med datum och frivillig anteckning.",
+              "source_refs": ["app-health-readme", "app-health-history-screen"]
+            },
+            {
+              "claim_id": "hr-limit",
+              "text": "Historiken är ägarregistrerad och inte en verifierad journal eller officiellt vaccinationskort; appen ger inga medicinska råd.",
+              "source_refs": ["app-health-readme", "app-health-history-screen"]
+            },
+            {
+              "claim_id": "hr-vet",
+              "text": "Frågor om vaccination, symtom eller vård hänvisas till veterinär.",
+              "source_refs": ["rspca-puppy-care"]
+            }
+          ],
+          "review": {
+            "dog_expert": {"status": "not_required", "evidence": []},
+            "human_reviewer": {"status": "pending", "evidence": []}
+          },
+          "training_steps": []
+        }
+      ]
+    },
+    {
+      "id": "61000000-0000-4000-8000-000000000009",
+      "slug": "handling-program",
+      "content_type": "training_program",
+      "versions": [
+        {
+          "id": "62000000-0000-4000-8000-000000000009",
+          "version": 1,
+          "title": "Trygg hantering i små steg",
+          "body": "Öva bara när valpen verkar lugn. Belöna frivilligt deltagande och låt valpen gå undan. Stegen är förslag, inte en kalender. Om valpen visar obehag: avbryt, ge utrymme och återgå nästa gång till ett enklare steg. Vid ihållande oro eller svår hantering, be veterinär om vägledning.",
+          "min_age_weeks": 8,
+          "max_age_weeks": 52,
+          "status": "draft",
+          "breed_targets": [],
+          "claim_trace": [
+            {
+              "claim_id": "hp-method",
+              "text": "Använd belöningsbaserade metoder, miljöhantering och gradvis inlärning där hunden kan känna sig trygg.",
+              "source_refs": ["avsab-humane-training-2021"]
+            },
+            {
+              "claim_id": "hp-stop",
+              "text": "Vända bort blicken, gäspa, slicka sig om munnen, sänka kroppen eller gå undan kan tyda på obehag; avbryt och ge utrymme.",
+              "source_refs": ["rspca-dog-body-language"]
+            }
+          ],
+          "review": {
+            "dog_expert": {"status": "pending", "evidence": []},
+            "human_reviewer": {"status": "pending", "evidence": []}
+          },
+          "training_steps": [
+            {
+              "id": "63000000-0000-4000-8000-000000000001",
+              "step_key": "voluntary-approach",
+              "position": 1,
+              "title": "Låt valpen välja kontakt",
+              "instruction": "Sitt stilla och erbjud en avslappnad hand en bit ifrån valpen. Belöna om valpen själv närmar sig eller nosar. Försök inte locka den närmare om den väljer att gå undan.",
+              "claim_refs": ["hp-method", "hp-stop"]
+            },
+            {
+              "id": "63000000-0000-4000-8000-000000000002",
+              "step_key": "brief-touch",
+              "position": 2,
+              "title": "Prova en kort beröring",
+              "instruction": "När valpen självmant söker kontakt och verkar bekväm, prova en lätt, kort beröring på en plats den accepterar. Belöna och pausa direkt. Om den blir stel, vänder bort sig eller går undan, sluta och återgå senare till steg 1.",
+              "claim_refs": ["hp-method", "hp-stop"]
+            },
+            {
+              "id": "63000000-0000-4000-8000-000000000003",
+              "step_key": "choose-repeat",
+              "position": 3,
+              "title": "Låt valpen välja om ni fortsätter",
+              "instruction": "Erbjud samma enkla beröring igen en annan gång och pausa mellan försöken. Fortsätt bara när valpen själv stannar kvar och verkar bekväm. Avsluta om den visar obehag; gör inte övningen till fasthållning.",
+              "claim_refs": ["hp-method", "hp-stop"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "61000000-0000-4000-8000-000000000010",
+      "slug": "environment-program",
+      "content_type": "training_program",
+      "versions": [
+        {
+          "id": "62000000-0000-4000-8000-000000000010",
+          "version": 1,
+          "title": "Utforska miljön med trygghet",
+          "body": "Erbjud vardagens miljöer och ljud i en takt där valpen kan känna sig trygg. Låt den observera, närma sig eller gå undan. Belöna lugn, frivillig utforskning; tvinga inte fram kontakt. Om valpen verkar rädd eller överväldigad, stoppa exponeringen, skapa avstånd och gör nästa försök enklare. Programmet ersätter inte individuell rådgivning.",
+          "min_age_weeks": 8,
+          "max_age_weeks": 52,
+          "status": "draft",
+          "breed_targets": [],
+          "claim_trace": [
+            {
+              "claim_id": "ep-positive",
+              "text": "Valpens nya erfarenheter bör vara positiva och gradvisa, med tillgång till en trygg viloplats.",
+              "source_refs": ["avsab-puppy-socialization-2024", "rspca-puppy-care"]
+            },
+            {
+              "claim_id": "ep-management",
+              "text": "Miljön kan arrangeras och exponering som utlöser rädsla kan undvikas eller göras lättare.",
+              "source_refs": ["avsab-humane-training-2021"]
+            },
+            {
+              "claim_id": "ep-signs",
+              "text": "Kroppsspråk som låg kropp, öron bak, läppslickning, gäspning eller undanrörelse kan signalera obehag.",
+              "source_refs": ["rspca-dog-body-language"]
+            }
+          ],
+          "review": {
+            "dog_expert": {"status": "pending", "evidence": []},
+            "human_reviewer": {"status": "pending", "evidence": []}
+          },
+          "training_steps": [
+            {
+              "id": "63000000-0000-4000-8000-000000000004",
+              "step_key": "quiet-observe",
+              "position": 1,
+              "title": "Börja med att titta",
+              "instruction": "Välj en lugn och bekant plats. Låt valpen observera en vardagssak på avstånd där den verkar bekväm. Belöna frivillig uppmärksamhet och låt den vila eller gå undan.",
+              "claim_refs": ["ep-positive", "ep-management"]
+            },
+            {
+              "id": "63000000-0000-4000-8000-000000000005",
+              "step_key": "voluntary-explore",
+              "position": 2,
+              "title": "Låt valpen närma sig själv",
+              "instruction": "När valpen är lugn kan den själv få nosa eller närma sig samma sak. Belöna lugn nyfikenhet. Om den tvekar, stanna på lättare avstånd i stället för att föra den fram.",
+              "claim_refs": ["ep-positive", "ep-management"]
+            },
+            {
+              "id": "63000000-0000-4000-8000-000000000006",
+              "step_key": "pause-or-backoff",
+              "position": 3,
+              "title": "Pausa när valpen behöver det",
+              "instruction": "Om valpen sänker kroppen, vänder bort sig, slickar sig om munnen eller försöker gå undan, avsluta och öka avståndet. Prova en enklare situation senare. Om rädslan återkommer, be veterinär eller beteendeexpert om hjälp.",
+              "claim_refs": ["ep-signs", "ep-management"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "61000000-0000-4000-8000-000000000011",
+      "slug": "being-alone-program",
+      "content_type": "training_program",
+      "versions": [
+        {
+          "id": "62000000-0000-4000-8000-000000000011",
+          "version": 1,
+          "title": "Öva på att vara själv i valpens takt",
+          "body": "Gör den valda viloplatsen trygg även när du är hemma. Börja med lite avstånd och håll varje övning så enkel att valpen verkar lugn. Gå vidare först när just din valp är bekväm; programmet har inga fasta minuter eller kalendersteg. Om valpen blir orolig: avbryt, gå tillbaka till senaste läget där den var lugn och sök stöd vid kvarstående oro.",
+          "min_age_weeks": 8,
+          "max_age_weeks": 52,
+          "status": "draft",
+          "breed_targets": [],
+          "claim_trace": [
+            {
+              "claim_id": "bp-positive-area",
+              "text": "Valpens område görs positivt även när ägaren är hemma; börja med närhet och korta individuella steg.",
+              "source_refs": ["bluecross-alone-puppies"]
+            },
+            {
+              "claim_id": "bp-gradual",
+              "text": "Tiden byggs gradvis utifrån hundens signaler och minskas om oro uppstår.",
+              "source_refs": ["bluecross-alone-puppies"]
+            },
+            {
+              "claim_id": "bp-support",
+              "text": "Återkommande eller kraftig oro bör få professionell bedömning.",
+              "source_refs": ["bluecross-alone-puppies"]
+            }
+          ],
+          "review": {
+            "dog_expert": {"status": "pending", "evidence": []},
+            "human_reviewer": {"status": "pending", "evidence": []}
+          },
+          "training_steps": [
+            {
+              "id": "63000000-0000-4000-8000-000000000007",
+              "step_key": "positive-settle-area",
+              "position": 1,
+              "title": "Gör viloplatsen trygg när du är hemma",
+              "instruction": "Låt valpen utforska sin valda viloplats medan du finns i närheten. Du kan sitta lugnt där utan att kräva kontakt. Låt valpen själv stanna eller gå därifrån.",
+              "claim_refs": ["bp-positive-area"]
+            },
+            {
+              "id": "63000000-0000-4000-8000-000000000008",
+              "step_key": "small-distance",
+              "position": 2,
+              "title": "Prova lite avstånd",
+              "instruction": "När valpen är avslappnad på platsen, flytta dig en liten bit medan du fortfarande är hemma och återvänd medan den är lugn. Öka utmaningen bara efter att valpen bekvämt klarat det föregående steget.",
+              "claim_refs": ["bp-gradual"]
+            },
+            {
+              "id": "63000000-0000-4000-8000-000000000009",
+              "step_key": "brief-out-of-sight",
+              "position": 3,
+              "title": "Gå ur sikte och backa vid oro",
+              "instruction": "När valpen klarar avståndet lugnt kan du kort gå ur sikte och komma tillbaka innan den blir orolig. Om den visar oro, avbryt och gå tillbaka till senast bekväma nivå. Upprepad oro är skäl att be om professionell vägledning.",
+              "claim_refs": ["bp-gradual", "bp-support"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1050,6 +1050,51 @@
         }
       ],
       "next_step": "Independent Reviewer PASS static Security PASS saved rapport release-log; next P04"
+    },
+    {
+      "id": "MVP-P04-CONTENT",
+      "title": "Sourced content drafts and versioned draft import",
+      "mvp_requirement": "docs/mvp.md Knowledge and three training programs",
+      "plan": "docs/tasks/dev/mvp-content-delivery.md v3",
+      "write_paths": [
+        "docs/content/mvp-content-bundle-v1.json",
+        "tools/validate_content_bundle.py",
+        "supabase/content/mvp-content-v1.sql",
+        "docs/content/README.md",
+        "supabase/README.md",
+        "tools/README.md",
+        "tests/content-bundle.test.mjs",
+        "tests/README.md"
+      ],
+      "acceptance": [
+        "Eleven sourced draft identities, real review gate",
+        "Idempotent draft-only import and structural validator"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "Independent content review; human publication review pending"
+      ],
+      "depends_on": [
+        "MVP-P03-PLANNED-HEALTH"
+      ],
+      "status": "implementing",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Actual v3 Architect APPROVE Critic PROCEED saved content plan; draft-only no remote SQL"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik full MVP mandate Luna medium; P03 local commit88b2ed8 done; start content draft checkpoint"
+        }
+      ],
+      "next_step": "Erik full MVP mandate Luna medium; P03 local commit88b2ed8 done; start content draft checkpoint"
     }
   ]
 }

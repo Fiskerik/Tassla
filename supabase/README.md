@@ -8,3 +8,7 @@ Migrationer är schemakälla, inte dashboardändringar. Framtida schemaändringa
 SQL-funktion: create_dog(dog_name, dog_breed_id, dog_birth_date, kennel_code). Hund-ID returneras; ägaren identifieras via auth.uid(). Första appklienten återstår. Ingen service_role-nyckel ska användas av appen.
 
 Inga notiser, publiceringsjobb, backups, raderings-API:er eller analytics aktiveras automatiskt. Endast typvillkor/lagring/åtkomst skapas.
+
+## Innehållsutkast
+
+`content/mvp-content-v1.sql` är en handkörd, versionsspecifik draft-import för en separat granskad utvecklingsmiljö. Den får köras först efter lokal bundle-validering och separat databasplan. Transaktionen kontrollerar befintliga UUID-, slug-, versions- och stegposter och avbryter vid avvikelse; den skriver aldrig över poster. Importen lämnar alla versioner som `draft` och review/publiceringsfält tomma. Den publicerar inte innehåll, ändrar inte runtimeflödet och har inte körts mot någon databas här. Se `../docs/content/README.md` och `../tools/README.md` för granskningsgrindar.
