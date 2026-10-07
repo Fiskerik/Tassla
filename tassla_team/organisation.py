@@ -1,4 +1,6 @@
 """Reporting lines and narrow mandates for the SDK organisation."""
+from .policy import DESIGN_POLICY
+
 COMMON = (
     "Follow applicable EU and relevant national law, initially Sweden. Verify current official legal sources "
     "and applicability; distinguish law from app-store rules. Never claim guaranteed compliance. "
@@ -19,6 +21,8 @@ COMMON = (
     "after each: completed work, checks, issues and exact next action. SDK only proposes this plan; "
     "it cannot persist files or execute tasks. Do not claim a checkpoint was saved. "
 )
+COMMON += DESIGN_POLICY
+
 TEAMS = {
     "product": {
         "lead": "Head of Product",
