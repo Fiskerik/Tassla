@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Alert, Image, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { ActionFeedbackModal, DatePickerField, InfoModal, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import {
   isValidHealthHistoryDate,
   normalizeHealthHistoryDescription,
@@ -43,6 +43,8 @@ export function HealthHistoryScreen({
   const [date, setDate] = useState(localDate());
   const [note, setNote] = useState('');
   const [formError, setFormError] = useState('');
+  const [dismissedStatus, setDismissedStatus] = useState<string | null>(null);
+  const [infoVisible, setInfoVisible] = useState(false);
   const available = records !== undefined;
   const rows = records ?? [];
   const blocked = busy || pending;
@@ -68,6 +70,7 @@ export function HealthHistoryScreen({
   }
 
   async function save() {
+    setDismissedStatus(null);
     setFormError('');
     if (!isValidHealthHistoryDate(date)) {
       setFormError('Ange ett giltigt datum som inte ligger i framtiden.');
@@ -89,6 +92,7 @@ export function HealthHistoryScreen({
   }
 
   async function deleteRecord(record: HealthHistoryRecord) {
+    setDismissedStatus(null);
     if (await onDelete?.(record.id) && editingId === record.id) resetForm();
   }
 
@@ -108,11 +112,20 @@ export function HealthHistoryScreen({
           <Text style={styles.sectionBody}>Spara sådant som redan har hänt.</Text>
         </View>
       </View>
-      <MessageCard>Uppgifterna är ägarregistrerade, inte en verifierad journal. Undvik personuppgifter i anteckningar.</MessageCard>
-      <MessageCard>Historiken hämtas i en läsning. Om listan når serverns svarstak kan äldre händelser saknas.</MessageCard>
+      <View style={styles.infoRow}>
+        <Text style={styles.infoHint}>Om hälsans historik</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel="Visa information om hälsans historik" onPress={() => setInfoVisible(true)} style={styles.infoButton}>
+          <Ionicons name="information-circle-outline" size={21} color={theme.colors.accent} />
+          <Text style={styles.infoButtonText}>Läs information</Text>
+        </Pressable>
+      </View>
+      <InfoModal visible={infoVisible} title="Om hälsans historik" onClose={() => setInfoVisible(false)}>
+        <Text style={styles.infoBody}>Uppgifterna är ägarregistrerade, inte en verifierad journal. Undvik personuppgifter i anteckningar.</Text>
+        <Text style={styles.infoBody}>Historiken hämtas i en läsning. Om listan når serverns svarstak kan äldre händelser saknas.</Text>
+      </InfoModal>
 
-      {statusMessage ? <>
-        <MessageCard tone={statusError ? 'error' : 'neutral'}>{statusMessage}</MessageCard>
+      {statusMessage && statusError ? <>
+        <MessageCard tone="error">{statusMessage}</MessageCard>
         {(pending || statusError) && <PrimaryButton title={pending ? 'Kontrollera status' : 'Försök igen'} disabled={busy} onPress={() => onRetry?.()} />}
       </> : null}
       {conflict && <View style={styles.conflictCard}>
@@ -126,7 +139,7 @@ export function HealthHistoryScreen({
       {loadState === 'loading' && <MessageCard>Hämtar hälsans historik…</MessageCard>}
       {loadState === 'error' && <>
         <MessageCard tone="error">Hälsans historik kunde inte hämtas.</MessageCard>
-        <PrimaryButton title="Försök igen" disabled={busy} onPress={() => onRetry?.()} />
+        {loadState === 'error' && <PrimaryButton title="Försök igen" disabled={busy} onPress={() => onRetry?.()} />}
       </>}
 
       {loadState === 'ready' && <>
@@ -139,15 +152,7 @@ export function HealthHistoryScreen({
             <TypeChoice selected={type === 'vet_visit'} disabled={blocked || editingRecord !== null}
               icon="medical-outline" label="Veterinärbesök" onPress={() => setType('vet_visit')} />
           </View>
-          <View style={styles.field}>
-            <Text style={styles.label}>Datum</Text>
-            <View style={styles.dateInputWrap}>
-              <Ionicons name="calendar-outline" size={18} color={theme.colors.mutedText} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-              <TextInput accessibilityLabel="Datum, år-månad-dag" editable={!blocked} keyboardType="numbers-and-punctuation"
-                onChangeText={setDate} onSubmitEditing={() => Keyboard.dismiss()} placeholder="ÅÅÅÅ-MM-DD"
-                placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.dateInput} value={date} />
-            </View>
-          </View>
+          <DatePickerField label="Datum" disabled={blocked} onChangeText={setDate} value={date} />
           <View style={styles.field}>
             <Text style={styles.label}>Kort anteckning (frivillig)</Text>
             <TextInput accessibilityLabel="Kort anteckning, högst 500 tecken" editable={!blocked} multiline
@@ -155,9 +160,9 @@ export function HealthHistoryScreen({
               placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.noteInput} value={note} />
             <Text style={styles.characterHint}>{Array.from(note).length}/500 tecken</Text>
           </View>
-          <QuietButton title="Stäng tangentbord" disabled={busy} onPress={() => Keyboard.dismiss()} />
           {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
           <PrimaryButton title={busy ? 'Sparar…' : editingRecord ? 'Spara rättning' : 'Spara händelse'} disabled={blocked} onPress={() => { void save(); }} />
+          {statusMessage && !statusError ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => setDismissedStatus(statusMessage)} /> : null}
           {editingRecord && <QuietButton title="Avbryt rättning" disabled={blocked} onPress={resetForm} />}
         </View>
 
@@ -212,6 +217,11 @@ const styles = StyleSheet.create({
   headingCopy: { flex: 1 },
   sectionTitle: { color: theme.colors.text, fontSize: 20, lineHeight: 27, fontWeight: '800' },
   sectionBody: { color: theme.colors.mutedText, fontSize: 14, marginTop: 2 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 4 },
+  infoHint: { color: theme.colors.mutedText, fontSize: 14 },
+  infoButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8 },
+  infoButtonText: { color: theme.colors.accent, fontSize: 14, fontWeight: '700' },
+  infoBody: { color: theme.colors.text, fontSize: 16, lineHeight: 24, marginBottom: 14 },
   formCard: { marginTop: 18, padding: 17, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: '#FBFCFA' },
   formTitle: { color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 14 },
   typeChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },

@@ -9,6 +9,7 @@ import {
   groupLogEventsByLocalDate,
   localDateTimeParts,
   parseLocalDateTime,
+  summarizePottyPatterns,
   updateLogEvent,
 } from '../src/features/puppy-log/log-model.ts';
 
@@ -34,6 +35,19 @@ test('log events accept all six domain types and preserve a canonical event', ()
   assert.throws(() => event({ dogId: '' }), /IDs are required/);
   assert.throws(() => event({ occurredAt: '2026-10-04T11:00:00Z' }), /canonical ISO timestamp/);
   assert.throws(() => event({ occurredAt: '2026-10-04T12:00:00.001Z' }), /future/);
+});
+
+test('potty summaries are retrospective, separate by type, and use median adjacent intervals', () => {
+  const events = [
+    event({ id: 'pee-1', type: 'pee', occurredAt: '2026-10-01T08:00:00.000Z' }, new Date('2026-10-02T12:00:00.000Z')),
+    event({ id: 'pee-2', type: 'pee', occurredAt: '2026-10-01T10:00:00.000Z' }, new Date('2026-10-02T12:00:00.000Z')),
+    event({ id: 'pee-3', type: 'pee', occurredAt: '2026-10-01T15:00:00.000Z' }, new Date('2026-10-02T12:00:00.000Z')),
+    event({ id: 'poop-1', type: 'poop', occurredAt: '2026-10-01T09:00:00.000Z' }, new Date('2026-10-02T12:00:00.000Z')),
+  ];
+  assert.deepEqual(summarizePottyPatterns(events), [
+    { type: 'pee', count: 3, medianIntervalMinutes: 210 },
+    { type: 'poop', count: 1, medianIntervalMinutes: null },
+  ]);
 });
 
 test('notes are trimmed, empty notes become null, and the 500 Unicode code-point limit is exact', () => {

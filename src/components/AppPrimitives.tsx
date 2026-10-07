@@ -168,34 +168,97 @@ export function InfoModal({ visible, title, children, onClose, onDismiss }: {
   </Modal>;
 }
 
-export function ActionFeedbackModal({ visible, message, onClose, onShown }: {
+export function ActionFeedbackModal({ visible, message, onClose, onShown, autoDismiss = true }: {
   visible: boolean;
   message: string;
   onClose: () => void;
   onShown?: (message: string) => void;
+  autoDismiss?: boolean;
 }) {
-  const reduceMotion = useReducedMotion();
   const headingRef = useRef<Text>(null);
-  return <Modal
-    visible={visible}
-    transparent
-    animationType={reduceMotion ? 'none' : 'fade'}
-    onShow={() => {
-      focusAccessibilityNode(headingRef);
-      onShown?.(message);
-    }}
-    onRequestClose={onClose}
-    accessibilityViewIsModal
-  >
-    <View style={styles.feedbackBackdrop}>
-      <View style={styles.feedbackCard}>
-        <ScrollView style={styles.feedbackScroll} contentContainerStyle={styles.modalContent}>
-          <Text ref={headingRef} accessible accessibilityRole="alert" style={styles.messageText}>{message}</Text>
-        </ScrollView>
-        <QuietButton title="Stäng status" onPress={onClose} />
-      </View>
+  const closeRef = useRef(onClose);
+  const shownRef = useRef(onShown);
+  useEffect(() => {
+    closeRef.current = onClose;
+    shownRef.current = onShown;
+  }, [onClose, onShown]);
+  useEffect(() => {
+    if (!visible) return;
+    shownRef.current?.(message);
+    if (!autoDismiss) return;
+    const timeout = setTimeout(() => closeRef.current(), 4000);
+    return () => clearTimeout(timeout);
+  }, [message, visible, autoDismiss]);
+  if (!visible) return null;
+  return <View style={styles.feedbackCard} accessibilityLiveRegion="polite">
+    <Text ref={headingRef} accessible accessibilityRole="alert" style={styles.messageText}>{message}</Text>
+    <QuietButton title="Stäng status" onPress={onClose} />
+  </View>;
+}
+
+export function DatePickerField({ label, value, onChangeText, disabled = false }: {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  disabled?: boolean;
+}) {
+  const [visible, setVisible] = useState(false);
+  const parsed = parseDateValue(value) ?? new Date();
+  const [month, setMonth] = useState(new Date(parsed.getFullYear(), parsed.getMonth(), 1));
+  const days = calendarDays(month);
+  return <View style={styles.datePickerField}>
+    <Text style={styles.fieldLabel}>{label}</Text>
+    <View style={styles.datePickerRow}>
+      <TextInput accessibilityLabel={`${label}, år-månad-dag`} editable={!disabled} keyboardType="numbers-and-punctuation"
+        onChangeText={onChangeText} placeholder="ÅÅÅÅ-MM-DD" placeholderTextColor={theme.colors.mutedText}
+        returnKeyType="done" style={styles.datePickerInput} value={value} />
+      <Pressable accessibilityRole="button" accessibilityLabel={`Välj ${label.toLowerCase()} i kalender`} disabled={disabled}
+        onPress={() => { const next = parseDateValue(value); if (next) setMonth(new Date(next.getFullYear(), next.getMonth(), 1)); setVisible(true); }} style={styles.pickerButton}>
+        <Text style={styles.pickerButtonText}>Kalender</Text>
+      </Pressable>
     </View>
-  </Modal>;
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
+      <View style={styles.modalBackdrop}><View style={styles.modalCard}>
+        <Text style={styles.modalTitle}>{label}</Text>
+        <View style={styles.calendarHeader}><QuietButton title="Föregående" onPress={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} /><Text style={styles.calendarMonth}>{month.toLocaleDateString('sv-SE', { month: 'long', year: 'numeric' })}</Text><QuietButton title="Nästa" onPress={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} /></View>
+        <View style={styles.calendarGrid}>{days.map((day, index) => day ? <Pressable key={`${day}-${index}`} accessibilityRole="button" accessibilityLabel={formatDateValue(day)} onPress={() => { onChangeText(formatDateValue(day)); setVisible(false); }} style={styles.calendarDay}><Text style={styles.calendarDayText}>{day.getDate()}</Text></Pressable> : <View key={`empty-${index}`} style={styles.calendarDay} />)}</View>
+        <TextInput accessibilityLabel="Manuellt datum, år-månad-dag" keyboardType="numbers-and-punctuation" onChangeText={onChangeText} placeholder="ÅÅÅÅ-MM-DD" placeholderTextColor={theme.colors.mutedText} style={styles.input} value={value} />
+        <QuietButton title="Stäng kalender" onPress={() => setVisible(false)} />
+      </View></View>
+    </Modal>
+  </View>;
+}
+
+export function TimePickerField({ label, value, onChangeText, disabled = false }: {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  disabled?: boolean;
+}) {
+  const [visible, setVisible] = useState(false);
+  const times = Array.from({ length: 96 }, (_, index) => `${String(Math.floor(index / 4)).padStart(2, '0')}:${String((index % 4) * 15).padStart(2, '0')}`);
+  return <View style={styles.datePickerField}>
+    <Text style={styles.fieldLabel}>{label}</Text>
+    <View style={styles.datePickerRow}><TextInput accessibilityLabel={`${label}, timmar och minuter`} editable={!disabled} keyboardType="numbers-and-punctuation" maxLength={5}
+      onChangeText={onChangeText} placeholder="09:00" placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.datePickerInput} value={value} />
+      <Pressable accessibilityRole="button" accessibilityLabel={`Välj ${label.toLowerCase()} från tider`} disabled={disabled} onPress={() => setVisible(true)} style={styles.pickerButton}><Text style={styles.pickerButtonText}>Välj tid</Text></Pressable>
+    </View>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}><View style={styles.modalBackdrop}><View style={styles.modalCard}><Text style={styles.modalTitle}>{label}</Text><ScrollView style={styles.timeList}>{times.map((time) => <Pressable key={time} accessibilityRole="button" onPress={() => { onChangeText(time); setVisible(false); }} style={styles.timeOption}><Text style={styles.timeOptionText}>{time}</Text></Pressable>)}</ScrollView><TextInput accessibilityLabel="Manuell tid, timmar och minuter" keyboardType="numbers-and-punctuation" maxLength={5} onChangeText={onChangeText} placeholder="HH:MM" placeholderTextColor={theme.colors.mutedText} style={styles.input} value={value} /><QuietButton title="Stäng tider" onPress={() => setVisible(false)} /></View></View></Modal>
+  </View>;
+}
+
+function parseDateValue(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return date.getFullYear() === Number(match[1]) && date.getMonth() === Number(match[2]) - 1 && date.getDate() === Number(match[3]) ? date : null;
+}
+function formatDateValue(date: Date): string { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }
+function calendarDays(month: Date): (Date | null)[] {
+  const first = new Date(month.getFullYear(), month.getMonth(), 1);
+  const offset = (first.getDay() + 6) % 7;
+  const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  return [...Array(offset).fill(null), ...Array.from({ length: count }, (_, index) => new Date(month.getFullYear(), month.getMonth(), index + 1))];
 }
 
 const styles = StyleSheet.create({
@@ -232,7 +295,18 @@ const styles = StyleSheet.create({
   modalTitle: { color: theme.colors.text, fontSize: 20, fontWeight: '800', marginBottom: 12 },
   modalScroll: { flexShrink: 1 },
   modalContent: { paddingBottom: 8 },
-  feedbackBackdrop: { flex: 1, justifyContent: 'flex-start', padding: 16, paddingTop: 60, backgroundColor: '#0005' },
-  feedbackCard: { padding: 16, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  feedbackScroll: { maxHeight: '65%' },
+  feedbackCard: { padding: 14, marginTop: 12, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: '#EAF3EC' },
+  datePickerField: { marginBottom: 18 },
+  datePickerRow: { minHeight: 54, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.button, backgroundColor: theme.colors.surface },
+  datePickerInput: { flex: 1, minHeight: 52, paddingHorizontal: 14, color: theme.colors.text, fontSize: 17 },
+  pickerButton: { minHeight: 52, paddingHorizontal: 13, justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: theme.colors.border },
+  pickerButtonText: { color: theme.colors.accent, fontSize: 13, fontWeight: '800' },
+  calendarHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  calendarMonth: { color: theme.colors.text, fontSize: 16, fontWeight: '800', textTransform: 'capitalize' },
+  calendarGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 },
+  calendarDay: { width: '14.285%', minHeight: 42, alignItems: 'center', justifyContent: 'center' },
+  calendarDayText: { color: theme.colors.text, fontSize: 16, fontWeight: '700' },
+  timeList: { maxHeight: 300 },
+  timeOption: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
+  timeOptionText: { color: theme.colors.text, fontSize: 17, textAlign: 'center' },
 });

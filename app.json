@@ -2,6 +2,8 @@
   "expo": {
     "name": "Tassla", "slug": "tassla", "version": "0.1.0", "scheme": "tassla",
     "orientation": "portrait", "userInterfaceStyle": "light",
+    "icon": "./assets/images/tassla-icon.png",
+    "extra": { "tasslaLogo": "./assets/images/tassla-logo.svg" },
     "ios": {
       "bundleIdentifier": "com.erimaliab.tassla", "supportsTablet": false,
       "infoPlist": { "ITSAppUsesNonExemptEncryption": false }

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
-import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { ActionFeedbackModal, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { fetchBreeds, type BreedOption, type OwnedDog } from '../../data/app-data';
 import type { HealthHistoryRecord, HealthWeightRecord } from '../../data/workspace-data';
 import { localDate } from '../onboarding/dog';
@@ -50,6 +50,7 @@ export function PassportScreen(props: PassportScreenProps) {
   const [exportingSnapshot, setExportingSnapshot] = useState<PassportSnapshot | null>(null);
   const [statusMessage, setStatusMessage] = useState('');
   const [statusError, setStatusError] = useState(false);
+  const [dismissedStatus, setDismissedStatus] = useState('');
   const mounted = useRef(true);
   const lifetimeRef = useRef(props.lifetime ?? 'preview');
   const operationInFlight = useRef(false);
@@ -183,8 +184,9 @@ export function PassportScreen(props: PassportScreenProps) {
           <Text style={styles.disclaimer}>Uppgifterna är registrerade av hundägaren. Tassla-pass är ingen officiell journal, legitimation eller vaccinationshandling.</Text>
           {visibleSnapshot && <Text style={styles.createdOn}>Skapad {visibleSnapshot.createdOn}</Text>}
         </View>
-        {statusMessage ? <MessageCard tone={statusError ? 'error' : 'neutral'}>{statusMessage}</MessageCard> : null}
-        <PrimaryButton title={exporting ? 'Skapar PDF…' : 'Skapa PDF och öppna delning'} disabled={!ready || !snapshot || busy || !selectedAny} onPress={() => { void createAndShare(); }} />
+        {statusMessage && statusError ? <MessageCard tone="error">{statusMessage}</MessageCard> : null}
+        <PrimaryButton title={exporting ? 'Skapar PDF…' : 'Skapa PDF och öppna delning'} disabled={!ready || !snapshot || busy || !selectedAny} onPress={() => { setDismissedStatus(''); void createAndShare(); }} />
+        {statusMessage && !statusError ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => setDismissedStatus(statusMessage)} /> : null}
         {props.weightLoadState === 'error' && <QuietButton title="Försök hämta vikterna igen" disabled={busy} onPress={props.onRetryWeights ?? (() => undefined)} />}
         {props.historyLoadState === 'error' && <QuietButton title="Försök hämta hälsoposter igen" disabled={busy} onPress={props.onRetryHistory ?? (() => undefined)} />}
       </>}
@@ -209,6 +211,7 @@ function SnapshotPreview({ snapshot }: { snapshot: PassportSnapshot }) {
     {snapshot.selected.profile && <View style={styles.snapshotSection}>
       <Text style={styles.snapshotHeading}>Hund</Text>
       {snapshot.dog ? <>
+        {snapshot.showIllustration && <View style={styles.illustrationFallback}><Text style={styles.illustrationMark}>T</Text><Text style={styles.illustrationLabel}>Tassla-illustration · inte hundens foto</Text></View>}
         <PreviewValue label="Namn" value={snapshot.dog.name} />
         <PreviewValue label="Ras" value={snapshot.dog.breed} />
         <PreviewValue label="Född" value={snapshot.dog.birthDate} />
@@ -261,6 +264,9 @@ const styles = StyleSheet.create({
   previewHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' },
   previewTag: { color: theme.colors.accent, fontSize: 12, fontWeight: '800', letterSpacing: 0.5, marginTop: 22 },
   snapshotSection: { borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: 12, marginTop: 12 },
+  illustrationFallback: { flexDirection: 'row', alignItems: 'center', gap: 9, padding: 10, borderRadius: 12, backgroundColor: '#EAF3EC', marginBottom: 10 },
+  illustrationMark: { width: 36, height: 36, borderRadius: 18, backgroundColor: theme.colors.accent, color: theme.colors.onAccent, textAlign: 'center', textAlignVertical: 'center', fontSize: 22, fontWeight: '800' },
+  illustrationLabel: { flex: 1, color: theme.colors.accent, fontSize: 12, fontWeight: '800' },
   snapshotHeading: { color: theme.colors.accent, fontSize: 16, fontWeight: '800', marginBottom: 6 },
   previewValueRow: { flexDirection: 'row', gap: 12, marginTop: 5 },
   previewLabel: { width: 68, color: theme.colors.mutedText, fontSize: 15 },

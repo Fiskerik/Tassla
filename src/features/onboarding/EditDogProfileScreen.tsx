@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Image, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { ActionFeedbackModal, DatePickerField, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import {
   fetchBreeds,
   isValidDogBirthDate,
@@ -45,6 +45,7 @@ export function EditDogProfileScreen({
   const [breedId, setBreedId] = useState(dog.breed_id);
   const [birthDate, setBirthDate] = useState(dog.birth_date);
   const [formError, setFormError] = useState('');
+  const [dismissedStatus, setDismissedStatus] = useState('');
   const blocked = busy || pending;
 
   useEffect(() => {
@@ -60,6 +61,7 @@ export function EditDogProfileScreen({
   }, [breedAttempt, client]);
 
   async function save() {
+    setDismissedStatus('');
     setFormError('');
     const normalizedName = normalizeDogProfileName(name);
     if (!normalizedName) {
@@ -82,7 +84,7 @@ export function EditDogProfileScreen({
   const currentBreed = breeds.find((breed) => breed.id === dog.breed_id)?.name ?? dog.breed_id;
   const conflictBreed = conflict ? breeds.find((breed) => breed.id === conflict.breed_id)?.name ?? conflict.breed_id : '';
   const draftDiffers = name.trim() !== dog.name || breedId !== dog.breed_id || birthDate.trim() !== dog.birth_date;
-  const showStatusMessage = Boolean(statusMessage) && (statusError || pending || busy || !draftDiffers);
+  const showStatusMessage = Boolean(statusMessage) && (statusError || pending || busy);
 
   return <View>
     <QuietButton title="Tillbaka till Mer" disabled={busy} onPress={onBack} />
@@ -135,20 +137,11 @@ export function EditDogProfileScreen({
         })}
         {!breeds.some((breed) => breed.id === dog.breed_id) && <MessageCard>Nuvarande ras ({currentBreed}) finns inte i listan. Välj en ras om du vill ändra profilen.</MessageCard>}
       </View>}
-      <View style={styles.field}>
-        <Text style={styles.label}>Födelsedatum</Text>
-        <View style={styles.dateWrap}>
-          <Ionicons name="calendar-outline" size={19} color={theme.colors.mutedText} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-          <TextInput accessibilityLabel="Födelsedatum, år-månad-dag" editable={!blocked}
-            keyboardType="numbers-and-punctuation" onChangeText={setBirthDate} onSubmitEditing={() => Keyboard.dismiss()}
-            placeholder="ÅÅÅÅ-MM-DD" placeholderTextColor={theme.colors.mutedText}
-            returnKeyType="done" style={styles.dateInput} value={birthDate} />
-        </View>
-      </View>
-      <QuietButton title="Stäng tangentbord" disabled={busy} onPress={() => Keyboard.dismiss()} />
+      <DatePickerField label="Födelsedatum" disabled={blocked} onChangeText={setBirthDate} value={birthDate} />
       {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
       <PrimaryButton title={busy ? 'Sparar…' : statusError && !pending ? 'Försök igen' : 'Spara profil'}
         disabled={blocked || breedState !== 'ready'} onPress={() => { void save(); }} />
+      {statusMessage && !statusError && !pending ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => setDismissedStatus(statusMessage)} /> : null}
     </View>
     <QuietButton title="Avbryt" disabled={busy} onPress={onBack} />
   </View>;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { ActionFeedbackModal, InfoModal, MessageCard, PageHeading, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
 import { theme } from '../../theme/tokens';
 import type { NotificationPreferences } from '../../notifications/notification-model';
 
@@ -24,8 +24,11 @@ export function NotificationSettingsScreen({
   const [formError, setFormError] = useState('');
   const [permissionBusy, setPermissionBusy] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState('');
+  const [dismissedStatus, setDismissedStatus] = useState<string | null>(null);
+  const [infoVisible, setInfoVisible] = useState(false);
 
   async function save() {
+    setDismissedStatus(null);
     setFormError('');
     const minutes = parseTime(trainingTime);
     if (minutes === null) {
@@ -36,6 +39,7 @@ export function NotificationSettingsScreen({
   }
 
   async function requestPermission() {
+    setDismissedStatus(null);
     setPermissionBusy(true);
     setPermissionMessage('');
     try {
@@ -61,7 +65,17 @@ export function NotificationSettingsScreen({
         <PageHeading title="Påminnelser" description="Välj om Tassla ska schemalägga lokala påminnelser på den här enheten." />
       </View>
     </View>
-    <MessageCard>Påminnelser är av från början. Enhetens tillstånd och ditt val här är separata. Låsskärmen visar bara en generell text. Påminnelser är inte en bekräftelse på leverans.</MessageCard>
+    <View style={styles.infoRow}>
+      <Text style={styles.infoHint}>Om lokala påminnelser</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel="Visa information om lokala påminnelser" onPress={() => setInfoVisible(true)} style={styles.infoButton}>
+        <Ionicons name="information-circle-outline" size={21} color={theme.colors.accent} />
+        <Text style={styles.infoButtonText}>Läs information</Text>
+      </Pressable>
+    </View>
+    <InfoModal visible={infoVisible} title="Om lokala påminnelser" onClose={() => setInfoVisible(false)}>
+      <Text style={styles.infoBody}>Påminnelser är av från början. Enhetens tillstånd och ditt val här är separata.</Text>
+      <Text style={styles.infoBody}>Låsskärmen visar bara en generell text. Påminnelser är inte en bekräftelse på leverans.</Text>
+    </InfoModal>
 
     <Choice selected={enabled} disabled={busy} label="Tillåt Tasslas påminnelser på den här enheten"
       detail="Avbokar Tasslas egna påminnelser när du stänger av. Dina planval sparas."
@@ -70,26 +84,18 @@ export function NotificationSettingsScreen({
       detail="En lokal träningspåminnelse i taget. Nästa tid uppdateras när Tassla öppnas. Den är av från början."
       onPress={() => setTrainingEnabled((value) => !value)} />
 
-    <View style={styles.field}>
-      <Text style={styles.label}>Träningspåminnelse, lokal tid</Text>
-      <View style={styles.timeInputWrap}>
-        <Ionicons name="time-outline" size={19} color={theme.colors.mutedText} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-        <TextInput accessibilityLabel="Träningstid, timmar och minuter" editable={!busy}
-          keyboardType="numbers-and-punctuation" maxLength={5} onChangeText={setTrainingTime}
-          onSubmitEditing={() => undefined} placeholder="09:00" placeholderTextColor={theme.colors.mutedText}
-          returnKeyType="done" style={styles.timeInput} value={trainingTime} />
-      </View>
-    </View>
+    <TimePickerField label="Träningspåminnelse, lokal tid" disabled={busy} onChangeText={setTrainingTime} value={trainingTime} />
 
     {permissionMessage ? <MessageCard tone={permissionState === 'denied' ? 'error' : 'neutral'}>{permissionMessage}</MessageCard> : null}
     <PrimaryButton title={permissionBusy ? 'Kontrollerar…' : 'Tillåt påminnelser på telefonen'}
       disabled={busy || permissionBusy} onPress={() => { void requestPermission(); }} />
     {permissionState === 'granted' && <MessageCard>Enheten tillåter notiser. Det säger inte att varje påminnelse visas eller levereras.</MessageCard>}
     {permissionState === 'denied' && <MessageCard tone="error">Enheten nekar notiser. Appen fungerar fortfarande.</MessageCard>}
-    {statusMessage ? <MessageCard tone={statusError ? 'error' : 'neutral'}>{statusMessage}</MessageCard> : null}
+    {statusMessage && statusError ? <MessageCard tone="error">{statusMessage}</MessageCard> : null}
     {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
     {saved && <MessageCard>Valen är sparade för ditt konto på den här enheten.</MessageCard>}
     <PrimaryButton title={busy ? 'Sparar…' : 'Spara val'} disabled={busy} onPress={() => { void save(); }} />
+    {statusMessage && !statusError ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => setDismissedStatus(statusMessage)} /> : null}
   </View>;
 }
 
@@ -114,6 +120,11 @@ function parseTime(value: string): number | null {
   return hours < 24 && minutes < 60 ? hours * 60 + minutes : null;
 }
 const styles = StyleSheet.create({
+  infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 4 },
+  infoHint: { color: theme.colors.mutedText, fontSize: 14 },
+  infoButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8 },
+  infoButtonText: { color: theme.colors.accent, fontSize: 14, fontWeight: '700' },
+  infoBody: { color: theme.colors.text, fontSize: 16, lineHeight: 24, marginBottom: 14 },
   hero: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8, padding: 16, borderRadius: theme.radius.card, backgroundColor: '#F1F5F0', borderWidth: 1, borderColor: theme.colors.border },
   icon: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#E5EFE8', alignItems: 'center', justifyContent: 'center' },
   heroCopy: { flex: 1 },

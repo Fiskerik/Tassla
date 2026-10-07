@@ -1678,6 +1678,83 @@
         }
       ],
       "next_step": "build02_reviewer PASS: exact config diff, no signing/build command changes, YAML valid, artifact path runtime remains unverified."
+    },
+    {
+      "id": "UX-02",
+      "title": "Återstående UX-korrigeringar, varumärkesikon och granskningsläge",
+      "mvp_requirement": "Owner feedback 2026-10-07: local feedback, input controls, log clarity, PDF presentation and draft review",
+      "plan": "docs/tasks/dev/ux-02.md v2",
+      "write_paths": [
+        "src/components/AppPrimitives.tsx",
+        "src/features/onboarding",
+        "src/features/puppy-log",
+        "src/features/health",
+        "src/features/notifications",
+        "src/features/account",
+        "src/features/passport",
+        "src/features/training",
+        "src/features/knowledge",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/content",
+        "tests",
+        "assets/images/tassla-icon.png",
+        "assets/images/README.md",
+        "app.json",
+        "docs/tasks/dev/ux-02.md",
+        "docs/releases/UX-02.md"
+      ],
+      "acceptance": [
+        "Action feedback is local to the triggering form/card, with exactly one recovery action and no keyboard-close controls",
+        "Date/time controls provide picker choices plus manual fallback without new dependencies",
+        "Kiss/Bajs icons are distinct and pattern support is retrospective only",
+        "Generated icon is configured and documented",
+        "PDF uses light sections and a clearly labelled neutral illustration fallback",
+        "Draft content is visible only in a development review mode and never in release content selection"
+      ],
+      "checks": [
+        "Focused slice tests",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "Independent QA and Reviewer"
+      ],
+      "depends_on": [
+        "UX-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE UX-02 v2; Critic PROCEED WITH CHANGES applied; product scope saved"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "UX-02 v2 slices A/B/C implemented locally; app icon, PDF illustration, draft preview, input controls and local feedback completed"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Focused 41/41, direct ESLint, iOS export and git diff --check PASS; pnpm check blocked by OneDrive/pnpm EPERM"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: 41/41, icon 1024x1024, log feedback/stale-status reset, local iOS export and diff check; native device behavior NOT TESTABLE"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS after deleted-event placement and stale-status corrections; native calendar, VoiceOver and device layout remain NOT TESTABLE"
+        }
+      ],
+      "next_step": "Push only after explicit owner authorization, then run Codemagic/TestFlight verification"
     }
   ]
 }

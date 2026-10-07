@@ -1,5 +1,5 @@
 # Vardagslogg
-APP-04A: Redigeraren använder keyboard-aware scrollning, Klar för datum/tid och en synlig `Stäng tangentbord`-åtgärd för multiline-noteringen.
+APP-04A: Redigeraren använder keyboard-aware scrollning, kalenderlik datum-/tidsväljare med manuell fallback och native tangentbordsdismissal utan extra stängningsknapp.
 
 `LogScreen.tsx` visar sex snabbval, lokal datumgruppering, historik, redigering och bekräftad radering. I det inloggade flödet äger `ProductWorkspace.tsx` vydata och använder `src/data/workspace-data.ts` för att läsa högst 40 poster åt gången och hämta äldre poster vid behov. Endast de sex vardagstyperna visas; hälsoposter med datum utan klockslag ingår inte i den här loggen.
 

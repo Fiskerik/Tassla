@@ -84,6 +84,19 @@ test('selection toggles remove sections, and empty selected sections disclose th
   assert.match(html, /Högst 50 senast inlästa poster visas; äldre uppgifter kan saknas/);
 });
 
+test('PDF HTML uses a local labelled illustration only when profile is selected', () => {
+  const withProfile = passport.createPassportSnapshot({ dog, breedName: 'Beagle', weights: [], performedHistory: [],
+    selection: { profile: true, latestWeight: false, healthHistory: false }, createdOn: '2026-10-06' });
+  const withoutProfile = passport.createPassportSnapshot({ dog, breedName: 'Beagle', weights: [], performedHistory: [],
+    selection: { profile: false, latestWeight: false, healthHistory: false }, createdOn: '2026-10-06' });
+  const profileHtml = passport.renderPassportHtml(withProfile);
+  const noProfileHtml = passport.renderPassportHtml(withoutProfile);
+  assert.match(profileHtml, /Tassla-illustration/);
+  assert.match(profileHtml, /<svg[^>]+class="tassla-illustration"/);
+  assert.doesNotMatch(profileHtml, /https?:\/\//);
+  assert.doesNotMatch(noProfileHtml, /Tassla-illustration/);
+});
+
 test('PassportScreen section toggles update the selected preview and are ignored while export is busy', () => {
   const source = extractLocalFunction(passportScreenSource, 'function toggleSelection(');
   const compiled = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
@@ -338,7 +351,7 @@ test('export startup actually runs stale owned-file cleanup before printing', as
 });
 
 test('PassportScreen export handler captures the current preview on user action and blocks duplicates', async () => {
-  assert.match(passportScreenSource, /onPress=\{\(\) => \{ void createAndShare\(\); \}\}/);
+  assert.match(passportScreenSource, /onPress=\{\(\) => \{ setDismissedStatus\(''\); void createAndShare\(\); \}\}/);
   assert.match(passportScreenSource, /disabled=\{!ready \|\| !snapshot \|\| busy \|\| !selectedAny\}/);
   const source = extractLocalFunction(passportScreenSource, 'async function createAndShare()');
   let completeExport;

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Alert, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { FormField, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActionFeedbackModal, DatePickerField, MessageCard, PageHeading, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
 import { theme } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
 import {
@@ -9,6 +9,7 @@ import {
   LOG_EVENT_LABELS,
   LOG_EVENT_TYPES,
   parseLocalDateTime,
+  summarizePottyPatterns,
   type LogEvent,
   type LogEventChanges,
   type LogEventType,
@@ -19,6 +20,7 @@ export function LogScreen({
   onAdd,
   onUpdate,
   onDelete,
+  onMutationStart,
   mode = 'preview',
   busy = false,
   statusMessage,
@@ -32,6 +34,7 @@ export function LogScreen({
   onAdd: (type: LogEventType) => void;
   onUpdate: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
   onDelete: (id: string) => void | Promise<void>;
+  onMutationStart?: () => void;
   mode?: 'preview' | 'cloud';
   busy?: boolean;
   statusMessage?: string;
@@ -42,8 +45,13 @@ export function LogScreen({
   onLoadMore?: () => void;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [feedbackEventId, setFeedbackEventId] = useState<string | null>(null);
+  const [deletedFeedbackEvent, setDeletedFeedbackEvent] = useState<LogEvent | null>(null);
+  const [dismissedStatus, setDismissedStatus] = useState<string | null>(null);
   const editingEvent = events.find((event) => event.id === editingId) ?? null;
   const groups = groupLogEventsByLocalDate(events);
+  const pottyPatterns = summarizePottyPatterns(events);
+  const feedbackAttached = feedbackEventId !== null && (events.some((event) => event.id === feedbackEventId) || deletedFeedbackEvent?.id === feedbackEventId);
 
   function confirmDelete(event: LogEvent) {
     Alert.alert(
@@ -51,7 +59,7 @@ export function LogScreen({
       mode === 'cloud' ? 'Posten tas bort från hundens logg.' : 'Posten tas bort från den här tillfälliga förhandsvisningen.',
       [
         { text: 'Avbryt', style: 'cancel' },
-        { text: 'Radera', style: 'destructive', onPress: () => onDelete(event.id) },
+        { text: 'Radera', style: 'destructive', onPress: () => { onMutationStart?.(); setDismissedStatus(null); setDeletedFeedbackEvent(event); setFeedbackEventId(event.id); void onDelete(event.id); } },
       ],
     );
   }
@@ -67,7 +75,7 @@ export function LogScreen({
             accessibilityRole="button"
             accessibilityLabel={`Lägg till ${LOG_EVENT_LABELS[type]}`}
             disabled={busy}
-            onPress={() => onAdd(type)}
+            onPress={() => { onMutationStart?.(); setDismissedStatus(null); setFeedbackEventId(null); setDeletedFeedbackEvent(null); onAdd(type); }}
             style={({ pressed }) => [styles.quickButton, busy && styles.disabled, pressed && !busy && styles.pressed]}
           >
             <View style={styles.quickMark}><Text style={styles.quickMarkText}>{quickMark[type]}</Text></View>
@@ -75,12 +83,18 @@ export function LogScreen({
           </Pressable>
         ))}
       </View>
+      {statusMessage && !statusError && !feedbackAttached ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => setDismissedStatus(statusMessage)} /> : null}
       <MessageCard>{mode === 'cloud'
         ? 'Loggen hämtas från ditt konto. Ändringar visas som sparade först när servern har bekräftat dem.'
         : 'Exempelposter är märkta. Nya poster finns bara i minnet och försvinner när appen stängs.'}</MessageCard>
-      {statusMessage ? <>
-        <MessageCard tone={statusError ? 'error' : 'neutral'}>{statusMessage}</MessageCard>
-        {statusError && onRetryPending && <PrimaryButton title="Kontrollera status" disabled={busy} onPress={onRetryPending} />}
+      <View style={styles.patternCard} accessibilityLabel="Historiskt mönsterunderlag för Kiss och Bajs">
+        <Text style={styles.patternTitle}>Historiskt mönsterunderlag</Text>
+        <Text style={styles.patternBody}>Sammanfattningen beskriver bara tidigare ägarregistreringar. Den förutsäger inte när hunden behöver gå ut.</Text>
+        {pottyPatterns.map((pattern) => <Text key={pattern.type} style={styles.patternRow}>{LOG_EVENT_LABELS[pattern.type]}: {pattern.count} registreringar{pattern.medianIntervalMinutes === null ? '' : ` · typiskt intervall ${formatInterval(pattern.medianIntervalMinutes)}`}</Text>)}
+      </View>
+      {statusMessage && statusError ? <>
+        <MessageCard tone="error">{statusMessage}</MessageCard>
+        {onRetryPending && <PrimaryButton title="Kontrollera status" disabled={busy} onPress={onRetryPending} />}
       </> : null}
       {mode === 'cloud' && busy && <MessageCard>Sparar och kontrollerar ändringen…</MessageCard>}
       {editingEvent && (
@@ -88,7 +102,7 @@ export function LogScreen({
           key={editingEvent.id}
           event={editingEvent}
           onCancel={() => setEditingId(null)}
-          onSave={(changes) => onUpdate(editingEvent.id, changes)}
+          onSave={(changes) => { onMutationStart?.(); setDismissedStatus(null); setDeletedFeedbackEvent(null); setFeedbackEventId(editingEvent.id); return onUpdate(editingEvent.id, changes); }}
           onSaved={() => setEditingId(null)}
         />
       )}
@@ -114,12 +128,34 @@ export function LogScreen({
                     <QuietButton title="Ändra" disabled={busy} onPress={() => setEditingId(event.id)} />
                     <QuietButton title="Radera" disabled={busy} onPress={() => confirmDelete(event)} />
                   </View>
+                  {statusMessage && !statusError && feedbackEventId === event.id ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => { setDismissedStatus(statusMessage); setDeletedFeedbackEvent(null); }} /> : null}
                 </View>
               </View>
             );
           })}
+          {deletedFeedbackEvent && feedbackEventId === deletedFeedbackEvent.id && localDateTimeParts(deletedFeedbackEvent.occurredAt).date === group.date && !events.some((event) => event.id === deletedFeedbackEvent.id) ? (
+            <View style={styles.eventCard} accessibilityLabel="Raderad loggpost">
+              <Text style={styles.eventTime}>{localDateTimeParts(deletedFeedbackEvent.occurredAt).time}</Text>
+              <View style={styles.eventCopy}>
+                <Text style={styles.eventTitle}>Loggpost raderad</Text>
+                {statusMessage && !statusError ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => { setDismissedStatus(statusMessage); setDeletedFeedbackEvent(null); }} /> : null}
+              </View>
+            </View>
+          ) : null}
         </View>
       ))}
+      {deletedFeedbackEvent && feedbackEventId === deletedFeedbackEvent.id && !events.some((event) => event.id === deletedFeedbackEvent.id) && !groups.some((group) => group.date === localDateTimeParts(deletedFeedbackEvent.occurredAt).date) ? (
+        <View style={styles.dateGroup}>
+          <Text style={styles.dateHeading}>{dateHeading(localDateTimeParts(deletedFeedbackEvent.occurredAt).date)}</Text>
+          <View style={styles.eventCard} accessibilityLabel="Raderad loggpost">
+            <Text style={styles.eventTime}>{localDateTimeParts(deletedFeedbackEvent.occurredAt).time}</Text>
+            <View style={styles.eventCopy}>
+              <Text style={styles.eventTitle}>Loggpost raderad</Text>
+              {statusMessage && !statusError ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => { setDismissedStatus(statusMessage); setDeletedFeedbackEvent(null); }} /> : null}
+            </View>
+          </View>
+        </View>
+      ) : null}
       {mode === 'cloud' && hasMore && <PrimaryButton title={loadingMore ? 'Hämtar…' : 'Visa äldre poster'} disabled={loadingMore || busy} onPress={onLoadMore ?? (() => undefined)} />}
       <View style={styles.footerSpace} />
     </View>
@@ -190,10 +226,10 @@ function LogEventEditor({
       </View>
       <View style={styles.dateTimeRow}>
         <View style={styles.dateField}>
-          <FormField autoCapitalize="none" keyboardType="numbers-and-punctuation" label="Datum" onChangeText={setDate} onSubmitEditing={() => Keyboard.dismiss()} placeholder="ÅÅÅÅ-MM-DD" returnKeyType="done" value={date} />
+          <DatePickerField label="Datum" onChangeText={setDate} value={date} />
         </View>
         <View style={styles.timeField}>
-          <FormField autoCapitalize="none" keyboardType="numbers-and-punctuation" label="Tid" onChangeText={setTime} onSubmitEditing={() => Keyboard.dismiss()} placeholder="HH:MM" returnKeyType="done" value={time} />
+          <TimePickerField label="Tid" onChangeText={setTime} value={time} />
         </View>
       </View>
       <View style={styles.noteGroup}>
@@ -208,7 +244,6 @@ function LogEventEditor({
           style={styles.noteInput}
           value={note}
         />
-        <QuietButton title="Stäng tangentbord" onPress={() => Keyboard.dismiss()} />
         <Text style={[styles.characterCount, noteLength > 500 && styles.tooManyCharacters]}>{noteLength}/500</Text>
       </View>
       {saveError ? <MessageCard tone="error">{saveError}</MessageCard> : null}
@@ -232,8 +267,8 @@ function pad(value: number): string {
 }
 
 const quickMark: Record<LogEventType, string> = {
-  pee: '◌',
-  poop: '●',
+  pee: '💧',
+  poop: '💩',
   food: '◒',
   sleep: '☾',
   awake: '◉',
@@ -276,4 +311,16 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.72 },
   disabled: { opacity: 0.55 },
   footerSpace: { height: 8 },
+  patternCard: { marginTop: 16, padding: 14, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: '#F1F5F0' },
+  patternTitle: { color: theme.colors.text, fontSize: 16, fontWeight: '800' },
+  patternBody: { color: theme.colors.mutedText, fontSize: 13, lineHeight: 19, marginTop: 5 },
+  patternRow: { color: theme.colors.text, fontSize: 14, fontWeight: '700', marginTop: 7 },
 });
+
+function formatInterval(minutes: number): string {
+  const rounded = Math.round(minutes);
+  if (rounded < 60) return `${rounded} min`;
+  const hours = Math.floor(rounded / 60);
+  const remainder = rounded % 60;
+  return remainder === 0 ? `${hours} h` : `${hours} h ${remainder} min`;
+}

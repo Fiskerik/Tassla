@@ -8,3 +8,7 @@ dog-welcome.png: photorealistic-natural, landscape 3:2 editorial photo of a calm
 dog-resting.png: photorealistic-natural, landscape 3:2 editorial photo of a healthy beagle peacefully curled up asleep on an oatmeal cream blanket in a naturally lit Scandinavian home, centered for mobile crop, sage and cream palette, believable anatomy. No people, medicine, text, logos or watermark. Decorative photo, not medical advice or a real user pet.
 
 Visuellt granskade i verktygsresultatet. React Native Image kan använda filerna lokalt. Profilen ska använda neutral hundikon tills användaren själv väljer ett foto i ett separat godkänt uppladdningsflöde.
+
+## Tassla-markör
+
+`tassla-logo.svg` är en repo-native, textfri Tassla-markör för små ytor. ImageGen var inte tillgängligt vid UX-02-körningen, därför skapades `tassla-icon.png` lokalt som en ogenomskinlig 1024×1024 rastermarkör med samma tass-/bladmotiv. Expo använder PNG-filen som appikon; den är inte en användares hundbild och innehåller ingen användardata.

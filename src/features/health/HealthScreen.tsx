@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Alert, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { ActionFeedbackModal, DatePickerField, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { isValidHealthWeightDate, isValidHealthWeightKg, type HealthHistoryRecord, type HealthHistoryType, type HealthWeightRecord } from '../../data/workspace-data';
 import { HealthHistoryScreen } from './HealthHistoryScreen';
 import { localDate } from '../onboarding/dog';
@@ -69,6 +69,7 @@ export function HealthScreen({
   const [date, setDate] = useState(localDate());
   const [weight, setWeight] = useState('');
   const [formError, setFormError] = useState('');
+  const [dismissedStatus, setDismissedStatus] = useState<string | null>(null);
   const editingRecord = cloudRecords.find((record) => record.id === editingId) ?? null;
 
   function startEditing(record: HealthWeightRecord) {
@@ -87,6 +88,7 @@ export function HealthScreen({
   }
 
   async function save() {
+    setDismissedStatus(null);
     setFormError('');
     if (!isValidHealthWeightDate(date)) {
       setFormError('Ange ett giltigt datum som inte ligger i framtiden.');
@@ -149,28 +151,14 @@ export function HealthScreen({
         <PrimaryButton title="Försök igen" disabled={isBusy} onPress={() => onRetry?.()} />
       </>}
       {cloudLoadState === 'ready' && <>
-        {statusMessage ? <>
-          <MessageCard tone={statusError ? 'error' : 'neutral'}>{statusMessage}</MessageCard>
-          {statusError && pendingStatus && <PrimaryButton title="Kontrollera status" disabled={isBusy} onPress={() => onRetryPending?.()} />}
+        {statusMessage && statusError ? <>
+          <MessageCard tone="error">{statusMessage}</MessageCard>
+          {pendingStatus && <PrimaryButton title="Kontrollera status" disabled={isBusy} onPress={() => onRetryPending?.()} />}
         </> : null}
         {isBusy && <MessageCard>Sparar och kontrollerar ändringen…</MessageCard>}
         <View style={styles.formCard}>
           <Text style={styles.formTitle} accessibilityRole="header">{editingRecord ? 'Rätta viktpost' : 'Lägg till vikt'}</Text>
-          <View style={styles.field}>
-            <Text style={styles.label}>Datum</Text>
-            <TextInput
-              accessibilityLabel="Datum, år-månad-dag"
-              editable={!isBlocked}
-              keyboardType="numbers-and-punctuation"
-              onChangeText={setDate}
-              onSubmitEditing={() => Keyboard.dismiss()}
-              placeholder="ÅÅÅÅ-MM-DD"
-              placeholderTextColor={theme.colors.mutedText}
-              returnKeyType="done"
-              style={styles.input}
-              value={date}
-            />
-          </View>
+          <DatePickerField label="Datum" disabled={isBlocked} onChangeText={setDate} value={date} />
           <View style={styles.field}>
             <Text style={styles.label}>Vikt (kg)</Text>
             <TextInput
@@ -186,9 +174,9 @@ export function HealthScreen({
               value={weight}
             />
           </View>
-          <QuietButton title="Stäng tangentbord" disabled={isBusy} onPress={() => Keyboard.dismiss()} />
           {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
           <PrimaryButton title={isBusy ? 'Sparar…' : editingRecord ? 'Spara rättning' : 'Spara vikt'} disabled={isBlocked} onPress={() => { void save(); }} />
+          {statusMessage && !statusError ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => setDismissedStatus(statusMessage)} /> : null}
           {editingRecord && <QuietButton title="Avbryt rättning" disabled={isBlocked} onPress={cancelEditing} />}
         </View>
         <Text style={styles.sectionTitle} accessibilityRole="header">Vikthistorik</Text>

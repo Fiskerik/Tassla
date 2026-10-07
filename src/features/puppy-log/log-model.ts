@@ -35,6 +35,25 @@ export interface LogEventChanges {
   note?: string | null;
 }
 
+export interface PottyPatternSummary {
+  type: 'pee' | 'poop';
+  count: number;
+  medianIntervalMinutes: number | null;
+}
+
+/** Retrospective owner-entered history only; this never predicts or recommends an outing. */
+export function summarizePottyPatterns(events: readonly LogEvent[]): PottyPatternSummary[] {
+  return (['pee', 'poop'] as const).map((type) => {
+    const timestamps = events.filter((event) => event.type === type)
+      .map((event) => Date.parse(event.occurredAt)).filter(Number.isFinite).sort((a, b) => a - b);
+    const intervals = timestamps.slice(1).map((timestamp, index) => (timestamp - timestamps[index]) / 60000).filter((minutes) => minutes > 0 && Number.isFinite(minutes));
+    const middle = Math.floor(intervals.length / 2);
+    const medianIntervalMinutes = intervals.length === 0 ? null : intervals.length % 2 === 1
+      ? intervals[middle] : (intervals[middle - 1] + intervals[middle]) / 2;
+    return { type, count: timestamps.length, medianIntervalMinutes };
+  });
+}
+
 export function createLogEvent(input: CreateLogEventInput, now = new Date()): LogEvent {
   if (!input.id.trim() || !input.dogId.trim()) throw new Error('Event and dog IDs are required');
   if (!LOG_EVENT_TYPES.includes(input.type)) throw new Error('Unknown log event type');

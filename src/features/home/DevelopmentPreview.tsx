@@ -5,6 +5,7 @@ import { theme } from '../../theme/tokens';
 import type { Dog } from '../onboarding/dog';
 import { HealthScreen } from '../health/HealthScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
+import { DraftContentPreview, DRAFT_PREVIEW_ENABLED } from '../knowledge/DraftContentPreview';
 import { LogScreen } from '../puppy-log/LogScreen';
 import { addLogEvent, createLogEvent, createSampleLogEvents, updateLogEvent, deleteLogEvent, type LogEvent, type LogEventChanges, type LogEventType } from '../puppy-log/log-model';
 import { PassportScreen } from '../passport/PassportScreen';
@@ -13,7 +14,7 @@ import { completeNextStep, getCompletedStepIds, resetProgramProgress, TRAINING_P
 import { PreviewHomeScreen } from './PreviewHomeScreen';
 import { PreviewProfileScreen } from './PreviewProfileScreen';
 
-type Screen = 'home' | 'log' | 'training' | 'more' | 'health' | 'knowledge' | 'passport' | 'profile';
+type Screen = 'home' | 'log' | 'training' | 'more' | 'health' | 'knowledge' | 'passport' | 'profile' | 'drafts';
 type MainTab = 'home' | 'log' | 'training' | 'more';
 
 export function DevelopmentPreview() {
@@ -137,7 +138,7 @@ export function DevelopmentPreview() {
       );
       break;
     case 'more':
-      page = <MoreScreen onOpenHealth={() => setScreen('health')} onOpenKnowledge={() => setScreen('knowledge')} onOpenPassport={() => setScreen('passport')} />;
+      page = <MoreScreen onOpenHealth={() => setScreen('health')} onOpenKnowledge={() => setScreen('knowledge')} onOpenPassport={() => setScreen('passport')} onOpenDrafts={DRAFT_PREVIEW_ENABLED ? () => setScreen('drafts') : undefined} />;
       break;
     case 'health':
       page = <HealthScreen onBack={navigateBack} />;
@@ -151,9 +152,12 @@ export function DevelopmentPreview() {
     case 'profile':
       page = <PreviewProfileScreen dog={dog} onCancel={navigateBack} onSave={(updated) => { setDog(updated); setScreen('home'); }} />;
       break;
+    case 'drafts':
+      page = <DraftContentPreview onBack={navigateBack} />;
+      break;
   }
 
-  const activeTab: MainTab = screen === 'health' || screen === 'knowledge' || screen === 'passport'
+  const activeTab: MainTab = screen === 'health' || screen === 'knowledge' || screen === 'passport' || screen === 'drafts'
     ? 'more'
     : screen === 'profile' ? 'home' : screen;
   return (
@@ -172,10 +176,12 @@ function MoreScreen({
   onOpenHealth,
   onOpenKnowledge,
   onOpenPassport,
+  onOpenDrafts,
 }: {
   onOpenHealth: () => void;
   onOpenKnowledge: () => void;
   onOpenPassport: () => void;
+  onOpenDrafts?: () => void;
 }) {
   return (
     <View>
@@ -183,6 +189,7 @@ function MoreScreen({
       <PreviewMenuItem title="Hälsa" description="Visuell grund" onPress={onOpenHealth} />
       <PreviewMenuItem title="Kunskap" description="Visuell grund" onPress={onOpenKnowledge} />
       <PreviewMenuItem title="Tassla-pass" description="Visuell grund" onPress={onOpenPassport} />
+      {onOpenDrafts && <PreviewMenuItem title="Utkast för granskning" description="Endast utvecklarläge · ej publicerat" onPress={onOpenDrafts} />}
     </View>
   );
 }

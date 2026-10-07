@@ -1,7 +1,7 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { AccessibilityInfo, Alert, findNodeHandle, Image, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ActionFeedbackModal, InfoModal, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { ActionFeedbackModal, DatePickerField, InfoModal, MessageCard, PageHeading, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
 import {
   isValidPlannedHealthDate,
   normalizePlannedHealthDescription,
@@ -230,13 +230,6 @@ export function PlannedHealthScreen({
       <Text style={styles.infoBody}>Planerna är ägarregistrerade och är inte en verifierad journal eller vårdrekommendation. Genomförda händelser läggs separat i hälsans historik.</Text>
       <Text style={styles.infoBody}>Datum som passerat ligger kvar som planerade tills du själv ändrar eller tar bort dem. Lokala påminnelser är frivilliga och styrs även av enhetens tillstånd.</Text>
     </InfoModal>
-    <ActionFeedbackModal
-      key={feedbackState.activeMessage ?? 'no-feedback'}
-      visible={feedbackState.activeMessage !== null && !infoVisible}
-      message={feedbackState.activeMessage ?? ''}
-      onShown={markFeedbackShown}
-      onClose={() => dispatchFeedback({ type: 'dismiss' })}
-    />
     {reminderSummary ? <MessageCard>{reminderSummary}</MessageCard> : null}
 
     {(pending || statusError) && <MessageCard tone={statusError ? 'error' : 'neutral'}>{statusMessage || (pending ? 'Ändringen väntar på kontroll av sparstatus.' : 'Åtgärden kunde inte slutföras.')}</MessageCard>}
@@ -263,15 +256,7 @@ export function PlannedHealthScreen({
           <TypeChoice selected={type === 'vet_visit'} disabled={blocked || editingRecord !== null}
             icon="medical-outline" label="Veterinärbesök" onPress={() => setType('vet_visit')} />
         </View>
-        <View style={styles.field}>
-          <Text style={styles.label}>Planerat datum</Text>
-          <View style={styles.dateInputWrap}>
-            <Ionicons name="calendar-outline" size={18} color={theme.colors.mutedText} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-            <TextInput accessibilityLabel="Planerat datum, år-månad-dag" editable={!blocked} keyboardType="numbers-and-punctuation"
-              onChangeText={setDueOn} onSubmitEditing={() => Keyboard.dismiss()} placeholder="ÅÅÅÅ-MM-DD"
-              placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.dateInput} value={dueOn} />
-          </View>
-        </View>
+        <DatePickerField label="Planerat datum" disabled={blocked} onChangeText={setDueOn} value={dueOn} />
         <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: reminderEnabled, disabled: blocked }} disabled={blocked}
           onPress={() => setReminderEnabled((value) => !value)} style={styles.reminderChoice}>
           <View style={[styles.reminderCheck, reminderEnabled && styles.reminderCheckSelected]}>
@@ -282,15 +267,7 @@ export function PlannedHealthScreen({
             <Text style={styles.reminderHint}>Visas bara om både planvalet och enhetens Tassla-val tillåter det.</Text>
           </View>
         </Pressable>
-        {reminderEnabled && <View style={styles.field}>
-          <Text style={styles.label}>Påminnelsetid, lokal tid</Text>
-          <View style={styles.dateInputWrap}>
-            <Ionicons name="time-outline" size={18} color={theme.colors.mutedText} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-            <TextInput accessibilityLabel="Påminnelsetid, timmar och minuter" editable={!blocked} keyboardType="numbers-and-punctuation" maxLength={5}
-              onChangeText={setReminderTime} onSubmitEditing={() => Keyboard.dismiss()} placeholder="09:00"
-              placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.dateInput} value={reminderTime} />
-          </View>
-        </View>}
+        {reminderEnabled && <TimePickerField label="Påminnelsetid, lokal tid" disabled={blocked} onChangeText={setReminderTime} value={reminderTime} />}
         <View style={styles.field}>
           <Text style={styles.label}>Kort anteckning (frivillig)</Text>
           <TextInput accessibilityLabel="Kort anteckning, högst 500 tecken" editable={!blocked} multiline
@@ -298,9 +275,15 @@ export function PlannedHealthScreen({
             placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.noteInput} value={note} />
           <Text style={styles.characterHint}>{Array.from(note).length}/500 tecken</Text>
         </View>
-        <QuietButton title="Stäng tangentbord" disabled={busy} onPress={() => Keyboard.dismiss()} />
         {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
         <PrimaryButton title={busy ? 'Sparar…' : editingRecord ? 'Spara rättning' : 'Spara plan'} disabled={blocked} onPress={() => { void save(); }} />
+        <ActionFeedbackModal
+          key={feedbackState.activeMessage ?? 'no-feedback'}
+          visible={feedbackState.activeMessage !== null && !infoVisible}
+          message={feedbackState.activeMessage ?? ''}
+          onShown={markFeedbackShown}
+          onClose={() => dispatchFeedback({ type: 'dismiss' })}
+        />
         {editingRecord && <QuietButton title="Avbryt rättning" disabled={blocked} onPress={resetForm} />}
       </View>
 

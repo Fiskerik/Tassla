@@ -1675,6 +1675,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         <PrimaryButton title="Försök igen" onPress={() => { void retryEvents(); }} />
       </>}
       {logState === 'ready' && <LogScreen events={displayEvents} onAdd={addEvent} onUpdate={updateEvent} onDelete={deleteEvent}
+        onMutationStart={() => { setLogMessage(''); setLogMessageError(false); }}
         mode="cloud" busy={logBusy} statusMessage={logMessage} statusError={logMessageError}
         onRetryPending={() => { void retryLogMutation(); }} hasMore={hasMore} loadingMore={loadingMore}
         onLoadMore={() => { void loadMoreEvents(); }} />}
