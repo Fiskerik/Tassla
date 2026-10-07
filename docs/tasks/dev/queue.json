@@ -1469,6 +1469,81 @@
         }
       ],
       "next_step": "build_reviewer PASS; build_security PASS; frozen788 verified, scoped lockdiff and local QA PASS; remote native build remains separate"
+    },
+    {
+      "id": "BUILD-02",
+      "title": "Expose raw Xcode archive logs as Codemagic artifacts",
+      "mvp_requirement": "docs/mvp.md — technical delivery of approved iOS MVP",
+      "plan": "docs/tasks/dev/BUILD-02.md v4",
+      "write_paths": [
+        "codemagic.yaml",
+        "docs/dev/codemagic-first-build.md",
+        "docs/tasks/dev/BUILD-02.md",
+        "docs/tasks/dev/queue.json"
+      ],
+      "acceptance": [
+        "Keep current xcode-project archive/signing flow unchanged",
+        "Attempt collection of user-proposed Xcode log path without claiming verification",
+        "Set submit_to_app_store=false temporarily per Erik while keeping TestFlight submission enabled",
+        "Confirm exact error only after a Codemagic run"
+      ],
+      "checks": [
+        "YAML parse codemagic.yaml",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "BUILD-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "actor": "coordinator",
+          "evidence": "Reframed plan v2 from speculative Pod signing override to user-requested raw Xcode log artifact; no source patch until root error is visible."
+        },
+        {
+          "actor": "coordinator",
+          "evidence": "Architect CHANGES: v3 explicitly scopes artifact path as an unverified diagnostic attempt; Critic PROCEED v2, exact changed artifact-only scope remains."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "build02_architect APPROVE plan v3; build02_critic PROCEED after artifact-capture guarantee caveat was corrected"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik asked to test raw Xcode log artifact proposal; exact path marked unverified; preserve archive/signing flow."
+        },
+        {
+          "actor": "coordinator",
+          "evidence": "Erik chose to turn App Store submission off temporarily while keeping TestFlight; plan v4 added that exact publishing scope; re-review required."
+        },
+        {
+          "actor": "coordinator",
+          "evidence": "Actual architect APPROVE and critic PROCEED v4 after owner chose temporary App Store submission off; TestFlight remains on."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Config/docs implementation complete; YAML parse and diff check PASS; raw artifact path remains unverified until Codemagic run."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "build02_qa PASS: YAML/settings and docs; artifact path correctly NOT TESTABLE until a Codemagic run."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "build02_reviewer PASS: exact config diff, no signing/build command changes, YAML valid, artifact path runtime remains unverified."
+        }
+      ],
+      "next_step": "build02_reviewer PASS: exact config diff, no signing/build command changes, YAML valid, artifact path runtime remains unverified."
     }
   ]
 }
