@@ -152,3 +152,5 @@ Erik begär skarpare UI/UX-regler och lämnar original DESIGN_RULES (1).md samt 
 Riktad verifiering:9TOML+policyrefs och2PythonAST PASS, diffPASS. Ordinarie pnpmcheck FAIL på saknad lokal expo-notifications dependency i oförändrad appkod; ingen appcheckPASS påstås. Befintligt head6cbd5f4, inte tidigare historisk251f5b7. Release-log docs/releases/DESIGN-POLICY-01.md. Oberoende slutreview väntar; inga API-kostnader, externa meddelanden, push/deploy eller nya modeller/verktyg.
 
 DESIGN-POLICY-01 slutreview: faktiskt ReviewerPASS/CriticPROCEED för instruktioner efter rättad canonicalreferens. Fullappcheck fortfarandeFAIL saknadlokaldependency, ingen UIleverans påstås. Befintliga appvyer kräver separat implementation, skärmdumpar och checklistan innan de rapporteras visuelltklara.
+
+DESIGN-POLICY-01 lokal leveranscommit4f676b8, jämförelse6cbd5f4..4f676b8. Endast instruktioner/policy; ingen push.

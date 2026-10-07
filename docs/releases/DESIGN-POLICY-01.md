@@ -1,5 +1,5 @@
 # Release-log — DESIGN-POLICY-01
-Datum: 2026-10-07. Status: policy införd; riktad kontroll och oberoende policyreview PASS. Appens ordinarie check FAIL enligt begränsningen nedan. Bas: faktisk lokal commit6cbd5f4. Leveranscommit/build: inte tillämpligt ännu; inga appskärmar eller TestFlightbyggen ändras.
+Datum: 2026-10-07. Status: policy införd; riktad kontroll och oberoende policyreview PASS. Appens ordinarie check FAIL enligt begränsningen nedan. Bas: faktisk lokal commit6cbd5f4. Lokal leveranscommit:4f676b8 (6cbd5f4..4f676b8). Ingen push/publicering. TestFlight-build: inte tillämplig; inga appskärmar eller byggen ändras.
 ## Major changes
 Infört: bindande konkret designpolicy för planering, implementation och granskning av användarytor.
 ## Minor changes
