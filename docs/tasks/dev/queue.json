@@ -1403,6 +1403,72 @@
         }
       ],
       "next_step": "Actual final ReviewerPASS staticSecurityPASS QA39 full339 appedgeTS lint ios diffPASS; localundeployedcandidate only; Deno SQL liveAuth deploy privacy realbeta unverified"
+    },
+    {
+      "id": "BUILD-01",
+      "title": "Fix Codemagic release-age dependency failure and validate build stages",
+      "mvp_requirement": "docs/mvp.md — technical delivery of approved iOS MVP",
+      "plan": "docs/tasks/dev/build-01.md v1.1",
+      "write_paths": [
+        "package.json",
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml",
+        "docs/dev/codemagic-first-build.md",
+        "docs/tasks/dev/build-01.md"
+      ],
+      "acceptance": [
+        "Frozen install retains minimumReleaseAge 1440 and integrity verification",
+        "Compatible Expo 57 patch dependencies; local check/export/prebuild pass",
+        "Native signed build and publication limitations reported honestly"
+      ],
+      "checks": [
+        "pnpm install --frozen-lockfile",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "Expo prebuild iOS --no-install",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "CI-02"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "build_architect APPROVE v1 and build_critic PROCEED; actual results saved in build-01.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik authorized Codemagic fix; exact approved compatible patch pins, no trust bypass"
+        },
+        {
+          "actor": "coordinator",
+          "evidence": "Actual architect APPROVE and critic PROCEED v1.1; scoped lock transplant; no trust bypass"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Actual frozen install PASS:788 entries verified, exact scoped package set, no integrity bypass; downstream QA pending"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "build_qa PASS local check/export/prebuild and Stockholm DST7/7; macOS/signing explicitly untested"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "build_reviewer PASS; build_security PASS; frozen788 verified, scoped lockdiff and local QA PASS; remote native build remains separate"
+        }
+      ],
+      "next_step": "build_reviewer PASS; build_security PASS; frozen788 verified, scoped lockdiff and local QA PASS; remote native build remains separate"
     }
   ]
 }

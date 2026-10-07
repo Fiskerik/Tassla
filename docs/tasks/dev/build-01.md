@@ -1,0 +1,27 @@
+# BUILD-01 — Codemagic låsta beroenden
+Plan v1, 2026-10-07. Mandat: Erik bad att lösa bifogat Codemagic-installationsfel och efterföljande byggfel. Bas: main 251f5b7. Ingen extern byggstart eller publicering genom detta arbete.
+
+1. Implementer: välj redan publicerade kompatibla patchversioner för de fyra avvisade paketen. Sätt expo-constants exakt 57.0.20 och expo-notifications exakt 57.0.21, inom Expo 57:s bundledNativeModules. Globala overrides för expo-constants 57.0.20, @expo/image-utils 0.11.5 och @expo/require-utils 57.0.5 undviker för nya transitiva versioner. Behåll pnpm 11.19.0 och låsfilens integritetskontroll. Sätt minimumReleaseAge: 1440 uttryckligen; inga undantag eller avstängda verifieringar. Regenerera låsfil via pnpm install. Filer: package.json, pnpm-workspace.yaml, pnpm-lock.yaml.
+2. QA: kör frozen install, full pnpm check, iOS-export och Expo prebuild iOS i tillfällig kopia under /tmp utan ändring av arbetskopians appkonfiguration. Inventera efterföljande fel; ändrad scope granskas före rättning. CocoaPods/Xcode/signering/Apple-uppladdning kan inte verifieras på Linux och får inte redovisas som PASS.
+3. Koordinator: dokumentera orsak, verifiering och återstående macOS-kontroller i docs/dev/codemagic-first-build.md och denna plan. Oberoende Reviewer/Security före commit/push. Tidigare lokala CONTENT-01-utkast bevarade i git stash före fast-forward; ingår inte i fixen.
+
+Acceptans: låsfil installeras med aktiv 24h-policy utan de fyra avvisade versionerna; app-/edge-TypeScript, lint, alla befintliga tester, iOS-export och tillgänglig prebuild fungerar. Ingen ny dependency, ändrad publiceringspolicy, ändrad signering eller SDK-majorversion.
+
+Faktisk planreview: build_critic PROCEED för v1; installerade Expo 57.0.26 stöder constants ~57.0.20 och notifications ~57.0.21. build_architect APPROVE v1: samtliga pins kompatibla och publicerade före 24h-gränsen; isolerad prebuild godkänd.
+
+## Korrigeringsplan v1.1 — riktad låsfil
+pnpm install (även --no-frozen-lockfile) och riktad pnpm update --lockfile-only avvisar den gamla låsfilen före färdig resolution. En helt ny resolution uppdaterar dessutom många orelaterade transitiva paket och ska inte användas som slutlig låsfil.
+
+Föreslagen korrigering, samma skrivfiler: generera en verifierad kandidat med pnpm i tillfällig katalog utan gammal låsfil. Bevara basens paketversioner/integritet och snapshots för alla orelaterade paket. Transplantera endast notifications 57.0.21:s metadata/snapshot från kandidaten; constants 57.0.20, image-utils 0.11.5 och require-utils 57.0.5 finns redan verifierbart i basens låsfil. Ta bort de fyra avvisade versionernas block, uppdatera deras dependency-/peer-referenser till valda versioner samt importer/overrides. Dubbletter efter peer-substitution får bara slås ihop om de är identiska. Ingen förfalskad integritet, ingen trust-lockfile, inga age-undantag. Slutlig pnpm install --frozen-lockfile med minimumReleaseAge 1440 måste verifiera resultatet före QA. Kontrollera mängddiff: endast notifications21 får vara ny package-version; endast de fyra avvisade versionerna får försvinna. Architect/Critic måste godkänna v1.1 före riktad ändring.
+
+Faktisk v1.1-review: build_architect APPROVE och build_critic PROCEED. Kandidat från pnpm 11.19.0 med aktiv 1440-policy: /tmp/tassla-build01-resolution-on8kbd/pnpm-lock.yaml. Endast notifications21 transplanteras; slutlig frozen-verifiering obligatorisk.
+
+Implementercheckpoint: slutlig pnpm install --frozen-lockfile exit 0, 788 låsfilsposter godkända av aktiva supply-chain policies (pnpm 11.19.0, minimumReleaseAge 1440). Paketmängd exakt: fyra avvisade versioner bort, endast notifications21 tillagd. Integriteter oförändrade för alla kvarvarande paket. pnpm normaliserade constants-peerkrav i expo-router/router-server enligt godkänt globalt override. git diff --check PASS. QA kontrollerar efterföljande steg.
+
+QA-resultat från körloggar: full pnpm check exit 0 (app-TypeScript, Edge-TypeScript och lint). 339 testfall: 338 PASS, 1 villkorligt SKIP i UTC (Stockholms övergång till sommartid). Riktad körning med TZ=Europe/Stockholm: tests/log-model.test.mjs 7/7 PASS, 0 SKIP, inklusive det tidigare överhoppade DST-fallet. iOS-export PASS med faktiskt iOS-Hermes-bundle. Isolerad prebuild --platform ios --no-install PASS och genererade ios/Tassla.xcodeproj. Ingen iOS-katalog eller appkonfiguration ändrad i arbetskopian. CocoaPods, Xcode, signering och Apple-uppladdning NOT TESTABLE på Linux; ingen Codemagic-körning startad.
+
+Oberoende Security: build_security PASS för exakt slutlig dependency-/låsfilskandidat. Inga credentials/signering/publiceringsändringar, ingen kringgång av trust/age/integritet. build_reviewer slutverdict PASS efter granskning av exakt diff och körloggar. build_qa PASS för lokal acceptans: projekt/scheme Tassla, bundle-ID com.erimaliab.tassla och entitlement-sökväg verifierade.
+
+Versionskontroll: genererad Info.plist anger faktisk CFBundleShortVersionString 0.1.0 enligt app.json och CFBundleVersion 1 före Codemagics agvtool. Xcode-template har även MARKETING_VERSION 1.0, men Info.plist använder ett explicit 0.1.0-värde och inte den variabeln. Ingen bekräftad versionsdefekt; faktiskt höjande av byggnummer verifieras på macOS.
+
+Nästa steg: committa och pusha den granskade fixen till main, bygg den committen manuellt i Codemagic och kontrollera pod install, agvtool, profiler, Xcode/IPA samt Apple-uppladdning. Inga påståenden om lyckad signerad build eller publicering genom lokal QA.

@@ -27,3 +27,13 @@ Fel vid nytt certifikat: redan current Distribution certificate/pending request 
 Källa: [Codemagic certifikat/profiler](https://docs.codemagic.io/yaml-quick-start/building-a-native-ios-app/) och [Not uploaded-felsökning](https://docs.codemagic.io/troubleshooting/common-ios-issues/).
 
 Underlag kontrollerat 2026-10-04: [Codemagic React Native/YAML](https://docs.codemagic.io/yaml-quick-start/building-a-react-native-app/), [första signerade bygge](https://docs.codemagic.io/yaml-quick-start/first-signed-build/), [Supabase Google](https://supabase.com/docs/guides/auth/social-login/auth-google), [mobilcallback](https://supabase.com/docs/guides/auth/native-mobile-deep-linking).
+
+## Installationsfel: minimumReleaseAge — 2026-10-07
+
+Den bifogade Codemagic-loggen avvisade fyra nypublicerade patchversioner: `@expo/image-utils 0.11.6`, `@expo/require-utils 57.0.6`, `expo-constants 57.0.21` och `expo-notifications 57.0.22`. De publicerades 6 oktober omkring 12:10 UTC och var yngre än pnpm:s 24h-gräns vid bygget. Det är ett låsfil-/versionsfel, inte saknade Supabase-variabler.
+
+BUILD-01 låser till kompatibla äldre patchversioner enligt Expo 57: constants 57.0.20, notifications 57.0.21, image-utils 0.11.5 och require-utils 57.0.5. `minimumReleaseAge: 1440` dokumenteras uttryckligen i pnpm-workspace.yaml; integritetskontroller, frozen-lockfile och godkända build scripts behålls. Lägg inte till age-undantag eller stäng av säkerhetskontrollen. Vid framtida dependencyuppdateringar måste den nya låsfilen själv klara en frozen installation med denna policy.
+
+Starta nästa Codemagic-bygge från den pushade fixens commit på `main`. Lokal Linux-verifiering omfattar installation, app-/Edge-typkontroll, lint, tester, iOS-export och isolerad iOS-prebuild. CocoaPods, Xcode-kompilering, signering och Apple-uppladdning kräver en faktisk macOS-körning; aktuella resultat/checkpoint finns i [BUILD-01](../tasks/dev/build-01.md).
+
+**Befintlig publiceringskonfiguration:** aktuell codemagic.yaml har både `submit_to_testflight: true` och `submit_to_app_store: true`, ändrat i commit b869f93. De äldre instruktionerna ovan om att bygget inte begär butikspublicering beskriver den tidigare konfigurationen. BUILD-01 ändrar inte användarens publiceringsinställningar och startar inget externt bygge.
