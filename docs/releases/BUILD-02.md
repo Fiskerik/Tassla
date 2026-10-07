@@ -4,7 +4,7 @@ Datum: 2026-10-07
 Paket-ID: BUILD-02 korrigering
 Status: implementerad lokalt; redo för commit/push
 Jämförelsebas: commit `b2935e7` (UX-02 leveranscheckpoint)
-Leveranscommit: ej skapad ännu
+Leveranscommit: `8e99d32`
 TestFlight-version/build: okänd
 
 ## Major changes
@@ -25,4 +25,4 @@ Direkt Node-testsvit: 350/350 PASS. ESLint på `app src tests`: PASS. `git diff 
 
 ## Nästa sprint/paket
 
-Commit och push korrigeringen, starta en ny Codemagic-körning och ladda ned `codemagic-logs/check-application.log` eller `codemagic-logs/xcode-build-ipa.log` vid nästa fel. Skapa inte GitHub Release automatiskt.
+Starta en ny Codemagic-körning och ladda ned `codemagic-logs/check-application.log` eller `codemagic-logs/xcode-build-ipa.log` vid nästa fel. Skapa inte GitHub Release automatiskt.
