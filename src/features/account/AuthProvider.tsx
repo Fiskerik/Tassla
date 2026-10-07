@@ -1,6 +1,6 @@
 import { AppState, Platform } from 'react-native';
 import * as Linking from 'expo-linking';
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { AUTH_CALLBACK_URL, isTrustedGoogleOAuthUrl } from '../../data/auth-callback';
 import { verifyPkceWebCrypto } from '../../data/pkce-crypto';
@@ -22,6 +22,7 @@ interface AuthContextValue {
   cancelGoogleSignIn(): void;
   sendMagicLink(email: string): Promise<boolean>;
   signOut(): Promise<SignOutResult>;
+  reportNotificationCleanupFailure(ownerId: string): void;
   signOutWarning: string | null;
 }
 
@@ -41,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [signOutWarning, setSignOutWarning] = useState<string | null>(null);
   const authAttemptInFlight = useRef(false);
   const googleBrowserPending = useRef(false);
+  const currentOwnerId = useRef(session?.user.id ?? null);
   const client = clientResult.client;
 
   useEffect(() => {
@@ -55,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         authAttemptInFlight.current = false;
         setGooglePending(false);
       }
+      currentOwnerId.current = nextSession?.user.id ?? null;
       setSession(nextSession);
       setStatus(nextSession ? 'signedIn' : 'signedOut');
       if (nextSession) setSignOutWarning(null);
@@ -68,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setStatus('unavailable');
         return;
       }
+      currentOwnerId.current = data.session?.user.id ?? null;
       setSession(data.session);
       setStatus(data.session ? 'signedIn' : 'signedOut');
     }).catch(() => {
@@ -98,6 +102,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       void client.auth.stopAutoRefresh().catch(() => undefined);
     };
   }, [client]);
+
+  const reportNotificationCleanupFailure = useCallback((ownerId: string) => {
+    const activeOwner = currentOwnerId.current;
+    if (activeOwner && activeOwner.toLowerCase() !== ownerId.toLowerCase()) return;
+    setSignOutWarning('Tassla kunde inte städa alla egna lokala påminnelser. Kontrollera Påminnelser när du öppnar kontot igen.');
+  }, []);
 
   const value = useMemo<AuthContextValue>(() => ({
     client,
@@ -148,6 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         authAttemptInFlight.current = false;
       }
     },
+    reportNotificationCleanupFailure,
     async signOut(): Promise<SignOutResult> {
       if (!client) return { localSessionCleared: false, serverRevocationConfirmed: false };
       setSignOutWarning(null);
@@ -163,6 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data, error } = await client.auth.getSession();
         localSessionCleared = !error && !data.session;
+        if (localSessionCleared) currentOwnerId.current = null;
       } catch {
         localSessionCleared = false;
       }
@@ -172,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { localSessionCleared, serverRevocationConfirmed };
     },
     signOutWarning,
-  }), [client, googlePending, session, signOutWarning, status]);
+  }), [client, googlePending, reportNotificationCleanupFailure, session, signOutWarning, status]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

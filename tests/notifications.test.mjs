@@ -17,6 +17,8 @@ tsResolution.deregister();
 
 const serviceSource = await readFile(new URL('../src/notifications/notification-service.ts', import.meta.url), 'utf8');
 const storageSource = await readFile(new URL('../src/notifications/notification-storage.ts', import.meta.url), 'utf8');
+const workspaceSource = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
+const authProviderSource = await readFile(new URL('../src/features/account/AuthProvider.tsx', import.meta.url), 'utf8');
 
 const baseUrl = 'https://local-test.supabase.invalid';
 const dogId = '11111111-1111-4111-8111-111111111111';
@@ -158,6 +160,34 @@ test('master notifications off retains the separately selected training reminder
   assert.deepEqual(plan, originalPlan);
 });
 
+test('master-off cleanup does not depend on permission reads and cancels only this owner’s app requests', async () => {
+  const { ReminderService } = buildServiceHarness('ios');
+  const ownerId = '11111111-1111-4111-8111-111111111111';
+  const foreignOwner = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+  const dogId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const planId = '22222222-2222-4222-8222-222222222222';
+  const planPayload = model.planReminderPayload(ownerId, dogId, planId);
+  const trainingPayload = model.trainingReminderPayload(ownerId, dogId);
+  const fireAt = new Date('2026-10-07T08:00:00Z');
+  const ownedPlan = notificationRequest(model.reminderLogicalKey(planPayload), planPayload, fireAt, model.reminderLogicalKey(planPayload), 'ios');
+  const ownedTraining = notificationRequest(model.reminderLogicalKey(trainingPayload), trainingPayload, fireAt, model.reminderLogicalKey(trainingPayload), 'ios');
+  const foreign = notificationRequest('other-owner', model.trainingReminderPayload(foreignOwner, dogId), fireAt, 'other-owner', 'ios');
+  const cancelled = [];
+  const scheduled = [];
+  let permissionCalls = 0;
+  const service = new ReminderService(fakeAdapter({ requests: [ownedPlan, ownedTraining, foreign], cancelled, scheduled,
+    getPermissionsAsync: async () => { permissionCalls += 1; throw new Error('permission API unavailable'); } }));
+  const context = service.setActiveContext(ownerId, dogId);
+  const preferences = { version: 1, enabled: false, trainingEnabled: true, trainingMinutes: 615 };
+  const result = await service.reconcile({ ...context, preferences,
+    plans: [plannedReminder(planId, dogId, '2026-10-07', 480)], now: new Date('2026-10-06T08:00:00Z') });
+  assert.equal(result.status, 'off');
+  assert.equal(permissionCalls, 0);
+  assert.deepEqual(cancelled, [ownedPlan.identifier, ownedTraining.identifier]);
+  assert.deepEqual(scheduled, []);
+  assert.equal(preferences.trainingEnabled, true);
+});
+
 test('native reminder reconciliation preserves foreign requests, deduplicates owned reminders and uses generic content', async () => {
   const { ReminderService } = buildServiceHarness();
   const scheduled = [];
@@ -243,6 +273,9 @@ test('native trigger with an altered time zone, tuple, repetition or unknown sha
   const invalid = [
     ['wrong time zone', { ...valid, trigger: { ...valid.trigger, dateComponents: { ...valid.trigger.dateComponents, timeZone: 'Europe/Stockholm' } } }],
     ['changed component', { ...valid, trigger: { ...valid.trigger, dateComponents: { ...valid.trigger.dateComponents, hour: valid.trigger.dateComponents.hour + 1 } } }],
+    ['extra weekday component', { ...valid, trigger: { ...valid.trigger, dateComponents: { ...valid.trigger.dateComponents, weekday: 3 } } }],
+    ['leap-month marker', { ...valid, trigger: { ...valid.trigger, dateComponents: { ...valid.trigger.dateComponents, isLeapMonth: true } } }],
+    ['repeated-day marker', { ...valid, trigger: { ...valid.trigger, dateComponents: { ...valid.trigger.dateComponents, isRepeatedDay: true } } }],
     ['repeats', { ...valid, trigger: { ...valid.trigger, repeats: true } }],
     ['missing time zone', { ...valid, trigger: { ...valid.trigger, dateComponents: { ...valid.trigger.dateComponents, timeZone: undefined } } }],
     ['unknown trigger shape', { ...valid, trigger: { type: 'unknown' } }],
@@ -260,6 +293,29 @@ test('native trigger with an altered time zone, tuple, repetition or unknown sha
     assert.deepEqual(cancelled, [key]);
     assert.equal(scheduled.length, 1);
   });
+});
+
+test('returned notification with non-generic copy is replaced even when id, payload, and fire time match', async () => {
+  const { ReminderService } = buildServiceHarness('ios');
+  const ownerId = '11111111-1111-4111-8111-111111111111';
+  const dogId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const planId = '22222222-2222-4222-8222-222222222222';
+  const payload = model.planReminderPayload(ownerId, dogId, planId);
+  const key = model.reminderLogicalKey(payload);
+  const fireAt = model.createLocalFireTime('2026-10-07', 480, new Date('2026-10-06T08:00:00Z')).date;
+  const unsafe = { ...notificationRequest(key, payload, fireAt, key, 'ios'), content: {
+    title: 'Veterinärbesök för hunden', body: 'Uppföljning av vaccination', data: payload,
+  } };
+  const cancelled = [];
+  const scheduled = [];
+  const service = new ReminderService(fakeAdapter({ requests: [unsafe], cancelled, scheduled }));
+  const context = service.setActiveContext(ownerId, dogId);
+  await service.reconcile({ ...context, preferences: { version: 1, enabled: true, trainingEnabled: false, trainingMinutes: 540 },
+    plans: [plannedReminder(planId, dogId, '2026-10-07', 480)], now: new Date('2026-10-06T08:00:00Z') });
+  assert.deepEqual(cancelled, [key]);
+  assert.equal(scheduled.length, 1);
+  assert.equal(scheduled[0].content.title, model.GENERIC_REMINDER_TITLE);
+  assert.equal(scheduled[0].content.body, model.GENERIC_REMINDER_BODY);
 });
 
 test('failed cancellation of a stale owned reminder blocks replacement for that logical item', async () => {
@@ -314,6 +370,39 @@ test('owner cleanup cancels only valid app-owned requests for that owner', async
   const service = new ReminderService(fakeAdapter({ requests: [validOwned, validForeign, unrelated], cancelled }));
   assert.equal(await service.cleanupOwner(ownerId), true);
   assert.deepEqual(cancelled, ['own']);
+});
+
+test('actual logout cleanup tracks failure and clears it after a successful owner cleanup retry', async () => {
+  const { ReminderService } = buildServiceHarness();
+  const ownerId = '11111111-1111-4111-8111-111111111111';
+  let shouldFail = true;
+  const service = new ReminderService(fakeAdapter({
+    getAllScheduledNotificationsAsync: async () => {
+      if (shouldFail) throw new Error('native store unavailable');
+      return [];
+    },
+  }));
+  assert.equal(await service.cleanupOwner(ownerId), false);
+  assert.equal(service.hasCleanupFailure(ownerId), true);
+  shouldFail = false;
+  assert.equal(await service.cleanupOwner(ownerId), true);
+  assert.equal(service.hasCleanupFailure(ownerId), false);
+});
+
+test('actual AuthProvider cleanup warning ignores an older owner after an account switch', () => {
+  const match = authProviderSource.match(/const reportNotificationCleanupFailure = useCallback\(\(ownerId: string\) => \{([\s\S]*?)\n  \}, \[\]\);/);
+  assert.ok(match, 'extracts the actual stable AuthProvider failure callback');
+  const source = ts.transpileModule(`function reportNotificationCleanupFailure(ownerId) {${match[1]}\n}`, {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
+  }).outputText;
+  const warnings = [];
+  const load = new Function('currentOwnerId', 'setSignOutWarning', `${source}\nreturn reportNotificationCleanupFailure;`);
+  const report = load({ current: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' }, (warning) => warnings.push(warning));
+  report('11111111-1111-4111-8111-111111111111');
+  assert.deepEqual(warnings, [], 'an old owner cleanup result cannot overwrite the new owner state');
+  report('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /egna lokala påminnelser/i);
 });
 
 test('reminder generation is checked after awaited cancellation before scheduling a replacement', async () => {
@@ -421,6 +510,112 @@ test('reminder generation is checked after the awaited native list before effect
   assert.deepEqual(effects, []);
 });
 
+test('actual notification response handler routes only current owner/dog payloads to their allowed screens', async (t) => {
+  await t.test('health tap verifies exact planned row and clears only its matching last response', async () => {
+    const ownerId = '11111111-1111-4111-8111-111111111111';
+    const dogId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const planId = '22222222-2222-4222-8222-222222222222';
+    const payload = model.planReminderPayload(ownerId, dogId, planId);
+    const response = nativeResponse('health-tap', payload);
+    const harness = buildTapHandlerHarness({ context: { ownerId, dogId, generation: 1 }, current: true,
+      response, lastResponse: response, plan: { id: planId, dog_id: dogId } });
+    await harness.handle(response);
+    await harness.handle(response);
+    assert.deepEqual(harness.pages, ['planned-health']);
+    assert.deepEqual(harness.lookups, [[{}, dogId, planId]]);
+    assert.equal(harness.clears, 1, 'the same identifier/date delivery is handled once');
+  });
+  await t.test('training tap routes directly after owner/dog/action validation', async () => {
+    const ownerId = '11111111-1111-4111-8111-111111111111';
+    const dogId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const response = nativeResponse('training-tap', model.trainingReminderPayload(ownerId, dogId));
+    const harness = buildTapHandlerHarness({ context: { ownerId, dogId, generation: 1 }, current: true, response, lastResponse: response });
+    await harness.handle(response);
+    assert.deepEqual(harness.pages, ['training']);
+    assert.deepEqual(harness.lookups, []);
+    assert.equal(harness.clears, 1);
+  });
+  await t.test('same identifier with a new delivery date routes again and only the matching delivery is cleared', async () => {
+    const ownerId = '11111111-1111-4111-8111-111111111111';
+    const dogId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const payload = model.trainingReminderPayload(ownerId, dogId);
+    const original = nativeResponse('daily-training', payload, undefined, new Date('2026-10-06T09:00:00Z'));
+    const later = nativeResponse('daily-training', payload, undefined, new Date('2026-10-07T09:00:00Z'));
+    const harness = buildTapHandlerHarness({ context: { ownerId, dogId, generation: 1 }, current: true, response: original, lastResponse: later });
+    await harness.handle(original);
+    assert.deepEqual(harness.pages, ['training']);
+    assert.equal(harness.clears, 0, 'a different delivery date is not cleared');
+    harness.setLastResponse(later);
+    await harness.handle(later);
+    assert.deepEqual(harness.pages, ['training', 'training']);
+    assert.equal(harness.clears, 1);
+  });
+  await t.test('foreign, malformed and non-default taps do not look up or navigate', async () => {
+    const ownerId = '11111111-1111-4111-8111-111111111111';
+    const dogId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const valid = model.trainingReminderPayload(ownerId, dogId);
+    for (const response of [
+      nativeResponse('wrong-owner', model.trainingReminderPayload('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', dogId)),
+      nativeResponse('wrong-dog', model.trainingReminderPayload(ownerId, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')),
+      nativeResponse('malformed', { ...valid, extra: 'unexpected' }),
+      nativeResponse('different-action', valid, 'SNOOZE'),
+      nativeResponse('invalid-date', valid, undefined, Number.NaN),
+    ]) {
+      const harness = buildTapHandlerHarness({ context: { ownerId, dogId, generation: 1 }, current: true, response, lastResponse: response });
+      await harness.handle(response);
+      assert.deepEqual(harness.pages, []);
+      assert.deepEqual(harness.lookups, []);
+      assert.equal(harness.clears, 0);
+    }
+  });
+  await t.test('stale lookup does not navigate or clear, and repeated taps do not duplicate the read', async () => {
+    const ownerId = '11111111-1111-4111-8111-111111111111';
+    const dogId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const planId = '22222222-2222-4222-8222-222222222222';
+    const response = nativeResponse('delayed-health', model.planReminderPayload(ownerId, dogId, planId));
+    let finishLookup;
+    const harness = buildTapHandlerHarness({ context: { ownerId, dogId, generation: 1 }, current: true, response, lastResponse: response,
+      fetchPlan: () => new Promise((resolve) => { finishLookup = resolve; }) });
+    const first = harness.handle(response);
+    while (!finishLookup) await new Promise((resolve) => setImmediate(resolve));
+    await harness.handle(response);
+    harness.setCurrent(false);
+    finishLookup({ id: planId, dog_id: dogId });
+    await first;
+    assert.deepEqual(harness.pages, []);
+    assert.equal(harness.lookups.length, 1);
+    assert.equal(harness.clears, 0);
+  });
+});
+
+test('actual response-listener effect handles the cold-start response and removes its live listener', async () => {
+  const match = workspaceSource.match(/useEffect\(\(\) => \{\s*let active = true;\s*const subscription = Notifications\.addNotificationResponseReceivedListener\(([\s\S]*?)\n  \}, \[handleNotificationResponse\]\);/);
+  assert.ok(match, 'extracts the actual listener/cold-start effect');
+  const effectSource = workspaceSource.slice(match.index, match.index + match[0].length)
+    .replace(/^useEffect\(\(\) => \{/, 'function registerResponseListener() {')
+    .replace(/\n  \}, \[handleNotificationResponse\]\);$/, '\n}');
+  const code = ts.transpileModule(effectSource, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
+  const received = [];
+  let liveListener;
+  let removed = 0;
+  const cold = nativeResponse('cold-start', model.trainingReminderPayload('11111111-1111-4111-8111-111111111111', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'));
+  const Notifications = {
+    addNotificationResponseReceivedListener(listener) { liveListener = listener; return { remove() { removed += 1; } }; },
+    async getLastNotificationResponseAsync() { return cold; },
+  };
+  const load = new Function('Notifications', 'handleNotificationResponse', `${code}\nreturn registerResponseListener;`);
+  const cleanup = load(Notifications, async (response) => { received.push(response); })();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(received, [cold]);
+  const live = nativeResponse('live', model.trainingReminderPayload('11111111-1111-4111-8111-111111111111', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'));
+  liveListener(live);
+  assert.deepEqual(received, [cold, live]);
+  cleanup();
+  assert.equal(removed, 1);
+  liveListener(nativeResponse('after-unmount', live.notification.request.content.data));
+  assert.deepEqual(received, [cold, live]);
+});
+
 test('reminder migration and synthetic SQL probe guard the reminder columns without claiming a live RLS run', async () => {
   const migration = await readFile(new URL('../supabase/migrations/202610060002_plan_reminders.sql', import.meta.url), 'utf8');
   const probe = await readFile(new URL('../supabase/tests/plan-reminders.sql', import.meta.url), 'utf8');
@@ -488,6 +683,40 @@ function buildServiceHarness(platformOS = 'ios') {
   model.planReminderPayload, model.reminderLogicalKey, model.trainingReminderPayload, async () => ({ ...model.DEFAULT_NOTIFICATION_PREFERENCES }), async () => {}];
   const load = new Function(...names, `${code}\nreturn { ReminderService };`);
   return load(...values);
+}
+
+function buildTapHandlerHarness({ context, current, response, lastResponse, plan, fetchPlan } = {}) {
+  const match = workspaceSource.match(/const handleNotificationResponse = useCallback\(async \(response: Notifications\.NotificationResponse\) => \{([\s\S]*?)\n  \}, \[client\]\);/);
+  assert.ok(match, 'extracts the actual notification response handler');
+  const code = ts.transpileModule(`async function handleNotificationResponse(response) {${match[1]}\n}`, {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
+  }).outputText;
+  const pages = [];
+  const lookups = [];
+  let clears = 0;
+  let isCurrent = current;
+  const identifiers = [
+    'Notifications', 'notificationContextRef', 'reminderService', 'parseReminderPayload', 'handledNotificationResponses',
+    'setPage', 'fetchPlannedHealthById', 'client',
+  ];
+  let currentLastResponse = lastResponse;
+  const dependencies = [
+    { DEFAULT_ACTION_IDENTIFIER: 'expo.modules.notifications.actions.DEFAULT', async getLastNotificationResponseAsync() { return currentLastResponse; }, async clearLastNotificationResponseAsync() { clears += 1; } },
+    { current: context },
+    { isCurrent() { return isCurrent; } },
+    model.parseReminderPayload,
+    { current: new Set() },
+    (page) => pages.push(page),
+    async (...args) => { lookups.push(args); return fetchPlan ? await fetchPlan(...args) : plan ?? null; },
+    {},
+  ];
+  const load = new Function(...identifiers, `${code}\nreturn { handleNotificationResponse };`);
+  return { handle: load(...dependencies).handleNotificationResponse, pages, lookups, get clears() { return clears; },
+    setCurrent(value) { isCurrent = value; }, setLastResponse(value) { currentLastResponse = value; } };
+}
+
+function nativeResponse(identifier, payload, actionIdentifier = 'expo.modules.notifications.actions.DEFAULT', date = new Date('2026-10-06T12:00:00Z')) {
+  return { actionIdentifier, notification: { date: date instanceof Date ? date.getTime() : date, request: { identifier, content: { data: payload } } } };
 }
 
 function fakeAdapter({ requests = [], scheduled = [], cancelled = [], cancelError, getAllScheduledNotificationsAsync,

@@ -121,6 +121,11 @@ export class ReminderService {
   private generation = 0;
   private active: { ownerId: string; dogId: string } | null = null;
   private tail: Promise<void> = Promise.resolve();
+  private cleanupFailures = new Set<string>();
+
+  hasCleanupFailure(ownerId: string): boolean {
+    return this.cleanupFailures.has(ownerId.toLowerCase());
+  }
 
   constructor(private readonly native: NativeReminderAdapter = expoReminderAdapter) {}
 
@@ -189,8 +194,10 @@ export class ReminderService {
           if (payload.ownerId.toLowerCase() !== owner) continue;
           await this.native.cancelScheduledNotificationAsync(request.identifier);
         }
+        this.cleanupFailures.delete(owner);
         return true;
       } catch {
+        this.cleanupFailures.add(owner);
         return false;
       }
     });
@@ -209,6 +216,20 @@ export class ReminderService {
       return { status: 'failed', scheduledCount: 0, overCap: false, timezone };
     }
     if (!current()) return { status: 'unknown', scheduledCount: 0, overCap: false, timezone };
+    if (!input.preferences.enabled) {
+      let hasFailure = false;
+      for (const request of requests) {
+        if (!isOwnedBy(request, input.ownerId)) continue;
+        if (!current()) return { status: 'unknown', scheduledCount: 0, overCap: false, timezone };
+        try {
+          await this.native.cancelScheduledNotificationAsync(request.identifier);
+        } catch {
+          hasFailure = true;
+        }
+        if (!current()) return { status: 'unknown', scheduledCount: 0, overCap: false, timezone };
+      }
+      return { status: hasFailure ? 'failed' : 'off', scheduledCount: 0, overCap: false, timezone };
+    }
     let permission: Notifications.NotificationPermissionsStatus | null;
     try { permission = await this.native.getPermissionsAsync(); } catch {
       return { status: 'failed', scheduledCount: 0, overCap: false, timezone };

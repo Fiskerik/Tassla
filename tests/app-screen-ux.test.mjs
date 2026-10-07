@@ -167,7 +167,7 @@ test('signed-out warning is owned by AuthProvider and survives workspace unmount
   ]);
   assert.match(provider, /setSignOutWarning\('Du är utloggad på den här enheten\./);
   assert.match(provider, /localSessionCleared && !serverRevocationConfirmed/);
-  assert.match(provider, /signOutWarning,\n\s*\}\), \[client, googlePending, session, signOutWarning, status\]\)/);
+  assert.match(provider, /signOutWarning,\n\s*\}\), \[client, googlePending, reportNotificationCleanupFailure, session, signOutWarning, status\]\)/);
   assert.match(workspace, /const signOutInFlight = useRef\(false\);/);
   assert.match(workspace, /if \(signOutInFlight\.current\) return;/);
   assert.match(workspace, /\{ text: 'Avbryt', style: 'cancel' \}/);

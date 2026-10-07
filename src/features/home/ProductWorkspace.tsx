@@ -4,6 +4,7 @@ import type { ComponentProps } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
 import * as ExpoCrypto from 'expo-crypto';
+import * as Notifications from 'expo-notifications';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { AppScreen, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import {
@@ -77,7 +78,7 @@ import { PublishedTrainingScreen } from '../training/PublishedTrainingScreen';
 import { theme } from '../../theme/tokens';
 import { useAuth } from '../account/AuthProvider';
 import { NotificationSettingsScreen } from '../notifications/NotificationSettingsScreen';
-import { futureFireTimeForPlan, type NotificationPreferences } from '../../notifications/notification-model';
+import { futureFireTimeForPlan, parseReminderPayload, type NotificationPreferences } from '../../notifications/notification-model';
 import { reminderService, type ReminderContext, type ReminderReconcileResult } from '../../notifications/notification-service';
 
 type ProductPage = 'home' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings';
@@ -142,6 +143,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [plannedHealthMessageError, setPlannedHealthMessageError] = useState(false);
   const [plannedHealthConflict, setPlannedHealthConflict] = useState<{ lifetime: string; mutationId: string; current: PlannedHealthRecord | null } | null>(null);
   const notificationContextRef = useRef<ReminderContext | null>(null);
+  const handledNotificationResponses = useRef(new Set<string>());
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>({ version: 1, enabled: false, trainingEnabled: false, trainingMinutes: 540 });
   const [notificationPreferencesReady, setNotificationPreferencesReady] = useState(false);
   const [notificationStorageError, setNotificationStorageError] = useState(false);
@@ -183,7 +185,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const healthHistoryReadQueue = useRef<Promise<void>>(Promise.resolve());
   const plannedHealthReadQueue = useRef<Promise<void>>(Promise.resolve());
   const loadMoreInFlight = useRef(false);
-  const { signOut, session } = useAuth();
+  const { signOut, session, reportNotificationCleanupFailure } = useAuth();
   const age = ageInWeeks(dog.birth_date, localDate());
   const currentHealthHistoryLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const healthHistoryLifetime = useRef('');
@@ -352,6 +354,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     let active = true;
     void reminderService.loadPreferences(ownerId).then((preferences) => {
       if (!active || !reminderService.isCurrent(context)) return;
+      if (reminderService.hasCleanupFailure(ownerId)) {
+        setNotificationMessage('Tassla kunde inte städa alla egna lokala påminnelser. Kontrollera dessa inställningar.');
+        setNotificationMessageError(true);
+      }
       setNotificationPreferences(preferences);
       setNotificationPreferencesReady(true);
       setNotificationSaved(false);
@@ -365,9 +371,60 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       active = false;
       notificationContextRef.current = null;
       reminderService.setActiveContext(null, null);
-      void reminderService.cleanupOwner(ownerId);
+      void reminderService.cleanupOwner(ownerId).then((cleaned) => {
+        if (!cleaned) reportNotificationCleanupFailure(ownerId);
+      });
     };
-  }, [dog.id, session?.user.id]);
+  }, [dog.id, reportNotificationCleanupFailure, session?.user.id]);
+
+  const handleNotificationResponse = useCallback(async (response: Notifications.NotificationResponse) => {
+    if (response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
+    const context = notificationContextRef.current;
+    if (!context || !reminderService.isCurrent(context)) return;
+    const payload = parseReminderPayload(response.notification.request.content.data);
+    if (!payload || payload.ownerId.toLowerCase() !== context.ownerId || payload.dogId.toLowerCase() !== context.dogId) return;
+    const responseId = response.notification.request.identifier;
+    const deliveryDate = response.notification.date;
+    if (!Number.isFinite(deliveryDate)) return;
+    const responseKey = responseId + ':' + deliveryDate.toString();
+    if (handledNotificationResponses.current.has(responseKey)) return;
+    handledNotificationResponses.current.add(responseKey);
+    if (handledNotificationResponses.current.size > 128) {
+      const oldest = handledNotificationResponses.current.values().next().value;
+      if (oldest) handledNotificationResponses.current.delete(oldest);
+    }
+    try {
+      if (payload.target === 'training') {
+        if (!reminderService.isCurrent(context)) return;
+        setPage('training');
+      } else {
+        const plan = await fetchPlannedHealthById(client, context.dogId, payload.planId!);
+        if (!reminderService.isCurrent(context)) return;
+        if (plan && plan.id === payload.planId && plan.dog_id.toLowerCase() === context.dogId) setPage('planned-health');
+      }
+      if (!reminderService.isCurrent(context)) return;
+      const latest = await Notifications.getLastNotificationResponseAsync();
+      if (!reminderService.isCurrent(context)) return;
+      if (latest?.notification.request.identifier === responseId
+        && latest.notification.date === deliveryDate
+        && latest.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) {
+        await Notifications.clearLastNotificationResponseAsync();
+      }
+    } catch {
+      handledNotificationResponses.current.delete(responseKey);
+    }
+  }, [client]);
+
+  useEffect(() => {
+    let active = true;
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      if (active) void handleNotificationResponse(response);
+    });
+    void Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (active && response) void handleNotificationResponse(response);
+    }).catch(() => undefined);
+    return () => { active = false; subscription.remove(); };
+  }, [handleNotificationResponse]);
 
   useEffect(() => { void refreshLocalReminders(); }, [refreshLocalReminders, plannedHealth, plannedHealthPending, plannedHealthState]);
   useEffect(() => {

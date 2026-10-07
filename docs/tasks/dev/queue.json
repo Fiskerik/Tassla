@@ -1274,7 +1274,8 @@
         "tests/notifications.test.mjs",
         "tests/README.md",
         "supabase/tests/plan-reminders.sql",
-        "tests/planned-health.test.mjs"
+        "tests/planned-health.test.mjs",
+        "tests/app-screen-ux.test.mjs"
       ],
       "acceptance": [
         "Future local reminders filtered before40cap, truthful status default-off master",
@@ -1290,7 +1291,7 @@
       "depends_on": [
         "MVP-P06-PASSPORT"
       ],
-      "status": "implementing",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -1303,9 +1304,27 @@
           "to": "implementing",
           "actor": "implementer",
           "evidence": "Erik fullMVP Luna medium reminders depsapproved; P06done47e5a19; startcheckpointDATA"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Oct7 actualsourcefreeze typecheck eslintappsrc diffPASS; QAhelpersinprogress nofullPASS yet; independentReview andfullQA next"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Actualfocused78 full300 TypeScript lintPASS ios exportPASS diffPASS; SQLnativeuntested; finalReviewer next"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "ActualfinalReviewerPASS staticSecurityPASS QA78/full300 ios export diffPASS finalrelease-logupdated; nativeSQLuntested"
         }
       ],
-      "next_step": "Erik fullMVP Luna medium reminders depsapproved; P06done47e5a19; startcheckpointDATA"
+      "next_step": "ActualfinalReviewerPASS staticSecurityPASS QA78/full300 ios export diffPASS finalrelease-logupdated; nativeSQLuntested"
     }
   ]
 }
