@@ -1405,6 +1405,140 @@
       "next_step": "Actual final ReviewerPASS staticSecurityPASS QA39 full339 appedgeTS lint ios diffPASS; localundeployedcandidate only; Deno SQL liveAuth deploy privacy realbeta unverified"
     },
     {
+      "id": "UX-01",
+      "title": "Planned health information and action feedback",
+      "mvp_requirement": "Owner feedback 2026-10-07 within approved planned-health and reminder MVP",
+      "plan": "docs/tasks/dev/ux-01.md v1.5",
+      "write_paths": [
+        "src/components/AppPrimitives.tsx",
+        "src/components/README.md",
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/features/health/planned-health-feedback.ts",
+        "src/features/health/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "tests/planned-health-feedback.test.mjs",
+        "tests/README.md",
+        "tests/account-delete.test.mjs",
+        "tests/app-screen-ux.test.mjs",
+        "tests/content-bundle.test.mjs"
+      ],
+      "acceptance": [
+        "One recovery action with conflict, pending, error priority",
+        "Scrollable information modal and queued timed action feedback without overlapping native modals",
+        "Persistent safe recovery context and accessible labelled controls"
+      ],
+      "checks": [
+        "Focused feedback tests",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "Independent QA and Reviewer"
+      ],
+      "depends_on": [
+        "MVP-P07-REMINDERS"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1.3; Critic PROCEED; exact modal queue, recommended timeout, persistent recovery and render matrix saved in docs/tasks/dev/ux-01.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik owner feedback and full MVP mandate; start exact UX-01 v1.3 slice with available GPT-5.6 Luna xhigh implementer"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "GPT-5.6 Luna xhigh implementation plus coordinator cleanup frozen; focused6 PASS, app/edge typecheck lint diffcheck PASS, iOS export PASS; full test command has unrelated Windows CRLF-sensitive baseline failures documented for QA"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Slice QA PASS, but full pnpm check blocked by three Windows CRLF-sensitive existing source-reading tests; correction v1.4 saved"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction attempt 1: normalize only test-read text newlines in three explicit QA files; assertions and product data unchanged"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE correction v1.4: newline normalization only in three explicit source-reading tests"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start correction attempt 1; no product or assertion changes"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction1 newline normalization implemented; affected94 PASS, full pnpm check345 PASS, diffcheck PASS; no assertion/product/content changes"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS v1.4: focused100/100, full pnpm check345/345, diffcheck PASS; root iOS export PASS; native modal/focus remains NOT TESTABLE"
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer BLOCK v1.4: stale retained status replayed as new popup on screen remount; correction2 v1.5 saved"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction attempt 2: initialize observed-status ref from normalized initial prop; preserve empty-to-same later transition; renewed tests/review required"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1.5 correction2 with ProductWorkspace ownership and stable page lifetime"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start reviewer correction2: remove list-derived key, suppress initial stale status, preserve explicit form resets"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction2 implemented: stable page lifetime, initial retained status suppressed, removed-record reset deferred; focused7, full346, iOS export and diffcheck PASS"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent final QA PASS v1.5: focused7, full346, diffcheck PASS; root iOS export PASS; native UI NOT TESTABLE"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Renewed Reviewer PASS v1.5 after independent QA focused7/full346; iOS export/diff PASS; native device behaviors NOT TESTABLE; release-log current"
+        }
+      ],
+      "next_step": "Renewed Reviewer PASS v1.5 after independent QA focused7/full346; iOS export/diff PASS; native device behaviors NOT TESTABLE; release-log current"
+    },
+    {
       "id": "BUILD-01",
       "title": "Fix Codemagic release-age dependency failure and validate build stages",
       "mvp_requirement": "docs/mvp.md — technical delivery of approved iOS MVP",

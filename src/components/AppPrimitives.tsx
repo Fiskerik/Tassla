@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react';
-import { AccessibilityInfo, Keyboard, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import type { ReactNode, RefObject } from 'react';
+import { AccessibilityInfo, findNodeHandle, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { theme } from '../theme/tokens';
 
 export function AppScreen({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
@@ -135,6 +135,69 @@ export function MessageCard({ children, tone = 'neutral' }: { children: ReactNod
   );
 }
 
+function focusAccessibilityNode(ref: RefObject<Text | null>) {
+  const handle = findNodeHandle(ref.current);
+  if (handle !== null) AccessibilityInfo.setAccessibilityFocus(handle);
+}
+
+export function InfoModal({ visible, title, children, onClose, onDismiss }: {
+  visible: boolean;
+  title: string;
+  children: ReactNode;
+  onClose: () => void;
+  onDismiss?: () => void;
+}) {
+  const reduceMotion = useReducedMotion();
+  const headingRef = useRef<Text>(null);
+  return <Modal
+    visible={visible}
+    transparent
+    animationType={reduceMotion || Platform.OS === 'android' ? 'none' : 'fade'}
+    onShow={() => focusAccessibilityNode(headingRef)}
+    onRequestClose={onClose}
+    onDismiss={onDismiss}
+    accessibilityViewIsModal
+  >
+    <View style={styles.modalBackdrop}>
+      <View style={styles.modalCard}>
+        <Text ref={headingRef} accessible accessibilityRole="header" style={styles.modalTitle}>{title}</Text>
+        <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalContent}>{children}</ScrollView>
+        <QuietButton title="Stäng information" onPress={onClose} />
+      </View>
+    </View>
+  </Modal>;
+}
+
+export function ActionFeedbackModal({ visible, message, onClose, onShown }: {
+  visible: boolean;
+  message: string;
+  onClose: () => void;
+  onShown?: (message: string) => void;
+}) {
+  const reduceMotion = useReducedMotion();
+  const headingRef = useRef<Text>(null);
+  return <Modal
+    visible={visible}
+    transparent
+    animationType={reduceMotion ? 'none' : 'fade'}
+    onShow={() => {
+      focusAccessibilityNode(headingRef);
+      onShown?.(message);
+    }}
+    onRequestClose={onClose}
+    accessibilityViewIsModal
+  >
+    <View style={styles.feedbackBackdrop}>
+      <View style={styles.feedbackCard}>
+        <ScrollView style={styles.feedbackScroll} contentContainerStyle={styles.modalContent}>
+          <Text ref={headingRef} accessible accessibilityRole="alert" style={styles.messageText}>{message}</Text>
+        </ScrollView>
+        <QuietButton title="Stäng status" onPress={onClose} />
+      </View>
+    </View>
+  </Modal>;
+}
+
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: theme.colors.background },
   screenLayout: { flex: 1, width: '100%', maxWidth: 560, alignSelf: 'center' },
@@ -164,4 +227,12 @@ const styles = StyleSheet.create({
   messageText: { color: theme.colors.text, fontSize: 15, lineHeight: 22 },
   errorCard: { borderColor: '#D5A5A0', backgroundColor: '#F7EAE7' },
   errorText: { color: theme.colors.error },
+  modalBackdrop: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#0008' },
+  modalCard: { maxHeight: '85%', padding: 20, borderRadius: theme.radius.card, backgroundColor: theme.colors.surface },
+  modalTitle: { color: theme.colors.text, fontSize: 20, fontWeight: '800', marginBottom: 12 },
+  modalScroll: { flexShrink: 1 },
+  modalContent: { paddingBottom: 8 },
+  feedbackBackdrop: { flex: 1, justifyContent: 'flex-start', padding: 16, paddingTop: 60, backgroundColor: '#0005' },
+  feedbackCard: { padding: 16, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+  feedbackScroll: { maxHeight: '65%' },
 });

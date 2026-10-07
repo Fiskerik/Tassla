@@ -137,4 +137,10 @@ Release-loggar P08-ONBOARDING/P09-METRICS/P11-BETA-QA skapade för planstatus/ch
 
 ## P10 hållbar lokal leverans — 2026-10-07
 Lokal commit e5611bc: Complete local beta account deletion candidate and checkpoints. Jämförelse 36b23d5..e5611bc. Slutlig ReviewerPASS/staticSecurityPASS faktisk; QA39/full339 och iOS/diffPASS. Ingen push, GitHubRelease, Edge-deploy eller TestFlightbuild genom arbetet. P01–P07 och P10lokalkandidat klara; hela MVP:n ännu inte betaredo.
+
+## UX-01 slutcheckpoint — 2026-10-07
+
+Ägarens skärmbilder och `UX-01-work-checkpoint.patch` användes som underlag, men patchen applicerades inte oförändrad. Planerad hälsa har nu en informationsmodal i stället för två skrymmande hjälpboxar, tidsbegränsad handlingspopup och exakt en synlig återställningsåtgärd. Popupen köas bakom informationsmodalen, gammal status spelas inte upp vid navigation och listuppdatering remonterar inte längre formuläret. Försvunnen redigerad post återställer formuläret säkert.
+
+Architect APPROVE v1.5, Critic PROCEED, independent QA PASS och renewed Reviewer PASS. Faktiskt: riktat 7/7, `pnpm check` 346/346, iOS-export och diffkontroll PASS. CRLF-korrigeringen normaliserar bara testinläsning i tre filer. Native modal/fokus/timer/VoiceOver/stor text är fortsatt `NOT TESTABLE`. Ingen push, GitHub Release eller TestFlight-build gjordes. Release-logg: [UX-01](../../releases/UX-01.md). Nästa exakta slice gäller övriga info/statusytor, datum/tid och tangentbordsknappar.
 Nästa nödvändiga mänskliga svar: tidigare fråga om frivilligt separat samtycke för uppfödarkälla/betamätning eller bortvald individmätning; identifiera godkänd syntetisk Supabase-utvecklingsmiljö och redan körda migrationer; beta-installationslänk/pilotuppfödare inför verkligt utdelningsunderlag. Sakgranskning är uttryckligen inte klar. Leverantörs-/backupfakta och slutdatum saknas inför realbetadrift, ingen aktiv gallringsautomation.

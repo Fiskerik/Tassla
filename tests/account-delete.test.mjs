@@ -16,7 +16,11 @@ const hook = registerHooks({
 });
 const { createDeleteAccountHandler } = await import('../supabase/functions/delete-account/handler.ts');
 hook.deregister();
-const authProviderSource = await readFile(new URL('../src/features/account/AuthProvider.tsx', import.meta.url), 'utf8');
+const authProviderSource = normalizeNewlines(await readFile(new URL('../src/features/account/AuthProvider.tsx', import.meta.url), 'utf8'));
+
+function normalizeNewlines(value) {
+  return value.replaceAll('\r\n', '\n');
+}
 
 const verifiedId = '11111111-1111-4111-8111-111111111111';
 const suppliedOtherId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';

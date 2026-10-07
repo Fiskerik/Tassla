@@ -332,7 +332,7 @@ test('publication check rejects missing, malformed, or unsupported review eviden
 
 test('draft SQL import is transactional, exact-idempotent, and cannot manufacture publication evidence', async () => {
   const sqlPath = join(root, 'supabase', 'content', 'mvp-content-v1.sql');
-  const sql = readFileSync(sqlPath, 'utf8');
+  const sql = normalizeNewlines(readFileSync(sqlPath, 'utf8'));
   assert.match(sql, /^-- Generated from docs\/content\/mvp-content-bundle-v1\.json; draft rows only\.[\s\S]*?\bbegin;/i);
   assert.match(sql, /\bcommit;\s*$/i);
   const itemInserts = [...sql.matchAll(/insert into public\.content_items\s*\(([^)]*)\)\s*values[\s\S]*?on conflict \(id\) do nothing/gi)];
@@ -362,7 +362,7 @@ test('draft SQL import is transactional, exact-idempotent, and cannot manufactur
 });
 
 test('draft SQL literals preserve every canonical item, version body/source set and training step', async () => {
-  const sql = readFileSync(join(root, 'supabase', 'content', 'mvp-content-v1.sql'), 'utf8');
+  const sql = normalizeNewlines(readFileSync(join(root, 'supabase', 'content', 'mvp-content-v1.sql'), 'utf8'));
   for (const item of canonical.items) {
     const itemInsert = `insert into public.content_items(id, slug, content_type) values ('${item.id}'::uuid, '${sqlLiteral(item.slug)}', '${sqlLiteral(item.content_type)}') on conflict (id) do nothing;`;
     assert.ok(sql.includes(itemInsert), `missing exact content_items row for ${item.slug}`);
@@ -426,6 +426,10 @@ function cloneCanonical() {
 
 function sqlLiteral(value) {
   return value.replaceAll("'", "''");
+}
+
+function normalizeNewlines(value) {
+  return value.replaceAll('\r\n', '\n');
 }
 
 function selectorRows(items) {

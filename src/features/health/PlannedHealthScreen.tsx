@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Alert, Image, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useReducer, useRef, useState } from 'react';
+import { AccessibilityInfo, Alert, findNodeHandle, Image, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { ActionFeedbackModal, InfoModal, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import {
   isValidPlannedHealthDate,
   normalizePlannedHealthDescription,
@@ -11,6 +11,13 @@ import {
 import { createLocalFireTime } from '../../notifications/notification-model';
 import { localDate } from '../onboarding/dog';
 import { theme } from '../../theme/tokens';
+import {
+  EMPTY_PLANNED_HEALTH_FEEDBACK,
+  feedbackTimeoutMillis,
+  initialPlannedHealthStatus,
+  reducePlannedHealthFeedback,
+  selectPlannedHealthRecovery,
+} from './planned-health-feedback';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -50,9 +57,83 @@ export function PlannedHealthScreen({
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState('09:00');
   const [formError, setFormError] = useState('');
+  const [infoVisible, setInfoVisible] = useState(false);
+  const [feedbackState, dispatchFeedback] = useReducer(reducePlannedHealthFeedback, EMPTY_PLANNED_HEALTH_FEEDBACK);
+  const [feedbackShownMessage, markFeedbackShown] = useReducer((_: string | null, message: string | null) => message, null);
+  const infoButtonRef = useRef<View>(null);
+  const infoWasVisible = useRef(false);
+  const previousStatusMessage = useRef<string | null>(initialPlannedHealthStatus(statusMessage));
+  const previousActiveMessage = useRef<string | null>(null);
   const today = localDate();
   const blocked = busy || pending;
   const editingRecord = records.find((record) => record.id === editingId) ?? null;
+  const recovery = selectPlannedHealthRecovery({ conflict: Boolean(conflict), pending, statusError, loadError: loadState === 'error' });
+
+  useEffect(() => {
+    if (editingId === null || editingRecord !== null) return;
+    const timer = setTimeout(() => {
+      setEditingId(null);
+      setType('vaccination');
+      setDueOn(localDate());
+      setNote('');
+      setReminderEnabled(false);
+      setReminderTime('09:00');
+      setFormError('');
+      Keyboard.dismiss();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [editingId, editingRecord]);
+
+  useEffect(() => {
+    const normalized = statusMessage.trim() ? statusMessage : null;
+    if (normalized === previousStatusMessage.current) return;
+    previousStatusMessage.current = normalized;
+    dispatchFeedback({ type: 'status', message: statusMessage, infoVisible });
+  }, [statusMessage, infoVisible]);
+
+  useEffect(() => {
+    const dismissed = infoWasVisible.current && !infoVisible;
+    infoWasVisible.current = infoVisible;
+    if (!dismissed || Platform.OS !== 'android') return;
+    const frame = requestAnimationFrame(() => {
+      dispatchFeedback({ type: 'info-closed' });
+      const handle = findNodeHandle(infoButtonRef.current);
+      if (handle !== null) AccessibilityInfo.setAccessibilityFocus(handle);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [infoVisible]);
+
+  useEffect(() => {
+    if (feedbackState.activeMessage !== previousActiveMessage.current) {
+      previousActiveMessage.current = feedbackState.activeMessage;
+      markFeedbackShown(null);
+      return;
+    }
+    if (!feedbackState.activeMessage || feedbackShownMessage !== feedbackState.activeMessage || infoVisible) return;
+    const activeMessage = feedbackState.activeMessage;
+    let cancelled = false;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const scheduleDismissal = async () => {
+      let recommended: number | null | undefined;
+      try {
+        if (typeof AccessibilityInfo.getRecommendedTimeoutMillis === 'function') {
+          recommended = await AccessibilityInfo.getRecommendedTimeoutMillis(5000);
+        }
+      } catch {
+        recommended = undefined;
+      }
+      if (cancelled) return;
+      timeout = setTimeout(() => {
+        if (cancelled) return;
+        dispatchFeedback({ type: 'dismiss', message: activeMessage });
+      }, feedbackTimeoutMillis(recommended));
+    };
+    void scheduleDismissal();
+    return () => {
+      cancelled = true;
+      if (timeout !== undefined) clearTimeout(timeout);
+    };
+  }, [feedbackState.activeMessage, feedbackShownMessage, infoVisible]);
 
   function resetForm() {
     setEditingId(null);
@@ -111,6 +192,20 @@ export function PlannedHealthScreen({
     onResolveConflict();
   }
 
+  function closeInfo() {
+    setInfoVisible(false);
+  }
+
+  function restoreInfoFocus() {
+    const handle = findNodeHandle(infoButtonRef.current);
+    if (handle !== null) AccessibilityInfo.setAccessibilityFocus(handle);
+  }
+
+  function finishInfoDismissal() {
+    dispatchFeedback({ type: 'info-closed' });
+    restoreInfoFocus();
+  }
+
   return <View>
     <QuietButton title="Tillbaka till hälsa" disabled={busy} onPress={onBack} />
     <View style={styles.heroCard}>
@@ -121,27 +216,42 @@ export function PlannedHealthScreen({
         <PageHeading title="Planerade hälsohändelser" description="Skriv in vaccinationer och veterinärbesök som ska ske framöver." />
       </View>
     </View>
-    <MessageCard>Planerna är ägarregistrerade och är inte en verifierad journal eller vårdrekommendation. Genomförda händelser läggs separat i hälsans historik.</MessageCard>
-    <MessageCard>Datum som passerat ligger kvar som planerade tills du själv ändrar eller tar bort dem. Lokala påminnelser är frivilliga och styrs även av enhetens tillstånd.</MessageCard>
+    <View style={styles.infoRow}>
+      <Text style={styles.infoHint}>Information om planerna</Text>
+      <Pressable ref={infoButtonRef} accessibilityRole="button" accessibilityLabel="Visa information om planerade hälsohändelser" onPress={() => {
+        dispatchFeedback({ type: 'info-opened' });
+        setInfoVisible(true);
+      }} style={styles.infoButton}>
+        <Ionicons name="information-circle-outline" size={22} color={theme.colors.accent} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+        <Text style={styles.infoButtonText}>Läs information</Text>
+      </Pressable>
+    </View>
+    <InfoModal visible={infoVisible} title="Om planerade hälsohändelser" onClose={closeInfo} onDismiss={finishInfoDismissal}>
+      <Text style={styles.infoBody}>Planerna är ägarregistrerade och är inte en verifierad journal eller vårdrekommendation. Genomförda händelser läggs separat i hälsans historik.</Text>
+      <Text style={styles.infoBody}>Datum som passerat ligger kvar som planerade tills du själv ändrar eller tar bort dem. Lokala påminnelser är frivilliga och styrs även av enhetens tillstånd.</Text>
+    </InfoModal>
+    <ActionFeedbackModal
+      key={feedbackState.activeMessage ?? 'no-feedback'}
+      visible={feedbackState.activeMessage !== null && !infoVisible}
+      message={feedbackState.activeMessage ?? ''}
+      onShown={markFeedbackShown}
+      onClose={() => dispatchFeedback({ type: 'dismiss' })}
+    />
     {reminderSummary ? <MessageCard>{reminderSummary}</MessageCard> : null}
 
-    {statusMessage ? <>
-      <MessageCard tone={statusError ? 'error' : 'neutral'}>{statusMessage}</MessageCard>
-      {(pending || statusError) && <PrimaryButton title={pending ? 'Kontrollera sparstatus' : 'Försök igen'} disabled={busy} onPress={onRetry} />}
-    </> : null}
+    {(pending || statusError) && <MessageCard tone={statusError ? 'error' : 'neutral'}>{statusMessage || (pending ? 'Ändringen väntar på kontroll av sparstatus.' : 'Åtgärden kunde inte slutföras.')}</MessageCard>}
     {conflict && <View style={styles.conflictCard}>
       <Text style={styles.conflictTitle} accessibilityRole="header">Senast sparade plan</Text>
       {conflict.current
         ? <Text style={styles.conflictText}>{typeLabel(conflict.current.event_type)} · {conflict.current.due_on}{conflict.current.description ? `\n${conflict.current.description}` : ''}</Text>
         : <Text style={styles.conflictText}>Planen finns inte längre.</Text>}
       <Text style={styles.conflictBody}>Den väntande ändringen ligger kvar tills du använder den aktuella versionen och börjar om.</Text>
-      <PrimaryButton title={busy ? 'Kontrollerar…' : 'Använd aktuell plan och börja om'} disabled={busy} onPress={acceptConflict} />
+      {recovery === 'conflict' && <PrimaryButton title={busy ? 'Kontrollerar…' : 'Använd aktuell plan och börja om'} disabled={busy} onPress={acceptConflict} />}
     </View>}
     {loadState === 'loading' && <MessageCard>Hämtar planerade hälsohändelser…</MessageCard>}
-    {loadState === 'error' && <>
-      <MessageCard tone="error">Planerna kunde inte hämtas.</MessageCard>
-      <PrimaryButton title="Försök igen" disabled={busy} onPress={onRetry} />
-    </>}
+    {loadState === 'error' && <MessageCard tone="error">Planerna kunde inte hämtas.</MessageCard>}
+    {recovery === 'pending' && <PrimaryButton title="Kontrollera sparstatus" disabled={busy} onPress={onRetry} />}
+    {recovery === 'error' && <PrimaryButton title="Försök igen" disabled={busy} onPress={onRetry} />}
 
     {loadState === 'ready' && <>
       {busy && <MessageCard>Sparar och kontrollerar ändringen…</MessageCard>}
@@ -247,6 +357,11 @@ const styles = StyleSheet.create({
   heroCard: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8, padding: 16, borderRadius: theme.radius.card, backgroundColor: '#F1F5F0', borderWidth: 1, borderColor: theme.colors.border },
   heroIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#E5EFE8', alignItems: 'center', justifyContent: 'center' },
   heroCopy: { flex: 1 },
+  infoRow: { marginTop: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 },
+  infoHint: { color: theme.colors.mutedText, fontSize: 14 },
+  infoButton: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10 },
+  infoButtonText: { color: theme.colors.accent, fontSize: 15, fontWeight: '700' },
+  infoBody: { color: theme.colors.text, fontSize: 16, lineHeight: 24, marginBottom: 14 },
   formCard: { marginTop: 18, padding: 17, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: '#FBFCFA' },
   formTitle: { color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 14 },
   typeChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },

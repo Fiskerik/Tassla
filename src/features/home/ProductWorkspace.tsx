@@ -1756,7 +1756,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       onOpenPlannedHealth={() => setPage('planned-health')}
     />;
     if (page === 'planned-health') return <PlannedHealthScreen
-      key={JSON.stringify(plannedHealth.map(({ id, event_type, due_on, description }) => [id, event_type, due_on, description]))}
       onBack={() => setPage('health')}
       records={plannedHealth}
       loadState={plannedHealthState}

@@ -160,11 +160,12 @@ test('local storage removal failure leaves the session and permits a retry', asy
 });
 
 test('signed-out warning is owned by AuthProvider and survives workspace unmount', async () => {
-  const [provider, workspace, signIn] = await Promise.all([
+  const sources = await Promise.all([
     readFile(new URL('../src/features/account/AuthProvider.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../src/features/account/SignInScreen.tsx', import.meta.url), 'utf8'),
   ]);
+  const [provider, workspace, signIn] = sources.map((source) => source.replaceAll('\r\n', '\n'));
   assert.match(provider, /setSignOutWarning\('Du är utloggad på den här enheten\./);
   assert.match(provider, /localSessionCleared && !serverRevocationConfirmed/);
   assert.match(provider, /signOutWarning,\n\s*\}\), \[accountGeneration, adoptOwner, client, googlePending, isCurrentAccount, reportDeletedAccountCleanupFailure, reportNotificationCleanupFailure, runAuthMutation, session, signOutCurrentAccountLocally, signOutWarning, status\]\)/);
