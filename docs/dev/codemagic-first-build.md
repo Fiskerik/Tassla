@@ -41,6 +41,6 @@ Efter BUILD-02-ändringen pushats ska diagnostikkörningen startas manuellt frå
 
 ## Hämta Xcodes arkiveringslogg
 
-Om arkiveringen misslyckas med exitkod 65 ska du öppna Codemagic-körningens artifacts och leta efter loggar som matchar `/tmp/xcodebuild_logs/*.log`. Mönstret har lagts till på förslag från Codemagics byggdiagnostik, men den exakta filsökvägen är ännu inte verifierad i en lyckad artifacts-uppladdning. Om ingen sådan logg finns: hämta Codemagics fullständiga rålogg för `Build signed application` eller exportera Xcode-resultatet (`.xcresult`) och sök efter första `error:`-raden. Hermes-scriptvarningen ensam pekar inte ut orsaken.
+Om ett steg misslyckas ska du först öppna Codemagic-körningens artifacts. Workflowet sparar nu `codemagic-logs/check-application.log` från `pnpm check` och `codemagic-logs/xcode-build-ipa.log` från `xcode-project build-ipa`, även när respektive kommando returnerar fel. Vid exitkod 65 ska du dessutom leta efter råloggar som matchar `/tmp/xcodebuild_logs/*.log`. Om ingen rålogg finns: hämta Codemagics fullständiga rålogg för `Build signed application` eller exportera Xcode-resultatet (`.xcresult`) och sök efter första `error:`-raden. Hermes-scriptvarningen ensam pekar inte ut orsaken.
 
 En lyckad diagnostikkörning kan laddas upp till TestFlight. App Store-inlämningen hålls tillfälligt avstängd tills felet är löst och Erik beslutar att återställa den.

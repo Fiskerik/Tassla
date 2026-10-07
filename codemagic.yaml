@@ -24,7 +24,10 @@ workflows:
           set -eu
           npx --yes pnpm@11.19.0 install --frozen-lockfile
       - name: Check application
-        script: npx --yes pnpm@11.19.0 check
+        script: |
+          set -o pipefail
+          mkdir -p codemagic-logs
+          npx --yes pnpm@11.19.0 check 2>&1 | tee codemagic-logs/check-application.log
       - name: Verify public app configuration
         script: |
           node -e 'for (const key of ["EXPO_PUBLIC_SUPABASE_URL", "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY"]) { if (!process.env[key]) throw new Error("Missing " + key); }'
@@ -39,9 +42,12 @@ workflows:
         script: xcode-project use-profiles
       - name: Build signed application
         script: |
-          xcode-project build-ipa --workspace "$CM_BUILD_DIR/ios/$XCODE_WORKSPACE" --scheme "$XCODE_SCHEME"
+          set -o pipefail
+          mkdir -p "$CM_BUILD_DIR/codemagic-logs"
+          xcode-project build-ipa --workspace "$CM_BUILD_DIR/ios/$XCODE_WORKSPACE" --scheme "$XCODE_SCHEME" 2>&1 | tee "$CM_BUILD_DIR/codemagic-logs/xcode-build-ipa.log"
     artifacts:
       - build/ios/ipa/*.ipa
+      - codemagic-logs/*.log
       - /tmp/xcodebuild_logs/*.log
     publishing:
       app_store_connect:

@@ -25,7 +25,7 @@ const desired = { id: dogId, name: 'Nala Rose', breed_id: 'mixed', birth_date: '
 const breeds = [{ id: 'beagle', name: 'Beagle' }, { id: 'mixed', name: 'Blandras' }];
 const changes = { name: '  Nala Rose  ', breed_id: 'mixed', birth_date: '2026-02-15' };
 
-test('profile editor hides an obsolete saved message after edits but keeps pending and error status visible', () => {
+test('profile editor keeps transient success feedback in the local action card and pending/error status visible', () => {
   const draftDiffersSource = profileEditorSource.match(/const draftDiffers = ([^;]+);/)?.[1];
   const statusVisibleSource = profileEditorSource.match(/const showStatusMessage = ([^;]+);/)?.[1];
   assert.ok(draftDiffersSource, 'expected the editor draft comparison');
@@ -36,11 +36,12 @@ test('profile editor hides an obsolete saved message after edits but keeps pendi
     return { draftDiffers, showStatusMessage };
   };
   const savedMessage = evaluate({ name: 'Nala', breedId: 'beagle', birthDate: profile.birth_date }, 'Profilen sparades.', false, false, false);
-  assert.deepEqual(savedMessage, { draftDiffers: false, showStatusMessage: true });
+  assert.deepEqual(savedMessage, { draftDiffers: false, showStatusMessage: false });
   const editedAfterSave = evaluate({ name: 'Nala ny', breedId: 'beagle', birthDate: profile.birth_date }, 'Profilen sparades.', false, false, false);
   assert.deepEqual(editedAfterSave, { draftDiffers: true, showStatusMessage: false });
   assert.equal(evaluate({ name: 'Nala ny', breedId: 'beagle', birthDate: profile.birth_date }, 'Ändringen väntar.', false, true, false).showStatusMessage, true);
   assert.equal(evaluate({ name: 'Nala ny', breedId: 'beagle', birthDate: profile.birth_date }, 'Sparningen misslyckades.', true, false, false).showStatusMessage, true);
+  assert.match(profileEditorSource, /<ActionFeedbackModal visible=/);
 });
 
 test('profile validators trim names, count Unicode code points, and validate local calendar dates', () => {

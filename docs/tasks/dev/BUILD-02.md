@@ -5,7 +5,7 @@ Plan v4, 2026-10-07. Bas: `a4cdf56`. Erik vill felsöka exitkod 65 från Codemag
 Lägg till det användarföreslagna mönstret för Codemagics råa Xcode-loggar (`/tmp/xcodebuild_logs/*.log`) som diagnostiska byggartefakter, i försök att kunna hitta Xcodes första faktiska `error:`-rad om den filen finns och mönstret stöds. Behåll `xcode-project build-ipa`, signering och TestFlight-uppladdning. Stäng tillfälligt av App Store-inlämning för diagnostikkörningen enligt Eriks beslut; byggkörningen startas inte av Codex. Den föreslagna Pods-inställningen `CODE_SIGNING_ALLOWED/REQUIRED=NO` implementeras inte före faktisk diagnostik, eftersom loggen inte visar att Pods-signering orsakar felet. Xcode-version, React Native och Expo ändras inte.
 
 ## Omfattning
-- `codemagic.yaml`: lägg till `/tmp/xcodebuild_logs/*.log` under `artifacts` tillsammans med befintligt IPA-mönster; behåll TestFlight=true och sätt App Store-submission=false tills Xcode-felet diagnostiserats.
+- `codemagic.yaml`: fånga `pnpm check` och `xcode-project build-ipa` med `tee` till `codemagic-logs/*.log`, lägg till dessa samt `/tmp/xcodebuild_logs/*.log` under `artifacts` tillsammans med befintligt IPA-mönster; behåll TestFlight=true och sätt App Store-submission=false tills Xcode-felet diagnostiserats.
 - `docs/dev/codemagic-first-build.md`: lägg till kort vägledning om att ladda ned rålogg/resultat efter Codemagic-arkivering.
 - `docs/tasks/dev/BUILD-02.md` och `queue.json`: acceptans, observationer och nästa steg.
 
@@ -14,9 +14,9 @@ Architect/Critic granskar plan v4, inklusive användarbeslutet att tillfälligt 
 
 Reviewhistorik: architect bad att v3 skulle beskriva insamlingen som ett oprövat försök; formuleringen rättades och v3 godkändes. För v4 godkände `build02_architect` och `build02_critic` ägarens tillfälliga App Store av / TestFlight på-beslut.
 
-Genomförd förändring: Codemagic artifacts innehåller nu IPA-mönstret och det oprövade `/tmp/xcodebuild_logs/*.log`-mönstret. Arkiverings-/signeringskommandot är oförändrat. Ingen Pods-signeringsoverride är pålagd.
+Genomförd förändring: Codemagic artifacts innehåller nu IPA-mönstret, lokala `codemagic-logs/*.log` från kontroll/build samt det oprövade `/tmp/xcodebuild_logs/*.log`-mönstret. Arkiverings-/signeringskommandot är oförändrat. Ingen Pods-signeringsoverride är pålagd.
 
 
 Planreview v4: build02_architect APPROVE, build02_critic PROCEED. Genomfört beslut: `submit_to_testflight: true`, `submit_to_app_store: false` tillfälligt. Codemagic-körning startas inte av Codex.
 
-Lokal kontroll: Python PyYAML tolkar workflow/artifacts/publishing korrekt; IPA-mönstret finns kvar, loggmönstret tillagt, TestFlight=true och App Store=false. `git diff --check` PASS. Build02_qa PASS och build02_reviewer PASS. Den riktiga loggsökvägen kan endast verifieras genom en Codemagic-körning.
+Lokal kontroll: IPA- och loggmönster är kvar/tillagda, TestFlight=true och App Store=false. `git diff --check` PASS. Direkta UX-02-regressionstester för de tidigare Codemagic-felen passerar. YAML-runtime och artifactuppladdning verifieras i nästa Codemagic-körning; den riktiga `/tmp/xcodebuild_logs`-sökvägen kan endast verifieras där.

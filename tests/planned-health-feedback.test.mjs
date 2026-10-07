@@ -78,5 +78,5 @@ test('recovery priority and source render matrix expose exactly one action per s
   assert.match(screenSource, /if \(await onDelete[\s\S]*?\) resetForm\(\)/);
   assert.match(screenSource, /function acceptConflict\(\)[\s\S]*?resetForm\(\)/);
   assert.match(primitivesSource, /onShow=\{\(\) => focusAccessibilityNode\(headingRef\)\}/);
-  assert.match(primitivesSource, /onShown\?\.\(message\)/);
+  assert.match(primitivesSource, /shownRef\.current\?\.\(message\)/);
 });
