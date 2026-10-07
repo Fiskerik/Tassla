@@ -1,5 +1,5 @@
 # Tassla — samlad leveransplan till beta
-Plan v2, 2026-10-06. Källa: docs/mvp.md, senaste kod e5327d1 och Eriks uppdrag att först planera hela MVP:n med arbetspaket/checkpunkter. Status: genomförande beställt av Erik med Luna medel; P01–P06 lokalt klara; P07 pågår, P08/P10 förberedda och senare paket återstår. Senaste beslut och reviewcheckpoint längre ned gäller framför historiska planeringsnoteringar. Inte en färdig beta eller ett releasebeslut.
+Plan v2, 2026-10-06. Källa: docs/mvp.md, senaste kod e5327d1 och Eriks uppdrag att först planera hela MVP:n med arbetspaket/checkpunkter. Status: genomförande beställt av Erik med Luna medel; P01–P07 lokalt klara; P10 lokal undeployed kandidat pågår. P08/P09 verklig attribution/mätning väntar på Eriks databeslut och distributionsuppgifter. Senaste beslut och reviewcheckpoint längre ned gäller framför historiska planeringsnoteringar. Inte en färdig beta eller ett releasebeslut.
 
 ## Mål och utgångsläge
 En betatestare kan skapa hundprofil, få relevant hjälp på Hem, logga vardagen, följa 2–3 träningsprogram, registrera hälsa, läsa granskat innehåll, välja påminnelser och skapa Tassla-pass PDF. Uppfödar-QR och minimal kohortmätning ingår i full MVP. Grundflöden och vikt finns; beta kräver sammanhängande integration, verkligt innehåll och driftsättning av beslutade backenddelar. En syntetisk demonstration kan visas tidigare men är inte samma leverans som hela pilot-MVP:n.
@@ -85,3 +85,5 @@ Varje paket har en UI-designcheckpunkt: använd passande bilder/illustrationer o
 ## Versionsunderlag för P06/P07
 Installerad Expo 57 bundledNativeModules.json anger expo-print ~57.0.2, expo-sharing ~57.0.22, expo-file-system ~57.0.7 och expo-notifications ~57.0.21. Behövliga paket är godkända av Erik; installeras först inom respektive granskad implementationplan. Versionskontroll mot installerad metadata väger högre än andra SDK-versioners dokumentation. Officiella API-underlag: https://docs.expo.dev/versions/v57.0.0/sdk/print/ och https://docs.expo.dev/versions/v57.0.0/sdk/sharing/.
 
+## P10 lokalt färdig kandidat — 2026-10-07
+Faktisk slutreview p04_final_review: Reviewer PASS/statisk Security PASS. QA39/full339 app-/edgeTS/lint, iOSexport/diff PASS. P10 är endast lokal undeployed syntetiskt verifierad kandidat; Deno/SQL/liveAuth/RLS/deploy/nativeauth/realbeta och privacypublication ejutförda. Ingen planerad funktion rapporteras som driftsatt. Nästa berörda implementation P08/P09 kräver Eriks databeslut; P11 samlad betamatris förberedd och paketvisa release-loggar finns. Sakgranskning väntar fortsatt.

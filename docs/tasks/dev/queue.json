@@ -1325,6 +1325,84 @@
         }
       ],
       "next_step": "ActualfinalReviewerPASS staticSecurityPASS QA78/full300 ios export diffPASS finalrelease-logupdated; nativeSQLuntested"
+    },
+    {
+      "id": "MVP-P10-ACCOUNT",
+      "title": "Local undeployed beta account and deletion candidate",
+      "mvp_requirement": "docs/mvp.md beta account erasure and support",
+      "plan": "docs/tasks/dev/beta-account.md exact amended v3 auth coordinator",
+      "write_paths": [
+        "src/features/account/AccountSettingsScreen.tsx",
+        "src/features/account/BetaInfoScreen.tsx",
+        "src/features/account/account-delete.ts",
+        "src/features/account/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/AppFlow.tsx",
+        "src/features/account/AuthProvider.tsx",
+        "src/notifications/notification-storage.ts",
+        "src/notifications/README.md",
+        "supabase/functions/delete-account/index.ts",
+        "supabase/functions/delete-account/handler.ts",
+        "supabase/functions/delete-account/tsconfig.json",
+        "supabase/functions/delete-account/README.md",
+        "supabase/functions/README.md",
+        "supabase/config.toml",
+        "package.json",
+        "tests/account-delete.test.mjs",
+        "tests/README.md",
+        "supabase/tests/account-deletion.sql",
+        "src/features/account/AuthCallbackScreen.tsx",
+        "tests/app-screen-ux.test.mjs"
+      ],
+      "acceptance": [
+        "Bodyless own-user verified server handler, captured-token client and confirmed/failure/unknown states",
+        "Account-generation local cleanup cannot affect another owner; no real account calls/deploy/privacy publication"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "Independent Reviewer Security",
+        "Handler strict TS check; Deno entry runtime untested",
+        "Synthetic cascade SQL prepared only"
+      ],
+      "depends_on": [
+        "MVP-P07-REMINDERS"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Actual amendedv2 ArchitectAPPROVE CriticPROCEED SecurityAPPROVE ComplianceAPPROVE localundeployedonly; P08P09realdataBLOCK unchanged"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik fullMVP Luna medium; P07done36b23d5; approved independentlocalcandidate while affectedP08P09 awaithuman"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Actual sourcefreeze v3; author app and edge TS PASS lint zero errors diffPASS; QA controlledSDK interleavings pending; Deno liveSQL deploy untested"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Actual QA39 focused and full339 appTS edgeTS lint tests PASS; fixture4 PASS exactapprovedassertion; rootiosPASS diffPASS; SQL Deno deploy liveaccounts untested"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Actual final ReviewerPASS staticSecurityPASS QA39 full339 appedgeTS lint ios diffPASS; localundeployedcandidate only; Deno SQL liveAuth deploy privacy realbeta unverified"
+        }
+      ],
+      "next_step": "Actual final ReviewerPASS staticSecurityPASS QA39 full339 appedgeTS lint ios diffPASS; localundeployedcandidate only; Deno SQL liveAuth deploy privacy realbeta unverified"
     }
   ]
 }

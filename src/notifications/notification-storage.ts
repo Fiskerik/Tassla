@@ -21,3 +21,7 @@ export async function writeNotificationPreferences(ownerId: string, value: Notif
   await SecureStore.setItemAsync(notificationPreferenceKey(ownerId), JSON.stringify(value));
 }
 
+
+export async function deleteNotificationPreferences(ownerId: string): Promise<void> {
+  await SecureStore.deleteItemAsync(notificationPreferenceKey(ownerId));
+}

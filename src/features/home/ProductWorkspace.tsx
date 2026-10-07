@@ -78,10 +78,15 @@ import { PublishedTrainingScreen } from '../training/PublishedTrainingScreen';
 import { theme } from '../../theme/tokens';
 import { useAuth } from '../account/AuthProvider';
 import { NotificationSettingsScreen } from '../notifications/NotificationSettingsScreen';
+import { AccountSettingsScreen } from '../account/AccountSettingsScreen';
+import { BetaInfoScreen } from '../account/BetaInfoScreen';
+import { requestAccountDeletion, type AccountDeleteResult } from '../account/account-delete';
+import { deleteNotificationPreferences } from '../../notifications/notification-storage';
+import { cleanupStalePassportFiles } from '../passport/passport-export';
 import { futureFireTimeForPlan, parseReminderPayload, type NotificationPreferences } from '../../notifications/notification-model';
 import { reminderService, type ReminderContext, type ReminderReconcileResult } from '../../notifications/notification-service';
 
-type ProductPage = 'home' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings';
+type ProductPage = 'home' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings' | 'account-settings' | 'beta-info';
 type PendingLogMutation =
   | { kind: 'insert'; operation: DogEventOperation }
   | { kind: 'update'; id: string; changes: { event_type: LogEventType; occurred_at: string; duration_minutes: number | null; description: string | null } }
@@ -153,6 +158,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [notificationMessageError, setNotificationMessageError] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState<'unknown' | 'granted' | 'denied'>('unknown');
   const [reminderResult, setReminderResult] = useState<ReminderReconcileResult | null>(null);
+  const [accountDeleteBusy, setAccountDeleteBusy] = useState(false);
+  const [accountDeleteStatus, setAccountDeleteStatus] = useState<'idle' | 'confirmed' | 'failed' | 'unknown' | 'unavailable' | 'blocked'>('idle');
+  const [accountDeleteCleanupFailed, setAccountDeleteCleanupFailed] = useState(false);
+  const [accountDeleteSignOutFailed, setAccountDeleteSignOutFailed] = useState(false);
+  const accountDeletionInvalidated = useRef(false);
+  const accountDeleteInFlight = useRef(false);
   const [profileBusy, setProfileBusy] = useState(false);
   const [profilePending, setProfilePending] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
@@ -185,7 +196,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const healthHistoryReadQueue = useRef<Promise<void>>(Promise.resolve());
   const plannedHealthReadQueue = useRef<Promise<void>>(Promise.resolve());
   const loadMoreInFlight = useRef(false);
-  const { signOut, session, reportNotificationCleanupFailure } = useAuth();
+  const { signOut, session, accountGeneration, isCurrentAccount, signOutCurrentAccountLocally,
+    reportNotificationCleanupFailure, reportDeletedAccountCleanupFailure } = useAuth();
   const age = ageInWeeks(dog.birth_date, localDate());
   const currentHealthHistoryLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const healthHistoryLifetime = useRef('');
@@ -216,7 +228,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     profileLifetime.current = currentProfileLifetime;
   }, [currentProfileLifetime]);
   const isPassportLifetimeCurrent = useCallback((lifetime: string) => (
-    mounted.current && profileLifetime.current === lifetime
+    mounted.current && !accountDeletionInvalidated.current && profileLifetime.current === lifetime
   ), []);
 
   useEffect(() => {
@@ -1518,6 +1530,94 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
+  async function handleAccountDeletion(): Promise<AccountDeleteResult> {
+    const capturedSession = session;
+    const ownerId = capturedSession?.user.id;
+    const generation = accountGeneration;
+    if (!ownerId || !capturedSession.access_token || accountDeleteInFlight.current || accountDeleteBusy) return { status: 'unavailable' };
+    const isCurrent = () => mounted.current && isCurrentAccount(ownerId, generation);
+    if (!isCurrent()) return { status: 'unavailable' };
+    const unresolvedWrite = pendingLogMutation.current || pendingHealthMutation.current
+      || pendingHealthHistoryMutation.current || pendingPlannedHealthMutation.current
+      || pendingProfileMutation.current || logMutationInFlight.current || healthMutationInFlight.current
+      || healthHistoryMutationInFlight.current || plannedHealthMutationInFlight.current
+      || profileMutationInFlight.current || trainingMutationInFlight.current || notificationBusy || accountDeleteBusy;
+    if (unresolvedWrite) {
+      setAccountDeleteStatus('blocked');
+      return { status: 'failed' };
+    }
+
+    accountDeleteInFlight.current = true;
+    setAccountDeleteBusy(true);
+    setAccountDeleteStatus('idle');
+    setAccountDeleteCleanupFailed(false);
+    setAccountDeleteSignOutFailed(false);
+    let serverConfirmed = false;
+    try {
+      const result = await requestAccountDeletion(client, {
+        ownerId,
+        accessToken: capturedSession.access_token,
+      }, isCurrent);
+      if (!isCurrent()) return { status: 'unknown' };
+      if (result.status !== 'confirmed') {
+        setAccountDeleteStatus(result.status);
+        return result;
+      }
+
+      serverConfirmed = true;
+      accountDeletionInvalidated.current = true;
+      reminderService.setActiveContext(null, null);
+      setAccountDeleteStatus('confirmed');
+      let cleanupFailed = false;
+      try {
+        if (!isCurrent()) return { status: 'confirmed' };
+        await deleteNotificationPreferences(ownerId);
+      } catch {
+        cleanupFailed = true;
+      }
+      if (!isCurrent()) return { status: 'confirmed' };
+
+      try {
+        const remindersCleaned = await reminderService.cleanupOwner(ownerId);
+        if (!remindersCleaned) cleanupFailed = true;
+      } catch {
+        cleanupFailed = true;
+      }
+      if (!isCurrent()) return { status: 'confirmed' };
+
+      try { cleanupStalePassportFiles(); } catch { cleanupFailed = true; }
+      if (cleanupFailed) reportDeletedAccountCleanupFailure(ownerId);
+      setAccountDeleteCleanupFailed(cleanupFailed);
+
+      const signedOut = await signOutCurrentAccountLocally(ownerId, generation);
+      if (!signedOut && isCurrent()) setAccountDeleteSignOutFailed(true);
+      return { status: 'confirmed' };
+    } catch {
+      if (serverConfirmed) {
+        if (isCurrent()) {
+          setAccountDeleteStatus('confirmed');
+          setAccountDeleteCleanupFailed(true);
+          reportDeletedAccountCleanupFailure(ownerId);
+        }
+        return { status: 'confirmed' };
+      }
+      if (isCurrent()) setAccountDeleteStatus('unknown');
+      return { status: 'unknown' };
+    } finally {
+      accountDeleteInFlight.current = false;
+      if (mounted.current && isCurrentAccount(ownerId, generation)) setAccountDeleteBusy(false);
+    }
+  }
+
+  async function signOutDeletedLocally(): Promise<boolean> {
+    const ownerId = session?.user.id;
+    if (!ownerId || !isCurrentAccount(ownerId, accountGeneration)) return false;
+    const generation = accountGeneration;
+    const signedOut = await signOutCurrentAccountLocally(ownerId, generation);
+    if (!signedOut && mounted.current && isCurrentAccount(ownerId, generation)) setAccountDeleteSignOutFailed(true);
+    return signedOut;
+  }
+
   async function handleSignOut() {
     if (signOutInFlight.current) return;
     signOutInFlight.current = true;
@@ -1546,7 +1646,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   if (fontError) return <AppScreen><MessageCard tone="error">Ikonerna kunde inte laddas. Starta om appen och försök igen.</MessageCard></AppScreen>;
 
   const pageContent = renderPage();
-  return <AppScreen key={page} footer={<BottomNavigation page={page} onNavigate={setPage} />}>
+  return <AppScreen key={page} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNavigation page={page} onNavigate={setPage} />}>
     <Animated.View style={{ opacity: pageOpacity }}>{pageContent}</Animated.View>
   </AppScreen>;
 
@@ -1594,7 +1694,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     if (page === 'more') return <MorePage onNavigate={(nextPage) => {
       if (nextPage === 'knowledge') setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId: null, returnPage: 'more' });
       setPage(nextPage);
-    }} signOutError={signOutError} signingOut={signingOut} onSignOut={confirmSignOut} onOpenNotifications={() => { setNotificationSaved(false); setPage('notification-settings'); }} />;
+    }} signOutError={signOutError} signingOut={signingOut} onSignOut={confirmSignOut}
+      onOpenNotifications={() => { setNotificationSaved(false); setPage('notification-settings'); }}
+      onOpenAccount={() => setPage('account-settings')} />;
+    if (page === 'account-settings') return <AccountSettingsScreen ownerId={session?.user.id ?? ''} onBack={() => setPage('more')}
+      onOpenInformation={() => setPage('beta-info')} busy={accountDeleteBusy} status={accountDeleteStatus}
+      localCleanupFailed={accountDeleteCleanupFailed} signOutFailed={accountDeleteSignOutFailed}
+      onDeleteAccount={handleAccountDeletion} onSignOutLocally={signOutDeletedLocally} />;
+    if (page === 'beta-info') return <BetaInfoScreen onBack={() => setPage('account-settings')} />;
     if (page === 'notification-settings') return <NotificationSettingsScreen
       key={JSON.stringify(notificationPreferences)} onBack={() => setPage('more')} preferences={notificationPreferences}
       saved={notificationSaved && !notificationStorageError} busy={notificationBusy || !notificationPreferencesReady}
@@ -1779,13 +1886,17 @@ function HomePage({
   </View>;
 }
 
-function MorePage({ onNavigate, signOutError, signingOut, onSignOut, onOpenNotifications }: { onNavigate: (page: ProductPage) => void; signOutError: boolean; signingOut: boolean; onSignOut: () => void; onOpenNotifications: () => void }) {
+function MorePage({ onNavigate, signOutError, signingOut, onSignOut, onOpenNotifications, onOpenAccount }: {
+  onNavigate: (page: ProductPage) => void; signOutError: boolean; signingOut: boolean; onSignOut: () => void;
+  onOpenNotifications: () => void; onOpenAccount: () => void;
+}) {
   return <View>
     <PageHeading title="Mer" description="Fler delar av hundens resa, samlade på ett ställe." />
     <MenuRow icon="book-outline" title="Kunskap" detail="Publicerade guider och checklistor" onPress={() => onNavigate('knowledge')} />
     <MenuRow icon="id-card-outline" title="Tassla-pass" detail="En ärlig överblick, utan export" onPress={() => onNavigate('passport')} />
     <MenuRow icon="paw-outline" title="Hundprofil" detail="Din hunds uppgifter" onPress={() => onNavigate('profile')} />
     <MenuRow icon="notifications-outline" title="Påminnelser" detail="Lokala val och enhetens tillstånd" onPress={onOpenNotifications} />
+    <MenuRow icon="person-circle-outline" title="Konto och support" detail="Information och kontohantering" onPress={onOpenAccount} />
     {signOutError && <MessageCard tone="error">Det gick inte att logga ut just nu. Försök igen.</MessageCard>}
     <QuietButton title={signingOut ? 'Loggar ut…' : 'Logga ut'} disabled={signingOut} onPress={onSignOut} />
   </View>;
@@ -1825,11 +1936,11 @@ function BottomNavigation({ page, onNavigate }: { page: ProductPage; onNavigate:
     { id: 'log', label: 'Logg', icon: page === 'log' ? 'create' : 'create-outline' },
     { id: 'training', label: 'Träning', icon: page === 'training' ? 'school' : 'school-outline' },
     { id: 'health', label: 'Hälsa', icon: page === 'health' ? 'heart' : 'heart-outline' },
-    { id: 'more', label: 'Mer', icon: ['more', 'knowledge', 'passport', 'profile'].includes(page) ? 'grid' : 'grid-outline' },
+    { id: 'more', label: 'Mer', icon: ['more', 'knowledge', 'passport', 'profile', 'notification-settings', 'account-settings', 'beta-info'].includes(page) ? 'grid' : 'grid-outline' },
   ];
   return <View style={styles.bottomNavigation}>
     {tabs.map((tab) => {
-      const selected = tab.id === page || (tab.id === 'more' && ['knowledge', 'passport', 'profile'].includes(page));
+      const selected = tab.id === page || (tab.id === 'more' && ['knowledge', 'passport', 'profile', 'notification-settings', 'account-settings', 'beta-info'].includes(page));
       return <Pressable key={tab.id} accessibilityRole="tab" accessibilityState={{ selected }} accessibilityLabel={tab.label}
         onPress={() => onNavigate(tab.id)} style={({ pressed }) => [styles.tab, pressed && styles.pressed]}>
         <Ionicons name={tab.icon} size={22} color={selected ? theme.colors.accent : theme.colors.mutedText} />

@@ -16,12 +16,12 @@ export function AppFlow() {
 }
 
 function AuthenticatedAppFlow() {
-  const { client, session, status } = useAuth();
+  const { client, session, status, accountGeneration } = useAuth();
 
   if (status === 'loading') return <AppScreen><MessageCard>Öppnar Tassla…</MessageCard></AppScreen>;
   if (status === 'unavailable' || !client) return <AppScreen><PageHeading title="Tassla vilar en stund" description="Inloggningen är inte tillgänglig just nu. Försök igen senare." /></AppScreen>;
   if (status === 'signedOut' || !session) return <SignInScreen />;
-  return <DogWorkspace key={session.user.id} client={client} />;
+  return <DogWorkspace key={session.user.id + ':' + accountGeneration} client={client} />;
 }
 
 function DogWorkspace({ client }: { client: SupabaseClient }) {

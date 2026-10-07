@@ -23,7 +23,7 @@ function PreviewCallbackGuard() {
 function ProductAuthCallbackScreen() {
   const url = useLinkingURL();
   const router = useRouter();
-  const { cancelGoogleSignIn, client } = useAuth();
+  const { cancelGoogleSignIn, client, exchangeAuthCodeForCurrentSession } = useAuth();
   const inFlightCode = useRef<string | null>(null);
   const failedCode = useRef<string | null>(null);
   const exchangedCode = useRef<string | null>(null);
@@ -35,8 +35,8 @@ function ProductAuthCallbackScreen() {
   useEffect(() => {
     if (!client || !shouldExchangeAuthCode(code, inFlightCode.current, failedCode.current, exchangedCode.current)) return;
     inFlightCode.current = code;
-    void client.auth.exchangeCodeForSession(code).then(({ error }) => {
-      if (error) {
+    void exchangeAuthCodeForCurrentSession(code).then((exchanged) => {
+      if (!exchanged) {
         failedCode.current = code;
         setFailedCodeForDisplay(code);
         cancelGoogleSignIn();
@@ -52,7 +52,7 @@ function ProductAuthCallbackScreen() {
       if (inFlightCode.current === code) inFlightCode.current = null;
       setAttempt((current) => current + 1);
     });
-  }, [attempt, cancelGoogleSignIn, client, code, router]);
+  }, [attempt, cancelGoogleSignIn, client, code, exchangeAuthCodeForCurrentSession, router]);
 
   const error = invalidCallback || Boolean(code && failedCodeForDisplay === code);
 

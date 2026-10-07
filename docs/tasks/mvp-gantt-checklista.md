@@ -16,8 +16,8 @@ Den äldre daterade tidslinjen nedan är ett historiskt estimat. Eriks nya best�
 | P01 utförd hälsa, P02 profil, P03 planerad hälsa | Lokalt klara och granskade |
 | P04 innehåll | Utkast/importverktyg klara; mänsklig sakgranskning/publicering väntar |
 | P05 Hem/Kunskap, P06 PDF-pass | Lokalt klara; senaste fullcheck253 och iOS-export PASS |
-| P07 påminnelser | DATAQA klar; NATIVE/storage/UI och slutkontroll pågår |
-| P08 QR, P09 mätning, P10 beta-konto | Förberedelser; verkliga betauppgifter/databeslut återstår |
+| P07 påminnelser | Lokalt klar: QA78 fokuserat/full300, iOS-export och independent review PASS |
+| P08 QR, P09 mätning, P10 beta-konto | P08/P09 väntar på databeslut; P10 oberoende lokal kandidat byggs. Verkliga betauppgifter återstår |
 | P11 samlad beta-QA | Efter funktionerna; verklig backend/RLS, signerad kandidat och Eriks distributionsbeslut återstår |
 
 [Release-log per paket](../releases/MVP-BETA.md) beskriver implementerat, verifierat och nästa steg. Ogranskade råd publiceras inte. D30-utvärdering börjar först efter verklig aktivering och är inte en bygggrind.
@@ -113,3 +113,5 @@ Heldragna datum är målintervall, inte utfästelser om att arbete sker automati
 
 Pilotbar MVP betyder att godkända `docs/mvp.md`-områden fungerar på en signerad fysisk iPhone, dataisolering/radering har verifierats, minimalt granskat innehåll finns, uppfödarvägen och mätningen fungerar, QA/Security/Reviewer har godkänt och Erik har accepterat pilotgrinden. D30-lärande betyder dessutom att det individuella 30-dagarsfönstret faktiskt är avslutat. En lyckad lokal typkontroll eller grön CI-jobb ensam uppfyller inte detta.
 
+## Aktuell leveranscheckpunkt 2026-10-07
+P10 lokal konto-/raderingskandidat passerar QA39/full339, iOS-export och oberoende Reviewer/statiskSecurity. Ingen Edge-deploy eller faktisk beta-QA genom detta. P08/P09 databeslut väntar; P11 är förberedd testmatris. Historiska datum nedan ersätter inte dessa faktiska beroenden.

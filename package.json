@@ -13,8 +13,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint app src tests",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
-    "check": "pnpm typecheck && pnpm lint && pnpm test",
-    "bundle:ios": "expo export --platform ios --output-dir dist/ios"
+    "check": "pnpm typecheck && pnpm typecheck:edge-account && pnpm lint && pnpm test",
+    "bundle:ios": "expo export --platform ios --output-dir dist/ios",
+    "typecheck:edge-account": "tsc --project supabase/functions/delete-account/tsconfig.json --noEmit"
   },
   "dependencies": {
     "@expo/vector-icons": "15.0.2",

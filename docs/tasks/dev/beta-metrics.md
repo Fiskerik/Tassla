@@ -12,3 +12,5 @@ Befintlig product_events har clientgrants avstängda; ny narrowmigration/RPC val
 Admin-only manuell invitationscount perdatum/kennel, inga inbjudnamn/adresser. SQL aggregate report cohorts/activation/contentusage/completedsteps/activedays/source; ingen kennelklientauthgrant och ingen realownerreport tillAIverktyg. Exakt rapportfält/permissions/tableFKcascade/radering låsesvidv2. Seedsrapport synthetics-only adminprepared, inte faktisktpilotresultat.
 ## Föreslagen omfattning
 Implementer: src/analytics/{analytics-model.ts,analytics-service.ts,README.md}; relevantProductWorkspace/Home/Knowledge/Training callbacks bara bekräftadehandlingar; src/features/account/BetaPreferencesScreen.tsx om consentUIhörhit och explicitownership; supabase/migrations/202610060004_beta_metrics.sql och supabase/reports/beta-cohorts.sql. QA tests/analytics.test.mjs och supabase/tests/beta-metrics.sql tvåsyntetiskaowners rollback. Coordinator defs/docs/release-log/queue; fullcheck/export/diff +independentReviewer/Security/Compliance. Exactpaths/API/pin efterP08scopefinal och allreview före sourcewrite.
+
+Release-log för planstatus och kommande checkpunkter: ../../releases/P09-METRICS.md.

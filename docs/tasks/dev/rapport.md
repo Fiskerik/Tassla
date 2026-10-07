@@ -126,3 +126,11 @@ Erik beställer fortsätt. Humancommitfc39347 fx fångade P07inprogress; worktre
 
 ## P07 slutcheckpoint —2026-10-07
 Luna medium QA78/78 fokuserat, full300/300 inkl TypeScript/lint PASS, iOSexportPASS efter EPERM-elevation och diffPASS. Independent renewedReviewerPASS/statiskSecurityPASS. Frivilligt master-/plan-/träningsval, strictframtidsurval, aktuelltägda notistap, genericcopy, actualSDK UTCcalendar/Androidvalue, kontosäkercleanup ochmasteroffavbokning. SQLprobe/nativeleverans ejutförda, ingenpublicering. Release-log P07-REMINDERS.md aktuell. P08/P09 affectedrealdata väntarpåErik; exaktgranskadP10lokalkandidat kanfortsätta obehindrat utanlivedeploy.
+
+## GitHub-status verifierad 2026-10-07
+GitHub Releases API returnerade 0 releaser. Remote main: fc393471d4ebd7317420782fded166dc0600540f (fx). P07 slutcommit 36b23d5 är lokal och ingår inte i detta verifierade remote-head. P10 pågår lokalt. Jämförelser ska använda dokumenterad commitbas och inte en påhittad senaste Release.
+P10 privacy- och livscykelutkast förberedda i docs/privacy/beta-information.md och docs/dev/beta-data-lifecycle.md; inga driftjobb eller publicering.
+
+## P10 QA slutcheckpoint — 2026-10-07
+Luna medium QA profile_contract:39/39 riktade konto-/server-/SDK-/markör-/kötester PASS; full pnpmcheck339/339 inklusive app-TypeScript, edge-TypeScript och lint PASS. Godkänd exakt app-screen UX dependencyassertion4/4 PASS, övriga assertions bevarade. Root iOSexportPASS1315moduler, diffPASS. ActualSDKfakefetch+syntetisk storage bevisar PKCE/tokenPOST, session/events och signoutverifierstädning; React-native/UI/nativeauth inte bevisat av sourceharness. SQL tvåägarcascade/rollbackprobe förberedd men inte körd. Deno-runtime/liveAuth/RLS/deploy/realaccounts ejtestade. Queue review, slutlig oberoende Reviewer/staticSecurity väntar.
+Release-loggar P08-ONBOARDING/P09-METRICS/P11-BETA-QA skapade för planstatus/checkpunkter; inga planerade funktioner listas som implementerade.
