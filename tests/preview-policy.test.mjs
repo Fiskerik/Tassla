@@ -16,6 +16,15 @@ test('preview requires the exact flag and a development build', () => {
   assert.equal(isDevPreviewEnabled('true', true), true);
 });
 
+test('component gallery is reachable only from the dev-gated preview menu', () => {
+  const preview = readFileSync(path.join(process.cwd(), 'src/features/home/DevelopmentPreview.tsx'), 'utf8');
+  const appFlow = readFileSync(path.join(process.cwd(), 'src/features/home/AppFlow.tsx'), 'utf8');
+  assert.match(preview, /typeof __DEV__ !== 'undefined' && __DEV__ === true \? \(\) => setScreen\('components'\)/);
+  assert.match(preview, /case 'components':[\s\S]*?<ComponentGalleryScreen/);
+  assert.doesNotMatch(appFlow, /ComponentGalleryScreen|setScreen\('components'\)/);
+  assert.equal(isDevPreviewEnabled('true', false), false);
+});
+
 test('preview script resolves the installed Expo CLI and forwards arguments without launching it', () => {
   const root = process.cwd();
   const { command, args } = buildExpoCommand(root, ['--port', '0']);

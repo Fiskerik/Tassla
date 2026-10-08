@@ -1,0 +1,4 @@
+import { StyleSheet, Text, View } from 'react-native';
+import { tokens } from '../../theme/tokens';
+export function SectionHeader({ title, action }: { title: string; action?: string }) { return <View accessibilityRole="header" accessibilityLabel={title} style={styles.header}><Text style={styles.title}>{title}</Text>{action ? <Text style={styles.action}>{action}</Text> : null}</View>; }
+const styles = StyleSheet.create({ header: { alignSelf: 'stretch', marginTop: tokens.layout.sectionGap, marginBottom: tokens.layout.headingGap, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: tokens.spacing.sm }, title: { ...tokens.typography.heading, color: tokens.colors.textPrimary, flexShrink: 1 }, action: { ...tokens.typography.caption, color: tokens.colors.primary } });

@@ -1,5 +1,18 @@
 # Gemensamma UI-komponenter
-APP-04A: `AppScreen` använder keyboard-aware scrollning med dragavvisning. Faktisk tangentbordsruntime, VoiceOver, stor text och bottennavigation är NOT TESTABLE lokalt och kräver APP-04A-PHONE.
-`AppPrimitives.tsx` innehåller den varma Tassla-ytan, rubriker, textfält, statuskort, primära/sekundära knappar och modalramar för scrollbar information samt kort handlingsstatus. Modalernas fokus begärs från React Native `Modal.onShow`; statusens timeout hanteras av den berörda skärmen med tillgänglighetsrekommenderad tid och säker fallback. `AppScreen` kan komponera en fast sidfot under scrollområdet för preview-navigation; authskärmar använder den utan sidfot. Skärmarna använder `src/theme/tokens.ts`. Tryckrespons är tydlig och läser systemets reducerad rörelse-inställning; textfält och knappar har minst 48 punkters tryckyta.
 
-Komponenterna är avsiktligt små och används av inloggning, onboarding och Hem. Kör `pnpm check`. Skärmläsare, stor text och fysisk enhetslayout behöver fortfarande QA på iOS och Android.
+`ui/` är ingången för nya gränssnitt. Importera komponenter från `src/components/ui` och använd designvärden från `src/theme/tokens.ts`. `AppPrimitives.tsx` och `theme`-aliaset är kvar för befintliga vyer tills de migreras i en separat slice.
+
+## Entry points och dataflöde
+
+- `ui/index.ts` exporterar knappar, navigationsdelar, kort/rader, kategori-chip, formulär, återkoppling och modaler.
+- `IconChip` äger kategoriikonernas och kategorifärgernas gemensamma mappning. `PoopIcon` ritar bajsikonen med React Native-vyer eftersom ikonbiblioteket saknar motivet.
+- `ComponentGalleryScreen` visar svenska exempel och tillstånd. Den nås endast från den redan flaggade `DevelopmentPreview`; ingen produktionsroute används.
+- Komponentprops går direkt från den sammansättande vyn till nativekontrollerna. Biblioteket lagrar inte data.
+
+## Setup och verifiering
+
+Inga nya beroenden. Ionicons kommer från den redan installerade `@expo/vector-icons`. Kör `pnpm typecheck`, `pnpm lint` och `pnpm test`; det fokuserade skyddet finns i `tests/ui-library-policy.test.mjs` och `tests/preview-policy.test.mjs`.
+
+## Begränsningar
+
+Datum- och tidsfält är textinmatning med formatledtråd, inte datum-/tidsväljare. `HeroCard` använder tokeniserade överläggslager som gradientapproximation. `Display` är tills vidare alias för `Title`, och avmaskningens tillfälliga ikon är `medical-outline`. Gallery visas endast i lokal utvecklingspreview. Skärmbilder, riktig skärmläsare, stor text och nativeinteraktion behöver separat QA; kodkontroller innebär inte visuell PASS.

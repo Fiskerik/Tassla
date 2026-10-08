@@ -1,0 +1,7 @@
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import { tokens } from '../../theme/tokens';
+export function CheckboxCard({ label, checked, onChange, disabled = false }: { label: string; checked: boolean; onChange: (checked: boolean) => void; disabled?: boolean }) {
+  return <Pressable accessibilityRole="checkbox" accessibilityLabel={label} accessibilityState={{ checked, disabled }} disabled={disabled} onPress={() => onChange(!checked)} style={({ pressed }) => [styles.card, checked && styles.selected, pressed && !disabled && styles.pressed, disabled && styles.disabled]}><Ionicons name={checked ? 'checkbox' : 'square-outline'} size={tokens.size.iconMd} color={tokens.colors.primary} /><Text style={styles.label}>{label}</Text></Pressable>;
+}
+const styles = StyleSheet.create({ card: { alignSelf: 'stretch', minHeight: tokens.size.buttonHeight, padding: tokens.spacing.md, flexDirection: 'row', gap: tokens.spacing.md, alignItems: 'center', borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface }, selected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface }, pressed: { opacity: 0.8 }, disabled: { opacity: 0.55 }, label: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 } });

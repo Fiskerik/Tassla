@@ -1,0 +1,8 @@
+import type { ReactNode } from 'react';
+import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { tokens } from '../../theme/tokens';
+import { Button } from './Button';
+export function Dialog({ visible, title, children, onRequestClose, onConfirm, confirmLabel = 'Radera' }: { visible: boolean; title: string; children: ReactNode; onRequestClose: () => void; onConfirm: () => void; confirmLabel?: string }) {
+  return <Modal visible={visible} transparent animationType="fade" onRequestClose={onRequestClose} accessibilityViewIsModal><View style={styles.backdrop}><View accessibilityRole="alert" accessibilityLabel={title} style={styles.dialog}><ScrollView contentContainerStyle={styles.content}><Text accessibilityRole="header" style={styles.title}>{title}</Text>{children}<View style={styles.actions}><Button variant="secondary" label="Avbryt" accessibilityLabel="Avbryt" onPress={onRequestClose} /><Button variant="destructive" label={confirmLabel} accessibilityLabel={confirmLabel} onPress={onConfirm} /></View></ScrollView></View></View></Modal>;
+}
+const styles = StyleSheet.create({ backdrop: { flex: 1, justifyContent: 'center', padding: tokens.layout.pageInset, backgroundColor: tokens.colors.overlay }, dialog: { alignSelf: 'stretch', maxHeight: '90%', padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface }, content: { gap: tokens.spacing.md }, title: { ...tokens.typography.heading, color: tokens.colors.textPrimary, flexShrink: 1 }, actions: { gap: tokens.spacing.sm } });

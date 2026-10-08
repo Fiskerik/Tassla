@@ -154,3 +154,13 @@ Riktad verifiering:9TOML+policyrefs och2PythonAST PASS, diffPASS. Ordinarie pnpm
 DESIGN-POLICY-01 slutreview: faktiskt ReviewerPASS/CriticPROCEED för instruktioner efter rättad canonicalreferens. Fullappcheck fortfarandeFAIL saknadlokaldependency, ingen UIleverans påstås. Befintliga appvyer kräver separat implementation, skärmdumpar och checklistan innan de rapporteras visuelltklara.
 
 DESIGN-POLICY-01 lokal leveranscommit4f676b8, jämförelse6cbd5f4..4f676b8. Endast instruktioner/policy; ingen push.
+
+## DS-CODE-01 implementationscheckpoint — 2026-10-07
+
+Architect APPROVE plan v4 och Critic PROCEED WITH CHANGES tillämpades. Kodtokens, 18 beställda komponentfamiljer, central kategoriikonmappning, dev-only galleri, lintgrind och policytester är implementerade utan ändring av befintliga produktskärmar eller produktionsnavigation. Primary `#186A4D` behålls från dagens app/inventering/Figma-plan.
+
+Faktiskt verifierat: frusen dependencyåterställning utan lockfileändring; `pnpm check` PASS med 355/355 tester, 0 lintfel och 238 dokumenterade legacyvarningar (62 hex, 176 numeriska fontSize i 18 filer); `git diff --check` PASS. Display=Title är tillfälligt alias, avmaskning=`medical-outline` är öppen ikonfråga och HeroCard använder overlayapproximation.
+
+Visuell QA är NOT TESTABLE: Windowsmiljön saknar Android-enhet/emulator, iOS-simulator och webbruntime. Ingen skärmdump finns, så paketet är inte visuellt godkänt eller DONE. Release-logg: [DS-CODE-01](../../releases/DS-CODE-01.md). Nästa steg: oberoende QA/reviewer och därefter verklig gallerirendering på liten/stor bredd och stor text.
+
+DS-CODE-01 korrigeringsförsök 1: Reviewer blockerade den oanvända `Button.fullWidth`-propen. Architect APPROVE v4.1; propen togs bort, vanliga knappar låstes till full bredd och ikonknappen till tokeniserad 44×44. Förnyad QA PASS fokuserat9/full356/diff; iOS-export PASS. Förnyad reviewer kod-PASS. Totalstatus förblir BLOCK eftersom renderade galleriskärmdumpar saknas; visuell QA är NOT TESTABLE och får inte ersättas av kodkontroll.

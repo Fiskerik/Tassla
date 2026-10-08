@@ -1,0 +1,10 @@
+import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { tokens } from '../../theme/tokens';
+type FieldKind = 'text' | 'date' | 'time' | 'multiline';
+export function Field({ label, value, onChangeText, kind = 'text', help, error, placeholder }: { label: string; value: string; onChangeText: (value: string) => void; kind?: FieldKind; help?: string; error?: string; placeholder?: string }) {
+  const multiline = kind === 'multiline';
+  const keyboardType = kind === 'date' ? 'numbers-and-punctuation' : kind === 'time' ? 'numbers-and-punctuation' : 'default';
+  const hint = kind === 'date' ? 'Skriv datum, till exempel 2026-10-07' : kind === 'time' ? 'Skriv tid, till exempel 12:05' : undefined;
+  return <View style={styles.field}><Text accessibilityRole="text" style={styles.label}>{label}</Text><TextInput accessibilityRole="text" accessibilityLabel={label} accessibilityHint={error ?? hint ?? help} value={value} onChangeText={onChangeText} placeholder={placeholder} keyboardType={keyboardType} multiline={multiline} textAlignVertical={multiline ? 'top' : 'center'} style={[styles.input, multiline && styles.multiline, error && styles.invalid]} />{error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : help ? <Text style={styles.help}>{help}</Text> : null}</View>;
+}
+const styles = StyleSheet.create({ field: { alignSelf: 'stretch', gap: tokens.spacing.xs }, label: { ...tokens.typography.label, color: tokens.colors.textPrimary }, input: { minHeight: tokens.size.buttonHeight, paddingHorizontal: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body }, multiline: { minHeight: tokens.size.buttonHeight * 2, paddingVertical: tokens.spacing.md }, invalid: { borderColor: tokens.colors.danger }, help: { ...tokens.typography.caption, color: tokens.colors.textSecondary }, error: { ...tokens.typography.caption, color: tokens.colors.danger } });

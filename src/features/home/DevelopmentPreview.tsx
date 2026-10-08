@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppScreen } from '../../components/AppPrimitives';
+import { ComponentGalleryScreen } from '../../components/ui/ComponentGalleryScreen';
 import { theme } from '../../theme/tokens';
 import type { Dog } from '../onboarding/dog';
 import { HealthScreen } from '../health/HealthScreen';
@@ -14,7 +15,7 @@ import { completeNextStep, getCompletedStepIds, resetProgramProgress, TRAINING_P
 import { PreviewHomeScreen } from './PreviewHomeScreen';
 import { PreviewProfileScreen } from './PreviewProfileScreen';
 
-type Screen = 'home' | 'log' | 'training' | 'more' | 'health' | 'knowledge' | 'passport' | 'profile' | 'drafts';
+type Screen = 'home' | 'log' | 'training' | 'more' | 'health' | 'knowledge' | 'passport' | 'profile' | 'drafts' | 'components';
 type MainTab = 'home' | 'log' | 'training' | 'more';
 
 export function DevelopmentPreview() {
@@ -138,7 +139,7 @@ export function DevelopmentPreview() {
       );
       break;
     case 'more':
-      page = <MoreScreen onOpenHealth={() => setScreen('health')} onOpenKnowledge={() => setScreen('knowledge')} onOpenPassport={() => setScreen('passport')} onOpenDrafts={DRAFT_PREVIEW_ENABLED ? () => setScreen('drafts') : undefined} />;
+      page = <MoreScreen onOpenHealth={() => setScreen('health')} onOpenKnowledge={() => setScreen('knowledge')} onOpenPassport={() => setScreen('passport')} onOpenDrafts={DRAFT_PREVIEW_ENABLED ? () => setScreen('drafts') : undefined} onOpenComponentGallery={typeof __DEV__ !== 'undefined' && __DEV__ === true ? () => setScreen('components') : undefined} />;
       break;
     case 'health':
       page = <HealthScreen onBack={navigateBack} />;
@@ -155,9 +156,12 @@ export function DevelopmentPreview() {
     case 'drafts':
       page = <DraftContentPreview onBack={navigateBack} />;
       break;
+    case 'components':
+      page = <ComponentGalleryScreen onBack={() => setScreen('more')} />;
+      break;
   }
 
-  const activeTab: MainTab = screen === 'health' || screen === 'knowledge' || screen === 'passport' || screen === 'drafts'
+  const activeTab: MainTab = screen === 'health' || screen === 'knowledge' || screen === 'passport' || screen === 'drafts' || screen === 'components'
     ? 'more'
     : screen === 'profile' ? 'home' : screen;
   return (
@@ -177,11 +181,13 @@ function MoreScreen({
   onOpenKnowledge,
   onOpenPassport,
   onOpenDrafts,
+  onOpenComponentGallery,
 }: {
   onOpenHealth: () => void;
   onOpenKnowledge: () => void;
   onOpenPassport: () => void;
   onOpenDrafts?: () => void;
+  onOpenComponentGallery?: () => void;
 }) {
   return (
     <View>
@@ -190,6 +196,7 @@ function MoreScreen({
       <PreviewMenuItem title="Kunskap" description="Visuell grund" onPress={onOpenKnowledge} />
       <PreviewMenuItem title="Tassla-pass" description="Visuell grund" onPress={onOpenPassport} />
       {onOpenDrafts && <PreviewMenuItem title="Utkast för granskning" description="Endast utvecklarläge · ej publicerat" onPress={onOpenDrafts} />}
+      {onOpenComponentGallery && <PreviewMenuItem title="Komponentgalleri" description="Visuell provyta för UI-delar" onPress={onOpenComponentGallery} />}
     </View>
   );
 }

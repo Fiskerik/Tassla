@@ -1755,6 +1755,113 @@
         }
       ],
       "next_step": "Push only after explicit owner authorization, then run Codemagic/TestFlight verification"
+    },
+    {
+      "id": "DS-CODE-01",
+      "title": "Kodtokens, delat komponentbibliotek och utvecklingsgalleri",
+      "mvp_requirement": "docs/mvp.md: Måste med produkt-MVP, skärm 1–6; gemensam UI-grund utan skärmmigrering",
+      "plan": "docs/tasks/dev/ds-code-01.md v4.1 correction 1",
+      "write_paths": [
+        "src/theme/tokens.ts",
+        "src/theme/README.md",
+        "src/components/ui",
+        "src/components/README.md",
+        "src/features/home/DevelopmentPreview.tsx",
+        "eslint.config.js",
+        "tests/ui-library-policy.test.mjs",
+        "tests/preview-policy.test.mjs",
+        "docs/tasks/dev/ds-code-01.md",
+        "docs/releases/DS-CODE-01.md",
+        "docs/tasks/dev/rapport.md",
+        "docs/design/evidence/ds-code-01"
+      ],
+      "acceptance": [
+        "Nya UI-tokens och beställda komponentfamiljer är enda källa för ny UI; legacyalias bevarar befintliga skärmar",
+        "Alla nya interaktiva komponenter har minst 44x44 tryckyta, märkt tillgänglighet och stor-textflöde",
+        "Galleri nås endast genom befintligt explicit utvecklingspreviewflöde; produktionsnavigationen är oförändrad",
+        "Legacy lintvarningar redovisas, nya UI-filer har noll hårdkodade hex eller numeriska fontSize",
+        "Renderad visuell evidens och checklista finns; annars är visuell status NOT TESTABLE och paketet inte klart"
+      ],
+      "checks": [
+        "Focused UI policy and preview tests",
+        "pnpm check",
+        "git diff --check",
+        "Rendered gallery screenshots at small/large width and large text",
+        "Independent QA and Reviewer"
+      ],
+      "depends_on": [
+        "UX-02"
+      ],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE DS-CODE-01 plan v4 after v1-v3 corrections; Critic PROCEED WITH CHANGES applied to scope and copy matrix"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Eriks direct mandate; implementer owns exact plan v4 code paths and sequential checkpoints"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Tokens, 18 requested component families, dev gallery, lint policy and tests implemented; pnpm check 355/355 and diff check PASS after frozen dependency restore; visual evidence NOT TESTABLE"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA code PASS: focused 8/8, pnpm check 355/355, 0 lint errors and 238 documented legacy warnings, diff check PASS; rendered visual QA NOT TESTABLE"
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer BLOCK: public Button.fullWidth can violate the approved full-width contract; rendered visual QA also remains NOT TESTABLE"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction attempt 1 v4.1: remove unused Button.fullWidth only; renewed architect, QA and reviewer required"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE correction v4.1; exact one-file Button contract correction and focused assertions"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start correction attempt 1 v4.1; Button.tsx and exact policy assertions only"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction v4.1 complete: fullWidth removed, non-icon stretch locked, icon 44x44; focused5, full356, iOS export and diff check PASS"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Renewed QA PASS v4.1: fullWidth absent, non-icon stretch, icon 44x44; focused9, pnpm check356 and diff check PASS; visual NOT TESTABLE"
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Renewed reviewer code PASS v4.1; total delivery BLOCK because required rendered gallery screenshots are absent and visual QA is NOT TESTABLE"
+        }
+      ],
+      "next_step": "Render dev gallery on small/large phone widths and large text, save screenshots, run independent visual QA checklist, then renewed reviewer"
     }
   ]
 }
