@@ -1,326 +1,216 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { ActionFeedbackModal, DatePickerField, MessageCard, PageHeading, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
-import { theme } from '../../theme/tokens';
+import { AppBar, BottomSheet, Button, Card, Dialog, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast } from '../../components/ui';
+import { DatePickerField, MessageCard, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
+import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
-import {
-  groupLogEventsByLocalDate,
-  localDateTimeParts,
-  LOG_EVENT_LABELS,
-  LOG_EVENT_TYPES,
-  parseLocalDateTime,
-  summarizePottyPatterns,
-  type LogEvent,
-  type LogEventChanges,
-  type LogEventType,
-} from './log-model';
+import { decideQuickLogPress, groupLogEventsByLocalDate, hasRecentCategoryLog, localDateTimeParts, LOG_EVENT_LABELS, LOG_EVENT_TYPES, parseLocalDateTime, summarizePottyPatterns, type LogEvent, type LogEventChanges, type LogEventType } from './log-model';
 
-export function LogScreen({
-  events,
-  onAdd,
-  onUpdate,
-  onDelete,
-  onMutationStart,
-  mode = 'preview',
-  busy = false,
-  statusMessage,
-  statusError = false,
-  onRetryPending,
-  hasMore = false,
-  loadingMore = false,
-  onLoadMore,
-}: {
+export type QuickLogMutationView = { kind: 'add' | 'update' | 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; status: 'pending' | 'failed' | 'unsure' | 'saved' };
+
+export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', busy = false, loading = false, loadError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore }: {
   events: readonly LogEvent[];
   onAdd: (type: LogEventType) => void;
-  onUpdate: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
-  onDelete: (id: string) => void | Promise<void>;
-  onMutationStart?: () => void;
+  onUpdate?: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
+  onDelete?: (id: string) => boolean | void | Promise<boolean | void>;
   mode?: 'preview' | 'cloud';
   busy?: boolean;
-  statusMessage?: string;
-  statusError?: boolean;
-  onRetryPending?: () => void;
+  loading?: boolean;
+  loadError?: boolean;
+  onReload?: () => void;
+  mutation?: QuickLogMutationView | null;
+  loadMoreError?: boolean;
+  onRetry?: () => boolean | void | Promise<boolean | void>;
+  onCancel?: () => void;
+  onUndo?: (id: string) => void;
   hasMore?: boolean;
   loadingMore?: boolean;
   onLoadMore?: () => void;
 }) {
+  const [moreVisible, setMoreVisible] = useState(false);
+  const [duplicate, setDuplicate] = useState<{ type: LogEventType; timestamp: number } | null>(null);
+  const lastSubmitAt = useRef<number | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [feedbackEventId, setFeedbackEventId] = useState<string | null>(null);
-  const [deletedFeedbackEvent, setDeletedFeedbackEvent] = useState<LogEvent | null>(null);
-  const [dismissedStatus, setDismissedStatus] = useState<string | null>(null);
+  const [dismissedMutationKey, setDismissedMutationKey] = useState<string | null>(null);
+  const groups = useMemo(() => groupLogEventsByLocalDate(events), [events]);
+  const patterns = useMemo(() => summarizePottyPatterns(events).filter((item) => item.count >= 2), [events]);
   const editingEvent = events.find((event) => event.id === editingId) ?? null;
-  const groups = groupLogEventsByLocalDate(events);
-  const pottyPatterns = summarizePottyPatterns(events);
-  const feedbackAttached = feedbackEventId !== null && (events.some((event) => event.id === feedbackEventId) || deletedFeedbackEvent?.id === feedbackEventId);
+  const editLocked = busy || Boolean(editingEvent && mutation?.id === editingEvent.id && mutation.status !== 'saved');
 
-  function confirmDelete(event: LogEvent) {
-    Alert.alert(
-      'Radera loggpost?',
-      mode === 'cloud' ? 'Posten tas bort från hundens logg.' : 'Posten tas bort från den här tillfälliga förhandsvisningen.',
-      [
-        { text: 'Avbryt', style: 'cancel' },
-        { text: 'Radera', style: 'destructive', onPress: () => { onMutationStart?.(); setDismissedStatus(null); setDeletedFeedbackEvent(event); setFeedbackEventId(event.id); void onDelete(event.id); } },
-      ],
-    );
+  useEffect(() => {
+    if (mutation?.status !== 'saved') return undefined;
+    const mutationKey = `${mutation.kind}:${mutation.mutationId}`;
+    const timeout = setTimeout(() => setDismissedMutationKey(mutationKey), 2500);
+    return () => clearTimeout(timeout);
+  }, [mutation?.id, mutation?.kind, mutation?.mutationId, mutation?.status]);
+
+  function selectType(type: LogEventType, timestamp: number, force = false) {
+    const recentDuplicate = hasRecentCategoryLog(events, type);
+    const decision = decideQuickLogPress({
+      blocked: busy || Boolean(mutation && mutation.status !== 'saved'),
+      force,
+      lastSubmitAt: lastSubmitAt.current,
+      timestamp,
+      recentDuplicate,
+    });
+    if (decision === 'blocked') return;
+    if (decision === 'confirm-duplicate') {
+      setDuplicate({ type, timestamp });
+      setMoreVisible(false);
+      return;
+    }
+    lastSubmitAt.current = timestamp;
+    setDuplicate(null);
+    setMoreVisible(false);
+    onAdd(type);
   }
 
-  return (
-    <View>
-      <PageHeading title="Vardagslogg" description={mode === 'cloud' ? 'Lägg till en händelse eller rätta något i hundens vardag.' : 'Lägg till en liten händelse eller rätta en exempelpost.'} />
-      <Text style={styles.sectionTitle} accessibilityRole="header">Snabb logg</Text>
-      <View style={styles.quickGrid}>
-        {LOG_EVENT_TYPES.map((type) => (
-          <Pressable
-            key={type}
-            accessibilityRole="button"
-            accessibilityLabel={`Lägg till ${LOG_EVENT_LABELS[type]}`}
-            disabled={busy}
-            onPress={() => { onMutationStart?.(); setDismissedStatus(null); setFeedbackEventId(null); setDeletedFeedbackEvent(null); onAdd(type); }}
-            style={({ pressed }) => [styles.quickButton, busy && styles.disabled, pressed && !busy && styles.pressed]}
-          >
-            <View style={styles.quickMark}><Text style={styles.quickMarkText}>{quickMark[type]}</Text></View>
-            <Text style={styles.quickLabel}>{LOG_EVENT_LABELS[type]}</Text>
-          </Pressable>
-        ))}
+  function saveEdit(event: LogEvent, changes: LogEventChanges): boolean | Promise<boolean> {
+    return onUpdate?.(event.id, changes) ?? false;
+  }
+
+  async function retryMutation() {
+    const saved = await onRetry?.();
+    if (saved && mutation && mutation.kind !== 'add' && mutation.kind !== 'undo') setEditingId(null);
+  }
+
+  function askToDelete(event: LogEvent) {
+    Alert.alert('Radera loggpost?', mode === 'cloud' ? 'Posten tas bort från hundens logg.' : 'Posten tas bort från den här tillfälliga förhandsvisningen.', [
+      { text: 'Avbryt', style: 'cancel' },
+      { text: 'Radera', style: 'destructive', onPress: () => {
+        if (!onDelete) return;
+        void Promise.resolve(onDelete(event.id)).then((saved) => { if (saved !== false) setEditingId(null); }).catch(() => undefined);
+      } },
+    ]);
+  }
+
+  return <View style={styles.screen}>
+    <AppBar mode="Title" title="Logga" />
+    {loading ? <>
+      <SectionHeader title="Snabb logg" />
+      <Skeleton shape="card" lines={3} />
+      <Skeleton shape="row" lines={2} />
+    </> : loadError ? <View style={styles.errorState}>
+      <Text style={styles.errorText}>Loggen kunde inte hämtas.</Text>
+      <Button label="Försök igen" accessibilityLabel="Försök igen" onPress={onReload ?? (() => undefined)} />
+    </View> : <>
+      <SectionHeader title="Snabb logg" />
+      <View style={styles.grid}>
+        <View style={styles.gridRow}>{(['pee', 'poop'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View>
+        <View style={styles.gridRow}>{(['food', 'sleep'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View>
       </View>
-      {statusMessage && !statusError && !feedbackAttached ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => setDismissedStatus(statusMessage)} /> : null}
-      <MessageCard>{mode === 'cloud'
-        ? 'Loggen hämtas från ditt konto. Ändringar visas som sparade först när servern har bekräftat dem.'
-        : 'Exempelposter är märkta. Nya poster finns bara i minnet och försvinner när appen stängs.'}</MessageCard>
-      <View style={styles.patternCard} accessibilityLabel="Historiskt mönsterunderlag för Kiss och Bajs">
-        <Text style={styles.patternTitle}>Historiskt mönsterunderlag</Text>
-        <Text style={styles.patternBody}>Sammanfattningen beskriver bara tidigare ägarregistreringar. Den förutsäger inte när hunden behöver gå ut.</Text>
-        {pottyPatterns.map((pattern) => <Text key={pattern.type} style={styles.patternRow}>{LOG_EVENT_LABELS[pattern.type]}: {pattern.count} registreringar{pattern.medianIntervalMinutes === null ? '' : ` · typiskt intervall ${formatInterval(pattern.medianIntervalMinutes)}`}</Text>)}
-      </View>
-      {statusMessage && statusError ? <>
-        <MessageCard tone="error">{statusMessage}</MessageCard>
-        {onRetryPending && <PrimaryButton title="Kontrollera status" disabled={busy} onPress={onRetryPending} />}
+      <View style={styles.moreRow}><QuickLogTile label="Fler" accessibilityLabel="Fler loggtyper" icon={<View style={styles.moreIcon}><Ionicons name="add" size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></View>} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={() => setMoreVisible(true)} /></View>
+
+      {patterns.length > 0 ? <>
+        <SectionHeader title="Dina senaste mönster" />
+        <Card accessibilityLabel="Dina senaste mönster för Kiss och Bajs">
+          {patterns.map((item) => <Text key={item.type} style={styles.patternText}>{LOG_EVENT_LABELS[item.type]}: {item.count} gånger{item.medianIntervalMinutes === null ? '' : ` · ungefär ${formatInterval(item.medianIntervalMinutes)}`}</Text>)}
+        </Card>
       </> : null}
-      {mode === 'cloud' && busy && <MessageCard>Sparar och kontrollerar ändringen…</MessageCard>}
-      {editingEvent && (
-        <LogEventEditor
-          key={editingEvent.id}
-          event={editingEvent}
-          onCancel={() => setEditingId(null)}
-          onSave={(changes) => { onMutationStart?.(); setDismissedStatus(null); setDeletedFeedbackEvent(null); setFeedbackEventId(editingEvent.id); return onUpdate(editingEvent.id, changes); }}
-          onSaved={() => setEditingId(null)}
-        />
-      )}
-      <Text style={styles.sectionTitle} accessibilityRole="header">Logghistorik</Text>
-      {groups.length === 0 && <MessageCard>Loggen är tom. Lägg till en händelse med snabbknapparna ovan.</MessageCard>}
-      {groups.map((group) => (
-        <View key={group.date} style={styles.dateGroup}>
-          <Text style={styles.dateHeading}>{dateHeading(group.date)}</Text>
-          {group.events.map((event) => {
-            const { time } = localDateTimeParts(event.occurredAt);
-            return (
-              <View key={event.id} style={styles.eventCard}>
-                <Text style={styles.eventTime}>{time}</Text>
-                <View style={styles.eventCopy}>
-                  <View style={styles.eventTitleRow}>
-                    <Text style={styles.eventTitle}>{LOG_EVENT_LABELS[event.type]}</Text>
-                    <Text style={event.origin === 'example' ? styles.exampleLabel : styles.testLabel}>
-                      {mode === 'cloud' ? 'SPARAD' : event.origin === 'example' ? 'EXEMPEL' : 'TESTPOST'}
-                    </Text>
-                  </View>
-                  {event.note && <Text style={styles.eventNote}>{event.note}</Text>}
-                  <View style={styles.eventActions}>
-                    <QuietButton title="Ändra" disabled={busy} onPress={() => setEditingId(event.id)} />
-                    <QuietButton title="Radera" disabled={busy} onPress={() => confirmDelete(event)} />
-                  </View>
-                  {statusMessage && !statusError && feedbackEventId === event.id ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => { setDismissedStatus(statusMessage); setDeletedFeedbackEvent(null); }} /> : null}
-                </View>
-              </View>
-            );
-          })}
-          {deletedFeedbackEvent && feedbackEventId === deletedFeedbackEvent.id && localDateTimeParts(deletedFeedbackEvent.occurredAt).date === group.date && !events.some((event) => event.id === deletedFeedbackEvent.id) ? (
-            <View style={styles.eventCard} accessibilityLabel="Raderad loggpost">
-              <Text style={styles.eventTime}>{localDateTimeParts(deletedFeedbackEvent.occurredAt).time}</Text>
-              <View style={styles.eventCopy}>
-                <Text style={styles.eventTitle}>Loggpost raderad</Text>
-                {statusMessage && !statusError ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => { setDismissedStatus(statusMessage); setDeletedFeedbackEvent(null); }} /> : null}
-              </View>
-            </View>
-          ) : null}
-        </View>
-      ))}
-      {deletedFeedbackEvent && feedbackEventId === deletedFeedbackEvent.id && !events.some((event) => event.id === deletedFeedbackEvent.id) && !groups.some((group) => group.date === localDateTimeParts(deletedFeedbackEvent.occurredAt).date) ? (
-        <View style={styles.dateGroup}>
-          <Text style={styles.dateHeading}>{dateHeading(localDateTimeParts(deletedFeedbackEvent.occurredAt).date)}</Text>
-          <View style={styles.eventCard} accessibilityLabel="Raderad loggpost">
-            <Text style={styles.eventTime}>{localDateTimeParts(deletedFeedbackEvent.occurredAt).time}</Text>
-            <View style={styles.eventCopy}>
-              <Text style={styles.eventTitle}>Loggpost raderad</Text>
-              {statusMessage && !statusError ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => { setDismissedStatus(statusMessage); setDeletedFeedbackEvent(null); }} /> : null}
-            </View>
-          </View>
-        </View>
-      ) : null}
-      {mode === 'cloud' && hasMore && <PrimaryButton title={loadingMore ? 'Hämtar…' : 'Visa äldre poster'} disabled={loadingMore || busy} onPress={onLoadMore ?? (() => undefined)} />}
-      <View style={styles.footerSpace} />
-    </View>
-  );
+
+      {mutation?.status === 'failed' && <Toast tone="error" message="Kunde inte spara" onRetry={retryMutation} onCancel={() => { onCancel?.(); if (mutation.kind !== 'add') setEditingId(null); }} />}
+      {mutation?.status === 'unsure' && <Toast tone="uncertain" onRetry={retryMutation} />}
+      {mutation?.status === 'saved' && dismissedMutationKey !== `${mutation.kind}:${mutation.mutationId}` && <Toast tone="success" confirmed message={mutation.kind === 'add' ? `${LOG_EVENT_LABELS[mutation.type]} loggat` : mutation.kind === 'update' ? 'Ändring sparad' : 'Händelsen är raderad'} onUndo={mutation.kind === 'add' ? () => onUndo?.(mutation.id) : undefined} />}
+
+      {editingEvent ? <LogEventEditor key={editingEvent.id} event={editingEvent} disabled={editLocked} onCancel={() => setEditingId(null)} onSave={(changes) => saveEdit(editingEvent, changes)} onDelete={() => askToDelete(editingEvent)} /> : null}
+
+      <SectionHeader title="Dagens logg" />
+      {!events.some((event) => localDateTimeParts(event.occurredAt).date === localDate()) && !(mutation?.kind === 'add' && mutation.status === 'pending') ? <View style={styles.empty}><Text style={styles.emptyTitle}>Inget loggat än idag</Text><Text style={styles.emptyBody}>Tryck på en ruta ovan för att lägga till dagens första händelse.</Text></View> : null}
+      {mutation?.kind === 'add' && mutation.status === 'pending' && <ListRow title={LOG_EVENT_LABELS[mutation.type]} meta="Sparar…" time={localDateTimeParts(mutation.occurredAt).time} category={mutation.type} accessibilityLabel={`${LOG_EVENT_LABELS[mutation.type]} ${localDateTimeParts(mutation.occurredAt).time}, sparar`} />}
+      {groups.map((group) => <View key={group.date}>
+        {group.date !== localDate() ? <SectionHeader title={heading(group.date)} variant="date" /> : null}
+        {group.events.map((event) => {
+          const rowPending = mutation?.id === event.id && mutation.status === 'pending';
+          const detail = [event.note, rowPending ? 'Sparar…' : null, event.origin === 'example' ? 'Exempel' : mode === 'preview' ? 'Testpost' : null].filter(Boolean).join(' · ');
+          const parts = localDateTimeParts(event.occurredAt);
+          return <ListRow key={event.id} title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}${event.note ? `, ${event.note}` : ''}${rowPending ? ', sparar' : ''}, tryck för att ändra`} category={event.type} time={parts.time} detail={detail || undefined} onPress={() => setEditingId(event.id)} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} />;
+        })}
+      </View>)}
+      {loadMoreError ? <Toast tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore} /> : hasMore ? <Button label={loadingMore ? 'Hämtar…' : 'Visa äldre poster'} accessibilityLabel={loadingMore ? 'Hämtar äldre poster' : 'Visa äldre poster'} disabled={loadingMore} loading={loadingMore} onPress={onLoadMore ?? (() => undefined)} /> : null}
+    </>}
+
+    <BottomSheet visible={moreVisible} title="Fler loggtyper" onRequestClose={() => setMoreVisible(false)}>
+      <View style={styles.grid}>
+        <View style={styles.gridRow}>{(['walk', 'awake'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View>
+      </View>
+    </BottomSheet>
+    <Dialog visible={duplicate !== null} title="Du har redan loggat det här. Lägga till ändå?" onRequestClose={() => setDuplicate(null)} onConfirm={() => { if (duplicate) selectType(duplicate.type, duplicate.timestamp, true); }} confirmLabel="Lägg till ändå" confirmVariant="primary"><View /></Dialog>
+  </View>;
 }
 
-function LogEventEditor({
-  event,
-  onSave,
-  onSaved,
-  onCancel,
-}: {
+function LogEventEditor({ event, disabled, onCancel, onSave, onDelete }: {
   event: LogEvent;
-  onSave: (changes: LogEventChanges) => boolean | Promise<boolean>;
-  onSaved: () => void;
+  disabled: boolean;
   onCancel: () => void;
+  onSave: (changes: LogEventChanges) => boolean | Promise<boolean>;
+  onDelete: () => void;
 }) {
   const initial = localDateTimeParts(event.occurredAt);
   const [type, setType] = useState(event.type);
   const [date, setDate] = useState(initial.date);
   const [time, setTime] = useState(initial.time);
   const [note, setNote] = useState(event.note ?? '');
-  const [saveError, setSaveError] = useState('');
+  const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const timestamp = parseLocalDateTime(date, time, new Date());
   const noteLength = Array.from(note).length;
   const valid = Boolean(timestamp) && noteLength <= 500;
 
   async function save() {
-    if (saving) return;
+    if (saving || disabled) return;
     const occurredAt = parseLocalDateTime(date, time, new Date());
-    if (!occurredAt) {
-      setSaveError('Ange ett giltigt datum och en tid som inte ligger i framtiden.');
-      return;
-    }
-    if (Array.from(note).length > 500) {
-      setSaveError('Noteringen får innehålla högst 500 tecken.');
-      return;
-    }
-    setSaveError('');
+    if (!occurredAt) { setError('Ange ett giltigt datum och en tid som inte ligger i framtiden.'); return; }
+    if (noteLength > 500) { setError('Anteckningen får innehålla högst 500 tecken.'); return; }
+    setError('');
     setSaving(true);
-    try {
-      if (await onSave({ type, occurredAt, note })) onSaved();
-    } finally {
-      setSaving(false);
-    }
+    try { if (await onSave({ type, occurredAt, note })) onCancel(); }
+    finally { setSaving(false); }
   }
 
-  return (
-    <View style={styles.editor}>
-      <Text style={styles.editorTitle} accessibilityRole="header">Ändra loggpost</Text>
-      <Text style={styles.fieldTitle}>Typ</Text>
-      <View style={styles.typeGrid}>
-        {LOG_EVENT_TYPES.map((option) => {
-          const selected = type === option;
-          return (
-            <Pressable
-              key={option}
-              accessibilityRole="radio"
-              accessibilityState={{ selected }}
-              onPress={() => setType(option)}
-              style={({ pressed }) => [styles.typeOption, selected && styles.selectedTypeOption, pressed && styles.pressed]}
-            >
-              <Text style={[styles.typeOptionText, selected && styles.selectedTypeText]}>{LOG_EVENT_LABELS[option]}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-      <View style={styles.dateTimeRow}>
-        <View style={styles.dateField}>
-          <DatePickerField label="Datum" onChangeText={setDate} value={date} />
-        </View>
-        <View style={styles.timeField}>
-          <TimePickerField label="Tid" onChangeText={setTime} value={time} />
-        </View>
-      </View>
-      <View style={styles.noteGroup}>
-        <Text style={styles.fieldTitle}>Notering (valfri)</Text>
-        <TextInput
-          accessibilityLabel="Notering, högst 500 tecken"
-          maxLength={1000}
-          multiline
-          onChangeText={setNote}
-          placeholder="Lägg till en kort notering"
-          placeholderTextColor={theme.colors.mutedText}
-          style={styles.noteInput}
-          value={note}
-        />
-        <Text style={[styles.characterCount, noteLength > 500 && styles.tooManyCharacters]}>{noteLength}/500</Text>
-      </View>
-      {saveError ? <MessageCard tone="error">{saveError}</MessageCard> : null}
-      {!valid && !saveError && <MessageCard tone="error">Kontrollera datum, tid och notering.</MessageCard>}
-      <PrimaryButton title={saving ? 'Sparar…' : 'Spara ändring'} disabled={!valid || saving} onPress={() => { void save(); }} />
-      <QuietButton title="Avbryt" onPress={onCancel} />
+  return <View style={styles.editor}>
+    <Text style={styles.editorTitle} accessibilityRole="header">Ändra händelse</Text>
+    <Text style={styles.fieldTitle}>Typ</Text>
+    <View style={styles.typeGrid}>{LOG_EVENT_TYPES.map((option) => {
+      const selected = type === option;
+      return <Pressable key={option} accessibilityRole="radio" accessibilityState={{ selected, disabled }} disabled={disabled} onPress={() => setType(option)} style={({ pressed }) => [styles.typeOption, selected && styles.selectedTypeOption, pressed && styles.pressed]}><Text style={[styles.typeOptionText, selected && styles.selectedTypeText]}>{LOG_EVENT_LABELS[option]}</Text></Pressable>;
+    })}</View>
+    <View style={styles.dateTimeRow}>
+      <View style={styles.dateField}><DatePickerField label="Datum" disabled={disabled} onChangeText={setDate} value={date} /></View>
+      <View style={styles.timeField}><TimePickerField label="Tid" disabled={disabled} onChangeText={setTime} value={time} /></View>
     </View>
-  );
+    <View style={styles.noteGroup}>
+      <Text style={styles.fieldTitle}>Anteckning (valfri)</Text>
+      <TextInput accessibilityLabel="Anteckning, högst 500 tecken" maxLength={1000} multiline editable={!disabled} onChangeText={setNote} placeholder="Lägg till en kort anteckning" placeholderTextColor={tokens.colors.textSecondary} style={styles.noteInput} value={note} />
+      <Text style={[styles.characterCount, noteLength > 500 && styles.tooManyCharacters]}>{noteLength}/500</Text>
+    </View>
+    {error ? <MessageCard tone="error">{error}</MessageCard> : null}
+    {!valid && !error ? <MessageCard tone="error">Kontrollera datum, tid och anteckning.</MessageCard> : null}
+    <PrimaryButton title="Spara" disabled={!valid || saving || disabled} onPress={() => { void save(); }} />
+    <QuietButton title="Radera" disabled={disabled} onPress={onDelete} />
+    <QuietButton title="Avbryt" disabled={saving || disabled} onPress={onCancel} />
+  </View>;
 }
 
-function dateHeading(date: string): string {
-  if (date === localDate()) return 'Idag';
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayKey = `${yesterday.getFullYear()}-${pad(yesterday.getMonth() + 1)}-${pad(yesterday.getDate())}`;
+function formatInterval(minutes: number): string {
+  if (minutes < 120) return `var ${Math.round(minutes)} minuter`;
+  if (minutes < 36 * 60) return `var ${Math.round(minutes / 60)} timmar`;
+  const halfDays = Math.max(1, Math.round(minutes / (12 * 60)));
+  return `var ${(halfDays / 2).toLocaleString('sv-SE')} dygn`;
+}
+
+function heading(date: string): string {
+  const today = new Date();
+  const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+  const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
   return date === yesterdayKey ? 'Igår' : date;
 }
 
-function pad(value: number): string {
-  return String(value).padStart(2, '0');
-}
-
-const quickMark: Record<LogEventType, string> = {
-  pee: '💧',
-  poop: '💩',
-  food: '◒',
-  sleep: '☾',
-  awake: '◉',
-  walk: '↗',
-};
-
 const styles = StyleSheet.create({
-  sectionTitle: { color: theme.colors.text, fontSize: 19, fontWeight: '800', marginTop: 2, marginBottom: 12 },
-  quickGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  quickButton: { flexBasis: '31%', flexGrow: 1, minHeight: 80, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.button, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, padding: 8 },
-  quickMark: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#E4EEF4', alignItems: 'center', justifyContent: 'center' },
-  quickMarkText: { color: theme.colors.accent, fontSize: 19, fontWeight: '800' },
-  quickLabel: { color: theme.colors.text, fontSize: 13, fontWeight: '700', marginTop: 6 },
-  dateGroup: { marginTop: 18 },
-  dateHeading: { color: theme.colors.mutedText, fontSize: 13, fontWeight: '800', marginBottom: 8 },
-  eventCard: { flexDirection: 'row', alignItems: 'flex-start', borderRadius: theme.radius.button, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, padding: 12, marginBottom: 8 },
-  eventTime: { color: theme.colors.mutedText, fontSize: 13, fontWeight: '700', width: 52, paddingTop: 3 },
-  eventCopy: { flex: 1 },
-  eventTitleRow: { minHeight: 28, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
-  eventTitle: { color: theme.colors.text, fontSize: 15, fontWeight: '800' },
-  exampleLabel: { color: '#785716', backgroundColor: '#F5E7BF', fontSize: 9, fontWeight: '800', letterSpacing: 0.4, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8 },
-  testLabel: { color: theme.colors.accent, backgroundColor: '#E5EFE8', fontSize: 9, fontWeight: '800', letterSpacing: 0.4, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8 },
-  eventNote: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 20, marginTop: 5 },
-  eventActions: { flexDirection: 'row', alignSelf: 'flex-start', gap: 4, marginLeft: -12, marginTop: 2 },
-  editor: { backgroundColor: '#F0E9DC', borderRadius: theme.radius.card, padding: 16, marginTop: 22, marginBottom: 24 },
-  editorTitle: { color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 14 },
-  fieldTitle: { color: theme.colors.text, fontSize: 14, fontWeight: '700', marginBottom: 8 },
-  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginBottom: 14 },
-  typeOption: { minHeight: 44, minWidth: 74, flexGrow: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 12, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, paddingHorizontal: 8 },
-  selectedTypeOption: { borderColor: theme.colors.accent, backgroundColor: '#E5EFE8' },
-  typeOptionText: { color: theme.colors.text, fontSize: 13, fontWeight: '700' },
-  selectedTypeText: { color: theme.colors.accent },
-  dateTimeRow: { flexDirection: 'row', gap: 10 },
-  dateField: { flex: 1.4 },
-  timeField: { flex: 0.8 },
-  noteGroup: { marginBottom: 12 },
-  noteInput: { minHeight: 92, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, fontSize: 16, lineHeight: 22, padding: 12, textAlignVertical: 'top' },
-  characterCount: { color: theme.colors.mutedText, fontSize: 12, textAlign: 'right', marginTop: 5 },
-  tooManyCharacters: { color: theme.colors.error, fontWeight: '700' },
-  pressed: { opacity: 0.72 },
-  disabled: { opacity: 0.55 },
-  footerSpace: { height: 8 },
-  patternCard: { marginTop: 16, padding: 14, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: '#F1F5F0' },
-  patternTitle: { color: theme.colors.text, fontSize: 16, fontWeight: '800' },
-  patternBody: { color: theme.colors.mutedText, fontSize: 13, lineHeight: 19, marginTop: 5 },
-  patternRow: { color: theme.colors.text, fontSize: 14, fontWeight: '700', marginTop: 7 },
+  screen: { gap: tokens.spacing.md }, grid: { gap: tokens.spacing.sm }, gridRow: { flexDirection: 'row', gap: tokens.spacing.sm }, moreRow: { width: '48%' }, moreIcon: { width: tokens.size.chipLg, minHeight: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.selectedSurface },
+  patternText: { ...tokens.typography.body, color: tokens.colors.textPrimary, paddingVertical: tokens.spacing.xs },
+  empty: { padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, gap: tokens.spacing.xs },
+  emptyTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary }, emptyBody: { ...tokens.typography.body, color: tokens.colors.textSecondary },
+  errorState: { minHeight: tokens.size.buttonHeight, justifyContent: 'center', gap: tokens.spacing.md }, errorText: { ...tokens.typography.body, color: tokens.colors.danger },
+  editor: { backgroundColor: tokens.colors.selectedSurface, borderRadius: tokens.radius.lg, padding: tokens.spacing.lg, gap: tokens.spacing.md }, editorTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary }, fieldTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.xs }, typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs }, typeOption: { minHeight: tokens.size.touchMin, minWidth: tokens.size.chipLg * 2, flexGrow: 1, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, paddingHorizontal: tokens.spacing.sm }, selectedTypeOption: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface }, typeOptionText: { ...tokens.typography.label, color: tokens.colors.textPrimary }, selectedTypeText: { color: tokens.colors.primary }, pressed: { opacity: 0.85 }, dateTimeRow: { flexDirection: 'row', gap: tokens.spacing.sm }, dateField: { flex: 1.4 }, timeField: { flex: 0.8 }, noteGroup: { gap: tokens.spacing.xs }, noteInput: { minHeight: tokens.size.heroHeight - tokens.spacing.xxl, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body, padding: tokens.spacing.md, textAlignVertical: 'top' }, characterCount: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'right' }, tooManyCharacters: { color: tokens.colors.danger },
 });
-
-function formatInterval(minutes: number): string {
-  const rounded = Math.round(minutes);
-  if (rounded < 60) return `${rounded} min`;
-  const hours = Math.floor(rounded / 60);
-  const remainder = rounded % 60;
-  return remainder === 0 ? `${hours} h` : `${hours} h ${remainder} min`;
-}

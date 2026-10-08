@@ -1867,13 +1867,14 @@
       "id": "LOGGA-QUICK",
       "title": "Logga snabbflöde, sanningsenlig status och skärmtillstånd",
       "mvp_requirement": "docs/mvp.md: Vardagslogg – ägaren kan snabbt logga kiss, bajs, mat, sömn/vaken och promenad samt se historik; Erik-beslut 2026-10-08 om Fler",
-      "plan": "docs/plans/LOGGA-ux-spec.md v3, slice LOGGA-QUICK",
+    "plan": "docs/plans/LOGGA-ux-spec.md v6, slice LOGGA-QUICK flight ownership correction",
       "write_paths": [
         "src/features/puppy-log/LogScreen.tsx",
         "src/features/puppy-log/log-model.ts",
         "src/features/puppy-log/README.md",
         "src/features/home/ProductWorkspace.tsx",
         "src/components/ui/QuickLogTile.tsx",
+        "src/components/ui/AppBar.tsx",
         "src/components/ui/BottomSheet.tsx",
         "src/components/ui/ListRow.tsx",
         "src/components/ui/Dialog.tsx",
@@ -1893,7 +1894,8 @@
         "Single-flight add visar pending på rätt rad, saved-toast först efter bekräftelse, failed/unsure med fungerande retry och undo endast för exakt bekräftad insert",
         "Samma kategori inom två minuter frågar före ny write; double tap skapar ingen extra write",
         "Mönster visas bara per Kiss/Bajs med minst två poster och behåller medianberäkningen",
-        "Liten/stor telefon och stor text samt laddar/tom/fel/normal, Fler, mutationstoasts och dubblettdialog har renderad evidens och oberoende visuell QA"
+        "Liten/stor telefon och stor text samt laddar/tom/fel/normal, Fler, mutationstoasts och dubblettdialog har renderad evidens och oberoende visuell QA",
+        "Befintlig update/delete-funktion är nåbar fram till LOGGA-EDIT; QUICK tar inte bort godkända rättnings- eller raderingsmöjligheter"
       ],
       "checks": [
         "node --experimental-strip-types --test tests/log-model.test.mjs tests/log-screen-policy.test.mjs tests/ui-library-policy.test.mjs",
@@ -1906,7 +1908,7 @@
       "depends_on": [
         "UX-02"
       ],
-      "status": "ready",
+    "status": "blocked",
       "history": [
         {
           "actor": "coordinator",
@@ -1917,15 +1919,123 @@
           "to": "ready",
           "actor": "architect",
           "evidence": "APPROVE LOGGA plan v3; Product-copy reviewed; Critic GO; review recorded in docs/plans/LOGGA-ux-spec.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementer dispatched for approved LOGGA plan v3 QUICK slice only; baseline 37bf93f, spec commit 80cc3ae"
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Pre-QA review found AppBar scope gap, time-order/status duplication, and update/delete regression; plan v4 requires renewed Architect review"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction plan v4 saved in docs/plans/LOGGA-ux-spec.md; no further app edits before renewed Architect review"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE LOGGA plan v4 QUICK correction: additive AppBar title mode, preserve update/delete, kind state, row-only pending, timed success, time-first row, partial retry"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction attempt 1 dispatched to existing implementer within plan v4 scope before QA"
+      },
+      {
+        "from": "implementing",
+        "to": "qa",
+        "actor": "coordinator",
+        "evidence": "Focused tests, typecheck, targeted lint, iOS bundle and diff check pass; full check has only two demonstrated baseline failures; independent QA/reviewer requested, visual evidence remains NOT TESTABLE"
+      },
+      {
+        "from": "qa",
+        "to": "blocked",
+        "actor": "qa-reviewer",
+        "evidence": "QA FAIL and Reviewer BLOCK: insert retry lacked pending/single-flight feedback, unresolved edit could close, screen-reader pending copy was incomplete, and required policies lacked executable coverage; visual evidence NOT TESTABLE"
+      },
+      {
+        "from": "blocked",
+        "to": "planned",
+        "actor": "coordinator",
+        "evidence": "Correction plan v5 recorded in docs/plans/LOGGA-ux-spec.md; no further app changes before renewed Architect review"
+      },
+      {
+        "from": "planned",
+        "to": "ready",
+        "actor": "architect",
+        "evidence": "APPROVE correction plan v5; verify readback helper as orchestration and clear stale intent after dog/session change"
+      },
+      {
+        "from": "ready",
+        "to": "implementing",
+        "actor": "coordinator",
+        "evidence": "Correction attempt 2 limited to approved v5 persistence, accessibility and executable-policy fixes"
+      },
+      {
+        "from": "implementing",
+        "to": "qa",
+        "actor": "coordinator",
+        "evidence": "v5 focused behavior tests, typechecks, targeted lint, iOS bundle, baseline diff check and queue validation pass; full check remains blocked only by the two documented 37bf93f baseline failures"
+      },
+      {
+        "from": "qa",
+        "to": "blocked",
+        "actor": "qa-reviewer",
+        "evidence": "QA FAIL and Reviewer BLOCK: stale bool flight and busy blocked the next lifetime; date/time inputs remained editable while retry owned an older update intent; visual evidence NOT TESTABLE"
+      },
+      {
+        "from": "blocked",
+        "to": "planned",
+        "actor": "coordinator",
+        "evidence": "Correction plan v6 specifies token-owned flight release plus disabled date/time and executable ownership transition test"
+      },
+      {
+        "from": "planned",
+        "to": "ready",
+        "actor": "architect",
+        "evidence": "APPROVE v6: unique flight-token ownership, immediate lifetime release, stale-finally guard, executable transition test and disabled date/time"
+      },
+      {
+        "from": "ready",
+        "to": "implementing",
+        "actor": "coordinator",
+        "evidence": "v6 implementation limited to approved flight ownership and editor input lock"
+      },
+      {
+        "from": "implementing",
+        "to": "qa",
+        "actor": "coordinator",
+        "evidence": "v6 focused executable tests, typechecks, iOS bundle, baseline diff check and queue validation pass; full check baseline failures remain separately documented"
+      },
+      {
+        "from": "qa",
+        "to": "review",
+        "actor": "qa",
+        "evidence": "QA v6 code/behavior PASS: token ownership/lifetime transition, stale-finally guard, locked editor input and prior save-state fixes; visual evidence NOT TESTABLE"
+      },
+      {
+        "from": "review",
+        "to": "blocked",
+        "actor": "reviewer",
+        "evidence": "Reviewer v6 code/behavior PASS with no remaining functional findings; rendered small/large/large-text state matrix is missing, so section 14 remains NOT TESTABLE and task cannot be DONE"
         }
       ],
-      "next_step": "APPROVE LOGGA plan v3; Product-copy reviewed; Critic GO; review recorded in docs/plans/LOGGA-ux-spec.md"
+    "next_step": "Erik opens the development preview on a phone or provides a native rendering environment; capture the required screenshot matrix and run independent visual QA before DONE"
     },
     {
       "id": "LOGGA-EDIT",
       "title": "Logga redigering, radering och slutlig visuell QA",
       "mvp_requirement": "docs/mvp.md: Vardagslogg – ägaren kan rätta och radera egna loggposter",
-      "plan": "docs/plans/LOGGA-ux-spec.md v3, slice LOGGA-EDIT",
+    "plan": "docs/plans/LOGGA-ux-spec.md v6, slice LOGGA-EDIT",
       "write_paths": [
         "src/features/puppy-log/LogScreen.tsx",
         "src/features/puppy-log/log-model.ts",

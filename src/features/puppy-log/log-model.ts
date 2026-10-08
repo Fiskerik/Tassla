@@ -41,6 +41,64 @@ export interface PottyPatternSummary {
   medianIntervalMinutes: number | null;
 }
 
+export type QuickLogPressDecision = 'blocked' | 'confirm-duplicate' | 'submit';
+
+export function decideQuickLogPress({ blocked, force, lastSubmitAt, timestamp, recentDuplicate }: {
+  blocked: boolean;
+  force: boolean;
+  lastSubmitAt: number | null;
+  timestamp: number;
+  recentDuplicate: boolean;
+}): QuickLogPressDecision {
+  if (blocked) return 'blocked';
+  if (!force && lastSubmitAt !== null && timestamp - lastSubmitAt < 2000) return 'blocked';
+  if (!force && recentDuplicate) return 'confirm-duplicate';
+  return 'submit';
+}
+
+export function canStartLogMutation(hasPendingIntent: boolean, inFlight: boolean): boolean {
+  return !hasPendingIntent && !inFlight;
+}
+
+export interface LogMutationFlight {
+  token: string;
+  lifetime: string;
+}
+
+export function startLogMutationFlight(current: LogMutationFlight | null, lifetime: string, token: string): LogMutationFlight | null {
+  return current ? null : { token, lifetime };
+}
+
+export function finishLogMutationFlight(current: LogMutationFlight | null, token: string): LogMutationFlight | null {
+  return current?.token === token ? null : current;
+}
+
+export function retainLogMutationFlightForLifetime(current: LogMutationFlight | null, lifetime: string): LogMutationFlight | null {
+  return current?.lifetime === lifetime ? current : null;
+}
+
+export function isLogMutationLifetimeCurrent(expected: string, current: string, mounted: boolean): boolean {
+  return mounted && expected === current;
+}
+
+export function logMutationStatusForWriteOutcome(status: 'saved' | 'failed' | 'unknown'): 'saved' | 'failed' | 'unsure' {
+  return status === 'unknown' ? 'unsure' : status;
+}
+
+export async function checkInsertRetryOperation<Operation extends { id: string }, Row>(
+  operation: Operation,
+  readById: (id: string) => Promise<Row | null>,
+): Promise<{ operation: Operation; found: Row | null }> {
+  return { operation, found: await readById(operation.id) };
+}
+
+export function hasRecentCategoryLog(events: readonly LogEvent[], type: LogEventType, now = Date.now(), windowMs = 2 * 60_000): boolean {
+  return events.some((event) => {
+    const timestamp = Date.parse(event.occurredAt);
+    return event.type === type && Number.isFinite(timestamp) && timestamp <= now && timestamp >= now - windowMs;
+  });
+}
+
 /** Retrospective owner-entered history only; this never predicts or recommends an outing. */
 export function summarizePottyPatterns(events: readonly LogEvent[]): PottyPatternSummary[] {
   return (['pee', 'poop'] as const).map((type) => {

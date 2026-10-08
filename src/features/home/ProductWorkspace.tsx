@@ -71,8 +71,8 @@ import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
 import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
 import { getGuidePreviewText } from '../knowledge/guide-body';
-import { LogScreen } from '../puppy-log/LogScreen';
-import { type LogEvent, type LogEventChanges, type LogEventType } from '../puppy-log/log-model';
+import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
+import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
 import { PassportScreen } from '../passport/PassportScreen';
 import { PublishedTrainingScreen } from '../training/PublishedTrainingScreen';
 import { theme } from '../../theme/tokens';
@@ -88,9 +88,9 @@ import { reminderService, type ReminderContext, type ReminderReconcileResult } f
 
 type ProductPage = 'home' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings' | 'account-settings' | 'beta-info';
 type PendingLogMutation =
-  | { kind: 'insert'; operation: DogEventOperation }
-  | { kind: 'update'; id: string; changes: { event_type: LogEventType; occurred_at: string; duration_minutes: number | null; description: string | null } }
-  | { kind: 'delete'; id: string };
+  | { kind: 'insert'; operation: DogEventOperation; lifetime: string }
+  | { kind: 'update'; mutationId: string; id: string; type: LogEventType; occurredAt: string; changes: { event_type: LogEventType; occurred_at: string; duration_minutes: number | null; description: string | null }; lifetime: string }
+  | { kind: 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; lifetime: string };
 type PendingHealthMutation =
   | { kind: 'insert'; operation: HealthWeightOperation }
   | { kind: 'update'; id: string; previous: HealthWeightRecord; changes: HealthWeightChanges }
@@ -120,10 +120,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const eventRows = useRef<DogEventRecord[]>([]);
   const [logState, setLogState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [logBusy, setLogBusy] = useState(false);
-  const [logMessage, setLogMessage] = useState('');
-  const [logMessageError, setLogMessageError] = useState(false);
+  const [quickLogMutation, setQuickLogMutation] = useState<QuickLogMutationView | null>(null);
   const [healthWeights, setHealthWeights] = useState<HealthWeightRecord[]>([]);
   const healthWeightRows = useRef<HealthWeightRecord[]>([]);
   const [healthState, setHealthState] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -178,7 +178,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [signingOut, setSigningOut] = useState(false);
   const signOutInFlight = useRef(false);
   const pendingLogMutation = useRef<PendingLogMutation | null>(null);
-  const logMutationInFlight = useRef(false);
+  const logMutationFlight = useRef<LogMutationFlight | null>(null);
   const pendingHealthMutation = useRef<PendingHealthMutation | null>(null);
   const healthMutationInFlight = useRef(false);
   const pendingHealthHistoryMutation = useRef<PendingHealthHistoryMutation | null>(null);
@@ -200,8 +200,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     reportNotificationCleanupFailure, reportDeletedAccountCleanupFailure } = useAuth();
   const age = ageInWeeks(dog.birth_date, localDate());
   const currentHealthHistoryLifetime = `${dog.id}:${session?.user.id ?? ''}`;
+  const currentLogLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const healthHistoryLifetime = useRef('');
+  const logLifetime = useRef('');
   const previousHealthHistoryLifetime = useRef('');
+  const previousLogLifetime = useRef('');
   const currentPlannedHealthLifetime = currentHealthHistoryLifetime;
   const plannedHealthLifetime = useRef('');
   const previousPlannedHealthLifetime = useRef('');
@@ -209,6 +212,19 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   useLayoutEffect(() => {
     healthHistoryLifetime.current = currentHealthHistoryLifetime;
   }, [currentHealthHistoryLifetime]);
+  useLayoutEffect(() => {
+    logLifetime.current = currentLogLifetime;
+  }, [currentLogLifetime]);
+  useLayoutEffect(() => {
+    if (previousLogLifetime.current && previousLogLifetime.current !== currentLogLifetime) {
+      pendingLogMutation.current = null;
+      logMutationFlight.current = retainLogMutationFlightForLifetime(logMutationFlight.current, currentLogLifetime);
+      setLogBusy(false);
+      setQuickLogMutation(null);
+      setLoadMoreError(false);
+    }
+    previousLogLifetime.current = currentLogLifetime;
+  }, [currentLogLifetime]);
   useLayoutEffect(() => {
     plannedHealthLifetime.current = currentPlannedHealthLifetime;
   }, [currentPlannedHealthLifetime]);
@@ -255,8 +271,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   }, []);
 
   const reloadEvents = useCallback(async (signal?: AbortSignal) => {
+    const lifetime = logLifetime.current;
     const rows = await serializeEventRead(() => fetchDogEvents(client, dog.id, 0, PAGE_SIZE, undefined, signal));
-    if (!mounted.current || signal?.aborted) return;
+    if (!mounted.current || signal?.aborted || logLifetime.current !== lifetime) return;
     eventRows.current = rows;
     setEvents(rows);
     setHasMore(rows.length === PAGE_SIZE);
@@ -709,74 +726,102 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
 
   async function loadMoreEvents() {
     if (loadMoreInFlight.current || loadingMore || !hasMore) return;
+    const lifetime = logLifetime.current;
     loadMoreInFlight.current = true;
     setLoadingMore(true);
+    setLoadMoreError(false);
     try {
       const next = await serializeEventRead(() => fetchDogEvents(client, dog.id, eventRows.current.length, PAGE_SIZE));
-      if (!mounted.current) return;
+      if (!mounted.current || logLifetime.current !== lifetime) return;
+      setLoadMoreError(false);
       const merged = [...eventRows.current, ...next.filter((row) => !eventRows.current.some((existing) => existing.id === row.id))];
       eventRows.current = merged;
       setEvents(merged);
       setHasMore(next.length === PAGE_SIZE);
     } catch {
-      if (!mounted.current) return;
-      setLogMessage('Äldre poster kunde inte hämtas. Försök igen när anslutningen fungerar.');
-      setLogMessageError(true);
+      if (!mounted.current || logLifetime.current !== lifetime) return;
+      setLoadMoreError(true);
     } finally {
       loadMoreInFlight.current = false;
       if (mounted.current) setLoadingMore(false);
     }
   }
 
-  async function runLogMutation(mutation: PendingLogMutation) {
-    if (logMutationInFlight.current) return false;
-    logMutationInFlight.current = true;
+  async function runLogMutation(mutation: PendingLogMutation, ownedFlightToken?: string) {
+    const lifetime = mutation.lifetime;
+    const isCurrent = () => isLogMutationLifetimeCurrent(lifetime, logLifetime.current, mounted.current);
+    const flightToken = ownedFlightToken ?? ExpoCrypto.randomUUID();
+    if (ownedFlightToken) {
+      if (logMutationFlight.current?.token !== ownedFlightToken) return false;
+    } else {
+      const flight = startLogMutationFlight(logMutationFlight.current, lifetime, flightToken);
+      if (!flight) return false;
+      logMutationFlight.current = flight;
+    }
     setLogBusy(true);
-    setLogMessage('');
-    setLogMessageError(false);
+    setQuickLogMutation(toQuickLogMutationView(mutation, 'pending'));
     let outcome: WriteOutcome<DogEventRecord | null>;
     try {
       if (mutation.kind === 'insert') outcome = await insertDogEvent(client, mutation.operation);
       else if (mutation.kind === 'update') outcome = await updateDogEvent(client, dog.id, mutation.id, mutation.changes);
       else outcome = await deleteDogEvent(client, dog.id, mutation.id);
-      if (!mounted.current) return false;
+      if (!isCurrent()) return false;
       if (outcome.status === 'saved') {
         pendingLogMutation.current = null;
-        setLogMessage('Ändringen är sparad.');
+        if (mutation.kind === 'insert') {
+          const confirmedEvent = outcome.value;
+          if (confirmedEvent) {
+            const localEvent = toLogEvent(confirmedEvent);
+            const merged = [...eventRows.current.filter((event) => event.id !== localEvent.id), confirmedEvent].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
+            eventRows.current = merged;
+            setEvents(merged);
+          }
+          setQuickLogMutation(toQuickLogMutationView(mutation, 'saved'));
+        }
+        if (mutation.kind === 'update') {
+          if (outcome.value) {
+            eventRows.current = [...eventRows.current.filter((event) => event.id !== mutation.id), outcome.value].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
+            setEvents(eventRows.current);
+          }
+          setQuickLogMutation(toQuickLogMutationView(mutation, 'saved'));
+        }
+        if (mutation.kind === 'delete' || mutation.kind === 'undo') {
+          const remaining = eventRows.current.filter((event) => event.id !== mutation.id);
+          eventRows.current = remaining;
+          setEvents(remaining);
+          setQuickLogMutation(toQuickLogMutationView(mutation, 'saved'));
+        }
         try {
           await reloadEvents();
         } catch {
-          if (mounted.current) {
-            setLogMessage('Ändringen är sparad, men logghistoriken kunde inte uppdateras.');
-            setLogMessageError(true);
-          }
+          // The confirmed local row remains authoritative until a later reload succeeds.
         }
-        return true;
+        return isCurrent();
       }
-      if (outcome.status === 'unknown') {
+      const presentationStatus = logMutationStatusForWriteOutcome(outcome.status);
+      if (presentationStatus === 'unsure') {
         pendingLogMutation.current = mutation;
-        setLogMessage('Sparstatus är osäker. Kontrollera samma post innan du försöker igen.');
-        setLogMessageError(true);
+        setQuickLogMutation(toQuickLogMutationView(mutation, 'unsure'));
         return false;
       }
-      pendingLogMutation.current = null;
-      setLogMessage('Ändringen kunde inte sparas. Kontrollera anslutningen och försök igen.');
-      setLogMessageError(true);
+      pendingLogMutation.current = mutation;
+      setQuickLogMutation(toQuickLogMutationView(mutation, 'failed'));
       return false;
     } catch {
-      if (!mounted.current) return false;
+      if (!isCurrent()) return false;
       pendingLogMutation.current = mutation;
-      setLogMessage('Sparstatus är osäker. Kontrollera samma post innan du försöker igen.');
-      setLogMessageError(true);
+      setQuickLogMutation(toQuickLogMutationView(mutation, 'unsure'));
       return false;
     } finally {
-      logMutationInFlight.current = false;
-      if (mounted.current) setLogBusy(false);
+      const ownsFlight = logMutationFlight.current?.token === flightToken;
+      logMutationFlight.current = finishLogMutationFlight(logMutationFlight.current, flightToken);
+      if (pendingLogMutation.current === mutation && !isCurrent()) pendingLogMutation.current = null;
+      if (mounted.current && ownsFlight) setLogBusy(false);
     }
   }
 
   function addEvent(type: LogEventType) {
-    if (pendingLogMutation.current || logMutationInFlight.current) return;
+    if (!canStartLogMutation(Boolean(pendingLogMutation.current), Boolean(logMutationFlight.current))) return;
     const operation: DogEventOperation = {
       id: ExpoCrypto.randomUUID(),
       dog_id: dog.id,
@@ -785,75 +830,104 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       duration_minutes: null,
       description: null,
     };
-    const mutation: PendingLogMutation = { kind: 'insert', operation };
+    const mutation: PendingLogMutation = { kind: 'insert', operation, lifetime: logLifetime.current };
     pendingLogMutation.current = mutation;
     void runLogMutation(mutation);
   }
 
   async function updateEvent(id: string, changes: LogEventChanges): Promise<boolean> {
-    if (pendingLogMutation.current || logMutationInFlight.current) return false;
-    const previous = events.find((event) => event.id === id);
+    if (!canStartLogMutation(Boolean(pendingLogMutation.current), Boolean(logMutationFlight.current))) return false;
+    const previous = eventRows.current.find((event) => event.id === id);
     if (!previous) return false;
-    const eventType = changes.type ?? previous.event_type;
+    const type = changes.type ?? previous.event_type;
+    const occurredAt = changes.occurredAt ?? previous.occurred_at;
     const mutation: PendingLogMutation = {
-      kind: 'update',
-      id,
+      kind: 'update', mutationId: ExpoCrypto.randomUUID(), id, type, occurredAt,
       changes: {
-        event_type: eventType,
-        occurred_at: changes.occurredAt ?? previous.occurred_at,
-        duration_minutes: eventType === 'sleep' || eventType === 'walk' ? previous.duration_minutes : null,
+        event_type: type,
+        occurred_at: occurredAt,
+        duration_minutes: type === 'sleep' || type === 'walk' ? previous.duration_minutes : null,
         description: changes.note?.trim() || null,
       },
+      lifetime: logLifetime.current,
     };
     pendingLogMutation.current = mutation;
     return runLogMutation(mutation);
   }
 
-  async function deleteEvent(id: string) {
-    if (pendingLogMutation.current || logMutationInFlight.current) return;
-    const mutation: PendingLogMutation = { kind: 'delete', id };
+  async function deleteEvent(id: string, kind: 'delete' | 'undo' = 'delete'): Promise<boolean> {
+    if (!canStartLogMutation(Boolean(pendingLogMutation.current), Boolean(logMutationFlight.current))) return false;
+    const previous = eventRows.current.find((event) => event.id === id);
+    if (!previous) return false;
+    const mutation: PendingLogMutation = { kind, mutationId: ExpoCrypto.randomUUID(), id, type: previous.event_type, occurredAt: previous.occurred_at, lifetime: logLifetime.current };
     pendingLogMutation.current = mutation;
-    await runLogMutation(mutation);
+    return runLogMutation(mutation);
   }
 
-  async function retryLogMutation() {
+  async function undoQuickLog(id: string) {
+    const current = quickLogMutation;
+    if (!current || current.kind !== 'add' || current.id !== id || current.status !== 'saved' || pendingLogMutation.current || logMutationFlight.current) return;
+    await deleteEvent(id, 'undo');
+  }
+
+  function cancelLogMutation() {
+    if (logMutationFlight.current || quickLogMutation?.status !== 'failed') return;
+    const pending = pendingLogMutation.current;
+    if (!pending || quickLogMutation.id !== (pending.kind === 'insert' ? pending.operation.id : pending.id)) return;
+    pendingLogMutation.current = null;
+    setQuickLogMutation(null);
+  }
+
+  async function retryLogMutation(): Promise<boolean> {
     const mutation = pendingLogMutation.current;
     if (mutation?.kind === 'insert') {
+      const lifetime = mutation.lifetime;
+      const flightToken = ExpoCrypto.randomUUID();
+      const flight = startLogMutationFlight(logMutationFlight.current, lifetime, flightToken);
+      if (!flight) return false;
+      const isCurrent = () => isLogMutationLifetimeCurrent(lifetime, logLifetime.current, mounted.current);
+      logMutationFlight.current = flight;
       setLogBusy(true);
+      setQuickLogMutation(toQuickLogMutationView(mutation, 'pending'));
       try {
-        const found = await fetchDogEventById(client, dog.id, mutation.operation.id);
-        if (!mounted.current) return;
+        const retryCheck = await checkInsertRetryOperation(mutation.operation, (id) => fetchDogEventById(client, dog.id, id));
+        const found = retryCheck.found;
+        if (!isCurrent()) return false;
         if (found) {
           pendingLogMutation.current = null;
+          const merged = [...eventRows.current.filter((event) => event.id !== found.id), found].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
+          eventRows.current = merged;
+          setEvents(merged);
+          setQuickLogMutation(toQuickLogMutationView(mutation, 'saved'));
           try {
             await reloadEvents();
-            setLogMessage('Posten är sparad och återläst.');
-            setLogMessageError(false);
+            if (!isCurrent()) return false;
           } catch {
-            setLogMessage('Posten är sparad, men logghistoriken kunde inte uppdateras.');
-            setLogMessageError(true);
+            if (!isCurrent()) return false;
           }
-          return;
+          return true;
         }
-        await runLogMutation(mutation);
+        return await runLogMutation({ ...mutation, operation: retryCheck.operation }, flightToken);
       } catch {
-        if (!mounted.current) return;
-        setLogMessage('Sparstatus kunde inte kontrolleras. Samma post väntar på en ny kontroll.');
-        setLogMessageError(true);
+        if (!isCurrent()) return false;
+        setQuickLogMutation(toQuickLogMutationView(mutation, 'unsure'));
+        return false;
       } finally {
-        if (mounted.current) setLogBusy(false);
+        const ownsFlight = logMutationFlight.current?.token === flightToken;
+        logMutationFlight.current = finishLogMutationFlight(logMutationFlight.current, flightToken);
+        if (pendingLogMutation.current === mutation && !isCurrent()) pendingLogMutation.current = null;
+        if (mounted.current && ownsFlight) setLogBusy(false);
       }
-    } else if (mutation) await runLogMutation(mutation);
+    } else if (mutation) return runLogMutation(mutation);
     else {
+      const lifetime = logLifetime.current;
       try {
         await reloadEvents();
-        if (!mounted.current) return;
-        setLogMessage('Loggen är uppdaterad.');
-        setLogMessageError(false);
+        if (!mounted.current || logLifetime.current !== lifetime) return false;
+        return true;
       } catch {
-        if (!mounted.current) return;
-        setLogMessage('Loggen kunde inte kontrolleras. Försök igen.');
-        setLogMessageError(true);
+        if (!mounted.current || logLifetime.current !== lifetime) return false;
+        return false;
       }
     }
   }
@@ -1539,7 +1613,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     if (!isCurrent()) return { status: 'unavailable' };
     const unresolvedWrite = pendingLogMutation.current || pendingHealthMutation.current
       || pendingHealthHistoryMutation.current || pendingPlannedHealthMutation.current
-      || pendingProfileMutation.current || logMutationInFlight.current || healthMutationInFlight.current
+      || pendingProfileMutation.current || logMutationFlight.current || healthMutationInFlight.current
       || healthHistoryMutationInFlight.current || plannedHealthMutationInFlight.current
       || profileMutationInFlight.current || trainingMutationInFlight.current || notificationBusy || accountDeleteBusy;
     if (unresolvedWrite) {
@@ -1668,18 +1742,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       }}
       onRetryContent={() => { void retryContent(); }}
     />;
-    if (page === 'log') return <>
-      {logState === 'loading' && <PageHeading title="Vardagslogg" description="Hämtar hundens logg…" />}
-      {logState === 'error' && <>
-        <PageHeading title="Vardagslogg" description="Loggen kunde inte hämtas." />
-        <PrimaryButton title="Försök igen" onPress={() => { void retryEvents(); }} />
-      </>}
-      {logState === 'ready' && <LogScreen events={displayEvents} onAdd={addEvent} onUpdate={updateEvent} onDelete={deleteEvent}
-        onMutationStart={() => { setLogMessage(''); setLogMessageError(false); }}
-        mode="cloud" busy={logBusy} statusMessage={logMessage} statusError={logMessageError}
-        onRetryPending={() => { void retryLogMutation(); }} hasMore={hasMore} loadingMore={loadingMore}
-        onLoadMore={() => { void loadMoreEvents(); }} />}
-    </>;
+    if (page === 'log') return <LogScreen events={displayEvents} onAdd={addEvent}
+      onUpdate={updateEvent} onDelete={(id) => deleteEvent(id)} mode="cloud"
+      loading={logState === 'loading'} loadError={logState === 'error'} onReload={() => { void retryEvents(); }}
+      busy={logBusy} mutation={quickLogMutation} loadMoreError={loadMoreError} onRetry={retryLogMutation} onCancel={cancelLogMutation}
+      onUndo={(id) => { void undoQuickLog(id); }} hasMore={hasMore} loadingMore={loadingMore}
+      onLoadMore={() => { void loadMoreEvents(); }} />;
     if (page === 'training') return <>
       {visibleTrainingState === 'loading' && <PageHeading title="Träning" description="Hämtar publicerade program…" />}
       {visibleTrainingState === 'error' && <>
@@ -1962,6 +2030,12 @@ function reminderStatusSummary(result: ReminderReconcileResult | null, preferenc
 
 function toLogEvent(row: DogEventRecord): LogEvent {
   return { id: row.id, dogId: row.dog_id, type: row.event_type, occurredAt: row.occurred_at, note: row.description, origin: 'local-test' };
+}
+
+function toQuickLogMutationView(mutation: PendingLogMutation, status: QuickLogMutationView['status']): QuickLogMutationView {
+  return mutation.kind === 'insert'
+    ? { kind: 'add', mutationId: mutation.operation.id, id: mutation.operation.id, type: mutation.operation.event_type, occurredAt: mutation.operation.occurred_at, status }
+    : { kind: mutation.kind, mutationId: mutation.mutationId, id: mutation.id, type: mutation.type, occurredAt: mutation.occurredAt, status };
 }
 
 function sameHealthWeight(

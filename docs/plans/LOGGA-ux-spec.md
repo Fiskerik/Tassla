@@ -1,10 +1,10 @@
 # LOGGA – UX-specifikation
 
-Datum: 2026-10-08  
-Task-ID: LOGGA  
-Version: 3  
-Status: Godkänd före implementation – Product-copy granskad, Critic GO och Architect APPROVE v3  
-Mandat: Eriks uppladdade brief 2026-10-08, inklusive ägarbeslutet att Promenad och Vaken nås via en femte ruta `Fler`, och genomförandemandatet i `AGENTS.md`. Erik bekräftade därefter uttryckligen att `37bf93f feat: complete shared log UI component library` är senaste baseline och ska återanvändas för att undvika dubbelarbete. Dessa beslut sparas här som hållbar scopesource.  
+Datum: 2026-10-08
+Task-ID: LOGGA
+Version: 6
+Status: Kod-/beteendecheckpoint v6 – Architect APPROVE, oberoende QA PASS och Reviewer PASS; visuell QA NOT TESTABLE
+Mandat: Eriks uppladdade brief 2026-10-08, inklusive ägarbeslutet att Promenad och Vaken nås via en femte ruta `Fler`, och genomförandemandatet i `AGENTS.md`. Erik bekräftade därefter uttryckligen att `37bf93f feat: complete shared log UI component library` är senaste baseline och ska återanvändas för att undvika dubbelarbete. Dessa beslut sparas här som hållbar scopesource.
 Referenser: `AGENTS.md`, `docs/design-rules.md`, `.agents/skills/tassla-consumer-ux/SKILL.md`, `vision_rev01.jpg` skärm 2 och `src/theme/tokens.ts`. Ingen riktig Figma-URL angavs; Figma är därför inte använd som evidens.
 
 ## Användarmål och huvudhandling
@@ -147,6 +147,7 @@ Planerade app-/testfiler:
 - `src/features/puppy-log/README.md`
 - `src/features/home/ProductWorkspace.tsx` endast Logga-props och presentationsstatus kring befintliga mutationer
 - `src/components/ui/QuickLogTile.tsx`: separat synlig etikett och `accessibilityLabel`
+- `src/components/ui/AppBar.tsx`: rent centrerat titel-läge utan varumärke, tillbaka- eller stängknapp
 - `src/components/ui/BottomSheet.tsx`: valfri primary-footer för `Fler`; befintlig footer används i edit
 - `src/components/ui/ListRow.tsx`: separat accessibilityLabel och layout där tid kan ligga först före kategori-chip
 - `src/components/ui/ActionMenu.tsx`: optional edit-action så edit-sheet kan vara delete-only
@@ -174,7 +175,15 @@ Tester ska minst täcka lokal datumgruppering, nyaste först, dold mönstersamma
 - Exakt dubbeltryck spärras medan den första skrivningen pågår. Efter ett snabbt svar används en tvåsekunders monotonic/UI-tidsgrind oberoende av wall-clock och reload. Kategoridubblett gäller samma kategori när `now - 2 minuter ≤ occurredAt ≤ now`; nyss lokalt försonad bekräftad post ingår även om reload misslyckas. Framtida tider räknas inte.
 - `ungefär` används för medianintervallet. Minuter under två timmar visas i minuter, därefter avrundade timmar; från 36 timmar används ungefärliga halva dygn. Detta är presentationslogik, inte ändrad beräkning.
 - `Ångra` är möjlig för en bekräftad ny post genom befintlig delete-operation. Den visas inte för pending/failed/unsure eller för uppdatering/radering.
-- Product har granskat copyförslagen och Critic har lämnat GO; Architect ska godkänna plan v3 före appkod.
+- Product har granskat copyförslagen och Critic har lämnat GO; Architect har godkänt plan v4 före korrigeringsimplementationen.
 - Expo-rendering och skärmdumpstagning är ännu inte verifierade. Fram till verklig rendering är visuell kvalitet NOT TESTABLE.
 - Baseline är `37bf93f feat: complete shared log UI component library`, uttryckligen bekräftad av Erik 2026-10-08 för att undvika dubbelarbete. Dess kod återanvänds som källa; DS-CODE-01:s saknade app-rendering ärvs inte som visuellt PASS. LOGGA får checkpointas med NOT TESTABLE men får inte markeras DONE eller visuellt godkänd utan skärmdumpar av liten/stor telefon och stor text för normal/tom/fel/laddar, Fler-sheet, edit-sheet, dubblettdialog, raderingsdialog samt success/error/unsure/undo. `cb427e7` finns inte i hämtade remote-refar eller objekthistoriken; inget antas om den.
+- QUICK får inte skapa en mellanliggande funktionsregression: befintliga update/delete-callbacks och möjligheten att öppna en post för rättning/radering ska bevaras tills LOGGA-EDIT ersätter presentationen. QUICK får inte tyst ta bort typändring, notering, datum/tid eller radering. Korrigeringsgranskningen ska också säkerställa att mutationsvyn innehåller `kind`, att bara add får en separat pending-rad, att pending inte dupliceras i toast, att bekräftad toast tidsbegränsas, att tid verkligen renderas före kategori-chip och att partial load-more-fel får synlig retry.
 
+## Korrigeringsplan v5 efter QA/Reviewer
+
+QA och Reviewer blockerade v4 på två konkreta sparmönster och otillräcklig körbar beteendetäckning. Den avgränsade korrigeringen ska: (1) visa insert-retry som `pending` redan under obligatorisk ID-återläsning och single-flight-skydda hela retryn, (2) hålla editorns Avbryt spärrad vid pending/failed/unsure så att input inte försvinner; definitiv failed avbryts endast via toastens uttryckliga Avbryt, (3) inkludera `sparar` i radens skärmläsaretikett, och (4) flytta besluten för snabbt dubbeltryck, dubblett-override, single-flight, lifetime och utfallsmappning till körbara rena policyfunktioner i befintliga `log-model.ts`, samt använda och testa en liten readback-orkestrering som bevarar exakt samma insert-operation/UUID. Stale svar ska rensa det gamla intentet och får inte blockera nästa hund/session. Inga nya filer, dependencies, adapters, schemaändringar, navigationer eller LOGGA-EDIT-delar ingår. Samma verifierings- och visuella grindar gäller; avsaknad av rendering är fortsatt NOT TESTABLE.
+
+## Korrigeringsplan v6 efter QA/Reviewer
+
+V5 löste retry-feedback, Avbryt, pending-copy och de körbara policybesluten men frigjorde inte en gammal in-flight-flagga direkt vid hund-/sessionsbyte. V6 ersätter den booleska loggflighten med ett unikt flight-token: lifetime-byte frigör nuvarande token och `busy` omedelbart, en ny lifetime får starta, och den gamla operationens `finally` får bara städa om dess token fortfarande äger flighten. Körbart test ska bevisa att gammal flight frigörs, ny flight kan börja och gammal finish inte rensar den nya. Editorns befintliga `disabled` skickas även till datum- och tidsfält så synlig input inte kan avvika från det intent som retry återspelar. Inga andra app-, komponent-, data- eller scopeändringar ingår. Visuell evidens är fortsatt NOT TESTABLE tills den renderas.
