@@ -3,19 +3,17 @@ import { tokens } from '../../theme/tokens';
 
 export function PoopIcon({ color, size = tokens.size.iconSm }: { color: string; size?: number }) {
   return (
-    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size, justifyContent: 'flex-end', alignItems: 'center' }}>
-      <View style={[styles.base, { borderColor: color, width: size * 0.72, height: size * 0.46, borderRadius: tokens.radius.full }]}>
-        <View style={[styles.leftEye, { backgroundColor: color }]} />
-        <View style={[styles.rightEye, { backgroundColor: color }]} />
-      </View>
-      <View style={[styles.tip, { backgroundColor: color, width: size * 0.28, height: size * 0.18, borderRadius: tokens.radius.full }]} />
+    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.icon, { width: size, height: size }]}>
+      <View style={[styles.tier, { borderColor: color, width: size * 0.44, height: size * 0.28, borderRadius: size * 0.16 }]} />
+      <View style={[styles.tier, styles.middle, { borderColor: color, width: size * 0.66, height: size * 0.28, borderRadius: size * 0.16 }]} />
+      <View style={[styles.tier, styles.bottom, { borderColor: color, width: size * 0.88, height: size * 0.28, borderRadius: size * 0.16 }]} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  base: { borderWidth: tokens.size.stroke, alignItems: 'center', flexDirection: 'row', justifyContent: 'space-evenly' },
-  leftEye: { width: tokens.size.stroke, height: tokens.size.stroke },
-  rightEye: { width: tokens.size.stroke, height: tokens.size.stroke },
-  tip: { marginBottom: -tokens.spacing.xs },
+  icon: { alignItems: 'center', justifyContent: 'flex-end' },
+  tier: { borderWidth: tokens.size.stroke * 2, position: 'absolute', top: 0 },
+  middle: { top: '26%' },
+  bottom: { top: '52%' },
 });
