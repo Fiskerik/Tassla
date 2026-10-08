@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
-import { Alert, ImageBackground, StyleSheet, Text, View } from 'react-native';
-import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { Alert, StyleSheet, Text, View } from 'react-native';
+import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { AppBar, HeroCard, Progress } from '../../components/ui';
 import type { PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
 import { theme } from '../../theme/tokens';
 
@@ -45,10 +46,8 @@ export function PublishedTrainingScreen({
 
   return (
     <View>
-      <PageHeading title="Träning" description="Små steg som bygger på frivillighet och belöning." />
-      <ImageBackground source={require('../../../assets/images/dog-resting.png')} imageStyle={styles.heroImage} style={styles.hero} accessibilityLabel="Dekorativ bild av en hund som vilar hemma">
-        <View style={styles.heroCaption}><Text style={styles.heroText}>LUGNA STUNDER</Text></View>
-      </ImageBackground>
+      <AppBar mode="Title" title="Träning" />
+      <HeroCard title="Små steg, lugna stunder" meta="Bygg progression med frivillighet och belöning." />
       <MessageCard>Allmän träningsvägledning. Anpassa efter din hund. Du kan alltid pausa eller gå tillbaka. Registrering visar vad du markerat, inte vad hunden behärskar.</MessageCard>
       {error ? <>
         <MessageCard tone="error">{error}</MessageCard>
@@ -76,7 +75,7 @@ export function PublishedTrainingScreen({
               <Text style={styles.sourceHeading}>Källor</Text>
               {program.sources.map((source, index) => <Text key={`${index}-${source}`} style={styles.sourceText}>{source}</Text>)}
             </View>}
-            <Text style={styles.progress}>{completed.size} av {program.steps.length} steg registrerade</Text>
+            <Progress value={program.steps.length ? completed.size / program.steps.length * 100 : 0} label={`${completed.size} av ${program.steps.length} steg registrerade`} />
             {allComplete && <MessageCard>Alla steg är registrerade. Det betyder inte att hunden är färdigtränad. Du kan läsa eller repetera programmet.</MessageCard>}
             <PrimaryButton title={isOpen ? 'Dölj program' : 'Visa program'} onPress={() => setOpenProgramId(isOpen ? null : program.id)} />
             {isOpen && <View style={styles.details}>

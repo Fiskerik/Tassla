@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, StyleSheet, Text, View } from 'react-native';
 import { useFonts } from 'expo-font';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { HomeContent } from '../../data/app-data';
-import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { AppBar, Card, InfoBanner, SectionHeader } from '../../components/ui';
 import { theme } from '../../theme/tokens';
 import { getSafeContentSourceUrl } from './source-links';
 import { parseGuideBody } from './guide-body';
@@ -42,8 +43,8 @@ export function KnowledgeScreen({
 
   return (
     <View>
-      <QuietButton title="Tillbaka" onPress={onBack} />
-      <PageHeading title="Kunskap" description="Lugna, granskade guider för hundens vardag." />
+      <AppBar mode="Back" title="Kunskap" onAction={onBack} />
+      <InfoBanner>Vardagen med hund, ett ämne i taget.</InfoBanner>
       {contentState === 'loading' && <MessageCard>Hämtar publicerade guider…</MessageCard>}
       {contentState === 'error' && <>
         <MessageCard tone="error">Guiderna kunde inte hämtas. Vi visar inget tills anslutningen fungerar igen.</MessageCard>
@@ -54,23 +55,21 @@ export function KnowledgeScreen({
       </MessageCard>}
       {contentState === 'ready' && items.length > 0 && <>
         <View style={styles.guideList}>
+          <SectionHeader title="Ämnen att utforska" />
           {items.map((item) => {
             const selected = selectedItem?.id === item.id;
-            return <Pressable
+            return <Card
               key={item.id}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
+              selected={selected}
               accessibilityLabel={`${item.title}, version ${item.version}`}
-              onPress={() => { setSourceMessage(''); onSelectContent(item.id); }}
-              style={({ pressed }) => [styles.guideRow, selected && styles.guideRowSelected, pressed && styles.pressed]}
-            >
+              onPress={() => { setSourceMessage(''); onSelectContent(item.id); }}>
               {iconsLoaded && <Ionicons name={item.contentType === 'checklist' ? 'checkbox-outline' : 'book-outline'} size={21} color={theme.colors.accent} />}
               <View style={styles.guideCopy}>
                 <Text style={styles.guideType}>{contentTypeLabel(item.contentType)}</Text>
                 <Text style={styles.guideTitle}>{item.title}</Text>
               </View>
               {selected && <Text style={styles.selectedLabel}>Vald</Text>}
-            </Pressable>;
+            </Card>;
           })}
         </View>
         {selectedItem && <View style={styles.articleCard}>

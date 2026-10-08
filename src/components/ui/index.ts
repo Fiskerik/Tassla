@@ -16,6 +16,7 @@ export { IconChip, categoryIcons, type IconCategory, type IconChipSize } from '.
 export { ListRow } from './ListRow';
 export { Progress } from './Progress';
 export { PhotoPlaceholder } from './PhotoPlaceholder';
+export { PillIcon } from './PillIcon';
 export { QuickLogTile } from './QuickLogTile';
 export { SectionHeader } from './SectionHeader';
 export { StatusBadge } from './StatusBadge';

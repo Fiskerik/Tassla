@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Alert, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ActionFeedbackModal, DatePickerField, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { ActionFeedbackModal, DatePickerField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { isValidHealthWeightDate, isValidHealthWeightKg, type HealthHistoryRecord, type HealthHistoryType, type HealthWeightRecord } from '../../data/workspace-data';
 import { HealthHistoryScreen } from './HealthHistoryScreen';
 import { localDate } from '../onboarding/dog';
 import { theme } from '../../theme/tokens';
+import { AppBar, InfoBanner } from '../../components/ui';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -116,8 +117,8 @@ export function HealthScreen({
 
   if (!isCloud) {
     return <View>
-      <QuietButton title="Tillbaka till Mer" onPress={onBack} />
-      <PageHeading title="Hälsa" description="En lugn plats för hundens hälsouppgifter." />
+      <AppBar mode="Back" title="Hälsa" onAction={onBack} />
+      <InfoBanner>Håll ordning på hundens hälsa, en sak i taget.</InfoBanner>
       <View style={styles.foundationCard}>
         <View style={styles.iconCircle}><Text style={styles.fallback}>H</Text></View>
         <View style={styles.copy}>
@@ -131,8 +132,8 @@ export function HealthScreen({
 
   return (
     <View>
-      <QuietButton title="Tillbaka till Mer" onPress={onBack} />
-      <PageHeading title="Hälsa" description="Håll ordning på hundens vikt över tid." />
+      <AppBar mode="Back" title="Hälsa" onAction={onBack} />
+      <InfoBanner>Håll ordning på hundens vikt över tid.</InfoBanner>
       <Text style={styles.sectionTitle} accessibilityRole="header">Viktresa</Text>
       <MessageCard>Vikterna är ägarregistrerade uppgifter, inte en verifierad journal. Tassla tolkar inte viktförändringar.</MessageCard>
       {onOpenPlannedHealth && <View style={styles.plannedCard}>
