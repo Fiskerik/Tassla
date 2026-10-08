@@ -2,6 +2,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useState } from 'react';
 import { tokens } from '../../theme/tokens';
 import { AppBar } from './AppBar';
+import { ActionMenu } from './ActionMenu';
+import { BottomNav } from './BottomNav';
 import { BottomSheet } from './BottomSheet';
 import { Button } from './Button';
 import { Card } from './Card';
@@ -17,6 +19,7 @@ import { Progress } from './Progress';
 import { QuickLogTile } from './QuickLogTile';
 import { SectionHeader } from './SectionHeader';
 import { StatusBadge } from './StatusBadge';
+import { Skeleton } from './Skeleton';
 import { Tabs } from './Tabs';
 import { Toast } from './Toast';
 
@@ -28,6 +31,8 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
   const [field, setField] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [showSheet, setShowSheet] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [activeNav, setActiveNav] = useState<'home' | 'log' | 'training' | 'health' | 'more'>('home');
   return <View style={styles.page}>
     <AppBar mode="Back" title="Komponentgalleri" onAction={onBack} />
     <Text style={styles.note}>Visuell provyta · Exempeltexter och lokala tillstånd. Håll in en knapp för tryckläget.</Text>
@@ -37,6 +42,7 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
       <Button variant={variant} label={variant === 'destructive' ? 'Radera' : 'Spara'} accessibilityLabel={variant === 'icon' ? 'Fler val' : variant === 'destructive' ? 'Radera' : 'Spara'} iconName="ellipsis-horizontal" onPress={() => undefined} />
       <Button variant={variant} label="Avstängd" accessibilityLabel="Avstängd" onPress={() => undefined} disabled />
       <Button variant={variant} label="Laddar" accessibilityLabel="Laddar" onPress={() => undefined} loading />
+      <Button variant={variant} label="Tryckt" accessibilityLabel="Tryckt" onPress={() => undefined} state="pressed" />
     </View>)}
     <SectionHeader title="Appbar och flikar" />
     <AppBar mode="Home" title="Tassla" />
@@ -62,9 +68,10 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
     <Progress value={60} label="3 av 5 genomförda" />
     <Progress value={100} label="5 av 5 genomförda" />
     <SectionHeader title="Återkoppling och status" />
-    <Toast tone="success" message="Loggat" onUndo={() => undefined} />
+    <Toast tone="success" message="Sparat" confirmed onUndo={() => undefined} />
     <Toast tone="error" message="Kunde inte spara" onRetry={() => undefined} />
     <Toast tone="neutral" message="Påminnelsen är avstängd" />
+    <Toast tone="uncertain" onRetry={() => undefined} />
     <StatusBadge status="saving" /><StatusBadge status="offline" /><StatusBadge status="error" />
     <EmptyState onAction={() => undefined} />
     <SectionHeader title="Formulär och val" />
@@ -75,6 +82,12 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
     <Field label="Datum" value="07/32" onChangeText={() => undefined} kind="date" error="Kontrollera datumet" />
     <CheckboxCard label="Visa påminnelse" checked={checked} onChange={setChecked} />
     <CheckboxCard label="Påminnelse avstängd" checked={false} onChange={() => undefined} disabled />
+    <Field label="Fokuserat fält" value="Luna" onChangeText={() => undefined} state="focus" />
+    <Field label="Inaktiverat fält" value="Luna" onChangeText={() => undefined} state="disabled" />
+    <SectionHeader title="Åtgärder och laddning" />
+    <ActionMenu visible={showMenu} onOpen={() => setShowMenu(true)} onClose={() => setShowMenu(false)} onEdit={() => undefined} onDelete={() => undefined} />
+    <Skeleton shape="line" lines={2} /><Skeleton shape="circle" /><Skeleton shape="card" /><Skeleton shape="row" />
+    <BottomNav active={activeNav} onChange={setActiveNav} />
     <SectionHeader title="Dialog och panel" />
     <Button variant="secondary" label="Visa dialog" accessibilityLabel="Visa dialog" onPress={() => setShowDialog(true)} />
     <Button variant="secondary" label="Visa panel" accessibilityLabel="Visa panel" onPress={() => setShowSheet(true)} />

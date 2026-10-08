@@ -1,6 +1,6 @@
 # FIGMA-DS-02 – kontrastunderlag
 
-Datum: 2026-10-08. Källa: INVENTORY.md §4.1–4.2 och den låsta variabelarkitekturen i FIGMA-DS-01 plan v3. **Beräknat från dokumenterade tokens, inte avläst eller verifierat i Figma.** Inga tokens har ändrats. Tabellen ska publiceras visuellt i Foundations när Figma-MCP är tillgängligt.
+Datum: 2026-10-08. Källa: INVENTORY.md §4.1–4.2, den låsta variabelarkitekturen i FIGMA-DS-01 plan v3 och genomförd FIGMA-DS-02-audit. Tabellen är publicerad i Figma [Foundations](https://www.figma.com/design/2UI5GtK3JjZH3ncCS9M35c/Untitled?node-id=61-1725).
 
 WCAG-metod: omvandla varje sRGB-kanal c till 0–1, använd c/12,92 för c ≤ 0,04045, annars ((c+0,055)/1,055)^2,4. Relativ luminans L = 0,2126R + 0,7152G + 0,0722B. Kontrast = (Lljus + 0,05)/(Lmörk + 0,05). Beräkningen utfördes lokalt med Python; gränserna bedömdes före avrundning till två decimaler.
 
@@ -45,8 +45,8 @@ for name, fg, bg in pairs:
 PY
 ```
 
-## Kontroller och gradient – återstår
+## Kontroller och gradient – genomfört
 
-`border #D9DFD7` ger bara 1,36:1 på surface och 1,21:1 på background; `dangerBorder #D5A5A0` ger 1,84:1 på dangerSurface. Dekorativa kortramar behöver inte fungera som enda kontrollsignal. Om dessa färger identifierar ett fält/checkbox ska en betydelsebärande token rättas: föreslaget `Color/controlBorder` aliasar befintlig `Primitives/muted #536257`, och felkontrollens kant använder `Color/danger`. Detta är en planerad Figma-åtgärd, inte implementerad eller godkänd appändring.
+`border #D9DFD7` ger bara 1,36:1 på surface och 1,21:1 på background och används därför inte som ensam kontrollsignal. Implementerad `Color/borderStrong` aliaserar `Primitives/muted #536257`: 6,46:1 mot surface, 5,75:1 mot background och 5,70:1 mot successSurface. Den är strukturellt verifierad på Field normal/disabled, CheckboxCard, secondary-/icon-knappar och okryssad ChecklistItem. Focus använder primary och Error använder dangerBorder/danger tillsammans med tillståndets övriga signaler.
 
-Hero-text över gradient, disabled-opacitet, fokusindikatorer och verkliga kontrollkanter är **NOT TESTABLE** utan Figma-rendering. Blanda inte transparenta färger med opaka kontrasttal. Bottenscrim ska få egna tokens och vara tillräckligt mörk över hela textområdet, även med ljusast möjliga platshållare. Verifiera sammansatta färger i slutlig audit och korrigera tokens om 4,5:1 inte nås.
+HeroCard är renderad med en svart gradient på 72–90 % över hela textområdet och vit text; även ljusaste underlag ger mer än 4,5:1 i området. Disabled-opacitet och fokusindikatorer är renderade i familjeevidensen. Transparenta färger redovisas fortsatt inte som opaka tokenkvoter.

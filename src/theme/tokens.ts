@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 
 const primitives = {
   white: '#FFFFFF', cream: '#F7F1E7', ink: '#1C3027', muted: '#536257',
-  green700: '#186A4D', green800: '#12543D', border: '#D9DFD7', green100: '#E8EFE8',
+  green700: '#186A4D', green800: '#12543D', border200: '#D9DFD7', green100: '#E8EFE8',
   successSurface: '#EAF3EC', amber700: '#785716', amber100: '#F5E7BF',
   red700: '#A32929', red100: '#F7EAE7', red200: '#D5A5A0', blue700: '#246A98',
   blue100: '#E4EEF4', brown700: '#885839', brown100: '#F5E9DF', purple700: '#72558E',
@@ -17,7 +17,8 @@ const semanticColors = {
   onPrimary: primitives.white,
   textPrimary: primitives.ink,
   textSecondary: primitives.muted,
-  border: primitives.border,
+  border: primitives.border200,
+  borderStrong: primitives.muted,
   selectedSurface: primitives.green100,
   success: primitives.green700,
   successSurface: primitives.successSurface,

@@ -164,3 +164,8 @@ Faktiskt verifierat: frusen dependencyåterställning utan lockfileändring; `pn
 Visuell QA är NOT TESTABLE: Windowsmiljön saknar Android-enhet/emulator, iOS-simulator och webbruntime. Ingen skärmdump finns, så paketet är inte visuellt godkänt eller DONE. Release-logg: [DS-CODE-01](../../releases/DS-CODE-01.md). Nästa steg: oberoende QA/reviewer och därefter verklig gallerirendering på liten/stor bredd och stor text.
 
 DS-CODE-01 korrigeringsförsök 1: Reviewer blockerade den oanvända `Button.fullWidth`-propen. Architect APPROVE v4.1; propen togs bort, vanliga knappar låstes till full bredd och ikonknappen till tokeniserad 44×44. Förnyad QA PASS fokuserat9/full356/diff; iOS-export PASS. Förnyad reviewer kod-PASS. Totalstatus förblir BLOCK eftersom renderade galleriskärmdumpar saknas; visuell QA är NOT TESTABLE och får inte ersättas av kodkontroll.
+## LOG-UI-COMPONENTS kompletteringscheckpoint — 2026-10-08
+
+Read-only Figma context och screenshot lästes för AppBar `13:113` efter metadata-inspektion av sidan `Design system`; inga Figma-skrivverktyg användes. Den befintliga DS-CODE-01-slicen kompletterades med BottomNav (fem MVP-destinationer), ActionMenu (Ändra/Radera), Skeleton, `Color/borderStrong`, Field states, ListRow time/detail/chevron och truthful Toast (`confirmed`/`uncertain` + retry). BottomSheet har ingen delningsstandardtext.
+
+Product gav små copyändringar som är införda. Critic blockerade först på delningscopy, ListRow-kontrakt och statiskt pressed-state; alla tre är korrigerade. Typecheck/lint kunde inte starta då pnpm saknar lokalt installerade paket och registryåtkomst blockeras med EPERM. `git diff --check` passerar. Visuell QA, stor text, skärmläsare och gallery screenshots är NOT TESTABLE utan Expo-rendering.
