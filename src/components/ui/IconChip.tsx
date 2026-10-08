@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
 import { categoryColors, tokens } from '../../theme/tokens';
 import { PoopIcon } from './PoopIcon';
+import { PillIcon } from './PillIcon';
 
 export type IconCategory = keyof typeof categoryColors;
 export type IconChipSize = 'medium' | 'large';
@@ -21,7 +22,7 @@ export function IconChip({ category, size = 'medium' }: { category: IconCategory
   const icon = categoryIcons[category];
   return (
     <View accessibilityRole="image" accessibilityLabel={`${categoryLabels[category]}-ikon`} style={[styles.chip, { width: dimension, minHeight: dimension, backgroundColor: color.bg, borderRadius: tokens.radius.full }]}>
-      {icon === 'poop' ? <PoopIcon color={color.fg} size={iconSize} /> : <Ionicons name={icon} size={iconSize} color={color.fg} />}
+      {icon === 'poop' ? <PoopIcon color={color.fg} size={iconSize} /> : icon === 'medical-outline' ? <PillIcon color={color.fg} size={iconSize} /> : <Ionicons name={icon} size={iconSize} color={color.fg} />}
     </View>
   );
 }
