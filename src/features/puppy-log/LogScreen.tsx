@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { AppBar, BottomSheet, Button, Card, Dialog, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast } from '../../components/ui';
+import { Alert, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AppBar, Button, Card, Dialog, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast } from '../../components/ui';
 import { DatePickerField, MessageCard, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
@@ -66,6 +66,11 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     onAdd(type);
   }
 
+  function toggleMore() {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setMoreVisible((visible) => !visible);
+  }
+
   function saveEdit(event: LogEvent, changes: LogEventChanges): boolean | Promise<boolean> {
     return onUpdate?.(event.id, changes) ?? false;
   }
@@ -100,7 +105,8 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         <View style={styles.gridRow}>{(['pee', 'poop'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View>
         <View style={styles.gridRow}>{(['food', 'sleep'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View>
       </View>
-      <View style={styles.moreRow}><QuickLogTile label="Fler" accessibilityLabel="Fler loggtyper" icon={<View style={styles.moreIcon}><Ionicons name="add" size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></View>} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={() => setMoreVisible(true)} /></View>
+      <View style={styles.moreRow}><QuickLogTile label="Fler" accessibilityLabel={moreVisible ? 'Dölj fler loggtyper' : 'Visa fler loggtyper'} icon={<View style={styles.moreIcon}><Ionicons name={moreVisible ? 'remove' : 'add'} size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></View>} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={toggleMore} /></View>
+      {moreVisible ? <View style={styles.grid} accessibilityLabel="Fler loggtyper"><View style={styles.gridRow}>{(['walk', 'awake'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View></View> : null}
 
       {patterns.length > 0 ? <>
         <SectionHeader title="Dina senaste mönster" />
@@ -130,11 +136,6 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       {loadMoreError ? <Toast tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore} /> : hasMore ? <Button label={loadingMore ? 'Hämtar…' : 'Visa äldre poster'} accessibilityLabel={loadingMore ? 'Hämtar äldre poster' : 'Visa äldre poster'} disabled={loadingMore} loading={loadingMore} onPress={onLoadMore ?? (() => undefined)} /> : null}
     </>}
 
-    <BottomSheet visible={moreVisible} title="Fler loggtyper" onRequestClose={() => setMoreVisible(false)}>
-      <View style={styles.grid}>
-        <View style={styles.gridRow}>{(['walk', 'awake'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View>
-      </View>
-    </BottomSheet>
     <Dialog visible={duplicate !== null} title="Du har redan loggat det här. Lägga till ändå?" onRequestClose={() => setDuplicate(null)} onConfirm={() => { if (duplicate) selectType(duplicate.type, duplicate.timestamp, true); }} confirmLabel="Lägg till ändå" confirmVariant="primary"><View /></Dialog>
   </View>;
 }

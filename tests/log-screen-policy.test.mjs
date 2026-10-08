@@ -15,8 +15,10 @@ test('quick log uses shared controls and keeps the approved two by two plus more
   assert.match(appBar, /mode !== 'Title'/);
   assert.match(screen, /\(\['pee', 'poop'\] as const\)/);
   assert.match(screen, /\(\['food', 'sleep'\] as const\)/);
-  assert.match(screen, /title="Fler loggtyper"/);
   assert.match(screen, /\(\['walk', 'awake'\] as const\)/);
+  assert.match(screen, /accessibilityLabel="Fler loggtyper"/);
+  assert.match(screen, /LayoutAnimation\.configureNext/);
+  assert.doesNotMatch(screen, /<BottomSheet[\s\S]*?Fler loggtyper/);
   assert.match(screen, /label="Fler"[\s\S]*?icon=\{/);
   assert.match(quickTile, /icon\?: ReactNode/);
   assert.match(screen, /<QuickLogTile/);
