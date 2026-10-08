@@ -1862,6 +1862,108 @@
         }
       ],
       "next_step": "Render dev gallery on small/large phone widths and large text, save screenshots, run independent visual QA checklist, then renewed reviewer"
+    },
+    {
+      "id": "LOGGA-QUICK",
+      "title": "Logga snabbflöde, sanningsenlig status och skärmtillstånd",
+      "mvp_requirement": "docs/mvp.md: Vardagslogg – ägaren kan snabbt logga kiss, bajs, mat, sömn/vaken och promenad samt se historik; Erik-beslut 2026-10-08 om Fler",
+      "plan": "docs/plans/LOGGA-ux-spec.md v3, slice LOGGA-QUICK",
+      "write_paths": [
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/log-model.ts",
+        "src/features/puppy-log/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/components/ui/QuickLogTile.tsx",
+        "src/components/ui/BottomSheet.tsx",
+        "src/components/ui/ListRow.tsx",
+        "src/components/ui/Dialog.tsx",
+        "src/components/ui/Toast.tsx",
+        "tests/log-model.test.mjs",
+        "tests/log-screen-policy.test.mjs",
+        "tests/ui-library-policy.test.mjs",
+        "docs/plans/LOGGA-ux-spec.md",
+        "docs/releases/LOGGA.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/design/evidence/logga/quick"
+      ],
+      "acceptance": [
+        "AppBar, 2x2 Kiss/Bajs/Mat/Sömn, Fler med Promenad/Vaken och kompakt datumgrupperad lista använder komponenter från 37bf93f utan duplicering",
+        "Laddar, tom, fel och normal är utformade; SPARAD och teknisk banner saknas",
+        "Single-flight add visar pending på rätt rad, saved-toast först efter bekräftelse, failed/unsure med fungerande retry och undo endast för exakt bekräftad insert",
+        "Samma kategori inom två minuter frågar före ny write; double tap skapar ingen extra write",
+        "Mönster visas bara per Kiss/Bajs med minst två poster och behåller medianberäkningen",
+        "Liten/stor telefon och stor text samt laddar/tom/fel/normal, Fler, mutationstoasts och dubblettdialog har renderad evidens och oberoende visuell QA"
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/log-model.test.mjs tests/log-screen-policy.test.mjs tests/ui-library-policy.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "Rendered QUICK screenshot matrix and independent visual QA",
+        "Independent QA and Reviewer"
+      ],
+      "depends_on": [
+        "UX-02"
+      ],
+      "status": "ready",
+      "history": [
+        {
+          "actor": "coordinator",
+          "evidence": "Erik confirmed 37bf93f as latest component baseline and directed LOGGA to build after it; DS-CODE visual gallery status remains NOT TESTABLE and is not represented as PASS"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE LOGGA plan v3; Product-copy reviewed; Critic GO; review recorded in docs/plans/LOGGA-ux-spec.md"
+        }
+      ],
+      "next_step": "APPROVE LOGGA plan v3; Product-copy reviewed; Critic GO; review recorded in docs/plans/LOGGA-ux-spec.md"
+    },
+    {
+      "id": "LOGGA-EDIT",
+      "title": "Logga redigering, radering och slutlig visuell QA",
+      "mvp_requirement": "docs/mvp.md: Vardagslogg – ägaren kan rätta och radera egna loggposter",
+      "plan": "docs/plans/LOGGA-ux-spec.md v3, slice LOGGA-EDIT",
+      "write_paths": [
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/log-model.ts",
+        "src/features/puppy-log/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/components/ui/ActionMenu.tsx",
+        "src/components/ui/BottomSheet.tsx",
+        "src/components/ui/Dialog.tsx",
+        "tests/log-model.test.mjs",
+        "tests/log-screen-policy.test.mjs",
+        "tests/ui-library-policy.test.mjs",
+        "docs/design/evidence/logga",
+        "docs/plans/LOGGA-ux-spec.md",
+        "docs/releases/LOGGA.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Tryck på rad öppnar edit-sheet med typ, datum, tid, valfri anteckning och Spara",
+        "Delete-only ActionMenu öppnar destructive dialog; inga stora Ändra/Radera-länkar finns på rader",
+        "Failed/unsure behåller sheet och input; saved försonar lista och mönster även om bakgrundsreload misslyckas",
+        "Liten/stor telefon och stor text renderas för alla specificerade skärm-, sheet-, dialog- och toasttillstånd",
+        "Design-rules avsnitt 14 och UX-skillens beteendechecklista granskas av annan roll än implementer"
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/log-model.test.mjs tests/log-screen-policy.test.mjs tests/ui-library-policy.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "Rendered screenshot matrix and independent visual QA",
+        "Independent QA and Reviewer"
+      ],
+      "depends_on": [
+        "LOGGA-QUICK"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Start only after LOGGA-QUICK has a durable QA/Reviewer-approved commit"
     }
   ]
 }
