@@ -75,7 +75,7 @@ import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
 import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
 import { PassportScreen } from '../passport/PassportScreen';
 import { PublishedTrainingScreen } from '../training/PublishedTrainingScreen';
-import { theme } from '../../theme/tokens';
+import { theme, tokens } from '../../theme/tokens';
 import { useAuth } from '../account/AuthProvider';
 import { NotificationSettingsScreen } from '../notifications/NotificationSettingsScreen';
 import { AccountSettingsScreen } from '../account/AccountSettingsScreen';
@@ -2099,11 +2099,11 @@ function logTypeText(type: LogEventType): string {
 }
 
 const styles = StyleSheet.create({
-  homeHeader: { marginTop: 30, marginBottom: 20 },
+  homeHeader: { marginTop: tokens.spacing.xl, marginBottom: tokens.spacing.xl },
   eyebrow: { color: theme.colors.accent, fontSize: 11, letterSpacing: 1.2, fontWeight: '800' },
-  homeTitle: { color: theme.colors.text, fontSize: 34, lineHeight: 42, fontWeight: '800', letterSpacing: -0.7, marginTop: 10 },
+  homeTitle: { ...tokens.typography.display, color: tokens.colors.textPrimary, marginTop: tokens.spacing.sm },
   homeSubtitle: { color: theme.colors.mutedText, fontSize: 16, marginTop: 4 },
-  welcomeCard: { minHeight: 176, flexDirection: 'row', overflow: 'hidden', borderRadius: theme.radius.card, backgroundColor: '#E8E3D6', marginBottom: 26 },
+  welcomeCard: { minHeight: 160, flexDirection: 'row', overflow: 'hidden', borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.selectedSurface, marginBottom: tokens.spacing.xl },
   welcomeCopy: { flex: 1, justifyContent: 'center', padding: 18 },
   welcomeEyebrow: { color: theme.colors.accent, fontSize: 10, letterSpacing: 1.1, fontWeight: '800' },
   welcomeTitle: { color: theme.colors.text, fontSize: 20, lineHeight: 25, fontWeight: '800', marginTop: 8 },
@@ -2111,12 +2111,12 @@ const styles = StyleSheet.create({
   welcomeImage: { width: '42%', height: '100%', resizeMode: 'cover' },
   sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 10 },
   sectionTitle: { color: theme.colors.text, fontSize: 20, fontWeight: '800' },
-  contentCard: { borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, padding: 17, marginTop: 8 },
+  contentCard: { borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.borderStrong, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, marginTop: tokens.spacing.sm },
   contentCardHeading: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   cardEyebrow: { color: theme.colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 0.9, marginBottom: 7 },
   contentTitle: { color: theme.colors.text, fontSize: 18, lineHeight: 24, fontWeight: '800' },
   contentBody: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 21, marginTop: 7 },
-  summaryCard: { borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, padding: 16, marginTop: 8 },
+  summaryCard: { borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.borderStrong, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, marginTop: tokens.spacing.sm },
   summaryTitle: { color: theme.colors.text, fontSize: 16, fontWeight: '800' },
   summaryText: { color: theme.colors.mutedText, fontSize: 15, lineHeight: 22 },
   shortcuts: { flexDirection: 'row', gap: 9, marginTop: 20 },
