@@ -7,7 +7,7 @@ export type IconCategory = keyof typeof categoryColors;
 export type IconChipSize = 'medium' | 'large';
 export const categoryIcons: Record<IconCategory, React.ComponentProps<typeof Ionicons>['name'] | 'poop'> = {
   pee: 'water-outline', poop: 'poop', food: 'restaurant-outline', sleep: 'moon-outline', awake: 'eye-outline',
-  walk: 'footsteps-outline', training: 'school-outline', vaccination: 'bandage-outline', deworming: 'bug-outline', veterinary: 'medkit-outline',
+  walk: 'footsteps-outline', training: 'school-outline', vaccination: 'bandage-outline', deworming: 'medical-outline', veterinary: 'medkit-outline',
 };
 const categoryLabels: Record<IconCategory, string> = {
   pee: 'Kiss', poop: 'Bajs', food: 'Mat', sleep: 'Sömn', awake: 'Vaken', walk: 'Promenad', training: 'Träning',

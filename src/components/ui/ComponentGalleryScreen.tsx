@@ -68,7 +68,7 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
     <Progress value={60} label="3 av 5 genomförda" />
     <Progress value={100} label="5 av 5 genomförda" />
     <SectionHeader title="Återkoppling och status" />
-    <Toast tone="success" message="Sparat" confirmed onUndo={() => undefined} />
+    <Toast tone="success" message="Loggat · Sparat" confirmed onUndo={() => undefined} />
     <Toast tone="error" message="Kunde inte spara" onRetry={() => undefined} />
     <Toast tone="neutral" message="Påminnelsen är avstängd" />
     <Toast tone="uncertain" onRetry={() => undefined} />
@@ -92,7 +92,7 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
     <Button variant="secondary" label="Visa dialog" accessibilityLabel="Visa dialog" onPress={() => setShowDialog(true)} />
     <Button variant="secondary" label="Visa panel" accessibilityLabel="Visa panel" onPress={() => setShowSheet(true)} />
     <Dialog visible={showDialog} title="Radera händelsen?" onRequestClose={() => setShowDialog(false)} onConfirm={() => setShowDialog(false)}><Text style={styles.body}>Det går inte att ångra.</Text></Dialog>
-    <BottomSheet visible={showSheet} title="Tassla-pass" onRequestClose={() => setShowSheet(false)} onPrimaryAction={() => setShowSheet(false)}><Text style={styles.body}>En kort överblick för veterinärbesöket.</Text></BottomSheet>
+    <BottomSheet visible={showSheet} title="Tassla-pass" onRequestClose={() => setShowSheet(false)} onPrimaryAction={() => setShowSheet(false)}><Text style={styles.body}>En kort överblick för veterinärbesöket. Dela som PDF.</Text></BottomSheet>
   </View>;
 }
 
