@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
-import { theme } from '../../theme/tokens';
+import { tokens } from '../../theme/tokens';
 import type { Dog } from '../onboarding/dog';
 import { ageInWeeks, localDate } from '../onboarding/dog';
 
@@ -22,10 +23,12 @@ export function PreviewHomeScreen({
     <View>
       <PageHeading title={`Hej, ${dog.name}!`} description="En lugn överblick för er vardag." />
       <View style={styles.dogCard}>
-        <View style={styles.dogIcon}><Text style={styles.dogIconText}>✦</Text></View>
+        <View style={styles.dogIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          <Ionicons name="paw" size={tokens.size.iconMd} color={tokens.colors.primary} />
+        </View>
         <View style={styles.dogCopy}>
           <Text style={styles.dogName}>{dog.name}</Text>
-          <Text style={styles.dogMeta}>Syntetisk profil · {age} {age === 1 ? 'vecka gammal' : 'veckor gammal'}</Text>
+          <Text style={styles.dogMeta}>{age} {age === 1 ? 'vecka gammal' : 'veckor gammal'}</Text>
         </View>
       </View>
       <Text style={styles.sectionTitle} accessibilityRole="header">Idag för {dog.name}</Text>
@@ -54,16 +57,15 @@ export function PreviewHomeScreen({
 }
 
 const styles = StyleSheet.create({
-  dogCard: { minHeight: 110, borderRadius: theme.radius.card, backgroundColor: theme.colors.accent, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 30 },
-  dogIcon: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', backgroundColor: '#2B805F' },
-  dogIconText: { color: '#FFF0D2', fontSize: 29, lineHeight: 34, fontWeight: '700' },
+  dogCard: { minHeight: tokens.size.touchMin * 2, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, flexDirection: 'row', alignItems: 'center', marginBottom: tokens.spacing.xl },
+  dogIcon: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.successSurface, marginRight: tokens.spacing.md },
   dogCopy: { flex: 1 },
-  dogName: { color: theme.colors.onAccent, fontSize: 20, fontWeight: '800' },
-  dogMeta: { color: '#DDECE2', fontSize: 14, lineHeight: 20, marginTop: 5 },
-  sectionTitle: { color: theme.colors.text, fontSize: 21, fontWeight: '800' },
-  trainingShortcut: { borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, padding: 16, marginTop: 14 },
-  shortcutEyebrow: { color: theme.colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 0.6 },
-  shortcutTitle: { color: theme.colors.text, fontSize: 17, fontWeight: '800', marginTop: 8 },
-  shortcutDetail: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 20, marginTop: 5 },
-  shortcutProgress: { color: theme.colors.accent, fontSize: 12, fontWeight: '700', marginTop: 8 },
+  dogName: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
+  dogMeta: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
+  sectionTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
+  trainingShortcut: { borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, marginTop: tokens.spacing.md },
+  shortcutEyebrow: { ...tokens.typography.label, color: tokens.colors.primary },
+  shortcutTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginTop: tokens.spacing.sm },
+  shortcutDetail: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
+  shortcutProgress: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700', marginTop: tokens.spacing.sm },
 });

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { MessageCard, PageHeading, QuietButton } from '../../components/AppPrimitives';
-import { theme } from '../../theme/tokens';
+import { tokens } from '../../theme/tokens';
 
 export function BetaInfoScreen({ onBack }: { onBack: () => void }) {
   const [linkError, setLinkError] = useState(false);
@@ -17,7 +17,7 @@ export function BetaInfoScreen({ onBack }: { onBack: () => void }) {
   return <View>
     <QuietButton title="Tillbaka till konto" onPress={onBack} />
     <View style={styles.hero}>
-      <Ionicons name="information-circle-outline" size={25} color={theme.colors.accent} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+      <Ionicons name="information-circle-outline" size={tokens.size.iconMd} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
       <PageHeading title="Information om betan" description="Tassla hjälper dig samla uppgifter om hundens vardag." />
     </View>
     <MessageCard>Du väljer själv att spara hundprofil, vardagslogg, vikt, utförda vaccinationer och veterinärbesök, planerade vårdbesök och träningssteg. Lokala påminnelser är frivilliga och av från början. Tassla-passet skapas bara när du väljer att exportera det.</MessageCard>
@@ -37,11 +37,11 @@ export function BetaInfoScreen({ onBack }: { onBack: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  hero: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: theme.radius.card, backgroundColor: '#F1F5F0', borderWidth: 1, borderColor: theme.colors.border, marginTop: 8, marginBottom: 12 },
-  company: { padding: 18, borderRadius: theme.radius.card, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, marginTop: 12 },
-  companyName: { color: theme.colors.text, fontSize: 17, fontWeight: '800' },
-  detail: { color: theme.colors.mutedText, fontSize: 15, marginTop: 6 },
-  email: { paddingVertical: 12, marginTop: 5 },
-  emailText: { color: theme.colors.accent, fontSize: 15, fontWeight: '700', textDecorationLine: 'underline' },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.selectedSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.md },
+  company: { padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, marginTop: tokens.spacing.md },
+  companyName: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  detail: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
+  email: { minHeight: tokens.size.touchMin, justifyContent: 'center', marginTop: tokens.spacing.xs },
+  emailText: { ...tokens.typography.body, color: tokens.colors.primary, fontWeight: '700', textDecorationLine: 'underline' },
   pressed: { opacity: 0.75 },
 });

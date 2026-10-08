@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ActionFeedbackModal, DatePickerField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { DatePickerField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { isValidHealthWeightDate, isValidHealthWeightKg, type HealthHistoryRecord, type HealthHistoryType, type HealthWeightRecord } from '../../data/workspace-data';
 import { HealthHistoryScreen } from './HealthHistoryScreen';
 import { localDate } from '../onboarding/dog';
-import { theme } from '../../theme/tokens';
+import { tokens } from '../../theme/tokens';
 import { AppBar, InfoBanner } from '../../components/ui';
-
+import { Toast } from '../../components/ui/Toast';
 type LoadState = 'loading' | 'ready' | 'error';
 
 export function HealthScreen({
@@ -69,33 +69,48 @@ export function HealthScreen({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [date, setDate] = useState(localDate());
   const [weight, setWeight] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editWeight, setEditWeight] = useState('');
+  const [toastRecordId, setToastRecordId] = useState<string | null>(null);
+  const [toastNonce, setToastNonce] = useState(0);
   const [formError, setFormError] = useState('');
-  const [dismissedStatus, setDismissedStatus] = useState<string | null>(null);
-  const editingRecord = cloudRecords.find((record) => record.id === editingId) ?? null;
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const confirmedMessage = statusMessage?.startsWith('Ändringen är sparad') && !statusError && !pendingStatus && !isBusy
+    ? statusMessage : null;
+  useEffect(() => {
+    if (!confirmedMessage) { setToastMessage(null); return; }
+    setToastMessage(confirmedMessage);
+    const timer = setTimeout(() => { setToastMessage(null); setToastRecordId(null); }, 2500);
+    return () => clearTimeout(timer);
+  }, [confirmedMessage, toastNonce]);
 
   function startEditing(record: HealthWeightRecord) {
     setEditingId(record.id);
-    setDate(record.occurred_on);
-    setWeight(String(record.weight_kg));
+    setToastRecordId(null);
+    setToastMessage(null);
+    setEditDate(record.occurred_on);
+    setEditWeight(String(record.weight_kg));
     setFormError('');
   }
 
   function cancelEditing() {
     setEditingId(null);
-    setDate(localDate());
-    setWeight('');
+    setToastRecordId(null);
+    setEditDate('');
+    setEditWeight('');
     setFormError('');
     Keyboard.dismiss();
   }
 
   async function save() {
-    setDismissedStatus(null);
     setFormError('');
-    if (!isValidHealthWeightDate(date)) {
+    const occurredOn = editingId ? editDate : date;
+    const enteredWeight = editingId ? editWeight : weight;
+    if (!isValidHealthWeightDate(occurredOn)) {
       setFormError('Ange ett giltigt datum som inte ligger i framtiden.');
       return;
     }
-    const normalizedWeight = weight.trim().replace(',', '.');
+    const normalizedWeight = enteredWeight.trim().replace(',', '.');
     if (!/^\d+(?:\.\d{1,3})?$/.test(normalizedWeight)) {
       setFormError('Ange vikten i kg med högst tre decimaler.');
       return;
@@ -105,7 +120,20 @@ export function HealthScreen({
       setFormError('Vikten måste vara större än 0 och högst 200 kg.');
       return;
     }
-    if (await onSave?.(editingId, date, weightKg)) cancelEditing();
+    if (await onSave?.(editingId, occurredOn, weightKg)) {
+      setToastNonce((current) => current + 1);
+      if (editingId) {
+        const savedRecordId = editingId;
+        cancelEditing();
+        setToastRecordId(savedRecordId);
+      }
+      else {
+        setDate(localDate());
+        setWeight('');
+        setFormError('');
+        Keyboard.dismiss();
+      }
+    }
   }
 
   function confirmDelete(record: HealthWeightRecord) {
@@ -138,7 +166,7 @@ export function HealthScreen({
       <MessageCard>Vikterna är ägarregistrerade uppgifter, inte en verifierad journal. Tassla tolkar inte viktförändringar.</MessageCard>
       {onOpenPlannedHealth && <View style={styles.plannedCard}>
         <View style={styles.plannedIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          <Ionicons name="calendar-outline" size={21} color={theme.colors.accent} />
+          <Ionicons name="calendar-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />
         </View>
         <View style={styles.plannedCopy}>
           <Text style={styles.cardTitle}>Planerade hälsohändelser</Text>
@@ -158,41 +186,65 @@ export function HealthScreen({
         </> : null}
         {isBusy && <MessageCard>Sparar och kontrollerar ändringen…</MessageCard>}
         <View style={styles.formCard}>
-          <Text style={styles.formTitle} accessibilityRole="header">{editingRecord ? 'Rätta viktpost' : 'Lägg till vikt'}</Text>
-          <DatePickerField label="Datum" disabled={isBlocked} onChangeText={setDate} value={date} />
+          <Text style={styles.formTitle} accessibilityRole="header">Lägg till vikt</Text>
+          <DatePickerField label="Datum" disabled={isBlocked || Boolean(editingId)} onChangeText={setDate} value={date} />
           <View style={styles.field}>
             <Text style={styles.label}>Vikt (kg)</Text>
             <TextInput
               accessibilityLabel="Vikt i kilogram"
-              editable={!isBlocked}
+              editable={!isBlocked && !editingId}
               keyboardType="decimal-pad"
               onChangeText={setWeight}
               onSubmitEditing={() => Keyboard.dismiss()}
               placeholder="Till exempel 4,25"
-              placeholderTextColor={theme.colors.mutedText}
+              placeholderTextColor={tokens.colors.textSecondary}
               returnKeyType="done"
               style={styles.input}
               value={weight}
             />
           </View>
-          {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
-          <PrimaryButton title={isBusy ? 'Sparar…' : editingRecord ? 'Spara rättning' : 'Spara vikt'} disabled={isBlocked} onPress={() => { void save(); }} />
-          {statusMessage && !statusError ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => setDismissedStatus(statusMessage)} /> : null}
-          {editingRecord && <QuietButton title="Avbryt rättning" disabled={isBlocked} onPress={cancelEditing} />}
+          {!editingId && formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
+          <PrimaryButton title={isBusy ? 'Sparar…' : 'Spara vikt'} disabled={isBlocked || Boolean(editingId)} onPress={() => { void save(); }} />
+          {toastMessage && !toastRecordId ? <Toast tone="success" confirmed message={toastMessage} /> : null}
         </View>
         <Text style={styles.sectionTitle} accessibilityRole="header">Vikthistorik</Text>
         {cloudRecords.length === 0 && <MessageCard>Ingen vikt har registrerats ännu.</MessageCard>}
         {cloudRecords.map((record) => (
           <View key={record.id} style={styles.recordCard}>
-            <View style={styles.recordHeading}>
-              <Text style={styles.recordWeight}>{formatWeight(record.weight_kg)} kg</Text>
-              <Text style={styles.ownerLabel}>ÄGARREGISTRERAD</Text>
-            </View>
-            <Text style={styles.recordDate}>{record.occurred_on}</Text>
-            <View style={styles.actions}>
-              <QuietButton title="Ändra" disabled={isBlocked} onPress={() => startEditing(record)} />
-              <QuietButton title="Radera" disabled={isBlocked} onPress={() => confirmDelete(record)} />
-            </View>
+            {editingId === record.id ? <>
+              <Text style={styles.formTitle} accessibilityRole="header">Rätta viktpost</Text>
+              <DatePickerField label="Datum" disabled={isBlocked} onChangeText={setEditDate} value={editDate} />
+              <View style={styles.field}>
+                <Text style={styles.label}>Vikt (kg)</Text>
+                <TextInput
+                  accessibilityLabel="Vikt i kilogram"
+                  editable={!isBlocked}
+                  keyboardType="decimal-pad"
+                  onChangeText={setEditWeight}
+                  onSubmitEditing={() => Keyboard.dismiss()}
+                  placeholder="Till exempel 4,25"
+                  placeholderTextColor={tokens.colors.textSecondary}
+                  returnKeyType="done"
+                  style={styles.input}
+                  value={editWeight}
+                />
+              </View>
+              {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
+              <View style={styles.actions}>
+                <PrimaryButton title={isBusy ? 'Sparar…' : 'Spara rättning'} disabled={isBlocked} onPress={() => { void save(); }} />
+                <QuietButton title="Avbryt" disabled={isBlocked} onPress={cancelEditing} />
+              </View>
+            </> : <>
+              <View style={styles.recordHeading}>
+                <Text style={styles.recordWeight}>{formatWeight(record.weight_kg)} kg</Text>
+              </View>
+              <Text style={styles.recordDate}>{record.occurred_on}</Text>
+              <View style={styles.actions}>
+                <QuietButton title="Ändra" disabled={isBlocked} onPress={() => startEditing(record)} />
+                <QuietButton title="Radera" disabled={isBlocked} onPress={() => confirmDelete(record)} />
+              </View>
+            </>}
+            {toastMessage && toastRecordId === record.id ? <Toast tone="success" confirmed message={toastMessage} /> : null}
           </View>
         ))}
       </>}
@@ -210,25 +262,24 @@ function formatWeight(value: number): string {
 }
 
 const styles = StyleSheet.create({
-  foundationCard: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, padding: 17 },
-  iconCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#E5EFE8', alignItems: 'center', justifyContent: 'center' },
-  fallback: { color: theme.colors.accent, fontSize: 19, fontWeight: '800' },
+  foundationCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding },
+  iconCircle: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.category.training.bg, alignItems: 'center', justifyContent: 'center' },
+  fallback: { color: tokens.colors.primary, ...tokens.typography.label },
   copy: { flex: 1 },
-  cardTitle: { color: theme.colors.text, fontSize: 17, lineHeight: 23, fontWeight: '800' },
-  cardBody: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 20, marginTop: 5 },
-  sectionTitle: { color: theme.colors.text, fontSize: 20, fontWeight: '800', marginTop: 14 },
-  formCard: { marginTop: 20, padding: 17, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  formTitle: { color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 16 },
-  field: { marginBottom: 14 },
-  label: { color: theme.colors.text, fontSize: 15, fontWeight: '700', marginBottom: 7 },
-  input: { minHeight: 54, paddingHorizontal: 14, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, fontSize: 17 },
-  recordCard: { marginTop: 10, padding: 16, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  plannedCard: { marginTop: 13, padding: 15, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: '#F1F5F0' },
-  plannedIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#E5EFE8', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  plannedCopy: { marginBottom: 8 },
+  cardTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
+  cardBody: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
+  sectionTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading, marginTop: tokens.layout.sectionGap },
+  formCard: { marginTop: tokens.layout.headingGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  formTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label, marginBottom: tokens.spacing.md },
+  field: { marginBottom: tokens.spacing.md },
+  label: { color: tokens.colors.textPrimary, ...tokens.typography.caption, fontWeight: '700', marginBottom: tokens.spacing.xs },
+  input: { minHeight: tokens.size.touchMin + tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body },
+  recordCard: { marginTop: tokens.layout.listGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  plannedCard: { marginTop: tokens.layout.listGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.selectedSurface },
+  plannedIcon: { width: tokens.size.chipMd + tokens.spacing.sm, height: tokens.size.chipMd + tokens.spacing.sm, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.category.vaccination.bg, alignItems: 'center', justifyContent: 'center', marginBottom: tokens.spacing.sm },
+  plannedCopy: { marginBottom: tokens.spacing.sm },
   recordHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  recordWeight: { color: theme.colors.text, fontSize: 21, fontWeight: '800' },
-  ownerLabel: { color: theme.colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 0.6 },
-  recordDate: { color: theme.colors.mutedText, fontSize: 15, marginTop: 4 },
-  actions: { flexDirection: 'row', justifyContent: 'flex-start', gap: 8, marginTop: 8 },
+  recordWeight: { color: tokens.colors.textPrimary, ...tokens.typography.heading },
+  recordDate: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
+  actions: { flexDirection: 'row', justifyContent: 'flex-start', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm },
 });

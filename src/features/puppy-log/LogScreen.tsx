@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Alert, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AccessibilityInfo, Alert, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppBar, Button, Card, Dialog, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast } from '../../components/ui';
-import { DatePickerField, MessageCard, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
+import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
 import { decideQuickLogPress, groupLogEventsByLocalDate, hasRecentCategoryLog, localDateTimeParts, LOG_EVENT_LABELS, LOG_EVENT_TYPES, parseLocalDateTime, summarizePottyPatterns, type LogEvent, type LogEventChanges, type LogEventType } from './log-model';
@@ -29,6 +29,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   onLoadMore?: () => void;
 }) {
   const [moreVisible, setMoreVisible] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(true);
   const [duplicate, setDuplicate] = useState<{ type: LogEventType; timestamp: number } | null>(null);
   const lastSubmitAt = useRef<number | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -37,6 +38,12 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const patterns = useMemo(() => summarizePottyPatterns(events).filter((item) => item.count >= 2), [events]);
   const editingEvent = events.find((event) => event.id === editingId) ?? null;
   const editLocked = busy || Boolean(editingEvent && mutation?.id === editingEvent.id && mutation.status !== 'saved');
+
+  useEffect(() => {
+    void AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => undefined);
+    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     if (mutation?.status !== 'saved') return undefined;
@@ -67,7 +74,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   }
 
   function toggleMore() {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    if (!reduceMotion) LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setMoreVisible((visible) => !visible);
   }
 
@@ -187,9 +194,14 @@ function LogEventEditor({ event, disabled, onCancel, onSave, onDelete }: {
     </View>
     {error ? <MessageCard tone="error">{error}</MessageCard> : null}
     {!valid && !error ? <MessageCard tone="error">Kontrollera datum, tid och anteckning.</MessageCard> : null}
-    <PrimaryButton title="Spara" disabled={!valid || saving || disabled} onPress={() => { void save(); }} />
-    <QuietButton title="Radera" disabled={disabled} onPress={onDelete} />
-    <QuietButton title="Avbryt" disabled={saving || disabled} onPress={onCancel} />
+    <View style={styles.editorActions}>
+      <View style={styles.editorSecondaryActions}>
+        <View style={styles.editorSecondaryAction}><Button variant="destructive" label="Radera" accessibilityLabel="Radera händelse" disabled={disabled} onPress={onDelete} /></View>
+        <View style={styles.editorSecondaryAction}><Button variant="secondary" label="Avbryt" accessibilityLabel="Avbryt ändring" disabled={saving || disabled} onPress={onCancel} /></View>
+      </View>
+      <Button label="Spara" accessibilityLabel={saving ? 'Sparar ändring' : 'Spara ändring'} loading={saving}
+        disabled={!valid || saving || disabled} onPress={() => { void save(); }} />
+    </View>
   </View>;
 }
 
@@ -213,5 +225,18 @@ const styles = StyleSheet.create({
   empty: { padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, gap: tokens.spacing.xs },
   emptyTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary }, emptyBody: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   errorState: { minHeight: tokens.size.buttonHeight, justifyContent: 'center', gap: tokens.spacing.md }, errorText: { ...tokens.typography.body, color: tokens.colors.danger },
-  editor: { backgroundColor: tokens.colors.selectedSurface, borderRadius: tokens.radius.lg, padding: tokens.spacing.lg, gap: tokens.spacing.md }, editorTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary }, fieldTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.xs }, typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs }, typeOption: { minHeight: tokens.size.touchMin, minWidth: tokens.size.chipLg * 2, flexGrow: 1, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, paddingHorizontal: tokens.spacing.sm }, selectedTypeOption: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface }, typeOptionText: { ...tokens.typography.label, color: tokens.colors.textPrimary }, selectedTypeText: { color: tokens.colors.primary }, pressed: { opacity: 0.85 }, dateTimeRow: { flexDirection: 'row', gap: tokens.spacing.sm }, dateField: { flex: 1.4 }, timeField: { flex: 0.8 }, noteGroup: { gap: tokens.spacing.xs }, noteInput: { minHeight: tokens.size.heroHeight - tokens.spacing.xxl, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body, padding: tokens.spacing.md, textAlignVertical: 'top' }, characterCount: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'right' }, tooManyCharacters: { color: tokens.colors.danger },
+  editor: { backgroundColor: tokens.colors.selectedSurface, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, padding: tokens.spacing.md, gap: tokens.spacing.sm },
+  editorTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
+  fieldTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.xs },
+  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
+  typeOption: { minHeight: tokens.size.touchMin, minWidth: tokens.size.chipLg * 2, flexGrow: 1, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, paddingHorizontal: tokens.spacing.sm },
+  selectedTypeOption: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
+  typeOptionText: { ...tokens.typography.label, color: tokens.colors.textPrimary }, selectedTypeText: { color: tokens.colors.primary }, pressed: { opacity: 0.85 },
+  dateTimeRow: { flexDirection: 'row', gap: tokens.spacing.sm }, dateField: { flex: 1.4 }, timeField: { flex: 0.8 },
+  noteGroup: { gap: tokens.spacing.xs },
+  noteInput: { minHeight: tokens.size.touchMin * 3, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body, padding: tokens.spacing.md, textAlignVertical: 'top' },
+  characterCount: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'right' }, tooManyCharacters: { color: tokens.colors.danger },
+  editorActions: { gap: tokens.spacing.sm },
+  editorSecondaryActions: { flexDirection: 'row', gap: tokens.spacing.xs },
+  editorSecondaryAction: { flex: 1 },
 });

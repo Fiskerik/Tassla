@@ -3,11 +3,13 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
-import { ActionFeedbackModal, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { Toast } from '../../components/ui/Toast';
 import { fetchBreeds, type BreedOption, type OwnedDog } from '../../data/app-data';
 import type { HealthHistoryRecord, HealthWeightRecord } from '../../data/workspace-data';
 import { localDate } from '../onboarding/dog';
-import { theme } from '../../theme/tokens';
+import { tokens } from '../../theme/tokens';
+import { IconChip } from '../../components/ui/IconChip';
 import { createAndSharePassportPdf, type PassportExportResult } from './passport-export';
 import { createPassportSnapshot, type PassportSelection, type PassportSnapshot } from './passport-model';
 
@@ -50,7 +52,7 @@ export function PassportScreen(props: PassportScreenProps) {
   const [exportingSnapshot, setExportingSnapshot] = useState<PassportSnapshot | null>(null);
   const [statusMessage, setStatusMessage] = useState('');
   const [statusError, setStatusError] = useState(false);
-  const [dismissedStatus, setDismissedStatus] = useState('');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const mounted = useRef(true);
   const lifetimeRef = useRef(props.lifetime ?? 'preview');
   const operationInFlight = useRef(false);
@@ -61,6 +63,12 @@ export function PassportScreen(props: PassportScreenProps) {
     mounted.current = true;
     return () => { mounted.current = false; };
   }, []);
+  useEffect(() => {
+    if (!statusMessage || statusError) { setToastMessage(null); return; }
+    setToastMessage(statusMessage);
+    const timer = setTimeout(() => setToastMessage(null), 2500);
+    return () => clearTimeout(timer);
+  }, [statusMessage, statusError]);
   useEffect(() => {
     if (!client || !dog) return;
     let active = true;
@@ -145,7 +153,7 @@ export function PassportScreen(props: PassportScreenProps) {
       <PageHeading title="Tassla-pass" description="En sparad överblick över hundens uppgifter, som du själv väljer att dela." />
       <View style={styles.heroCard}>
         <View style={styles.heroIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          {iconsLoaded ? <Ionicons name="document-text-outline" size={25} color={theme.colors.accent} /> : <Text style={styles.fallback}>T</Text>}
+          {iconsLoaded ? <IconChip category="veterinary" size="large" /> : <Text style={styles.fallback}>T</Text>}
         </View>
         <View style={styles.heroCopy}>
           <Text style={styles.heroTitle}>Dina uppgifter, på ditt sätt.</Text>
@@ -174,8 +182,7 @@ export function PassportScreen(props: PassportScreenProps) {
 
         <View style={styles.previewCard}>
           <View style={styles.previewHeading}>
-            <Text style={styles.sectionTitle} accessibilityRole="header">Förhandsvisning</Text>
-            <Text style={styles.previewTag}>SPARADE UPPGIFTER</Text>
+            <Text style={styles.previewTitle} accessibilityRole="header">Förhandsvisning</Text>
           </View>
           {visibleSnapshot ? <SnapshotPreview snapshot={visibleSnapshot} /> : (
             <Text style={styles.body}>{selectedAny ? 'Förhandsvisningen visas när de valda uppgifterna är inlästa och sparstatusen är säker.' : 'Välj minst ett avsnitt för att se en förhandsvisning.'}</Text>
@@ -185,8 +192,8 @@ export function PassportScreen(props: PassportScreenProps) {
           {visibleSnapshot && <Text style={styles.createdOn}>Skapad {visibleSnapshot.createdOn}</Text>}
         </View>
         {statusMessage && statusError ? <MessageCard tone="error">{statusMessage}</MessageCard> : null}
-        <PrimaryButton title={exporting ? 'Skapar PDF…' : 'Skapa PDF och öppna delning'} disabled={!ready || !snapshot || busy || !selectedAny} onPress={() => { setDismissedStatus(''); void createAndShare(); }} />
-        {statusMessage && !statusError ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => setDismissedStatus(statusMessage)} /> : null}
+        <PrimaryButton title={exporting ? 'Skapar PDF…' : 'Skapa PDF och öppna delning'} disabled={!ready || !snapshot || busy || !selectedAny} onPress={() => { void createAndShare(); }} />
+        {toastMessage ? <Toast tone="neutral" message={toastMessage} /> : null}
         {props.weightLoadState === 'error' && <QuietButton title="Försök hämta vikterna igen" disabled={busy} onPress={props.onRetryWeights ?? (() => undefined)} />}
         {props.historyLoadState === 'error' && <QuietButton title="Försök hämta hälsoposter igen" disabled={busy} onPress={props.onRetryHistory ?? (() => undefined)} />}
       </>}
@@ -199,7 +206,7 @@ function SelectionRow({ iconsLoaded, icon, title, detail, checked, disabled, onP
 }) {
   return <Pressable accessibilityRole="checkbox" accessibilityState={{ checked, disabled }} disabled={disabled} onPress={onPress} style={[styles.selectionRow, disabled && styles.disabled]}>
     <View style={styles.selectionIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      {iconsLoaded ? <Ionicons name={icon} size={21} color={theme.colors.accent} /> : <Text style={styles.fallback}>•</Text>}
+      {iconsLoaded ? <Ionicons name={icon} size={tokens.size.iconSm} color={tokens.colors.primary} /> : <Text style={styles.fallback}>•</Text>}
     </View>
     <View style={styles.selectionCopy}><Text style={styles.selectionTitle}>{title}</Text><Text style={styles.body}>{detail}</Text></View>
     <View style={[styles.checkbox, checked && styles.checkboxChecked]}><Text style={[styles.checkmark, checked && styles.checkmarkChecked]}>{checked ? '✓' : ''}</Text></View>
@@ -220,7 +227,6 @@ function SnapshotPreview({ snapshot }: { snapshot: PassportSnapshot }) {
     {snapshot.selected.latestWeight && <View style={styles.snapshotSection}>
       <Text style={styles.snapshotHeading}>Senaste registrerade vikt</Text>
       {snapshot.latestWeight ? <Text style={styles.previewValue}>{snapshot.latestWeight.weightKg.toLocaleString('sv-SE', { maximumFractionDigits: 3 })} kg · {snapshot.latestWeight.occurredOn}</Text> : <Text style={styles.body}>Ingen vikt har registrerats.</Text>}
-      <Text style={styles.body}>Ägarregistrerad uppgift.</Text>
     </View>}
     {snapshot.selected.healthHistory && <View style={styles.snapshotSection}>
       <Text style={styles.snapshotHeading}>Utförda hälsoposter</Text>
@@ -244,35 +250,35 @@ function exportMessage(result: PassportExportResult): { text: string; error: boo
 }
 
 const styles = StyleSheet.create({
-  heroCard: { flexDirection: 'row', alignItems: 'center', gap: 13, borderRadius: theme.radius.card, backgroundColor: '#E8EFE8', padding: 16 },
-  heroIcon: { width: 46, height: 46, borderRadius: 23, backgroundColor: theme.colors.surface, alignItems: 'center', justifyContent: 'center' },
+  heroCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.selectedSurface, padding: tokens.layout.cardPadding },
+  heroIcon: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.surface, alignItems: 'center', justifyContent: 'center' },
   heroCopy: { flex: 1 },
-  heroTitle: { color: theme.colors.text, fontSize: 18, lineHeight: 24, fontWeight: '800' },
-  body: { color: theme.colors.mutedText, fontSize: 15, lineHeight: 22, marginTop: 4 },
-  fallback: { color: theme.colors.accent, fontSize: 19, fontWeight: '800' },
-  sectionTitle: { color: theme.colors.text, fontSize: 20, fontWeight: '800', marginTop: 23, marginBottom: 10 },
-  selectionRow: { minHeight: 78, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, padding: 12, marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 11 },
-  selectionIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#E8EFE8', alignItems: 'center', justifyContent: 'center' },
+  heroTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
+  body: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
+  fallback: { color: tokens.colors.primary, ...tokens.typography.label },
+  sectionTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading, marginTop: tokens.layout.sectionGap, marginBottom: tokens.layout.headingGap },
+  selectionRow: { minHeight: tokens.size.touchMin + tokens.spacing.xxl, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.spacing.md, marginTop: tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md },
+  selectionIcon: { width: tokens.size.chipMd + tokens.spacing.sm, height: tokens.size.chipMd + tokens.spacing.sm, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.selectedSurface, alignItems: 'center', justifyContent: 'center' },
   selectionCopy: { flex: 1 },
-  selectionTitle: { color: theme.colors.text, fontSize: 16, fontWeight: '800' },
-  checkbox: { width: 26, height: 26, borderRadius: 8, borderWidth: 2, borderColor: theme.colors.accent, alignItems: 'center', justifyContent: 'center' },
-  checkboxChecked: { backgroundColor: theme.colors.accent },
-  checkmark: { color: theme.colors.accent, fontWeight: '900', fontSize: 17, lineHeight: 19 },
-  checkmarkChecked: { color: theme.colors.onAccent },
+  selectionTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
+  checkbox: { width: tokens.spacing.xxl, height: tokens.spacing.xxl, borderRadius: tokens.radius.sm, borderWidth: 2, borderColor: tokens.colors.primary, alignItems: 'center', justifyContent: 'center' },
+  checkboxChecked: { backgroundColor: tokens.colors.primary },
+  checkmark: { color: tokens.colors.primary, fontWeight: '900', fontSize: 17, lineHeight: 19 },
+  checkmarkChecked: { color: tokens.colors.onPrimary },
   disabled: { opacity: 0.6 },
-  previewCard: { borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, padding: 17, marginTop: 22 },
+  previewCard: { borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, marginTop: tokens.layout.sectionGap },
   previewHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' },
-  previewTag: { color: theme.colors.accent, fontSize: 12, fontWeight: '800', letterSpacing: 0.5, marginTop: 22 },
-  snapshotSection: { borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: 12, marginTop: 12 },
-  illustrationFallback: { flexDirection: 'row', alignItems: 'center', gap: 9, padding: 10, borderRadius: 12, backgroundColor: '#EAF3EC', marginBottom: 10 },
-  illustrationMark: { width: 36, height: 36, borderRadius: 18, backgroundColor: theme.colors.accent, color: theme.colors.onAccent, textAlign: 'center', textAlignVertical: 'center', fontSize: 22, fontWeight: '800' },
-  illustrationLabel: { flex: 1, color: theme.colors.accent, fontSize: 12, fontWeight: '800' },
-  snapshotHeading: { color: theme.colors.accent, fontSize: 16, fontWeight: '800', marginBottom: 6 },
-  previewValueRow: { flexDirection: 'row', gap: 12, marginTop: 5 },
-  previewLabel: { width: 68, color: theme.colors.mutedText, fontSize: 15 },
-  previewValue: { color: theme.colors.text, fontSize: 16, lineHeight: 22, fontWeight: '700', marginTop: 4 },
-  historyRow: { borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: 7, marginTop: 7 },
-  limitNotice: { color: theme.colors.text, fontSize: 14, lineHeight: 20, borderRadius: 12, backgroundColor: '#F7F1E7', padding: 12, marginTop: 14 },
-  disclaimer: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 20, marginTop: 13 },
-  createdOn: { color: theme.colors.mutedText, fontSize: 14, fontWeight: '700', marginTop: 11 },
+  previewTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading },
+  snapshotSection: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, paddingTop: tokens.spacing.md, marginTop: tokens.spacing.md },
+  illustrationFallback: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, padding: tokens.spacing.md, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.successSurface, marginBottom: tokens.spacing.md },
+  illustrationMark: { width: tokens.size.chipMd, height: tokens.size.chipMd, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.primary, color: tokens.colors.onPrimary, textAlign: 'center', textAlignVertical: 'center', fontSize: 22, fontWeight: '800' },
+  illustrationLabel: { flex: 1, color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '700' },
+  snapshotHeading: { color: tokens.colors.primary, ...tokens.typography.label, marginBottom: tokens.spacing.sm },
+  previewValueRow: { flexDirection: 'row', gap: tokens.spacing.md, marginTop: tokens.spacing.xs },
+  previewLabel: { width: 68, color: tokens.colors.textSecondary, ...tokens.typography.caption },
+  previewValue: { color: tokens.colors.textPrimary, ...tokens.typography.caption, fontWeight: '700', marginTop: tokens.spacing.xs },
+  historyRow: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, paddingTop: tokens.spacing.sm, marginTop: tokens.spacing.sm },
+  limitNotice: { color: tokens.colors.textPrimary, ...tokens.typography.caption, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.background, padding: tokens.spacing.md, marginTop: tokens.spacing.md },
+  disclaimer: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.md },
+  createdOn: { color: tokens.colors.textSecondary, ...tokens.typography.caption, fontWeight: '700', marginTop: tokens.spacing.md },
 });

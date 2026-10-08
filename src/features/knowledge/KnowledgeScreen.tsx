@@ -5,7 +5,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { HomeContent } from '../../data/app-data';
 import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { AppBar, Card, InfoBanner, SectionHeader } from '../../components/ui';
-import { theme } from '../../theme/tokens';
+import { tokens } from '../../theme/tokens';
 import { getSafeContentSourceUrl } from './source-links';
 import { parseGuideBody } from './guide-body';
 
@@ -63,7 +63,9 @@ export function KnowledgeScreen({
               selected={selected}
               accessibilityLabel={`${item.title}, version ${item.version}`}
               onPress={() => { setSourceMessage(''); onSelectContent(item.id); }}>
-              {iconsLoaded && <Ionicons name={item.contentType === 'checklist' ? 'checkbox-outline' : 'book-outline'} size={21} color={theme.colors.accent} />}
+              <View style={styles.topicIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                {iconsLoaded && <Ionicons name={item.contentType === 'checklist' ? 'checkbox-outline' : 'book-outline'} size={tokens.size.iconSm} color={tokens.colors.primary} />}
+              </View>
               <View style={styles.guideCopy}>
                 <Text style={styles.guideType}>{contentTypeLabel(item.contentType)}</Text>
                 <Text style={styles.guideTitle}>{item.title}</Text>
@@ -74,7 +76,7 @@ export function KnowledgeScreen({
         </View>
         {selectedItem && <View style={styles.articleCard}>
           <View style={styles.articleEyebrowRow}>
-            {iconsLoaded && <Ionicons name="leaf-outline" size={18} color={theme.colors.accent} />}
+            {iconsLoaded && <Ionicons name="leaf-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />}
             <Text style={styles.articleEyebrow}>PUBLICERAD GUIDE · VERSION {selectedItem.version}</Text>
           </View>
           <Text style={styles.articleTitle} accessibilityRole="header">{selectedItem.title}</Text>
@@ -96,7 +98,7 @@ export function KnowledgeScreen({
           {selectedItem.sources.map((source, index) => {
             const safeUrl = getSafeContentSourceUrl(source);
             return <View key={`${selectedItem.id}:${index}`} style={styles.sourceRow}>
-              {iconsLoaded && <Ionicons name={safeUrl ? 'link-outline' : 'document-text-outline'} size={17} color={theme.colors.accent} />}
+              {iconsLoaded && <Ionicons name={safeUrl ? 'link-outline' : 'document-text-outline'} size={tokens.size.iconSm} color={tokens.colors.primary} />}
               <View style={styles.sourceCopy}>
                 <Text style={styles.sourceText}>{source}</Text>
                 {safeUrl && <QuietButton title="Öppna extern källa" onPress={() => { void openSource(source); }} />}
@@ -115,26 +117,24 @@ function contentTypeLabel(type: HomeContent['contentType']): string {
 }
 
 const styles = StyleSheet.create({
-  guideList: { gap: 9, marginTop: 3 },
-  guideRow: { minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, paddingHorizontal: 15, paddingVertical: 12 },
-  guideRowSelected: { borderColor: theme.colors.accent, backgroundColor: '#E8EFE8' },
-  guideCopy: { flex: 1 },
-  guideType: { color: theme.colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 0.9 },
-  guideTitle: { color: theme.colors.text, fontSize: 16, lineHeight: 22, fontWeight: '800', marginTop: 3 },
-  selectedLabel: { color: theme.colors.accent, fontSize: 12, fontWeight: '800' },
-  articleCard: { borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, padding: 18, marginTop: 14 },
-  articleEyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  articleEyebrow: { color: theme.colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
-  articleTitle: { color: theme.colors.text, fontSize: 22, lineHeight: 29, fontWeight: '800', marginTop: 9 },
-  articleBody: { marginTop: 12 },
-  bodyHeading: { color: theme.colors.text, fontSize: 19, lineHeight: 26, fontWeight: '800', marginTop: 15, marginBottom: 3 },
-  bodySubheading: { color: theme.colors.text, fontSize: 17, lineHeight: 24, fontWeight: '800', marginTop: 12, marginBottom: 2 },
-  bodyParagraph: { color: theme.colors.text, fontSize: 16, lineHeight: 25, marginTop: 7 },
-  bodyList: { marginTop: 4 },
-  bodyListItem: { color: theme.colors.text, fontSize: 16, lineHeight: 25, marginTop: 6 },
-  sourcesHeading: { color: theme.colors.text, fontSize: 17, fontWeight: '800', marginTop: 24, marginBottom: 6 },
-  sourceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 9, borderTopWidth: 1, borderTopColor: theme.colors.border, paddingVertical: 9 },
-  sourceCopy: { flex: 1 },
-  sourceText: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 20 },
-  pressed: { opacity: 0.78 },
+  guideList: { gap: tokens.spacing.sm },
+  topicIcon: { width: tokens.size.chipMd, height: tokens.size.chipMd, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.selectedSurface },
+  guideCopy: { flex: 1, gap: tokens.spacing.xs },
+  guideType: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
+  guideTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  selectedLabel: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
+  articleCard: { alignSelf: 'stretch', borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, marginTop: tokens.layout.sectionGap },
+  articleEyebrowRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingVertical: tokens.spacing.sm, borderBottomWidth: tokens.size.stroke, borderBottomColor: tokens.colors.border },
+  articleEyebrow: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700', flexShrink: 1 },
+  articleTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginTop: tokens.spacing.md },
+  articleBody: { marginTop: tokens.spacing.md },
+  bodyHeading: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginTop: tokens.spacing.xl },
+  bodySubheading: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginTop: tokens.spacing.lg },
+  bodyParagraph: { ...tokens.typography.body, color: tokens.colors.textPrimary, marginTop: tokens.spacing.sm },
+  bodyList: { marginTop: tokens.spacing.sm },
+  bodyListItem: { ...tokens.typography.body, color: tokens.colors.textPrimary, marginTop: tokens.spacing.sm },
+  sourcesHeading: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginTop: tokens.spacing.xl, marginBottom: tokens.spacing.sm },
+  sourceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.spacing.sm, borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, paddingVertical: tokens.spacing.md },
+  sourceCopy: { flex: 1, gap: tokens.spacing.xs },
+  sourceText: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
 });
