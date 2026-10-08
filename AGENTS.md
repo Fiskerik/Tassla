@@ -3,6 +3,7 @@
 Innan du planerar, skapar, ändrar eller granskar UI: läs `docs/design-rules.md` och följ den.
 Alla UI-ändringar granskas separat med skärmdump mot målbilden och ifylld checklista (avsnitt 14). Saknad visuell evidens är NOT TESTABLE, inte visuellt GODKÄND.
 Vid konflikt med äldre visuella råd gäller docs/design-rules.md inom godkänt scope. Aktuella mänskliga beslut, säkerhet, tillgänglighet och sanningsenlighet kvarstår.
+Vid varje ändring av skärmar, komponenter, flöden, tillstånd eller UI-texter: följ docs/design-rules.md (utseende) och använd skillen $tassla-consumer-ux (beteende, tillstånd, återkoppling). Vid konflikt mellan dem: stanna och fråga.
 
 ## What Tassla is
 A free mobile app that follows a puppy's life from before it comes home until it is grown, for new dog owners. Inspired by BabyJourney, but for puppies. Goal: make the first 6–12 months simpler, safer and more enjoyable.
