@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "bundle_id": "mvp-content-bundle-v1",
-  "status": "draft",
+  "status": "approved",
   "sources": [
     {
       "id": "avsab-humane-training-2021",
@@ -150,7 +150,7 @@
           "body": "Om valpen nyligen har flyttat hem kan de första dagarna göras lugna och förutsägbara. Ge valpen en trygg viloplats, låt den utforska i egen takt och belöna sådant du gärna vill se mer av. Titta på flera kroppssignaler tillsammans och i sitt sammanhang; en enstaka signal är inte en diagnos. Ge utrymme om valpen verkar obekväm och kontakta veterinär vid oro för hälsan.",
           "min_age_weeks": 8,
           "max_age_weeks": 12,
-          "status": "draft",
+          "status": "published",
           "breed_targets": [],
           "claim_trace": [
             {
@@ -192,12 +192,22 @@
           ],
           "review": {
             "dog_expert": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             },
             "human_reviewer": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             }
           },
           "training_steps": [],
@@ -223,7 +233,7 @@
           "body": "## Så använder du vardagsloggen\n\nTryck på en snabbknapp för att lägga till kiss, bajs, mat, sömn, vaken eller promenad. En post får datum och tid och kan ha en kort, frivillig anteckning.\n\nI logghistoriken kan du se poster grupperade efter dag. Du kan ändra eller radera en post och, när det finns äldre poster, hämta fler. Hälsoposter som vikt och veterinärbesök visas under Hälsa i stället.\n\nLoggen hjälper dig att hålla reda på det du själv registrerar. Den tolkar inte hundens behov och upptäcker inte mönster åt dig.",
           "min_age_weeks": 0,
           "max_age_weeks": null,
-          "status": "draft",
+          "status": "published",
           "breed_targets": [],
           "claim_trace": [
             {
@@ -256,8 +266,13 @@
               "evidence": []
             },
             "human_reviewer": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             }
           },
           "training_steps": [],
@@ -281,7 +296,7 @@
           "body": "## Kort, lugnt och frivilligt\n\nLåt valpen först se och nosa på handen. Belöna lugn nyfikenhet. Om valpen är bekväm kan du prova en mycket kort beröring på en plats den verkar acceptera och sedan pausa.\n\nLåt valpen välja om den vill stanna kvar. Tvinga inte fram beröring eller fasthållning för att genomföra övningen. Målet här är en trygg vardagsvana, inte att utföra en undersökning eller behandling.\n\nLäs flera kroppssignaler tillsammans och i sitt sammanhang; en enstaka signal är inte en diagnos. Att vända bort huvudet, slicka sig om munnen, gäspa, krypa undan eller försöka gå därifrån kan då vara tecken på obehag. Sluta då, ge utrymme och gör nästa försök lättare. Om rädsla eller svår hantering återkommer, be veterinär om hjälp att hitta rätt stöd.",
           "min_age_weeks": 13,
           "max_age_weeks": 16,
-          "status": "draft",
+          "status": "published",
           "breed_targets": [],
           "claim_trace": [
             {
@@ -310,12 +325,22 @@
           ],
           "review": {
             "dog_expert": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             },
             "human_reviewer": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             }
           },
           "training_steps": [],
@@ -339,7 +364,7 @@
           "body": "## Innan ni utforskar\n\n- Börja på en lugn plats där valpen kan vila och själv välja att närma sig.\n- Plocka undan sådant som kan skada valpen eller som du inte vill att den tuggar på.\n- Låt nya vardagsintryck komma gradvis och på ett avstånd där valpen fortfarande verkar bekväm.\n- Låt valpen titta, nosa eller gå undan; belöna frivillig nyfikenhet och lugn kontakt.\n- Avsluta och skapa mer avstånd om valpen verkar orolig. Försök senare från ett lättare läge.\n\nSocialisering handlar om positiva, gradvisa och individanpassade erfarenheter. Valpen behöver inte hälsa på allt.",
           "min_age_weeks": 17,
           "max_age_weeks": 26,
-          "status": "draft",
+          "status": "published",
           "breed_targets": [],
           "claim_trace": [
             {
@@ -367,12 +392,22 @@
           ],
           "review": {
             "dog_expert": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             },
             "human_reviewer": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             }
           },
           "training_steps": [],
@@ -396,7 +431,7 @@
           "body": "## Börja med trygghet hemma\n\nVälj en lugn plats där valpen kan vila och ha vatten. Låt platsen vara trevlig även när du är hemma, så att den inte bara förknippas med att du går.\n\nBörja med lite avstånd medan du fortfarande är hemma. Håll övningen så enkel att valpen kan vara lugn och återvänd innan den blir orolig. Gör det gradvis och utifrån just din valps reaktion; det finns ingen minutplan som passar alla.\n\nOm valpen verkar orolig, gör det lättare nästa gång och återgå till det senaste läge där den var lugn. Om oron kvarstår eller är kraftig, kontakta veterinär först. Efter medicinsk bedömning kan veterinären vid behov hänvisa till kvalificerad, belöningsbaserad beteendehjälp. Den här guiden förebygger inte eller behandlar garanterat separationsrelaterade problem.",
           "min_age_weeks": 27,
           "max_age_weeks": 52,
-          "status": "draft",
+          "status": "published",
           "breed_targets": [],
           "claim_trace": [
             {
@@ -427,12 +462,22 @@
           ],
           "review": {
             "dog_expert": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             },
             "human_reviewer": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             }
           },
           "training_steps": [],
@@ -456,7 +501,7 @@
           "body": "## Lägg till en viktpost\n\nUnder Hälsa kan du registrera hundens vikt i kilo och ange datum. Du kan rätta eller radera en post och se dina registrerade vikter i datumordning.\n\nUppgifterna är ägarregistrerade. Tassla kontrollerar inte om vikten är lämplig, tolkar inte förändringar och ersätter inte en veterinärjournal. Vid frågor om hundens vikt eller tillväxt kan du kontakta veterinär.",
           "min_age_weeks": 0,
           "max_age_weeks": null,
-          "status": "draft",
+          "status": "published",
           "breed_targets": [],
           "claim_trace": [
             {
@@ -489,8 +534,13 @@
               "evidence": []
             },
             "human_reviewer": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             }
           },
           "training_steps": [],
@@ -514,7 +564,7 @@
           "body": "## Din egen historik\n\nI Hälsa kan du lägga till en post för en vaccination som redan har utförts eller ett veterinärbesök som redan har ägt rum. Ange datum och lägg vid behov till en kort anteckning. Du kan senare ändra eller radera posten.\n\nUppgifterna är registrerade av dig. De är inte en verifierad journal, ett officiellt vaccinationskort eller ett råd om när nästa vårdbesök ska ske. Fråga veterinär om vaccinationer, symtom eller vård.",
           "min_age_weeks": 0,
           "max_age_weeks": null,
-          "status": "draft",
+          "status": "published",
           "breed_targets": [],
           "claim_trace": [
             {
@@ -547,8 +597,13 @@
               "evidence": []
             },
             "human_reviewer": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             }
           },
           "training_steps": [],
@@ -572,7 +627,7 @@
           "body": "Öva bara när hunden verkar lugn. Belöna frivilligt deltagande och låt hunden gå undan. Stegen är förslag, inte en kalender. Tolka kroppssignaler i sitt sammanhang och tillsammans; en enstaka signal är inte en diagnos. Om hunden visar obehag: avbryt, ge utrymme och återgå nästa gång till ett enklare steg. Vid ihållande oro eller svår hantering, be veterinär om vägledning.",
           "min_age_weeks": 8,
           "max_age_weeks": null,
-          "status": "draft",
+          "status": "published",
           "breed_targets": [],
           "claim_trace": [
             {
@@ -593,12 +648,22 @@
           ],
           "review": {
             "dog_expert": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             },
             "human_reviewer": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             }
           },
           "training_steps": [
@@ -655,7 +720,7 @@
           "body": "Erbjud vardagens miljöer och ljud i en takt där hunden kan känna sig trygg. Låt den observera, närma sig eller gå undan. Belöna lugn, frivillig utforskning; tvinga inte fram kontakt. Om hunden verkar rädd eller överväldigad, stoppa exponeringen, skapa avstånd och gör nästa försök enklare. Tolka kroppssignaler i sitt sammanhang och tillsammans; en enstaka signal är inte en diagnos. Programmet ersätter inte individuell rådgivning.",
           "min_age_weeks": 8,
           "max_age_weeks": null,
-          "status": "draft",
+          "status": "published",
           "breed_targets": [],
           "claim_trace": [
             {
@@ -683,12 +748,22 @@
           ],
           "review": {
             "dog_expert": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             },
             "human_reviewer": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             }
           },
           "training_steps": [
@@ -746,7 +821,7 @@
           "body": "Gör den valda viloplatsen trygg även när du är hemma. Börja med lite avstånd och håll varje övning så enkel att hunden verkar lugn. Gå vidare först när just din hund är bekväm; programmet har inga fasta minuter eller kalendersteg. Om hunden blir orolig: avbryt, gå tillbaka till senaste läget där den var lugn och kontakta veterinär först vid kvarstående eller kraftig oro. Efter medicinsk bedömning kan veterinären vid behov hänvisa till kvalificerad, belöningsbaserad beteendehjälp.",
           "min_age_weeks": 8,
           "max_age_weeks": null,
-          "status": "draft",
+          "status": "published",
           "breed_targets": [],
           "claim_trace": [
             {
@@ -777,12 +852,22 @@
           ],
           "review": {
             "dog_expert": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             },
             "human_reviewer": {
-              "status": "pending",
-              "evidence": []
+              "status": "approved",
+              "evidence": [
+                {
+                  "reference": "docs/content/mvp-content-approval-v1.md",
+                  "reviewed_on": "2026-10-08"
+                }
+              ]
             }
           },
           "training_steps": [

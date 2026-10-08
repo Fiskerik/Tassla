@@ -146,16 +146,36 @@ export async function fetchBreeds(client: SupabaseClient): Promise<BreedOption[]
 
 export async function createDog(
   client: SupabaseClient,
-  input: { name: string; breedId: string; birthDate: string },
-): Promise<void> {
-  await withRequestDeadline(async (signal) => {
-    const { error } = await client.rpc('create_dog', {
+  input: { name: string; breedId: string; birthDate: string; kennelCode?: string | null },
+): Promise<string> {
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.rpc('create_dog', {
       dog_name: input.name.trim(),
       dog_breed_id: input.breedId,
       dog_birth_date: input.birthDate,
-      kennel_code: null,
+      kennel_code: input.kennelCode?.trim().toUpperCase() || null,
     }).abortSignal(signal);
-    if (error) throw new Error('Could not create the dog profile');
+    if (error) {
+      if (/invalid kennel code/i.test(error.message)) throw new Error('Invalid kennel code');
+      throw new Error('Could not create the dog profile');
+    }
+    if (typeof data !== 'string' || !data) throw new Error('Dog profile creation could not be confirmed');
+    return data;
+  });
+}
+
+export async function ownedDogAttributionMatches(
+  client: SupabaseClient,
+  dogId: string,
+  kennelCode: string | null,
+): Promise<boolean> {
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.rpc('owned_dog_attribution_matches', {
+      requested_dog_id: dogId,
+      requested_kennel_code: kennelCode,
+    }).abortSignal(signal);
+    if (error || typeof data !== 'boolean') throw new Error('Could not check the dog source');
+    return data;
   });
 }
 

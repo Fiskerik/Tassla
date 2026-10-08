@@ -7,6 +7,7 @@ import {
   parseKennelJoinUrl,
   parsePendingReferral,
   clearPendingReferral,
+  captureKennelJoinUrl,
   PENDING_REFERRAL_KEY,
   readPendingReferral,
   savePendingReferral,
@@ -66,4 +67,17 @@ test('storage keeps only a pending code, clears invalid/expired state and suppor
   await savePendingReferral(storage, 'KENNEL-42', now);
   await clearPendingReferral(storage);
   assert.equal(value, null);
+});
+
+test('deep-link capture persists only a valid kennel join URL', async () => {
+  let value = null;
+  const storage = {
+    async getItemAsync() { return value; },
+    async setItemAsync(_key, next) { value = next; },
+    async deleteItemAsync() { value = null; },
+  };
+  assert.equal(await captureKennelJoinUrl('tassla://join?code=KENNEL-42', storage, 123), true);
+  assert.deepEqual(JSON.parse(value), { code: 'KENNEL-42', capturedAt: 123 });
+  assert.equal(await captureKennelJoinUrl('tassla://auth/callback?code=KENNEL-42', storage, 456), false);
+  assert.deepEqual(JSON.parse(value), { code: 'KENNEL-42', capturedAt: 123 });
 });

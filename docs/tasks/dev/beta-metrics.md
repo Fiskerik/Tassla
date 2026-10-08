@@ -1,5 +1,12 @@
 # P09 — minimal frivillig betamätning
 Förberedelse v2, 2026-10-08. P08/P09 är obligatoriskt sista funktionella MVP-block före P11. Kräver P08 done/exakt review och Eriks beslut om ändamål, rättslig grund, information, frivillighet, åtkomst och gallring/radering; tidigare samtyckesförslag är inte ett fattat beslut. Ingen verklig analyticsinsamling genom planen. Syntetiska tester är tillåtna som förberedelse. Hela featureflag är off tills datakontrakt, backend och information är verifierade.
+
+## Checkpoint 2026-10-08 — beslut bekräftat, implementering P09.1
+Erik har bekräftat frivillig mätning med återkallelse, 30 dagars retention och att Supabase har RLS aktiverat. Detta låser implementeringsbeslutet för en minimal betaslice. Hunden/kenneln/device/fritext/health ska inte skickas. Se [P09 UX- och implementation-spec](../../plans/P09-PRODUCTION-METRICS-ux-spec.md) för skärmtillstånd, exakt filscope och acceptans.
+
+Implementer: consent-state/RPC och event-RPC, kontoinställning, server-side allowlist/dedupe/tid, fail-open klientadapter, withdrawal-radering och rollbackad SQL-/syntetisk Node-test. Riktig Supabase-migration, RLS-test och schemalagd purge kräver separat körning i utvecklingsprojektet; lokal SQL-texttest räknas inte som serververifiering.
+
+Nästa steg efter lokal implementering: oberoende schema/UX-review → kör migration och `supabase/tests/beta-metrics.sql` i development → konfigurera daglig retention purge om inte migrationen aktiverade scheduler → kontrollera rapportdimensioner innan P11. D1/D7/D30 behöver inte vara mogna för beta; rapporten ska visa endast mogna fönster.
 ## Ändamål och uppgifter
 Intern MVP/pilotutvärdering för EriMali AB: distribution→aktivering→meningsfull användning→återkomst, inga reklampartners/mottagare. Frivilligt val påverkar inte appens kärnfunktioner; inget val innebär inga mätposter. Ingen hund/vikt/hälsa/notestext/email/devicefingerprint/token till mått. Kontokopplingen är personuppgift även om ID används, inte påstått anonym.
 En accepterad kennelkod är referral-/onboardingattribution. Den bevisar inte QR-skanning, nedladdning eller installation. Rapporten håller tekniskt observerbar QR-/länkoppning, accepterad kod, onboardingstart, skapad hund/aktivering och återkomst som separata steg; steg utan verklig signal rapporteras inte.

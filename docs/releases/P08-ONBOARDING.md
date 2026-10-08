@@ -1,12 +1,23 @@
 # Release-log — P08 uppfödarkod och onboarding
-Datum: 2026-10-08. Status: syntetisk teknisk förberedelse lokalt; onboarding/attribution ej aktiverad och P08 inte betaredo. Jämförelsebas för detta checkpoint: lokal branch `codex/full-ui-figma-revision` vid `fb91ae6`. Ingen GitHub Release finns enligt verifiering 2026-10-07. Leveranscommit och TestFlight-build: saknas.
+
+Datum: 2026-10-08. Status: implementation lokalt. Parser-/SecureStore-adaptertestet passerar; SDK-kontraktstester kunde inte starta eftersom `@supabase/supabase-js` saknas. Migration/SQL-test och native deep-link är inte verifierade i riktiga miljöer. Inte pushad eller tillgänglig i TestFlight. Jämförelsebas: arbetsbranchens P08-underlag vid `fb91ae6`; ingen GitHub Release finns enligt tidigare verifiering 2026-10-07. Leveranscommit och TestFlight-build: okända.
+
 ## Major changes
-Ingen aktiv användarfunktion. Syntetisk förberedelse: parser/livstidsvalidering, injicerbar lagringsadapter och ett QR-exempel som är märkt att inte delas eller tryckas. Planerat efter beslut/review: frivillig, återkallelig uppfödarkod, säker länkhantering genom inloggning, bekräftad källa vid hundskapning och delbart/utskriftsbart pilotunderlag. Fysisk tryckning och kennelprofil/portal ingår inte.
+
+Appen tar emot `tassla://join?code=...` med Expo Linking, sparar endast normaliserad kod och fångstdatum i SecureStore och visar koden i hundprofilformuläret efter inloggning. Kennelkällan är frivillig och kräver ett separat aktivt val; användaren kan redigera eller ta bort den. Endast `create_dog` skapar attribution atomärt. En owner-scoped boolean RPC bekräftar att exakt inskickad kod hör till den inloggade ägarens hund utan att exponera kennel eller uppgifter.
+
 ## Minor changes
-Parsern avvisar andra scheme/hosts/path, dubbla parametrar, extra parametrar, credentials och fragments. Lagringsmodellen tillåter bara code + capturedAt och rensar ogiltig data eller data äldre än sju dagar. `tools/generate_synthetic_kennel_invitation.py` genererar `docs/distribution/pilot-invitation-example.html` med den fasta syntetiska koden `TASSLA-TEST`; ReportLab finns redan i verktygsmiljön, ingen appdependency lades till. Förberedande paketplan finns i ../tasks/dev/kennel-onboarding.md.
+
+Parsern avvisar andra scheme/hosts/path, dubbla parametrar, extra parametrar, credentials och fragments. Pending-koden löper ut efter sju dagar och rensas efter verifierad skapning, bortval eller explicit utloggning. Ingen appdependency, pilotseed eller installations-URL har lagts till.
+
 ## Bug-fixes
-Inga. Befintlig onboarding och `create_dog` är orörda; ingen kennelkoppling läggs till i appflödet. Identifierat planfynd kvarstår: befintlig hund efter okänt skapanderesultat måste jämföras mot hela begäran och exakt attribution innan framgång påstås.
+
+Utvecklingsfel före första P08-leverans: okänt `create_dog`-resultat kunde tidigare acceptera vilken ägd hund som helst efter en vanlig läsning. Nu krävs exakt match på namn, ras, födelsedatum och attribution; annan profil skrivs inte över och okänd attribution visas inte som lyckad.
+
 ## Verifiering och begränsningar
-`node --experimental-strip-types --test tests/referral.test.mjs` passerar (4 testfall). QR-generatorn kördes och skapade syntetiskt HTML-underlag. `git diff --check` passerar. Ingen appkoppling, `/join` route, auth carry-through, manuellt inmatningsfält i onboarding, aktiv kodvalidering, samtycke eller attribution är implementerad. Datakontrakt och förnyad Architect/Critic/Compliance/Security-review saknas; installationsväg/pilotuppfödare saknas. Typecheck kunde inte köras eftersom pnpm försökte hämta saknade paket från ett blockerat register; native SecureStore, QR-avkodning/print, Supabase och onboarding har inte verifierats. Ingen migration, pilotseed eller verklig data använd.
+
+`node --experimental-strip-types --test tests/referral.test.mjs` passerar (5 checks i en testfil). `tests/app-data.test.mjs` och `tests/profile-edit.test.mjs` kunde inte starta eftersom `@supabase/supabase-js` saknas. `git diff --check` passerar. `supabase/tests/kennel-attribution.sql` är syntetiskt tvåägartest men kräver verklig Supabase-databas efter migration; ej kört. Native iOS-länkstart/SecureStore och visuell skärmbild är NOT TESTABLE i nuvarande miljö. Inga verkliga kenneluppgifter eller kodseed användes. Fysisk tryckning och installation efter TestFlight är inte verifierade; inget påstående om mätt installation görs.
+
 ## Nästa sprint/paket
-P08/P09 genomförs som sista funktionella MVP-block före P11. Nästa steg är beslutat datakontrakt och ny granskad plan, därefter app-route, säker onboarding carry-through, manuell kod med korrekt bortval/invalid/inactive/unknown-state och owner-scoped readback. Därefter syntetisk QA/review, QR-avkodningskontroll och först sist verklig pilotkonfiguration. P09 bygger på samma kontrakt. Ingen data görs tillgänglig för uppfödare här.
+
+Kör full `pnpm check`, SQL-migration/test i Eriks Supabase-utvecklingsprojekt och installerad TestFlight-länkväg. Därefter slutför P09 separat. Pilotkonfiguration kräver att Erik anger verkliga pilotkennlar och beta-installationslänk; inget QR-underlag för faktisk distribution genereras före detta. Nästa releasegrind är P11 med dessa verifieringar och separat review.

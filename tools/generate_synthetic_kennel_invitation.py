@@ -45,8 +45,8 @@ def main() -> None:
   <p>Skanna koden med mobilkameran. Om Tassla redan finns på mobilen öppnas appen. Annars installerar du via din inbjudan och skriver koden nedan i appen.</p>
   <div class="qr" aria-label="QR-kod för syntetisk testkod">{qr_svg}</div>
   <div class="code">{CODE}</div>
-  <p>Koden visar hur ett framtida uppfödarkort kan se ut. Den leder inte till ett fungerande onboardingflöde ännu.</p>
-  <div class="notice"><strong>Endast syntetiskt exempel.</strong> Koden är inte aktiv. Appens kennelkoppling och join-rutt är inte aktiverade. Tryck eller dela inte detta exempel med köpare.</div>
+  <p>QR-länken visar hur uppfödarkortet kan fungera. Koden är syntetisk och inte aktiverad i någon databas.</p>
+  <div class="notice"><strong>Endast syntetiskt exempel.</strong> Länkmottagning finns i appen, men den här koden är inte aktiv. Tryck eller dela inte exemplet med köpare.</div>
 </main>
 </html>
 """,

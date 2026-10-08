@@ -92,6 +92,7 @@ export function FormField({
   textContentType,
   returnKeyType,
   onSubmitEditing,
+  editable = true,
 }: {
   label: string;
   value: string;
@@ -103,6 +104,7 @@ export function FormField({
   textContentType?: 'emailAddress' | 'none';
   returnKeyType?: 'done' | 'next';
   onSubmitEditing?: () => void;
+  editable?: boolean;
 }) {
   return (
     <View style={styles.fieldGroup}>
@@ -111,6 +113,7 @@ export function FormField({
         accessibilityLabel={label}
         autoCapitalize={autoCapitalize}
         autoComplete={autoComplete}
+        editable={editable}
         keyboardType={keyboardType}
         onChangeText={onChangeText}
         onSubmitEditing={() => {

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ANALYTICS_EVENT_TYPES } from '../src/analytics/analytics-model.ts';
-import { createSyntheticAnalyticsAdapter } from '../src/analytics/analytics-service.ts';
+import { createAnalyticsService, createSyntheticAnalyticsAdapter } from '../src/analytics/analytics-service.ts';
 
 test('synthetic metrics are off by default and require explicit opt-in gates', () => {
   const adapter = createSyntheticAnalyticsAdapter();
@@ -41,4 +41,41 @@ test('synthetic events can be cleared and returned values cannot mutate the stor
 
   adapter.clear();
   assert.deepEqual(adapter.getEvents(), []);
+});
+
+test('production adapter requires server consent and sends only an allowlisted event type', async () => {
+  const calls = [];
+  let consent = false;
+  const service = createAnalyticsService(async (name, args) => {
+    calls.push({ name, args });
+    if (name === 'get_beta_metrics_consent') return { data: consent, error: null };
+    if (name === 'set_beta_metrics_consent') {
+      consent = args.p_enabled;
+      return { data: true, error: null };
+    }
+    if (name === 'record_product_event') return { data: 'synthetic-event-id', error: null };
+    return { data: null, error: new Error('unknown rpc') };
+  });
+
+  assert.equal(await service.track('home_viewed'), false);
+  assert.equal(await service.getConsent(), false);
+  assert.equal(await service.track('home_viewed'), false);
+  assert.equal(await service.setConsent(true), true);
+  assert.equal(await service.track('first_log'), true);
+  assert.deepEqual(calls.at(-1), { name: 'record_product_event', args: { p_event_type: 'first_log' } });
+  assert.equal(await service.setConsent(false), true);
+  assert.equal(await service.track('meaningful_return'), false);
+});
+
+test('production adapter fails open when RPC rejects or returns an error', async () => {
+  const service = createAnalyticsService(async (name) => {
+    if (name === 'get_beta_metrics_consent') return { data: true, error: null };
+    if (name === 'record_product_event') throw new Error('offline');
+    return { data: null, error: new Error('database unavailable') };
+  });
+
+  assert.equal(await service.getConsent(), true);
+  assert.equal(await service.track('home_viewed'), false);
+  assert.equal(await service.setConsent(false), false);
+  assert.equal(await service.track('not_allowed'), false);
 });

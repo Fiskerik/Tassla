@@ -23,18 +23,20 @@ const sourcePreparationPath = 'docs/content/mvp-source-preparation.md';
 const canonical = JSON.parse(readFileSync(bundlePath, 'utf8'));
 const slugById = new Map(canonical.items.map(({ id, slug }) => [id, slug]));
 
-test('canonical draft bundle validates with the standard-library Python CLI', () => {
+test('approved content bundle validates with the standard-library Python CLI', () => {
   const result = runValidator();
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /11 content items, 11 versions, 9 training steps, 12 sources/);
-  assert.match(result.stdout, /does not verify source support, expert approval, or human review/i);
+  assert.match(result.stdout, /does not verify source support or the authenticity of recorded approval/i);
 });
 
-test('publication check rejects the real canonical draft with a pending review gate', () => {
+test('publication check accepts only the approved runtime versions and leaves onboarding content draft', () => {
   const result = runValidator({ publicationCheck: true });
-  assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /not approved with evidence/);
-  assert.doesNotMatch(result.stdout + result.stderr, /published successfully/i);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const onboarding = canonical.items.find(({ slug }) => slug === 'before-homecoming');
+  assert.equal(onboarding.versions[0].status, 'draft');
+  assert.ok(canonical.items.filter(({ slug }) => slug !== 'before-homecoming')
+    .every(({ versions }) => versions.every(({ status }) => status === 'published')));
 });
 
 test('fixed eleven content identities retain exact slug, reserved id, type and onboarding context', () => {
@@ -51,7 +53,7 @@ test('fixed eleven content identities retain exact slug, reserved id, type and o
     ['weight-history-guide', 'article'], ['health-records-guide', 'article'], ['handling-program', 'training_program'],
     ['environment-program', 'training_program'], ['being-alone-program', 'training_program'],
   ]));
-  assert.ok(canonical.items.every(({ versions }) => versions.length === 1 && versions[0].version === 1 && versions[0].status === 'draft'));
+  assert.ok(canonical.items.every(({ versions }) => versions.length === 1 && versions[0].version === 1));
 });
 
 test('canonical bundle carries the exact reviewed v4 editorial age windows', () => {
@@ -91,10 +93,11 @@ test('actual selector applies inclusive bundle windows with app guides and progr
 test('onboarding-only before-homecoming is a separate record, filtered before ordinary selection', () => {
   const onboarding = canonical.items.find(({ slug }) => slug === 'before-homecoming');
   assert.equal(onboarding.context, 'onboarding-only');
+  assert.equal(onboarding.versions[0].status, 'draft');
   assert.deepEqual([onboarding.versions[0].min_age_weeks, onboarding.versions[0].max_age_weeks], [0, 0]);
-  // This models the separate pre-selector contract. P05 must separately verify this filter in its real runtime path.
-  const ordinary = selectorRows(canonical.items.filter(({ slug }) => slug !== 'before-homecoming'));
-  assert.equal(selectContent(ordinary, 0, 'unknown').some(({ contentId }) => contentId === onboarding.id), false);
+  const selected = selectContent(selectorRows(canonical.items), 0, 'unknown');
+  assert.equal(selected.some(({ contentId }) => contentId === onboarding.id), false,
+    'draft onboarding content is filtered out by the real published-only selector');
 });
 
 test('validator rejects open-schema fields, a missing item, and duplicate slugs', async (t) => {
@@ -294,7 +297,7 @@ test('validator resolves step claims and verifies explicit unverified traces', a
   });
   await t.test('publication check rejects an unverified claim even with complete draft shape', async () => {
     const bundle = cloneCanonical();
-    const claim = firstSourcedClaim(bundle);
+    const claim = bundle.items.find(({ slug }) => slug === 'first-week').versions[0].claim_trace.find((entry) => Array.isArray(entry.source_refs));
     delete claim.source_refs;
     claim.unverified = { reason: 'needs_source', evidence_refs: [] };
     const result = runValidator({ bundle, publicationCheck: true });
@@ -304,8 +307,12 @@ test('validator resolves step claims and verifies explicit unverified traces', a
 });
 
 test('publication check rejects missing, malformed, or unsupported review evidence', async (t) => {
-  await t.test('canonical draft has pending evidence gates', () => {
-    const result = runValidator({ publicationCheck: true });
+  await t.test('published version with pending evidence is rejected', () => {
+    const bundle = cloneCanonical();
+    const gate = bundle.items.find(({ slug }) => slug === 'first-week').versions[0].review.human_reviewer;
+    gate.status = 'pending';
+    gate.evidence = [];
+    const result = runValidator({ bundle, publicationCheck: true });
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /not approved with evidence/);
   });
@@ -392,6 +399,18 @@ test('draft SQL literals preserve every canonical item, version body/source set 
   }
 });
 
+test('approved publish SQL promotes exactly the ten runtime versions and keeps onboarding-only content hidden', () => {
+  const sql = normalizeNewlines(readFileSync(join(root, 'supabase', 'content', 'publish-mvp-content-v1.sql'), 'utf8'));
+  const approvedIds = canonical.items.filter(({ slug }) => slug !== 'before-homecoming')
+    .map(({ versions }) => versions[0].id);
+  const updates = [...sql.matchAll(/where id='([0-9a-f-]+)'::uuid and status='draft'/g)].map(([, id]) => id);
+  assert.deepEqual(updates.sort(), approvedIds.sort());
+  assert.match(sql, /review_reference='docs\/content\/mvp-content-approval-v1\.md'/);
+  assert.match(sql, /approved content publication mismatch/);
+  assert.match(sql, /onboarding-only content must remain draft/);
+  assert.doesNotMatch(sql, /62000000-0000-4000-8000-000000000001'::uuid and status='draft'/);
+});
+
 function runValidator({ bundle, publicationCheck = false } = {}) {
   const args = [validatorPath];
   let temporaryDirectory;
@@ -437,7 +456,7 @@ function selectorRows(items) {
     id: version.id,
     contentId: item.id,
     version: version.version,
-    status: 'published',
+    status: version.status,
     minAgeWeeks: version.min_age_weeks,
     maxAgeWeeks: version.max_age_weeks,
     breedIds: version.breed_targets,
@@ -445,7 +464,7 @@ function selectorRows(items) {
 }
 
 function firstSourcedClaim(bundle) {
-  for (const item of bundle.items) {
+  for (const item of bundle.items.filter(({ slug }) => slug !== 'before-homecoming')) {
     for (const version of item.versions) {
       const claim = version.claim_trace.find((entry) => Array.isArray(entry.source_refs));
       if (claim) return claim;

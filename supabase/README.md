@@ -7,8 +7,8 @@ Migrationer är schemakälla, inte dashboardändringar. Framtida schemaändringa
 
 SQL-funktion: create_dog(dog_name, dog_breed_id, dog_birth_date, kennel_code). Hund-ID returneras; ägaren identifieras via auth.uid(). Första appklienten återstår. Ingen service_role-nyckel ska användas av appen.
 
-Inga notiser, publiceringsjobb, backups, raderings-API:er eller analytics aktiveras automatiskt. Endast typvillkor/lagring/åtkomst skapas.
+Ingen schemaändring aktiveras i ett fjärrprojekt automatiskt. För P09: kör `migrations/202610080001_beta_metrics.sql` efter grundmigrationerna, därefter `tests/beta-metrics.sql` separat med syntetiska konton. Slå på `pg_cron` i Supabase Database Extensions och kör `beta-metrics-retention-job.sql` för daglig 30-dagars gallring. Kontrollera `cron.job` visar jobbet och `cron.job_run_details` visar en lyckad körning innan frivillig insamling används i en betamiljö. Denna miljö saknar verifierad anslutning till Eriks Supabase-projekt; migration, RLS och scheduler har inte körts där.
 
 ## Innehållsutkast
 
-`content/mvp-content-v1.sql` är en handkörd, versionsspecifik draft-import för en separat granskad utvecklingsmiljö. Den får köras först efter lokal bundle-validering och separat databasplan. Transaktionen kontrollerar befintliga UUID-, slug-, versions- och stegposter och avbryter vid avvikelse; den skriver aldrig över poster. Importen lämnar alla versioner som `draft` och review/publiceringsfält tomma. Den publicerar inte innehåll, ändrar inte runtimeflödet och har inte körts mot någon databas här. Se `../docs/content/README.md` och `../tools/README.md` för granskningsgrindar.
+`content/mvp-content-v1.sql` är en handkörd, versionsspecifik draft-import som ska köras först och kontrollerar exakt innehållsparitet. Efter den kan `content/publish-mvp-content-v1.sql` publicera tio godkända runtimeversioner med dokumenterad reviewreferens. Den lämnar `before-homecoming` som draft tills runtime upprätthåller onboarding-only-kontext. Ingendera filen har körts mot en databas här. Verifiera RLS och publicerad readback i målmiljön. Se `../docs/content/README.md`.

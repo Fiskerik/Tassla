@@ -35,6 +35,15 @@ export function parseKennelJoinUrl(value: string): string | null {
   return normalizeKennelCode(entries[0][1]);
 }
 
+export async function captureKennelJoinUrl(
+  value: string,
+  storage: KeyValueStorage,
+  capturedAt = Date.now(),
+): Promise<boolean> {
+  const code = parseKennelJoinUrl(value);
+  return code ? savePendingReferral(storage, code, capturedAt) : false;
+}
+
 export function createPendingReferral(code: string, capturedAt = Date.now()): PendingKennelReferral | null {
   const normalized = normalizeKennelCode(code);
   if (!normalized || !Number.isFinite(capturedAt)) return null;

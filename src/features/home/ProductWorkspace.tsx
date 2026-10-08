@@ -81,6 +81,7 @@ import { NotificationSettingsScreen } from '../notifications/NotificationSetting
 import { AccountSettingsScreen } from '../account/AccountSettingsScreen';
 import { BetaInfoScreen } from '../account/BetaInfoScreen';
 import { requestAccountDeletion, type AccountDeleteResult } from '../account/account-delete';
+import { createAnalyticsService } from '../../analytics/analytics-service';
 import { deleteNotificationPreferences } from '../../notifications/notification-storage';
 import { cleanupStalePassportFiles } from '../passport/passport-export';
 import { futureFireTimeForPlan, parseReminderPayload, type NotificationPreferences } from '../../notifications/notification-model';
@@ -162,6 +163,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [accountDeleteStatus, setAccountDeleteStatus] = useState<'idle' | 'confirmed' | 'failed' | 'unknown' | 'unavailable' | 'blocked'>('idle');
   const [accountDeleteCleanupFailed, setAccountDeleteCleanupFailed] = useState(false);
   const [accountDeleteSignOutFailed, setAccountDeleteSignOutFailed] = useState(false);
+  const [analyticsConsent, setAnalyticsConsent] = useState<boolean | null>(null);
+  const [analyticsBusy, setAnalyticsBusy] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState(false);
+  const analyticsOperationInFlight = useRef(false);
   const accountDeletionInvalidated = useRef(false);
   const accountDeleteInFlight = useRef(false);
   const [profileBusy, setProfileBusy] = useState(false);
@@ -198,6 +203,27 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const loadMoreInFlight = useRef(false);
   const { signOut, session, accountGeneration, isCurrentAccount, signOutCurrentAccountLocally,
     reportNotificationCleanupFailure, reportDeletedAccountCleanupFailure } = useAuth();
+  const analyticsService = useMemo(() => createAnalyticsService(async (name, args) => {
+    const result = await client.rpc(name, args as never);
+    return { data: result.data, error: result.error };
+  }), [client, session?.user.id]);
+
+  useEffect(() => {
+    let active = true;
+    setAnalyticsConsent(null);
+    setAnalyticsError(false);
+    if (!session?.user.id) return () => { active = false; };
+    void analyticsService.getConsent().then((value) => {
+      if (!active) return;
+      setAnalyticsConsent(value);
+      setAnalyticsError(value === null);
+    });
+    return () => { active = false; };
+  }, [analyticsService, session?.user.id]);
+
+  useEffect(() => {
+    if (page === 'home' && analyticsConsent === true) void analyticsService.track('home_viewed');
+  }, [analyticsConsent, analyticsService, page]);
   const age = ageInWeeks(dog.birth_date, localDate());
   const currentHealthHistoryLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const currentLogLifetime = `${dog.id}:${session?.user.id ?? ''}`;
@@ -767,6 +793,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       else outcome = await deleteDogEvent(client, dog.id, mutation.id);
       if (!isCurrent()) return false;
       if (outcome.status === 'saved') {
+        if (mutation.kind === 'insert') {
+          const firstConfirmedLog = logState === 'ready' && eventRows.current.length === 0;
+          void analyticsService.track(firstConfirmedLog ? 'first_log' : 'meaningful_return');
+        }
         pendingLogMutation.current = null;
         if (mutation.kind === 'insert') {
           const confirmedEvent = outcome.value;
@@ -1546,6 +1576,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         try {
           await reloadTraining();
           if (!mounted.current) return false;
+          void analyticsService.track('training_completed');
           return true;
         } catch {
           if (!mounted.current) return false;
@@ -1683,6 +1714,43 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
+  async function saveAnalyticsConsent(enabled: boolean): Promise<boolean> {
+    const ownerId = session?.user.id;
+    const generation = accountGeneration;
+    if (!ownerId || analyticsOperationInFlight.current || !isCurrentAccount(ownerId, generation)) return false;
+    analyticsOperationInFlight.current = true;
+    setAnalyticsBusy(true);
+    setAnalyticsError(false);
+    try {
+      const saved = await analyticsService.setConsent(enabled);
+      if (!isCurrentAccount(ownerId, generation)) return false;
+      if (saved) setAnalyticsConsent(enabled);
+      else setAnalyticsError(true);
+      return saved;
+    } finally {
+      analyticsOperationInFlight.current = false;
+      if (isCurrentAccount(ownerId, generation)) setAnalyticsBusy(false);
+    }
+  }
+
+  async function retryAnalyticsConsent(): Promise<void> {
+    const ownerId = session?.user.id;
+    const generation = accountGeneration;
+    if (!ownerId || analyticsOperationInFlight.current || !isCurrentAccount(ownerId, generation)) return;
+    analyticsOperationInFlight.current = true;
+    setAnalyticsBusy(true);
+    setAnalyticsError(false);
+    try {
+      const value = await analyticsService.getConsent();
+      if (!isCurrentAccount(ownerId, generation)) return;
+      setAnalyticsConsent(value);
+      setAnalyticsError(value === null);
+    } finally {
+      analyticsOperationInFlight.current = false;
+      if (isCurrentAccount(ownerId, generation)) setAnalyticsBusy(false);
+    }
+  }
+
   async function signOutDeletedLocally(): Promise<boolean> {
     const ownerId = session?.user.id;
     if (!ownerId || !isCurrentAccount(ownerId, accountGeneration)) return false;
@@ -1769,6 +1837,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     if (page === 'account-settings') return <AccountSettingsScreen ownerId={session?.user.id ?? ''} onBack={() => setPage('more')}
       onOpenInformation={() => setPage('beta-info')} busy={accountDeleteBusy} status={accountDeleteStatus}
       localCleanupFailed={accountDeleteCleanupFailed} signOutFailed={accountDeleteSignOutFailed}
+      analyticsConsent={analyticsConsent} analyticsBusy={analyticsBusy} analyticsError={analyticsError}
+      onSetAnalyticsConsent={saveAnalyticsConsent}
+      onRetryAnalyticsConsent={retryAnalyticsConsent}
       onDeleteAccount={handleAccountDeletion} onSignOutLocally={signOutDeletedLocally} />;
     if (page === 'beta-info') return <BetaInfoScreen onBack={() => setPage('account-settings')} />;
     if (page === 'notification-settings') return <NotificationSettingsScreen

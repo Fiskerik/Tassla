@@ -1,4 +1,5 @@
 # P04 dog_expert förgranskning — 2026-10-06
+> Historisk arbetsgranskning. Erik bekräftade 2026-10-08 att MVP-bundlen är godkänd och att hundexperten verifierat den. Bekräftelsen och omfattningen finns i `mvp-content-approval-v1.md`; anteckningarna nedan beskriver den tidigare reviewrundan.
 Faktisk oberoende read-only review p04_dog_expert, enligt konfigurerad roll gpt-5.6-sol medium. Verdict NEEDS CAVEAT före publicering, inget direkt UNSAFE. 11 items, 30 claim-trace-påståenden och 9 steg granskade. Mänsklig sakgranskning väntar. Detta dokument är reviewunderlag, inte publiceringsapproval.
 ## Källor verifierade
 AVSAB Humane Dog Training 2021 och aktuella positionssidan; RSPCA puppycare och kroppsspråk; Blue Cross separation anxiety. Äkta organisationsriktlinjer/positionsdokument, inte primär empirisk forskning. Appguider jämförda med citerad repositoryimplementation. Tillägg: https://avsab.org/wp-content/uploads/2024/12/Puppy-Socialization-Position-Statement-FINAL.pdf för socialiseringsdefinition/individanpassning.

@@ -1,4 +1,5 @@
 export {
+  captureKennelJoinUrl,
   clearPendingReferral,
   PENDING_REFERRAL_KEY,
   readPendingReferral,
