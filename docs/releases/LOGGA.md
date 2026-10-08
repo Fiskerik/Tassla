@@ -4,7 +4,7 @@ Datum: 2026-10-08
 Paket-ID: LOGGA
 Status: LOGGA-QUICK kod-/beteendecheckpoint v6; blockerad på renderad visuell evidens
 Jämförelsebas: `37bf93f` (`feat: complete shared log UI component library`)
-Leveranscommit: okänd
+Leveranscommit: `230ad34` (`feat: redesign quick log experience`), lokal och inte pushad
 TestFlight-version/build: okänd
 GitHub Release: saknas; commitbasen ovan används.
 
