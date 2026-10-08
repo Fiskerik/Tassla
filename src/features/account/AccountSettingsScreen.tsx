@@ -100,16 +100,19 @@ export function AccountSettingsScreen({
         <Text style={styles.rowTitle}>Hjälp oss göra Tassla bättre</Text>
         <Text style={styles.rowDetail}>Frivillig mätning visar vilka delar av appen som används. Händelser sparas i upp till 30 dagar. Du kan stänga av när du vill.</Text>
       </View>
-      <Switch
-        accessibilityLabel="Tillåt frivillig användningsmätning"
-        accessibilityState={{ checked: analyticsConsent === true, disabled: analyticsConsent === null || analyticsBusy || busy }}
-        disabled={analyticsConsent === null || analyticsBusy || busy}
-        value={analyticsConsent === true}
-        onValueChange={(value) => { void onSetAnalyticsConsent(value); }}
-        trackColor={{ false: tokens.colors.borderStrong, true: tokens.colors.primary }}
-        thumbColor={tokens.colors.surface}
-      />
-      <Text style={styles.metricsLabel}>{analyticsBusy ? 'Sparar ditt val…' : analyticsConsent === null ? 'Hämtar ditt val…' : 'Tillåt användningsmätning'}</Text>
+      <View style={styles.metricsToggleRow}>
+        <Text style={styles.metricsLabel}>Tillåt användningsmätning</Text>
+        <Switch
+          accessibilityLabel="Tillåt frivillig användningsmätning"
+          accessibilityState={{ checked: analyticsConsent === true, disabled: analyticsConsent === null || analyticsBusy || busy }}
+          disabled={analyticsConsent === null || analyticsBusy || busy}
+          value={analyticsConsent === true}
+          onValueChange={(value) => { void onSetAnalyticsConsent(value); }}
+          trackColor={{ false: tokens.colors.borderStrong, true: tokens.colors.primary }}
+          thumbColor={tokens.colors.surface}
+        />
+      </View>
+      {(analyticsBusy || analyticsConsent === null) && <Text style={styles.metricsStatus}>{analyticsBusy ? 'Sparar ditt val…' : 'Hämtar ditt val…'}</Text>}
     </View>
     {analyticsError && <MessageCard tone="error">Valet kunde inte sparas eller hämtas. Kontrollera anslutningen och försök igen.</MessageCard>}
     {analyticsError && <QuietButton title="Försök hämta valet igen" disabled={analyticsBusy || busy} onPress={() => { void onRetryAnalyticsConsent(); }} />}
@@ -149,7 +152,9 @@ const styles = StyleSheet.create({
   rowDetail: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
   metricsCard: { padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, marginBottom: tokens.spacing.sm },
   metricsCopy: { marginBottom: tokens.spacing.sm },
-  metricsLabel: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginTop: tokens.spacing.xs },
+  metricsToggleRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm },
+  metricsLabel: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1 },
+  metricsStatus: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
   deleteButton: { minHeight: tokens.size.buttonHeight, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.lg, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.danger, backgroundColor: tokens.colors.surface, marginTop: tokens.spacing.md },
   deleteDisabled: { opacity: 0.5 },
   deleteText: { ...tokens.typography.label, color: tokens.colors.danger },
