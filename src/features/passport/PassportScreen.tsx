@@ -172,22 +172,22 @@ export function PassportScreen(props: PassportScreenProps) {
           <MessageCard tone="error">Rasnamnet kunde inte hämtas. Försök igen eller välj bort hundprofilen.</MessageCard>
           <PrimaryButton title="Hämta rasnamnet igen" onPress={() => { setBreedState('loading'); setBreedDataLifetime(currentLifetime); setBreedAttempt((count) => count + 1); }} disabled={busy} />
         </>}
-        {selection.profile && (props.profileBusy || props.profilePending || props.profileConflict) && <MessageCard tone="error">Hundprofilens sparstatus behöver lösas innan den kan tas med. Kontrollera profilen i Mer.</MessageCard>}
+        {selection.profile && (props.profileBusy || props.profilePending || props.profileConflict) && <MessageCard tone="error">Vi kunde inte kontrollera om hundprofilen sparades. Kontrollera profilen i Mer innan du fortsätter.</MessageCard>}
         {selection.latestWeight && props.weightLoadState === 'loading' && <MessageCard>Hämtar sparade vikter…</MessageCard>}
         {selection.latestWeight && props.weightLoadState === 'error' && <MessageCard tone="error">Vikterna kunde inte hämtas. Försök igen i Hälsa eller välj bort viktavsnittet.</MessageCard>}
-        {selection.latestWeight && props.weightPending && <MessageCard tone="error">En viktändring har oklar sparstatus. Kontrollera den i Hälsa innan du tar med vikten.</MessageCard>}
+        {selection.latestWeight && props.weightPending && <MessageCard tone="error">Vi kunde inte kontrollera om viktändringen sparades. Kontrollera den i Hälsa innan du tar med vikten.</MessageCard>}
         {selection.healthHistory && props.historyLoadState === 'loading' && <MessageCard>Hämtar sparade hälsoposter…</MessageCard>}
         {selection.healthHistory && props.historyLoadState === 'error' && <MessageCard tone="error">Hälsoposterna kunde inte hämtas. Försök igen i Hälsa eller välj bort avsnittet.</MessageCard>}
-        {selection.healthHistory && props.historyPending && <MessageCard tone="error">En hälsopost har oklar sparstatus. Kontrollera den i Hälsa innan du tar med posterna.</MessageCard>}
+        {selection.healthHistory && props.historyPending && <MessageCard tone="error">Vi kunde inte kontrollera om hälsoposten sparades. Kontrollera den i Hälsa innan du tar med posterna.</MessageCard>}
 
         <View style={styles.previewCard}>
           <View style={styles.previewHeading}>
             <Text style={styles.previewTitle} accessibilityRole="header">Förhandsvisning</Text>
           </View>
           {visibleSnapshot ? <SnapshotPreview snapshot={visibleSnapshot} /> : (
-            <Text style={styles.body}>{selectedAny ? 'Förhandsvisningen visas när de valda uppgifterna är inlästa och sparstatusen är säker.' : 'Välj minst ett avsnitt för att se en förhandsvisning.'}</Text>
+          <Text style={styles.body}>{selectedAny ? 'Förhandsvisningen visas när valda uppgifter har hämtats och inga ändringar väntar på kontroll.' : 'Välj minst ett avsnitt för att se en förhandsvisning.'}</Text>
           )}
-          {selection.healthHistory && <Text style={styles.limitNotice}>Högst 50 senast inlästa utförda poster visas. Äldre uppgifter kan saknas på grund av historikens servergräns.</Text>}
+          {selection.healthHistory && <Text style={styles.limitNotice}>Visar högst 50 av de senast hämtade händelserna. Äldre uppgifter kan saknas.</Text>}
           <Text style={styles.disclaimer}>Uppgifterna är registrerade av hundägaren. Tassla-pass är ingen officiell journal, legitimation eller vaccinationshandling.</Text>
           {visibleSnapshot && <Text style={styles.createdOn}>Skapad {visibleSnapshot.createdOn}</Text>}
         </View>

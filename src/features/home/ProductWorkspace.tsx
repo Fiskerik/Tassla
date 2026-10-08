@@ -351,7 +351,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         setNotificationMessage('Enhetens påminnelser kunde inte uppdateras. Kontrollera inställningarna och försök igen.');
         setNotificationMessageError(true);
       } else if (result.status === 'unknown') {
-        setNotificationMessage('En plan har osäker sparstatus. Den schemaläggs inte förrän du har kontrollerat ändringen.');
+        setNotificationMessage('Vi kunde inte kontrollera om planen sparades. Den påminnelsen är pausad tills du kontrollerar ändringen.');
         setNotificationMessageError(true);
       } else {
         setNotificationMessage('');
@@ -621,7 +621,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       if (outcome.status === 'unknown') {
         pendingProfileMutation.current = mutation;
         setProfilePending(true);
-        setProfileMessage('Sparstatus är osäker. Kontrollera samma profiländring innan du gör något nytt.');
+        setProfileMessage('Vi kunde inte kontrollera om profilen sparades. Kontrollera samma ändring innan du gör något nytt.');
         setProfileMessageError(true);
         return false;
       }
@@ -634,7 +634,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       if (!isCurrent()) return false;
       pendingProfileMutation.current = mutation;
       setProfilePending(true);
-      setProfileMessage('Sparstatus är osäker. Kontrollera samma profiländring innan du gör något nytt.');
+      setProfileMessage('Vi kunde inte kontrollera om profilen sparades. Kontrollera samma ändring innan du gör något nytt.');
       setProfileMessageError(true);
       return false;
     } finally {
@@ -662,7 +662,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     if (!isCurrent()) return;
     profileMutationInFlight.current = true;
     setProfileBusy(true);
-    setProfileMessage('Kontrollerar sparstatus…');
+    setProfileMessage('Kontrollerar profilen…');
     setProfileMessageError(false);
     setProfileConflict(null);
     let retrySameIntent = false;
@@ -684,7 +684,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       if (!isCurrent()) return;
     } catch {
       if (isCurrent()) {
-        setProfileMessage('Sparstatus kunde inte kontrolleras. Försök igen när anslutningen fungerar.');
+        setProfileMessage('Vi kunde inte kontrollera om profilen sparades. Försök igen när anslutningen fungerar.');
         setProfileMessageError(true);
       }
     } finally {
@@ -978,7 +978,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       if (outcome.status === 'unknown') {
         pendingHealthMutation.current = mutation;
         setHealthPending(true);
-        setHealthMessage('Sparstatus är osäker. Kontrollera samma ändring innan du försöker igen.');
+        setHealthMessage('Vi kunde inte kontrollera om viktändringen sparades. Kontrollera samma ändring innan du försöker igen.');
         setHealthMessageError(true);
         return false;
       }
@@ -991,7 +991,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       if (!mounted.current) return false;
       pendingHealthMutation.current = mutation;
       setHealthPending(true);
-      setHealthMessage('Sparstatus är osäker. Kontrollera samma ändring innan du försöker igen.');
+      setHealthMessage('Vi kunde inte kontrollera om viktändringen sparades. Kontrollera samma ändring innan du försöker igen.');
       setHealthMessageError(true);
       return false;
     } finally {
@@ -1028,7 +1028,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     if (mutation) {
       healthMutationInFlight.current = true;
       setHealthBusy(true);
-      setHealthMessage('Kontrollerar sparstatus…');
+      setHealthMessage('Kontrollerar viktändringen…');
       setHealthMessageError(false);
       let retrySameOperation = false;
       try {
@@ -1050,7 +1050,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         if (!retrySameOperation && pendingHealthMutation.current) setHealthMessageError(true);
       } catch {
         if (mounted.current) {
-          setHealthMessage('Sparstatus kunde inte kontrolleras. Försök kontrollera igen när anslutningen fungerar.');
+          setHealthMessage('Vi kunde inte kontrollera om viktändringen sparades. Försök igen när anslutningen fungerar.');
           setHealthMessageError(true);
         }
       } finally {
@@ -1129,7 +1129,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       if (outcome.status === 'unknown') {
         pendingHealthHistoryMutation.current = mutation;
         setHealthHistoryPending(true);
-        setHealthHistoryMessage('Sparstatus är osäker. Kontrollera samma ändring innan du försöker igen.');
+        setHealthHistoryMessage('Vi kunde inte kontrollera om hälsohändelsen sparades. Kontrollera samma ändring innan du försöker igen.');
         setHealthHistoryMessageError(true);
         return false;
       }
@@ -1142,7 +1142,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       if (!isCurrent()) return false;
       pendingHealthHistoryMutation.current = mutation;
       setHealthHistoryPending(true);
-      setHealthHistoryMessage('Sparstatus är osäker. Kontrollera samma ändring innan du försöker igen.');
+      setHealthHistoryMessage('Vi kunde inte kontrollera om hälsohändelsen sparades. Kontrollera samma ändring innan du försöker igen.');
       setHealthHistoryMessageError(true);
       return false;
     } finally {
@@ -1203,7 +1203,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       const flightToken = {};
       healthHistoryFlightToken.current = flightToken;
       setHealthHistoryBusy(true);
-      setHealthHistoryMessage('Kontrollerar sparstatus…');
+      setHealthHistoryMessage('Kontrollerar hälsohändelsen…');
       setHealthHistoryMessageError(false);
       let retrySameOperation = false;
       try {
@@ -1235,7 +1235,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         if (!retrySameOperation && pendingHealthHistoryMutation.current) setHealthHistoryMessageError(true);
       } catch {
         if (isCurrent()) {
-          setHealthHistoryMessage('Sparstatus kunde inte kontrolleras. Försök igen när anslutningen fungerar.');
+          setHealthHistoryMessage('Vi kunde inte kontrollera om hälsohändelsen sparades. Försök igen när anslutningen fungerar.');
           setHealthHistoryMessageError(true);
         }
       } finally {
@@ -1320,7 +1320,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       if (outcome.status === 'unknown') {
         pendingPlannedHealthMutation.current = mutation;
         setPlannedHealthPending(true);
-        setPlannedHealthMessage('Sparstatus är osäker. Kontrollera samma ändring innan du försöker igen.');
+        setPlannedHealthMessage('Vi kunde inte kontrollera om planen sparades. Kontrollera samma ändring innan du försöker igen.');
         setPlannedHealthMessageError(true);
         return false;
       }
@@ -1333,7 +1333,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       if (!isCurrent()) return false;
       pendingPlannedHealthMutation.current = mutation;
       setPlannedHealthPending(true);
-      setPlannedHealthMessage('Sparstatus är osäker. Kontrollera samma ändring innan du försöker igen.');
+      setPlannedHealthMessage('Vi kunde inte kontrollera om planen sparades. Kontrollera samma ändring innan du försöker igen.');
       setPlannedHealthMessageError(true);
       return false;
     } finally {
@@ -1439,7 +1439,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     const flightToken = {};
     plannedHealthFlightToken.current = flightToken;
     setPlannedHealthBusy(true);
-    setPlannedHealthMessage('Kontrollerar sparstatus…');
+    setPlannedHealthMessage('Kontrollerar planen…');
     setPlannedHealthMessageError(false);
     let retrySameOperation = false;
     try {
@@ -1471,7 +1471,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       if (!retrySameOperation && pendingPlannedHealthMutation.current) setPlannedHealthMessageError(true);
     } catch {
       if (isCurrent()) {
-        setPlannedHealthMessage('Sparstatus kunde inte kontrolleras. Försök igen när anslutningen fungerar.');
+        setPlannedHealthMessage('Vi kunde inte kontrollera om planen sparades. Försök igen när anslutningen fungerar.');
         setPlannedHealthMessageError(true);
       }
     } finally {
@@ -1562,9 +1562,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       }
       if (!mounted.current) return false;
       setTrainingError(!progressChecked
-        ? 'Stegets sparstatus kunde inte kontrolleras. Försök läsa programmet igen innan du registrerar på nytt.'
+        ? 'Vi kunde inte kontrollera om steget sparades. Läs in programmet igen innan du försöker på nytt.'
         : outcome.status === 'unknown'
-          ? 'Sparstatus är osäker. Programmet har kontrollerats; om steget saknas kan du försöka igen.'
+          ? 'Vi kunde inte bekräfta att steget sparades. Programmet har hämtats igen; om steget saknas kan du försöka på nytt.'
           : 'Steget kunde inte registreras. Kontrollera anslutningen och försök igen.');
       return false;
     } catch {
@@ -1593,10 +1593,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       if (!mounted.current) return;
       try {
         await reloadTraining();
-        setTrainingError('Alla registreringar kunde inte rensas. Kontrollera programmet och försök igen.');
+        setTrainingError('Alla genomförda steg kunde inte rensas. Kontrollera programmet och försök igen.');
       } catch {
         setTrainingState('error');
-        setTrainingError('Rensningens status kunde inte läsas in. Hämta programmet igen innan du ändrar det.');
+        setTrainingError('Vi kunde inte kontrollera om stegen rensades. Hämta programmet igen innan du ändrar det.');
       }
     } finally {
       trainingMutationInFlight.current = false;
@@ -2021,7 +2021,7 @@ function BottomNavigation({ page, onNavigate }: { page: ProductPage; onNavigate:
 function reminderStatusSummary(result: ReminderReconcileResult | null, preferences: NotificationPreferences, permission: 'unknown' | 'granted' | 'denied'): string {
   if (!preferences.enabled) return 'Påminnelser av på den här enheten. Sparade planval finns kvar.';
   if (permission === 'denied' || result?.status === 'permission-denied') return 'Enheten nekar notiser; Tassla fungerar ändå.';
-  if (result?.status === 'unknown') return 'En plan har osäker sparstatus och väntar på kontroll.';
+  if (result?.status === 'unknown') return 'Vi kunde inte kontrollera om en plan sparades. Påminnelsen väntar tills du har kontrollerat ändringen.';
   if (result?.status === 'failed') return 'Påminnelserna kunde inte stämmas av.';
   if (result?.status === 'over-cap') return 'Schemalagda högst 40 planer och en träningspåminnelse. Ytterligare planer schemaläggs inte.';
   if (result?.status === 'scheduled') return result.scheduledCount + ' lokala påminnelser schemalagda i ' + result.timezone + '. Schemaläggning är ingen leveransbekräftelse.';

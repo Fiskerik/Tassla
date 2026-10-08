@@ -92,7 +92,7 @@ export function AccountSettingsScreen({
     {status === 'confirmed' && <MessageCard>Kontot är raderat. Vi loggar ut från den här enheten.</MessageCard>}
     {status === 'failed' && <MessageCard tone="error">Vi kunde inte bekräfta att kontot raderades. Kontrollera anslutningen eller kontakta support.</MessageCard>}
     {status === 'unavailable' && <MessageCard tone="error">Raderingen kunde inte startas säkert på den här enheten. Försök igen senare.</MessageCard>}
-    {status === 'blocked' && <MessageCard tone="error">Avsluta först pågående ändringar och lös eventuell osäker sparstatus innan du raderar kontot.</MessageCard>}
+    {status === 'blocked' && <MessageCard tone="error">Avsluta pågående ändringar och kontrollera att de är klara innan du raderar kontot.</MessageCard>}
     {status === 'unknown' && <MessageCard tone="error">Vi kunde inte bekräfta om kontot raderades. Försök inte igen än. Logga ut, försök logga in och kontakta support om du fortfarande kan komma in.</MessageCard>}
     {markerReady && markerState === 'pending' && status === 'idle' && <MessageCard tone="error">Vi kunde inte bekräfta en tidigare radering. Försök inte igen än. Logga ut och kontakta support för hjälp.</MessageCard>}
     {markerReady && markerState === 'unavailable' && status === 'idle' && <MessageCard tone="error">Vi kunde inte kontrollera om kontot redan har en raderingsbegäran. Skicka inte en ny innan support har hjälpt dig.</MessageCard>}

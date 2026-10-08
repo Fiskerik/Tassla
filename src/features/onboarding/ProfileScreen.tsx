@@ -128,9 +128,9 @@ export function ProfileScreen({ client, onCreated }: { client: SupabaseClient; o
         value={birthDate}
       />
       {saveState === 'error' && <MessageCard tone="error">Profilen kunde inte sparas. Kontrollera uppgifterna och anslutningen innan du försöker igen.</MessageCard>}
-      {saveState === 'unknown' && <MessageCard tone="error">Sparstatus är okänd. Kontrollera först om profilen redan finns.</MessageCard>}
+      {saveState === 'unknown' && <MessageCard tone="error">Vi kunde inte kontrollera om profilen sparades. Kontrollera om den redan finns innan du försöker igen.</MessageCard>}
       {saveState === 'unknown'
-        ? <PrimaryButton title={busy ? 'Kontrollerar…' : 'Kontrollera sparstatus'} disabled={busy} onPress={() => { void checkSaveStatus(); }} />
+        ? <PrimaryButton title={busy ? 'Kontrollerar…' : 'Kontrollera om profilen finns'} disabled={busy} onPress={() => { void checkSaveStatus(); }} />
         : <PrimaryButton title={busy ? 'Sparar…' : 'Fortsätt'} disabled={!canSubmit || busy || breedsState !== 'ready'} onPress={() => { void submitProfile(); }} />}
     </AppScreen>
   );
