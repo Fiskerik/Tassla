@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppScreen, FormField, MessageCard, PageHeading, PrimaryButton } from '../../components/AppPrimitives';
 import { createDog, fetchBreeds, fetchOwnedDog, type BreedOption, type OwnedDog } from '../../data/app-data';
-import { theme } from '../../theme/tokens';
+import { tokens } from '../../theme/tokens';
 import { ageInWeeks, localDate } from './dog';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -91,20 +91,21 @@ export function ProfileScreen({ client, onCreated }: { client: SupabaseClient; o
         description="Det hjälper oss att visa innehåll som passar just er."
       />
       <FormField label="Hundens namn" onChangeText={(value) => { setName(value); markEdited(); }} onSubmitEditing={() => Keyboard.dismiss()} placeholder="Till exempel Nala" returnKeyType="done" value={name} />
-      <Text style={styles.label}>Ras</Text>
+      <Text style={styles.label} accessibilityRole="header">Ras</Text>
       {breedsState === 'loading' && <MessageCard>Hämtar raslistan…</MessageCard>}
       {breedsState === 'error' && <>
         <MessageCard tone="error">Raslistan gick inte att hämta. Kontrollera anslutningen och försök igen.</MessageCard>
         <PrimaryButton title="Försök igen" onPress={() => { setBreedsState('loading'); setBreedAttempt((count) => count + 1); }} />
       </>}
       {breedsState === 'ready' && (
-        <View style={styles.breedList}>
+        <View accessibilityRole="radiogroup" accessibilityLabel="Välj hundras" style={styles.breedList}>
           {breeds.map((breed) => {
             const selected = breedId === breed.id;
             return (
               <Pressable
                 key={breed.id}
                 accessibilityRole="radio"
+                accessibilityLabel={breed.name}
                 accessibilityState={{ selected }}
                 onPress={() => { setBreedId(breed.id); markEdited(); }}
                 style={({ pressed }) => [styles.breedOption, selected && styles.breedSelected, pressed && styles.breedPressed]}
@@ -146,12 +147,12 @@ function isValidBirthDate(value: string): boolean {
 }
 
 const styles = StyleSheet.create({
-  label: { color: theme.colors.text, fontSize: 15, fontWeight: '700', marginBottom: 8, marginTop: 2 },
-  breedList: { gap: 8, marginBottom: 18 },
-  breedOption: { minHeight: 52, borderRadius: theme.radius.button, paddingHorizontal: 16, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  breedSelected: { borderColor: theme.colors.accent, backgroundColor: '#E5EFE8' },
+  label: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.sm, marginTop: tokens.spacing.xs },
+  breedList: { gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg },
+  breedOption: { minHeight: tokens.size.touchMin, borderRadius: tokens.radius.md, paddingHorizontal: tokens.spacing.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  breedSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   breedPressed: { opacity: 0.72 },
-  breedText: { color: theme.colors.text, fontSize: 16 },
-  breedTextSelected: { color: theme.colors.accent, fontWeight: '700' },
-  checkmark: { color: theme.colors.accent, fontSize: 19, fontWeight: '800' },
+  breedText: { ...tokens.typography.body, color: tokens.colors.textPrimary },
+  breedTextSelected: { color: tokens.colors.primary, fontWeight: '700' },
+  checkmark: { ...tokens.typography.label, color: tokens.colors.primary },
 });

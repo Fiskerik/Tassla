@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MessageCard, PageHeading, QuietButton } from '../../components/AppPrimitives';
-import { theme } from '../../theme/tokens';
+import { tokens } from '../../theme/tokens';
 
 declare const __DEV__: boolean;
 declare const require: (path: string) => unknown;
@@ -33,7 +33,7 @@ function loadDraftBundle(): DraftBundle {
 export function DraftContentPreview({ onBack, enabled = DRAFT_PREVIEW_ENABLED }: { onBack: () => void; enabled?: boolean }) {
   const draftBundle = enabled ? loadDraftBundle() : null;
   if (!draftBundle || draftBundle.status !== 'draft') return null;
-  return <ScrollView>
+  return <ScrollView contentContainerStyle={styles.content}>
     <QuietButton title="Tillbaka till Mer" onPress={onBack} />
     <PageHeading title="Utkast för granskning" description="Intern förhandsvisning av tränings- och hälsotexter som ännu inte är sakgranskade eller publicerade." />
     <MessageCard tone="error">Utkast – ej granskat eller publicerat. Använd inte texten som vård- eller träningsråd före granskning.</MessageCard>
@@ -51,10 +51,19 @@ export function DraftContentPreview({ onBack, enabled = DRAFT_PREVIEW_ENABLED }:
 }
 
 const styles = StyleSheet.create({
-  card: { padding: 16, marginTop: 13, borderRadius: theme.radius.card, borderWidth: 1, borderColor: '#D6C59B', backgroundColor: '#FBF6EA' },
-  eyebrow: { color: '#785716', fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
-  title: { color: theme.colors.text, fontSize: 19, lineHeight: 25, fontWeight: '800', marginTop: 6 },
-  body: { color: theme.colors.text, fontSize: 15, lineHeight: 22, marginTop: 7 },
-  step: { borderTopWidth: 1, borderTopColor: '#E4D9BE', marginTop: 12, paddingTop: 10 },
-  stepTitle: { color: theme.colors.accent, fontSize: 15, fontWeight: '800' },
+  content: { padding: tokens.layout.pageInset, paddingBottom: tokens.spacing.xxl, gap: tokens.spacing.md },
+  card: {
+    padding: tokens.layout.cardPadding,
+    marginTop: tokens.spacing.xs,
+    borderRadius: tokens.radius.lg,
+    borderWidth: tokens.size.stroke,
+    borderColor: tokens.colors.border,
+    backgroundColor: tokens.colors.surface,
+    gap: tokens.spacing.sm,
+  },
+  eyebrow: { ...tokens.typography.caption, color: tokens.colors.warning, fontWeight: '700' },
+  title: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
+  body: { ...tokens.typography.body, color: tokens.colors.textPrimary },
+  step: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, marginTop: tokens.spacing.xs, paddingTop: tokens.spacing.md, gap: tokens.spacing.sm },
+  stepTitle: { ...tokens.typography.label, color: tokens.colors.primary },
 });

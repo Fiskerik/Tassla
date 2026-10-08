@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppScreen } from '../../components/AppPrimitives';
 import { ComponentGalleryScreen } from '../../components/ui/ComponentGalleryScreen';
-import { theme } from '../../theme/tokens';
+import { tokens } from '../../theme/tokens';
 import type { Dog } from '../onboarding/dog';
 import { HealthScreen } from '../health/HealthScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
@@ -41,7 +41,12 @@ export function DevelopmentPreview() {
       return;
     }
     pageOpacity.setValue(0);
-    Animated.timing(pageOpacity, { toValue: 1, duration: 140, useNativeDriver: true }).start();
+    Animated.timing(pageOpacity, {
+      toValue: 1,
+      duration: 140,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
     return () => pageOpacity.stopAnimation();
   }, [pageOpacity, reduceMotion, screen]);
 
@@ -264,20 +269,35 @@ function createSyntheticDog(): Dog {
 }
 
 const styles = StyleSheet.create({
-  previewTag: { alignSelf: 'flex-start', borderRadius: 20, backgroundColor: '#DCE9DD', paddingHorizontal: 11, paddingVertical: 7, marginTop: 18 },
-  previewTagText: { color: theme.colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 0.7 },
-  heading: { marginTop: 36, marginBottom: 22 },
-  headingTitle: { color: theme.colors.text, fontSize: 28, lineHeight: 36, fontWeight: '800', letterSpacing: -0.5 },
-  headingDescription: { color: theme.colors.mutedText, fontSize: 16, lineHeight: 23, marginTop: 8 },
-  menuItem: { minHeight: 68, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  previewTag: { alignSelf: 'flex-start', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.selectedSurface, paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.sm, marginTop: tokens.spacing.lg },
+  previewTagText: { ...tokens.typography.label, color: tokens.colors.primary, fontSize: tokens.typography.caption.fontSize, lineHeight: tokens.typography.caption.lineHeight, letterSpacing: 0.4 },
+  heading: { marginTop: tokens.spacing.xl, marginBottom: tokens.spacing.lg },
+  headingTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary },
+  headingDescription: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginTop: tokens.spacing.sm },
+  menuItem: {
+    minHeight: tokens.size.buttonHeight,
+    borderRadius: tokens.radius.md,
+    borderWidth: tokens.size.stroke,
+    borderColor: tokens.colors.border,
+    backgroundColor: tokens.colors.surface,
+    paddingHorizontal: tokens.spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: tokens.spacing.md,
+    shadowColor: tokens.primitives.ink,
+    shadowOpacity: 0.08,
+    shadowRadius: tokens.spacing.sm,
+    shadowOffset: { width: 0, height: tokens.spacing.xs },
+    elevation: tokens.spacing.xs,
+  },
   menuCopy: { flex: 1 },
-  menuTitle: { color: theme.colors.text, fontSize: 16, fontWeight: '700' },
-  menuDescription: { color: theme.colors.mutedText, fontSize: 13, marginTop: 4 },
-  chevron: { color: theme.colors.accent, fontSize: 26, paddingLeft: 12 },
-  tabBar: { width: '100%', minHeight: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: 8, paddingVertical: 5 },
-  tab: { minWidth: 64, minHeight: 48, borderRadius: 16, flex: 1, alignItems: 'center', justifyContent: 'center', marginHorizontal: 3 },
-  selectedTab: { backgroundColor: '#E5EFE8' },
-  tabLabel: { color: theme.colors.mutedText, fontSize: 12, fontWeight: '700' },
-  selectedTabLabel: { color: theme.colors.accent, fontWeight: '800' },
-  pressed: { opacity: 0.72 },
+  menuTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  menuDescription: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
+  chevron: { color: tokens.colors.primary, ...tokens.typography.title, paddingLeft: tokens.spacing.md },
+  tabBar: { width: '100%', minHeight: tokens.size.navHeight, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: tokens.spacing.sm, paddingVertical: tokens.spacing.xs },
+  tab: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, borderRadius: tokens.radius.md, flex: 1, alignItems: 'center', justifyContent: 'center', marginHorizontal: tokens.spacing.xs },
+  selectedTab: { backgroundColor: tokens.colors.selectedSurface },
+  tabLabel: { ...tokens.typography.caption, color: tokens.colors.textSecondary, fontWeight: '700' },
+  selectedTabLabel: { color: tokens.colors.primary, fontWeight: '800' },
+  pressed: { opacity: 0.84, transform: [{ scale: 0.99 }] },
 });

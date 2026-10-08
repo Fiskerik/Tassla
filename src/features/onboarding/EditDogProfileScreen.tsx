@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Image, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ActionFeedbackModal, DatePickerField, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { DatePickerField, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { Toast } from '../../components/ui/Toast';
 import {
   fetchBreeds,
   isValidDogBirthDate,
@@ -11,7 +12,7 @@ import {
   type OwnedDog,
   type OwnedDogProfileChanges,
 } from '../../data/app-data';
-import { theme } from '../../theme/tokens';
+import { tokens } from '../../theme/tokens';
 
 export function EditDogProfileScreen({
   client,
@@ -45,8 +46,17 @@ export function EditDogProfileScreen({
   const [breedId, setBreedId] = useState(dog.breed_id);
   const [birthDate, setBirthDate] = useState(dog.birth_date);
   const [formError, setFormError] = useState('');
-  const [dismissedStatus, setDismissedStatus] = useState('');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const confirmedMessage = statusMessage === 'Hundprofilen är sparad.' && !statusError && !pending && !busy
+    ? statusMessage : null;
   const blocked = busy || pending;
+
+  useEffect(() => {
+    if (!confirmedMessage) { setToastMessage(null); return; }
+    setToastMessage(confirmedMessage);
+    const timer = setTimeout(() => setToastMessage(null), 2500);
+    return () => clearTimeout(timer);
+  }, [confirmedMessage]);
 
   useEffect(() => {
     let active = true;
@@ -61,7 +71,6 @@ export function EditDogProfileScreen({
   }, [breedAttempt, client]);
 
   async function save() {
-    setDismissedStatus('');
     setFormError('');
     const normalizedName = normalizeDogProfileName(name);
     if (!normalizedName) {
@@ -96,7 +105,7 @@ export function EditDogProfileScreen({
         accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
     </View>
     <View style={styles.profileNote}>
-      <Ionicons name="paw-outline" size={19} color={theme.colors.accent} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+      <Ionicons name="paw-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
       <Text style={styles.profileNoteText}>Hundens historik och träningssteg följer med när du rättar profilen.</Text>
     </View>
     {showStatusMessage ? <MessageCard tone={statusError ? 'error' : 'neutral'}>{statusMessage}</MessageCard> : null}
@@ -117,7 +126,7 @@ export function EditDogProfileScreen({
         <Text style={styles.label}>Hundens namn</Text>
         <TextInput accessibilityLabel="Hundens namn" autoCapitalize="words" editable={!blocked}
           onChangeText={setName} onSubmitEditing={() => Keyboard.dismiss()} placeholder="Till exempel Nala"
-          placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.input} value={name} />
+          placeholderTextColor={tokens.colors.textSecondary} returnKeyType="done" style={styles.input} value={name} />
       </View>
       <Text style={styles.label}>Ras</Text>
       {breedState === 'loading' && <MessageCard>Hämtar raslistan…</MessageCard>}
@@ -132,7 +141,7 @@ export function EditDogProfileScreen({
             accessibilityState={{ selected, disabled: blocked }} disabled={blocked} onPress={() => setBreedId(breed.id)}
             style={({ pressed }) => [styles.breedOption, selected && styles.breedSelected, pressed && !blocked && styles.breedPressed]}>
             <Text style={[styles.breedText, selected && styles.breedTextSelected]}>{breed.name}</Text>
-            {selected && <Ionicons name="checkmark-circle" size={21} color={theme.colors.accent} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />}
+            {selected && <Ionicons name="checkmark-circle" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />}
           </Pressable>;
         })}
         {!breeds.some((breed) => breed.id === dog.breed_id) && <MessageCard>Nuvarande ras ({currentBreed}) finns inte i listan. Välj en ras om du vill ändra profilen.</MessageCard>}
@@ -141,33 +150,31 @@ export function EditDogProfileScreen({
       {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
       <PrimaryButton title={busy ? 'Sparar…' : statusError && !pending ? 'Försök igen' : 'Spara profil'}
         disabled={blocked || breedState !== 'ready'} onPress={() => { void save(); }} />
-      {statusMessage && !statusError && !pending ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => setDismissedStatus(statusMessage)} /> : null}
+      {toastMessage ? <Toast tone="success" confirmed message={toastMessage} /> : null}
     </View>
     <QuietButton title="Avbryt" disabled={busy} onPress={onBack} />
   </View>;
 }
 
 const styles = StyleSheet.create({
-  heroCard: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, padding: 16, borderRadius: theme.radius.card, backgroundColor: '#F1F5F0', borderWidth: 1, borderColor: theme.colors.border },
+  heroCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.selectedSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   heroCopy: { flex: 1 },
-  heroImage: { width: 56, height: 56, borderRadius: 28 },
-  profileNote: { flexDirection: 'row', alignItems: 'center', gap: 9, padding: 14, marginTop: 10, borderRadius: theme.radius.card, backgroundColor: '#EAF2EC' },
-  profileNoteText: { flex: 1, color: theme.colors.text, fontSize: 14, lineHeight: 20 },
-  conflictCard: { marginTop: 12, padding: 15, borderRadius: theme.radius.card, borderWidth: 1, borderColor: '#D6C59B', backgroundColor: '#FBF6EA' },
-  conflictTitle: { color: theme.colors.text, fontSize: 17, fontWeight: '800' },
-  conflictText: { color: theme.colors.text, fontSize: 16, fontWeight: '700', marginTop: 8 },
-  conflictBody: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 20, marginVertical: 8 },
-  formCard: { marginTop: 17, padding: 17, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  formTitle: { color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 15 },
-  field: { marginBottom: 14 },
-  label: { color: theme.colors.text, fontSize: 15, fontWeight: '700', marginBottom: 7 },
-  input: { minHeight: 54, paddingHorizontal: 14, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, fontSize: 17 },
-  breedList: { gap: 8, marginBottom: 17 },
-  breedOption: { minHeight: 50, borderRadius: theme.radius.button, paddingHorizontal: 14, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  breedSelected: { borderColor: theme.colors.accent, backgroundColor: '#E5EFE8' },
+  heroImage: { width: tokens.size.chipLg + tokens.spacing.md, height: tokens.size.chipLg + tokens.spacing.md, borderRadius: tokens.radius.full },
+  profileNote: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, padding: tokens.spacing.md, marginTop: tokens.spacing.md, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.successSurface },
+  profileNoteText: { ...tokens.typography.caption, flex: 1, color: tokens.colors.textPrimary },
+  conflictCard: { marginTop: tokens.spacing.md, padding: tokens.spacing.md, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.warning, backgroundColor: tokens.colors.warningSurface },
+  conflictTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  conflictText: { ...tokens.typography.body, color: tokens.colors.textPrimary, fontWeight: '700', marginTop: tokens.spacing.sm },
+  conflictBody: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginVertical: tokens.spacing.sm },
+  formCard: { marginTop: tokens.spacing.lg, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  formTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
+  field: { marginBottom: tokens.spacing.md },
+  label: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.sm },
+  input: { minHeight: tokens.size.buttonHeight, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body },
+  breedList: { gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg },
+  breedOption: { minHeight: tokens.size.touchMin, borderRadius: tokens.radius.md, paddingHorizontal: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  breedSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   breedPressed: { opacity: 0.75 },
-  breedText: { color: theme.colors.text, fontSize: 16 },
-  breedTextSelected: { color: theme.colors.accent, fontWeight: '700' },
-  dateWrap: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 14, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  dateInput: { flex: 1, paddingVertical: 10, color: theme.colors.text, fontSize: 17 },
+  breedText: { ...tokens.typography.body, color: tokens.colors.textPrimary },
+  breedTextSelected: { color: tokens.colors.primary, fontWeight: '700' },
 });

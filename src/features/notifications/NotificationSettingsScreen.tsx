@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ActionFeedbackModal, InfoModal, MessageCard, PageHeading, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
-import { theme } from '../../theme/tokens';
+import { InfoModal, MessageCard, PageHeading, QuietButton, TimePickerField } from '../../components/AppPrimitives';
+import { Button } from '../../components/ui/Button';
+import { Toast } from '../../components/ui/Toast';
+import { tokens } from '../../theme/tokens';
 import type { NotificationPreferences } from '../../notifications/notification-model';
 
 export function NotificationSettingsScreen({
@@ -21,25 +23,41 @@ export function NotificationSettingsScreen({
   const [enabled, setEnabled] = useState(preferences.enabled);
   const [trainingEnabled, setTrainingEnabled] = useState(preferences.trainingEnabled);
   const [trainingTime, setTrainingTime] = useState(formatTime(preferences.trainingMinutes));
+  const [showSavedToast, setShowSavedToast] = useState(saved);
+  const [toastMessage, setToastMessage] = useState<string | null>(saved ? 'Valen är sparade för ditt konto på den här enheten.' : null);
   const [formError, setFormError] = useState('');
   const [permissionBusy, setPermissionBusy] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState('');
-  const [dismissedStatus, setDismissedStatus] = useState<string | null>(null);
   const [infoVisible, setInfoVisible] = useState(false);
+  const isDirty = enabled !== preferences.enabled
+    || trainingEnabled !== preferences.trainingEnabled
+    || trainingTime !== formatTime(preferences.trainingMinutes);
+
+  useEffect(() => {
+    if (!showSavedToast || !saved || statusError) { setToastMessage(null); return; }
+    setToastMessage('Valen är sparade för ditt konto på den här enheten.');
+    const timer = setTimeout(() => {
+      setShowSavedToast(false);
+      setToastMessage(null);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [showSavedToast, saved, statusError, preferences]);
 
   async function save() {
-    setDismissedStatus(null);
     setFormError('');
+    setShowSavedToast(false);
+    setToastMessage(null);
     const minutes = parseTime(trainingTime);
     if (minutes === null) {
       setFormError('Ange en tid mellan 00:00 och 23:59.');
       return;
     }
-    await onSave({ version: 1, enabled, trainingEnabled, trainingMinutes: minutes });
+    if (await onSave({ version: 1, enabled, trainingEnabled, trainingMinutes: minutes })) {
+      setShowSavedToast(true);
+    }
   }
 
   async function requestPermission() {
-    setDismissedStatus(null);
     setPermissionBusy(true);
     setPermissionMessage('');
     try {
@@ -59,7 +77,7 @@ export function NotificationSettingsScreen({
     <QuietButton title="Tillbaka till Mer" disabled={busy} onPress={onBack} />
     <View style={styles.hero}>
       <View style={styles.icon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        <Ionicons name="notifications-outline" size={24} color={theme.colors.accent} />
+        <Ionicons name="notifications-outline" size={tokens.size.iconMd} color={tokens.colors.primary} />
       </View>
       <View style={styles.heroCopy}>
         <PageHeading title="Påminnelser" description="Välj om Tassla ska schemalägga lokala påminnelser på den här enheten." />
@@ -68,7 +86,7 @@ export function NotificationSettingsScreen({
     <View style={styles.infoRow}>
       <Text style={styles.infoHint}>Om lokala påminnelser</Text>
       <Pressable accessibilityRole="button" accessibilityLabel="Visa information om lokala påminnelser" onPress={() => setInfoVisible(true)} style={styles.infoButton}>
-        <Ionicons name="information-circle-outline" size={21} color={theme.colors.accent} />
+        <Ionicons name="information-circle-outline" size={tokens.size.iconMd} color={tokens.colors.primary} />
         <Text style={styles.infoButtonText}>Läs information</Text>
       </Pressable>
     </View>
@@ -80,32 +98,44 @@ export function NotificationSettingsScreen({
     <Choice selected={enabled} disabled={busy} label="Tillåt Tasslas påminnelser på den här enheten"
       detail="Avbokar Tasslas egna påminnelser när du stänger av. Dina planval sparas."
       onPress={() => setEnabled((value) => !value)} />
-    <Choice selected={trainingEnabled} disabled={busy || !enabled} label="Lägg till en frivillig träningspåminnelse"
-      detail="En lokal träningspåminnelse i taget. Nästa tid uppdateras när Tassla öppnas. Den är av från början."
-      onPress={() => setTrainingEnabled((value) => !value)} />
+    <Choice selected={trainingEnabled} disabled={busy} label="Lägg till en frivillig träningspåminnelse"
+      detail={enabled
+        ? 'En lokal träningspåminnelse i taget. Nästa tid uppdateras när Tassla öppnas.'
+        : trainingEnabled
+          ? 'Tasslas påminnelser är av. Tryck för att ta bort träningsvalet.'
+          : 'Tryck för att slå på Tasslas påminnelser och lägga till träningspåminnelsen.'}
+      accessibilityHint={!enabled && !trainingEnabled ? 'Slår på Tasslas påminnelser på den här enheten och väljer träningspåminnelse.' : undefined}
+      onPress={() => {
+        if (!enabled && !trainingEnabled) setEnabled(true);
+        setTrainingEnabled((value) => !value);
+      }} />
 
-    <TimePickerField label="Träningspåminnelse, lokal tid" disabled={busy} onChangeText={setTrainingTime} value={trainingTime} />
+    <TimePickerField label="Träningspåminnelse, lokal tid" disabled={busy}
+      onChangeText={setTrainingTime} value={trainingTime} />
 
     {permissionMessage ? <MessageCard tone={permissionState === 'denied' ? 'error' : 'neutral'}>{permissionMessage}</MessageCard> : null}
-    <PrimaryButton title={permissionBusy ? 'Kontrollerar…' : 'Tillåt påminnelser på telefonen'}
-      disabled={busy || permissionBusy} onPress={() => { void requestPermission(); }} />
+    <Button variant="secondary" label={permissionBusy ? 'Kontrollerar…' : 'Tillåt påminnelser på telefonen'}
+      accessibilityLabel={permissionBusy ? 'Kontrollerar tillåtelse för notiser' : 'Tillåt påminnelser på telefonen'}
+      loading={permissionBusy} disabled={busy || permissionBusy} onPress={() => { void requestPermission(); }} />
     {permissionState === 'granted' && <MessageCard>Enheten tillåter notiser. Det säger inte att varje påminnelse visas eller levereras.</MessageCard>}
     {permissionState === 'denied' && <MessageCard tone="error">Enheten nekar notiser. Appen fungerar fortfarande.</MessageCard>}
     {statusMessage && statusError ? <MessageCard tone="error">{statusMessage}</MessageCard> : null}
     {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
-    {saved && <MessageCard>Valen är sparade för ditt konto på den här enheten.</MessageCard>}
-    <PrimaryButton title={busy ? 'Sparar…' : 'Spara val'} disabled={busy} onPress={() => { void save(); }} />
-    {statusMessage && !statusError ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => setDismissedStatus(statusMessage)} /> : null}
+    {toastMessage && showSavedToast && saved && !statusError && !isDirty
+      ? <Toast tone="success" confirmed message={toastMessage} /> : null}
+    <Button label={busy ? 'Sparar…' : 'Spara val'} accessibilityLabel={busy ? 'Sparar val' : 'Spara val'}
+      loading={busy} disabled={busy} onPress={() => { void save(); }} />
   </View>;
 }
 
-function Choice({ selected, disabled, label, detail, onPress }: {
-  selected: boolean; disabled: boolean; label: string; detail: string; onPress: () => void;
+function Choice({ selected, disabled, label, detail, accessibilityHint, onPress }: {
+  selected: boolean; disabled: boolean; label: string; detail: string; accessibilityHint?: string; onPress: () => void;
 }) {
-  return <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: selected, disabled }} disabled={disabled}
+  return <Pressable accessibilityRole="checkbox" accessibilityLabel={label} accessibilityHint={accessibilityHint}
+    accessibilityState={{ checked: selected, disabled }} disabled={disabled}
     onPress={onPress} style={({ pressed }) => [styles.choice, selected && styles.choiceSelected, pressed && !disabled && styles.pressed]}>
     <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
-      {selected && <Ionicons name="checkmark" size={17} color={theme.colors.onAccent} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />}
+      {selected && <Ionicons name="checkmark" size={tokens.size.iconSm} color={tokens.colors.onPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />}
     </View>
     <View style={styles.choiceCopy}><Text style={styles.choiceTitle}>{label}</Text><Text style={styles.choiceDetail}>{detail}</Text></View>
   </Pressable>;
@@ -120,25 +150,21 @@ function parseTime(value: string): number | null {
   return hours < 24 && minutes < 60 ? hours * 60 + minutes : null;
 }
 const styles = StyleSheet.create({
-  infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 4 },
-  infoHint: { color: theme.colors.mutedText, fontSize: 14 },
-  infoButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8 },
-  infoButtonText: { color: theme.colors.accent, fontSize: 14, fontWeight: '700' },
-  infoBody: { color: theme.colors.text, fontSize: 16, lineHeight: 24, marginBottom: 14 },
-  hero: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8, padding: 16, borderRadius: theme.radius.card, backgroundColor: '#F1F5F0', borderWidth: 1, borderColor: theme.colors.border },
-  icon: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#E5EFE8', alignItems: 'center', justifyContent: 'center' },
+  infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: tokens.spacing.md, marginBottom: tokens.spacing.xs },
+  infoHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },
+  infoButtonText: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
+  infoBody: { ...tokens.typography.body, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.spacing.sm, padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.selectedSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
+  icon: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.surface, alignItems: 'center', justifyContent: 'center' },
   heroCopy: { flex: 1 },
-  choice: { minHeight: 72, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, marginTop: 12, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.card, backgroundColor: theme.colors.surface },
-  choiceSelected: { borderColor: theme.colors.accent, backgroundColor: '#F0F6F1' },
-  pressed: { opacity: 0.8 },
-  checkbox: { width: 27, height: 27, borderRadius: 8, borderWidth: 2, borderColor: theme.colors.mutedText, alignItems: 'center', justifyContent: 'center' },
-  checkboxSelected: { backgroundColor: theme.colors.accent, borderColor: theme.colors.accent },
+  choice: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.layout.listGap, paddingHorizontal: tokens.layout.cardPadding, paddingVertical: tokens.spacing.md, marginTop: tokens.layout.listGap, borderWidth: tokens.size.stroke, borderColor: tokens.colors.borderStrong, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface },
+  choiceSelected: { backgroundColor: tokens.colors.selectedSurface },
+  pressed: { opacity: 0.9 },
+  checkbox: { width: tokens.size.iconMd, height: tokens.size.iconMd, borderRadius: tokens.radius.sm, borderWidth: tokens.size.stroke, borderColor: tokens.colors.borderStrong, backgroundColor: tokens.colors.surface, alignItems: 'center', justifyContent: 'center' },
+  checkboxSelected: { backgroundColor: tokens.colors.primary, borderColor: tokens.colors.primary },
   choiceCopy: { flex: 1 },
-  choiceTitle: { color: theme.colors.text, fontSize: 15, fontWeight: '800' },
-  choiceDetail: { color: theme.colors.mutedText, fontSize: 13, lineHeight: 19, marginTop: 4 },
-  field: { marginTop: 16 },
-  label: { color: theme.colors.text, fontSize: 15, fontWeight: '700', marginBottom: 7 },
-  timeInputWrap: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 13, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.button, backgroundColor: theme.colors.surface },
-  timeInput: { flex: 1, minHeight: 48, fontSize: 17, color: theme.colors.text },
+  choiceTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  choiceDetail: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.layout.headingGap },
 });
 

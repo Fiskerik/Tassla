@@ -1,8 +1,9 @@
 import type { ReactNode, RefObject } from 'react';
 import { AccessibilityInfo, findNodeHandle, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useRef, useState } from 'react';
-import { theme } from '../theme/tokens';
+import { theme, tokens } from '../theme/tokens';
 
 export function AppScreen({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
   return (
@@ -243,7 +244,33 @@ export function TimePickerField({ label, value, onChangeText, disabled = false }
       onChangeText={onChangeText} placeholder="09:00" placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.datePickerInput} value={value} />
       <Pressable accessibilityRole="button" accessibilityLabel={`Välj ${label.toLowerCase()} från tider`} disabled={disabled} onPress={() => setVisible(true)} style={styles.pickerButton}><Text style={styles.pickerButtonText}>Välj tid</Text></Pressable>
     </View>
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}><View style={styles.modalBackdrop}><View style={styles.modalCard}><Text style={styles.modalTitle}>{label}</Text><ScrollView style={styles.timeList}>{times.map((time) => <Pressable key={time} accessibilityRole="button" onPress={() => { onChangeText(time); setVisible(false); }} style={styles.timeOption}><Text style={styles.timeOptionText}>{time}</Text></Pressable>)}</ScrollView><TextInput accessibilityLabel="Manuell tid, timmar och minuter" keyboardType="numbers-and-punctuation" maxLength={5} onChangeText={onChangeText} placeholder="HH:MM" placeholderTextColor={theme.colors.mutedText} style={styles.input} value={value} /><QuietButton title="Stäng tider" onPress={() => setVisible(false)} /></View></View></Modal>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={() => setVisible(false)} accessibilityViewIsModal>
+      <View style={styles.timeModalBackdrop}>
+        <KeyboardAvoidingView style={styles.timeModalKeyboard} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <View style={styles.timeModalCard}>
+            <View style={styles.timeModalHandle} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+            <View style={styles.timeModalHeader}>
+              <Text style={styles.timeModalTitle} accessibilityRole="header">{label}</Text>
+              <Pressable accessibilityRole="button" accessibilityLabel="Stäng tider" onPress={() => setVisible(false)} style={styles.timeModalClose}>
+                <Ionicons name="close" size={tokens.size.iconMd} color={tokens.colors.textPrimary} />
+              </Pressable>
+            </View>
+            <Text style={styles.timeModalCaption}>Vald tid</Text>
+            <TextInput accessibilityLabel="Manuell tid, timmar och minuter" keyboardType="numbers-and-punctuation" maxLength={5}
+              onChangeText={onChangeText} placeholder="HH:MM" placeholderTextColor={tokens.colors.textSecondary}
+              returnKeyType="done" style={styles.timeModalInput} value={value} />
+            <Text style={styles.timeModalCaption}>Eller välj en tid</Text>
+            <ScrollView style={styles.timeModalList} keyboardShouldPersistTaps="handled">
+              {times.map((time) => <Pressable key={time} accessibilityRole="button" accessibilityLabel={`Välj ${time}`}
+                accessibilityState={{ selected: value === time }} onPress={() => { onChangeText(time); setVisible(false); }}
+                style={({ pressed }) => [styles.timeOption, value === time && styles.timeOptionSelected, pressed && styles.pressed]}>
+                <Text style={[styles.timeOptionText, value === time && styles.timeOptionTextSelected]}>{time}</Text>
+              </Pressable>)}
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
   </View>;
 }
 
@@ -277,7 +304,7 @@ const styles = StyleSheet.create({
   fieldGroup: { marginBottom: 18 },
   fieldLabel: { color: theme.colors.text, fontSize: 15, fontWeight: '700', marginBottom: 8 },
   input: { minHeight: 56, paddingHorizontal: 16, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, fontSize: 17 },
-  button: { minHeight: 56, borderRadius: theme.radius.button, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, backgroundColor: theme.colors.accent, marginTop: 10 },
+  button: { minHeight: tokens.size.buttonHeight, borderRadius: theme.radius.button, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.lg, backgroundColor: theme.colors.accent, marginTop: tokens.spacing.sm, shadowColor: theme.colors.text, shadowOpacity: 0.12, shadowRadius: tokens.spacing.sm, shadowOffset: { width: 0, height: tokens.size.progress }, elevation: tokens.spacing.xs },
   buttonDisabled: { opacity: 0.55 },
   buttonPressed: { backgroundColor: '#12543D', transform: [{ scale: 0.985 }] },
   buttonReducedPressed: { backgroundColor: '#12543D', opacity: 0.9 },
@@ -306,7 +333,19 @@ const styles = StyleSheet.create({
   calendarGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 },
   calendarDay: { width: '14.285%', minHeight: 42, alignItems: 'center', justifyContent: 'center' },
   calendarDayText: { color: theme.colors.text, fontSize: 16, fontWeight: '700' },
-  timeList: { maxHeight: 300 },
-  timeOption: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
-  timeOptionText: { color: theme.colors.text, fontSize: 17, textAlign: 'center' },
+  timeModalBackdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: tokens.colors.overlay },
+  timeModalKeyboard: { flex: 1, justifyContent: 'flex-end' },
+  timeModalCard: { width: '100%', maxHeight: '85%', padding: tokens.spacing.lg, gap: tokens.spacing.md, borderTopLeftRadius: tokens.radius.lg, borderTopRightRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  timeModalHandle: { width: tokens.spacing.xl + tokens.spacing.md, height: tokens.size.progress, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.border, alignSelf: 'center' },
+  timeModalHeader: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
+  timeModalClose: { width: tokens.size.touchMin, height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
+  timeModalTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 },
+  timeModalCaption: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  timeModalInput: { minHeight: tokens.size.touchMin + tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.heading },
+  timeModalList: { maxHeight: tokens.size.buttonHeight * 4, flexShrink: 1 },
+  timeOption: { minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderBottomWidth: tokens.size.stroke, borderBottomColor: tokens.colors.border },
+  timeOptionSelected: { backgroundColor: tokens.colors.successSurface },
+  timeOptionText: { ...tokens.typography.body, color: tokens.colors.textPrimary, textAlign: 'center' },
+  timeOptionTextSelected: { color: tokens.colors.primary, fontWeight: '800' },
+  pressed: { opacity: 0.85 },
 });

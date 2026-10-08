@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { FormField, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import type { Dog } from '../onboarding/dog';
 import { ageInWeeks, localDate } from '../onboarding/dog';
+import { tokens } from '../../theme/tokens';
 
 export function PreviewProfileScreen({
   dog,
@@ -19,17 +20,19 @@ export function PreviewProfileScreen({
   const validBirthDate = isValidBirthDate(birthDate);
 
   return (
-    <View>
+    <View style={styles.screen}>
       <PageHeading title="Hundprofil" description="Ändra uppgifterna för att granska namn och ålder på Hem." />
-      <FormField label="Hundens namn" onChangeText={setName} placeholder="Exempelhund" value={name} />
-      <FormField
-        autoCapitalize="none"
-        autoComplete="off"
-        label="Födelsedatum"
-        onChangeText={setBirthDate}
-        placeholder="ÅÅÅÅ-MM-DD"
-        value={birthDate}
-      />
+      <View style={styles.fields}>
+        <FormField label="Hundens namn" onChangeText={setName} placeholder="Exempelhund" value={name} />
+        <FormField
+          autoCapitalize="none"
+          autoComplete="off"
+          label="Födelsedatum"
+          onChangeText={setBirthDate}
+          placeholder="ÅÅÅÅ-MM-DD"
+          value={birthDate}
+        />
+      </View>
       {(!validName || !validBirthDate) && (
         <MessageCard tone="error">
           {!validName ? 'Ange ett namn på högst 80 tecken. ' : ''}
@@ -46,6 +49,11 @@ export function PreviewProfileScreen({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: { gap: tokens.spacing.md },
+  fields: { gap: tokens.spacing.sm },
+});
 
 function isValidBirthDate(value: string): boolean {
   try {

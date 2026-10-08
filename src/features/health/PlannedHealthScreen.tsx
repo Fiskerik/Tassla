@@ -1,7 +1,10 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { AccessibilityInfo, Alert, findNodeHandle, Image, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ActionFeedbackModal, DatePickerField, InfoModal, MessageCard, PageHeading, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
+import { DatePickerField, InfoModal, MessageCard, PageHeading, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
+import { Toast } from '../../components/ui/Toast';
+import { IconChip } from '../../components/ui/IconChip';
+import { theme, tokens } from '../../theme/tokens';
 import {
   isValidPlannedHealthDate,
   normalizePlannedHealthDescription,
@@ -10,7 +13,6 @@ import {
 } from '../../data/workspace-data';
 import { createLocalFireTime } from '../../notifications/notification-model';
 import { localDate } from '../onboarding/dog';
-import { theme } from '../../theme/tokens';
 import {
   EMPTY_PLANNED_HEALTH_FEEDBACK,
   feedbackTimeoutMillis,
@@ -117,7 +119,7 @@ export function PlannedHealthScreen({
       let recommended: number | null | undefined;
       try {
         if (typeof AccessibilityInfo.getRecommendedTimeoutMillis === 'function') {
-          recommended = await AccessibilityInfo.getRecommendedTimeoutMillis(5000);
+          recommended = await AccessibilityInfo.getRecommendedTimeoutMillis(2500);
         }
       } catch {
         recommended = undefined;
@@ -126,7 +128,7 @@ export function PlannedHealthScreen({
       timeout = setTimeout(() => {
         if (cancelled) return;
         dispatchFeedback({ type: 'dismiss', message: activeMessage });
-      }, feedbackTimeoutMillis(recommended));
+      }, feedbackTimeoutMillis(recommended, 2500));
     };
     void scheduleDismissal();
     return () => {
@@ -134,6 +136,12 @@ export function PlannedHealthScreen({
       if (timeout !== undefined) clearTimeout(timeout);
     };
   }, [feedbackState.activeMessage, feedbackShownMessage, infoVisible]);
+
+  useEffect(() => {
+    if (feedbackState.activeMessage?.startsWith('Ändringen är sparad') && !statusError && !pending) {
+      markFeedbackShown(feedbackState.activeMessage);
+    }
+  }, [feedbackState.activeMessage, statusError, pending]);
 
   function resetForm() {
     setEditingId(null);
@@ -210,7 +218,7 @@ export function PlannedHealthScreen({
     <QuietButton title="Tillbaka till hälsa" disabled={busy} onPress={onBack} />
     <View style={styles.heroCard}>
       <View style={styles.heroIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        <Ionicons name="calendar-outline" size={24} color={theme.colors.accent} />
+        <Ionicons name="calendar-outline" size={tokens.size.iconMd} color={tokens.colors.primary} />
       </View>
       <View style={styles.heroCopy}>
         <PageHeading title="Planerade hälsohändelser" description="Skriv in vaccinationer och veterinärbesök som ska ske framöver." />
@@ -222,7 +230,7 @@ export function PlannedHealthScreen({
         dispatchFeedback({ type: 'info-opened' });
         setInfoVisible(true);
       }} style={styles.infoButton}>
-        <Ionicons name="information-circle-outline" size={22} color={theme.colors.accent} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+        <Ionicons name="information-circle-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
         <Text style={styles.infoButtonText}>Läs information</Text>
       </Pressable>
     </View>
@@ -260,7 +268,7 @@ export function PlannedHealthScreen({
         <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: reminderEnabled, disabled: blocked }} disabled={blocked}
           onPress={() => setReminderEnabled((value) => !value)} style={styles.reminderChoice}>
           <View style={[styles.reminderCheck, reminderEnabled && styles.reminderCheckSelected]}>
-            {reminderEnabled && <Ionicons name="checkmark" size={17} color={theme.colors.onAccent} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />}
+            {reminderEnabled && <Ionicons name="checkmark" size={tokens.size.iconSm} color={tokens.colors.onPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />}
           </View>
           <View style={styles.reminderCopy}>
             <Text style={styles.label}>Påminn mig lokalt</Text>
@@ -272,18 +280,13 @@ export function PlannedHealthScreen({
           <Text style={styles.label}>Kort anteckning (frivillig)</Text>
           <TextInput accessibilityLabel="Kort anteckning, högst 500 tecken" editable={!blocked} multiline
             onChangeText={setNote} onSubmitEditing={() => Keyboard.dismiss()} placeholder="Till exempel: boka årlig kontroll"
-            placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.noteInput} value={note} />
+            placeholderTextColor={tokens.colors.textSecondary} returnKeyType="done" style={styles.noteInput} value={note} />
           <Text style={styles.characterHint}>{Array.from(note).length}/500 tecken</Text>
         </View>
         {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
         <PrimaryButton title={busy ? 'Sparar…' : editingRecord ? 'Spara rättning' : 'Spara plan'} disabled={blocked} onPress={() => { void save(); }} />
-        <ActionFeedbackModal
-          key={feedbackState.activeMessage ?? 'no-feedback'}
-          visible={feedbackState.activeMessage !== null && !infoVisible}
-          message={feedbackState.activeMessage ?? ''}
-          onShown={markFeedbackShown}
-          onClose={() => dispatchFeedback({ type: 'dismiss' })}
-        />
+        {feedbackState.activeMessage?.startsWith('Ändringen är sparad') && !statusError && !pending && !busy && !infoVisible
+          ? <Toast key={feedbackState.activeMessage} tone="success" confirmed message={feedbackState.activeMessage} /> : null}
         {editingRecord && <QuietButton title="Avbryt rättning" disabled={blocked} onPress={resetForm} />}
       </View>
 
@@ -302,15 +305,13 @@ export function PlannedHealthScreen({
         return <View key={record.id} style={styles.recordCard}>
           <View style={styles.recordHeading}>
             <View style={styles.recordType}>
-              <Ionicons name={record.event_type === 'vaccination' ? 'bandage-outline' : 'medical-outline'} size={19} color={theme.colors.accent}
-                accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+              <IconChip category={record.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} />
               <Text style={styles.recordTitle}>{typeLabel(record.event_type)}</Text>
             </View>
             <Text style={[styles.timingLabel, record.due_on < today && styles.overdueLabel]}>{timing.toUpperCase()}</Text>
           </View>
           <Text style={styles.recordDate}>{record.due_on}</Text>
           {record.description ? <Text style={styles.recordNote}>{record.description}</Text> : null}
-          <Text style={styles.ownerLabel}>ÄGARREGISTRERAD PLAN</Text>
           <Text style={styles.reminderRow}>{reminderLabel(record.reminder_enabled, record.due_on, record.reminder_minutes)}</Text>
           <View style={styles.actions}>
             <QuietButton title="Ändra" disabled={blocked} onPress={() => edit(record)} />
@@ -327,7 +328,7 @@ function TypeChoice({ selected, disabled, icon, label, onPress }: {
 }) {
   return <Pressable accessibilityRole="radio" accessibilityState={{ checked: selected, disabled }} accessibilityLabel={label}
     disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.typeChoice, selected && styles.typeChoiceSelected, pressed && !disabled && styles.typeChoicePressed]}>
-    <Ionicons name={icon} size={20} color={selected ? theme.colors.accent : theme.colors.mutedText} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+    <Ionicons name={icon} size={tokens.size.iconSm} color={selected ? tokens.colors.primary : tokens.colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
     <Text style={[styles.typeChoiceText, selected && styles.typeChoiceTextSelected]}>{label}</Text>
   </Pressable>;
 }
@@ -383,7 +384,6 @@ const styles = StyleSheet.create({
   overdueLabel: { color: '#936324' },
   recordDate: { color: theme.colors.text, fontSize: 16, fontWeight: '700', marginTop: 7 },
   recordNote: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 20, marginTop: 5 },
-  ownerLabel: { color: theme.colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 0.6, marginTop: 8 },
   actions: { flexDirection: 'row', justifyContent: 'flex-start', gap: 8, marginTop: 8 },
 });
 

@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { StyleSheet, Text } from 'react-native';
 import { useLinkingURL } from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { AppScreen, MessageCard, PageHeading, PrimaryButton } from '../../components/AppPrimitives';
+import { tokens } from '../../theme/tokens';
 import { readAuthCode, shouldExchangeAuthCode } from '../../data/auth-callback';
 import { DEV_PREVIEW_ENABLED } from './preview-policy';
 import { useAuth } from './AuthProvider';
@@ -62,8 +64,20 @@ function ProductAuthCallbackScreen() {
         title={error ? 'Länken fungerar inte' : 'Välkommen till Tassla'}
         description={error ? 'Länken kan ha gått ut eller vara ogiltig. Gå tillbaka och be om en ny.' : 'Vi öppnar din trygga plats för livet med hund.'}
       />
-      {!error && <MessageCard>{url ? 'Vi slutför inloggningen…' : 'Vänta medan länken öppnas…'}</MessageCard>}
+      {!error && (
+        <MessageCard>
+          <Text style={styles.pendingText}>{url ? 'Vi slutför inloggningen…' : 'Vänta medan länken öppnas…'}</Text>
+        </MessageCard>
+      )}
       {error && <PrimaryButton title="Till inloggningen" onPress={() => { cancelGoogleSignIn(); router.replace('/'); }} />}
     </AppScreen>
   );
 }
+
+const styles = StyleSheet.create({
+  pendingText: {
+    ...tokens.typography.body,
+    color: tokens.colors.textPrimary,
+    textAlign: 'center',
+  },
+});

@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { AccessibilityInfo, Alert, LayoutAnimation, StyleSheet, Text, View } from 'react-native';
+import { ChecklistItem, HeroCard, SectionHeader } from '../../components/ui';
 import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
-import { theme } from '../../theme/tokens';
+import { tokens } from '../../theme/tokens';
 import { TRAINING_NOTICE, TRAINING_PROGRESS_CAVEAT, TRAINING_PROGRAMS, type TrainingProgram } from './training-model';
 
 export function TrainingScreen({
@@ -20,6 +21,18 @@ export function TrainingScreen({
   onResetProgram: (program: TrainingProgram) => void;
 }) {
   const [openProgramId, setOpenProgramId] = useState<string | null>(initialProgramId);
+  const [reduceMotion, setReduceMotion] = useState(true);
+
+  useEffect(() => {
+    void AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => undefined);
+    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => subscription.remove();
+  }, []);
+
+  function toggleProgram(programId: string) {
+    if (!reduceMotion) LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setOpenProgramId((currentId) => currentId === programId ? null : programId);
+  }
 
   return (
     <View>
@@ -33,33 +46,32 @@ export function TrainingScreen({
         const waitingForContinue = acknowledgedStep?.programId === program.id;
         return (
           <View key={`${program.id}-v${program.version}`} style={styles.programCard}>
-            <Text style={styles.programTitle} accessibilityRole="header">{program.title}</Text>
+            <HeroCard title={program.title} meta={program.introduction} />
             {program.audience && <Text style={styles.audience}>{program.audience}</Text>}
-            <Text style={styles.body}>{program.introduction}</Text>
-            <Text style={styles.progress}>{completed.length} av {program.steps.length} steg registrerade</Text>
+            <View style={styles.progressGroup}>
+              <Text style={styles.progressHeading}>VECKANS FOKUS</Text>
+              <Text style={styles.progress}>{completed.length} av {program.steps.length} steg genomförda</Text>
+              <View style={styles.progressTrack} accessibilityElementsHidden><View style={[styles.progressFill, { width: `${program.steps.length ? Math.min(100, completed.length / program.steps.length * 100) : 0}%` }]} /></View>
+            </View>
             {completed.length === program.steps.length && (
               <MessageCard>Alla steg är registrerade i testläget. Det säger inget om hundens färdighet. Läs stegen igen eller rensa programmets registreringar.</MessageCard>
             )}
-            <PrimaryButton
+            <QuietButton
               title={isOpen ? 'Dölj program' : completed.length ? 'Fortsätt eller läs igen' : 'Visa program'}
-              onPress={() => setOpenProgramId(isOpen ? null : program.id)}
+              onPress={() => toggleProgram(program.id)}
             />
             {isOpen && (
               <View style={styles.programDetails}>
+                <SectionHeader title="Veckans övningar" />
                 <MessageCard tone="error">{program.stopText}</MessageCard>
                 {program.steps.map((step, index) => {
                   const isCompleted = completed.includes(step.id);
+                  const isCurrent = !isCompleted && nextStep?.id === step.id;
                   return (
                     <View key={step.id} style={[styles.stepCard, isCompleted && styles.completedStep]}>
-                      <View style={styles.stepHeader}>
-                        <Text style={styles.stepNumber}>Steg {index + 1}</Text>
-                        {isCompleted && <Text style={styles.registered}>REGISTRERAT</Text>}
-                      </View>
-                      <Text style={styles.stepTitle}>{step.title}</Text>
+                      <Text style={styles.stepNumber}>Steg {index + 1}</Text>
+                      <ChecklistItem label={step.title} checked={isCompleted} disabled={!isCurrent || waitingForContinue} onPress={() => onCompleteStep(program, step.id)} />
                       <Text style={styles.body}>{step.body}</Text>
-                      {!isCompleted && nextStep?.id === step.id && !waitingForContinue && (
-                        <PrimaryButton title="Markera steg som genomfört" onPress={() => onCompleteStep(program, step.id)} />
-                      )}
                     </View>
                   );
                 })}
@@ -98,23 +110,23 @@ function confirmReset(program: TrainingProgram, onReset: (program: TrainingProgr
 }
 
 const styles = StyleSheet.create({
-  previewLabel: { alignSelf: 'flex-start', borderRadius: 20, backgroundColor: '#E5EFE8', paddingHorizontal: 11, paddingVertical: 7 },
-  previewLabelText: { color: theme.colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 0.6 },
-  programCard: { borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.card, backgroundColor: theme.colors.surface, padding: 16, marginTop: 20 },
-  programTitle: { color: theme.colors.text, fontSize: 20, lineHeight: 27, fontWeight: '800' },
-  audience: { color: '#785716', backgroundColor: '#F5E7BF', overflow: 'hidden', alignSelf: 'flex-start', borderRadius: 12, paddingHorizontal: 9, paddingVertical: 6, marginTop: 9, fontSize: 12, fontWeight: '700' },
-  body: { color: theme.colors.mutedText, fontSize: 15, lineHeight: 22, marginTop: 8 },
-  progress: { color: theme.colors.accent, fontSize: 13, fontWeight: '800', marginTop: 14 },
-  programDetails: { marginTop: 16 },
-  stepCard: { borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: '#FBF8F1', padding: 14, marginBottom: 10 },
-  completedStep: { borderColor: '#94B39E', backgroundColor: '#F0F6F0' },
-  stepHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  stepNumber: { color: theme.colors.mutedText, fontSize: 12, fontWeight: '800' },
-  registered: { color: theme.colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
-  stepTitle: { color: theme.colors.text, fontSize: 16, fontWeight: '800', marginTop: 5 },
-  sourceCard: { borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: 13, marginTop: 14 },
-  sourceLabel: { color: theme.colors.mutedText, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.7, fontWeight: '800' },
-  sourceTitle: { color: theme.colors.text, fontSize: 14, fontWeight: '700', marginTop: 5 },
-  sourceUrl: { color: theme.colors.accent, fontSize: 12, lineHeight: 18, marginTop: 4 },
-  limitation: { color: theme.colors.mutedText, fontSize: 12, lineHeight: 18, marginTop: 7 },
+  previewLabel: { alignSelf: 'flex-start', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.selectedSurface, paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.sm, marginBottom: tokens.spacing.md },
+  previewLabelText: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
+  programCard: { alignSelf: 'stretch', borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, marginTop: tokens.layout.sectionGap },
+  audience: { ...tokens.typography.caption, color: tokens.colors.warning, backgroundColor: tokens.colors.warningSurface, overflow: 'hidden', alignSelf: 'flex-start', borderRadius: tokens.radius.sm, paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.sm, marginTop: tokens.spacing.md },
+  body: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginTop: tokens.spacing.sm },
+  progressGroup: { borderRadius: tokens.radius.md, backgroundColor: tokens.colors.selectedSurface, padding: tokens.spacing.md, marginTop: tokens.spacing.md },
+  progressHeading: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
+  progress: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.sm },
+  progressTrack: { height: tokens.size.progress, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.border, overflow: 'hidden', marginTop: tokens.spacing.sm },
+  progressFill: { height: tokens.size.progress, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.success },
+  programDetails: { marginTop: tokens.spacing.md, gap: tokens.spacing.sm },
+  stepCard: { alignSelf: 'stretch', borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.spacing.md, gap: tokens.spacing.xs },
+  completedStep: { borderColor: tokens.colors.success, backgroundColor: tokens.colors.successSurface },
+  stepNumber: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  sourceCard: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, paddingTop: tokens.spacing.md, marginTop: tokens.spacing.md },
+  sourceLabel: { ...tokens.typography.caption, color: tokens.colors.textSecondary, fontWeight: '700' },
+  sourceTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginTop: tokens.spacing.xs },
+  sourceUrl: { ...tokens.typography.caption, color: tokens.colors.primary, marginTop: tokens.spacing.xs },
+  limitation: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.sm },
 });

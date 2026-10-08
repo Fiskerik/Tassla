@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Image, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ActionFeedbackModal, DatePickerField, InfoModal, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { DatePickerField, InfoModal, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { Toast } from '../../components/ui/Toast';
 import {
   isValidHealthHistoryDate,
   normalizeHealthHistoryDescription,
@@ -9,7 +10,8 @@ import {
   type HealthHistoryType,
 } from '../../data/workspace-data';
 import { localDate } from '../onboarding/dog';
-import { theme } from '../../theme/tokens';
+import { tokens } from '../../theme/tokens';
+import { IconChip } from '../../components/ui/IconChip';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -43,12 +45,21 @@ export function HealthHistoryScreen({
   const [date, setDate] = useState(localDate());
   const [note, setNote] = useState('');
   const [formError, setFormError] = useState('');
-  const [dismissedStatus, setDismissedStatus] = useState<string | null>(null);
   const [infoVisible, setInfoVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const confirmedMessage = statusMessage.startsWith('Ändringen är sparad') && !statusError && !pending && !busy
+    ? statusMessage : null;
   const available = records !== undefined;
   const rows = records ?? [];
   const blocked = busy || pending;
   const editingRecord = rows.find((row) => row.id === editingId) ?? null;
+
+  useEffect(() => {
+    if (!confirmedMessage) { setToastMessage(null); return; }
+    setToastMessage(confirmedMessage);
+    const timer = setTimeout(() => setToastMessage(null), 2500);
+    return () => clearTimeout(timer);
+  }, [confirmedMessage]);
 
   if (!available) return null;
 
@@ -70,7 +81,6 @@ export function HealthHistoryScreen({
   }
 
   async function save() {
-    setDismissedStatus(null);
     setFormError('');
     if (!isValidHealthHistoryDate(date)) {
       setFormError('Ange ett giltigt datum som inte ligger i framtiden.');
@@ -92,7 +102,6 @@ export function HealthHistoryScreen({
   }
 
   async function deleteRecord(record: HealthHistoryRecord) {
-    setDismissedStatus(null);
     if (await onDelete?.(record.id) && editingId === record.id) resetForm();
   }
 
@@ -105,7 +114,7 @@ export function HealthHistoryScreen({
     <View style={styles.section}>
       <View style={styles.sectionHeading}>
         <View style={styles.headingIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          <Ionicons name="medical-outline" size={21} color={theme.colors.accent} />
+          <IconChip category="vaccination" size="large" />
         </View>
         <View style={styles.headingCopy}>
           <Text style={styles.sectionTitle} accessibilityRole="header">Vaccinationer och veterinärbesök</Text>
@@ -115,7 +124,7 @@ export function HealthHistoryScreen({
       <View style={styles.infoRow}>
         <Text style={styles.infoHint}>Om hälsans historik</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Visa information om hälsans historik" onPress={() => setInfoVisible(true)} style={styles.infoButton}>
-          <Ionicons name="information-circle-outline" size={21} color={theme.colors.accent} />
+          <Ionicons name="information-circle-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />
           <Text style={styles.infoButtonText}>Läs information</Text>
         </Pressable>
       </View>
@@ -157,12 +166,12 @@ export function HealthHistoryScreen({
             <Text style={styles.label}>Kort anteckning (frivillig)</Text>
             <TextInput accessibilityLabel="Kort anteckning, högst 500 tecken" editable={!blocked} multiline
               onChangeText={setNote} onSubmitEditing={() => Keyboard.dismiss()} placeholder="Till exempel: valpens första vaccination"
-              placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.noteInput} value={note} />
+              placeholderTextColor={tokens.colors.textSecondary} returnKeyType="done" style={styles.noteInput} value={note} />
             <Text style={styles.characterHint}>{Array.from(note).length}/500 tecken</Text>
           </View>
           {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
           <PrimaryButton title={busy ? 'Sparar…' : editingRecord ? 'Spara rättning' : 'Spara händelse'} disabled={blocked} onPress={() => { void save(); }} />
-          {statusMessage && !statusError ? <ActionFeedbackModal visible={dismissedStatus !== statusMessage} message={statusMessage} onClose={() => setDismissedStatus(statusMessage)} /> : null}
+          {toastMessage ? <Toast tone="success" confirmed message={toastMessage} /> : null}
           {editingRecord && <QuietButton title="Avbryt rättning" disabled={blocked} onPress={resetForm} />}
         </View>
 
@@ -178,11 +187,9 @@ export function HealthHistoryScreen({
         {rows.map((record) => <View key={record.id} style={styles.recordCard}>
           <View style={styles.recordHeading}>
             <View style={styles.recordType}>
-              <Ionicons name={record.event_type === 'vaccination' ? 'bandage-outline' : 'medical-outline'} size={19} color={theme.colors.accent}
-                accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+              <IconChip category={record.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} />
               <Text style={styles.recordTitle}>{typeLabel(record.event_type)}</Text>
             </View>
-            <Text style={styles.ownerLabel}>ÄGARREGISTRERAD</Text>
           </View>
           <Text style={styles.recordDate}>{record.occurred_on}</Text>
           {record.description ? <Text style={styles.recordNote}>{record.description}</Text> : null}
@@ -201,7 +208,7 @@ function TypeChoice({ selected, disabled, icon, label, onPress }: {
 }) {
   return <Pressable accessibilityRole="radio" accessibilityState={{ checked: selected, disabled }} accessibilityLabel={label}
     disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.typeChoice, selected && styles.typeChoiceSelected, pressed && !disabled && styles.typeChoicePressed]}>
-    <Ionicons name={icon} size={20} color={selected ? theme.colors.accent : theme.colors.mutedText} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+            <Ionicons name={icon} size={tokens.size.iconSm} color={selected ? tokens.colors.primary : tokens.colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
     <Text style={[styles.typeChoiceText, selected && styles.typeChoiceTextSelected]}>{label}</Text>
   </Pressable>;
 }
@@ -211,46 +218,45 @@ function typeLabel(type: HealthHistoryType): string {
 }
 
 const styles = StyleSheet.create({
-  section: { marginTop: 28 },
-  sectionHeading: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
-  headingIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#E5EFE8', alignItems: 'center', justifyContent: 'center' },
+  section: { marginTop: tokens.layout.sectionGap },
+  sectionHeading: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginBottom: tokens.layout.headingGap },
+  headingIcon: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center' },
   headingCopy: { flex: 1 },
-  sectionTitle: { color: theme.colors.text, fontSize: 20, lineHeight: 27, fontWeight: '800' },
-  sectionBody: { color: theme.colors.mutedText, fontSize: 14, marginTop: 2 },
-  infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 4 },
-  infoHint: { color: theme.colors.mutedText, fontSize: 14 },
-  infoButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8 },
-  infoButtonText: { color: theme.colors.accent, fontSize: 14, fontWeight: '700' },
-  infoBody: { color: theme.colors.text, fontSize: 16, lineHeight: 24, marginBottom: 14 },
-  formCard: { marginTop: 18, padding: 17, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: '#FBFCFA' },
-  formTitle: { color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 14 },
-  typeChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-  typeChoice: { flexGrow: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingHorizontal: 11, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  typeChoiceSelected: { borderColor: theme.colors.accent, backgroundColor: '#EAF2EC' },
+  sectionTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading },
+  sectionBody: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
+  infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: tokens.spacing.md, marginBottom: tokens.spacing.xs },
+  infoHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption },
+  infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },
+  infoButtonText: { color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '700' },
+  infoBody: { color: tokens.colors.textPrimary, ...tokens.typography.body, marginBottom: tokens.spacing.md },
+  formCard: { marginTop: tokens.layout.sectionGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  formTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label, marginBottom: tokens.spacing.md },
+  typeChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg },
+  typeChoice: { flexGrow: 1, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  typeChoiceSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   typeChoicePressed: { opacity: 0.78 },
-  typeChoiceText: { color: theme.colors.mutedText, fontSize: 14, fontWeight: '700' },
-  typeChoiceTextSelected: { color: theme.colors.accent },
-  field: { marginBottom: 14 },
-  label: { color: theme.colors.text, fontSize: 15, fontWeight: '700', marginBottom: 7 },
-  dateInputWrap: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 14, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  dateInput: { flex: 1, color: theme.colors.text, fontSize: 17, paddingVertical: 10 },
-  noteInput: { minHeight: 84, paddingHorizontal: 14, paddingVertical: 12, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, fontSize: 16, textAlignVertical: 'top' },
-  characterHint: { color: theme.colors.mutedText, fontSize: 12, textAlign: 'right', marginTop: 5 },
-  historyTitle: { color: theme.colors.text, fontSize: 19, fontWeight: '800', marginTop: 22 },
-  conflictCard: { marginTop: 10, padding: 15, borderRadius: theme.radius.card, borderWidth: 1, borderColor: '#D6C59B', backgroundColor: '#FBF6EA' },
-  conflictTitle: { color: theme.colors.text, fontSize: 16, fontWeight: '800' },
-  conflictBody: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 20, marginTop: 8, marginBottom: 10 },
-  emptyCard: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 10, padding: 14, borderRadius: theme.radius.card, backgroundColor: '#F1F5F0', borderWidth: 1, borderColor: theme.colors.border },
-  emptyImage: { width: 48, height: 48, borderRadius: 24 },
+  typeChoiceText: { color: tokens.colors.textSecondary, ...tokens.typography.caption, fontWeight: '700' },
+  typeChoiceTextSelected: { color: tokens.colors.primary },
+  field: { marginBottom: tokens.spacing.md },
+  label: { color: tokens.colors.textPrimary, ...tokens.typography.caption, fontWeight: '700', marginBottom: tokens.spacing.xs },
+  dateInputWrap: { minHeight: tokens.size.touchMin + tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  dateInput: { flex: 1, color: tokens.colors.textPrimary, ...tokens.typography.body, paddingVertical: tokens.spacing.sm },
+  noteInput: { minHeight: tokens.size.touchMin * 2, paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body, textAlignVertical: 'top' },
+  characterHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption, textAlign: 'right', marginTop: tokens.spacing.xs },
+  historyTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading, marginTop: tokens.layout.sectionGap },
+  conflictCard: { marginTop: tokens.layout.listGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.warning, backgroundColor: tokens.colors.warningSurface },
+  conflictTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
+  conflictBody: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.md },
+  emptyCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.layout.listGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.selectedSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
+  emptyImage: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full },
   emptyCopy: { flex: 1 },
-  emptyTitle: { color: theme.colors.text, fontSize: 16, fontWeight: '800' },
-  emptyBody: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 19, marginTop: 3 },
-  recordCard: { marginTop: 10, padding: 15, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+  emptyTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
+  emptyBody: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
+  recordCard: { marginTop: tokens.layout.listGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   recordHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   recordType: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  recordTitle: { color: theme.colors.text, fontSize: 17, fontWeight: '800' },
-  ownerLabel: { color: theme.colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
-  recordDate: { color: theme.colors.mutedText, fontSize: 15, marginTop: 5 },
-  recordNote: { color: theme.colors.text, fontSize: 15, lineHeight: 21, marginTop: 8 },
-  actions: { flexDirection: 'row', gap: 8, marginTop: 9 },
+  recordTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
+  recordDate: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
+  recordNote: { color: tokens.colors.textPrimary, ...tokens.typography.caption, marginTop: tokens.spacing.sm },
+  actions: { flexDirection: 'row', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm },
 });
