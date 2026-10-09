@@ -1,4 +1,4 @@
-import { isAnalyticsEventType, type AnalyticsEventType, type SyntheticAnalyticsEvent } from './analytics-model';
+import { isAnalyticsEventType, type AnalyticsEventType, type SyntheticAnalyticsEvent } from './analytics-model.ts';
 
 type RpcResult = { data: unknown; error: unknown | null };
 export type AnalyticsRpc = (name: string, args?: Record<string, unknown>) => Promise<RpcResult>;

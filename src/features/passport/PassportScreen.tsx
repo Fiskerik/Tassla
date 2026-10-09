@@ -64,6 +64,8 @@ export function PassportScreen(props: PassportScreenProps) {
     return () => { mounted.current = false; };
   }, []);
   useEffect(() => {
+    // The toast mirrors an external save-status prop and is intentionally reset here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!statusMessage || statusError) { setToastMessage(null); return; }
     setToastMessage(statusMessage);
     const timer = setTimeout(() => setToastMessage(null), 2500);

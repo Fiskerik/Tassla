@@ -67,9 +67,10 @@ test('recovery priority and source render matrix expose exactly one action per s
   assert.equal((screenSource.match(/recovery === 'conflict'/g) ?? []).length, 1);
   assert.match(screenSource, /loadState === 'error'/);
   assert.match(screenSource, /pending \|\| statusError/);
-  assert.match(screenSource, /feedbackState\.activeMessage !== null && !infoVisible/);
-  assert.match(screenSource, /key=\{feedbackState\.activeMessage \?\? 'no-feedback'\}/);
-  assert.match(screenSource, /getRecommendedTimeoutMillis\(5000\)/);
+  assert.match(screenSource, /feedbackState\.activeMessage\?\.startsWith\('Ändringen är sparad'\)[\s\S]*?!infoVisible/);
+  assert.match(screenSource, /key=\{feedbackState\.activeMessage\}/);
+  assert.match(screenSource, /getRecommendedTimeoutMillis\(2500\)/);
+  assert.match(screenSource, /feedbackTimeoutMillis\(recommended, 2500\)/);
   assert.match(screenSource, /normalized === previousStatusMessage\.current/);
   assert.match(screenSource, /dispatchFeedback\(\{ type: 'info-closed' \}\)/);
   assert.doesNotMatch(workspaceSource, /<PlannedHealthScreen\s+key=/);

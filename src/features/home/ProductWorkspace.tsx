@@ -210,6 +210,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
 
   useEffect(() => {
     let active = true;
+    // Reset consent while the account-scoped RPC is loading.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAnalyticsConsent(null);
     setAnalyticsError(false);
     if (!session?.user.id) return () => { active = false; };
