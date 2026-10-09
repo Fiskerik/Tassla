@@ -1,6 +1,6 @@
 # Gemensamma UI-komponenter
 
-`ui/` är ingången för nya gränssnitt. Importera komponenter från `src/components/ui` och använd designvärden från `src/theme/tokens.ts`. `AppPrimitives.tsx` och `theme`-aliaset är kvar för befintliga vyer tills de migreras i en separat slice.
+`ui/` är ingången för nya gränssnitt. Importera komponenter från `src/components/ui` och använd designvärden från `src/theme/tokens.ts`. `AppPrimitives.tsx` använder samma tokenkälla; `theme` exporteras endast för befintliga skärmar som ännu inte ingår i komponentmigreringen.
 
 ## Entry points och dataflöde
 

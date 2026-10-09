@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Alert, Image, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DatePickerField, InfoModal, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { EmptyState, ErrorState, IconChip, Skeleton } from '../../components/ui';
 import { Toast } from '../../components/ui/Toast';
 import {
   isValidHealthHistoryDate,
@@ -11,7 +12,6 @@ import {
 } from '../../data/workspace-data';
 import { localDate } from '../onboarding/dog';
 import { tokens } from '../../theme/tokens';
-import { IconChip } from '../../components/ui/IconChip';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -27,6 +27,8 @@ export function HealthHistoryScreen({
   onResolveConflict,
   onSave,
   onDelete,
+  filterType,
+  sectionTitle = 'Genomfört',
 }: {
   records?: readonly HealthHistoryRecord[];
   loadState?: LoadState;
@@ -39,9 +41,11 @@ export function HealthHistoryScreen({
   onResolveConflict?: () => void;
   onSave?: (id: string | null, type: HealthHistoryType, date: string, note: string) => Promise<boolean>;
   onDelete?: (id: string) => Promise<boolean>;
+  filterType?: HealthHistoryType;
+  sectionTitle?: string;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [type, setType] = useState<HealthHistoryType>('vaccination');
+  const [type, setType] = useState<HealthHistoryType>(filterType ?? 'vaccination');
   const [date, setDate] = useState(localDate());
   const [note, setNote] = useState('');
   const [formError, setFormError] = useState('');
@@ -91,7 +95,7 @@ export function HealthHistoryScreen({
       setFormError('Anteckningen får innehålla högst 500 tecken.');
       return;
     }
-    if (await onSave?.(editingId, type, date, normalized ?? '')) resetForm();
+    if (await onSave?.(editingId, filterType ?? type, date, normalized ?? '')) resetForm();
   }
 
   function confirmDelete(record: HealthHistoryRecord) {
@@ -117,8 +121,8 @@ export function HealthHistoryScreen({
           <IconChip category="vaccination" size="large" />
         </View>
         <View style={styles.headingCopy}>
-          <Text style={styles.sectionTitle} accessibilityRole="header">Vaccinationer och veterinärbesök</Text>
-          <Text style={styles.sectionBody}>Spara sådant som redan har hänt.</Text>
+          <Text style={styles.sectionTitle} accessibilityRole="header">{sectionTitle}</Text>
+          <Text style={styles.sectionBody}>Ägarregistrerade hälsohändelser.</Text>
         </View>
       </View>
       <View style={styles.infoRow}>
@@ -145,22 +149,19 @@ export function HealthHistoryScreen({
         <Text style={styles.conflictBody}>Den väntande ändringen lämnas orörd tills du väljer hur du vill fortsätta.</Text>
         <PrimaryButton title="Använd aktuell historik och börja om" disabled={busy} onPress={resolveConflict} />
       </View>}
-      {loadState === 'loading' && <MessageCard>Hämtar hälsans historik…</MessageCard>}
-      {loadState === 'error' && <>
-        <MessageCard tone="error">Hälsans historik kunde inte hämtas.</MessageCard>
-        {loadState === 'error' && <PrimaryButton title="Försök igen" disabled={busy} onPress={() => onRetry?.()} />}
-      </>}
+      {loadState === 'loading' && <Skeleton shape="row" lines={4} />}
+      {loadState === 'error' && <ErrorState title="Hälsans historik kunde inte hämtas" description="Försök igen när du vill." actionLabel="Försök igen" onRetry={onRetry} />}
 
       {loadState === 'ready' && <>
         {busy && <MessageCard>Sparar och kontrollerar ändringen…</MessageCard>}
         <View style={styles.formCard}>
           <Text style={styles.formTitle} accessibilityRole="header">{editingRecord ? 'Rätta händelse' : 'Lägg till händelse'}</Text>
-          <View accessibilityRole="radiogroup" accessibilityLabel="Typ av händelse" style={styles.typeChoices}>
+          {!filterType && <View accessibilityRole="radiogroup" accessibilityLabel="Typ av händelse" style={styles.typeChoices}>
             <TypeChoice selected={type === 'vaccination'} disabled={blocked || editingRecord !== null}
               icon="bandage-outline" label="Vaccination" onPress={() => setType('vaccination')} />
             <TypeChoice selected={type === 'vet_visit'} disabled={blocked || editingRecord !== null}
               icon="medical-outline" label="Veterinärbesök" onPress={() => setType('vet_visit')} />
-          </View>
+          </View>}
           <DatePickerField label="Datum" disabled={blocked} onChangeText={setDate} value={date} />
           <View style={styles.field}>
             <Text style={styles.label}>Kort anteckning (frivillig)</Text>
@@ -176,20 +177,14 @@ export function HealthHistoryScreen({
         </View>
 
         <Text style={styles.historyTitle} accessibilityRole="header">Sparad historik</Text>
-        {rows.length === 0 && <View style={styles.emptyCard}>
-          <Image source={require('../../../assets/images/dog-resting.png')} style={styles.emptyImage}
-            accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-          <View style={styles.emptyCopy}>
-            <Text style={styles.emptyTitle}>Ingen historik ännu</Text>
-            <Text style={styles.emptyBody}>När något har hänt kan du enkelt lägga till det här.</Text>
-          </View>
-        </View>}
+        {rows.length === 0 && <EmptyState title="Ingen historik ännu" description="När något har hänt kan du lägga till det här." />}
         {rows.map((record) => <View key={record.id} style={styles.recordCard}>
           <View style={styles.recordHeading}>
             <View style={styles.recordType}>
               <IconChip category={record.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} />
               <Text style={styles.recordTitle}>{typeLabel(record.event_type)}</Text>
             </View>
+            <Ionicons name="checkmark-circle" size={tokens.size.iconSm} color={tokens.colors.success} accessibilityLabel="Ägarregistrerad" />
           </View>
           <Text style={styles.recordDate}>{record.occurred_on}</Text>
           {record.description ? <Text style={styles.recordNote}>{record.description}</Text> : null}

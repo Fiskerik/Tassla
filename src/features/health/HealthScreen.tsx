@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Alert, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { DatePickerField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
-import { isValidHealthWeightDate, isValidHealthWeightKg, type HealthHistoryRecord, type HealthHistoryType, type HealthWeightRecord } from '../../data/workspace-data';
+import { isValidHealthWeightDate, isValidHealthWeightKg, type HealthHistoryRecord, type HealthHistoryType, type HealthWeightRecord, type PlannedHealthRecord } from '../../data/workspace-data';
 import { HealthHistoryScreen } from './HealthHistoryScreen';
 import { localDate } from '../onboarding/dog';
 import { tokens } from '../../theme/tokens';
-import { AppBar, InfoBanner } from '../../components/ui';
+import { AppBar, EmptyState, ErrorState, IconChip, Skeleton, Tabs } from '../../components/ui';
 import { Toast } from '../../components/ui/Toast';
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -34,6 +33,8 @@ export function HealthScreen({
   onResolveHistoryConflict,
   onSaveHistory,
   onDeleteHistory,
+  plannedRecords,
+  plannedLoadState,
   onOpenPlannedHealth,
 }: {
   onBack: () => void;
@@ -59,6 +60,8 @@ export function HealthScreen({
   onResolveHistoryConflict?: () => void;
   onSaveHistory?: (id: string | null, type: HealthHistoryType, date: string, note: string) => Promise<boolean>;
   onDeleteHistory?: (id: string) => Promise<boolean>;
+  plannedRecords?: readonly PlannedHealthRecord[];
+  plannedLoadState?: LoadState;
   onOpenPlannedHealth?: () => void;
 }) {
   const cloudRecords = records ?? [];
@@ -75,8 +78,14 @@ export function HealthScreen({
   const [toastNonce, setToastNonce] = useState(0);
   const [formError, setFormError] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('Översikt');
   const confirmedMessage = statusMessage?.startsWith('Ändringen är sparad') && !statusError && !pendingStatus && !isBusy
     ? statusMessage : null;
+  const historyFilter: HealthHistoryType | undefined = activeTab === 'Vaccinationer' ? 'vaccination' : activeTab === 'Veterinär' ? 'vet_visit' : undefined;
+  const visibleHistoryRecords = historyFilter ? (historyRecords ?? []).filter((record) => record.event_type === historyFilter) : historyRecords;
+  const visiblePlannedRecords = activeTab === 'Vaccinationer'
+    ? (plannedRecords ?? []).filter((record) => record.event_type === 'vaccination')
+    : activeTab === 'Veterinär' ? (plannedRecords ?? []).filter((record) => record.event_type === 'vet_visit') : plannedRecords;
   useEffect(() => {
     if (!confirmedMessage) { setToastMessage(null); return; }
     setToastMessage(confirmedMessage);
@@ -146,7 +155,7 @@ export function HealthScreen({
   if (!isCloud) {
     return <View>
       <AppBar mode="Back" title="Hälsa" onAction={onBack} />
-      <InfoBanner>Håll ordning på hundens hälsa, en sak i taget.</InfoBanner>
+      <Tabs items={['Översikt', 'Vaccinationer', 'Veterinär', 'Vikt']} active={activeTab} onChange={setActiveTab} />
       <View style={styles.foundationCard}>
         <View style={styles.iconCircle}><Text style={styles.fallback}>H</Text></View>
         <View style={styles.copy}>
@@ -161,19 +170,11 @@ export function HealthScreen({
   return (
     <View>
       <AppBar mode="Back" title="Hälsa" onAction={onBack} />
-      <InfoBanner>Håll ordning på hundens vikt över tid.</InfoBanner>
+      <Tabs items={['Översikt', 'Vaccinationer', 'Veterinär', 'Vikt']} active={activeTab} onChange={setActiveTab} />
+      {activeTab !== 'Vikt' && <UpcomingHealthSection records={visiblePlannedRecords} loadState={plannedLoadState ?? 'ready'} onOpenPlans={onOpenPlannedHealth} />}
+      {activeTab === 'Vikt' && <>
       <Text style={styles.sectionTitle} accessibilityRole="header">Viktresa</Text>
-      <MessageCard>Vikterna är ägarregistrerade uppgifter, inte en verifierad journal. Tassla tolkar inte viktförändringar.</MessageCard>
-      {onOpenPlannedHealth && <View style={styles.plannedCard}>
-        <View style={styles.plannedIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          <Ionicons name="calendar-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />
-        </View>
-        <View style={styles.plannedCopy}>
-          <Text style={styles.cardTitle}>Planerade hälsohändelser</Text>
-          <Text style={styles.cardBody}>Håll vaccinationer och veterinärbesök åtskilda från det som redan har hänt.</Text>
-        </View>
-        <PrimaryButton title="Öppna planer" onPress={onOpenPlannedHealth} />
-      </View>}
+      <Text style={styles.sectionBody}>Ägarregistrerade uppgifter över tid.</Text>
       {cloudLoadState === 'loading' && <MessageCard>Hämtar hundens vikthistorik…</MessageCard>}
       {cloudLoadState === 'error' && <>
         <MessageCard tone="error">Vikthistoriken kunde inte hämtas.</MessageCard>
@@ -248,13 +249,37 @@ export function HealthScreen({
           </View>
         ))}
       </>}
-      <HealthHistoryScreen key={JSON.stringify(historyRecords?.map(({ id, event_type, occurred_on, description }) => [id, event_type, occurred_on, description]))}
-        records={historyRecords} loadState={historyLoadState} busy={historyBusy}
+      </>}
+      {activeTab !== 'Vikt' && <HealthHistoryScreen key={`${activeTab}:${JSON.stringify(visibleHistoryRecords?.map(({ id, event_type, occurred_on, description }) => [id, event_type, occurred_on, description]))}`}
+        records={visibleHistoryRecords} filterType={historyFilter} loadState={historyLoadState} busy={historyBusy}
         pending={historyPending} statusMessage={historyMessage} statusError={historyMessageError}
         conflict={historyConflict} onRetry={onRetryHistory} onResolveConflict={onResolveHistoryConflict}
-        onSave={onSaveHistory} onDelete={onDeleteHistory} />
+        onSave={onSaveHistory} onDelete={onDeleteHistory} />}
     </View>
   );
+}
+
+function UpcomingHealthSection({ records, loadState, onOpenPlans }: { records?: readonly PlannedHealthRecord[]; loadState: LoadState; onOpenPlans?: () => void }) {
+  return <View style={styles.upcomingSection}>
+    <Text style={styles.sectionTitle} accessibilityRole="header">Kommande</Text>
+    {loadState === 'loading' && <Skeleton shape="row" lines={3} />}
+    {loadState === 'error' && <ErrorState title="Kommande händelser kunde inte hämtas" description="Försök igen senare." />}
+    {loadState === 'ready' && records?.length === 0 && <EmptyState title="Inget planerat ännu" description="Planerade vaccinationer och veterinärbesök visas här när du lägger till dem." />}
+    {loadState === 'ready' && records?.map((record) => <View key={record.id} style={styles.healthCard}>
+      <View style={styles.healthCardHeading}><IconChip category={record.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} /><Text style={styles.cardTitle}>{record.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök'}</Text></View>
+      <Text style={styles.cardBody}>{relativeHealthDate(record.due_on)} · {record.due_on}</Text>
+      {record.description ? <Text style={styles.cardBody}>{record.description}</Text> : null}
+    </View>)}
+    {onOpenPlans ? <QuietButton title="Hantera planerade händelser" onPress={onOpenPlans} /> : null}
+  </View>;
+}
+
+function relativeHealthDate(date: string): string {
+  const today = new Date(`${localDate()}T00:00:00`);
+  const target = new Date(`${date}T00:00:00`);
+  const days = Math.round((target.getTime() - today.getTime()) / 86400000);
+  if (days <= 0) return days === 0 ? 'Idag' : 'Passerat datum';
+  return days === 1 ? 'Om 1 dag' : `Om ${days} dagar`;
 }
 
 function formatWeight(value: number): string {
@@ -269,6 +294,10 @@ const styles = StyleSheet.create({
   cardTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
   cardBody: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
   sectionTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading, marginTop: tokens.layout.sectionGap },
+  sectionBody: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
+  upcomingSection: { gap: tokens.spacing.sm },
+  healthCard: { padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, gap: tokens.spacing.xs },
+  healthCardHeading: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   formCard: { marginTop: tokens.layout.headingGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   formTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label, marginBottom: tokens.spacing.md },
   field: { marginBottom: tokens.spacing.md },

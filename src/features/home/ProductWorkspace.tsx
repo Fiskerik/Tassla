@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, Alert, Animated, AppState, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Alert, Animated, AppState, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { ComponentProps } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
 import * as ExpoCrypto from 'expo-crypto';
 import * as Notifications from 'expo-notifications';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { AppScreen, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { AppScreen, MessageCard, PageHeading, QuietButton } from '../../components/AppPrimitives';
+import { AppBar, DogCard, EmptyState, ErrorState, ListRow, Skeleton } from '../../components/ui';
 import {
   deleteDogEvent,
   deleteHealthWeight,
@@ -70,7 +71,6 @@ import { HealthScreen } from '../health/HealthScreen';
 import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
 import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
-import { getGuidePreviewText } from '../knowledge/guide-body';
 import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
 import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
 import { PassportScreen } from '../passport/PassportScreen';
@@ -610,7 +610,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     ? knowledgeFocus.contentId : null;
 
   const displayEvents = useMemo(() => events.map(toLogEvent), [events]);
-  const latestEvent = events[0];
   const nextProgram = training.programs.find((program) => program.steps.some((step) => !program.completedStepIds.includes(step.id)));
   const nextStep = nextProgram?.steps.find((step) => !nextProgram.completedStepIds.includes(step.id));
 
@@ -1788,16 +1787,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   if (fontError) return <AppScreen><MessageCard tone="error">Ikonerna kunde inte laddas. Starta om appen och försök igen.</MessageCard></AppScreen>;
 
   const pageContent = renderPage();
-  return <AppScreen key={page} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNavigation page={page} onNavigate={setPage} />}>
+  return <AppScreen key={page} showBrand={page !== 'home' && page !== 'log' && page !== 'training' && page !== 'health' && page !== 'knowledge' && page !== 'passport'} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNavigation page={page} onNavigate={setPage} />}>
     <Animated.View style={{ opacity: pageOpacity }}>{pageContent}</Animated.View>
   </AppScreen>;
 
   function renderPage() {
     if (page === 'home') return <HomePage
       dog={dog}
-      iconsLoaded={fontsLoaded}
       ageWeeks={age}
-      latestEvent={latestEvent ? toLogEvent(latestEvent) : null}
       nextProgram={nextProgram ?? null}
       nextStep={nextStep ?? null}
       content={visibleGuideContent}
@@ -1809,25 +1806,19 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         setPage('knowledge');
       }}
       onRetryContent={() => { void retryContent(); }}
+      onOpenNotifications={() => { setNotificationSaved(false); setPage('notification-settings'); }}
     />;
     if (page === 'log') return <LogScreen events={displayEvents} onAdd={addEvent}
       onUpdate={updateEvent} onDelete={(id) => deleteEvent(id)} mode="cloud"
+      onBack={() => setPage('home')}
       loading={logState === 'loading'} loadError={logState === 'error'} onReload={() => { void retryEvents(); }}
       busy={logBusy} mutation={quickLogMutation} loadMoreError={loadMoreError} onRetry={retryLogMutation} onCancel={cancelLogMutation}
       onUndo={(id) => { void undoQuickLog(id); }} hasMore={hasMore} loadingMore={loadingMore}
       onLoadMore={() => { void loadMoreEvents(); }} />;
-    if (page === 'training') return <>
-      {visibleTrainingState === 'loading' && <PageHeading title="Träning" description="Hämtar publicerade program…" />}
-      {visibleTrainingState === 'error' && <>
-        <PageHeading title="Träning" description="Programmen kunde inte hämtas." />
-        <MessageCard tone="error">{trainingError}</MessageCard>
-        <PrimaryButton title="Försök igen" onPress={() => { void retryTraining(); }} />
-      </>}
-      {visibleTrainingState === 'ready' && <PublishedTrainingScreen programs={training.programs} paused={training.paused}
-        busyStepKey={busyStepKey} error={trainingError} onCompleteStep={completeStep}
-        onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
-        onRetry={() => { void retryTraining(); }} />}
-    </>;
+    if (page === 'training') return <PublishedTrainingScreen programs={training.programs} paused={training.paused}
+      busyStepKey={busyStepKey} error={visibleTrainingState === 'error' ? trainingError : ''} loading={visibleTrainingState === 'loading'} onCompleteStep={completeStep}
+      onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
+      onRetry={() => { void retryTraining(); }} onBack={() => setPage('home')} />;
     if (page === 'more') return <MorePage onNavigate={(nextPage) => {
       if (nextPage === 'knowledge') setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId: null, returnPage: 'more' });
       setPage(nextPage);
@@ -1893,6 +1884,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       onResolveHistoryConflict={resolveHealthHistoryConflict}
       onSaveHistory={saveHealthHistory}
       onDeleteHistory={removeHealthHistory}
+      plannedRecords={plannedHealth}
+      plannedLoadState={plannedHealthState}
       onOpenPlannedHealth={() => setPage('planned-health')}
     />;
     if (page === 'planned-health') return <PlannedHealthScreen
@@ -1952,13 +1945,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
 }
 
 function HomePage({
-  dog, ageWeeks, latestEvent, nextProgram, nextStep, content, contentState, trainingState,
-  iconsLoaded, onGo, onOpenContent, onRetryContent,
+  dog, ageWeeks, nextProgram, nextStep, content, contentState, trainingState,
+  onGo, onOpenContent, onRetryContent, onOpenNotifications,
 }: {
   dog: OwnedDog;
-  iconsLoaded: boolean;
   ageWeeks: number;
-  latestEvent: LogEvent | null;
   nextProgram: PublishedTrainingProgram | null;
   nextStep: PublishedTrainingProgram['steps'][number] | null;
   content: HomeContent[];
@@ -1967,62 +1958,44 @@ function HomePage({
   onGo: (page: ProductPage) => void;
   onOpenContent: (contentId: string) => void;
   onRetryContent: () => void;
+  onOpenNotifications: () => void;
 }) {
-  return <View>
-    <View style={styles.homeHeader}>
-      <Text style={styles.eyebrow}>ER HUNDRESA</Text>
-      <Text style={styles.homeTitle} accessibilityRole="header">Hej, {dog.name}!</Text>
-      <Text style={styles.homeSubtitle}>{formatDogAge(dog.birth_date, ageWeeks)}</Text>
+  const tip = content[0];
+  const tipDetail = contentState === 'loading' ? 'Laddar tips…' : contentState === 'error' ? 'Tips kunde inte hämtas just nu' : tip?.title ?? 'Inga nya tips just nu';
+  return <View style={styles.homePage}>
+    <AppBar mode="Home" title="Tassla" onAction={onOpenNotifications} actionLabel="Öppna notiser" />
+    <DogCard name={dog.name} breed={dog.breed_id} age={formatDogAgeShort(dog.birth_date, ageWeeks)} />
+    <WeekStrip />
+    <Text style={styles.todayTitle} accessibilityRole="header">Idag för {dog.name}</Text>
+    <View style={styles.todayList}>
+      <ListRow title="Måltid" detail="Dagens rutin" category="food" onPress={() => onGo('log')} accessibilityLabel="Måltid, öppna Logg" />
+      <ListRow title="Promenad" detail="Kort promenad och rastning" category="walk" onPress={() => onGo('log')} accessibilityLabel="Promenad, öppna Logg" />
+      <ListRow title="Träning" detail={trainingState === 'loading' ? 'Laddar nästa steg…' : nextStep?.title ?? 'Ett litet steg i taget'} category="training" onPress={() => onGo('training')} accessibilityLabel="Träning, öppna Träning" />
+      <ListRow title="Vila" detail="En lugn stund" category="sleep" onPress={() => onGo('log')} accessibilityLabel="Vila, öppna Logg" />
+      <ListRow title="Tips" detail={tipDetail} category="training" onPress={tip ? () => onOpenContent(tip.id) : contentState === 'error' ? onRetryContent : undefined} accessibilityLabel={`Tips, ${tipDetail}`} />
     </View>
-    <View style={styles.welcomeCard}>
-      <View style={styles.welcomeCopy}>
-        <Text style={styles.welcomeEyebrow}>TILLSAMMANS</Text>
-        <Text style={styles.welcomeTitle}>En dag i taget.</Text>
-        <Text style={styles.welcomeBody}>Små minnen och trygga steg i hundens vardag.</Text>
-      </View>
-      <Image source={require('../../../assets/images/dog-welcome.png')} style={styles.welcomeImage} accessibilityLabel="Dekorativ bild av en hund i ett varmt hem" />
-    </View>
-    <View style={styles.sectionHeading}><Text style={styles.sectionTitle} accessibilityRole="header">För er just nu</Text><Ionicons name="sparkles-outline" size={22} color={theme.colors.accent} /></View>
-    {contentState === 'loading' && <MessageCard>Hämtar publicerat innehåll…</MessageCard>}
-    {contentState === 'error' && <>
-      <MessageCard tone="error">Innehållet kunde inte hämtas. Vi visar inget tills anslutningen fungerar igen.</MessageCard>
-      <PrimaryButton title="Försök igen" onPress={onRetryContent} />
-    </>}
-    {contentState === 'ready' && content.length === 0 && <MessageCard>Det finns inget publicerat innehåll för {dog.name}s ålder och ras ännu. Nya guider visas här när de är klara.</MessageCard>}
-    {contentState === 'ready' && content.slice(0, 2).map((item) => <View key={item.id} style={styles.contentCard}>
-      <View style={styles.contentCardHeading}>
-        {iconsLoaded && <Ionicons name={item.contentType === 'checklist' ? 'checkbox-outline' : 'book-outline'} size={19} color={theme.colors.accent} />}
-        <Text style={styles.cardEyebrow}>{contentTypeLabel(item.contentType)}</Text>
-      </View>
-      <Text style={styles.contentTitle}>{item.title}</Text>
-      <Text style={styles.contentBody} numberOfLines={3} ellipsizeMode="tail">{getGuidePreviewText(item.body)}</Text>
-      <QuietButton title="Läs i Kunskap" onPress={() => onOpenContent(item.id)} />
-    </View>)}
-    <View style={styles.sectionHeading}><Text style={styles.sectionTitle} accessibilityRole="header">Hundens vardag</Text><Ionicons name="calendar-outline" size={22} color={theme.colors.accent} /></View>
-    <View style={styles.summaryCard}>
-      <Text style={styles.cardEyebrow}>SENASTE I LOGGEN</Text>
-      {latestEvent
-        ? <Text style={styles.summaryText}>{latestEvent.note || logTypeText(latestEvent.type)} · {new Date(latestEvent.occurredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
-        : <Text style={styles.summaryText}>Inga loggposter ännu. Lägg till en liten händelse när ni vill.</Text>}
-      <QuietButton title="Öppna loggen" onPress={() => onGo('log')} />
-    </View>
-    <View style={styles.summaryCard}>
-      <Text style={styles.cardEyebrow}>NÄSTA TRÄNINGSSTEG</Text>
-      {trainingState === 'loading' && <Text style={styles.summaryText}>Hämtar publicerade program…</Text>}
-      {trainingState === 'error' && <Text style={styles.summaryText}>Programmen kunde inte hämtas just nu.</Text>}
-      {trainingState === 'ready' && nextProgram && nextStep && <>
-        <Text style={styles.summaryTitle}>{nextProgram.title}</Text>
-        <Text style={styles.summaryText}>{nextStep.title}</Text>
-        <QuietButton title="Öppna nästa steg" onPress={() => onGo('training')} />
-      </>}
-      {trainingState === 'ready' && !nextProgram && <Text style={styles.summaryText}>Inget publicerat nästa steg ännu. Nya program visas här när de är klara.</Text>}
-    </View>
-    <View style={styles.shortcuts}>
-      <Shortcut icon="create-outline" label="Logga" onPress={() => onGo('log')} />
-      <Shortcut icon="school-outline" label="Träning" onPress={() => onGo('training')} />
-      <Shortcut icon="ellipsis-horizontal-circle-outline" label="Mer" onPress={() => onGo('more')} />
-    </View>
+    {contentState === 'loading' && <Skeleton shape="row" lines={2} />}
+    {contentState === 'error' && <ErrorState title="Tipsen kunde inte hämtas" description="Försök igen när du vill." actionLabel="Försök igen" onRetry={onRetryContent} />}
+    {contentState === 'ready' && content.length === 0 && <EmptyState title="Inga nya tips just nu" description="Nya tips visas här när de är klara." />}
   </View>;
+}
+
+function WeekStrip() {
+  const today = new Date(`${localDate()}T00:00:00`);
+  const weekday = (today.getDay() + 6) % 7;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - weekday);
+  const labels = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre'];
+  const active = Math.min(weekday, labels.length - 1);
+  return <View accessibilityRole="tablist" accessibilityLabel="Veckans dagar" style={styles.weekStrip}>{labels.map((label, index) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
+    const selected = index === active;
+    return <View key={label} accessibilityRole="tab" accessibilityState={{ selected }} accessibilityLabel={`${label} ${date.getDate()}${selected ? ', idag' : ''}`} style={[styles.weekDay, selected && styles.weekDaySelected]}>
+      <Text style={[styles.weekLabel, selected && styles.weekLabelSelected]}>{label}</Text>
+      <Text style={[styles.weekDate, selected && styles.weekDateSelected]}>{date.getDate()}</Text>
+    </View>;
+  })}</View>;
 }
 
 function MorePage({ onNavigate, signOutError, signingOut, onSignOut, onOpenNotifications, onOpenAccount }: {
@@ -2059,13 +2032,6 @@ function MenuRow({ icon, title, detail, onPress }: { icon: ComponentProps<typeof
     <Ionicons name={icon} size={23} color={theme.colors.accent} />
     <View style={styles.menuCopy}><Text style={styles.menuTitle}>{title}</Text><Text style={styles.menuDetail}>{detail}</Text></View>
     <Ionicons name="chevron-forward" size={18} color={theme.colors.mutedText} />
-  </Pressable>;
-}
-
-function Shortcut({ icon, label, onPress }: { icon: ComponentProps<typeof Ionicons>['name']; label: string; onPress: () => void }) {
-  return <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.shortcut, pressed && styles.pressed]}>
-    <Ionicons name={icon} size={22} color={theme.colors.accent} />
-    <Text style={styles.shortcutLabel}>{label}</Text>
   </Pressable>;
 }
 
@@ -2161,38 +2127,22 @@ function formatDogAge(birthDate: string, weeks: number): string {
   return `${Math.max(1, months)} ${months === 1 ? 'månad' : 'månader'} gammal`;
 }
 
-function contentTypeLabel(type: HomeContent['contentType']): string {
-  return type === 'article' ? 'KUNSKAP' : type === 'guide' ? 'GUIDE' : type === 'checklist' ? 'CHECKLISTA' : 'TRÄNING';
-}
-
-function logTypeText(type: LogEventType): string {
-  return type === 'pee' ? 'Kiss' : type === 'poop' ? 'Bajs' : type === 'food' ? 'Mat' : type === 'sleep' ? 'Sömn' : type === 'awake' ? 'Vaken' : 'Promenad';
+function formatDogAgeShort(birthDate: string, weeks: number): string {
+  return formatDogAge(birthDate, weeks).replace(/ gammal$/, '');
 }
 
 const styles = StyleSheet.create({
-  homeHeader: { marginTop: tokens.spacing.xl, marginBottom: tokens.spacing.xl },
-  eyebrow: { color: theme.colors.accent, fontSize: 11, letterSpacing: 1.2, fontWeight: '800' },
-  homeTitle: { ...tokens.typography.display, color: tokens.colors.textPrimary, marginTop: tokens.spacing.sm },
-  homeSubtitle: { color: theme.colors.mutedText, fontSize: 16, marginTop: 4 },
-  welcomeCard: { minHeight: 160, flexDirection: 'row', overflow: 'hidden', borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.selectedSurface, marginBottom: tokens.spacing.xl },
-  welcomeCopy: { flex: 1, justifyContent: 'center', padding: 18 },
-  welcomeEyebrow: { color: theme.colors.accent, fontSize: 10, letterSpacing: 1.1, fontWeight: '800' },
-  welcomeTitle: { color: theme.colors.text, fontSize: 20, lineHeight: 25, fontWeight: '800', marginTop: 8 },
-  welcomeBody: { color: theme.colors.mutedText, fontSize: 13, lineHeight: 19, marginTop: 5 },
-  welcomeImage: { width: '42%', height: '100%', resizeMode: 'cover' },
-  sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 10 },
-  sectionTitle: { color: theme.colors.text, fontSize: 20, fontWeight: '800' },
-  contentCard: { borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.borderStrong, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, marginTop: tokens.spacing.sm },
-  contentCardHeading: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  cardEyebrow: { color: theme.colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 0.9, marginBottom: 7 },
-  contentTitle: { color: theme.colors.text, fontSize: 18, lineHeight: 24, fontWeight: '800' },
-  contentBody: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 21, marginTop: 7 },
-  summaryCard: { borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.borderStrong, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, marginTop: tokens.spacing.sm },
-  summaryTitle: { color: theme.colors.text, fontSize: 16, fontWeight: '800' },
-  summaryText: { color: theme.colors.mutedText, fontSize: 15, lineHeight: 22 },
-  shortcuts: { flexDirection: 'row', gap: 9, marginTop: 20 },
-  shortcut: { flex: 1, minHeight: 68, borderRadius: theme.radius.button, backgroundColor: '#E8EFE8', alignItems: 'center', justifyContent: 'center', gap: 5 },
-  shortcutLabel: { color: theme.colors.accent, fontSize: 12, fontWeight: '800' },
+  homePage: { alignSelf: 'stretch', gap: tokens.spacing.lg },
+  weekStrip: { alignSelf: 'stretch', flexDirection: 'row', gap: tokens.spacing.sm },
+  weekDay: { flex: 1, minHeight: tokens.size.calendarDay, alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface },
+  weekDaySelected: { backgroundColor: tokens.colors.primary },
+  weekLabel: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  weekLabelSelected: { color: tokens.colors.onPrimary },
+  weekDate: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  weekDateSelected: { color: tokens.colors.onPrimary },
+  todayTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginTop: tokens.spacing.sm },
+  todayList: { alignSelf: 'stretch', gap: tokens.spacing.xs },
+  cardEyebrow: { ...tokens.typography.caption, color: tokens.colors.primary },
   menuRow: { minHeight: 74, flexDirection: 'row', alignItems: 'center', gap: 13, borderRadius: theme.radius.button, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, paddingHorizontal: 14, marginBottom: 10 },
   menuCopy: { flex: 1 },
   menuTitle: { color: theme.colors.text, fontSize: 16, fontWeight: '800' },
@@ -2203,5 +2153,5 @@ const styles = StyleSheet.create({
   tab: { flex: 1, minHeight: 56, alignItems: 'center', justifyContent: 'center', borderRadius: 14 },
   tabLabel: { color: theme.colors.mutedText, fontSize: 11, fontWeight: '700', marginTop: 3 },
   selectedTabLabel: { color: theme.colors.accent, fontWeight: '800' },
-  pressed: { opacity: 0.72 },
+  pressed: { opacity: tokens.opacity.pressed },
 });

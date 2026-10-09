@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
-import { AppBar, ChecklistItem, HeroCard, Progress, SectionHeader } from '../../components/ui';
+import { AppBar, ChecklistItem, EmptyState, ErrorState, HeroCard, Progress, SectionHeader, Skeleton, Tabs } from '../../components/ui';
 import type { PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
 import { tokens } from '../../theme/tokens';
 
@@ -14,6 +14,8 @@ export function PublishedTrainingScreen({
   onContinue,
   onResetProgram,
   onRetry,
+  onBack,
+  loading = false,
 }: {
   programs: readonly PublishedTrainingProgram[];
   paused: readonly PausedTrainingProgress[];
@@ -23,9 +25,12 @@ export function PublishedTrainingScreen({
   onContinue: () => void;
   onResetProgram: (program: PublishedTrainingProgram) => void;
   onRetry: () => void;
+  onBack?: () => void;
+  loading?: boolean;
 }) {
   const [openProgramId, setOpenProgramId] = useState<string | null>(null);
   const [acknowledged, setAcknowledged] = useState<{ programId: string; stepId: string } | null>(null);
+  const [activeTab, setActiveTab] = useState('Valpprogram');
   const pending = useRef(false);
 
   async function complete(program: PublishedTrainingProgram, stepId: string) {
@@ -46,13 +51,15 @@ export function PublishedTrainingScreen({
 
   return (
     <View>
-      <AppBar mode="Title" title="Träning" />
+      <AppBar mode="Back" title="Träning" onAction={onBack} />
+      <Tabs items={['Valpprogram', 'Alla övningar', 'Mina mål']} active={activeTab} onChange={setActiveTab} />
+      {loading ? <>
+        <Skeleton shape="card" />
+        <Skeleton shape="row" lines={4} />
+      </> : activeTab !== 'Valpprogram' ? <EmptyState title={activeTab === 'Alla övningar' ? 'Inga andra övningar ännu' : 'Inga mål ännu'} description="Det här läget visar innehåll när det finns i ditt träningsprogram." /> : <>
       <HeroCard title="Små steg, lugna stunder" meta="Bygg progression med frivillighet och belöning." />
       <MessageCard>Allmän träningsvägledning. Anpassa efter din hund. Du kan alltid pausa eller gå tillbaka. Registrering visar vad du markerat, inte vad hunden behärskar.</MessageCard>
-      {error ? <>
-        <MessageCard tone="error">{error}</MessageCard>
-        <PrimaryButton title="Försök igen" onPress={onRetry} />
-      </> : null}
+      {error ? <ErrorState title="Träningen kunde inte uppdateras" description={error} actionLabel="Försök igen" onRetry={onRetry} /> : null}
       {paused.map((item) => (
         <MessageCard key={item.versionId} tone="error">
           En tidigare programversion har {item.completedCount} registrerade steg men är pausad. Historiken har inte flyttats eller raderats.
@@ -80,7 +87,7 @@ export function PublishedTrainingScreen({
             </View>}
             <View style={styles.progressGroup}>
               <Text style={styles.progressHeading}>STEG</Text>
-              <Progress value={program.steps.length ? completed.size / program.steps.length * 100 : 0} label={`${completed.size} av ${program.steps.length} steg registrerade`} />
+              <Progress value={program.steps.length ? completed.size / program.steps.length * 100 : 0} label={`${completed.size} av ${program.steps.length} genomförda`} />
             </View>
             {allComplete && <MessageCard>Alla steg är registrerade. Det betyder inte att hunden är färdigtränad. Du kan läsa eller repetera programmet.</MessageCard>}
             <QuietButton title={isOpen ? 'Dölj övningar' : 'Visa övningar'} onPress={() => setOpenProgramId(isOpen ? null : program.id)} />
@@ -113,6 +120,7 @@ export function PublishedTrainingScreen({
           </View>
         );
       })}
+      </>}
     </View>
   );
 }

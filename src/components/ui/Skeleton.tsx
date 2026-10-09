@@ -1,9 +1,9 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { tokens } from '../../theme/tokens';
 
-export function Skeleton({ shape = 'line', lines = 1 }: { shape?: 'line' | 'circle' | 'card' | 'row'; lines?: number }) {
+export function Skeleton({ shape = 'line', lines = 1, style }: { shape?: 'line' | 'circle' | 'card' | 'row'; lines?: number; style?: StyleProp<ViewStyle> }) {
   const count = Math.max(1, lines);
-  return <View accessibilityRole="progressbar" accessibilityLabel="Laddar innehåll" style={[styles.wrap, shape === 'row' && styles.row, shape === 'card' && styles.card]}>
+  return <View accessibilityRole="progressbar" accessibilityLabel="Laddar innehåll" style={[styles.wrap, shape === 'row' && styles.row, shape === 'card' && styles.card, style]}>
     {shape === 'circle' ? <View style={styles.circle} /> : Array.from({ length: count }, (_, index) => <View key={index} style={[styles.line, shape === 'card' && styles.cardLine, shape === 'row' && styles.rowLine]} />)}
   </View>;
 }

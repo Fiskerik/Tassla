@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { Linking, StyleSheet, Text, View } from 'react-native';
+import { Image, Linking, StyleSheet, Text, View } from 'react-native';
 import { useFonts } from 'expo-font';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { HomeContent } from '../../data/app-data';
-import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
-import { AppBar, Card, InfoBanner, SectionHeader } from '../../components/ui';
+import { MessageCard, QuietButton } from '../../components/AppPrimitives';
+import { AppBar, Card, EmptyState, ErrorState, Skeleton, Tabs } from '../../components/ui';
 import { tokens } from '../../theme/tokens';
 import { getSafeContentSourceUrl } from './source-links';
-import { parseGuideBody } from './guide-body';
+import { getGuidePreviewText, parseGuideBody } from './guide-body';
 
 type ContentState = 'loading' | 'ready' | 'error';
 
@@ -28,7 +28,13 @@ export function KnowledgeScreen({
 }) {
   const [iconsLoaded] = useFonts(Ionicons.font);
   const [sourceMessage, setSourceMessage] = useState('');
-  const selectedItem = items.find((item) => item.id === focusedContentId) ?? items[0] ?? null;
+  const [activeTab, setActiveTab] = useState('För dig');
+  const filteredItems = items.filter((item) => activeTab === 'För dig'
+    || (activeTab === 'Artiklar' && item.contentType === 'article')
+    || (activeTab === 'Checklistor' && item.contentType === 'checklist')
+    || (activeTab === 'FAQ' && false));
+  const selectedItem = filteredItems.find((item) => item.id === focusedContentId) ?? filteredItems[0] ?? null;
+  const compactItems = filteredItems.filter((item) => item.id !== selectedItem?.id);
 
   async function openSource(source: string) {
     const url = getSafeContentSourceUrl(source);
@@ -44,37 +50,23 @@ export function KnowledgeScreen({
   return (
     <View>
       <AppBar mode="Back" title="Kunskap" onAction={onBack} />
-      <InfoBanner>Vardagen med hund, ett ämne i taget.</InfoBanner>
-      {contentState === 'loading' && <MessageCard>Hämtar publicerade guider…</MessageCard>}
-      {contentState === 'error' && <>
-        <MessageCard tone="error">Guiderna kunde inte hämtas. Vi visar inget tills anslutningen fungerar igen.</MessageCard>
-        <PrimaryButton title="Försök igen" onPress={onRetry} />
+      <Tabs items={['För dig', 'Artiklar', 'Checklistor', 'FAQ']} active={activeTab} onChange={(tab) => { setActiveTab(tab); setSourceMessage(''); }} />
+      {contentState === 'loading' && <>
+        <Skeleton shape="card" />
+        <View style={styles.gridRow}><Skeleton shape="row" lines={2} style={styles.gridCard} /><Skeleton shape="row" lines={2} style={styles.gridCard} /></View>
       </>}
-      {contentState === 'ready' && items.length === 0 && <MessageCard>
-        Det finns inga publicerade guider som passar just nu. Nya guider visas här när de är klara.
-      </MessageCard>}
-      {contentState === 'ready' && items.length > 0 && <>
-        <View style={styles.guideList}>
-          <SectionHeader title="Ämnen att utforska" />
-          {items.map((item) => {
-            const selected = selectedItem?.id === item.id;
-            return <Card
-              key={item.id}
-              selected={selected}
-              accessibilityLabel={`${item.title}, version ${item.version}`}
-              onPress={() => { setSourceMessage(''); onSelectContent(item.id); }}>
-              <View style={styles.topicIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                {iconsLoaded && <Ionicons name={item.contentType === 'checklist' ? 'checkbox-outline' : 'book-outline'} size={tokens.size.iconSm} color={tokens.colors.primary} />}
-              </View>
-              <View style={styles.guideCopy}>
-                <Text style={styles.guideType}>{contentTypeLabel(item.contentType)}</Text>
-                <Text style={styles.guideTitle}>{item.title}</Text>
-              </View>
-              {selected && <Text style={styles.selectedLabel}>Vald</Text>}
-            </Card>;
-          })}
-        </View>
-        {selectedItem && <View style={styles.articleCard}>
+      {contentState === 'error' && <ErrorState title="Kunskapen kunde inte hämtas" description="Försök igen när du vill." actionLabel="Försök igen" onRetry={onRetry} />}
+      {contentState === 'ready' && filteredItems.length === 0 && <EmptyState title="Inget publicerat ännu" description="Nytt innehåll visas här när det finns för dig." />}
+      {contentState === 'ready' && selectedItem && <>
+        <Card accessibilityLabel={`${selectedItem.title}, ${contentTypeLabel(selectedItem.contentType)}`} onPress={() => { setSourceMessage(''); onSelectContent(selectedItem.id); }}>
+          <Image source={require('../../../assets/images/dog-welcome.png')} style={styles.featureImage} accessibilityLabel="Illustrativ Tassla-bild" />
+          <Text style={styles.featureType}>{contentTypeLabel(selectedItem.contentType)}</Text>
+          <Text style={styles.featureTitle} numberOfLines={2} accessibilityRole="header">{selectedItem.title}</Text>
+          <Text style={styles.featureIngress} numberOfLines={2}>{getGuidePreviewText(selectedItem.body)}</Text>
+          <Text style={styles.readTime}>{estimatedReadTime(selectedItem.body)} · Publicerat innehåll</Text>
+        </Card>
+        {compactItems.length > 0 && <View style={styles.grid}>{Array.from({ length: Math.ceil(compactItems.length / 2) }, (_, rowIndex) => <View key={`row-${rowIndex}`} style={styles.gridRow}>{compactItems.slice(rowIndex * 2, rowIndex * 2 + 2).map((item) => <View key={item.id} style={styles.gridCard}><Card accessibilityLabel={`${item.title}, ${contentTypeLabel(item.contentType)}`} onPress={() => { setSourceMessage(''); onSelectContent(item.id); }}><Text style={styles.guideType}>{contentTypeLabel(item.contentType)}</Text><Text style={styles.guideTitle} numberOfLines={2}>{item.title}</Text><Text style={styles.gridPreview} numberOfLines={2}>{getGuidePreviewText(item.body)}</Text></Card></View>)}</View>)}</View>}
+        {focusedContentId === selectedItem.id && <View style={styles.articleCard}>
           <View style={styles.articleEyebrowRow}>
             {iconsLoaded && <Ionicons name="leaf-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />}
             <Text style={styles.articleEyebrow}>PUBLICERAD GUIDE · VERSION {selectedItem.version}</Text>
@@ -116,13 +108,23 @@ function contentTypeLabel(type: HomeContent['contentType']): string {
   return type === 'article' ? 'KUNSKAP' : type === 'guide' ? 'GUIDE' : type === 'checklist' ? 'CHECKLISTA' : 'TRÄNING';
 }
 
+function estimatedReadTime(body: string): string {
+  const words = body.trim().split(/\s+/).filter(Boolean).length;
+  return `${Math.max(1, Math.ceil(words / 200))} min läsning`;
+}
+
 const styles = StyleSheet.create({
-  guideList: { gap: tokens.spacing.sm },
-  topicIcon: { width: tokens.size.chipMd, height: tokens.size.chipMd, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.selectedSurface },
-  guideCopy: { flex: 1, gap: tokens.spacing.xs },
+  grid: { gap: tokens.spacing.sm },
+  gridRow: { flexDirection: 'row', gap: tokens.spacing.sm },
+  gridCard: { flex: 1 },
+  featureImage: { alignSelf: 'stretch', height: tokens.size.heroHeight - tokens.spacing.xxl, borderRadius: tokens.radius.md, marginBottom: tokens.spacing.md },
+  featureType: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
+  featureTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginTop: tokens.spacing.xs },
+  featureIngress: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginTop: tokens.spacing.sm },
+  readTime: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.md },
   guideType: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
   guideTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
-  selectedLabel: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
+  gridPreview: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
   articleCard: { alignSelf: 'stretch', borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, marginTop: tokens.layout.sectionGap },
   articleEyebrowRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingVertical: tokens.spacing.sm, borderBottomWidth: tokens.size.stroke, borderBottomColor: tokens.colors.border },
   articleEyebrow: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700', flexShrink: 1 },

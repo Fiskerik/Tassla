@@ -56,9 +56,11 @@ export const tokens = {
   primitives,
   colors: { ...semanticColors, category: categoryColors },
   spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 },
-  layout: { headingGap: 8, listGap: 12, cardPadding: 16, pageInset: 24, sectionGap: 24 },
+  layout: { headingGap: 8, listGap: 12, cardPadding: 16, pageInset: 24, sectionGap: 24, contentMaxWidth: 560 },
   radius: { sm: 8, md: 14, lg: 20, full: 999 },
-  size: { touchMin: 44, buttonHeight: 56, navHeight: 56, iconSm: 20, iconMd: 24, chipMd: 32, chipLg: 44, stroke: 1, progress: 4, heroHeight: 200 },
+  size: { touchMin: 44, buttonHeight: 56, navHeight: 56, iconSm: 20, iconMd: 24, chipMd: 32, chipLg: 44, stroke: 1, progress: 4, heroHeight: 200, calendarDay: 44, modalMaxHeight: '85%' as const, dialogMaxHeight: '90%' as const },
+  opacity: { disabled: 0.55, pressed: 0.84, overlay: 0.25, overlayStrong: 0.5, shadow: 0.12 },
+  motion: { quick: 140, feedback: 2500 },
   typography: { ...typography, display: typography.title },
 } as const;
 

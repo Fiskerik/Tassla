@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { categoryColors, tokens } from '../../theme/tokens';
 import { PoopIcon } from './PoopIcon';
 import { PillIcon } from './PillIcon';
@@ -15,16 +15,17 @@ const categoryLabels: Record<IconCategory, string> = {
   vaccination: 'Vaccination', deworming: 'Avmaskning', veterinary: 'Veterinär',
 };
 
-export function IconChip({ category, size = 'medium' }: { category: IconCategory; size?: IconChipSize }) {
+export type IconChipState = 'default' | 'pressed' | 'loading' | 'disabled' | 'success' | 'error';
+export function IconChip({ category, size = 'medium', state = 'default' }: { category: IconCategory; size?: IconChipSize; state?: IconChipState }) {
   const dimension = size === 'large' ? tokens.size.chipLg : tokens.size.chipMd;
   const iconSize = size === 'large' ? tokens.size.iconMd : tokens.size.iconSm;
   const color = categoryColors[category];
   const icon = categoryIcons[category];
   return (
-    <View accessibilityRole="image" accessibilityLabel={`${categoryLabels[category]}-ikon`} style={[styles.chip, { width: dimension, minHeight: dimension, backgroundColor: color.bg, borderRadius: tokens.radius.full }]}>
-      {icon === 'poop' ? <PoopIcon color={color.fg} size={iconSize} /> : icon === 'medical-outline' ? <PillIcon color={color.fg} size={iconSize} /> : <Ionicons name={icon} size={iconSize} color={color.fg} />}
+    <View accessibilityRole="image" accessibilityLabel={`${categoryLabels[category]}-ikon`} accessibilityState={{ disabled: state === 'disabled', busy: state === 'loading' }} style={[styles.chip, { width: dimension, minHeight: dimension, backgroundColor: color.bg, borderRadius: tokens.radius.full }, state === 'pressed' && styles.pressed, state === 'success' && styles.success, state === 'error' && styles.error, state === 'disabled' && styles.disabled]}>
+      {state === 'loading' ? <ActivityIndicator color={color.fg} /> : icon === 'poop' ? <PoopIcon color={color.fg} size={iconSize} /> : icon === 'medical-outline' ? <PillIcon color={color.fg} size={iconSize} /> : <Ionicons name={icon} size={iconSize} color={color.fg} />}
     </View>
   );
 }
 
-const styles = StyleSheet.create({ chip: { minWidth: tokens.size.chipMd, alignItems: 'center', justifyContent: 'center' } });
+const styles = StyleSheet.create({ chip: { minWidth: tokens.size.chipMd, alignItems: 'center', justifyContent: 'center' }, pressed: { opacity: tokens.opacity.pressed }, success: { borderWidth: tokens.size.stroke, borderColor: tokens.colors.success }, error: { borderWidth: tokens.size.stroke, borderColor: tokens.colors.danger }, disabled: { opacity: tokens.opacity.disabled } });

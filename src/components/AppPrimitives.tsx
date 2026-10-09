@@ -3,18 +3,20 @@ import { AccessibilityInfo, findNodeHandle, Keyboard, KeyboardAvoidingView, Moda
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useRef, useState } from 'react';
-import { theme, tokens } from '../theme/tokens';
+import { tokens } from '../theme/tokens';
 
-export function AppScreen({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
+export function AppScreen({ children, footer, showBrand = true }: { children: ReactNode; footer?: ReactNode; showBrand?: boolean }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.screenLayout}>
         <KeyboardAvoidingView style={styles.keyboardLayout} behavior="padding">
           <ScrollView style={styles.scrollArea} contentContainerStyle={styles.page} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled">
-            <View style={styles.brandMark} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-              <Text style={styles.brandMarkText}>T</Text>
-            </View>
-            <Text style={styles.brandName}>tassla</Text>
+            {showBrand ? <>
+              <View style={styles.brandMark} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                <Text style={styles.brandMarkText}>T</Text>
+              </View>
+              <Text style={styles.brandName}>tassla</Text>
+            </> : null}
             {children}
           </ScrollView>
         </KeyboardAvoidingView>
@@ -121,7 +123,7 @@ export function FormField({
           if (returnKeyType === 'done') Keyboard.dismiss();
         }}
         placeholder={placeholder}
-        placeholderTextColor={theme.colors.mutedText}
+        placeholderTextColor={tokens.colors.textSecondary}
         returnKeyType={returnKeyType}
         style={styles.input}
         textContentType={textContentType}
@@ -196,7 +198,7 @@ export function ActionFeedbackModal({ visible, message, onClose, onShown, autoDi
   if (!visible) return null;
   return <View style={styles.feedbackCard} accessibilityLiveRegion="polite">
     <Text ref={headingRef} accessible accessibilityRole="alert" style={styles.messageText}>{message}</Text>
-    <QuietButton title="Stäng status" onPress={onClose} />
+    <QuietButton title="Stäng" onPress={onClose} />
   </View>;
 }
 
@@ -214,7 +216,7 @@ export function DatePickerField({ label, value, onChangeText, disabled = false }
     <Text style={styles.fieldLabel}>{label}</Text>
     <View style={styles.datePickerRow}>
       <TextInput accessibilityLabel={`${label}, år-månad-dag`} editable={!disabled} keyboardType="numbers-and-punctuation"
-        onChangeText={onChangeText} placeholder="ÅÅÅÅ-MM-DD" placeholderTextColor={theme.colors.mutedText}
+        onChangeText={onChangeText} placeholder="ÅÅÅÅ-MM-DD" placeholderTextColor={tokens.colors.textSecondary}
         returnKeyType="done" style={styles.datePickerInput} value={value} />
       <Pressable accessibilityRole="button" accessibilityLabel={`Välj ${label.toLowerCase()} i kalender`} disabled={disabled}
         onPress={() => { const next = parseDateValue(value); if (next) setMonth(new Date(next.getFullYear(), next.getMonth(), 1)); setVisible(true); }} style={styles.pickerButton}>
@@ -226,7 +228,7 @@ export function DatePickerField({ label, value, onChangeText, disabled = false }
         <Text style={styles.modalTitle}>{label}</Text>
         <View style={styles.calendarHeader}><QuietButton title="Föregående" onPress={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} /><Text style={styles.calendarMonth}>{month.toLocaleDateString('sv-SE', { month: 'long', year: 'numeric' })}</Text><QuietButton title="Nästa" onPress={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} /></View>
         <View style={styles.calendarGrid}>{days.map((day, index) => day ? <Pressable key={`${day}-${index}`} accessibilityRole="button" accessibilityLabel={formatDateValue(day)} onPress={() => { onChangeText(formatDateValue(day)); setVisible(false); }} style={styles.calendarDay}><Text style={styles.calendarDayText}>{day.getDate()}</Text></Pressable> : <View key={`empty-${index}`} style={styles.calendarDay} />)}</View>
-        <TextInput accessibilityLabel="Manuellt datum, år-månad-dag" keyboardType="numbers-and-punctuation" onChangeText={onChangeText} placeholder="ÅÅÅÅ-MM-DD" placeholderTextColor={theme.colors.mutedText} style={styles.input} value={value} />
+        <TextInput accessibilityLabel="Manuellt datum, år-månad-dag" keyboardType="numbers-and-punctuation" onChangeText={onChangeText} placeholder="ÅÅÅÅ-MM-DD" placeholderTextColor={tokens.colors.textSecondary} style={styles.input} value={value} />
         <QuietButton title="Stäng kalender" onPress={() => setVisible(false)} />
       </View></View>
     </Modal>
@@ -244,7 +246,7 @@ export function TimePickerField({ label, value, onChangeText, disabled = false }
   return <View style={styles.datePickerField}>
     <Text style={styles.fieldLabel}>{label}</Text>
     <View style={styles.datePickerRow}><TextInput accessibilityLabel={`${label}, timmar och minuter`} editable={!disabled} keyboardType="numbers-and-punctuation" maxLength={5}
-      onChangeText={onChangeText} placeholder="09:00" placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.datePickerInput} value={value} />
+      onChangeText={onChangeText} placeholder="09:00" placeholderTextColor={tokens.colors.textSecondary} returnKeyType="done" style={styles.datePickerInput} value={value} />
       <Pressable accessibilityRole="button" accessibilityLabel={`Välj ${label.toLowerCase()} från tider`} disabled={disabled} onPress={() => setVisible(true)} style={styles.pickerButton}><Text style={styles.pickerButtonText}>Välj tid</Text></Pressable>
     </View>
     <Modal visible={visible} transparent animationType="slide" onRequestClose={() => setVisible(false)} accessibilityViewIsModal>
@@ -292,53 +294,53 @@ function calendarDays(month: Date): (Date | null)[] {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: theme.colors.background },
-  screenLayout: { flex: 1, width: '100%', maxWidth: 560, alignSelf: 'center' },
+  safeArea: { flex: 1, backgroundColor: tokens.colors.background },
+  screenLayout: { flex: 1, width: '100%', maxWidth: tokens.layout.contentMaxWidth, alignSelf: 'center' },
   keyboardLayout: { flex: 1 },
   scrollArea: { flex: 1 },
-  page: { flexGrow: 1, width: '100%', maxWidth: 560, alignSelf: 'center', paddingHorizontal: 24, paddingTop: 20, paddingBottom: 48 },
-  footer: { borderTopWidth: 1, borderTopColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  brandMark: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.accent, alignSelf: 'center' },
-  brandMarkText: { color: theme.colors.onAccent, fontSize: 24, fontWeight: '800' },
-  brandName: { color: theme.colors.accent, fontSize: 15, fontWeight: '800', letterSpacing: 1.4, textAlign: 'center', marginTop: 7 },
-  heading: { marginTop: 36, marginBottom: 24 },
-  title: { color: theme.colors.text, fontSize: 30, fontWeight: '800', lineHeight: 38, letterSpacing: -0.6 },
-  description: { color: theme.colors.mutedText, fontSize: 17, lineHeight: 25, marginTop: 12 },
-  fieldGroup: { marginBottom: 18 },
-  fieldLabel: { color: theme.colors.text, fontSize: 15, fontWeight: '700', marginBottom: 8 },
-  input: { minHeight: 56, paddingHorizontal: 16, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, fontSize: 17 },
-  button: { minHeight: tokens.size.buttonHeight, borderRadius: theme.radius.button, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.lg, backgroundColor: theme.colors.accent, marginTop: tokens.spacing.sm, shadowColor: theme.colors.text, shadowOpacity: 0.12, shadowRadius: tokens.spacing.sm, shadowOffset: { width: 0, height: tokens.size.progress }, elevation: tokens.spacing.xs },
+  page: { flexGrow: 1, width: '100%', maxWidth: tokens.layout.contentMaxWidth, alignSelf: 'center', paddingHorizontal: tokens.layout.pageInset, paddingTop: tokens.spacing.lg, paddingBottom: tokens.spacing.xxl },
+  footer: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  brandMark: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.md, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.primary, alignSelf: 'center' },
+  brandMarkText: { color: tokens.colors.onPrimary, ...tokens.typography.title },
+  brandName: { color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '800', letterSpacing: 1.4, textAlign: 'center', marginTop: tokens.spacing.sm },
+  heading: { marginTop: tokens.spacing.xxl, marginBottom: tokens.spacing.xl },
+  title: { color: tokens.colors.textPrimary, ...tokens.typography.title },
+  description: { color: tokens.colors.textSecondary, ...tokens.typography.body, marginTop: tokens.spacing.md },
+  fieldGroup: { marginBottom: tokens.spacing.lg },
+  fieldLabel: { color: tokens.colors.textPrimary, ...tokens.typography.caption, fontWeight: '700', marginBottom: tokens.spacing.sm },
+  input: { minHeight: tokens.size.buttonHeight, paddingHorizontal: tokens.spacing.lg, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body },
+  button: { minHeight: tokens.size.buttonHeight, borderRadius: tokens.radius.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.lg, backgroundColor: tokens.colors.primary, marginTop: tokens.spacing.sm, shadowColor: tokens.colors.textPrimary, shadowOpacity: tokens.opacity.shadow, shadowRadius: tokens.spacing.sm, shadowOffset: { width: 0, height: tokens.size.progress }, elevation: tokens.spacing.xs },
   buttonDisabled: { opacity: 0.55 },
-  buttonPressed: { backgroundColor: '#12543D', transform: [{ scale: 0.985 }] },
-  buttonReducedPressed: { backgroundColor: '#12543D', opacity: 0.9 },
-  buttonText: { color: theme.colors.onAccent, fontSize: 16, fontWeight: '800' },
-  quietButton: { minHeight: 48, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, marginTop: 8 },
+  buttonPressed: { backgroundColor: tokens.colors.primaryPressed, transform: [{ scale: 0.985 }] },
+  buttonReducedPressed: { backgroundColor: tokens.colors.primaryPressed, opacity: tokens.opacity.pressed },
+  buttonText: { color: tokens.colors.onPrimary, ...tokens.typography.label },
+  quietButton: { minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.md, marginTop: tokens.spacing.sm },
   quietButtonPressed: { opacity: 0.65 },
   quietButtonReducedPressed: { opacity: 0.7 },
-  quietButtonText: { color: theme.colors.accent, fontSize: 15, fontWeight: '700' },
-  messageCard: { padding: 16, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: '#EFE8DA', marginTop: 18 },
-  messageText: { color: theme.colors.text, fontSize: 15, lineHeight: 22 },
-  errorCard: { borderColor: '#D5A5A0', backgroundColor: '#F7EAE7' },
-  errorText: { color: theme.colors.error },
-  modalBackdrop: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#0008' },
-  modalCard: { maxHeight: '85%', padding: 20, borderRadius: theme.radius.card, backgroundColor: theme.colors.surface },
-  modalTitle: { color: theme.colors.text, fontSize: 20, fontWeight: '800', marginBottom: 12 },
+  quietButtonText: { color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '700' },
+  messageCard: { padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.warningSurface, marginTop: tokens.spacing.lg },
+  messageText: { color: tokens.colors.textPrimary, ...tokens.typography.caption },
+  errorCard: { borderColor: tokens.colors.dangerBorder, backgroundColor: tokens.colors.dangerSurface },
+  errorText: { color: tokens.colors.danger },
+  modalBackdrop: { flex: 1, justifyContent: 'center', padding: tokens.spacing.lg, backgroundColor: tokens.colors.overlay },
+  modalCard: { maxHeight: tokens.size.modalMaxHeight, padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface },
+  modalTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading, marginBottom: tokens.spacing.md },
   modalScroll: { flexShrink: 1 },
-  modalContent: { paddingBottom: 8 },
-  feedbackCard: { padding: 14, marginTop: 12, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: '#EAF3EC' },
-  datePickerField: { marginBottom: 18 },
-  datePickerRow: { minHeight: 54, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.button, backgroundColor: theme.colors.surface },
-  datePickerInput: { flex: 1, minHeight: 52, paddingHorizontal: 14, color: theme.colors.text, fontSize: 17 },
-  pickerButton: { minHeight: 52, paddingHorizontal: 13, justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: theme.colors.border },
-  pickerButtonText: { color: theme.colors.accent, fontSize: 13, fontWeight: '800' },
+  modalContent: { paddingBottom: tokens.spacing.sm },
+  feedbackCard: { padding: tokens.spacing.md, marginTop: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.successSurface },
+  datePickerField: { marginBottom: tokens.spacing.lg },
+  datePickerRow: { minHeight: tokens.size.touchMin + tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface },
+  datePickerInput: { flex: 1, minHeight: tokens.size.touchMin + tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, color: tokens.colors.textPrimary, ...tokens.typography.body },
+  pickerButton: { minHeight: tokens.size.touchMin + tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, justifyContent: 'center', borderLeftWidth: tokens.size.stroke, borderLeftColor: tokens.colors.border },
+  pickerButtonText: { color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '800' },
   calendarHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  calendarMonth: { color: theme.colors.text, fontSize: 16, fontWeight: '800', textTransform: 'capitalize' },
-  calendarGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 },
-  calendarDay: { width: '14.285%', minHeight: 42, alignItems: 'center', justifyContent: 'center' },
-  calendarDayText: { color: theme.colors.text, fontSize: 16, fontWeight: '700' },
+  calendarMonth: { color: tokens.colors.textPrimary, ...tokens.typography.label, textTransform: 'capitalize' },
+  calendarGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: tokens.spacing.md },
+  calendarDay: { width: '14.285%', minHeight: tokens.size.calendarDay, alignItems: 'center', justifyContent: 'center' },
+  calendarDayText: { color: tokens.colors.textPrimary, ...tokens.typography.label },
   timeModalBackdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: tokens.colors.overlay },
   timeModalKeyboard: { flex: 1, justifyContent: 'flex-end' },
-  timeModalCard: { width: '100%', maxHeight: '85%', padding: tokens.spacing.lg, gap: tokens.spacing.md, borderTopLeftRadius: tokens.radius.lg, borderTopRightRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  timeModalCard: { width: '100%', maxHeight: tokens.size.modalMaxHeight, padding: tokens.spacing.lg, gap: tokens.spacing.md, borderTopLeftRadius: tokens.radius.lg, borderTopRightRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   timeModalHandle: { width: tokens.spacing.xl + tokens.spacing.md, height: tokens.size.progress, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.border, alignSelf: 'center' },
   timeModalHeader: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   timeModalClose: { width: tokens.size.touchMin, height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
