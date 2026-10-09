@@ -1,4 +1,4 @@
-import { isAnalyticsEventType, type AnalyticsEventType, type SyntheticAnalyticsEvent } from './analytics-model.ts';
+import { isAnalyticsEventType, type AnalyticsEventType, type SyntheticAnalyticsEvent } from './analytics-model';
 
 type RpcResult = { data: unknown; error: unknown | null };
 export type AnalyticsRpc = (name: string, args?: Record<string, unknown>) => Promise<RpcResult>;
@@ -16,14 +16,19 @@ export function createAnalyticsService(rpc: AnalyticsRpc): AnalyticsService {
     async getConsent() {
       try {
         const result = await rpc('get_beta_metrics_consent');
-        if (result.error) return null;
+        if (result.error) {
+          consent = null;
+          return null;
+        }
         consent = result.data === true;
         return consent;
       } catch {
+        consent = null;
         return null;
       }
     },
     async setConsent(enabled) {
+      if (!enabled) consent = false;
       try {
         const result = await rpc('set_beta_metrics_consent', { p_enabled: enabled });
         if (result.error || result.data !== true) return false;

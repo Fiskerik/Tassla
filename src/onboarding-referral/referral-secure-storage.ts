@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { captureKennelJoinUrl, clearPendingReferral, readPendingReferral, savePendingReferral } from './referral-storage';
+export { normalizeKennelCode } from './referral-model';
 
 const storage = {
   getItemAsync: SecureStore.getItemAsync,
