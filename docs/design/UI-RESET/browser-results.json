@@ -1,0 +1,23 @@
+{
+  "passes": [
+    "Six screens at 360px; no document horizontal overflow",
+    "Six screens at 390px; no document horizontal overflow",
+    "Six screens at 430px; no document horizontal overflow",
+    "Date strip changes day and content",
+    "More log types expand",
+    "Quick add and confirmed undo",
+    "Edit sheet saves note and closes",
+    "Edit failed recovery remains inside sheet",
+    "Edit unsure recovery remains inside sheet",
+    "Training completion updates progress",
+    "Health filters, overdue plan and weight navigation",
+    "Article reader, return and category filter",
+    "Passport selection changes preview",
+    "Loading/empty/error rendering: empty",
+    "Loading/empty/error rendering: loading",
+    "Loading/empty/error rendering: error",
+    "Reduced motion preference and 140% text smoke rendering; no document overflow"
+  ],
+  "pageErrors": [],
+  "scope": "React Native Web rendering of production UI; native services stubbed, synthetic data; not device/backend certification"
+}

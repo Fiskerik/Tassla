@@ -1,9 +1,30 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { tokens } from '../../theme/tokens';
+import { MotionPressable } from './Motion';
+
 type Mode = 'Home' | 'Back' | 'Close' | 'Title';
 export function AppBar({ mode, title, onAction, actionLabel }: { mode: Mode; title: string; onAction?: () => void; actionLabel?: string }) {
-  const label = mode === 'Back' ? 'Tillbaka' : mode === 'Close' ? 'Stäng' : actionLabel ?? 'Notiser';
-  return <View style={styles.bar} accessibilityRole="header" accessibilityLabel={title}><View style={styles.side}>{mode === 'Home' ? <Text style={styles.brand}>Tassla</Text> : mode === 'Back' ? <Pressable accessibilityRole="button" accessibilityLabel="Tillbaka" onPress={onAction} style={styles.action}><Ionicons name="chevron-back" size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></Pressable> : mode === 'Close' ? <Pressable accessibilityRole="button" accessibilityLabel="Stäng" onPress={onAction} style={styles.action}><Ionicons name="close" size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></Pressable> : null}</View><Text accessibilityRole="header" style={styles.title}>{title}</Text><View style={[styles.side, styles.right]}>{mode !== 'Title' && mode === 'Home' && onAction ? <Pressable accessibilityRole="button" accessibilityLabel={actionLabel ?? label} onPress={onAction} style={styles.action}><Ionicons name="notifications-outline" size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></Pressable> : mode !== 'Home' && mode !== 'Title' && onAction ? <Pressable accessibilityRole="button" accessibilityLabel={actionLabel ?? label} onPress={onAction} style={styles.action}><Ionicons name="notifications-outline" size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></Pressable> : null}</View></View>;
+  const control = (icon: 'chevron-back' | 'close' | 'notifications-outline', label: string) => (
+    <MotionPressable accessibilityRole="button" accessibilityLabel={label} onPress={onAction} style={({ pressed }) => [styles.action, pressed && styles.pressed]}>
+      <Ionicons name={icon} size={tokens.size.iconMd} color={tokens.colors.textPrimary} />
+    </MotionPressable>
+  );
+  if (mode === 'Home') return <View style={styles.bar}>
+    <Text accessibilityRole="header" style={styles.brand}>Tassla</Text>
+    {onAction ? control('notifications-outline', actionLabel ?? 'Påminnelser') : null}
+  </View>;
+  return <View style={styles.bar}>
+    <View style={styles.side}>{mode === 'Back' ? control('chevron-back', 'Tillbaka') : null}</View>
+    <Text accessibilityRole="header" style={styles.title}>{title}</Text>
+    <View style={styles.side}>{mode === 'Close' ? control('close', 'Stäng') : null}</View>
+  </View>;
 }
-const styles = StyleSheet.create({ bar: { alignSelf: 'stretch', minHeight: tokens.size.navHeight, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm, backgroundColor: tokens.colors.background }, side: { flex: 1, minHeight: tokens.size.touchMin, justifyContent: 'center' }, right: { alignItems: 'flex-end' }, action: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' }, brand: { ...tokens.typography.title, color: tokens.colors.textPrimary }, title: { ...tokens.typography.heading, color: tokens.colors.textPrimary, textAlign: 'center', flexShrink: 1 } });
+const styles = StyleSheet.create({
+  bar: { minHeight: tokens.size.navHeight, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: tokens.spacing.md },
+  side: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin },
+  action: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center' },
+  brand: { ...tokens.typography.title, color: tokens.colors.textPrimary },
+  title: { ...tokens.typography.label, color: tokens.colors.textPrimary, textAlign: 'center', flex: 1 },
+  pressed: { backgroundColor: tokens.colors.selectedSurface },
+});

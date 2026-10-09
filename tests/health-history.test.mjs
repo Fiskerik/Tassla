@@ -439,7 +439,8 @@ test('actual workspace handler suppresses a pending mutation result after its li
 
 test('health history editor remounts on saved-record snapshot changes and resets on conflict resolution', async () => {
   const healthScreenSource = await readFile(new URL('../src/features/health/HealthScreen.tsx', import.meta.url), 'utf8');
-  assert.match(healthScreenSource, /<HealthHistoryScreen key=\{JSON\.stringify\(historyRecords\?\.map\(\(\{ id, event_type, occurred_on, description \}\) => \[id, event_type, occurred_on, description\]\)\)\}/);
+  assert.match(healthScreenSource, /const historyEditorKey = JSON.stringify\(\[editingId, type, props.historyRecords/);
+  assert.match(healthScreenSource, /<HealthHistoryScreen key=\{historyEditorKey\}/);
   assert.match(historyScreenSource, /function resolveConflict\(\) \{\s*resetForm\(\);\s*onResolveConflict\?\.\(\);\s*\}/);
   assert.match(historyScreenSource, /onResolveConflict\?\.\(\)/);
   assert.match(historyScreenSource, /title="Använd aktuell historik och börja om"/);

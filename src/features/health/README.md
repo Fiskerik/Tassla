@@ -9,3 +9,7 @@ Datum för vikt och utförd historik måste vara ett verkligt lokalt `ÅÅÅÅ-M
 Vid osäker sparstatus kontrolleras samma stabila id och avsedda fält före ett återförsök. Vid ändrad post visas den aktuella versionen och ägaren måste uttryckligen bekräfta den innan en ny ändring kan starta. Senare ändringar skrivs inte över av ett gammalt återförsök. Resultat från tidigare hund eller konto ignoreras. Anteckningar skrivs inte till loggar.
 
 Kör `pnpm check` för typkontroll, lint och lokala tester och `pnpm bundle:ios` för iOS-exporten. Dessa kontroller verifierar inte fysisk tangentbords-/skärmläsarupplevelse eller verklig Supabase/RLS-isolering. Tvåsyntetkontoverifiering och native UX redovisas separat när de faktiskt har körts.
+
+## UI-RESET, 2026-10-09
+
+`HealthScreen` är nu översikt med filter för vaccination/veterinär, förfallna/kommande planer och genomförda händelser. `WeightScreen` innehåller det tidigare viktflödet med oförändrade callbacks. `HealthHistoryScreen` används som editor i en sheet, initierad med vald post/typ; historiklistan ligger enbart i översikten. En ändrad sparad snapshot nycklar om editorn, och lyckad spara/radera stänger sheeten. Fel, osäker sparstatus och konfliktåterhämtning finns inne i editorn. Inga datakontrakt eller vårdråd har ändrats.

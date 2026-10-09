@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Image, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DatePickerField, InfoModal, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { Toast } from '../../components/ui/Toast';
@@ -11,12 +11,14 @@ import {
 } from '../../data/workspace-data';
 import { localDate } from '../onboarding/dog';
 import { tokens } from '../../theme/tokens';
-import { IconChip } from '../../components/ui/IconChip';
+import { Button } from '../../components/ui';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
 export function HealthHistoryScreen({
   records,
+  initialEditingId = null,
+  initialType = 'vaccination',
   loadState = 'loading',
   busy = false,
   pending = false,
@@ -29,6 +31,8 @@ export function HealthHistoryScreen({
   onDelete,
 }: {
   records?: readonly HealthHistoryRecord[];
+  initialEditingId?: string | null;
+  initialType?: HealthHistoryType;
   loadState?: LoadState;
   busy?: boolean;
   pending?: boolean;
@@ -40,10 +44,10 @@ export function HealthHistoryScreen({
   onSave?: (id: string | null, type: HealthHistoryType, date: string, note: string) => Promise<boolean>;
   onDelete?: (id: string) => Promise<boolean>;
 }) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [type, setType] = useState<HealthHistoryType>('vaccination');
-  const [date, setDate] = useState(localDate());
-  const [note, setNote] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(initialEditingId);
+  const [type, setType] = useState<HealthHistoryType>(records?.find((row) => row.id === initialEditingId)?.event_type ?? initialType);
+  const [date, setDate] = useState(records?.find((row) => row.id === initialEditingId)?.occurred_on ?? localDate());
+  const [note, setNote] = useState(records?.find((row) => row.id === initialEditingId)?.description ?? '');
   const [formError, setFormError] = useState('');
   const [infoVisible, setInfoVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -72,14 +76,6 @@ export function HealthHistoryScreen({
     setNote('');
     setFormError('');
     Keyboard.dismiss();
-  }
-
-  function edit(record: HealthHistoryRecord) {
-    setEditingId(record.id);
-    setType(record.event_type);
-    setDate(record.occurred_on);
-    setNote(record.description ?? '');
-    setFormError('');
   }
 
   async function save() {
@@ -114,15 +110,6 @@ export function HealthHistoryScreen({
 
   return (
     <View style={styles.section}>
-      <View style={styles.sectionHeading}>
-        <View style={styles.headingIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          <IconChip category="vaccination" size="large" />
-        </View>
-        <View style={styles.headingCopy}>
-          <Text style={styles.sectionTitle} accessibilityRole="header">Vaccinationer och veterinärbesök</Text>
-          <Text style={styles.sectionBody}>Spara sådant som redan har hänt.</Text>
-        </View>
-      </View>
       <View style={styles.infoRow}>
         <Text style={styles.infoHint}>Om hälsans historik</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Visa information om hälsans historik" onPress={() => setInfoVisible(true)} style={styles.infoButton}>
@@ -177,29 +164,7 @@ export function HealthHistoryScreen({
           {editingRecord && <QuietButton title="Avbryt rättning" disabled={blocked} onPress={resetForm} />}
         </View>
 
-        <Text style={styles.historyTitle} accessibilityRole="header">Sparad historik</Text>
-        {rows.length === 0 && <View style={styles.emptyCard}>
-          <Image source={require('../../../assets/images/dog-resting.png')} style={styles.emptyImage}
-            accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-          <View style={styles.emptyCopy}>
-            <Text style={styles.emptyTitle}>Ingen historik ännu</Text>
-            <Text style={styles.emptyBody}>När något har hänt kan du enkelt lägga till det här.</Text>
-          </View>
-        </View>}
-        {rows.map((record) => <View key={record.id} style={styles.recordCard}>
-          <View style={styles.recordHeading}>
-            <View style={styles.recordType}>
-              <IconChip category={record.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} />
-              <Text style={styles.recordTitle}>{typeLabel(record.event_type)}</Text>
-            </View>
-          </View>
-          <Text style={styles.recordDate}>{record.occurred_on}</Text>
-          {record.description ? <Text style={styles.recordNote}>{record.description}</Text> : null}
-          <View style={styles.actions}>
-            <QuietButton title="Ändra" disabled={blocked} onPress={() => edit(record)} />
-            <QuietButton title="Radera" disabled={blocked} onPress={() => confirmDelete(record)} />
-          </View>
-        </View>)}
+        {editingRecord && <Button variant="destructive" label="Radera händelse" accessibilityLabel="Radera händelse" disabled={blocked} onPress={() => confirmDelete(editingRecord)} />}
       </>}
     </View>
   );
@@ -221,11 +186,6 @@ function typeLabel(type: HealthHistoryType): string {
 
 const styles = StyleSheet.create({
   section: { marginTop: tokens.layout.sectionGap },
-  sectionHeading: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginBottom: tokens.layout.headingGap },
-  headingIcon: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center' },
-  headingCopy: { flex: 1 },
-  sectionTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading },
-  sectionBody: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
   infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: tokens.spacing.md, marginBottom: tokens.spacing.xs },
   infoHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption },
   infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },
@@ -241,24 +201,10 @@ const styles = StyleSheet.create({
   typeChoiceTextSelected: { color: tokens.colors.primary },
   field: { marginBottom: tokens.spacing.md },
   label: { color: tokens.colors.textPrimary, ...tokens.typography.caption, fontWeight: '700', marginBottom: tokens.spacing.xs },
-  dateInputWrap: { minHeight: tokens.size.touchMin + tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
-  dateInput: { flex: 1, color: tokens.colors.textPrimary, ...tokens.typography.body, paddingVertical: tokens.spacing.sm },
   noteInput: { minHeight: tokens.size.touchMin * 2, paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body, textAlignVertical: 'top' },
   characterHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption, textAlign: 'right', marginTop: tokens.spacing.xs },
-  historyTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading, marginTop: tokens.layout.sectionGap },
   conflictCard: { marginTop: tokens.layout.listGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.warning, backgroundColor: tokens.colors.warningSurface },
   conflictTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
   conflictBody: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.md },
-  emptyCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.layout.listGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.selectedSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
-  emptyImage: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full },
-  emptyCopy: { flex: 1 },
-  emptyTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
-  emptyBody: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
-  recordCard: { marginTop: tokens.layout.listGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
-  recordHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  recordType: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  recordTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
-  recordDate: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
   recordNote: { color: tokens.colors.textPrimary, ...tokens.typography.caption, marginTop: tokens.spacing.sm },
-  actions: { flexDirection: 'row', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm },
 });

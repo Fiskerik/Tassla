@@ -128,7 +128,7 @@ test('actual Knowledge source handler opens only user-requested HTTPS and report
 });
 
 test('actual screen states separate loading, error with retry, and ready-empty', () => {
-  assert.match(knowledgeSource, /contentState === 'loading'[\s\S]*?Hämtar publicerade guider/);
+  assert.match(knowledgeSource, /contentState === 'loading'[\s\S]*?<Skeleton/);
   assert.match(knowledgeSource, /contentState === 'error'[\s\S]*?<PrimaryButton title="Försök igen" onPress=\{onRetry\}/);
   assert.match(knowledgeSource, /contentState === 'ready' && items\.length === 0/);
 });
@@ -147,7 +147,7 @@ test('guide-body helper renders supported headings and lists as plain text and p
   assert.doesNotMatch(preview, /[#*-]/);
   assert.ok(Array.from(guideBody.getGuidePreviewText('😀'.repeat(40), 12)).length <= 12);
   assert.match(knowledgeSource, /parseGuideBody\(selectedItem\.body\)\.map/);
-  assert.match(workspaceSource, /getGuidePreviewText\(item\.body\)/);
+  assert.match(knowledgeSource, /getGuidePreviewText\(visibleItems\[0\]\.body\)/);
 });
 
 test('Home opens the exact fetched version and Knowledge resolves that exact row without a reload', () => {
@@ -168,9 +168,9 @@ test('Home opens the exact fetched version and Knowledge resolves that exact row
 
   const selectionExpression = knowledgeSource.match(/const selectedItem = ([^;]+);/)?.[1];
   assert.ok(selectionExpression, 'expected Knowledge exact version selection');
-  const selected = new Function('items', 'focusedContentId', `return ${selectionExpression};`)([selectedVersion], focus.contentId);
+  const selected = new Function('items', 'openedId', `return ${selectionExpression};`)([selectedVersion], focus.contentId);
   assert.equal(selected, selectedVersion);
-  assert.match(knowledgeSource, /onPress=\{\(\) => \{ setSourceMessage\(''\); onSelectContent\(item\.id\); \}\}/);
+  assert.match(knowledgeSource, /setOpenedId\(id\); setSourceMessage\(''\); onSelectContent\(id\)/);
 });
 
 function contentRow({ slug, contentType, minAge, versionId, sourceUrls = [], contentId = versionId.replace(/^62/, '61') }) {

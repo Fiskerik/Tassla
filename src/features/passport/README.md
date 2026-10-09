@@ -7,3 +7,5 @@
 `passport-export.ts` runs only after the owner's explicit action. It uses Expo Print to create a local PDF, moves it to a Tassla-prefixed file directly in app cache, checks dog/account lifetime after each async stage and immediately before opening the native share sheet, and deletes its exact generated files on every exit. Startup cleanup scans only direct app-cache files with the Tassla prefix and skips active exports. A resolved share promise is reported only as “Delningsdialogen har stängts”; it does not establish delivery. Real device PDF rendering and native sharing remain NOT TESTABLE by local typecheck/lint.
 
 Installed Expo versions: `expo-print ~57.0.2`, `expo-sharing ~57.0.22`, and `expo-file-system ~57.0.7`. Run `pnpm check` for typecheck, lint, and tests.
+
+UI-RESET: förhandsvisningen är huvudvy och delningsval öppnas med Välj vad som delas i en sheet. Dela som PDF använder samma snapshot, spärrar och native-export som tidigare. Stäng finns i höger appbar. Saknat hundfoto visas med tass, inte med ett påstått foto. Nya foder-/medicin-/allergifält eller delningslänkar införs inte.

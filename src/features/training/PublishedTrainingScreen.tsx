@@ -1,177 +1,75 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
-import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
-import { AppBar, ChecklistItem, HeroCard, Progress, SectionHeader } from '../../components/ui';
+import { AppBar, BottomSheet, Button, HeroCard, ListRow, Progress, SectionHeader, Tabs, Toast } from '../../components/ui';
 import type { PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
 import { tokens } from '../../theme/tokens';
 
-export function PublishedTrainingScreen({
-  programs,
-  paused,
-  busyStepKey,
-  error,
-  onCompleteStep,
-  onContinue,
-  onResetProgram,
-  onRetry,
-}: {
-  programs: readonly PublishedTrainingProgram[];
-  paused: readonly PausedTrainingProgress[];
-  busyStepKey: string | null;
-  error: string;
-  onCompleteStep: (program: PublishedTrainingProgram, stepId: string) => Promise<boolean>;
-  onContinue: () => void;
-  onResetProgram: (program: PublishedTrainingProgram) => void;
-  onRetry: () => void;
+export function PublishedTrainingScreen({ programs, paused, busyStepKey, error, onCompleteStep, onContinue, onResetProgram, onRetry }: {
+  programs: readonly PublishedTrainingProgram[]; paused: readonly PausedTrainingProgress[]; busyStepKey: string | null; error: string;
+  onCompleteStep: (program: PublishedTrainingProgram, stepId: string) => Promise<boolean>; onContinue: () => void;
+  onResetProgram: (program: PublishedTrainingProgram) => void; onRetry: () => void;
 }) {
-  const [openProgramId, setOpenProgramId] = useState<string | null>(null);
-  const [acknowledged, setAcknowledged] = useState<{ programId: string; stepId: string } | null>(null);
+  const [tab, setTab] = useState('Valpprogram');
+  const [programId, setProgramId] = useState<string | null>(null);
+  const [selection, setSelection] = useState<{ programId: string; stepId: string } | null>(null);
+  const [saved, setSaved] = useState(false);
   const pending = useRef(false);
+  const active = programs.find((program) => program.id === programId) ?? programs[0];
+  const selectedProgram = programs.find((program) => program.id === selection?.programId);
+  const selectedStep = selectedProgram?.steps.find((step) => step.id === selection?.stepId);
+  const nextStep = selectedProgram?.steps.find((step) => !selectedProgram.completedStepIds.includes(step.id));
+  useEffect(() => { if (!saved) return; const timer = setTimeout(() => setSaved(false), 2500); return () => clearTimeout(timer); }, [saved]);
 
-  async function complete(program: PublishedTrainingProgram, stepId: string) {
-    if (pending.current || busyStepKey || acknowledged) return;
+  async function complete() {
+    if (pending.current || busyStepKey || !selectedProgram || !selectedStep) return;
     pending.current = true;
     try {
-      if (await onCompleteStep(program, stepId)) setAcknowledged({ programId: program.id, stepId });
-    } finally {
-      pending.current = false;
-    }
+      if (await onCompleteStep(selectedProgram, selectedStep.id)) {
+        setSaved(true); setSelection(null); onContinue();
+      }
+    } finally { pending.current = false; }
   }
-
-  function continueAfterSave() {
-    if (!acknowledged) return;
-    setAcknowledged(null);
-    onContinue();
+  function rows(program: PublishedTrainingProgram) {
+    return <View style={styles.rows}>{program.steps.map((step) => <ListRow key={step.id} category="training" title={step.title}
+      complete={program.completedStepIds.includes(step.id)} onPress={() => setSelection({ programId: program.id, stepId: step.id })} />)}</View>;
   }
-
-  return (
-    <View>
-      <AppBar mode="Title" title="Träning" />
-      <HeroCard title="Små steg, lugna stunder" meta="Bygg progression med frivillighet och belöning." />
-      <MessageCard>Allmän träningsvägledning. Anpassa efter din hund. Du kan alltid pausa eller gå tillbaka. Registrering visar vad du markerat, inte vad hunden behärskar.</MessageCard>
-      {error ? <>
-        <MessageCard tone="error">{error}</MessageCard>
-        <PrimaryButton title="Försök igen" onPress={onRetry} />
+  return <View>
+    <AppBar mode="Title" title="Träning" />
+    <Tabs items={['Valpprogram', 'Alla övningar', 'Framsteg']} active={tab} onChange={setTab} />
+    {error ? <Toast tone="error" message={error} onRetry={onRetry} /> : null}
+    {saved ? <Toast tone="success" confirmed message="Övningen är genomförd" /> : null}
+    {paused.map((item) => <Text key={item.versionId} style={styles.note}>Ett tidigare program är pausat. Dina {item.completedCount} genomförda steg finns kvar.</Text>)}
+    {programs.length === 0 ? <><HeroCard title="Träning i er takt" meta="Här samlas övningarna för din hund." /><Text style={styles.note}>Fler program kommer när de är färdiga att använda.</Text></> : null}
+    {tab === 'Valpprogram' && active ? <>
+      <HeroCard title={active.title} meta="Ett steg i taget">
+        <View style={styles.progress}><Progress light value={percentage(active)} label={`${active.completedStepIds.length} av ${active.steps.length} genomförda`} /></View>
+      </HeroCard>
+      <SectionHeader title="Övningar" />
+      {rows(active)}
+      <Button variant="tertiary" label="Om programmet" accessibilityLabel="Läs om programmet och dess källor" onPress={() => setSelection({ programId: active.id, stepId: '' })} />
+      {programs.length > 1 ? <><SectionHeader title="Fler program" />{programs.filter((program) => program.id !== active.id).map((program) => <ListRow key={program.id} category="training" title={program.title} onPress={() => setProgramId(program.id)} />)}</> : null}
+    </> : null}
+    {tab === 'Alla övningar' ? programs.map((program) => <View key={program.id}><SectionHeader title={program.title} />{rows(program)}</View>) : null}
+    {tab === 'Framsteg' ? programs.map((program) => <View key={program.id} style={styles.progressCard}>
+      <Text style={styles.heading}>{program.title}</Text><Progress value={percentage(program)} label={`${program.completedStepIds.length} av ${program.steps.length} genomförda`} />
+      {program.completedStepIds.length ? <Button variant="destructive" label="Börja om" accessibilityLabel={`Börja om med ${program.title}`} disabled={Boolean(busyStepKey)} onPress={() => Alert.alert('Börja om?', `Dina markeringar i ”${program.title}” tas bort.`, [{ text: 'Avbryt', style: 'cancel' }, { text: 'Börja om', style: 'destructive', onPress: () => onResetProgram(program) }])} /> : null}
+    </View>) : null}
+    <BottomSheet visible={Boolean(selectedProgram)} title={selectedStep ? 'Övning' : 'Om programmet'} onRequestClose={() => { if (!busyStepKey) setSelection(null); }}>
+      <Text style={styles.heading}>{selectedStep?.title ?? selectedProgram?.title}</Text>
+      <Text style={styles.body}>{selectedStep?.instruction ?? selectedProgram?.body}</Text>
+      <Text style={styles.note}>Anpassa efter din hund och pausa när det behövs.</Text>
+      {!selectedStep ? <><SectionHeader title="Källor" />{selectedProgram?.sources.map((source) => <Text key={source} style={styles.note}>{source}</Text>)}</> : null}
+      {error ? <Toast tone="error" message={error} onRetry={onRetry} /> : null}
+      {selectedStep && selectedProgram?.completedStepIds.includes(selectedStep.id) ? <Text style={styles.note}>Genomförd. Ni kan gärna öva igen.</Text> : selectedStep ? <>
+        {nextStep?.id !== selectedStep.id ? <Text style={styles.note}>Börja med {nextStep?.title} innan du markerar den här övningen.</Text> : null}
+        <Button label="Markera som genomförd" accessibilityLabel="Markera övningen som genomförd" loading={Boolean(busyStepKey)} disabled={Boolean(busyStepKey) || nextStep?.id !== selectedStep.id} onPress={() => { void complete(); }} />
       </> : null}
-      {paused.map((item) => (
-        <MessageCard key={item.versionId} tone="error">
-          En tidigare programversion har {item.completedCount} registrerade steg men är pausad. Historiken har inte flyttats eller raderats.
-        </MessageCard>
-      ))}
-      {!error && programs.length === 0 && paused.length === 0 && (
-        <MessageCard>Det finns inga publicerade träningsprogram som passar just nu. Fler granskade program visas här när de publiceras.</MessageCard>
-      )}
-      {programs.map((program) => {
-        const isOpen = openProgramId === program.id;
-        const completed = new Set(program.completedStepIds);
-        const nextStep = program.steps.find((step) => !completed.has(step.id));
-        const allComplete = program.steps.length > 0 && !nextStep;
-        const waiting = acknowledged?.programId === program.id;
-        return (
-          <View key={program.id} style={styles.programCard}>
-            <View style={styles.focusCard}>
-              <Text style={styles.focusEyebrow}>VECKANS FOKUS</Text>
-              <Text style={styles.programTitle} accessibilityRole="header">{program.title}</Text>
-              <Text style={styles.focusBody}>{program.body}</Text>
-            </View>
-            {program.sources.length > 0 && <View style={styles.sources}>
-              <Text style={styles.sourceHeading}>Källor</Text>
-              {program.sources.map((source, index) => <Text key={`${index}-${source}`} style={styles.sourceText}>{source}</Text>)}
-            </View>}
-            <View style={styles.progressGroup}>
-              <Text style={styles.progressHeading}>STEG</Text>
-              <Progress value={program.steps.length ? completed.size / program.steps.length * 100 : 0} label={`${completed.size} av ${program.steps.length} steg registrerade`} />
-            </View>
-            {allComplete && <MessageCard>Alla steg är registrerade. Det betyder inte att hunden är färdigtränad. Du kan läsa eller repetera programmet.</MessageCard>}
-            <QuietButton title={isOpen ? 'Dölj övningar' : 'Visa övningar'} onPress={() => setOpenProgramId(isOpen ? null : program.id)} />
-            {isOpen && <View style={styles.details}>
-              <SectionHeader title="Veckans övningar" />
-              {program.steps.length === 0 && <MessageCard>Programmet har inga publicerade steg ännu.</MessageCard>}
-              {program.steps.map((step, index) => {
-                const isComplete = completed.has(step.id);
-                const isCurrent = nextStep?.id === step.id;
-                return (
-                  <View key={step.id} style={[styles.stepCard, isComplete && styles.completedStep]}>
-                    <Text style={styles.stepNumber}>Steg {index + 1}</Text>
-                    <ChecklistItem
-                      label={step.title}
-                      checked={isComplete}
-                      disabled={!isCurrent || Boolean(busyStepKey) || Boolean(waiting)}
-                      onPress={() => { void complete(program, step.id); }}
-                    />
-                    <Text style={styles.body}>{step.instruction}</Text>
-                    {busyStepKey === `${program.id}:${step.id}` && <Text style={styles.saving}>Sparar…</Text>}
-                  </View>
-                );
-              })}
-              {waiting && <View>
-                <MessageCard>Steget är registrerat på ditt konto. Registreringen visar inte att hunden behärskar beteendet.</MessageCard>
-                <PrimaryButton title={nextStep ? 'Fortsätt till nästa steg' : 'Visa avslutatläge'} onPress={continueAfterSave} />
-              </View>}
-              <QuietButton title={busyStepKey === `${program.id}:reset` ? 'Rensar…' : 'Rensa registrerade steg'} disabled={Boolean(busyStepKey)} onPress={() => confirmReset(program, (selected) => { onResetProgram(selected); setAcknowledged(null); })} />
-            </View>}
-          </View>
-        );
-      })}
-    </View>
-  );
+    </BottomSheet>
+  </View>;
 }
-
-function confirmReset(program: PublishedTrainingProgram, onReset: (program: PublishedTrainingProgram) => void) {
-  Alert.alert('Rensa registrerade steg?', `Registreringarna för ”${program.title}” tas bort från ditt konto.`, [
-    { text: 'Avbryt', style: 'cancel' },
-    { text: 'Rensa', style: 'destructive', onPress: () => onReset(program) },
-  ]);
-}
-
+function percentage(program: PublishedTrainingProgram) { return program.steps.length ? program.completedStepIds.length / program.steps.length * 100 : 0; }
 const styles = StyleSheet.create({
-  programCard: {
-    alignSelf: 'stretch',
-    borderWidth: tokens.size.stroke,
-    borderColor: tokens.colors.border,
-    borderRadius: tokens.radius.lg,
-    backgroundColor: tokens.colors.surface,
-    padding: tokens.layout.cardPadding,
-    marginTop: tokens.layout.sectionGap,
-  },
-  focusCard: {
-    alignSelf: 'stretch',
-    backgroundColor: tokens.colors.primaryPressed,
-    borderRadius: tokens.radius.md,
-    padding: tokens.spacing.md,
-    marginBottom: tokens.spacing.md,
-  },
-  focusEyebrow: { ...tokens.typography.caption, color: tokens.colors.successSurface, fontWeight: '700', marginBottom: tokens.spacing.xs },
-  programTitle: { ...tokens.typography.heading, color: tokens.colors.onPrimary },
-  focusBody: { ...tokens.typography.body, color: tokens.colors.onPrimary, marginTop: tokens.spacing.sm },
-  progressGroup: {
-    alignSelf: 'stretch',
-    borderRadius: tokens.radius.md,
-    backgroundColor: tokens.colors.selectedSurface,
-    padding: tokens.spacing.md,
-    marginTop: tokens.spacing.md,
-    marginBottom: tokens.spacing.md,
-  },
-  progressHeading: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700', marginBottom: tokens.spacing.sm },
-  details: { marginTop: tokens.spacing.md, gap: tokens.spacing.sm },
-  stepCard: {
-    alignSelf: 'stretch',
-    borderRadius: tokens.radius.md,
-    borderWidth: tokens.size.stroke,
-    borderColor: tokens.colors.border,
-    backgroundColor: tokens.colors.surface,
-    padding: tokens.spacing.md,
-  },
-  completedStep: { borderColor: tokens.colors.success, backgroundColor: tokens.colors.successSurface },
-  stepNumber: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
-  body: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginTop: tokens.spacing.sm },
-  saving: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
-  sources: {
-    borderTopWidth: tokens.size.stroke,
-    borderTopColor: tokens.colors.border,
-    paddingTop: tokens.spacing.md,
-    marginTop: tokens.spacing.md,
-  },
-  sourceHeading: { ...tokens.typography.caption, color: tokens.colors.textSecondary, fontWeight: '700' },
-  sourceText: { ...tokens.typography.caption, color: tokens.colors.primary, marginTop: tokens.spacing.xs },
+  rows: { gap: tokens.spacing.xs }, progress: { marginTop: tokens.spacing.sm },
+  progressCard: { backgroundColor: tokens.colors.surface, borderRadius: tokens.radius.md, padding: tokens.spacing.lg, gap: tokens.spacing.md, marginBottom: tokens.spacing.md },
+  heading: { ...tokens.typography.heading, color: tokens.colors.textPrimary }, body: { ...tokens.typography.body, color: tokens.colors.textPrimary }, note: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginVertical: tokens.spacing.md },
 });

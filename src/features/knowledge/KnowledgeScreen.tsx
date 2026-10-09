@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Linking, StyleSheet, Text, View } from 'react-native';
+import { Image, Linking, StyleSheet, Text, View } from 'react-native';
 import { useFonts } from 'expo-font';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { HomeContent } from '../../data/app-data';
 import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
-import { AppBar, Card, InfoBanner, SectionHeader } from '../../components/ui';
+import { AppBar, Button, Skeleton, Tabs } from '../../components/ui';
 import { tokens } from '../../theme/tokens';
+import { MotionPressable } from '../../components/ui/Motion';
 import { getSafeContentSourceUrl } from './source-links';
-import { parseGuideBody } from './guide-body';
+import { getGuidePreviewText, parseGuideBody } from './guide-body';
 
 type ContentState = 'loading' | 'ready' | 'error';
 
@@ -28,7 +29,11 @@ export function KnowledgeScreen({
 }) {
   const [iconsLoaded] = useFonts(Ionicons.font);
   const [sourceMessage, setSourceMessage] = useState('');
-  const selectedItem = items.find((item) => item.id === focusedContentId) ?? items[0] ?? null;
+  const [openedId, setOpenedId] = useState<string | null>(focusedContentId);
+  const [tab, setTab] = useState('För dig');
+  const selectedItem = items.find((item) => item.id === openedId) ?? null;
+  const visibleItems = items.filter((item) => tab === 'För dig' || (tab === 'Checklistor' ? item.contentType === 'checklist' : item.contentType !== 'checklist'));
+  function openArticle(id: string) { setOpenedId(id); setSourceMessage(''); onSelectContent(id); }
 
   async function openSource(source: string) {
     const url = getSafeContentSourceUrl(source);
@@ -43,42 +48,29 @@ export function KnowledgeScreen({
 
   return (
     <View>
-      <AppBar mode="Back" title="Kunskap" onAction={onBack} />
-      <InfoBanner>Vardagen med hund, ett ämne i taget.</InfoBanner>
-      {contentState === 'loading' && <MessageCard>Hämtar publicerade guider…</MessageCard>}
+      <AppBar mode="Back" title={selectedItem ? "Läsning" : "Kunskap"} onAction={selectedItem ? () => setOpenedId(null) : onBack} />
+      {!selectedItem && <Tabs items={["För dig", "Artiklar", "Checklistor"]} active={tab} onChange={setTab} />}
+      {contentState === 'loading' && <Skeleton shape="card" lines={4} />}
       {contentState === 'error' && <>
-        <MessageCard tone="error">Guiderna kunde inte hämtas. Vi visar inget tills anslutningen fungerar igen.</MessageCard>
+        <MessageCard tone="error">Guiderna kunde inte hämtas. Försök igen.</MessageCard>
         <PrimaryButton title="Försök igen" onPress={onRetry} />
       </>}
       {contentState === 'ready' && items.length === 0 && <MessageCard>
-        Det finns inga publicerade guider som passar just nu. Nya guider visas här när de är klara.
+        Här kommer guider för din hund. Titta gärna in igen.
       </MessageCard>}
       {contentState === 'ready' && items.length > 0 && <>
-        <View style={styles.guideList}>
-          <SectionHeader title="Ämnen att utforska" />
-          {items.map((item) => {
-            const selected = selectedItem?.id === item.id;
-            return <Card
-              key={item.id}
-              selected={selected}
-              accessibilityLabel={`${item.title}, version ${item.version}`}
-              onPress={() => { setSourceMessage(''); onSelectContent(item.id); }}>
-              <View style={styles.topicIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                {iconsLoaded && <Ionicons name={item.contentType === 'checklist' ? 'checkbox-outline' : 'book-outline'} size={tokens.size.iconSm} color={tokens.colors.primary} />}
-              </View>
-              <View style={styles.guideCopy}>
-                <Text style={styles.guideType}>{contentTypeLabel(item.contentType)}</Text>
-                <Text style={styles.guideTitle}>{item.title}</Text>
-              </View>
-              {selected && <Text style={styles.selectedLabel}>Vald</Text>}
-            </Card>;
-          })}
-        </View>
+        {!selectedItem && <View style={styles.guideList}>
+          {visibleItems.length === 0 ? <Text style={styles.sourceText}>Inga checklistor här ännu.</Text> : null}
+          {visibleItems[0] ? <MotionPressable accessibilityRole="button" accessibilityLabel={`Läs ${visibleItems[0].title}`} onPress={() => openArticle(visibleItems[0].id)} style={styles.featured}>
+            <Image source={require('../../../assets/images/dog-resting.png')} style={styles.featuredImage} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+            <View style={styles.cardCopy}><Text style={styles.guideTitle}>{visibleItems[0].title}</Text><Text style={styles.sourceText} numberOfLines={2}>{getGuidePreviewText(visibleItems[0].body)}</Text><Text style={styles.readTime}>{readingMinutes(visibleItems[0].body)} min läsning</Text></View>
+          </MotionPressable> : null}
+          <View style={styles.articleGrid}>{visibleItems.slice(1).map((item, index) => <MotionPressable key={item.id} accessibilityRole="button" accessibilityLabel={`Läs ${item.title}`} onPress={() => openArticle(item.id)} style={styles.smallCard}>
+            <Image source={index % 2 ? require('../../../assets/images/dog-resting.png') : require('../../../assets/images/dog-welcome.png')} style={styles.smallImage} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+            <View style={styles.cardCopy}><Text style={styles.guideTitle}>{item.title}</Text><Text style={styles.readTime}>{readingMinutes(item.body)} min läsning</Text></View>
+          </MotionPressable>)}</View>
+        </View>}
         {selectedItem && <View style={styles.articleCard}>
-          <View style={styles.articleEyebrowRow}>
-            {iconsLoaded && <Ionicons name="leaf-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />}
-            <Text style={styles.articleEyebrow}>PUBLICERAD GUIDE · VERSION {selectedItem.version}</Text>
-          </View>
           <Text style={styles.articleTitle} accessibilityRole="header">{selectedItem.title}</Text>
           <View style={styles.articleBody}>
             {parseGuideBody(selectedItem.body).map((block, index) => {
@@ -106,26 +98,26 @@ export function KnowledgeScreen({
             </View>;
           })}
           {sourceMessage !== '' && <MessageCard>{sourceMessage}</MessageCard>}
+          <Button variant="tertiary" label="Tillbaka till guider" accessibilityLabel="Tillbaka till guider" onPress={() => setOpenedId(null)} />
         </View>}
       </>}
     </View>
   );
 }
 
-function contentTypeLabel(type: HomeContent['contentType']): string {
-  return type === 'article' ? 'KUNSKAP' : type === 'guide' ? 'GUIDE' : type === 'checklist' ? 'CHECKLISTA' : 'TRÄNING';
-}
+function readingMinutes(body: string) { return Math.max(1, Math.ceil(body.split(/\s+/).length / 200)); }
 
 const styles = StyleSheet.create({
+  featured: { backgroundColor: tokens.colors.surface, borderRadius: tokens.radius.md, overflow: 'hidden' },
+  featuredImage: { width: '100%', height: tokens.size.heroHeight },
+  cardCopy: { padding: tokens.spacing.md, gap: tokens.spacing.sm },
+  readTime: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  articleGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.md },
+  smallCard: { flexGrow: 1, flexBasis: '45%', backgroundColor: tokens.colors.surface, borderRadius: tokens.radius.md, overflow: 'hidden' },
+  smallImage: { width: '100%', height: tokens.size.quickLogHeight },
   guideList: { gap: tokens.spacing.sm },
-  topicIcon: { width: tokens.size.chipMd, height: tokens.size.chipMd, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.selectedSurface },
-  guideCopy: { flex: 1, gap: tokens.spacing.xs },
-  guideType: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
   guideTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
-  selectedLabel: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
-  articleCard: { alignSelf: 'stretch', borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, marginTop: tokens.layout.sectionGap },
-  articleEyebrowRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingVertical: tokens.spacing.sm, borderBottomWidth: tokens.size.stroke, borderBottomColor: tokens.colors.border },
-  articleEyebrow: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700', flexShrink: 1 },
+  articleCard: { alignSelf: 'stretch', borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, marginTop: tokens.spacing.sm },
   articleTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginTop: tokens.spacing.md },
   articleBody: { marginTop: tokens.spacing.md },
   bodyHeading: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginTop: tokens.spacing.xl },

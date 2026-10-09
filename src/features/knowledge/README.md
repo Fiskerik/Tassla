@@ -5,3 +5,5 @@
 Hälsotexter behöver granskas innan publicering. Kör `pnpm check` för typkontroll, lint och tester; innehållsurvalet kräver en konfigurerad utvecklingsmiljö med publicerade versioner.
 
 `DraftContentPreview.tsx` är en separat granskningsvy som laddar den kanoniska draft-bundlen endast när både `__DEV__` och `EXPO_PUBLIC_TASSLA_DRAFT_PREVIEW=true` är aktiva. Den nås via det lokala `DevelopmentPreview`-flödet, aldrig via `ProductWorkspace` eller publicerat innehåll. Varje text märks `Utkast – ej granskat eller publicerat`.
+
+UI-RESET: `KnowledgeScreen` skiljer fotoöversikt från läsvy. För dig/Artiklar/Checklistor filtrerar befintligt publicerat innehåll; FAQ utan data införs inte. Vald versions-ID kommer från Hem eller artikeltryck. Lästid uppskattas med 200 ord/minut. Rubriker, listor och källänkar bevaras i läsvyn. Lokala dekorbilder är inte hundens profilfoto.

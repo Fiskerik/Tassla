@@ -480,7 +480,8 @@ test('actual workspace lifetime change suppresses delayed status replay and keep
 
 test('planned health is linked from the health workspace and remains a separate screen/contract', async () => {
   assert.match(healthScreenSource, /onOpenPlannedHealth/);
-  assert.match(healthScreenSource, /Öppna planer/);
+  assert.match(healthScreenSource, /Planera en händelse/);
+  assert.match(healthScreenSource, /props.onOpenPlannedHealth\?\.\(\)/);
   assert.match(workspaceSource, /<PlannedHealthScreen/);
   assert.match(workspaceSource, /fetchHealthHistory\(client, dog\.id/);
   assert.match(workspaceSource, /fetchPlannedHealth\(client, dog\.id/);
