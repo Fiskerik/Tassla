@@ -78,6 +78,8 @@ export function HealthScreen({
   const confirmedMessage = statusMessage?.startsWith('Ändringen är sparad') && !statusError && !pendingStatus && !isBusy
     ? statusMessage : null;
   useEffect(() => {
+    // The toast mirrors an external save-status prop and is intentionally reset here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!confirmedMessage) { setToastMessage(null); return; }
     setToastMessage(confirmedMessage);
     const timer = setTimeout(() => { setToastMessage(null); setToastRecordId(null); }, 2500);

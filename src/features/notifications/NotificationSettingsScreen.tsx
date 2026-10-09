@@ -34,6 +34,8 @@ export function NotificationSettingsScreen({
     || trainingTime !== formatTime(preferences.trainingMinutes);
 
   useEffect(() => {
+    // Reset the transient toast when the persisted save status changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!showSavedToast || !saved || statusError) { setToastMessage(null); return; }
     setToastMessage('Valen är sparade för ditt konto på den här enheten.');
     const timer = setTimeout(() => {
