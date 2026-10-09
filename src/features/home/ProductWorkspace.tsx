@@ -2014,6 +2014,7 @@ function sameOwnedDogProfile(
 
 const styles = StyleSheet.create({
   profileCard: { borderRadius: theme.radius.card, backgroundColor: theme.colors.surface, padding: 18, borderColor: theme.colors.border, borderWidth: 1 },
+  cardEyebrow: { ...theme.typography.caption, color: theme.colors.textMuted, marginBottom: 4 },
   profileValue: { color: theme.colors.text, fontSize: 17, fontWeight: '700', marginBottom: 18 },
   pressed: { opacity: 0.72 },
 });

@@ -4,6 +4,8 @@ import { Button, Dialog, InfoBanner, ListRow } from '../../components/ui';
 import { tokens } from '../../theme/tokens';
 import { readAccountDeletionMarker, type AccountDeleteResult } from './account-delete';
 
+type AccountStatus = AccountDeleteResult['status'] | 'blocked';
+
 export function AccountSettingsScreen({
   ownerId, onOpenInformation, onDeleteAccount, onSignOutLocally, busy, status, localCleanupFailed, signOutFailed,
   analyticsConsent, analyticsBusy, analyticsError, onSetAnalyticsConsent, onRetryAnalyticsConsent,
@@ -14,7 +16,7 @@ export function AccountSettingsScreen({
   onDeleteAccount: () => Promise<AccountDeleteResult>;
   onSignOutLocally: () => Promise<boolean>;
   busy: boolean;
-  status: 'idle' | 'confirmed' | 'failed' | 'unknown' | 'unavailable' | 'blocked';
+  status: 'idle' | AccountStatus;
   localCleanupFailed: boolean;
   signOutFailed: boolean;
   analyticsConsent: boolean | null;
@@ -97,7 +99,7 @@ export function AccountSettingsScreen({
   </View>;
 }
 
-function accountStatusText({ status, markerReady, markerState, localCleanupFailed, signOutFailed }: { status: AccountDeleteResult['status']; markerReady: boolean; markerState: string; localCleanupFailed: boolean; signOutFailed: boolean }): string {
+function accountStatusText({ status, markerReady, markerState, localCleanupFailed, signOutFailed }: { status: 'idle' | AccountStatus; markerReady: boolean; markerState: string; localCleanupFailed: boolean; signOutFailed: boolean }): string {
   if (localCleanupFailed) return 'Kontot är raderat, men uppgifter kan fortfarande visas på den här enheten. Kontakta support.';
   if (signOutFailed) return 'Utloggningen på den här enheten misslyckades.';
   if (status === 'confirmed') return 'Kontot är raderat. Vi loggar ut från den här enheten.';
