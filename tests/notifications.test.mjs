@@ -521,7 +521,7 @@ test('actual notification response handler routes only current owner/dog payload
       response, lastResponse: response, plan: { id: planId, dog_id: dogId } });
     await harness.handle(response);
     await harness.handle(response);
-    assert.deepEqual(harness.pages, ['planned-health']);
+    assert.deepEqual(harness.pages, ['/planned-health']);
     assert.deepEqual(harness.lookups, [[{}, dogId, planId]]);
     assert.equal(harness.clears, 1, 'the same identifier/date delivery is handled once');
   });
@@ -531,7 +531,7 @@ test('actual notification response handler routes only current owner/dog payload
     const response = nativeResponse('training-tap', model.trainingReminderPayload(ownerId, dogId));
     const harness = buildTapHandlerHarness({ context: { ownerId, dogId, generation: 1 }, current: true, response, lastResponse: response });
     await harness.handle(response);
-    assert.deepEqual(harness.pages, ['training']);
+    assert.deepEqual(harness.pages, ['/training']);
     assert.deepEqual(harness.lookups, []);
     assert.equal(harness.clears, 1);
   });
@@ -543,11 +543,11 @@ test('actual notification response handler routes only current owner/dog payload
     const later = nativeResponse('daily-training', payload, undefined, new Date('2026-10-07T09:00:00Z'));
     const harness = buildTapHandlerHarness({ context: { ownerId, dogId, generation: 1 }, current: true, response: original, lastResponse: later });
     await harness.handle(original);
-    assert.deepEqual(harness.pages, ['training']);
+    assert.deepEqual(harness.pages, ['/training']);
     assert.equal(harness.clears, 0, 'a different delivery date is not cleared');
     harness.setLastResponse(later);
     await harness.handle(later);
-    assert.deepEqual(harness.pages, ['training', 'training']);
+    assert.deepEqual(harness.pages, ['/training', '/training']);
     assert.equal(harness.clears, 1);
   });
   await t.test('foreign, malformed and non-default taps do not look up or navigate', async () => {
@@ -697,7 +697,7 @@ function buildTapHandlerHarness({ context, current, response, lastResponse, plan
   let isCurrent = current;
   const identifiers = [
     'Notifications', 'notificationContextRef', 'reminderService', 'parseReminderPayload', 'handledNotificationResponses',
-    'setPage', 'fetchPlannedHealthById', 'client',
+    'router', 'fetchPlannedHealthById', 'client',
   ];
   let currentLastResponse = lastResponse;
   const dependencies = [
@@ -706,7 +706,7 @@ function buildTapHandlerHarness({ context, current, response, lastResponse, plan
     { isCurrent() { return isCurrent; } },
     model.parseReminderPayload,
     { current: new Set() },
-    (page) => pages.push(page),
+    { replace: (route) => pages.push(route) },
     async (...args) => { lookups.push(args); return fetchPlan ? await fetchPlan(...args) : plan ?? null; },
     {},
   ];

@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
-import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
-import { AppBar, ChecklistItem, HeroCard, Progress, SectionHeader } from '../../components/ui';
+import { Button, ChecklistItem, EmptyState, HeroCard, InfoBanner, Progress, SectionHeader, Skeleton } from '../../components/ui';
 import type { PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
 import { tokens } from '../../theme/tokens';
 
@@ -14,6 +13,7 @@ export function PublishedTrainingScreen({
   onContinue,
   onResetProgram,
   onRetry,
+  loadState = 'ready',
 }: {
   programs: readonly PublishedTrainingProgram[];
   paused: readonly PausedTrainingProgress[];
@@ -23,6 +23,7 @@ export function PublishedTrainingScreen({
   onContinue: () => void;
   onResetProgram: (program: PublishedTrainingProgram) => void;
   onRetry: () => void;
+  loadState?: 'loading' | 'ready' | 'error';
 }) {
   const [openProgramId, setOpenProgramId] = useState<string | null>(null);
   const [acknowledged, setAcknowledged] = useState<{ programId: string; stepId: string } | null>(null);
@@ -44,22 +45,16 @@ export function PublishedTrainingScreen({
     onContinue();
   }
 
+  if (loadState === 'loading') return <View><Skeleton shape="card" lines={3} /></View>;
+
   return (
     <View>
-      <AppBar mode="Title" title="Träning" />
-      <HeroCard title="Små steg, lugna stunder" meta="Bygg progression med frivillighet och belöning." />
-      <MessageCard>Allmän träningsvägledning. Anpassa efter din hund. Du kan alltid pausa eller gå tillbaka. Registrering visar vad du markerat, inte vad hunden behärskar.</MessageCard>
-      {error ? <>
-        <MessageCard tone="error">{error}</MessageCard>
-        <PrimaryButton title="Försök igen" onPress={onRetry} />
-      </> : null}
-      {paused.map((item) => (
-        <MessageCard key={item.versionId} tone="error">
-          En tidigare programversion har {item.completedCount} registrerade steg men är pausad. Historiken har inte flyttats eller raderats.
-        </MessageCard>
-      ))}
+      <Text style={styles.caption}>Allmän vägledning: anpassa efter din hund. Registrering visar vad du markerat, inte vad hunden behärskar.</Text>
+      {error
+        ? <InfoBanner action={<Button label="Försök igen" accessibilityLabel="Försök igen" variant="secondary" onPress={onRetry} />}>{error}</InfoBanner>
+        : paused.length > 0 ? <InfoBanner>En tidigare programversion har registrerade steg men är pausad. Historiken har inte flyttats eller raderats.</InfoBanner> : null}
       {!error && programs.length === 0 && paused.length === 0 && (
-        <MessageCard>Det finns inga publicerade träningsprogram som passar just nu. Fler granskade program visas här när de publiceras.</MessageCard>
+        <EmptyState title="Inget träningsprogram ännu" actionLabel="Försök igen" onAction={onRetry} />
       )}
       {programs.map((program) => {
         const isOpen = openProgramId === program.id;
@@ -69,24 +64,20 @@ export function PublishedTrainingScreen({
         const waiting = acknowledged?.programId === program.id;
         return (
           <View key={program.id} style={styles.programCard}>
-            <View style={styles.focusCard}>
-              <Text style={styles.focusEyebrow}>VECKANS FOKUS</Text>
-              <Text style={styles.programTitle} accessibilityRole="header">{program.title}</Text>
-              <Text style={styles.focusBody}>{program.body}</Text>
-            </View>
+            <HeroCard title={program.title} meta={program.body} />
             {program.sources.length > 0 && <View style={styles.sources}>
               <Text style={styles.sourceHeading}>Källor</Text>
               {program.sources.map((source, index) => <Text key={`${index}-${source}`} style={styles.sourceText}>{source}</Text>)}
             </View>}
             <View style={styles.progressGroup}>
-              <Text style={styles.progressHeading}>STEG</Text>
+              <Text style={styles.progressHeading}>Progress</Text>
               <Progress value={program.steps.length ? completed.size / program.steps.length * 100 : 0} label={`${completed.size} av ${program.steps.length} steg registrerade`} />
             </View>
-            {allComplete && <MessageCard>Alla steg är registrerade. Det betyder inte att hunden är färdigtränad. Du kan läsa eller repetera programmet.</MessageCard>}
-            <QuietButton title={isOpen ? 'Dölj övningar' : 'Visa övningar'} onPress={() => setOpenProgramId(isOpen ? null : program.id)} />
+            {allComplete && <Text style={styles.caption}>Alla steg är registrerade. Det betyder inte att hunden är färdigtränad.</Text>}
+            <Button label={isOpen ? 'Dölj övningar' : 'Visa övningar'} accessibilityLabel={isOpen ? 'Dölj övningar' : 'Visa övningar'} variant="tertiary" onPress={() => setOpenProgramId(isOpen ? null : program.id)} />
             {isOpen && <View style={styles.details}>
               <SectionHeader title="Veckans övningar" />
-              {program.steps.length === 0 && <MessageCard>Programmet har inga publicerade steg ännu.</MessageCard>}
+              {program.steps.length === 0 && <Text style={styles.caption}>Programmet har inga publicerade steg ännu.</Text>}
               {program.steps.map((step, index) => {
                 const isComplete = completed.has(step.id);
                 const isCurrent = nextStep?.id === step.id;
@@ -105,10 +96,10 @@ export function PublishedTrainingScreen({
                 );
               })}
               {waiting && <View>
-                <MessageCard>Steget är registrerat på ditt konto. Registreringen visar inte att hunden behärskar beteendet.</MessageCard>
-                <PrimaryButton title={nextStep ? 'Fortsätt till nästa steg' : 'Visa avslutatläge'} onPress={continueAfterSave} />
+                <Text style={styles.caption}>Steget är registrerat på ditt konto. Det visar inte att hunden behärskar beteendet.</Text>
+                <Button label={nextStep ? 'Fortsätt till nästa steg' : 'Visa avslutatläge'} accessibilityLabel={nextStep ? 'Fortsätt till nästa steg' : 'Visa avslutatläge'} onPress={continueAfterSave} />
               </View>}
-              <QuietButton title={busyStepKey === `${program.id}:reset` ? 'Rensar…' : 'Rensa registrerade steg'} disabled={Boolean(busyStepKey)} onPress={() => confirmReset(program, (selected) => { onResetProgram(selected); setAcknowledged(null); })} />
+              <Button label={busyStepKey === `${program.id}:reset` ? 'Rensar…' : 'Rensa registrerade steg'} accessibilityLabel="Rensa registrerade steg" variant="tertiary" disabled={Boolean(busyStepKey)} onPress={() => confirmReset(program, (selected) => { onResetProgram(selected); setAcknowledged(null); })} />
             </View>}
           </View>
         );
@@ -125,6 +116,7 @@ function confirmReset(program: PublishedTrainingProgram, onReset: (program: Publ
 }
 
 const styles = StyleSheet.create({
+  caption: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.md, marginBottom: tokens.spacing.sm },
   programCard: {
     alignSelf: 'stretch',
     borderWidth: tokens.size.stroke,
@@ -134,16 +126,6 @@ const styles = StyleSheet.create({
     padding: tokens.layout.cardPadding,
     marginTop: tokens.layout.sectionGap,
   },
-  focusCard: {
-    alignSelf: 'stretch',
-    backgroundColor: tokens.colors.primaryPressed,
-    borderRadius: tokens.radius.md,
-    padding: tokens.spacing.md,
-    marginBottom: tokens.spacing.md,
-  },
-  focusEyebrow: { ...tokens.typography.caption, color: tokens.colors.successSurface, fontWeight: '700', marginBottom: tokens.spacing.xs },
-  programTitle: { ...tokens.typography.heading, color: tokens.colors.onPrimary },
-  focusBody: { ...tokens.typography.body, color: tokens.colors.onPrimary, marginTop: tokens.spacing.sm },
   progressGroup: {
     alignSelf: 'stretch',
     borderRadius: tokens.radius.md,

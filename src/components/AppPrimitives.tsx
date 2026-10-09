@@ -11,10 +11,6 @@ export function AppScreen({ children, footer }: { children: ReactNode; footer?: 
       <View style={styles.screenLayout}>
         <KeyboardAvoidingView style={styles.keyboardLayout} behavior="padding">
           <ScrollView style={styles.scrollArea} contentContainerStyle={styles.page} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled">
-            <View style={styles.brandMark} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-              <Text style={styles.brandMarkText}>T</Text>
-            </View>
-            <Text style={styles.brandName}>tassla</Text>
             {children}
           </ScrollView>
         </KeyboardAvoidingView>
@@ -298,9 +294,6 @@ const styles = StyleSheet.create({
   scrollArea: { flex: 1 },
   page: { flexGrow: 1, width: '100%', maxWidth: 560, alignSelf: 'center', paddingHorizontal: 24, paddingTop: 20, paddingBottom: 48 },
   footer: { borderTopWidth: 1, borderTopColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  brandMark: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.accent, alignSelf: 'center' },
-  brandMarkText: { color: theme.colors.onAccent, fontSize: 24, fontWeight: '800' },
-  brandName: { color: theme.colors.accent, fontSize: 15, fontWeight: '800', letterSpacing: 1.4, textAlign: 'center', marginTop: 7 },
   heading: { marginTop: 36, marginBottom: 24 },
   title: { color: theme.colors.text, fontSize: 30, fontWeight: '800', lineHeight: 38, letterSpacing: -0.6 },
   description: { color: theme.colors.mutedText, fontSize: 17, lineHeight: 25, marginTop: 12 },

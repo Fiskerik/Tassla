@@ -326,6 +326,64 @@ Resultat: GODKÄND | UNDERKÄND
 Underkända punkter: [nummer + en rad om vad som är fel + förslag]
 ```
 
+### UI-QUICK-01 – visuell QA-status
+
+- Logga: NOT TESTABLE utan renderad app/skärmdump. Erik ska ta `Logga normal`, `Logga stor text`.
+- Mer → Påminnelser: NOT TESTABLE utan renderad app/skärmdump. Erik ska ta `Påminnelser normal`, `Påminnelser denied`, `Påminnelser stor text`.
+- Ägar-godkänd avvikelse från Figma Large-chip: Snabb logg använder 36 pt chip med 20 pt ikon för att minska ikonernas visuella tyngd; `chipLg` lämnas oförändrad för övriga användningar.
+- Kodkontroll ersätter inte visuell QA. Punkten förblir NOT TESTABLE tills skärmdumparna finns och checklistans 18 punkter är bedömda per skärm.
+
+### UI-NAV-01 – visuell QA-status
+
+- Tabroots: NOT TESTABLE utan rendering. Erik ska ta `Hem`, `Logg`, `Träning`, `Hälsa`, `Mer` i normal/stor text.
+- Pushed routes: NOT TESTABLE utan rendering. Erik ska ta `Påminnelser`, `Konto`, `Beta-info`, `Hundprofil`, `Kunskap`, `Tassla-pass`, `Planerade hälsohändelser` och relevanta modal-/backstates.
+- Kontrollera i section 14: AppBar Home/Title/Back, ingen global T-brandblock, BottomNav endast på tabroots, enhetlig högeranimation och inga dubbla backkontroller.
+- Fysisk edge swipe, full-screen swipe, Reduce Motion och statebevarande vid tabbyte är NOT TESTABLE lokalt och kräver Eriks telefonchecklista.
+
+### UI-HOME-01 – visuell QA-status
+
+- Hem: NOT TESTABLE utan renderad app/skärmdump. Erik ska ta `Hem normal`, `Hem tomt`, `Hem fel` och `Hem stor text`.
+- Kontrollera section 14: Home AppBar, DogCard med PhotoPlaceholder och verkligt hundnamn, `Idag` som ListRow med IconChip/chevron, publicerat innehåll som HeroCard, högst en InfoBanner endast vid åtgärdsbehov och EmptyState när publicerat innehåll saknas.
+- Veckoremsa ingår inte i denna slice enligt owner decision (default no).
+- Kodkontroll ersätter inte visuell QA. Punkten förblir NOT TESTABLE tills Erik har jämfört screenshot-matrisen mot checklistans 18 punkter.
+
+### UI-HEALTH-01 – visuell QA-status
+
+- Hälsa: NOT TESTABLE utan renderad app/skärmdump. Erik ska ta `Hälsa normal`, `Hälsa tom`, `Hälsa error` och `Hälsa stor text`.
+- Kontrollera section 14: Title-AppBar från tab-shellen, en kort ägarregistrerad caption, planerade hälsohändelser som ListRow, viktregistrering i BottomSheet med datum/kg-fält, historik som ListRows med ActionMenu och InfoModal bakom `Läs information`.
+- Endast avvikande/pågående/felaktiga sparstatusar ska visas; normala rader har ingen statusbadge.
+- Kodkontroll ersätter inte visuell QA. Punkten förblir NOT TESTABLE tills Erik har jämfört screenshot-matrisen mot checklistans 18 punkter.
+
+### UI-TRAINING-01 – visuell QA-status
+
+- Träning: NOT TESTABLE utan renderad app/skärmdump. Erik ska ta `Träning normal`, `Träning tom`, `Träning error` och `Träning stor text`.
+- Kontrollera HeroCard för aktivt publicerat program, Progress, ChecklistItem, kort väglednings-caption, en primär save-action och inga uppercase-eyebrows.
+
+### UI-MORE-01 – visuell QA-status
+
+- Mer: NOT TESTABLE utan renderad app/skärmdump. Erik ska ta `Mer normal`, `Mer sign-out error` och `Mer stor text`.
+- Kontrollera Title-AppBar från tab-shellen, ListRows med IconChip/chevron, tertiary `Logga ut`, account deletion lock och inga gamla PageHeading/MenuRow-primitives.
+
+### UI-KNOWLEDGE-01 – visuell QA-status
+
+- Kunskap: NOT TESTABLE utan renderad app/skärmdump. Erik ska ta `Kunskap normal`, `Kunskap tom`, `Kunskap error` och `Kunskap stor text`.
+- Kontrollera Card-layout, publicerat-only urval, läsbar body/källor, högst en åtgärdskrävande InfoBanner och inga uppercase-eyebrows.
+
+### UI-PASSPORT-01 – visuell QA-status
+
+- Tassla-pass: NOT TESTABLE utan renderad app/skärmdump. Erik ska ta `Tassla-pass normal`, `Tassla-pass empty/error` och `Tassla-pass stor text`.
+- Kontrollera DogCard med PhotoPlaceholder, godkända info-rader, kort legal-caption och exakt en primär `Dela som PDF`.
+
+### UI-ACCOUNT-01 – visuell QA-status
+
+- Konto: NOT TESTABLE utan renderad app/skärmdump. Erik ska ta `Konto normal`, `Konto error/locked` och `Konto stor text`.
+- Kontrollera Back-AppBar från shellen, ListRows, Dialog för destruktiv radering, marker-/busy-lock och endast avvikande status.
+
+### UI-BETA-INFO-01 – visuell QA-status
+
+- Beta-info: NOT TESTABLE utan renderad app/skärmdump. Erik ska ta `Beta-info normal`, `Beta-info link-error` och `Beta-info stor text`.
+- Kontrollera Back-AppBar från shellen, korta Card/caption-sektioner, support-ListRow och högst en åtgärdskrävande InfoBanner.
+
 ---
 
 ## 15. Vad agenter inte får göra

@@ -1,17 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Alert, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { DatePickerField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { Alert, Keyboard, StyleSheet, Text, View } from 'react-native';
 import { isValidHealthWeightDate, isValidHealthWeightKg, type HealthHistoryRecord, type HealthHistoryType, type HealthWeightRecord } from '../../data/workspace-data';
 import { HealthHistoryScreen } from './HealthHistoryScreen';
 import { localDate } from '../onboarding/dog';
 import { tokens } from '../../theme/tokens';
-import { AppBar, InfoBanner } from '../../components/ui';
+import { ActionMenu, BottomSheet, Button, EmptyState, Field, InfoBanner, ListRow, Skeleton } from '../../components/ui';
 import { Toast } from '../../components/ui/Toast';
 type LoadState = 'loading' | 'ready' | 'error';
 
 export function HealthScreen({
-  onBack,
   records,
   loadState,
   busy,
@@ -75,6 +72,8 @@ export function HealthScreen({
   const [toastNonce, setToastNonce] = useState(0);
   const [formError, setFormError] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [weightSheet, setWeightSheet] = useState<'add' | 'edit' | null>(null);
+  const [menuRecordId, setMenuRecordId] = useState<string | null>(null);
   const confirmedMessage = statusMessage?.startsWith('Ändringen är sparad') && !statusError && !pendingStatus && !isBusy
     ? statusMessage : null;
   useEffect(() => {
@@ -91,6 +90,7 @@ export function HealthScreen({
     setEditDate(record.occurred_on);
     setEditWeight(String(record.weight_kg));
     setFormError('');
+    setWeightSheet('edit');
   }
 
   function cancelEditing() {
@@ -99,7 +99,16 @@ export function HealthScreen({
     setEditDate('');
     setEditWeight('');
     setFormError('');
+    setWeightSheet(null);
     Keyboard.dismiss();
+  }
+
+  function startAdding() {
+    setEditingId(null);
+    setDate(localDate());
+    setWeight('');
+    setFormError('');
+    setWeightSheet('add');
   }
 
   async function save() {
@@ -132,6 +141,7 @@ export function HealthScreen({
         setWeight('');
         setFormError('');
         Keyboard.dismiss();
+        setWeightSheet(null);
       }
     }
   }
@@ -145,109 +155,33 @@ export function HealthScreen({
 
   if (!isCloud) {
     return <View>
-      <AppBar mode="Back" title="Hälsa" onAction={onBack} />
-      <InfoBanner>Håll ordning på hundens hälsa, en sak i taget.</InfoBanner>
-      <View style={styles.foundationCard}>
-        <View style={styles.iconCircle}><Text style={styles.fallback}>H</Text></View>
-        <View style={styles.copy}>
-          <Text style={styles.cardTitle}>Hälsan får ta plats i sin egen takt.</Text>
-          <Text style={styles.cardBody}>Här visas inga hälsodata, påminnelser eller vårdscheman ännu.</Text>
-        </View>
-      </View>
-      <MessageCard>Den här delen är en grund för framtida funktioner. Den ger inga råd om symtom eller vård.</MessageCard>
+      <EmptyState title="Ingen hälsodata ännu" actionLabel="Lägg till vikt" onAction={startAdding} />
+      <WeightSheet visible={weightSheet !== null} mode={weightSheet ?? 'add'} date={date} weight={weight} error={formError} busy={isBusy} blocked={isBlocked} onDateChange={setDate} onWeightChange={setWeight} onClose={cancelEditing} onSave={() => { void save(); }} />
     </View>;
   }
 
   return (
     <View>
-      <AppBar mode="Back" title="Hälsa" onAction={onBack} />
-      <InfoBanner>Håll ordning på hundens vikt över tid.</InfoBanner>
-      <Text style={styles.sectionTitle} accessibilityRole="header">Viktresa</Text>
-      <MessageCard>Vikterna är ägarregistrerade uppgifter, inte en verifierad journal. Tassla tolkar inte viktförändringar.</MessageCard>
-      {onOpenPlannedHealth && <View style={styles.plannedCard}>
-        <View style={styles.plannedIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          <Ionicons name="calendar-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />
-        </View>
-        <View style={styles.plannedCopy}>
-          <Text style={styles.cardTitle}>Planerade hälsohändelser</Text>
-          <Text style={styles.cardBody}>Håll vaccinationer och veterinärbesök åtskilda från det som redan har hänt.</Text>
-        </View>
-        <PrimaryButton title="Öppna planer" onPress={onOpenPlannedHealth} />
-      </View>}
-      {cloudLoadState === 'loading' && <MessageCard>Hämtar hundens vikthistorik…</MessageCard>}
+      <Text style={styles.sectionTitle} accessibilityRole="header">Vikt</Text>
+      <Text style={styles.caption}>Ägarregistrerade uppgifter, inte en verifierad journal. Tassla tolkar inte viktförändringar.</Text>
+      {onOpenPlannedHealth && <ListRow category="vaccination" title="Planerade hälsohändelser" detail="Vaccinationer och veterinärbesök" onPress={onOpenPlannedHealth} />}
+      {cloudLoadState === 'loading' && <Skeleton shape="row" lines={2} />}
       {cloudLoadState === 'error' && <>
-        <MessageCard tone="error">Vikthistoriken kunde inte hämtas.</MessageCard>
-        <PrimaryButton title="Försök igen" disabled={isBusy} onPress={() => onRetry?.()} />
+        <InfoBanner action={<Button label="Försök igen" accessibilityLabel="Försök igen" variant="secondary" onPress={() => onRetry?.()} />}>Vikthistoriken kunde inte hämtas.</InfoBanner>
       </>}
       {cloudLoadState === 'ready' && <>
-        {statusMessage && statusError ? <>
-          <MessageCard tone="error">{statusMessage}</MessageCard>
-          {pendingStatus && <PrimaryButton title="Kontrollera status" disabled={isBusy} onPress={() => onRetryPending?.()} />}
-        </> : null}
-        {isBusy && <MessageCard>Sparar och kontrollerar ändringen…</MessageCard>}
-        <View style={styles.formCard}>
-          <Text style={styles.formTitle} accessibilityRole="header">Lägg till vikt</Text>
-          <DatePickerField label="Datum" disabled={isBlocked || Boolean(editingId)} onChangeText={setDate} value={date} />
-          <View style={styles.field}>
-            <Text style={styles.label}>Vikt (kg)</Text>
-            <TextInput
-              accessibilityLabel="Vikt i kilogram"
-              editable={!isBlocked && !editingId}
-              keyboardType="decimal-pad"
-              onChangeText={setWeight}
-              onSubmitEditing={() => Keyboard.dismiss()}
-              placeholder="Till exempel 4,25"
-              placeholderTextColor={tokens.colors.textSecondary}
-              returnKeyType="done"
-              style={styles.input}
-              value={weight}
-            />
-          </View>
-          {!editingId && formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
-          <PrimaryButton title={isBusy ? 'Sparar…' : 'Spara vikt'} disabled={isBlocked || Boolean(editingId)} onPress={() => { void save(); }} />
-          {toastMessage && !toastRecordId ? <Toast tone="success" confirmed message={toastMessage} /> : null}
-        </View>
-        <Text style={styles.sectionTitle} accessibilityRole="header">Vikthistorik</Text>
-        {cloudRecords.length === 0 && <MessageCard>Ingen vikt har registrerats ännu.</MessageCard>}
+        {statusMessage && statusError ? <InfoBanner action={<Button label={pendingStatus ? 'Kontrollera status' : 'Försök igen'} accessibilityLabel={pendingStatus ? 'Kontrollera status' : 'Försök igen'} variant="secondary" disabled={isBusy} onPress={() => (pendingStatus ? onRetryPending?.() : onRetry?.())} />}>{statusMessage}</InfoBanner> : null}
+        <Button label="Lägg till" accessibilityLabel="Lägg till vikt" onPress={startAdding} />
+        {cloudRecords.length === 0 && <EmptyState title="Ingen vikt registrerad ännu" actionLabel="Lägg till vikt" onAction={startAdding} />}
         {cloudRecords.map((record) => (
-          <View key={record.id} style={styles.recordCard}>
-            {editingId === record.id ? <>
-              <Text style={styles.formTitle} accessibilityRole="header">Rätta viktpost</Text>
-              <DatePickerField label="Datum" disabled={isBlocked} onChangeText={setEditDate} value={editDate} />
-              <View style={styles.field}>
-                <Text style={styles.label}>Vikt (kg)</Text>
-                <TextInput
-                  accessibilityLabel="Vikt i kilogram"
-                  editable={!isBlocked}
-                  keyboardType="decimal-pad"
-                  onChangeText={setEditWeight}
-                  onSubmitEditing={() => Keyboard.dismiss()}
-                  placeholder="Till exempel 4,25"
-                  placeholderTextColor={tokens.colors.textSecondary}
-                  returnKeyType="done"
-                  style={styles.input}
-                  value={editWeight}
-                />
-              </View>
-              {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
-              <View style={styles.actions}>
-                <PrimaryButton title={isBusy ? 'Sparar…' : 'Spara rättning'} disabled={isBlocked} onPress={() => { void save(); }} />
-                <QuietButton title="Avbryt" disabled={isBlocked} onPress={cancelEditing} />
-              </View>
-            </> : <>
-              <View style={styles.recordHeading}>
-                <Text style={styles.recordWeight}>{formatWeight(record.weight_kg)} kg</Text>
-              </View>
-              <Text style={styles.recordDate}>{record.occurred_on}</Text>
-              <View style={styles.actions}>
-                <QuietButton title="Ändra" disabled={isBlocked} onPress={() => startEditing(record)} />
-                <QuietButton title="Radera" disabled={isBlocked} onPress={() => confirmDelete(record)} />
-              </View>
-            </>}
+          <View key={record.id} style={styles.rowWithMenu}>
+            <ListRow category="training" title={`${formatWeight(record.weight_kg)} kg`} detail={record.occurred_on} chevron={false} />
+            <ActionMenu visible={menuRecordId === record.id} onOpen={() => setMenuRecordId(record.id)} onClose={() => setMenuRecordId(null)} onEdit={() => startEditing(record)} onDelete={() => confirmDelete(record)} />
             {toastMessage && toastRecordId === record.id ? <Toast tone="success" confirmed message={toastMessage} /> : null}
           </View>
         ))}
       </>}
+      <WeightSheet visible={weightSheet !== null} mode={weightSheet ?? 'add'} date={editingId ? editDate : date} weight={editingId ? editWeight : weight} error={formError} busy={isBusy} blocked={isBlocked} onDateChange={editingId ? setEditDate : setDate} onWeightChange={editingId ? setEditWeight : setWeight} onClose={cancelEditing} onSave={() => { void save(); }} />
       <HealthHistoryScreen key={JSON.stringify(historyRecords?.map(({ id, event_type, occurred_on, description }) => [id, event_type, occurred_on, description]))}
         records={historyRecords} loadState={historyLoadState} busy={historyBusy}
         pending={historyPending} statusMessage={historyMessage} statusError={historyMessageError}
@@ -261,25 +195,19 @@ function formatWeight(value: number): string {
   return value.toLocaleString('sv-SE', { maximumFractionDigits: 3 });
 }
 
+function WeightSheet({ visible, mode, date, weight, error, busy, blocked, onDateChange, onWeightChange, onClose, onSave }: {
+  visible: boolean; mode: 'add' | 'edit'; date: string; weight: string; error: string; busy: boolean; blocked: boolean;
+  onDateChange: (value: string) => void; onWeightChange: (value: string) => void; onClose: () => void; onSave: () => void;
+}) {
+  return <BottomSheet visible={visible} title={mode === 'edit' ? 'Rätta vikt' : 'Lägg till vikt'} onRequestClose={onClose} onPrimaryAction={onSave} primaryLabel={busy ? 'Sparar…' : 'Spara'}>
+    <Field label="Datum" kind="date" value={date} onChangeText={onDateChange} state={blocked ? 'disabled' : error && !date ? 'error' : 'default'} help="ÅÅÅÅ-MM-DD" />
+    <Field label="Vikt (kg)" value={weight} onChangeText={onWeightChange} placeholder="Till exempel 4,25" state={blocked ? 'disabled' : error ? 'error' : 'default'} error={error || undefined} />
+  </BottomSheet>;
+}
+
 const styles = StyleSheet.create({
-  foundationCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding },
-  iconCircle: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.category.training.bg, alignItems: 'center', justifyContent: 'center' },
-  fallback: { color: tokens.colors.primary, ...tokens.typography.label },
-  copy: { flex: 1 },
-  cardTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
-  cardBody: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
   sectionTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading, marginTop: tokens.layout.sectionGap },
-  formCard: { marginTop: tokens.layout.headingGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
-  formTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label, marginBottom: tokens.spacing.md },
-  field: { marginBottom: tokens.spacing.md },
-  label: { color: tokens.colors.textPrimary, ...tokens.typography.caption, fontWeight: '700', marginBottom: tokens.spacing.xs },
-  input: { minHeight: tokens.size.touchMin + tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body },
-  recordCard: { marginTop: tokens.layout.listGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
-  plannedCard: { marginTop: tokens.layout.listGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.selectedSurface },
-  plannedIcon: { width: tokens.size.chipMd + tokens.spacing.sm, height: tokens.size.chipMd + tokens.spacing.sm, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.category.vaccination.bg, alignItems: 'center', justifyContent: 'center', marginBottom: tokens.spacing.sm },
-  plannedCopy: { marginBottom: tokens.spacing.sm },
-  recordHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  recordWeight: { color: tokens.colors.textPrimary, ...tokens.typography.heading },
-  recordDate: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
-  actions: { flexDirection: 'row', justifyContent: 'flex-start', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm },
+  caption: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs, marginBottom: tokens.spacing.md },
+  rowWithMenu: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, borderRadius: tokens.radius.md },
+  row: { flex: 1 },
 });

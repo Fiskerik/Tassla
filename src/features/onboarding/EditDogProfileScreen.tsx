@@ -96,7 +96,6 @@ export function EditDogProfileScreen({
   const showStatusMessage = Boolean(statusMessage) && (statusError || pending || busy);
 
   return <View>
-    <QuietButton title="Tillbaka till Mer" disabled={busy} onPress={onBack} />
     <View style={styles.heroCard}>
       <View style={styles.heroCopy}>
         <PageHeading title="Hundprofil" description="Håll namn, ras och födelsedatum uppdaterade för innehåll som passar er." />

@@ -12,17 +12,37 @@ const toast = readFileSync('src/components/ui/Toast.tsx', 'utf8');
 test('quick log uses shared controls and keeps the approved two by two plus more layout', () => {
   assert.match(screen, /<AppBar mode="Title" title="Logga"/);
   assert.match(appBar, /'Home' \| 'Back' \| 'Close' \| 'Title'/);
-  assert.match(appBar, /mode !== 'Title'/);
+  assert.match(appBar, /mode === 'Home'/);
   assert.match(screen, /\(\['pee', 'poop'\] as const\)/);
   assert.match(screen, /\(\['food', 'sleep'\] as const\)/);
   assert.match(screen, /\(\['walk', 'awake'\] as const\)/);
-  assert.match(screen, /accessibilityLabel="Fler loggtyper"/);
   assert.match(screen, /LayoutAnimation\.configureNext/);
-  assert.doesNotMatch(screen, /<BottomSheet[\s\S]*?Fler loggtyper/);
-  assert.match(screen, /label="Fler"[\s\S]*?icon=\{/);
+  assert.match(screen, /<BottomSheet visible=\{moreVisible\} title="Fler händelser"/);
+  assert.match(screen, /title="Fler händelser" category="walk"/);
+  assert.doesNotMatch(screen, /label="Fler"/);
   assert.match(quickTile, /icon\?: ReactNode/);
+  assert.match(quickTile, /size="tile"/);
+  assert.match(quickTile, /minHeight: tokens\.size\.quickTileHeight/);
+  assert.match(quickTile, /padding: tokens\.spacing\.md/);
+  assert.match(quickTile, /gap: tokens\.spacing\.sm/);
+  assert.match(quickTile, /disabled=\{disabled\}/);
+  assert.match(readFileSync('src/theme/tokens.ts', 'utf8'), /chipTile: 36/);
+  assert.match(readFileSync('src/theme/tokens.ts', 'utf8'), /quickTileHeight: 72/);
   assert.match(screen, /<QuickLogTile/);
   assert.match(screen, /<ListRow/);
+});
+
+test('notification settings uses the shared form structure and one primary action', () => {
+  const settings = readFileSync('src/features/notifications/NotificationSettingsScreen.tsx', 'utf8');
+  assert.match(readFileSync('app/(workspace)/notifications.tsx', 'utf8'), /<WorkspaceRouteScreen page="notification-settings" title="Påminnelser" mode="Back"/);
+  assert.equal((settings.match(/<CheckboxCard /g) ?? []).length, 2);
+  assert.match(settings, /<Field label="Träningspåminnelse, lokal tid"[\s\S]*kind="time"/);
+  assert.match(settings, /Button variant="secondary" label=\{permissionBusy/);
+  assert.match(settings, /Button variant="primary" label=\{busy \? 'Sparar…' : 'Spara val'/);
+  assert.match(settings, /Enheten tillåter notiser\. Det säger inte att varje påminnelse visas eller levereras\./);
+  assert.match(settings, /statusLine: .*tokens\.typography\.caption/);
+  assert.doesNotMatch(settings, /Tillbaka till Mer/);
+  assert.doesNotMatch(settings, /function Choice/);
 });
 
 test('quick log has truthful loading, empty, failure, mutation and confirmed undo states', () => {
@@ -40,7 +60,8 @@ test('quick log has truthful loading, empty, failure, mutation and confirmed und
 test('quick log hides sparse patterns and keeps edit/delete inside the row editor', () => {
   assert.match(screen, /summarizePottyPatterns\(events\)\.filter\(\(item\) => item\.count >= 2\)/);
   assert.match(screen, /onPress=\{\(\) => setEditingId\(event\.id\)\}/);
-  assert.match(screen, /QuietButton title="Radera"/);
+  assert.match(screen, /<BottomSheet visible=\{editingEvent !== null\} title="Ändra händelse"/);
+  assert.match(screen, /Button variant="destructive" label="Radera"/);
   assert.doesNotMatch(screen, /SPARAD|ActionFeedbackModal/);
 });
 
@@ -84,7 +105,7 @@ test('quick add labels, rapid-tap guard, retry propagation and Swedish decimal f
   assert.match(workspace, /onRetry=\{retryLogMutation\}/);
   assert.match(workspace, /const logLifetime = useRef\(''\)/);
   assert.match(workspace, /const isCurrent = \(\) => isLogMutationLifetimeCurrent\(lifetime, logLifetime\.current, mounted\.current\)/);
-  assert.match(screen, /title="Avbryt" disabled=\{saving \|\| disabled\}/);
+  assert.match(screen, /label="Avbryt" accessibilityLabel="Avbryt ändring" disabled=\{saving \|\| disabled\}/);
   assert.match(screen, /DatePickerField label="Datum" disabled=\{disabled\}/);
   assert.match(screen, /TimePickerField label="Tid" disabled=\{disabled\}/);
   assert.match(workspace, /setQuickLogMutation\(toQuickLogMutationView\(mutation, 'pending'\)\);[\s\S]*?checkInsertRetryOperation/);

@@ -3,13 +3,12 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
-import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { Toast } from '../../components/ui/Toast';
 import { fetchBreeds, type BreedOption, type OwnedDog } from '../../data/app-data';
 import type { HealthHistoryRecord, HealthWeightRecord } from '../../data/workspace-data';
 import { localDate } from '../onboarding/dog';
 import { tokens } from '../../theme/tokens';
-import { IconChip } from '../../components/ui/IconChip';
+import { Button, Card, DogCard, EmptyState, InfoBanner, Skeleton } from '../../components/ui';
 import { createAndSharePassportPdf, type PassportExportResult } from './passport-export';
 import { createPassportSnapshot, type PassportSelection, type PassportSnapshot } from './passport-model';
 
@@ -149,38 +148,27 @@ export function PassportScreen(props: PassportScreenProps) {
 
   return (
     <View>
-      <QuietButton title="Tillbaka till Mer" onPress={props.onBack} disabled={busy} />
-      <PageHeading title="Tassla-pass" description="En sparad överblick över hundens uppgifter, som du själv väljer att dela." />
-      <View style={styles.heroCard}>
-        <View style={styles.heroIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          {iconsLoaded ? <IconChip category="veterinary" size="large" /> : <Text style={styles.fallback}>T</Text>}
-        </View>
-        <View style={styles.heroCopy}>
-          <Text style={styles.heroTitle}>Dina uppgifter, på ditt sätt.</Text>
-          <Text style={styles.body}>Förhandsvisningen visar samma sparade uppgifter som PDF:en.</Text>
-        </View>
-      </View>
+      {dog && <DogCard name={dog.name} breed={breedName ?? dog.breed_id} age={formatDogAge(dog.birth_date)} />}
 
-      {!props.client || !dog ? <MessageCard>Ingen hundinformation visas i den lokala förhandsvisningen. En PDF skapas inte här.</MessageCard> : <>
+      {!props.client || !dog ? <EmptyState title="Ingen hundinformation ännu" actionLabel="Tillbaka" onAction={props.onBack} /> : <>
         <Text style={styles.sectionTitle} accessibilityRole="header">Välj avsnitt</Text>
         <SelectionRow iconsLoaded={iconsLoaded} icon="person-outline" title="Hundprofil" detail="Namn, ras och födelsedatum" checked={selection.profile} disabled={busy} onPress={() => toggleSelection('profile')} />
         <SelectionRow iconsLoaded={iconsLoaded} icon="scale-outline" title="Senaste vikten" detail="Senaste ägarregistrerade vikt och datum" checked={selection.latestWeight} disabled={busy} onPress={() => toggleSelection('latestWeight')} />
         <SelectionRow iconsLoaded={iconsLoaded} icon="medkit-outline" title="Utförda hälsoposter" detail="Vaccinationer och veterinärbesök" checked={selection.healthHistory} disabled={busy} onPress={() => toggleSelection('healthHistory')} />
 
-        {selection.profile && currentBreedState === 'loading' && <MessageCard>Hämtar rasnamnet till hundprofilen…</MessageCard>}
+        {selection.profile && currentBreedState === 'loading' && <Skeleton shape="row" />}
         {selection.profile && currentBreedState === 'error' && <>
-          <MessageCard tone="error">Rasnamnet kunde inte hämtas. Försök igen eller välj bort hundprofilen.</MessageCard>
-          <PrimaryButton title="Hämta rasnamnet igen" onPress={() => { setBreedState('loading'); setBreedDataLifetime(currentLifetime); setBreedAttempt((count) => count + 1); }} disabled={busy} />
+          <InfoBanner action={<Button label="Försök igen" accessibilityLabel="Försök igen" variant="secondary" onPress={() => { setBreedState('loading'); setBreedDataLifetime(currentLifetime); setBreedAttempt((count) => count + 1); }} disabled={busy} />}>Rasnamnet kunde inte hämtas.</InfoBanner>
         </>}
-        {selection.profile && (props.profileBusy || props.profilePending || props.profileConflict) && <MessageCard tone="error">Vi kunde inte kontrollera om hundprofilen sparades. Kontrollera profilen i Mer innan du fortsätter.</MessageCard>}
-        {selection.latestWeight && props.weightLoadState === 'loading' && <MessageCard>Hämtar sparade vikter…</MessageCard>}
-        {selection.latestWeight && props.weightLoadState === 'error' && <MessageCard tone="error">Vikterna kunde inte hämtas. Försök igen i Hälsa eller välj bort viktavsnittet.</MessageCard>}
-        {selection.latestWeight && props.weightPending && <MessageCard tone="error">Vi kunde inte kontrollera om viktändringen sparades. Kontrollera den i Hälsa innan du tar med vikten.</MessageCard>}
-        {selection.healthHistory && props.historyLoadState === 'loading' && <MessageCard>Hämtar sparade hälsoposter…</MessageCard>}
-        {selection.healthHistory && props.historyLoadState === 'error' && <MessageCard tone="error">Hälsoposterna kunde inte hämtas. Försök igen i Hälsa eller välj bort avsnittet.</MessageCard>}
-        {selection.healthHistory && props.historyPending && <MessageCard tone="error">Vi kunde inte kontrollera om hälsoposten sparades. Kontrollera den i Hälsa innan du tar med posterna.</MessageCard>}
+        {selection.profile && (props.profileBusy || props.profilePending || props.profileConflict) && <InfoBanner>Vi kunde inte kontrollera om hundprofilen sparades. Kontrollera profilen i Mer innan du fortsätter.</InfoBanner>}
+        {selection.latestWeight && props.weightLoadState === 'loading' && <Skeleton shape="row" />}
+        {selection.latestWeight && props.weightLoadState === 'error' && <InfoBanner>Vikterna kunde inte hämtas. Försök igen i Hälsa eller välj bort viktavsnittet.</InfoBanner>}
+        {selection.latestWeight && props.weightPending && <InfoBanner>Vi kunde inte kontrollera om viktändringen sparades. Kontrollera den i Hälsa innan du tar med vikten.</InfoBanner>}
+        {selection.healthHistory && props.historyLoadState === 'loading' && <Skeleton shape="row" />}
+        {selection.healthHistory && props.historyLoadState === 'error' && <InfoBanner>Hälsoposterna kunde inte hämtas. Försök igen i Hälsa eller välj bort avsnittet.</InfoBanner>}
+        {selection.healthHistory && props.historyPending && <InfoBanner>Vi kunde inte kontrollera om hälsoposten sparades. Kontrollera den i Hälsa innan du tar med posterna.</InfoBanner>}
 
-        <View style={styles.previewCard}>
+        <Card accessibilityLabel="Förhandsvisning av Tassla-pass">
           <View style={styles.previewHeading}>
             <Text style={styles.previewTitle} accessibilityRole="header">Förhandsvisning</Text>
           </View>
@@ -190,12 +178,12 @@ export function PassportScreen(props: PassportScreenProps) {
           {selection.healthHistory && <Text style={styles.limitNotice}>Visar högst 50 av de senast hämtade händelserna. Äldre uppgifter kan saknas.</Text>}
           <Text style={styles.disclaimer}>Uppgifterna är registrerade av hundägaren. Tassla-pass är ingen officiell journal, legitimation eller vaccinationshandling.</Text>
           {visibleSnapshot && <Text style={styles.createdOn}>Skapad {visibleSnapshot.createdOn}</Text>}
-        </View>
-        {statusMessage && statusError ? <MessageCard tone="error">{statusMessage}</MessageCard> : null}
-        <PrimaryButton title={exporting ? 'Skapar PDF…' : 'Skapa PDF och öppna delning'} disabled={!ready || !snapshot || busy || !selectedAny} onPress={() => { void createAndShare(); }} />
+        </Card>
+        {statusMessage && statusError ? <InfoBanner>{statusMessage}</InfoBanner> : null}
+        <Button label={exporting ? 'Skapar PDF…' : 'Dela som PDF'} accessibilityLabel="Dela som PDF" disabled={!ready || !snapshot || busy || !selectedAny} onPress={() => { void createAndShare(); }} />
         {toastMessage ? <Toast tone="neutral" message={toastMessage} /> : null}
-        {props.weightLoadState === 'error' && <QuietButton title="Försök hämta vikterna igen" disabled={busy} onPress={props.onRetryWeights ?? (() => undefined)} />}
-        {props.historyLoadState === 'error' && <QuietButton title="Försök hämta hälsoposter igen" disabled={busy} onPress={props.onRetryHistory ?? (() => undefined)} />}
+        {props.weightLoadState === 'error' && <Button label="Försök hämta vikterna igen" accessibilityLabel="Försök hämta vikterna igen" variant="secondary" disabled={busy} onPress={props.onRetryWeights ?? (() => undefined)} />}
+        {props.historyLoadState === 'error' && <Button label="Försök hämta hälsoposter igen" accessibilityLabel="Försök hämta hälsoposter igen" variant="secondary" disabled={busy} onPress={props.onRetryHistory ?? (() => undefined)} />}
       </>}
     </View>
   );
@@ -249,6 +237,17 @@ function exportMessage(result: PassportExportResult): { text: string; error: boo
   return { text: 'PDF:en kunde inte skapas eller öppnas för delning. Kontrollera att du fortfarande har åtkomst och försök igen.', error: true };
 }
 
+function formatDogAge(birthDate: string): string {
+  const birth = new Date(`${birthDate}T00:00:00`);
+  const today = new Date();
+  const months = Math.max(0, (today.getFullYear() - birth.getFullYear()) * 12 + today.getMonth() - birth.getMonth() - (today.getDate() < birth.getDate() ? 1 : 0));
+  const years = Math.floor(months / 12);
+  const rest = months % 12;
+  if (years > 0 && rest > 0) return `${years} år och ${rest} ${rest === 1 ? 'månad' : 'månader'}`;
+  if (years > 0) return `${years} år`;
+  return `${Math.max(1, months)} ${months === 1 ? 'månad' : 'månader'}`;
+}
+
 const styles = StyleSheet.create({
   heroCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.selectedSurface, padding: tokens.layout.cardPadding },
   heroIcon: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.surface, alignItems: 'center', justifyContent: 'center' },
@@ -263,7 +262,7 @@ const styles = StyleSheet.create({
   selectionTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
   checkbox: { width: tokens.spacing.xxl, height: tokens.spacing.xxl, borderRadius: tokens.radius.sm, borderWidth: 2, borderColor: tokens.colors.primary, alignItems: 'center', justifyContent: 'center' },
   checkboxChecked: { backgroundColor: tokens.colors.primary },
-  checkmark: { color: tokens.colors.primary, fontWeight: '900', fontSize: 17, lineHeight: 19 },
+  checkmark: { color: tokens.colors.primary, ...tokens.typography.label },
   checkmarkChecked: { color: tokens.colors.onPrimary },
   disabled: { opacity: 0.6 },
   previewCard: { borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, marginTop: tokens.layout.sectionGap },
@@ -271,7 +270,7 @@ const styles = StyleSheet.create({
   previewTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading },
   snapshotSection: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, paddingTop: tokens.spacing.md, marginTop: tokens.spacing.md },
   illustrationFallback: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, padding: tokens.spacing.md, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.successSurface, marginBottom: tokens.spacing.md },
-  illustrationMark: { width: tokens.size.chipMd, height: tokens.size.chipMd, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.primary, color: tokens.colors.onPrimary, textAlign: 'center', textAlignVertical: 'center', fontSize: 22, fontWeight: '800' },
+  illustrationMark: { width: tokens.size.chipMd, height: tokens.size.chipMd, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.primary, color: tokens.colors.onPrimary, textAlign: 'center', textAlignVertical: 'center', ...tokens.typography.label },
   illustrationLabel: { flex: 1, color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '700' },
   snapshotHeading: { color: tokens.colors.primary, ...tokens.typography.label, marginBottom: tokens.spacing.sm },
   previewValueRow: { flexDirection: 'row', gap: tokens.spacing.md, marginTop: tokens.spacing.xs },

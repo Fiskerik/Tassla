@@ -24,7 +24,6 @@ import {
 type LoadState = 'loading' | 'ready' | 'error';
 
 export function PlannedHealthScreen({
-  onBack,
   records,
   loadState,
   busy = false,
@@ -215,7 +214,6 @@ export function PlannedHealthScreen({
   }
 
   return <View>
-    <QuietButton title="Tillbaka till hälsa" disabled={busy} onPress={onBack} />
     <View style={styles.heroCard}>
       <View style={styles.heroIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
         <Ionicons name="calendar-outline" size={tokens.size.iconMd} color={tokens.colors.primary} />

@@ -124,12 +124,12 @@ test('actual Knowledge source handler opens only user-requested HTTPS and report
   await openSource('https://example.org/unavailable');
   assert.deepEqual(calls, ['https://example.org/guide', 'https://example.org/unavailable']);
   assert.deepEqual(messages, ['Källan öppnades.', 'Källan kunde inte öppnas just nu. Du kan försöka igen.']);
-  assert.match(knowledgeSource, /safeUrl\s*&&\s*<QuietButton[\s\S]*?onPress=\{\(\) => \{ void openSource\(source\); \}\}/);
+  assert.match(knowledgeSource, /safeUrl\s*&&\s*<Button[\s\S]*?onPress=\{\(\) => \{ void openSource\(source\); \}\}/);
 });
 
 test('actual screen states separate loading, error with retry, and ready-empty', () => {
-  assert.match(knowledgeSource, /contentState === 'loading'[\s\S]*?Hämtar publicerade guider/);
-  assert.match(knowledgeSource, /contentState === 'error'[\s\S]*?<PrimaryButton title="Försök igen" onPress=\{onRetry\}/);
+  assert.match(knowledgeSource, /contentState === 'loading'[\s\S]*?<Skeleton/);
+  assert.match(knowledgeSource, /contentState === 'error'[\s\S]*?<InfoBanner[\s\S]*?<Button label="Försök igen"/);
   assert.match(knowledgeSource, /contentState === 'ready' && items\.length === 0/);
 });
 
@@ -160,11 +160,11 @@ test('Home opens the exact fetched version and Knowledge resolves that exact row
   };
   let focus;
   let page;
-  const onOpenContent = new Function('setKnowledgeFocus', 'setPage', 'currentSelectionKey',
-    `return (contentId) => {${body}}`)((value) => { focus = value; }, (value) => { page = value; }, 'dog-age-breed-generation');
+  const onOpenContent = new Function('setKnowledgeFocus', 'router', 'currentSelectionKey',
+    `return (contentId) => {${body}}`)((value) => { focus = value; }, { push: (value) => { page = value; } }, 'dog-age-breed-generation');
   onOpenContent(selectedVersion.id);
   assert.deepEqual(focus, { selectionKey: 'dog-age-breed-generation', contentId: selectedVersion.id, returnPage: 'home' });
-  assert.equal(page, 'knowledge');
+  assert.equal(page, '/knowledge');
 
   const selectionExpression = knowledgeSource.match(/const selectedItem = ([^;]+);/)?.[1];
   assert.ok(selectionExpression, 'expected Knowledge exact version selection');

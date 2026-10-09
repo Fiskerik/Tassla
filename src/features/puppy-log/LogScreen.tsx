@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { AccessibilityInfo, Alert, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { AppBar, Button, Card, Dialog, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast } from '../../components/ui';
+import { AppBar, BottomSheet, Button, Card, Dialog, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast } from '../../components/ui';
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
@@ -112,8 +111,10 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         <View style={styles.gridRow}>{(['pee', 'poop'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View>
         <View style={styles.gridRow}>{(['food', 'sleep'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View>
       </View>
-      <View style={styles.moreRow}><QuickLogTile label="Fler" accessibilityLabel={moreVisible ? 'Dölj fler loggtyper' : 'Visa fler loggtyper'} icon={<View style={styles.moreIcon}><Ionicons name={moreVisible ? 'remove' : 'add'} size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></View>} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={toggleMore} /></View>
-      {moreVisible ? <View style={styles.grid} accessibilityLabel="Fler loggtyper"><View style={styles.gridRow}>{(['walk', 'awake'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View></View> : null}
+      <View style={styles.moreRow}><ListRow title="Fler händelser" category="walk" chevron accessibilityLabel={moreVisible ? 'Dölj fler händelser' : 'Visa fler händelser'} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={toggleMore} /></View>
+      <BottomSheet visible={moreVisible} title="Fler händelser" onRequestClose={() => setMoreVisible(false)}>
+        {(['walk', 'awake'] as const).map((type) => <ListRow key={type} title={LOG_EVENT_LABELS[type]} category={type} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={() => selectType(type, Date.now())} />)}
+      </BottomSheet>
 
       {patterns.length > 0 ? <>
         <SectionHeader title="Dina senaste mönster" />
@@ -126,7 +127,9 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       {mutation?.status === 'unsure' && <Toast tone="uncertain" onRetry={retryMutation} />}
       {mutation?.status === 'saved' && dismissedMutationKey !== `${mutation.kind}:${mutation.mutationId}` && <Toast tone="success" confirmed message={mutation.kind === 'add' ? `${LOG_EVENT_LABELS[mutation.type]} loggat` : mutation.kind === 'update' ? 'Ändring sparad' : 'Händelsen är raderad'} onUndo={mutation.kind === 'add' ? () => onUndo?.(mutation.id) : undefined} />}
 
-      {editingEvent ? <LogEventEditor key={editingEvent.id} event={editingEvent} disabled={editLocked} onCancel={() => setEditingId(null)} onSave={(changes) => saveEdit(editingEvent, changes)} onDelete={() => askToDelete(editingEvent)} /> : null}
+      <BottomSheet visible={editingEvent !== null} title="Ändra händelse" onRequestClose={() => setEditingId(null)}>
+        {editingEvent ? <LogEventEditor key={editingEvent.id} event={editingEvent} disabled={editLocked} onCancel={() => setEditingId(null)} onSave={(changes) => saveEdit(editingEvent, changes)} onDelete={() => askToDelete(editingEvent)} /> : null}
+      </BottomSheet>
 
       <SectionHeader title="Dagens logg" />
       {!events.some((event) => localDateTimeParts(event.occurredAt).date === localDate()) && !(mutation?.kind === 'add' && mutation.status === 'pending') ? <View style={styles.empty}><Text style={styles.emptyTitle}>Inget loggat än idag</Text><Text style={styles.emptyBody}>Tryck på en ruta ovan för att lägga till dagens första händelse.</Text></View> : null}
@@ -220,7 +223,7 @@ function heading(date: string): string {
 }
 
 const styles = StyleSheet.create({
-  screen: { gap: tokens.spacing.md }, grid: { gap: tokens.spacing.sm }, gridRow: { flexDirection: 'row', gap: tokens.spacing.sm }, moreRow: { width: '48%' }, moreIcon: { width: tokens.size.chipLg, minHeight: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.selectedSurface },
+  screen: { gap: tokens.spacing.md }, grid: { gap: tokens.spacing.sm }, gridRow: { flexDirection: 'row', gap: tokens.spacing.sm }, moreRow: { alignSelf: 'stretch' },
   patternText: { ...tokens.typography.body, color: tokens.colors.textPrimary, paddingVertical: tokens.spacing.xs },
   empty: { padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, gap: tokens.spacing.xs },
   emptyTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary }, emptyBody: { ...tokens.typography.body, color: tokens.colors.textSecondary },

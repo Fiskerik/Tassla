@@ -5,7 +5,7 @@ import { PoopIcon } from './PoopIcon';
 import { PillIcon } from './PillIcon';
 
 export type IconCategory = keyof typeof categoryColors;
-export type IconChipSize = 'medium' | 'large';
+export type IconChipSize = 'medium' | 'tile' | 'large';
 export const categoryIcons: Record<IconCategory, React.ComponentProps<typeof Ionicons>['name'] | 'poop'> = {
   pee: 'water-outline', poop: 'poop', food: 'restaurant-outline', sleep: 'moon-outline', awake: 'eye-outline',
   walk: 'footsteps-outline', training: 'school-outline', vaccination: 'bandage-outline', deworming: 'medical-outline', veterinary: 'medkit-outline',
@@ -16,7 +16,7 @@ const categoryLabels: Record<IconCategory, string> = {
 };
 
 export function IconChip({ category, size = 'medium' }: { category: IconCategory; size?: IconChipSize }) {
-  const dimension = size === 'large' ? tokens.size.chipLg : tokens.size.chipMd;
+  const dimension = size === 'large' ? tokens.size.chipLg : size === 'tile' ? tokens.size.chipTile : tokens.size.chipMd;
   const iconSize = size === 'large' ? tokens.size.iconMd : tokens.size.iconSm;
   const color = categoryColors[category];
   const icon = categoryIcons[category];
