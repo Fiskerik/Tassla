@@ -181,3 +181,21 @@ Architect APPROVE v6. Oberoende QA PASS och Reviewer PASS för kod/beteende efte
 Renderade skärmdumpar saknas eftersom miljön inte har iOS-/Android-simulator eller webbberoenden. Liten/stor telefon, stor text, safe area, tangentbord/fokus och den fulla tillståndsmatrisens upplevda kvalitet är därför NOT TESTABLE. LOGGA-QUICK är blockerad, inte DONE, och LOGGA-EDIT har inte startats. Nästa steg kräver att Erik öppnar `pnpm start:preview` på en kompatibel telefon eller tillhandahåller native rendering; därefter fångas matrisen och en annan roll gör visuell QA. Ingen push, GitHub Release, TestFlight-build, dependency-, schema- eller databasändring har gjorts.
 
 Lokal implementationscheckpoint: `230ad34` (`feat: redesign quick log experience`). Den är inte pushad. Dokumentationscommitten som registrerar checkpoint-ID:t följer separat.
+
+## UX-03 lokal checkpoint — 2026-10-09
+
+Implementerat `MainSwipeNavigation` för de sex MVP-ytorna Hem → Valplogg → Träning → Hälsa → Kunskap → Tassla-pass i `ProductWorkspace`, med befintlig Expo Router-ingång och `BottomNav` kvar. `ScreenTransition` stöder nu en tokeniserad horisontell variant för sidbyte, medan reducerad rörelse tar bort förflyttning och befintliga vertikala övergångar behåller y-axeln. `HomeCarousel` visar fyra/fem tappbara kort från befintliga tränings-, logg-, kunskaps- och hälsodata samt `Logga nu`; snap stängs av vid reducerad rörelse. Ingen dependency, lockfil, migration eller datamodell ändrad.
+
+Plan/checkpoint: [UX-03](ux-03.md). Release-logg: [UX-03](../../releases/UX-03.md). `git diff --check` PASS. `pnpm typecheck`, `pnpm lint` och `pnpm test` kunde inte slutföras eftersom lokala paket saknas och återställning via registry ger EPERM; direkt Node-test gav 12 pass och 13 importfel. Native/renderad QA är NOT TESTABLE. Nästa steg är dependencyåterställning, full `pnpm check` och separat visuell/native QA av swipe/carousel på liten/stor skärm och reducerad rörelse.
+
+## UX-04 lokal checkpoint — 2026-10-09
+
+`formatDogAge` centraliserar all användarsynlig hundålder till `Y mån` eller `X år Y mån`; Hem, preview och Tassla-pass använder profilens födelsedatum. Interna veckor används fortsatt endast för befintliga åldersintervall i publicerat content/training och visas inte. Hem-carouselen kompletterades med åldersetikett i relevanta kort och tydligare Valplogg-copy; dess upstream-data är redan age-/breed-filtrerad.
+
+`tasks.md` saknas i repot; detta är dokumenterat i UX-04. Riktad domain-test passerar och `git diff --check` passerar. Full typecheck/lint/test är blockerad av saknade paket/registry-EPERM. Visual-check försöktes men preview-site saknas och Chromium avslutas med SIGTRAP; skärmdumpmatrisen är NOT TESTABLE. Checklista och exakt avvikelse från “HeroCard på Hem” finns i [UX-04-checklist](../../design/UX-04-checklist.md). Release-logg: [UX-04](../../releases/UX-04.md).
+
+## UX-05 lokal checkpoint — 2026-10-09
+
+Hem använder nu den befintliga `HeroCard` överst med hundens profilnamn, profilbaserad ålder i år/månader och befintlig hundbild. `HomeCarousel` ligger direkt därefter och visar 4–5 ålders-/rasrelevanta, tappbara kort med befintliga komponenter/tokens. BottomNav, datumväljare och `Idag för [namn]`-flödet är bevarade; pressed-state och reducerad-rörelse följer gemensamma komponenter.
+
+Riktad domain-test och `git diff --check` passerar. Full typecheck/lint/test är blockerad av saknade paket/registry-EPERM. Visual-check försöktes men preview-site saknas och Chromium avslutas med SIGTRAP; skärmdumpmatrisen är NOT TESTABLE. Ifylld checklista finns i [UX-05-checklist](../../design/UX-05-checklist.md). Release-logg: [UX-05](../../releases/UX-05.md).

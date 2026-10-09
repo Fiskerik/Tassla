@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { AppBar, Button, DogCard, ListRow, SectionHeader, Skeleton } from '../../components/ui';
+import { AppBar, Button, HeroCard, ListRow, SectionHeader, Skeleton } from '../../components/ui';
 import { MotionPressable, ScreenTransition } from '../../components/ui/Motion';
 import type { HomeContent, OwnedDog } from '../../data/app-data';
 import type { PlannedHealthRecord } from '../../data/workspace-data';
 import { tokens } from '../../theme/tokens';
-import { ageInWeeks, localDate } from '../onboarding/dog';
+import { formatDogAge, localDate } from '../onboarding/dog';
 import { LOG_EVENT_LABELS, localDateTimeParts, type LogEvent } from '../puppy-log/log-model';
+import { HomeCarousel } from './HomeCarousel';
 
 type Destination = 'log' | 'training' | 'health' | 'profile' | 'notification-settings' | 'planned-health' | 'knowledge';
 export function HomeScreen({ dog, breed = '', events, plans = [], content, contentState, logState = 'ready', planState = 'ready', nextStep, onGo, onOpenContent, onRetryContent }: {
@@ -24,12 +25,16 @@ export function HomeScreen({ dog, breed = '', events, plans = [], content, conte
   });
   const dailyEvents = events.filter((event) => localDateTimeParts(event.occurredAt).date === selected);
   const dailyPlans = plans.filter((plan) => plan.due_on === selected);
-  const age = ageInWeeks(dog.birth_date, today);
+  const age = formatDogAge(dog.birth_date, today);
   return <View>
     <AppBar mode="Home" title="Tassla" onAction={() => onGo('notification-settings')} />
-    <MotionPressable accessibilityRole="button" accessibilityLabel={`Visa ${dog.name}s profil`} onPress={() => onGo('profile')}>
-      <DogCard name={dog.name} age={`${age} ${age === 1 ? 'vecka' : 'veckor'}`} breed={breed} />
-    </MotionPressable>
+    <HeroCard
+      title={dog.name}
+      meta={breed ? `${age} · ${breed}` : age}
+      image={require('../../../assets/images/dog-welcome.png')}
+      onPress={() => onGo('profile')}
+    />
+    <HomeCarousel dog={dog} events={events} plans={plans} content={content} contentState={contentState} nextStep={nextStep} onGo={onGo} onOpenContent={onOpenContent} />
     <View style={styles.week} accessibilityRole="tablist" accessibilityLabel="Välj dag">
       {dates.map(({ key, date }) => <MotionPressable key={key} accessibilityRole="tab" accessibilityLabel={date.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' })} accessibilityState={{ selected: key === selected }} onPress={() => setSelected(key)} style={[styles.day, key === selected && styles.selectedDay]}>
         <Text style={[styles.weekday, key === selected && styles.selectedText]}>{date.toLocaleDateString('sv-SE', { weekday: 'short' }).replace('.', '')}</Text>

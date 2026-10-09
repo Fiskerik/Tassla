@@ -7,7 +7,7 @@ import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPri
 import { Toast } from '../../components/ui/Toast';
 import { fetchBreeds, type BreedOption, type OwnedDog } from '../../data/app-data';
 import type { HealthHistoryRecord, HealthWeightRecord } from '../../data/workspace-data';
-import { localDate } from '../onboarding/dog';
+import { formatDogAge, localDate } from '../onboarding/dog';
 import { tokens } from '../../theme/tokens';
 import { AppBar, BottomSheet, Button, DogCard } from '../../components/ui';
 import { createAndSharePassportPdf, type PassportExportResult } from './passport-export';
@@ -210,7 +210,7 @@ function SelectionRow({ iconsLoaded, icon, title, detail, checked, disabled, onP
 function SnapshotPreview({ snapshot }: { snapshot: PassportSnapshot }) {
   return <View>
     {snapshot.selected.profile && <View>
-      {snapshot.dog ? <DogCard name={snapshot.dog.name} breed={snapshot.dog.breed} age={`Född ${snapshot.dog.birthDate}`} /> : <Text style={styles.body}>Hunduppgifter saknas.</Text>}
+      {snapshot.dog ? <DogCard name={snapshot.dog.name} breed={snapshot.dog.breed} age={`${formatDogAge(snapshot.dog.birthDate, localDate())} · Född ${snapshot.dog.birthDate}`} /> : <Text style={styles.body}>Hunduppgifter saknas.</Text>}
     </View>}
     {snapshot.selected.latestWeight && <View style={styles.snapshotSection}>
       <Text style={styles.snapshotHeading}>Senaste vikten</Text>

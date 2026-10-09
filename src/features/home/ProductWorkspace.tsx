@@ -72,7 +72,7 @@ import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
 import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
 import { HomeScreen } from './HomeScreen';
-import { AppBar, BottomNav, type BottomNavDestination } from '../../components/ui';
+import { AppBar, BottomNav, MainSwipeNavigation, type BottomNavDestination } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
 import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
 import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
@@ -110,10 +110,12 @@ type PendingPlannedHealthMutation =
 type PendingProfileMutation = { previous: OwnedDog; changes: OwnedDogProfileChanges; knownBreeds: readonly BreedOption[]; lifetime: string };
 
 const PAGE_SIZE = 40;
+const MAIN_PAGES: ProductPage[] = ['home', 'log', 'training', 'health', 'knowledge', 'passport'];
 
 export function ProductWorkspace({ client, dog, onDogUpdated }: { client: SupabaseClient; dog: OwnedDog; onDogUpdated?: (updated: OwnedDog) => void }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
   const [page, setPage] = useState<ProductPage>('home');
+  const previousPage = useRef(page);
   const [breeds, setBreeds] = useState<BreedOption[]>([]);
   useEffect(() => {
     let active = true;
@@ -233,6 +235,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   useEffect(() => {
     if (page === 'home' && analyticsConsent === true) void analyticsService.track('home_viewed');
   }, [analyticsConsent, analyticsService, page]);
+  useEffect(() => { previousPage.current = page; }, [page]);
   const currentHealthHistoryLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const currentLogLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const healthHistoryLifetime = useRef('');
@@ -1779,8 +1782,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   if (fontError) return <AppScreen><MessageCard tone="error">Ikonerna kunde inte laddas. Starta om appen och försök igen.</MessageCard></AppScreen>;
 
   const pageContent = renderPage();
+  const transitionDirection = navigationDirection(previousPage.current, page);
   return <AppScreen scrollKey={page} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={mainDestination(page)} onChange={setPage} />}>
-    <ScreenTransition transitionKey={page}>{pageContent}</ScreenTransition>
+    <MainSwipeNavigation enabled={MAIN_PAGES.includes(page)} onSwipe={(direction) => navigateMainPage(page, direction)}>
+      <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x">{pageContent}</ScreenTransition>
+    </MainSwipeNavigation>
   </AppScreen>;
 
   function renderPage() {
@@ -1942,6 +1948,20 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       onRetryStatus={() => { void retryProfileStatus(); }} onAcceptCurrent={() => { void acceptCurrentProfile(); }} />;
     return <DogProfilePage dog={dog} onBack={() => setPage('more')} />;
   }
+
+  function navigateMainPage(current: ProductPage, direction: 'left' | 'right') {
+    const index = MAIN_PAGES.indexOf(current);
+    if (index < 0) return;
+    const nextIndex = direction === 'left' ? index + 1 : index - 1;
+    const next = MAIN_PAGES[nextIndex];
+    if (next) setPage(next);
+  }
+}
+
+function navigationDirection(previous: ProductPage, current: ProductPage): 'forward' | 'backward' {
+  const previousIndex = MAIN_PAGES.indexOf(previous);
+  const currentIndex = MAIN_PAGES.indexOf(current);
+  return currentIndex >= 0 && previousIndex >= 0 && currentIndex < previousIndex ? 'backward' : 'forward';
 }
 
 function MorePage({ onNavigate, signOutError, signingOut, onSignOut, onOpenNotifications, onOpenAccount }: {

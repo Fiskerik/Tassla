@@ -36,7 +36,9 @@ export function MotionPressable({ style, onPressIn, onPressOut, ...props }: Pres
     style={[typeof style === 'function' ? style({ pressed: pressed && !props.disabled }) : style, { transform: [{ scale }] }]} />;
 }
 
-export function ScreenTransition({ children, transitionKey }: { children: ReactNode; transitionKey: string }) {
+export function ScreenTransition({ children, transitionKey, direction = 'forward', axis = 'y' }: {
+  children: ReactNode; transitionKey: string; direction?: 'forward' | 'backward'; axis?: 'x' | 'y';
+}) {
   const reduced = useReducedMotion();
   const [progress] = useState(() => new Animated.Value(1));
   useEffect(() => {
@@ -47,5 +49,7 @@ export function ScreenTransition({ children, transitionKey }: { children: ReactN
     animation.start();
     return () => animation.stop();
   }, [progress, reduced, transitionKey]);
-  return <Animated.View key={transitionKey} style={{ opacity: progress, transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [tokens.motion.distance, 0] }) }] }}>{children}</Animated.View>;
+  const shift = direction === 'forward' ? tokens.motion.distance : -tokens.motion.distance;
+  const translation = reduced ? 0 : progress.interpolate({ inputRange: [0, 1], outputRange: [shift, 0] });
+  return <Animated.View key={transitionKey} style={{ opacity: progress, transform: [axis === 'x' ? { translateX: translation } : { translateY: translation }] }}>{children}</Animated.View>;
 }
