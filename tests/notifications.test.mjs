@@ -96,16 +96,16 @@ test('future reminder reads reject cross-dog rows and invalid reminder metadata'
 });
 
 test('local fire time rejects the Stockholm spring gap and chooses the earlier fall-fold instant', async () => {
-  const source = `import { createLocalFireTime } from ${JSON.stringify(new URL('../src/notifications/notification-model.ts', import.meta.url).href)};
-    const gap = createLocalFireTime('2026-03-29', 150, new Date('2026-01-01T00:00:00Z'));
-    const fold = createLocalFireTime('2026-10-25', 150, new Date('2026-01-01T00:00:00Z'));
-    process.stdout.write(JSON.stringify({ gap: gap.status, fold: fold.status, instant: fold.date?.toISOString() }));`;
-  const { spawnSync } = await import('node:child_process');
-  const result = spawnSync(process.execPath, ['--experimental-strip-types', '--input-type=module', '-e', source], {
-    encoding: 'utf8', env: { ...process.env, TZ: 'Europe/Stockholm' },
-  });
-  assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(JSON.parse(result.stdout), { gap: 'unrepresentable', fold: 'scheduled', instant: '2026-10-25T00:30:00.000Z' });
+  const previousTz = process.env.TZ;
+  process.env.TZ = 'Europe/Stockholm';
+  try {
+    const gap = model.createLocalFireTime('2026-03-29', 150, new Date('2026-01-01T00:00:00Z'));
+    const fold = model.createLocalFireTime('2026-10-25', 150, new Date('2026-01-01T00:00:00Z'));
+    assert.deepEqual({ gap: gap.status, fold: fold.status, instant: fold.date?.toISOString() }, { gap: 'unrepresentable', fold: 'scheduled', instant: '2026-10-25T00:30:00.000Z' });
+  } finally {
+    if (previousTz === undefined) delete process.env.TZ;
+    else process.env.TZ = previousTz;
+  }
 });
 
 test('notification preference validation is closed, bounded, and keyed per owner', () => {

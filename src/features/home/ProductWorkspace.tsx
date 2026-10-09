@@ -210,15 +210,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated, children }: { clie
 
   useEffect(() => {
     let active = true;
-    setAnalyticsConsent(null);
-    setAnalyticsError(false);
-    if (!session?.user.id) return () => { active = false; };
+    const resetTimer = setTimeout(() => {
+      if (!active) return;
+      setAnalyticsConsent(null);
+      setAnalyticsError(false);
+    }, 0);
+    if (!session?.user.id) return () => { active = false; clearTimeout(resetTimer); };
     void analyticsService.getConsent().then((value) => {
       if (!active) return;
       setAnalyticsConsent(value);
       setAnalyticsError(value === null);
     });
-    return () => { active = false; };
+    return () => { active = false; clearTimeout(resetTimer); };
   }, [analyticsService, session?.user.id]);
 
   useEffect(() => {
@@ -2014,7 +2017,7 @@ function sameOwnedDogProfile(
 
 const styles = StyleSheet.create({
   profileCard: { borderRadius: theme.radius.card, backgroundColor: theme.colors.surface, padding: 18, borderColor: theme.colors.border, borderWidth: 1 },
-  cardEyebrow: { ...theme.typography.caption, color: theme.colors.textMuted, marginBottom: 4 },
+  cardEyebrow: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginBottom: 4 },
   profileValue: { color: theme.colors.text, fontSize: 17, fontWeight: '700', marginBottom: 18 },
   pressed: { opacity: 0.72 },
 });

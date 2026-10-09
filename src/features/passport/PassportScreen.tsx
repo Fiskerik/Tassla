@@ -63,10 +63,13 @@ export function PassportScreen(props: PassportScreenProps) {
     return () => { mounted.current = false; };
   }, []);
   useEffect(() => {
-    if (!statusMessage || statusError) { setToastMessage(null); return; }
-    setToastMessage(statusMessage);
+    if (!statusMessage || statusError) {
+      const clearTimer = setTimeout(() => setToastMessage(null), 0);
+      return () => clearTimeout(clearTimer);
+    }
+    const showTimer = setTimeout(() => setToastMessage(statusMessage), 0);
     const timer = setTimeout(() => setToastMessage(null), 2500);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(showTimer); clearTimeout(timer); };
   }, [statusMessage, statusError]);
   useEffect(() => {
     if (!client || !dog) return;

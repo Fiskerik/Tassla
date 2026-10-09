@@ -77,10 +77,13 @@ export function HealthScreen({
   const confirmedMessage = statusMessage?.startsWith('Ändringen är sparad') && !statusError && !pendingStatus && !isBusy
     ? statusMessage : null;
   useEffect(() => {
-    if (!confirmedMessage) { setToastMessage(null); return; }
-    setToastMessage(confirmedMessage);
+    if (!confirmedMessage) {
+      const clearTimer = setTimeout(() => { setToastMessage(null); setToastRecordId(null); }, 0);
+      return () => clearTimeout(clearTimer);
+    }
+    const showTimer = setTimeout(() => setToastMessage(confirmedMessage), 0);
     const timer = setTimeout(() => { setToastMessage(null); setToastRecordId(null); }, 2500);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(showTimer); clearTimeout(timer); };
   }, [confirmedMessage, toastNonce]);
 
   function startEditing(record: HealthWeightRecord) {

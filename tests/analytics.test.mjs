@@ -1,7 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ANALYTICS_EVENT_TYPES } from '../src/analytics/analytics-model.ts';
-import { createAnalyticsService, createSyntheticAnalyticsAdapter } from '../src/analytics/analytics-service.ts';
+import { registerHooks } from 'node:module';
+
+const tsResolution = registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier.startsWith('.') && !/\.[a-z0-9]+$/i.test(specifier)) return nextResolve(`${specifier}.ts`, context);
+    return nextResolve(specifier);
+  },
+});
+const { ANALYTICS_EVENT_TYPES } = await import('../src/analytics/analytics-model.ts');
+const { createAnalyticsService, createSyntheticAnalyticsAdapter } = await import('../src/analytics/analytics-service.ts');
+tsResolution.deregister();
 
 test('synthetic metrics are off by default and require explicit opt-in gates', () => {
   const adapter = createSyntheticAnalyticsAdapter();

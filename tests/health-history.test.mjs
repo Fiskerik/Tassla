@@ -442,7 +442,7 @@ test('health history editor remounts on saved-record snapshot changes and resets
   assert.match(healthScreenSource, /<HealthHistoryScreen key=\{JSON\.stringify\(historyRecords\?\.map\(\(\{ id, event_type, occurred_on, description \}\) => \[id, event_type, occurred_on, description\]\)\)\}/);
   assert.match(historyScreenSource, /function resolveConflict\(\) \{\s*resetForm\(\);\s*onResolveConflict\?\.\(\);\s*\}/);
   assert.match(historyScreenSource, /onResolveConflict\?\.\(\)/);
-  assert.match(historyScreenSource, /title="Använd aktuell historik och börja om"/);
+  assert.match(historyScreenSource, /label="Använd aktuell historik och börja om"/);
 });
 
 function localClient(handler) {

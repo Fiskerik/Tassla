@@ -52,10 +52,13 @@ export function EditDogProfileScreen({
   const blocked = busy || pending;
 
   useEffect(() => {
-    if (!confirmedMessage) { setToastMessage(null); return; }
-    setToastMessage(confirmedMessage);
+    if (!confirmedMessage) {
+      const clearTimer = setTimeout(() => setToastMessage(null), 0);
+      return () => clearTimeout(clearTimer);
+    }
+    const showTimer = setTimeout(() => setToastMessage(confirmedMessage), 0);
     const timer = setTimeout(() => setToastMessage(null), 2500);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(showTimer); clearTimeout(timer); };
   }, [confirmedMessage]);
 
   useEffect(() => {

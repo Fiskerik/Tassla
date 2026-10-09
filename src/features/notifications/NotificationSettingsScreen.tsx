@@ -33,13 +33,16 @@ export function NotificationSettingsScreen({
     || trainingTime !== formatTime(preferences.trainingMinutes);
 
   useEffect(() => {
-    if (!showSavedToast || !saved || statusError) { setToastMessage(null); return; }
-    setToastMessage('Valen är sparade för ditt konto på den här enheten.');
+    if (!showSavedToast || !saved || statusError) {
+      const clearTimer = setTimeout(() => setToastMessage(null), 0);
+      return () => clearTimeout(clearTimer);
+    }
+    const showTimer = setTimeout(() => setToastMessage('Valen är sparade för ditt konto på den här enheten.'), 0);
     const timer = setTimeout(() => {
       setShowSavedToast(false);
       setToastMessage(null);
     }, 2500);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(showTimer); clearTimeout(timer); };
   }, [showSavedToast, saved, statusError, preferences]);
 
   async function save() {

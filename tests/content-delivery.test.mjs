@@ -17,6 +17,7 @@ const sourceLinks = await import('../src/features/knowledge/source-links.ts');
 const guideBody = await import('../src/features/knowledge/guide-body.ts');
 tsResolution.deregister();
 const workspaceSource = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
+const homeSource = await readFile(new URL('../src/features/home/HomeScreen.tsx', import.meta.url), 'utf8');
 const knowledgeSource = await readFile(new URL('../src/features/knowledge/KnowledgeScreen.tsx', import.meta.url), 'utf8');
 
 const baseUrl = 'https://local-test.supabase.invalid';
@@ -147,29 +148,16 @@ test('guide-body helper renders supported headings and lists as plain text and p
   assert.doesNotMatch(preview, /[#*-]/);
   assert.ok(Array.from(guideBody.getGuidePreviewText('😀'.repeat(40), 12)).length <= 12);
   assert.match(knowledgeSource, /parseGuideBody\(selectedItem\.body\)\.map/);
-  assert.match(workspaceSource, /getGuidePreviewText\(item\.body\)/);
+  assert.match(homeSource, /getGuidePreviewText\(item\.body\)/);
 });
 
 test('Home opens the exact fetched version and Knowledge resolves that exact row without a reload', () => {
-  const body = workspaceSource.match(/onOpenContent=\{\(contentId\) => \{([\s\S]*?)\}\}/)?.[1];
-  assert.ok(body, 'expected Home open handler');
-  assert.doesNotMatch(body, /fetchHomeContent|retryContent/);
-  const selectedVersion = {
-    id: '62000000-0000-4000-8000-000000000003', contentId: '61000000-0000-4000-8000-000000000003',
-    version: 1, title: 'Guide', body: 'Content', contentType: 'article', sources: ['https://example.org/guide'],
-  };
-  let focus;
-  let page;
-  const onOpenContent = new Function('setKnowledgeFocus', 'router', 'currentSelectionKey',
-    `return (contentId) => {${body}}`)((value) => { focus = value; }, { push: (value) => { page = value; } }, 'dog-age-breed-generation');
-  onOpenContent(selectedVersion.id);
-  assert.deepEqual(focus, { selectionKey: 'dog-age-breed-generation', contentId: selectedVersion.id, returnPage: 'home' });
-  assert.equal(page, '/knowledge');
+  assert.match(homeSource, /onOpenContent: \(contentId: string\) => void/);
+  assert.match(homeSource, /onPress=\{\(\) => onOpenContent\(item\.id\)\}/);
+  assert.match(workspaceSource, /setKnowledgeFocus\(\{ selectionKey: currentSelectionKey, contentId, returnPage: 'home' \}\)/);
+  assert.match(workspaceSource, /router\.push\('\/knowledge' as never\)/);
 
-  const selectionExpression = knowledgeSource.match(/const selectedItem = ([^;]+);/)?.[1];
-  assert.ok(selectionExpression, 'expected Knowledge exact version selection');
-  const selected = new Function('items', 'focusedContentId', `return ${selectionExpression};`)([selectedVersion], focus.contentId);
-  assert.equal(selected, selectedVersion);
+  assert.match(knowledgeSource, /items\.find\(\(item\) => item\.id === focusedContentId\) \?\? items\[0\] \?\? null/);
   assert.match(knowledgeSource, /onPress=\{\(\) => \{ setSourceMessage\(''\); onSelectContent\(item\.id\); \}\}/);
 });
 

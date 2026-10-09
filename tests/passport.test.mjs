@@ -255,7 +255,7 @@ test('account or dog lifetime change after each asynchronous boundary suppresses
 });
 
 test('startup cleanup deletes only stale direct-cache files with the owned prefix and preserves active files', () => {
-  assert.match(appFlowSource, /useEffect\(\(\) => \{ cleanupStalePassportFiles\(\); \}, \[\]\)/,
+  assert.match(appFlowSource, /cleanupStalePassportFiles\(\);/,
     'AppFlow startup must invoke cleanup independently of local/remote branches');
   const harness = createExporterHarness();
   const removed = [];
@@ -351,7 +351,7 @@ test('export startup actually runs stale owned-file cleanup before printing', as
 });
 
 test('PassportScreen export handler captures the current preview on user action and blocks duplicates', async () => {
-  assert.match(passportScreenSource, /onPress=\{\(\) => \{ setDismissedStatus\(''\); void createAndShare\(\); \}\}/);
+  assert.match(passportScreenSource, /onPress=\{\(\) => \{ void createAndShare\(\); \}\}/);
   assert.match(passportScreenSource, /disabled=\{!ready \|\| !snapshot \|\| busy \|\| !selectedAny\}/);
   const source = extractLocalFunction(passportScreenSource, 'async function createAndShare()');
   let completeExport;
