@@ -40,7 +40,7 @@ test('quick log has truthful loading, empty, failure, mutation and confirmed und
 test('quick log hides sparse patterns and keeps edit/delete inside the row editor', () => {
   assert.match(screen, /summarizePottyPatterns\(events\)\.filter\(\(item\) => item\.count >= 2\)/);
   assert.match(screen, /onPress=\{\(\) => setEditingId\(event\.id\)\}/);
-  assert.match(screen, /QuietButton title="Radera"/);
+  assert.match(screen, /<Button variant="destructive" label="Radera"/);
   assert.doesNotMatch(screen, /SPARAD|ActionFeedbackModal/);
 });
 
@@ -84,7 +84,7 @@ test('quick add labels, rapid-tap guard, retry propagation and Swedish decimal f
   assert.match(workspace, /onRetry=\{retryLogMutation\}/);
   assert.match(workspace, /const logLifetime = useRef\(''\)/);
   assert.match(workspace, /const isCurrent = \(\) => isLogMutationLifetimeCurrent\(lifetime, logLifetime\.current, mounted\.current\)/);
-  assert.match(screen, /title="Avbryt" disabled=\{saving \|\| disabled\}/);
+  assert.match(screen, /label="Avbryt"[\s\S]*?disabled=\{saving \|\| disabled\}/);
   assert.match(screen, /DatePickerField label="Datum" disabled=\{disabled\}/);
   assert.match(screen, /TimePickerField label="Tid" disabled=\{disabled\}/);
   assert.match(workspace, /setQuickLogMutation\(toQuickLogMutationView\(mutation, 'pending'\)\);[\s\S]*?checkInsertRetryOperation/);
