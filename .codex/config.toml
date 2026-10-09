@@ -2,10 +2,7 @@
 # Active subagents live in .codex/agents/*.toml (one file per agent).
 # Dev roles are configured in agents/; app work is gated by approved segment and plan.
 
-# The main session is the orchestrator. Sol is a good default;
-# Choose stronger models explicitly only when needed.
-model = "gpt-5.6-sol"
-model_reasoning_effort = "medium"
+
 
 [agents]
 max_concurrent_threads_per_session = 2 # at most two spawned agents
