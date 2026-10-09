@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { MessageCard, PageHeading, QuietButton } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
@@ -7,6 +7,7 @@ import { readAccountDeletionMarker, type AccountDeleteResult } from './account-d
 
 export function AccountSettingsScreen({
   ownerId, onBack, onOpenInformation, onDeleteAccount, onSignOutLocally, busy, status, localCleanupFailed, signOutFailed,
+  analyticsConsent, analyticsBusy, analyticsError, onSetAnalyticsConsent, onRetryAnalyticsConsent,
 }: {
   ownerId: string;
   onBack: () => void;
@@ -17,6 +18,11 @@ export function AccountSettingsScreen({
   status: 'idle' | 'confirmed' | 'failed' | 'unknown' | 'unavailable' | 'blocked';
   localCleanupFailed: boolean;
   signOutFailed: boolean;
+  analyticsConsent: boolean | null;
+  analyticsBusy: boolean;
+  analyticsError: boolean;
+  onSetAnalyticsConsent: (enabled: boolean) => Promise<boolean>;
+  onRetryAnalyticsConsent: () => Promise<void>;
 }) {
   const [markerState, setMarkerState] = useState<'pending' | 'clear' | 'unavailable'>('unavailable');
   const [markerReady, setMarkerReady] = useState(false);
@@ -89,10 +95,32 @@ export function AccountSettingsScreen({
     </Pressable>
     {supportError && <MessageCard tone="error">E-postlänken kunde inte öppnas. Du kan skriva till erimali.ab@gmail.com.</MessageCard>}
 
+    <View style={styles.metricsCard}>
+      <View style={styles.metricsCopy}>
+        <Text style={styles.rowTitle}>Hjälp oss göra Tassla bättre</Text>
+        <Text style={styles.rowDetail}>Frivillig mätning visar vilka delar av appen som används. Händelser sparas i upp till 30 dagar. Du kan stänga av när du vill.</Text>
+      </View>
+      <View style={styles.metricsToggleRow}>
+        <Text style={styles.metricsLabel}>Tillåt användningsmätning</Text>
+        <Switch
+          accessibilityLabel="Tillåt frivillig användningsmätning"
+          accessibilityState={{ checked: analyticsConsent === true, disabled: analyticsConsent === null || analyticsBusy || busy }}
+          disabled={analyticsConsent === null || analyticsBusy || busy}
+          value={analyticsConsent === true}
+          onValueChange={(value) => { void onSetAnalyticsConsent(value); }}
+          trackColor={{ false: tokens.colors.borderStrong, true: tokens.colors.primary }}
+          thumbColor={tokens.colors.surface}
+        />
+      </View>
+      {(analyticsBusy || analyticsConsent === null) && <Text style={styles.metricsStatus}>{analyticsBusy ? 'Sparar ditt val…' : 'Hämtar ditt val…'}</Text>}
+    </View>
+    {analyticsError && <MessageCard tone="error">Valet kunde inte sparas eller hämtas. Kontrollera anslutningen och försök igen.</MessageCard>}
+    {analyticsError && <QuietButton title="Försök hämta valet igen" disabled={analyticsBusy || busy} onPress={() => { void onRetryAnalyticsConsent(); }} />}
+
     {status === 'confirmed' && <MessageCard>Kontot är raderat. Vi loggar ut från den här enheten.</MessageCard>}
     {status === 'failed' && <MessageCard tone="error">Vi kunde inte bekräfta att kontot raderades. Kontrollera anslutningen eller kontakta support.</MessageCard>}
     {status === 'unavailable' && <MessageCard tone="error">Raderingen kunde inte startas säkert på den här enheten. Försök igen senare.</MessageCard>}
-    {status === 'blocked' && <MessageCard tone="error">Avsluta först pågående ändringar och lös eventuell osäker sparstatus innan du raderar kontot.</MessageCard>}
+    {status === 'blocked' && <MessageCard tone="error">Avsluta pågående ändringar och kontrollera att de är klara innan du raderar kontot.</MessageCard>}
     {status === 'unknown' && <MessageCard tone="error">Vi kunde inte bekräfta om kontot raderades. Försök inte igen än. Logga ut, försök logga in och kontakta support om du fortfarande kan komma in.</MessageCard>}
     {markerReady && markerState === 'pending' && status === 'idle' && <MessageCard tone="error">Vi kunde inte bekräfta en tidigare radering. Försök inte igen än. Logga ut och kontakta support för hjälp.</MessageCard>}
     {markerReady && markerState === 'unavailable' && status === 'idle' && <MessageCard tone="error">Vi kunde inte kontrollera om kontot redan har en raderingsbegäran. Skicka inte en ny innan support har hjälpt dig.</MessageCard>}
@@ -122,6 +150,11 @@ const styles = StyleSheet.create({
   rowCopy: { flex: 1 },
   rowTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
   rowDetail: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
+  metricsCard: { padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, marginBottom: tokens.spacing.sm },
+  metricsCopy: { marginBottom: tokens.spacing.sm },
+  metricsToggleRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm },
+  metricsLabel: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1 },
+  metricsStatus: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
   deleteButton: { minHeight: tokens.size.buttonHeight, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.lg, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.danger, backgroundColor: tokens.colors.surface, marginTop: tokens.spacing.md },
   deleteDisabled: { opacity: 0.5 },
   deleteText: { ...tokens.typography.label, color: tokens.colors.danger },

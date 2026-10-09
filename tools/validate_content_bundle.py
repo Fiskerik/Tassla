@@ -206,8 +206,8 @@ def validate_bundle(bundle: Any, publication_check: bool = False) -> dict[str, i
         fail("schema_version must be integer 1")
     if root["bundle_id"] != "mvp-content-bundle-v1":
         fail('bundle_id must be "mvp-content-bundle-v1"')
-    if root["status"] != "draft":
-        fail('bundle status must remain "draft"; publication is a separate human process')
+    if root["status"] not in {"draft", "approved"}:
+        fail('bundle status must be "draft" or "approved"')
 
     raw_sources = root["sources"]
     if not isinstance(raw_sources, list):
@@ -262,8 +262,12 @@ def validate_bundle(bundle: Any, publication_check: bool = False) -> dict[str, i
             seen_numbers.add(number)
             if number == 1 and version_id != VERSION_ONE_IDS[slug]:
                 fail(f"{version_label}.id does not match the reserved version-1 id for {slug}")
-            if version["status"] != "draft":
-                fail(f"{version_label}.status must remain draft")
+            if version["status"] not in {"draft", "published"}:
+                fail(f"{version_label}.status must be draft or published")
+            if publication_check and version["status"] == "draft" and not (
+                slug == "before-homecoming" and item.get("context") == "onboarding-only"
+            ):
+                fail(f"{version_label} is still draft")
             require_text(version["title"], f"{version_label}.title", 160)
             require_text(version["body"], f"{version_label}.body")
             minimum, maximum = version["min_age_weeks"], version["max_age_weeks"]
@@ -288,7 +292,12 @@ def validate_bundle(bundle: Any, publication_check: bool = False) -> dict[str, i
                 fail(f"{version_label}.claim_trace must contain at least one claim or app-behavior trace")
             claim_ids: set[str] = set()
             for claim_index, claim in enumerate(claims):
-                claim_id = validate_claim(claim, f"{version_label}.claim_trace[{claim_index}]", source_ids, publication_check)
+                claim_id = validate_claim(
+                    claim,
+                    f"{version_label}.claim_trace[{claim_index}]",
+                    source_ids,
+                    publication_check and version["status"] == "published",
+                )
                 if claim_id in claim_ids:
                     fail(f"duplicate claim_id in {version_label}: {claim_id}")
                 claim_ids.add(claim_id)
@@ -305,8 +314,9 @@ def validate_bundle(bundle: Any, publication_check: bool = False) -> dict[str, i
             expert_required = slug in ADVICE_SLUGS
             if slug not in ADVICE_SLUGS | APP_GUIDE_SLUGS:
                 fail(f"{slug} is missing a review-gate classification")
-            validate_gate(review["dog_expert"], f"{version_label}.review.dog_expert", expert_required, publication_check)
-            validate_gate(review["human_reviewer"], f"{version_label}.review.human_reviewer", True, publication_check)
+            published_check = publication_check and version["status"] == "published"
+            validate_gate(review["dog_expert"], f"{version_label}.review.dog_expert", expert_required, published_check)
+            validate_gate(review["human_reviewer"], f"{version_label}.review.human_reviewer", True, published_check)
 
             raw_steps = version["training_steps"]
             if not isinstance(raw_steps, list):
@@ -357,13 +367,13 @@ def main() -> int:
         print(f"Invalid content bundle: {error}", file=sys.stderr)
         return 1
     print(
-        f"Validated draft bundle: {counts['items']} content items, {counts['versions']} versions, "
+        f"Validated content bundle: {counts['items']} content items, {counts['versions']} versions, "
         f"{counts['steps']} training steps, {counts['sources']} sources."
     )
     if args.publication_check:
-        print("Evidence fields and repository references pass structural checks only; review authenticity is manual. No content was published or imported.")
+        print("Publication metadata and repository references pass structural checks only; review authenticity is recorded manually. No database was changed.")
     else:
-        print("Draft validation does not verify source support, expert approval, or human review.")
+        print("Structural validation does not verify source support or the authenticity of recorded approval.")
     return 0
 
 

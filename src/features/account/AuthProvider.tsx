@@ -5,6 +5,7 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { AUTH_CALLBACK_URL, isTrustedGoogleOAuthUrl } from '../../data/auth-callback';
 import { verifyPkceWebCrypto } from '../../data/pkce-crypto';
 import { getSupabaseClient, getSupabaseProjectUrl } from '../../data/supabase';
+import { clearSecurePendingReferral } from '../../onboarding-referral/referral-secure-storage';
 
 type AuthStatus = 'loading' | 'signedOut' | 'signedIn' | 'unavailable';
 
@@ -288,6 +289,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (localSessionCleared && !serverRevocationConfirmed && currentOwnerId.current === null) {
         setSignOutWarning('Du är utloggad på den här enheten. Servern kunde inte bekräfta att sessionen har återkallats.');
       }
+      if (localSessionCleared) void clearSecurePendingReferral().catch(() => undefined);
       return { localSessionCleared, serverRevocationConfirmed };
     },
     signOutWarning,

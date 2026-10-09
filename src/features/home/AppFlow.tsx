@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import * as Linking from 'expo-linking';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { AppScreen, MessageCard, PageHeading, PrimaryButton } from '../../components/AppPrimitives';
 import { fetchOwnedDog, type OwnedDog } from '../../data/app-data';
@@ -9,22 +10,40 @@ import { DevelopmentPreview } from './DevelopmentPreview';
 import { ProductWorkspace } from './ProductWorkspace';
 import { useAuth } from '../account/AuthProvider';
 import { cleanupStalePassportFiles } from '../passport/passport-export';
+import { captureSecureKennelJoinUrl } from '../../onboarding-referral/referral-secure-storage';
 
 export function AppFlow() {
-  useEffect(() => { cleanupStalePassportFiles(); }, []);
+  const [referralReady, setReferralReady] = useState(false);
+  useEffect(() => {
+    cleanupStalePassportFiles();
+    let active = true;
+    void Linking.getInitialURL().then(async (url) => {
+      if (active && url) await captureSecureKennelJoinUrl(url).catch(() => undefined);
+    }).catch(() => undefined).finally(() => { if (active) setReferralReady(true); });
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      void captureSecureKennelJoinUrl(url);
+    });
+    return () => { active = false; subscription.remove(); };
+  }, []);
+  if (!referralReady) return <AppScreen><MessageCard>Förbereder Tassla…</MessageCard></AppScreen>;
   return DEV_PREVIEW_ENABLED ? <DevelopmentPreview /> : <AuthenticatedAppFlow />;
 }
 
 function AuthenticatedAppFlow() {
-  const { client, session, status, accountGeneration } = useAuth();
+  const { client, session, status, accountGeneration, isCurrentAccount } = useAuth();
 
   if (status === 'loading') return <AppScreen><MessageCard>Öppnar Tassla…</MessageCard></AppScreen>;
   if (status === 'unavailable' || !client) return <AppScreen><PageHeading title="Tassla vilar en stund" description="Inloggningen är inte tillgänglig just nu. Försök igen senare." /></AppScreen>;
   if (status === 'signedOut' || !session) return <SignInScreen />;
-  return <DogWorkspace key={session.user.id + ':' + accountGeneration} client={client} />;
+  return <DogWorkspace key={session.user.id + ':' + accountGeneration} client={client} ownerId={session.user.id} accountGeneration={accountGeneration} isCurrentAccount={isCurrentAccount} />;
 }
 
-function DogWorkspace({ client }: { client: SupabaseClient }) {
+function DogWorkspace({ client, ownerId, accountGeneration, isCurrentAccount }: {
+  client: SupabaseClient;
+  ownerId: string;
+  accountGeneration: number;
+  isCurrentAccount(ownerId: string, generation: number): boolean;
+}) {
   const [dog, setDog] = useState<OwnedDog | null>(null);
   const [state, setState] = useState<'loading' | 'missing' | 'ready' | 'error'>('loading');
   const [attempt, setAttempt] = useState(0);
@@ -46,6 +65,6 @@ function DogWorkspace({ client }: { client: SupabaseClient }) {
     <PageHeading title="Vi kunde inte öppna profilen" description="Kontrollera anslutningen och försök hämta profilen igen." />
     <PrimaryButton title="Försök igen" onPress={() => { setState('loading'); setAttempt((count) => count + 1); }} />
   </AppScreen>;
-  if (state === 'missing') return <ProfileScreen client={client} onCreated={(created) => { setDog(created); setState('ready'); }} />;
+  if (state === 'missing') return <ProfileScreen client={client} ownerId={ownerId} accountGeneration={accountGeneration} isCurrentAccount={isCurrentAccount} onCreated={(created) => { setDog(created); setState('ready'); }} />;
   return dog ? <ProductWorkspace key={dog.id} client={client} dog={dog} onDogUpdated={setDog} /> : <AppScreen><MessageCard>Öppnar hundens plats…</MessageCard></AppScreen>;
 }

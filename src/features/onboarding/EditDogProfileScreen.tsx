@@ -112,7 +112,7 @@ export function EditDogProfileScreen({
     {draftDiffers && !pending && !busy ? <MessageCard tone="neutral">Ändringarna är inte sparade.</MessageCard> : null}
     {pending && <>
       <MessageCard tone="error">Ändringen väntar på en säker statuskontroll. Den finns kvar även om du lämnar den här sidan.</MessageCard>
-      <PrimaryButton title={busy ? 'Kontrollerar…' : 'Kontrollera sparstatus'} disabled={busy} onPress={onRetryStatus} />
+      <PrimaryButton title={busy ? 'Kontrollerar…' : 'Kontrollera profilen igen'} disabled={busy} onPress={onRetryStatus} />
     </>}
     {conflict && <View style={styles.conflictCard}>
       <Text style={styles.conflictTitle} accessibilityRole="header">Aktuella sparade uppgifter</Text>

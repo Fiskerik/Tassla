@@ -11,7 +11,7 @@ const tsResolution = registerHooks({
     return nextResolve(specifier, context);
   },
 });
-const { fetchBreeds } = await import('../src/data/app-data.ts');
+const { createDog, fetchBreeds, ownedDogAttributionMatches } = await import('../src/data/app-data.ts');
 tsResolution.deregister();
 
 const projectUrl = 'https://local-test.supabase.invalid';
@@ -106,6 +106,24 @@ test('fails the breed request at its 12-second deadline and aborts the real SDK 
   }
 });
 
+test('createDog forwards the optional normalized kennel code and returns the created id', async () => {
+  const { client, requests } = localClient((request) => Response.json('33000000-0000-4000-8000-000000000001'));
+  try {
+    assert.equal(await createDog(client, { name: ' Nala ', breedId: 'beagle', birthDate: '2026-02-01', kennelCode: ' kennel-42 ' }), '33000000-0000-4000-8000-000000000001');
+    assert.equal(requests[0].url.pathname, '/rest/v1/rpc/create_dog');
+    assert.deepEqual(requests[0].body, { dog_name: 'Nala', dog_breed_id: 'beagle', dog_birth_date: '2026-02-01', kennel_code: 'KENNEL-42' });
+  } finally { await client.auth.dispose(); }
+});
+
+test('attribution readback calls only the owner-scoped boolean RPC', async () => {
+  const { client, requests } = localClient((request) => Response.json(true));
+  try {
+    assert.equal(await ownedDogAttributionMatches(client, '33000000-0000-4000-8000-000000000001', 'KENNEL-42'), true);
+    assert.equal(requests[0].url.pathname, '/rest/v1/rpc/owned_dog_attribution_matches');
+    assert.deepEqual(requests[0].body, { requested_dog_id: '33000000-0000-4000-8000-000000000001', requested_kennel_code: 'KENNEL-42' });
+  } finally { await client.auth.dispose(); }
+});
+
 function localClient(handler) {
   const requests = [];
   const client = createClient(projectUrl, 'synthetic-publishable-key', {
@@ -117,6 +135,7 @@ function localClient(handler) {
           method: init.method ?? 'GET',
           url,
           signal: init.signal,
+          body: init.body ? JSON.parse(String(init.body)) : undefined,
         };
         requests.push(request);
         return handler(request);

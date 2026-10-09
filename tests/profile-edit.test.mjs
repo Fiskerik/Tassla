@@ -223,7 +223,7 @@ test('profile editing leaves the existing createDog RPC contract unchanged', asy
     assert.equal(method, 'POST');
     assert.equal(url.pathname, '/rest/v1/rpc/create_dog');
     assert.deepEqual(body, { dog_name: 'Nala', dog_breed_id: 'beagle', dog_birth_date: '2026-02-01', kennel_code: null });
-    return jsonResponse(null);
+    return jsonResponse(dogId);
   });
   try {
     await appData.createDog(client, { name: ' Nala ', breedId: 'beagle', birthDate: profile.birth_date });

@@ -130,7 +130,7 @@ export function HealthHistoryScreen({
       </View>
       <InfoModal visible={infoVisible} title="Om hälsans historik" onClose={() => setInfoVisible(false)}>
         <Text style={styles.infoBody}>Uppgifterna är ägarregistrerade, inte en verifierad journal. Undvik personuppgifter i anteckningar.</Text>
-        <Text style={styles.infoBody}>Historiken hämtas i en läsning. Om listan når serverns svarstak kan äldre händelser saknas.</Text>
+        <Text style={styles.infoBody}>Vi visar de senast hämtade händelserna. Äldre händelser kan saknas.</Text>
       </InfoModal>
 
       {statusMessage && statusError ? <>
