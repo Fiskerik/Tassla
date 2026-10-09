@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef } from 'react';
-import { PanResponder, View, type ReactNode } from 'react-native';
+import { useMemo, type ReactNode } from 'react';
+import { PanResponder, View } from 'react-native';
 import { tokens } from '../../theme/tokens';
 
 const SWIPE_DISTANCE = tokens.size.touchMin;
@@ -9,21 +9,16 @@ export function MainSwipeNavigation({ enabled, onSwipe, children }: {
   onSwipe: (direction: 'left' | 'right') => void;
   children: ReactNode;
 }) {
-  const enabledRef = useRef(enabled);
-  const onSwipeRef = useRef(onSwipe);
-  useEffect(() => { enabledRef.current = enabled; }, [enabled]);
-  useEffect(() => { onSwipeRef.current = onSwipe; }, [onSwipe]);
-
   const responder = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: (_, gesture) => enabledRef.current
+    onMoveShouldSetPanResponder: (_, gesture) => enabled
       && Math.abs(gesture.dx) > SWIPE_DISTANCE
       && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2,
     onPanResponderRelease: (_, gesture) => {
       if (Math.abs(gesture.dx) < SWIPE_DISTANCE || Math.abs(gesture.dx) <= Math.abs(gesture.dy)) return;
-      onSwipeRef.current(gesture.dx < 0 ? 'left' : 'right');
+      onSwipe(gesture.dx < 0 ? 'left' : 'right');
     },
-  }), []);
+  }), [enabled, onSwipe]);
 
   return <View {...(enabled ? responder.panHandlers : {})}>{children}</View>;
 }

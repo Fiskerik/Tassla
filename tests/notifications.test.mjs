@@ -686,7 +686,7 @@ function buildServiceHarness(platformOS = 'ios') {
 }
 
 function buildTapHandlerHarness({ context, current, response, lastResponse, plan, fetchPlan } = {}) {
-  const match = workspaceSource.match(/const handleNotificationResponse = useCallback\(async \(response: Notifications\.NotificationResponse\) => \{([\s\S]*?)\n  \}, \[client\]\);/);
+  const match = workspaceSource.match(/const handleNotificationResponse = useCallback\(async \(response: Notifications\.NotificationResponse\) => \{([\s\S]*?)\n  \}, \[client, setPage\]\);/);
   assert.ok(match, 'extracts the actual notification response handler');
   const code = ts.transpileModule(`async function handleNotificationResponse(response) {${match[1]}\n}`, {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },

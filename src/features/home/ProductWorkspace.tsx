@@ -118,8 +118,21 @@ const MAIN_PAGES: ProductPage[] = ['home', 'log', 'training', 'health', 'knowled
 
 export function ProductWorkspace({ client, dog, onDogUpdated }: { client: SupabaseClient; dog: OwnedDog; onDogUpdated?: (updated: OwnedDog) => void }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
-  const [page, setPage] = useState<ProductPage>('home');
-  const previousPage = useRef(page);
+  const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>({ page: 'home', previousPage: 'home' });
+  const { page, previousPage } = navigation;
+  const setPage = useCallback((nextPage: ProductPage) => {
+    setNavigation((current) => current.page === nextPage
+      ? current
+      : { page: nextPage, previousPage: current.page });
+  }, []);
+  const handleMainSwipe = useCallback((direction: 'left' | 'right') => {
+    setNavigation((current) => {
+      const index = MAIN_PAGES.indexOf(current.page);
+      if (index < 0) return current;
+      const next = MAIN_PAGES[index + (direction === 'left' ? 1 : -1)];
+      return next ? { page: next, previousPage: current.page } : current;
+    });
+  }, []);
   const [breeds, setBreeds] = useState<BreedOption[]>([]);
   useEffect(() => {
     let active = true;
@@ -244,7 +257,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   useEffect(() => {
     if (page === 'home' && analyticsConsent === true) void analyticsService.track('home_viewed');
   }, [analyticsConsent, analyticsService, page]);
-  useEffect(() => { previousPage.current = page; }, [page]);
   const currentHealthHistoryLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const currentLogLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const healthHistoryLifetime = useRef('');
@@ -472,7 +484,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     } catch {
       handledNotificationResponses.current.delete(responseKey);
     }
-  }, [client]);
+  }, [client, setPage]);
 
   useEffect(() => {
     let active = true;
@@ -504,6 +516,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       setProfileMessageError(false);
       setProfileConflict(null);
     }
+    // Hide the previous dog's kennel link while the next dog's attribution loads.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAttributionState('loading');
     setAttributionMessage('');
     setAttributionMessageError(false);
@@ -1848,9 +1862,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   if (fontError) return <AppScreen><MessageCard tone="error">Ikonerna kunde inte laddas. Starta om appen och försök igen.</MessageCard></AppScreen>;
 
   const pageContent = renderPage();
-  const transitionDirection = navigationDirection(previousPage.current, page);
+  const transitionDirection = navigationDirection(previousPage, page);
   return <AppScreen scrollKey={page} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={mainDestination(page)} onChange={setPage} />}>
-    <MainSwipeNavigation enabled={MAIN_PAGES.includes(page)} onSwipe={(direction) => navigateMainPage(page, direction)}>
+    <MainSwipeNavigation enabled={MAIN_PAGES.includes(page)} onSwipe={handleMainSwipe}>
       <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x">{pageContent}</ScreenTransition>
     </MainSwipeNavigation>
   </AppScreen>;
@@ -2019,13 +2033,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     return <DogProfilePage dog={dog} onBack={() => setPage('more')} />;
   }
 
-  function navigateMainPage(current: ProductPage, direction: 'left' | 'right') {
-    const index = MAIN_PAGES.indexOf(current);
-    if (index < 0) return;
-    const nextIndex = direction === 'left' ? index + 1 : index - 1;
-    const next = MAIN_PAGES[nextIndex];
-    if (next) setPage(next);
-  }
 }
 
 function navigationDirection(previous: ProductPage, current: ProductPage): 'forward' | 'backward' {
