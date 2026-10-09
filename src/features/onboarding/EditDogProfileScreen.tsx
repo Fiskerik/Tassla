@@ -3,6 +3,7 @@ import { Image, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'r
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DatePickerField, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { Button } from '../../components/ui';
 import { Toast } from '../../components/ui/Toast';
 import {
   fetchBreeds,
@@ -10,8 +11,10 @@ import {
   normalizeDogProfileName,
   type BreedOption,
   type OwnedDog,
+  type OwnedDogAttribution,
   type OwnedDogProfileChanges,
 } from '../../data/app-data';
+import { normalizeKennelCode } from '../../onboarding-referral/referral-secure-storage';
 import { tokens } from '../../theme/tokens';
 
 export function EditDogProfileScreen({
@@ -22,8 +25,15 @@ export function EditDogProfileScreen({
   statusMessage = '',
   statusError = false,
   conflict,
+  attribution = null,
+  attributionState = 'loading',
+  attributionBusy = false,
+  attributionMessage = '',
+  attributionMessageError = false,
   onBack,
   onSave,
+  onSaveAttribution,
+  onRetryAttribution,
   onRetryStatus,
   onAcceptCurrent,
 }: {
@@ -34,8 +44,15 @@ export function EditDogProfileScreen({
   statusMessage?: string;
   statusError?: boolean;
   conflict?: OwnedDog | null;
+  attribution?: OwnedDogAttribution | null;
+  attributionState?: 'loading' | 'ready' | 'error';
+  attributionBusy?: boolean;
+  attributionMessage?: string;
+  attributionMessageError?: boolean;
   onBack: () => void;
   onSave: (changes: OwnedDogProfileChanges, knownBreeds: readonly BreedOption[]) => Promise<boolean>;
+  onSaveAttribution?: (code: string | null) => Promise<boolean>;
+  onRetryAttribution?: () => void;
   onRetryStatus: () => void;
   onAcceptCurrent: () => void;
 }) {
@@ -46,10 +63,18 @@ export function EditDogProfileScreen({
   const [breedId, setBreedId] = useState(dog.breed_id);
   const [birthDate, setBirthDate] = useState(dog.birth_date);
   const [formError, setFormError] = useState('');
+  const [kennelCode, setKennelCode] = useState(attribution?.code ?? '');
+  const [attributionFormError, setAttributionFormError] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const confirmedMessage = statusMessage === 'Hundprofilen är sparad.' && !statusError && !pending && !busy
     ? statusMessage : null;
   const blocked = busy || pending;
+
+  useEffect(() => {
+    // The profile read is asynchronous; mirror a completed read into the local field.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (attributionState === 'ready') setKennelCode(attribution?.code ?? '');
+  }, [attribution?.code, attributionState]);
 
   useEffect(() => {
     // The toast mirrors an external save-status prop and is intentionally reset here.
@@ -90,6 +115,18 @@ export function EditDogProfileScreen({
     }
     const changes: OwnedDogProfileChanges = { name: normalizedName, breed_id: breedId, birth_date: normalizedDate };
     await onSave(changes, breeds);
+  }
+
+  async function saveAttribution() {
+    setAttributionFormError('');
+    const value = kennelCode.trim();
+    const normalized = value ? normalizeKennelCode(value) : null;
+    if (value && !normalized) {
+      setAttributionFormError('Ange en giltig kennelkod eller lämna fältet tomt.');
+      return;
+    }
+    if (!onSaveAttribution) return;
+    await onSaveAttribution(normalized);
   }
 
   const currentBreed = breeds.find((breed) => breed.id === dog.breed_id)?.name ?? dog.breed_id;
@@ -154,6 +191,25 @@ export function EditDogProfileScreen({
         disabled={blocked || breedState !== 'ready'} onPress={() => { void save(); }} />
       {toastMessage ? <Toast tone="success" confirmed message={toastMessage} /> : null}
     </View>
+    <View style={styles.attributionCard}>
+      <Text style={styles.formTitle} accessibilityRole="header">Kennelkoppling (valfri)</Text>
+      <Text style={styles.attributionBody}>Du kan koppla en kennel nu eller senare. Det påverkar inte din hundprofil.</Text>
+      {attributionState === 'loading' && <MessageCard>Hämtar kennelkopplingen…</MessageCard>}
+      {attributionState === 'error' && <>
+        <MessageCard tone="error">Kennelkopplingen kunde inte hämtas. Du kan försöka igen utan att ändra hundprofilen.</MessageCard>
+        <Button variant="secondary" label="Försök igen" accessibilityLabel="Försök hämta kennelkopplingen igen" disabled={attributionBusy} onPress={onRetryAttribution ?? (() => undefined)} />
+      </>}
+      {attributionState === 'ready' && <>
+        {attribution ? <Text style={styles.attributionConnected}>Kopplad till {attribution.name}.</Text> : null}
+        <TextInput accessibilityLabel="Kennelkod, valfri" autoCapitalize="characters" editable={!attributionBusy}
+          onChangeText={(value) => { setKennelCode(value.toUpperCase()); setAttributionFormError(''); }} placeholder="Till exempel ABC123"
+          placeholderTextColor={tokens.colors.textSecondary} style={styles.input} value={kennelCode} />
+        {attributionFormError ? <MessageCard tone="error">{attributionFormError}</MessageCard> : null}
+        {attributionMessage ? <MessageCard tone={attributionMessageError ? 'error' : 'neutral'}>{attributionMessage}</MessageCard> : null}
+        <Button variant="secondary" label={attributionBusy ? 'Sparar…' : attribution ? (kennelCode.trim() ? 'Spara kennelkoppling' : 'Ta bort kennelkoppling') : 'Spara kennelkoppling'} accessibilityLabel="Spara kennelkoppling" loading={attributionBusy}
+          disabled={attributionBusy || !onSaveAttribution || kennelCode.trim() === (attribution?.code ?? '')} onPress={() => { void saveAttribution(); }} />
+      </>}
+    </View>
     <QuietButton title="Avbryt" disabled={busy} onPress={onBack} />
   </View>;
 }
@@ -169,7 +225,10 @@ const styles = StyleSheet.create({
   conflictText: { ...tokens.typography.body, color: tokens.colors.textPrimary, fontWeight: '700', marginTop: tokens.spacing.sm },
   conflictBody: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginVertical: tokens.spacing.sm },
   formCard: { marginTop: tokens.spacing.lg, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  attributionCard: { marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, gap: tokens.spacing.sm },
   formTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
+  attributionBody: { ...tokens.typography.body, color: tokens.colors.textSecondary },
+  attributionConnected: { ...tokens.typography.caption, color: tokens.colors.textPrimary },
   field: { marginBottom: tokens.spacing.md },
   label: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.sm },
   input: { minHeight: tokens.size.buttonHeight, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body },

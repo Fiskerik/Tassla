@@ -5,16 +5,19 @@ import { AppBar, BottomSheet, Button, Card, Dialog, ListRow, QuickLogTile, Secti
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
-import { decideQuickLogPress, groupLogEventsByLocalDate, hasRecentCategoryLog, localDateTimeParts, LOG_EVENT_LABELS, LOG_EVENT_TYPES, parseLocalDateTime, summarizePottyPatterns, type LogEvent, type LogEventChanges, type LogEventType } from './log-model';
+import { decideQuickLogPress, groupLogEventsByLocalDate, hasRecentCategoryLog, localDateTimeParts, LOG_ENTRY_TYPES, LOG_EVENT_LABELS, parseLocalDateTime, summarizePottyPatterns, type LogEvent, type LogEventChanges, type LogEventType } from './log-model';
+import { loadQuickLogLayout, saveQuickLogLayout } from './quick-log-layout-storage';
+import { DEFAULT_QUICK_LOG_LAYOUT, moveQuickLogType, type QuickLogLayout, type QuickLogLayoutType } from './quick-log-layout';
 
 export type QuickLogMutationView = { kind: 'add' | 'update' | 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; status: 'pending' | 'failed' | 'unsure' | 'saved' };
 
-export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', busy = false, loading = false, loadError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore }: {
+export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, busy = false, loading = false, loadError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore }: {
   events: readonly LogEvent[];
   onAdd: (type: LogEventType) => void;
   onUpdate?: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
   onDelete?: (id: string) => boolean | void | Promise<boolean | void>;
   mode?: 'preview' | 'cloud';
+  layoutOwnerId?: string;
   busy?: boolean;
   loading?: boolean;
   loadError?: boolean;
@@ -34,6 +37,9 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const lastSubmitAt = useRef<number | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dismissedMutationKey, setDismissedMutationKey] = useState<string | null>(null);
+  const [layout, setLayout] = useState<QuickLogLayout>(DEFAULT_QUICK_LOG_LAYOUT);
+  const [layoutEditing, setLayoutEditing] = useState(false);
+  const [layoutError, setLayoutError] = useState(false);
   const groups = useMemo(() => groupLogEventsByLocalDate(events), [events]);
   const patterns = useMemo(() => summarizePottyPatterns(events).filter((item) => item.count >= 2), [events]);
   const editingEvent = events.find((event) => event.id === editingId) ?? null;
@@ -44,6 +50,14 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
     return () => subscription.remove();
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    void loadQuickLogLayout(layoutOwnerId).then((saved) => {
+      if (active) setLayout(saved);
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [layoutOwnerId]);
 
   useEffect(() => {
     if (mutation?.status !== 'saved') return undefined;
@@ -77,6 +91,37 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     if (!reduceMotion) LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setMoreVisible((visible) => !visible);
   }
+
+  function startLayoutEdit() {
+    if (busy || Boolean(mutation && mutation.status !== 'saved')) return;
+    setLayoutEditing(true);
+    setMoreVisible(false);
+  }
+
+  function moveLayoutType(type: QuickLogLayoutType, destination: 'primary' | 'more') {
+    const next = moveQuickLogType(layout, type, destination);
+    setLayout(next);
+    setLayoutError(false);
+    void saveQuickLogLayout(next, layoutOwnerId).catch(() => setLayoutError(true));
+  }
+
+  const disabled = busy || Boolean(mutation && mutation.status !== 'saved');
+  const renderQuickTile = (type: QuickLogLayoutType) => <QuickLogTile
+    key={type}
+    label={LOG_EVENT_LABELS[type]}
+    accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`}
+    accessibilityHint="Håll inne för att ändra vilka snabbval som visas först"
+    category={type}
+    compact
+    disabled={disabled}
+    onLongPress={startLayoutEdit}
+    onPress={(event) => selectType(type, event.nativeEvent.timestamp)}
+  />;
+  const renderRows = (types: readonly QuickLogLayoutType[]) => Array.from({ length: Math.ceil(types.length / 2) }, (_, index) => (
+    <View key={`${types[index * 2]}-${types[index * 2 + 1] ?? 'single'}`} style={styles.gridRow}>
+      {types.slice(index * 2, index * 2 + 2).map(renderQuickTile)}
+    </View>
+  ));
 
   function saveEdit(event: LogEvent, changes: LogEventChanges): boolean | Promise<boolean> {
     return onUpdate?.(event.id, changes) ?? false;
@@ -114,11 +159,10 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     </View> : <>
       <SectionHeader title="Snabb logg" />
       <View style={styles.grid}>
-        <View style={styles.gridRow}>{(['pee', 'poop'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View>
-        <View style={styles.gridRow}>{(['food', 'sleep'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View>
+        {layoutEditing ? <LayoutEditor layout={layout} onMove={moveLayoutType} onDone={() => setLayoutEditing(false)} error={layoutError} /> : renderRows(layout.primary)}
       </View>
-      <View style={styles.moreRow}><QuickLogTile subtle label="Fler" accessibilityLabel={moreVisible ? 'Dölj fler loggtyper' : 'Visa fler loggtyper'} icon={<View style={styles.moreIcon}><Ionicons name={moreVisible ? 'close-outline' : 'grid-outline'} size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></View>} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={toggleMore} /></View>
-      {moreVisible ? <View style={styles.grid} accessibilityLabel="Fler loggtyper"><View style={styles.gridRow}>{(['walk', 'awake'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View></View> : null}
+      {!layoutEditing && <View style={styles.moreRow}><QuickLogTile subtle label="Fler" accessibilityLabel={moreVisible ? 'Dölj fler loggtyper' : 'Visa fler loggtyper'} accessibilityHint="Håll inne för att ändra snabbvalens layout" icon={<View style={styles.moreIcon}><Ionicons name={moreVisible ? 'close-outline' : 'grid-outline'} size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></View>} disabled={disabled} onLongPress={startLayoutEdit} onPress={toggleMore} /></View>}
+      {!layoutEditing && moreVisible ? <View style={styles.grid} accessibilityLabel="Fler loggtyper">{renderRows(layout.more)}</View> : null}
 
       {!editingEvent && mutationFeedback}
       {mutation?.status === 'saved' && dismissedMutationKey !== `${mutation.kind}:${mutation.mutationId}` && <Toast tone="success" confirmed message={mutation.kind === 'add' ? `${LOG_EVENT_LABELS[mutation.type]} loggat` : mutation.kind === 'update' ? 'Ändring sparad' : 'Händelsen är raderad'} onUndo={mutation.kind === 'add' ? () => onUndo?.(mutation.id) : undefined} />}
@@ -183,7 +227,7 @@ function LogEventEditor({ event, disabled, onCancel, onSave, onDelete }: {
   return <View style={styles.editor}>
 
     <Text style={styles.fieldTitle}>Typ</Text>
-    <View style={styles.typeGrid}>{LOG_EVENT_TYPES.map((option) => {
+    <View style={styles.typeGrid}>{LOG_ENTRY_TYPES.map((option) => {
       const selected = type === option;
       return <Pressable key={option} accessibilityRole="radio" accessibilityState={{ selected, disabled }} disabled={disabled} onPress={() => setType(option)} style={({ pressed }) => [styles.typeOption, selected && styles.selectedTypeOption, pressed && styles.pressed]}><Text style={[styles.typeOptionText, selected && styles.selectedTypeText]}>{LOG_EVENT_LABELS[option]}</Text></Pressable>;
     })}</View>
@@ -243,4 +287,21 @@ const styles = StyleSheet.create({
   editorActions: { gap: tokens.spacing.sm },
   editorSecondaryActions: { flexDirection: 'row', gap: tokens.spacing.xs },
   editorSecondaryAction: { flex: 1 },
+  layoutEditor: { gap: tokens.spacing.sm, width: '100%' },
+  layoutTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
+  layoutBody: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  layoutGroupTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginTop: tokens.spacing.sm },
 });
+
+function LayoutEditor({ layout, onMove, onDone, error }: { layout: QuickLogLayout; onMove: (type: QuickLogLayoutType, destination: 'primary' | 'more') => void; onDone: () => void; error: boolean }) {
+  return <View style={styles.layoutEditor} accessibilityLabel="Ändra snabbvalens layout">
+    <Text style={styles.layoutTitle} accessibilityRole="header">Ändra snabbval</Text>
+    <Text style={styles.layoutBody}>Tryck på en ruta för att flytta den mellan snabbval och Mer.</Text>
+    <Text style={styles.layoutGroupTitle}>Visas först</Text>
+    {layout.primary.map((type) => <ListRow key={`primary-${type}`} category={type} title={LOG_EVENT_LABELS[type]} meta="Flytta till Mer" onPress={() => onMove(type, 'more')} />)}
+    <Text style={styles.layoutGroupTitle}>Under Mer</Text>
+    {layout.more.map((type) => <ListRow key={`more-${type}`} category={type} title={LOG_EVENT_LABELS[type]} meta="Visa bland snabbval" onPress={() => onMove(type, 'primary')} />)}
+    {error ? <MessageCard tone="error">Snabbvalen kunde inte sparas på enheten.</MessageCard> : null}
+    <Button variant="tertiary" label="Klar" accessibilityLabel="Klar med snabbval" onPress={onDone} />
+  </View>;
+}

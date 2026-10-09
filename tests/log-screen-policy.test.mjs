@@ -14,9 +14,11 @@ test('quick log uses shared controls and keeps the approved two by two plus more
   assert.match(appBar, /'Home' \| 'Back' \| 'Close' \| 'Title'/);
   assert.match(appBar, /mode === 'Back' \? control\('chevron-back'/);
   assert.match(appBar, /mode === 'Close' \? control\('close'/);
-  assert.match(screen, /\(\['pee', 'poop'\] as const\)/);
-  assert.match(screen, /\(\['food', 'sleep'\] as const\)/);
-  assert.match(screen, /\(\['walk', 'awake'\] as const\)/);
+  assert.match(screen, /DEFAULT_QUICK_LOG_LAYOUT/);
+  assert.match(screen, /layout\.primary/);
+  assert.match(screen, /layout\.more/);
+  assert.match(screen, /label="Olycka"|LOG_EVENT_LABELS/);
+  assert.match(screen, /onLongPress=\{startLayoutEdit\}/);
   assert.match(screen, /accessibilityLabel="Fler loggtyper"/);
   assert.match(screen, /LayoutAnimation\.configureNext/);
   assert.doesNotMatch(screen, /<BottomSheet[\s\S]*?Fler loggtyper/);
@@ -51,7 +53,7 @@ test('legacy row editing and deletion remain reachable from workspace and previe
   assert.match(screen, /onUpdate\?:/);
   assert.match(screen, /onDelete\?:/);
   assert.match(workspace, /onUpdate=\{updateEvent\} onDelete=\{\(id\) => deleteEvent\(id\)\}/);
-  assert.match(screen, /LOG_EVENT_TYPES\.map/);
+  assert.match(screen, /LOG_ENTRY_TYPES\.map/);
   assert.match(screen, /DatePickerField/);
   assert.match(screen, /TimePickerField/);
   assert.match(screen, /Anteckning \(valfri\)/);
@@ -79,7 +81,7 @@ test('duplicate dialog uses the approved full copy', () => {
 });
 
 test('quick add labels, rapid-tap guard, retry propagation and Swedish decimal format stay explicit', () => {
-  assert.equal((screen.match(/accessibilityLabel=\{`Logga \$\{LOG_EVENT_LABELS\[type\]\.toLocaleLowerCase\('sv-SE'\)\}`\}/g) ?? []).length, 3);
+  assert.equal((screen.match(/accessibilityLabel=\{`Logga \$\{LOG_EVENT_LABELS\[type\]\.toLocaleLowerCase\('sv-SE'\)\}`\}/g) ?? []).length, 1);
   assert.match(screen, /const lastSubmitAt = useRef<number \| null>\(null\)/);
   assert.match(screen, /lastSubmitAt\.current = timestamp/);
   assert.match(workspace, /onRetry=\{retryLogMutation\}/);

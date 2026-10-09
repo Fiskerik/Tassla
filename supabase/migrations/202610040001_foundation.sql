@@ -37,7 +37,7 @@ create table public.dog_events (
   id uuid primary key,
   dog_id uuid not null references public.dogs(id) on delete cascade,
   actor_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  event_type text not null check (event_type in ('pee','poop','food','sleep','awake','walk','weight','vaccination','vet_visit')),
+  event_type text not null check (event_type in ('pee','poop','food','sleep','awake','walk','accident','water','weight','vaccination','vet_visit')),
   occurred_at timestamptz,
   occurred_on date,
   weight_kg numeric(6,3),
@@ -45,7 +45,7 @@ create table public.dog_events (
   description text check (char_length(description) <= 500),
   created_at timestamptz not null default now(),
   check (
-    (event_type in ('pee','poop','food','sleep','awake','walk') and occurred_at is not null and occurred_on is null and weight_kg is null)
+    (event_type in ('pee','poop','food','sleep','awake','walk','accident','water') and occurred_at is not null and occurred_on is null and weight_kg is null)
     or (event_type = 'weight' and occurred_on is not null and occurred_at is null and weight_kg is not null and weight_kg > 0 and weight_kg <= 200 and duration_minutes is null)
     or (event_type in ('vaccination','vet_visit') and occurred_on is not null and occurred_at is null and weight_kg is null and duration_minutes is null)
   ),

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   LOG_EVENT_TYPES,
+  LOG_ENTRY_TYPES,
   addLogEvent,
   canStartLogMutation,
   checkInsertRetryOperation,
@@ -21,6 +22,7 @@ import {
   startLogMutationFlight,
   updateLogEvent,
 } from '../src/features/puppy-log/log-model.ts';
+import { DEFAULT_QUICK_LOG_LAYOUT, moveQuickLogType, normalizeQuickLogLayout } from '../src/features/puppy-log/quick-log-layout.ts';
 
 const fixedNow = new Date('2026-10-04T12:00:00.000Z');
 
@@ -34,8 +36,9 @@ function event(overrides = {}, now = fixedNow) {
   }, now);
 }
 
-test('log events accept all six domain types and preserve a canonical event', () => {
-  assert.deepEqual(LOG_EVENT_TYPES, ['pee', 'poop', 'food', 'sleep', 'awake', 'walk']);
+test('log events accept legacy and current domain types and preserve a canonical event', () => {
+  assert.deepEqual(LOG_EVENT_TYPES, ['pee', 'poop', 'food', 'sleep', 'awake', 'walk', 'accident', 'water']);
+  assert.deepEqual(LOG_ENTRY_TYPES, ['pee', 'poop', 'food', 'sleep', 'walk', 'accident', 'water']);
   for (const type of LOG_EVENT_TYPES) {
     assert.equal(event({ type }).type, type);
   }
@@ -44,6 +47,25 @@ test('log events accept all six domain types and preserve a canonical event', ()
   assert.throws(() => event({ dogId: '' }), /IDs are required/);
   assert.throws(() => event({ occurredAt: '2026-10-04T11:00:00Z' }), /canonical ISO timestamp/);
   assert.throws(() => event({ occurredAt: '2026-10-04T12:00:00.001Z' }), /future/);
+});
+
+test('quick-log layout keeps four compact defaults and moves types between groups', () => {
+  assert.deepEqual(DEFAULT_QUICK_LOG_LAYOUT, {
+    primary: ['pee', 'poop', 'food', 'sleep'],
+    more: ['walk', 'accident', 'water'],
+  });
+  assert.deepEqual(moveQuickLogType(DEFAULT_QUICK_LOG_LAYOUT, 'water', 'primary'), {
+    primary: ['pee', 'poop', 'food', 'water'],
+    more: ['walk', 'accident', 'sleep'],
+  });
+  assert.deepEqual(moveQuickLogType(DEFAULT_QUICK_LOG_LAYOUT, 'sleep', 'more'), {
+    primary: ['pee', 'poop', 'food'],
+    more: ['walk', 'accident', 'water', 'sleep'],
+  });
+  assert.deepEqual(normalizeQuickLogLayout({ primary: ['pee', 'pee', 'unknown'], more: ['water'] }), {
+    primary: ['pee'],
+    more: ['water', 'poop', 'food', 'sleep', 'walk', 'accident'],
+  });
 });
 
 test('potty summaries are retrospective, separate by type, and use median adjacent intervals', () => {

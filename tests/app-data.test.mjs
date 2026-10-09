@@ -11,7 +11,7 @@ const tsResolution = registerHooks({
     return nextResolve(specifier, context);
   },
 });
-const { createDog, fetchBreeds, ownedDogAttributionMatches } = await import('../src/data/app-data.ts');
+const { createDog, fetchBreeds, fetchOwnedDogAttribution, ownedDogAttributionMatches, updateOwnedDogAttribution } = await import('../src/data/app-data.ts');
 tsResolution.deregister();
 
 const projectUrl = 'https://local-test.supabase.invalid';
@@ -121,6 +121,25 @@ test('attribution readback calls only the owner-scoped boolean RPC', async () =>
     assert.equal(await ownedDogAttributionMatches(client, '33000000-0000-4000-8000-000000000001', 'KENNEL-42'), true);
     assert.equal(requests[0].url.pathname, '/rest/v1/rpc/owned_dog_attribution_matches');
     assert.deepEqual(requests[0].body, { requested_dog_id: '33000000-0000-4000-8000-000000000001', requested_kennel_code: 'KENNEL-42' });
+  } finally { await client.auth.dispose(); }
+});
+
+test('profile attribution can be read, saved, and removed independently of dog profile fields', async () => {
+  const dogId = '33000000-0000-4000-8000-000000000001';
+  const { client, requests } = localClient((request) => {
+    if (request.url.pathname.endsWith('/owned_dog_attribution_details')) return Response.json([{ code: 'KENNEL-42', name: 'Kennel 42' }]);
+    return Response.json(true);
+  });
+  try {
+    assert.deepEqual(await fetchOwnedDogAttribution(client, dogId), { code: 'KENNEL-42', name: 'Kennel 42' });
+    assert.deepEqual(await updateOwnedDogAttribution(client, dogId, ' kennel-42 '), { status: 'saved', value: { code: 'KENNEL-42', name: 'Kennel 42' } });
+    assert.deepEqual(await updateOwnedDogAttribution(client, dogId, null), { status: 'saved', value: { code: 'KENNEL-42', name: 'Kennel 42' } });
+    assert.equal(requests[0].url.pathname, '/rest/v1/rpc/owned_dog_attribution_details');
+    assert.equal(requests[1].url.pathname, '/rest/v1/rpc/set_owned_dog_attribution');
+    assert.deepEqual(requests[1].body, { requested_dog_id: dogId, requested_kennel_code: 'KENNEL-42' });
+    assert.deepEqual(requests[2].body, { requested_dog_id: dogId });
+    assert.equal(requests[3].url.pathname, '/rest/v1/rpc/set_owned_dog_attribution');
+    assert.deepEqual(requests[3].body, { requested_dog_id: dogId, requested_kennel_code: null });
   } finally { await client.auth.dispose(); }
 });
 

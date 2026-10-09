@@ -23,7 +23,7 @@ import { Skeleton } from './Skeleton';
 import { Tabs } from './Tabs';
 import { Toast } from './Toast';
 
-const categories: IconCategory[] = ['pee', 'poop', 'food', 'sleep', 'awake', 'walk', 'training', 'vaccination', 'deworming', 'veterinary'];
+const categories: IconCategory[] = ['pee', 'poop', 'food', 'sleep', 'awake', 'walk', 'accident', 'water', 'training', 'vaccination', 'deworming', 'veterinary'];
 
 export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
   const [activeTab, setActiveTab] = useState('Översikt');

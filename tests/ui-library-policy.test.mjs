@@ -28,7 +28,7 @@ test('shared component source uses tokens and contains no local hex or font-size
 
 test('category identity and accessible example copy are centrally defined', () => {
   const icons = source('IconChip.tsx');
-  for (const category of ['pee', 'poop', 'food', 'sleep', 'awake', 'walk', 'training', 'vaccination', 'deworming', 'veterinary']) {
+  for (const category of ['pee', 'poop', 'food', 'sleep', 'awake', 'walk', 'accident', 'water', 'training', 'vaccination', 'deworming', 'veterinary']) {
     assert.match(icons, new RegExp(`\\b${category}:`));
   }
   assert.match(icons, /deworming:\s*'medical-outline'/);

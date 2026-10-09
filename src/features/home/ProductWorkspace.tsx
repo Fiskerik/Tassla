@@ -57,13 +57,17 @@ import {
   type WriteOutcome,
 } from '../../data/workspace-data';
 import {
+  fetchOwnedDogAttribution,
   fetchOwnedDogById,
   fetchBreeds,
+  updateOwnedDogAttribution,
   updateOwnedDog,
   type BreedOption,
+  type DogAttributionWriteOutcome,
   type DogProfileWriteOutcome,
   type HomeContent,
   type OwnedDog,
+  type OwnedDogAttribution,
   type OwnedDogProfileChanges,
 } from '../../data/app-data';
 import { ageInWeeks, localDate } from '../onboarding/dog';
@@ -183,6 +187,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [profileMessage, setProfileMessage] = useState('');
   const [profileMessageError, setProfileMessageError] = useState(false);
   const [profileConflict, setProfileConflict] = useState<OwnedDog | null>(null);
+  const [dogAttribution, setDogAttribution] = useState<OwnedDogAttribution | null>(null);
+  const [attributionState, setAttributionState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [attributionBusy, setAttributionBusy] = useState(false);
+  const [attributionMessage, setAttributionMessage] = useState('');
+  const [attributionMessageError, setAttributionMessageError] = useState(false);
   const [training, setTraining] = useState<{ programs: PublishedTrainingProgram[]; paused: PausedTrainingProgress[] }>({ programs: [], paused: [] });
   const [trainingState, setTrainingState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [trainingSelectionKey, setTrainingSelectionKey] = useState<string | null>(null);
@@ -495,6 +504,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       setProfileMessageError(false);
       setProfileConflict(null);
     }
+    setAttributionState('loading');
+    setAttributionMessage('');
+    setAttributionMessageError(false);
+    void fetchOwnedDogAttribution(client, dog.id).then((value) => {
+      if (!mounted.current || currentProfileLifetime !== profileLifetime.current) return;
+      setDogAttribution(value);
+      setAttributionState('ready');
+    }).catch(() => {
+      if (!mounted.current || currentProfileLifetime !== profileLifetime.current) return;
+      setAttributionState('error');
+    });
     const currentHistoryLifetime = currentHealthHistoryLifetime;
     if (previousHealthHistoryLifetime.current !== currentHistoryLifetime) {
       previousHealthHistoryLifetime.current = currentHistoryLifetime;
@@ -672,6 +692,52 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       lifetime: profileLifetime.current,
     };
     return runProfileMutation(mutation);
+  }
+
+  async function retryDogAttribution() {
+    if (attributionBusy) return;
+    setAttributionState('loading');
+    setAttributionMessage('');
+    setAttributionMessageError(false);
+    try {
+      const value = await fetchOwnedDogAttribution(client, dog.id);
+      if (!mounted.current) return;
+      setDogAttribution(value);
+      setAttributionState('ready');
+    } catch {
+      if (mounted.current) setAttributionState('error');
+    }
+  }
+
+  async function saveDogAttribution(code: string | null): Promise<boolean> {
+    if (attributionBusy || !mounted.current) return false;
+    setAttributionBusy(true);
+    setAttributionMessage('');
+    setAttributionMessageError(false);
+    let outcome: DogAttributionWriteOutcome;
+    try {
+      outcome = await updateOwnedDogAttribution(client, dog.id, code);
+      if (!mounted.current) return false;
+      if (outcome.status === 'saved') {
+        setDogAttribution(outcome.value);
+        setAttributionState('ready');
+        setAttributionMessage(outcome.value ? 'Kennelkopplingen är sparad.' : 'Kennelkopplingen är borttagen.');
+        return true;
+      }
+      setAttributionMessage(outcome.status === 'unknown'
+        ? 'Vi kunde inte bekräfta kennelkopplingen. Kontrollera den innan du försöker igen.'
+        : 'Kennelkoden kunde inte sparas. Kontrollera koden och försök igen.');
+      setAttributionMessageError(true);
+      return false;
+    } catch {
+      if (mounted.current) {
+        setAttributionMessage('Kennelkopplingen kunde inte sparas. Kontrollera anslutningen och försök igen.');
+        setAttributionMessageError(true);
+      }
+      return false;
+    } finally {
+      if (mounted.current) setAttributionBusy(false);
+    }
   }
 
   async function retryProfileStatus() {
@@ -1640,7 +1706,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       || pendingHealthHistoryMutation.current || pendingPlannedHealthMutation.current
       || pendingProfileMutation.current || logMutationFlight.current || healthMutationInFlight.current
       || healthHistoryMutationInFlight.current || plannedHealthMutationInFlight.current
-      || profileMutationInFlight.current || trainingMutationInFlight.current || notificationBusy || accountDeleteBusy;
+      || profileMutationInFlight.current || trainingMutationInFlight.current || notificationBusy || attributionBusy || accountDeleteBusy;
     if (unresolvedWrite) {
       setAccountDeleteStatus('blocked');
       return { status: 'failed' };
@@ -1809,6 +1875,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     />;
     if (page === 'log') return <LogScreen events={displayEvents} onAdd={addEvent}
       onUpdate={updateEvent} onDelete={(id) => deleteEvent(id)} mode="cloud"
+      layoutOwnerId={session?.user.id}
       loading={logState === 'loading'} loadError={logState === 'error'} onReload={() => { void retryEvents(); }}
       busy={logBusy} mutation={quickLogMutation} loadMoreError={loadMoreError} onRetry={retryLogMutation} onCancel={cancelLogMutation}
       onUndo={(id) => { void undoQuickLog(id); }} hasMore={hasMore} loadingMore={loadingMore}
@@ -1944,7 +2011,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     if (onDogUpdated) return <EditDogProfileScreen key={`${dog.id}:${dog.name}:${dog.breed_id}:${dog.birth_date}`}
       client={client} dog={dog} busy={profileBusy} pending={profilePending} statusMessage={profileMessage}
       statusError={profileMessageError} conflict={profileConflict ?? undefined}
+      attribution={dogAttribution} attributionState={attributionState} attributionBusy={attributionBusy}
+      attributionMessage={attributionMessage} attributionMessageError={attributionMessageError}
       onBack={() => setPage('more')} onSave={saveDogProfile}
+      onSaveAttribution={saveDogAttribution} onRetryAttribution={() => { void retryDogAttribution(); }}
       onRetryStatus={() => { void retryProfileStatus(); }} onAcceptCurrent={() => { void acceptCurrentProfile(); }} />;
     return <DogProfilePage dog={dog} onBack={() => setPage('more')} />;
   }
