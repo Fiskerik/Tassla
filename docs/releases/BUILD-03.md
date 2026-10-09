@@ -17,7 +17,7 @@ Byggkontrollens `pnpm test` filtrerar bort de 15 namngivna tester som fallerar i
 
 ## Bug-fixes
 
-CodeMagic-kontrollen stannade efter typecheck och lint eftersom testerna förväntade äldre UI-markup och copy. De testerna blockeras nu från bygggrinden. Ingen applikationsfunktion ändrades i detta paket.
+CodeMagic-kontrollen stannade i teststeget på 15 felande testfall. Några har föråldrade källkodsförväntningar efter UI-revisionerna; övriga behöver separat undersökning. På ägarens begäran är de exkluderade från bygggrinden, inte rättade. Ingen applikationsfunktion ändrades i detta paket.
 
 ## Verifiering och kända begränsningar
 
