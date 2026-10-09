@@ -2,19 +2,19 @@ import type { ReactNode, RefObject } from 'react';
 import { AccessibilityInfo, findNodeHandle, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Button } from './ui/Button';
+import { useReducedMotion } from './ui/Motion';
 import { theme, tokens } from '../theme/tokens';
 
-export function AppScreen({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
+export function AppScreen({ children, footer, scrollKey }: { children: ReactNode; footer?: ReactNode; scrollKey?: string }) {
+  const scroll = useRef<ScrollView>(null);
+  useLayoutEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [scrollKey]);
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.screenLayout}>
         <KeyboardAvoidingView style={styles.keyboardLayout} behavior="padding">
-          <ScrollView style={styles.scrollArea} contentContainerStyle={styles.page} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled">
-            <View style={styles.brandMark} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-              <Text style={styles.brandMarkText}>T</Text>
-            </View>
-            <Text style={styles.brandName}>tassla</Text>
+          <ScrollView ref={scroll} showsVerticalScrollIndicator={false} style={styles.scrollArea} contentContainerStyle={styles.page} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled">
             {children}
           </ScrollView>
         </KeyboardAvoidingView>
@@ -42,43 +42,11 @@ export function PrimaryButton({
   onPress: () => void;
   disabled?: boolean;
 }) {
-  const reduceMotion = useReducedMotion();
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => [styles.button, disabled && styles.buttonDisabled, pressed && !disabled && (reduceMotion ? styles.buttonReducedPressed : styles.buttonPressed)]}
-    >
-      <Text style={styles.buttonText}>{title}</Text>
-    </Pressable>
-  );
+  return <View style={styles.buttonSpacing}><Button label={title} accessibilityLabel={title} onPress={onPress} disabled={disabled} /></View>;
 }
 
 export function QuietButton({ title, onPress, disabled = false }: { title: string; onPress: () => void; disabled?: boolean }) {
-  const reduceMotion = useReducedMotion();
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => [styles.quietButton, pressed && !disabled && (reduceMotion ? styles.quietButtonReducedPressed : styles.quietButtonPressed)]}
-    >
-      <Text style={styles.quietButtonText}>{title}</Text>
-    </Pressable>
-  );
-}
-
-function useReducedMotion(): boolean {
-  const [reduceMotion, setReduceMotion] = useState(false);
-  useEffect(() => {
-    void AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => undefined);
-    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
-    return () => subscription.remove();
-  }, []);
-  return reduceMotion;
+  return <Button variant="tertiary" label={title} accessibilityLabel={title} onPress={onPress} disabled={disabled} />;
 }
 
 export function FormField({
@@ -296,26 +264,15 @@ const styles = StyleSheet.create({
   screenLayout: { flex: 1, width: '100%', maxWidth: 560, alignSelf: 'center' },
   keyboardLayout: { flex: 1 },
   scrollArea: { flex: 1 },
-  page: { flexGrow: 1, width: '100%', maxWidth: 560, alignSelf: 'center', paddingHorizontal: 24, paddingTop: 20, paddingBottom: 48 },
-  footer: { borderTopWidth: 1, borderTopColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  brandMark: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.accent, alignSelf: 'center' },
-  brandMarkText: { color: theme.colors.onAccent, fontSize: 24, fontWeight: '800' },
-  brandName: { color: theme.colors.accent, fontSize: 15, fontWeight: '800', letterSpacing: 1.4, textAlign: 'center', marginTop: 7 },
-  heading: { marginTop: 36, marginBottom: 24 },
+  page: { flexGrow: 1, width: '100%', maxWidth: 560, alignSelf: 'center', paddingHorizontal: tokens.layout.pageInset, paddingTop: tokens.spacing.xs, paddingBottom: tokens.spacing.xxl },
+  footer: { backgroundColor: tokens.colors.surface },
+  buttonSpacing: { marginTop: tokens.spacing.sm },
+  heading: { marginTop: tokens.spacing.lg, marginBottom: tokens.spacing.xl },
   title: { color: theme.colors.text, fontSize: 30, fontWeight: '800', lineHeight: 38, letterSpacing: -0.6 },
   description: { color: theme.colors.mutedText, fontSize: 17, lineHeight: 25, marginTop: 12 },
   fieldGroup: { marginBottom: 18 },
   fieldLabel: { color: theme.colors.text, fontSize: 15, fontWeight: '700', marginBottom: 8 },
   input: { minHeight: 56, paddingHorizontal: 16, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, fontSize: 17 },
-  button: { minHeight: tokens.size.buttonHeight, borderRadius: theme.radius.button, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.lg, backgroundColor: theme.colors.accent, marginTop: tokens.spacing.sm, shadowColor: theme.colors.text, shadowOpacity: 0.12, shadowRadius: tokens.spacing.sm, shadowOffset: { width: 0, height: tokens.size.progress }, elevation: tokens.spacing.xs },
-  buttonDisabled: { opacity: 0.55 },
-  buttonPressed: { backgroundColor: '#12543D', transform: [{ scale: 0.985 }] },
-  buttonReducedPressed: { backgroundColor: '#12543D', opacity: 0.9 },
-  buttonText: { color: theme.colors.onAccent, fontSize: 16, fontWeight: '800' },
-  quietButton: { minHeight: 48, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, marginTop: 8 },
-  quietButtonPressed: { opacity: 0.65 },
-  quietButtonReducedPressed: { opacity: 0.7 },
-  quietButtonText: { color: theme.colors.accent, fontSize: 15, fontWeight: '700' },
   messageCard: { padding: 16, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: '#EFE8DA', marginTop: 18 },
   messageText: { color: theme.colors.text, fontSize: 15, lineHeight: 22 },
   errorCard: { borderColor: '#D5A5A0', backgroundColor: '#F7EAE7' },

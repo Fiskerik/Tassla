@@ -1,5 +1,6 @@
+import { MotionPressable } from './Motion';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { tokens } from '../../theme/tokens';
 
 export type BottomNavDestination = 'home' | 'log' | 'training' | 'health' | 'more';
@@ -16,10 +17,10 @@ export function BottomNav({ active = 'home', onChange }: { active?: BottomNavDes
   return <View accessibilityRole="tablist" accessibilityLabel="Huvudmeny" style={styles.nav}>
     {items.map((item) => {
       const selected = item.key === active;
-      return <Pressable key={item.key} accessibilityRole="tab" accessibilityLabel={item.label} accessibilityState={{ selected }} onPress={() => onChange(item.key)} style={({ pressed }) => [styles.item, pressed && styles.pressed]}>
+      return <MotionPressable key={item.key} accessibilityRole="tab" accessibilityLabel={item.label} accessibilityState={{ selected }} onPress={() => onChange(item.key)} style={({ pressed }) => [styles.item, pressed && styles.pressed]}>
         <Ionicons name={selected ? item.activeIcon : item.icon} size={tokens.size.iconMd} color={selected ? tokens.colors.primary : tokens.colors.textSecondary} />
         <Text style={[styles.label, selected && styles.selectedLabel]}>{item.label}</Text>
-      </Pressable>;
+      </MotionPressable>;
     })}
   </View>;
 }

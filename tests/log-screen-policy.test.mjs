@@ -12,7 +12,8 @@ const toast = readFileSync('src/components/ui/Toast.tsx', 'utf8');
 test('quick log uses shared controls and keeps the approved two by two plus more layout', () => {
   assert.match(screen, /<AppBar mode="Title" title="Logga"/);
   assert.match(appBar, /'Home' \| 'Back' \| 'Close' \| 'Title'/);
-  assert.match(appBar, /mode !== 'Title'/);
+  assert.match(appBar, /mode === 'Back' \? control\('chevron-back'/);
+  assert.match(appBar, /mode === 'Close' \? control\('close'/);
   assert.match(screen, /\(\['pee', 'poop'\] as const\)/);
   assert.match(screen, /\(\['food', 'sleep'\] as const\)/);
   assert.match(screen, /\(\['walk', 'awake'\] as const\)/);
@@ -54,7 +55,7 @@ test('legacy row editing and deletion remain reachable from workspace and previe
   assert.match(screen, /DatePickerField/);
   assert.match(screen, /TimePickerField/);
   assert.match(screen, /Anteckning \(valfri\)/);
-  assert.match(listRow, /\{time \? <Text style=\{styles\.time\}>\{time\}<\/Text> : null\}\s*<IconChip/);
+  assert.match(listRow, /<IconChip[\s\S]*?\{time \? <Text style=\{styles\.time\}>\{time\}<\/Text> : null\}<Text style=\{styles\.title\}>/);
   assert.match(screen, /tryck för att ändra/);
 });
 

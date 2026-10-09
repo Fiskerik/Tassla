@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AccessibilityInfo, Alert, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { AppBar, Button, Card, Dialog, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast } from '../../components/ui';
+import { AppBar, BottomSheet, Button, Card, Dialog, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast } from '../../components/ui';
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
@@ -97,6 +97,11 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     ]);
   }
 
+  const mutationFeedback = <>
+      {mutation?.status === 'failed' && <Toast tone="error" message="Kunde inte spara" onRetry={retryMutation} onCancel={() => { onCancel?.(); if (mutation.kind !== 'add') setEditingId(null); }} />}
+      {mutation?.status === 'unsure' && <Toast tone="uncertain" onRetry={retryMutation} />}
+  </>;
+
   return <View style={styles.screen}>
     <AppBar mode="Title" title="Logga" />
     {loading ? <>
@@ -112,26 +117,18 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         <View style={styles.gridRow}>{(['pee', 'poop'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View>
         <View style={styles.gridRow}>{(['food', 'sleep'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View>
       </View>
-      <View style={styles.moreRow}><QuickLogTile label="Fler" accessibilityLabel={moreVisible ? 'Dölj fler loggtyper' : 'Visa fler loggtyper'} icon={<View style={styles.moreIcon}><Ionicons name={moreVisible ? 'remove' : 'add'} size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></View>} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={toggleMore} /></View>
+      <View style={styles.moreRow}><QuickLogTile subtle label="Fler" accessibilityLabel={moreVisible ? 'Dölj fler loggtyper' : 'Visa fler loggtyper'} icon={<View style={styles.moreIcon}><Ionicons name={moreVisible ? 'close-outline' : 'grid-outline'} size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></View>} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={toggleMore} /></View>
       {moreVisible ? <View style={styles.grid} accessibilityLabel="Fler loggtyper"><View style={styles.gridRow}>{(['walk', 'awake'] as const).map((type) => <QuickLogTile key={type} label={LOG_EVENT_LABELS[type]} accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`} category={type} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} onPress={(event) => selectType(type, event.nativeEvent.timestamp)} />)}</View></View> : null}
 
-      {patterns.length > 0 ? <>
-        <SectionHeader title="Dina senaste mönster" />
-        <Card accessibilityLabel="Dina senaste mönster för Kiss och Bajs">
-          {patterns.map((item) => <Text key={item.type} style={styles.patternText}>{LOG_EVENT_LABELS[item.type]}: {item.count} gånger{item.medianIntervalMinutes === null ? '' : ` · ungefär ${formatInterval(item.medianIntervalMinutes)}`}</Text>)}
-        </Card>
-      </> : null}
-
-      {mutation?.status === 'failed' && <Toast tone="error" message="Kunde inte spara" onRetry={retryMutation} onCancel={() => { onCancel?.(); if (mutation.kind !== 'add') setEditingId(null); }} />}
-      {mutation?.status === 'unsure' && <Toast tone="uncertain" onRetry={retryMutation} />}
+      {!editingEvent && mutationFeedback}
       {mutation?.status === 'saved' && dismissedMutationKey !== `${mutation.kind}:${mutation.mutationId}` && <Toast tone="success" confirmed message={mutation.kind === 'add' ? `${LOG_EVENT_LABELS[mutation.type]} loggat` : mutation.kind === 'update' ? 'Ändring sparad' : 'Händelsen är raderad'} onUndo={mutation.kind === 'add' ? () => onUndo?.(mutation.id) : undefined} />}
 
-      {editingEvent ? <LogEventEditor key={editingEvent.id} event={editingEvent} disabled={editLocked} onCancel={() => setEditingId(null)} onSave={(changes) => saveEdit(editingEvent, changes)} onDelete={() => askToDelete(editingEvent)} /> : null}
+      {editingEvent ? <BottomSheet visible title="Ändra händelse" onRequestClose={() => { if (!editLocked) setEditingId(null); }}>{mutationFeedback}<LogEventEditor key={editingEvent.id} event={editingEvent} disabled={editLocked} onCancel={() => setEditingId(null)} onSave={(changes) => saveEdit(editingEvent, changes)} onDelete={() => askToDelete(editingEvent)} /></BottomSheet> : null}
 
       <SectionHeader title="Dagens logg" />
       {!events.some((event) => localDateTimeParts(event.occurredAt).date === localDate()) && !(mutation?.kind === 'add' && mutation.status === 'pending') ? <View style={styles.empty}><Text style={styles.emptyTitle}>Inget loggat än idag</Text><Text style={styles.emptyBody}>Tryck på en ruta ovan för att lägga till dagens första händelse.</Text></View> : null}
       {mutation?.kind === 'add' && mutation.status === 'pending' && <ListRow title={LOG_EVENT_LABELS[mutation.type]} meta="Sparar…" time={localDateTimeParts(mutation.occurredAt).time} category={mutation.type} accessibilityLabel={`${LOG_EVENT_LABELS[mutation.type]} ${localDateTimeParts(mutation.occurredAt).time}, sparar`} />}
-      {groups.map((group) => <View key={group.date}>
+      {groups.map((group) => <View key={group.date} style={styles.logGroup}>
         {group.date !== localDate() ? <SectionHeader title={heading(group.date)} variant="date" /> : null}
         {group.events.map((event) => {
           const rowPending = mutation?.id === event.id && mutation.status === 'pending';
@@ -140,6 +137,13 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
           return <ListRow key={event.id} title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}${event.note ? `, ${event.note}` : ''}${rowPending ? ', sparar' : ''}, tryck för att ändra`} category={event.type} time={parts.time} detail={detail || undefined} onPress={() => setEditingId(event.id)} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} />;
         })}
       </View>)}
+      {patterns.length > 0 ? <>
+        <SectionHeader title="Dina senaste mönster" />
+        <Card accessibilityLabel="Dina senaste mönster för Kiss och Bajs">
+          {patterns.map((item) => <Text key={item.type} style={styles.patternText}>{LOG_EVENT_LABELS[item.type]}: {item.count} gånger{item.medianIntervalMinutes === null ? '' : ` · ungefär ${formatInterval(item.medianIntervalMinutes)}`}</Text>)}
+        </Card>
+      </> : null}
+
       {loadMoreError ? <Toast tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore} /> : hasMore ? <Button label={loadingMore ? 'Hämtar…' : 'Visa äldre poster'} accessibilityLabel={loadingMore ? 'Hämtar äldre poster' : 'Visa äldre poster'} disabled={loadingMore} loading={loadingMore} onPress={onLoadMore ?? (() => undefined)} /> : null}
     </>}
 
@@ -177,7 +181,7 @@ function LogEventEditor({ event, disabled, onCancel, onSave, onDelete }: {
   }
 
   return <View style={styles.editor}>
-    <Text style={styles.editorTitle} accessibilityRole="header">Ändra händelse</Text>
+
     <Text style={styles.fieldTitle}>Typ</Text>
     <View style={styles.typeGrid}>{LOG_EVENT_TYPES.map((option) => {
       const selected = type === option;
@@ -220,12 +224,12 @@ function heading(date: string): string {
 }
 
 const styles = StyleSheet.create({
-  screen: { gap: tokens.spacing.md }, grid: { gap: tokens.spacing.sm }, gridRow: { flexDirection: 'row', gap: tokens.spacing.sm }, moreRow: { width: '48%' }, moreIcon: { width: tokens.size.chipLg, minHeight: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.selectedSurface },
+  screen: { gap: tokens.spacing.xs }, logGroup: { gap: tokens.spacing.xs }, grid: { gap: tokens.spacing.sm }, gridRow: { flexDirection: 'row', gap: tokens.spacing.sm }, moreRow: { marginTop: tokens.spacing.sm }, moreIcon: { width: tokens.size.chipLg, minHeight: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.selectedSurface },
   patternText: { ...tokens.typography.body, color: tokens.colors.textPrimary, paddingVertical: tokens.spacing.xs },
   empty: { padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, gap: tokens.spacing.xs },
   emptyTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary }, emptyBody: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   errorState: { minHeight: tokens.size.buttonHeight, justifyContent: 'center', gap: tokens.spacing.md }, errorText: { ...tokens.typography.body, color: tokens.colors.danger },
-  editor: { backgroundColor: tokens.colors.selectedSurface, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, padding: tokens.spacing.md, gap: tokens.spacing.sm },
+  editor: { gap: tokens.spacing.sm },
   editorTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
   fieldTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.xs },
   typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
