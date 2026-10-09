@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Alert, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DatePickerField, InfoModal, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
@@ -50,20 +50,12 @@ export function HealthHistoryScreen({
   const [note, setNote] = useState('');
   const [formError, setFormError] = useState('');
   const [infoVisible, setInfoVisible] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const confirmedMessage = statusMessage.startsWith('Ändringen är sparad') && !statusError && !pending && !busy
     ? statusMessage : null;
   const available = records !== undefined;
   const rows = records ?? [];
   const blocked = busy || pending;
   const editingRecord = rows.find((row) => row.id === editingId) ?? null;
-
-  useEffect(() => {
-    if (!confirmedMessage) { setToastMessage(null); return; }
-    setToastMessage(confirmedMessage);
-    const timer = setTimeout(() => setToastMessage(null), 2500);
-    return () => clearTimeout(timer);
-  }, [confirmedMessage]);
 
   if (!available) return null;
 
@@ -172,7 +164,7 @@ export function HealthHistoryScreen({
           </View>
           {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
           <PrimaryButton title={busy ? 'Sparar…' : editingRecord ? 'Spara rättning' : 'Spara händelse'} disabled={blocked} onPress={() => { void save(); }} />
-          {toastMessage ? <Toast tone="success" confirmed message={toastMessage} /> : null}
+          {confirmedMessage ? <Toast tone="success" confirmed message={confirmedMessage} /> : null}
           {editingRecord && <QuietButton title="Avbryt rättning" disabled={blocked} onPress={resetForm} />}
         </View>
 

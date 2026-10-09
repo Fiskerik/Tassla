@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { InfoModal, MessageCard, PageHeading, QuietButton, TimePickerField } from '../../components/AppPrimitives';
@@ -24,7 +24,6 @@ export function NotificationSettingsScreen({
   const [trainingEnabled, setTrainingEnabled] = useState(preferences.trainingEnabled);
   const [trainingTime, setTrainingTime] = useState(formatTime(preferences.trainingMinutes));
   const [showSavedToast, setShowSavedToast] = useState(saved);
-  const [toastMessage, setToastMessage] = useState<string | null>(saved ? 'Valen är sparade för ditt konto på den här enheten.' : null);
   const [formError, setFormError] = useState('');
   const [permissionBusy, setPermissionBusy] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState('');
@@ -33,20 +32,9 @@ export function NotificationSettingsScreen({
     || trainingEnabled !== preferences.trainingEnabled
     || trainingTime !== formatTime(preferences.trainingMinutes);
 
-  useEffect(() => {
-    if (!showSavedToast || !saved || statusError) { setToastMessage(null); return; }
-    setToastMessage('Valen är sparade för ditt konto på den här enheten.');
-    const timer = setTimeout(() => {
-      setShowSavedToast(false);
-      setToastMessage(null);
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, [showSavedToast, saved, statusError, preferences]);
-
   async function save() {
     setFormError('');
     setShowSavedToast(false);
-    setToastMessage(null);
     const minutes = parseTime(trainingTime);
     if (minutes === null) {
       setFormError('Ange en tid mellan 00:00 och 23:59.');
@@ -121,8 +109,8 @@ export function NotificationSettingsScreen({
     {permissionState === 'denied' && <MessageCard tone="error">Enheten nekar notiser. Appen fungerar fortfarande.</MessageCard>}
     {statusMessage && statusError ? <MessageCard tone="error">{statusMessage}</MessageCard> : null}
     {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
-    {toastMessage && showSavedToast && saved && !statusError && !isDirty
-      ? <Toast tone="success" confirmed message={toastMessage} /> : null}
+    {showSavedToast && saved && !statusError && !isDirty
+      ? <Toast tone="success" confirmed message="Valen är sparade för ditt konto på den här enheten." /> : null}
     <Button label={busy ? 'Sparar…' : 'Spara val'} accessibilityLabel={busy ? 'Sparar val' : 'Spara val'}
       loading={busy} disabled={busy} onPress={() => { void save(); }} />
   </View>;

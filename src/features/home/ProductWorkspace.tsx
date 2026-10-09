@@ -206,15 +206,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const analyticsService = useMemo(() => createAnalyticsService(async (name, args) => {
     const result = await client.rpc(name, args as never);
     return { data: result.data, error: result.error };
-  }), [client, session?.user.id]);
+  }), [client]);
 
   useEffect(() => {
     let active = true;
-    setAnalyticsConsent(null);
-    setAnalyticsError(false);
     if (!session?.user.id) return () => { active = false; };
     void analyticsService.getConsent().then((value) => {
       if (!active) return;
+      setAnalyticsConsent(null);
+      setAnalyticsError(false);
       setAnalyticsConsent(value);
       setAnalyticsError(value === null);
     });

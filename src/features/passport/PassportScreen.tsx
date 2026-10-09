@@ -45,7 +45,6 @@ export function PassportScreen(props: PassportScreenProps) {
   const [exporting, setExporting] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [statusError, setStatusError] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const mounted = useRef(true);
   const lifetimeRef = useRef(props.lifetime ?? 'preview');
   const operationInFlight = useRef(false);
@@ -107,7 +106,6 @@ export function PassportScreen(props: PassportScreenProps) {
       const message = exportMessage(result);
       setStatusMessage(message.text);
       setStatusError(message.error);
-      if (!message.error) setToastMessage(message.text);
     } finally {
       operationInFlight.current = false;
       if (isCurrent(lifetime)) setExporting(false);
@@ -140,7 +138,7 @@ export function PassportScreen(props: PassportScreenProps) {
       {snapshot?.healthHistory.map((row, index) => <ListRow key={`${row.type}-${row.occurredOn}-${index}`} title={row.type} detail={row.note ? `${row.occurredOn} · ${row.note}` : row.occurredOn} category={row.type === 'Vaccination' ? 'vaccination' : 'veterinary'} chevron={false} />)}
       {snapshot && !snapshot.latestWeight && snapshot.healthHistory.length === 0 && <Text style={styles.emptyCopy}>Inga vikt- eller hälsoposter finns bland de inlästa uppgifterna.</Text>}
       {statusError && <ErrorState title="PDF:en kunde inte skapas" description={statusMessage} actionLabel="Försök igen" onRetry={() => { void createAndShare(); }} />}
-      {toastMessage && !statusError && <Toast tone="success" confirmed message={toastMessage} />}
+      {statusMessage && !statusError && <Toast tone="success" confirmed message={statusMessage} />}
       <Text style={styles.disclaimer}>Uppgifterna är registrerade av hundägaren. Tassla-pass är ingen officiell journal, legitimation eller vaccinationshandling.</Text>
     </>}
   </BottomSheet>;

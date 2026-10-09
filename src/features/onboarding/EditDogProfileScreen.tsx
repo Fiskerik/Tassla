@@ -46,17 +46,9 @@ export function EditDogProfileScreen({
   const [breedId, setBreedId] = useState(dog.breed_id);
   const [birthDate, setBirthDate] = useState(dog.birth_date);
   const [formError, setFormError] = useState('');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const confirmedMessage = statusMessage === 'Hundprofilen är sparad.' && !statusError && !pending && !busy
     ? statusMessage : null;
   const blocked = busy || pending;
-
-  useEffect(() => {
-    if (!confirmedMessage) { setToastMessage(null); return; }
-    setToastMessage(confirmedMessage);
-    const timer = setTimeout(() => setToastMessage(null), 2500);
-    return () => clearTimeout(timer);
-  }, [confirmedMessage]);
 
   useEffect(() => {
     let active = true;
@@ -150,7 +142,7 @@ export function EditDogProfileScreen({
       {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
       <PrimaryButton title={busy ? 'Sparar…' : statusError && !pending ? 'Försök igen' : 'Spara profil'}
         disabled={blocked || breedState !== 'ready'} onPress={() => { void save(); }} />
-      {toastMessage ? <Toast tone="success" confirmed message={toastMessage} /> : null}
+      {confirmedMessage ? <Toast tone="success" confirmed message={confirmedMessage} /> : null}
     </View>
     <QuietButton title="Avbryt" disabled={busy} onPress={onBack} />
   </View>;

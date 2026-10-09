@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Alert, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
 import { DatePickerField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { isValidHealthWeightDate, isValidHealthWeightKg, type HealthHistoryRecord, type HealthHistoryType, type HealthWeightRecord, type PlannedHealthRecord } from '../../data/workspace-data';
@@ -75,9 +75,7 @@ export function HealthScreen({
   const [editDate, setEditDate] = useState('');
   const [editWeight, setEditWeight] = useState('');
   const [toastRecordId, setToastRecordId] = useState<string | null>(null);
-  const [toastNonce, setToastNonce] = useState(0);
   const [formError, setFormError] = useState('');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('Översikt');
   const confirmedMessage = statusMessage?.startsWith('Ändringen är sparad') && !statusError && !pendingStatus && !isBusy
     ? statusMessage : null;
@@ -86,17 +84,9 @@ export function HealthScreen({
   const visiblePlannedRecords = activeTab === 'Vaccinationer'
     ? (plannedRecords ?? []).filter((record) => record.event_type === 'vaccination')
     : activeTab === 'Veterinär' ? (plannedRecords ?? []).filter((record) => record.event_type === 'vet_visit') : plannedRecords;
-  useEffect(() => {
-    if (!confirmedMessage) { setToastMessage(null); return; }
-    setToastMessage(confirmedMessage);
-    const timer = setTimeout(() => { setToastMessage(null); setToastRecordId(null); }, 2500);
-    return () => clearTimeout(timer);
-  }, [confirmedMessage, toastNonce]);
-
   function startEditing(record: HealthWeightRecord) {
     setEditingId(record.id);
     setToastRecordId(null);
-    setToastMessage(null);
     setEditDate(record.occurred_on);
     setEditWeight(String(record.weight_kg));
     setFormError('');
@@ -130,7 +120,6 @@ export function HealthScreen({
       return;
     }
     if (await onSave?.(editingId, occurredOn, weightKg)) {
-      setToastNonce((current) => current + 1);
       if (editingId) {
         const savedRecordId = editingId;
         cancelEditing();
@@ -206,7 +195,7 @@ export function HealthScreen({
           </View>
           {!editingId && formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
           <PrimaryButton title={isBusy ? 'Sparar…' : 'Spara vikt'} disabled={isBlocked || Boolean(editingId)} onPress={() => { void save(); }} />
-          {toastMessage && !toastRecordId ? <Toast tone="success" confirmed message={toastMessage} /> : null}
+          {confirmedMessage && !toastRecordId ? <Toast tone="success" confirmed message={confirmedMessage} /> : null}
         </View>
         <Text style={styles.sectionTitle} accessibilityRole="header">Vikthistorik</Text>
         {cloudRecords.length === 0 && <MessageCard>Ingen vikt har registrerats ännu.</MessageCard>}
@@ -245,7 +234,7 @@ export function HealthScreen({
                 <QuietButton title="Radera" disabled={isBlocked} onPress={() => confirmDelete(record)} />
               </View>
             </>}
-            {toastMessage && toastRecordId === record.id ? <Toast tone="success" confirmed message={toastMessage} /> : null}
+            {confirmedMessage && toastRecordId === record.id ? <Toast tone="success" confirmed message={confirmedMessage} /> : null}
           </View>
         ))}
       </>}
