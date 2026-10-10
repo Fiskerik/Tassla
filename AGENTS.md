@@ -148,3 +148,8 @@ Ansvarig: EriMali AB. Postadress: Stenvallavägen 1, 18634 Vallentuna. Support: 
 Läs docs/design-rules.md före planering, implementation och granskning av UI. Använd originalets målbild, gemensamma tokens/komponenter och 18-punktschecklista: max en huvudknapp, kompakt information, tydlig navigation, enhetliga ikoner och inga tekniska banners eller statusetiketter på normala poster. Product ansvarar för UX-copy; Critic granskar begriplighet. Varje UI-task ska ange användaruppgift, huvudhandling, synlig information, fördjupning, målbild/avvikelser och visuell verifiering. Separat QA/Reviewer jämför renderade skärmdumpar med målbilden; kodkontroll ensam ger inte visuellt PASS. Dokumentera NOT TESTABLE när evidens saknas och rätta konkreta regelbrott i berörd slice. Nyare designpolicy ersätter motstridiga äldre visuella råd; MVP-scope, sanningsenlighet, säkerhet och Eriks TestFlight-policy kvarstår. Befintlig UI är inte ombyggd genom instruktionerna. Nya agentstarter läser policyn; pågående agenter ska uttryckligen få den innan nästa UI-arbete.
 
 Eriks MOTION-beslut 2026-10-10 finns i `docs/decisions/0004-motion-package.md`; kökonflikter och telefonprov styr slice-ordningen.
+
+
+## INNAN COMMIT OCH PUSH TILL GITHUB
+
+Alla nödvändiga tester som krävs efter implementering av funktionalitet behöver modifieras så att bygget går igenom build i CodeMagic. Kan vara allt från Testfall och Lint-fel som dyker upp. Detta får INTE ske. Kontrollera eventuella tester som är inaktuella och inaktivera de om så krävs, och se till att alla förutsättningar för att klara CodeMagic bygget innan varje Commit och Push till GITHUB. 
