@@ -2211,189 +2211,399 @@
       "next_step": "Local delivery done; run a new Codemagic build for code commit 94686aaa8e717aaca069fde8ae5cc960d2fbc287 and inspect its artifacts separately"
     },
       {
-        "id": "UI-06",
-        "title": "Förbättra Hem och Logg med lugn hierarki och foto-carousel",
-        "mvp_requirement": "docs/mvp.md: Hem och Valplogg; Eriks bildbaserade UI-beställning 2026-10-10",
-        "plan": "docs/tasks/dev/ui-06.md v6",
-        "write_paths": [
-          "src/components/ui/IconChip.tsx",
-          "src/features/home/HomeScreen.tsx",
-          "src/features/home/HomeCarousel.tsx",
-          "src/features/puppy-log/LogScreen.tsx",
-          "assets/images/puppy-training.png",
-          "assets/images/puppy-water.png",
-          "assets/images/puppy-resting-carousel.png",
-          "assets/images/dog-placeholder.png",
-          "assets/images/README.md",
-          "src/features/home/README.md",
-          "src/features/puppy-log/README.md",
-          "docs/design/UI-06/",
-          "docs/tasks/dev/ui-06.md",
-          "docs/tasks/dev/queue.json",
-          "docs/tasks/dev/rapport.md",
-          "docs/releases/UI-06.md"
-        ],
-        "acceptance": [
-          "Hem har en primär Logga nu-knapp före dagens rader och ingen dubblerad loggåtgärd",
-          "Carousel visar dekorativa originalfoton och befintligt relevant innehåll utan falskt hundfoto",
-          "Logg behåller korrekt sparstatus och får subtil bekräftad radtoning, Olycka har relevant central ikon",
-          "pnpm check, iOS-bundling, diff- och kövalidering passerar; visual evidence redovisas sanningsenligt"
-        ],
-        "checks": [
-          "pnpm check",
-          "EXPO_NO_TELEMETRY=1 pnpm bundle:ios",
-          "git diff --check",
-          "python tools/dev_flow.py validate"
-        ],
-        "depends_on": [],
-        "status": "blocked",
-        "history": [
-          {
-            "from": "planned",
-            "to": "ready",
-            "actor": "architect",
-            "evidence": "APPROVE plan v2; Critic/Product PROCEED; both saved in docs/tasks/dev/ui-06.md"
-          },
-          {
-            "from": "ready",
-            "to": "implementing",
-            "actor": "implementer",
-            "evidence": "Erik explicitly authorized Home+Log UI work 2026-10-10; v2 exact scope approved before app code"
-          },
-          {
-            "from": "implementing",
-            "to": "blocked",
-            "actor": "coordinator",
-            "evidence": "v2 app implementation checks pass; v3 only adds concrete visual evidence directory before independent QA, requiring renewed Architect review"
-          },
-          {
-            "from": "blocked",
-            "to": "planned",
-            "actor": "coordinator",
-            "evidence": "Plan v3 specifies docs/design/UI-06 screenshots and checklist; no app behavior scope change"
-          },
-          {
-            "from": "planned",
-            "to": "ready",
-            "actor": "architect",
-            "evidence": "APPROVE v3 screenshot/checklist destination only; saved in ui-06.md"
-          },
-          {
-            "from": "ready",
-            "to": "implementing",
-            "actor": "implementer",
-            "evidence": "v2 app code complete with targeted checks PASS; v3 changes QA output path only"
-          },
-          {
-            "from": "implementing",
-            "to": "qa",
-            "actor": "implementer",
-            "evidence": "Home+Log app implementation and bounded cleanup complete; typecheck, targeted ESLint, focused UI/log tests and diff check PASS; independent full/visual QA next"
-          },
-          {
-            "from": "qa",
-            "to": "blocked",
-            "actor": "qa",
-            "evidence": "QA technical checks PASS and RN Web captures produced; Olycka vertical composite resembles exclamation at phone scale (checklist 9 FAIL); BottomNav labels merge at 140% (checklist 15 FAIL, assigned UI-07)"
-          },
-          {
-            "from": "blocked",
-            "to": "planned",
-            "actor": "coordinator",
-            "evidence": "Correction v4 narrows Olycka icon composition to side-by-side glyphs within existing central chip; no other UI-06 app code change"
-          },
-          {
-            "from": "planned",
-            "to": "ready",
-            "actor": "architect",
-            "evidence": "APPROVE v4 IconChip Olycka side-by-side correction, recorded in docs/tasks/dev/ui-06.md"
-          },
-          {
-            "from": "ready",
-            "to": "implementing",
-            "actor": "implementer",
-            "evidence": "Implement only v4 Olycka IconChip composition, then recapture visual QA point 9"
-          },
-          {
-            "from": "implementing",
-            "to": "qa",
-            "actor": "implementer",
-            "evidence": "IconChip v4 horizontal glyph correction complete; typecheck targeted lint and diff check pass; visual recapture pending"
-          },
-          {
-            "from": "qa",
-            "to": "blocked",
-            "actor": "reviewer",
-            "evidence": "Reviewer BLOCK: duplicate daily training, health, knowledge destinations and carousel; review finding recorded in ui-06.md v5"
-          },
-          {
-            "from": "blocked",
-            "to": "planned",
-            "actor": "coordinator",
-            "evidence": "v5 correction: actual daily rows only, editorial suggestions in carousel; await Architect and Critic"
-          },
-          {
-            "from": "planned",
-            "to": "ready",
-            "actor": "architect",
-            "evidence": "APPROVE v5 Architect and PROCEED Critic/Product; plan and precise health ID invariant in ui-06.md"
-          },
-          {
-            "from": "ready",
-            "to": "implementing",
-            "actor": "implementer",
-            "evidence": "Implement approved v5 Home dedup correction and refresh QA"
-          },
-          {
-            "from": "implementing",
-            "to": "qa",
-            "actor": "implementer",
-            "evidence": "v5 Home dedup correction complete; typecheck lint two targeted suites diff check pass; visual recapture pending"
-          },
-          {
-            "from": "qa",
-            "to": "blocked",
-            "actor": "reviewer",
-            "evidence": "Reviewer BLOCK v5: stale selectedDatePlans hid global health card during loading/error; finding recorded in ui-06.md v6"
-          },
-          {
-            "from": "blocked",
-            "to": "planned",
-            "actor": "coordinator",
-            "evidence": "v6 limits dedupe input to plans actually rendered when planState ready; verify stale loading/error scenario"
-          },
-          {
-            "from": "planned",
-            "to": "ready",
-            "actor": "architect",
-            "evidence": "APPROVE v6 stale-plan state correction; contract recorded in ui-06.md"
-          },
-          {
-            "from": "ready",
-            "to": "implementing",
-            "actor": "implementer",
-            "evidence": "Implement v6 only: pass rendered ready-state plans into health-carousel dedupe; verify stale loading/error behavior"
-          },
-          {
-            "from": "implementing",
-            "to": "qa",
-            "actor": "implementer",
-            "evidence": "v6 passes only rendered plan list to dedupe; typecheck lint diff pass; run focused visual stale loading/error scenario"
-          },
-          {
-            "from": "qa",
-            "to": "review",
-            "actor": "qa",
-            "evidence": "QA v6 targeted state verification PASS; full pnpm check 387/1/0 and iOS bundle from v5 pass; visual checklist remains UNDERKÄND point15"
-          },
-          {
-            "from": "review",
-            "to": "blocked",
-            "actor": "reviewer",
-            "evidence": "Reviewer code/QA evidence PASS v6; overall visual delivery blocked only by point15 BottomNav 140% labels, queued for UI-07"
-          }
-        ],
-        "next_step": "Reviewer code/QA evidence PASS v6; overall visual delivery blocked only by point15 BottomNav 140% labels, queued for UI-07"
-      }
-  ]
+      "id": "UI-06",
+      "title": "Förbättra Hem och Logg med lugn hierarki och foto-carousel",
+      "mvp_requirement": "docs/mvp.md: Hem och Valplogg; Eriks bildbaserade UI-beställning 2026-10-10",
+      "plan": "docs/tasks/dev/ui-06.md v6",
+      "write_paths": [
+        "src/components/ui/IconChip.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/HomeCarousel.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "assets/images/puppy-training.png",
+        "assets/images/puppy-water.png",
+        "assets/images/puppy-resting-carousel.png",
+        "assets/images/dog-placeholder.png",
+        "assets/images/README.md",
+        "src/features/home/README.md",
+        "src/features/puppy-log/README.md",
+        "docs/design/UI-06/",
+        "docs/tasks/dev/ui-06.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/UI-06.md"
+      ],
+      "acceptance": [
+        "Hem har en primär Logga nu-knapp före dagens rader och ingen dubblerad loggåtgärd",
+        "Carousel visar dekorativa originalfoton och befintligt relevant innehåll utan falskt hundfoto",
+        "Logg behåller korrekt sparstatus och får subtil bekräftad radtoning, Olycka har relevant central ikon",
+        "pnpm check, iOS-bundling, diff- och kövalidering passerar; visual evidence redovisas sanningsenligt"
+      ],
+      "checks": [
+        "pnpm check",
+        "EXPO_NO_TELEMETRY=1 pnpm bundle:ios",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v2; Critic/Product PROCEED; both saved in docs/tasks/dev/ui-06.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik explicitly authorized Home+Log UI work 2026-10-10; v2 exact scope approved before app code"
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "v2 app implementation checks pass; v3 only adds concrete visual evidence directory before independent QA, requiring renewed Architect review"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v3 specifies docs/design/UI-06 screenshots and checklist; no app behavior scope change"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v3 screenshot/checklist destination only; saved in ui-06.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "v2 app code complete with targeted checks PASS; v3 changes QA output path only"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Home+Log app implementation and bounded cleanup complete; typecheck, targeted ESLint, focused UI/log tests and diff check PASS; independent full/visual QA next"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "QA technical checks PASS and RN Web captures produced; Olycka vertical composite resembles exclamation at phone scale (checklist 9 FAIL); BottomNav labels merge at 140% (checklist 15 FAIL, assigned UI-07)"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction v4 narrows Olycka icon composition to side-by-side glyphs within existing central chip; no other UI-06 app code change"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v4 IconChip Olycka side-by-side correction, recorded in docs/tasks/dev/ui-06.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement only v4 Olycka IconChip composition, then recapture visual QA point 9"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "IconChip v4 horizontal glyph correction complete; typecheck targeted lint and diff check pass; visual recapture pending"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer BLOCK: duplicate daily training, health, knowledge destinations and carousel; review finding recorded in ui-06.md v5"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "v5 correction: actual daily rows only, editorial suggestions in carousel; await Architect and Critic"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v5 Architect and PROCEED Critic/Product; plan and precise health ID invariant in ui-06.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement approved v5 Home dedup correction and refresh QA"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v5 Home dedup correction complete; typecheck lint two targeted suites diff check pass; visual recapture pending"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer BLOCK v5: stale selectedDatePlans hid global health card during loading/error; finding recorded in ui-06.md v6"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "v6 limits dedupe input to plans actually rendered when planState ready; verify stale loading/error scenario"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v6 stale-plan state correction; contract recorded in ui-06.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement v6 only: pass rendered ready-state plans into health-carousel dedupe; verify stale loading/error behavior"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v6 passes only rendered plan list to dedupe; typecheck lint diff pass; run focused visual stale loading/error scenario"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA v6 targeted state verification PASS; full pnpm check 387/1/0 and iOS bundle from v5 pass; visual checklist remains UNDERKÄND point15"
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer code/QA evidence PASS v6; overall visual delivery blocked only by point15 BottomNav 140% labels, queued for UI-07"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "UI-07 PASS provides updated point15 140% captures; reviewer confirms UI-06 remains code PASS and all checklist Nej findings resolved"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect UI-07 v2/v3 review required point15 recheck; updated evidence from all five active tabs at 360/430 140% now passes"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "UI-06 code unchanged; docs/checklist/release updated with UI-07 point15 PASS and native NOT TESTABLE limits"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "UI-06 code v6 unchanged; screenshots and checklist re-reviewed against UI-07 v3 captures; point15 PASS"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA v6 state scenarios PASS; UI-07 all five nav labels PASS at 140%/360/430; full checks and bundle PASS"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS UI-06 v6 code and updated visual point15; checklist VISUELLT GODKÄND MED BEGRÄNSNINGAR, remaining native concerns documented NOT TESTABLE"
+        }
+      ],
+      "next_step": "Independent Reviewer PASS UI-06 v6 code and updated visual point15; checklist VISUELLT GODKÄND MED BEGRÄNSNINGAR, remaining native concerns documented NOT TESTABLE"
+    },
+{
+      "id": "UI-07",
+      "title": "Centrerat Tassla-varumärke och täckande bottenmeny",
+      "mvp_requirement": "docs/mvp.md: Hem, Valplogg, Träning, Hälsa, Kunskap och Tassla-pass; Eriks bildbaserade UI-beställning 2026-10-10",
+      "plan": "docs/tasks/dev/ui-07.md v3; docs/plans/UI-07-ux-spec.md",
+      "write_paths": [
+        "src/components/ui/AppBar.tsx",
+        "src/components/ui/BottomNav.tsx",
+        "src/components/AppPrimitives.tsx",
+        "src/components/README.md",
+        "docs/design/UI-07/",
+        "docs/tasks/dev/ui-07.md",
+        "docs/plans/UI-07-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/UI-07.md"
+      ],
+      "acceptance": [
+        "Every AppBar variant shows centered muted Tassla; page titles, notification, back and close controls remain clear and usable",
+        "BottomNav covers the complete bottom safe area with existing surface color",
+        "Five labels remain distinct at 140% text without limiting Dynamic Type; destinations and accessibility state unchanged",
+        "No new dependency, token, navigation destination or product flow"
+      ],
+      "checks": [
+        "pnpm check",
+        "EXPO_NO_TELEMETRY=1 pnpm bundle:ios",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "actor": "coordinator",
+          "evidence": "UI-06 checkpoint 223b306; UI-07 addresses shared BottomNav point 15 and requested centered wordmark/full bottom safe area; v1 Architect review required before UI changes"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v2 Architect; exact AppBar/footer/nav contracts and no-footer QA recorded in ui-07.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement approved AppBar, BottomNav and AppScreen shared components only"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Approved v2 implementation in AppBar/BottomNav/AppScreen; typecheck targeted lint and two UI policy suites pass; screenshots/callback QA pending"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "QA visual BLOCK: Träning breaks awkwardly as Tränin + g at 360px/140%; v3 removes horizontal nav item padding and requires new large-text captures"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v3 narrows correction to give labels full equal-column width by removing horizontal padding; await Architect review"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v3 remove horizontal tab-item padding; retake all five tab footer states 360/430 at 140%"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement approved v3 in BottomNav only: remove horizontal item padding, preserve all other constraints"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v3 removes nav horizontal padding only; typecheck lint targeted diff pass; recapture 140% at 360/430 pending"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "QA v3 recapture still shows Tränin/g at 360px 140 despite removing horizontal padding; v4 proposes discretionary soft break after Trä while keeping accessibility label Träning"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction attempt 2 for visual nav label issue; wait Architect review of optional soft hyphen break"
+        },
+        {
+          "from": "planned",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "QA v3 recapture still shows Tränin/g at 360px 140 despite removing horizontal padding; v4 proposes discretionary soft hyphen break after Trä while keeping accessibility label Träning"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction attempt 2 for visual nav label issue; wait Architect review of optional soft hyphen break"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "V3 Architect APPROVE retained; refreshed QA confirmed Träning fits single line at 360/430 140%, so proposed v4 is withdrawn"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "V3 one-line padding change already implemented and targeted checks pass; proceed to refreshed visual QA"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "No v4 code change; refreshed v3 captures now show all five labels in one line at 140% for both widths; full checks in progress"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA PASS: 360/430/140, callbacks, Back/Close, no-footer sign-in, full-width footer; pnpm check 387/1/0 and iOS bundle PASS"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS code/APIs and visual evidence; task plan/release docs corrected; physical inset/native accessibility explicitly NOT TESTABLE"
+        }
+      ],
+      "next_step": "Independent Reviewer PASS code/APIs and visual evidence; task plan/release docs corrected; physical inset/native accessibility explicitly NOT TESTABLE"
+    },
+{
+      "id": "FIX-36",
+      "title": "Rätta påminnelsetid och verifiera Olycka/Vatten",
+      "mvp_requirement": "docs/mvp.md: Hälsa och Valplogg; Eriks felrapporterade fel 2026-10-10",
+      "plan": "docs/tasks/dev/fix-36.md v2",
+      "write_paths": [
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/features/health/planned-health-time.ts",
+        "tests/planned-health-time.test.mjs",
+        "tests/README.md",
+        "docs/tasks/dev/fix-36.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/FIX-36.md"
+      ],
+      "acceptance": [
+        "Påminnelsetid accepterar endast HH:MM från 00:00 till 23:59 och skickar minuter sedan midnatt",
+        "accident och water stöds av appkontrakt och lokala migrationer; målmiljön markeras korrekt NOT TESTABLE om inte säkert läsbar",
+        "Inga onödiga schemaändringar eller nya beroenden"
+      ],
+      "checks": [
+        "pnpm check",
+        "EXPO_NO_TELEMETRY=1 pnpm bundle:ios",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-06",
+        "UI-07"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Förnyad Architect/Critic granskar plan v2; ändra inte appkod före APPROVE/PROCEED"
+    }]
 }

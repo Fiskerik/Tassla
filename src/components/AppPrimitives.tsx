@@ -1,7 +1,7 @@
 import type { ReactNode, RefObject } from 'react';
 import { AccessibilityInfo, findNodeHandle, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button } from './ui/Button';
 import { useReducedMotion } from './ui/Motion';
@@ -9,17 +9,19 @@ import { theme, tokens } from '../theme/tokens';
 
 export function AppScreen({ children, footer, scrollKey }: { children: ReactNode; footer?: ReactNode; scrollKey?: string }) {
   const scroll = useRef<ScrollView>(null);
+  const insets = useSafeAreaInsets();
+  const hasFooter = Boolean(footer);
   useLayoutEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [scrollKey]);
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={hasFooter ? ['top', 'left', 'right'] : ['top', 'right', 'bottom', 'left']}>
       <View style={styles.screenLayout}>
         <KeyboardAvoidingView style={styles.keyboardLayout} behavior="padding">
           <ScrollView ref={scroll} showsVerticalScrollIndicator={false} style={styles.scrollArea} contentContainerStyle={styles.page} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled">
             {children}
           </ScrollView>
         </KeyboardAvoidingView>
-        {footer && <View style={styles.footer}>{footer}</View>}
       </View>
+      {hasFooter ? <View style={[styles.footerSurface, { paddingBottom: insets.bottom }]}><View style={styles.footerContent}>{footer}</View></View> : null}
     </SafeAreaView>
   );
 }
@@ -265,7 +267,8 @@ const styles = StyleSheet.create({
   keyboardLayout: { flex: 1 },
   scrollArea: { flex: 1 },
   page: { flexGrow: 1, width: '100%', maxWidth: 560, alignSelf: 'center', paddingHorizontal: tokens.layout.pageInset, paddingTop: tokens.spacing.xs, paddingBottom: tokens.spacing.xxl },
-  footer: { backgroundColor: tokens.colors.surface },
+  footerSurface: { alignSelf: 'stretch', width: '100%', backgroundColor: tokens.colors.surface },
+  footerContent: { width: '100%', maxWidth: 560, alignSelf: 'center' },
   buttonSpacing: { marginTop: tokens.spacing.sm },
   heading: { marginTop: tokens.spacing.lg, marginBottom: tokens.spacing.xl },
   title: { color: theme.colors.text, fontSize: 30, fontWeight: '800', lineHeight: 38, letterSpacing: -0.6 },
