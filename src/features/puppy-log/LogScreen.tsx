@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { AccessibilityInfo, Alert, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AccessibilityInfo, Alert, Animated, Easing, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppBar, BottomSheet, Button, Card, Dialog, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast } from '../../components/ui';
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
-import { ScreenTransition } from '../../components/ui/Motion';
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
 import { decideQuickLogPress, groupLogEventsByLocalDate, hasRecentCategoryLog, localDateTimeParts, LOG_ENTRY_TYPES, LOG_EVENT_LABELS, parseLocalDateTime, summarizePottyPatterns, type LogEvent, type LogEventChanges, type LogEventType } from './log-model';
@@ -41,10 +40,35 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const [layout, setLayout] = useState<QuickLogLayout>(DEFAULT_QUICK_LOG_LAYOUT);
   const [layoutEditing, setLayoutEditing] = useState(false);
   const [layoutError, setLayoutError] = useState(false);
-  const groups = useMemo(() => groupLogEventsByLocalDate(events), [events]);
+  const [deleteSnapshot, setDeleteSnapshot] = useState<{ token: number; event: LogEvent; phase: 'pending' | 'exiting' } | null>(null);
+  const deleteToken = useRef(0);
+  const [entryAnimationTarget, setEntryAnimationTarget] = useState<{ eventId: string; key: string } | null>(null);
+  const [consumedEntryAnimationKey, setConsumedEntryAnimationKey] = useState<string | null>(null);
+  const handledEntryMutationKey = useRef(mutation?.kind === 'add' && mutation.status === 'saved' ? `${mutation.kind}:${mutation.mutationId}` : '');
+  const displayedEvents = useMemo(() => {
+    if (!deleteSnapshot) return events;
+    return [...events.filter((event) => event.id !== deleteSnapshot.event.id), deleteSnapshot.event];
+  }, [deleteSnapshot, events]);
+  const groups = useMemo(() => groupLogEventsByLocalDate(displayedEvents), [displayedEvents]);
   const patterns = useMemo(() => summarizePottyPatterns(events).filter((item) => item.count >= 2), [events]);
   const editingEvent = events.find((event) => event.id === editingId) ?? null;
   const editLocked = busy || Boolean(editingEvent && mutation?.id === editingEvent.id && mutation.status !== 'saved');
+  const onDeleteAnimationEnd = useCallback((token: number) => {
+    setDeleteSnapshot((current) => current?.token === token ? null : current);
+  }, []);
+  const consumeEntryAnimation = useCallback((key: string) => {
+    setConsumedEntryAnimationKey(key);
+  }, []);
+
+  useEffect(() => {
+    const isConfirmedAdd = mutation?.kind === 'add' && mutation.status === 'saved' && events.some((event) => event.id === mutation.id);
+    if (!isConfirmedAdd) return;
+    const key = `${mutation.kind}:${mutation.mutationId}`;
+    if (handledEntryMutationKey.current === key) return;
+    handledEntryMutationKey.current = key;
+    setEntryAnimationTarget({ eventId: mutation.id, key });
+    setConsumedEntryAnimationKey(null);
+  }, [events, mutation]);
 
   useEffect(() => {
     void AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => undefined);
@@ -131,7 +155,20 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       { text: 'Avbryt', style: 'cancel' },
       { text: 'Radera', style: 'destructive', onPress: () => {
         if (!onDelete) return;
-        void Promise.resolve(onDelete(event.id)).then((saved) => { if (saved !== false) setEditingId(null); }).catch(() => undefined);
+        const token = ++deleteToken.current;
+        setDeleteSnapshot({ token, event, phase: 'pending' });
+        void Promise.resolve(onDelete(event.id)).then((saved) => {
+          if (deleteToken.current !== token) return;
+          if (saved === true) {
+            setDeleteSnapshot((current) => current?.token === token ? { ...current, phase: 'exiting' } : current);
+            setEditingId(null);
+          } else {
+            setDeleteSnapshot((current) => current?.token === token ? null : current);
+            if (saved !== false) setEditingId(null);
+          }
+        }).catch(() => {
+          if (deleteToken.current === token) setDeleteSnapshot((current) => current?.token === token ? null : current);
+        });
       } },
     ]);
   }
@@ -177,11 +214,14 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         {group.date !== localDate() ? <SectionHeader title={heading(group.date)} variant="date" /> : null}
         {group.events.map((event) => {
           const rowPending = mutation?.id === event.id && mutation.status === 'pending';
-          const newlyConfirmed = mutation?.kind === 'add' && mutation.status === 'saved' && mutation.id === event.id;
+          const deleting = deleteSnapshot?.event.id === event.id;
           const detail = [event.note, rowPending ? 'Sparar…' : null, event.origin === 'example' ? 'Exempel' : mode === 'preview' ? 'Testpost' : null].filter(Boolean).join(' · ');
           const parts = localDateTimeParts(event.occurredAt);
-          const row = <ListRow title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}${event.note ? `, ${event.note}` : ''}${rowPending ? ', sparar' : ''}, tryck för att ändra`} category={event.type} time={parts.time} detail={detail || undefined} onPress={() => setEditingId(event.id)} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} />;
-          return newlyConfirmed ? <ScreenTransition key={event.id} transitionKey={event.id}>{row}</ScreenTransition> : <View key={event.id}>{row}</View>;
+          if (deleting && deleteSnapshot.phase === 'exiting') return <DeleteExitRow key={event.id} token={deleteSnapshot.token} event={event} reduceMotion={reduceMotion} onFinished={onDeleteAnimationEnd} />;
+          const row = <ListRow title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}${event.note ? `, ${event.note}` : ''}${deleting ? ', raderar' : rowPending ? ', sparar' : ''}${deleting ? '' : ', tryck för att ändra'}`} accessibilityState={deleting && deleteSnapshot.phase === 'pending' ? { busy: true, disabled: true } : undefined} category={event.type} time={parts.time} detail={deleting ? 'Raderar…' : detail || undefined} onPress={deleting ? undefined : () => setEditingId(event.id)} disabled={deleting || busy || Boolean(mutation && mutation.status !== 'saved')} />;
+          const entryTarget = entryAnimationTarget?.eventId === event.id ? entryAnimationTarget : null;
+          if (entryTarget) return <LogEntryTransition key={event.id} transitionKey={consumedEntryAnimationKey === entryTarget.key ? undefined : entryTarget.key} reduceMotion={reduceMotion} onAnimationStart={consumeEntryAnimation}>{row}</LogEntryTransition>;
+          return <View key={event.id}>{row}</View>;
         })}
       </View>)}
       {patterns.length > 0 ? <>
@@ -196,6 +236,46 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
 
     <Dialog visible={duplicate !== null} title="Du har redan loggat det här. Lägga till ändå?" onRequestClose={() => setDuplicate(null)} onConfirm={() => { if (duplicate) selectType(duplicate.type, duplicate.timestamp, true); }} confirmLabel="Lägg till ändå" confirmVariant="primary"><View /></Dialog>
   </View>;
+}
+
+function LogEntryTransition({ children, transitionKey, reduceMotion, onAnimationStart }: { children: ReactNode; transitionKey?: string; reduceMotion: boolean; onAnimationStart: (key: string) => void }) {
+  const [progress] = useState(() => new Animated.Value(1));
+  const playedKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (!transitionKey) return;
+    if (playedKey.current === transitionKey) {
+      if (reduceMotion) { progress.stopAnimation(); progress.setValue(1); }
+      return;
+    }
+    playedKey.current = transitionKey;
+    onAnimationStart(transitionKey);
+    progress.stopAnimation();
+    if (reduceMotion) { progress.setValue(1); return; }
+    progress.setValue(0);
+    Animated.timing(progress, { toValue: 1, duration: tokens.motion.enter, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [onAnimationStart, progress, reduceMotion, transitionKey]);
+  useEffect(() => {
+    if (!reduceMotion) return;
+    progress.stopAnimation();
+    progress.setValue(1);
+  }, [progress, reduceMotion]);
+  useEffect(() => () => progress.stopAnimation(), [progress]);
+  const translation = progress.interpolate({ inputRange: [0, 1], outputRange: [tokens.motion.distance, 0] });
+  return <Animated.View style={{ opacity: progress, transform: [{ translateY: translation }] }}>{children}</Animated.View>;
+}
+
+function DeleteExitRow({ token, event, reduceMotion, onFinished }: { token: number; event: LogEvent; reduceMotion: boolean; onFinished: (token: number) => void }) {
+  const [progress] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (reduceMotion) { onFinished(token); return; }
+    const animation = Animated.timing(progress, { toValue: 1, duration: tokens.motion.release, easing: Easing.out(Easing.cubic), useNativeDriver: true });
+    animation.start(({ finished }) => { if (finished) onFinished(token); });
+    return () => animation.stop();
+  }, [onFinished, progress, reduceMotion, token]);
+  const parts = localDateTimeParts(event.occurredAt);
+  return <Animated.View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [0, -tokens.motion.distance] }) }] }}>
+    <ListRow title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}, raderad`} category={event.type} time={parts.time} detail={event.note || undefined} disabled />
+  </Animated.View>;
 }
 
 function LogEventEditor({ event, disabled, onCancel, onSave, onDelete }: {

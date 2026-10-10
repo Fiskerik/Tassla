@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { AppBar, BottomSheet, Button, HeroCard, ListRow, Progress, SectionHeader, Tabs, Toast } from '../../components/ui';
 import type { PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
@@ -6,31 +6,39 @@ import { tokens } from '../../theme/tokens';
 
 export function PublishedTrainingScreen({ programs, paused, busyStepKey, error, onCompleteStep, onContinue, onResetProgram, onRetry }: {
   programs: readonly PublishedTrainingProgram[]; paused: readonly PausedTrainingProgress[]; busyStepKey: string | null; error: string;
-  onCompleteStep: (program: PublishedTrainingProgram, stepId: string) => Promise<boolean>; onContinue: () => void;
+  onCompleteStep: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>; onContinue: () => void;
   onResetProgram: (program: PublishedTrainingProgram) => void; onRetry: () => void;
 }) {
   const [tab, setTab] = useState('Valpprogram');
   const [programId, setProgramId] = useState<string | null>(null);
   const [selection, setSelection] = useState<{ programId: string; stepId: string } | null>(null);
   const [saved, setSaved] = useState(false);
+  const [animateCompleteTarget, setAnimateCompleteTarget] = useState<{ key: string; programId: string; stepId: string } | null>(null);
+  const animationSequence = useRef(0);
   const pending = useRef(false);
   const active = programs.find((program) => program.id === programId) ?? programs[0];
   const selectedProgram = programs.find((program) => program.id === selection?.programId);
   const selectedStep = selectedProgram?.steps.find((step) => step.id === selection?.stepId);
   const nextStep = selectedProgram?.steps.find((step) => !selectedProgram.completedStepIds.includes(step.id));
+  const consumeCompletionAnimation = useCallback((key: string) => {
+    setAnimateCompleteTarget((current) => current?.key === key ? null : current);
+  }, []);
 
   async function complete() {
     if (pending.current || busyStepKey || !selectedProgram || !selectedStep) return;
     pending.current = true;
     try {
-      if (await onCompleteStep(selectedProgram, selectedStep.id)) {
+      const confirmed = await onCompleteStep(selectedProgram, selectedStep.id);
+      if (confirmed && confirmed.programId === selectedProgram.id && confirmed.stepId === selectedStep.id) {
+        setAnimateCompleteTarget({ key: `${confirmed.programId}:${confirmed.stepId}:${++animationSequence.current}`, programId: confirmed.programId, stepId: confirmed.stepId });
         setSaved(true); setSelection(null); onContinue();
       }
     } finally { pending.current = false; }
   }
   function rows(program: PublishedTrainingProgram) {
     return <View style={styles.rows}>{program.steps.map((step) => <ListRow key={step.id} category="training" title={step.title} titleSize="compact"
-      complete={program.completedStepIds.includes(step.id)} onPress={() => setSelection({ programId: program.id, stepId: step.id })} />)}</View>;
+      complete={program.completedStepIds.includes(step.id)} animateCompleteKey={animateCompleteTarget?.programId === program.id && animateCompleteTarget.stepId === step.id ? animateCompleteTarget.key : undefined} onCompleteAnimationStart={consumeCompletionAnimation}
+      onPress={() => setSelection({ programId: program.id, stepId: step.id })} />)}</View>;
   }
   return <View>
     <AppBar mode="Title" title="Träning" />

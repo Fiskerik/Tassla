@@ -414,7 +414,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     setTraining(result);
     setTrainingSelectionKey(currentSelectionKey);
     setTrainingState('ready');
-    return true;
+    return result;
   }, [age, client, currentSelectionKey, dog]);
 
   useEffect(() => {
@@ -1638,7 +1638,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
-  async function completeStep(program: PublishedTrainingProgram, stepId: string): Promise<boolean> {
+  async function completeStep(program: PublishedTrainingProgram, stepId: string): Promise<{ programId: string; stepId: string } | false> {
     if (trainingMutationInFlight.current) return false;
     const key = `${program.id}:${stepId}`;
     trainingMutationInFlight.current = true;
@@ -1648,10 +1648,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       const outcome = await insertTrainingProgress(client, { dog_id: dog.id, program_version_id: program.id, step_id: stepId });
       if (outcome.status === 'saved') {
         try {
-          await reloadTraining();
+          const refreshed = await reloadTraining();
           if (!mounted.current) return false;
+          const confirmedProgram = refreshed ? refreshed.programs.find((item) => item.id === program.id) : undefined;
+          if (program.completedStepIds.includes(stepId) || !confirmedProgram?.completedStepIds.includes(stepId)) {
+            setTrainingError('Steget sparades, men en ny statusändring kunde inte bekräftas. Läs in programmet igen innan du fortsätter.');
+            return false;
+          }
           void analyticsService.track('training_completed');
-          return true;
+          return { programId: program.id, stepId };
         } catch {
           if (!mounted.current) return false;
           setTrainingState('error');

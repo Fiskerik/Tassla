@@ -55,6 +55,38 @@ test('TrainingScreen and ProductWorkspace were not given new animation state', (
   assert.doesNotMatch(workspace, /Animated\.Value|useReducedMotion/);
 });
 
+test('published training only animates the exact identity returned after refreshed readback', () => {
+  const workspace = read('src/features/home/ProductWorkspace.tsx');
+  const screen = read('src/features/training/PublishedTrainingScreen.tsx');
+  const row = read('src/components/ui/ListRow.tsx');
+  const log = read('src/features/puppy-log/LogScreen.tsx');
+  assert.match(workspace, /const confirmedProgram = refreshed \? refreshed\.programs\.find\(\(item\) => item\.id === program\.id\) : undefined/);
+  assert.match(workspace, /confirmedProgram\?\.completedStepIds\.includes\(stepId\)/);
+  assert.match(workspace, /return \{ programId: program\.id, stepId \}/);
+  assert.match(screen, /confirmed\.programId === selectedProgram\.id && confirmed\.stepId === selectedStep\.id/);
+  assert.match(screen, /key: `\$\{confirmed\.programId\}:\$\{confirmed\.stepId\}:\$\{\+\+animationSequence\.current\}`/);
+  assert.match(screen, /animateCompleteKey=\{animateCompleteTarget\?\.programId === program\.id && animateCompleteTarget\.stepId === step\.id/);
+  assert.match(row, /onAnimationStart\?\.\(animateKey\)/);
+  assert.match(row, /if \(!reduced\) return;[\s\S]*?progress\.stopAnimation\(\);[\s\S]*?progress\.setValue\(1\)/);
+  assert.match(screen, /current\?\.key === key \? null : current/);
+  assert.match(log, /consumedEntryAnimationKey === entryTarget\.key \? undefined : entryTarget\.key/);
+  assert.match(log, /setConsumedEntryAnimationKey\(key\)/);
+  assert.doesNotMatch(log, /ScreenTransition/);
+  assert.match(row, /complete \? `\$\{baseLabel\}, Genomförd` : baseLabel/);
+  assert.doesNotMatch(row, /selected:\s*complete/);
+});
+
+test('log entry does not replay when reduced motion turns on mid-entry and then off', () => {
+  const log = read('src/features/puppy-log/LogScreen.tsx');
+  const entryTransition = log.match(/function LogEntryTransition\([\s\S]*?(?=\nfunction DeleteExitRow)/)?.[0];
+  assert.ok(entryTransition, 'LogEntryTransition is present');
+  assert.match(log, /consumedEntryAnimationKey === entryTarget\.key \? undefined : entryTarget\.key/);
+  assert.match(entryTransition, /if \(playedKey\.current === transitionKey\)[\s\S]*?if \(reduceMotion\) \{ progress\.stopAnimation\(\); progress\.setValue\(1\); \}/);
+  assert.match(entryTransition, /playedKey\.current = transitionKey;[\s\S]*?onAnimationStart\(transitionKey\)/);
+  assert.match(entryTransition, /if \(reduceMotion\) \{ progress\.setValue\(1\); return; \}/);
+  assert.match(entryTransition, /\[onAnimationStart, progress, reduceMotion, transitionKey\]/);
+});
+
 test('Toast callsites use explicit visibility and keep dismissal under the view owner', () => {
   for (const file of [
     'src/features/puppy-log/LogScreen.tsx',
