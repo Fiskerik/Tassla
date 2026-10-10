@@ -60,13 +60,6 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     return () => { active = false; };
   }, [layoutOwnerId]);
 
-  useEffect(() => {
-    if (mutation?.status !== 'saved') return undefined;
-    const mutationKey = `${mutation.kind}:${mutation.mutationId}`;
-    const timeout = setTimeout(() => setDismissedMutationKey(mutationKey), 2500);
-    return () => clearTimeout(timeout);
-  }, [mutation?.id, mutation?.kind, mutation?.mutationId, mutation?.status]);
-
   function selectType(type: LogEventType, timestamp: number, force = false) {
     const recentDuplicate = hasRecentCategoryLog(events, type);
     const decision = decideQuickLogPress({
@@ -143,13 +136,19 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     ]);
   }
 
+  const successMutationKey = mutation?.status === 'saved' ? `${mutation.kind}:${mutation.mutationId}` : '';
   const mutationFeedback = <>
-      {mutation?.status === 'failed' && <Toast tone="error" message="Kunde inte spara" onRetry={retryMutation} onCancel={() => { onCancel?.(); if (mutation.kind !== 'add') setEditingId(null); }} />}
-      {mutation?.status === 'unsure' && <Toast tone="uncertain" onRetry={retryMutation} />}
+      <Toast visible={mutation?.status === 'saved' && dismissedMutationKey !== successMutationKey} tone="success" confirmed message={mutation?.status === 'saved' ? mutation.kind === 'add' ? `${LOG_EVENT_LABELS[mutation.type]} loggat` : mutation.kind === 'update' ? 'Ändring sparad' : 'Händelsen är raderad' : ''}
+        onUndo={mutation?.status === 'saved' && mutation.kind === 'add' ? () => onUndo?.(mutation.id) : undefined} autoDismissMs={2500}
+        onAutoDismiss={() => setDismissedMutationKey(successMutationKey)} />
+      <Toast visible={loadMoreError} tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore} />
   </>;
 
   return <View style={styles.screen}>
     <AppBar mode="Title" title="Logga" />
+    {mutationFeedback}
+    <Toast visible={!editingEvent && mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={retryMutation} onCancel={() => { onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
+    <Toast visible={!editingEvent && mutation?.status === 'unsure'} tone="uncertain" onRetry={retryMutation} />
     {loading ? <>
       <SectionHeader title="Snabb logg" />
       <Skeleton shape="card" lines={3} />
@@ -165,10 +164,11 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       {!layoutEditing && <View style={styles.moreRow}><QuickLogTile subtle label="Fler" accessibilityLabel={moreVisible ? 'Dölj fler loggtyper' : 'Visa fler loggtyper'} accessibilityHint="Håll inne för att ändra snabbvalens layout" icon={<View style={styles.moreIcon}><Ionicons name={moreVisible ? 'close-outline' : 'grid-outline'} size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></View>} disabled={disabled} onLongPress={startLayoutEdit} onPress={toggleMore} /></View>}
       {!layoutEditing && moreVisible ? <View style={styles.grid} accessibilityLabel="Fler loggtyper">{renderRows(layout.more)}</View> : null}
 
-      {!editingEvent && mutationFeedback}
-      {mutation?.status === 'saved' && dismissedMutationKey !== `${mutation.kind}:${mutation.mutationId}` && <Toast tone="success" confirmed message={mutation.kind === 'add' ? `${LOG_EVENT_LABELS[mutation.type]} loggat` : mutation.kind === 'update' ? 'Ändring sparad' : 'Händelsen är raderad'} onUndo={mutation.kind === 'add' ? () => onUndo?.(mutation.id) : undefined} />}
-
-      {editingEvent ? <BottomSheet visible title="Ändra händelse" onRequestClose={() => { if (!editLocked) setEditingId(null); }}>{mutationFeedback}<LogEventEditor key={editingEvent.id} event={editingEvent} disabled={editLocked} onCancel={() => setEditingId(null)} onSave={(changes) => saveEdit(editingEvent, changes)} onDelete={() => askToDelete(editingEvent)} /></BottomSheet> : null}
+      {editingEvent ? <BottomSheet visible title="Ändra händelse" onRequestClose={() => { if (!editLocked) setEditingId(null); }}>
+        <Toast visible={mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={retryMutation} onCancel={() => { onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
+        <Toast visible={mutation?.status === 'unsure'} tone="uncertain" onRetry={retryMutation} />
+        <LogEventEditor key={editingEvent.id} event={editingEvent} disabled={editLocked} onCancel={() => setEditingId(null)} onSave={(changes) => saveEdit(editingEvent, changes)} onDelete={() => askToDelete(editingEvent)} />
+      </BottomSheet> : null}
 
       <SectionHeader title="Dagens logg" />
       {!events.some((event) => localDateTimeParts(event.occurredAt).date === localDate()) && !(mutation?.kind === 'add' && mutation.status === 'pending') ? <View style={styles.empty}><Text style={styles.emptyTitle}>Inget loggat än idag</Text><Text style={styles.emptyBody}>Tryck på en ruta ovan för att lägga till dagens första händelse.</Text></View> : null}
@@ -191,7 +191,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         </Card>
       </> : null}
 
-      {loadMoreError ? <Toast tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore} /> : hasMore ? <Button label={loadingMore ? 'Hämtar…' : 'Visa äldre poster'} accessibilityLabel={loadingMore ? 'Hämtar äldre poster' : 'Visa äldre poster'} disabled={loadingMore} loading={loadingMore} onPress={onLoadMore ?? (() => undefined)} /> : null}
+      {!loadMoreError && hasMore ? <Button label={loadingMore ? 'Hämtar…' : 'Visa äldre poster'} accessibilityLabel={loadingMore ? 'Hämtar äldre poster' : 'Visa äldre poster'} disabled={loadingMore} loading={loadingMore} onPress={onLoadMore ?? (() => undefined)} /> : null}
     </>}
 
     <Dialog visible={duplicate !== null} title="Du har redan loggat det här. Lägga till ändå?" onRequestClose={() => setDuplicate(null)} onConfirm={() => { if (duplicate) selectType(duplicate.type, duplicate.timestamp, true); }} confirmLabel="Lägg till ändå" confirmVariant="primary"><View /></Dialog>

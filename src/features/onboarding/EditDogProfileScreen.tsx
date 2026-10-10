@@ -66,6 +66,7 @@ export function EditDogProfileScreen({
   const [kennelCode, setKennelCode] = useState(attribution?.code ?? '');
   const [attributionFormError, setAttributionFormError] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastVisible, setToastVisible] = useState(false);
   const confirmedMessage = statusMessage === 'Hundprofilen är sparad.' && !statusError && !pending && !busy
     ? statusMessage : null;
   const blocked = busy || pending;
@@ -79,10 +80,9 @@ export function EditDogProfileScreen({
   useEffect(() => {
     // The toast mirrors an external save-status prop and is intentionally reset here.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!confirmedMessage) { setToastMessage(null); return; }
+    if (!confirmedMessage) { setToastVisible(false); return; }
     setToastMessage(confirmedMessage);
-    const timer = setTimeout(() => setToastMessage(null), 2500);
-    return () => clearTimeout(timer);
+    setToastVisible(true);
   }, [confirmedMessage]);
 
   useEffect(() => {
@@ -189,7 +189,7 @@ export function EditDogProfileScreen({
       {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
       <PrimaryButton title={busy ? 'Sparar…' : statusError && !pending ? 'Försök igen' : 'Spara profil'}
         disabled={blocked || breedState !== 'ready'} onPress={() => { void save(); }} />
-      {toastMessage ? <Toast tone="success" confirmed message={toastMessage} /> : null}
+      <Toast visible={toastVisible} tone="success" confirmed message={toastMessage ?? undefined} autoDismissMs={2500} onAutoDismiss={() => setToastVisible(false)} onExitComplete={() => setToastMessage(null)} />
     </View>
     <View style={styles.attributionCard}>
       <Text style={styles.formTitle} accessibilityRole="header">Kennelkoppling (valfri)</Text>

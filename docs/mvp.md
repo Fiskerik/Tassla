@@ -208,6 +208,10 @@ Prioritera låg friktion, relevant hjälp och återkommande värde framför funk
 
 Exempelvis är delning av vardagsloggen med en partner inte beslutad MVP-funktionalitet. Den kan omprövas om piloten visar att den är avgörande för användning i hushållet.
 
+### Eriks tillägg 2026-10-10, utanför ursprunglig MVP
+
+För MOTION-paketet godkände Erik mikrorörelse, tips vid första användning och en valpfigur utanför den ursprungliga MVP:n. Omfattning och begränsningar finns i [beslut 0004](decisions/0004-motion-package.md). Detta tillägg gäller endast MOTION-paketets fyra avgränsade slices; det ändrar inte övrig MVP-scope.
+
 ## Definition av framgång
 
 MVP:n är validerad när pilotdata visar att:

@@ -51,6 +51,7 @@ export function HealthHistoryScreen({
   const [formError, setFormError] = useState('');
   const [infoVisible, setInfoVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastVisible, setToastVisible] = useState(false);
   const confirmedMessage = statusMessage.startsWith('Ändringen är sparad') && !statusError && !pending && !busy
     ? statusMessage : null;
   const available = records !== undefined;
@@ -61,10 +62,9 @@ export function HealthHistoryScreen({
   useEffect(() => {
     // The toast mirrors an external save-status prop and is intentionally reset here.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!confirmedMessage) { setToastMessage(null); return; }
+    if (!confirmedMessage) { setToastVisible(false); return; }
     setToastMessage(confirmedMessage);
-    const timer = setTimeout(() => setToastMessage(null), 2500);
-    return () => clearTimeout(timer);
+    setToastVisible(true);
   }, [confirmedMessage]);
 
   if (!available) return null;
@@ -160,7 +160,7 @@ export function HealthHistoryScreen({
           </View>
           {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
           <PrimaryButton title={busy ? 'Sparar…' : editingRecord ? 'Spara rättning' : 'Spara händelse'} disabled={blocked} onPress={() => { void save(); }} />
-          {toastMessage ? <Toast tone="success" confirmed message={toastMessage} /> : null}
+          <Toast visible={toastVisible} tone="success" confirmed message={toastMessage ?? undefined} autoDismissMs={2500} onAutoDismiss={() => setToastVisible(false)} onExitComplete={() => setToastMessage(null)} />
           {editingRecord && <QuietButton title="Avbryt rättning" disabled={blocked} onPress={resetForm} />}
         </View>
 

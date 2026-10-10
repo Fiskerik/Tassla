@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { AppBar, BottomSheet, Button, HeroCard, ListRow, Progress, SectionHeader, Tabs, Toast } from '../../components/ui';
 import type { PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
@@ -18,7 +18,6 @@ export function PublishedTrainingScreen({ programs, paused, busyStepKey, error, 
   const selectedProgram = programs.find((program) => program.id === selection?.programId);
   const selectedStep = selectedProgram?.steps.find((step) => step.id === selection?.stepId);
   const nextStep = selectedProgram?.steps.find((step) => !selectedProgram.completedStepIds.includes(step.id));
-  useEffect(() => { if (!saved) return; const timer = setTimeout(() => setSaved(false), 2500); return () => clearTimeout(timer); }, [saved]);
 
   async function complete() {
     if (pending.current || busyStepKey || !selectedProgram || !selectedStep) return;
@@ -36,8 +35,8 @@ export function PublishedTrainingScreen({ programs, paused, busyStepKey, error, 
   return <View>
     <AppBar mode="Title" title="Träning" />
     <Tabs items={['Valpprogram', 'Alla övningar', 'Framsteg']} active={tab} onChange={setTab} />
-    {error ? <Toast tone="error" message={error} onRetry={onRetry} /> : null}
-    {saved ? <Toast tone="success" confirmed message="Övningen är genomförd" /> : null}
+    <Toast visible={Boolean(error)} tone="error" message={error || undefined} onRetry={onRetry} />
+    <Toast visible={saved} tone="success" confirmed message="Övningen är genomförd" autoDismissMs={2500} onAutoDismiss={() => setSaved(false)} />
     {paused.map((item) => <Text key={item.versionId} style={styles.note}>Ett tidigare program är pausat. Dina {item.completedCount} genomförda steg finns kvar.</Text>)}
     {programs.length === 0 ? <><HeroCard title="Träning i er takt" meta="Här samlas övningarna för din hund." /><Text style={styles.note}>Fler program kommer när de är färdiga att använda.</Text></> : null}
     {tab === 'Valpprogram' && active ? <>
@@ -59,7 +58,7 @@ export function PublishedTrainingScreen({ programs, paused, busyStepKey, error, 
       <Text style={styles.body}>{selectedStep?.instruction ?? selectedProgram?.body}</Text>
       <Text style={styles.note}>Anpassa efter din hund och pausa när det behövs.</Text>
       {!selectedStep ? <><SectionHeader title="Källor" />{selectedProgram?.sources.map((source) => <Text key={source} style={styles.note}>{source}</Text>)}</> : null}
-      {error ? <Toast tone="error" message={error} onRetry={onRetry} /> : null}
+      <Toast visible={Boolean(error)} tone="error" message={error || undefined} onRetry={onRetry} />
       {selectedStep && selectedProgram?.completedStepIds.includes(selectedStep.id) ? <Text style={styles.note}>Genomförd. Ni kan gärna öva igen.</Text> : selectedStep ? <>
         {nextStep?.id !== selectedStep.id ? <Text style={styles.note}>Börja med {nextStep?.title} innan du markerar den här övningen.</Text> : null}
         <Button label="Markera som genomförd" accessibilityLabel="Markera övningen som genomförd" loading={Boolean(busyStepKey)} disabled={Boolean(busyStepKey) || nextStep?.id !== selectedStep.id} onPress={() => { void complete(); }} />

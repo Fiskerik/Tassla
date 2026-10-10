@@ -229,3 +229,11 @@ Toast i appen har nu semantiska 1 px-kanter enligt befintliga tokens. Figma-huvu
 Typecheck, edge-account typecheck, iOS-export, riktat `tests/log-screen-policy.test.mjs`, `git diff --check` och kövalidering passerar. Lint har 0 fel och 33 varningar. `pnpm check` fallerar bara i `tests/notifications.test.mjs`: sandboxens interna `spawnSync` ger tom output i timezone-deltestet; samma beräkning direkt returnerar förväntat resultat. Oberoende källreview fann inga UI-fel.
 
 Visuell QA vid 360/430 px och 140 % är NOT TESTABLE: localhost-bind nekades och Chromium stoppade vid `setsockopt: Operation not permitted`. Inga nya skärmbilder skapades. Ingen visuell PASS eller färdiggranskning rapporteras. Checklista enligt designreglerna finns i [UI-08 visuell QA](../../design/UI-08/checklist.md), markerad NOT TESTABLE. Implementeringsdetaljer och ändrade appfiler finns i [UI-08](ui-08.md); sammanfattning finns i [release-loggen](../../releases/UI-08.md).
+
+## MOTION-01 implementation — 2026-10-10
+
+Implementerade tokeniserad React Native Animated-rörelse för Toast, Progress och bekräftad ChecklistItem samt uppdaterade toast-ägare i de åtta planerade vyerna. Ändrade även komponent-/themeguider och designregler. `TrainingScreen.tsx` och `ProductWorkspace.tsx` har ingen ny motionskod. Ingen dependency, sparsemantik, dubblettfönster, analytics eller data ändrades.
+
+Verifiering efter rättningar: `node --experimental-strip-types --test tests/motion-policy.test.mjs` PASS (sex policykontroller i en testfil), `git diff --check` PASS och `python tools/dev_flow.py validate` PASS. `pnpm typecheck` kunde inte starta eftersom pnpm försökte hämta paket och nätverksanrop gav EPERM; full `pnpm check` saknar därför PASS.
+
+Oberoende QA blockerade först på loggredigeringens feltoast och borttagen OS-rekommenderad timeout; båda är rättade. Vikt-toastens gamla exit callback skyddades mot att rensa nyare feedback. Förnyad QA hittade inga statiska fynd men native/visuella acceptanskriterier är NOT TESTABLE: timing, VoiceOver/TalkBack, stor text, reducerad rörelse och dold Toast-layoutgap saknar renderad evidens. Oberoende Reviewer gav code review PASS; full typecheck/lint och native QA återstår. MOTION-01 är inte DONE och MOTION-02 har inte startat. Eriks DS-CODE-01/LOGGA-QUICK-rapport avser inte MOTION-01. Se `docs/releases/MOTION-01.md`.

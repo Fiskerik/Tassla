@@ -62,11 +62,11 @@ export function PlannedHealthScreen({
   const [formError, setFormError] = useState('');
   const [infoVisible, setInfoVisible] = useState(false);
   const [feedbackState, dispatchFeedback] = useReducer(reducePlannedHealthFeedback, EMPTY_PLANNED_HEALTH_FEEDBACK);
-  const [feedbackShownMessage, markFeedbackShown] = useReducer((_: string | null, message: string | null) => message, null);
+  const [feedbackTimeout, setFeedbackTimeout] = useState(2500);
+  const [timedFeedbackMessage, setTimedFeedbackMessage] = useState<string | null>(null);
   const infoButtonRef = useRef<View>(null);
   const infoWasVisible = useRef(false);
   const previousStatusMessage = useRef<string | null>(initialPlannedHealthStatus(statusMessage));
-  const previousActiveMessage = useRef<string | null>(null);
   const today = localDate();
   const blocked = busy || pending;
   const editingRecord = records.find((record) => record.id === editingId) ?? null;
@@ -107,16 +107,14 @@ export function PlannedHealthScreen({
   }, [infoVisible]);
 
   useEffect(() => {
-    if (feedbackState.activeMessage !== previousActiveMessage.current) {
-      previousActiveMessage.current = feedbackState.activeMessage;
-      markFeedbackShown(null);
+    const activeMessage = feedbackState.activeMessage;
+    if (!activeMessage || infoVisible) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTimedFeedbackMessage(null);
       return;
     }
-    if (!feedbackState.activeMessage || feedbackShownMessage !== feedbackState.activeMessage || infoVisible) return;
-    const activeMessage = feedbackState.activeMessage;
     let cancelled = false;
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-    const scheduleDismissal = async () => {
+    const getRecommendedTimeout = async () => {
       let recommended: number | null | undefined;
       try {
         if (typeof AccessibilityInfo.getRecommendedTimeoutMillis === 'function') {
@@ -126,23 +124,12 @@ export function PlannedHealthScreen({
         recommended = undefined;
       }
       if (cancelled) return;
-      timeout = setTimeout(() => {
-        if (cancelled) return;
-        dispatchFeedback({ type: 'dismiss', message: activeMessage });
-      }, feedbackTimeoutMillis(recommended, 2500));
+      setFeedbackTimeout(feedbackTimeoutMillis(recommended, 2500));
+      setTimedFeedbackMessage(activeMessage);
     };
-    void scheduleDismissal();
-    return () => {
-      cancelled = true;
-      if (timeout !== undefined) clearTimeout(timeout);
-    };
-  }, [feedbackState.activeMessage, feedbackShownMessage, infoVisible]);
-
-  useEffect(() => {
-    if (feedbackState.activeMessage?.startsWith('Ändringen är sparad') && !statusError && !pending) {
-      markFeedbackShown(feedbackState.activeMessage);
-    }
-  }, [feedbackState.activeMessage, statusError, pending]);
+    void getRecommendedTimeout();
+    return () => { cancelled = true; };
+  }, [feedbackState.activeMessage, infoVisible]);
 
   function resetForm() {
     setEditingId(null);
@@ -286,8 +273,9 @@ export function PlannedHealthScreen({
         </View>
         {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
         <PrimaryButton title={busy ? 'Sparar…' : editingRecord ? 'Spara rättning' : 'Spara plan'} disabled={blocked} onPress={() => { void save(); }} />
-        {feedbackState.activeMessage?.startsWith('Ändringen är sparad') && !statusError && !pending && !busy && !infoVisible
-          ? <Toast key={feedbackState.activeMessage} tone="success" confirmed message={feedbackState.activeMessage} /> : null}
+        <Toast visible={Boolean(feedbackState.activeMessage?.startsWith('Ändringen är sparad') && timedFeedbackMessage === feedbackState.activeMessage && !statusError && !pending && !busy && !infoVisible)}
+          tone="success" confirmed message={feedbackState.activeMessage ?? undefined} autoDismissMs={feedbackTimeout}
+          onAutoDismiss={() => { if (feedbackState.activeMessage) dispatchFeedback({ type: 'dismiss', message: feedbackState.activeMessage }); }} />
         {editingRecord && <QuietButton title="Avbryt rättning" disabled={blocked} onPress={resetForm} />}
       </View>
 

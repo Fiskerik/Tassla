@@ -61,7 +61,7 @@ export const tokens = {
   layout: { headingGap: 8, listGap: 12, cardPadding: 16, pageInset: 24, sectionGap: 24 },
   radius: { sm: 8, md: 14, lg: 20, full: 999 },
   size: { quickLogHeight: 104, quickLogCompactHeight: 76, touchMin: 44, buttonHeight: 56, navHeight: 56, iconSm: 20, iconMd: 24, chipMd: 32, chipLg: 44, stroke: 1, progress: 4, heroHeight: 200 },
-  motion: { press: 120, enter: 240, release: 180, distance: 8, pressedScale: 0.98 },
+  motion: { press: 120, enter: 240, release: 180, progress: 220, toastEnter: 240, toastExit: 180, check: 180, distance: 8, pressedScale: 0.98 },
   typography: { ...typography, display: typography.title },
 } as const;
 

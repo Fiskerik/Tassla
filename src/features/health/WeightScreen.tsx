@@ -61,21 +61,21 @@ export function WeightScreen({
   const [toastNonce, setToastNonce] = useState(0);
   const [formError, setFormError] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastVisible, setToastVisible] = useState(false);
   const confirmedMessage = statusMessage?.startsWith('Ändringen är sparad') && !statusError && !pendingStatus && !isBusy
     ? statusMessage : null;
   useEffect(() => {
     // The toast mirrors an external save-status prop and is intentionally reset here.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!confirmedMessage) { setToastMessage(null); return; }
+    if (!confirmedMessage) { setToastVisible(false); return; }
     setToastMessage(confirmedMessage);
-    const timer = setTimeout(() => { setToastMessage(null); setToastRecordId(null); }, 2500);
-    return () => clearTimeout(timer);
+    setToastVisible(true);
   }, [confirmedMessage, toastNonce]);
 
   function startEditing(record: HealthWeightRecord) {
     setEditingId(record.id);
+    setToastVisible(false);
     setToastRecordId(null);
-    setToastMessage(null);
     setEditDate(record.occurred_on);
     setEditWeight(String(record.weight_kg));
     setFormError('');
@@ -83,6 +83,7 @@ export function WeightScreen({
 
   function cancelEditing() {
     setEditingId(null);
+    setToastVisible(false);
     setToastRecordId(null);
     setEditDate('');
     setEditWeight('');
@@ -166,7 +167,12 @@ export function WeightScreen({
           </View>
           {!editingId && formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
           <PrimaryButton title={isBusy ? 'Sparar…' : 'Spara vikt'} disabled={isBlocked || Boolean(editingId)} onPress={() => { void save(); }} />
-          {toastMessage && !toastRecordId ? <Toast tone="success" confirmed message={toastMessage} /> : null}
+          <Toast visible={toastVisible && !toastRecordId} tone="success" confirmed message={toastMessage ?? undefined} autoDismissMs={2500}
+            onAutoDismiss={() => setToastVisible(false)} onExitComplete={() => {
+              if (toastVisible || toastRecordId !== null) return;
+              setToastMessage(null);
+              setToastRecordId(null);
+            }} />
         </View>}
         <Text style={styles.sectionTitle} accessibilityRole="header">Vikthistorik</Text>
         {cloudRecords.length === 0 && <MessageCard>Ingen vikt har registrerats ännu.</MessageCard>}
@@ -197,7 +203,12 @@ export function WeightScreen({
               </View>
               <Button variant="destructive" label="Radera vikt" accessibilityLabel="Radera viktpost" disabled={isBlocked} onPress={() => confirmDelete(record)} />
             </> : <ListRow category="veterinary" title={`${formatWeight(record.weight_kg)} kg`} meta={record.occurred_on} accessibilityLabel={`Ändra vikt ${formatWeight(record.weight_kg)} kg, ${record.occurred_on}`} disabled={isBlocked} onPress={() => startEditing(record)} />}
-            {toastMessage && toastRecordId === record.id ? <Toast tone="success" confirmed message={toastMessage} /> : null}
+            <Toast visible={toastVisible && toastRecordId === record.id} tone="success" confirmed message={toastMessage ?? undefined} autoDismissMs={2500}
+              onAutoDismiss={() => setToastVisible(false)} onExitComplete={() => {
+                if (toastVisible || toastRecordId !== record.id) return;
+                setToastMessage(null);
+                setToastRecordId(null);
+              }} />
           </View>
         ))}
       </>}

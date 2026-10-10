@@ -34,7 +34,7 @@ test('quick log has truthful loading, empty, failure, mutation and confirmed und
   }
   assert.match(screen, /mutation\?\.status === 'unsure'/);
   assert.match(screen, /mutation\?\.status === 'saved'/);
-  assert.match(screen, /onUndo=\{mutation\.kind === 'add'[\s\S]*?onUndo\?\.\(mutation\.id\)/);
+  assert.match(screen, /onUndo=\{mutation\?\.status === 'saved' && mutation\.kind === 'add'[\s\S]*?onUndo\?\.\(mutation\.id\)/);
   assert.match(workspace, /setQuickLogMutation\(toQuickLogMutationView\(mutation, 'saved'\)\)/);
   assert.match(workspace, /pendingLogMutation\.current = mutation/);
   assert.match(workspace, /checkInsertRetryOperation\(mutation\.operation, \(id\) => fetchDogEventById\(client, dog\.id, id\)\)/);
@@ -67,13 +67,13 @@ test('pending mutations show once on their row, success toast expires, and parti
   assert.match(screen, /rowPending = mutation\?\.id === event\.id && mutation\.status === 'pending'/);
   assert.match(screen, /rowPending \? ', sparar' : ''/);
   assert.doesNotMatch(screen, /status === 'pending' && <Toast/);
-  assert.match(screen, /setTimeout\(\(\) => setDismissedMutationKey\(mutationKey\), 2500\)/);
+  assert.match(screen, /onAutoDismiss=\{\(\) => setDismissedMutationKey\(successMutationKey\)\}/);
   assert.match(screen, /mutation\.mutationId/);
   assert.match(workspace, /current\.kind !== 'add' \|\| current\.id !== id/);
-  assert.match(screen, /loadMoreError \? <Toast tone="error" message="Äldre poster kunde inte hämtas" onRetry=\{onLoadMore\}/);
+  assert.match(screen, /<Toast visible=\{loadMoreError\} tone="error" message="Äldre poster kunde inte hämtas" onRetry=\{onLoadMore\}/);
   assert.match(workspace, /logLifetime\.current !== lifetime/);
   assert.match(toast, /withCancel: \{ flexDirection: 'column'/);
-  assert.match(toast, /tone: 'uncertain'; message\?: string; onRetry: \(\) => void/);
+  assert.match(toast, /tone: 'uncertain'; onRetry: \(\) => void/);
 });
 
 test('duplicate dialog uses the approved full copy', () => {
