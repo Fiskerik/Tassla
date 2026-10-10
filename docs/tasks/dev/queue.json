@@ -3129,10 +3129,10 @@
           "from": "review",
           "to": "done",
           "actor": "reviewer",
-          "evidence": "Independent Reviewer PASS after both the readiness race fix and stale-error fallback guard. No code blockers. Full pnpm check, focused policy test, iOS export (1,418 modules), diff check and queue validation pass. Local implementation is complete; native/rendered accessibility and phone behavior are NOT TESTABLE here and remain for Erik's batched mobile QA under decision 0005. Create local commit checkpoint next; no push/build claimed."
+          "evidence": "Independent Reviewer PASS after both the readiness race fix and stale-error fallback guard. No code blockers. Full pnpm check, focused policy test, iOS export (1,418 modules), diff check and queue validation pass. Local implementation is complete; native/rendered accessibility and phone behavior are NOT TESTABLE here and remain for Erik’s batched mobile QA under decision 0005. Local implementation checkpoint created: ac2b940 on motion-03-first-use-tip. Not pushed; no Codemagic/TestFlight build claimed."
         }
       ],
-      "next_step": "Independent Reviewer PASS after both the readiness race fix and stale-error fallback guard. No code blockers. Full pnpm check, focused policy test, iOS export (1,418 modules), diff check and queue validation pass. Local implementation is complete; native/rendered accessibility and phone behavior are NOT TESTABLE here and remain for Erik's batched mobile QA under decision 0005. Create local commit checkpoint next; no push/build claimed."
+      "next_step": "Local implementation checkpoint ac2b940 on motion-03-first-use-tip. Not pushed; Codemagic/TestFlight build unknown. Fold rendered/native accessibility and phone checks into Erik’s batched mobile QA under decision 0005. After any push, move docs/releases/MOTION-04.md into HISTORY-2026.md according to Erik’s documentation rule."
     },
     {
       "id": "FIX-38",

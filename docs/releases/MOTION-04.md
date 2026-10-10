@@ -1,9 +1,9 @@
 # MOTION-04 — Valpfigur
 
 Datum: 2026-10-10
-Status: implementation lokalt klar; oberoende QA och Reviewer PASS; inte ännu committad eller pushad
+Status: implementation lokalt klar; oberoende QA och Reviewer PASS; committad lokalt men inte pushad
 Jämförelsebas: `9012b1d` (MOTION-02 branch delivery on `motion-02-phone-qa`)
-Leveranscommit: ej skapad
+Leveranscommit: `ac2b940` (lokal checkpoint på `motion-03-first-use-tip`)
 TestFlight-version/build: okänd
 
 ## Major changes
@@ -24,4 +24,4 @@ Inga.
 
 ## Nästa sprint/paket
 
-Skapa lokalt commitcheckpoint. Paketet är inte pushat och Codemagic/TestFlight-build är okänd. Lägg in den renderade/native kontrollen i Eriks samlade mobil-QA.
+Paketet är inte pushat och Codemagic/TestFlight-build är okänd. Lägg in den renderade/native kontrollen i Eriks samlade mobil-QA. Efter push flyttas releaseloggen till `HISTORY-2026.md` enligt Eriks dokumentationsregel.
