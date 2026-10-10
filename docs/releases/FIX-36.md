@@ -1,6 +1,6 @@
 # FIX-36 – påminnelsetid och loggkategorier
 
-Datum: 2026-10-10. Status: implementerad lokalt; QA och oberoende code review PASS. Bas: `4f2b634` (`remove-ai-slop`, UI-07 checkpoint). Leveranscommit/build okända; ingen GitHub Release skapad.
+Datum: 2026-10-10. Status: implementerad och pushad; QA och oberoende code review PASS. Bas: `3adf73d` (`remove-ai-slop`, UI-07 checkpoint). Leveranscommit: `e29a5fb`; TestFlight-build okänd. Ingen GitHub Release skapad.
 
 ## Major changes
 

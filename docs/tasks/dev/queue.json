@@ -2465,7 +2465,7 @@
       "history": [
         {
           "actor": "coordinator",
-          "evidence": "UI-06 checkpoint 223b306; UI-07 addresses shared BottomNav point 15 and requested centered wordmark/full bottom safe area; v1 Architect review required before UI changes"
+          "evidence": "UI-06 checkpoint e50da50; UI-07 addresses shared BottomNav point 15 and requested centered wordmark/full bottom safe area; v1 Architect review required before UI changes"
         },
         {
           "from": "planned",

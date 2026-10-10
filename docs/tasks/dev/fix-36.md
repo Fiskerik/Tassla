@@ -1,6 +1,6 @@
 # FIX-36 – påminnelsetid och loggkategorier
 
-Datum: 2026-10-10. Status: implementerad; QA och oberoende code review PASS. Bas: `4f2b634` på `remove-ai-slop` (UI-07 checkpoint).
+Datum: 2026-10-10. Status: implementerad och pushad; QA och oberoende code review PASS. Bas: `3adf73d` på `remove-ai-slop` (UI-07 checkpoint); leveranscommit `e29a5fb`.
 
 ## Mål och avgränsning
 
