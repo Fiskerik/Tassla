@@ -4,7 +4,7 @@ Datum: 2026-10-10
 Paket-ID: FIX-38
 Status: Implementerad; QA PASS och oberoende code review PASS
 Bascommit: `3585c59` på `remove-ai-slop`
-Leveranscommit: ej skapad
+Leveranscommit: `2198e55ed20a1a60aaafca0c9364c6dc3a523bae` (`remove-ai-slop`)
 TestFlight build/version: ej tillämpligt; ingen telefonrelease ingår
 GitHub Release: skapas inte för denna rättning
 
@@ -35,4 +35,4 @@ Versionshanterade pre-commit- och pre-push-hookar kör `pnpm check`; commit kont
 
 ## Nästa steg
 
-QA och Reviewer har bekräftat kod, hookar och dokumentation. Nästa steg: commit med aktiva hookar och push till `origin/remove-ai-slop`; leveranscommit-SHA dokumenteras efter leverans.
+Push verifierad: `origin/remove-ai-slop` pekar på `2198e55ed20a1a60aaafca0c9364c6dc3a523bae`. Ingen telefonrelease eller GitHub Release skapades.

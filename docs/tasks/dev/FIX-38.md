@@ -57,3 +57,10 @@ Den första FIX-38A-kontrollen blockerades eftersom workspace saknade länkade d
 - Verifiering: `pnpm check` PASS (395 pass, 1 skip, 0 fail; ESLint 0 errors/35 warnings); `EXPO_NO_TELEMETRY=1 pnpm bundle:ios` PASS; `git diff --check`; `python tools/dev_flow.py validate`; hooktester i separata tomma Git-repon för installation, fail-closed, staged whitespace, ny/existerande ref och borttagen ref PASS.
 - Oberoende QA PASS. Visuell rendering, VoiceOver/TalkBack, stor text och fysisk enhet är NOT TESTABLE; dokumenterat i `docs/design/FIX-38/checklist.md`.
 - Nästa steg: Reviewer gör oberoende granskning; därefter commit med aktiv hook och push till `origin/remove-ai-slop`.
+
+### Checkpoint FIX-38D — 2026-10-10
+
+- Oberoende Reviewer PASS; dokumentationens tidigare motsägelse korrigerad före commit.
+- Commit `2198e55ed20a1a60aaafca0c9364c6dc3a523bae` skapad med aktiva pre-commit-hookar: `pnpm check` och staged whitespace-kontroll passerade.
+- Push till `origin/remove-ai-slop` passerade aktiva pre-push-hookar: `pnpm check` och whitespacekontroll för refen passerade. Efter fetch bekräftades att lokal `HEAD` och `origin/remove-ai-slop` båda pekar på leveranscommitten.
+- FIX-38 flyttad från review till done med Reviewer-roll och verifieringsunderlag i köhistoriken. Visuell/device QA kvarstår NOT TESTABLE; ingen TestFlight-build eller GitHub Release skapades.

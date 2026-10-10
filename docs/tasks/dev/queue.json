@@ -2959,7 +2959,7 @@
         "docs/design/FIX-38/checklist.md: render/accessibility evidence or itemized NOT TESTABLE"
       ],
       "depends_on": [],
-      "status": "review",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -2984,9 +2984,15 @@
           "to": "review",
           "actor": "qa",
           "evidence": "Independent QA PASS; Toast lifecycle including hidden reduced-motion toggles and all hook checks validated; visual/device NOT TESTABLE documented"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS. Commit 2198e55ed20a1a60aaafca0c9364c6dc3a523bae passed active pre-commit pnpm check and staged whitespace validation; push to origin/remove-ai-slop passed active pre-push pnpm check and ref whitespace validation. Refetched origin/remove-ai-slop and confirmed it matches the pushed commit. Visual/device evidence remains NOT TESTABLE."
         }
       ],
-      "next_step": "Reviewer PASS; skapa commit genom aktiva hookar och pusha till origin/remove-ai-slop. Efter verifierad push, registrera leverans-SHA och flytta uppgiften till done."
+      "next_step": "Independent Reviewer PASS. Commit 2198e55ed20a1a60aaafca0c9364c6dc3a523bae passed active pre-commit pnpm check and staged whitespace validation; push to origin/remove-ai-slop passed active pre-push pnpm check and ref whitespace validation. Refetched origin/remove-ai-slop and confirmed it matches the pushed commit. Visual/device evidence remains NOT TESTABLE."
     }
   ]
 }
