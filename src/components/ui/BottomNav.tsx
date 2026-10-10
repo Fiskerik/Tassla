@@ -26,7 +26,7 @@ export function BottomNav({ active = 'home', onChange }: { active?: BottomNavDes
 }
 
 const styles = StyleSheet.create({
-  nav: { alignSelf: 'stretch', minHeight: tokens.size.navHeight, flexDirection: 'row', backgroundColor: tokens.colors.surface, borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border },
+  nav: { alignSelf: 'stretch', minHeight: tokens.size.navHeight, flexDirection: 'row', gap: tokens.spacing.xs, backgroundColor: tokens.colors.surface, borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border },
   item: { flex: 1, minWidth: tokens.size.touchMin, minHeight: tokens.size.navHeight, alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs },
   label: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'center', width: '100%', flexShrink: 1 },
   selectedLabel: { color: tokens.colors.primary, fontWeight: '700' },

@@ -2144,7 +2144,7 @@ function sameOwnedDogProfile(
 
 const styles = StyleSheet.create({
   cardEyebrow: { color: theme.colors.accent, ...tokens.typography.caption, marginBottom: tokens.spacing.sm },
-  menuRow: { minHeight: 74, flexDirection: 'row', alignItems: 'center', gap: 13, borderRadius: theme.radius.button, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, paddingHorizontal: 14, marginBottom: 10 },
+  menuRow: { minHeight: 74, flexDirection: 'row', alignItems: 'center', gap: 13, borderRadius: theme.radius.button, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, paddingHorizontal: 14, marginBottom: tokens.layout.listGap },
   menuCopy: { flex: 1 },
   menuTitle: { color: theme.colors.text, ...tokens.typography.label },
   menuDetail: { color: theme.colors.mutedText, ...tokens.typography.caption, marginTop: tokens.spacing.xs },

@@ -23,7 +23,9 @@ export function HomeScreen({ dog, breed = '', events, plans = [], content, conte
     date.setDate(date.getDate() + index - 2);
     return { key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`, date };
   });
-  const dailyEvents = events.filter((event) => localDateTimeParts(event.occurredAt).date === selected);
+  const dailyEvents = events
+    .filter((event) => localDateTimeParts(event.occurredAt).date === selected)
+    .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt) || right.id.localeCompare(left.id));
   const dailyPlans = plans.filter((plan) => plan.due_on === selected);
   const age = formatDogAge(dog.birth_date, today);
   return <View>
@@ -40,6 +42,7 @@ export function HomeScreen({ dog, breed = '', events, plans = [], content, conte
         </MotionPressable>
       </View>
     </Card>
+    <HomeCarousel dog={dog} plans={plans} selectedDatePlans={planState === 'ready' ? dailyPlans : []} content={content} contentState={contentState} nextStep={nextStep} onGo={onGo} onOpenContent={onOpenContent} />
     <View style={styles.week} accessibilityRole="tablist" accessibilityLabel="Välj dag">
       {dates.map(({ key, date }) => <MotionPressable key={key} accessibilityRole="tab" accessibilityLabel={date.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' })} accessibilityState={{ selected: key === selected }} onPress={() => setSelected(key)} style={[styles.day, key === selected && styles.selectedDay]}>
         <Text style={[styles.weekday, key === selected && styles.selectedText]}>{date.toLocaleDateString('sv-SE', { weekday: 'short' }).replace('.', '')}</Text>
@@ -50,16 +53,15 @@ export function HomeScreen({ dog, breed = '', events, plans = [], content, conte
     <SectionHeader title={selected === today ? `Idag för ${dog.name}` : new Date(`${selected}T12:00:00`).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' })} />
     {selected === today ? <Button label="Logga nu" accessibilityLabel="Logga en händelse nu" onPress={() => onGo('log')} /> : null}
     <ScreenTransition transitionKey={selected}>
-      <View style={styles.rows}>
+      <View style={[styles.rows, selected === today && styles.todayRows]}>
         {logState === 'loading' || planState === 'loading' ? <Skeleton shape="row" lines={2} /> : null}
         {logState === 'error' ? <ListRow category="pee" title="Loggen kunde inte hämtas" meta="Öppna loggen för att försöka igen" onPress={() => onGo('log')} /> : null}
         {planState === 'error' ? <ListRow category="vaccination" title="Planerna kunde inte hämtas" onPress={() => onGo('planned-health')} /> : null}
         {planState === 'ready' && dailyPlans.map((plan) => <ListRow key={plan.id} category={plan.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} title={plan.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök'} meta={plan.description ?? undefined} onPress={() => onGo('planned-health')} />)}
         {logState === 'ready' && planState === 'ready' && dailyEvents.length === 0 && dailyPlans.length === 0 ? <Text style={styles.empty}>{selected > today ? 'Inget planerat den här dagen.' : 'Inget loggat den här dagen.'}</Text> : null}
-        {dailyEvents.map((event) => <ListRow key={event.id} category={event.type} title={LOG_EVENT_LABELS[event.type]} time={localDateTimeParts(event.occurredAt).time} meta={event.note ?? undefined} onPress={() => onGo('log')} />)}
+        {dailyEvents.slice(0, 3).map((event) => <ListRow key={event.id} category={event.type} title={LOG_EVENT_LABELS[event.type]} time={localDateTimeParts(event.occurredAt).time} meta={event.note ?? undefined} onPress={() => onGo('log')} />)}
       </View>
     </ScreenTransition>
-    <HomeCarousel dog={dog} plans={plans} selectedDatePlans={planState === 'ready' ? dailyPlans : []} content={content} contentState={contentState} nextStep={nextStep} onGo={onGo} onOpenContent={onOpenContent} />
     {contentState === 'error' ? <Button label="Hämta guider igen" accessibilityLabel="Hämta guider igen" variant="tertiary" onPress={onRetryContent} /> : null}
   </View>;
 }
@@ -77,5 +79,5 @@ const styles = StyleSheet.create({
   weekday: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textTransform: 'capitalize' },
   date: { ...tokens.typography.label, color: tokens.colors.textPrimary }, selectedText: { color: tokens.colors.onPrimary },
   dayDot: { height: tokens.spacing.xs, width: tokens.spacing.xs, borderRadius: tokens.radius.full }, todayDot: { backgroundColor: tokens.colors.primary }, lightDot: { backgroundColor: tokens.colors.onPrimary },
-  rows: { gap: tokens.spacing.xs }, empty: { ...tokens.typography.body, color: tokens.colors.textSecondary, paddingVertical: tokens.spacing.lg },
+  rows: { gap: tokens.spacing.xs }, todayRows: { marginTop: tokens.layout.listGap }, empty: { ...tokens.typography.body, color: tokens.colors.textSecondary, paddingVertical: tokens.spacing.lg },
 });

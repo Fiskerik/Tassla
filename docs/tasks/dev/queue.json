@@ -2636,5 +2636,68 @@
         }
       ],
       "next_step": "Independent Reviewer PASS FIX-36 approved plan, parser/save API, tests, local schema evidence and documented remote NOT TESTABLE limits"
-    }]
+    },
+    {
+      "id": "UI-08",
+      "title": "Toastkanter och finjustering av Hem, Kunskap, Mer och Träning",
+      "mvp_requirement": "docs/mvp.md: Hem, Valplogg, Träning och Kunskap; Eriks UI-08-besked 2026-10-10",
+      "plan": "docs/tasks/dev/ui-08.md v4",
+      "write_paths": [
+        "src/components/ui/Toast.tsx",
+        "src/components/ui/BottomNav.tsx",
+        "src/components/ui/ListRow.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/HomeCarousel.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/README.md",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "docs/design/UI-08",
+        "docs/tasks/dev/ui-08.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/UI-08.md"
+      ],
+      "acceptance": [
+        "Toast-färger i appen matchar befintliga Figma-ramar (success grön, error röd, övriga semantiska varianter)",
+        "Hem visar carousel före datumremsa och högst tre nyaste inlästa logghändelser per valt datum; planer räknas inte; ingen datahämtning läggs till",
+        "Mer-rader får tokens.layout.listGap; footerflikar får tokens.spacing.xs med bevarade tryckytor och enradiga etiketter vid 360/430 och 140 procent",
+        "Kunskapskortens rubriker ryms utan ensamma slutbokstäver vid 140 procent och med fortsatt Dynamic Type",
+        "Endast publicerade träningsrader använder caption-variant av ListRow; övriga vyer behåller standardstorlek; visuell evidens och design-rules-checklista finns"
+      ],
+      "checks": [
+        "pnpm check",
+        "EXPO_NO_TELEMETRY=1 pnpm bundle:ios",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-06",
+        "UI-07",
+        "FIX-36"
+      ],
+      "status": "qa",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v3 and renewed APPROVE v4 after checking production Training screenshot source; Critic PROCEED; Figma Toast strokes verified via component metadata"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik authorized UI-08 slice; approved plan v4"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "All planned UI code changes implemented; typechecks, iOS export, log policy test, diff and queue validation pass; notifications timezone subprocess test remains environment-blocked; screenshots NOT TESTABLE"
+        }
+      ],
+      "next_step": "Visual screenshot QA at 360/430 and 140 percent is still required; RN Web localhost/Chromium are blocked by sandbox permissions."
+    }
+    ]
 }

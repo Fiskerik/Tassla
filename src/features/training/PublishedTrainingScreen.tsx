@@ -30,7 +30,7 @@ export function PublishedTrainingScreen({ programs, paused, busyStepKey, error, 
     } finally { pending.current = false; }
   }
   function rows(program: PublishedTrainingProgram) {
-    return <View style={styles.rows}>{program.steps.map((step) => <ListRow key={step.id} category="training" title={step.title}
+    return <View style={styles.rows}>{program.steps.map((step) => <ListRow key={step.id} category="training" title={step.title} titleSize="compact"
       complete={program.completedStepIds.includes(step.id)} onPress={() => setSelection({ programId: program.id, stepId: step.id })} />)}</View>;
   }
   return <View>
@@ -47,7 +47,7 @@ export function PublishedTrainingScreen({ programs, paused, busyStepKey, error, 
       <SectionHeader title="Övningar" />
       {rows(active)}
       <Button variant="tertiary" label="Om programmet" accessibilityLabel="Läs om programmet och dess källor" onPress={() => setSelection({ programId: active.id, stepId: '' })} />
-      {programs.length > 1 ? <><SectionHeader title="Fler program" />{programs.filter((program) => program.id !== active.id).map((program) => <ListRow key={program.id} category="training" title={program.title} onPress={() => setProgramId(program.id)} />)}</> : null}
+      {programs.length > 1 ? <><SectionHeader title="Fler program" />{programs.filter((program) => program.id !== active.id).map((program) => <ListRow key={program.id} category="training" title={program.title} titleSize="compact" onPress={() => setProgramId(program.id)} />)}</> : null}
     </> : null}
     {tab === 'Alla övningar' ? programs.map((program) => <View key={program.id}><SectionHeader title={program.title} />{rows(program)}</View>) : null}
     {tab === 'Framsteg' ? programs.map((program) => <View key={program.id} style={styles.progressCard}>
