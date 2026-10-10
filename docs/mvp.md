@@ -185,6 +185,10 @@ Tidslinjen är en dataprincip. Den kräver inte en avancerad tidslinjeprodukt i 
 
 MVP:n ska validera att denna loop ger verkligt värde och upprepas över tid. Initial relevans kommer framför allt från ålder och ras; mer avancerad personalisering kan utvecklas senare.
 
+## App-design
+**Appen ska kännas levande. Animationer som infriar detta måste premieras**
+
+
 ## Utanför MVP
 
 Följande passar den långsiktiga visionen men ingår inte i första versionen:
