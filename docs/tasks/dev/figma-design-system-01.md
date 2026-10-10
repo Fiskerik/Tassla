@@ -1,9 +1,9 @@
 # FIGMA-DS-01 – Tasslas designsystem i Figma
 
-Datum: 2026-10-07  
-Planversion: v3  
-Status: Pågår – QA UNDERKÄND; korrigering blockerad av Figmas Starter-gräns  
-Mandat: Eriks uttryckliga beställning 2026-10-07 att bygga designsystemet i angiven Figma-fil, utan skärmar.  
+Datum: 2026-10-07<br>
+Planversion: v3<br>
+Status: Pågår – QA UNDERKÄND; korrigering blockerad av Figmas Starter-gräns<br>
+Mandat: Eriks uttryckliga beställning 2026-10-07 att bygga designsystemet i angiven Figma-fil, utan skärmar.<br>
 Release-log: [docs/releases/FIGMA-DS-01.md](../../releases/FIGMA-DS-01.md)
 
 ## Scope och användaruppgift
@@ -14,32 +14,32 @@ Huvudhandling i komponentexempel: en primär handling åt gången. Synlig inform
 
 ## Numrerade deluppgifter
 
-1. **Inventering och planlåsning**  
-   Ägare: huvudsession.  
-   Beroenden: `docs/design/INVENTORY.md`, `docs/design-rules.md`, befintlig Figma-fil och tillgängliga bibliotek.  
-   Påverkade ytor: endast Figma-filen samt denna plan/release-log.  
-   Acceptans: befintliga variabler, stilar, komponenter och bibliotek är inventerade; gap och antaganden är dokumenterade.  
+1. **Inventering och planlåsning**<br>
+   Ägare: huvudsession.<br>
+   Beroenden: `docs/design/INVENTORY.md`, `docs/design-rules.md`, befintlig Figma-fil och tillgängliga bibliotek.<br>
+   Påverkade ytor: endast Figma-filen samt denna plan/release-log.<br>
+   Acceptans: befintliga variabler, stilar, komponenter och bibliotek är inventerade; gap och antaganden är dokumenterade.<br>
    Verifiering: read-only Figma-inspektion samt bibliotekssökning.
 
-2. **Foundations**  
-   Ägare: huvudsession.  
-   Beroenden: deluppgift 1 och arkitektens godkännande av exakt plan.  
-   Påverkade ytor: Figma-sidan `Design system`.  
-   Acceptans: variablerna i den låsta arkitekturen nedan finns; semantiska färger aliasar primitiver; scopes och kodsyntax är satta; textstilar finns.  
+2. **Foundations**<br>
+   Ägare: huvudsession.<br>
+   Beroenden: deluppgift 1 och arkitektens godkännande av exakt plan.<br>
+   Påverkade ytor: Figma-sidan `Design system`.<br>
+   Acceptans: variablerna i den låsta arkitekturen nedan finns; semantiska färger aliasar primitiver; scopes och kodsyntax är satta; textstilar finns.<br>
    Verifiering: strukturell audit av collections, modes, värden, alias, scopes, kodsyntax och stilar.
 
-3. **Komponentbibliotek**  
-   Ägare: huvudsession.  
-   Beroenden: verifierad deluppgift 2.  
-   Påverkade ytor: Figma-sidan `Design system`.  
-   Acceptans: Button (primary/secondary/tertiary/icon/destructive), AppBar, Tabs, BottomNav, ListRow, Card, HeroCard, QuickLogTile, ChecklistItem, Progress, Toast och kategoribundna IconChip-komponenter finns med den låsta variantmatrisen nedan och variabelbindningar. Inga skärmar byggs.  
+3. **Komponentbibliotek**<br>
+   Ägare: huvudsession.<br>
+   Beroenden: verifierad deluppgift 2.<br>
+   Påverkade ytor: Figma-sidan `Design system`.<br>
+   Acceptans: Button (primary/secondary/tertiary/icon/destructive), AppBar, Tabs, BottomNav, ListRow, Card, HeroCard, QuickLogTile, ChecklistItem, Progress, Toast och kategoribundna IconChip-komponenter finns med den låsta variantmatrisen nedan och variabelbindningar. Inga skärmar byggs.<br>
    Verifiering: variant-/property-audit och kontroll att representativa noder använder variabler.
 
-4. **Visuell QA och checkpoint**  
-   Ägare: separat QA/reviewer för bedömning; huvudsession rättar högst två gånger.  
-   Beroenden: deluppgift 3.  
-   Påverkade ytor: Figma-sidan `Design system`, denna plan och release-loggen.  
-   Acceptans: komponentöversikten är läsbar utan klippning/överlapp; målbildens hierarki, färgton, ikonprincip och tryckytor följs; relevanta punkter i designchecklistan är Ja och övriga motiveras som ej tillämpliga.  
+4. **Visuell QA och checkpoint**<br>
+   Ägare: separat QA/reviewer för bedömning; huvudsession rättar högst två gånger.<br>
+   Beroenden: deluppgift 3.<br>
+   Påverkade ytor: Figma-sidan `Design system`, denna plan och release-loggen.<br>
+   Acceptans: komponentöversikten är läsbar utan klippning/överlapp; målbildens hierarki, färgton, ikonprincip och tryckytor följs; relevanta punkter i designchecklistan är Ja och övriga motiveras som ej tillämpliga.<br>
    Verifiering: renderad Figma-skärmdump, strukturell audit och separat granskning.
 
 ## Låsta avgränsningar och antaganden

@@ -11,5 +11,3 @@ Utvecklingsfynd före leverans: passerade tider får inte uppta40-gränsen; SDKo
 Faktisk planreview v3/nativev4 ArchitectAPPROVE/CriticPROCEED/SecurityAPPROVE; Compliance gäller minimerat lokaländamål, inte juridiskcertifiering. Slutlig oberoende QA78/78 fokuserat och fullcheck300/300 inklusive typecheck/lint PASS. iOS-export PASS efter sandbox-EPERM och godkänd filskrivningseskalering; diffcheck PASS. Förnyad final Reviewer PASS och statisk Security PASS efter master-av-korrigeringen. Den gamla statiska dependencyassertionen korrigerad inom godkänt scope med övriga assertions bevarade. Migration/SQLtvåägarprov intekörda; fysisknotisleverans inteutförd. Erik väljer telefonprov utan automatiskgrind.
 ## Nästa paket
 P08 verklig QR/attribution och P09 individuell mätning väntar på Eriks databeslut och installationsuppgifter; inget implicitgodkännande. Oberoende P10 lokal/undeployed konto-raderingskandidat är exaktgranskad och kan byggas efterP07DONE. Actualdeploy/realdata/privacypublikation väntar separat. P11 samlad QA förberedd; fullbeta är fortfarande inteklar.
-
-

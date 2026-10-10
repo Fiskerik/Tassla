@@ -10,4 +10,3 @@ Under utvecklingen korrigerades cleanup som blockerades av in-flightflagga, SDK:
 Exakt v3 Architect APPROVE och Critic PROCEED sparade. Installerade native typer och Print-sökvägar kontrollerade. Oberoende QA30/30 fokuserat, fullcheck253/253 inklusive typecheck/lint PASS, iOS-export PASS efter filskrivningseskalering, diffcheck PASS. Förnyad independent Reviewer PASS och statisk Security PASS. Fysisk native PDF-rendering/delning inte utförd; Erik avgör kritiska telefonprov utan interpaketstopp. HTML-escaping, cache-only filer, avsnittsval och kontolivslängd testas lokalt. Ingen databasmigration för detta paket.
 ## Nästa paket
 P07 frivilliga lokala hälso-/träningspåminnelser. Checkpunkter: exakt permissions-/tidskontrakt, native lifecycle/avbokning, UIstatus, QA/Review/Security och release-log. P07-kod börjar efter P06:s verifierade checkpoint; planreview pågår.
-

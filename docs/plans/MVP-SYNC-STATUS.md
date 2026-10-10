@@ -1,7 +1,7 @@
 # MVP-SYNC-STATUS – inventering mot målbilden
 
-Datum: 2026-10-08  
-Typ: läsbar inventering; ingen kod och ingen Figma-fil ändrad  
+Datum: 2026-10-08<br>
+Typ: läsbar inventering; ingen kod och ingen Figma-fil ändrad<br>
 Källor: `AGENTS.md`, `docs/mvp.md`, `docs/design-rules.md` (inkl. §4–10, §14), `vision_rev01.jpg` (övre ”MVP – 6 skärmar”), `docs/tasks/dev/mvp-beta-delivery.md`, `docs/tasks/dev/queue.json`, `docs/plans/`, `docs/tasks/dev/`, `src/theme/tokens.ts`, `src/components/ui/`, `app/` och `src/features/`. Figma-API/läsverktyg var inte tillgängliga; Figma-uppgifter och planer används som sekundär källa och osäkra uppgifter markeras `okänt`.
 
 ## 1. Skärminventering

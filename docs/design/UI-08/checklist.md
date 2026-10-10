@@ -1,6 +1,6 @@
 # UI-08 visuell QA
 
-Datum: 2026-10-10  
+Datum: 2026-10-10<br>
 Status: **NOT TESTABLE — inga nya skärmbilder kunde skapas**
 
 ## Skärmbilder

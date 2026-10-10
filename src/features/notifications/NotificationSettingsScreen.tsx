@@ -167,4 +167,3 @@ const styles = StyleSheet.create({
   choiceTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
   choiceDetail: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.layout.headingGap },
 });
-

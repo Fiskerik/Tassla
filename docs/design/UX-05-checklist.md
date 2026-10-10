@@ -1,7 +1,7 @@
 # UX-05 visuell QA-checklista
 
-Datum: 2026-10-09  
-Berörd vy: Hem  
+Datum: 2026-10-09<br>
+Berörd vy: Hem<br>
 Målbild: personlig, kompakt BabyJourney-lik startyta med befintliga Tassla-komponenter
 
 ## Evidens

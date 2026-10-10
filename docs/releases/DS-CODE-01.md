@@ -1,10 +1,10 @@
 # Release-log – DS-CODE-01
 
-Datum: 2026-10-07  
-Paket-ID: DS-CODE-01  
-Status: BLOCK – kod QA/reviewer PASS; visuell QA NOT TESTABLE  
-Jämförelsebas: commit `85cf5dcde1f1bb3d4282353a1edf8fdcc8608e1e`; GitHub Release saknas.  
-Leveranscommit: Okänd  
+Datum: 2026-10-07<br>
+Paket-ID: DS-CODE-01<br>
+Status: BLOCK – kod QA/reviewer PASS; visuell QA NOT TESTABLE<br>
+Jämförelsebas: commit `85cf5dcde1f1bb3d4282353a1edf8fdcc8608e1e`; GitHub Release saknas.<br>
+Leveranscommit: Okänd<br>
 TestFlight-version/build: Okänd
 
 ## Major changes
