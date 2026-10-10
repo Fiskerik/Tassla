@@ -1,6 +1,6 @@
 # FIX-36 – påminnelsetid och loggkategorier
 
-Datum: 2026-10-10. Status: planerad, väntar på förnyad Architect/Critic efter ändringar. Bas: UI-07 checkpoint skapas före implementation; exakta commit-ID läggs in före implementation. Begärt inom Eriks felrapporterade fortsättning.
+Datum: 2026-10-10. Status: implementerad; QA och oberoende code review PASS. Bas: `4f2b634` på `remove-ai-slop` (UI-07 checkpoint).
 
 ## Mål och avgränsning
 
@@ -20,7 +20,9 @@ Acceptans: valideraren accepterar endast 00:00–23:59 i HH:MM-format och return
 
 ## Review
 
-Plan v2 efter Critic-förtydligande: Architect bad om ännu tydligare separering av fjärrens migrationshistorik, live-constraint och runtime/RLS, numeriska parserresultat, enabled/disabled sparväg samt en föregående UI-07 checkpoint. Dessa är införda; förnyad Architect- och Critic-granskning krävs före appkod.
+Plan v1 Architect CHANGES; Critic CHANGES. Plan v2 inför bevisnivåerna, numeriska parserresultat, enabled/disabled sparväg och UI-07 checkpoint. Architect **APPROVE** och Critic **PROCEED** för exakt plan v2 2026-10-10. `python tools/dev_flow.py validate` PASS.
+
+Implementer genomförde parser-/teständringen. Oberoende QA och Reviewer **PASS**: ingen kod-/API-avvikelse, ingen migration eller dependency. `pnpm check` PASS (389 pass, 1 skip, 0 fail), iOS-export, riktat parserprov, diff- och kövalidering PASS. Läsaren behöver känna till att vanlig sandbox blockerar notifications-testets tidszonsunderprocess med EPERM; samma fulla check passerar när befintlig underprocess tillåts.
 
 ## Release-logg
 

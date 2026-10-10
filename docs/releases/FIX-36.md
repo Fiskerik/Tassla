@@ -1,6 +1,6 @@
 # FIX-36 – påminnelsetid och loggkategorier
 
-Datum: 2026-10-10. Status: planerad. Bas: `223b306` (`remove-ai-slop`). Leveranscommit/build okända; ingen GitHub Release skapad.
+Datum: 2026-10-10. Status: implementerad lokalt; QA och oberoende code review PASS. Bas: `4f2b634` (`remove-ai-slop`, UI-07 checkpoint). Leveranscommit/build okända; ingen GitHub Release skapad.
 
 ## Major changes
 
@@ -8,16 +8,16 @@ Inga.
 
 ## Minor changes
 
-Planerat: korrigera validering av påminnelsetid i Hälsa.
+Ny ren HH:MM-parser i Hälsa godtar giltigt lokalt klockslag och skickar minuter sedan midnatt.
 
 ## Bug-fixes
 
-Planerat: giltig HH:MM-tid avvisas för närvarande av en felaktig regex. `Olycka` och `Vatten` granskas i spar-/schemaflödet.
+Utvecklingsfel rättat före leverans: regexen matchade bokstaven `d` i stället för siffror, så giltiga tider avvisades. Parsern returnerar 0 för 00:00 och 1439 för 23:59, och avvisar fel format/tider utanför dygnet. `Olycka`/`Vatten` stöds lokalt i appkontrakt och migrationscheckar; ingen fjärrmiljöändring gjordes.
 
 ## Verifiering och kända begränsningar
 
-Planen granskas före kod. Lokal migration innehåller redan `accident` och `water`; verklig målmiljö är ännu inte kontrollerad. Ingen migration/deploy planeras.
+Plan v2 Architect **APPROVE**, Critic **PROCEED**, independent QA och Reviewer **PASS**. `pnpm check` PASS (389 pass, 1 skip, 0 fail), iOS-export PASS, fokuserat parserprov PASS, diff- och kövalidering PASS. `EventType`, loggtyp-unioner, insertväg och migrationsfiler 202610040001/202610090001 innehåller `accident` och `water` inklusive shape-checken. Fjärrens migrationshistorik, faktisk live-constraint och runtime/RLS är **NOT TESTABLE**: ingen Supabase CLI, `.env` eller länkad projektkontext finns. Nästa säkra steg är read-only schemaintrospektion med godkänd projektåtkomst; runtime kräver separat syntetiskt utvecklingsprov. Ingen migration/deploy utförd.
 
 ## Nästa sprint/paket
 
-Kör `pnpm check`, iOS-export, diff- och kövalidering; separat native-/databasprov endast om tillgängligt och utan skrivande deploy.
+Vidare kontroll av fjärrschema/runtime kräver senare en godkänd utvecklingsmiljö och läsåtkomst. Ingen migration/deploy i denna uppgift.

@@ -20,6 +20,7 @@ import {
   reducePlannedHealthFeedback,
   selectPlannedHealthRecovery,
 } from './planned-health-feedback';
+import { parsePlannedHealthTime } from './planned-health-time';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -176,7 +177,7 @@ export function PlannedHealthScreen({
       setFormError('Anteckningen får innehålla högst 500 tecken.');
       return;
     }
-    const minutes = parseTime(reminderTime);
+    const minutes = parsePlannedHealthTime(reminderTime);
     if (reminderEnabled && minutes === null) {
       setFormError('Ange en giltig påminnelsetid mellan 00:00 och 23:59.');
       return;
@@ -387,12 +388,6 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', justifyContent: 'flex-start', gap: 8, marginTop: 8 },
 });
 
-function parseTime(value: string): number | null {
-  const match = /^(d{2}):(d{2})$/.exec(value.trim());
-  if (!match) return null;
-  const hours = Number(match[1]), minutes = Number(match[2]);
-  return hours < 24 && minutes < 60 ? hours * 60 + minutes : null;
-}
 function formatTime(minutes: number): string {
   return Math.floor(minutes / 60).toString().padStart(2, '0') + ':' + (minutes % 60).toString().padStart(2, '0');
 }

@@ -2602,8 +2602,39 @@
         "UI-06",
         "UI-07"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Förnyad Architect/Critic granskar plan v2; ändra inte appkod före APPROVE/PROCEED"
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE FIX-36 plan v2; independent Critic PROCEED"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Authorized FIX-36 plan v2 implementation"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Parser and tests implemented; targeted tests/typecheck/diff pass"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: pnpm check 389/1/0, iOS export, diff/queue; remote DB layers NOT TESTABLE"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS FIX-36 approved plan, parser/save API, tests, local schema evidence and documented remote NOT TESTABLE limits"
+        }
+      ],
+      "next_step": "Independent Reviewer PASS FIX-36 approved plan, parser/save API, tests, local schema evidence and documented remote NOT TESTABLE limits"
     }]
 }

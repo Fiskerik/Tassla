@@ -1,5 +1,7 @@
 # Lokala tester
 
+`planned-health-time.test.mjs` täcker omvandling av planerad lokal HH:MM-påminnelsetid till minuter efter midnatt, inklusive gränsvärden, trimning, format och intervall.
+
 `pnpm check` kör typkontroll, lint och Node-testerna utan nätverk. Domäntesterna täcker ålders- och innehållsurval. `auth-storage.test.mjs` täcker callback-validering och den rena chunklagringen. `app-data.test.mjs` använder den installerade Supabase-klienten med en lokal fetch-funktion för att kontrollera att PostgREST förmedlar avbrottssignalen till begäran; inget anrop lämnar processen. Den 12 sekunder långa timeouten i `app-data.ts` granskas statiskt, eftersom den rena timeout-hjälpen inte är fristående/testexporterad.
 
 `log-model.test.mjs` kör den rena vardagsloggmodellen: händelsetyper, canonical tid/future, notisens 500 Unicode-codepoint-gräns, syntetiska identiteter, immutable CRUD, lokal kalendergruppering samt datum/tidsvalidering inklusive Stockholm-vårens DST-gap. DST-fallet hoppas över i andra tidszoner.
