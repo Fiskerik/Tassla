@@ -1,6 +1,6 @@
 # MOTION-04 – Valpfigur
 
-Status: planutkast v1, granskningsklart; implementation väntar på MOTION-03-checkpoint
+Status: plan v1 Architect APPROVE/Critic PROCEED; implementation, lokal QA och oberoende Reviewer klara efter checkpoint `117c406`; lokal MOTION-04-commit återstår
 Datum: 2026-10-10
 Mandat: Eriks MOTION-beslut 0004 och uttryckliga fortsättning 2026-10-10
 

@@ -1,6 +1,6 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
-import { AppBar, BottomSheet, Button, HeroCard, ListRow, Progress, SectionHeader, Tabs, Toast } from '../../components/ui';
+import { AppBar, BottomSheet, Button, DogMascot, HeroCard, ListRow, Progress, SectionHeader, Tabs, Toast } from '../../components/ui';
 import type { PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
 import { tokens } from '../../theme/tokens';
 
@@ -14,8 +14,10 @@ export function PublishedTrainingScreen({ programs, paused, busyStepKey, error, 
   const [selection, setSelection] = useState<{ programId: string; stepId: string } | null>(null);
   const [saved, setSaved] = useState(false);
   const [animateCompleteTarget, setAnimateCompleteTarget] = useState<{ key: string; programId: string; stepId: string } | null>(null);
+  const [dogReaction, setDogReaction] = useState<{ key: string; programId: string; stepId: string } | null>(null);
   const animationSequence = useRef(0);
   const pending = useRef(false);
+  const mounted = useRef(true);
   const active = programs.find((program) => program.id === programId) ?? programs[0];
   const selectedProgram = programs.find((program) => program.id === selection?.programId);
   const selectedStep = selectedProgram?.steps.find((step) => step.id === selection?.stepId);
@@ -24,16 +26,24 @@ export function PublishedTrainingScreen({ programs, paused, busyStepKey, error, 
     setAnimateCompleteTarget((current) => current?.key === key ? null : current);
   }, []);
 
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
   async function complete() {
     if (pending.current || busyStepKey || !selectedProgram || !selectedStep) return;
     pending.current = true;
     try {
       const confirmed = await onCompleteStep(selectedProgram, selectedStep.id);
+      if (!mounted.current) return;
       if (confirmed && confirmed.programId === selectedProgram.id && confirmed.stepId === selectedStep.id) {
-        setAnimateCompleteTarget({ key: `${confirmed.programId}:${confirmed.stepId}:${++animationSequence.current}`, programId: confirmed.programId, stepId: confirmed.stepId });
+        const key = `${confirmed.programId}:${confirmed.stepId}:${++animationSequence.current}`;
+        setAnimateCompleteTarget({ key, programId: confirmed.programId, stepId: confirmed.stepId });
+        setDogReaction({ key, programId: confirmed.programId, stepId: confirmed.stepId });
         setSaved(true); setSelection(null); onContinue();
       }
-    } finally { pending.current = false; }
+    } finally { if (mounted.current) pending.current = false; }
   }
   function rows(program: PublishedTrainingProgram) {
     return <View style={styles.rows}>{program.steps.map((step) => <ListRow key={step.id} category="training" title={step.title} titleSize="compact"
@@ -44,7 +54,8 @@ export function PublishedTrainingScreen({ programs, paused, busyStepKey, error, 
     <AppBar mode="Title" title="Träning" />
     <Tabs items={['Valpprogram', 'Alla övningar', 'Framsteg']} active={tab} onChange={setTab} />
     <Toast visible={Boolean(error)} tone="error" message={error || undefined} onRetry={onRetry} />
-    <Toast visible={saved} tone="success" confirmed message="Övningen är genomförd" autoDismissMs={2500} onAutoDismiss={() => setSaved(false)} />
+    {dogReaction ? <View style={styles.confirmationRow}><View style={styles.confirmationToast}><Toast visible={saved} tone="success" confirmed message="Övningen är genomförd" autoDismissMs={2500} onAutoDismiss={() => { setSaved(false); setDogReaction(null); }} /></View><DogMascot reactionKey={dogReaction.key} /></View>
+      : <Toast visible={saved} tone="success" confirmed message="Övningen är genomförd" autoDismissMs={2500} onAutoDismiss={() => setSaved(false)} />}
     {paused.map((item) => <Text key={item.versionId} style={styles.note}>Ett tidigare program är pausat. Dina {item.completedCount} genomförda steg finns kvar.</Text>)}
     {programs.length === 0 ? <><HeroCard title="Träning i er takt" meta="Här samlas övningarna för din hund." /><Text style={styles.note}>Fler program kommer när de är färdiga att använda.</Text></> : null}
     {tab === 'Valpprogram' && active ? <>
@@ -76,6 +87,7 @@ export function PublishedTrainingScreen({ programs, paused, busyStepKey, error, 
 }
 function percentage(program: PublishedTrainingProgram) { return program.steps.length ? program.completedStepIds.length / program.steps.length * 100 : 0; }
 const styles = StyleSheet.create({
+  confirmationRow: { flexDirection: 'row', alignItems: 'center' }, confirmationToast: { flex: 1, minWidth: 0 },
   rows: { gap: tokens.spacing.xs }, progress: { marginTop: tokens.spacing.sm },
   progressCard: { backgroundColor: tokens.colors.surface, borderRadius: tokens.radius.md, padding: tokens.spacing.lg, gap: tokens.spacing.md, marginBottom: tokens.spacing.md },
   heading: { ...tokens.typography.heading, color: tokens.colors.textPrimary }, body: { ...tokens.typography.body, color: tokens.colors.textPrimary }, note: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginVertical: tokens.spacing.md },

@@ -23,3 +23,13 @@ Originalgenererade med inbyggda imagegen-verktyget 2026-10-10; kopiorna här anv
 - `dog-placeholder.png` (1,2 MB): enkel grön generisk hundsilhuett mot gräddvit bakgrund, kvadratisk och läsbar vid liten cirkulär beskärning. Platshållare för hundkort, inte varumärkeslogotyp eller hundfoto.
 
 Originalen ligger under `/workspace/generated_images/` i Codex-arbetsmiljön. Bilderna har visuellt granskats i verktygsresultatet. Den lokala iOS-bundlingen och mobilskärmdumpar ska granskas för slutlig beskärning och paketstorlek.
+
+## MOTION-04: valpfigur
+
+`dog-mascot.png` skapades 2026-10-10 med Codex `image_gen` (transparent PNG). Den genererade originalfilen ligger i `/workspace/generated_images/exec-157ebdd9-b161-4238-8428-e7daef9d7320.png` och var 1254×1254. Den granskades visuellt och skalades lokalt med ImageMagick till kvadratisk RGBA 512×512 utan beskärning eller palettkvantisering. Slutfilen är 161,690 bytes; bildbudget 300,000 bytes. Originalet behålls i generated_images.
+
+Exakt prompt:
+
+> A clean, charming flat 2D editorial mascot illustration for a calm puppy-care app: a small generic puppy sitting, full body, three-quarter view, one paw raised slightly in a gentle acknowledgment. Distinctly hand-drawn cartoon illustration with simple curved shapes, solid muted honey-brown and warm cream fur patches, small dark brown eyes and nose, a few fine fur tufts, restrained palette, confident dark umber linework. Friendly and quiet, not excited, not anthropomorphic. Centered with generous padding on a genuinely transparent background. Precisely clean anti-aliased silhouette edges with neutral edge pixels: absolutely no red/green fringe, no glow, no colored outline halo, no shadow. No gradients, no 3D rendering, no photorealism, no text, no logo, no props. Square 512x512 PNG, transparent alpha.
+
+ImageMagick-kommandot för den spårade nedskalningen var `magick <original> -resize 512x512 -strip -define png:compression-level=9 dog-mascot.png`. Den slutliga appfilen har PNG RGBA-kanaler och visas endast vid bekräftade loggningar/träningssteg; VoiceOver/TalkBack ignorerar den dekorativa figuren. Fysisk beskärnings- och renderings-QA görs i Eriks samlade mobil-QA.

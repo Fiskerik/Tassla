@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AccessibilityInfo, Alert, Animated, Easing, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { AppBar, BottomSheet, Button, Card, Dialog, FirstUseTip, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast, useFirstUseTip } from '../../components/ui';
+import { AppBar, BottomSheet, Button, Card, Dialog, DogMascot, FirstUseTip, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast, useFirstUseTip } from '../../components/ui';
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
@@ -175,10 +175,15 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   }
 
   const successMutationKey = mutation?.status === 'saved' ? `${mutation.kind}:${mutation.mutationId}` : '';
+  const dogReactionKey = entryAnimationTarget && mutation?.kind === 'add' && mutation.status === 'saved'
+    && dismissedMutationKey !== successMutationKey
+    && mutation.id === entryAnimationTarget.eventId && successMutationKey === entryAnimationTarget.key
+    ? entryAnimationTarget.key : null;
+  const successToast = <Toast visible={mutation?.status === 'saved' && dismissedMutationKey !== successMutationKey} tone="success" confirmed message={mutation?.status === 'saved' ? mutation.kind === 'add' ? `${LOG_EVENT_LABELS[mutation.type]} loggat` : mutation.kind === 'update' ? 'Ändring sparad' : 'Händelsen är raderad' : ''}
+    onUndo={mutation?.status === 'saved' && mutation.kind === 'add' ? () => { firstUseTip.dismiss(); onUndo?.(mutation.id); } : undefined} autoDismissMs={2500}
+    onAutoDismiss={() => setDismissedMutationKey(successMutationKey)} />;
   const mutationFeedback = <>
-      <Toast visible={mutation?.status === 'saved' && dismissedMutationKey !== successMutationKey} tone="success" confirmed message={mutation?.status === 'saved' ? mutation.kind === 'add' ? `${LOG_EVENT_LABELS[mutation.type]} loggat` : mutation.kind === 'update' ? 'Ändring sparad' : 'Händelsen är raderad' : ''}
-        onUndo={mutation?.status === 'saved' && mutation.kind === 'add' ? () => { firstUseTip.dismiss(); onUndo?.(mutation.id); } : undefined} autoDismissMs={2500}
-        onAutoDismiss={() => setDismissedMutationKey(successMutationKey)} />
+      {dogReactionKey ? <View style={styles.confirmationRow}><View style={styles.confirmationToast}>{successToast}</View><DogMascot reactionKey={dogReactionKey} /></View> : successToast}
       <Toast visible={loadMoreError} tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore ? () => { firstUseTip.dismiss(); return onLoadMore(); } : undefined} />
   </>;
 
@@ -353,6 +358,7 @@ function heading(date: string): string {
 }
 
 const styles = StyleSheet.create({
+  confirmationRow: { flexDirection: 'row', alignItems: 'center' }, confirmationToast: { flex: 1, minWidth: 0 },
   screen: { gap: tokens.spacing.xs }, logGroup: { gap: tokens.spacing.xs }, grid: { gap: tokens.spacing.sm }, gridRow: { flexDirection: 'row', gap: tokens.spacing.sm }, moreRow: { marginTop: tokens.spacing.sm }, moreIcon: { width: tokens.size.chipLg, minHeight: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.selectedSurface },
   patternText: { ...tokens.typography.body, color: tokens.colors.textPrimary, paddingVertical: tokens.spacing.xs },
   empty: { padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, gap: tokens.spacing.xs },

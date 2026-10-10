@@ -1,18 +1,18 @@
 # MOTION-04 — Valpfigur
 
 Datum: 2026-10-10
-Status: planutkast v1; implementation väntar på MOTION-03-checkpoint
+Status: implementation lokalt klar; oberoende QA och Reviewer PASS; inte ännu committad eller pushad
 Jämförelsebas: `9012b1d` (MOTION-02 branch delivery on `motion-02-phone-qa`)
 Leveranscommit: ej skapad
 TestFlight-version/build: okänd
 
 ## Major changes
 
-Planerat: en illustrerad valpfigur med kort engångsreaktion efter en bekräftad loggning eller ett bekräftat träningssteg.
+Implementerat lokalt: illustrerad valpfigur med kort engångsreaktion efter en bekräftad ny loggning eller ett bekräftat träningssteg. Inställningen för reducerad rörelse läses via samma prenumeration och query; reaktionsnyckeln konsumeras först när inställningen är färdigläst.
 
 ## Minor changes
 
-Inga implementerade ändringar.
+Ingen ytterligare ändring.
 
 ## Bug-fixes
 
@@ -20,8 +20,8 @@ Inga.
 
 ## Verifiering och kända begränsningar
 
-Plan v1 använder befintlig `Animated`, en genererad transparent bild eller RN-fallback, bekräftade affärshändelser och befintlig toastcopy. Ingen appkod eller bildasset är skapad. Architect APPROVE och Critic PROCEED gavs 2026-10-10 på exakt v1. Ingen renderad eller native QA har körts. Vid implementation ska befintlig tränings-resetsekvens verifieras; inget nytt persistent eller affärsrelaterat animationstillstånd ska införas.
+`pnpm check` PASS (30 testfiler, 0 fel/skip; lint 0 fel och 35 varningar), iOS-export PASS (1,418 moduler), `git diff --check` och queue validation PASS. Oberoende QA och Reviewer PASS efter rättning av en race mellan laddning av reducerad rörelse och reaktionsnyckeln. Renderad/native QA, VoiceOver/TalkBack, stor text och telefon är NOT TESTABLE här och lämnas till Eriks samlade mobil-QA. Den transparenta asseten och metadata är dokumenterade under `assets/images/README.md`. Befintlig träningssekvens verifierades; inget persistent eller affärsrelaterat animationstillstånd infördes.
 
 ## Nästa sprint/paket
 
-Slutför MOTION-03:s lokala QA, oberoende Reviewer och hållbara checkpoint. Planreview är klar. Därefter byggs MOTION-04 med egen QA/Reviewer före Eriks gemensamma mobil-QA.
+Skapa lokalt commitcheckpoint. Paketet är inte pushat och Codemagic/TestFlight-build är okänd. Lägg in den renderade/native kontrollen i Eriks samlade mobil-QA.

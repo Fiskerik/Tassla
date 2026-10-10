@@ -2,9 +2,9 @@
 
 Datum: 2026-10-10
 Paket-ID: MOTION-03
-Status: lokal implementation, QA och Reviewer PASS; commitcheckpoint följer
+Status: lokal implementation, QA och Reviewer PASS; commitcheckpoint `117c406`
 Jämförelsebas: `9012b1d` (MOTION-02 branch delivery on `motion-02-phone-qa`)
-Leveranscommit: ej skapad
+Leveranscommit: `117c406` (lokal MOTION-03 + releasehistory-checkpoint)
 TestFlight-version/build: okänd
 GitHub Release: skapas inte automatiskt
 

@@ -3099,9 +3099,40 @@
       "depends_on": [
         "MOTION-03"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Plan v1 har Architect APPROVE och Critic PROCEED. Kod får starta efter MOTION-03:s lokala QA, Reviewer och hållbara checkpoint. Vid implementation verifieras befintlig tränings-resetsekvens utan nytt persistent/affärstillstånd; använd en dokumenterad transparent mascot-PNG eller RN-fallback. Gemensam enhets-QA följer beslut 0005."
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact MOTION-04 plan v1 approved by Architect 2026-10-10 and Critic PROCEED; scope, one-shot confirmed triggers, LogScreen mount handling, stale training callback guard, accessibility, mascot source/budget, evidence and acceptance criteria aligned. MOTION-03 checkpoint commit 117c406 is now durable."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik explicitly requested MOTION-04 implementation. Its approved plan v1 and Critic PROCEED are recorded; dependency MOTION-03 is local DONE after QA/Reviewer PASS and durable checkpoint 117c406. Start implementation on the current branch; shared phone QA remains deferred under decision 0005."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete after reviewer-identified reduced-motion race fix. Full pnpm check passes (30/30 tests, lint 0 errors/35 existing warnings), iOS export bundles 1,418 modules, focused dog policy test passes; begin independent final QA."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS on final diff. Verified listener-before-query order, stale successful/rejected reads ignored after change event, DogMascot readiness gate, trigger gates, one-shot keys and training unmount guard. Focused policy test, git diff --check and queue validation pass. Rendered/native/accessibility/device checks remain NOT TESTABLE; log this accurately for Erik's mobile QA."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS after both the readiness race fix and stale-error fallback guard. No code blockers. Full pnpm check, focused policy test, iOS export (1,418 modules), diff check and queue validation pass. Local implementation is complete; native/rendered accessibility and phone behavior are NOT TESTABLE here and remain for Erik's batched mobile QA under decision 0005. Create local commit checkpoint next; no push/build claimed."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS after both the readiness race fix and stale-error fallback guard. No code blockers. Full pnpm check, focused policy test, iOS export (1,418 modules), diff check and queue validation pass. Local implementation is complete; native/rendered accessibility and phone behavior are NOT TESTABLE here and remain for Erik's batched mobile QA under decision 0005. Create local commit checkpoint next; no push/build claimed."
     },
     {
       "id": "FIX-38",

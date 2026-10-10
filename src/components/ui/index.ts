@@ -7,6 +7,7 @@ export { Card } from './Card';
 export { CheckboxCard } from './CheckboxCard';
 export { ChecklistItem } from './ChecklistItem';
 export { Dialog } from './Dialog';
+export { DogMascot } from './DogMascot';
 export { EmptyState } from './EmptyState';
 export { FirstUseTip, useFirstUseTip } from './FirstUseTip';
 export { Field } from './Field';

@@ -64,7 +64,10 @@ test('published training only animates the exact identity returned after refresh
   assert.match(workspace, /confirmedProgram\?\.completedStepIds\.includes\(stepId\)/);
   assert.match(workspace, /return \{ programId: program\.id, stepId \}/);
   assert.match(screen, /confirmed\.programId === selectedProgram\.id && confirmed\.stepId === selectedStep\.id/);
-  assert.match(screen, /key: `\$\{confirmed\.programId\}:\$\{confirmed\.stepId\}:\$\{\+\+animationSequence\.current\}`/);
+  assert.match(screen, /const key = `\$\{confirmed\.programId\}:\$\{confirmed\.stepId\}:\$\{\+\+animationSequence\.current\}`/);
+  assert.match(screen, /setAnimateCompleteTarget\(\{ key, programId: confirmed\.programId, stepId: confirmed\.stepId \}\)/);
+  assert.match(screen, /setDogReaction\(\{ key, programId: confirmed\.programId, stepId: confirmed\.stepId \}\)/);
+  assert.match(screen, /if \(!mounted\.current\) return;/);
   assert.match(screen, /animateCompleteKey=\{animateCompleteTarget\?\.programId === program\.id && animateCompleteTarget\.stepId === step\.id/);
   assert.match(row, /onAnimationStart\?\.\(animateKey\)/);
   assert.match(row, /if \(!reduced\) return;[\s\S]*?progress\.stopAnimation\(\);[\s\S]*?progress\.setValue\(1\)/);

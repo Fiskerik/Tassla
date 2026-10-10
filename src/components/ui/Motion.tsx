@@ -2,15 +2,27 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, Animated, Easing, Pressable, type PressableProps } from 'react-native';
 import { tokens } from '../../theme/tokens';
 
-export function useReducedMotion() {
-  const [reduced, setReduced] = useState(true);
+export function useReducedMotionPreference() {
+  const [preference, setPreference] = useState({ reduced: true, ready: false });
   useEffect(() => {
     let active = true;
-    void AccessibilityInfo.isReduceMotionEnabled().then((value) => { if (active) setReduced(value); }).catch(() => undefined);
-    const listener = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduced);
+    let receivedChange = false;
+    const listener = AccessibilityInfo.addEventListener('reduceMotionChanged', (reduced) => {
+      receivedChange = true;
+      if (active) setPreference({ reduced, ready: true });
+    });
+    void AccessibilityInfo.isReduceMotionEnabled().then((reduced) => {
+      if (active && !receivedChange) setPreference({ reduced, ready: true });
+    }).catch(() => {
+      if (active && !receivedChange) setPreference({ reduced: true, ready: true });
+    });
     return () => { active = false; listener.remove(); };
   }, []);
-  return reduced;
+  return preference;
+}
+
+export function useReducedMotion() {
+  return useReducedMotionPreference().reduced;
 }
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
