@@ -7,7 +7,7 @@ export const WORKSPACE_PAGE_SIZE = 40;
 const DEFAULT_REQUEST_TIMEOUT_MS = 12_000;
 const EVENT_COLUMNS = 'id,dog_id,event_type,occurred_at,occurred_on,weight_kg,duration_minutes,description';
 const HEALTH_WEIGHT_COLUMNS = 'id,dog_id,actor_id,occurred_on,weight_kg';
-const HEALTH_HISTORY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,description';
+const HEALTH_HISTORY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,occurred_time,description';
 const PLANNED_HEALTH_COLUMNS = 'id,dog_id,event_type,due_on,description,created_at,reminder_enabled,reminder_minutes';
 
 export interface DogEventRecord {
@@ -65,6 +65,7 @@ export interface HealthHistoryRecord {
   actor_id: string;
   event_type: HealthHistoryType;
   occurred_on: string;
+  occurred_time: string | null;
   description: string | null;
 }
 
@@ -73,11 +74,13 @@ export interface HealthHistoryOperation {
   dog_id: string;
   event_type: HealthHistoryType;
   occurred_on: string;
+  occurred_time: string | null;
   description: string | null;
 }
 
 export interface HealthHistoryChanges {
   occurred_on: string;
+  occurred_time: string | null;
   description: string | null;
 }
 
@@ -497,6 +500,17 @@ export function normalizeHealthHistoryDescription(value: string | null | undefin
   return trimmed || null;
 }
 
+export function normalizeHealthHistoryTime(value: unknown): string | null | undefined {
+  if (value === null) return null;
+  if (typeof value !== 'string') return undefined;
+  const match = /^(?:([01]\d|2[0-3]):([0-5]\d))(?:\:00)?$/.exec(value);
+  return match ? `${match[1]}:${match[2]}` : undefined;
+}
+
+export function isValidHealthHistoryTime(value: string | null): boolean {
+  return value === null || typeof value === 'string' && normalizeHealthHistoryTime(value) === value;
+}
+
 export async function fetchHealthHistory(
   client: SupabaseClient,
   dogId: string,
@@ -511,9 +525,10 @@ export async function fetchHealthHistory(
       .order('occurred_on', { ascending: false })
       .order('id', { ascending: false })
       .abortSignal(signal);
-    if (error || !Array.isArray(data) || !data.every(isHealthHistoryRecord)
-      || data.some((row) => row.dog_id !== dogId)) throw new Error('Could not load health history');
-    return data;
+    if (error || !Array.isArray(data)) throw new Error('Could not load health history');
+    const rows = data.map(normalizeHealthHistoryRecord);
+    if (rows.some((row) => row === null || row.dog_id !== dogId)) throw new Error('Could not load health history');
+    return rows as HealthHistoryRecord[];
   }, timeoutMs, parentSignal);
 }
 
@@ -534,10 +549,11 @@ export async function fetchHealthHistoryById(
       .maybeSingle();
     if (error) throw new Error('Could not check health history status');
     if (data === null) return null;
-    if (!isHealthHistoryRecord(data) || data.dog_id !== dogId || data.event_type !== eventType || data.id !== id) {
+    const row = normalizeHealthHistoryRecord(data);
+    if (!row || row.dog_id !== dogId || row.event_type !== eventType || row.id !== id) {
       throw new Error('Health history response did not match the database contract');
     }
-    return data;
+    return row;
   }, timeoutMs);
 }
 
@@ -547,7 +563,7 @@ export async function insertHealthHistory(
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
 ): Promise<WriteOutcome<HealthHistoryRecord>> {
   const description = normalizeHealthHistoryDescription(operation.description);
-  if (!isValidHealthHistoryDate(operation.occurred_on) || description === undefined
+  if (!isValidHealthHistoryDate(operation.occurred_on) || !isValidHealthHistoryTime(operation.occurred_time) || description === undefined
     || !isHealthHistoryType(operation.event_type)) return { status: 'failed' };
   const normalized = { ...operation, description };
   const payload = {
@@ -555,14 +571,16 @@ export async function insertHealthHistory(
     dog_id: operation.dog_id,
     event_type: operation.event_type,
     occurred_on: operation.occurred_on,
+    occurred_time: operation.occurred_time,
     description,
   };
   let failure: unknown = null;
   try {
     const result = await withRequestDeadline(async (signal) => await client.from('dog_events')
       .insert(payload).abortSignal(signal).select(HEALTH_HISTORY_COLUMNS).single(), timeoutMs);
-    if (!result.error && isHealthHistoryRecord(result.data) && matchesHealthHistory(result.data, normalized)) {
-      return { status: 'saved', value: result.data };
+    const row = result.error ? null : normalizeHealthHistoryRecord(result.data);
+    if (!result.error && row && matchesHealthHistory(row, normalized)) {
+      return { status: 'saved', value: row };
     }
     failure = result.error ?? new Error('Empty health history insert response');
   } catch (error) { failure = error; }
@@ -578,24 +596,26 @@ export async function updateHealthHistory(
   dogId: string,
   eventType: HealthHistoryType,
   id: string,
-  previous: Pick<HealthHistoryRecord, 'occurred_on' | 'description'>,
+  previous: Pick<HealthHistoryRecord, 'occurred_on' | 'occurred_time' | 'description'>,
   changes: HealthHistoryChanges,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
 ): Promise<WriteOutcome<HealthHistoryRecord>> {
   const description = normalizeHealthHistoryDescription(changes.description);
-  if (!isValidHealthHistoryDate(changes.occurred_on) || description === undefined || !isHealthHistoryType(eventType)) return { status: 'failed' };
+  if (!isValidHealthHistoryDate(changes.occurred_on) || !isValidHealthHistoryTime(changes.occurred_time) || description === undefined || !isHealthHistoryType(eventType)) return { status: 'failed' };
   const normalizedChanges = { ...changes, description };
-  const payload = { occurred_on: changes.occurred_on, description };
+  const payload = { occurred_on: changes.occurred_on, occurred_time: changes.occurred_time, description };
   let failure: unknown = null;
   try {
     let query = client.from('dog_events').update(payload)
       .eq('dog_id', dogId).eq('event_type', eventType).eq('id', id)
       .eq('occurred_on', previous.occurred_on);
+    query = previous.occurred_time === null ? query.is('occurred_time', null) : query.eq('occurred_time', `${previous.occurred_time}:00`);
     query = previous.description === null ? query.is('description', null) : query.eq('description', previous.description);
     const result = await withRequestDeadline(async (signal) => await query.abortSignal(signal)
       .select(HEALTH_HISTORY_COLUMNS).maybeSingle(), timeoutMs);
-    if (!result.error && isHealthHistoryRecord(result.data) && matchesHealthHistory(result.data, { id, dog_id: dogId, event_type: eventType, ...normalizedChanges })) {
-      return { status: 'saved', value: result.data };
+    const row = result.error ? null : normalizeHealthHistoryRecord(result.data);
+    if (!result.error && row && matchesHealthHistory(row, { id, dog_id: dogId, event_type: eventType, ...normalizedChanges })) {
+      return { status: 'saved', value: row };
     }
     failure = result.error ?? new Error('Empty health history update response');
   } catch (error) { failure = error; }
@@ -611,7 +631,7 @@ export async function deleteHealthHistory(
   dogId: string,
   eventType: HealthHistoryType,
   id: string,
-  previous: Pick<HealthHistoryRecord, 'occurred_on' | 'description'>,
+  previous: Pick<HealthHistoryRecord, 'occurred_on' | 'occurred_time' | 'description'>,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
 ): Promise<WriteOutcome<null>> {
   let failure: unknown = null;
@@ -619,6 +639,7 @@ export async function deleteHealthHistory(
     let query = client.from('dog_events').delete()
       .eq('dog_id', dogId).eq('event_type', eventType).eq('id', id)
       .eq('occurred_on', previous.occurred_on);
+    query = previous.occurred_time === null ? query.is('occurred_time', null) : query.eq('occurred_time', `${previous.occurred_time}:00`);
     query = previous.description === null ? query.is('description', null) : query.eq('description', previous.description);
     const result = await withRequestDeadline(async (signal) => await query.abortSignal(signal).select('id').maybeSingle(), timeoutMs);
     if (!result.error && result.data && result.data.id === id) return { status: 'saved', value: null };
@@ -1044,13 +1065,16 @@ function isHealthHistoryType(value: unknown): value is HealthHistoryType {
   return value === 'vaccination' || value === 'vet_visit';
 }
 
-function isHealthHistoryRecord(value: unknown): value is HealthHistoryRecord {
-  if (!value || typeof value !== 'object') return false;
+function normalizeHealthHistoryRecord(value: unknown): HealthHistoryRecord | null {
+  if (!value || typeof value !== 'object') return null;
   const row = value as Record<string, unknown>;
-  return typeof row.id === 'string' && typeof row.dog_id === 'string' && typeof row.actor_id === 'string'
-    && isHealthHistoryType(row.event_type) && typeof row.occurred_on === 'string'
-    && isValidHealthHistoryDate(row.occurred_on)
-    && (row.description === null || typeof row.description === 'string' && Array.from(row.description).length <= 500);
+  const occurredTime = normalizeHealthHistoryTime(row.occurred_time);
+  if (typeof row.id !== 'string' || typeof row.dog_id !== 'string' || typeof row.actor_id !== 'string'
+    || !isHealthHistoryType(row.event_type) || typeof row.occurred_on !== 'string'
+    || !isValidHealthHistoryDate(row.occurred_on) || occurredTime === undefined
+    || (row.description !== null && (typeof row.description !== 'string' || Array.from(row.description).length > 500))) return null;
+  return { id: row.id, dog_id: row.dog_id, actor_id: row.actor_id, event_type: row.event_type,
+    occurred_on: row.occurred_on, occurred_time: occurredTime, description: row.description };
 }
 
 function isPlannedHealthType(value: unknown): value is PlannedHealthType {
@@ -1130,10 +1154,10 @@ function matchesHealthWeight(
 
 function matchesHealthHistory(
   record: HealthHistoryRecord,
-  expected: Pick<HealthHistoryOperation, 'id' | 'dog_id' | 'event_type' | 'occurred_on' | 'description'>,
+  expected: Pick<HealthHistoryOperation, 'id' | 'dog_id' | 'event_type' | 'occurred_on' | 'occurred_time' | 'description'>,
 ): boolean {
   return record.id === expected.id && record.dog_id === expected.dog_id && record.event_type === expected.event_type
-    && record.occurred_on === expected.occurred_on && record.description === expected.description;
+    && record.occurred_on === expected.occurred_on && record.occurred_time === expected.occurred_time && record.description === expected.description;
 }
 
 function matchesPlannedHealth(

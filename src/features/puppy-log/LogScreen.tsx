@@ -103,6 +103,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     lastSubmitAt.current = timestamp;
     setDuplicate(null);
     setMoreVisible(false);
+    firstUseTip.dismiss();
     onAdd(type);
   }
 
@@ -182,15 +183,10 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const successToast = <Toast visible={mutation?.status === 'saved' && dismissedMutationKey !== successMutationKey} tone="success" confirmed message={mutation?.status === 'saved' ? mutation.kind === 'add' ? `${LOG_EVENT_LABELS[mutation.type]} loggat` : mutation.kind === 'update' ? 'Ändring sparad' : 'Händelsen är raderad' : ''}
     onUndo={mutation?.status === 'saved' && mutation.kind === 'add' ? () => { firstUseTip.dismiss(); onUndo?.(mutation.id); } : undefined} autoDismissMs={2500}
     onAutoDismiss={() => setDismissedMutationKey(successMutationKey)} />;
-  const mutationFeedback = <>
-      {dogReactionKey ? <View style={styles.confirmationRow}><View style={styles.confirmationToast}>{successToast}</View><DogMascot reactionKey={dogReactionKey} /></View> : successToast}
-      <Toast visible={loadMoreError} tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore ? () => { firstUseTip.dismiss(); return onLoadMore(); } : undefined} />
-  </>;
-
   return <View style={styles.screen}>
     <AppBar mode="Title" title="Logga" />
     {firstUseTip.visible ? <FirstUseTip text="Tryck på Fler för fler loggtyper." onDismiss={firstUseTip.dismiss} /> : null}
-    {mutationFeedback}
+    <Toast visible={loadMoreError} tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore ? () => { firstUseTip.dismiss(); return onLoadMore(); } : undefined} />
     <Toast visible={!editingEvent && mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} onCancel={() => { firstUseTip.dismiss(); onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
     <Toast visible={!editingEvent && mutation?.status === 'unsure'} tone="uncertain" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} />
     {loading ? <>
@@ -205,6 +201,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       <View style={styles.grid}>
         {layoutEditing ? <LayoutEditor layout={layout} onMove={moveLayoutType} onDone={() => setLayoutEditing(false)} error={layoutError} /> : renderRows(layout.primary)}
       </View>
+      {dogReactionKey ? <View style={styles.confirmationRow}><View style={styles.confirmationToast}>{successToast}</View><DogMascot reactionKey={dogReactionKey} /></View> : successToast}
       {!layoutEditing && <View style={styles.moreRow}><QuickLogTile subtle label="Fler" accessibilityLabel={moreVisible ? 'Dölj fler loggtyper' : 'Visa fler loggtyper'} accessibilityHint="Håll inne för att ändra snabbvalens layout" icon={<View style={styles.moreIcon}><Ionicons name={moreVisible ? 'close-outline' : 'grid-outline'} size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></View>} disabled={disabled} onLongPress={() => { firstUseTip.dismiss(); startLayoutEdit(); }} onPress={() => { firstUseTip.dismiss(); toggleMore(); }} /></View>}
       {!layoutEditing && moreVisible ? <View style={styles.grid} accessibilityLabel="Fler loggtyper">{renderRows(layout.more)}</View> : null}
 

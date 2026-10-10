@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Alert, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { DatePickerField, InfoModal, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { DatePickerField, InfoModal, MessageCard, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
 import { Toast } from '../../components/ui/Toast';
 import {
   isValidHealthHistoryDate,
+  isValidHealthHistoryTime,
   normalizeHealthHistoryDescription,
   type HealthHistoryRecord,
   type HealthHistoryType,
@@ -41,12 +42,13 @@ export function HealthHistoryScreen({
   conflict?: { current: HealthHistoryRecord | null } | null;
   onRetry?: () => void;
   onResolveConflict?: () => void;
-  onSave?: (id: string | null, type: HealthHistoryType, date: string, note: string) => Promise<boolean>;
+  onSave?: (id: string | null, type: HealthHistoryType, date: string, time: string | null, note: string) => Promise<boolean>;
   onDelete?: (id: string) => Promise<boolean>;
 }) {
   const [editingId, setEditingId] = useState<string | null>(initialEditingId);
   const [type, setType] = useState<HealthHistoryType>(records?.find((row) => row.id === initialEditingId)?.event_type ?? initialType);
   const [date, setDate] = useState(records?.find((row) => row.id === initialEditingId)?.occurred_on ?? localDate());
+  const [time, setTime] = useState(records?.find((row) => row.id === initialEditingId)?.occurred_time ?? '');
   const [note, setNote] = useState(records?.find((row) => row.id === initialEditingId)?.description ?? '');
   const [formError, setFormError] = useState('');
   const [infoVisible, setInfoVisible] = useState(false);
@@ -73,6 +75,7 @@ export function HealthHistoryScreen({
     setEditingId(null);
     setType('vaccination');
     setDate(localDate());
+    setTime('');
     setNote('');
     setFormError('');
     Keyboard.dismiss();
@@ -84,12 +87,17 @@ export function HealthHistoryScreen({
       setFormError('Ange ett giltigt datum som inte ligger i framtiden.');
       return;
     }
+    const occurredTime = time === '' ? null : time;
+    if (!isValidHealthHistoryTime(occurredTime)) {
+      setFormError('Ange en giltig tid då händelsen inträffade.');
+      return;
+    }
     const normalized = normalizeHealthHistoryDescription(note);
     if (normalized === undefined) {
       setFormError('Anteckningen får innehålla högst 500 tecken.');
       return;
     }
-    if (await onSave?.(editingId, type, date, normalized ?? '')) resetForm();
+    if (await onSave?.(editingId, type, date, occurredTime, normalized ?? '')) resetForm();
   }
 
   function confirmDelete(record: HealthHistoryRecord) {
@@ -129,7 +137,7 @@ export function HealthHistoryScreen({
       {conflict && <View style={styles.conflictCard}>
         <Text style={styles.conflictTitle} accessibilityRole="header">Aktuell sparad version</Text>
         {conflict.current
-          ? <Text style={styles.recordNote}>{typeLabel(conflict.current.event_type)} · {conflict.current.occurred_on}{conflict.current.description ? `\n${conflict.current.description}` : ''}</Text>
+          ? <Text style={styles.recordNote}>{typeLabel(conflict.current.event_type)} · {conflict.current.occurred_on}{conflict.current.occurred_time ? ` · ${conflict.current.occurred_time}` : ''}{conflict.current.description ? `\n${conflict.current.description}` : ''}</Text>
           : <Text style={styles.recordNote}>Posten finns inte längre.</Text>}
         <Text style={styles.conflictBody}>Den väntande ändringen lämnas orörd tills du väljer hur du vill fortsätta.</Text>
         <PrimaryButton title="Använd aktuell historik och börja om" disabled={busy} onPress={resolveConflict} />
@@ -151,6 +159,8 @@ export function HealthHistoryScreen({
               icon="medical-outline" label="Veterinärbesök" onPress={() => setType('vet_visit')} />
           </View>
           <DatePickerField label="Datum" disabled={blocked} onChangeText={setDate} value={date} />
+          <TimePickerField label="Tid (valfri)" disabled={blocked} onChangeText={setTime} value={time} />
+          <Text style={styles.timeHint}>Välj när händelsen inträffade, eller lämna tomt.</Text>
           <View style={styles.field}>
             <Text style={styles.label}>Kort anteckning (frivillig)</Text>
             <TextInput accessibilityLabel="Kort anteckning, högst 500 tecken" editable={!blocked} multiline
@@ -203,6 +213,7 @@ const styles = StyleSheet.create({
   label: { color: tokens.colors.textPrimary, ...tokens.typography.caption, fontWeight: '700', marginBottom: tokens.spacing.xs },
   noteInput: { minHeight: tokens.size.touchMin * 2, paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body, textAlignVertical: 'top' },
   characterHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption, textAlign: 'right', marginTop: tokens.spacing.xs },
+  timeHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs, marginBottom: tokens.spacing.md },
   conflictCard: { marginTop: tokens.layout.listGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.warning, backgroundColor: tokens.colors.warningSurface },
   conflictTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
   conflictBody: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.md },

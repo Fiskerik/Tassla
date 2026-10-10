@@ -27,6 +27,7 @@ import {
   isValidHealthWeightDate,
   isValidHealthWeightKg,
   isValidHealthHistoryDate,
+  isValidHealthHistoryTime,
   isValidPlannedHealthDate,
   normalizeHealthHistoryDescription,
   normalizePlannedHealthDescription,
@@ -1258,19 +1259,19 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
-  function saveHealthHistory(id: string | null, eventType: HealthHistoryType, occurredOn: string, note: string): Promise<boolean> {
+  function saveHealthHistory(id: string | null, eventType: HealthHistoryType, occurredOn: string, occurredTime: string | null, note: string): Promise<boolean> {
     const lifetime = healthHistoryLifetime.current;
     if (healthHistoryMutationInFlight.current || pendingHealthHistoryMutation.current || healthHistoryState !== 'ready') return Promise.resolve(false);
-    if (!isValidHealthHistoryDate(occurredOn)) return Promise.resolve(false);
+    if (!isValidHealthHistoryDate(occurredOn) || !isValidHealthHistoryTime(occurredTime)) return Promise.resolve(false);
     const description = normalizeHealthHistoryDescription(note);
     if (description === undefined || (eventType !== 'vaccination' && eventType !== 'vet_visit')) return Promise.resolve(false);
     if (id === null) {
-      const operation: HealthHistoryOperation = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, event_type: eventType, occurred_on: occurredOn, description };
+      const operation: HealthHistoryOperation = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, event_type: eventType, occurred_on: occurredOn, occurred_time: occurredTime, description };
       return runHealthHistoryMutation({ kind: 'insert', operation, lifetime });
     }
     const previous = healthHistoryRows.current.find((row) => row.id === id && row.event_type === eventType);
     if (!previous) return Promise.resolve(false);
-    return runHealthHistoryMutation({ kind: 'update', id, eventType, previous, changes: { occurred_on: occurredOn, description }, lifetime });
+    return runHealthHistoryMutation({ kind: 'update', id, eventType, previous, changes: { occurred_on: occurredOn, occurred_time: occurredTime, description }, lifetime });
   }
 
   function removeHealthHistory(id: string): Promise<boolean> {
@@ -1885,6 +1886,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       dog={dog}
       breed={breeds.find((breed) => breed.id === dog.breed_id)?.name ?? ''}
       events={displayEvents}
+      healthHistory={healthHistory}
+      healthHistoryState={healthHistoryState}
       plans={plannedHealth}
       logState={logState}
       planState={plannedHealthState}
@@ -2124,10 +2127,10 @@ function sameHealthWeight(
 
 function sameHealthHistory(
   current: HealthHistoryRecord,
-  expected: Pick<HealthHistoryRecord, 'id' | 'dog_id' | 'event_type' | 'occurred_on' | 'description'>,
+  expected: Pick<HealthHistoryRecord, 'id' | 'dog_id' | 'event_type' | 'occurred_on' | 'occurred_time' | 'description'>,
 ): boolean {
   return current.id === expected.id && current.dog_id === expected.dog_id && current.event_type === expected.event_type
-    && current.occurred_on === expected.occurred_on && current.description === expected.description;
+    && current.occurred_on === expected.occurred_on && current.occurred_time === expected.occurred_time && current.description === expected.description;
 }
 
 function samePlannedHealth(

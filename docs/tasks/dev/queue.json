@@ -3135,6 +3135,177 @@
       "next_step": "MOTION-04 is pushed to origin/motion-03-first-use-tip (implementation ac2b940; documentation f2b1afc). Codemagic/TestFlight build remains unknown. Rendered/native accessibility and phone checks are NOT TESTABLE here and remain in Erik’s batched mobile QA under decision 0005."
     },
     {
+      "id": "HOME-TIME-01",
+      "title": "Valbar tid för logg/hälsohändelser och visning på Hem",
+      "mvp_requirement": "Eriks uttryckliga begäran 2026-10-10 om valbar tid vid loggning/utförd hälsa och visning på Hem",
+      "plan": "docs/plans/HOME-TIME-01-time-choice-and-home-timeline.md v7.1 (approved)",
+      "write_paths": [
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/home-timeline.ts",
+        "src/features/home/README.md",
+        "src/features/health/HealthHistoryScreen.tsx",
+        "src/features/health/HealthScreen.tsx",
+        "src/features/health/README.md",
+        "src/data/workspace-data.ts",
+        "supabase/migrations/202610100001_health_history_time.sql",
+        "docs/plans/HOME-TIME-01-time-choice-and-home-timeline.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HOME-TIME-01.md",
+        "docs/design/evidence/home-time-01"
+      ],
+      "acceptance": [
+        "Quick log remains one tap with its existing current event timestamp and no time prompt; health form explicitly labels time optional and allows both blank save and a saved chosen time; existing known time remains prefilled on edit and legacy null stays blank",
+        "Performed vaccination/veterinary records persist nullable occurred_time without inventing a time for legacy date-only records; only minimal update grant changes and existing RLS ownership remain intact",
+        "Home receives health-history rows and load state from ProductWorkspace; it combines every same-day log event and performed vaccination/veterinary entry without truncating the timeline, displays stored times and orders known times deterministically; unknown legacy times remain unlabeled",
+        "DevelopmentPreview keeps the existing one-tap quick-log behavior without a time-selection step",
+        "Existing add/edit/delete/readback, undo, retry, conflict and owner-scoped mutation behavior remains truthful",
+        "No planned-health/reminder, weight, PDF, data-purpose, dependency or live database changes; Erik explicitly scoped work to log + vaccination/veterinary history",
+        "Focused/full checks, migration/grant policy checks and render evidence for narrow/wide/large text are recorded; actual database/RLS is reported NOT TESTABLE unless approved synthetic environment is available"
+      ],
+      "checks": [
+        "Focused log, health history, workspace data and Home timeline tests; pnpm check (not run at this checkpoint per coordinator instruction)",
+        "iOS export, git diff --check and python tools/dev_flow.py validate (not run at this checkpoint per coordinator instruction)",
+        "Independent QA, Reviewer and Security review of frozen data/schema diff",
+        "Rendered optional health-time field in blank-save and selected-time states, Home timeline and toast matrix at narrow/wide/large text compared with vision_rev01.jpg; DB/RLS probe only in approved synthetic dev DB"
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v4, Critic PROCEED v4, Security APPROVE v4 saved in docs/plans/HOME-TIME-01-time-choice-and-home-timeline.md. Erik explicit-time and scope answers recorded."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "v6 implementation resumed after Architect APPROVE, Critic PROCEED and mirrored DevelopmentPreview acceptance. Exact write paths in queue and plan; no database migration execution, commit or push."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Implementation paused because exact v4 plan changed to v5 to include DevelopmentPreview synthetic log path. Only partial edits in workspace-data.ts and the new unexecuted migration exist; no UI/test work, migration execution, commit or push. Renew Architect/Critic review before resuming."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "v6 corrected stale weight pending text and added DevelopmentPreview selected occurredAt pass-through acceptance; renewed Architect APPROVE and Critic PROCEED v6 saved in plan. Security APPROVE v4 unchanged."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v6; Critic PROCEED v6; Security APPROVE v4 remains valid for unchanged schema/security scope. Preview selected occurredAt acceptance mirrored in plan and queue."
+        },
+        {
+          "from": "ready",
+          "to": "blocked",
+          "actor": "implementer",
+          "evidence": "HOME-TIME-01 v6 implementation is present. No test files were changed and no check/test/build commands were run per coordinator instruction. Migration was not executed. Independent static Security APPROVE and Reviewer found no blocking code issues; rendered/device QA and automated checks remain outstanding. No commit/push. See docs/releases/HOME-TIME-01.md."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Erik clarified that quick log must remain one tap with no required time and health-history time is optional. Plan v7.1 records the corrected behavior and Critic's request to label the field and verify blank/filled save states. v6 approvals do not cover the changed contract; renew Architect/Critic approval before updating implementation. Product APPROVE is recorded in the plan."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v7.1 and Critic PROCEED v7.1 recorded in plan; Product APPROVE corrected rule. Quick log one tap; optional health time, blank/filled save states required."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement approved plan v7.1 in existing local changes: restore one-tap quick log; make performed health time optional; preserve Home display for selected times. No tests unless requested, no live migration, no commit/push."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "implementer",
+          "evidence": "v7.1 code and documentation changes are present. No test/check/build commands were run and no test files changed. Independent Security APPROVE, source QA and Reviewer found no blocking code gaps; rendered/device QA and automated checks remain outstanding. No live migration, commit or push. See docs/releases/HOME-TIME-01.md."
+        }
+      ],
+      "status": "blocked",
+      "next_step": "Run local automated checks when authorized and capture render evidence for blank/filled health time, Home timeline and UI-09 toast matrix; fill the design checklist. Security, source QA and code Reviewer reviews are complete. No live migration, commit or push."
+    },
+    {
+      "id": "UI-09",
+      "title": "Kompakt loggbekräftelse med grön bock",
+      "mvp_requirement": "Eriks uttryckliga UI-begäran 2026-10-10 om mindre grön sparbekräftelse, bockikon och placering närmare loggen",
+      "plan": "docs/plans/UI-09-toast-feedback-ux-spec.md v3",
+      "write_paths": [
+        "src/components/ui/Toast.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "tests/toast-compact-policy.test.mjs",
+        "tests/README.md",
+        "docs/plans/UI-09-toast-feedback-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/UI-09.md",
+        "docs/design/evidence/ui-09"
+      ],
+      "acceptance": [
+        "Only confirmed saved outcomes receive the compact green treatment and decorative green check; existing truthful wording and undo behavior remain intact",
+        "All confirmed LogScreen outcomes (add, edit, delete) move from under the app bar to after standard quick-log choices and before Fler; loading, error, unsure, retry, cancel and dismiss semantics remain intact",
+        "The confirmation stays visible at a narrow mobile height with Fler expanded and collapsed, without covering controls or the undo action",
+        "The icon is hidden from screen readers and the confirmation remains understandable without color; undo touch target, small widths and large text remain usable",
+        "Other existing success-toast callers receive the compact check treatment without a placement change",
+        "No time/date/data-schema changes are included; those are planned separately for Home and health history"
+      ],
+      "checks": [
+        "Focused toast policy tests and pnpm check",
+        "iOS export, git diff --check and python tools/dev_flow.py validate",
+        "Independent QA and Reviewer",
+        "Rendered success and error/undo states compared with vision_rev01.jpg, small/large layout and large text; otherwise itemize NOT TESTABLE"
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE UI-09 plan v3; Critic PROCEED WITH CHANGES v3 after adding visibility criteria and clarifying all saved LogScreen outcomes. Review notes saved in docs/plans/UI-09-toast-feedback-ux-spec.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Architect APPROVE and Critic PROCEED WITH CHANGES for v3 saved; implementation scope assigned to implementer with no commit/push."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementer färdig: fokuserad policy 4/4, pnpm check 31 testfiler/0 lintfel, iOS-export 1,418 moduler, diffcheck och kövalidering PASS. Visuell rendering NOT TESTABLE; screenshotgate kvar enligt spec."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA code PASS: focused 4/4, pnpm check 31 test files, diffcheck and queue validate PASS. Rendered/mobile layout remains NOT TESTABLE; screenshots absent."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer BLOCK: static code/API checks pass, but required rendered comparison/checklist is absent; visual acceptance is NOT TESTABLE in current RN Web tool environment. No commit/push."
+        }
+      ],
+      "next_step": "Render success/error/undo states with small and expanded Fler at narrow/wide layouts, complete the large-text checklist per docs/design-rules.md §14, then obtain renewed visual PASS. No commit/push yet."
+    },
+    {
       "id": "FIX-38",
       "title": "Rätta Toast lintfel och kör preflight inför commit/push",
       "mvp_requirement": "CodeMagic pnpm check samt repots obligatoriska commit- och pushkontroller",
