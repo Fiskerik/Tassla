@@ -3,6 +3,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { AccessibilityInfo, Alert, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppBar, BottomSheet, Button, Card, Dialog, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast } from '../../components/ui';
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
+import { ScreenTransition } from '../../components/ui/Motion';
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
 import { decideQuickLogPress, groupLogEventsByLocalDate, hasRecentCategoryLog, localDateTimeParts, LOG_ENTRY_TYPES, LOG_EVENT_LABELS, parseLocalDateTime, summarizePottyPatterns, type LogEvent, type LogEventChanges, type LogEventType } from './log-model';
@@ -176,9 +177,11 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         {group.date !== localDate() ? <SectionHeader title={heading(group.date)} variant="date" /> : null}
         {group.events.map((event) => {
           const rowPending = mutation?.id === event.id && mutation.status === 'pending';
+          const newlyConfirmed = mutation?.kind === 'add' && mutation.status === 'saved' && mutation.id === event.id;
           const detail = [event.note, rowPending ? 'Sparar…' : null, event.origin === 'example' ? 'Exempel' : mode === 'preview' ? 'Testpost' : null].filter(Boolean).join(' · ');
           const parts = localDateTimeParts(event.occurredAt);
-          return <ListRow key={event.id} title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}${event.note ? `, ${event.note}` : ''}${rowPending ? ', sparar' : ''}, tryck för att ändra`} category={event.type} time={parts.time} detail={detail || undefined} onPress={() => setEditingId(event.id)} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} />;
+          const row = <ListRow title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}${event.note ? `, ${event.note}` : ''}${rowPending ? ', sparar' : ''}, tryck för att ändra`} category={event.type} time={parts.time} detail={detail || undefined} onPress={() => setEditingId(event.id)} disabled={busy || Boolean(mutation && mutation.status !== 'saved')} />;
+          return newlyConfirmed ? <ScreenTransition key={event.id} transitionKey={event.id}>{row}</ScreenTransition> : <View key={event.id}>{row}</View>;
         })}
       </View>)}
       {patterns.length > 0 ? <>
