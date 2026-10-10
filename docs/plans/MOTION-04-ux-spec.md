@@ -49,7 +49,7 @@ Använd `image_gen` för en enda transparent PNG, cirka 512 px, med Tasslas varm
 - `tests/dog-mascot-policy.test.mjs`
 - `docs/tasks/dev/queue.json`
 - `docs/tasks/dev/rapport.md`
-- `docs/releases/MOTION-04.md`
+- `docs/releases/HISTORY-2026.md#motion-04`
 - `docs/design/evidence/motion-04/` (endast faktisk renderad evidens eller specificerad NOT TESTABLE)
 
 ## Acceptans och kontroller

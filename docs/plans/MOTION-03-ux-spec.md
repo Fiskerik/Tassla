@@ -66,7 +66,7 @@ Designreglernas skärmbildsmatris, stor text, skärmläsare och liten/större br
 - `tests/first-use-tip-policy.test.mjs`
 - `tests/account-delete.test.mjs` (existing account-delete test suite)
 - `tests/README.md`
-- `docs/tasks/dev/queue.json`, `docs/tasks/dev/rapport.md`, `docs/releases/HISTORY-2026.md#motion-02`, `docs/releases/MOTION-03.md`
+- `docs/tasks/dev/queue.json`, `docs/tasks/dev/rapport.md`, `docs/releases/HISTORY-2026.md#motion-02`, `docs/releases/HISTORY-2026.md#motion-03`
 - `docs/design/evidence/motion-03/` endast när bilder finns tillgängliga
 
 ## Acceptans och verifiering

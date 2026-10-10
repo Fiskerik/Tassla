@@ -24,6 +24,8 @@ Avslutade paketnotiser har samlats här. Varje post bevarar ursprunglig status o
 | [FIX-38](#fix-38) | 2026-10-10 | Implementerad; QA PASS och oberoende code review PASS | `3585c59`, `2198e55ed20a1a60aaafca0c9364c6dc3a523bae` |
 | [MOTION-01](#motion-01) | 2026-10-10 | DONE för ägaraccepterad omfattning; kod-QA/Reviewer PASS; full check PASS; native evidensundantag godkänt av Erik | `bec6971`, `a44ba16`, `70612e9` |
 | [MOTION-02](#motion-02) | 2026-10-10 | branch pushad; oberoende QA/Reviewer PASS; mobil-QA uppskjuten enligt beslut 0005 | `4267d457`, `a020779`, `bff79b9`, `9012b1d` |
+| [MOTION-03](#motion-03) | 2026-10-10 | implementerad, lokal QA/Reviewer PASS och pushad på `motion-03-first-use-tip`; ingen Codemagic/TestFlight-build verifierad | `117c406` |
+| [MOTION-04](#motion-04) | 2026-10-10 | implementerad, oberoende QA/Reviewer PASS och pushad på `motion-03-first-use-tip`; rendering/native/telefon kvar för samlad mobil-QA | `ac2b940`, `f2b1afc` |
 | [UI-06](#ui-06) | 2026-10-10 | implementerad lokalt; teknisk QA och code review PASS; visuell QA PASS med begränsningar efter UI-07; native iPhone safe-area/motion ej verifierad | `4d230688fd6acae204112bf475eb1828bcb01231` |
 | [UI-07](#ui-07) | 2026-10-10 | implementerad och pushad; QA PASS; oberoende code review PASS | `e50da50`, `3adf73d` |
 | [P04-CONTENT](#p04-content) | okänt | `published` i bundlen, medan onboarding-only-versionen förblir `draft` för att inte läcka till den vanliga åldersbaserade feeden | ej angivet |
@@ -442,6 +444,22 @@ Lokal kod-/testdiff SHA-256 mot `origin/main`: `42e14559522f5c1fc236d857d3646b04
 ## Nästa sprint/paket
 
 Erik har godkänt MOTION-02 för fortsatt arbete och beslutat att telefonkontrollen samlas med senare MOTION-slices. Codemagic-build, native beteende, skärmbilder, VoiceOver/TalkBack och stor text är ännu inte verifierade; de är NOT TESTABLE tills den gemensamma mobil-QA:n. MOTION-03 fortsätter efter sina egna plan-, QA- och Reviewer-grindar enligt [beslut 0005](../decisions/0005-motion-batched-mobile-qa.md).
+
+## MOTION-03
+
+Datum: 2026-10-10. Jämförelsebas `9012b1d`; leveranscommit `117c406`; pushad på `origin/motion-03-first-use-tip` när branchens aktuella spets var `f2b1afc`. Codemagic/TestFlight-build är okänd.
+
+Implementerat: ägarbundet, avfärdbart första-användningstips i LogScreen om `Fler`. Läsning, skrivning och radering serialiseras per ägarnyckel. Misslyckad skrivning blockerar remount-läsning; tombstone vid kontoradering hindrar en samtidig skrivning från att återskapa nyckeln.
+
+Verifiering: plan/spec v4 Architect APPROVE, Critic PROCEED och Product-godkänd copy. Compliance fann ingen blockerare för den avgränsade SecureStore-flaggan med ägarseparation, minimering och cleanup; slutlig beta-rättslig grund/integritetsinformation kvarstår som releasefråga. `pnpm check` PASS med 29/29 testfiler, 0 lintfel och 35 varningar; iOS-export 1,416 moduler, fokuserad QA, diffcheck, queue validation, oberoende QA och Reviewer PASS. Device/native rendering, VoiceOver/TalkBack och stor text är NOT TESTABLE här; samlas i Eriks mobil-QA enligt beslut 0005.
+
+## MOTION-04
+
+Datum: 2026-10-10. Jämförelsebas `9012b1d`. Implementation: `ac2b940`; uppdaterad checkpoint-/release-dokumentation: `f2b1afc`. Pushad på `origin/motion-03-first-use-tip`; branchspets efter push `f2b1afc`. Codemagic/TestFlight-build är okänd.
+
+Implementerat: transparent 512×512 RGBA-valpfigur (161,690 bytes), med källa och exakt prompt dokumenterade i `assets/images/README.md`. Figuren visas med en kort engångsreaktion efter en ny bekräftat sparad logg eller exakt bekräftat träningssteg. Befintlig textbärande bekräftelse finns kvar; ingen Home-hälsning eller persistent/affärstillstånd tillkom. Träningsresultat skyddas mot callback efter avmontering. Reducerad rörelse inväntar samma query-/eventkälla innan reaktionsnyckeln konsumeras; en stale query eller fallback kan inte skriva över ett nyare event.
+
+Verifiering: MOTION-04 plan v1 Architect APPROVE och Critic PROCEED. `pnpm check` PASS med 30/30 testfiler, 0 fel/skip och 35 lintvarningar; iOS-export 1,418 moduler; diffcheck, queue validation, oberoende QA och Reviewer PASS. Renderad layout, native animation, reducerad-rörelse på enhet, VoiceOver/TalkBack, stor text och fysisk telefon är NOT TESTABLE här och lämnas till Eriks samlade mobil-QA. Ingen TestFlight-version/build verifierad.
 
 ## UI-06
 
