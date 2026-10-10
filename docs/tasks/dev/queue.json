@@ -2970,7 +2970,7 @@
           "evidence": "Independent Reviewer PASS on corrected diff; no code findings. Prior reduced-motion replay finding is closed. Fresh QA PASS, full check 399/399, bundle and focused checks PASS; visual/native remains NOT TESTABLE. Commit 965cb94 was created on motion-02-phone-qa; pre-commit check passed (398 pass, 1 skip). Push pre-push pnpm check passed, but full-tree whitespace validation found legacy whitespace in 45 files outside MOTION-02 scope; no hook bypass. Push is pending compliant cleanup. MOTION-03 remains gated on Erik phone QA."
         }
       ],
-      "next_step": "Commit 965cb94 exists locally on motion-02-phone-qa. Push is blocked by the active pre-push full-tree whitespace findings in 45 older, out-of-scope files. Do not bypass the hook; handle legacy whitespace according to repo policy, then rerun push checks. MOTION-03 remains gated on Erik phone QA."
+      "next_step": "MOTION-02 commit a020779 and whitespace cleanup commit bff79b9 are pushed on motion-02-phone-qa; active pre-commit/pre-push checks passed. Build this branch in Codemagic and have Erik phone-test MOTION-02; MOTION-03 remains gated on that result."
     },
     {
       "id": "MOTION-03",
