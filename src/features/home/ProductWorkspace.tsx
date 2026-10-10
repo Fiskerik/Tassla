@@ -89,7 +89,7 @@ import { AccountSettingsScreen } from '../account/AccountSettingsScreen';
 import { BetaInfoScreen } from '../account/BetaInfoScreen';
 import { requestAccountDeletion, type AccountDeleteResult } from '../account/account-delete';
 import { createAnalyticsService } from '../../analytics/analytics-service';
-import { deleteNotificationPreferences } from '../../notifications/notification-storage';
+import { deleteFirstUseTipStatus, deleteNotificationPreferences } from '../../notifications/notification-storage';
 import { cleanupStalePassportFiles } from '../passport/passport-export';
 import { futureFireTimeForPlan, parseReminderPayload, type NotificationPreferences } from '../../notifications/notification-model';
 import { reminderService, type ReminderContext, type ReminderReconcileResult } from '../../notifications/notification-service';
@@ -1756,6 +1756,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       try {
         if (!isCurrent()) return { status: 'confirmed' };
         await deleteNotificationPreferences(ownerId);
+      } catch {
+        cleanupFailed = true;
+      }
+      try {
+        if (!isCurrent()) return { status: 'confirmed' };
+        await deleteFirstUseTipStatus(ownerId);
       } catch {
         cleanupFailed = true;
       }

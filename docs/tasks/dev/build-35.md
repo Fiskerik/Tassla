@@ -15,11 +15,11 @@ Erik har bett om att rätta byggstoppet i `Tassla_35_artifacts.zip`, hitta event
 5. QA verifierar kontrollerna oberoende och rättar inte appkod. Reviewer granskar slutlig diff och importer mot installerad React/React Native-version utan egna ändringar.
 6. Koordinatorn sparar granskningsresultat och checkpoint, committar, pushar `remove-ai-slop` efter QA/Reviewer PASS och verifierar att remote pekar på exakt leverans-SHA.
 
-Berörda filer: `src/components/ui/MainSwipeNavigation.tsx`, `src/features/home/ProductWorkspace.tsx`, `tests/account-delete.test.mjs`, `tests/notifications.test.mjs`, denna taskfil, `docs/tasks/dev/queue.json`, `docs/tasks/dev/rapport.md`, `docs/releases/BUILD-35.md`. Ingen avsedd ändring av godkänt appbeteende eller Supabase. Kodändringen gäller render-/lintstruktur, så visuellt PASS kan inte hävdas utan rendering; ingen skärmbild tas för denna byggkorrigering. Om faktisk UI- eller beteendeändring krävs gäller designpolicyn och separat visuell QA.
+Berörda filer: `src/components/ui/MainSwipeNavigation.tsx`, `src/features/home/ProductWorkspace.tsx`, `tests/account-delete.test.mjs`, `tests/notifications.test.mjs`, denna taskfil, `docs/tasks/dev/queue.json`, `docs/tasks/dev/rapport.md`, `docs/releases/HISTORY-2026.md#build-35`. Ingen avsedd ändring av godkänt appbeteende eller Supabase. Kodändringen gäller render-/lintstruktur, så visuellt PASS kan inte hävdas utan rendering; ingen skärmbild tas för denna byggkorrigering. Om faktisk UI- eller beteendeändring krävs gäller designpolicyn och separat visuell QA.
 
 Acceptans: det rapporterade TS2305-felet, de tre observerade lintfelen och den stale kontoraderingsassertionen är rättade utan avsedd gest-/navigationsändring; hela `pnpm check` och iOS-bundlingen passerar lokalt, diffen är ren och pushens commit kan verifieras på remote. Native signerad build och fysisk telefon är separata kontroller.
 
-Release-logg: [BUILD-35](../../releases/BUILD-35.md).
+Release-logg: [BUILD-35](../../releases/HISTORY-2026.md#build-35).
 
 ## Planreview
 

@@ -4,7 +4,7 @@
 
 ## Entry points och dataflöde
 
-- `ui/index.ts` exporterar knappar, AppBar/BottomNav, kort/rader, kategori-chip, formulär, återkoppling, ActionMenu, Skeleton och modaler.
+- `ui/index.ts` exporterar knappar, AppBar/BottomNav, kort/rader, kategori-chip, formulär, återkoppling, ActionMenu, Skeleton, modaler och förstaanvändningstips.
 - `IconChip` äger kategoriikonernas och kategorifärgernas gemensamma mappning. `PoopIcon` ritar bajsikonen med React Native-vyer eftersom ikonbiblioteket saknar motivet.
 - `ComponentGalleryScreen` visar svenska exempel och tillstånd. Den nås endast från den redan flaggade `DevelopmentPreview`; ingen produktionsroute används.
 - `MainSwipeNavigation` ger ett dependencyfritt horisontellt svepresponderlager för produktens sex MVP-ytor. Den aktiveras bara av arbetsytan, använder stora touchmål som tröskel och äger ingen sidstate.
@@ -33,3 +33,5 @@ Datum- och tidsfält är textinmatning med formatledtråd, inte datum-/tidsvälj
 Aktuella webbskärmbilder finns i `docs/design/UI-RESET`; native begränsningar kvarstår enligt verifieringsrapporten där.
 
 `ListRow` visar `complete` med en tillgänglig etikett som slutar med “Genomförd”. `animateCompleteKey` är opt-in för en specifik bekräftad träningsrad; generella färdiga rader får ingen ny rörelse.
+
+`FirstUseTip` är den lilla visuella presentationen och har en separat tillgänglig stängknapp. `useFirstUseTip` läser status för en explicit kontoägare/skärm, ignorerar sena svar efter ägarbyte/avmontering och avfärdar omedelbart. LogScreen markerar kontrollaktivering explicit; scroll/fokus och tom yta räknas inte. SecureStore fel döljer tipset resten av appprocessen för ägaren/skärmen, utan att påstå att status sparats. Status raderas tillsammans med kontoägarens lokala data efter bekräftad serverradering.

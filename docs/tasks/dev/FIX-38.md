@@ -13,14 +13,14 @@ Toast är återkoppling efter en användarhandling: synligt bekräftar den resul
 ### 1. FIX-38A — Render-pure Toast och CodeMagic-felet
 
 - **Ägare:** Implementer. **Beroenden:** plan v3 Architect APPROVE och Critic PROCEED.
-- **Berörda filer:** `src/components/ui/Toast.tsx`, relevanta befintliga tester vid behov, `docs/plans/FIX-38-ux-spec.md`, denna plan och `docs/releases/FIX-38.md`.
+- **Berörda filer:** `src/components/ui/Toast.tsx`, relevanta befintliga tester vid behov, `docs/plans/FIX-38-ux-spec.md`, denna plan och `docs/releases/HISTORY-2026.md#fix-38`.
 - **Acceptans:** ta bort render-tidsref-läsning/skrivning och synkron state-uppdatering i effect utan att ändra synlig eller utgående Toast-semantik. Inga lint-suppressioner och inga tester inaktiveras.
 - **Verifiering:** `pnpm check`; uppdatera endast verifierat föråldrade källkodsmönster i policytest (aldrig inaktivera test); riktade tester om ändrat; `git diff --check`; separat QA/Reviewer kontrollerar tillstånd, callbacks, timer och reducerad rörelse. Produktuppgift/copy/visuellt mål förblir oförändrade. Separat QA kontrollerar relevanta toasttillstånd vid liten/stor mobilbredd och stor text, skärmläsaretiketter, dynamisk text och reducerad rörelse. Fyll i tillämpliga punkter i design-reglernas checklista. Spara skärmbilder och checklista i `docs/design/FIX-38/`; markera varje saknad rendering, baslinje, tillstånd eller tillgänglighetsmiljö NOT TESTABLE med orsak.
 
 ### 2. FIX-38B — Obligatorisk Git-hook och policy
 
 - **Ägare:** Implementer. **Beroenden:** FIX-38A passerar `pnpm check`; före första commit i detta arbete installeras hookarna först efter att den korrigerade arbetskopian passerat grinden.
-- **Berörda filer:** `.githooks/pre-commit`, `.githooks/pre-push`, idempotent installationsskript eller dokumenterat npm-/pnpm-kommando, `AGENTS.md`, `docs/tasks/dev/queue.json`, denna plan och `docs/releases/FIX-38.md`.
+- **Berörda filer:** `.githooks/pre-commit`, `.githooks/pre-push`, idempotent installationsskript eller dokumenterat npm-/pnpm-kommando, `AGENTS.md`, `docs/tasks/dev/queue.json`, denna plan och `docs/releases/HISTORY-2026.md#fix-38`.
 - **Acceptans:** pre-commit kör `pnpm check` och `git diff --cached --check` och stoppar commit vid fel. Pre-push kör `pnpm check` och `git diff --check <old> <new>` för varje ref som pushas; för en ny remote-branch med nollad gammal remote-SHA jämförs tomt Git-träd mot ny lokal SHA; för borttagen lokal ref med nollad ny local-SHA hoppas endast den ref-diffen över, medan `pnpm check` fortfarande körs. Hookarna är versionshanterade och körbara; installationen sätter `core.hooksPath=.githooks`. `AGENTS.md` kräver kontroller före varje commit och push, dokumenterar aktivering per klon och förbjuder att hookar eller tester hoppas över. Hookarna körs vid vanliga Git-operationer i kloner där de installerats; `--no-verify` kan kringgå Git-hookar men får inte användas.
 - **Verifiering:** installera hookarna efter att FIX-38A:s `pnpm check` passerat och kontrollera `git config --get core.hooksPath`. Testa installationen i ett separat tomt lokalt testrepo; testa också att ett felande kontrollkommando stoppar både commit och push med ofarliga testkommandon. Verifiera whitespace-kontrollen för ny och befintlig ref samt borttagen lokal ref. Kör `git diff --check` och `python tools/dev_flow.py validate`.
 
@@ -34,7 +34,7 @@ Toast är återkoppling efter en användarhandling: synligt bekräftar den resul
 ### 4. FIX-38D — Leverans till GitHub
 
 - **Ägare:** Koordinator. **Beroenden:** FIX-38C QA och Reviewer PASS; release-logg och köpost uppdaterade; lokala hookar aktiva.
-- **Berörda filer:** leveranscommit på `remove-ai-slop`; `docs/tasks/dev/FIX-38.md`, `docs/tasks/dev/queue.json`, `docs/releases/FIX-38.md` uppdaterade med commitresultatet.
+- **Berörda filer:** leveranscommit på `remove-ai-slop`; `docs/tasks/dev/FIX-38.md`, `docs/tasks/dev/queue.json`, `docs/releases/HISTORY-2026.md#fix-38` uppdaterade med commitresultatet.
 - **Acceptans:** skapa commit med normala hookar aktiva och pusha den till `origin/remove-ai-slop`. Bekräfta pushad commit och att branchen är uppdaterad. GitHub Release skapas inte för den här rättningen.
 - **Verifiering:** hookarna kör sina kontroller under commit/push; därefter jämför lokal och remote branch-head och rapportera commit SHA.
 
@@ -48,7 +48,7 @@ Den första FIX-38A-kontrollen blockerades eftersom workspace saknade länkade d
 
 ## Release-logg
 
-`docs/releases/FIX-38.md` skapades före implementation. Uppdatera den vid varje checkpoint med datum, paket-ID/status, bas- och leveranscommit, Major changes, Minor changes, Bug-fixes, verifiering, nästa steg, TestFlight build/version (eller Not applicable) och GitHub Release-status. Ange uttryckligen när leveranscommit/build ännu är okänd; GitHub Release skapas inte.
+`docs/releases/HISTORY-2026.md#fix-38` skapades före implementation. Uppdatera den vid varje checkpoint med datum, paket-ID/status, bas- och leveranscommit, Major changes, Minor changes, Bug-fixes, verifiering, nästa steg, TestFlight build/version (eller Not applicable) och GitHub Release-status. Ange uttryckligen när leveranscommit/build ännu är okänd; GitHub Release skapas inte.
 
 ## Checkpoint 2026-10-10 — FIX-38A och FIX-38B
 

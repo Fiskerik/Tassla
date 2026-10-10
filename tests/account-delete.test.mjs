@@ -665,6 +665,8 @@ test('callback screen delegates exchange to AuthProvider and confirmed server de
   assert.doesNotMatch(callback, /client\.auth\.exchangeCodeForSession/);
   assert.match(workspace, /notificationBusy\s*\|\|\s*attributionBusy\s*\|\|\s*accountDeleteBusy/);
   assert.match(workspace, /remindersCleaned\s*=\s*await reminderService\.cleanupOwner\(ownerId\)/);
+  assert.match(workspace, /await deleteFirstUseTipStatus\(ownerId\)/);
+  assert.match(workspace, /deleteFirstUseTipStatus\(ownerId\)[\s\S]*?catch\s*\{\s*cleanupFailed\s*=\s*true;/);
   assert.match(workspace, /catch\s*\{\s*cleanupFailed\s*=\s*true;/);
   assert.match(workspace, /setAccountDeleteStatus\('confirmed'\)/);
   assert.match(workspace, /signOutCurrentAccountLocally\(ownerId, generation\)/);

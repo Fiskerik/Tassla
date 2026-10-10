@@ -1,4 +1,8 @@
-## Tassla UI-polish checklista (BabyJourney-inspirerad)
+# Äldre UI-polishchecklista
+
+Den här checklistan är ett historiskt idéunderlag och visar inte aktuell status. Aktuella arbetspaket och status finns i [`docs/tasks/dev/queue.json`](tasks/dev/queue.json); leveranshistorik finns i [`docs/releases/HISTORY-2026.md`](releases/HISTORY-2026.md).
+
+## UI-polishchecklista (historiskt underlag)
 
 ### Ålder & personalisering
 - [ ] Hundens ålder visas alltid som "X år Y mån" eller "Y mån" (aldrig totala veckor)

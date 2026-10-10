@@ -26,7 +26,7 @@ Erik rapporterade 2026-10-10 att DS-CODE-01 och LOGGA-QUICK redan hade verifiera
 - Berörda toast-platser där utgång annars skulle klippas: `src/features/puppy-log/LogScreen.tsx`, `src/features/training/PublishedTrainingScreen.tsx`, `src/features/health/HealthHistoryScreen.tsx`, `src/features/health/PlannedHealthScreen.tsx`, `src/features/health/WeightScreen.tsx`, `src/features/notifications/NotificationSettingsScreen.tsx`, `src/features/onboarding/EditDogProfileScreen.tsx`, `src/features/passport/PassportScreen.tsx`
 - `tests/motion-policy.test.mjs`
 - `docs/design-rules.md`, `docs/dev/ui-and-code-standards.md`
-- `docs/plans/MOTION-01-ux-spec.md`, `docs/tasks/dev/MOTION-01.md`, `docs/tasks/dev/queue.json`, `docs/releases/MOTION-01.md`, `docs/tasks/dev/rapport.md`
+- `docs/plans/MOTION-01-ux-spec.md`, `docs/tasks/dev/MOTION-01.md`, `docs/tasks/dev/queue.json`, `docs/releases/HISTORY-2026.md#motion-01`, `docs/tasks/dev/rapport.md`
 - QA-evidens under `docs/design/evidence/motion-01/`
 
 Ingen ny animationstillstånd eller `Animated.Value` läggs till i `ProductWorkspace`. `TrainingScreen.tsx` lämnas orörd. Ändra inte sparstatus, dubblettfönster, analytics eller datalager.

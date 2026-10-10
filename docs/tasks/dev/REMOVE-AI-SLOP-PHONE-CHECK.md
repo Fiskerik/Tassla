@@ -45,4 +45,4 @@ Fyll i efter provet:
 - Reducerad rörelse, VoiceOver och stor text:
 - Problem och skärmdumpar/video:
 
-Se även [MOTION-01-tasken](MOTION-01.md) och [release-loggen](../../releases/MOTION-01.md).
+Se även [MOTION-01-tasken](MOTION-01.md) och [release-loggen](../../releases/HISTORY-2026.md#motion-01).

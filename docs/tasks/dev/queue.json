@@ -216,9 +216,16 @@
       "depends_on": [
         "APP-01-LOCAL"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Erik tillåter callback och startar Codemagic/TestFlight manuellt efter lokala kontroller."
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "done",
+          "actor": "Erik",
+          "evidence": "Erik rapporterar 2026-10-10 att Google Sign-In/OAuth fungerar i Codemagic utan problem och anger APP-01-PHONE som klar. Ägarrapporterat PASS; build/version och separat oberoende verifiering saknas."
+        }
+      ],
+      "next_step": "Klart enligt Eriks användarrapport 2026-10-10: Google Sign-In/OAuth fungerar i Codemagic. Ingen egen telefonkörning eller oberoende verifiering i denna session; build/version okänd."
     },
     {
       "id": "DEV-PREVIEW-01",
@@ -1701,7 +1708,7 @@
         "assets/images/README.md",
         "app.json",
         "docs/tasks/dev/ux-02.md",
-        "docs/releases/UX-02.md"
+        "docs/releases/HISTORY-2026.md#ux-02"
       ],
       "acceptance": [
         "Action feedback is local to the triggering form/card, with exactly one recovery action and no keyboard-close controls",
@@ -2126,7 +2133,7 @@
         "docs/tasks/dev/build-35.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
-        "docs/releases/BUILD-35.md"
+        "docs/releases/HISTORY-2026.md#build-35"
       ],
       "acceptance": [
         "TS2305, tre observerade lintfel och stale kontoraderingstest är rättade utan avsedd gest- eller navigationsändring",
@@ -2269,7 +2276,7 @@
         "docs/tasks/dev/ui-06.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
-        "docs/releases/UI-06.md"
+        "docs/releases/HISTORY-2026.md#ui-06"
       ],
       "acceptance": [
         "Hem har en primär Logga nu-knapp före dagens rader och ingen dubblerad loggåtgärd",
@@ -2484,7 +2491,7 @@
         "docs/plans/UI-07-ux-spec.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
-        "docs/releases/UI-07.md"
+        "docs/releases/HISTORY-2026.md#ui-07"
       ],
       "acceptance": [
         "Every AppBar variant shows centered muted Tassla; page titles, notification, back and close controls remain clear and usable",
@@ -2623,7 +2630,7 @@
         "docs/tasks/dev/fix-36.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
-        "docs/releases/FIX-36.md"
+        "docs/releases/HISTORY-2026.md#fix-36"
       ],
       "acceptance": [
         "Påminnelsetid accepterar endast HH:MM från 00:00 till 23:59 och skickar minuter sedan midnatt",
@@ -2771,7 +2778,7 @@
         "docs/tasks/dev/MOTION-01.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
-        "docs/releases/MOTION-01.md",
+        "docs/releases/HISTORY-2026.md#motion-01",
         "docs/design/evidence/motion-01"
       ],
       "acceptance": [
@@ -2812,7 +2819,7 @@
           "from": "implementing",
           "to": "qa",
           "actor": "implementer",
-          "evidence": "Implementation checkpoint complete after QA correction pass: focused motion policy test PASS, git diff --check PASS, queue validate PASS. Full pnpm check unavailable because registry requests failed EPERM; independent QA and review evidence saved in docs/tasks/dev/MOTION-01.md and docs/releases/MOTION-01.md."
+          "evidence": "Implementation checkpoint complete after QA correction pass: focused motion policy test PASS, git diff --check PASS, queue validate PASS. Full pnpm check unavailable because registry requests failed EPERM; independent QA and review evidence saved in docs/tasks/dev/MOTION-01.md and docs/releases/HISTORY-2026.md#motion-01."
         },
         {
           "from": "qa",
@@ -2877,7 +2884,7 @@
         "docs/plans/MOTION-02-ux-spec.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
-        "docs/releases/MOTION-02.md",
+        "docs/releases/HISTORY-2026.md#motion-02",
         "docs/design/evidence/motion-02"
       ],
       "acceptance": [
@@ -2967,53 +2974,90 @@
           "from": "review",
           "to": "done",
           "actor": "reviewer",
-          "evidence": "Independent Reviewer PASS on corrected diff; no code findings. Prior reduced-motion replay finding is closed. Fresh QA PASS, full check 399/399, bundle and focused checks PASS; visual/native remains NOT TESTABLE. Commit 965cb94 was created on motion-02-phone-qa; pre-commit check passed (398 pass, 1 skip). Push pre-push pnpm check passed, but full-tree whitespace validation found legacy whitespace in 45 files outside MOTION-02 scope; no hook bypass. Push is pending compliant cleanup. MOTION-03 remains gated on Erik phone QA."
+          "evidence": "Independent Reviewer PASS on corrected diff; no code findings. Prior reduced-motion replay finding is closed. Fresh QA PASS, full check 399/399, bundle and focused checks PASS; visual/native remains NOT TESTABLE. Commit 965cb94 was created on motion-02-phone-qa; pre-commit check passed (398 pass, 1 skip). Push pre-push pnpm check passed, but full-tree whitespace validation found legacy whitespace in 45 files outside MOTION-02 scope; no hook bypass. Push was pending cleanup at that checkpoint; later commits a020779, bff79b9 and 9012b1d were pushed. Original per-slice phone gate is superseded by owner decision 0005; shared native/mobile QA remains pending and NOT TESTABLE."
         }
       ],
-      "next_step": "MOTION-02 commit a020779 and whitespace cleanup commit bff79b9 are pushed on motion-02-phone-qa; active pre-commit/pre-push checks passed. Build this branch in Codemagic and have Erik phone-test MOTION-02; MOTION-03 remains gated on that result."
+      "next_step": "Commits a020779, bff79b9 and 9012b1d are pushed on motion-02-phone-qa; local checks and hooks passed. Per owner decision 0005, defer Codemagic/native phone review to the shared MOTION mobile-QA round after subsequent slices. Until then native/rendered behavior remains NOT TESTABLE."
     },
     {
       "id": "MOTION-03",
       "title": "Tips vid första användning",
       "mvp_requirement": "Eriks uttryckliga tillägg 2026-10-10, docs/mvp.md: tips vid första användning",
-      "plan": "docs/plans/MOTION-03-ux-spec.md; task contract in docs/tasks/dev/queue.json",
+      "plan": "docs/plans/MOTION-03-ux-spec.md v4; task contract in docs/tasks/dev/queue.json",
       "write_paths": [
         "src/components/ui/FirstUseTip.tsx",
         "src/components/ui/index.ts",
         "src/components/README.md",
         "src/notifications/notification-storage.ts",
+        "src/notifications/README.md",
         "src/features/home/ProductWorkspace.tsx",
         "src/features/puppy-log/LogScreen.tsx",
-        "src/features/training/PublishedTrainingScreen.tsx",
-        "src/features/health/HealthScreen.tsx",
+        "src/features/puppy-log/README.md",
         "tests/first-use-tip-policy.test.mjs",
-        "tests/account-deletion-policy.test.mjs",
+        "tests/account-delete.test.mjs",
+        "tests/README.md",
         "docs/plans/MOTION-03-ux-spec.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md#motion-02",
         "docs/releases/MOTION-03.md",
         "docs/design/evidence/motion-03"
       ],
       "acceptance": [
-        "At most one dismissible tip per screen, max two lines, only first visit and removed on first interaction",
-        "Tip does not occupy form or save-status space and is not an InfoBanner",
-        "Seen flags are per owner in SecureStore, cleared on account deletion, with no new DB field or analytics event",
-        "Product/Critic review Swedish copy; health tip gives no veterinary advice",
-        "Compliance reviews whether local flags create a new personal-data purpose before implementation"
+        "LogScreen alone shows one short tip after the log is ready; explicit activation of any screen control dismisses it; passive scroll/focus and blank-area taps do not",
+        "Accessible tip close control dismisses only the tip; component does not cover or take over the main action and is not InfoBanner",
+        "Per-owner log seen status uses one stable SecureStore key; session-scoped in-memory suppression prevents repeated display after read/write errors without claiming persistent save",
+        "Confirmed account deletion removes the log key through ProductWorkspace cleanup; cleanup failure is included in existing aggregate local-cleanup reporting",
+        "Preview without a valid owner never reads/writes status; owner change and late read/write responses cannot affect the new owner UI",
+        "Product approves Swedish copy and Critic approves usefulness; no medical text, DB field, analytics event or new purpose",
+        "Limited Compliance review completed 2026-10-10 and saved in docs/tasks/dev/rapport.md; beta legal basis/privacy information remains a separate release gate"
       ],
       "checks": [
         "Focused first-use and account-deletion policy tests",
         "pnpm check",
+        "EXPO_NO_TELEMETRY=1 pnpm bundle:ios",
         "git diff --check",
-        "First/return visit, dismissal, owner change, deletion, large text and screen-reader checks",
+        "First/return visit; explicit control, screen-reader and keyboard activation; passive scroll/focus; read/write failures; remount/session suppression; owner switch; deletion and stale async result checks",
+        "Large text, render/native interaction and shared phone review are NOT TESTABLE until Erik's bundled mobile-QA round",
         "Independent QA and Reviewer"
       ],
       "depends_on": [
         "MOTION-02"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Start only after MOTION-02 phone result; obtain compliance review; write UX spec before code"
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE MOTION-03 plan v4; Critic PROCEED; Product approved copy; Compliance assessment complete; scope/paths aligned, decision 0005 applied"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik authorized MOTION-03 after MOTION-02 and deferred device QA under decision 0005; plan v4 approved; use existing components/tokens only"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Local QA evidence after implementing plan v4 policy tests: pnpm check PASS (both typechecks, lint 0 errors/35 warnings, 29/29 test files); focused first-use/account-delete/log-screen/notifications tests PASS; EXPO_NO_TELEMETRY=1 pnpm bundle:ios PASS; git diff --check and queue validation PASS. Native/rendered and device accessibility remain NOT TESTABLE for shared mobile QA. Independent QA and Reviewer are reviewing the frozen diff."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS after race correction. Focused MOTION-03 suite passes across first-use policy, LogScreen, notifications and account deletion; fresh full pnpm check passes (29 test files, 0 failures/skips, lint 0 errors/35 warnings), iOS export PASS (1,416 modules), git diff --check and queue validation PASS. Native/rendered/VoiceOver/TalkBack/Dynamic Type/device criteria remain NOT TESTABLE and are deferred to Erik’s shared mobile QA."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS on final MOTION-03 code/test diff, no code findings. Verified per-key operation serialization and deletion tombstone close the failed-remount read and delete/write resurrection races; lifecycle tests cover owner switch, unmount and late results. QA PASS; local checks and iOS export pass. Local slice is DONE; create durable commit checkpoint before MOTION-04. Shared mobile QA remains deferred under decision 0005."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS on final MOTION-03 code/test diff, no code findings. Verified per-key operation serialization and deletion tombstone close the failed-remount read and delete/write resurrection races; lifecycle tests cover owner switch, unmount and late results. QA PASS; local checks and iOS export pass. Local slice is DONE; create durable commit checkpoint before MOTION-04. Shared mobile QA remains deferred under decision 0005."
     },
     {
       "id": "MOTION-04",
@@ -3026,31 +3070,30 @@
         "src/components/README.md",
         "src/features/puppy-log/LogScreen.tsx",
         "src/features/training/PublishedTrainingScreen.tsx",
-        "src/features/home/ProductWorkspace.tsx",
-        "assets/images/dog-mascot-body.png",
+        "assets/images/dog-mascot.png",
         "assets/images/README.md",
         "tests/dog-mascot-policy.test.mjs",
         "docs/plans/MOTION-04-ux-spec.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
         "docs/releases/MOTION-04.md",
-        "docs/design/evidence/motion-04",
-        "assets/images/dog-mascot-head.png",
-        "assets/images/dog-mascot-tail.png"
+        "docs/design/evidence/motion-04"
       ],
       "acceptance": [
-        "Mascot has only calm, happy, proud and resting positive/neutral states",
-        "Only confirmed app activity triggers one-time reaction; text always carries meaning and mascot is hidden from screen readers",
-        "Mascot never implies dog health, feelings, obedience or skill; no Home greeting in this slice",
-        "Illustration is warm, clearly illustrated, non-breed-specific, no text/logo, and cannot be mistaken for owner dog photo",
-        "Source, prompt, date, tool and asset sizes are documented; total stays near 300 KB or excess is justified"
+        "Only a confirmed saved log add or confirmed training completion triggers a one-time reaction; existing text retains all meaning and the mascot is hidden from screen readers",
+        "Pending, failed, unsure, retry, preview, edit, delete, undo, initial load and stale callbacks never trigger a reaction",
+        "A previously saved add present on LogScreen mount does not replay; only a later pending-to-saved transition can trigger",
+        "A stale training completion after screen unmount cannot trigger; reduced motion shows a static illustration and one confirmation cannot replay on rerender",
+        "Mascot never implies dog health, inferred feelings, obedience or skill; no Home greeting in this slice",
+        "Illustration is warm, clearly illustrated, generic and non-breed-specific, has no text/logo, and cannot be mistaken for an owner dog photo",
+        "Source, prompt, date, tool, dimensions and byte size are documented; total stays near or below 300 KB or excess is justified"
       ],
       "checks": [
         "Focused mascot policy tests",
         "pnpm check",
+        "python tools/dev_flow.py validate",
         "git diff --check",
-        "Small/large layout, large text, reduced motion and accessibility checks",
-        "Short motion recording or NOT TESTABLE",
+        "Small/large layout, large text, reduced motion, VoiceOver/TalkBack meaning and actual visual recording or itemized NOT TESTABLE",
         "Independent QA and Reviewer"
       ],
       "depends_on": [
@@ -3058,7 +3101,7 @@
       ],
       "status": "planned",
       "history": [],
-      "next_step": "Start only after MOTION-03 phone result; generate consistent transparent layers or stop for flat React Native illustration fallback; write UX spec before code"
+      "next_step": "Plan v1 har Architect APPROVE och Critic PROCEED. Kod får starta efter MOTION-03:s lokala QA, Reviewer och hållbara checkpoint. Vid implementation verifieras befintlig tränings-resetsekvens utan nytt persistent/affärstillstånd; använd en dokumenterad transparent mascot-PNG eller RN-fallback. Gemensam enhets-QA följer beslut 0005."
     },
     {
       "id": "FIX-38",
@@ -3073,7 +3116,7 @@
         "AGENTS.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/FIX-38.md",
-        "docs/releases/FIX-38.md",
+        "docs/releases/HISTORY-2026.md#fix-38",
         "docs/plans/FIX-38-ux-spec.md",
         "docs/design/FIX-38"
       ],

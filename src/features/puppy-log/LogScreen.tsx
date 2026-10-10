@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AccessibilityInfo, Alert, Animated, Easing, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { AppBar, BottomSheet, Button, Card, Dialog, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast } from '../../components/ui';
+import { AppBar, BottomSheet, Button, Card, Dialog, FirstUseTip, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast, useFirstUseTip } from '../../components/ui';
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
@@ -44,6 +44,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const deleteToken = useRef(0);
   const [entryAnimationTarget, setEntryAnimationTarget] = useState<{ eventId: string; key: string } | null>(null);
   const [consumedEntryAnimationKey, setConsumedEntryAnimationKey] = useState<string | null>(null);
+  const firstUseTip = useFirstUseTip(layoutOwnerId, 'log', mode === 'cloud' && !loading && !loadError);
   const handledEntryMutationKey = useRef(mutation?.kind === 'add' && mutation.status === 'saved' ? `${mutation.kind}:${mutation.mutationId}` : '');
   const displayedEvents = useMemo(() => {
     if (!deleteSnapshot) return events;
@@ -132,8 +133,8 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     category={type}
     compact
     disabled={disabled}
-    onLongPress={startLayoutEdit}
-    onPress={(event) => selectType(type, event.nativeEvent.timestamp)}
+    onLongPress={() => { firstUseTip.dismiss(); startLayoutEdit(); }}
+    onPress={(event) => { firstUseTip.dismiss(); selectType(type, event.nativeEvent.timestamp); }}
   />;
   const renderRows = (types: readonly QuickLogLayoutType[]) => Array.from({ length: Math.ceil(types.length / 2) }, (_, index) => (
     <View key={`${types[index * 2]}-${types[index * 2 + 1] ?? 'single'}`} style={styles.gridRow}>
@@ -176,35 +177,36 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const successMutationKey = mutation?.status === 'saved' ? `${mutation.kind}:${mutation.mutationId}` : '';
   const mutationFeedback = <>
       <Toast visible={mutation?.status === 'saved' && dismissedMutationKey !== successMutationKey} tone="success" confirmed message={mutation?.status === 'saved' ? mutation.kind === 'add' ? `${LOG_EVENT_LABELS[mutation.type]} loggat` : mutation.kind === 'update' ? 'Ändring sparad' : 'Händelsen är raderad' : ''}
-        onUndo={mutation?.status === 'saved' && mutation.kind === 'add' ? () => onUndo?.(mutation.id) : undefined} autoDismissMs={2500}
+        onUndo={mutation?.status === 'saved' && mutation.kind === 'add' ? () => { firstUseTip.dismiss(); onUndo?.(mutation.id); } : undefined} autoDismissMs={2500}
         onAutoDismiss={() => setDismissedMutationKey(successMutationKey)} />
-      <Toast visible={loadMoreError} tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore} />
+      <Toast visible={loadMoreError} tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore ? () => { firstUseTip.dismiss(); return onLoadMore(); } : undefined} />
   </>;
 
   return <View style={styles.screen}>
     <AppBar mode="Title" title="Logga" />
+    {firstUseTip.visible ? <FirstUseTip text="Tryck på Fler för fler loggtyper." onDismiss={firstUseTip.dismiss} /> : null}
     {mutationFeedback}
-    <Toast visible={!editingEvent && mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={retryMutation} onCancel={() => { onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
-    <Toast visible={!editingEvent && mutation?.status === 'unsure'} tone="uncertain" onRetry={retryMutation} />
+    <Toast visible={!editingEvent && mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} onCancel={() => { firstUseTip.dismiss(); onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
+    <Toast visible={!editingEvent && mutation?.status === 'unsure'} tone="uncertain" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} />
     {loading ? <>
       <SectionHeader title="Snabb logg" />
       <Skeleton shape="card" lines={3} />
       <Skeleton shape="row" lines={2} />
     </> : loadError ? <View style={styles.errorState}>
       <Text style={styles.errorText}>Loggen kunde inte hämtas.</Text>
-      <Button label="Försök igen" accessibilityLabel="Försök igen" onPress={onReload ?? (() => undefined)} />
+      <Button label="Försök igen" accessibilityLabel="Försök igen" onPress={() => { firstUseTip.dismiss(); onReload?.(); }} />
     </View> : <>
       <SectionHeader title="Snabb logg" />
       <View style={styles.grid}>
         {layoutEditing ? <LayoutEditor layout={layout} onMove={moveLayoutType} onDone={() => setLayoutEditing(false)} error={layoutError} /> : renderRows(layout.primary)}
       </View>
-      {!layoutEditing && <View style={styles.moreRow}><QuickLogTile subtle label="Fler" accessibilityLabel={moreVisible ? 'Dölj fler loggtyper' : 'Visa fler loggtyper'} accessibilityHint="Håll inne för att ändra snabbvalens layout" icon={<View style={styles.moreIcon}><Ionicons name={moreVisible ? 'close-outline' : 'grid-outline'} size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></View>} disabled={disabled} onLongPress={startLayoutEdit} onPress={toggleMore} /></View>}
+      {!layoutEditing && <View style={styles.moreRow}><QuickLogTile subtle label="Fler" accessibilityLabel={moreVisible ? 'Dölj fler loggtyper' : 'Visa fler loggtyper'} accessibilityHint="Håll inne för att ändra snabbvalens layout" icon={<View style={styles.moreIcon}><Ionicons name={moreVisible ? 'close-outline' : 'grid-outline'} size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></View>} disabled={disabled} onLongPress={() => { firstUseTip.dismiss(); startLayoutEdit(); }} onPress={() => { firstUseTip.dismiss(); toggleMore(); }} /></View>}
       {!layoutEditing && moreVisible ? <View style={styles.grid} accessibilityLabel="Fler loggtyper">{renderRows(layout.more)}</View> : null}
 
       {editingEvent ? <BottomSheet visible title="Ändra händelse" onRequestClose={() => { if (!editLocked) setEditingId(null); }}>
-        <Toast visible={mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={retryMutation} onCancel={() => { onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
-        <Toast visible={mutation?.status === 'unsure'} tone="uncertain" onRetry={retryMutation} />
-        <LogEventEditor key={editingEvent.id} event={editingEvent} disabled={editLocked} onCancel={() => setEditingId(null)} onSave={(changes) => saveEdit(editingEvent, changes)} onDelete={() => askToDelete(editingEvent)} />
+        <Toast visible={mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} onCancel={() => { firstUseTip.dismiss(); onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
+        <Toast visible={mutation?.status === 'unsure'} tone="uncertain" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} />
+        <LogEventEditor key={editingEvent.id} event={editingEvent} disabled={editLocked} onCancel={() => { firstUseTip.dismiss(); setEditingId(null); }} onSave={(changes) => { firstUseTip.dismiss(); return saveEdit(editingEvent, changes); }} onDelete={() => { firstUseTip.dismiss(); askToDelete(editingEvent); }} />
       </BottomSheet> : null}
 
       <SectionHeader title="Dagens logg" />
@@ -218,7 +220,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
           const detail = [event.note, rowPending ? 'Sparar…' : null, event.origin === 'example' ? 'Exempel' : mode === 'preview' ? 'Testpost' : null].filter(Boolean).join(' · ');
           const parts = localDateTimeParts(event.occurredAt);
           if (deleting && deleteSnapshot.phase === 'exiting') return <DeleteExitRow key={event.id} token={deleteSnapshot.token} event={event} reduceMotion={reduceMotion} onFinished={onDeleteAnimationEnd} />;
-          const row = <ListRow title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}${event.note ? `, ${event.note}` : ''}${deleting ? ', raderar' : rowPending ? ', sparar' : ''}${deleting ? '' : ', tryck för att ändra'}`} accessibilityState={deleting && deleteSnapshot.phase === 'pending' ? { busy: true, disabled: true } : undefined} category={event.type} time={parts.time} detail={deleting ? 'Raderar…' : detail || undefined} onPress={deleting ? undefined : () => setEditingId(event.id)} disabled={deleting || busy || Boolean(mutation && mutation.status !== 'saved')} />;
+          const row = <ListRow title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}${event.note ? `, ${event.note}` : ''}${deleting ? ', raderar' : rowPending ? ', sparar' : ''}${deleting ? '' : ', tryck för att ändra'}`} accessibilityState={deleting && deleteSnapshot.phase === 'pending' ? { busy: true, disabled: true } : undefined} category={event.type} time={parts.time} detail={deleting ? 'Raderar…' : detail || undefined} onPress={deleting ? undefined : () => { firstUseTip.dismiss(); setEditingId(event.id); }} disabled={deleting || busy || Boolean(mutation && mutation.status !== 'saved')} />;
           const entryTarget = entryAnimationTarget?.eventId === event.id ? entryAnimationTarget : null;
           if (entryTarget) return <LogEntryTransition key={event.id} transitionKey={consumedEntryAnimationKey === entryTarget.key ? undefined : entryTarget.key} reduceMotion={reduceMotion} onAnimationStart={consumeEntryAnimation}>{row}</LogEntryTransition>;
           return <View key={event.id}>{row}</View>;
@@ -231,7 +233,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         </Card>
       </> : null}
 
-      {!loadMoreError && hasMore ? <Button label={loadingMore ? 'Hämtar…' : 'Visa äldre poster'} accessibilityLabel={loadingMore ? 'Hämtar äldre poster' : 'Visa äldre poster'} disabled={loadingMore} loading={loadingMore} onPress={onLoadMore ?? (() => undefined)} /> : null}
+      {!loadMoreError && hasMore ? <Button label={loadingMore ? 'Hämtar…' : 'Visa äldre poster'} accessibilityLabel={loadingMore ? 'Hämtar äldre poster' : 'Visa äldre poster'} disabled={loadingMore} loading={loadingMore} onPress={() => { firstUseTip.dismiss(); onLoadMore?.(); }} /> : null}
     </>}
 
     <Dialog visible={duplicate !== null} title="Du har redan loggat det här. Lägga till ändå?" onRequestClose={() => setDuplicate(null)} onConfirm={() => { if (duplicate) selectType(duplicate.type, duplicate.timestamp, true); }} confirmLabel="Lägg till ändå" confirmVariant="primary"><View /></Dialog>

@@ -8,7 +8,7 @@ Plan v1 2026-10-06. Erik full-MVP mandate, Luna medium. Preparation only until A
 ## Ownership
 Implementer: src/data/app-data.ts, src/features/onboarding/EditDogProfileScreen.tsx, src/features/home/AppFlow.tsx, src/features/home/ProductWorkspace.tsx, src/features/onboarding/README.md.
 QA: tests/profile-edit.test.mjs and tests/README.md.
-Coordinator: this plan, docs/releases/APP-04C.md, report/queue. No concurrent source writes with B2.
+Coordinator: this plan, docs/releases/HISTORY-2026.md#app-04c, report/queue. No concurrent source writes with B2.
 ## Acceptance
 Complete edit of name/breed/birth date, same permanent dog ID, confirmed changes update derived age/content without restart; safe error/conflict/retry and session isolation. Existing create/log/weight/health/progression unaffected. Runtime RLS/native NOT TESTABLE unless actually run. Exact planreview pending.
 ## Next

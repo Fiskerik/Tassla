@@ -14,7 +14,7 @@ APP-05 B1 är kodlevererat i e5327d1 och checkpointat med lokala granskningsresu
 |---|---|---|---|---|
 | B2-01 | Koordinator, Architect/Critic, Compliance/Security | Denna plan; release-log | B1-checkpoint och underlag för PHONE-DB | Granska kontrakt, fritext, datum, åtkomst och beroenden; spara faktiska utlåtanden före ready |
 | B2-02 | Implementer | src/data/workspace-data.ts; src/features/health/HealthScreen.tsx; src/features/home/ProductWorkspace.tsx; src/features/health/README.md | B2-01 och segmentmandat | Komplett CRUD för båda typerna; rätt hund/typ/id-filter, återläsning, sanningsenliga statuslägen och historik; ingen ändring av vikt/loggens beteende |
-| B2-03 | QA, sedan Reviewer/Security; koordinator | tests/health-history.test.mjs; tests/README.md; denna plan; docs/releases/APP-04B2.md; docs/tasks/dev/rapport.md | B2-02 | Fokuserade beteendetester, pnpm check, pnpm bundle:ios, git diff --check; oberoende review och hållbar checkpoint |
+| B2-03 | QA, sedan Reviewer/Security; koordinator | tests/health-history.test.mjs; tests/README.md; denna plan; docs/releases/HISTORY-2026.md#app-04b2; docs/tasks/dev/rapport.md | B2-02 | Fokuserade beteendetester, pnpm check, pnpm bundle:ios, git diff --check; oberoende review och hållbar checkpoint |
 | B2-PHONE-DB | Erik/QA | Dokumenterad build och utvecklingsdatabasresultat | Verifierad B2-kod och tillgänglig signerad build | Fysisk formulär-UX, återstart/nätfel samt tvåkontoprov som nekar läsning/ändring/radering för annan ägare |
 
 ## Acceptanschecklista
@@ -31,7 +31,7 @@ APP-05 B1 är kodlevererat i e5327d1 och checkpointat med lokala granskningsresu
 
 ## Checkpoint
 Förberedelse klar. Implementation ej startad; ingen APPROVE/PASS påstås. Nästa steg: dokumentera APP-05-PHONE-DB och granska exakt B2-plan. Köstatus ändras först med workflowets faktiska reviewunderlag.
-Release-log: ../../releases/APP-04B2.md. Nästa funktionspaket: APP-04C profilredigering (namn, ras, födelsedatum; uppdaterad ålder/innehåll efter bekräftad sparning).
+Release-log: ../../releases/HISTORY-2026.md#app-04b2. Nästa funktionspaket: APP-04C profilredigering (namn, ras, födelsedatum; uppdaterad ålder/innehåll efter bekräftad sparning).
 
 ## Uppdaterat beroende 2026-10-06
 Eriks nya TestFlight-policy ersätter ovanstående rekommendation att vänta på APP-05-PHONE-DB före B2. Vikt/tangentbord är användarrapporterat PASS, build okänd. B2-planreview och lokal implementation kan fortsätta utan ny telefonkontroll. Se mvp-beta-delivery.md för samlad plan.

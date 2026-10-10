@@ -118,10 +118,9 @@ Rules:
 - Talk to the human in Swedish. Keep answers short. Propose alternatives when something looks wrong.
 - Code, identifiers, code comments and commit messages: English. Documents in `docs/`: Swedish.
 
-## Release-log för varje arbetspaket (Eriks beslut 2026-10-06)
-För varje paket/sprint ska koordinatorn före start skapa och efter varje checkpoint uppdatera en release-log i docs/releases/<paket-id>.md. Ett paket får inte rapporteras färdigt utan aktuell logg.
-Loggen ska alltid innehålla: Major changes (nya större användarflöden), Minor changes (mindre förbättringar), Bug-fixes (rättat fel och före/efter), Verifiering och kända begränsningar, samt Nästa sprint/paket med planerade funktioner, beroenden och checkpunkter. Skriv ”Inga” när en kategori saknar ändringar. Kategorierna är produktbeskrivningar, inte automatiska SemVer-beslut.
-Ange datum, paket-ID, status och jämförelsebas (release/tag eller exakt commitintervall), leveranscommit och TestFlight-version/build när känd. Skilj planerat, implementerat, lokalt verifierat, pushat och tillgängligt i TestFlight/publicerad release. Okänd build anges som okänd. Saknas GitHub Release ska detta sägas och en dokumenterad commitbas användas. Planerade ändringar får aldrig listas som implementerade. Utvecklingsfel som rättats innan leverans märks som sådana; kalla dem inte fel i en tidigare release utan evidens. Länka loggen från taskplan och rapport och sammanfatta den för Erik efter varje paket. Skapa/pusha/publicera inte GitHub Release automatiskt genom detta krav.
+## Samlad arbetshistorik — Eriks beslut 2026-10-10
+Använd `docs/releases/HISTORY-2026.md` som samlad historik med datum, paket-ID, status och exakta commit-ID:n. `docs/tasks/dev/rapport.md` behåller tekniska checkpoints och pågående arbetsanteckningar. En separat `docs/releases/<paket-id>.md` används bara medan ett paket pågår eller har en aktiv blockerare som kräver egen logg. Den ska skilja planerat, implementerat, lokalt verifierat, pushat och tillgängligt i TestFlight; okänd build anges som okänd. Planerade ändringar listas aldrig som implementerade.
+När paketet avslutas dokumenteras utfallet och commit-ID i `HISTORY-2026.md`, den paketspecifika loggens relevanta information förs över dit och den tillfälliga releasefilen tas bort. Uppdatera hänvisningar till historiken. Skapa/pusha/publicera inte GitHub Release automatiskt genom detta krav.
 
 ## MVP-slutförande och TestFlight-policy — Eriks beslut 2026-10-06
 Erik har beställt planering och därefter färdigställande av hela godkända MVP:n till betaredo app. Första steg är samlad paketplan, checkpunkter och öppna detaljbeslut före genomförandet.
