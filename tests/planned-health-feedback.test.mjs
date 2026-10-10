@@ -68,7 +68,8 @@ test('recovery priority and source render matrix expose exactly one action per s
   assert.match(screenSource, /loadState === 'error'/);
   assert.match(screenSource, /pending \|\| statusError/);
   assert.match(screenSource, /feedbackState\.activeMessage\?\.startsWith\('Ändringen är sparad'\)[\s\S]*?!infoVisible/);
-  assert.match(screenSource, /key=\{feedbackState\.activeMessage\}/);
+  assert.match(screenSource, /timedFeedbackMessage === feedbackState\.activeMessage/);
+  assert.doesNotMatch(screenSource, /<Toast\s+key=\{feedbackState\.activeMessage\}/);
   assert.match(screenSource, /getRecommendedTimeoutMillis\(2500\)/);
   assert.match(screenSource, /feedbackTimeoutMillis\(recommended, 2500\)/);
   assert.match(screenSource, /normalized === previousStatusMessage\.current/);

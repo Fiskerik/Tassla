@@ -2684,7 +2684,7 @@
         "UI-07",
         "FIX-36"
       ],
-      "status": "qa",
+      "status": "blocked",
       "history": [
         {
           "from": "planned",
@@ -2703,9 +2703,15 @@
           "to": "qa",
           "actor": "implementer",
           "evidence": "All planned UI code changes implemented; typechecks, iOS export, log policy test, diff and queue validation pass; notifications timezone subprocess test remains environment-blocked; screenshots NOT TESTABLE"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "UI-08 implementering och källreview färdiga; QA blockerad av dokumenterad RN Web screenshotmiljö (localhost/Chromium). Pausas för att frigöra Toast-filens skrivägarskap till FIX-38 lint-rättning; visuell QA kvarstår."
         }
       ],
-      "next_step": "Visual screenshot QA at 360/430 and 140 percent is still required; RN Web localhost/Chromium are blocked by sandbox permissions."
+      "next_step": "UI-08 implementering och källreview färdiga; QA blockerad av dokumenterad RN Web screenshotmiljö (localhost/Chromium). Pausas för att frigöra Toast-filens skrivägarskap till FIX-38 lint-rättning; visuell QA kvarstår."
     },
     {
       "id": "MOTION-01",
@@ -2918,6 +2924,69 @@
       "status": "planned",
       "history": [],
       "next_step": "Start only after MOTION-03 phone result; generate consistent transparent layers or stop for flat React Native illustration fallback; write UX spec before code"
+    },
+    {
+      "id": "FIX-38",
+      "title": "Rätta Toast lintfel och kör preflight inför commit/push",
+      "mvp_requirement": "CodeMagic pnpm check samt repots obligatoriska commit- och pushkontroller",
+      "plan": "docs/tasks/dev/FIX-38.md v3; docs/plans/FIX-38-ux-spec.md",
+      "write_paths": [
+        "src/components/ui/Toast.tsx",
+        "tests",
+        ".githooks",
+        "tools",
+        "AGENTS.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/FIX-38.md",
+        "docs/releases/FIX-38.md",
+        "docs/plans/FIX-38-ux-spec.md",
+        "docs/design/FIX-38"
+      ],
+      "acceptance": [
+        "Toast passerar hooks-lint utan suppression eller testdeaktivering",
+        "Pre-commit kör pnpm check och git diff --cached --check",
+        "Pre-push kör pnpm check och whitespacekontroll för utgående refs, även ny branch",
+        "AGENTS.md kräver grinden före varje commit/push; dokumenterad hookinstallation fungerar",
+        "After QA and Reviewer PASS, commit through active hooks and push to origin/remove-ai-slop"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "negativa hooktester för commit och push",
+        "Confirm pushed commit SHA equals origin/remove-ai-slop",
+        "docs/design/FIX-38/checklist.md: render/accessibility evidence or itemized NOT TESTABLE"
+      ],
+      "depends_on": [],
+      "status": "review",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v3; Critic PROCEED plan v3; both reviewed the exact version in docs/tasks/dev/FIX-38.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Architect APPROVE and Critic PROCEED plan v3; UI-08 moved to blocked because its visual QA environment is unavailable and shared Toast write ownership is now released"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "FIX-38A/B complete; pnpm check 395 pass, 1 skip, 0 fail; iOS export, diff/queue validation, temporary hook tests pass; visual NOT TESTABLE documented"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS; Toast lifecycle including hidden reduced-motion toggles and all hook checks validated; visual/device NOT TESTABLE documented"
+        }
+      ],
+      "next_step": "Reviewer PASS; skapa commit genom aktiva hookar och pusha till origin/remove-ai-slop. Efter verifierad push, registrera leverans-SHA och flytta uppgiften till done."
     }
   ]
 }

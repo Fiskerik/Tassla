@@ -25,22 +25,27 @@ export function Toast({ visible, tone, message, onUndo, onRetry, onCancel, confi
   const previousVisible = useRef(visible);
   const generation = useRef(0);
   const autoDismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const exitNotified = useRef(false);
+  const exitPending = useRef(false);
   const autoDismissMsRef = useRef(autoDismissMs);
   const onAutoDismissRef = useRef(onAutoDismiss);
   const onExitCompleteRef = useRef(onExitComplete);
-  onAutoDismissRef.current = onAutoDismiss;
-  onExitCompleteRef.current = onExitComplete;
-  autoDismissMsRef.current = autoDismissMs;
   const [phase, setPhase] = useState<'visible' | 'exiting' | 'hidden'>(visible ? 'visible' : 'hidden');
-  const phaseRef = useRef(phase);
-  phaseRef.current = phase;
+  const [phaseInputs, setPhaseInputs] = useState({ visible, reduced });
+  if (phaseInputs.visible !== visible || phaseInputs.reduced !== reduced) {
+    setPhaseInputs({ visible, reduced });
+    if (phaseInputs.visible !== visible) setPhase(visible ? 'visible' : reduced ? 'hidden' : 'exiting');
+    else if (!visible && reduced) setPhase('hidden');
+  }
   const [motion] = useState(() => new Animated.Value(visible ? 1 : 0));
   const effectiveTone = tone === 'success' && !confirmed ? 'uncertain' : tone;
   const effectiveMessage = effectiveTone === 'uncertain' ? 'Vi kunde inte kontrollera om det sparades' : message ?? (effectiveTone === 'error' ? 'Kunde inte spara' : 'Sparat');
   const currentContent = { tone: effectiveTone, message: effectiveMessage, onUndo, onRetry, onCancel };
-  const retainedContent = useRef(currentContent);
-  if (visible) retainedContent.current = currentContent;
-  const displayContent = visible ? currentContent : retainedContent.current;
+  const [retainedContent, setRetainedContent] = useState(currentContent);
+  if (visible && (retainedContent.tone !== currentContent.tone || retainedContent.message !== currentContent.message || retainedContent.onUndo !== currentContent.onUndo || retainedContent.onRetry !== currentContent.onRetry || retainedContent.onCancel !== currentContent.onCancel)) {
+    setRetainedContent(currentContent);
+  }
+  const displayContent = visible ? currentContent : retainedContent;
   const action = displayContent.tone === 'success' && displayContent.onUndo ? { label: 'Ångra', onPress: displayContent.onUndo, disabled: false } : (displayContent.tone === 'error' || displayContent.tone === 'uncertain') ? { label: 'Försök igen', onPress: displayContent.onRetry ?? (() => undefined), disabled: !displayContent.onRetry } : undefined;
 
   const scheduleAutoDismiss = useCallback((currentGeneration: number) => {
@@ -50,6 +55,18 @@ export function Toast({ visible, tone, message, onUndo, onRetry, onCancel, confi
       if (generation.current === currentGeneration) onAutoDismissRef.current?.();
     }, autoDismissMsRef.current);
   }, []);
+  const completeExit = useCallback(() => {
+    if (!exitPending.current || exitNotified.current) return;
+    exitNotified.current = true;
+    exitPending.current = false;
+    onExitCompleteRef.current?.();
+  }, []);
+
+  useEffect(() => {
+    autoDismissMsRef.current = autoDismissMs;
+    onAutoDismissRef.current = onAutoDismiss;
+    onExitCompleteRef.current = onExitComplete;
+  }, [autoDismissMs, onAutoDismiss, onExitComplete]);
 
   useEffect(() => {
     if (initiallyVisible.current) {
@@ -63,12 +80,10 @@ export function Toast({ visible, tone, message, onUndo, onRetry, onCancel, confi
         motion.stopAnimation();
         if (autoDismissTimer.current) clearTimeout(autoDismissTimer.current);
         if (visible) {
-          setPhase('visible');
           motion.setValue(1);
           scheduleAutoDismiss(currentGeneration);
-        } else if (phaseRef.current !== 'hidden') {
-          setPhase('hidden');
-          onExitCompleteRef.current?.();
+        } else {
+          completeExit();
         }
       }
       return;
@@ -78,7 +93,8 @@ export function Toast({ visible, tone, message, onUndo, onRetry, onCancel, confi
     if (autoDismissTimer.current) clearTimeout(autoDismissTimer.current);
     motion.stopAnimation();
     if (visible) {
-      setPhase('visible');
+      exitNotified.current = false;
+      exitPending.current = false;
       if (reduced) { motion.setValue(1); scheduleAutoDismiss(currentGeneration); return; }
       motion.setValue(0);
       const animation = Animated.timing(motion, { toValue: 1, duration: tokens.motion.toastEnter, easing: Easing.out(Easing.cubic), useNativeDriver: true });
@@ -87,21 +103,19 @@ export function Toast({ visible, tone, message, onUndo, onRetry, onCancel, confi
       });
       return () => animation.stop();
     }
-    if (phaseRef.current === 'hidden') return;
+    exitPending.current = true;
     if (reduced) {
-      setPhase('hidden');
-      onExitCompleteRef.current?.();
+      completeExit();
       return;
     }
-    setPhase('exiting');
     const animation = Animated.timing(motion, { toValue: 0, duration: tokens.motion.toastExit, easing: Easing.in(Easing.cubic), useNativeDriver: true });
     animation.start(({ finished }) => {
       if (!finished || generation.current !== currentGeneration) return;
       setPhase('hidden');
-      onExitCompleteRef.current?.();
+      completeExit();
     });
     return () => animation.stop();
-  }, [visible, reduced, motion, scheduleAutoDismiss]);
+  }, [visible, reduced, motion, scheduleAutoDismiss, completeExit]);
 
   useEffect(() => () => { generation.current += 1; if (autoDismissTimer.current) clearTimeout(autoDismissTimer.current); motion.stopAnimation(); }, [motion]);
 

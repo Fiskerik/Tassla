@@ -152,4 +152,10 @@ Eriks MOTION-beslut 2026-10-10 finns i `docs/decisions/0004-motion-package.md`; 
 
 ## INNAN COMMIT OCH PUSH TILL GITHUB
 
-Alla nödvändiga tester som krävs efter implementering av funktionalitet behöver modifieras så att bygget går igenom build i CodeMagic. Kan vara allt från Testfall och Lint-fel som dyker upp. Detta får INTE ske. Kontrollera eventuella tester som är inaktuella och inaktivera de om så krävs, och se till att alla förutsättningar för att klara CodeMagic bygget innan varje Commit och Push till GITHUB. 
+Alla kontroller nedan måste köras automatiskt före varje commit och push. Misslyckad kontroll stoppar operationen och felet ska rättas innan ett nytt försök.
+
+- Aktivera de versionshanterade Git-hookarna en gång i varje klon med `./tools/install-git-hooks.sh`. Kontrollera att `git config --get core.hooksPath` visar `.githooks`.
+- `.githooks/pre-commit` kör `pnpm check` och `git diff --cached --check` före varje commit.
+- `.githooks/pre-push` kör `pnpm check` samt `git diff --check` för varje ref som pushas. Ny branch jämförs från det tomma Git-trädet; en ref som tas bort saknar ny tree och hoppas endast över i whitespace-kontrollen.
+- Hoppas inte över hookar eller tester och använd inte `--no-verify`. Ta inte bort eller inaktivera ett test för att få bygget grönt. Om testets kontrakt är föråldrat, uppdatera assertionen till det verifierade beteendet; om felet är verkligt, rätta produktionen.
+- Hookarna gäller normala Git-operationer i kloner där de installerats. Kontrollera att de är aktiva före varje commit/push; ett avsiktligt Git-hook-bypass får inte användas.

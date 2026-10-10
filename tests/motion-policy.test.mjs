@@ -27,10 +27,14 @@ test('animated feedback uses the shared reduced-motion hook and native driver ex
 test('Toast keeps a hidden mount gap-free, exits before completion callback and hides exiting content from accessibility', () => {
   const source = read('src/components/ui/Toast.tsx');
   assert.match(source, /if \(phase === 'hidden'\) return null/);
-  assert.match(source, /setPhase\('exiting'\)/);
+  assert.match(source, /if \(phaseInputs\.visible !== visible\) setPhase\(visible \? 'visible' : reduced \? 'hidden' : 'exiting'\)/);
+  assert.match(source, /else if \(!visible && reduced\) setPhase\('hidden'\)/);
   assert.match(source, /generation\.current === currentGeneration/);
   assert.match(source, /accessibilityElementsHidden=\{!exposed\}/);
   assert.match(source, /importantForAccessibility=\{exposed \? 'auto' : 'no-hide-descendants'\}/);
+  assert.match(source, /const completeExit = useCallback\(\(\) =>/);
+  assert.match(source, /if \(!exitPending\.current \|\| exitNotified\.current\) return/);
+  assert.match(source, /exitPending\.current = true/);
   assert.match(source, /onExitCompleteRef\.current\?\.\(\)/);
   assert.match(source, /scheduleAutoDismiss\(currentGeneration\)/);
 });
