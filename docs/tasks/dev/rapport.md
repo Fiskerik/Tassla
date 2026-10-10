@@ -181,3 +181,59 @@ Architect APPROVE v6. Oberoende QA PASS och Reviewer PASS för kod/beteende efte
 Renderade skärmdumpar saknas eftersom miljön inte har iOS-/Android-simulator eller webbberoenden. Liten/stor telefon, stor text, safe area, tangentbord/fokus och den fulla tillståndsmatrisens upplevda kvalitet är därför NOT TESTABLE. LOGGA-QUICK är blockerad, inte DONE, och LOGGA-EDIT har inte startats. Nästa steg kräver att Erik öppnar `pnpm start:preview` på en kompatibel telefon eller tillhandahåller native rendering; därefter fångas matrisen och en annan roll gör visuell QA. Ingen push, GitHub Release, TestFlight-build, dependency-, schema- eller databasändring har gjorts.
 
 Lokal implementationscheckpoint: `230ad34` (`feat: redesign quick log experience`). Den är inte pushad. Dokumentationscommitten som registrerar checkpoint-ID:t följer separat.
+
+## UX-03 lokal checkpoint — 2026-10-09
+
+Implementerat `MainSwipeNavigation` för de sex MVP-ytorna Hem → Valplogg → Träning → Hälsa → Kunskap → Tassla-pass i `ProductWorkspace`, med befintlig Expo Router-ingång och `BottomNav` kvar. `ScreenTransition` stöder nu en tokeniserad horisontell variant för sidbyte, medan reducerad rörelse tar bort förflyttning och befintliga vertikala övergångar behåller y-axeln. `HomeCarousel` visar fyra/fem tappbara kort från befintliga tränings-, logg-, kunskaps- och hälsodata samt `Logga nu`; snap stängs av vid reducerad rörelse. Ingen dependency, lockfil, migration eller datamodell ändrad.
+
+Plan/checkpoint: [UX-03](ux-03.md). Release-logg: [UX-03](../../releases/UX-03.md). `git diff --check` PASS. `pnpm typecheck`, `pnpm lint` och `pnpm test` kunde inte slutföras eftersom lokala paket saknas och återställning via registry ger EPERM; direkt Node-test gav 12 pass och 13 importfel. Native/renderad QA är NOT TESTABLE. Nästa steg är dependencyåterställning, full `pnpm check` och separat visuell/native QA av swipe/carousel på liten/stor skärm och reducerad rörelse.
+
+## UX-04 lokal checkpoint — 2026-10-09
+
+`formatDogAge` centraliserar all användarsynlig hundålder till `Y mån` eller `X år Y mån`; Hem, preview och Tassla-pass använder profilens födelsedatum. Interna veckor används fortsatt endast för befintliga åldersintervall i publicerat content/training och visas inte. Hem-carouselen kompletterades med åldersetikett i relevanta kort och tydligare Valplogg-copy; dess upstream-data är redan age-/breed-filtrerad.
+
+`tasks.md` saknas i repot; detta är dokumenterat i UX-04. Riktad domain-test passerar och `git diff --check` passerar. Full typecheck/lint/test är blockerad av saknade paket/registry-EPERM. Visual-check försöktes men preview-site saknas och Chromium avslutas med SIGTRAP; skärmdumpmatrisen är NOT TESTABLE. Checklista och exakt avvikelse från “HeroCard på Hem” finns i [UX-04-checklist](../../design/UX-04-checklist.md). Release-logg: [UX-04](../../releases/UX-04.md).
+
+## UX-05 lokal checkpoint — 2026-10-09
+
+Hem använder nu den befintliga `HeroCard` överst med hundens profilnamn, profilbaserad ålder i år/månader och befintlig hundbild. `HomeCarousel` ligger direkt därefter och visar 4–5 ålders-/rasrelevanta, tappbara kort med befintliga komponenter/tokens. BottomNav, datumväljare och `Idag för [namn]`-flödet är bevarade; pressed-state och reducerad-rörelse följer gemensamma komponenter.
+
+Riktad domain-test och `git diff --check` passerar. Full typecheck/lint/test är blockerad av saknade paket/registry-EPERM. Visual-check försöktes men preview-site saknas och Chromium avslutas med SIGTRAP; skärmdumpmatrisen är NOT TESTABLE. Ifylld checklista finns i [UX-05-checklist](../../design/UX-05-checklist.md). Release-logg: [UX-05](../../releases/UX-05.md).
+
+## BUILD-35 lokal QA-checkpoint — 2026-10-09
+
+Codemagic-loggen från `Tassla_35_artifacts.zip` visade TS2305 för `ReactNode` importerat från `react-native`. Importen kommer nu från `react`; följande lintfel rättades genom stabil svepresponder, atomiskt navigationsstate och ett lokalt motiverat undantag för attributionens synkrona loading-reset. Två källkodshärledande tester uppdaterades till redan befintlig busy-spärr och handlerns faktiska dependency-lista. Ingen avsedd användarflödesändring eller Supabase-ändring.
+
+Architect APPROVE v5, oberoende QA PASS och oberoende Reviewer PASS efter rättad dokumentationscheckpoint: `pnpm check` med två typkontroller/lint samt 387 godkända tester, ett överhoppat, noll fel; notifieringar 42/42 och kontoradering 39/39. iOS-export, diffkontroll och kövalidering PASS. Testunderprocesser krävde extra lokal sandbox-behörighet, och Expo-telemetri stängdes av för exporten. Kodcommit `94686aaa8e717aaca069fde8ae5cc960d2fbc287` pushades till `origin/remove-ai-slop` och verifierades på remote; dokumentationscheckpoint följer separat. Native/renderad visuell QA, signerad Codemagic-build och TestFlight är NOT TESTABLE här. Plan: [BUILD-35](build-35.md). Release-logg: [BUILD-35](../../releases/BUILD-35.md).
+
+## UI-06 lokal checkpoint — 2026-10-10
+
+Hem + Logg: tydligare **Logga nu**, fotokarusell med fyra originalgenererade tillgångar (tre valpbilder och en generisk silhuett), faktiska dagsrader utan duplicerade carouselmål, ID-baserad plan-deduplicering endast mot faktiskt renderade dagsrader, diskret övergång för ny bekräftad loggrad samt Olycka-ikon med vatten + bajs sida vid sida. QA skärmdumpar och 18-punktschecklista: [UI-06](../design/UI-06/). `pnpm check` 387 pass / 1 skip / 0 fail, iOS-export, riktad v6 state-QA, code review, diff- och kövalidering PASS. Visuell helhet står fortfarande UNDERKÄND på punkt 15: Hem/Logg-etiketterna i delad bottenmeny går ihop vid 140 % text. Native rörelse, VoiceOver, tangentbord och fysisk safe area är NOT TESTABLE i RN Web. Plan: [UI-06](ui-06.md). Release-logg: [UI-06](../../releases/UI-06.md). Nästa slice UI-07 åtgärdar centrerat varumärke och bottenmenyn; lokal checkpoint sparas före start.
+
+
+## UI-07 lokal checkpoint — 2026-10-10
+
+`AppBar` visar nu dämpat centrerat `Tassla` i alla varianter; sidtitlar och kontroller behåller plats/semantik. `AppScreen` ger footern full device-bredd och bottom inset endast när footer finns. `BottomNav` använder hela kolumnbredden; fem etiketter passerar vid 140 % och 360/430 px. QA verifierade Home notification, alla fem flikar, Back/Close och riktig sign-in utan footer. `pnpm check` 387 pass/1 skip, iOS-export, screenshots/checklista, independent review, diff- och kövalidering PASS. Fysisk safe area och native selected-state/Dynamic Type/motion/tangentbord/VoiceOver är NOT TESTABLE i RN Web. Plan: [UI-07](ui-07.md). Release-logg: [UI-07](../../releases/UI-07.md). UI-06 checklistpunkt 15 godkändes på samma skärmdumpar.
+
+## FIX-36 QA-checkpoint — 2026-10-10
+
+Rättad tidsregex i Hälsa: giltig `HH:MM` avvisades eftersom mönstret matchade bokstaven `d`. Ny ren parser har gränstester `00:00 → 0`, `23:59 → 1439`, trimning, formatfel och intervallfel. Sparvägen skickar minuter när påminnelse är aktiv och fortsatt `null` när den är av. Lokalt `EventType`, logg-unioner, insertväg och migrationscheckar innehåller `accident`/`water`; befintliga migrationsfiler täcker typ- och shape-constraints.
+
+Architect APPROVE/Critic PROCEED för FIX-36 v2; independent QA och Reviewer PASS. Fokuserat parserprov PASS; `pnpm check` PASS (389 pass, 1 skip, 0 fail; tidszonstestets barnprocess krävde tillfällig tilläggsåtkomst eftersom standardsandbox returnerade EPERM); iOS-export PASS, diff-/kövalidering PASS. Ingen migration/deploy och inga credentials lästa. Ingen Supabase CLI, `.env` eller länkat projekt hittades: fjärrens applicerade historik, aktuell live-constraint och insert/RLS-runtime är NOT TESTABLE. Lokal kod och migrationsfiler omfattar `accident`/`water`. FIX-36 checkpointas och pushas efter commit. Release-logg: [FIX-36](../../releases/FIX-36.md).
+
+Leveranscommits efter att befintligt fjärrcommit `af1bc7a` bevarats: UI-06 `e50da50`, UI-07 `3adf73d`, FIX-36 `e29a5fb`. Push utförd till `origin/remove-ai-slop`; fjärrverifiering görs efter push.
+## UI-08 lokal checkpoint — 2026-10-10
+
+Toast i appen har nu semantiska 1 px-kanter enligt befintliga tokens. Figma-huvudkomponenten hade redan motsvarande färgade ramar, så ingen Figma-mutation behövdes. Hem visar karusellen före datumremsan och högst tre nyaste inlästa loggar för valt datum, med luft efter `Logga nu`. Mer-rader och bottenflikar har tokeniserad spacing. Kunskapskortens mindre rubriker och publicerade träningsrader använder kompakt befintlig typografisk token; övriga ListRow-anrop behåller standardstorleken.
+
+Typecheck, edge-account typecheck, iOS-export, riktat `tests/log-screen-policy.test.mjs`, `git diff --check` och kövalidering passerar. Lint har 0 fel och 33 varningar. `pnpm check` fallerar bara i `tests/notifications.test.mjs`: sandboxens interna `spawnSync` ger tom output i timezone-deltestet; samma beräkning direkt returnerar förväntat resultat. Oberoende källreview fann inga UI-fel.
+
+Visuell QA vid 360/430 px och 140 % är NOT TESTABLE: localhost-bind nekades och Chromium stoppade vid `setsockopt: Operation not permitted`. Inga nya skärmbilder skapades. Ingen visuell PASS eller färdiggranskning rapporteras. Checklista enligt designreglerna finns i [UI-08 visuell QA](../../design/UI-08/checklist.md), markerad NOT TESTABLE. Implementeringsdetaljer och ändrade appfiler finns i [UI-08](ui-08.md); sammanfattning finns i [release-loggen](../../releases/UI-08.md).
+
+## MOTION-01 implementation — 2026-10-10
+
+Implementerade tokeniserad React Native Animated-rörelse för Toast, Progress och bekräftad ChecklistItem samt uppdaterade toast-ägare i de åtta planerade vyerna. Ändrade även komponent-/themeguider och designregler. `TrainingScreen.tsx` och `ProductWorkspace.tsx` har ingen ny motionskod. Ingen dependency, sparsemantik, dubblettfönster, analytics eller data ändrades.
+
+Verifiering efter rättningar: `node --experimental-strip-types --test tests/motion-policy.test.mjs` PASS (sex policykontroller i en testfil), `git diff --check` PASS och `python tools/dev_flow.py validate` PASS. `pnpm typecheck` kunde inte starta eftersom pnpm försökte hämta paket och nätverksanrop gav EPERM; full `pnpm check` saknar därför PASS.
+
+Oberoende QA blockerade först på loggredigeringens feltoast och borttagen OS-rekommenderad timeout; båda är rättade. Vikt-toastens gamla exit callback skyddades mot att rensa nyare feedback. Förnyad QA hittade inga statiska fynd men native/visuella acceptanskriterier är NOT TESTABLE: timing, VoiceOver/TalkBack, stor text, reducerad rörelse och dold Toast-layoutgap saknar renderad evidens. Oberoende Reviewer gav code review PASS; full typecheck/lint och native QA återstår. MOTION-01 är inte DONE och MOTION-02 har inte startat. Eriks DS-CODE-01/LOGGA-QUICK-rapport avser inte MOTION-01. Se `docs/releases/MOTION-01.md`.

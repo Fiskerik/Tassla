@@ -1,4 +1,5 @@
-export const LOG_EVENT_TYPES = ['pee', 'poop', 'food', 'sleep', 'awake', 'walk'] as const;
+export const LOG_EVENT_TYPES = ['pee', 'poop', 'food', 'sleep', 'awake', 'walk', 'accident', 'water'] as const;
+export const LOG_ENTRY_TYPES = ['pee', 'poop', 'food', 'sleep', 'walk', 'accident', 'water'] as const;
 export type LogEventType = typeof LOG_EVENT_TYPES[number];
 export type LogEventOrigin = 'example' | 'local-test';
 
@@ -9,6 +10,8 @@ export const LOG_EVENT_LABELS: Record<LogEventType, string> = {
   sleep: 'Sömn',
   awake: 'Vaken',
   walk: 'Promenad',
+  accident: 'Olycka',
+  water: 'Vatten',
 };
 
 export interface LogEvent {

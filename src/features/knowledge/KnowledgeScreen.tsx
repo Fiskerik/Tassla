@@ -67,7 +67,7 @@ export function KnowledgeScreen({
           </MotionPressable> : null}
           <View style={styles.articleGrid}>{visibleItems.slice(1).map((item, index) => <MotionPressable key={item.id} accessibilityRole="button" accessibilityLabel={`Läs ${item.title}`} onPress={() => openArticle(item.id)} style={styles.smallCard}>
             <Image source={index % 2 ? require('../../../assets/images/dog-resting.png') : require('../../../assets/images/dog-welcome.png')} style={styles.smallImage} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-            <View style={styles.cardCopy}><Text style={styles.guideTitle}>{item.title}</Text><Text style={styles.readTime}>{readingMinutes(item.body)} min läsning</Text></View>
+            <View style={styles.cardCopy}><Text style={styles.smallGuideTitle}>{item.title}</Text><Text style={styles.readTime}>{readingMinutes(item.body)} min läsning</Text></View>
           </MotionPressable>)}</View>
         </View>}
         {selectedItem && <View style={styles.articleCard}>
@@ -117,6 +117,7 @@ const styles = StyleSheet.create({
   smallImage: { width: '100%', height: tokens.size.quickLogHeight },
   guideList: { gap: tokens.spacing.sm },
   guideTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  smallGuideTitle: { ...tokens.typography.caption, fontWeight: '700', color: tokens.colors.textPrimary },
   articleCard: { alignSelf: 'stretch', borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, marginTop: tokens.spacing.sm },
   articleTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginTop: tokens.spacing.md },
   articleBody: { marginTop: tokens.spacing.md },

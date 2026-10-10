@@ -185,6 +185,10 @@ Tidslinjen är en dataprincip. Den kräver inte en avancerad tidslinjeprodukt i 
 
 MVP:n ska validera att denna loop ger verkligt värde och upprepas över tid. Initial relevans kommer framför allt från ålder och ras; mer avancerad personalisering kan utvecklas senare.
 
+## App-design
+**Appen ska kännas levande. Animationer som infriar detta måste premieras**
+
+
 ## Utanför MVP
 
 Följande passar den långsiktiga visionen men ingår inte i första versionen:
@@ -207,6 +211,10 @@ Kommersiella partners ska inte vara beroenden för lansering. Framtida funktione
 Prioritera låg friktion, relevant hjälp och återkommande värde framför funktionsbredd. Nya behov från användartester kan motivera en scopeändring, men ska uttryckligen godkännas och skrivas in här innan de blir krav.
 
 Exempelvis är delning av vardagsloggen med en partner inte beslutad MVP-funktionalitet. Den kan omprövas om piloten visar att den är avgörande för användning i hushållet.
+
+### Eriks tillägg 2026-10-10, utanför ursprunglig MVP
+
+För MOTION-paketet godkände Erik mikrorörelse, tips vid första användning och en valpfigur utanför den ursprungliga MVP:n. Omfattning och begränsningar finns i [beslut 0004](decisions/0004-motion-package.md). Detta tillägg gäller endast MOTION-paketets fyra avgränsade slices; det ändrar inte övrig MVP-scope.
 
 ## Definition av framgång
 

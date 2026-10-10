@@ -3,7 +3,7 @@
 Kanonisk policy för alla nya och reviderade UI-uppgifter. Införd på Eriks begäran från originalet DESIGN_RULES (1).md och jämförd med Tassla-design-policy.zip. Originalets regler och 18 kontrollpunkter följer nedan. Bilagorna är designunderlag; deras installationskommandon och gamla statusuppgifter är inte projektmandat.
 
 ## Tillämpning i aktuellt Tassla
-- Detta dokument preciserar och ersätter motstridiga äldre visuella råd i docs/dev/ui-and-code-standards.md. Följ varm, lugn målbild framför äldre krav på ”modig” färg eller dekorativ rörelse.
+- Detta dokument preciserar och ersätter motstridiga äldre visuella råd i docs/dev/ui-and-code-standards.md. Följ varm, lugn målbild framför äldre krav på ”modig” färg. Målstyrd rörelse som svar på en användarhandling är tillåten; loopande dekorativ rörelse är inte tillåten.
 - Ingen ny appfunktion, datainsamling, delningslänk, foder-/allergi-/medicinfält, flik, flerhundsstöd eller schemaändring godkänns automatiskt av en bild eller komponentlista. Godkänt MVP-scope och faktiska uppgifter styr innehållet. Framtida design ska inte skapa spekulativa abstraktioner nu.
 - ”Luna” i målbilden är exempel. Visa aktuell hunds riktiga namn. Befintliga dekorbilder får inte presenteras som ägarens hundfoto; använd en tydlig vänlig platshållare när foto saknas.
 - Tvåradersregeln gäller kort förklarande copy i arbetsflöden. Flytta fördjupning till läsvy eller Läs mer; klipp inte viktig text och minska inte text/tryckytor för att uppfylla raden vid stor text. Nödvändiga säkerhetsvarningar och information som behövs för ett aktivt val måste fortfarande gå att förstå och läsa.
@@ -326,9 +326,44 @@ Resultat: GODKÄND | UNDERKÄND
 Underkända punkter: [nummer + en rad om vad som är fel + förslag]
 ```
 
+### Förslag till kompletterande checklistpunkter 19–22 – väntar Eriks granskning
+
+Punkterna nedan är förslag för framtida visuell QA. De ändrar inte checklistans beslutade punkter 1–18.
+
+19. Är rörelse kopplad till bekräftat tillstånd och inom tokeniserad tidsgräns?
+20. Försvinner eller förenklas rörelsen vid reducerad rörelse utan att information går förlorad?
+21. Är valpfiguren enbart positiv eller neutral och finns betydelsen även i text bredvid?
+22. Finns högst ett första-användningstips per skärm och ryms det på högst två rader?
+
 ---
 
-## 15. Vad agenter inte får göra
+## 15. Rörelse
+
+- Använd React Natives inbyggda `Animated`; lägg inte till Lottie, Rive, Reanimated, `react-native-svg` eller haptikpaket för MOTION.
+- Alla animationstider hämtas från `tokens.motion`. Varje animation varar 120–350 ms, kan avbrytas och blockerar aldrig input.
+- Rörelse visar ett bekräftat tillstånd, aldrig själva trycket som om det vore en lyckad skrivning. Framgångsrörelse startar först när status är `saved` eller när data som kommer från sparat tillstånd ändras. Vid `failed` eller `unsure` visas befintlig fel-/osäkerfeedback utan framgångsrörelse.
+- Animera inte vid första rendering; animera bara ändringar efter mount. Ingen idle-loop eller dekorativ rörelse.
+- Respektera `useReducedMotion`: ändringen sker direkt och samma status, text, ikon och skärmläsarbetydelse finns kvar.
+- Rörelse är aldrig enda feedbackkanal. Native driver används för opacity/transform. Layout får använda JS-driver endast för ett litet element, exempelvis den befintliga 4 px progressfyllningen.
+- UI-copy och bekräftelse får aldrig antyda att data sparats före verkligt lyckad skrivning.
+
+## 16. Tips vid första användning
+
+- Högst ett litet, avfärdbart tips per skärm och endast vid användarens första besök på den skärmen.
+- Tipset har högst två rader, försvinner vid första interaktion och tar inte plats från formulär, huvudhandling eller sparstatus.
+- Tipset är inte en `InfoBanner` och räknas inte som den tillåtna handlingskrävande informationsrutan. Det ska vara diskret och inte kräva att användaren agerar.
+- Spara en "sett"-flagga per ägare i SecureStore enligt `src/notifications/notification-storage.ts`. Rensa flaggorna vid kontoborttagning. Inget nytt databasfält eller analytics-event.
+- Hälsotips ger inte veterinärmedicinska råd. Ny svensk copy granskas av Product och Critic före leverans.
+
+## 17. Valpfigur
+
+- Figuren får endast ha positiva eller neutrala lägen: lugn, glad, stolt och vilar. Inga ledsna, besvikna, sjuka eller skuldbeläggande lägen.
+- Figuren speglar endast appaktivitet: bekräftad logg, bekräftat träningssteg eller ett klart program. Den antyder aldrig hundens hälsa, känslor, lydnad eller färdighet. Träningsdelens reservation får inte motsägas.
+- Reaktionen spelas en gång efter bekräftad händelse, aldrig som loop. En text bär alltid betydelsen bredvid figuren.
+- Figuren är dekorativ för skärmläsare. Första placering är vid första bekräftade loggen och bekräftat träningssteg; ingen hälsobaserad eller Hem-baserad hälsning.
+- Illustration ska vara varm och lugn i Tasslas cream/gröna palett, tydligt illustrerad, utan specifik ras, text eller logotyp och får inte kunna misstas för ägarens hund.
+
+## 18. Vad agenter inte får göra
 
 - Lägga till nya färger, ikonstilar eller knappstilar utan att uppdatera tokens/komponenter.
 - Lägga till förklarande bannertexter "för säkerhets skull".

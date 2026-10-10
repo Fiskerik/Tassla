@@ -23,3 +23,4 @@ export { StatusBadge } from './StatusBadge';
 export { Skeleton } from './Skeleton';
 export { Tabs } from './Tabs';
 export { Toast } from './Toast';
+export { MainSwipeNavigation } from './MainSwipeNavigation';

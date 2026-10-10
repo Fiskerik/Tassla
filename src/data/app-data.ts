@@ -14,6 +14,15 @@ export interface OwnedDogProfileChanges {
   birth_date: string;
 }
 
+export interface OwnedDogAttribution {
+  code: string;
+  name: string;
+}
+
+export type DogAttributionWriteOutcome =
+  | { status: 'saved'; value: OwnedDogAttribution | null }
+  | { status: 'failed' | 'unknown' };
+
 export interface BreedOption {
   id: string;
   name: string;
@@ -177,6 +186,49 @@ export async function ownedDogAttributionMatches(
     if (error || typeof data !== 'boolean') throw new Error('Could not check the dog source');
     return data;
   });
+}
+
+export async function fetchOwnedDogAttribution(
+  client: SupabaseClient,
+  dogId: string,
+): Promise<OwnedDogAttribution | null> {
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.rpc('owned_dog_attribution_details', {
+      requested_dog_id: dogId,
+    }).abortSignal(signal);
+    if (error) throw new Error('Could not load the dog source');
+    if (!Array.isArray(data)) throw new Error('Dog source response did not match the database contract');
+    if (data.length === 0) return null;
+    const row = data[0] as Record<string, unknown>;
+    if (typeof row.code !== 'string' || typeof row.name !== 'string') {
+      throw new Error('Dog source response did not match the database contract');
+    }
+    return { code: row.code, name: row.name };
+  });
+}
+
+export async function updateOwnedDogAttribution(
+  client: SupabaseClient,
+  dogId: string,
+  kennelCode: string | null,
+): Promise<DogAttributionWriteOutcome> {
+  let result: { data: unknown; error: unknown };
+  try {
+    result = await withRequestDeadline(async (signal) => await client.rpc('set_owned_dog_attribution', {
+      requested_dog_id: dogId,
+      requested_kennel_code: kennelCode?.trim().toUpperCase() || null,
+    }).abortSignal(signal));
+  } catch {
+    return { status: 'unknown' };
+  }
+  if (result.error || result.data !== true) return { status: 'failed' };
+  try {
+    const value = await fetchOwnedDogAttribution(client, dogId);
+    if (kennelCode !== null && value === null) return { status: 'unknown' };
+    return { status: 'saved', value };
+  } catch {
+    return { status: 'unknown' };
+  }
 }
 
 async function withRequestDeadline<T>(request: (signal: AbortSignal) => Promise<T>): Promise<T> {

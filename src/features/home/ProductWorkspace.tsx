@@ -57,13 +57,17 @@ import {
   type WriteOutcome,
 } from '../../data/workspace-data';
 import {
+  fetchOwnedDogAttribution,
   fetchOwnedDogById,
   fetchBreeds,
+  updateOwnedDogAttribution,
   updateOwnedDog,
   type BreedOption,
+  type DogAttributionWriteOutcome,
   type DogProfileWriteOutcome,
   type HomeContent,
   type OwnedDog,
+  type OwnedDogAttribution,
   type OwnedDogProfileChanges,
 } from '../../data/app-data';
 import { ageInWeeks, localDate } from '../onboarding/dog';
@@ -72,7 +76,7 @@ import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
 import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
 import { HomeScreen } from './HomeScreen';
-import { AppBar, BottomNav, type BottomNavDestination } from '../../components/ui';
+import { AppBar, BottomNav, MainSwipeNavigation, type BottomNavDestination } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
 import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
 import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
@@ -110,10 +114,25 @@ type PendingPlannedHealthMutation =
 type PendingProfileMutation = { previous: OwnedDog; changes: OwnedDogProfileChanges; knownBreeds: readonly BreedOption[]; lifetime: string };
 
 const PAGE_SIZE = 40;
+const MAIN_PAGES: ProductPage[] = ['home', 'log', 'training', 'health', 'knowledge', 'passport'];
 
 export function ProductWorkspace({ client, dog, onDogUpdated }: { client: SupabaseClient; dog: OwnedDog; onDogUpdated?: (updated: OwnedDog) => void }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
-  const [page, setPage] = useState<ProductPage>('home');
+  const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>({ page: 'home', previousPage: 'home' });
+  const { page, previousPage } = navigation;
+  const setPage = useCallback((nextPage: ProductPage) => {
+    setNavigation((current) => current.page === nextPage
+      ? current
+      : { page: nextPage, previousPage: current.page });
+  }, []);
+  const handleMainSwipe = useCallback((direction: 'left' | 'right') => {
+    setNavigation((current) => {
+      const index = MAIN_PAGES.indexOf(current.page);
+      if (index < 0) return current;
+      const next = MAIN_PAGES[index + (direction === 'left' ? 1 : -1)];
+      return next ? { page: next, previousPage: current.page } : current;
+    });
+  }, []);
   const [breeds, setBreeds] = useState<BreedOption[]>([]);
   useEffect(() => {
     let active = true;
@@ -181,6 +200,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [profileMessage, setProfileMessage] = useState('');
   const [profileMessageError, setProfileMessageError] = useState(false);
   const [profileConflict, setProfileConflict] = useState<OwnedDog | null>(null);
+  const [dogAttribution, setDogAttribution] = useState<OwnedDogAttribution | null>(null);
+  const [attributionState, setAttributionState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [attributionBusy, setAttributionBusy] = useState(false);
+  const [attributionMessage, setAttributionMessage] = useState('');
+  const [attributionMessageError, setAttributionMessageError] = useState(false);
   const [training, setTraining] = useState<{ programs: PublishedTrainingProgram[]; paused: PausedTrainingProgress[] }>({ programs: [], paused: [] });
   const [trainingState, setTrainingState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [trainingSelectionKey, setTrainingSelectionKey] = useState<string | null>(null);
@@ -460,7 +484,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     } catch {
       handledNotificationResponses.current.delete(responseKey);
     }
-  }, [client]);
+  }, [client, setPage]);
 
   useEffect(() => {
     let active = true;
@@ -492,6 +516,19 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       setProfileMessageError(false);
       setProfileConflict(null);
     }
+    // Hide the previous dog's kennel link while the next dog's attribution loads.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAttributionState('loading');
+    setAttributionMessage('');
+    setAttributionMessageError(false);
+    void fetchOwnedDogAttribution(client, dog.id).then((value) => {
+      if (!mounted.current || currentProfileLifetime !== profileLifetime.current) return;
+      setDogAttribution(value);
+      setAttributionState('ready');
+    }).catch(() => {
+      if (!mounted.current || currentProfileLifetime !== profileLifetime.current) return;
+      setAttributionState('error');
+    });
     const currentHistoryLifetime = currentHealthHistoryLifetime;
     if (previousHealthHistoryLifetime.current !== currentHistoryLifetime) {
       previousHealthHistoryLifetime.current = currentHistoryLifetime;
@@ -669,6 +706,52 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       lifetime: profileLifetime.current,
     };
     return runProfileMutation(mutation);
+  }
+
+  async function retryDogAttribution() {
+    if (attributionBusy) return;
+    setAttributionState('loading');
+    setAttributionMessage('');
+    setAttributionMessageError(false);
+    try {
+      const value = await fetchOwnedDogAttribution(client, dog.id);
+      if (!mounted.current) return;
+      setDogAttribution(value);
+      setAttributionState('ready');
+    } catch {
+      if (mounted.current) setAttributionState('error');
+    }
+  }
+
+  async function saveDogAttribution(code: string | null): Promise<boolean> {
+    if (attributionBusy || !mounted.current) return false;
+    setAttributionBusy(true);
+    setAttributionMessage('');
+    setAttributionMessageError(false);
+    let outcome: DogAttributionWriteOutcome;
+    try {
+      outcome = await updateOwnedDogAttribution(client, dog.id, code);
+      if (!mounted.current) return false;
+      if (outcome.status === 'saved') {
+        setDogAttribution(outcome.value);
+        setAttributionState('ready');
+        setAttributionMessage(outcome.value ? 'Kennelkopplingen är sparad.' : 'Kennelkopplingen är borttagen.');
+        return true;
+      }
+      setAttributionMessage(outcome.status === 'unknown'
+        ? 'Vi kunde inte bekräfta kennelkopplingen. Kontrollera den innan du försöker igen.'
+        : 'Kennelkoden kunde inte sparas. Kontrollera koden och försök igen.');
+      setAttributionMessageError(true);
+      return false;
+    } catch {
+      if (mounted.current) {
+        setAttributionMessage('Kennelkopplingen kunde inte sparas. Kontrollera anslutningen och försök igen.');
+        setAttributionMessageError(true);
+      }
+      return false;
+    } finally {
+      if (mounted.current) setAttributionBusy(false);
+    }
   }
 
   async function retryProfileStatus() {
@@ -1637,7 +1720,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       || pendingHealthHistoryMutation.current || pendingPlannedHealthMutation.current
       || pendingProfileMutation.current || logMutationFlight.current || healthMutationInFlight.current
       || healthHistoryMutationInFlight.current || plannedHealthMutationInFlight.current
-      || profileMutationInFlight.current || trainingMutationInFlight.current || notificationBusy || accountDeleteBusy;
+      || profileMutationInFlight.current || trainingMutationInFlight.current || notificationBusy || attributionBusy || accountDeleteBusy;
     if (unresolvedWrite) {
       setAccountDeleteStatus('blocked');
       return { status: 'failed' };
@@ -1779,8 +1862,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   if (fontError) return <AppScreen><MessageCard tone="error">Ikonerna kunde inte laddas. Starta om appen och försök igen.</MessageCard></AppScreen>;
 
   const pageContent = renderPage();
+  const transitionDirection = navigationDirection(previousPage, page);
   return <AppScreen scrollKey={page} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={mainDestination(page)} onChange={setPage} />}>
-    <ScreenTransition transitionKey={page}>{pageContent}</ScreenTransition>
+    <MainSwipeNavigation enabled={MAIN_PAGES.includes(page)} onSwipe={handleMainSwipe}>
+      <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x">{pageContent}</ScreenTransition>
+    </MainSwipeNavigation>
   </AppScreen>;
 
   function renderPage() {
@@ -1803,6 +1889,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     />;
     if (page === 'log') return <LogScreen events={displayEvents} onAdd={addEvent}
       onUpdate={updateEvent} onDelete={(id) => deleteEvent(id)} mode="cloud"
+      layoutOwnerId={session?.user.id}
       loading={logState === 'loading'} loadError={logState === 'error'} onReload={() => { void retryEvents(); }}
       busy={logBusy} mutation={quickLogMutation} loadMoreError={loadMoreError} onRetry={retryLogMutation} onCancel={cancelLogMutation}
       onUndo={(id) => { void undoQuickLog(id); }} hasMore={hasMore} loadingMore={loadingMore}
@@ -1938,10 +2025,20 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     if (onDogUpdated) return <EditDogProfileScreen key={`${dog.id}:${dog.name}:${dog.breed_id}:${dog.birth_date}`}
       client={client} dog={dog} busy={profileBusy} pending={profilePending} statusMessage={profileMessage}
       statusError={profileMessageError} conflict={profileConflict ?? undefined}
+      attribution={dogAttribution} attributionState={attributionState} attributionBusy={attributionBusy}
+      attributionMessage={attributionMessage} attributionMessageError={attributionMessageError}
       onBack={() => setPage('more')} onSave={saveDogProfile}
+      onSaveAttribution={saveDogAttribution} onRetryAttribution={() => { void retryDogAttribution(); }}
       onRetryStatus={() => { void retryProfileStatus(); }} onAcceptCurrent={() => { void acceptCurrentProfile(); }} />;
     return <DogProfilePage dog={dog} onBack={() => setPage('more')} />;
   }
+
+}
+
+function navigationDirection(previous: ProductPage, current: ProductPage): 'forward' | 'backward' {
+  const previousIndex = MAIN_PAGES.indexOf(previous);
+  const currentIndex = MAIN_PAGES.indexOf(current);
+  return currentIndex >= 0 && previousIndex >= 0 && currentIndex < previousIndex ? 'backward' : 'forward';
 }
 
 function MorePage({ onNavigate, signOutError, signingOut, onSignOut, onOpenNotifications, onOpenAccount }: {
@@ -2047,7 +2144,7 @@ function sameOwnedDogProfile(
 
 const styles = StyleSheet.create({
   cardEyebrow: { color: theme.colors.accent, ...tokens.typography.caption, marginBottom: tokens.spacing.sm },
-  menuRow: { minHeight: 74, flexDirection: 'row', alignItems: 'center', gap: 13, borderRadius: theme.radius.button, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, paddingHorizontal: 14, marginBottom: 10 },
+  menuRow: { minHeight: 74, flexDirection: 'row', alignItems: 'center', gap: 13, borderRadius: theme.radius.button, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, paddingHorizontal: 14, marginBottom: tokens.layout.listGap },
   menuCopy: { flex: 1 },
   menuTitle: { color: theme.colors.text, ...tokens.typography.label },
   menuDetail: { color: theme.colors.mutedText, ...tokens.typography.caption, marginTop: tokens.spacing.xs },

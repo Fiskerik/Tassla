@@ -3,7 +3,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import type { Dog } from '../onboarding/dog';
-import { ageInWeeks, localDate } from '../onboarding/dog';
+import { formatDogAge, localDate } from '../onboarding/dog';
 
 export function PreviewHomeScreen({
   dog,
@@ -18,7 +18,7 @@ export function PreviewHomeScreen({
   onOpenTraining: () => void;
   trainingShortcut: { programTitle: string; stepTitle: string; stepNumber: number; completedCount: number; totalCount: number } | null;
 }) {
-  const age = ageInWeeks(dog.birthDate, localDate());
+  const age = formatDogAge(dog.birthDate, localDate());
   return (
     <View>
       <PageHeading title={`Hej, ${dog.name}!`} description="En lugn överblick för er vardag." />
@@ -28,7 +28,7 @@ export function PreviewHomeScreen({
         </View>
         <View style={styles.dogCopy}>
           <Text style={styles.dogName}>{dog.name}</Text>
-          <Text style={styles.dogMeta}>{age} {age === 1 ? 'vecka gammal' : 'veckor gammal'}</Text>
+          <Text style={styles.dogMeta}>{age}</Text>
         </View>
       </View>
       <Text style={styles.sectionTitle} accessibilityRole="header">Idag för {dog.name}</Text>

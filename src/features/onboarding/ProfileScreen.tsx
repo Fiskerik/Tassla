@@ -24,14 +24,13 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   const [saveState, setSaveState] = useState<'idle' | 'error' | 'unknown' | 'invalidCode' | 'existingProfile'>('idle');
   const [kennelCode, setKennelCode] = useState('');
   const [sourceSelected, setSourceSelected] = useState(false);
-  const [referralReady, setReferralReady] = useState(false);
   const operationInFlight = useRef(false);
 
   useEffect(() => {
     let active = true;
     void readSecurePendingReferral().then((referral) => {
       if (active && referral) setKennelCode(referral.code);
-    }).catch(() => undefined).finally(() => { if (active) setReferralReady(true); });
+    }).catch(() => undefined);
     return () => { active = false; };
   }, []);
 
@@ -61,7 +60,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
           setSaveState('existingProfile');
           return false;
         }
-        if (!await ownedDogAttributionMatches(client, dog.id, referralCode)) {
+        if (referralCode !== null && !await ownedDogAttributionMatches(client, dog.id, referralCode)) {
           setSaveState('unknown');
           return false;
         }
@@ -130,7 +129,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   }
 
   const canSubmit = name.trim().length > 0 && name.trim().length <= 80 && Boolean(breedId)
-    && isValidBirthDate(birthDate) && (!sourceSelected || Boolean(normalizeKennelCode(kennelCode))) && referralReady;
+    && isValidBirthDate(birthDate) && (!sourceSelected || Boolean(normalizeKennelCode(kennelCode)));
 
   return (
     <AppScreen>

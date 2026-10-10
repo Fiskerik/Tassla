@@ -17,7 +17,7 @@ tsResolution.deregister();
 const baseUrl = 'https://local-test.supabase.invalid';
 const dogId = '11111111-1111-4111-8111-111111111111';
 
-test('dog-event history filters the six everyday types and has deterministic owner-scoped pagination order', async () => {
+test('dog-event history filters the supported everyday types and has deterministic owner-scoped pagination order', async () => {
   const event = {
     id: '22222222-2222-4222-8222-222222222222',
     dog_id: dogId,
@@ -32,7 +32,7 @@ test('dog-event history filters the six everyday types and has deterministic own
     assert.equal(method, 'GET');
     assert.equal(url.pathname, '/rest/v1/dog_events');
     assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
-    assert.equal(url.searchParams.get('event_type'), 'in.(pee,poop,food,sleep,awake,walk)');
+    assert.equal(url.searchParams.get('event_type'), 'in.(pee,poop,food,sleep,awake,walk,accident,water)');
     const order = url.searchParams.get('order')?.split(',') ?? [];
     assert.ok(order.includes('occurred_at.desc'));
     assert.ok(order.some((value) => /^id\.(asc|desc)$/.test(value)), 'stable event ID tie-breaker is required');

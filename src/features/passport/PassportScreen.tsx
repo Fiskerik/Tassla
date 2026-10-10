@@ -7,7 +7,7 @@ import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPri
 import { Toast } from '../../components/ui/Toast';
 import { fetchBreeds, type BreedOption, type OwnedDog } from '../../data/app-data';
 import type { HealthHistoryRecord, HealthWeightRecord } from '../../data/workspace-data';
-import { localDate } from '../onboarding/dog';
+import { formatDogAge, localDate } from '../onboarding/dog';
 import { tokens } from '../../theme/tokens';
 import { AppBar, BottomSheet, Button, DogCard } from '../../components/ui';
 import { createAndSharePassportPdf, type PassportExportResult } from './passport-export';
@@ -54,6 +54,7 @@ export function PassportScreen(props: PassportScreenProps) {
   const [statusMessage, setStatusMessage] = useState('');
   const [statusError, setStatusError] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastVisible, setToastVisible] = useState(false);
   const mounted = useRef(true);
   const lifetimeRef = useRef(props.lifetime ?? 'preview');
   const operationInFlight = useRef(false);
@@ -67,10 +68,9 @@ export function PassportScreen(props: PassportScreenProps) {
   useEffect(() => {
     // The toast mirrors an external save-status prop and is intentionally reset here.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!statusMessage || statusError) { setToastMessage(null); return; }
+    if (!statusMessage || statusError) { setToastVisible(false); return; }
     setToastMessage(statusMessage);
-    const timer = setTimeout(() => setToastMessage(null), 2500);
-    return () => clearTimeout(timer);
+    setToastVisible(true);
   }, [statusMessage, statusError]);
   useEffect(() => {
     if (!client || !dog) return;
@@ -187,7 +187,7 @@ export function PassportScreen(props: PassportScreenProps) {
         </BottomSheet>
         {statusMessage && statusError ? <MessageCard tone="error">{statusMessage}</MessageCard> : null}
         <PrimaryButton title={exporting ? 'Skapar PDF…' : 'Dela som PDF'} disabled={!ready || !snapshot || busy || !selectedAny} onPress={() => { void createAndShare(); }} />
-        {toastMessage ? <Toast tone="neutral" message={toastMessage} /> : null}
+        <Toast visible={toastVisible} tone="neutral" message={toastMessage ?? undefined} autoDismissMs={2500} onAutoDismiss={() => setToastVisible(false)} onExitComplete={() => setToastMessage(null)} />
         {props.weightLoadState === 'error' && <QuietButton title="Försök hämta vikterna igen" disabled={busy} onPress={props.onRetryWeights ?? (() => undefined)} />}
         {props.historyLoadState === 'error' && <QuietButton title="Försök hämta hälsoposter igen" disabled={busy} onPress={props.onRetryHistory ?? (() => undefined)} />}
       </>}
@@ -210,7 +210,7 @@ function SelectionRow({ iconsLoaded, icon, title, detail, checked, disabled, onP
 function SnapshotPreview({ snapshot }: { snapshot: PassportSnapshot }) {
   return <View>
     {snapshot.selected.profile && <View>
-      {snapshot.dog ? <DogCard name={snapshot.dog.name} breed={snapshot.dog.breed} age={`Född ${snapshot.dog.birthDate}`} /> : <Text style={styles.body}>Hunduppgifter saknas.</Text>}
+      {snapshot.dog ? <DogCard name={snapshot.dog.name} breed={snapshot.dog.breed} age={`${formatDogAge(snapshot.dog.birthDate, localDate())} · Född ${snapshot.dog.birthDate}`} /> : <Text style={styles.body}>Hunduppgifter saknas.</Text>}
     </View>}
     {snapshot.selected.latestWeight && <View style={styles.snapshotSection}>
       <Text style={styles.snapshotHeading}>Senaste vikten</Text>

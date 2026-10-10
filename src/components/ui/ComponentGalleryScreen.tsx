@@ -23,7 +23,7 @@ import { Skeleton } from './Skeleton';
 import { Tabs } from './Tabs';
 import { Toast } from './Toast';
 
-const categories: IconCategory[] = ['pee', 'poop', 'food', 'sleep', 'awake', 'walk', 'training', 'vaccination', 'deworming', 'veterinary'];
+const categories: IconCategory[] = ['pee', 'poop', 'food', 'sleep', 'awake', 'walk', 'accident', 'water', 'training', 'vaccination', 'deworming', 'veterinary'];
 
 export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
   const [activeTab, setActiveTab] = useState('Översikt');
@@ -68,10 +68,10 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
     <Progress value={60} label="3 av 5 genomförda" />
     <Progress value={100} label="5 av 5 genomförda" />
     <SectionHeader title="Återkoppling och status" />
-    <Toast tone="success" message="Loggat · Sparat" confirmed onUndo={() => undefined} />
-    <Toast tone="error" message="Kunde inte spara" onRetry={() => undefined} />
-    <Toast tone="neutral" message="Påminnelsen är avstängd" />
-    <Toast tone="uncertain" onRetry={() => undefined} />
+    <Toast visible tone="success" message="Loggat · Sparat" confirmed onUndo={() => undefined} />
+    <Toast visible tone="error" message="Kunde inte spara" onRetry={() => undefined} />
+    <Toast visible tone="neutral" message="Påminnelsen är avstängd" />
+    <Toast visible tone="uncertain" onRetry={() => undefined} />
     <StatusBadge status="saving" /><StatusBadge status="offline" /><StatusBadge status="error" />
     <EmptyState onAction={() => undefined} />
     <SectionHeader title="Formulär och val" />

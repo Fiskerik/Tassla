@@ -10,21 +10,31 @@ export function AppBar({ mode, title, onAction, actionLabel }: { mode: Mode; tit
       <Ionicons name={icon} size={tokens.size.iconMd} color={tokens.colors.textPrimary} />
     </MotionPressable>
   );
-  if (mode === 'Home') return <View style={styles.bar}>
-    <Text accessibilityRole="header" style={styles.brand}>Tassla</Text>
-    {onAction ? control('notifications-outline', actionLabel ?? 'Påminnelser') : null}
+
+  if (mode === 'Home') return <View style={[styles.bar, styles.homeBar]}>
+    <View style={styles.side} />
+    <Text accessibilityRole="header" style={styles.homeBrand}>Tassla</Text>
+    <View style={styles.side}>{onAction ? control('notifications-outline', actionLabel ?? 'Påminnelser') : null}</View>
   </View>;
-  return <View style={styles.bar}>
-    <View style={styles.side}>{mode === 'Back' ? control('chevron-back', 'Tillbaka') : null}</View>
-    <Text accessibilityRole="header" style={styles.title}>{title}</Text>
-    <View style={styles.side}>{mode === 'Close' ? control('close', 'Stäng') : null}</View>
+
+  return <View style={[styles.bar, styles.titleBar]}>
+    <Text style={styles.brand} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">Tassla</Text>
+    <View style={styles.titleRow}>
+      <View style={styles.side}>{mode === 'Back' ? control('chevron-back', 'Tillbaka') : null}</View>
+      <Text accessibilityRole="header" style={styles.title}>{title}</Text>
+      <View style={styles.side}>{mode === 'Close' ? control('close', 'Stäng') : null}</View>
+    </View>
   </View>;
 }
 const styles = StyleSheet.create({
-  bar: { minHeight: tokens.size.navHeight, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: tokens.spacing.md },
-  side: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin },
+  bar: { marginBottom: tokens.spacing.md },
+  homeBar: { minHeight: tokens.size.navHeight, flexDirection: 'row', alignItems: 'center' },
+  titleBar: { gap: tokens.spacing.xs },
+  brand: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'center' },
+  homeBrand: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'center', flex: 1 },
+  titleRow: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center' },
+  side: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
   action: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center' },
-  brand: { ...tokens.typography.title, color: tokens.colors.textPrimary },
   title: { ...tokens.typography.label, color: tokens.colors.textPrimary, textAlign: 'center', flex: 1 },
   pressed: { backgroundColor: tokens.colors.selectedSurface },
 });

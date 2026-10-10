@@ -25,6 +25,7 @@ export function NotificationSettingsScreen({
   const [trainingTime, setTrainingTime] = useState(formatTime(preferences.trainingMinutes));
   const [showSavedToast, setShowSavedToast] = useState(saved);
   const [toastMessage, setToastMessage] = useState<string | null>(saved ? 'Valen är sparade för ditt konto på den här enheten.' : null);
+  const [toastVisible, setToastVisible] = useState(saved);
   const [formError, setFormError] = useState('');
   const [permissionBusy, setPermissionBusy] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState('');
@@ -36,19 +37,14 @@ export function NotificationSettingsScreen({
   useEffect(() => {
     // Reset the transient toast when the persisted save status changes.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!showSavedToast || !saved || statusError) { setToastMessage(null); return; }
+    if (!showSavedToast || !saved || statusError) { setToastVisible(false); return; }
     setToastMessage('Valen är sparade för ditt konto på den här enheten.');
-    const timer = setTimeout(() => {
-      setShowSavedToast(false);
-      setToastMessage(null);
-    }, 2500);
-    return () => clearTimeout(timer);
   }, [showSavedToast, saved, statusError, preferences]);
 
   async function save() {
     setFormError('');
     setShowSavedToast(false);
-    setToastMessage(null);
+    setToastVisible(false);
     const minutes = parseTime(trainingTime);
     if (minutes === null) {
       setFormError('Ange en tid mellan 00:00 och 23:59.');
@@ -56,6 +52,8 @@ export function NotificationSettingsScreen({
     }
     if (await onSave({ version: 1, enabled, trainingEnabled, trainingMinutes: minutes })) {
       setShowSavedToast(true);
+      setToastMessage('Valen är sparade för ditt konto på den här enheten.');
+      setToastVisible(true);
     }
   }
 
@@ -123,8 +121,8 @@ export function NotificationSettingsScreen({
     {permissionState === 'denied' && <MessageCard tone="error">Enheten nekar notiser. Appen fungerar fortfarande.</MessageCard>}
     {statusMessage && statusError ? <MessageCard tone="error">{statusMessage}</MessageCard> : null}
     {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
-    {toastMessage && showSavedToast && saved && !statusError && !isDirty
-      ? <Toast tone="success" confirmed message={toastMessage} /> : null}
+    <Toast visible={toastVisible && showSavedToast && saved && !statusError && !isDirty} tone="success" confirmed message={toastMessage ?? undefined}
+      autoDismissMs={2500} onAutoDismiss={() => { setToastVisible(false); setShowSavedToast(false); }} onExitComplete={() => setToastMessage(null)} />
     <Button label={busy ? 'Sparar…' : 'Spara val'} accessibilityLabel={busy ? 'Sparar val' : 'Spara val'}
       loading={busy} disabled={busy} onPress={() => { void save(); }} />
   </View>;

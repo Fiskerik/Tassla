@@ -5,7 +5,7 @@ export interface CreateDogInput {
   kennel_code?: string | null;
 }
 
-export type EventType = 'pee' | 'poop' | 'food' | 'sleep' | 'awake' | 'walk'
+export type EventType = 'pee' | 'poop' | 'food' | 'sleep' | 'awake' | 'walk' | 'accident' | 'water'
   | 'weight' | 'vaccination' | 'vet_visit';
 
 export interface TimedDogEventInput {

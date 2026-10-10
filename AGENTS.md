@@ -146,3 +146,16 @@ Ansvarig: EriMali AB. Postadress: Stenvallavägen 1, 18634 Vallentuna. Support: 
 
 ## Bindande designpolicy — Eriks beslut 2026-10-07
 Läs docs/design-rules.md före planering, implementation och granskning av UI. Använd originalets målbild, gemensamma tokens/komponenter och 18-punktschecklista: max en huvudknapp, kompakt information, tydlig navigation, enhetliga ikoner och inga tekniska banners eller statusetiketter på normala poster. Product ansvarar för UX-copy; Critic granskar begriplighet. Varje UI-task ska ange användaruppgift, huvudhandling, synlig information, fördjupning, målbild/avvikelser och visuell verifiering. Separat QA/Reviewer jämför renderade skärmdumpar med målbilden; kodkontroll ensam ger inte visuellt PASS. Dokumentera NOT TESTABLE när evidens saknas och rätta konkreta regelbrott i berörd slice. Nyare designpolicy ersätter motstridiga äldre visuella råd; MVP-scope, sanningsenlighet, säkerhet och Eriks TestFlight-policy kvarstår. Befintlig UI är inte ombyggd genom instruktionerna. Nya agentstarter läser policyn; pågående agenter ska uttryckligen få den innan nästa UI-arbete.
+
+Eriks MOTION-beslut 2026-10-10 finns i `docs/decisions/0004-motion-package.md`; kökonflikter och telefonprov styr slice-ordningen.
+
+
+## INNAN COMMIT OCH PUSH TILL GITHUB
+
+Alla kontroller nedan måste köras automatiskt före varje commit och push. Misslyckad kontroll stoppar operationen och felet ska rättas innan ett nytt försök.
+
+- Aktivera de versionshanterade Git-hookarna en gång i varje klon med `./tools/install-git-hooks.sh`. Kontrollera att `git config --get core.hooksPath` visar `.githooks`.
+- `.githooks/pre-commit` kör `pnpm check` och `git diff --cached --check` före varje commit.
+- `.githooks/pre-push` kör `pnpm check` samt `git diff --check` för varje ref som pushas. Ny branch jämförs från det tomma Git-trädet; en ref som tas bort saknar ny tree och hoppas endast över i whitespace-kontrollen.
+- Hoppas inte över hookar eller tester och använd inte `--no-verify`. Ta inte bort eller inaktivera ett test för att få bygget grönt. Om testets kontrakt är föråldrat, uppdatera assertionen till det verifierade beteendet; om felet är verkligt, rätta produktionen.
+- Hookarna gäller normala Git-operationer i kloner där de installerats. Kontrollera att de är aktiva före varje commit/push; ett avsiktligt Git-hook-bypass får inte användas.

@@ -1859,6 +1859,10 @@
           "to": "blocked",
           "actor": "reviewer",
           "evidence": "Renewed reviewer code PASS v4.1; total delivery BLOCK because required rendered gallery screenshots are absent and visual QA is NOT TESTABLE"
+        },
+        {
+          "actor": "coordinator",
+          "evidence": "Erik reports 2026-10-10 that DS-CODE-01 and LOGGA-QUICK were already verified on phone and work well. Recorded as user-reported; build/version, screenshots and independent visual QA are not attached. Erik selected option A and directed MOTION to continue based on this report."
         }
       ],
       "next_step": "Render dev gallery on small/large phone widths and large text, save screenshots, run independent visual QA checklist, then renewed reviewer"
@@ -1867,7 +1871,7 @@
       "id": "LOGGA-QUICK",
       "title": "Logga snabbflöde, sanningsenlig status och skärmtillstånd",
       "mvp_requirement": "docs/mvp.md: Vardagslogg – ägaren kan snabbt logga kiss, bajs, mat, sömn/vaken och promenad samt se historik; Erik-beslut 2026-10-08 om Fler",
-    "plan": "docs/plans/LOGGA-ux-spec.md v6, slice LOGGA-QUICK flight ownership correction",
+      "plan": "docs/plans/LOGGA-ux-spec.md v6, slice LOGGA-QUICK flight ownership correction",
       "write_paths": [
         "src/features/puppy-log/LogScreen.tsx",
         "src/features/puppy-log/log-model.ts",
@@ -1908,7 +1912,7 @@
       "depends_on": [
         "UX-02"
       ],
-    "status": "blocked",
+      "status": "blocked",
       "history": [
         {
           "actor": "coordinator",
@@ -1949,93 +1953,97 @@
           "to": "implementing",
           "actor": "implementer",
           "evidence": "Correction attempt 1 dispatched to existing implementer within plan v4 scope before QA"
-      },
-      {
-        "from": "implementing",
-        "to": "qa",
-        "actor": "coordinator",
-        "evidence": "Focused tests, typecheck, targeted lint, iOS bundle and diff check pass; full check has only two demonstrated baseline failures; independent QA/reviewer requested, visual evidence remains NOT TESTABLE"
-      },
-      {
-        "from": "qa",
-        "to": "blocked",
-        "actor": "qa-reviewer",
-        "evidence": "QA FAIL and Reviewer BLOCK: insert retry lacked pending/single-flight feedback, unresolved edit could close, screen-reader pending copy was incomplete, and required policies lacked executable coverage; visual evidence NOT TESTABLE"
-      },
-      {
-        "from": "blocked",
-        "to": "planned",
-        "actor": "coordinator",
-        "evidence": "Correction plan v5 recorded in docs/plans/LOGGA-ux-spec.md; no further app changes before renewed Architect review"
-      },
-      {
-        "from": "planned",
-        "to": "ready",
-        "actor": "architect",
-        "evidence": "APPROVE correction plan v5; verify readback helper as orchestration and clear stale intent after dog/session change"
-      },
-      {
-        "from": "ready",
-        "to": "implementing",
-        "actor": "coordinator",
-        "evidence": "Correction attempt 2 limited to approved v5 persistence, accessibility and executable-policy fixes"
-      },
-      {
-        "from": "implementing",
-        "to": "qa",
-        "actor": "coordinator",
-        "evidence": "v5 focused behavior tests, typechecks, targeted lint, iOS bundle, baseline diff check and queue validation pass; full check remains blocked only by the two documented 37bf93f baseline failures"
-      },
-      {
-        "from": "qa",
-        "to": "blocked",
-        "actor": "qa-reviewer",
-        "evidence": "QA FAIL and Reviewer BLOCK: stale bool flight and busy blocked the next lifetime; date/time inputs remained editable while retry owned an older update intent; visual evidence NOT TESTABLE"
-      },
-      {
-        "from": "blocked",
-        "to": "planned",
-        "actor": "coordinator",
-        "evidence": "Correction plan v6 specifies token-owned flight release plus disabled date/time and executable ownership transition test"
-      },
-      {
-        "from": "planned",
-        "to": "ready",
-        "actor": "architect",
-        "evidence": "APPROVE v6: unique flight-token ownership, immediate lifetime release, stale-finally guard, executable transition test and disabled date/time"
-      },
-      {
-        "from": "ready",
-        "to": "implementing",
-        "actor": "coordinator",
-        "evidence": "v6 implementation limited to approved flight ownership and editor input lock"
-      },
-      {
-        "from": "implementing",
-        "to": "qa",
-        "actor": "coordinator",
-        "evidence": "v6 focused executable tests, typechecks, iOS bundle, baseline diff check and queue validation pass; full check baseline failures remain separately documented"
-      },
-      {
-        "from": "qa",
-        "to": "review",
-        "actor": "qa",
-        "evidence": "QA v6 code/behavior PASS: token ownership/lifetime transition, stale-finally guard, locked editor input and prior save-state fixes; visual evidence NOT TESTABLE"
-      },
-      {
-        "from": "review",
-        "to": "blocked",
-        "actor": "reviewer",
-        "evidence": "Reviewer v6 code/behavior PASS with no remaining functional findings; rendered small/large/large-text state matrix is missing, so section 14 remains NOT TESTABLE and task cannot be DONE"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "coordinator",
+          "evidence": "Focused tests, typecheck, targeted lint, iOS bundle and diff check pass; full check has only two demonstrated baseline failures; independent QA/reviewer requested, visual evidence remains NOT TESTABLE"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa-reviewer",
+          "evidence": "QA FAIL and Reviewer BLOCK: insert retry lacked pending/single-flight feedback, unresolved edit could close, screen-reader pending copy was incomplete, and required policies lacked executable coverage; visual evidence NOT TESTABLE"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction plan v5 recorded in docs/plans/LOGGA-ux-spec.md; no further app changes before renewed Architect review"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE correction plan v5; verify readback helper as orchestration and clear stale intent after dog/session change"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "Correction attempt 2 limited to approved v5 persistence, accessibility and executable-policy fixes"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "coordinator",
+          "evidence": "v5 focused behavior tests, typechecks, targeted lint, iOS bundle, baseline diff check and queue validation pass; full check remains blocked only by the two documented 37bf93f baseline failures"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa-reviewer",
+          "evidence": "QA FAIL and Reviewer BLOCK: stale bool flight and busy blocked the next lifetime; date/time inputs remained editable while retry owned an older update intent; visual evidence NOT TESTABLE"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction plan v6 specifies token-owned flight release plus disabled date/time and executable ownership transition test"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v6: unique flight-token ownership, immediate lifetime release, stale-finally guard, executable transition test and disabled date/time"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "v6 implementation limited to approved flight ownership and editor input lock"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "coordinator",
+          "evidence": "v6 focused executable tests, typechecks, iOS bundle, baseline diff check and queue validation pass; full check baseline failures remain separately documented"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA v6 code/behavior PASS: token ownership/lifetime transition, stale-finally guard, locked editor input and prior save-state fixes; visual evidence NOT TESTABLE"
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer v6 code/behavior PASS with no remaining functional findings; rendered small/large/large-text state matrix is missing, so section 14 remains NOT TESTABLE and task cannot be DONE"
+        },
+        {
+          "actor": "coordinator",
+          "evidence": "Erik reports 2026-10-10 that DS-CODE-01 and LOGGA-QUICK were already verified on phone and work well. Recorded as user-reported; build/version, screenshots and independent visual QA are not attached. Erik selected option A and directed MOTION to continue based on this report."
         }
       ],
-    "next_step": "Erik opens the development preview on a phone or provides a native rendering environment; capture the required screenshot matrix and run independent visual QA before DONE"
+      "next_step": "Erik opens the development preview on a phone or provides a native rendering environment; capture the required screenshot matrix and run independent visual QA before DONE"
     },
     {
       "id": "LOGGA-EDIT",
       "title": "Logga redigering, radering och slutlig visuell QA",
       "mvp_requirement": "docs/mvp.md: Vardagslogg – ägaren kan rätta och radera egna loggposter",
-    "plan": "docs/plans/LOGGA-ux-spec.md v6, slice LOGGA-EDIT",
+      "plan": "docs/plans/LOGGA-ux-spec.md v6, slice LOGGA-EDIT",
       "write_paths": [
         "src/features/puppy-log/LogScreen.tsx",
         "src/features/puppy-log/log-model.ts",
@@ -2074,6 +2082,917 @@
       "status": "planned",
       "history": [],
       "next_step": "Start only after LOGGA-QUICK has a durable QA/Reviewer-approved commit"
+    },
+    {
+      "id": "BUILD-35",
+      "title": "Rätta Codemagic Check application för remove-ai-slop",
+      "mvp_requirement": "Underhåll av godkänd Expo-MVP: pnpm check ska passera innan iOS-byggning",
+      "plan": "docs/tasks/dev/build-35.md v5",
+      "write_paths": [
+        "src/components/ui/MainSwipeNavigation.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "tests/account-delete.test.mjs",
+        "tests/notifications.test.mjs",
+        "docs/tasks/dev/build-35.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/BUILD-35.md"
+      ],
+      "acceptance": [
+        "TS2305, tre observerade lintfel och stale kontoraderingstest är rättade utan avsedd gest- eller navigationsändring",
+        "pnpm check, pnpm bundle:ios och git diff --check passerar lokalt",
+        "Oberoende QA och Reviewer ger PASS på slutlig diff",
+        "Remote remove-ai-slop verifieras på exakt leveranscommit"
+      ],
+      "checks": [
+        "pnpm check",
+        "EXPO_NO_TELEMETRY=1 pnpm bundle:ios",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v2; review saved in docs/tasks/dev/build-35.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Owner authorized build fix and push; implementer assigned exact ReactNode import correction"
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "pnpm check passed both typechecks but found three lint errors in MainSwipeNavigation and ProductWorkspace; plan v3 required"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v3 will specify exact lint fixes and ProductWorkspace ownership before renewed Architect review"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v3 for exact three lint corrections; saved in build-35.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementer assigned v3 scope MainSwipeNavigation and ProductWorkspace only"
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "After v3 typecheck and lint, account-delete source assertion fails on existing attributionBusy guard; notification test needs subprocess permission only"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v4 will add exact account-delete test path and adjust stale source assertion; no notification code change"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v4 for stale account test and stable setPage dependency; saved in build-35.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementer handles ProductWorkspace dependency; QA owns exact account-delete test assertion"
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "QA: account-delete 39/39, typechecks, lint, iOS bundle, diff and queue PASS; notification harness has six stale [client] extraction failures after setPage dependency, so full check BLOCK"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v5 narrows the fix to notification handler extraction regex at tests/notifications.test.mjs:689; renewed Architect review required"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v5: update only notifications harness extraction regex to [client, setPage], rerun full check; recorded in build-35.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "App source and account-delete test complete; QA assigned exact notification harness regex correction under approved v5"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Approved v5 code and exact test harness updates complete; independent QA has already run full checks with PASS"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA PASS: pnpm check typechecks/lint and 387 pass, 1 skip, 0 fail; notifications 42/42, account-delete 39/39, iOS bundle, diff and queue validation PASS; native visual NOT TESTABLE"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS code/APIs and renewed docs checkpoint; QA full pnpm check 387 pass/1 skip, iOS bundle, diff, queue PASS; code commit 94686aaa8e717aaca069fde8ae5cc960d2fbc287 pushed to origin/remove-ai-slop and verified by ls-remote; docs checkpoint follows"
+        }
+      ],
+      "next_step": "Local delivery done; run a new Codemagic build for code commit 94686aaa8e717aaca069fde8ae5cc960d2fbc287 and inspect its artifacts separately"
+    },
+    {
+      "id": "UI-06",
+      "title": "Förbättra Hem och Logg med lugn hierarki och foto-carousel",
+      "mvp_requirement": "docs/mvp.md: Hem och Valplogg; Eriks bildbaserade UI-beställning 2026-10-10",
+      "plan": "docs/tasks/dev/ui-06.md v6",
+      "write_paths": [
+        "src/components/ui/IconChip.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/HomeCarousel.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "assets/images/puppy-training.png",
+        "assets/images/puppy-water.png",
+        "assets/images/puppy-resting-carousel.png",
+        "assets/images/dog-placeholder.png",
+        "assets/images/README.md",
+        "src/features/home/README.md",
+        "src/features/puppy-log/README.md",
+        "docs/design/UI-06/",
+        "docs/tasks/dev/ui-06.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/UI-06.md"
+      ],
+      "acceptance": [
+        "Hem har en primär Logga nu-knapp före dagens rader och ingen dubblerad loggåtgärd",
+        "Carousel visar dekorativa originalfoton och befintligt relevant innehåll utan falskt hundfoto",
+        "Logg behåller korrekt sparstatus och får subtil bekräftad radtoning, Olycka har relevant central ikon",
+        "pnpm check, iOS-bundling, diff- och kövalidering passerar; visual evidence redovisas sanningsenligt"
+      ],
+      "checks": [
+        "pnpm check",
+        "EXPO_NO_TELEMETRY=1 pnpm bundle:ios",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v2; Critic/Product PROCEED; both saved in docs/tasks/dev/ui-06.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik explicitly authorized Home+Log UI work 2026-10-10; v2 exact scope approved before app code"
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "v2 app implementation checks pass; v3 only adds concrete visual evidence directory before independent QA, requiring renewed Architect review"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v3 specifies docs/design/UI-06 screenshots and checklist; no app behavior scope change"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v3 screenshot/checklist destination only; saved in ui-06.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "v2 app code complete with targeted checks PASS; v3 changes QA output path only"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Home+Log app implementation and bounded cleanup complete; typecheck, targeted ESLint, focused UI/log tests and diff check PASS; independent full/visual QA next"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "QA technical checks PASS and RN Web captures produced; Olycka vertical composite resembles exclamation at phone scale (checklist 9 FAIL); BottomNav labels merge at 140% (checklist 15 FAIL, assigned UI-07)"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction v4 narrows Olycka icon composition to side-by-side glyphs within existing central chip; no other UI-06 app code change"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v4 IconChip Olycka side-by-side correction, recorded in docs/tasks/dev/ui-06.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement only v4 Olycka IconChip composition, then recapture visual QA point 9"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "IconChip v4 horizontal glyph correction complete; typecheck targeted lint and diff check pass; visual recapture pending"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer BLOCK: duplicate daily training, health, knowledge destinations and carousel; review finding recorded in ui-06.md v5"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "v5 correction: actual daily rows only, editorial suggestions in carousel; await Architect and Critic"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v5 Architect and PROCEED Critic/Product; plan and precise health ID invariant in ui-06.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement approved v5 Home dedup correction and refresh QA"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v5 Home dedup correction complete; typecheck lint two targeted suites diff check pass; visual recapture pending"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer BLOCK v5: stale selectedDatePlans hid global health card during loading/error; finding recorded in ui-06.md v6"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "v6 limits dedupe input to plans actually rendered when planState ready; verify stale loading/error scenario"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v6 stale-plan state correction; contract recorded in ui-06.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement v6 only: pass rendered ready-state plans into health-carousel dedupe; verify stale loading/error behavior"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v6 passes only rendered plan list to dedupe; typecheck lint diff pass; run focused visual stale loading/error scenario"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA v6 targeted state verification PASS; full pnpm check 387/1/0 and iOS bundle from v5 pass; visual checklist remains UNDERKÄND point15"
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer code/QA evidence PASS v6; overall visual delivery blocked only by point15 BottomNav 140% labels, queued for UI-07"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "UI-07 PASS provides updated point15 140% captures; reviewer confirms UI-06 remains code PASS and all checklist Nej findings resolved"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect UI-07 v2/v3 review required point15 recheck; updated evidence from all five active tabs at 360/430 140% now passes"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "UI-06 code unchanged; docs/checklist/release updated with UI-07 point15 PASS and native NOT TESTABLE limits"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "UI-06 code v6 unchanged; screenshots and checklist re-reviewed against UI-07 v3 captures; point15 PASS"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA v6 state scenarios PASS; UI-07 all five nav labels PASS at 140%/360/430; full checks and bundle PASS"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS UI-06 v6 code and updated visual point15; checklist VISUELLT GODKÄND MED BEGRÄNSNINGAR, remaining native concerns documented NOT TESTABLE"
+        }
+      ],
+      "next_step": "Independent Reviewer PASS UI-06 v6 code and updated visual point15; checklist VISUELLT GODKÄND MED BEGRÄNSNINGAR, remaining native concerns documented NOT TESTABLE"
+    },
+    {
+      "id": "UI-07",
+      "title": "Centrerat Tassla-varumärke och täckande bottenmeny",
+      "mvp_requirement": "docs/mvp.md: Hem, Valplogg, Träning, Hälsa, Kunskap och Tassla-pass; Eriks bildbaserade UI-beställning 2026-10-10",
+      "plan": "docs/tasks/dev/ui-07.md v3; docs/plans/UI-07-ux-spec.md",
+      "write_paths": [
+        "src/components/ui/AppBar.tsx",
+        "src/components/ui/BottomNav.tsx",
+        "src/components/AppPrimitives.tsx",
+        "src/components/README.md",
+        "docs/design/UI-07/",
+        "docs/tasks/dev/ui-07.md",
+        "docs/plans/UI-07-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/UI-07.md"
+      ],
+      "acceptance": [
+        "Every AppBar variant shows centered muted Tassla; page titles, notification, back and close controls remain clear and usable",
+        "BottomNav covers the complete bottom safe area with existing surface color",
+        "Five labels remain distinct at 140% text without limiting Dynamic Type; destinations and accessibility state unchanged",
+        "No new dependency, token, navigation destination or product flow"
+      ],
+      "checks": [
+        "pnpm check",
+        "EXPO_NO_TELEMETRY=1 pnpm bundle:ios",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "actor": "coordinator",
+          "evidence": "UI-06 checkpoint e50da50; UI-07 addresses shared BottomNav point 15 and requested centered wordmark/full bottom safe area; v1 Architect review required before UI changes"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v2 Architect; exact AppBar/footer/nav contracts and no-footer QA recorded in ui-07.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement approved AppBar, BottomNav and AppScreen shared components only"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Approved v2 implementation in AppBar/BottomNav/AppScreen; typecheck targeted lint and two UI policy suites pass; screenshots/callback QA pending"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "QA visual BLOCK: Träning breaks awkwardly as Tränin + g at 360px/140%; v3 removes horizontal nav item padding and requires new large-text captures"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v3 narrows correction to give labels full equal-column width by removing horizontal padding; await Architect review"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v3 remove horizontal tab-item padding; retake all five tab footer states 360/430 at 140%"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement approved v3 in BottomNav only: remove horizontal item padding, preserve all other constraints"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v3 removes nav horizontal padding only; typecheck lint targeted diff pass; recapture 140% at 360/430 pending"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "QA v3 recapture still shows Tränin/g at 360px 140 despite removing horizontal padding; v4 proposes discretionary soft break after Trä while keeping accessibility label Träning"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction attempt 2 for visual nav label issue; wait Architect review of optional soft hyphen break"
+        },
+        {
+          "from": "planned",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "QA v3 recapture still shows Tränin/g at 360px 140 despite removing horizontal padding; v4 proposes discretionary soft hyphen break after Trä while keeping accessibility label Träning"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction attempt 2 for visual nav label issue; wait Architect review of optional soft hyphen break"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "V3 Architect APPROVE retained; refreshed QA confirmed Träning fits single line at 360/430 140%, so proposed v4 is withdrawn"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "V3 one-line padding change already implemented and targeted checks pass; proceed to refreshed visual QA"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "No v4 code change; refreshed v3 captures now show all five labels in one line at 140% for both widths; full checks in progress"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA PASS: 360/430/140, callbacks, Back/Close, no-footer sign-in, full-width footer; pnpm check 387/1/0 and iOS bundle PASS"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS code/APIs and visual evidence; task plan/release docs corrected; physical inset/native accessibility explicitly NOT TESTABLE"
+        }
+      ],
+      "next_step": "Independent Reviewer PASS code/APIs and visual evidence; task plan/release docs corrected; physical inset/native accessibility explicitly NOT TESTABLE"
+    },
+    {
+      "id": "FIX-36",
+      "title": "Rätta påminnelsetid och verifiera Olycka/Vatten",
+      "mvp_requirement": "docs/mvp.md: Hälsa och Valplogg; Eriks felrapporterade fel 2026-10-10",
+      "plan": "docs/tasks/dev/fix-36.md v2",
+      "write_paths": [
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/features/health/planned-health-time.ts",
+        "tests/planned-health-time.test.mjs",
+        "tests/README.md",
+        "docs/tasks/dev/fix-36.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/FIX-36.md"
+      ],
+      "acceptance": [
+        "Påminnelsetid accepterar endast HH:MM från 00:00 till 23:59 och skickar minuter sedan midnatt",
+        "accident och water stöds av appkontrakt och lokala migrationer; målmiljön markeras korrekt NOT TESTABLE om inte säkert läsbar",
+        "Inga onödiga schemaändringar eller nya beroenden"
+      ],
+      "checks": [
+        "pnpm check",
+        "EXPO_NO_TELEMETRY=1 pnpm bundle:ios",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-06",
+        "UI-07"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE FIX-36 plan v2; independent Critic PROCEED"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Authorized FIX-36 plan v2 implementation"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Parser and tests implemented; targeted tests/typecheck/diff pass"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: pnpm check 389/1/0, iOS export, diff/queue; remote DB layers NOT TESTABLE"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS FIX-36 approved plan, parser/save API, tests, local schema evidence and documented remote NOT TESTABLE limits"
+        }
+      ],
+      "next_step": "Independent Reviewer PASS FIX-36 approved plan, parser/save API, tests, local schema evidence and documented remote NOT TESTABLE limits"
+    },
+    {
+      "id": "UI-08",
+      "title": "Toastkanter och finjustering av Hem, Kunskap, Mer och Träning",
+      "mvp_requirement": "docs/mvp.md: Hem, Valplogg, Träning och Kunskap; Eriks UI-08-besked 2026-10-10",
+      "plan": "docs/tasks/dev/ui-08.md v4",
+      "write_paths": [
+        "src/components/ui/Toast.tsx",
+        "src/components/ui/BottomNav.tsx",
+        "src/components/ui/ListRow.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/HomeCarousel.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/README.md",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "docs/design/UI-08",
+        "docs/tasks/dev/ui-08.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/UI-08.md"
+      ],
+      "acceptance": [
+        "Toast-färger i appen matchar befintliga Figma-ramar (success grön, error röd, övriga semantiska varianter)",
+        "Hem visar carousel före datumremsa och högst tre nyaste inlästa logghändelser per valt datum; planer räknas inte; ingen datahämtning läggs till",
+        "Mer-rader får tokens.layout.listGap; footerflikar får tokens.spacing.xs med bevarade tryckytor och enradiga etiketter vid 360/430 och 140 procent",
+        "Kunskapskortens rubriker ryms utan ensamma slutbokstäver vid 140 procent och med fortsatt Dynamic Type",
+        "Endast publicerade träningsrader använder caption-variant av ListRow; övriga vyer behåller standardstorlek; visuell evidens och design-rules-checklista finns"
+      ],
+      "checks": [
+        "pnpm check",
+        "EXPO_NO_TELEMETRY=1 pnpm bundle:ios",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-06",
+        "UI-07",
+        "FIX-36"
+      ],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v3 and renewed APPROVE v4 after checking production Training screenshot source; Critic PROCEED; Figma Toast strokes verified via component metadata"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik authorized UI-08 slice; approved plan v4"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "All planned UI code changes implemented; typechecks, iOS export, log policy test, diff and queue validation pass; notifications timezone subprocess test remains environment-blocked; screenshots NOT TESTABLE"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "UI-08 implementering och källreview färdiga; QA blockerad av dokumenterad RN Web screenshotmiljö (localhost/Chromium). Pausas för att frigöra Toast-filens skrivägarskap till FIX-38 lint-rättning; visuell QA kvarstår."
+        }
+      ],
+      "next_step": "UI-08 implementering och källreview färdiga; QA blockerad av dokumenterad RN Web screenshotmiljö (localhost/Chromium). Pausas för att frigöra Toast-filens skrivägarskap till FIX-38 lint-rättning; visuell QA kvarstår."
+    },
+    {
+      "id": "MOTION-01",
+      "title": "Rörelsegrund och bekräftelse",
+      "mvp_requirement": "Eriks uttryckliga tillägg 2026-10-10, docs/mvp.md: mikrorörelse",
+      "plan": "docs/tasks/dev/MOTION-01.md v4; UX-spec docs/plans/MOTION-01-ux-spec.md",
+      "write_paths": [
+        "src/theme/tokens.ts",
+        "src/theme/README.md",
+        "src/components/README.md",
+        "src/components/ui/Toast.tsx",
+        "src/components/ui/Progress.tsx",
+        "src/components/ui/ChecklistItem.tsx",
+        "src/components/ui/Motion.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/health/HealthHistoryScreen.tsx",
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/features/health/WeightScreen.tsx",
+        "src/features/notifications/NotificationSettingsScreen.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/passport/PassportScreen.tsx",
+        "tests/motion-policy.test.mjs",
+        "docs/design-rules.md",
+        "docs/dev/ui-and-code-standards.md",
+        "docs/plans/MOTION-01-ux-spec.md",
+        "docs/tasks/dev/MOTION-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/MOTION-01.md",
+        "docs/design/evidence/motion-01"
+      ],
+      "acceptance": [
+        "Toast uses hidden stable mount, visible transition, retained exit and unmount callback; stale exit callbacks cannot clear newer feedback; timeout begins after entrance and cannot clip exit; initially visible toast is immediate; hidden/exiting toast is excluded from accessibility and shown through one alert mechanism",
+        "Progress fills on post-mount value changes; first-render value is immediate",
+        "Checklist checkmark scales in only on confirmed false-to-true after mount; uncheck and unconfirmed preview changes are immediate",
+        "Success animation requires saved state; failed/unsure never trigger success animation",
+        "All durations use tokens.motion in 120–350 ms; Animated files use useReducedMotion; input is never blocked",
+        "Reduced motion applies state immediately without losing text, icon or accessibility value",
+        "No new dependency, analytics, idle loop, ProductWorkspace animation state, hardcoded screen values, or TrainingScreen.tsx change",
+        "UX spec, README and design rules updated; render/timing evidence classified honestly"
+      ],
+      "checks": [
+        "Focused motion policy and component tests",
+        "pnpm check",
+        "git diff --check",
+        "Toast hidden/show/hide/exit lifecycle, timer ordering, stale callback guard, initially visible state, accessibility tree/announcement states, no hidden layout gap, checklist confirmed/unconfirmed state, saved/failed/unsure and reduced motion",
+        "Short motion recording or NOT TESTABLE",
+        "Independent QA and Reviewer"
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE MOTION-01 plan v4 and UX spec; Critic PROCEED v4. Erik reports prior DS-CODE-01 and LOGGA-QUICK phone verification (user-reported only); their blocked visual-evidence statuses remain unchanged. Start MOTION-01 as the only active writer."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin implementation after Architect APPROVE plan v4 and Critic PROCEED v4. Exact scope in docs/tasks/dev/MOTION-01.md; no other task may write overlapping paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation checkpoint complete after QA correction pass: focused motion policy test PASS, git diff --check PASS, queue validate PASS. Full pnpm check unavailable because registry requests failed EPERM; independent QA and review evidence saved in docs/tasks/dev/MOTION-01.md and docs/releases/MOTION-01.md."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent QA found no remaining static findings after corrections; BLOCK/NOT TESTABLE because native motion timing, accessibility tree, large text, reduced-motion rendering and hidden Toast layout-gap evidence are unavailable; full pnpm check also unverified. Reviewer code PASS saved. Resume after native evidence and runnable pnpm check."
+        }
+      ],
+      "next_step": "Independent QA found no remaining static findings after corrections; BLOCK/NOT TESTABLE because native motion timing, accessibility tree, large text, reduced-motion rendering and hidden Toast layout-gap evidence are unavailable; full pnpm check also unverified. Reviewer code PASS saved. Resume after native evidence and runnable pnpm check."
+    },
+    {
+      "id": "MOTION-02",
+      "title": "Dynamisk logg och bekräftade träningssteg",
+      "mvp_requirement": "docs/mvp.md: vardagslogg och valpflöden; Eriks MOTION-tillägg 2026-10-10",
+      "plan": "docs/plans/MOTION-02-ux-spec.md; task contract in docs/tasks/dev/queue.json",
+      "write_paths": [
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/log-model.ts",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/components/ui/QuickLogTile.tsx",
+        "src/components/ui/ListRow.tsx",
+        "src/components/ui/ChecklistItem.tsx",
+        "tests/motion-policy.test.mjs",
+        "tests/log-screen-policy.test.mjs",
+        "tests/ui-library-policy.test.mjs",
+        "docs/plans/MOTION-02-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/MOTION-02.md",
+        "docs/design/evidence/motion-02"
+      ],
+      "acceptance": [
+        "QuickLogTile confirmation occurs only when mutation status is saved and has accessible text",
+        "A newly confirmed daily-log row enters once; a row exits only after confirmed deletion",
+        "Published training progress/checkmark animate only after confirmed step and refreshed saved data",
+        "Existing 2-second and 2-minute duplicate protections remain unchanged",
+        "Failed/unsure writes never trigger success animation; no Animated.Value or new animation state is added to ProductWorkspace"
+      ],
+      "checks": [
+        "Focused log and motion policy tests",
+        "pnpm check",
+        "git diff --check",
+        "Saved/failed/unsure, duplicate thresholds, reduced motion and accessibility checks",
+        "Short motion recording or NOT TESTABLE",
+        "Independent QA and Reviewer"
+      ],
+      "depends_on": [
+        "MOTION-01",
+        "LOGGA-EDIT"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Start only after MOTION-01 phone result and LOGGA-EDIT is complete; write UX spec before code"
+    },
+    {
+      "id": "MOTION-03",
+      "title": "Tips vid första användning",
+      "mvp_requirement": "Eriks uttryckliga tillägg 2026-10-10, docs/mvp.md: tips vid första användning",
+      "plan": "docs/plans/MOTION-03-ux-spec.md; task contract in docs/tasks/dev/queue.json",
+      "write_paths": [
+        "src/components/ui/FirstUseTip.tsx",
+        "src/components/ui/index.ts",
+        "src/components/README.md",
+        "src/notifications/notification-storage.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/health/HealthScreen.tsx",
+        "tests/first-use-tip-policy.test.mjs",
+        "tests/account-deletion-policy.test.mjs",
+        "docs/plans/MOTION-03-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/MOTION-03.md",
+        "docs/design/evidence/motion-03"
+      ],
+      "acceptance": [
+        "At most one dismissible tip per screen, max two lines, only first visit and removed on first interaction",
+        "Tip does not occupy form or save-status space and is not an InfoBanner",
+        "Seen flags are per owner in SecureStore, cleared on account deletion, with no new DB field or analytics event",
+        "Product/Critic review Swedish copy; health tip gives no veterinary advice",
+        "Compliance reviews whether local flags create a new personal-data purpose before implementation"
+      ],
+      "checks": [
+        "Focused first-use and account-deletion policy tests",
+        "pnpm check",
+        "git diff --check",
+        "First/return visit, dismissal, owner change, deletion, large text and screen-reader checks",
+        "Independent QA and Reviewer"
+      ],
+      "depends_on": [
+        "MOTION-02"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Start only after MOTION-02 phone result; obtain compliance review; write UX spec before code"
+    },
+    {
+      "id": "MOTION-04",
+      "title": "Valpfigur",
+      "mvp_requirement": "Eriks uttryckliga tillägg 2026-10-10, docs/mvp.md: valpfigur",
+      "plan": "docs/plans/MOTION-04-ux-spec.md; task contract in docs/tasks/dev/queue.json",
+      "write_paths": [
+        "src/components/ui/DogMascot.tsx",
+        "src/components/ui/index.ts",
+        "src/components/README.md",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "assets/images/dog-mascot-body.png",
+        "assets/images/README.md",
+        "tests/dog-mascot-policy.test.mjs",
+        "docs/plans/MOTION-04-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/MOTION-04.md",
+        "docs/design/evidence/motion-04",
+        "assets/images/dog-mascot-head.png",
+        "assets/images/dog-mascot-tail.png"
+      ],
+      "acceptance": [
+        "Mascot has only calm, happy, proud and resting positive/neutral states",
+        "Only confirmed app activity triggers one-time reaction; text always carries meaning and mascot is hidden from screen readers",
+        "Mascot never implies dog health, feelings, obedience or skill; no Home greeting in this slice",
+        "Illustration is warm, clearly illustrated, non-breed-specific, no text/logo, and cannot be mistaken for owner dog photo",
+        "Source, prompt, date, tool and asset sizes are documented; total stays near 300 KB or excess is justified"
+      ],
+      "checks": [
+        "Focused mascot policy tests",
+        "pnpm check",
+        "git diff --check",
+        "Small/large layout, large text, reduced motion and accessibility checks",
+        "Short motion recording or NOT TESTABLE",
+        "Independent QA and Reviewer"
+      ],
+      "depends_on": [
+        "MOTION-03"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Start only after MOTION-03 phone result; generate consistent transparent layers or stop for flat React Native illustration fallback; write UX spec before code"
+    },
+    {
+      "id": "FIX-38",
+      "title": "Rätta Toast lintfel och kör preflight inför commit/push",
+      "mvp_requirement": "CodeMagic pnpm check samt repots obligatoriska commit- och pushkontroller",
+      "plan": "docs/tasks/dev/FIX-38.md v3; docs/plans/FIX-38-ux-spec.md",
+      "write_paths": [
+        "src/components/ui/Toast.tsx",
+        "tests",
+        ".githooks",
+        "tools",
+        "AGENTS.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/FIX-38.md",
+        "docs/releases/FIX-38.md",
+        "docs/plans/FIX-38-ux-spec.md",
+        "docs/design/FIX-38"
+      ],
+      "acceptance": [
+        "Toast passerar hooks-lint utan suppression eller testdeaktivering",
+        "Pre-commit kör pnpm check och git diff --cached --check",
+        "Pre-push kör pnpm check och whitespacekontroll för utgående refs, även ny branch",
+        "AGENTS.md kräver grinden före varje commit/push; dokumenterad hookinstallation fungerar",
+        "After QA and Reviewer PASS, commit through active hooks and push to origin/remove-ai-slop"
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "negativa hooktester för commit och push",
+        "Confirm pushed commit SHA equals origin/remove-ai-slop",
+        "docs/design/FIX-38/checklist.md: render/accessibility evidence or itemized NOT TESTABLE"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v3; Critic PROCEED plan v3; both reviewed the exact version in docs/tasks/dev/FIX-38.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Architect APPROVE and Critic PROCEED plan v3; UI-08 moved to blocked because its visual QA environment is unavailable and shared Toast write ownership is now released"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "FIX-38A/B complete; pnpm check 395 pass, 1 skip, 0 fail; iOS export, diff/queue validation, temporary hook tests pass; visual NOT TESTABLE documented"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS; Toast lifecycle including hidden reduced-motion toggles and all hook checks validated; visual/device NOT TESTABLE documented"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS. Commit 2198e55ed20a1a60aaafca0c9364c6dc3a523bae passed active pre-commit pnpm check and staged whitespace validation; push to origin/remove-ai-slop passed active pre-push pnpm check and ref whitespace validation. Refetched origin/remove-ai-slop and confirmed it matches the pushed commit. Visual/device evidence remains NOT TESTABLE."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS. Commit 2198e55ed20a1a60aaafca0c9364c6dc3a523bae passed active pre-commit pnpm check and staged whitespace validation; push to origin/remove-ai-slop passed active pre-push pnpm check and ref whitespace validation. Refetched origin/remove-ai-slop and confirmed it matches the pushed commit. Visual/device evidence remains NOT TESTABLE."
     }
   ]
 }

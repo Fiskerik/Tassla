@@ -1,0 +1,24 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+pnpm check
+
+zero_sha=0000000000000000000000000000000000000000
+empty_tree=$(git hash-object -t tree /dev/null)
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -n "$local_ref" ] || continue
+
+  # A deletion has no local source tree to inspect; the project checks still ran above.
+  case "$local_sha" in
+    "$zero_sha") continue ;;
+  esac
+
+  # A new remote branch compares its full tree; an existing ref checks only the outgoing delta.
+  case "$remote_sha" in
+    "$zero_sha") git diff --check "$empty_tree" "$local_sha" ;;
+    *) git diff --check "$remote_sha" "$local_sha" ;;
+  esac
+done

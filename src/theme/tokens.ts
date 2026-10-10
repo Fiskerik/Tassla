@@ -38,6 +38,8 @@ export const categoryColors = {
   sleep: { fg: primitives.purple700, bg: primitives.purple100 },
   awake: { fg: primitives.purple700, bg: primitives.purple100 },
   walk: { fg: primitives.amber700, bg: primitives.amber100 },
+  accident: { fg: primitives.red700, bg: primitives.red100 },
+  water: { fg: primitives.blue700, bg: primitives.blue100 },
   training: { fg: primitives.green700, bg: primitives.food100 },
   vaccination: { fg: primitives.red700, bg: primitives.red100 },
   deworming: { fg: primitives.purple700, bg: primitives.purple100 },
@@ -58,8 +60,8 @@ export const tokens = {
   spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 },
   layout: { headingGap: 8, listGap: 12, cardPadding: 16, pageInset: 24, sectionGap: 24 },
   radius: { sm: 8, md: 14, lg: 20, full: 999 },
-  size: { quickLogHeight: 104, touchMin: 44, buttonHeight: 56, navHeight: 56, iconSm: 20, iconMd: 24, chipMd: 32, chipLg: 44, stroke: 1, progress: 4, heroHeight: 200 },
-  motion: { press: 120, enter: 240, release: 180, distance: 8, pressedScale: 0.98 },
+  size: { quickLogHeight: 104, quickLogCompactHeight: 76, touchMin: 44, buttonHeight: 56, navHeight: 56, iconSm: 20, iconMd: 24, chipMd: 32, chipLg: 44, stroke: 1, progress: 4, heroHeight: 200 },
+  motion: { press: 120, enter: 240, release: 180, progress: 220, toastEnter: 240, toastExit: 180, check: 180, distance: 8, pressedScale: 0.98 },
   typography: { ...typography, display: typography.title },
 } as const;
 

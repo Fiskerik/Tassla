@@ -41,7 +41,7 @@ test('profile editor keeps transient success feedback in the local action card a
   assert.deepEqual(editedAfterSave, { draftDiffers: true, showStatusMessage: false });
   assert.equal(evaluate({ name: 'Nala ny', breedId: 'beagle', birthDate: profile.birth_date }, 'Ändringen väntar.', false, true, false).showStatusMessage, true);
   assert.equal(evaluate({ name: 'Nala ny', breedId: 'beagle', birthDate: profile.birth_date }, 'Sparningen misslyckades.', true, false, false).showStatusMessage, true);
-  assert.match(profileEditorSource, /<Toast tone="success" confirmed message=\{toastMessage\}/);
+  assert.match(profileEditorSource, /<Toast visible=\{toastVisible\} tone="success" confirmed message=\{toastMessage\b/);
 });
 
 test('profile validators trim names, count Unicode code points, and validate local calendar dates', () => {
