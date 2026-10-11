@@ -538,3 +538,11 @@ Tidsbekräftelse, separat planerad händelsetid på Hem/Hälsa, enhetlig chevron
 Verifierat lokalt: oberoende pnpm check37testfilerPASS, lint0fel38varningar, diffPASS; senaste visuella/flödes-QA44PASS utan pageerrors vid375/430/140%; Reviewer och SecurityPASS; båda sista iOS-exporter1427modulerPASS. Underlag docs/design/KNOW-02/checklista.md och docs/tasks/dev/rapport.md. Begränsningar: liveSQL/RLS/cascade och native/TestFlight/VoiceOver/riktig DynamicType ej verifierade. Nya migrationer202610110001 och202610110002 ej körda.
 
 Paketcommit: `7b9da840d2ca2ac8f5d5ed998d73495858c98eae`. Bascommit617fb67. Pushad och verifierad mot origin: `puppy-checklists-faq-qa11` pekar på `7b9da840d2ca2ac8f5d5ed998d73495858c98eae`. TestFlight-build: ingen genom detta paket. Utkasten måste sakgranskas/revideras eller tas bort före publik release.
+
+## UPD-SCOPE — avgränsning och paketkö
+
+2026-10-11. Status: implementerad, verifierad och committad lokalt; inte pushad. Bascommit: `c89b6a0a4300997712a2c332d49fc3ec4182c568`. Paketcommit: `3a30f80bbbd0ac0e13432af6342902118c80e44c` (`docs: record UPD-1011 scope and package queue`).
+
+Dokumenterat Eriks UPD-1011-beslut i MVP:n och beslut 0007, registrerat alla nio paket i ordning, och uppdaterat endast den begärda kommentaren vid `summarizePottyPatterns`. Ingen körbar kod/beteendeförändring. Product/Critic PROCEED, Architect APPROVE, Dog Expert PASS, QA PASS och oberoende Reviewer PASS.
+
+Verifiering: `pnpm check` PASS (typechecks PASS; lint 0 fel/38 varningar; 37/37 testfiler PASS), `python tools/dev_flow.py validate` PASS och `git diff --check` PASS. Pre-commit hook körde full `pnpm check` och staged diffcheck utan `--no-verify`. Ingen migration, push, Codemagic eller TestFlight genomfördes. UPD-LOG-DATA är nästa paket och förblir `planned` tills egen plan och reviews är klara.

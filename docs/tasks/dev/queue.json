@@ -3631,7 +3631,7 @@
           "evidence": "Reviewer v8 PASS: independent review found no blocking scope/code issue; only approved docs, queue and requested comment changed. QA v8 PASS; pnpm check passed (37/37 test files, 0 failures, lint 0 errors/38 warnings); queue validation and diff check passed. Ready for local commit with normal hooks; record exact commit ID afterward."
         }
       ],
-      "next_step": "Reviewer v8 PASS: independent review found no blocking scope/code issue; only approved docs, queue and requested comment changed. QA v8 PASS; pnpm check passed (37/37 test files, 0 failures, lint 0 errors/38 warnings); queue validation and diff check passed. Ready for local commit with normal hooks; record exact commit ID afterward."
+      "next_step": "UPD-SCOPE v8 klar: Product/Critic PROCEED, Architect APPROVE, QA/Reviewer PASS; pnpm check, queue validation and diff check pass. Local package commit 3a30f80bbbd0ac0e13432af6342902118c80e44c; not pushed. Next: plan/review UPD-LOG-DATA."
     },
     {
       "id": "UPD-LOG-DATA",
