@@ -5,7 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 from agents import Agent, ModelSettings, RunConfig, Runner
 from .organisation import COMMON, TEAMS
-from .repo_context import MAX_CONTEXT_CHARS, RepoContext, build_repo_context, redact, truncate_text
+from .repo_context import RepoContext, build_repo_context
 
 class TeamRequest(BaseModel):
     team: Literal["product", "commercial", "dev"]
@@ -60,8 +60,6 @@ def run_question(question, model, history="", project_context="", use_repo=True)
     repo = build_repo_context(question, history) if use_repo else RepoContext()
     result.sources = repo.sources
     underlag = "\n\n".join(part for part in (repo.text, project_context) if part)
-    underlag = truncate_text(underlag, MAX_CONTEXT_CHARS, " …[underlag avkortat]")
-    underlag = redact(underlag)
     config = RunConfig(tracing_disabled=True)
     catalogue = "\n".join(
         f"{key}: {team['mandate']} Specialists: " + "; ".join(

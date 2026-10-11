@@ -37,6 +37,11 @@ GROUNDING = (
     "answer it; never fill a gap with general knowledge presented as project fact; "
     "(5) label general advice 'Allmänt (ej från repot)'. The underlag is excerpted and may be stale: never claim a file "
     "was read in full or that anything was tested or verified. "
+    "WHAT YOU CAN SEE: you cannot browse the file system, but the program has already read the repo for you. You see exactly "
+    "what REPO-UNDERLAG contains (its header lists the sources, incl. recent commits and newest files). If asked what you "
+    "can see or read, or about recent changes, answer from that list and say precisely what is NOT visible (source code "
+    "under src/ or app/, files outside the list, anything newer than the underlag). Never answer 'I have no access to your "
+    "project' or ask the user to paste excerpts that the underlag already contains. "
 )
 COMMON += GROUNDING
 

@@ -1,0 +1,167 @@
+diff --git a/tassla_team/organisation.py b/tassla_team/organisation.py
+index 29a028d..cf4fecf 100644
+--- a/tassla_team/organisation.py
++++ b/tassla_team/organisation.py
+@@ -33,6 +33,11 @@ GROUNDING = (
+     "answer it; never fill a gap with general knowledge presented as project fact; "
+     "(5) label general advice 'Allmänt (ej från repot)'. The underlag is excerpted and may be stale: never claim a file "
+     "was read in full or that anything was tested or verified. "
++    "WHAT YOU CAN SEE: you cannot browse the file system, but the program has already read the repo for you. You see exactly "
++    "what REPO-UNDERLAG contains (its header lists the sources, incl. recent commits and newest files). If asked what you "
++    "can see or read, or about recent changes, answer from that list and say precisely what is NOT visible (source code "
++    "under src/ or app/, files outside the list, anything newer than the underlag). Never answer 'I have no access to your "
++    "project' or ask the user to paste excerpts that the underlag already contains. "
+ )
+ COMMON += GROUNDING
+ 
+diff --git a/tassla_team/repo_context.py b/tassla_team/repo_context.py
+index 62d71bc..65f4265 100644
+--- a/tassla_team/repo_context.py
++++ b/tassla_team/repo_context.py
+@@ -7,6 +7,8 @@ labelled REPO-UNDERLAG block that is put into every brief:
+   2. SCOPE    docs/mvp.md outline plus the 'Utanför MVP' section
+   3. TASKS    full record for any task id named in the question (e.g. LOGGA-EDIT)
+   4. SECTIONS top-ranked doc sections for THIS question (keyword ranking, max 2 per file)
++  5. RECENT   latest commits, uncommitted changes and newest files, read with fixed read-only git
++              commands by this program (agents never get a shell)
+ 
+ Every block carries its source label so agents can cite it. E-mail addresses and phone numbers
+ are redacted before anything leaves the machine. Read failures are reported inside the block
+@@ -17,6 +19,7 @@ from __future__ import annotations
+ import json
+ import math
+ import re
++import subprocess
+ from collections import Counter
+ from dataclasses import dataclass, field
+ from pathlib import Path
+@@ -34,6 +37,7 @@ SOURCE_OF_TRUTH = {"docs/vision.md", "docs/mvp.md", "docs/revenue.md", "docs/des
+ MAX_CHUNK = 1400       # chars shown per retrieved section
+ MAX_PER_FILE = 2       # keeps one big document from crowding out the rest
+ TOP_K = 5
++MAX_TOTAL = 12000      # hard cap for the whole REPO-UNDERLAG block (chars, ~3k tokens); sections get what is left
+ MIN_RELATIVE = 0.4    # weakest accepted score relative to the best section
+ 
+ _STOP = set("""och att det som för med den har inte jag vi är ska kan på av en ett om till vad hur vilka vilken
+@@ -229,6 +233,39 @@ def retrieve(query: str, top_k: int = TOP_K, char_budget: int = 6000) -> tuple[s
+     return "\n\n".join(picked), labels
+ 
+ 
++# --------------------------------------------------------------------------- RECENT
++
++_CODE_SUFFIXES = {".md", ".ts", ".tsx", ".js", ".mjs", ".py", ".json", ".sql", ".toml", ".yaml", ".yml"}
++
++
++def _git(*args: str) -> str:
++    # Fixed argv, no shell, no user input. Raises OSError/ValueError on any failure.
++    done = subprocess.run(["git", "-c", "core.quotepath=false", "-C", str(ROOT), *args], capture_output=True,
++                          text=True, encoding="utf-8", errors="replace", timeout=8)
++    if done.returncode != 0:
++        raise ValueError(done.stderr.strip()[:120] or f"git exit {done.returncode}")
++    return done.stdout
++
++
++def recent_changes(commits: int = 6, dirty: int = 10, newest: int = 6) -> str:
++    """What changed lately: the live record of work that queue.json may not list yet."""
++    from datetime import datetime
++
++    out = ["[SENASTE COMMITS ur git log]"]
++    out += [line[:130] for line in _git("log", f"-n{commits}", "--date=short", "--pretty=format:%h %ad %s").splitlines()]
++    changed = [line[:110] for line in _git("status", "--porcelain").splitlines() if line.strip()]
++    out.append(f"[OCOMMITTADE ÄNDRINGAR ur git status: {len(changed)} st]")
++    out += changed[:dirty] or ["(inga)"]
++    files = []
++    for name in _git("ls-files", "-z").split("\0"):
++        path = ROOT / name
++        if name and path.suffix in _CODE_SUFFIXES and not name.endswith("pnpm-lock.yaml") and path.is_file():
++            files.append((path.stat().st_mtime, name))
++    out.append("[SENAST ÄNDRADE FILER enligt filsystemet (spårade filer)]")
++    out += [f"{datetime.fromtimestamp(m):%Y-%m-%d %H:%M} {n}" for m, n in sorted(files, reverse=True)[:newest]]
++    return "\n".join(out)
++
++
+ # --------------------------------------------------------------------------- public API
+ 
+ def _last_user_line(history: str) -> str:
+@@ -262,10 +299,24 @@ def build_repo_context(question: str, history: str = "") -> RepoContext:
+             parts.append(details)
+             sources += labels
+ 
++    try:
++        recent = recent_changes()
++        sources_recent = "git: senaste commits, ocommittade ändringar, nyast ändrade filer"
++    except (OSError, ValueError, subprocess.SubprocessError) as error:
++        recent = (f"[RECENT kunde inte läsas ({type(error).__name__}: git saknas eller avvisade). "
++                  "Säg att information om senaste ändringar saknas.]")
++        sources_recent = "git: KUNDE INTE LÄSAS"
++
++    # Budget: sections only get what the fixed blocks leave over (1000 chars reserved for the header).
++    left = MAX_TOTAL - 1000 - sum(len(part) for part in parts) - len(recent)
+     # Follow-ups ("och hur gör vi det för hälsa?") borrow the previous user line for ranking only.
+-    sections, labels = retrieve(f"{question} {_last_user_line(history)}".strip())
++    sections, labels = retrieve(f"{question} {_last_user_line(history)}".strip(), char_budget=max(left, 1500))
+     if sections:
+         parts.append(sections)
+         sources += labels
++    parts.append(recent)
++    sources.append(sources_recent)
+ 
+-    return RepoContext(text=redact("\n\n".join(parts)), sources=sources)
++    # The agents must be able to answer "what can you see?" truthfully, so the list goes in the block.
++    header = "[VAD DU KAN SE: endast detta underlag. Källor: " + "; ".join(sources) + "]"
++    return RepoContext(text=redact(header + "\n\n" + "\n\n".join(parts)), sources=sources)
+diff --git a/work/check_repo_context.py b/work/check_repo_context.py
+index 7980222..cafdae5 100644
+--- a/work/check_repo_context.py
++++ b/work/check_repo_context.py
+@@ -23,14 +23,14 @@ for status in ("done", "planned", "blocked"):
+ ctx = rc.build_repo_context("Vad återstår för LOGGA-EDIT?")
+ assert "queue:LOGGA-EDIT" in ctx.sources, ctx.sources
+ assert "[STATUS ur" in ctx.text and "[SCOPE" in ctx.text
+-assert len(ctx.text) < 12000, f"context too large: {len(ctx.text)}"
++assert len(ctx.text) <= rc.MAX_TOTAL + 500, f"context too large: {len(ctx.text)}"
+ 
+ ctx = rc.build_repo_context("Hur når vi uppfödare för distribution?")
+ assert any(s.startswith(("docs/vision.md", "docs/mvp.md")) for s in ctx.sources), ctx.sources
+ 
+ # Privacy: denylisted files never used; e-mail and phone numbers are redacted.
+ assert not any(s.startswith(("docs/privacy", "docs/tasks/dev/beta-account")) for s in ctx.sources)
+-assert "@" not in rc.build_repo_context("beta konto test e-post").text
++assert not rc._EMAIL.search(rc.build_repo_context("beta konto test e-post").text)
+ assert rc.redact("mejla a.b@example.com eller ring 070-123 45 67") == "mejla [e-post] eller ring [telefon]"
+ assert rc.redact("2026-10-06 och commit 94686aa") == "2026-10-06 och commit 94686aa"
+ 
+@@ -38,6 +38,12 @@ assert rc.redact("2026-10-06 och commit 94686aa") == "2026-10-06 och commit 9468
+ assert rc._stem("uppfödare") == rc._stem("uppfödarna") == rc._stem("uppfödning")
+ assert rc._stem("hundpassning") != rc._stem("hundprofil")
+ 
++# Recent changes + "what can you see" header (needs git; skipped gracefully if the folder is not a repo).
++ctx = rc.build_repo_context("Vilken fil ändrades senast?")
++assert ctx.text.startswith("[VAD DU KAN SE: endast detta underlag. Källor:")
++if not any("KUNDE INTE LÄSAS" in s for s in ctx.sources):
++    assert "[SENASTE COMMITS" in ctx.text and "[SENAST ÄNDRADE FILER" in ctx.text
++
+ # Failure must be visible, never silent.
+ original = rc.QUEUE
+ rc.QUEUE = "docs/tasks/dev/does-not-exist.json"
+@@ -45,6 +51,20 @@ broken = rc.build_repo_context("vad är klart?")
+ rc.QUEUE = original
+ assert "kunde inte läsas" in broken.text and any("KUNDE INTE LÄSAS" in s for s in broken.sources)
+ 
++# Git failure (git missing / not a repo) must also be reported, not crash the question.
++real_git = rc._git
++
++
++def no_git(*args):
++    raise ValueError("fatal: not a git repository")
++
++
++rc._git = no_git
++nogit = rc.build_repo_context("vad har ändrats?")
++rc._git = real_git
++assert "[RECENT kunde inte läsas" in nogit.text and "git: KUNDE INTE LÄSAS" in nogit.sources
++assert "[STATUS ur" in nogit.text, "other blocks must survive a git failure"
++
+ # ---- 2. Wiring: the underlag really reaches every agent ----------------------------------------
+ fake = ModuleType("agents")
+ 

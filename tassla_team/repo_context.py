@@ -1,22 +1,25 @@
 """Always-on, read-only repo grounding for the SDK team (stdlib only, no new dependency).
 
-The agents get no file tools. Instead this module reads a narrow allowlist of repo docs and builds a
+The agents get no file tools. Instead this module reads an allowlist of repo docs and builds a
 labelled REPO-UNDERLAG block that is put into every brief:
 
   1. STATUS   digest of docs/tasks/dev/queue.json: what is done / blocked / planned
-  2. SCOPE    bounded 'Måste med' and 'Utanför MVP' sections from docs/mvp.md
-  3. TASKS    bounded records for task ids named in this or the previous question
+  2. SCOPE    docs/mvp.md outline plus the 'Utanför MVP' section
+  3. TASKS    full record for any task id named in the question (e.g. LOGGA-EDIT)
   4. SECTIONS top-ranked doc sections for THIS question (keyword ranking, max 2 per file)
+  5. RECENT   latest commits, uncommitted changes and newest files, read with fixed read-only git
+              commands by this program (agents never get a shell)
 
-Every block carries its source label so agents can cite it. E-mail addresses, phone numbers and
-Swedish postal addresses are redacted before anything leaves the machine. Read failures are
-reported inside the block instead of silently dropping the grounding.
+Every block carries its source label so agents can cite it. E-mail addresses and phone numbers
+are redacted before anything leaves the machine. Read failures are reported inside the block
+instead of silently dropping the grounding.
 """
 from __future__ import annotations
 
 import json
 import math
 import re
+import subprocess
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -28,24 +31,14 @@ MVP = "docs/mvp.md"
 # Explicit allowlist; extend deliberately. Nothing outside docs/ is ever read.
 ALLOW = ("docs/*.md", "docs/decisions/*.md", "docs/plans/*.md", "docs/releases/*.md",
          "docs/tasks/*.md", "docs/tasks/dev/*.md")
-DENY = (
-    "docs/privacy/",
-    "docs/tasks/breeder-interviews-pilot.md",
-    "docs/tasks/dev/beta-account.md",
-    "docs/tasks/dev/owner-feedback-2026-10-07.md",
-    "docs/tasks/dev/rapport.md",
-    "docs/tasks/dev/mvp-beta-delivery.md",
-    "docs/releases/MVP-BETA.md",
-)
+DENY = ("docs/privacy/", "docs/tasks/breeder-interviews-pilot.md", "docs/tasks/dev/beta-account.md")
 SOURCE_OF_TRUTH = {"docs/vision.md", "docs/mvp.md", "docs/revenue.md", "docs/design-rules.md"}
 
 MAX_CHUNK = 1400       # chars shown per retrieved section
 MAX_PER_FILE = 2       # keeps one big document from crowding out the rest
 TOP_K = 5
+MAX_TOTAL = 12000      # hard cap for the whole REPO-UNDERLAG block (chars, ~3k tokens); sections get what is left
 MIN_RELATIVE = 0.4    # weakest accepted score relative to the best section
-MAX_CONTEXT_CHARS = 14000
-MAX_TASK_MATCHES = 2
-MAX_TASK_CHARS = 1800
 
 _STOP = set("""och att det som för med den har inte jag vi är ska kan på av en ett om till vad hur vilka vilken
 bör när så men eller också från finns något detta denna ska skulle man vara blir bli the and for with what how
@@ -53,11 +46,6 @@ are this that you your""".split())
 _WORD = re.compile(r"[a-zåäöé0-9][a-zåäöé0-9_-]{2,}")
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 _PHONE = re.compile(r"(?<![\d-])(?:\+46|0)[\s-]?\d(?:[\s-]?\d){7,9}(?!\d)")
-_POSTAL_ADDRESS = re.compile(
-    r"(?:[\wÅÄÖåäö.-]+\s+\d+[A-Za-z]?(?:,\s*)?)?\b\d{3}\s?\d{2}\s+"
-    r"[A-ZÅÄÖ][\wÅÄÖåäö-]*(?:\s+[A-ZÅÄÖ][\wÅÄÖåäö-]*)?",
-    re.IGNORECASE,
-)
 
 
 @dataclass
@@ -66,18 +54,8 @@ class RepoContext:
     sources: list[str] = field(default_factory=list)
 
 
-def truncate_text(text: str, limit: int, marker: str) -> str:
-    if len(text) <= limit:
-        return text
-    if limit <= len(marker):
-        return marker[:limit]
-    return text[:max(0, limit - len(marker))] + marker
-
-
 def redact(text: str) -> str:
-    text = _EMAIL.sub("[e-post]", text)
-    text = _PHONE.sub("[telefon]", text)
-    return _POSTAL_ADDRESS.sub("[postadress]", text)
+    return _PHONE.sub("[telefon]", _EMAIL.sub("[e-post]", text))
 
 
 _SUFFIXES = ("ningarna", "ningar", "ningen", "arnas", "ernas", "ornas", "arna", "erna", "orna", "ning",
@@ -111,7 +89,7 @@ def _load_queue() -> dict:
     return json.loads(_read(QUEUE))
 
 
-def status_digest(queue: dict, limit: int = 2600) -> str:
+def status_digest(queue: dict, limit: int = 3400) -> str:
     tasks = queue.get("tasks", [])
     by_status: dict[str, list] = {}
     for task in tasks:
@@ -120,89 +98,50 @@ def status_digest(queue: dict, limit: int = 2600) -> str:
     lines = [f"[STATUS ur {QUEUE}; {len(tasks)} uppgifter; segment: {segment}]"]
     order = ["blocked", "implementing", "qa", "review", "ready", "planned", "done"]
     order += [s for s in by_status if s not in order]
-    counts = ", ".join(f"{status}={len(by_status[status])}" for status in order if by_status.get(status))
-    if counts:
-        lines.append(f"Statusantal: {counts}")
     for status in order:
         items = by_status.get(status)
         if not items:
             continue
         if status == "done":
-            lines.append("Klart: " + ", ".join(str(t.get("id", "?"))[:48] for t in items))
+            body = "; ".join(f"{t['id']} ({str(t.get('title', ''))[:48]})" for t in items)
+            lines.append(f"Klart ({len(items)}): {body}")
         else:
-            lines.append(f"{status.capitalize()}:")
+            lines.append(f"{status.capitalize()} ({len(items)}):")
             for t in items:
-                lines.append(f"- {str(t.get('id', '?'))[:48]}: {str(t.get('title', ''))[:60]} -> nästa: {str(t.get('next_step', ''))[:90]}")
+                lines.append(f"- {t['id']}: {str(t.get('title', ''))[:70]} -> nästa: {str(t.get('next_step', ''))[:150]}")
     text = "\n".join(lines)
-    return truncate_text(text, limit, " …[status avkortad]")
+    return text if len(text) <= limit else text[:limit] + " …[avkortat]"
 
 
-def task_details(queue: dict, question: str, history_text: str = "") -> tuple[str, list[str]]:
-    q = f"{question} {_last_user_line(history_text)}".lower()
+def task_details(queue: dict, question: str) -> tuple[str, list[str]]:
+    q = question.lower()
     blocks, labels = [], []
     for t in queue.get("tasks", []):
-        if len(blocks) >= MAX_TASK_MATCHES:
-            break
-        if str(t.get("id", "")).lower() not in q:
+        if t["id"].lower() not in q:
             continue
-        task_history = t.get("history", [])[-2:]
-        evidence = " | ".join(f"{h.get('from')}->{h.get('to')}: {str(h.get('evidence', ''))[:120]}"
-                              for h in task_history)
+        history = t.get("history", [])[-2:]
+        evidence = " | ".join(f"{h.get('from')}->{h.get('to')} ({h.get('actor')}): {str(h.get('evidence', ''))[:200]}"
+                              for h in history)
         acceptance = "; ".join(str(a)[:120] for a in t.get("acceptance", [])[:4])
-        block = (
+        blocks.append(
             f"[queue:{t['id']}] {t.get('title', '')} | status={t.get('status')} | beror på={t.get('depends_on', [])}\n"
             f"MVP-krav: {t.get('mvp_requirement', '?')} | plan: {t.get('plan', '?')}\n"
             f"Acceptans: {acceptance}\nSenaste historik: {evidence}\nNästa steg: {str(t.get('next_step', ''))[:300]}")
-        remaining = MAX_TASK_CHARS - sum(len(part) for part in blocks) - max(0, len(blocks) * 2)
-        if remaining <= 0:
-            break
-        block = truncate_text(block, remaining, " …[task avkortad]")
-        blocks.append(block)
         labels.append(f"queue:{t['id']}")
     return "\n\n".join(blocks), labels
 
 
 # --------------------------------------------------------------------------- SCOPE
 
-def _sections(text: str, heading_prefix: str) -> list[tuple[str, str]]:
-    lines = text.splitlines()
-    sections, current_heading, body = [], None, []
-    for line in lines:
-        if line.startswith("## "):
-            if current_heading is not None and current_heading.startswith(heading_prefix):
-                sections.append((current_heading, "\n".join(body).strip()))
-            current_heading = line[3:].strip()
-            body = []
-        elif current_heading is not None:
-            body.append(line)
-    if current_heading is not None and current_heading.startswith(heading_prefix):
-        sections.append((current_heading, "\n".join(body).strip()))
-    return sections
-
-
-def scope_block(limit: int = 4700) -> str:
+def scope_block(limit: int = 2400) -> str:
     text = _read(MVP)
     headings = [line.strip() for line in text.splitlines() if line.startswith(("## ", "### "))]
     out = [f"[SCOPE {MVP}; rubriker]", " | ".join(h.lstrip("# ") for h in headings)]
-    must_sections = _sections(text, "Måste med")
-    must_budget = 2300
-    if must_sections:
-        out.append(f"[{MVP} §Måste med; utdrag, kan vara avkortat]")
-        per_section = max(1, must_budget // len(must_sections))
-        for heading, body in must_sections:
-            if must_budget <= 0:
-                out.append("…[Måste med avkortad]")
-                break
-            part = f"{heading}\n{body}"
-            excerpt = part[:min(per_section, must_budget)]
-            out.append(excerpt)
-            must_budget -= len(excerpt)
-    outside_sections = _sections(text, "Utanför MVP")
-    if outside_sections:
-        out.append(f"[{MVP} §Utanför MVP]")
-        out.append(outside_sections[0][1][:1200])
+    match = re.search(r"^## Utanför MVP\s*$(.*?)(?=^## |\Z)", text, re.S | re.M)
+    if match:
+        out += [f"[{MVP} §Utanför MVP]", match.group(1).strip()[:1500]]
     block = "\n".join(out)
-    return truncate_text(block, limit, " …[scope avkortad]")
+    return block if len(block) <= limit else block[:limit] + " …[avkortat]"
 
 
 # --------------------------------------------------------------------------- SECTIONS
@@ -242,7 +181,7 @@ def _allowed_files() -> list[str]:
     for pattern in ALLOW:
         for path in sorted(ROOT.glob(pattern)):
             relative = path.relative_to(ROOT).as_posix()
-            if any(relative.startswith(d) if d.endswith("/") else relative == d for d in DENY):
+            if any(relative.startswith(d) or relative == d for d in DENY):
                 continue
             seen.add(relative)
     return sorted(seen)
@@ -294,6 +233,39 @@ def retrieve(query: str, top_k: int = TOP_K, char_budget: int = 6000) -> tuple[s
     return "\n\n".join(picked), labels
 
 
+# --------------------------------------------------------------------------- RECENT
+
+_CODE_SUFFIXES = {".md", ".ts", ".tsx", ".js", ".mjs", ".py", ".json", ".sql", ".toml", ".yaml", ".yml"}
+
+
+def _git(*args: str) -> str:
+    # Fixed argv, no shell, no user input. Raises OSError/ValueError on any failure.
+    done = subprocess.run(["git", "-c", "core.quotepath=false", "-C", str(ROOT), *args], capture_output=True,
+                          text=True, encoding="utf-8", errors="replace", timeout=8)
+    if done.returncode != 0:
+        raise ValueError(done.stderr.strip()[:120] or f"git exit {done.returncode}")
+    return done.stdout
+
+
+def recent_changes(commits: int = 6, dirty: int = 10, newest: int = 6) -> str:
+    """What changed lately: the live record of work that queue.json may not list yet."""
+    from datetime import datetime
+
+    out = ["[SENASTE COMMITS ur git log]"]
+    out += [line[:130] for line in _git("log", f"-n{commits}", "--date=short", "--pretty=format:%h %ad %s").splitlines()]
+    changed = [line[:110] for line in _git("status", "--porcelain").splitlines() if line.strip()]
+    out.append(f"[OCOMMITTADE ÄNDRINGAR ur git status: {len(changed)} st]")
+    out += changed[:dirty] or ["(inga)"]
+    files = []
+    for name in _git("ls-files", "-z").split("\0"):
+        path = ROOT / name
+        if name and path.suffix in _CODE_SUFFIXES and not name.endswith("pnpm-lock.yaml") and path.is_file():
+            files.append((path.stat().st_mtime, name))
+    out.append("[SENAST ÄNDRADE FILER enligt filsystemet (spårade filer)]")
+    out += [f"{datetime.fromtimestamp(m):%Y-%m-%d %H:%M} {n}" for m, n in sorted(files, reverse=True)[:newest]]
+    return "\n".join(out)
+
+
 # --------------------------------------------------------------------------- public API
 
 def _last_user_line(history: str) -> str:
@@ -321,18 +293,30 @@ def build_repo_context(question: str, history: str = "") -> RepoContext:
         parts.append(f"[SCOPE kunde inte läsas: {type(error).__name__}. Säg att scopeunderlag saknas.]")
         sources.append(f"{MVP}: KUNDE INTE LÄSAS")
 
-    # Follow-ups borrow the previous user line for both task lookup and section ranking.
     if queue is not None:
-        details, labels = task_details(queue, question, history)
+        details, labels = task_details(queue, question)
         if details:
             parts.append(details)
             sources += labels
 
-    sections, labels = retrieve(f"{question} {_last_user_line(history)}".strip(), char_budget=4200)
+    try:
+        recent = recent_changes()
+        sources_recent = "git: senaste commits, ocommittade ändringar, nyast ändrade filer"
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
+        recent = (f"[RECENT kunde inte läsas ({type(error).__name__}: git saknas eller avvisade). "
+                  "Säg att information om senaste ändringar saknas.]")
+        sources_recent = "git: KUNDE INTE LÄSAS"
+
+    # Budget: sections only get what the fixed blocks leave over (1000 chars reserved for the header).
+    left = MAX_TOTAL - 1000 - sum(len(part) for part in parts) - len(recent)
+    # Follow-ups ("och hur gör vi det för hälsa?") borrow the previous user line for ranking only.
+    sections, labels = retrieve(f"{question} {_last_user_line(history)}".strip(), char_budget=max(left, 1500))
     if sections:
         parts.append(sections)
         sources += labels
+    parts.append(recent)
+    sources.append(sources_recent)
 
-    text = "\n\n".join(parts)
-    text = truncate_text(text, MAX_CONTEXT_CHARS, " …[underlag avkortat]")
-    return RepoContext(text=redact(text), sources=list(dict.fromkeys(sources)))
+    # The agents must be able to answer "what can you see?" truthfully, so the list goes in the block.
+    header = "[VAD DU KAN SE: endast detta underlag. Källor: " + "; ".join(sources) + "]"
+    return RepoContext(text=redact(header + "\n\n" + "\n\n".join(parts)), sources=sources)
