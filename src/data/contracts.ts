@@ -14,6 +14,10 @@ export interface TimedDogEventInput {
   event_type: Exclude<EventType, 'weight' | 'vaccination' | 'vet_visit'>;
   occurred_at: string;
   duration_minutes?: number;
+  accident_kind?: 'pee' | 'poop' | 'both' | null;
+  amount?: number | null;
+  amount_unit?: 'g' | 'ml' | 'dl' | null;
+  food_type?: string | null;
 }
 
 // The Supabase client and generated database types are added with the app task.

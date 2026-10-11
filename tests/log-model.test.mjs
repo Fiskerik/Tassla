@@ -164,6 +164,62 @@ test('notes are trimmed, empty notes become null, and the 500 Unicode code-point
   assert.throws(() => event({ note: '🐕'.repeat(501) }), /500 characters or fewer/);
 });
 
+test('optional accident, food, and water details normalize and validate against their event type', () => {
+  assert.deepEqual(event({ type: 'accident', accidentKind: 'both' }), {
+    ...event({ type: 'accident' }), accidentKind: 'both', amount: null, amountUnit: null, foodType: null,
+  });
+  assert.deepEqual(event({ type: 'food', amount: 80, amountUnit: 'g', foodType: '\t\r\n Synthetic food \n\t' }).foodType, 'Synthetic food');
+  assert.equal(event({ type: 'food', foodType: ' \t\r\n ' }).foodType, null);
+  assert.deepEqual(event({ type: 'water', amount: 10000, amountUnit: 'ml' }).amount, 10000);
+  assert.deepEqual(event({ type: 'water', amount: 100, amountUnit: 'dl' }).amountUnit, 'dl');
+  assert.equal(event({ type: 'food', foodType: '🐕'.repeat(60) }).foodType, '🐕'.repeat(60));
+
+  for (const invalid of [
+    { type: 'pee', accidentKind: 'pee' },
+    { type: 'food', accidentKind: 'poop' },
+    { type: 'food', amount: 80 },
+    { type: 'food', amount: 80, amountUnit: 'ml' },
+    { type: 'food', amount: 0, amountUnit: 'g' },
+    { type: 'food', amount: 2000.01, amountUnit: 'g' },
+    { type: 'water', amount: 10000.01, amountUnit: 'ml' },
+    { type: 'water', amount: 100.01, amountUnit: 'dl' },
+    { type: 'sleep', amount: 1, amountUnit: 'g' },
+    { type: 'water', foodType: 'Synthetic food' },
+    { type: 'food', foodType: '🐕'.repeat(61) },
+  ]) assert.throws(() => event(invalid), /Accident kind|Amount|Food amount|Water amount|Food type/);
+});
+
+test('detail updates preserve omitted values, clear explicit nulls, and reset incompatible details on type changes', () => {
+  const food = event({ type: 'food', amount: 80, amountUnit: 'g', foodType: 'Synthetic kibble' });
+  const noteOnly = updateLogEvent([food], food.id, { note: 'updated note' }, fixedNow)[0];
+  assert.equal(noteOnly.amount, 80);
+  assert.equal(noteOnly.amountUnit, 'g');
+  assert.equal(noteOnly.foodType, 'Synthetic kibble');
+
+  const cleared = updateLogEvent([food], food.id, {
+    amount: null, amountUnit: null, foodType: null,
+  }, fixedNow)[0];
+  assert.equal(cleared.amount, null);
+  assert.equal(cleared.amountUnit, null);
+  assert.equal(cleared.foodType, null);
+  assert.throws(() => updateLogEvent([food], food.id, { amount: null }, fixedNow), /set together/);
+
+  const switched = updateLogEvent([food], food.id, {
+    type: 'water', amount: 300, amountUnit: 'ml',
+  }, fixedNow)[0];
+  assert.equal(switched.type, 'water');
+  assert.equal(switched.amount, 300);
+  assert.equal(switched.amountUnit, 'ml');
+  assert.equal(switched.foodType, null);
+  assert.equal(switched.accidentKind, null);
+
+  const accident = event({ type: 'accident', accidentKind: 'pee' });
+  const changedToSleep = updateLogEvent([accident], accident.id, { type: 'sleep' }, fixedNow)[0];
+  assert.equal(changedToSleep.accidentKind, null);
+  assert.equal(changedToSleep.amount, null);
+  assert.equal(changedToSleep.foodType, null);
+});
+
 test('sample events have stable IDs and dog identity and are returned newest first', () => {
   const first = createSampleLogEvents('synthetic-dog-1', fixedNow);
   const second = createSampleLogEvents('synthetic-dog-1', fixedNow);

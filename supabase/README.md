@@ -9,6 +9,10 @@ SQL-funktion: create_dog(dog_name, dog_breed_id, dog_birth_date, kennel_code). H
 
 Ingen schemaändring aktiveras i ett fjärrprojekt automatiskt. För P09: kör `migrations/202610080001_beta_metrics.sql` efter grundmigrationerna, därefter `tests/beta-metrics.sql` separat med syntetiska konton. Slå på `pg_cron` i Supabase Database Extensions och kör `beta-metrics-retention-job.sql` för daglig 30-dagars gallring. Kontrollera `cron.job` visar jobbet och `cron.job_run_details` visar en lyckad körning innan frivillig insamling används i en betamiljö. Denna miljö saknar verifierad anslutning till Eriks Supabase-projekt; migration, RLS och scheduler har inte körts där.
 
+## Valfria detaljer i vardagsloggen
+
+Kör `migrations/202610110003_dog_event_details.sql` efter `migrations/202610110002_puppy_checklists.sql`, på en ny eller uppdaterad utvecklingsdatabas. Den lägger till nullable `accident_kind`, `amount`, `amount_unit` och `food_type` i `public.dog_events`; äldre poster förblir giltiga med `NULL`. Kör därefter `tests/log-event-details.sql` separat med syntetiska konton. Testet kontrollerar tillåtna fältkombinationer, gränser, kolumnrättigheter och ägarisolering och rullar tillbaka alla testdata. Migreringen ändrar inte befintliga tidskontroller eller RLS-policyer. `food_type` ska lagras trimmad enligt ASCII blanksteg, tab, CR och LF; mat-/vattenmängdernas tak är teknisk validering, inte mängdråd.
+
 ## Innehållsutkast
 
 `content/mvp-content-v1.sql` är en handkörd, versionsspecifik draft-import som ska köras först och kontrollerar exakt innehållsparitet. Efter den kan `content/publish-mvp-content-v1.sql` publicera tio godkända runtimeversioner med dokumenterad reviewreferens. Den lämnar `before-homecoming` som draft tills runtime upprätthåller onboarding-only-kontext. Ingendera filen har körts mot en databas här. Verifiera RLS och publicerad readback i målmiljön. Se `../docs/content/README.md`.

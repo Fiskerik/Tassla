@@ -27,12 +27,17 @@ test('dog-event history filters the supported everyday types and has determinist
     weight_kg: null,
     duration_minutes: 12,
     description: null,
+    accident_kind: null,
+    amount: null,
+    amount_unit: null,
+    food_type: null,
   };
   const { client, requests } = localClient(({ method, url }) => {
     assert.equal(method, 'GET');
     assert.equal(url.pathname, '/rest/v1/dog_events');
     assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
     assert.equal(url.searchParams.get('event_type'), 'in.(pee,poop,food,sleep,awake,walk,accident,water)');
+    assert.match(url.searchParams.get('select'), /accident_kind,amount,amount_unit,food_type/);
     const order = url.searchParams.get('order')?.split(',') ?? [];
     assert.ok(order.includes('occurred_at.desc'));
     assert.ok(order.some((value) => /^id\.(asc|desc)$/.test(value)), 'stable event ID tie-breaker is required');
@@ -51,7 +56,7 @@ test('dog-event history filters the supported everyday types and has determinist
 
 test('recovers an uncertain event update when the server returns an equivalent timestamp format', async () => {
   const changes = {
-    event_type: 'walk',
+    event_type: 'accident',
     occurred_at: '2026-10-04T10:00:00.000Z',
     duration_minutes: 15,
     description: 'kort runda',
@@ -59,12 +64,16 @@ test('recovers an uncertain event update when the server returns an equivalent t
   const serverRow = {
     id: '55555555-5555-4555-8555-555555555555',
     dog_id: dogId,
-    event_type: 'walk',
+    event_type: 'accident',
     occurred_at: '2026-10-04T12:00:00+02:00',
     occurred_on: null,
     weight_kg: null,
     duration_minutes: 15,
     description: 'kort runda',
+    accident_kind: 'both',
+    amount: null,
+    amount_unit: null,
+    food_type: null,
   };
   const { client, requests } = localClient(async (request) => {
     if (request.method === 'PATCH') {
@@ -92,6 +101,49 @@ test('recovers an uncertain event update when the server returns an equivalent t
   }
 });
 
+test('round-trips detail fields and matches only explicitly supplied patch fields after an uncertain update', async () => {
+  const id = '66666666-6666-4666-8666-666666666666';
+  const changes = {
+    event_type: 'food',
+    occurred_at: '2026-10-04T10:00:00.000Z',
+    duration_minutes: null,
+    description: null,
+    food_type: null,
+  };
+  const serverRow = {
+    id,
+    dog_id: dogId,
+    event_type: 'food',
+    occurred_at: '2026-10-04T10:00:00+00:00',
+    occurred_on: null,
+    weight_kg: null,
+    duration_minutes: null,
+    description: null,
+    accident_kind: null,
+    amount: 90,
+    amount_unit: 'g',
+    food_type: null,
+  };
+  const { client, requests } = localClient(async (request) => {
+    if (request.method === 'PATCH') {
+      assert.deepEqual(request.body, changes);
+      throw new TypeError('simulated lost update response after server commit');
+    }
+    assert.equal(request.method, 'GET');
+    assert.match(request.url.searchParams.get('select'), /accident_kind,amount,amount_unit,food_type/);
+    return jsonResponse(serverRow);
+  });
+
+  try {
+    assert.deepEqual(await workspaceData.updateDogEvent(client, dogId, id, changes), {
+      status: 'saved', value: serverRow,
+    });
+    assert.deepEqual(requests.map(({ method }) => method), ['PATCH', 'GET']);
+  } finally {
+    await client.auth.dispose();
+  }
+});
+
 test('recovers an event insert after response loss by reading the same stable UUID', async () => {
   const storedEvents = new Map();
   const { client, requests } = localClient(async (request) => {
@@ -105,7 +157,8 @@ test('recovers an event insert after response loss by reading the same stable UU
         duration_minutes: null,
         description: null,
       });
-      const saved = { ...input, occurred_on: null, weight_kg: null };
+      const saved = { ...input, occurred_on: null, weight_kg: null,
+        accident_kind: null, amount: null, amount_unit: null, food_type: null };
       storedEvents.set(input.id, saved);
       throw new TypeError('simulated lost response after server commit');
     }
@@ -131,6 +184,38 @@ test('recovers an event insert after response loss by reading the same stable UU
     assert.equal(result.value.id, '22222222-2222-4222-8222-222222222222');
     assert.equal(requests.filter(({ method }) => method === 'POST').length, 1);
     assert.equal(requests.filter(({ method }) => method === 'GET').length, 1);
+  } finally {
+    await client.auth.dispose();
+  }
+});
+
+test('dog-event inserts serialize optional detail fields and return explicit nullable values', async () => {
+  const operation = {
+    id: '77777777-7777-4777-8777-777777777777',
+    dog_id: dogId,
+    event_type: 'food',
+    occurred_at: '2026-10-04T10:00:00.000Z',
+    duration_minutes: null,
+    description: null,
+    amount: 80,
+    amount_unit: 'g',
+    food_type: 'Synthetic food',
+  };
+  const record = {
+    ...operation,
+    occurred_on: null,
+    weight_kg: null,
+    accident_kind: null,
+  };
+  const { client } = localClient((request) => {
+    assert.equal(request.method, 'POST');
+    assert.deepEqual(request.body, operation);
+    return jsonResponse(record, 201);
+  });
+
+  try {
+    assert.deepEqual(await workspaceData.insertDogEvent(client, operation), { status: 'saved', value: record });
+    assert.equal(Object.hasOwn(record, 'accident_kind'), true);
   } finally {
     await client.auth.dispose();
   }

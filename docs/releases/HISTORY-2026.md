@@ -546,3 +546,9 @@ Paketcommit: `7b9da840d2ca2ac8f5d5ed998d73495858c98eae`. Bascommit617fb67. Pusha
 Dokumenterat Eriks UPD-1011-beslut i MVP:n och beslut 0007, registrerat alla nio paket i ordning, och uppdaterat endast den begärda kommentaren vid `summarizePottyPatterns`. Ingen körbar kod/beteendeförändring. Product/Critic PROCEED, Architect APPROVE, Dog Expert PASS, QA PASS och oberoende Reviewer PASS.
 
 Verifiering: `pnpm check` PASS (typechecks PASS; lint 0 fel/38 varningar; 37/37 testfiler PASS), `python tools/dev_flow.py validate` PASS och `git diff --check` PASS. Pre-commit hook körde full `pnpm check` och staged diffcheck utan `--no-verify`. Ingen migration, push, Codemagic eller TestFlight genomfördes. UPD-LOG-DATA är nästa paket och förblir `planned` tills egen plan och reviews är klara.
+
+## UPD-LOG-DATA — valfria detaljer i vardagsloggen
+
+2026-10-11. Implementerat lokalt och granskat enligt plan v4. Tillagda nullable fält i `dog_events`: olyckstyp, mängd/enhet för mat eller vatten och fodertyp. Separata constraints bevarar befintliga tids-/shape-regler och RLS; UPDATE-grant gäller endast de fyra nya kolumnerna. Modellen normaliserar ASCII-trimning, validerar fälten och bevarar patchsemantik; UI-handoff ligger i nästa UPD-LOG-UI-paket.
+
+Product/Critic PROCEED, Architect APPROVE, Dog Expert PASS, Security statiskt PASS, QA PASS, Reviewer PASS. `pnpm check` PASS (37/37 testfiler, lint 0 fel/38 varningar); fokuserade logg-/workspace-tester PASS (2/2); kövalidering och diff-check PASS. SQL-runtime NOT TESTABLE utan lokal PostgreSQL/Supabase-miljö. Ingen push, publicering eller TestFlight. Paketcommit-SHA dokumenteras i lokal uppföljningscheckpoint.

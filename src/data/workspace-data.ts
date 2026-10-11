@@ -1,11 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { selectContent } from '../content/select-content';
-import { LOG_EVENT_TYPES, type LogEventType } from '../features/puppy-log/log-model';
+import { LOG_EVENT_TYPES, normalizeLogEventDetails, type LogAccidentKind, type LogAmountUnit, type LogEventType } from '../features/puppy-log/log-model';
 import type { HomeContent, OwnedDog } from './app-data';
 
 export const WORKSPACE_PAGE_SIZE = 40;
 const DEFAULT_REQUEST_TIMEOUT_MS = 12_000;
-const EVENT_COLUMNS = 'id,dog_id,event_type,occurred_at,occurred_on,weight_kg,duration_minutes,description';
+const EVENT_COLUMNS = 'id,dog_id,event_type,occurred_at,occurred_on,weight_kg,duration_minutes,description,accident_kind,amount,amount_unit,food_type';
 const HEALTH_WEIGHT_COLUMNS = 'id,dog_id,actor_id,occurred_on,weight_kg';
 const HEALTH_HISTORY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,occurred_time,description';
 const HEALTH_HISTORY_LEGACY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,description';
@@ -20,6 +20,10 @@ export interface DogEventRecord {
   weight_kg: number | null;
   duration_minutes: number | null;
   description: string | null;
+  accident_kind: LogAccidentKind | null;
+  amount: number | null;
+  amount_unit: LogAmountUnit | null;
+  food_type: string | null;
 }
 
 export interface DogEventOperation {
@@ -29,6 +33,10 @@ export interface DogEventOperation {
   occurred_at: string;
   duration_minutes: number | null;
   description: string | null;
+  accident_kind?: LogAccidentKind | null;
+  amount?: number | null;
+  amount_unit?: LogAmountUnit | null;
+  food_type?: string | null;
 }
 
 export interface DogEventChanges {
@@ -36,6 +44,10 @@ export interface DogEventChanges {
   occurred_at: string;
   duration_minutes: number | null;
   description: string | null;
+  accident_kind?: LogAccidentKind | null;
+  amount?: number | null;
+  amount_unit?: LogAmountUnit | null;
+  food_type?: string | null;
 }
 
 export interface HealthWeightRecord {
@@ -1074,7 +1086,28 @@ function isDogEventRecord(value: unknown): value is DogEventRecord {
     && (row.occurred_on === null || typeof row.occurred_on === 'string')
     && (row.weight_kg === null || typeof row.weight_kg === 'number')
     && (row.duration_minutes === null || typeof row.duration_minutes === 'number')
-    && (row.description === null || typeof row.description === 'string' && Array.from(row.description).length <= 500);
+    && (row.description === null || typeof row.description === 'string' && Array.from(row.description).length <= 500)
+    && isDogEventDetails(row);
+}
+
+function isDogEventDetails(row: Record<string, unknown>): boolean {
+  if (!(row.accident_kind === null || typeof row.accident_kind === 'string')
+    || !(row.amount === null || typeof row.amount === 'number')
+    || !(row.amount_unit === null || typeof row.amount_unit === 'string')
+    || !(row.food_type === null || typeof row.food_type === 'string')) return false;
+  if (typeof row.event_type !== 'string' || !LOG_EVENT_TYPES.includes(row.event_type as LogEventType)) return false;
+  try {
+    const normalized = normalizeLogEventDetails(row.event_type as LogEventType, {
+      accidentKind: row.accident_kind as LogAccidentKind | null,
+      amount: row.amount as number | null,
+      amountUnit: row.amount_unit as LogAmountUnit | null,
+      foodType: row.food_type as string | null,
+    });
+    return normalized.accidentKind === row.accident_kind && normalized.amount === row.amount
+      && normalized.amountUnit === row.amount_unit && normalized.foodType === row.food_type;
+  } catch {
+    return false;
+  }
 }
 
 function isHealthWeightRecord(value: unknown): value is HealthWeightRecord {
@@ -1180,7 +1213,11 @@ function isDisplayableContentType(value: string | undefined): value is 'article'
 
 function matchesChanges(event: DogEventRecord, changes: DogEventChanges): boolean {
   return event.event_type === changes.event_type && Date.parse(event.occurred_at) === Date.parse(changes.occurred_at)
-    && event.duration_minutes === changes.duration_minutes && event.description === changes.description;
+    && event.duration_minutes === changes.duration_minutes && event.description === changes.description
+    && (changes.accident_kind === undefined || event.accident_kind === changes.accident_kind)
+    && (changes.amount === undefined || event.amount === changes.amount)
+    && (changes.amount_unit === undefined || event.amount_unit === changes.amount_unit)
+    && (changes.food_type === undefined || event.food_type === changes.food_type);
 }
 
 function matchesHealthWeight(

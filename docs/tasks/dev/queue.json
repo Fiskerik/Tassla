@@ -3637,37 +3637,72 @@
       "id": "UPD-LOG-DATA",
       "title": "Valfria olycks-, mat- och vattenfält i loggen",
       "mvp_requirement": "docs/mvp.md: Eriks tillägg 2026-10-11; Valplogg",
-      "plan": "docs/tasks/dev/UPD-LOG-DATA.md v1 (före implementation)",
+      "plan": "docs/tasks/dev/UPD-LOG-DATA.md v4 (före implementation)",
       "write_paths": [
-        "supabase/migrations",
+        "supabase/migrations/202610110003_dog_event_details.sql",
         "supabase/README.md",
+        "supabase/tests/log-event-details.sql",
         "src/data/contracts.ts",
         "src/data/workspace-data.ts",
         "src/features/puppy-log/log-model.ts",
         "src/features/puppy-log/README.md",
-        "tests",
+        "tests/log-model.test.mjs",
+        "tests/workspace-data.test.mjs",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
         "docs/releases/HISTORY-2026.md",
         "docs/tasks/dev/UPD-LOG-DATA.md"
       ],
       "acceptance": [
-        "Valfria fält valideras i kod och migration",
-        "CHECK-villkor begränsar typ och tillåtna eventtyper",
-        "RLS är oförändrad och granskad",
-        "Syntetiska tester täcker nya fält"
+        "Nullable accident_kind/amount/amount_unit/food_type enforce event-type and unit mapping; amount and unit must both be NULL or both NOT NULL; legacy rows remain NULL-compatible",
+        "Existing dog_events shape/time constraints and RLS policies stay unchanged; only narrow UPDATE grants for new fields, with owner-scope and column-privilege SQL assertions",
+        "Persisted data/model records use explicit nullable values; omitted detail fields in updates preserve values, explicit null clears, and event-type changes clear old details before valid explicit replacements",
+        "Synthetic tests cover both half-NULL cases, unit caps, identical SQL/TypeScript ASCII trim and Unicode-codepoint length, legacy nulls, patch semantics and readback",
+        "Supabase and puppy-log READMEs document migration order and separate data changes from UI work; ProductWorkspace handoff remains assigned to UPD-LOG-UI"
       ],
       "checks": [
         "pnpm check",
+        "node --experimental-strip-types --test tests/log-model.test.mjs tests/workspace-data.test.mjs",
         "git diff --check",
-        "SQL-runtime i utvecklingsdatabas; annars NOT TESTABLE"
+        "SQL constraint/owner-scope test in a local/development database; otherwise NOT TESTABLE"
       ],
       "depends_on": [
         "UPD-SCOPE"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Följ sekventiell ordning; fullständig paketplan och granskningar krävs innan start av UPD-LOG-DATA."
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v4; Product/Critic PROCEED; review saved in docs/tasks/dev/UPD-LOG-DATA.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Startar implementation enligt Architect APPROVE v4; paket 1 UPD-SCOPE klart"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete; fokuserade tester och pnpm check passerade; Security statiskt PASS; SQL-runtime NOT TESTABLE"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA PASS enligt oberoende QA; relevanta kontroller körda; SQL-runtime NOT TESTABLE och redovisad i UPD-LOG-DATA.md"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Oberoende Reviewer PASS plan v4; Security statiskt PASS; QA PASS; SQL-runtime NOT TESTABLE redovisat"
+        }
+      ],
+      "next_step": "Paketet är QA-/Reviewer-godkänt och lokalt klart; lokal commit och exakt SHA dokumenteras före start av UPD-LOG-UI. Ingen push. SQL-runtime NOT TESTABLE."
     },
     {
       "id": "UPD-LOG-UI",
@@ -3677,6 +3712,7 @@
       "write_paths": [
         "src/features/puppy-log/LogScreen.tsx",
         "src/features/puppy-log/log-model.ts",
+        "src/features/home/ProductWorkspace.tsx",
         "src/features/puppy-log/README.md",
         "tests",
         "docs/tasks/dev/queue.json",
@@ -3687,6 +3723,7 @@
       "acceptance": [
         "Logg sparas före valfria detaljer",
         "Detaljer kan hoppas över och redigeras",
+        "ProductWorkspace maps detail fields on read and preserves omitted-versus-null patch semantics on write, including event-type changes",
         "Samma hunds egna tidigare foderstyper används lokalt",
         "Ångra, dubblettskydd, sparstatus och gruppering per dag fungerar"
       ],

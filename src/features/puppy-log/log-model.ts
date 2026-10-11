@@ -2,6 +2,22 @@ export const LOG_EVENT_TYPES = ['pee', 'poop', 'food', 'sleep', 'awake', 'walk',
 export const LOG_ENTRY_TYPES = ['pee', 'poop', 'food', 'sleep', 'walk', 'accident', 'water'] as const;
 export type LogEventType = typeof LOG_EVENT_TYPES[number];
 export type LogEventOrigin = 'example' | 'local-test';
+export type LogAccidentKind = 'pee' | 'poop' | 'both';
+export type LogAmountUnit = 'g' | 'ml' | 'dl';
+
+export interface LogEventDetailInput {
+  accidentKind?: LogAccidentKind | null;
+  amount?: number | null;
+  amountUnit?: LogAmountUnit | null;
+  foodType?: string | null;
+}
+
+export interface LogEventDetails {
+  accidentKind: LogAccidentKind | null;
+  amount: number | null;
+  amountUnit: LogAmountUnit | null;
+  foodType: string | null;
+}
 
 export const LOG_EVENT_LABELS: Record<LogEventType, string> = {
   pee: 'Kiss',
@@ -21,9 +37,13 @@ export interface LogEvent {
   occurredAt: string;
   note: string | null;
   origin: LogEventOrigin;
+  accidentKind?: LogAccidentKind | null;
+  amount?: number | null;
+  amountUnit?: LogAmountUnit | null;
+  foodType?: string | null;
 }
 
-export interface CreateLogEventInput {
+export interface CreateLogEventInput extends LogEventDetailInput {
   id: string;
   dogId: string;
   type: LogEventType;
@@ -32,7 +52,7 @@ export interface CreateLogEventInput {
   origin?: LogEventOrigin;
 }
 
-export interface LogEventChanges {
+export interface LogEventChanges extends LogEventDetailInput {
   type?: LogEventType;
   occurredAt?: string;
   note?: string | null;
@@ -88,6 +108,42 @@ export function logMutationStatusForWriteOutcome(status: 'saved' | 'failed' | 'u
   return status === 'unknown' ? 'unsure' : status;
 }
 
+export function normalizeLogEventDetails(type: LogEventType, input: LogEventDetailInput): LogEventDetails {
+  const accidentKind = input.accidentKind ?? null;
+  const amount = input.amount ?? null;
+  const amountUnit = input.amountUnit ?? null;
+  const rawFoodType = input.foodType ?? null;
+  const foodType = typeof rawFoodType === 'string'
+    ? rawFoodType.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, '') || null
+    : rawFoodType;
+
+  if (accidentKind !== null && !['pee', 'poop', 'both'].includes(accidentKind)) {
+    throw new Error('Accident kind is invalid');
+  }
+  if (accidentKind !== null && type !== 'accident') throw new Error('Accident kind is only allowed for accidents');
+  if (amountUnit !== null && !['g', 'ml', 'dl'].includes(amountUnit)) throw new Error('Amount unit is invalid');
+  if (amount !== null && (!Number.isFinite(amount) || amount <= 0)) throw new Error('Amount must be positive');
+  if ((amount === null) !== (amountUnit === null)) throw new Error('Amount and unit must be set together');
+  if (amount !== null && amountUnit !== null) {
+    if (type === 'food') {
+      if (amountUnit !== 'g' || amount > 2000) throw new Error('Food amount must use g and be at most 2000');
+    } else if (type === 'water') {
+      if (!((amountUnit === 'ml' && amount <= 10_000) || (amountUnit === 'dl' && amount <= 100))) {
+        throw new Error('Water amount must use ml or dl within the input limit');
+      }
+    } else {
+      throw new Error('Amount is only allowed for food or water');
+    }
+  }
+  if (foodType !== null) {
+    if (typeof foodType !== 'string') throw new Error('Food type must be text');
+    if (type !== 'food') throw new Error('Food type is only allowed for food');
+    if (Array.from(foodType).length > 60) throw new Error('Food type must be 60 characters or fewer');
+  }
+
+  return { accidentKind, amount, amountUnit, foodType };
+}
+
 export async function checkInsertRetryOperation<Operation extends { id: string }, Row>(
   operation: Operation,
   readById: (id: string) => Promise<Row | null>,
@@ -126,6 +182,7 @@ export function createLogEvent(input: CreateLogEventInput, now = new Date()): Lo
 
   const note = input.note?.trim() || null;
   if (note && Array.from(note).length > 500) throw new Error('Note must be 500 characters or fewer');
+  const details = normalizeLogEventDetails(input.type, input);
   return {
     id: input.id,
     dogId: input.dogId,
@@ -133,6 +190,7 @@ export function createLogEvent(input: CreateLogEventInput, now = new Date()): Lo
     occurredAt: input.occurredAt,
     note,
     origin: input.origin ?? 'local-test',
+    ...details,
   };
 }
 
@@ -166,9 +224,26 @@ export function updateLogEvent(
 ): LogEvent[] {
   const current = events.find((event) => event.id === id);
   if (!current) return [...events];
+  const type = changes.type ?? current.type;
+  const typeChanged = type !== current.type;
+  const detailChanges = typeChanged
+    ? {
+      accidentKind: changes.accidentKind ?? null,
+      amount: changes.amount ?? null,
+      amountUnit: changes.amountUnit ?? null,
+      foodType: changes.foodType ?? null,
+    }
+    : {
+      accidentKind: changes.accidentKind === undefined ? current.accidentKind ?? null : changes.accidentKind,
+      amount: changes.amount === undefined ? current.amount ?? null : changes.amount,
+      amountUnit: changes.amountUnit === undefined ? current.amountUnit ?? null : changes.amountUnit,
+      foodType: changes.foodType === undefined ? current.foodType ?? null : changes.foodType,
+    };
   const updated = createLogEvent({
     ...current,
     ...changes,
+    ...detailChanges,
+    type,
     id: current.id,
     dogId: current.dogId,
     origin: current.origin,
