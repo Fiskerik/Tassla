@@ -76,6 +76,58 @@ test('history read filters the dog and allowed event types, sorts stably, and pa
   }
 });
 
+test('legacy history read retries without occurred_time only for its specific missing-column error', async (t) => {
+  await t.test('legacy schema returns rows with a null time', async () => {
+    const legacyRow = { ...savedRecord };
+    delete legacyRow.occurred_time;
+    const { client, requests } = localClient(({ url }) => url.searchParams.has('select')
+      && url.searchParams.get('select').includes('occurred_time')
+      ? jsonResponse({ code: '42703', message: 'column dog_events.occurred_time does not exist' }, 400)
+      : jsonResponse([legacyRow]));
+    try {
+      assert.deepEqual(await workspaceData.fetchHealthHistory(client, dogId), [savedRecord]);
+      assert.equal(requests.length, 2);
+      assert.equal(requests[1].url.searchParams.get('select'), 'id,dog_id,actor_id,event_type,occurred_on,description');
+    } finally { await client.auth.dispose(); }
+  });
+  await t.test('other missing-column errors are not retried', async () => {
+    const { client, requests } = localClient(() => jsonResponse({ code: '42703', message: 'column dog_events.description does not exist' }, 400));
+    try {
+      await assert.rejects(workspaceData.fetchHealthHistory(client, dogId));
+      assert.equal(requests.length, 1);
+    } finally { await client.auth.dispose(); }
+  });
+  await t.test('PGRST204 is retried only when it names occurred_time', async () => {
+    const legacyRow = { ...savedRecord };
+    delete legacyRow.occurred_time;
+    const { client, requests } = localClient(({ url }) => url.searchParams.get('select')?.includes('occurred_time')
+      ? jsonResponse({ code: 'PGRST204', message: "Could not find the 'occurred_time' column of 'dog_events' in the schema cache" }, 400)
+      : jsonResponse([legacyRow]));
+    try {
+      assert.deepEqual(await workspaceData.fetchHealthHistory(client, dogId), [savedRecord]);
+      assert.equal(requests.length, 2);
+    } finally { await client.auth.dispose(); }
+  });
+  await t.test('authorization and network failures are surfaced without retrying', async (t) => {
+    await t.test('authorization failure', async () => {
+      const { client, requests } = localClient(() => jsonResponse({ code: '42501', message: 'permission denied' }, 403));
+      try {
+        await assert.rejects(workspaceData.fetchHealthHistory(client, dogId));
+        assert.equal(requests.length, 1);
+      } finally { await client.auth.dispose(); }
+    });
+    await t.test('network failure', async () => {
+      const { client, requests } = localClient(() => { throw new TypeError('network unavailable'); });
+      try {
+        await assert.rejects(workspaceData.fetchHealthHistory(client, dogId));
+        assert.ok(requests.length > 0);
+        assert.ok(requests.every(({ url }) => url.searchParams.get('select').includes('occurred_time')),
+          'network retries retain the full schema request and never issue a legacy fallback');
+      } finally { await client.auth.dispose(); }
+    });
+  });
+});
+
 test('history reads reject a row for another dog or a malformed row', async (t) => {
   await t.test('cross-dog collection result', async () => {
     const { client } = localClient(() => jsonResponse([{ ...savedRecord, dog_id: otherDogId }]));

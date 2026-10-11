@@ -28,7 +28,7 @@ const tomorrow = '2026-10-07';
 
 test('future reminder selection filters past times today before counting its 40-row cap and paginates to a valid 41st', async () => {
   const makeRow = (index, dueOn, minutes) => ({ id: `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
-    dog_id: dogId, event_type: 'vaccination', due_on: dueOn, description: null, created_at: '2026-10-01T00:00:00Z',
+    dog_id: dogId, event_type: 'vaccination', due_on: dueOn, due_time: null, description: null, created_at: '2026-10-01T00:00:00Z',
     reminder_enabled: true, reminder_minutes: minutes });
   const pages = [
     Array.from({ length: 40 }, (_, index) => makeRow(index, today, 1 + index)),
@@ -82,7 +82,7 @@ test('future reminder selection checks an already-stale lifetime before any serv
 
 test('future reminder reads reject cross-dog rows and invalid reminder metadata', async (t) => {
   const valid = { id: '22222222-2222-4222-8222-222222222222', dog_id: dogId, event_type: 'vet_visit', due_on: tomorrow,
-    description: null, created_at: '2026-10-01T00:00:00Z', reminder_enabled: true, reminder_minutes: 600 };
+    due_time: null, description: null, created_at: '2026-10-01T00:00:00Z', reminder_enabled: true, reminder_minutes: 600 };
   await t.test('cross-dog row', async () => {
     const { client } = localClient(() => jsonResponse([{ ...valid, dog_id: otherDogId }]));
     try { await assert.rejects(data.fetchFuturePlannedHealthReminders(client, dogId, today, () => true, () => true)); }
@@ -737,7 +737,7 @@ function fakeAdapter({ requests = [], scheduled = [], cancelled = [], cancelErro
 }
 
 function plannedReminder(id, dogId, due_on, reminder_minutes) {
-  return { id, dog_id: dogId, event_type: 'vaccination', due_on, description: null,
+  return { id, dog_id: dogId, event_type: 'vaccination', due_on, due_time: null, description: null,
     created_at: '2026-10-01T00:00:00Z', reminder_enabled: true, reminder_minutes };
 }
 

@@ -13,3 +13,5 @@ Kör `pnpm check` för typkontroll, lint och lokala tester och `pnpm bundle:ios`
 ## UI-RESET, 2026-10-09
 
 `HealthScreen` är nu översikt med filter för vaccination/veterinär, förfallna/kommande planer och genomförda händelser. `WeightScreen` innehåller det tidigare viktflödet med oförändrade callbacks. `HealthHistoryScreen` används som editor i en sheet, initierad med vald post/typ; historiklistan ligger enbart i översikten. En ändrad sparad snapshot nycklar om editorn, och lyckad spara/radera stänger sheeten. Fel, osäker sparstatus och konfliktåterhämtning finns inne i editorn. Inga datakontrakt eller vårdråd har ändrats.
+
+Planerade planer visar `due_time` som händelsetid, oberoende av notifieringsvalet. `reminder_minutes` visas som `Påminnelse HH:mm` när en tid finns; en avstängd sparad tid märks `· av`, medan en osatt tid inte visas. Sparade planer har en 44 pt åtgärdsknapp med alternativen `Ändra`, `Ta bort` och `Avbryt`; borttagning använder fortsatt bekräftelsen `Ta bort plan?`. Genomförd tid kommer från `occurred_time`. Den gemensamma tidsmodalen bekräftar ett formulärvärde innan slutlig sparaåtgärd.

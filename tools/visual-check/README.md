@@ -16,6 +16,13 @@ I en annan terminal, med Python Playwright och `/usr/bin/chromium` installerade:
 python tools/visual-check/verify.py
 ```
 
-Resultat och skärmbilder sparas i `docs/design/UI-RESET/`. Browserklockan låses till 2026-10-09 kl. 15 UTC för reproducerbara loggtider. `?screen=log&mutation=failed` respektive `unsure` provar återhämtning utan backend. `?state=empty|loading|error` provar lästillstånd.
+QA-11-resultat och skärmbilder sparas i `docs/design/QA-11/evidence/`. KNOW-02 har en separat entry/output och skriver till `docs/design/KNOW-02/evidence/`:
 
-Detta verifierar layout och kopplade UI-handlingar. Det verifierar inte native animationers bildfrekvens, verkligt tangentbord/VoiceOver, native PDF eller databas/RLS. 140 % text är ett layoutprov, inte fullständig Dynamic Type-verifiering.
+```sh
+TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_ENTRY=tools/visual-check/know02-app.tsx TASSLA_UI_OUTPUT=/tmp/tassla-preview/site/know02 TASSLA_UI_REVIEW=true node tools/visual-check/build.cjs
+python tools/visual-check/verify-know02.py
+```
+
+Browserklockan låses till 2026-10-11 kl. 15 UTC för reproducerbara loggtider. `?screen=log&mutation=failed` respektive `unsure` provar återhämtning utan backend. `?state=empty|loading|error` provar lästillstånd.
+
+React Native Web-harnessen registrerar RN `Alert`-alternativen och kan anropa en vald callback via `window.__tasslaAlertActions`; detta verifierar menyvalens kopplade åtgärder, inte native Alert-visning, tangentbords-/VoiceOver-beteende, native PDF eller databas/RLS. Harnessen verifierar inte animationers native bildfrekvens. 140 % text är ett layoutprov, inte fullständig Dynamic Type-verifiering.

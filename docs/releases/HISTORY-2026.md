@@ -524,3 +524,16 @@ Approval-recorden dokumenterar Eriks produktägarbekräftelse av sakkunnigverifi
 ## Nästa steg
 
 Kör `supabase/content/mvp-content-v1.sql`, därefter `supabase/content/publish-mvp-content-v1.sql` i avsedd Supabase-miljö. Verifiera published rows och appens urval där. Bygg en separat context-aware onboardingväg innan `before-homecoming` publiceras.
+
+## 2026-10-11 – QA-11 lokalt implementerad och verifierad
+
+Tidsbekräftelse, separat planerad händelsetid på Hem/Hälsa, enhetlig chevronback, Toast-luft, maskot bort och strikt legacy history fallback/retry. Lokalt check/QA/Reviewer/SecurityPASS; renderad 375/430/140%harness23kontroller. Plan v3.2, evidence docs/design/QA-11. Commit: ingen ny, workingtree på bas617fb67; push och TestFlight för denna ändring: inte genomförda. Migration 202610110001 behöver köras/verifieras separat; native/liveSQL/RLS NOT TESTABLE.
+
+
+## KNOW-02 — Faschecklistor, FAQ och granskningsinnehåll
+
+2026-10-11: lokalt implementerat och oberoende granskat på puppy-checklists-faq-qa11. Sex faser, egna/standardpunkter, progress och privat konto-/hundmodell; kontextval före hemkomst/första dagar/ålder; säkra okända sparresultat vid navigation. Kunskap har fyra flikar, färgkategorier och FAQ; Hem öppnar samma destinationer. Tre tillfälliga träningsprogram med guidepar och lokal övningsprogress. Granskningsmärkning och separata review/public-buildflöden med innehållsgrind. Inga podcasts.
+
+Verifierat lokalt: oberoende pnpm check37testfilerPASS, lint0fel38varningar, diffPASS; senaste visuella/flödes-QA44PASS utan pageerrors vid375/430/140%; Reviewer och SecurityPASS; båda sista iOS-exporter1427modulerPASS. Underlag docs/design/KNOW-02/checklista.md och docs/tasks/dev/rapport.md. Begränsningar: liveSQL/RLS/cascade och native/TestFlight/VoiceOver/riktig DynamicType ej verifierade. Nya migrationer202610110001 och202610110002 ej körda.
+
+Commit-ID för paketet: inget ännu. Bascommit617fb67 är tidigare arbete. Pushat: nej. TestFlight-build: ingen genom detta paket. Utkasten måste sakgranskas/revideras eller tas bort före publik release.

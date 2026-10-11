@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Alert, Linking, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { MessageCard, PageHeading, QuietButton } from '../../components/AppPrimitives';
+import { MessageCard, QuietButton } from '../../components/AppPrimitives';
+import { AppBar } from '../../components/ui';
 import { tokens } from '../../theme/tokens';
 import { readAccountDeletionMarker, type AccountDeleteResult } from './account-delete';
 
@@ -73,13 +74,13 @@ export function AccountSettingsScreen({
   }
 
   return <View>
-    <QuietButton title="Tillbaka till Mer" disabled={busy} onPress={onBack} />
+    <AppBar mode="Back" title="Konto" actionLabel="Tillbaka till Mer" disabled={busy} onAction={onBack} />
     <View style={styles.hero}>
       <View style={styles.icon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
         <Ionicons name="person-circle-outline" size={tokens.size.iconMd} color={tokens.colors.primary} />
       </View>
       <View style={styles.heroText}>
-        <PageHeading title="Konto och support" description="Se information om betan eller hantera ditt konto." />
+        <Text style={styles.intro}>Se information om betan eller hantera ditt konto.</Text>
       </View>
     </View>
 
@@ -143,6 +144,7 @@ function DestructiveButton({ title, onPress, disabled }: { title: string; onPres
 }
 
 const styles = StyleSheet.create({
+  intro: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   hero: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.selectedSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.md },
   icon: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.successSurface, alignItems: 'center', justifyContent: 'center' },
   heroText: { flex: 1 },

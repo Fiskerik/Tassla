@@ -1,4 +1,4 @@
--- Run separately AFTER 202610060001_planned_health.sql in a new development project.
+-- Run separately AFTER planned-health and planned-health-event-time migrations in a new development project.
 -- Synthetic users and dog data only; this transaction is always rolled back.
 begin;
 insert into auth.users(id, email) values
@@ -8,24 +8,24 @@ insert into auth.users(id, email) values
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 select set_config('test.planned_dog_a', public.create_dog('Synthetic plan A', 'unknown', current_date - 70)::text, true);
-insert into public.dog_health_plans(id, dog_id, event_type, due_on, description) values
-  ('50000000-0000-4000-8000-000000000001', current_setting('test.planned_dog_a')::uuid, 'vaccination', current_date + 1, 'Planned only');
+insert into public.dog_health_plans(id, dog_id, event_type, due_on, due_time, description) values
+  ('50000000-0000-4000-8000-000000000001', current_setting('test.planned_dog_a')::uuid, 'vaccination', current_date + 1, time '09:30', 'Planned only');
 insert into public.dog_events(id, dog_id, event_type, occurred_on, description) values
   ('50000000-0000-4000-8000-000000000002', current_setting('test.planned_dog_a')::uuid, 'vaccination', current_date, 'Performed separately');
 
 do $$ begin
-  if (select count(*) from public.dog_health_plans where dog_id = current_setting('test.planned_dog_a')::uuid) <> 1 then
+  if (select count(*) from public.dog_health_plans where dog_id = current_setting('test.planned_dog_a')::uuid and due_time = time '09:30') <> 1 then
     raise exception 'Owner cannot read the planned record';
   end if;
   if (select count(*) from public.dog_events where dog_id = current_setting('test.planned_dog_a')::uuid and event_type = 'vaccination') <> 1 then
     raise exception 'Completed history was not stored separately';
   end if;
-  update public.dog_health_plans set due_on = current_date - 1
+  update public.dog_health_plans set due_on = current_date - 1, due_time = time '10:45'
     where id = '50000000-0000-4000-8000-000000000001';
   update public.dog_health_plans set description = 'Corrected overdue plan'
     where id = '50000000-0000-4000-8000-000000000001';
   if not exists(select 1 from public.dog_health_plans where id = '50000000-0000-4000-8000-000000000001'
-      and due_on = current_date - 1 and description = 'Corrected overdue plan') then
+      and due_on = current_date - 1 and due_time = time '10:45' and description = 'Corrected overdue plan') then
     raise exception 'Overdue plan could not be corrected without changing its date';
   end if;
   begin
@@ -44,6 +44,11 @@ do $$ begin
     update public.dog_health_plans set created_at = now() where id = '50000000-0000-4000-8000-000000000001';
     raise exception 'Authenticated owner changed created_at';
   exception when insufficient_privilege then null; end;
+  insert into public.dog_health_plans(id, dog_id, event_type, due_on, due_time, description) values
+    ('50000000-0000-4000-8000-000000000004', current_setting('test.planned_dog_a')::uuid, 'vet_visit', current_date + 2, null, 'No time');
+  if not exists(select 1 from public.dog_health_plans where id = '50000000-0000-4000-8000-000000000004' and due_time is null) then
+    raise exception 'Optional event time could not be stored as null';
+  end if;
 end $$;
 
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
@@ -52,7 +57,7 @@ do $$ declare affected integer; begin
   if exists(select 1 from public.dog_health_plans where id = '50000000-0000-4000-8000-000000000001') then
     raise exception 'Other owner read a planned record';
   end if;
-  update public.dog_health_plans set description = 'Other owner edit' where id = '50000000-0000-4000-8000-000000000001';
+  update public.dog_health_plans set description = 'Other owner edit', due_time = time '11:00' where id = '50000000-0000-4000-8000-000000000001';
   get diagnostics affected = row_count;
   if affected <> 0 then raise exception 'Other owner updated a planned record'; end if;
   delete from public.dog_health_plans where id = '50000000-0000-4000-8000-000000000001';
@@ -78,7 +83,7 @@ do $$ begin
     raise exception 'Anonymous insert was granted';
   exception when insufficient_privilege then null; end;
   begin
-    update public.dog_health_plans set description = 'Anonymous edit';
+    update public.dog_health_plans set due_time = time '12:00';
     raise exception 'Anonymous update was granted';
   exception when insufficient_privilege then null; end;
   begin

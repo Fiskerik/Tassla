@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { InfoModal, MessageCard, PageHeading, QuietButton, TimePickerField } from '../../components/AppPrimitives';
+import { InfoModal, MessageCard, TimePickerField } from '../../components/AppPrimitives';
+import { AppBar } from '../../components/ui';
 import { Button } from '../../components/ui/Button';
 import { Toast } from '../../components/ui/Toast';
 import { tokens } from '../../theme/tokens';
@@ -74,13 +75,13 @@ export function NotificationSettingsScreen({
   }
 
   return <View>
-    <QuietButton title="Tillbaka till Mer" disabled={busy} onPress={onBack} />
+    <AppBar mode="Back" title="Påminnelser" actionLabel="Tillbaka till Mer" disabled={busy} onAction={onBack} />
     <View style={styles.hero}>
       <View style={styles.icon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
         <Ionicons name="notifications-outline" size={tokens.size.iconMd} color={tokens.colors.primary} />
       </View>
       <View style={styles.heroCopy}>
-        <PageHeading title="Påminnelser" description="Välj om Tassla ska schemalägga lokala påminnelser på den här enheten." />
+        <Text style={styles.intro}>Välj om Tassla ska schemalägga lokala påminnelser på den här enheten.</Text>
       </View>
     </View>
     <View style={styles.infoRow}>
@@ -150,6 +151,7 @@ function parseTime(value: string): number | null {
   return hours < 24 && minutes < 60 ? hours * 60 + minutes : null;
 }
 const styles = StyleSheet.create({
+  intro: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: tokens.spacing.md, marginBottom: tokens.spacing.xs },
   infoHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { FormField, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { StyleSheet, Text, View } from 'react-native';
+import { FormField, MessageCard, PrimaryButton } from '../../components/AppPrimitives';
+import { AppBar } from '../../components/ui';
 import type { Dog } from '../onboarding/dog';
 import { ageInWeeks, localDate } from '../onboarding/dog';
 import { tokens } from '../../theme/tokens';
@@ -21,7 +22,8 @@ export function PreviewProfileScreen({
 
   return (
     <View style={styles.screen}>
-      <PageHeading title="Hundprofil" description="Ändra uppgifterna för att granska namn och ålder på Hem." />
+      <AppBar mode="Back" title="Hundprofil" actionLabel="Tillbaka hem" onAction={onCancel} />
+      <Text style={styles.description}>Ändra uppgifterna för att granska namn och ålder på Hem.</Text>
       <View style={styles.fields}>
         <FormField label="Hundens namn" onChangeText={setName} placeholder="Exempelhund" value={name} />
         <FormField
@@ -45,13 +47,13 @@ export function PreviewProfileScreen({
         disabled={!validName || !validBirthDate}
         onPress={() => onSave({ ...dog, name: name.trim(), birthDate: birthDate.trim() })}
       />
-      <QuietButton title="Tillbaka hem" onPress={onCancel} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { gap: tokens.spacing.md },
+  description: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   fields: { gap: tokens.spacing.sm },
 });
 

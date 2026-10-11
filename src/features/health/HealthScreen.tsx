@@ -28,10 +28,10 @@ export function HealthScreen(props: Props) {
   return <View>
     <AppBar mode="Title" title="Hälsa" />
     <Tabs items={['Översikt', 'Vaccinationer', 'Veterinär', 'Vikt']} active={tab} onChange={setTab} />
-    {props.plannedLoadState === 'ready' && overdue.length ? <><SectionHeader title="Datum har passerat" /><View style={styles.rows}>{overdue.map((row) => <ListRow key={row.id} category={row.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} title={row.description || (row.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök')} meta={`Planerad ${shortDate(row.due_on)}`} onPress={props.onOpenPlannedHealth} />)}</View></> : null}
+    {props.plannedLoadState === 'ready' && overdue.length ? <><SectionHeader title="Datum har passerat" /><View style={styles.rows}>{overdue.map((row) => <ListRow key={row.id} category={row.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} title={row.description || (row.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök')} time={row.due_time?.slice(0, 5)} meta={planMeta(row, `Planerad ${shortDate(row.due_on)}`)} onPress={props.onOpenPlannedHealth} />)}</View></> : null}
     <SectionHeader title="Kommande" />
     {props.plannedLoadState === 'loading' ? <Skeleton shape="row" lines={2} /> : props.plannedLoadState === 'error' ? <Button variant="secondary" label="Hämta planer igen" accessibilityLabel="Hämta planer igen" onPress={() => props.onOpenPlannedHealth?.()} /> : <View style={styles.rows}>
-      {upcoming.length ? upcoming.map((row) => <ListRow key={row.id} category={row.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} title={row.description || (row.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök')} meta={`${relativeDate(row.due_on)} · ${shortDate(row.due_on)}`} onPress={props.onOpenPlannedHealth} />) : <Text style={styles.empty}>Inga kommande händelser.</Text>}
+      {upcoming.length ? upcoming.map((row) => <ListRow key={row.id} category={row.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} title={row.description || (row.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök')} time={row.due_time?.slice(0, 5)} meta={planMeta(row, `${relativeDate(row.due_on)} · ${shortDate(row.due_on)}`)} onPress={props.onOpenPlannedHealth} />) : <Text style={styles.empty}>Inga kommande händelser.</Text>}
     </View>}
     <SectionHeader title="Genomfört" />
     {props.historyLoadState === 'loading' ? <Skeleton shape="row" lines={3} /> : props.historyLoadState === 'error' ? <Button variant="secondary" label="Hämta historiken igen" accessibilityLabel="Hämta historiken igen" onPress={() => props.onRetryHistory?.()} /> : <View style={styles.rows}>
@@ -57,5 +57,13 @@ function shortDate(value: string) { return new Date(`${value}T12:00:00`).toLocal
 function relativeDate(value: string) {
   const days = Math.round((Date.parse(`${value}T12:00:00Z`) - Date.parse(`${localDate()}T12:00:00Z`)) / 86400000);
   return days === 0 ? 'Idag' : days === 1 ? 'Imorgon' : `Om ${days} dagar`;
+}
+function planMeta(row: PlannedHealthRecord, dateLabel: string): string {
+  const parts = [dateLabel];
+  if (row.reminder_minutes !== null) parts.push(`Påminnelse ${formatMinutes(row.reminder_minutes)}`);
+  return parts.join(' · ');
+}
+function formatMinutes(minutes: number): string {
+  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 }
 const styles = StyleSheet.create({ rows: { gap: tokens.spacing.xs }, empty: { ...tokens.typography.body, color: tokens.colors.textSecondary, paddingVertical: tokens.spacing.md }, action: { marginTop: tokens.spacing.xl } });

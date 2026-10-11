@@ -276,3 +276,92 @@ Implementerade kompakt bekräftad success-toast med dekorativ grön bock och fly
 Erik korrigerade scope efter v6: snabb loggning ska fortsatt vara ett tryck med befintlig aktuell tid; tid för utförd vaccination/veterinär är frivillig. Plan v7.1 har Architect APPROVE, Critic PROCEED och Product APPROVE. Implementationen återställer ett-trycksflödet, skickar tom hälsotid som `NULL`, förifyller känd tid vid redigering, lämnar legacy `NULL` blank och behåller Home-tidslinjens visning av känd tid. Strict wire-normalisering, NULL-aware health readback/CAS och migrationens nullable kolumn kvarstår. Vikt och planerad hälsa är utanför scope.
 
 Lokal implementation finns. Inga testfiler ändrades och inga check-, test- eller buildkommandon kördes. Migrationen kördes inte. Oberoende Security APPROVE, käll-QA utan blockerande gap och Reviewer utan blockerande kodfynd är klara; renderad/enhets-QA och automatiska kontroller återstår. Ingen commit/push/deploy. Detaljer: [HOME-TIME-01](../../releases/HOME-TIME-01.md).
+
+
+## 2026-10-11 – QA-11 och KNOW-02 plancheckpoint
+
+Ny lokal branch puppy-checklists-faq-qa11 från 617fb67. QA-11 v3.1 Architect APPROVE, Critic PROCEED: valfri händelsetid separat från påminnelsetid, strikt legacy-läsfallback, tidsbekräftelse, backchevron, Toast-luft och maskot bort. QA-11 implementer startad; separat visuell QA förbereder isolerad harness. KNOW-02 v2 Architect APPROVE/Critic PROCEED efter fyra slices och konkret synkkontrakt; depends_on QA-11. Dog Expert råd fortsatt utkast; Compliance privat konto-/hundprogress tillåten lokalt, livekontroller separata. Inga appändringar eller godkända testsiffror tills implementer faktiskt verifierat. Inget commit/push i detta checkpoint.
+
+### QA-11 A – implementercheckpoint
+
+Data/API: due_time, egna kolumngrants, CAS/readback och strikt occurred_time-läsfallback införda. Implementer körde tsc PASS, planned-health 36 PASS och health-history 41 PASS, diffcheck PASS. SQL inte körd. Detta är agentrapporterad teknisk delcheckpoint, slutlig oberoende QA/review återstår. B påbörjas inom samma exklusiva kodscope.
+
+### QA-11 A – Security PASS
+
+qa11_security verifierade verkliga Supabase/PostgREST 2.117.2 API-definitioner, narrow grants/RLS oförändrad, separat notifieringstid, strikt legacy fallback och syntetiska tester/diffcheck. Ett verkligt integritetsfel med HH:mm:ss→CAS fångades och rättades med regression fetch→update→delete. Security PASS för A; live SQL/grants/RLS NOT TESTABLE. PGRST204/auth/network explicita regressionsfall kompletteras före full QA.
+
+### QA-11 B – implementercheckpoint
+
+Tidsmodal draft med Bekräfta tid/avbryt och reduced motion, enhetlig AppBar Back i fastställda vyer, gemensam Toast marginVertical. Agentrapporterat tsc PASS, planned health 38, time 3, history 45, toast policy 5, diffcheck PASS. A kompletterad med PGRST204/auth/nätfel och canonical DB-time regression. C påbörjad. Slutlig QA/renderad evidens återstår.
+
+### QA-11 C – stabil implementation
+
+Hem/Hälsa/carousel visar händelsetid och äldre påminnelsetid med explicit etikett; direkt history retry; maskot bort från Logg/Träning. samePlannedHealth omfattar nu canonical due_time även vid statuskontroll/replay, regression för avvikande tid finns. Implementer pnpm check PASS (31 testfiler; lint0fel39varningar), diffcheck PASS. Skrivägarskap släppt till QA/review; live SQL/native fortsatt NOT TESTABLE. Separat rendering slutkontrolleras.
+
+### QA-11 v3.2 – renderad korrigering1
+
+Första QA/review underkänd på hero tre rader, stora ändra/radera och normal Påminnelse av. BLOCK registrerat, ny plan v3.2 Architect APPROVE/Critic PROCEED. Rättat enbart PlannedHealthScreen/test/README: kort hero,44pt ellipsmeny med samma bekräftelse/blocked, av-etikett endast för kvarvarande tid. Agent pnpm check/diff PASS. Oberoende omprov begärt; första BLOCK inte överprövat.
+
+### QA-11 v3.2 – oberoende QA PASS
+
+qa11_visual: korrigerad lokal visual QA GODKÄND, 23 Playwright-kontroller/0 sidfel, 375/430 och140% text, menu callback shim och bekräftelse inom375x844. Oberoende pnpm check PASS31filer/0lintfel39varningar, diffcheck PASS. Tidigare fynd4/10/13 rättade. Evidence/checklista docs/design/QA-11. Native Alert/VoiceOver/faktisk Dynamic Type/live SQL och jämförelse med icke-lokala chattbilder NOT TESTABLE. Ny Reviewer-granskning begärd på rättad diff.
+
+### QA-11 avslut / KNOW-02 start
+
+Reviewer PASS rättad v3.2 (qa11_reviewer), oberoende lokal QA GODKÄND, SecurityPASSA. Hållbar workingtreecheckpoint på branch puppy-checklists-faq-qa11, bas617fb67; ingen commit/push. Full pnpm check/diff och köverifiering passerade; migration/liveSQL/native luckor kvar redovisade. QA11 skrivägarskap släppt. KNOW02 v2 ArchitectAPPROVE/CriticPROCEED + explicit användarmandat. Starta A schema/API, sedan B checklistflow, CFAQ/Hem, Dreviewtraining/buildguard med respektive checkpoint.
+
+Koordinatorförtydligande: QA11 behövliga testfixture-filer notifications.test.mjs (due_time:null) och motion-policy.test.mjs (owner removed mascot assertion) registrerade i write_paths; ingen utökad appfunktion. KNOW02 privacy/lifecycle-texter uppdaterade av koordinator med checkliständamål, rättighetsexport och cascade-verifieringskrav, inga livepåståenden.
+
+### KNOW-02 A – implementercheckpoint
+
+Schema/API/catalog review-v1 infört. Agent typecheck PASS, focused model/data tests3PASS, scoped diffPASS; liveSQL inte körd. Dog/template/item/title-validering, tuple-upsert/delete, fast customUUID, CAS/reconciliation och context readback. Catalogens FK kräver static parent checklist_templates(id,title) eftersom itemtabellens PK är template/item; extra statisk relation saknar persondata/client writes, targeted Architect bekräftelse begärd. B UI bygger samma godkända flödeskontrakt.
+
+Architect targeted KNOW02 A: checklist_templates parenttabell bekräftad som minsta FK-implementationdetalj inom godkänd v2, ingen ny planreview krävs. Ingen ny persondata/klientskrivning eller ändamål.
+
+KNOW02 Security tidiga fynd: explicit revokeALLauthenticated behövs för Supabase defaults, column grants ska hindra custom id/dog/template flytt. Preference mergeupsert ändras till insert-ignore/updatecontext för att fungera med column grant. Delete0rows behöver exakt återläsning för idempotent lostresponse replay. Korrigering och meningsfull PostgREST/SQL-probe komplettering skickad implementer innan slutlig QA. Inget fynd överprövat, securitygate fortsatt öppen.
+
+KNOW02 A Security omkontroll: grant/CAS/idempotensfynd rättade, verklig Supabase/PostgREST API verifierad. Gate fortsatt öppen: SQL-probe ska omfatta verkliga syntetiska tvåägareCRUD/denied/cascade och abortmock ska respektera signal. B fynd/livscykel och dataminimerad översikt rättas parallellt inom samma agent/exklusiva scope, ingen vidare verifierad checkpoint ännu.
+
+## Återupptagning 2026-10-11 kl13:36UTC
+
+Erik: fortsätt. Agentkörningen avbröts tidigare av användningsgräns; nytt turn startat från faktisk arbetskopia, inte omstart. QA11done lokalgranskat kvarstår. KNOW02A/B under implementation (Puppy262rader/data114test/SQL81rader vid läsning), CFAQ/Home och Dreviewtraining/buildguard ännu inte implementerade. Samma implementer/security/visual uppdrag återupptagna, inga nya mandatfrågor. Inga commits/push/liveSQL.
+
+KNOW02 A Security statisk PASS efter SQL105rader: tvåägareCRUD/nekningar/WITHCHECK/kolumngrants/REFERENCES/TRUNCATE/account→dogcascade. Aborttester signalmedvetna; liveSQL fortsatt NT. B kvarvarande exact-intent fynd rättas: normalizedpostimage och volatile ProductWorkspace snapshot peraccountgeneration+dog bevarar unknownUUID/form över tillåten navigation; ingen globalMap/persistentlagring. Child abort/generation och explicit Kontrollera före nya skriver; per-template freshdata för summary. Security bekräftar föreslagen parentrefimplementation som säkrare detalj inom godkänt kontrakt.
+
+### KNOW-02 fortsättning — 2026-10-11
+
+A: oberoende statisk Security/Reviewer har inga kvarvarande konkreta schema/API-fynd; verkligt SQL/RLS-prov är inte utfört. B: granskning av okända sparresultat och navigation pågår; avsikten ska bevaras före begäran och återställas med synlig Kontrollera. C/D byggs inom godkänd v2. Implementer får ändra endast bundle:ios-scriptet i package.json för att köra den redan planerade innehållsgrinden före Expo-export; inga beroenden eller versionsändringar. Filen har lagts till i skrivscope. Ingen commit, push eller migrering har utförts.
+
+### KNOW-02 B/C/D – granskning pågår
+
+Implementer rapporterar typecheck och fokuserade model/data/UI-kontroller PASS för B. Reviewer och Security bekräftar statiskt att de tidigare navigations- och återmonteringsfynden rättats: aktuell avsikt/form fryses vid cleanup före abort och Kontrollera visas vid återkomst. Oberoende körbara livscykel-/reconciliationprov återstår; B är inte slutligt QA-godkänd. Renderad QA återupptagen för faktisk B och därefter C/D. C:s generiska guidegrid får inte visas på FAQ/Checklistor; koordinator och Reviewer har skickat samma konkreta fynd för rättning. D:s bygggrind/workflows ser statiskt korrekta ut enligt Security; molnhandler-isolering och slutliga tester väntar.
+
+KNOW-02: checklist-intent.ts har extraherats inom befintligt knowledge-scope för körbara saved/retry/conflict-prov; skärmen använder klassificeraren. review-training-state.ts registrerad i exakt skrivscope för samma godkända lokala reviewMode-progression. Ingen funktionsutökning eller nytt beroende. Slutlig QA av integrationen återstår.
+
+KNOW-02 tidig renderad QA: matikon på checklistkort rättas till befintlig grön träningsikon. Vid misslyckad första läsning får översikten inte visa falskt 0 av 3; visa okänd progress eller dölj antal tills läsningen bekräftats. Dubbla retryåtgärder ska undvikas. Fynd skickade implementer, ingen slutlig visuell PASS ännu. Körbara tester för exakt intent och scope-hantering kompletteras; faktiskt unmount/remount och cloud-handler-isolering provas även i separat UI-harness.
+
+KNOW-02 koordinator: review iOS-export PASS, 1427 moduler, dist/ios. Första försöket stoppades av saknad Expo-hemmapp i miljön; omkörning med EXPO_NO_TELEMETRY=1 och EXPO_OFFLINE=1 passerade utan HOME-ändring. Bygggrind review+true passerade. Public+false-export körs därefter. Detta är lokal export, ingen signerad/native build eller TestFlight-distribution.
+
+KNOW-02 public iOS-export PASS med public+false och 1427 moduler. Oberoende pnpm check hittade två äldre källkontraktstest som behövde följa guidefilter-namnet/nya review-beroenden i testharness. Snäva korrigeringar i content-delivery.test.mjs och profile-edit.test.mjs granskade av koordinator och registrerade i scope; fokuserad omkörning PASS enligt implementer, full omkörning pågår. Inga tester avaktiverades.
+
+### KNOW-02 A–D fryst checkpoint
+
+Implementer bekräftar att fullcheck kördes efter samtliga rättningar: 37/37 testfiler, typechecks PASS, lint0fel38varningar och diffclean. Källa fryst för oberoende slutlig QA/Reviewer. Security slutligt PASS på faktisk A–D-kod och körbara API/intent/scope/cloud-isolationtester; inget öppet säkerhetsfynd. Levande SQL/RLS/grants/cascade och signerad native/TestFlight/App Store-process fortsatt NT. Byggguiden översatt till svenska utan ändrad policy. Queue KNOW02→qa via dev_flow med faktisk implementerevidens.
+
+### KNOW-02 slutlig QA – riktad rättning
+
+Körbar UI-QA hittade att custom-update-fel med exakt oförändrad gammal rad klassificerades som konflikt. Enligt befintligt kontrakt ska det vara failed/retry; postimage saved, ändrad rad conflict, oläsbar status unknown. Renderad detalj visar dessutom dubbla branded AppBars och flikar; v2 kräver ett Back-sidhuvud. QA har inte godkänt dessa tillstånd. Implementer återöppnad för två avgränsade rättningar och regression/fullcheck. Inga nya funktioner eller ändrade säkerhetsändamål; granskningar för slutligt fryst diff måste förnyas. Koordinatorns senaste export PASS hör till versionen före dessa rättningar.
+
+KNOW-02 riktad korrigering verifierad: error-readback exactoldimage→failed, exactpostimage→saved, ändrad/saknad rad→conflict, oläsbar→unknown. Faktisk kod och HTTP-regression för försvunnen rad kontrollerade; ny fullcheck37testfiler/0fel38varningar+diffPASS enligt implementer. Security förnyad PASS efter aktuell omläsning. Dubbla sidhuvuden borttagna i detalj/översikt. Slutlig UI-QA med140% hittade klippt kategoritext; avgränsad flex/wrap-rättning pågår. Tabs har redan horisontell ScrollView; faktisk nåbarhet/fulltext/touchyta ska provas vid140% innan visuell bedömning, inte antas från stillbild. Slutlig QA/Reviewer och export för sista korrigerade källan kvarstår.
+
+KNOW-02 slutlig korrigerad källa: pnpm check/diff PASS efter text-wrap och CAS/header-rättningar. Koordinator har exporterat om båda lägena efter dessa ändringar: review+true och public+false PASS, 1427 moduler vardera; guard PASS och metadata skrivna. Loggar /tmp/know02-ios-review-verified.log och /tmp/know02-ios-public-verified.log. Visuell QA/flödesmatrix och slutligt Reviewer-resultat återstår; inga ytterligare källändringar planeras.
+
+### KNOW-02 slutresultat — 2026-10-11
+
+A–D lokalt implementerat och granskat på branch puppy-checklists-faq-qa11, bascommit617fb67. Oberoende QA senaste clean rebuild44PASS/0FAIL/0pageerrors, 375/430px och140%text, faktisk scroll/tap/CRUD/failedretry/unknown/remount/scope/cloudhandler-isolering. Checklista/evidens: docs/design/KNOW-02. Oberoende pnpm check37testfilerPASS, typechecksPASS, lint0fel38varningar och diffPASS. Reviewer slutligt PASS efter rättningar; Security förnyad PASS. Koordinatorns båda sista iOS-exporter review+true/public+false PASS1427; inga källändringar därefter. Queue→review→done via dev_flow med verklig evidens.
+
+Implementerat: sex faschecklistor med förvalda/egna punkter, antal/procent, ägarens kontextval och privata konto-/hundtabeller/API; exakt intent/reconciliation utan falsk sparstatus eller dubbel UUID vid navigation; fyra Kunskap-flikar, grön checklist-/lila FAQ-kategori och samma destinationer från Hem; tillfälliga FAQ och tre träningsprogram med guidepar, träning endast RAM-progress; explicita review/public Codemagic-flöden och fail-closed innehållsgrind/metadata. Inga podcasts, nya beroenden, AI-nätanrop eller partneröverföringar.
+
+Begränsningar och nästa faktiska steg: inga commits/push eller körda migrationer genom detta paket. Två nya SQL-filer behöver tillämpas/verifieras i avsedd utvecklingsdatabas: 202610110001_planned_health_event_time.sql och 202610110002_puppy_checklists.sql. Verklig RLS/grants/cascade, signerad native/TestFlight, Alert/tangentbord/VoiceOver/riktig Dynamic Type är inte verifierade. Granskningsråden behöver mänsklig sakgranskning före publik release. Nästa distribution kräver separat commit/push/build och faktisk databasverifiering; ingen automatisk publicering.
+
+Avslutande dokumentationsstädning: Knowledge README uppdaterad från tidigare treflikars/public-only-text till faktisk v2-data/intent/review-flow, migrationskrav och verifieringsbegränsningar. Codemagic-grindens genererade logg/metadata-katalog ignoreras i Git; .gitignore registrerad i scope och fortsatt artefakt i Codemagic. Ingen runtime-/test-/beroendeändring efter slutliga kontroller.

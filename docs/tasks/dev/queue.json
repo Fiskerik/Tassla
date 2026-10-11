@@ -3236,8 +3236,7 @@
           "evidence": "v7.1 code and documentation changes are present. No test/check/build commands were run and no test files changed. Independent Security APPROVE, source QA and Reviewer found no blocking code gaps; rendered/device QA and automated checks remain outstanding. No live migration, commit or push. See docs/releases/HOME-TIME-01.md."
         }
       ],
-      "status": "blocked",
-      "next_step": "Run local automated checks when authorized and capture render evidence for blank/filled health time, Home timeline and UI-09 toast matrix; fill the design checklist. Security, source QA and code Reviewer reviews are complete. No live migration, commit or push."
+      "next_step": "Commit/push 617fb67 verified; visual acceptance remains open. QA-11 owns authorized follow-up corrections; prior write ownership released."
     },
     {
       "id": "UI-09",
@@ -3303,7 +3302,7 @@
           "evidence": "Independent Reviewer BLOCK: static code/API checks pass, but required rendered comparison/checklist is absent; visual acceptance is NOT TESTABLE in current RN Web tool environment. No commit/push."
         }
       ],
-      "next_step": "Render success/error/undo states with small and expanded Fler at narrow/wide layouts, complete the large-text checklist per docs/design-rules.md §14, then obtain renewed visual PASS. No commit/push yet."
+      "next_step": "Commit/push 617fb67 verified; visual acceptance remains open. QA-11 owns authorized follow-up corrections; prior write ownership released."
     },
     {
       "id": "FIX-38",
@@ -3373,6 +3372,206 @@
         }
       ],
       "next_step": "Independent Reviewer PASS. Commit 2198e55ed20a1a60aaafca0c9364c6dc3a523bae passed active pre-commit pnpm check and staged whitespace validation; push to origin/remove-ai-slop passed active pre-push pnpm check and ref whitespace validation. Refetched origin/remove-ai-slop and confirmed it matches the pushed commit. Visual/device evidence remains NOT TESTABLE."
+    },
+    {
+      "id": "QA-11",
+      "title": "Mobilkorrigeringar från Eriks fem bilder",
+      "mvp_requirement": "docs/mvp.md: Hem och Hälsa; Eriks explicit QA 2026-10-11",
+      "plan": "docs/plans/QA-11-mobile-fixes-ux-spec.md v3.2",
+      "write_paths": [
+        "src/components/AppPrimitives.tsx",
+        "src/components/ui/Toast.tsx",
+        "src/components/ui/AppBar.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/HomeCarousel.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/health/HealthScreen.tsx",
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/data/workspace-data.ts",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/notifications/NotificationSettingsScreen.tsx",
+        "src/features/account/AccountSettingsScreen.tsx",
+        "src/features/account/BetaInfoScreen.tsx",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/DraftContentPreview.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "supabase/migrations/202610110001_planned_health_event_time.sql",
+        "tests/planned-health.test.mjs",
+        "tests/planned-health-time.test.mjs",
+        "tests/planned-health-feedback.test.mjs",
+        "tests/health-history.test.mjs",
+        "tests/dog-mascot-policy.test.mjs",
+        "tests/toast-compact-policy.test.mjs",
+        "tests/app-screen-ux.test.mjs",
+        "src/data/README.md",
+        "src/components/README.md",
+        "src/features/home/README.md",
+        "src/features/health/README.md",
+        "src/features/puppy-log/README.md",
+        "src/features/training/README.md",
+        "src/features/home/PreviewProfileScreen.tsx",
+        "supabase/tests/planned-health.sql",
+        "tests/notifications.test.mjs",
+        "tests/motion-policy.test.mjs"
+      ],
+      "acceptance": [
+        "Valda tider visas korrekt och skiljs från påminnelsetid",
+        "Tidsbekräftelse, enhetlig back och toastavstånd; ingen maskot",
+        "Korrekt fallback utan falsk sparstatus; QA/review"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "FIX-38"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE QA-11 v3.1 från qa11_architect 2026-10-11; Critic PROCEED v2, v3.1 precisa scopekorrigeringar"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Eriks mobilfixbeställning; APPROVE plan v3.1"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "A/B/C stable; implementer pnpm check PASS 31 testfiler, lint0fel39varningar och diffcheck; separat QA/rendering startad"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer BLOCK på två renderade designfynd; QA13 text tre rader och QA4 stora Ändra/Ta bort per post"
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Korrigeringsplan v3.2, fixa fynd och nytt QA/reviewer-resultat krävs"
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v3.2 qa11_architect och PROCEED qa11_critic; rendered correction pending"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Targeted correction1 inom explicit UI-scope, ny QA/review krävs"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "V3.2 targeted correction stable; pnpm check/diff PASS; nový rendered QA requested"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "v3.2 independent QA check PASS and local rendered GODKÄND;23checks0errors; native/liveSQL NT"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS rättad v3.2; QA local rendering GODKÄND23checks/checkPASS; SecurityPASSA; native/liveSQL NT; skrivscope släppt"
+        }
+      ],
+      "next_step": "Reviewer PASS rättad v3.2; QA local rendering GODKÄND23checks/checkPASS; SecurityPASSA; native/liveSQL NT; skrivscope släppt"
+    },
+    {
+      "id": "KNOW-02",
+      "title": "Faschecklistor och FAQ med konto-/hundprogress och reviewinnehåll",
+      "mvp_requirement": "Eriks checklist-/FAQ-beställning 2026-10-11; Träning/Kunskap i MVP",
+      "plan": "docs/plans/KNOW-02-checklists-faq-ux-spec.md v2",
+      "write_paths": [
+        "src/features/knowledge",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/HomeCarousel.tsx",
+        "src/components/ui/ContentCategoryCard.tsx",
+        "src/theme/tokens.ts",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "supabase/migrations/202610110002_puppy_checklists.sql",
+        "supabase/tests/puppy-checklists.sql",
+        "tests/checklist-data.test.mjs",
+        "tests/checklist-model.test.mjs",
+        "tests/checklist-ui.test.mjs",
+        "tests/knowledge-review-content.test.mjs",
+        "tests/review-training.test.mjs",
+        "tests/content-release-guard.test.mjs",
+        "codemagic.yaml",
+        "tools/check-content-release.cjs",
+        ".env.example",
+        "docs/dev/review-content-builds.md",
+        "package.json",
+        "src/features/training/review-training-state.ts",
+        "tests/content-delivery.test.mjs",
+        "tests/profile-edit.test.mjs",
+        ".gitignore"
+      ],
+      "acceptance": [
+        "Preset/egna checklistpunkter och progress sparas per hund/konto",
+        "Fyra kunskapsflikar inklusive FAQ och inga podcasts",
+        "Tillfälligt ärligt reviewinnehåll i TestFlight och public buildguard"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "QA-11"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVEv2 know02_architect/CriticPROCEEDv2; QA11 workingcheckpointdone"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erikbeställt checklistsFAQ/kontosynk/reviewinnehåll; QA11 done checkpoint"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementer pnpm check PASS: 37 testfiler, typechecks PASS, lint 0 fel/38 varningar; diffcheck clean. A-D implementerat; oberoende renderad och körbar UI-QA kvarstår. Koordinator review/public iOS-export PASS1427; live SQL/native NT."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende lokal QA PASS: senaste ombyggda harness 44 browserkontroller, 0 fail/pageerrors; pnpm check 37 testfiler, lint0fel38varningar; diffcheck PASS. docs/design/KNOW-02/checklista.md + evidence. Native/liveSQL NT."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Oberoende Reviewer PASS faktisk slutlig A-D-kod; Security förnyad PASS; QA44PASS/check37files/diffPASS och båda slutliga iOS-exporter PASS1427. Lokalt klart, bas617fb67, ingen commit/push/migrering/TestFlight. Externa SQL/RLS/native/VoiceOver/DynamicType NT."
+        }
+      ],
+      "next_step": "Oberoende Reviewer PASS faktisk slutlig A-D-kod; Security förnyad PASS; QA44PASS/check37files/diffPASS och båda slutliga iOS-exporter PASS1427. Lokalt klart, bas617fb67, ingen commit/push/migrering/TestFlight. Externa SQL/RLS/native/VoiceOver/DynamicType NT."
     }
   ]
 }

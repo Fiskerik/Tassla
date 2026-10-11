@@ -20,6 +20,7 @@ import {
   fetchHealthHistory,
   fetchHealthHistoryById,
   fetchPlannedHealth,
+  normalizePlannedHealthTime,
   fetchFuturePlannedHealthReminders,
   fetchPlannedHealthById,
   fetchHomeContent,
@@ -76,6 +77,8 @@ import { HealthScreen } from '../health/HealthScreen';
 import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
 import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
+import { checklistMemoryScope, keepChecklistMemoryForScope, updateChecklistMemory, type PendingChecklistMemory } from '../knowledge/checklist-intent';
+import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, REVIEW_TRAINING_PROGRAMS } from '../knowledge/review-content';
 import { HomeScreen } from './HomeScreen';
 import { AppBar, BottomNav, MainSwipeNavigation, type BottomNavDestination } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
@@ -94,6 +97,8 @@ import { deleteFirstUseTipStatus, deleteNotificationPreferences } from '../../no
 import { cleanupStalePassportFiles } from '../passport/passport-export';
 import { futureFireTimeForPlan, parseReminderPayload, type NotificationPreferences } from '../../notifications/notification-model';
 import { reminderService, type ReminderContext, type ReminderReconcileResult } from '../../notifications/notification-service';
+
+const reviewContentEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
 
 type ProductPage = 'home' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings' | 'account-settings' | 'beta-info';
 type PendingLogMutation =
@@ -294,6 +299,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const trainingGeneration = useRef(0);
   const age = ageInWeeks(dog.birth_date, localDate());
   const currentSelectionKey = `${dog.id}:${dog.breed_id}:${age}`;
+  const checklistMemory = useRef<{ scope: string; state: PendingChecklistMemory } | null>(null);
+  const [checklistMemoryView, setChecklistMemoryView] = useState<{ scope: string; state: PendingChecklistMemory } | null>(null);
+  const currentChecklistMemoryScope = checklistMemoryScope(session?.user.id ?? null, accountGeneration, dog.id);
+  useLayoutEffect(() => {
+    checklistMemory.current = keepChecklistMemoryForScope(checklistMemory.current, currentChecklistMemoryScope);
+    setChecklistMemoryView(checklistMemory.current);
+  }, [currentChecklistMemoryScope]);
   const currentSelectionKeyRef = useRef(currentSelectionKey);
 
   useLayoutEffect(() => {
@@ -617,7 +629,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     const trainingRevision = ++trainingGeneration.current;
     void fetchTrainingWorkspace(client, dog, age, undefined, controller.signal).then((result) => {
       if (!mounted.current || controller.signal.aborted || trainingGeneration.current !== trainingRevision || currentSelectionKeyRef.current !== currentSelectionKey) return;
-      setTraining(result);
+      setTraining(reviewContentEnabled && result.programs.length === 0
+        ? { programs: [...REVIEW_TRAINING_PROGRAMS], paused: [] }
+        : result);
       setTrainingSelectionKey(currentSelectionKey);
       setTrainingError('');
       setTrainingState('ready');
@@ -634,9 +648,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const visibleContent = contentSelectionKey === currentSelectionKey ? content : [];
   const visibleContentState = contentSelectionKey === currentSelectionKey ? contentState : 'loading';
   const visibleTrainingState = trainingSelectionKey === currentSelectionKey ? trainingState : 'loading';
-  const visibleGuideContent = visibleContent.filter((item) => item.contentType !== 'training_program');
+  const publishedGuides = visibleContent.filter((item) => item.contentType !== 'training_program');
+  const hasReviewTraining = reviewContentEnabled && visibleTrainingState === 'ready'
+    && training.programs.some((program) => program.id.startsWith('review-v1:training:'));
+  const visibleGuideContent = hasReviewTraining && visibleContentState === 'ready'
+    ? [...publishedGuides, ...REVIEW_TRAINING_GUIDES.filter((guide) => !publishedGuides.some((item) => item.id === guide.id))]
+    : publishedGuides;
   const focusedKnowledgeContentId = knowledgeFocus?.selectionKey === currentSelectionKey
-    && visibleGuideContent.some((item) => item.id === knowledgeFocus.contentId)
+    && (visibleGuideContent.some((item) => item.id === knowledgeFocus.contentId)
+      || knowledgeFocus.contentId === CHECKLIST_DESTINATION_ID || knowledgeFocus.contentId === FAQ_DESTINATION_ID)
     ? knowledgeFocus.contentId : null;
 
   const displayEvents = useMemo(() => events.map(toLogEvent), [events]);
@@ -1450,7 +1470,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
-  function savePlannedHealth(id: string | null, eventType: PlannedHealthType, dueOn: string, note: string, reminderEnabled?: boolean, reminderMinutes?: number | null): Promise<boolean> {
+  function savePlannedHealth(id: string | null, eventType: PlannedHealthType, dueOn: string, note: string, reminderEnabled?: boolean, reminderMinutes?: number | null, dueTime?: string | null): Promise<boolean> {
     const lifetime = plannedHealthLifetime.current;
     if (plannedHealthMutationInFlight.current || pendingPlannedHealthMutation.current || plannedHealthState !== 'ready') return Promise.resolve(false);
     const localToday = localDate();
@@ -1462,11 +1482,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     const minutes = reminderMinutes === undefined ? previous?.reminder_minutes ?? null : reminderMinutes;
     if (enabled && minutes === null) return Promise.resolve(false);
     if (id === null) {
-      const operation: PlannedHealthOperation = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, event_type: eventType, due_on: dueOn, description, local_today: localToday, reminder_enabled: enabled, reminder_minutes: minutes };
+      const operation: PlannedHealthOperation = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, event_type: eventType, due_on: dueOn, due_time: dueTime ?? null, description, local_today: localToday, reminder_enabled: enabled, reminder_minutes: minutes };
       return runPlannedHealthMutation({ kind: 'insert', operation, lifetime });
     }
     if (!previous) return Promise.resolve(false);
-    return runPlannedHealthMutation({ kind: 'update', id, previous, changes: { due_on: dueOn, description, reminder_enabled: enabled, reminder_minutes: minutes }, localToday, lifetime });
+    return runPlannedHealthMutation({ kind: 'update', id, previous, changes: { due_on: dueOn, due_time: dueTime === undefined ? previous.due_time : dueTime, description, reminder_enabled: enabled, reminder_minutes: minutes }, localToday, lifetime });
   }
 
   function removePlannedHealth(id: string): Promise<boolean> {
@@ -1894,6 +1914,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       nextStep={nextStep?.title}
       content={visibleGuideContent}
       contentState={visibleContentState}
+      onRetryHealthHistory={() => { void retryHealthHistory(); }}
       onGo={setPage}
       onOpenContent={(contentId) => {
         setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId, returnPage: 'home' });
@@ -1916,6 +1937,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         <PrimaryButton title="Försök igen" onPress={() => { void retryTraining(); }} />
       </>}
       {visibleTrainingState === 'ready' && <PublishedTrainingScreen programs={training.programs} paused={training.paused}
+        reviewMode={reviewContentEnabled && training.programs.some((program) => program.id.startsWith('review-v1:training:'))}
         busyStepKey={busyStepKey} error={trainingError} onCompleteStep={completeStep}
         onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
         onRetry={() => { void retryTraining(); }} />}
@@ -2015,6 +2037,16 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         returnPage: knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : 'more',
       })}
       onRetry={() => { void retryContent(); }}
+      client={client}
+      dogId={dog.id}
+      ageWeeks={age}
+      sessionKey={`${session?.user.id ?? 'signed-out'}:${accountGeneration}`}
+      checklistPending={checklistMemoryView?.scope === currentChecklistMemoryScope ? checklistMemoryView.state : null}
+      onChecklistPendingChange={(state) => {
+        const next = updateChecklistMemory(checklistMemory.current, currentChecklistMemoryScope, state);
+        checklistMemory.current = next;
+        setChecklistMemoryView(next);
+      }}
     />;
     if (page === 'passport') return <PassportScreen
       onBack={() => setPage('more')}
@@ -2073,8 +2105,8 @@ function MorePage({ onNavigate, signOutError, signingOut, onSignOut, onOpenNotif
 
 function DogProfilePage({ dog, onBack }: { dog: OwnedDog; onBack: () => void }) {
   return <View>
-    <QuietButton title="Tillbaka till Mer" onPress={onBack} />
-    <PageHeading title="Hundprofil" description="Uppgifterna används för att välja ålders- och rasrelevant innehåll." />
+    <AppBar mode="Back" title="Hundprofil" actionLabel="Tillbaka till Mer" onAction={onBack} />
+    <Text style={styles.profileIntro}>Uppgifterna används för att välja ålders- och rasrelevant innehåll.</Text>
     <View style={styles.profileCard}>
       <Text style={styles.cardEyebrow}>HUNDENS NAMN</Text><Text style={styles.profileValue}>{dog.name}</Text>
       <Text style={styles.cardEyebrow}>RAS</Text><Text style={styles.profileValue}>{dog.breed_id}</Text>
@@ -2135,10 +2167,10 @@ function sameHealthHistory(
 
 function samePlannedHealth(
   record: PlannedHealthRecord,
-  expected: Pick<PlannedHealthOperation, 'id' | 'dog_id' | 'event_type' | 'due_on' | 'description' | 'reminder_enabled' | 'reminder_minutes'>,
+  expected: Pick<PlannedHealthOperation, 'id' | 'dog_id' | 'event_type' | 'due_on' | 'due_time' | 'description' | 'reminder_enabled' | 'reminder_minutes'>,
 ): boolean {
   return record.id === expected.id && record.dog_id === expected.dog_id && record.event_type === expected.event_type
-    && record.due_on === expected.due_on && record.description === expected.description
+    && record.due_on === expected.due_on && normalizePlannedHealthTime(record.due_time) === normalizePlannedHealthTime(expected.due_time) && record.description === expected.description
     && record.reminder_enabled === expected.reminder_enabled && record.reminder_minutes === expected.reminder_minutes;
 }
 
@@ -2162,6 +2194,7 @@ const styles = StyleSheet.create({
   menuCopy: { flex: 1 },
   menuTitle: { color: theme.colors.text, ...tokens.typography.label },
   menuDetail: { color: theme.colors.mutedText, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
+  profileIntro: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginBottom: tokens.spacing.md },
   profileCard: { borderRadius: theme.radius.card, backgroundColor: theme.colors.surface, padding: 18, borderColor: theme.colors.border, borderWidth: 1 },
   profileValue: { color: theme.colors.text, ...tokens.typography.label, marginBottom: tokens.spacing.lg },
   pressed: { opacity: 0.72 },

@@ -4,9 +4,9 @@ import { tokens } from '../../theme/tokens';
 import { MotionPressable } from './Motion';
 
 type Mode = 'Home' | 'Back' | 'Close' | 'Title';
-export function AppBar({ mode, title, onAction, actionLabel }: { mode: Mode; title: string; onAction?: () => void; actionLabel?: string }) {
+export function AppBar({ mode, title, onAction, actionLabel, disabled = false }: { mode: Mode; title: string; onAction?: () => void; actionLabel?: string; disabled?: boolean }) {
   const control = (icon: 'chevron-back' | 'close' | 'notifications-outline', label: string) => (
-    <MotionPressable accessibilityRole="button" accessibilityLabel={label} onPress={onAction} style={({ pressed }) => [styles.action, pressed && styles.pressed]}>
+    <MotionPressable accessibilityRole="button" accessibilityLabel={actionLabel ?? label} accessibilityState={{ disabled }} disabled={disabled} onPress={onAction} style={({ pressed }) => [styles.action, pressed && !disabled && styles.pressed]}>
       <Ionicons name={icon} size={tokens.size.iconMd} color={tokens.colors.textPrimary} />
     </MotionPressable>
   );

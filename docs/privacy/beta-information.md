@@ -5,7 +5,7 @@ Datum: 2026-10-07. P10. Inte färdig information för publicering eller godkänn
 Av Erik angiven ansvarig: EriMali AB. Rollen som personuppgiftsansvarig ska bekräftas mot faktisk drift före publicering. Postadress: Stenvallavägen 1, 18634 Vallentuna. Support: erimali.ab@gmail.com. Erik har valt egna konton och sparade hunduppgifter. Betakonton och hunddata ska gallras 30 dagar efter avslutad beta. Individuell kontoradering är ett separat flöde och ska inte vänta till denna tidsfrist.
 
 ## Funktioner som informationen behöver beskriva
-Kontouppgifter, hundprofil, vikt, utförda och planerade hälsohändelser samt träningsprogress används i ägarens appflöden. Lokala påminnelser är frivilliga och har generisk text. Tassla-passet skapas på begäran som lokal PDF och delas endast genom ägarens val i systemets delningsdialog. Delade kopior hos mottagaren kan inte återkallas av appens lokala städning.
+Kontouppgifter, hundprofil, vikt, utförda och planerade hälsohändelser samt träningsprogress och privata checklistor (bockar, egna punkter och valt fasläge per hund/konto) används i ägarens appflöden. Lokala påminnelser är frivilliga och har generisk text. Tassla-passet skapas på begäran som lokal PDF och delas endast genom ägarens val i systemets delningsdialog. Delade kopior hos mottagaren kan inte återkallas av appens lokala städning.
 
 Konto- och raderingskandidaten är lokalt implementerad under P10. Serverfunktionen måste driftsättas och verifieras innan flödet kan beskrivas som tillgängligt i en betaversion. Ett okänt serversvar är inte bevis på radering. Appen ska visa supportväg och skilja serverradering från problem med lokal städning.
 

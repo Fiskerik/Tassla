@@ -21,3 +21,7 @@ Status: implementerat lokalt; QA-checkpoint blockerad på grund av uteblivna kon
 - Ingen commit, push eller deploy har gjorts. Innan paketet kan markeras klart behöver lokala kontroller tillåtas och kvarvarande QA genomföras.
 
 Plan: [HOME-TIME-01](../plans/HOME-TIME-01-time-choice-and-home-timeline.md). Köstatus: `blocked` tills verifieringsgrindarna kan genomföras.
+
+## Leveranscheckpoint 2026-10-11
+
+Implementation commit/push `617fb67` på `motion-03-first-use-tip`. Pre-push `pnpm check` PASS: 412 pass, 1 skip, inga testfel; 35 lintvarningar. Äldre formuleringar om uteblivna kontroller/commit är historiska och ersätts här. Migration ej körd, visuell acceptans kvarstår. QA-11 tar skrivägarskapet för uttryckligen beställda mobilkorrigeringar.

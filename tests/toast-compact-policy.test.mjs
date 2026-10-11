@@ -19,16 +19,21 @@ test('success keeps undo and errors keep retry and cancel semantics', () => {
   assert.match(toast, /displayContent\.tone === 'error' && displayContent\.onCancel \? <Button variant="secondary" label="Avbryt"/);
 });
 
+test('all visible and exiting toasts use the shared tokenized vertical margin and hidden toast returns no layout node', () => {
+  assert.match(toast, /if \(phase === 'hidden'\) return null/);
+  assert.match(toast, /marginVertical: tokens\.spacing\.md/);
+});
+
 test('LogScreen puts every confirmed mutation result after the normal grid and before Fler', () => {
-  const gridEnd = logScreen.indexOf('</View>\n      {dogReactionKey ?');
-  const feedback = logScreen.indexOf('{dogReactionKey ? <View style={styles.confirmationRow}');
+  const gridEnd = logScreen.indexOf('</View>\n      {successToast}');
+  const feedback = logScreen.indexOf('{successToast}', gridEnd);
   const more = logScreen.indexOf('label="Fler"', feedback);
   assert.ok(gridEnd >= 0 && feedback > gridEnd && more > feedback, 'confirmation follows the primary grid and precedes Fler');
   const expandedTiles = logScreen.indexOf('{!layoutEditing && moreVisible ? <View style={styles.grid} accessibilityLabel="Fler loggtyper"', more);
   assert.ok(expandedTiles > more, 'expanded quick-log choices follow the success feedback');
   assert.match(logScreen.slice(logScreen.indexOf('const successToast ='), logScreen.indexOf('\n  return <View', logScreen.indexOf('const successToast ='))), /visible=\{mutation\?\.status === 'saved'/);
   assert.match(logScreen, /mutation\.kind === 'add' \? `\$\{LOG_EVENT_LABELS\[mutation\.type\]\} loggat` : mutation\.kind === 'update' \? 'Ändring sparad' : 'Händelsen är raderad'/);
-  assert.match(logScreen, /dogReactionKey \? <View style=\{styles\.confirmationRow\}>[\s\S]*?<DogMascot reactionKey=\{dogReactionKey\} \/>/);
+  assert.doesNotMatch(logScreen, /DogMascot|dogReaction/);
   assert.match(logScreen, /onUndo=\{mutation\?\.status === 'saved' && mutation\.kind === 'add'/);
   assert.match(logScreen, /onAutoDismiss=\{\(\) => setDismissedMutationKey\(successMutationKey\)\}/);
 });

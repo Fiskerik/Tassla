@@ -7,3 +7,7 @@ Ett steg sparas med riktiga versions- och steg-UUID genom insert/select. Nästa 
 `TrainingScreen.tsx` och `training-model.ts` är bara för lokal preview och dess internt granskade syntetiska text. Normalflödet har inget program som reserv när publicerat innehåll saknas. Kör `pnpm check`; verklig RLS-åtkomst och publicerat datainnehåll behöver separat miljötest.
 
 UI-RESET: produktionsvyn `PublishedTrainingScreen` visar ett program med foto, framsteg och övningsrader. Alla övningar kan läsas i sheet; endast nästa steg kan markeras, och först efter bekräftat sparande uppdateras återkopplingen. Fliken Framsteg visar befintliga markeringar och återställning med bekräftelse. Programtext/källor nås via Om programmet. Inga nya träningsråd eller innehållspubliceringar ingår.
+
+Bekräftad träningsåterkoppling visas utan valpfigur. Spara- och radstatusen är fortsatt knuten till den bekräftade serverposten.
+
+Explicit review builds may use three versioned `review-v1:training:*` layout examples when the real published program query succeeds with an empty list. These rows use `PublishedTrainingScreen` with `reviewMode`; completion and reset live only in component memory and never call `training_progress` handlers. A real fetch error remains an error with retry and does not reveal examples. Copy is marked as an unreviewed temporary example in the view.

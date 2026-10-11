@@ -29,18 +29,12 @@ test('mascot is decorative, one-shot per reaction key and static with reduced mo
   assert.match(uiIndex, /export \{ DogMascot \} from '\.\/DogMascot'/);
 });
 
-test('only a newly confirmed saved log add and an exact training read-back can show the mascot', () => {
-  assert.match(logScreen, /handledEntryMutationKey = useRef\(mutation\?\.kind === 'add' && mutation\.status === 'saved'/);
-  assert.match(logScreen, /const isConfirmedAdd = mutation\?\.kind === 'add' && mutation\.status === 'saved' && events\.some\(\(event\) => event\.id === mutation\.id\)/);
-  assert.match(logScreen, /successMutationKey === entryAnimationTarget\.key/);
-  assert.match(logScreen, /<DogMascot reactionKey=\{dogReactionKey\}/);
-  assert.match(trainingScreen, /const mounted = useRef\(true\)/);
-  assert.match(trainingScreen, /return \(\) => \{ mounted\.current = false; \};/);
-  assert.match(trainingScreen, /if \(!mounted\.current\) return;/);
-  assert.match(trainingScreen, /confirmed\.programId === selectedProgram\.id && confirmed\.stepId === selectedStep\.id/);
-  assert.match(trainingScreen, /\+\+animationSequence\.current/);
-  assert.match(trainingScreen, /setDogReaction\(\{ key, programId: confirmed\.programId, stepId: confirmed\.stepId \}\)/);
-  assert.match(trainingScreen, /<DogMascot reactionKey=\{dogReaction\.key\}/);
+test('owner decision keeps the mascot out of Logg and Träning while confirmed feedback remains', () => {
+  assert.doesNotMatch(logScreen, /DogMascot|dogReaction/);
+  assert.doesNotMatch(trainingScreen, /DogMascot|dogReaction/);
+  assert.match(logScreen, /const successToast = <Toast visible=\{mutation\?\.status === 'saved'/);
+  assert.match(trainingScreen, /<Toast visible=\{saved\} tone="success" confirmed message="Övningen är genomförd"/);
+  assert.match(trainingScreen, /if \(confirmed && confirmed\.programId === selectedProgram\.id && confirmed\.stepId === selectedStep\.id\)/);
 });
 
 test('mascot asset is a transparent square PNG within the approved byte budget', async () => {
