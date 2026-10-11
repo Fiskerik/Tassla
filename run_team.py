@@ -2,23 +2,7 @@
 import argparse
 import os
 from dotenv import load_dotenv
-
-def show(result):
-    if result.sources:
-        print("\nRepo-underlag:", "; ".join(result.sources))
-    if result.plan:
-        for request in result.plan.requests:
-            print(f"\nTeam: {request.team}; roller: {', '.join(request.roles) or 'enbart teamledaren'}")
-            print("Skäl:", request.reason)
-    for name, text, usage in result.steps:
-        if name != "AI Chief of Staff: routing":
-            print(f"\n--- {name} ---\n{text}")
-        print(f"[{name}: input={usage.input_tokens}, output={usage.output_tokens}]")
-    if not result.steps or result.steps[-1][0] != "AI Chief of Staff":
-        print("\nSvar:\n" + result.answer)
-    print("Requests:", sum(u.requests for _, _, u in result.steps))
-    print("Input tokens:", sum(u.input_tokens for _, _, u in result.steps))
-    print("Output tokens:", sum(u.output_tokens for _, _, u in result.steps))
+from tassla_team.display import show, working
 
 def main():
     parser = argparse.ArgumentParser(description="Tassla AI-team: endast relevanta roller, API-kostnad per fråga")
@@ -27,6 +11,8 @@ def main():
     parser.add_argument("--roles", action="store_true", help="Visa roller, modell och reasoning utan API-anrop")
     parser.add_argument("--project-context", action="store_true", help="Föråldrad: repo-underlag är nu alltid på")
     parser.add_argument("--no-repo", action="store_true", help="Stäng av repo-underlag (sparar tokens, ger generella svar)")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Visa routing, alla roller och alla källor")
+    parser.add_argument("--plain", action="store_true", help="Ingen färg eller ramtecken (för loggar och enkla terminaler)")
     args = parser.parse_args()
     load_dotenv()
     model = os.getenv("TASSLA_TEST_MODEL", "gpt-4.1-nano")
@@ -53,12 +39,14 @@ def main():
     if args.project_context:
         print("Obs: --project-context behövs inte längre; repo-underlag är alltid på (stäng av med --no-repo).")
     print("Modell:", model)
+    if args.chat:
+        print("/quit avslutar · /reset tömmer minnet" if not args.plain else "/quit avslutar, /reset tömmer minnet")
     history = []
     question = args.question
     while True:
         if question is None:
             try:
-                question = input("\nDu (/quit avslutar, /reset tömmer minnet): ").strip()
+                question = input("\nDu > ").strip()
             except (EOFError, KeyboardInterrupt):
                 break
         if question == "/quit":
@@ -73,9 +61,10 @@ def main():
                 break
             question = None
             continue
-        result = run_question(question, model, "\n".join(history)[-2400:], project_context=project_context,
-                              use_repo=not args.no_repo)
-        show(result)
+        with working(plain=args.plain):
+            result = run_question(question, model, "\n".join(history)[-2400:], project_context=project_context,
+                                  use_repo=not args.no_repo)
+        show(result, verbose=args.verbose, plain=args.plain)
         history.append(f"User: {question}\nAssistant: {result.answer}")
         history = history[-2:]
         if not args.chat:
