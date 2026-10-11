@@ -1,5 +1,10 @@
 import sys
+from pathlib import Path
 from types import ModuleType, SimpleNamespace
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
 fake = ModuleType('agents')
 class Agent:
     def __init__(self, **kwargs): self.__dict__.update(kwargs)
@@ -33,12 +38,14 @@ calls.clear()
 Runner.stop = True
 result = run_question('Review?', 'fake')
 assert 'STOP' in result.answer and 'AI Chief of Staff' not in calls
-try:
-    validate_plan(RoutingPlan(requests=[TeamRequest(team='commercial',reason='bad',roles=['qa'])], direct_answer=''))
-    raise AssertionError('Wrong-team specialist accepted')
-except ValueError: pass
+invalid_role_plan = validate_plan(
+    RoutingPlan(requests=[TeamRequest(team='commercial', reason='bad', roles=['qa'])], direct_answer='')
+)
+assert len(invalid_role_plan.requests) == 1
+assert invalid_role_plan.requests[0].team == 'commercial'
+assert invalid_role_plan.requests[0].roles == []
 calls.clear()
 Runner.plan = RoutingPlan(requests=[], direct_answer='Hej')
 result = run_question('Hej', 'fake')
 assert len(calls) == 1 and result.answer == 'Hej'
-print('Offline checks passed: selective dispatch, hierarchy, draft/review order, STOP, invalid role rejection, direct reply.')
+print('Offline checks passed: selective dispatch, hierarchy, draft/review order, STOP, invalid-role filtering, direct reply.')
