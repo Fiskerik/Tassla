@@ -367,3 +367,11 @@ Begränsningar och nästa faktiska steg: inga commits/push eller körda migratio
 Avslutande dokumentationsstädning: Knowledge README uppdaterad från tidigare treflikars/public-only-text till faktisk v2-data/intent/review-flow, migrationskrav och verifieringsbegränsningar. Codemagic-grindens genererade logg/metadata-katalog ignoreras i Git; .gitignore registrerad i scope och fortsatt artefakt i Codemagic. Ingen runtime-/test-/beroendeändring efter slutliga kontroller.
 
 KNOW-02 levererat: commit `7b9da840d2ca2ac8f5d5ed998d73495858c98eae` (`feat: add puppy checklists and QA refinements`) på `puppy-checklists-faq-qa11`. Pushad till `origin` och `git ls-remote` bekräftade exakt samma SHA. Pre-commit och pre-push körde repots hooks; pnpm check PASS (461 pass, 1 skip; 37 testfiler; lint0fel38varningar), staged/ref diffcheck PASS. Inget --no-verify. TestFlight ej distribuerat.
+
+## UPD-SCOPE — 2026-10-11
+
+UPD-1011 har Eriks uttryckliga mandat. Plan v8: Product PROCEED, Critic PROCEED, Architect APPROVE; Dog Expert PASS. Dokumenterat tillägget i `docs/mvp.md`, skapat beslut 0007, registrerat nio paket i rätt ordning i `queue.json` och uppdaterat enbart den uttryckligen begärda kommentaren i `log-model.ts`. Inga körbara beteenden ändrades. Köstatus: UPD-SCOPE `done`; resterande åtta `planned`.
+
+Kontroller: `pnpm check` PASS (typechecks PASS, lint 0 fel/38 varningar, 37/37 testfiler PASS, 0 fel); `python tools/dev_flow.py validate` PASS; `git diff --check` PASS. QA v8 PASS och oberoende Reviewer v8 PASS. Beslut/mvp/diff och gränsen att artikelutkast inte publiceras verifierades. Ingen migration, push, Codemagic eller TestFlight kördes.
+
+Ändrade filer: `docs/mvp.md`, `docs/decisions/0007-upd-1011.md`, `docs/tasks/dev/queue.json`, `docs/tasks/dev/UPD-SCOPE.md`, `src/features/puppy-log/log-model.ts`, `docs/tasks/dev/rapport.md`. Bas: `c89b6a0a4300997712a2c332d49fc3ec4182c568` på `codex/repo-grounding`. Lokal commit väntar; fyll i exakt commit-ID och slutlig historik efter att hooks passerat. Nästa steg efter checkpoint: planera och granska UPD-LOG-DATA före kod.

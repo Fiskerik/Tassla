@@ -216,6 +216,20 @@ Exempelvis är delning av vardagsloggen med en partner inte beslutad MVP-funktio
 
 För MOTION-paketet godkände Erik mikrorörelse, tips vid första användning och en valpfigur utanför den ursprungliga MVP:n. Omfattning och begränsningar finns i [beslut 0004](decisions/0004-motion-package.md). Detta tillägg gäller endast MOTION-paketets fyra avgränsade slices; det ändrar inte övrig MVP-scope.
 
+### Eriks tillägg 2026-10-11 – UPD-1011
+
+Erik har godkänt följande avgränsade tillägg till MVP:n. Det fullständiga beslutet finns i [beslut 0007](decisions/0007-upd-1011.md). Tillägget omfattar endast paketen nedan; det utökar inte övriga funktioner eller dataändamål.
+
+- **UPD-LOG-DATA och UPD-LOG-UI:** ägaren kan ange olyckstyp (`pee`, `poop`, `both`), matmängd och fodertyp samt vattenmängd. Uppgifterna är valfria, beskriver bara vad ägaren själv registrerat och kan kompletteras efter att snabbregistreringen sparats. Foderförslag får bara komma från samma hunds tidigare loggade fodertyper. Varken loggarna eller gränssnittet bedömer hälsa, symptom, måltidsbehov eller lämplig mängd.
+- **UPD-HEALTH-TIME:** planerade veterinärbesök och vaccinationer visar händelsens `due_time` i listor och kort. Påminnelsetiden visas bara när den redigeras.
+- **UPD-HOME:** Home visar nästa planerade veterinärbesök och vaccinationer med händelsetid när sådan finns, samt senaste mat- och logghändelser. En enkel retrospektiv median av intervall mellan hundens egna loggar får visas som tidsuppskattning med etiketten **”Uppskattning från era loggar”**. ”Dags att gå ut om …” och ”ska äta om …” är information utan uppmaning, påminnelse eller rekommendation. Saknade loggar betyder inte att en händelse uteblivit. Tröskel för minsta antal loggar och tidsfönster är förslag, ej validerade; utan tillräckligt underlag visas ingen siffra. Estimat bedömer inte hälsa, behov eller lämplighet.
+- **UPD-TRAIN:** befintliga program får tydliga programkort och progression som räknar bekräftat genomförda steg, inte öppnade eller lästa steg. Befintligt innehåll och återställning behålls.
+- **UPD-ONB-PICKUP:** nya hundprofiler får ett obligatoriskt datum för hämtning. Datumet kan ligga i framtiden, men inte före födelsedatumet. Äldre profiler får sakna datum; det är valfritt att lägga till och blockerar inte användning. Datumet används för att föreslå innehållsfas; sparat manuellt fasval fortsätter att gälla. Gränser för övre datum och ”första dagarna” ska föreslås och märkas ej validerade.
+- **UPD-CHECKLIST-UI:** checklistorna visas som faser i en lodrät tidslinje. Befintliga exempel kan visas med etiketten **”Tillfälligt exempel – inte sakgranskat”**, en gång ovanför faslistan; de beskrivs inte som sakgranskade.
+- **UPD-ARTICLES:** utkast om omplacering, första natten, rumsrenhet, vinter och sommar får förberedas i granskningsflödet. I UPD-1011 publiceras inget artikelutkast. Framtida publicering ligger utanför segmentet och kräver ett nytt uttryckligt mandat. Utkasten innehåller inga behandlings-, produkt- eller partnerråd och ska sakgranskas före varje framtida publiceringsbeslut.
+
+Detta tillägg är inte symptomhantering, diagnos, behandlingsråd, foderrekommendation eller avancerad mönsterigenkänning/AI på hundens historik. Det tillåter endast de enkla, bakåtblickande och tydligt märkta tidsuppskattningar som beskrivs ovan.
+
 ## Definition av framgång
 
 MVP:n är validerad när pilotdata visar att:

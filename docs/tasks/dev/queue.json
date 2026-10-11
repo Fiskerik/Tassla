@@ -1,5 +1,5 @@
 {
-  "segment": "Full MVP beta delivery: Erik authorized implementation 2026-10-06, Luna medium; phone tests chosen by Erik, real beta activation separate",
+  "segment": "UPD-1011: Tassla-uppdatering 2026-10-11, uttryckligen godkänt av Erik som tillägg till MVP:n; lokal utveckling, ingen push eller distribution",
   "segment_approved_by_erik": true,
   "tasks": [
     {
@@ -3572,6 +3572,338 @@
         }
       ],
       "next_step": "Implementerat, QA44PASS, ReviewerPASS, SecurityPASS; commit `7b9da840d2ca2ac8f5d5ed998d73495858c98eae` pushad till origin/puppy-checklists-faq-qa11 och fjärr-SHA verifierad. pnpm check461pass/1skip, lint0fel38varningar; pre-commit/pre-push PASS. Migrationer/native/TestFlight ej körda."
+    },
+    {
+      "id": "UPD-SCOPE",
+      "title": "Dokumentera och avgränsa Eriks UPD-1011-tillägg",
+      "mvp_requirement": "docs/mvp.md: Eriks tillägg 2026-10-11",
+      "plan": "docs/tasks/dev/UPD-SCOPE.md v8",
+      "write_paths": [
+        "docs/mvp.md",
+        "docs/decisions/0007-upd-1011.md",
+        "src/features/puppy-log/log-model.ts",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/tasks/dev/UPD-SCOPE.md"
+      ],
+      "acceptance": [
+        "Eriks 2026-10-11-beslut och gränser är dokumenterade",
+        "Samtliga nio UPD-paket registrerade i angiven ordning; UPD-SCOPE implementing och övriga åtta planned",
+        "Loggkommentaren beskriver endast retrospektiv uppskattning och ingen uppmaning"
+      ],
+      "checks": [
+        "python tools/dev_flow.py validate",
+        "python tools/dev_flow.py status",
+        "git diff --check"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v6; Product/Critic PROCEED och Dog Expert PASS dokumenterade i docs/tasks/dev/UPD-SCOPE.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementerar godkänd UPD-SCOPE plan v6; endast docs, köregistrering och uttryckligen begärd kommentar utan beteendeförändring"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "UPD-SCOPE v8 implementer checkpoint: pnpm check passed (typechecks, lint 0 errors/38 warnings, 37/37 test files); python tools/dev_flow.py validate and git diff --check passed. QA v8 PASS; plan v8 and approvals recorded. Independent Reviewer is the next gate."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA v8 PASS: `python tools/dev_flow.py validate` and `git diff --check` exited 0; the primary `pnpm check` passed (37/37 test files, 0 failures, 0 lint errors/38 warnings). Independent Reviewer is inspecting the stable diff."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer v8 PASS: independent review found no blocking scope/code issue; only approved docs, queue and requested comment changed. QA v8 PASS; pnpm check passed (37/37 test files, 0 failures, lint 0 errors/38 warnings); queue validation and diff check passed. Ready for local commit with normal hooks; record exact commit ID afterward."
+        }
+      ],
+      "next_step": "Reviewer v8 PASS: independent review found no blocking scope/code issue; only approved docs, queue and requested comment changed. QA v8 PASS; pnpm check passed (37/37 test files, 0 failures, lint 0 errors/38 warnings); queue validation and diff check passed. Ready for local commit with normal hooks; record exact commit ID afterward."
+    },
+    {
+      "id": "UPD-LOG-DATA",
+      "title": "Valfria olycks-, mat- och vattenfält i loggen",
+      "mvp_requirement": "docs/mvp.md: Eriks tillägg 2026-10-11; Valplogg",
+      "plan": "docs/tasks/dev/UPD-LOG-DATA.md v1 (före implementation)",
+      "write_paths": [
+        "supabase/migrations",
+        "supabase/README.md",
+        "src/data/contracts.ts",
+        "src/data/workspace-data.ts",
+        "src/features/puppy-log/log-model.ts",
+        "src/features/puppy-log/README.md",
+        "tests",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/tasks/dev/UPD-LOG-DATA.md"
+      ],
+      "acceptance": [
+        "Valfria fält valideras i kod och migration",
+        "CHECK-villkor begränsar typ och tillåtna eventtyper",
+        "RLS är oförändrad och granskad",
+        "Syntetiska tester täcker nya fält"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "SQL-runtime i utvecklingsdatabas; annars NOT TESTABLE"
+      ],
+      "depends_on": [
+        "UPD-SCOPE"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Följ sekventiell ordning; fullständig paketplan och granskningar krävs innan start av UPD-LOG-DATA."
+    },
+    {
+      "id": "UPD-LOG-UI",
+      "title": "Valfria detaljer efter snabb loggning",
+      "mvp_requirement": "docs/mvp.md: Skärm 2, Eriks tillägg 2026-10-11",
+      "plan": "docs/tasks/dev/UPD-LOG-UI.md v1 (före implementation)",
+      "write_paths": [
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/log-model.ts",
+        "src/features/puppy-log/README.md",
+        "tests",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/tasks/dev/UPD-LOG-UI.md"
+      ],
+      "acceptance": [
+        "Logg sparas före valfria detaljer",
+        "Detaljer kan hoppas över och redigeras",
+        "Samma hunds egna tidigare foderstyper används lokalt",
+        "Ångra, dubblettskydd, sparstatus och gruppering per dag fungerar"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "Renderade skärmdumpar mot målbild och designchecklista; annars NOT TESTABLE"
+      ],
+      "depends_on": [
+        "UPD-LOG-DATA"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Följ sekventiell ordning; fullständig paketplan och granskningar krävs innan start av UPD-LOG-UI."
+    },
+    {
+      "id": "UPD-HEALTH-TIME",
+      "title": "Visa händelsetid i hälsoöversikten",
+      "mvp_requirement": "docs/mvp.md: Skärm 4, ägarangivna hälsohändelser",
+      "plan": "docs/tasks/dev/UPD-HEALTH-TIME.md v1 (före implementation)",
+      "write_paths": [
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/HomeCarousel.tsx",
+        "tests/planned-health-time.test.mjs",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/tasks/dev/UPD-HEALTH-TIME.md"
+      ],
+      "acceptance": [
+        "Listor/kort visar due_time, aldrig reminder_minutes",
+        "Formuläret skiljer “Tid för besöket” och “Påminn mig kl”",
+        "Saknad händelsetid visas inte",
+        "Ingen datamodell- eller schemaläggningsändring"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "Riktade tids-/UI-tester och skärmdumpsgranskning"
+      ],
+      "depends_on": [
+        "UPD-LOG-UI"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Följ sekventiell ordning; fullständig paketplan och granskningar krävs innan start av UPD-HEALTH-TIME."
+    },
+    {
+      "id": "UPD-HOME",
+      "title": "Kompakt Home-sammanfattning och retrospektiva loggestimat",
+      "mvp_requirement": "docs/mvp.md: Skärm 1, personligt Home/Today",
+      "plan": "docs/tasks/dev/UPD-HOME.md v1 (före implementation)",
+      "write_paths": [
+        "src/features/home/home-summary.ts",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/HomeCarousel.tsx",
+        "src/features/home/README.md",
+        "tests",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/tasks/dev/UPD-HOME.md"
+      ],
+      "acceptance": [
+        "Ren modell hanterar kommande händelser och loggbaserade estimat",
+        "Etiketten “uppskattning från era loggar”; neutralt språk, inget estimat vid tunt underlag",
+        "Dagväljare och Logga nu behålls; högst tre loggrader plus Visa alla loggar",
+        "Laddar/tomt/fel följer befintliga mönster",
+        "Nästa veterinärbesök och vaccinationer visar due_time när det finns; reminder_minutes visas aldrig i sammanfattningen"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "Riktade modelltester",
+        "Renderade skärmdumpar/designchecklista; annars NOT TESTABLE"
+      ],
+      "depends_on": [
+        "UPD-HEALTH-TIME"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Följ sekventiell ordning; fullständig paketplan och granskningar krävs innan start av UPD-HOME."
+    },
+    {
+      "id": "UPD-TRAIN",
+      "title": "Programkort och tydlig träningsprogress",
+      "mvp_requirement": "docs/mvp.md: Skärm 3, guidande valpflöden",
+      "plan": "docs/tasks/dev/UPD-TRAIN.md v1 (före implementation)",
+      "write_paths": [
+        "src/features/training/TrainingScreen.tsx",
+        "src/features/training/README.md",
+        "tests",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/tasks/dev/UPD-TRAIN.md"
+      ],
+      "acceptance": [
+        "Ett kort per befintligt program visar bild/platshållare och progress",
+        "Progress räknar endast bekräftat genomförda steg",
+        "Börja om finns kvar; stor text och reducerad rörelse beaktas"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "Riktade progressionstester och renderad visuell granskning"
+      ],
+      "depends_on": [
+        "UPD-HOME"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Följ sekventiell ordning; fullständig paketplan och granskningar krävs innan start av UPD-TRAIN."
+    },
+    {
+      "id": "UPD-ONB-PICKUP",
+      "title": "Hämtningsdatum och automatisk fasföreslagning",
+      "mvp_requirement": "docs/mvp.md: hundprofil och onboarding; checklistfas",
+      "plan": "docs/tasks/dev/UPD-ONB-PICKUP.md v1 (före implementation)",
+      "write_paths": [
+        "supabase/migrations",
+        "supabase/README.md",
+        "src/data/contracts.ts",
+        "src/data/workspace-data.ts",
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/knowledge/checklist-model.ts",
+        "src/content/select-content.ts",
+        "tests",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/tasks/dev/UPD-ONB-PICKUP.md"
+      ],
+      "acceptance": [
+        "Nya profiler kräver pickup_date; befintliga nullvärden är tillåtna och blockerar inte användning",
+        "Fas föreslås utifrån datum och ålder; manuellt sparat fasval har fortsatt företräde",
+        "Syntetiska tester täcker gränsdatum och befintliga null-värden",
+        "Inget utkastinnehåll publiceras genom ändringen"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "SQL-runtime kehitystietokannassa; muuten NOT TESTABLE"
+      ],
+      "depends_on": [
+        "UPD-TRAIN"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Följ sekventiell ordning; fullständig paketplan och granskningar krävs innan start av UPD-ONB-PICKUP."
+    },
+    {
+      "id": "UPD-CHECKLIST-UI",
+      "title": "Checklistor som lodrät faslinje",
+      "mvp_requirement": "docs/mvp.md: Skärm 5, kunskap och checklistor",
+      "plan": "docs/tasks/dev/UPD-CHECKLIST-UI.md v1 (före implementation)",
+      "write_paths": [
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/README.md",
+        "tests/checklist-ui.test.mjs",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/tasks/dev/UPD-CHECKLIST-UI.md"
+      ],
+      "acceptance": [
+        "Nuvarande fas är öppen och visar rader med framsteg",
+        "Övriga faser är kompakta och kan öppnas",
+        "Etiketten “Tillfälligt exempel – inte sakgranskat” visas en gång ovanför faslistan, inte per punkt eller fas",
+        "Befintligt sparbeteende/datakontrakt bibehålls"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "Renderade skärmdumpar mot målbild och designchecklista; annars NOT TESTABLE"
+      ],
+      "depends_on": [
+        "UPD-ONB-PICKUP"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Följ sekventiell ordning; fullständig paketplan och granskningar krävs innan start av UPD-CHECKLIST-UI."
+    },
+    {
+      "id": "UPD-ARTICLES",
+      "title": "Sakgranskningsutkast för valpålder och säsong",
+      "mvp_requirement": "docs/mvp.md: Skärm 5, granskat innehållsurval",
+      "plan": "docs/tasks/dev/UPD-ARTICLES.md v1 (före implementation)",
+      "write_paths": [
+        "src/features/knowledge/review-content.ts",
+        "src/features/knowledge/source-links.ts",
+        "supabase/content",
+        "tests",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/tasks/dev/UPD-ARTICLES.md"
+      ],
+      "acceptance": [
+        "Fem utkast har källor och tillfällig granskningsetikett; ingen av dem publiceras inom UPD-1011",
+        "All framtida publicering ligger utanför segmentet och kräver nytt uttryckligt mandat",
+        "Inga behandlings-, produkt- eller partnerråd",
+        "Minsta fas-/säsongsurval lämnas till Critic"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "Innehålls-release-guard och statisk kontroll av publiceringsväg"
+      ],
+      "depends_on": [
+        "UPD-CHECKLIST-UI"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Följ sekventiell ordning; fullständig paketplan och granskningar krävs innan start av UPD-ARTICLES."
     }
   ]
 }

@@ -102,7 +102,7 @@ export function hasRecentCategoryLog(events: readonly LogEvent[], type: LogEvent
   });
 }
 
-/** Retrospective owner-entered history only; this never predicts or recommends an outing. */
+/** Retrospective owner-log intervals support estimates only; never a prompt or recommendation. */
 export function summarizePottyPatterns(events: readonly LogEvent[]): PottyPatternSummary[] {
   return (['pee', 'poop'] as const).map((type) => {
     const timestamps = events.filter((event) => event.type === type)
