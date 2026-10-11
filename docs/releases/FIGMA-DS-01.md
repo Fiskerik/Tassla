@@ -1,10 +1,10 @@
 # Release-log – FIGMA-DS-01
 
-Datum: 2026-10-07  
-Paket-ID: FIGMA-DS-01  
-Status: Pågår – QA UNDERKÄND; ej leveransklart  
-Jämförelsebas: Figma-filens befintliga tillstånd före paketet; exakt Figma-version saknas. GitHub Release saknas; dokumentbas är repositoryns aktuella HEAD vid start.  
-Leveranscommit: Okänd  
+Datum: 2026-10-07<br>
+Paket-ID: FIGMA-DS-01<br>
+Status: Pågår – QA UNDERKÄND; ej leveransklart<br>
+Jämförelsebas: Figma-filens befintliga tillstånd före paketet; exakt Figma-version saknas. GitHub Release saknas; dokumentbas är repositoryns aktuella HEAD vid start.<br>
+Leveranscommit: Okänd<br>
 TestFlight-version/build: Ej tillämpligt – endast Figma-designsystem.
 
 ## Major changes

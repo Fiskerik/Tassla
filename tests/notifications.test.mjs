@@ -28,7 +28,7 @@ const tomorrow = '2026-10-07';
 
 test('future reminder selection filters past times today before counting its 40-row cap and paginates to a valid 41st', async () => {
   const makeRow = (index, dueOn, minutes) => ({ id: `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
-    dog_id: dogId, event_type: 'vaccination', due_on: dueOn, description: null, created_at: '2026-10-01T00:00:00Z',
+    dog_id: dogId, event_type: 'vaccination', due_on: dueOn, due_time: null, description: null, created_at: '2026-10-01T00:00:00Z',
     reminder_enabled: true, reminder_minutes: minutes });
   const pages = [
     Array.from({ length: 40 }, (_, index) => makeRow(index, today, 1 + index)),
@@ -82,7 +82,7 @@ test('future reminder selection checks an already-stale lifetime before any serv
 
 test('future reminder reads reject cross-dog rows and invalid reminder metadata', async (t) => {
   const valid = { id: '22222222-2222-4222-8222-222222222222', dog_id: dogId, event_type: 'vet_visit', due_on: tomorrow,
-    description: null, created_at: '2026-10-01T00:00:00Z', reminder_enabled: true, reminder_minutes: 600 };
+    due_time: null, description: null, created_at: '2026-10-01T00:00:00Z', reminder_enabled: true, reminder_minutes: 600 };
   await t.test('cross-dog row', async () => {
     const { client } = localClient(() => jsonResponse([{ ...valid, dog_id: otherDogId }]));
     try { await assert.rejects(data.fetchFuturePlannedHealthReminders(client, dogId, today, () => true, () => true)); }
@@ -95,17 +95,18 @@ test('future reminder reads reject cross-dog rows and invalid reminder metadata'
   });
 });
 
-test('local fire time rejects the Stockholm spring gap and chooses the earlier fall-fold instant', async () => {
-  const source = `import { createLocalFireTime } from ${JSON.stringify(new URL('../src/notifications/notification-model.ts', import.meta.url).href)};
-    const gap = createLocalFireTime('2026-03-29', 150, new Date('2026-01-01T00:00:00Z'));
-    const fold = createLocalFireTime('2026-10-25', 150, new Date('2026-01-01T00:00:00Z'));
-    process.stdout.write(JSON.stringify({ gap: gap.status, fold: fold.status, instant: fold.date?.toISOString() }));`;
-  const { spawnSync } = await import('node:child_process');
-  const result = spawnSync(process.execPath, ['--experimental-strip-types', '--input-type=module', '-e', source], {
-    encoding: 'utf8', env: { ...process.env, TZ: 'Europe/Stockholm' },
-  });
-  assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(JSON.parse(result.stdout), { gap: 'unrepresentable', fold: 'scheduled', instant: '2026-10-25T00:30:00.000Z' });
+test('local fire time rejects the Stockholm spring gap and chooses the earlier fall-fold instant', () => {
+  const previousTimezone = process.env.TZ;
+  process.env.TZ = 'Europe/Stockholm';
+  try {
+    const gap = model.createLocalFireTime('2026-03-29', 150, new Date('2026-01-01T00:00:00Z'));
+    const fold = model.createLocalFireTime('2026-10-25', 150, new Date('2026-01-01T00:00:00Z'));
+    assert.equal(gap.status, 'unrepresentable');
+    assert.equal(fold.status, 'scheduled');
+    assert.equal(fold.date?.toISOString(), '2026-10-25T00:30:00.000Z');
+  } finally {
+    if (previousTimezone === undefined) delete process.env.TZ; else process.env.TZ = previousTimezone;
+  }
 });
 
 test('notification preference validation is closed, bounded, and keyed per owner', () => {
@@ -653,8 +654,8 @@ function jsonResponse(value, status = 200) {
 }
 
 function buildStorageHarness(secureStore) {
-  const importsRemoved = storageSource.replace(/import[\s\S]*?from ['"][^'"]+['"];\r?\n/g, '');
-  const code = ts.transpileModule(importsRemoved.replaceAll('export async function', 'async function'), {
+  const importsRemoved = storageSource.replace(/import[\s\S]*?from ['"][^'"]+['"];\r?\n/g, '').replaceAll('export ', '');
+  const code = ts.transpileModule(importsRemoved, {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
   }).outputText;
   const load = new Function('SecureStore', 'DEFAULT_NOTIFICATION_PREFERENCES', 'isNotificationPreferences', 'notificationPreferenceKey',
@@ -736,7 +737,7 @@ function fakeAdapter({ requests = [], scheduled = [], cancelled = [], cancelErro
 }
 
 function plannedReminder(id, dogId, due_on, reminder_minutes) {
-  return { id, dog_id: dogId, event_type: 'vaccination', due_on, description: null,
+  return { id, dog_id: dogId, event_type: 'vaccination', due_on, due_time: null, description: null,
     created_at: '2026-10-01T00:00:00Z', reminder_enabled: true, reminder_minutes };
 }
 

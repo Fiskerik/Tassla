@@ -1,7 +1,7 @@
 # UI-06 – visuell QA och teknisk verifiering
 
-Datum: 2026-10-10  
-Granskad mot: [`vision_rev01.jpg`](../../../vision_rev01.jpg), övre raden “MVP – 6 skärmar”.  
+Datum: 2026-10-10<br>
+Granskad mot: [`vision_rev01.jpg`](../../../vision_rev01.jpg), övre raden “MVP – 6 skärmar”.<br>
 Testdata: syntetisk hund Luna, logghändelser och hälsoplaner i isolerad RN Web-förhandsvisning. BabyJourney Bild 4 som Erik delade inline saknas i repot; direkt jämförelse med just den bilden är **NOT TESTABLE**. Den planerade avvikelsen och dess motivering finns i [UI-06-planen](../../tasks/dev/ui-06.md).
 
 ## Skärmbilder

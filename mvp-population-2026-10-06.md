@@ -1,7 +1,7 @@
 # MVP-population: innehåll och återstående leverans
 
-Datum: 2026-10-06  
-Referens: lokal källsnapshot `4f1a649b2b8996c78de8eec0b8ac63befac76f8d`  
+Datum: 2026-10-06<br>
+Referens: lokal källsnapshot `4f1a649b2b8996c78de8eec0b8ac63befac76f8d`<br>
 Status: planeringscheckpoint; detta dokument godkänner inte implementation, verklig databehandling eller pilot.
 
 ## Utgångsläge och avgränsning
@@ -44,5 +44,3 @@ Mätning börjar med entydiga definitioner, inte siffermål. Distribution: QR-la
 ## Verifiering och evidensgräns
 
 Den här checkpointen verifieras genom parsning och schema-/konsistenskontroll av JSON samt jämförelse med lokala dokument/källkomponenter. Det är inte ett `pnpm check`, inte en release och inte oberoende review. APP-04A-PHONE återges som användarrapporterat resultat för 2026-10-06; vi har inte verifierat build eller runtime. APP-05 förblir blockerad på återstående grindar. Inga påståenden görs om Supabase-runtime, RLS, publicerat innehåll eller faktisk pilot.
-
-

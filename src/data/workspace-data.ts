@@ -7,8 +7,9 @@ export const WORKSPACE_PAGE_SIZE = 40;
 const DEFAULT_REQUEST_TIMEOUT_MS = 12_000;
 const EVENT_COLUMNS = 'id,dog_id,event_type,occurred_at,occurred_on,weight_kg,duration_minutes,description';
 const HEALTH_WEIGHT_COLUMNS = 'id,dog_id,actor_id,occurred_on,weight_kg';
-const HEALTH_HISTORY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,description';
-const PLANNED_HEALTH_COLUMNS = 'id,dog_id,event_type,due_on,description,created_at,reminder_enabled,reminder_minutes';
+const HEALTH_HISTORY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,occurred_time,description';
+const HEALTH_HISTORY_LEGACY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,description';
+const PLANNED_HEALTH_COLUMNS = 'id,dog_id,event_type,due_on,due_time,description,created_at,reminder_enabled,reminder_minutes';
 
 export interface DogEventRecord {
   id: string;
@@ -65,6 +66,7 @@ export interface HealthHistoryRecord {
   actor_id: string;
   event_type: HealthHistoryType;
   occurred_on: string;
+  occurred_time: string | null;
   description: string | null;
 }
 
@@ -73,11 +75,13 @@ export interface HealthHistoryOperation {
   dog_id: string;
   event_type: HealthHistoryType;
   occurred_on: string;
+  occurred_time: string | null;
   description: string | null;
 }
 
 export interface HealthHistoryChanges {
   occurred_on: string;
+  occurred_time: string | null;
   description: string | null;
 }
 
@@ -88,6 +92,7 @@ export interface PlannedHealthRecord {
   dog_id: string;
   event_type: PlannedHealthType;
   due_on: string;
+  due_time: string | null;
   description: string | null;
   created_at: string;
   reminder_enabled: boolean;
@@ -99,6 +104,7 @@ export interface PlannedHealthOperation {
   dog_id: string;
   event_type: PlannedHealthType;
   due_on: string;
+  due_time: string | null;
   description: string | null;
   local_today: string;
   reminder_enabled: boolean;
@@ -107,6 +113,7 @@ export interface PlannedHealthOperation {
 
 export interface PlannedHealthChanges {
   due_on: string;
+  due_time: string | null;
   description: string | null;
   reminder_enabled: boolean;
   reminder_minutes: number | null;
@@ -497,6 +504,24 @@ export function normalizeHealthHistoryDescription(value: string | null | undefin
   return trimmed || null;
 }
 
+export function normalizeHealthHistoryTime(value: unknown): string | null | undefined {
+  if (value === null) return null;
+  if (typeof value !== 'string') return undefined;
+  const match = /^(?:([01]\d|2[0-3]):([0-5]\d))(?:\:00)?$/.exec(value);
+  return match ? `${match[1]}:${match[2]}` : undefined;
+}
+
+export function normalizePlannedHealthTime(value: unknown): string | null | undefined {
+  if (value === null) return null;
+  if (typeof value !== 'string') return undefined;
+  const match = /^(?:([01]\d|2[0-3]):([0-5]\d))(?:\:00)?$/.exec(value);
+  return match ? `${match[1]}:${match[2]}` : undefined;
+}
+
+export function isValidHealthHistoryTime(value: string | null): boolean {
+  return value === null || typeof value === 'string' && normalizeHealthHistoryTime(value) === value;
+}
+
 export async function fetchHealthHistory(
   client: SupabaseClient,
   dogId: string,
@@ -504,16 +529,22 @@ export async function fetchHealthHistory(
   parentSignal?: AbortSignal,
 ): Promise<HealthHistoryRecord[]> {
   return withRequestDeadline(async (signal) => {
-    const { data, error } = await client.from('dog_events')
-      .select(HEALTH_HISTORY_COLUMNS)
-      .eq('dog_id', dogId)
-      .in('event_type', ['vaccination', 'vet_visit'])
-      .order('occurred_on', { ascending: false })
-      .order('id', { ascending: false })
-      .abortSignal(signal);
-    if (error || !Array.isArray(data) || !data.every(isHealthHistoryRecord)
-      || data.some((row) => row.dog_id !== dogId)) throw new Error('Could not load health history');
-    return data;
+    const makeQuery = (columns: string) => client.from('dog_events')
+      .select(columns).eq('dog_id', dogId).in('event_type', ['vaccination', 'vet_visit'])
+      .order('occurred_on', { ascending: false }).order('id', { ascending: false }).abortSignal(signal);
+    let { data, error } = await makeQuery(HEALTH_HISTORY_COLUMNS);
+    let responseData: unknown = data;
+    if (error && isMissingOccurredTimeColumn(error)) {
+      const legacy = await makeQuery(HEALTH_HISTORY_LEGACY_COLUMNS);
+      responseData = Array.isArray(legacy.data)
+        ? (legacy.data as unknown as Array<Record<string, unknown>>).map((row) => ({ ...row, occurred_time: null }))
+        : legacy.data;
+      error = legacy.error;
+    }
+    if (error || !Array.isArray(responseData)) throw new Error('Could not load health history');
+    const rows = responseData.map(normalizeHealthHistoryRecord);
+    if (rows.some((row) => row === null || row.dog_id !== dogId)) throw new Error('Could not load health history');
+    return rows as HealthHistoryRecord[];
   }, timeoutMs, parentSignal);
 }
 
@@ -534,10 +565,11 @@ export async function fetchHealthHistoryById(
       .maybeSingle();
     if (error) throw new Error('Could not check health history status');
     if (data === null) return null;
-    if (!isHealthHistoryRecord(data) || data.dog_id !== dogId || data.event_type !== eventType || data.id !== id) {
+    const row = normalizeHealthHistoryRecord(data);
+    if (!row || row.dog_id !== dogId || row.event_type !== eventType || row.id !== id) {
       throw new Error('Health history response did not match the database contract');
     }
-    return data;
+    return row;
   }, timeoutMs);
 }
 
@@ -547,7 +579,7 @@ export async function insertHealthHistory(
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
 ): Promise<WriteOutcome<HealthHistoryRecord>> {
   const description = normalizeHealthHistoryDescription(operation.description);
-  if (!isValidHealthHistoryDate(operation.occurred_on) || description === undefined
+  if (!isValidHealthHistoryDate(operation.occurred_on) || !isValidHealthHistoryTime(operation.occurred_time) || description === undefined
     || !isHealthHistoryType(operation.event_type)) return { status: 'failed' };
   const normalized = { ...operation, description };
   const payload = {
@@ -555,14 +587,16 @@ export async function insertHealthHistory(
     dog_id: operation.dog_id,
     event_type: operation.event_type,
     occurred_on: operation.occurred_on,
+    occurred_time: operation.occurred_time,
     description,
   };
   let failure: unknown = null;
   try {
     const result = await withRequestDeadline(async (signal) => await client.from('dog_events')
       .insert(payload).abortSignal(signal).select(HEALTH_HISTORY_COLUMNS).single(), timeoutMs);
-    if (!result.error && isHealthHistoryRecord(result.data) && matchesHealthHistory(result.data, normalized)) {
-      return { status: 'saved', value: result.data };
+    const row = result.error ? null : normalizeHealthHistoryRecord(result.data);
+    if (!result.error && row && matchesHealthHistory(row, normalized)) {
+      return { status: 'saved', value: row };
     }
     failure = result.error ?? new Error('Empty health history insert response');
   } catch (error) { failure = error; }
@@ -578,24 +612,26 @@ export async function updateHealthHistory(
   dogId: string,
   eventType: HealthHistoryType,
   id: string,
-  previous: Pick<HealthHistoryRecord, 'occurred_on' | 'description'>,
+  previous: Pick<HealthHistoryRecord, 'occurred_on' | 'occurred_time' | 'description'>,
   changes: HealthHistoryChanges,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
 ): Promise<WriteOutcome<HealthHistoryRecord>> {
   const description = normalizeHealthHistoryDescription(changes.description);
-  if (!isValidHealthHistoryDate(changes.occurred_on) || description === undefined || !isHealthHistoryType(eventType)) return { status: 'failed' };
+  if (!isValidHealthHistoryDate(changes.occurred_on) || !isValidHealthHistoryTime(changes.occurred_time) || description === undefined || !isHealthHistoryType(eventType)) return { status: 'failed' };
   const normalizedChanges = { ...changes, description };
-  const payload = { occurred_on: changes.occurred_on, description };
+  const payload = { occurred_on: changes.occurred_on, occurred_time: changes.occurred_time, description };
   let failure: unknown = null;
   try {
     let query = client.from('dog_events').update(payload)
       .eq('dog_id', dogId).eq('event_type', eventType).eq('id', id)
       .eq('occurred_on', previous.occurred_on);
+    query = previous.occurred_time === null ? query.is('occurred_time', null) : query.eq('occurred_time', `${previous.occurred_time}:00`);
     query = previous.description === null ? query.is('description', null) : query.eq('description', previous.description);
     const result = await withRequestDeadline(async (signal) => await query.abortSignal(signal)
       .select(HEALTH_HISTORY_COLUMNS).maybeSingle(), timeoutMs);
-    if (!result.error && isHealthHistoryRecord(result.data) && matchesHealthHistory(result.data, { id, dog_id: dogId, event_type: eventType, ...normalizedChanges })) {
-      return { status: 'saved', value: result.data };
+    const row = result.error ? null : normalizeHealthHistoryRecord(result.data);
+    if (!result.error && row && matchesHealthHistory(row, { id, dog_id: dogId, event_type: eventType, ...normalizedChanges })) {
+      return { status: 'saved', value: row };
     }
     failure = result.error ?? new Error('Empty health history update response');
   } catch (error) { failure = error; }
@@ -611,7 +647,7 @@ export async function deleteHealthHistory(
   dogId: string,
   eventType: HealthHistoryType,
   id: string,
-  previous: Pick<HealthHistoryRecord, 'occurred_on' | 'description'>,
+  previous: Pick<HealthHistoryRecord, 'occurred_on' | 'occurred_time' | 'description'>,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
 ): Promise<WriteOutcome<null>> {
   let failure: unknown = null;
@@ -619,6 +655,7 @@ export async function deleteHealthHistory(
     let query = client.from('dog_events').delete()
       .eq('dog_id', dogId).eq('event_type', eventType).eq('id', id)
       .eq('occurred_on', previous.occurred_on);
+    query = previous.occurred_time === null ? query.is('occurred_time', null) : query.eq('occurred_time', `${previous.occurred_time}:00`);
     query = previous.description === null ? query.is('description', null) : query.eq('description', previous.description);
     const result = await withRequestDeadline(async (signal) => await query.abortSignal(signal).select('id').maybeSingle(), timeoutMs);
     if (!result.error && result.data && result.data.id === id) return { status: 'saved', value: null };
@@ -662,7 +699,7 @@ export async function fetchPlannedHealth(
       .abortSignal(signal);
     if (error || !Array.isArray(data) || !data.every(isPlannedHealthRecord)
       || data.some((row) => row.dog_id !== dogId)) throw new Error('Could not load planned health');
-    return data;
+    return data.map(canonicalPlannedHealthRecord);
   }, timeoutMs, parentSignal);
 }
 
@@ -685,7 +722,7 @@ export async function fetchFuturePlannedHealthReminders(
         || data.some((row) => row.dog_id !== dogId || !row.reminder_enabled || row.due_on < localToday)) {
         throw new Error('Could not load planned reminders');
       }
-      return data;
+      return data.map(canonicalPlannedHealthRecord);
     }, timeoutMs);
     if (!isCurrent()) return null;
     for (const record of page) if (!candidates.has(record.id) && isFutureFireTime(record)) candidates.set(record.id, record);
@@ -711,7 +748,7 @@ export async function fetchPlannedHealthById(
     if (!isPlannedHealthRecord(data) || data.dog_id !== dogId || data.id !== id) {
       throw new Error('Planned health response did not match the database contract');
     }
-    return data;
+    return canonicalPlannedHealthRecord(data);
   }, timeoutMs);
 }
 
@@ -722,16 +759,18 @@ export async function insertPlannedHealth(
 ): Promise<WriteOutcome<PlannedHealthRecord>> {
   const description = normalizePlannedHealthDescription(operation.description);
   if (!isPlannedHealthType(operation.event_type) || !isValidPlannedHealthDate(operation.due_on, operation.local_today)
-    || description === undefined || typeof operation.reminder_enabled !== 'boolean'
+    || normalizePlannedHealthTime(operation.due_time) === undefined || description === undefined || typeof operation.reminder_enabled !== 'boolean'
     || !isValidReminderMinutes(operation.reminder_minutes) || operation.reminder_enabled && operation.reminder_minutes === null) return { status: 'failed' };
-  const expected = { ...operation, description };
-  const payload = { id: operation.id, dog_id: operation.dog_id, event_type: operation.event_type, due_on: operation.due_on, description, reminder_enabled: operation.reminder_enabled, reminder_minutes: operation.reminder_minutes };
+  const due_time = normalizePlannedHealthTime(operation.due_time) ?? null;
+  const expected = { ...operation, due_time, description };
+  const payload = { id: operation.id, dog_id: operation.dog_id, event_type: operation.event_type, due_on: operation.due_on, due_time, description, reminder_enabled: operation.reminder_enabled, reminder_minutes: operation.reminder_minutes };
   let failure: unknown = null;
   try {
     const result = await withRequestDeadline(async (signal) => await client.from('dog_health_plans')
       .insert(payload).abortSignal(signal).select(PLANNED_HEALTH_COLUMNS).single(), timeoutMs);
-    if (!result.error && isPlannedHealthRecord(result.data) && matchesPlannedHealth(result.data, expected)) {
-      return { status: 'saved', value: result.data };
+    if (!result.error && isPlannedHealthRecord(result.data)) {
+      const record = canonicalPlannedHealthRecord(result.data);
+      if (matchesPlannedHealth(record, expected)) return { status: 'saved', value: record };
     }
     failure = result.error ?? new Error('Empty planned health insert response');
   } catch (error) { failure = error; }
@@ -746,7 +785,7 @@ export async function updatePlannedHealth(
   client: SupabaseClient,
   dogId: string,
   id: string,
-  previous: Pick<PlannedHealthRecord, 'event_type' | 'due_on' | 'description' | 'reminder_enabled' | 'reminder_minutes'>,
+  previous: Pick<PlannedHealthRecord, 'event_type' | 'due_on' | 'due_time' | 'description' | 'reminder_enabled' | 'reminder_minutes'>,
   changes: PlannedHealthChanges,
   localToday: string,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
@@ -756,9 +795,9 @@ export async function updatePlannedHealth(
   if (!isPlannedHealthType(previous.event_type) || !isCalendarDate(localToday) || !allowedDate || description === undefined) {
     return { status: 'failed' };
   }
-  if (typeof changes.reminder_enabled !== 'boolean' || !isValidReminderMinutes(changes.reminder_minutes)
+  if (normalizePlannedHealthTime(changes.due_time) === undefined || typeof changes.reminder_enabled !== 'boolean' || !isValidReminderMinutes(changes.reminder_minutes)
     || changes.reminder_enabled && changes.reminder_minutes === null) return { status: 'failed' };
-  const normalizedChanges = { due_on: changes.due_on, description, reminder_enabled: changes.reminder_enabled, reminder_minutes: changes.reminder_minutes };
+  const normalizedChanges = { due_on: changes.due_on, due_time: normalizePlannedHealthTime(changes.due_time) ?? null, description, reminder_enabled: changes.reminder_enabled, reminder_minutes: changes.reminder_minutes };
   let failure: unknown = null;
   try {
     let query = client.from('dog_health_plans').update(normalizedChanges)
@@ -766,11 +805,15 @@ export async function updatePlannedHealth(
     query = previous.description === null ? query.is('description', null) : query.eq('description', previous.description);
     query = query.eq('reminder_enabled', previous.reminder_enabled);
     query = previous.reminder_minutes === null ? query.is('reminder_minutes', null) : query.eq('reminder_minutes', previous.reminder_minutes);
+    const priorDueTime = normalizePlannedHealthTime(previous.due_time);
+    query = priorDueTime === null ? query.is('due_time', null) : query.eq('due_time', `${priorDueTime}:00`);
     const result = await withRequestDeadline(async (signal) => await query.abortSignal(signal)
       .select(PLANNED_HEALTH_COLUMNS).maybeSingle(), timeoutMs);
-    if (!result.error && isPlannedHealthRecord(result.data)
-      && matchesPlannedHealth(result.data, { id, dog_id: dogId, event_type: previous.event_type, ...normalizedChanges })) {
-      return { status: 'saved', value: result.data };
+    if (!result.error && isPlannedHealthRecord(result.data)) {
+      const record = canonicalPlannedHealthRecord(result.data);
+      if (matchesPlannedHealth(record, { id, dog_id: dogId, event_type: previous.event_type, ...normalizedChanges })) {
+        return { status: 'saved', value: record };
+      }
     }
     failure = result.error ?? new Error('Empty planned health update response');
   } catch (error) { failure = error; }
@@ -785,7 +828,7 @@ export async function deletePlannedHealth(
   client: SupabaseClient,
   dogId: string,
   id: string,
-  previous: Pick<PlannedHealthRecord, 'event_type' | 'due_on' | 'description' | 'reminder_enabled' | 'reminder_minutes'>,
+  previous: Pick<PlannedHealthRecord, 'event_type' | 'due_on' | 'due_time' | 'description' | 'reminder_enabled' | 'reminder_minutes'>,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
 ): Promise<WriteOutcome<null>> {
   let failure: unknown = null;
@@ -795,6 +838,8 @@ export async function deletePlannedHealth(
     query = previous.description === null ? query.is('description', null) : query.eq('description', previous.description);
     query = query.eq('reminder_enabled', previous.reminder_enabled);
     query = previous.reminder_minutes === null ? query.is('reminder_minutes', null) : query.eq('reminder_minutes', previous.reminder_minutes);
+    const priorDueTime = normalizePlannedHealthTime(previous.due_time);
+    query = priorDueTime === null ? query.is('due_time', null) : query.eq('due_time', `${priorDueTime}:00`);
     const result = await withRequestDeadline(async (signal) => await query.abortSignal(signal).select('id').maybeSingle(), timeoutMs);
     if (!result.error && result.data?.id === id) return { status: 'saved', value: null };
     if (!result.error && result.data === null) {
@@ -1044,13 +1089,16 @@ function isHealthHistoryType(value: unknown): value is HealthHistoryType {
   return value === 'vaccination' || value === 'vet_visit';
 }
 
-function isHealthHistoryRecord(value: unknown): value is HealthHistoryRecord {
-  if (!value || typeof value !== 'object') return false;
+function normalizeHealthHistoryRecord(value: unknown): HealthHistoryRecord | null {
+  if (!value || typeof value !== 'object') return null;
   const row = value as Record<string, unknown>;
-  return typeof row.id === 'string' && typeof row.dog_id === 'string' && typeof row.actor_id === 'string'
-    && isHealthHistoryType(row.event_type) && typeof row.occurred_on === 'string'
-    && isValidHealthHistoryDate(row.occurred_on)
-    && (row.description === null || typeof row.description === 'string' && Array.from(row.description).length <= 500);
+  const occurredTime = normalizeHealthHistoryTime(row.occurred_time);
+  if (typeof row.id !== 'string' || typeof row.dog_id !== 'string' || typeof row.actor_id !== 'string'
+    || !isHealthHistoryType(row.event_type) || typeof row.occurred_on !== 'string'
+    || !isValidHealthHistoryDate(row.occurred_on) || occurredTime === undefined
+    || (row.description !== null && (typeof row.description !== 'string' || Array.from(row.description).length > 500))) return null;
+  return { id: row.id, dog_id: row.dog_id, actor_id: row.actor_id, event_type: row.event_type,
+    occurred_on: row.occurred_on, occurred_time: occurredTime, description: row.description };
 }
 
 function isPlannedHealthType(value: unknown): value is PlannedHealthType {
@@ -1068,6 +1116,15 @@ function isValidReminderMinutes(value: unknown): value is number | null {
   return value === null || typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 1439;
 }
 
+function isMissingOccurredTimeColumn(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const row = error as Record<string, unknown>;
+  const code = row.code;
+  const message = typeof row.message === 'string' ? row.message : '';
+  return (code === '42703' || code === 'PGRST204') && /occurred_time/.test(message)
+    && (code !== '42703' || /dog_events|column/i.test(message));
+}
+
 function isPlannedHealthRecord(value: unknown): value is PlannedHealthRecord {
   if (!value || typeof value !== 'object') return false;
   const row = value as Record<string, unknown>;
@@ -1075,8 +1132,14 @@ function isPlannedHealthRecord(value: unknown): value is PlannedHealthRecord {
     && isPlannedHealthType(row.event_type) && typeof row.due_on === 'string' && isCalendarDate(row.due_on)
     && (row.description === null || typeof row.description === 'string' && Array.from(row.description).length <= 500)
     && typeof row.created_at === 'string' && Number.isFinite(Date.parse(row.created_at))
+    && normalizePlannedHealthTime(row.due_time) !== undefined
     && typeof row.reminder_enabled === 'boolean' && isValidReminderMinutes(row.reminder_minutes)
     && (!row.reminder_enabled || row.reminder_minutes !== null);
+}
+
+function canonicalPlannedHealthRecord(value: unknown): PlannedHealthRecord {
+  const row = value as PlannedHealthRecord;
+  return { ...row, due_time: normalizePlannedHealthTime(row.due_time) ?? null };
 }
 
 function isPublishedVersionRow(value: unknown): value is PublishedVersionRow {
@@ -1130,18 +1193,18 @@ function matchesHealthWeight(
 
 function matchesHealthHistory(
   record: HealthHistoryRecord,
-  expected: Pick<HealthHistoryOperation, 'id' | 'dog_id' | 'event_type' | 'occurred_on' | 'description'>,
+  expected: Pick<HealthHistoryOperation, 'id' | 'dog_id' | 'event_type' | 'occurred_on' | 'occurred_time' | 'description'>,
 ): boolean {
   return record.id === expected.id && record.dog_id === expected.dog_id && record.event_type === expected.event_type
-    && record.occurred_on === expected.occurred_on && record.description === expected.description;
+    && record.occurred_on === expected.occurred_on && record.occurred_time === expected.occurred_time && record.description === expected.description;
 }
 
 function matchesPlannedHealth(
   record: PlannedHealthRecord,
-  expected: Pick<PlannedHealthOperation, 'id' | 'dog_id' | 'event_type' | 'due_on' | 'description' | 'reminder_enabled' | 'reminder_minutes'>,
+  expected: Pick<PlannedHealthOperation, 'id' | 'dog_id' | 'event_type' | 'due_on' | 'due_time' | 'description' | 'reminder_enabled' | 'reminder_minutes'>,
 ): boolean {
   return record.id === expected.id && record.dog_id === expected.dog_id && record.event_type === expected.event_type
-    && record.due_on === expected.due_on && record.description === expected.description
+    && record.due_on === expected.due_on && normalizePlannedHealthTime(record.due_time) === expected.due_time && record.description === expected.description
     && record.reminder_enabled === expected.reminder_enabled && record.reminder_minutes === expected.reminder_minutes;
 }
 

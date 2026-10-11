@@ -23,7 +23,7 @@ const dogId = '11111111-1111-4111-8111-111111111111';
 const otherDogId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const historyId = '22222222-2222-4222-8222-222222222222';
 const actorId = '33333333-3333-4333-8333-333333333333';
-const operation = { id: historyId, dog_id: dogId, event_type: 'vaccination', occurred_on: '2026-10-01', description: '  Booster  ' };
+const operation = { id: historyId, dog_id: dogId, event_type: 'vaccination', occurred_on: '2026-10-01', occurred_time: null, description: '  Booster  ' };
 const savedRecord = { ...operation, description: 'Booster', actor_id: actorId };
 
 test('health-history date and note validators enforce calendar, future, trim and Unicode boundaries', () => {
@@ -62,7 +62,7 @@ test('history read filters the dog and allowed event types, sorts stably, and pa
   const { client, requests } = localClient(({ method, url }) => {
     assert.equal(method, 'GET');
     assert.equal(url.pathname, '/rest/v1/dog_events');
-    assert.equal(url.searchParams.get('select'), 'id,dog_id,actor_id,event_type,occurred_on,description');
+    assert.equal(url.searchParams.get('select'), 'id,dog_id,actor_id,event_type,occurred_on,occurred_time,description');
     assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
     assert.deepEqual(url.searchParams.getAll('event_type'), ['in.(vaccination,vet_visit)']);
     assert.deepEqual(url.searchParams.get('order')?.split(','), ['occurred_on.desc', 'id.desc']);
@@ -74,6 +74,58 @@ test('history read filters the dog and allowed event types, sorts stably, and pa
   } finally {
     await client.auth.dispose();
   }
+});
+
+test('legacy history read retries without occurred_time only for its specific missing-column error', async (t) => {
+  await t.test('legacy schema returns rows with a null time', async () => {
+    const legacyRow = { ...savedRecord };
+    delete legacyRow.occurred_time;
+    const { client, requests } = localClient(({ url }) => url.searchParams.has('select')
+      && url.searchParams.get('select').includes('occurred_time')
+      ? jsonResponse({ code: '42703', message: 'column dog_events.occurred_time does not exist' }, 400)
+      : jsonResponse([legacyRow]));
+    try {
+      assert.deepEqual(await workspaceData.fetchHealthHistory(client, dogId), [savedRecord]);
+      assert.equal(requests.length, 2);
+      assert.equal(requests[1].url.searchParams.get('select'), 'id,dog_id,actor_id,event_type,occurred_on,description');
+    } finally { await client.auth.dispose(); }
+  });
+  await t.test('other missing-column errors are not retried', async () => {
+    const { client, requests } = localClient(() => jsonResponse({ code: '42703', message: 'column dog_events.description does not exist' }, 400));
+    try {
+      await assert.rejects(workspaceData.fetchHealthHistory(client, dogId));
+      assert.equal(requests.length, 1);
+    } finally { await client.auth.dispose(); }
+  });
+  await t.test('PGRST204 is retried only when it names occurred_time', async () => {
+    const legacyRow = { ...savedRecord };
+    delete legacyRow.occurred_time;
+    const { client, requests } = localClient(({ url }) => url.searchParams.get('select')?.includes('occurred_time')
+      ? jsonResponse({ code: 'PGRST204', message: "Could not find the 'occurred_time' column of 'dog_events' in the schema cache" }, 400)
+      : jsonResponse([legacyRow]));
+    try {
+      assert.deepEqual(await workspaceData.fetchHealthHistory(client, dogId), [savedRecord]);
+      assert.equal(requests.length, 2);
+    } finally { await client.auth.dispose(); }
+  });
+  await t.test('authorization and network failures are surfaced without retrying', async (t) => {
+    await t.test('authorization failure', async () => {
+      const { client, requests } = localClient(() => jsonResponse({ code: '42501', message: 'permission denied' }, 403));
+      try {
+        await assert.rejects(workspaceData.fetchHealthHistory(client, dogId));
+        assert.equal(requests.length, 1);
+      } finally { await client.auth.dispose(); }
+    });
+    await t.test('network failure', async () => {
+      const { client, requests } = localClient(() => { throw new TypeError('network unavailable'); });
+      try {
+        await assert.rejects(workspaceData.fetchHealthHistory(client, dogId));
+        assert.ok(requests.length > 0);
+        assert.ok(requests.every(({ url }) => url.searchParams.get('select').includes('occurred_time')),
+          'network retries retain the full schema request and never issue a legacy fallback');
+      } finally { await client.auth.dispose(); }
+    });
+  });
 });
 
 test('history reads reject a row for another dog or a malformed row', async (t) => {
@@ -119,7 +171,7 @@ test('insert sends only the allowed payload, normalizes the note, and trusts the
   const { client, requests } = localClient(({ method, url, body }) => {
     assert.equal(method, 'POST');
     assert.equal(url.pathname, '/rest/v1/dog_events');
-    assert.deepEqual(body, { id: historyId, dog_id: dogId, event_type: 'vaccination', occurred_on: '2026-10-01', description: 'Booster' });
+    assert.deepEqual(body, { id: historyId, dog_id: dogId, event_type: 'vaccination', occurred_on: '2026-10-01', occurred_time: null, description: 'Booster' });
     assert.equal(Object.hasOwn(body, 'actor_id'), false);
     return jsonResponse(savedRecord);
   });
@@ -180,8 +232,8 @@ test('lost insert response reconciles the same stable id and exact values', asyn
 });
 
 test('update scopes identity and captured preimage, uses IS NULL for a null note, and sends only changes', async () => {
-  const previous = { occurred_on: '2026-09-20', description: null };
-  const changes = { occurred_on: '2026-09-25', description: 'Follow-up' };
+  const previous = { occurred_on: '2026-09-20', occurred_time: null, description: null };
+  const changes = { occurred_on: '2026-09-25', occurred_time: '14:30', description: 'Follow-up' };
   const updated = { ...savedRecord, ...changes };
   const { client, requests } = localClient(({ method, url, body }) => {
     assert.equal(method, 'PATCH');
@@ -190,6 +242,7 @@ test('update scopes identity and captured preimage, uses IS NULL for a null note
     assert.equal(url.searchParams.get('event_type'), 'eq.vaccination');
     assert.equal(url.searchParams.get('id'), `eq.${historyId}`);
     assert.equal(url.searchParams.get('occurred_on'), `eq.${previous.occurred_on}`);
+    assert.equal(url.searchParams.get('occurred_time'), 'is.null');
     assert.equal(url.searchParams.get('description'), 'is.null');
     assert.equal(Object.hasOwn(body, 'event_type'), false);
     return jsonResponse(updated);
@@ -200,12 +253,13 @@ test('update scopes identity and captured preimage, uses IS NULL for a null note
   } finally { await client.auth.dispose(); }
 });
 
-test('update uses exact equality when the captured note is non-null', async () => {
-  const previous = { occurred_on: '2026-09-20', description: 'Original note' };
-  const changes = { occurred_on: '2026-09-25', description: null };
+test('update uses exact equality when the captured time and note are non-null', async () => {
+  const previous = { occurred_on: '2026-09-20', occurred_time: '08:15', description: 'Original note' };
+  const changes = { occurred_on: '2026-09-25', occurred_time: null, description: null };
   const { client, requests } = localClient(({ method, url }) => {
     assert.equal(method, 'PATCH');
     assert.equal(url.searchParams.get('occurred_on'), `eq.${previous.occurred_on}`);
+    assert.equal(url.searchParams.get('occurred_time'), 'eq.08:15:00');
     assert.equal(url.searchParams.get('description'), `eq.${previous.description}`);
     return jsonResponse({ ...savedRecord, ...changes });
   });
@@ -218,8 +272,8 @@ test('update uses exact equality when the captured note is non-null', async () =
 });
 
 test('update reconciliation distinguishes committed, rejected, and conflicting preimages', async (t) => {
-  const previous = { occurred_on: '2026-09-20', description: 'Original' };
-  const changes = { occurred_on: '2026-09-25', description: null };
+  const previous = { occurred_on: '2026-09-20', occurred_time: null, description: 'Original' };
+  const changes = { occurred_on: '2026-09-25', occurred_time: '11:45', description: null };
   const updated = { ...savedRecord, ...changes };
 
   await t.test('lost response with requested postimage is saved', async () => {
@@ -240,7 +294,7 @@ test('update reconciliation distinguishes committed, rejected, and conflicting p
   });
 
   await t.test('another edit after lost response is unknown and never replayed', async () => {
-    const concurrent = { ...savedRecord, occurred_on: '2026-09-22', description: 'Later owner edit' };
+    const concurrent = { ...savedRecord, occurred_on: '2026-09-22', occurred_time: null, description: 'Later owner edit' };
     const { client, requests } = localClient(({ method }) => method === 'PATCH'
       ? Promise.reject(new TypeError('lost update response')) : jsonResponse(concurrent));
     try {
@@ -250,7 +304,7 @@ test('update reconciliation distinguishes committed, rejected, and conflicting p
   });
 
   await t.test('concurrent preimage mismatch returns no updated row without overwriting it', async () => {
-    const concurrent = { ...savedRecord, occurred_on: '2026-09-22', description: 'Later owner edit' };
+    const concurrent = { ...savedRecord, occurred_on: '2026-09-22', occurred_time: null, description: 'Later owner edit' };
     const { client, requests } = localClient(({ method }) => method === 'PATCH' ? jsonResponse(null) : jsonResponse(concurrent));
     try {
       assert.deepEqual(await workspaceData.updateHealthHistory(client, dogId, 'vaccination', historyId, previous, changes), { status: 'unknown' });
@@ -261,13 +315,14 @@ test('update reconciliation distinguishes committed, rejected, and conflicting p
 
 test('delete is conditional on dog, type, id, date and note preimage, including null notes', async () => {
   let exists = true;
-  const previous = { occurred_on: '2026-09-20', description: null };
+  const previous = { occurred_on: '2026-09-20', occurred_time: null, description: null };
   const { client, requests } = localClient(async ({ method, url }) => {
     assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
     assert.equal(url.searchParams.get('event_type'), 'eq.vaccination');
     assert.equal(url.searchParams.get('id'), `eq.${historyId}`);
     if (method === 'DELETE') {
       assert.equal(url.searchParams.get('occurred_on'), `eq.${previous.occurred_on}`);
+      assert.equal(url.searchParams.get('occurred_time'), 'is.null');
       assert.equal(url.searchParams.get('description'), 'is.null');
       exists = false;
       throw new TypeError('simulated committed delete with lost response');
@@ -282,7 +337,7 @@ test('delete is conditional on dog, type, id, date and note preimage, including 
 });
 
 test('delete only trusts the returned id after it matches or a follow-up proves absence', async (t) => {
-  const previous = { occurred_on: '2026-09-20', description: 'Original' };
+  const previous = { occurred_on: '2026-09-20', occurred_time: null, description: 'Original' };
   await t.test('mismatched delete id requires absence readback before saved', async () => {
     const { client, requests } = localClient(({ method }) => method === 'DELETE'
       ? jsonResponse({ id: '99999999-9999-4999-8999-999999999999' }) : jsonResponse(null));
@@ -302,8 +357,8 @@ test('delete only trusts the returned id after it matches or a follow-up proves 
 });
 
 test('delete never treats a changed row as deleted after an ambiguous or rejected write', async (t) => {
-  const previous = { occurred_on: '2026-09-20', description: 'Original' };
-  const changed = { ...savedRecord, occurred_on: '2026-09-22', description: 'Concurrent edit' };
+  const previous = { occurred_on: '2026-09-20', occurred_time: null, description: 'Original' };
+  const changed = { ...savedRecord, occurred_on: '2026-09-22', occurred_time: null, description: 'Concurrent edit' };
   await t.test('ambiguous outcome remains unknown', async () => {
     const { client, requests } = localClient(({ method }) => method === 'DELETE'
       ? Promise.reject(new TypeError('lost delete response')) : jsonResponse(changed));
@@ -355,9 +410,9 @@ test('actual workspace history handler prevents same-tick duplicate inserts and 
   const harness = createHealthHistoryHandlerHarness({
     insertHealthHistory: async (...args) => { harness.calls.insert.push(args); return deferred.promise; },
   });
-  const first = harness.handlers.saveHealthHistory(null, 'vaccination', today(), 'Booster');
+  const first = harness.handlers.saveHealthHistory(null, 'vaccination', today(), null, 'Booster');
   assert.equal(harness.calls.insert.length, 1);
-  assert.equal(await harness.handlers.saveHealthHistory(null, 'vaccination', today(), 'Booster'), false);
+  assert.equal(await harness.handlers.saveHealthHistory(null, 'vaccination', today(), null, 'Booster'), false);
   assert.equal(harness.calls.insert.length, 1);
   deferred.resolve({ status: 'saved', value: savedRecord });
   assert.equal(await first, true);
@@ -367,10 +422,10 @@ test('actual workspace history handler prevents same-tick duplicate inserts and 
   const unknownHarness = createHealthHistoryHandlerHarness({
     insertHealthHistory: async (...args) => { unknownHarness.calls.insert.push(args); return { status: 'unknown' }; },
   });
-  assert.equal(await unknownHarness.handlers.saveHealthHistory(null, 'vet_visit', today(), ''), false);
+  assert.equal(await unknownHarness.handlers.saveHealthHistory(null, 'vet_visit', today(), null, ''), false);
   assert.equal(unknownHarness.state.pending, true);
   assert.equal(unknownHarness.state.pendingMutation.current?.operation.id, historyId);
-  assert.equal(await unknownHarness.handlers.saveHealthHistory(null, 'vet_visit', today(), 'different'), false);
+  assert.equal(await unknownHarness.handlers.saveHealthHistory(null, 'vet_visit', today(), null, 'different'), false);
   assert.equal(unknownHarness.calls.insert.length, 1);
 });
 
@@ -380,7 +435,7 @@ test('actual workspace status check does not replay an absent insert after dog/s
     insertHealthHistory: async (...args) => { harness.calls.insert.push(args); return { status: 'unknown' }; },
     fetchHealthHistoryById: async (...args) => { harness.calls.lookup.push(args); return lookup.promise; },
   });
-  assert.equal(await harness.handlers.saveHealthHistory(null, 'vaccination', today(), 'Booster'), false);
+  assert.equal(await harness.handlers.saveHealthHistory(null, 'vaccination', today(), null, 'Booster'), false);
   assert.equal(harness.calls.insert.length, 1);
 
   const retry = harness.handlers.retryHealthHistory();
@@ -396,8 +451,8 @@ test('actual workspace status check does not replay an absent insert after dog/s
 });
 
 test('actual workspace update conflict can be explicitly resolved before starting a fresh edit', async () => {
-  const original = { ...savedRecord, occurred_on: '2026-09-20', description: 'Original' };
-  const current = { ...savedRecord, occurred_on: '2026-09-22', description: 'Another edit' };
+  const original = { ...savedRecord, occurred_on: '2026-09-20', occurred_time: null, description: 'Original' };
+  const current = { ...savedRecord, occurred_on: '2026-09-22', occurred_time: '09:00', description: 'Another edit' };
   const harness = createHealthHistoryHandlerHarness({ rows: [original] });
   harness.dependencies.updateHealthHistory = async (...args) => {
     harness.calls.update.push(args);
@@ -406,7 +461,7 @@ test('actual workspace update conflict can be explicitly resolved before startin
   harness.dependencies.fetchHealthHistoryById = async (...args) => { harness.calls.lookup.push(args); return current; };
   harness.handlers = harness.rebuildHandlers();
 
-  assert.equal(await harness.handlers.saveHealthHistory(historyId, 'vaccination', '2026-09-25', 'My edit'), false);
+  assert.equal(await harness.handlers.saveHealthHistory(historyId, 'vaccination', '2026-09-25', '10:15', 'My edit'), false);
   assert.equal(harness.state.pending, true);
   await harness.handlers.retryHealthHistory();
   assert.deepEqual(harness.state.conflict, { lifetime: `${dogId}:user-1`, mutationId: historyId, current });
@@ -419,7 +474,7 @@ test('actual workspace update conflict can be explicitly resolved before startin
   assert.equal(harness.state.pendingMutation.current, null);
   assert.equal(harness.state.pending, false);
   assert.deepEqual(harness.state.rows, [current]);
-  assert.equal(await harness.handlers.saveHealthHistory(historyId, 'vaccination', '2026-09-26', 'Fresh intent'), true);
+  assert.equal(await harness.handlers.saveHealthHistory(historyId, 'vaccination', '2026-09-26', '11:30', 'Fresh intent'), true);
   assert.equal(harness.calls.update.length, 2);
   assert.deepEqual(harness.calls.update[1].slice(1, 5), [dogId, 'vaccination', historyId, current]);
 });
@@ -429,7 +484,7 @@ test('actual workspace handler suppresses a pending mutation result after its li
   const harness = createHealthHistoryHandlerHarness({
     insertHealthHistory: async (...args) => { harness.calls.insert.push(args); return write.promise; },
   });
-  const save = harness.handlers.saveHealthHistory(null, 'vaccination', today(), 'Booster');
+  const save = harness.handlers.saveHealthHistory(null, 'vaccination', today(), null, 'Booster');
   harness.state.lifetime.current = 'dog-2:user-1';
   write.resolve({ status: 'saved', value: savedRecord });
   assert.equal(await save, false);
@@ -496,6 +551,7 @@ function createHealthHistoryHandlerHarness({ rows = [], ...overrides } = {}) {
     healthHistoryFlightToken: { current: null },
     healthHistoryConflict: state.conflict,
     isValidHealthHistoryDate: workspaceData.isValidHealthHistoryDate,
+    isValidHealthHistoryTime: workspaceData.isValidHealthHistoryTime,
     normalizeHealthHistoryDescription: workspaceData.normalizeHealthHistoryDescription,
     insertHealthHistory: async (...args) => {
       calls.insert.push(args);

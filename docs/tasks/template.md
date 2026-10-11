@@ -19,5 +19,5 @@ För större arbeten: dela upp före start. En aktiv deluppgift är standard, h�
 
 Spara efter varje deluppgift och före längre verifiering när möjligt. Påbörja inte ett nytt skrivarbete innan föregående checkpoint finns. Återuppta första ofärdiga deluppgiften; läs dess status och relevanta filer. SDK-teamet kan föreslå planen men saknar skrivverktyg; Codex eller människan sparar den. Ingen automatisk återstart efter användningsgräns är implementerad.
 
-## Release-log
-Länka docs/releases/<paket-id>.md och uppdatera Major changes, Minor changes, Bug-fixes, verifiering och nästa sprint/paket enligt AGENTS.md. Ange commitbas och faktisk leveransstatus.
+## Historik
+För aktiva paket kan en tillfällig `docs/releases/<paket-id>.md` användas. Vid avslut förs datum, status, verifiering, commitbas och kvarstående begränsningar till `docs/releases/HISTORY-2026.md` enligt AGENTS.md.

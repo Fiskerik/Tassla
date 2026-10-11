@@ -1,7 +1,7 @@
 # UX-04 visuell QA-checklista
 
-Datum: 2026-10-09  
-Berörda vyer: Hem, Tassla-pass, gemensamma hundkort och Hem-carousel  
+Datum: 2026-10-09<br>
+Berörda vyer: Hem, Tassla-pass, gemensamma hundkort och Hem-carousel<br>
 Målbild: `vision_rev01.jpg`, övre delen MVP – 6 skärmar
 
 ## Evidens

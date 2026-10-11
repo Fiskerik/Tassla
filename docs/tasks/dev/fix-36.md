@@ -14,7 +14,7 @@ Göra det möjligt att spara en giltig påminnelsetid i Hälsa och avvisa värde
 
 ## Ändrade filer och acceptans
 
-Avsedda app-/testfiler: `src/features/health/PlannedHealthScreen.tsx`, `src/features/health/planned-health-time.ts`, `tests/planned-health-time.test.mjs`, eventuellt `tests/README.md`. Plan, kö, rapport och `docs/releases/FIX-36.md` dokumenterar status. Inga nya beroenden.
+Avsedda app-/testfiler: `src/features/health/PlannedHealthScreen.tsx`, `src/features/health/planned-health-time.ts`, `tests/planned-health-time.test.mjs`, eventuellt `tests/README.md`. Plan, kö, rapport och `docs/releases/HISTORY-2026.md#fix-36` dokumenterar status. Inga nya beroenden.
 
 Acceptans: valideraren accepterar endast 00:00–23:59 i HH:MM-format och returnerar rätt minutvärde; sparvägen behåller enabled/disabled-semantik. Lokal kontrakts- och migrationssupport för `accident`/`water`, fjärrens migrationshistorik, faktisk constraint och runtime/RLS redovisas som skilda verifieringslager utan att hävda starkare bevis än vad som faktiskt körts.
 
@@ -26,4 +26,4 @@ Implementer genomförde parser-/teständringen. Oberoende QA och Reviewer **PASS
 
 ## Release-logg
 
-[FIX-36](../../releases/FIX-36.md)
+[FIX-36](../../releases/HISTORY-2026.md#fix-36)

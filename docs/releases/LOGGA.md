@@ -2,7 +2,7 @@
 
 Datum: 2026-10-08
 Paket-ID: LOGGA
-Status: LOGGA-QUICK kod-/beteendecheckpoint v6; blockerad på renderad visuell evidens
+Status: LOGGA-EDIT DONE på ägaraccepterad avgränsning; LOGGA-QUICK fortsatt blocked på egen visuell evidens
 Jämförelsebas: `37bf93f` (`feat: complete shared log UI component library`)
 Leveranscommit: `230ad34` (`feat: redesign quick log experience`), lokal och inte pushad
 TestFlight-version/build: okänd
@@ -26,8 +26,18 @@ Quick-add behåller samma mutation/UUID för retry, visar `Sparar…` och single
 
 Riktade loggtester PASS (log-model och log-screen-policy), inklusive körbara beslut för dubbeltryck/override, single-flight, lifetime, tokenägarbyte/stale finish, utfallsmappning och samma insert-operation/UUID vid readback. Typecheck och edge-function typecheck PASS. Ändrade UI-/flödesfiler ESLint PASS (19 befintliga varningar i den stora workspace-filen); full lint PASS med 214 varningar. `EXPO_NO_TELEMETRY=1 pnpm bundle:ios` PASS och `git diff 37bf93f --check` PASS. `pnpm check` BLOCKED enbart av två befintliga orelaterade testfilfel: oförändrade `notifications.test.mjs` får tom JSON-utdata i sitt spawnade Stockholm-tidszonstest (hela testfilen misslyckas även direkt; det exakta isolerade child-kommandot producerar däremot rätt JSON), och oförändrade `ui-library-policy.test.mjs` förväntar `medical-outline` medan `37bf93f` definierar `bug-outline` i IconChip. Renderad visuell evidens saknas; rendering och visuell QA är NOT TESTABLE. Ingen appkod är pushad eller tillgänglig i TestFlight.
 
-## Nästa sprint/paket
+## Tidigare nästa-steg — ersatt av ägarbeskedet nedan
 
 1. Öppna `pnpm start:preview` i Expo Go eller annan native previewmiljö och fånga den specificerade matrisen för liten/stor telefon och stor text.
 2. Låt en annan roll göra visuell QA mot målbilden och `docs/design-rules.md` avsnitt 14.
-3. LOGGA-EDIT startar först efter att QUICK:s visuella grind är godkänd.
+3. Dåvarande plan krävde att LOGGA-EDIT inväntade QUICK:s visuella grind. Detta beroende har senare undantagits av Erik för EDIT:s progression; LOGGA-QUICK behåller sin egen `blocked`-status tills dess visuella evidens är klar.
+
+## Ägarens rapport efter merge till main — 2026-10-10
+
+Erik rapporterar att LOGGA-EDIT är färdig och att Olycka nu sparas; han rapporterar också telefon-QA av hela senaste `main`-pushen/mergen. Build/version, körda scenarier och visuella underlag saknas.
+
+Erik har uttryckligen godkänt att LOGGA-EDIT stängs på det befintliga beteendet i senaste main. Det inkluderar känd avvikelse från UX-spec v6: radering görs från edit-arket med destructive knapp och native alert, i stället för delete-only ActionMenu och delad Dialog. Den fulla screenshotmatrisen levereras inte som underlag för detta ägarbeslut. Dessa punkter redovisas som accepterade av ägaren, inte som visuell QA eller kodmässig överensstämmelse. Separata QA- och Reviewer-checkpointar finns nedan.
+
+### Closeout — LOGGA-EDIT
+
+Queue checkpoint: **DONE** efter Architect APPROVE / Critic PROCEED för owner exception, QA PASS och Reviewer PASS mot nuvarande main-kod. Verifierat i workspace: `pnpm check` PASS (395 tester pass, 1 skip, 0 fail; lint 0 errors, 35 warnings), `EXPO_NO_TELEMETRY=1 pnpm bundle:ios` PASS, `git diff --check` PASS och `python tools/dev_flow.py validate` PASS. QA/Reviewer bekräftade edit/save, failed/unsure retention/retry och confirmed delete/local reconciliation. Olycka live save och telefonprov är fortsatt ägarrapporterat; native alert/screenshotmatris är accepterat undantag, inte visual PASS. LOGGA-QUICK förblir blocked och är inte DONE; Erik accepterade dess telefonrapport endast som LOGGA-EDIT:s progression prerequisite.

@@ -2,7 +2,7 @@
 
 Datum: 2026-10-10
 Planversion: v4 – Architect APPROVE, Critic PROCEED
-Status: implementation lokal; code review PASS; QA blockerad av ej tillgänglig native rendering och full check
+Status: DONE för accepterad scope; code QA/Reviewer PASS; pnpm check PASS; native evidens stängd med ägarundantag
 UX-spec: [MOTION-01 UX-spec](../../plans/MOTION-01-ux-spec.md)
 Scopebeslut: [beslut 0004](../../decisions/0004-motion-package.md)
 
@@ -10,9 +10,9 @@ Scopebeslut: [beslut 0004](../../decisions/0004-motion-package.md)
 
 Ge lugn, begriplig återkoppling när sparad feedback, framsteg eller ett avklarat checklistesteg ändras. Eriks uttryckliga MOTION-mandat 2026-10-10 är källan för scope utanför den ursprungliga MVP:n. Rörelse bär aldrig ensam betydelsen och positiv rörelse börjar bara vid bekräftat sparat tillstånd.
 
-## Ägarens telefonrapport om tidigare taskar
+## Tidigare rapport om telefon-QA av andra taskar — historik
 
-Erik rapporterar 2026-10-10 att DS-CODE-01 och LOGGA-QUICK redan har verifierats på telefon och fungerar bra. Registrerat som **användarrapporterat**; build/version och skärmdumpar har inte bifogats. Tidigare tasks behåller sina befintliga statusar tills deras krav på renderad evidens och oberoende QA/review är hanterade. Erik har valt alternativ A och bett arbetet fortsätta utifrån telefonrapporten.
+Erik rapporterade 2026-10-10 att DS-CODE-01 och LOGGA-QUICK redan hade verifierats på telefon. Den rapporten gällde inte då MOTION-01. Senare rapporterade Erik telefon-QA av hela senaste main-merge, inklusive MOTION-01, och godkände uttryckligen stängning trots saknade artefakter; se avsnittet “Ägarens telefonrapport och avslutsmandat” nedan.
 
 ## Ändringsyta
 
@@ -26,7 +26,7 @@ Erik rapporterar 2026-10-10 att DS-CODE-01 och LOGGA-QUICK redan har verifierats
 - Berörda toast-platser där utgång annars skulle klippas: `src/features/puppy-log/LogScreen.tsx`, `src/features/training/PublishedTrainingScreen.tsx`, `src/features/health/HealthHistoryScreen.tsx`, `src/features/health/PlannedHealthScreen.tsx`, `src/features/health/WeightScreen.tsx`, `src/features/notifications/NotificationSettingsScreen.tsx`, `src/features/onboarding/EditDogProfileScreen.tsx`, `src/features/passport/PassportScreen.tsx`
 - `tests/motion-policy.test.mjs`
 - `docs/design-rules.md`, `docs/dev/ui-and-code-standards.md`
-- `docs/plans/MOTION-01-ux-spec.md`, `docs/tasks/dev/MOTION-01.md`, `docs/tasks/dev/queue.json`, `docs/releases/MOTION-01.md`, `docs/tasks/dev/rapport.md`
+- `docs/plans/MOTION-01-ux-spec.md`, `docs/tasks/dev/MOTION-01.md`, `docs/tasks/dev/queue.json`, `docs/releases/HISTORY-2026.md#motion-01`, `docs/tasks/dev/rapport.md`
 - QA-evidens under `docs/design/evidence/motion-01/`
 
 Ingen ny animationstillstånd eller `Animated.Value` läggs till i `ProductWorkspace`. `TrainingScreen.tsx` lämnas orörd. Ändra inte sparstatus, dubblettfönster, analytics eller datalager.
@@ -63,9 +63,9 @@ Inga nya dependencies. MOTION-01 kan börja efter Architect APPROVE och Critic-g
 - Critic, 2026-10-10: **PROCEED v3**; inga kvarvarande invändningar. De tidigare kraven på Toast-livscykel och bekräftad ChecklistItem-rörelse finns i v3.
 - v4 lägger layoutgap-kontrollen i verifieringslistan. Architect, 2026-10-10: **APPROVE v4** och länkad UX-spec; inga aktiva skrivägare kolliderar, men överlappande kötaskar ska hållas inaktiva. Critic, 2026-10-10: **PROCEED v4**, inga kvarvarande invändningar.
 
-## Nästa steg
+## Ägarens telefonrapport och avslutsmandat
 
-Implementationen följer endast MOTION-01. DS-CODE-01, LOGGA-QUICK och LOGGA-EDIT hölls inaktiva under kodändringen. Eriks tidigare telefonrapport för DS-CODE-01 och LOGGA-QUICK förblir användarrapporterad, utan ändring av deras öppna screenshot-/QA-status.
+Erik rapporterar att hela den senaste `main`-pushen/mergen har telefon-QA:ats. Eftersom MOTION-01 ingår i den merge registreras detta som ägarrapporterat telefonresultat för senaste main; build/version, körda scenarier och visuella artefakter saknas. Erik har uttryckligen godkänt att MOTION-01 stängs på denna telefon-QA trots dessa saknade underlag. Native/timing/a11y-punkterna nedan förblir ägarrapporterade och får inte beskrivas som oberoende QA-PASS.
 
 ### Implementationscheckpoint — 2026-10-10
 
@@ -77,8 +77,12 @@ Verifierat efter rättningar: policytest `node --experimental-strip-types --test
 
 QA blockerade först på två regressioner. Båda rättades inom MOTION-01: misslyckad loggredigering har nu en stabil fel-/osäker-toastplats i BottomSheet, och planerad hälsa använder åter `AccessibilityInfo.getRecommendedTimeoutMillis` med `feedbackTimeoutMillis` fallback innan toasten visas. Vikt-toasternas exit callbacks skyddas mot att en äldre post rensar nyare feedback. Toast-effektens callback/phase-läsning stabiliserades via refs och `useCallback`.
 
-Förnyad oberoende QA: statiska acceptanskriterier utan nya fynd; policytest, `git diff --check` och kövalidering PASS. QA totalt är **BLOCK/NOT TESTABLE** eftersom native rendering saknas för timing, layoutgap, VoiceOver/TalkBack, stor text och reducerad rörelse. Full `pnpm check` är inte verifierad efter EPERM.
+Förnyad oberoende QA: statiska acceptanskriterier utan nya fynd; policytest, `git diff --check` och kövalidering PASS. Den ursprungliga QA-körningen saknade native rendering för timing, layoutgap, VoiceOver/TalkBack, stor text och reducerad rörelse; dessa kriterier är då dokumenterade NOT TESTABLE. Erik rapporterar därefter telefon-QA av senaste main, utan scenariodetaljer/artefakter.
 
-Förnyad oberoende Reviewer: **Code review PASS**, inga kvarvarande kodfynd. Native/visuell QA bedöms separat som **NOT TESTABLE**. Eriks telefonrapport gäller DS-CODE-01 och LOGGA-QUICK, inte MOTION-01.
+Förnyad oberoende Reviewer vid den ursprungliga QA-checkpointen: **Code review PASS**, inga kvarvarande kodfynd. Native/visuell QA bedömdes separat som **NOT TESTABLE**. Vid det tillfället omfattade Eriks telefonrapport endast DS-CODE-01 och LOGGA-QUICK; senare har Erik rapporterat telefon-QA av hela senaste main-merge inklusive MOTION-01.
 
-Implementationen är inte visuellt godkänd och paketet är inte DONE. Nästa steg: native/telefonverifiering av MOTION-01 och körbar full `pnpm check`; därefter återuppta QA. MOTION-02 är inte startat. Se [release-loggen](../../releases/MOTION-01.md).
+Full `pnpm check` är nu PASS i workspace-checkouten: typecheck, edge typecheck, lint (35 warnings, 0 errors), 395 tester pass, 1 skipped, 0 failed. Sandboxen blockerade testets child-process första gången med EPERM; omkörningen efter att child-process fick köras passerade. `EXPO_NO_TELEMETRY=1 pnpm bundle:ios`, `git diff --check` och queue validation PASS. Oberoende QA och Reviewer gav PASS för kod/accepterad omfattning. Erik accepterade uttryckligen sin senaste-main telefon-QA som avslutsunderlag trots att build/scenarier/artefakter saknas. Native timing/accessibility/stortext/reduced-motion/layoutgap är därmed ägaraccepterade undantag, inte oberoende visuella PASS.
+
+### Closeout — 2026-10-10
+
+Queue checkpoint: **DONE**. MOTION-02:s beroende är stängt för denna ägaraccepterade scope. Ingen MOTION-02-produktkod ingår i MOTION-01.

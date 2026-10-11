@@ -18,7 +18,7 @@ test('quick log uses shared controls and keeps the approved two by two plus more
   assert.match(screen, /layout\.primary/);
   assert.match(screen, /layout\.more/);
   assert.match(screen, /label="Olycka"|LOG_EVENT_LABELS/);
-  assert.match(screen, /onLongPress=\{startLayoutEdit\}/);
+  assert.match(screen, /onLongPress=\{\(\) => \{ firstUseTip\.dismiss\(\); startLayoutEdit\(\); \}\}/);
   assert.match(screen, /accessibilityLabel="Fler loggtyper"/);
   assert.match(screen, /LayoutAnimation\.configureNext/);
   assert.doesNotMatch(screen, /<BottomSheet[\s\S]*?Fler loggtyper/);
@@ -40,15 +40,27 @@ test('quick log has truthful loading, empty, failure, mutation and confirmed und
   assert.match(workspace, /checkInsertRetryOperation\(mutation\.operation, \(id\) => fetchDogEventById\(client, dog\.id, id\)\)/);
 });
 
+test('delete snapshot replaces its source row and exits only after a token-matched saved result', () => {
+  assert.match(screen, /events\.filter\(\(event\) => event\.id !== deleteSnapshot\.event\.id\), deleteSnapshot\.event/);
+  assert.match(screen, /setDeleteSnapshot\(\{ token, event, phase: 'pending' \}\)/);
+  assert.match(screen, /if \(saved === true\)[\s\S]*?phase: 'exiting'/);
+  assert.match(screen, /if \(saved !== false\)[\s\S]*?setEditingId\(null\)/);
+  assert.match(screen, /current\?\.token === token \? null : current/);
+  assert.match(screen, /accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none"/);
+  assert.match(screen, /if \(reduceMotion\) \{ onFinished\(token\); return; \}/);
+  assert.match(screen, /handledEntryMutationKey\.current === key/);
+  assert.match(screen, /handledEntryMutationKey\.current = key/);
+});
+
 test('quick log hides sparse patterns and keeps edit/delete inside the row editor', () => {
   assert.match(screen, /summarizePottyPatterns\(events\)\.filter\(\(item\) => item\.count >= 2\)/);
-  assert.match(screen, /onPress=\{\(\) => setEditingId\(event\.id\)\}/);
+  assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); setEditingId\(event\.id\); \}\}/);
   assert.match(screen, /<Button variant="destructive" label="Radera"/);
   assert.doesNotMatch(screen, /SPARAD|ActionFeedbackModal/);
 });
 
 test('legacy row editing and deletion remain reachable from workspace and preview', () => {
-  assert.match(screen, /onPress=\{\(\) => setEditingId\(event\.id\)\}/);
+  assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); setEditingId\(event\.id\); \}\}/);
   assert.match(screen, /function LogEventEditor/);
   assert.match(screen, /onUpdate\?:/);
   assert.match(screen, /onDelete\?:/);
@@ -70,7 +82,7 @@ test('pending mutations show once on their row, success toast expires, and parti
   assert.match(screen, /onAutoDismiss=\{\(\) => setDismissedMutationKey\(successMutationKey\)\}/);
   assert.match(screen, /mutation\.mutationId/);
   assert.match(workspace, /current\.kind !== 'add' \|\| current\.id !== id/);
-  assert.match(screen, /<Toast visible=\{loadMoreError\} tone="error" message="Äldre poster kunde inte hämtas" onRetry=\{onLoadMore\}/);
+  assert.match(screen, /<Toast visible=\{loadMoreError\} tone="error" message="Äldre poster kunde inte hämtas" onRetry=\{onLoadMore \? \(\) => \{ firstUseTip\.dismiss\(\); return onLoadMore\(\); \} : undefined\}/);
   assert.match(workspace, /logLifetime\.current !== lifetime/);
   assert.match(toast, /withCancel: \{ flexDirection: 'column'/);
   assert.match(toast, /tone: 'uncertain'; onRetry: \(\) => void/);

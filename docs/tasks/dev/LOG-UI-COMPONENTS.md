@@ -1,6 +1,6 @@
 # LOG-UI-COMPONENTS – plan v1
 
-Datum: 2026-10-08  
+Datum: 2026-10-08<br>
 Status: planned → implementing under the existing approved DS-CODE-01 segment
 
 ## Användaruppgift och scope

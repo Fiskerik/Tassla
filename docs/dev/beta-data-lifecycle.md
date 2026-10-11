@@ -26,3 +26,8 @@ Denna instruktion är inte ett genomfört driftprov eller ett schemalagt jobb. F
 
 ## Krav innan runbook får användas
 Dokumentera exakt godkänt miljö-/projekt-ID, namngiven ansvarig operatör, minsta nödvändiga behörighet och autentiseringsväg. Kandidatlistan ska hanteras endast i den godkända administrativa miljön; ange åtkomst och raderingstid även för listan och granskningsloggen. Dokumentera per körning kandidatantal, verifierat utfall, avvikelser och hur misslyckade poster återupptas utan att redan lyckade raderingar upprepas. Bekräfta hur 30-dagarsfristen tillämpas på aktiva data, leverantörskopior, backuper och loggar samt eventuella granskade undantag. Dessa uppgifter saknas ännu; ingen körning godkänns genom utkastet.
+
+
+## KNOW-02 – privata checklistor, 2026-10-11
+
+Inventeringen ska även omfatta dog_checklist_progress, dog_checklist_custom_items och dog_checklist_preferences. Koppling via dog_id gör konto-/hundradering till avsedd cascade; verifiera faktiskt tvåägarskydd och cascade i syntetisk utvecklingsdatabas innan liveaktivering. Egna texter max160 Unicode-tecken är personuppgifter kopplade till konto. Rättighetsförfrågningar/export behöver ta med bockar, egna texter och fasval; de ingår inte automatiskt i Tassla-pass PDF. Ändamålet är endast ägarens privata progression, ingen partnerdelning/profilering/analytics. Ingen faktisk SQL/gallrings-/exportrutin är genomförd genom detta dokument. Katalognycklar innehåller inte personuppgifter.

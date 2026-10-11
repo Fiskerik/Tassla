@@ -2,8 +2,8 @@
 
 Datum: 2026-10-08
 Task-ID: LOGGA
-Version: 6
-Status: Kod-/beteendecheckpoint v6 – Architect APPROVE, oberoende QA PASS och Reviewer PASS; visuell QA NOT TESTABLE
+Version: 7
+Status: v7 dokumenterar ägarundantag för LOGGA-EDIT efter kod-/beteendecheckpoint v6; Architect/Critic-granskning av undantaget pågår
 Mandat: Eriks uppladdade brief 2026-10-08, inklusive ägarbeslutet att Promenad och Vaken nås via en femte ruta `Fler`, och genomförandemandatet i `AGENTS.md`. Erik bekräftade därefter uttryckligen att `37bf93f feat: complete shared log UI component library` är senaste baseline och ska återanvändas för att undvika dubbelarbete. Dessa beslut sparas här som hållbar scopesource.
 Referenser: `AGENTS.md`, `docs/design-rules.md`, `.agents/skills/tassla-consumer-ux/SKILL.md`, `vision_rev01.jpg` skärm 2 och `src/theme/tokens.ts`. Ingen riktig Figma-URL angavs; Figma är därför inte använd som evidens.
 
@@ -165,8 +165,8 @@ Erik har efter att `37bf93f` publicerades uttryckligen instruerat att LOGGA ska 
 
 ## Delar och acceptans
 
-1. **LOGGA-QUICK, fungerande vertikal slice:** nödvändiga komponentprop-delta, AppBar, laddar/tom/fel/normal, 2×2 + Fler, mönsterkort, kompakt lista, global single-flight, add pending/saved/failed/unsure, retry med samma ID, dubblettskydd och fungerande Ångra efter bekräftad insert. Före DONE renderas liten/stor telefon, stor text, laddar/tom/fel/normal, Fler-sheet, pending, saved/undo, failed, unsure och dubblettdialog; annan roll fyller checklistorna. Saknad rendering får dokumenteras som kodcheckpoint/NOT TESTABLE men QUICK går då inte till DONE och EDIT startar inte. Slice avslutas annars med cleanup, riktade tester, `pnpm check`, `pnpm bundle:ios`, `git diff --check`, QA/Reviewer och commit innan nästa slice.
-2. **LOGGA-EDIT, fungerande vertikal slice:** edit-sheet med bibehållet typval/inmatning, update/delete/retry, delete-only ActionMenu, destructive dialog, lokal försoning av lista/mönster samt hela visuella evidensmatrisen. Slice avslutas med samma kontroller, oberoende QA/Reviewer och commit.
+1. **LOGGA-QUICK, fungerande vertikal slice:** nödvändiga komponentprop-delta, AppBar, laddar/tom/fel/normal, 2×2 + Fler, mönsterkort, kompakt lista, global single-flight, add pending/saved/failed/unsure, retry med samma ID, dubblettskydd och fungerande Ångra efter bekräftad insert. Före DONE renderas liten/stor telefon, stor text, laddar/tom/fel/normal, Fler-sheet, pending, saved/undo, failed, unsure och dubblettdialog; annan roll fyller checklistorna. Saknad rendering betyder QUICK stannar NOT TESTABLE/blocked och får inte tillgodoräknas som visuell PASS. Eriks senare ägarundantag för LOGGA-EDIT beskrivs nedan och ändrar inte QUICK:s grind.
+2. **LOGGA-EDIT, fungerande vertikal slice (ursprungligt mål):** edit-sheet med bibehållet typval/inmatning, update/delete/retry, delete-only ActionMenu, destructive dialog, lokal försoning av lista/mönster samt hela visuella evidensmatrisen. Eriks daterade ägarundantag nedan accepterar nuvarande delete-presentation och saknad screenshotmatris som kända avvikelser. Oberoende QA/Reviewer av accepterad omfattning kvarstår.
 
 Tester ska minst täcka lokal datumgruppering, nyaste först, dold mönstersammanfattning vid färre än två poster, frånvaro av `SPARAD`, Vaken/Promenad via Fler och rättning av kategori. Dubblettmatrisen omfattar exakt tvåminutersgräns, strax utanför, annan kategori, framtida tidsstämpel, avbryt och `Lägg till ändå`; pending dubbeltryck ger noll extra writes och override ger exakt ett nytt UUID/write. Mutationsmatrisen omfattar saved/failed/unsure och reload-fel för add/update/delete/undo, samma insert-ID vid retry, failed → retry med samma intent, failed → uttryckligt Avbryt, ingen undo före confirmed, stale svar efter hund/session/unmount, global spärr för andra writes tills retry/cancel löser failed samt bevarad input/sheet vid failed/unsure. Slutgranskning fyller alla tillämpliga punkter i `docs/design-rules.md` avsnitt 14 och behavior-checklistan i UX-skillen.
 
@@ -177,8 +177,12 @@ Tester ska minst täcka lokal datumgruppering, nyaste först, dold mönstersamma
 - `Ångra` är möjlig för en bekräftad ny post genom befintlig delete-operation. Den visas inte för pending/failed/unsure eller för uppdatering/radering.
 - Product har granskat copyförslagen och Critic har lämnat GO; Architect har godkänt plan v4 före korrigeringsimplementationen.
 - Expo-rendering och skärmdumpstagning är ännu inte verifierade. Fram till verklig rendering är visuell kvalitet NOT TESTABLE.
-- Baseline är `37bf93f feat: complete shared log UI component library`, uttryckligen bekräftad av Erik 2026-10-08 för att undvika dubbelarbete. Dess kod återanvänds som källa; DS-CODE-01:s saknade app-rendering ärvs inte som visuellt PASS. LOGGA får checkpointas med NOT TESTABLE men får inte markeras DONE eller visuellt godkänd utan skärmdumpar av liten/stor telefon och stor text för normal/tom/fel/laddar, Fler-sheet, edit-sheet, dubblettdialog, raderingsdialog samt success/error/unsure/undo. `cb427e7` finns inte i hämtade remote-refar eller objekthistoriken; inget antas om den.
+- Baseline är `37bf93f feat: complete shared log UI component library`, uttryckligen bekräftad av Erik 2026-10-08 för att undvika dubbelarbete. Dess kod återanvänds som källa; DS-CODE-01:s saknade app-rendering ärvs inte som visuellt PASS. QUICK får checkpointas med NOT TESTABLE men får inte markeras DONE eller visuellt godkänd utan skärmdumpar av sin matris. EDIT kan stängas endast genom det daterade, uttryckliga ägarundantaget nedan; det undantaget är inte en visuell PASS. `cb427e7` finns inte i hämtade remote-refar eller objekthistoriken; inget antas om den.
 - QUICK får inte skapa en mellanliggande funktionsregression: befintliga update/delete-callbacks och möjligheten att öppna en post för rättning/radering ska bevaras tills LOGGA-EDIT ersätter presentationen. QUICK får inte tyst ta bort typändring, notering, datum/tid eller radering. Korrigeringsgranskningen ska också säkerställa att mutationsvyn innehåller `kind`, att bara add får en separat pending-rad, att pending inte dupliceras i toast, att bekräftad toast tidsbegränsas, att tid verkligen renderas före kategori-chip och att partial load-more-fel får synlig retry.
+
+### Ägarundantag 2026-10-10 — LOGGA-EDIT
+
+Erik har uttryckligen godkänt att LOGGA-EDIT stängs på nuvarande implementation i senaste `main` och att hans rapporterade telefon-QA av LOGGA-QUICK räcker för EDIT:s progression. Det avgränsade undantaget omfattar (a) den befintliga delete-knappen i edit-sheet + native `Alert` i stället för delete-only `ActionMenu` + delad `Dialog`, (b) att full EDIT screenshotmatris inte bifogas och (c) att LOGGA-QUICK förblir `blocked` för sin egen visuella evidens trots att dess rapporterade phone-QA accepteras enbart som EDIT-föregångare. Detta är produktägarens acceptans av de faktiska beteendena, inte visuell QA-PASS, ActionMenu/Dialog-konformitet eller live-databasverifiering. Oberoende QA och Reviewer ska fortfarande granska nuvarande kod mot den accepterade omfattningen innan LOGGA-EDIT sätts DONE.
 
 ## Korrigeringsplan v5 efter QA/Reviewer
 

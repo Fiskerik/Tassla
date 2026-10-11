@@ -1,9 +1,21 @@
 # Kunskap
 
-`KnowledgeScreen.tsx` visar enbart publicerat ålders- och rasrelevant innehåll som arbetsytan redan hämtat från Supabase. Hem och Kunskap delar samma version-ID, innehåll och källista; navigation hämtar eller väljer inte om data. Loading, fel med retry och publicerat tomläge är separata. `guide-body.ts` tolkar endast `##`/`###`-rubriker, enkla `- `-listor och stycken till native textblock; rå HTML renderas aldrig. Hem använder en kort vanlig textinledning från samma body. Källor som är syntaktiskt giltiga HTTPS-URL:er öppnas endast efter knapptryck via React Native Linking; öppningsfel visas i vyn. Repositoryreferenser och andra strängar visas som text och länkas inte. `source-links.ts` avvisar annat än giltig HTTPS utan användaruppgifter. Lokal preview skickar inget nätverksanrop och visar ingen artikeltext.
+`KnowledgeScreen.tsx` har fyra flikar: För dig, Artiklar, Checklistor och FAQ. Publicerade guider kommer från arbetsytans ålders-/rasurval i Supabase. Hem och Kunskap delar samma version-ID, innehåll och källista. Loading, fel med retry och tomt publicerat urval skiljs åt; guideflikarnas tillstånd visas inte ovanpå checklistor/FAQ. En guide visas i en separat läsvy. `guide-body.ts` tolkar rubriker, enkla listor och stycken till native text; rå HTML renderas inte. `source-links.ts` tillåter endast syntaktiskt giltiga HTTPS-länkar utan användaruppgifter, som öppnas efter användartryck med felåterkoppling.
 
-Hälsotexter behöver granskas innan publicering. Kör `pnpm check` för typkontroll, lint och tester; innehållsurvalet kräver en konfigurerad utvecklingsmiljö med publicerade versioner.
+## Checklistor och FAQ
 
-`DraftContentPreview.tsx` är en separat granskningsvy som laddar den kanoniska draft-bundlen endast när både `__DEV__` och `EXPO_PUBLIC_TASSLA_DRAFT_PREVIEW=true` är aktiva. Den nås via det lokala `DevelopmentPreview`-flödet, aldrig via `ProductWorkspace` eller publicerat innehåll. Varje text märks `Utkast – ej granskat eller publicerat`.
+`PuppyChecklistScreen.tsx` visar översikt och detalj för sex faser, standardpunkter, egna punkter, antal/procent och framstegsindikator. Före hemkomst/första dagarna är uttryckliga kontextval; annars föreslås fas utifrån hundens ålder. Alla faser går att läsa. Översikten har Kunskaps sidhuvud; detaljen har ett eget Back-sidhuvud. `FAQScreen.tsx` visar expanderbara frågor med bläddringsbar kontext, utan nätbaserad frågetjänst.
 
-UI-RESET: `KnowledgeScreen` skiljer fotoöversikt från läsvy. För dig/Artiklar/Checklistor filtrerar befintligt publicerat innehåll; FAQ utan data införs inte. Vald versions-ID kommer från Hem eller artikeltryck. Lästid uppskattas med 200 ord/minut. Rubriker, listor och källänkar bevaras i läsvyn. Lokala dekorbilder är inte hundens profilfoto.
+`checklist-content.ts` har versionsmärkta katalognycklar. `checklist-model.ts` validerar kontext och egna titlar om högst160 Unicode-tecken. `checklist-data.ts` använder ägarens Supabase-klient för bockar, egna punkter och kontext per hund. Översikten hämtar inga fritexttitlar. Nya tabeller och smala ägarbehörigheter finns i `202610110002_puppy_checklists.sql`; migreringen och den syntetiska tvåägarproben måste verifieras i rätt utvecklingsdatabas före liveanvändning.
+
+Ingen optimistisk grön sparstatus används. UUID, exakta återläsningar och villkorade ändringar skyddar mot dubletter/konflikter. `checklist-intent.ts` klassificerar saved/retry/conflict; okänt resultat kräver Kontrollera. Vid sidbyte fryses avsikt/form till ett flyktigt ref i ProductWorkspace, avgränsat till session/kontogeneration/hund. Scopebyte rensar gamla avsikter. Detta minne är inte permanent lokal lagring eller en offlinesynkkö.
+
+## Tillfälligt granskningsinnehåll
+
+`review-content.ts` innehåller syntetiska FAQ och tre träningsprogram med motsvarande guider. Endast `EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=true` visar detta i utvecklings-/TestFlight-byggen, oberoende av `__DEV__`. Berörda vyer märks Tillfälligt exempel – innehållet är inte sakgranskat. False döljer katalogen och utför inga checklistläsningar. Hem använder samma checklist-/FAQ-destinations-ID:n som Kunskap. Verkliga innehållsfel ersätts inte med falsk lyckad läsning. Träningsutkast har separat lokal progression; se Tränings README och `docs/dev/review-content-builds.md`.
+
+`DraftContentPreview.tsx` är fortfarande en separat kanonisk draft-granskningsvy som kräver både `__DEV__` och `EXPO_PUBLIC_TASSLA_DRAFT_PREVIEW=true`. Den ersätter inte detta signerade granskningsläge. Dekorativa innehållsbilder är inte hundens profilfoto. Råden kräver mänsklig sakgranskning inför publik release.
+
+## Verifiering
+
+Kör `pnpm check` för typkontroll, lint och API-/intent-/innehållstester. `tools/visual-check/know02-app.tsx` och `verify-know02.py` provar de aktuella skärmarna med syntetisk adapter, CRUD, okända resultat, remount/scope och stor text; evidens och begränsningar finns i `docs/design/KNOW-02/checklista.md`. Native presentation, VoiceOver/riktig Dynamic Type samt verklig SQL/RLS är separata verifieringar.

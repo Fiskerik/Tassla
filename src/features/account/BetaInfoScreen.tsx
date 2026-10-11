@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { MessageCard, PageHeading, QuietButton } from '../../components/AppPrimitives';
+import { MessageCard } from '../../components/AppPrimitives';
+import { AppBar } from '../../components/ui';
 import { tokens } from '../../theme/tokens';
 
 export function BetaInfoScreen({ onBack }: { onBack: () => void }) {
@@ -15,10 +16,10 @@ export function BetaInfoScreen({ onBack }: { onBack: () => void }) {
     }
   }
   return <View>
-    <QuietButton title="Tillbaka till konto" onPress={onBack} />
+    <AppBar mode="Back" title="Information" actionLabel="Tillbaka till Konto" onAction={onBack} />
     <View style={styles.hero}>
       <Ionicons name="information-circle-outline" size={tokens.size.iconMd} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-      <PageHeading title="Information om betan" description="Tassla hjälper dig samla uppgifter om hundens vardag." />
+      <Text style={styles.intro}>Tassla hjälper dig samla uppgifter om hundens vardag.</Text>
     </View>
     <MessageCard>Du väljer själv att spara hundprofil, vardagslogg, vikt, utförda vaccinationer och veterinärbesök, planerade vårdbesök och träningssteg. Lokala påminnelser är frivilliga och av från början. Tassla-passet skapas bara när du väljer att exportera det.</MessageCard>
     <MessageCard>Det här är betainformation, inte en fullständig publicerad integritetspolicy. Uppgifter om leverantörer och övrig driftinformation behöver färdigställas innan betan öppnas för egna konton och sparade uppgifter.</MessageCard>
@@ -37,6 +38,7 @@ export function BetaInfoScreen({ onBack }: { onBack: () => void }) {
 }
 
 const styles = StyleSheet.create({
+  intro: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   hero: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.selectedSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.md },
   company: { padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, marginTop: tokens.spacing.md },
   companyName: { ...tokens.typography.label, color: tokens.colors.textPrimary },

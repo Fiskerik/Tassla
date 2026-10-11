@@ -26,7 +26,7 @@ En ny hundägare ska förstå vad som visas, vad som inte kunde sparas eller hä
 
 Skärmkopior: `src/features/home/ProductWorkspace.tsx`, `src/features/health/HealthHistoryScreen.tsx`, `src/features/onboarding/ProfileScreen.tsx`, `src/features/onboarding/EditDogProfileScreen.tsx`, `src/features/passport/PassportScreen.tsx`, `src/features/account/AccountSettingsScreen.tsx`.
 
-Dokumentation: denna plan och `docs/releases/MVP-COPY-01.md`.
+Dokumentation: denna plan och `docs/releases/HISTORY-2026.md#mvp-copy-01`.
 
 Ingen ändring av schema, tjänster, innehållskroppar, påståenden, reviewstatus, publicering, navigering eller delade komponenter. Ingen ny medicinsk/träningsvägledning.
 

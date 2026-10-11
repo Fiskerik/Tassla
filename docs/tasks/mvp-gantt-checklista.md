@@ -1,9 +1,9 @@
 # Tassla MVP – Gantt-schema och checklista
 
-**Planeringsdatum:** 2026-10-05  
-**Status:** arbetsplan; framtida datum är mål och flyttas om en grind eller mänsklig input dröjer.  
-**Scopekälla:** [`docs/mvp.md`](../mvp.md), godkänd 2026-10-04.  
-**Detaljerad uppskattning:** [`mvp-tidplan.md`](mvp-tidplan.md).  
+**Planeringsdatum:** 2026-10-05<br>
+**Status:** arbetsplan; framtida datum är mål och flyttas om en grind eller mänsklig input dröjer.<br>
+**Scopekälla:** [`docs/mvp.md`](../mvp.md), godkänd 2026-10-04.<br>
+**Detaljerad uppskattning:** [`mvp-tidplan.md`](mvp-tidplan.md).<br>
 **Uppfödarintervjuer:** [`breeder-interviews-pilot.md`](breeder-interviews-pilot.md).
 
 Planen räknar med en eller högst två aktiva deluppgifter åt gången, cirka 20–30 fokuserade agenttimmar per vecka när arbetet kan köras, mänskliga svar inom 24–48 timmar och inga nya funktioner utanför godkänd MVP. Uppskattningen är inte en garanti. Erik har uppgett att Codemagic-krediterna är slut; därför är första nya signerade iPhone-bygget en **blockerad grind** och alla beroende datum nedan är preliminära. Återstående arbete uppskattades tidigare till 122–206 agenttimmar, med cirka 7–9 veckor till pilotbar hel MVP och 12–15 veckor till första D30-beslut när arbetet kan fortgå.

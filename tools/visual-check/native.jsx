@@ -11,3 +11,6 @@ export const randomUUID=()=>crypto.randomUUID();
 export const printToFileAsync=async()=>{throw new Error('Native PDF only');};
 export const isAvailableAsync=async()=>false;
 export const shareAsync=async()=>{};
+export const getItemAsync=async()=>null;
+export const setItemAsync=async()=>{};
+export const deleteItemAsync=async()=>{};

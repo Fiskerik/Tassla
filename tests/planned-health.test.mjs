@@ -14,6 +14,8 @@ const tsResolution = registerHooks({
 const data = await import('../src/data/workspace-data.ts');
 tsResolution.deregister();
 const workspaceSource = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
+const homeScreenSource = await readFile(new URL('../src/features/home/HomeScreen.tsx', import.meta.url), 'utf8');
+const homeCarouselSource = await readFile(new URL('../src/features/home/HomeCarousel.tsx', import.meta.url), 'utf8');
 const healthScreenSource = await readFile(new URL('../src/features/health/HealthScreen.tsx', import.meta.url), 'utf8');
 
 const baseUrl = 'https://local-test.supabase.invalid';
@@ -23,9 +25,9 @@ const planId = '22222222-2222-4222-8222-222222222222';
 const today = localDate();
 const tomorrow = addDays(today, 1);
 const yesterday = addDays(today, -1);
-const plan = { id: planId, dog_id: dogId, event_type: 'vaccination', due_on: tomorrow,
+const plan = { id: planId, dog_id: dogId, event_type: 'vaccination', due_on: tomorrow, due_time: null,
   description: 'Booster', created_at: '2026-10-06T10:00:00Z', reminder_enabled: false, reminder_minutes: null };
-const operation = { id: planId, dog_id: dogId, event_type: 'vaccination', due_on: tomorrow,
+const operation = { id: planId, dog_id: dogId, event_type: 'vaccination', due_on: tomorrow, due_time: null,
   description: '  Booster  ', local_today: today, reminder_enabled: false, reminder_minutes: null };
 
 test('planned health dates use the captured local calendar day; notes trim and count Unicode code points', () => {
@@ -47,16 +49,16 @@ test('invalid planned-health input fails before a request; performed history rem
     assert.deepEqual(await data.insertPlannedHealth(client, { ...operation, event_type: 'weight' }), { status: 'failed' });
     assert.deepEqual(await data.insertPlannedHealth(client, { ...operation, description: '😀'.repeat(501) }), { status: 'failed' });
     assert.deepEqual(await data.updatePlannedHealth(client, dogId, planId,
-      { event_type: 'vaccination', due_on: tomorrow, description: 'Booster' },
-      { due_on: yesterday, description: 'Change' }, today), { status: 'failed' });
+      { event_type: 'vaccination', due_on: tomorrow, due_time: null, description: 'Booster' },
+      { due_on: yesterday, due_time: null, description: 'Change' }, today), { status: 'failed' });
     assert.equal(requests.length, 0);
   } finally { await client.auth.dispose(); }
 });
 
 test('overdue plans remain editable without changing date, but cannot be moved to another past date', async (t) => {
-  const prior = { event_type: 'vet_visit', due_on: yesterday, description: 'Original', reminder_enabled: false, reminder_minutes: null };
+  const prior = { event_type: 'vet_visit', due_on: yesterday, due_time: null, description: 'Original', reminder_enabled: false, reminder_minutes: null };
   await t.test('note-only correction preserves overdue date and filters its captured preimage', async () => {
-    const updated = { ...plan, event_type: 'vet_visit', due_on: yesterday, description: 'Corrected' };
+    const updated = { ...plan, event_type: 'vet_visit', due_on: yesterday, due_time: null, description: 'Corrected' };
     const { client, requests } = localClient(({ method, url, body }) => {
       assert.equal(method, 'PATCH');
       assert.equal(body.due_on, yesterday);
@@ -70,7 +72,7 @@ test('overdue plans remain editable without changing date, but cannot be moved t
     });
     try {
       assert.deepEqual(await data.updatePlannedHealth(client, dogId, planId, prior,
-        { due_on: yesterday, description: ' Corrected ', reminder_enabled: false, reminder_minutes: null }, today), { status: 'saved', value: updated });
+        { due_on: yesterday, due_time: null, description: ' Corrected ', reminder_enabled: false, reminder_minutes: null }, today), { status: 'saved', value: updated });
       assert.equal(requests.length, 1);
     } finally { await client.auth.dispose(); }
   });
@@ -89,7 +91,7 @@ test('planned list is dog-scoped, ascending due date then id, and never reads co
   const { client, requests } = localClient(({ method, url }) => {
     assert.equal(method, 'GET');
     assert.equal(url.pathname, '/rest/v1/dog_health_plans');
-    assert.equal(url.searchParams.get('select'), 'id,dog_id,event_type,due_on,description,created_at,reminder_enabled,reminder_minutes');
+    assert.equal(url.searchParams.get('select'), 'id,dog_id,event_type,due_on,due_time,description,created_at,reminder_enabled,reminder_minutes');
     assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
     assert.deepEqual(url.searchParams.get('order')?.split(','), ['due_on.asc', 'id.asc']);
     assert.equal(url.searchParams.get('limit'), '40');
@@ -102,12 +104,41 @@ test('planned list is dog-scoped, ascending due date then id, and never reads co
   } finally { await client.auth.dispose(); }
 });
 
+test('Postgres time values normalize to HH:mm for subsequent conditional writes', async () => {
+  const wireRecord = { ...plan, due_time: '10:30:00' };
+  const updatedWire = { ...wireRecord, description: 'Updated' };
+  const { client, requests } = localClient(({ method, url, body }) => {
+    if (method === 'GET') return jsonResponse(wireRecord);
+    if (method === 'PATCH') {
+      assert.equal(url.searchParams.get('due_time'), 'eq.10:30:00');
+      assert.equal(body.due_time, '10:30');
+      return jsonResponse(updatedWire);
+    }
+    if (method === 'DELETE') {
+      assert.equal(url.searchParams.get('due_time'), 'eq.10:30:00');
+      return jsonResponse({ id: planId });
+    }
+    throw new Error(`Unexpected ${method}`);
+  });
+  try {
+    const fetched = await data.fetchPlannedHealthById(client, dogId, planId);
+    assert.equal(fetched.due_time, '10:30');
+    const updated = await data.updatePlannedHealth(client, dogId, planId, fetched,
+      { due_on: tomorrow, due_time: '10:30', description: 'Updated', reminder_enabled: false, reminder_minutes: null }, today);
+    assert.equal(updated.status, 'saved');
+    assert.equal(updated.value.due_time, '10:30');
+    const deleted = await data.deletePlannedHealth(client, dogId, planId, updated.value);
+    assert.equal(deleted.status, 'saved');
+    assert.equal(requests.length, 3);
+  } finally { await client.auth.dispose(); }
+});
+
 test('planned reminder mutations validate and condition on the captured reminder choice', async (t) => {
   const enabled = { ...plan, reminder_enabled: true, reminder_minutes: 540 };
   await t.test('insert sends enabled choice and rejects an enabled null time', async () => {
     const { client, requests } = localClient(({ method, body }) => {
       assert.equal(method, 'POST');
-      assert.deepEqual(body, { id: planId, dog_id: dogId, event_type: 'vaccination', due_on: tomorrow,
+      assert.deepEqual(body, { id: planId, dog_id: dogId, event_type: 'vaccination', due_on: tomorrow, due_time: null,
         description: 'Booster', reminder_enabled: true, reminder_minutes: 540 });
       return jsonResponse(enabled);
     });
@@ -120,17 +151,17 @@ test('planned reminder mutations validate and condition on the captured reminder
     } finally { await client.auth.dispose(); }
   });
   await t.test('update filters old choice and writes new choice', async () => {
-    const previous = { event_type: 'vaccination', due_on: tomorrow, description: 'Booster', reminder_enabled: false, reminder_minutes: null };
+    const previous = { event_type: 'vaccination', due_on: tomorrow, due_time: null, description: 'Booster', reminder_enabled: false, reminder_minutes: null };
     const { client, requests } = localClient(({ method, url, body }) => {
       assert.equal(method, 'PATCH');
       assert.equal(url.searchParams.get('reminder_enabled'), 'eq.false');
       assert.equal(url.searchParams.get('reminder_minutes'), 'is.null');
-      assert.deepEqual(body, { due_on: tomorrow, description: 'Booster', reminder_enabled: true, reminder_minutes: 540 });
+      assert.deepEqual(body, { due_on: tomorrow, due_time: null, description: 'Booster', reminder_enabled: true, reminder_minutes: 540 });
       return jsonResponse(enabled);
     });
     try {
       assert.deepEqual(await data.updatePlannedHealth(client, dogId, planId, previous,
-        { due_on: tomorrow, description: 'Booster', reminder_enabled: true, reminder_minutes: 540 }, today),
+        { due_on: tomorrow, due_time: null, description: 'Booster', reminder_enabled: true, reminder_minutes: 540 }, today),
       { status: 'saved', value: enabled });
       assert.equal(requests.length, 1);
     } finally { await client.auth.dispose(); }
@@ -206,7 +237,7 @@ test('planned reads reject cross-dog rows and exact lookup validates id/type', a
 });
 
 test('insert sends only stable plan fields and excludes localToday and actor identity', async () => {
-  const expected = { id: planId, dog_id: dogId, event_type: 'vaccination', due_on: tomorrow, description: 'Booster', reminder_enabled: false, reminder_minutes: null };
+  const expected = { id: planId, dog_id: dogId, event_type: 'vaccination', due_on: tomorrow, due_time: null, description: 'Booster', reminder_enabled: false, reminder_minutes: null };
   const { client, requests } = localClient(({ method, url, body }) => {
     assert.equal(method, 'POST');
     assert.equal(url.pathname, '/rest/v1/dog_health_plans');
@@ -250,8 +281,8 @@ test('insert reconciles uncertain outcome by stable UUID and exact postimage', a
 });
 
 test('update is type-immutable, conditionally filters the exact date/note preimage and sends no identity fields', async () => {
-  const prior = { event_type: 'vaccination', due_on: today, description: null, reminder_enabled: false, reminder_minutes: null };
-  const updated = { ...plan, due_on: tomorrow, description: 'Updated' };
+  const prior = { event_type: 'vaccination', due_on: today, due_time: null, description: null, reminder_enabled: false, reminder_minutes: null };
+  const updated = { ...plan, due_on: tomorrow, due_time: null, description: 'Updated' };
   const { client, requests } = localClient(({ method, url, body }) => {
     assert.equal(method, 'PATCH');
     assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
@@ -259,7 +290,7 @@ test('update is type-immutable, conditionally filters the exact date/note preima
     assert.equal(url.searchParams.get('event_type'), 'eq.vaccination');
     assert.equal(url.searchParams.get('due_on'), `eq.${today}`);
     assert.equal(url.searchParams.get('description'), 'is.null');
-    assert.deepEqual(body, { due_on: tomorrow, description: 'Updated', reminder_enabled: false, reminder_minutes: null });
+    assert.deepEqual(body, { due_on: tomorrow, due_time: null, description: 'Updated', reminder_enabled: false, reminder_minutes: null });
     assert.equal(url.searchParams.get('reminder_enabled'), 'eq.false');
     assert.equal(url.searchParams.get('reminder_minutes'), 'is.null');
     for (const field of ['id', 'dog_id', 'event_type', 'created_at']) assert.equal(Object.hasOwn(body, field), false);
@@ -267,36 +298,36 @@ test('update is type-immutable, conditionally filters the exact date/note preima
   });
   try {
     assert.deepEqual(await data.updatePlannedHealth(client, dogId, planId, prior,
-      { due_on: tomorrow, description: ' Updated ', reminder_enabled: false, reminder_minutes: null }, today), { status: 'saved', value: updated });
+      { due_on: tomorrow, due_time: null, description: ' Updated ', reminder_enabled: false, reminder_minutes: null }, today), { status: 'saved', value: updated });
     assert.equal(requests.length, 1);
   } finally { await client.auth.dispose(); }
 });
 
 test('update conflict is not overwritten and outcome is reconciled with the exact current record', async (t) => {
-  const prior = { event_type: 'vaccination', due_on: today, description: 'Original', reminder_enabled: false, reminder_minutes: null };
-  const current = { ...plan, due_on: tomorrow, description: 'Concurrent edit' };
+  const prior = { event_type: 'vaccination', due_on: today, due_time: null, description: 'Original', reminder_enabled: false, reminder_minutes: null };
+  const current = { ...plan, due_on: tomorrow, due_time: null, description: 'Concurrent edit' };
   await t.test('ambiguous conflict remains unknown', async () => {
     const { client, requests } = localClient(({ method }) => method === 'PATCH'
       ? Promise.reject(new TypeError('lost response')) : jsonResponse(current));
     try {
       assert.deepEqual(await data.updatePlannedHealth(client, dogId, planId, prior,
-        { due_on: tomorrow, description: 'Mine', reminder_enabled: false, reminder_minutes: null }, today), { status: 'unknown' });
+        { due_on: tomorrow, due_time: null, description: 'Mine', reminder_enabled: false, reminder_minutes: null }, today), { status: 'unknown' });
       assert.deepEqual(requests.map(({ method }) => method), ['PATCH', 'GET']);
     } finally { await client.auth.dispose(); }
   });
   await t.test('definite rejection with unchanged row is failed', async () => {
-    const unchanged = { ...plan, due_on: today, description: 'Original' };
+    const unchanged = { ...plan, due_on: today, due_time: null, description: 'Original' };
     const { client } = localClient(({ method }) => method === 'PATCH'
       ? jsonResponse({ code: '23514', message: 'rejected' }, 400) : jsonResponse(unchanged));
     try {
       assert.deepEqual(await data.updatePlannedHealth(client, dogId, planId, prior,
-        { due_on: tomorrow, description: 'Mine', reminder_enabled: false, reminder_minutes: null }, today), { status: 'failed' });
+        { due_on: tomorrow, due_time: null, description: 'Mine', reminder_enabled: false, reminder_minutes: null }, today), { status: 'failed' });
     } finally { await client.auth.dispose(); }
   });
 });
 
 test('delete scopes dog, id, type and full preimage; ambiguity requires independent absence readback', async (t) => {
-  const prior = { event_type: 'vaccination', due_on: tomorrow, description: 'Booster', reminder_enabled: false, reminder_minutes: null };
+  const prior = { event_type: 'vaccination', due_on: tomorrow, due_time: null, description: 'Booster', reminder_enabled: false, reminder_minutes: null };
   await t.test('exact id confirms deletion', async () => {
     const { client, requests } = localClient(({ method, url }) => {
       assert.equal(method, 'DELETE');
@@ -346,6 +377,14 @@ test('planned-health migration declares isolated completed-history semantics and
   assert.match(migration, /create policy dog_health_plans_delete on public\.dog_health_plans for delete to authenticated\s+using \(private\.owns_dog\(dog_id\)\)/i);
 });
 
+test('event-time migration keeps due time optional and grants only the new time column', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/202610110001_planned_health_event_time.sql', import.meta.url), 'utf8');
+  assert.match(migration, /add column due_time time\(0\) without time zone/i);
+  assert.match(migration, /due_time is null or \(due_time < time '24:00:00' and extract\(second from due_time\) = 0\)/i);
+  assert.match(migration, /grant insert\(due_time\)[\s\S]*grant update\(due_time\)/i);
+  assert.doesNotMatch(migration, /create policy|enable row level security|grant all/i);
+});
+
 test('synthetic planned-health SQL probe contains two-owner RLS checks and always rolls back', async () => {
   const probe = await readFile(new URL('../supabase/tests/planned-health.sql', import.meta.url), 'utf8');
   assert.match(probe, /\bbegin;/i);
@@ -381,7 +420,7 @@ test('actual workspace blocks duplicate plan writes and preserves pending intent
   assert.ok(intent);
   assert.equal(intent.kind, 'insert');
   assert.deepEqual(intent.operation, { id: planId, dog_id: dogId, event_type: 'vaccination', due_on: tomorrow,
-    description: 'Booster', local_today: today, reminder_enabled: false, reminder_minutes: null });
+    due_time: null, description: 'Booster', local_today: today, reminder_enabled: false, reminder_minutes: null });
   harness.state.page = 'health';
   assert.equal(await harness.handlers.savePlannedHealth(null, 'vet_visit', tomorrow, ''), false,
     'leaving the planned-health page does not clear or replace unresolved intent');
@@ -403,6 +442,18 @@ test('actual workspace status retry replays only the exact pending plan after ab
   assert.deepEqual(harness.state.rows, [plan]);
 });
 
+test('actual workspace does not reconcile a plan with a different due_time as saved', async () => {
+  const conflicting = { ...plan, due_time: '10:30' };
+  const harness = createPlannedHealthHandlerHarness({
+    insertPlannedHealth: async () => ({ status: 'unknown' }),
+    fetchPlannedHealthById: async () => conflicting,
+  });
+  assert.equal(await harness.handlers.savePlannedHealth(null, 'vaccination', tomorrow, 'Booster', false, null, '09:00'), false);
+  await harness.handlers.retryPlannedHealth();
+  assert.deepEqual(harness.state.conflict?.current, conflicting);
+  assert.equal(harness.state.rows.length, 0, 'different event time cannot enter the confirmed saved state');
+});
+
 test('actual workspace uses exact captured preimage on update/delete and never auto-overwrites concurrent edits', async () => {
   const overdue = { ...plan, due_on: yesterday, event_type: 'vet_visit', description: null };
   const current = { ...overdue, description: 'Concurrent' };
@@ -417,7 +468,7 @@ test('actual workspace uses exact captured preimage on update/delete and never a
   assert.equal(harness.calls.update.length, 0, 'a new past date cannot be accepted for an overdue plan');
   assert.equal(await harness.handlers.savePlannedHealth(planId, 'vet_visit', yesterday, 'Corrected'), false);
   assert.deepEqual(harness.calls.update[0].slice(1), [dogId, planId, overdue,
-    { due_on: yesterday, description: 'Corrected', reminder_enabled: false, reminder_minutes: null }, today]);
+    { due_on: yesterday, due_time: null, description: 'Corrected', reminder_enabled: false, reminder_minutes: null }, today]);
   assert.equal(harness.state.pending, true);
   await harness.handlers.retryPlannedHealth();
   assert.equal(harness.calls.update.length, 1, 'status check must not overwrite a later owner edit');
@@ -444,7 +495,7 @@ test('actual workspace uses exact captured preimage on update/delete and never a
 });
 
 test('actual workspace status retry retains localToday captured with the plan intent', async () => {
-  const previous = { ...plan, due_on: today, description: 'Original' };
+  const previous = { ...plan, due_on: today, due_time: null, description: 'Original' };
   const targetDate = tomorrow;
   let dateReads = 0;
   const harness = createPlannedHealthHandlerHarness({ rows: [previous],
@@ -478,6 +529,18 @@ test('actual workspace lifetime change suppresses delayed status replay and keep
   assert.equal(harness.state.pendingMutation.current, intent);
 });
 
+test('Home and Health show planned event time separately from explicitly labeled reminder time', () => {
+  assert.match(homeScreenSource, /time=\{plan\.due_time\?\.slice\(0, 5\)\}/);
+  assert.match(homeScreenSource, /Påminnelse \$\{formatMinutes\(plan\.reminder_minutes\)\}/);
+  assert.match(healthScreenSource, /time=\{row\.due_time\?\.slice\(0, 5\)\}/);
+  assert.match(healthScreenSource, /Påminnelse \$\{formatMinutes\(row\.reminder_minutes\)\}/);
+  assert.match(workspaceSource, /normalizePlannedHealthTime\(record\.due_time\) === normalizePlannedHealthTime\(expected\.due_time\)/);
+  assert.match(homeCarouselSource, /Tid \$\{upcomingPlan\.due_time\.slice\(0, 5\)\}/);
+  assert.match(homeScreenSource, /onPress=\{onRetryHealthHistory\}/);
+  assert.match(homeScreenSource, /Tidigare hälsohändelser kunde inte visas/);
+  assert.doesNotMatch(homeScreenSource, /healthHistoryState === 'error' \? <ListRow/);
+});
+
 test('planned health is linked from the health workspace and remains a separate screen/contract', async () => {
   assert.match(healthScreenSource, /onOpenPlannedHealth/);
   assert.match(healthScreenSource, /Planera en händelse/);
@@ -505,6 +568,7 @@ function createPlannedHealthHandlerHarness({ rows = [], ...overrides } = {}) {
     plannedHealthConflict: state.conflict,
     localDate,
     isValidPlannedHealthDate: data.isValidPlannedHealthDate,
+    normalizePlannedHealthTime: data.normalizePlannedHealthTime,
     normalizePlannedHealthDescription: data.normalizePlannedHealthDescription,
     insertPlannedHealth: async (...args) => { calls.insert.push(args); return { status: 'saved', value: { ...args[1], local_today: undefined, created_at: '2026-10-06T10:00:00Z' } }; },
     updatePlannedHealth: async (...args) => { calls.update.push(args); return { status: 'saved', value: { id: args[2], dog_id: dogId, event_type: args[3].event_type, ...args[5], created_at: '2026-10-06T10:00:00Z' } }; },

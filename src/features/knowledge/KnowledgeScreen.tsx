@@ -1,14 +1,19 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Image, Linking, StyleSheet, Text, View } from 'react-native';
 import { useFonts } from 'expo-font';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { HomeContent } from '../../data/app-data';
 import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
-import { AppBar, Button, Skeleton, Tabs } from '../../components/ui';
+import { AppBar, Card, IconChip, Skeleton, Tabs } from '../../components/ui';
 import { tokens } from '../../theme/tokens';
 import { MotionPressable } from '../../components/ui/Motion';
 import { getSafeContentSourceUrl } from './source-links';
 import { getGuidePreviewText, parseGuideBody } from './guide-body';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { PuppyChecklistScreen } from './PuppyChecklistScreen';
+import type { PendingChecklistMemory } from './checklist-intent';
+import { FAQScreen } from './FAQScreen';
+import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID } from './review-content';
 
 type ContentState = 'loading' | 'ready' | 'error';
 
@@ -19,6 +24,12 @@ export function KnowledgeScreen({
   focusedContentId = null,
   onSelectContent = () => undefined,
   onRetry = () => undefined,
+  client,
+  dogId = '',
+  ageWeeks = 0,
+  sessionKey = '',
+  checklistPending = null,
+  onChecklistPendingChange = () => undefined,
 }: {
   onBack: () => void;
   items?: readonly HomeContent[];
@@ -26,14 +37,26 @@ export function KnowledgeScreen({
   focusedContentId?: string | null;
   onSelectContent?: (id: string) => void;
   onRetry?: () => void;
+  client?: SupabaseClient;
+  dogId?: string;
+  ageWeeks?: number;
+  sessionKey?: string;
+  checklistPending?: PendingChecklistMemory | null;
+  onChecklistPendingChange?: (state: PendingChecklistMemory | null) => void;
 }) {
   const [iconsLoaded] = useFonts(Ionicons.font);
   const [sourceMessage, setSourceMessage] = useState('');
   const [openedId, setOpenedId] = useState<string | null>(focusedContentId);
-  const [tab, setTab] = useState('För dig');
+  const [tab, setTab] = useState(() => focusedContentId === CHECKLIST_DESTINATION_ID ? 'Checklistor' : focusedContentId === FAQ_DESTINATION_ID ? 'FAQ' : 'För dig');
+  const [checklistDetailOpen, setChecklistDetailOpen] = useState(false);
+  const checklistInvalidate = useRef<(() => void) | null>(null);
   const selectedItem = items.find((item) => item.id === openedId) ?? null;
-  const visibleItems = items.filter((item) => tab === 'För dig' || (tab === 'Checklistor' ? item.contentType === 'checklist' : item.contentType !== 'checklist'));
+  const visibleItems = items.filter((item) => tab === 'För dig' || (tab === 'Artiklar' && item.contentType !== 'checklist' && item.contentType !== 'training_program'));
   function openArticle(id: string) { setOpenedId(id); setSourceMessage(''); onSelectContent(id); }
+  function changeTab(nextTab: string) {
+    if (tab === 'Checklistor' && nextTab !== 'Checklistor') { checklistInvalidate.current?.(); checklistInvalidate.current = null; }
+    setTab(nextTab);
+  }
 
   async function openSource(source: string) {
     const url = getSafeContentSourceUrl(source);
@@ -48,17 +71,26 @@ export function KnowledgeScreen({
 
   return (
     <View>
-      <AppBar mode="Back" title={selectedItem ? "Läsning" : "Kunskap"} onAction={selectedItem ? () => setOpenedId(null) : onBack} />
-      {!selectedItem && <Tabs items={["För dig", "Artiklar", "Checklistor"]} active={tab} onChange={setTab} />}
-      {contentState === 'loading' && <Skeleton shape="card" lines={4} />}
-      {contentState === 'error' && <>
+      {!(tab === 'Checklistor' && checklistDetailOpen) ? <AppBar mode="Back" title={selectedItem ? 'Läsning' : 'Kunskap'} actionLabel={selectedItem ? 'Tillbaka till guider' : 'Tillbaka'} onAction={selectedItem ? () => setOpenedId(null) : () => { checklistInvalidate.current?.(); onBack(); }} /> : null}
+      {!selectedItem && !(tab === 'Checklistor' && checklistDetailOpen) && <Tabs items={["För dig", "Artiklar", "Checklistor", "FAQ"]} active={tab} onChange={changeTab} />}
+      {(tab === 'För dig' || tab === 'Artiklar' || selectedItem) && contentState === 'loading' && <Skeleton shape="card" lines={4} />}
+      {(tab === 'För dig' || tab === 'Artiklar' || selectedItem) && contentState === 'error' && <>
         <MessageCard tone="error">Guiderna kunde inte hämtas. Försök igen.</MessageCard>
         <PrimaryButton title="Försök igen" onPress={onRetry} />
       </>}
-      {contentState === 'ready' && items.length === 0 && <MessageCard>
+      {(tab === 'För dig' || tab === 'Artiklar') && contentState === 'ready' && visibleItems.length === 0 && <MessageCard>
         Här kommer guider för din hund. Titta gärna in igen.
       </MessageCard>}
-      {contentState === 'ready' && items.length > 0 && <>
+      {tab === 'För dig' && !selectedItem ? <View style={styles.categoryLinks}>
+        <Card onPress={() => changeTab('Checklistor')} accessibilityLabel="Öppna Checklistor">
+          <View style={styles.categoryLink}><IconChip category="training" /><View style={styles.categoryCopy}><Text style={styles.guideTitle}>Checklistor</Text><Text style={styles.sourceText}>Gröna listor för valpens olika faser</Text></View></View>
+        </Card>
+        <Card onPress={() => changeTab('FAQ')} accessibilityLabel="Öppna Vanliga frågor">
+          <View style={styles.categoryLink}><IconChip category="sleep" /><View style={styles.categoryCopy}><Text style={styles.guideTitle}>Vanliga frågor</Text><Text style={styles.sourceText}>Svar efter var ni är just nu</Text></View></View>
+        </Card>
+      </View> : null}
+      {tab === 'FAQ' && !selectedItem ? <FAQScreen context="by_age" reviewEnabled={process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true'} /> : null}
+      {(tab === 'För dig' || tab === 'Artiklar' || selectedItem) && contentState === 'ready' && items.length > 0 && <>
         {!selectedItem && <View style={styles.guideList}>
           {visibleItems.length === 0 ? <Text style={styles.sourceText}>Inga checklistor här ännu.</Text> : null}
           {visibleItems[0] ? <MotionPressable accessibilityRole="button" accessibilityLabel={`Läs ${visibleItems[0].title}`} onPress={() => openArticle(visibleItems[0].id)} style={styles.featured}>
@@ -98,9 +130,11 @@ export function KnowledgeScreen({
             </View>;
           })}
           {sourceMessage !== '' && <MessageCard>{sourceMessage}</MessageCard>}
-          <Button variant="tertiary" label="Tillbaka till guider" accessibilityLabel="Tillbaka till guider" onPress={() => setOpenedId(null)} />
         </View>}
       </>}
+      {client && dogId ? <View style={{ display: tab === 'Checklistor' ? 'flex' : 'none' }}>
+        <PuppyChecklistScreen key={`${sessionKey}:${dogId}`} client={client} dogId={dogId} ageWeeks={ageWeeks ?? 0} active={tab === 'Checklistor'} pendingState={checklistPending} onPendingStateChange={onChecklistPendingChange} onDetailChange={setChecklistDetailOpen} onBack={() => changeTab('För dig')} registerInvalidate={(invalidate) => { checklistInvalidate.current = invalidate; }} />
+      </View> : null}
     </View>
   );
 }
@@ -108,6 +142,9 @@ export function KnowledgeScreen({
 function readingMinutes(body: string) { return Math.max(1, Math.ceil(body.split(/\s+/).length / 200)); }
 
 const styles = StyleSheet.create({
+  categoryLinks: { gap: tokens.spacing.sm, marginBottom: tokens.spacing.md },
+  categoryLink: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md },
+  categoryCopy: { flex: 1, minWidth: 0, padding: tokens.spacing.md, gap: tokens.spacing.sm },
   featured: { backgroundColor: tokens.colors.surface, borderRadius: tokens.radius.md, overflow: 'hidden' },
   featuredImage: { width: '100%', height: tokens.size.heroHeight },
   cardCopy: { padding: tokens.spacing.md, gap: tokens.spacing.sm },

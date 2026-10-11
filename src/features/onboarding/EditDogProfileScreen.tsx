@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { Image, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { DatePickerField, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { DatePickerField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { Button } from '../../components/ui';
+import { AppBar } from '../../components/ui';
 import { Toast } from '../../components/ui/Toast';
 import {
   fetchBreeds,
@@ -135,10 +136,10 @@ export function EditDogProfileScreen({
   const showStatusMessage = Boolean(statusMessage) && (statusError || pending || busy);
 
   return <View>
-    <QuietButton title="Tillbaka till Mer" disabled={busy} onPress={onBack} />
+    <AppBar mode="Back" title="Hundprofil" actionLabel="Tillbaka till Mer" disabled={busy} onAction={onBack} />
     <View style={styles.heroCard}>
       <View style={styles.heroCopy}>
-        <PageHeading title="Hundprofil" description="Håll namn, ras och födelsedatum uppdaterade för innehåll som passar er." />
+        <Text style={styles.intro}>Håll namn, ras och födelsedatum uppdaterade för innehåll som passar er.</Text>
       </View>
       <Image source={require('../../../assets/images/dog-resting.png')} style={styles.heroImage}
         accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
@@ -215,6 +216,7 @@ export function EditDogProfileScreen({
 }
 
 const styles = StyleSheet.create({
+  intro: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   heroCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.selectedSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   heroCopy: { flex: 1 },
   heroImage: { width: tokens.size.chipLg + tokens.spacing.md, height: tokens.size.chipLg + tokens.spacing.md, borderRadius: tokens.radius.full },

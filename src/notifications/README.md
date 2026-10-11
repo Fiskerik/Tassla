@@ -4,4 +4,6 @@
 
 `notification-service.ts` använder endast Expo Notifications lokala schemaläggnings-, avboknings- och behörighets-API:er. Den jämför stabila Tassla-ID:n med den faktiska iOS UTC-kalender- eller Android datum-triggern innan den behåller en notis. Endast egna whitelisted payloads kan avbokas. Kallback från en avisering öppnar endast en aktuell hunds träningsvy eller en serverbekräftad plan.
 
+`notification-storage.ts` håller också status för MOTION-03:s första Logg-tips under en SecureStore-nyckel per kontoägare och skärm-ID. Statusen styr endast om tipset visas. Läs-/skrivfel sätter en volatil minnesspärr tills appprocessen startas om; status raderas efter bekräftad kontoradering genom ProductWorkspace:s befintliga lokala cleanup. Ingen serverpost eller analytics används.
+
 Urvalet tar högst 40 tidigaste framtida planer plus en frivillig nästa träningspåminnelse. Ej representerbar DST-tid, passerad tid, enhetsbehörighet, fel och osäker sparstatus visas skilt åt. Generisk låsskärmstext innehåller inte hundnamn eller anteckning. Att en notis är schemalagd betyder inte att enheten faktiskt visar eller levererar den. Faktisk nativeleverans har inte verifierats här.

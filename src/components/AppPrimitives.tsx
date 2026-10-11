@@ -210,36 +210,44 @@ export function TimePickerField({ label, value, onChangeText, disabled = false }
   disabled?: boolean;
 }) {
   const [visible, setVisible] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const reducedMotion = useReducedMotion();
+  const validDraft = draft === '' || /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(draft);
   const times = Array.from({ length: 96 }, (_, index) => `${String(Math.floor(index / 4)).padStart(2, '0')}:${String((index % 4) * 15).padStart(2, '0')}`);
   return <View style={styles.datePickerField}>
     <Text style={styles.fieldLabel}>{label}</Text>
     <View style={styles.datePickerRow}><TextInput accessibilityLabel={`${label}, timmar och minuter`} editable={!disabled} keyboardType="numbers-and-punctuation" maxLength={5}
       onChangeText={onChangeText} placeholder="09:00" placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.datePickerInput} value={value} />
-      <Pressable accessibilityRole="button" accessibilityLabel={`Välj ${label.toLowerCase()} från tider`} disabled={disabled} onPress={() => setVisible(true)} style={styles.pickerButton}><Text style={styles.pickerButtonText}>Välj tid</Text></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Välj ${label.toLowerCase()} från tider`} disabled={disabled} onPress={() => { setDraft(value); setVisible(true); }} style={styles.pickerButton}><Text style={styles.pickerButtonText}>Välj tid</Text></Pressable>
     </View>
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={() => setVisible(false)} accessibilityViewIsModal>
+    <Modal visible={visible} transparent animationType={reducedMotion ? 'none' : 'slide'} onRequestClose={() => setVisible(false)} accessibilityViewIsModal>
       <View style={styles.timeModalBackdrop}>
         <KeyboardAvoidingView style={styles.timeModalKeyboard} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={styles.timeModalCard}>
             <View style={styles.timeModalHandle} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
             <View style={styles.timeModalHeader}>
               <Text style={styles.timeModalTitle} accessibilityRole="header">{label}</Text>
-              <Pressable accessibilityRole="button" accessibilityLabel="Stäng tider" onPress={() => setVisible(false)} style={styles.timeModalClose}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Avbryt tid" onPress={() => setVisible(false)} style={styles.timeModalClose}>
                 <Ionicons name="close" size={tokens.size.iconMd} color={tokens.colors.textPrimary} />
               </Pressable>
             </View>
-            <Text style={styles.timeModalCaption}>Vald tid</Text>
+            <Text style={styles.timeModalCaption}>Välj en tid eller skriv HH:mm</Text>
             <TextInput accessibilityLabel="Manuell tid, timmar och minuter" keyboardType="numbers-and-punctuation" maxLength={5}
-              onChangeText={onChangeText} placeholder="HH:MM" placeholderTextColor={tokens.colors.textSecondary}
-              returnKeyType="done" style={styles.timeModalInput} value={value} />
+              onChangeText={setDraft} placeholder="HH:MM" placeholderTextColor={tokens.colors.textSecondary}
+              returnKeyType="done" style={styles.timeModalInput} value={draft} />
             <Text style={styles.timeModalCaption}>Eller välj en tid</Text>
             <ScrollView style={styles.timeModalList} keyboardShouldPersistTaps="handled">
               {times.map((time) => <Pressable key={time} accessibilityRole="button" accessibilityLabel={`Välj ${time}`}
-                accessibilityState={{ selected: value === time }} onPress={() => { onChangeText(time); setVisible(false); }}
-                style={({ pressed }) => [styles.timeOption, value === time && styles.timeOptionSelected, pressed && styles.pressed]}>
-                <Text style={[styles.timeOptionText, value === time && styles.timeOptionTextSelected]}>{time}</Text>
+                accessibilityState={{ selected: draft === time }} onPress={() => setDraft(time)}
+                style={({ pressed }) => [styles.timeOption, draft === time && styles.timeOptionSelected, pressed && styles.pressed]}>
+                <Text style={[styles.timeOptionText, draft === time && styles.timeOptionTextSelected]}>{time}</Text>
               </Pressable>)}
             </ScrollView>
+            <Button label="Bekräfta tid" accessibilityLabel="Bekräfta tid" disabled={!validDraft} onPress={() => {
+              Keyboard.dismiss();
+              onChangeText(draft);
+              setVisible(false);
+            }} />
           </View>
         </KeyboardAvoidingView>
       </View>

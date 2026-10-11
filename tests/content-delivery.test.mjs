@@ -128,9 +128,9 @@ test('actual Knowledge source handler opens only user-requested HTTPS and report
 });
 
 test('actual screen states separate loading, error with retry, and ready-empty', () => {
-  assert.match(knowledgeSource, /contentState === 'loading'[\s\S]*?<Skeleton/);
-  assert.match(knowledgeSource, /contentState === 'error'[\s\S]*?<PrimaryButton title="Försök igen" onPress=\{onRetry\}/);
-  assert.match(knowledgeSource, /contentState === 'ready' && items\.length === 0/);
+  assert.match(knowledgeSource, /contentState === 'loading' && <Skeleton/);
+  assert.match(knowledgeSource, /contentState === 'error' && <>[\s\S]*?<PrimaryButton title="Försök igen" onPress=\{onRetry\}/);
+  assert.match(knowledgeSource, /contentState === 'ready' && visibleItems\.length === 0/);
 });
 
 test('guide-body helper renders supported headings and lists as plain text and produces a compact plain preview', () => {
@@ -200,7 +200,7 @@ function jsonResponse(value, status = 200) {
 }
 
 function evaluateActualGuideFilter(content) {
-  const expression = workspaceSource.match(/const visibleGuideContent = ([^;]+);/)?.[1];
+  const expression = workspaceSource.match(/const publishedGuides = ([^;]+);/)?.[1];
   assert.ok(expression, 'expected actual workspace to exclude training programs from guides');
   return new Function('visibleContent', `return ${expression};`)(content);
 }

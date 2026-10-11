@@ -1,44 +1,75 @@
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { AppBar, BottomSheet, Button, HeroCard, ListRow, Progress, SectionHeader, Tabs, Toast } from '../../components/ui';
 import type { PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
+import { completeReviewTrainingStep, completeTrainingStepForMode, isReviewTrainingProgram, resetReviewTrainingProgram } from './review-training-state';
 import { tokens } from '../../theme/tokens';
 
-export function PublishedTrainingScreen({ programs, paused, busyStepKey, error, onCompleteStep, onContinue, onResetProgram, onRetry }: {
+export function PublishedTrainingScreen({ programs, paused, busyStepKey, error, onCompleteStep, onContinue, onResetProgram, onRetry, reviewMode = false }: {
   programs: readonly PublishedTrainingProgram[]; paused: readonly PausedTrainingProgress[]; busyStepKey: string | null; error: string;
-  onCompleteStep: (program: PublishedTrainingProgram, stepId: string) => Promise<boolean>; onContinue: () => void;
+  reviewMode?: boolean;
+  onCompleteStep: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>; onContinue: () => void;
   onResetProgram: (program: PublishedTrainingProgram) => void; onRetry: () => void;
 }) {
   const [tab, setTab] = useState('Valpprogram');
   const [programId, setProgramId] = useState<string | null>(null);
   const [selection, setSelection] = useState<{ programId: string; stepId: string } | null>(null);
   const [saved, setSaved] = useState(false);
+  const [reviewCompleted, setReviewCompleted] = useState<Record<string, string[]>>({});
+  const [animateCompleteTarget, setAnimateCompleteTarget] = useState<{ key: string; programId: string; stepId: string } | null>(null);
+  const animationSequence = useRef(0);
   const pending = useRef(false);
-  const active = programs.find((program) => program.id === programId) ?? programs[0];
-  const selectedProgram = programs.find((program) => program.id === selection?.programId);
+  const mounted = useRef(true);
+  const visiblePrograms = reviewMode ? programs.map((program) => ({ ...program, completedStepIds: reviewCompleted[program.id] ?? program.completedStepIds })) : programs;
+  const active = visiblePrograms.find((program) => program.id === programId) ?? visiblePrograms[0];
+  const selectedProgram = visiblePrograms.find((program) => program.id === selection?.programId);
   const selectedStep = selectedProgram?.steps.find((step) => step.id === selection?.stepId);
   const nextStep = selectedProgram?.steps.find((step) => !selectedProgram.completedStepIds.includes(step.id));
+  const consumeCompletionAnimation = useCallback((key: string) => {
+    setAnimateCompleteTarget((current) => current?.key === key ? null : current);
+  }, []);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
 
   async function complete() {
     if (pending.current || busyStepKey || !selectedProgram || !selectedStep) return;
     pending.current = true;
     try {
-      if (await onCompleteStep(selectedProgram, selectedStep.id)) {
+      const completion = await completeTrainingStepForMode(
+        selectedProgram.id,
+        reviewMode,
+        () => {
+          setReviewCompleted((current) => completeReviewTrainingStep(current, selectedProgram.id, selectedStep.id));
+          setSaved(true); setSelection(null); onContinue();
+        },
+        () => onCompleteStep(selectedProgram, selectedStep.id),
+      );
+      if (!mounted.current) return;
+      if (completion.kind === 'review') return;
+      const confirmed = completion.value;
+      if (confirmed && confirmed.programId === selectedProgram.id && confirmed.stepId === selectedStep.id) {
+        const key = `${confirmed.programId}:${confirmed.stepId}:${++animationSequence.current}`;
+        setAnimateCompleteTarget({ key, programId: confirmed.programId, stepId: confirmed.stepId });
         setSaved(true); setSelection(null); onContinue();
       }
-    } finally { pending.current = false; }
+    } finally { if (mounted.current) pending.current = false; }
   }
   function rows(program: PublishedTrainingProgram) {
     return <View style={styles.rows}>{program.steps.map((step) => <ListRow key={step.id} category="training" title={step.title} titleSize="compact"
-      complete={program.completedStepIds.includes(step.id)} onPress={() => setSelection({ programId: program.id, stepId: step.id })} />)}</View>;
+      complete={program.completedStepIds.includes(step.id)} animateCompleteKey={animateCompleteTarget?.programId === program.id && animateCompleteTarget.stepId === step.id ? animateCompleteTarget.key : undefined} onCompleteAnimationStart={consumeCompletionAnimation}
+      onPress={() => setSelection({ programId: program.id, stepId: step.id })} />)}</View>;
   }
   return <View>
     <AppBar mode="Title" title="Träning" />
     <Tabs items={['Valpprogram', 'Alla övningar', 'Framsteg']} active={tab} onChange={setTab} />
+    {reviewMode ? <Text style={styles.note}>Tillfälligt exempel – innehållet är inte sakgranskat. Markeringar i dessa övningsutkast sparas under den här visningen.</Text> : null}
     <Toast visible={Boolean(error)} tone="error" message={error || undefined} onRetry={onRetry} />
     <Toast visible={saved} tone="success" confirmed message="Övningen är genomförd" autoDismissMs={2500} onAutoDismiss={() => setSaved(false)} />
     {paused.map((item) => <Text key={item.versionId} style={styles.note}>Ett tidigare program är pausat. Dina {item.completedCount} genomförda steg finns kvar.</Text>)}
-    {programs.length === 0 ? <><HeroCard title="Träning i er takt" meta="Här samlas övningarna för din hund." /><Text style={styles.note}>Fler program kommer när de är färdiga att använda.</Text></> : null}
+    {visiblePrograms.length === 0 ? <><HeroCard title="Träning i er takt" meta="Här samlas övningarna för din hund." /><Text style={styles.note}>Fler program kommer när de är färdiga att använda.</Text></> : null}
     {tab === 'Valpprogram' && active ? <>
       <HeroCard title={active.title} meta="Ett steg i taget">
         <View style={styles.progress}><Progress light value={percentage(active)} label={`${active.completedStepIds.length} av ${active.steps.length} genomförda`} /></View>
@@ -48,10 +79,10 @@ export function PublishedTrainingScreen({ programs, paused, busyStepKey, error, 
       <Button variant="tertiary" label="Om programmet" accessibilityLabel="Läs om programmet och dess källor" onPress={() => setSelection({ programId: active.id, stepId: '' })} />
       {programs.length > 1 ? <><SectionHeader title="Fler program" />{programs.filter((program) => program.id !== active.id).map((program) => <ListRow key={program.id} category="training" title={program.title} titleSize="compact" onPress={() => setProgramId(program.id)} />)}</> : null}
     </> : null}
-    {tab === 'Alla övningar' ? programs.map((program) => <View key={program.id}><SectionHeader title={program.title} />{rows(program)}</View>) : null}
-    {tab === 'Framsteg' ? programs.map((program) => <View key={program.id} style={styles.progressCard}>
+    {tab === 'Alla övningar' ? visiblePrograms.map((program) => <View key={program.id}><SectionHeader title={program.title} />{rows(program)}</View>) : null}
+    {tab === 'Framsteg' ? visiblePrograms.map((program) => <View key={program.id} style={styles.progressCard}>
       <Text style={styles.heading}>{program.title}</Text><Progress value={percentage(program)} label={`${program.completedStepIds.length} av ${program.steps.length} genomförda`} />
-      {program.completedStepIds.length ? <Button variant="destructive" label="Börja om" accessibilityLabel={`Börja om med ${program.title}`} disabled={Boolean(busyStepKey)} onPress={() => Alert.alert('Börja om?', `Dina markeringar i ”${program.title}” tas bort.`, [{ text: 'Avbryt', style: 'cancel' }, { text: 'Börja om', style: 'destructive', onPress: () => onResetProgram(program) }])} /> : null}
+      {program.completedStepIds.length ? <Button variant="destructive" label="Börja om" accessibilityLabel={`Börja om med ${program.title}`} disabled={Boolean(busyStepKey)} onPress={() => Alert.alert('Börja om?', `Dina markeringar i ”${program.title}” tas bort.`, [{ text: 'Avbryt', style: 'cancel' }, { text: 'Börja om', style: 'destructive', onPress: () => reviewMode && isReviewTrainingProgram(program.id) ? setReviewCompleted((current) => resetReviewTrainingProgram(current, program.id)) : onResetProgram(program) }])} /> : null}
     </View>) : null}
     <BottomSheet visible={Boolean(selectedProgram)} title={selectedStep ? 'Övning' : 'Om programmet'} onRequestClose={() => { if (!busyStepKey) setSelection(null); }}>
       <Text style={styles.heading}>{selectedStep?.title ?? selectedProgram?.title}</Text>

@@ -1940,5 +1940,3 @@ PDF ska använda samma semantiska palett och typografiska hierarki, men CSS px o
 ## 5. Avslut och kvarstående beslut
 
 Inventeringen är sparad; appkod, tokens, komponenter och navigation är oförändrade. Ingen paketimplementation eller UI-ombyggnad har startats genom denna rapport. Följande behöver avgöras inför ett senare ändringsuppdrag: referensskärm, placering av Promenad/Vaken utöver fyra snabbloggar, slutliga kategoriikoner och visuell validering av föreslagna tokens. Ingen publicering, build eller fysisk telefonverifiering har utförts.
-
-

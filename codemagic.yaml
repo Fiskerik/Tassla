@@ -18,6 +18,8 @@ workflows:
         XCODE_SCHEME: Tassla
         EXPO_NO_DOTENV: "1"
         CI: "1"
+        EXPO_PUBLIC_TASSLA_REVIEW_CONTENT: "true"
+        TASSLA_BUILD_CHANNEL: "review"
     scripts:
       - name: Install locked dependencies
         script: |
@@ -31,6 +33,8 @@ workflows:
       - name: Verify public app configuration
         script: |
           node -e 'for (const key of ["EXPO_PUBLIC_SUPABASE_URL", "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY"]) { if (!process.env[key]) throw new Error("Missing " + key); }'
+      - name: Verify content build channel
+        script: node tools/check-content-release.cjs
       - name: Generate iOS project
         script: |
           set -eu
@@ -48,9 +52,71 @@ workflows:
     artifacts:
       - build/ios/ipa/*.ipa
       - codemagic-logs/*.log
+      - codemagic-logs/*.json
       - /tmp/xcodebuild_logs/*.log
     publishing:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
         submit_to_app_store: false # Temporarily off for BUILD-02 diagnostics; restore after owner review.
+
+  tassla-ios-public:
+    name: Tassla iOS — public content build
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: tassla-app-store
+    environment:
+      node: 24
+      xcode: 26.6
+      groups:
+        - tassla-mobile
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.erimaliab.tassla
+      vars:
+        XCODE_WORKSPACE: Tassla.xcworkspace
+        XCODE_SCHEME: Tassla
+        EXPO_NO_DOTENV: "1"
+        CI: "1"
+        EXPO_PUBLIC_TASSLA_REVIEW_CONTENT: "false"
+        TASSLA_BUILD_CHANNEL: "public"
+    scripts:
+      - name: Install locked dependencies
+        script: |
+          set -eu
+          npx --yes pnpm@11.19.0 install --frozen-lockfile
+      - name: Check application
+        script: |
+          set -o pipefail
+          mkdir -p codemagic-logs
+          npx --yes pnpm@11.19.0 check 2>&1 | tee codemagic-logs/check-application.log
+      - name: Verify public app configuration
+        script: |
+          node -e 'for (const key of ["EXPO_PUBLIC_SUPABASE_URL", "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY"]) { if (!process.env[key]) throw new Error("Missing " + key); }'
+      - name: Verify content build channel
+        script: node tools/check-content-release.cjs
+      - name: Generate iOS project
+        script: |
+          set -eu
+          node node_modules/expo/bin/cli prebuild --platform ios --no-install
+          cd ios
+          pod install
+          agvtool new-version -all "$PROJECT_BUILD_NUMBER"
+      - name: Apply signing profiles
+        script: xcode-project use-profiles
+      - name: Build signed application
+        script: |
+          set -o pipefail
+          mkdir -p "$CM_BUILD_DIR/codemagic-logs"
+          xcode-project build-ipa --workspace "$CM_BUILD_DIR/ios/$XCODE_WORKSPACE" --scheme "$XCODE_SCHEME" 2>&1 | tee "$CM_BUILD_DIR/codemagic-logs/xcode-build-ipa.log"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - codemagic-logs/*.log
+      - codemagic-logs/*.json
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: false

@@ -1,7 +1,8 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { AccessibilityInfo, Alert, findNodeHandle, Image, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { DatePickerField, InfoModal, MessageCard, PageHeading, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
+import { DatePickerField, InfoModal, MessageCard, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
+import { AppBar } from '../../components/ui';
 import { Toast } from '../../components/ui/Toast';
 import { IconChip } from '../../components/ui/IconChip';
 import { theme, tokens } from '../../theme/tokens';
@@ -50,12 +51,13 @@ export function PlannedHealthScreen({
   conflict?: { current: PlannedHealthRecord | null } | null;
   onRetry: () => void;
   onResolveConflict: () => void;
-  onSave: (id: string | null, type: PlannedHealthType, dueOn: string, note: string, reminderEnabled: boolean, reminderMinutes: number | null) => Promise<boolean>;
+  onSave: (id: string | null, type: PlannedHealthType, dueOn: string, note: string, reminderEnabled: boolean, reminderMinutes: number | null, dueTime: string | null) => Promise<boolean>;
   onDelete: (id: string) => Promise<boolean>;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [type, setType] = useState<PlannedHealthType>('vaccination');
   const [dueOn, setDueOn] = useState(localDate());
+  const [dueTime, setDueTime] = useState('');
   const [note, setNote] = useState('');
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState('09:00');
@@ -78,6 +80,7 @@ export function PlannedHealthScreen({
       setEditingId(null);
       setType('vaccination');
       setDueOn(localDate());
+      setDueTime('');
       setNote('');
       setReminderEnabled(false);
       setReminderTime('09:00');
@@ -135,6 +138,7 @@ export function PlannedHealthScreen({
     setEditingId(null);
     setType('vaccination');
     setDueOn(localDate());
+    setDueTime('');
     setNote('');
     setReminderEnabled(false);
     setReminderTime('09:00');
@@ -146,6 +150,7 @@ export function PlannedHealthScreen({
     setEditingId(record.id);
     setType(record.event_type);
     setDueOn(record.due_on);
+    setDueTime(record.due_time?.slice(0, 5) ?? '');
     setNote(record.description ?? '');
     setReminderEnabled(record.reminder_enabled);
     setReminderTime(formatTime(record.reminder_minutes ?? 9 * 60));
@@ -169,7 +174,12 @@ export function PlannedHealthScreen({
       setFormError('Ange en giltig påminnelsetid mellan 00:00 och 23:59.');
       return;
     }
-    if (await onSave(editingId, type, normalizedDate, normalizedNote ?? '', reminderEnabled, reminderEnabled ? minutes : null)) resetForm();
+    const eventMinutes = parsePlannedHealthTime(dueTime);
+    if (dueTime.trim() && eventMinutes === null) {
+      setFormError('Ange en giltig händelsetid mellan 00:00 och 23:59.');
+      return;
+    }
+    if (await onSave(editingId, type, normalizedDate, normalizedNote ?? '', reminderEnabled, reminderEnabled ? minutes : null, dueTime.trim() || null)) resetForm();
   }
 
   function confirmDelete(record: PlannedHealthRecord) {
@@ -203,13 +213,13 @@ export function PlannedHealthScreen({
   }
 
   return <View>
-    <QuietButton title="Tillbaka till hälsa" disabled={busy} onPress={onBack} />
+    <AppBar mode="Back" title="Planerade hälsohändelser" actionLabel="Tillbaka till Hälsa" disabled={busy} onAction={onBack} />
     <View style={styles.heroCard}>
       <View style={styles.heroIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
         <Ionicons name="calendar-outline" size={tokens.size.iconMd} color={tokens.colors.primary} />
       </View>
       <View style={styles.heroCopy}>
-        <PageHeading title="Planerade hälsohändelser" description="Skriv in vaccinationer och veterinärbesök som ska ske framöver." />
+        <Text style={styles.description}>Planera vaccinationer och veterinärbesök.</Text>
       </View>
     </View>
     <View style={styles.infoRow}>
@@ -253,6 +263,7 @@ export function PlannedHealthScreen({
             icon="medical-outline" label="Veterinärbesök" onPress={() => setType('vet_visit')} />
         </View>
         <DatePickerField label="Planerat datum" disabled={blocked} onChangeText={setDueOn} value={dueOn} />
+        <TimePickerField label="Tid (valfri)" disabled={blocked} onChangeText={setDueTime} value={dueTime} />
         <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: reminderEnabled, disabled: blocked }} disabled={blocked}
           onPress={() => setReminderEnabled((value) => !value)} style={styles.reminderChoice}>
           <View style={[styles.reminderCheck, reminderEnabled && styles.reminderCheckSelected]}>
@@ -291,6 +302,7 @@ export function PlannedHealthScreen({
       </View>}
       {records.map((record) => {
         const timing = record.due_on < today ? 'Passerat datum' : record.due_on === today ? 'Idag' : 'Kommande';
+        const reminderText = reminderLabel(record.reminder_enabled, record.due_on, record.reminder_minutes);
         return <View key={record.id} style={styles.recordCard}>
           <View style={styles.recordHeading}>
             <View style={styles.recordType}>
@@ -300,12 +312,20 @@ export function PlannedHealthScreen({
             <Text style={[styles.timingLabel, record.due_on < today && styles.overdueLabel]}>{timing.toUpperCase()}</Text>
           </View>
           <Text style={styles.recordDate}>{record.due_on}</Text>
+          {record.due_time ? <Text style={styles.reminderRow}>Tid {record.due_time.slice(0, 5)}</Text> : null}
           {record.description ? <Text style={styles.recordNote}>{record.description}</Text> : null}
-          <Text style={styles.reminderRow}>{reminderLabel(record.reminder_enabled, record.due_on, record.reminder_minutes)}</Text>
-          <View style={styles.actions}>
-            <QuietButton title="Ändra" disabled={blocked} onPress={() => edit(record)} />
-            <QuietButton title="Ta bort" disabled={blocked} onPress={() => confirmDelete(record)} />
-          </View>
+          {reminderText
+            ? <Text style={styles.reminderRow}>{reminderText}</Text>
+            : null}
+          <Pressable accessibilityRole="button" accessibilityLabel={`Åtgärder för ${typeLabel(record.event_type)} ${record.due_on}`}
+            accessibilityState={{ disabled: blocked }} disabled={blocked}
+            onPress={() => Alert.alert('Åtgärder', undefined, buildPlannedHealthActionButtons(
+              () => { if (!blocked) edit(record); },
+              () => { if (!blocked) confirmDelete(record); },
+            ))}
+            style={({ pressed }) => [styles.actionsButton, pressed && !blocked && styles.actionsButtonPressed]}>
+            <Ionicons name="ellipsis-horizontal" size={tokens.size.iconMd} color={blocked ? tokens.colors.textSecondary : tokens.colors.textPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+          </Pressable>
         </View>;
       })}
     </>}
@@ -330,6 +350,7 @@ const styles = StyleSheet.create({
   heroCard: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8, padding: 16, borderRadius: theme.radius.card, backgroundColor: '#F1F5F0', borderWidth: 1, borderColor: theme.colors.border },
   heroIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#E5EFE8', alignItems: 'center', justifyContent: 'center' },
   heroCopy: { flex: 1 },
+  description: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   infoRow: { marginTop: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 },
   infoHint: { color: theme.colors.mutedText, fontSize: 14 },
   infoButton: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10 },
@@ -373,16 +394,27 @@ const styles = StyleSheet.create({
   overdueLabel: { color: '#936324' },
   recordDate: { color: theme.colors.text, fontSize: 16, fontWeight: '700', marginTop: 7 },
   recordNote: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 20, marginTop: 5 },
-  actions: { flexDirection: 'row', justifyContent: 'flex-start', gap: 8, marginTop: 8 },
+  actionsButton: { width: tokens.size.touchMin, minWidth: tokens.size.touchMin, height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end', marginTop: tokens.spacing.xs, borderRadius: tokens.radius.full },
+  actionsButtonPressed: { backgroundColor: tokens.colors.selectedSurface },
 });
 
 function formatTime(minutes: number): string {
   return Math.floor(minutes / 60).toString().padStart(2, '0') + ':' + (minutes % 60).toString().padStart(2, '0');
 }
-function reminderLabel(enabled: boolean, dueOn: string, minutes: number | null): string {
-  if (!enabled || minutes === null) return 'Påminnelse av';
+function reminderLabel(enabled: boolean, dueOn: string, minutes: number | null): string | null {
+  if (minutes === null) return null;
+  const label = `Påminnelse ${formatTime(minutes)}`;
+  if (!enabled) return `${label} · av`;
   const local = createLocalFireTime(dueOn, minutes);
-  if (local.status === 'passed-time') return 'Påminnelsetiden har passerat';
-  if (local.status === 'unrepresentable') return 'Tiden kan inte schemaläggas den här dagen';
-  return 'Vald tid ' + formatTime(minutes) + ' · schemaläggs bara om enhetens val tillåter det';
+  if (local.status === 'passed-time') return `${label} · påminnelsetiden har passerat`;
+  if (local.status === 'unrepresentable') return `${label} · kan inte schemaläggas den här dagen`;
+  return `${label} · schemaläggs bara om enhetens val tillåter det`;
+}
+
+function buildPlannedHealthActionButtons(onEdit: () => void, onDelete: () => void) {
+  return [
+    { text: 'Ändra', onPress: onEdit },
+    { text: 'Ta bort', style: 'destructive' as const, onPress: onDelete },
+    { text: 'Avbryt', style: 'cancel' as const },
+  ];
 }

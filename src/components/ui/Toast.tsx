@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { tokens } from '../../theme/tokens';
 import { Button } from './Button';
 import { useReducedMotion } from './Motion';
@@ -126,9 +127,10 @@ export function Toast({ visible, tone, message, onUndo, onRetry, onCancel, confi
   return <Animated.View accessibilityRole={exposed ? 'alert' : undefined} accessibilityLabel={exposed ? displayContent.message : undefined}
     accessibilityElementsHidden={!exposed} importantForAccessibility={exposed ? 'auto' : 'no-hide-descendants'}
     pointerEvents={exposed ? 'auto' : 'none'} style={[styles.toast, (displayContent.tone === 'error' && displayContent.onCancel) && styles.withCancel, displayContent.tone === 'error' && styles.error, displayContent.tone === 'success' && styles.success, displayContent.tone === 'uncertain' && styles.uncertain, { opacity, transform: [{ translateY }] }]}>
-    <Text style={styles.message} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{displayContent.message}</Text>
+    {displayContent.tone === 'success' ? <Ionicons name="checkmark-circle" size={tokens.size.iconSm} color={tokens.colors.success} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}
+    <Text style={[styles.message, displayContent.tone === 'success' && styles.successMessage]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{displayContent.message}</Text>
     {action ? <Button variant="tertiary" label={action.label} accessibilityLabel={action.label} onPress={action.onPress} disabled={action.disabled || !exposed} /> : null}
     {displayContent.tone === 'error' && displayContent.onCancel ? <Button variant="secondary" label="Avbryt" accessibilityLabel="Avbryt" onPress={displayContent.onCancel} disabled={!exposed} /> : null}
   </Animated.View>;
 }
-const styles = StyleSheet.create({ toast: { alignSelf: 'stretch', minHeight: tokens.size.touchMin, padding: tokens.spacing.md, gap: tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.selectedSurface }, withCancel: { flexDirection: 'column', alignItems: 'stretch' }, error: { backgroundColor: tokens.colors.dangerSurface, borderColor: tokens.colors.dangerBorder }, success: { backgroundColor: tokens.colors.successSurface, borderColor: tokens.colors.success }, uncertain: { backgroundColor: tokens.colors.warningSurface, borderColor: tokens.colors.warning }, message: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 } });
+const styles = StyleSheet.create({ toast: { alignSelf: 'stretch', minHeight: tokens.size.touchMin, marginVertical: tokens.spacing.md, padding: tokens.spacing.md, gap: tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.selectedSurface }, withCancel: { flexDirection: 'column', alignItems: 'stretch' }, error: { backgroundColor: tokens.colors.dangerSurface, borderColor: tokens.colors.dangerBorder }, success: { paddingVertical: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm, gap: tokens.spacing.xs, backgroundColor: tokens.colors.successSurface, borderColor: tokens.colors.success }, uncertain: { backgroundColor: tokens.colors.warningSurface, borderColor: tokens.colors.warning }, message: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 }, successMessage: { ...tokens.typography.caption, color: tokens.colors.textPrimary } });

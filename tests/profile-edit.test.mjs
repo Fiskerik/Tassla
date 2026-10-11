@@ -541,6 +541,8 @@ function buildDerivedEffect({ state, generations, dog, age, selectionKey, homeRe
     dog,
     age,
     client: {},
+    reviewContentEnabled: false,
+    REVIEW_TRAINING_PROGRAMS: [],
     mounted: { current: true },
     fetchHomeContent: async (...args) => { requests.content.push({ dog: args[1], age: args[2], signal: args[4] }); return homeResult; },
     fetchTrainingWorkspace: async (...args) => { requests.training.push({ dog: args[1], age: args[2], signal: args[4] }); return trainingResult; },

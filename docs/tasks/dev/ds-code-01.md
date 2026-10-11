@@ -1,9 +1,9 @@
 # DS-CODE-01 – Tokens och komponentbibliotek i appkoden
 
-Datum: 2026-10-07  
-Planversion: v4.1 – korrigeringsförsök 1  
-Status: BLOCK – kod QA/reviewer PASS; visuell QA NOT TESTABLE utan renderade skärmdumpar  
-Mandat: Eriks beställning 2026-10-07 att skapa kodens UI-källa utan att ändra befintliga skärmar.  
+Datum: 2026-10-07<br>
+Planversion: v4.1 – korrigeringsförsök 1<br>
+Status: BLOCK – kod QA/reviewer PASS; visuell QA NOT TESTABLE utan renderade skärmdumpar<br>
+Mandat: Eriks beställning 2026-10-07 att skapa kodens UI-källa utan att ändra befintliga skärmar.<br>
 Release-log: [docs/releases/DS-CODE-01.md](../../releases/DS-CODE-01.md)
 
 ## Användaruppgift och avgränsning

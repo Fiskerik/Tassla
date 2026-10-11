@@ -1,8 +1,8 @@
 # FIGMA-LOGGA-MIGRATION – UX-specifikation
 
-Datum: 2026-10-08  
-Status: planerad, före implementation  
-Baseline: `37bf93f feat: complete shared log UI component library` plus befintlig Logga-implementation  
+Datum: 2026-10-08<br>
+Status: planerad, före implementation<br>
+Baseline: `37bf93f feat: complete shared log UI component library` plus befintlig Logga-implementation<br>
 Underlag: `tassla-consumer-ux`, `docs/design-rules.md`, Figma `Design system` (`64:2032`, `95:3507`, `95:3378`), `src/features/puppy-log/LogScreen.tsx`, `src/components/ui/`.
 
 ## Användarmål
