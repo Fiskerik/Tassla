@@ -99,4 +99,4 @@ Reviewer, implementation, 2026-10-11: **PASS — UPD-LOG-DATA v4**. Oberoende gr
 
 ## Checkpoint
 
-UPD-LOG-DATA v4 är implementerat, QA-/Reviewer-godkänt och köstatus `done`. Product/Critic PROCEED, Architect APPROVE, Dog Expert PASS och Security statiskt PASS. `pnpm check` och fokuserade tester passerade. SQL-runtime är NOT TESTABLE utan psql/Supabase CLI; migrationen har inte körts mot någon databas. Local commit följer efter release-/checkpointdokumentationen. Nästa paket: UPD-LOG-UI, där ProductWorkspace read/write-handoff är en uttrycklig grind.
+UPD-LOG-DATA v4 är implementerat, QA-/Reviewer-godkänt, committat lokalt och köstatus `done`. Product/Critic PROCEED, Architect APPROVE, Dog Expert PASS och Security statiskt PASS. `pnpm check` och fokuserade tester passerade. SQL-runtime är NOT TESTABLE utan psql/Supabase CLI; migrationen har inte körts mot någon databas. Paketcommit `cb30f50325a72207fc5bf9d9bae2ba3ae51de16d` (`feat: add optional puppy log details`) på `codex/repo-grounding`; uppföljande docs-commit registrerar SHA i historiken. Nästa paket: UPD-LOG-UI, där ProductWorkspace read/write-handoff är en uttrycklig grind.

@@ -3702,7 +3702,7 @@
           "evidence": "Oberoende Reviewer PASS plan v4; Security statiskt PASS; QA PASS; SQL-runtime NOT TESTABLE redovisat"
         }
       ],
-      "next_step": "Paketet är QA-/Reviewer-godkänt och lokalt klart; lokal commit och exakt SHA dokumenteras före start av UPD-LOG-UI. Ingen push. SQL-runtime NOT TESTABLE."
+      "next_step": "Klart lokalt; paketcommit cb30f50325a72207fc5bf9d9bae2ba3ae51de16d. UPD-LOG-UI får starta med ProductWorkspace-handoff som grind. Ingen push. SQL-runtime NOT TESTABLE."
     },
     {
       "id": "UPD-LOG-UI",
