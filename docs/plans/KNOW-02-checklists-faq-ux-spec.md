@@ -77,3 +77,5 @@ Befintlig tassla-ios förblir manuell TestFlight review-build med EXPO_PUBLIC_TA
 ## Genomförande och lokal verifiering — 2026-10-11
 
 A–D implementerat enligt v2. Slutliga riktade QA-rättningar följer befintligt kontrakt: ett sidhuvud per checklistvy, korrekt failed/conflict vid update-readback och radbrytning/stor text. QA44PASS, ReviewerPASS och SecurityPASS; pnpm check37testfilerPASS och båda iOS-exporternaPASS. Ingen migration, commit, push eller TestFlight-distribution utförd. Se samlad historik och rapport för exakta begränsningar; liveSQL och native är inte verifierade.
+
+Commit/push-closeout: `7b9da840d2ca2ac8f5d5ed998d73495858c98eae` pushad till `origin/puppy-checklists-faq-qa11`, fjärr-SHA verifierad. Hookarna passerade. Migrationer och signerad distribution återstår som separata åtgärder.

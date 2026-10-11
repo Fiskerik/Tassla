@@ -22,6 +22,7 @@ Avslutade paketnotiser har samlats här. Varje post bevarar ursprunglig status o
 | [BUILD-35](#build-35) | 2026-10-09 | lokalt verifierad och kod pushad till `remove-ai-slop` | `0bc15bc`, `383f003`, `94686aaa8e717aaca069fde8ae5cc960d2fbc287` |
 | [FIX-36](#fix-36) | 2026-10-10 | implementerad och pushad; QA och oberoende code review PASS | `3adf73d`, `e29a5fb` |
 | [FIX-38](#fix-38) | 2026-10-10 | Implementerad; QA PASS och oberoende code review PASS | `3585c59`, `2198e55ed20a1a60aaafca0c9364c6dc3a523bae` |
+| [KNOW-02](#know-02) | 2026-10-11 | implementerad, pushad till `puppy-checklists-faq-qa11`; QA, Reviewer och Security PASS. Migration/native/TestFlight ej verifierat | `7b9da840d2ca2ac8f5d5ed998d73495858c98eae` |
 | [MOTION-01](#motion-01) | 2026-10-10 | DONE för ägaraccepterad omfattning; kod-QA/Reviewer PASS; full check PASS; native evidensundantag godkänt av Erik | `bec6971`, `a44ba16`, `70612e9` |
 | [MOTION-02](#motion-02) | 2026-10-10 | branch pushad; oberoende QA/Reviewer PASS; mobil-QA uppskjuten enligt beslut 0005 | `4267d457`, `a020779`, `bff79b9`, `9012b1d` |
 | [MOTION-03](#motion-03) | 2026-10-10 | implementerad, lokal QA/Reviewer PASS och pushad på `motion-03-first-use-tip`; ingen Codemagic/TestFlight-build verifierad | `117c406` |
@@ -536,4 +537,4 @@ Tidsbekräftelse, separat planerad händelsetid på Hem/Hälsa, enhetlig chevron
 
 Verifierat lokalt: oberoende pnpm check37testfilerPASS, lint0fel38varningar, diffPASS; senaste visuella/flödes-QA44PASS utan pageerrors vid375/430/140%; Reviewer och SecurityPASS; båda sista iOS-exporter1427modulerPASS. Underlag docs/design/KNOW-02/checklista.md och docs/tasks/dev/rapport.md. Begränsningar: liveSQL/RLS/cascade och native/TestFlight/VoiceOver/riktig DynamicType ej verifierade. Nya migrationer202610110001 och202610110002 ej körda.
 
-Commit-ID för paketet: inget ännu. Bascommit617fb67 är tidigare arbete. Pushat: nej. TestFlight-build: ingen genom detta paket. Utkasten måste sakgranskas/revideras eller tas bort före publik release.
+Paketcommit: `7b9da840d2ca2ac8f5d5ed998d73495858c98eae`. Bascommit617fb67. Pushad och verifierad mot origin: `puppy-checklists-faq-qa11` pekar på `7b9da840d2ca2ac8f5d5ed998d73495858c98eae`. TestFlight-build: ingen genom detta paket. Utkasten måste sakgranskas/revideras eller tas bort före publik release.

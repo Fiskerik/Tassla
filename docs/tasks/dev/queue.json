@@ -3568,10 +3568,10 @@
           "from": "review",
           "to": "done",
           "actor": "reviewer",
-          "evidence": "Oberoende Reviewer PASS faktisk slutlig A-D-kod; Security förnyad PASS; QA44PASS/check37files/diffPASS och båda slutliga iOS-exporter PASS1427. Lokalt klart, bas617fb67, ingen commit/push/migrering/TestFlight. Externa SQL/RLS/native/VoiceOver/DynamicType NT."
+          "evidence": "Implementerat, QA44PASS, ReviewerPASS, SecurityPASS; commit `7b9da840d2ca2ac8f5d5ed998d73495858c98eae` pushad till origin/puppy-checklists-faq-qa11 och fjärr-SHA verifierad. pnpm check461pass/1skip, lint0fel38varningar; pre-commit/pre-push PASS. Migrationer/native/TestFlight ej körda."
         }
       ],
-      "next_step": "Oberoende Reviewer PASS faktisk slutlig A-D-kod; Security förnyad PASS; QA44PASS/check37files/diffPASS och båda slutliga iOS-exporter PASS1427. Lokalt klart, bas617fb67, ingen commit/push/migrering/TestFlight. Externa SQL/RLS/native/VoiceOver/DynamicType NT."
+      "next_step": "Implementerat, QA44PASS, ReviewerPASS, SecurityPASS; commit `7b9da840d2ca2ac8f5d5ed998d73495858c98eae` pushad till origin/puppy-checklists-faq-qa11 och fjärr-SHA verifierad. pnpm check461pass/1skip, lint0fel38varningar; pre-commit/pre-push PASS. Migrationer/native/TestFlight ej körda."
     }
   ]
 }
