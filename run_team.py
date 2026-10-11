@@ -4,6 +4,8 @@ import os
 from dotenv import load_dotenv
 
 def show(result):
+    if result.sources:
+        print("\nRepo-underlag:", "; ".join(result.sources))
     if result.plan:
         for request in result.plan.requests:
             print(f"\nTeam: {request.team}; roller: {', '.join(request.roles) or 'enbart teamledaren'}")
@@ -23,7 +25,8 @@ def main():
     parser.add_argument("question", nargs="?")
     parser.add_argument("--chat", action="store_true", help="Följdfrågor med kort minne under samma session")
     parser.add_argument("--roles", action="store_true", help="Visa roller, modell och reasoning utan API-anrop")
-    parser.add_argument("--project-context", action="store_true", help="Skicka begränsade utdrag ur vision, MVP och revenue till API:t")
+    parser.add_argument("--project-context", action="store_true", help="Föråldrad: repo-underlag är nu alltid på")
+    parser.add_argument("--no-repo", action="store_true", help="Stäng av repo-underlag (sparar tokens, ger generella svar)")
     args = parser.parse_args()
     load_dotenv()
     model = os.getenv("TASSLA_TEST_MODEL", "gpt-4.1-nano")
@@ -48,9 +51,7 @@ def main():
         raise SystemExit("OPENAI_API_KEY saknas.")
     project_context = ''
     if args.project_context:
-        from tassla_team.project_context import load_project_context
-        project_context = load_project_context()
-        print("Projektutdrag aktiverade: vision, MVP och revenue. Högst 6000 innehållstecken.")
+        print("Obs: --project-context behövs inte längre; repo-underlag är alltid på (stäng av med --no-repo).")
     print("Modell:", model)
     history = []
     question = args.question
@@ -72,7 +73,8 @@ def main():
                 break
             question = None
             continue
-        result = run_question(question, model, "\n".join(history)[-2400:], project_context=project_context)
+        result = run_question(question, model, "\n".join(history)[-2400:], project_context=project_context,
+                              use_repo=not args.no_repo)
         show(result)
         history.append(f"User: {question}\nAssistant: {result.answer}")
         history = history[-2:]
