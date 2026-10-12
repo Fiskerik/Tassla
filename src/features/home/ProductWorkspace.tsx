@@ -15,6 +15,7 @@ import {
   deleteTrainingProgress,
   fetchDogEventById,
   fetchDogEvents,
+  fetchPottyEvents,
   fetchHealthWeightById,
   fetchHealthWeights,
   fetchHealthHistory,
@@ -43,6 +44,7 @@ import {
   updatePlannedHealth,
   type DogEventOperation,
   type DogEventRecord,
+  type PottyEventRecord,
   type HealthWeightChanges,
   type HealthWeightOperation,
   type HealthWeightRecord,
@@ -83,7 +85,7 @@ import { HomeScreen } from './HomeScreen';
 import { AppBar, BottomNav, MainSwipeNavigation, type BottomNavDestination } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
 import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
-import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
+import { canPublishPottyHistoryResult, canStartLogMutation, canStartPottyHistoryRetry, checkInsertRetryOperation, finishLogMutationFlight, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
 import { PassportScreen } from '../passport/PassportScreen';
 import { PublishedTrainingScreen } from '../training/PublishedTrainingScreen';
 import { theme, tokens } from '../../theme/tokens';
@@ -148,8 +150,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [content, setContent] = useState<HomeContent[]>([]);
   const [contentState, setContentState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [contentSelectionKey, setContentSelectionKey] = useState<string | null>(null);
-  const [knowledgeFocus, setKnowledgeFocus] = useState<{ selectionKey: string; contentId: string | null; returnPage: 'home' | 'more' } | null>(null);
+  const [knowledgeFocus, setKnowledgeFocus] = useState<{ selectionKey: string; contentId: string | null; returnPage: 'home' | 'more'; origin: 'home-carousel' | 'knowledge-list' | null } | null>(null);
   const [events, setEvents] = useState<DogEventRecord[]>([]);
+  const [pottyHistoryView, setPottyHistoryView] = useState<{ scope: string; events: LogEvent[]; status: 'loading' | 'ready' | 'error'; retrying: boolean }>({ scope: '', events: [], status: 'loading', retrying: false });
   const eventRows = useRef<DogEventRecord[]>([]);
   const [logState, setLogState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [loadingMore, setLoadingMore] = useState(false);
@@ -214,6 +217,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [training, setTraining] = useState<{ programs: PublishedTrainingProgram[]; paused: PausedTrainingProgress[] }>({ programs: [], paused: [] });
   const [trainingState, setTrainingState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [trainingSelectionKey, setTrainingSelectionKey] = useState<string | null>(null);
+  const [trainingFocusGeneration, setTrainingFocusGeneration] = useState(0);
   const [trainingError, setTrainingError] = useState('');
   const [busyStepKey, setBusyStepKey] = useState<string | null>(null);
   const [signOutError, setSignOutError] = useState(false);
@@ -221,6 +225,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const signOutInFlight = useRef(false);
   const pendingLogMutation = useRef<PendingLogMutation | null>(null);
   const logMutationFlight = useRef<LogMutationFlight | null>(null);
+  const pottyLifetime = useRef('');
+  const previousPottyLifetime = useRef('');
+  const pottyGeneration = useRef(0);
+  const pottyController = useRef<AbortController | null>(null);
+  const pottyRetryInFlight = useRef(false);
   const pendingHealthMutation = useRef<PendingHealthMutation | null>(null);
   const healthMutationInFlight = useRef(false);
   const pendingHealthHistoryMutation = useRef<PendingHealthHistoryMutation | null>(null);
@@ -264,7 +273,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     if (page === 'home' && analyticsConsent === true) void analyticsService.track('home_viewed');
   }, [analyticsConsent, analyticsService, page]);
   const currentHealthHistoryLifetime = `${dog.id}:${session?.user.id ?? ''}`;
-  const currentLogLifetime = `${dog.id}:${session?.user.id ?? ''}`;
+  const currentLogLifetime = `${dog.id}:${session?.user.id ?? ''}:${accountGeneration}`;
+  const currentPottyLifetime = `${dog.id}:${session?.user.id ?? ''}:${accountGeneration}`;
   const healthHistoryLifetime = useRef('');
   const logLifetime = useRef('');
   const previousHealthHistoryLifetime = useRef('');
@@ -279,6 +289,16 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   useLayoutEffect(() => {
     logLifetime.current = currentLogLifetime;
   }, [currentLogLifetime]);
+  useLayoutEffect(() => {
+    if (previousPottyLifetime.current && previousPottyLifetime.current !== currentPottyLifetime) {
+      pottyGeneration.current += 1;
+      pottyController.current?.abort();
+      pottyController.current = null;
+      pottyRetryInFlight.current = false;
+    }
+    pottyLifetime.current = currentPottyLifetime;
+    previousPottyLifetime.current = currentPottyLifetime;
+  }, [currentPottyLifetime]);
   useLayoutEffect(() => {
     if (previousLogLifetime.current && previousLogLifetime.current !== currentLogLifetime) {
       pendingLogMutation.current = null;
@@ -334,6 +354,40 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     setHasMore(rows.length === PAGE_SIZE);
     setLogState('ready');
   }, [client, dog.id, serializeEventRead]);
+
+  const refreshPottyHistory = useCallback(async (retry = false) => {
+    if (retry && !canStartPottyHistoryRetry(pottyRetryInFlight.current)) return;
+    pottyRetryInFlight.current = retry;
+    const lifetime = currentPottyLifetime;
+    const generation = ++pottyGeneration.current;
+    pottyController.current?.abort();
+    const controller = new AbortController();
+    pottyController.current = controller;
+    const isCurrent = () => canPublishPottyHistoryResult({
+      expectedScope: lifetime,
+      currentScope: pottyLifetime.current,
+      generation,
+      currentGeneration: pottyGeneration.current,
+      mounted: mounted.current,
+      aborted: controller.signal.aborted,
+      deletionInvalidated: accountDeletionInvalidated.current,
+    });
+    setPottyHistoryView({ scope: lifetime, events: [], status: 'loading', retrying: retry });
+    const capturedNow = new Date();
+    try {
+      const rows = await fetchPottyEvents(client, dog.id, capturedNow, undefined, undefined, controller.signal);
+      if (!isCurrent()) return;
+      setPottyHistoryView({ scope: lifetime, events: rows.map(toPottyLogEvent), status: 'ready', retrying: false });
+    } catch {
+      if (!isCurrent()) return;
+      setPottyHistoryView({ scope: lifetime, events: [], status: 'error', retrying: false });
+    } finally {
+      if (pottyGeneration.current === generation) {
+        pottyController.current = null;
+        pottyRetryInFlight.current = false;
+      }
+    }
+  }, [client, currentPottyLifetime, dog.id]);
 
   const serializeHealthRead = useCallback(<T,>(read: () => Promise<T>): Promise<T> => {
     const request = healthReadQueue.current.catch(() => undefined).then(read);
@@ -612,6 +666,36 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   }, [client, currentHealthHistoryLifetime, currentPlannedHealthLifetime, currentProfileLifetime, dog.id, serializeEventRead, serializeHealthRead, serializeHealthHistoryRead, serializePlannedHealthRead]);
 
   useEffect(() => {
+    let active = true;
+    let midnightTimer: ReturnType<typeof setTimeout> | undefined;
+    function scheduleMidnightRefresh() {
+      if (midnightTimer) clearTimeout(midnightTimer);
+      const now = new Date();
+      const nextMidnight = new Date(now);
+      nextMidnight.setHours(24, 0, 0, 0);
+      midnightTimer = setTimeout(refresh, Math.max(0, nextMidnight.getTime() - now.getTime() + 50));
+    }
+    function refresh() {
+      if (!active) return;
+      void refreshPottyHistory();
+      scheduleMidnightRefresh();
+    }
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refresh();
+    });
+    refresh();
+    return () => {
+      active = false;
+      if (midnightTimer) clearTimeout(midnightTimer);
+      subscription.remove();
+      pottyGeneration.current += 1;
+      pottyController.current?.abort();
+      pottyController.current = null;
+      pottyRetryInFlight.current = false;
+    };
+  }, [currentPottyLifetime, refreshPottyHistory]);
+
+  useEffect(() => {
     const generation = ++contentGeneration.current;
     const controller = new AbortController();
     void fetchHomeContent(client, dog, age, undefined, controller.signal).then((items) => {
@@ -888,6 +972,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       else outcome = await deleteDogEvent(client, dog.id, mutation.id);
       if (!isCurrent()) return false;
       if (outcome.status === 'saved') {
+        if (pottyLifetime.current === currentPottyLifetime) void refreshPottyHistory();
         if (mutation.kind === 'insert') {
           const firstConfirmedLog = logState === 'ready' && eventRows.current.length === 0;
           void analyticsService.track(firstConfirmedLog ? 'first_log' : 'meaningful_return');
@@ -925,6 +1010,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       }
       const presentationStatus = logMutationStatusForWriteOutcome(outcome.status);
       if (presentationStatus === 'unsure') {
+        if (pottyLifetime.current === currentPottyLifetime) void refreshPottyHistory();
         pendingLogMutation.current = mutation;
         setQuickLogMutation(toQuickLogMutationView(mutation, 'unsure'));
         return false;
@@ -934,6 +1020,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       return false;
     } catch {
       if (!isCurrent()) return false;
+      if (pottyLifetime.current === currentPottyLifetime) void refreshPottyHistory();
       pendingLogMutation.current = mutation;
       setQuickLogMutation(toQuickLogMutationView(mutation, 'unsure'));
       return false;
@@ -1019,6 +1106,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         const found = retryCheck.found;
         if (!isCurrent()) return false;
         if (found) {
+          if (pottyLifetime.current === currentPottyLifetime) void refreshPottyHistory();
           pendingLogMutation.current = null;
           const merged = [...eventRows.current.filter((event) => event.id !== found.id), found].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
           eventRows.current = merged;
@@ -1035,6 +1123,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         return await runLogMutation({ ...mutation, operation: retryCheck.operation }, flightToken);
       } catch {
         if (!isCurrent()) return false;
+        if (pottyLifetime.current === currentPottyLifetime) void refreshPottyHistory();
         setQuickLogMutation(toQuickLogMutationView(mutation, 'unsure'));
         return false;
       } finally {
@@ -1735,6 +1824,46 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
+  async function undoTrainingStep(program: PublishedTrainingProgram, stepId: string): Promise<boolean> {
+    const ownerId = session?.user.id;
+    const generation = accountGeneration;
+    const dogId = dog.id;
+    const selectionKey = currentSelectionKey;
+    if (!ownerId || !isCurrentAccount(ownerId, generation) || trainingMutationInFlight.current) return false;
+    const isCurrent = () => mounted.current && isCurrentAccount(ownerId, generation)
+      && currentSelectionKeyRef.current === selectionKey && dog.id === dogId;
+    const key = `${program.id}:${stepId}:undo`;
+    trainingMutationInFlight.current = true;
+    setBusyStepKey(key);
+    setTrainingError('');
+    try {
+      const outcome = await deleteTrainingProgress(client, dogId, program.id, stepId);
+      if (!isCurrent()) return false;
+      const refreshed = await reloadTraining();
+      if (!isCurrent() || !refreshed) return false;
+      const confirmedProgram = refreshed.programs.find((item) => item.id === program.id);
+      const confirmedAbsent = confirmedProgram !== undefined && !confirmedProgram.completedStepIds.includes(stepId);
+      if (outcome.status === 'saved' && confirmedAbsent) return true;
+      if (outcome.status === 'unknown' && confirmedAbsent) return true;
+      setTrainingError(outcome.status === 'unknown'
+        ? 'Vi kunde inte bekräfta att övningen återställdes. Kontrollera programmet innan du försöker igen.'
+        : 'Övningen kunde inte återställas. Kontrollera anslutningen och försök igen.');
+      return false;
+    } catch {
+      if (!isCurrent()) return false;
+      try {
+        await reloadTraining();
+      } catch {
+        if (isCurrent()) setTrainingState('error');
+      }
+      if (isCurrent()) setTrainingError('Vi kunde inte kontrollera om övningen återställdes. Hämta programmet igen innan du ändrar den.');
+      return false;
+    } finally {
+      trainingMutationInFlight.current = false;
+      if (mounted.current) setBusyStepKey((current) => current === key ? null : current);
+    }
+  }
+
   async function handleAccountDeletion(): Promise<AccountDeleteResult> {
     const capturedSession = session;
     const ownerId = capturedSession?.user.id;
@@ -1771,6 +1900,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
 
       serverConfirmed = true;
       accountDeletionInvalidated.current = true;
+      pottyGeneration.current += 1;
+      pottyController.current?.abort();
+      pottyController.current = null;
+      pottyRetryInFlight.current = false;
       reminderService.setActiveContext(null, null);
       setAccountDeleteStatus('confirmed');
       let cleanupFailed = false;
@@ -1893,9 +2026,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   if (!fontsLoaded && !fontError) return <AppScreen><MessageCard>Laddar Tasslas ikoner…</MessageCard></AppScreen>;
   if (fontError) return <AppScreen><MessageCard tone="error">Ikonerna kunde inte laddas. Starta om appen och försök igen.</MessageCard></AppScreen>;
 
+  const currentPottyHistory = pottyHistoryView.scope === currentPottyLifetime
+    ? pottyHistoryView
+    : { scope: currentPottyLifetime, events: [], status: 'loading' as const, retrying: false };
   const pageContent = renderPage();
   const transitionDirection = navigationDirection(previousPage, page);
-  return <AppScreen scrollKey={page} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={mainDestination(page)} onChange={setPage} />}>
+  return <AppScreen scrollKey={page === 'training' ? `${page}:${trainingFocusGeneration}` : page} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={mainDestination(page)} onChange={setPage} />}>
     <MainSwipeNavigation enabled={MAIN_PAGES.includes(page)} onSwipe={handleMainSwipe}>
       <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x">{pageContent}</ScreenTransition>
     </MainSwipeNavigation>
@@ -1906,6 +2042,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       dog={dog}
       breed={breeds.find((breed) => breed.id === dog.breed_id)?.name ?? ''}
       events={displayEvents}
+      pottyEvents={currentPottyHistory.events}
+      pottyHistoryState={currentPottyHistory.status}
+      pottyRetrying={currentPottyHistory.retrying}
+      onRetryPotty={() => { void refreshPottyHistory(true); }}
       healthHistory={healthHistory}
       healthHistoryState={healthHistoryState}
       plans={plannedHealth}
@@ -1917,7 +2057,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       onRetryHealthHistory={() => { void retryHealthHistory(); }}
       onGo={setPage}
       onOpenContent={(contentId) => {
-        setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId, returnPage: 'home' });
+        setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId, returnPage: 'home', origin: 'home-carousel' });
         setPage('knowledge');
       }}
       onRetryContent={() => { void retryContent(); }}
@@ -1939,11 +2079,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       {visibleTrainingState === 'ready' && <PublishedTrainingScreen programs={training.programs} paused={training.paused}
         reviewMode={reviewContentEnabled && training.programs.some((program) => program.id.startsWith('review-v1:training:'))}
         busyStepKey={busyStepKey} error={trainingError} onCompleteStep={completeStep}
-        onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
+        onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }} onUndoStep={undoTrainingStep}
+        onFocusProgram={() => setTrainingFocusGeneration((value) => value + 1)}
         onRetry={() => { void retryTraining(); }} />}
     </>;
     if (page === 'more') return <MorePage onNavigate={(nextPage) => {
-      if (nextPage === 'knowledge') setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId: null, returnPage: 'more' });
+      if (nextPage === 'knowledge') setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId: null, returnPage: 'more', origin: null });
       setPage(nextPage);
     }} signOutError={signOutError} signingOut={signingOut} onSignOut={confirmSignOut}
       onOpenNotifications={() => { setNotificationSaved(false); setPage('notification-settings'); }}
@@ -2031,10 +2172,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       items={visibleGuideContent}
       contentState={visibleContentState}
       focusedContentId={focusedKnowledgeContentId}
-      onSelectContent={(contentId) => setKnowledgeFocus({
+      focusedContentOrigin={knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.origin : null}
+      focusScopeKey={currentSelectionKey}
+      onSelectContent={(contentId, origin) => setKnowledgeFocus({
         selectionKey: currentSelectionKey,
         contentId,
         returnPage: knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : 'more',
+        origin,
       })}
       onRetry={() => { void retryContent(); }}
       client={client}
@@ -2141,6 +2285,17 @@ function reminderStatusSummary(result: ReminderReconcileResult | null, preferenc
 
 function toLogEvent(row: DogEventRecord): LogEvent {
   return { id: row.id, dogId: row.dog_id, type: row.event_type, occurredAt: row.occurred_at, note: row.description, origin: 'local-test' };
+}
+
+function toPottyLogEvent(row: PottyEventRecord): LogEvent {
+  return {
+    id: row.id,
+    dogId: row.dog_id,
+    type: row.event_type,
+    occurredAt: row.occurred_at,
+    note: null,
+    origin: 'local-test',
+  };
 }
 
 function toQuickLogMutationView(mutation: PendingLogMutation, status: QuickLogMutationView['status']): QuickLogMutationView {

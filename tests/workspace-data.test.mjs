@@ -49,6 +49,77 @@ test('dog-event history filters the supported everyday types and has determinist
   }
 });
 
+test('complete potty history repeats one fixed server window and advances by descending timestamp and id', async () => {
+  const now = new Date('2026-10-12T12:00:00.000Z');
+  const pages = [
+    [pottyRow('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', '2026-10-12T10:00:00.000Z'), pottyRow('dddddddd-dddd-4ddd-8ddd-dddddddddddd', '2026-10-12T10:00:00.000Z', 'poop')],
+    [pottyRow('cccccccc-cccc-4ccc-8ccc-cccccccccccc', '2026-10-11T09:00:00.000Z')],
+  ];
+  const { client, requests } = localClient(({ method, url }) => {
+    assert.equal(method, 'GET');
+    assert.equal(url.pathname, '/rest/v1/dog_events');
+    assert.equal(url.searchParams.get('select'), 'id,dog_id,event_type,occurred_at');
+    assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
+    assert.equal(url.searchParams.get('event_type'), 'in.(pee,poop)');
+    assert.deepEqual(url.searchParams.getAll('occurred_at'), [
+      'gte.2026-09-12T12:00:00.000Z',
+      'lte.2026-10-12T12:00:00.000Z',
+    ]);
+    assert.equal(url.searchParams.get('limit'), '2');
+    assert.equal(url.searchParams.has('offset'), false, 'complete history must not use offset pagination');
+    assert.equal(url.searchParams.get('order'), 'occurred_at.desc,id.desc');
+    return jsonResponse(pages[requests.length - 1] ?? []);
+  });
+
+  try {
+    const result = await workspaceData.fetchPottyEvents(client, dogId, now, 2);
+    assert.deepEqual(result, pages.flat());
+    assert.equal(requests.length, 2);
+    const secondPageCursor = requests[1].url.searchParams.get('or');
+    assert.match(secondPageCursor, /occurred_at\.lt\.2026-10-12T10:00:00\.000Z/);
+    assert.match(secondPageCursor, /and\(occurred_at\.eq\.2026-10-12T10:00:00\.000Z,id\.lt\.dddddddd-dddd-4ddd-8ddd-dddddddddddd\)/);
+  } finally {
+    await client.auth.dispose();
+  }
+});
+
+test('complete potty history rejects a later page error instead of returning earlier rows', async () => {
+  const { client, requests } = localClient(({ url }) => {
+    if (requests.length === 1) return jsonResponse([pottyRow('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', '2026-10-12T10:00:00.000Z')]);
+    return jsonResponse({ message: 'later page unavailable' }, 400);
+  });
+
+  try {
+    await assert.rejects(workspaceData.fetchPottyEvents(client, dogId, new Date('2026-10-12T12:00:00.000Z'), 1), /complete potty history/i);
+    assert.equal(requests.length, 2);
+  } finally {
+    await client.auth.dispose();
+  }
+});
+
+test('complete potty history forwards abort to an in-flight later page', async () => {
+  const controller = new AbortController();
+  let secondPageSignal;
+  const { client, requests } = localClient(({ signal }) => {
+    if (requests.length === 1) return jsonResponse([pottyRow('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', '2026-10-12T10:00:00.000Z')]);
+    secondPageSignal = signal;
+    return new Promise((_resolve, reject) => {
+      signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true });
+    });
+  });
+
+  try {
+    const pending = workspaceData.fetchPottyEvents(client, dogId, new Date('2026-10-12T12:00:00.000Z'), 1, 12_000, controller.signal);
+    while (requests.length < 2) await new Promise((resolve) => setTimeout(resolve, 0));
+    controller.abort();
+    await assert.rejects(pending, { name: 'AbortError' });
+    assert.ok(secondPageSignal instanceof AbortSignal);
+    assert.equal(secondPageSignal.aborted, true);
+  } finally {
+    await client.auth.dispose();
+  }
+});
+
 test('recovers an uncertain event update when the server returns an equivalent timestamp format', async () => {
   const changes = {
     event_type: 'walk',
@@ -369,6 +440,36 @@ test('training progress insert and delete reconcile uncertain outcomes by the fu
     await client.auth.dispose();
   }
 });
+
+test('training progress delete stays unresolved when the full-key readback still finds the completion', async () => {
+  const row = {
+    dog_id: dogId,
+    program_version_id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2',
+    step_id: 'dddddddd-dddd-4ddd-8ddd-ddddddddddd2',
+    completed_at: '2026-10-12T09:00:00.000Z',
+  };
+  const { client, requests } = localClient(async ({ method, url }) => {
+    assert.equal(url.pathname, '/rest/v1/training_progress');
+    assert.equal(url.searchParams.get('dog_id'), `eq.${row.dog_id}`);
+    assert.equal(url.searchParams.get('program_version_id'), `eq.${row.program_version_id}`);
+    assert.equal(url.searchParams.get('step_id'), `eq.${row.step_id}`);
+    if (method === 'DELETE') throw new TypeError('simulated unavailable delete response');
+    if (method === 'GET') return jsonResponse(row);
+    throw new Error(`Unexpected method ${method}`);
+  });
+
+  try {
+    const result = await workspaceData.deleteTrainingProgress(client, row.dog_id, row.program_version_id, row.step_id);
+    assert.deepEqual(result, { status: 'unknown' });
+    assert.deepEqual(requests.map(({ method }) => method), ['DELETE', 'GET']);
+  } finally {
+    await client.auth.dispose();
+  }
+});
+
+function pottyRow(id, occurredAt, eventType = 'pee') {
+  return { id, dog_id: dogId, event_type: eventType, occurred_at: occurredAt };
+}
 
 function localClient(handler) {
   const requests = [];

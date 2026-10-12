@@ -538,3 +538,17 @@ Tidsbekräftelse, separat planerad händelsetid på Hem/Hälsa, enhetlig chevron
 Verifierat lokalt: oberoende pnpm check37testfilerPASS, lint0fel38varningar, diffPASS; senaste visuella/flödes-QA44PASS utan pageerrors vid375/430/140%; Reviewer och SecurityPASS; båda sista iOS-exporter1427modulerPASS. Underlag docs/design/KNOW-02/checklista.md och docs/tasks/dev/rapport.md. Begränsningar: liveSQL/RLS/cascade och native/TestFlight/VoiceOver/riktig DynamicType ej verifierade. Nya migrationer202610110001 och202610110002 ej körda.
 
 Paketcommit: `7b9da840d2ca2ac8f5d5ed998d73495858c98eae`. Bascommit617fb67. Pushad och verifierad mot origin: `puppy-checklists-faq-qa11` pekar på `7b9da840d2ca2ac8f5d5ed998d73495858c98eae`. TestFlight-build: ingen genom detta paket. Utkasten måste sakgranskas/revideras eller tas bort före publik release.
+
+## DOG-RHYTHM-01 – v2.8-korrigering under implementation
+
+2026-10-12: lokal implementation på `feedback-2026-10-12` enligt v2.5. Hem visar lokal dagsräkning och senaste loggtid samt villkorad, källbelagd Estimerad vägledning eller personlig, avrundad beskrivning av historiska intervall. Endast tillräcklig logghistorik kan visa ett Rekommenderad-fönster; copy förklarar att tiderna bygger på tidigare liknande loggar och är ungefärliga. Trösklarna är otestade heuristiker, inte validerad prognos.
+
+Oberoende QA fann att Hem använde enbart LogScreens första 40 loggar, vilket kunde underskatta kompletta 30-dagarsantal och trösklar. Architect APPROVE och Critic PROCEED godkände korrigering v2.8. Den separata queryn använder fast fångat 30×24h-fönster, aktiv hund/pee/poop serverfilter, deterministisk timestamp+id keyset-paginering och publicerar först efter alla sidor; Hemretry är separat och håller partiella/stale data dolda. Korrigeringen är implementerad lokalt men står kvar som `implementing` i kön i väntan på kompletterande verifiering. Ingen commit eller push.
+
+`node --experimental-strip-types --test tests/home-carousel.test.mjs tests/log-model.test.mjs` passerar (2 filer). `tests/workspace-data.test.mjs` avslutas före testlastning: `ERR_MODULE_NOT_FOUND @supabase/supabase-js` eftersom lokala dependencies saknas; ingen installation görs. `pnpm check` och iOS-bundle kräver samma saknade dependencies; renderad 360/430/140 %-QA är **NOT TESTABLE** eftersom React Native Web saknas. Ingen oberoende QA/review, commit, push, distribution eller TestFlight-build har genomförts. UI-evidens: `docs/design/DOG-RHYTHM-01/checklista.md`.
+
+### DOG-RHYTHM-01 v2.9 — slutgranskad lokalt
+
+2026-10-12: separat, komplett, serverfiltrerad 30×24h kiss-/bajshistorik med keyset-pagination, färskhetsgrind, retry och scope-/generationsskydd i Hem. Före tio loggar per kategori visas källbelagd **Estimerad** rutin; därefter visas en deskriptiv, hundanpassad **Rekommenderad** summering av loggintervall med ungefärligt avrundat fönster bara när data uppfyller heuristikerna. Godkänd copy är “Ungefärligt tidsfönster utifrån dina loggar.” Otestade trösklar beskrivs inte som veterinär prognos.
+
+Critic PROCEED, independent QA PASS, Reviewer PASS. `pnpm check`: app/edge typecheck och 38/38 testfiler PASS, lint 0 fel/36 varningar. Renderad browser verifiering 11 state/bredd/retryfall och 140%-text PASS; review-channel iOS bundle PASS; diff och queue validation PASS. Native VoiceOver/enhetsbeteende och live Supabase RLS är NOT TESTABLE. Ingen app-store/TestFlight-publicering har skett.

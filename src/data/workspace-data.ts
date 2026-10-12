@@ -6,6 +6,8 @@ import type { HomeContent, OwnedDog } from './app-data';
 export const WORKSPACE_PAGE_SIZE = 40;
 const DEFAULT_REQUEST_TIMEOUT_MS = 12_000;
 const EVENT_COLUMNS = 'id,dog_id,event_type,occurred_at,occurred_on,weight_kg,duration_minutes,description';
+const POTTY_EVENT_COLUMNS = 'id,dog_id,event_type,occurred_at';
+const POTTY_HISTORY_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 const HEALTH_WEIGHT_COLUMNS = 'id,dog_id,actor_id,occurred_on,weight_kg';
 const HEALTH_HISTORY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,occurred_time,description';
 const HEALTH_HISTORY_LEGACY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,description';
@@ -20,6 +22,13 @@ export interface DogEventRecord {
   weight_kg: number | null;
   duration_minutes: number | null;
   description: string | null;
+}
+
+export interface PottyEventRecord {
+  id: string;
+  dog_id: string;
+  event_type: 'pee' | 'poop';
+  occurred_at: string;
 }
 
 export interface DogEventOperation {
@@ -214,6 +223,67 @@ export async function fetchDogEvents(
     if (error || !Array.isArray(data) || !data.every(isDogEventRecord)) throw new Error('Could not load dog events');
     return data;
   }, timeoutMs, parentSignal);
+}
+
+/** Fetches a complete, fixed 30-day potty history. Rows are kept local until the final page succeeds. */
+export async function fetchPottyEvents(
+  client: SupabaseClient,
+  dogId: string,
+  now = new Date(),
+  pageSize = WORKSPACE_PAGE_SIZE,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  parentSignal?: AbortSignal,
+): Promise<PottyEventRecord[]> {
+  if (!dogId.trim() || !Number.isFinite(now.getTime()) || !Number.isInteger(pageSize) || pageSize < 1) {
+    throw new Error('Invalid potty history query');
+  }
+  const capturedNowMs = now.getTime();
+  const upperBound = new Date(capturedNowMs).toISOString();
+  const lowerBound = new Date(capturedNowMs - POTTY_HISTORY_WINDOW_MS).toISOString();
+  const rows: PottyEventRecord[] = [];
+  const seenIds = new Set<string>();
+  let cursor: PottyEventRecord | null = null;
+
+  while (true) {
+    if (parentSignal?.aborted) throw new DOMException('Aborted', 'AbortError');
+    const page = await withRequestDeadline(async (signal) => {
+      let query = client.from('dog_events')
+        .select(POTTY_EVENT_COLUMNS)
+        .eq('dog_id', dogId)
+        .in('event_type', ['pee', 'poop'])
+        .gte('occurred_at', lowerBound)
+        .lte('occurred_at', upperBound)
+        .order('occurred_at', { ascending: false })
+        .order('id', { ascending: false })
+        .limit(pageSize);
+      if (cursor) {
+        query = query.or(`occurred_at.lt.${cursor.occurred_at},and(occurred_at.eq.${cursor.occurred_at},id.lt.${cursor.id})`);
+      }
+      const { data, error } = await query.abortSignal(signal);
+      if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+      if (error || !Array.isArray(data) || !data.every(isPottyEventRecord)) {
+        throw new Error('Could not load complete potty history');
+      }
+      return data;
+    }, timeoutMs, parentSignal);
+    if (parentSignal?.aborted) throw new DOMException('Aborted', 'AbortError');
+    if (page.length > pageSize) throw new Error('Potty history page exceeded its requested size');
+
+    let previous = cursor;
+    for (const row of page) {
+      const timestamp = Date.parse(row.occurred_at);
+      if (row.dog_id !== dogId || timestamp < capturedNowMs - POTTY_HISTORY_WINDOW_MS || timestamp > capturedNowMs
+        || seenIds.has(row.id) || (previous && !isAfterDescendingPottyCursor(row, previous))) {
+        throw new Error('Potty history page did not advance in stable order');
+      }
+      seenIds.add(row.id);
+      rows.push(row);
+      previous = row;
+    }
+    if (page.length < pageSize) return rows;
+    cursor = page[page.length - 1] ?? null;
+    if (!cursor) throw new Error('Potty history page did not advance');
+  }
 }
 
 export async function fetchDogEventById(
@@ -1075,6 +1145,21 @@ function isDogEventRecord(value: unknown): value is DogEventRecord {
     && (row.weight_kg === null || typeof row.weight_kg === 'number')
     && (row.duration_minutes === null || typeof row.duration_minutes === 'number')
     && (row.description === null || typeof row.description === 'string' && Array.from(row.description).length <= 500);
+}
+
+function isPottyEventRecord(value: unknown): value is PottyEventRecord {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return typeof row.id === 'string' && row.id.length > 0
+    && typeof row.dog_id === 'string'
+    && (row.event_type === 'pee' || row.event_type === 'poop')
+    && typeof row.occurred_at === 'string' && Number.isFinite(Date.parse(row.occurred_at));
+}
+
+function isAfterDescendingPottyCursor(row: PottyEventRecord, previous: PottyEventRecord): boolean {
+  const currentTime = Date.parse(row.occurred_at);
+  const previousTime = Date.parse(previous.occurred_at);
+  return currentTime < previousTime || (currentTime === previousTime && row.id < previous.id);
 }
 
 function isHealthWeightRecord(value: unknown): value is HealthWeightRecord {

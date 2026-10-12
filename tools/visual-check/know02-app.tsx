@@ -6,7 +6,7 @@ import type { PublishedTrainingProgram } from '../../src/data/workspace-data';
 import { AppScreen } from '../../src/components/AppPrimitives';
 import { BottomNav } from '../../src/components/ui';
 import { HomeCarousel } from '../../src/features/home/HomeCarousel';
-import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, REVIEW_TRAINING_PROGRAMS } from '../../src/features/knowledge/review-content';
+import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_PROGRAMS } from '../../src/features/knowledge/review-content';
 import { KnowledgeScreen } from '../../src/features/knowledge/KnowledgeScreen';
 import type { PendingChecklistMemory } from '../../src/features/knowledge/PuppyChecklistScreen';
 import { PublishedTrainingScreen } from '../../src/features/training/PublishedTrainingScreen';
@@ -110,10 +110,11 @@ const items: readonly HomeContent[] = [
   { id: 'review-v1:guide:first-days', contentId: 'review-v1:guide:first-days', version: 1, title: 'En lugn start hemma', body: 'Tillfälligt exempel – innehållet är inte sakgranskat.\n\nLåt valpen landa i sin egen takt.', contentType: 'article', sources: [] },
 ];
 
-function KnowledgeRoute({ pending, onPendingChange, sessionKey, dogId }: { pending: PendingChecklistMemory | null; onPendingChange: (state: PendingChecklistMemory | null) => void; sessionKey: string; dogId: string }) {
-  const focusedContentId = query.get('screen') === 'faq' ? FAQ_DESTINATION_ID : query.get('screen') === 'checklist-detail' || query.get('screen') === 'checklist-overview' ? CHECKLIST_DESTINATION_ID : null;
+function KnowledgeRoute({ pending, onPendingChange, sessionKey, dogId, directContentId, directFromHome = false, onBack = () => undefined }: { pending: PendingChecklistMemory | null; onPendingChange: (state: PendingChecklistMemory | null) => void; sessionKey: string; dogId: string; directContentId?: string | null; directFromHome?: boolean; onBack?: () => void }) {
+  const focusedContentId = directContentId !== undefined ? directContentId : query.get('screen') === 'faq' ? FAQ_DESTINATION_ID : query.get('screen') === 'checklist-detail' || query.get('screen') === 'checklist-overview' ? CHECKLIST_DESTINATION_ID : null;
   return <AppScreen scrollKey="know02-knowledge" footer={<BottomNav active="more" onChange={() => undefined} />}>
-    <KnowledgeScreen onBack={() => undefined} items={items} contentState="ready" focusedContentId={focusedContentId}
+    <KnowledgeScreen onBack={onBack} items={items} contentState="ready" focusedContentId={focusedContentId}
+      focusedContentOrigin={directFromHome ? 'home-carousel' : focusedContentId ? 'knowledge-list' : null} focusScopeKey={`${sessionKey}:${dogId}`}
       client={client as never} dogId={dogId} ageWeeks={Number(query.get('ageWeeks') ?? 10)} sessionKey={sessionKey}
       checklistPending={pending} onChecklistPendingChange={onPendingChange} />
   </AppScreen>;
@@ -121,23 +122,31 @@ function KnowledgeRoute({ pending, onPendingChange, sessionKey, dogId }: { pendi
 
 function TrainingRoute() {
   const [programs, setPrograms] = useState<readonly PublishedTrainingProgram[]>(REVIEW_TRAINING_PROGRAMS);
+  const [focusGeneration, setFocusGeneration] = useState(0);
   const onCompleteStep = async (program: PublishedTrainingProgram, stepId: string) => {
     window.__know02CloudWrites = (window.__know02CloudWrites ?? 0) + 1;
     setPrograms((current) => current.map((item) => item.id === program.id ? { ...item, completedStepIds: [...item.completedStepIds, stepId] } : item));
     return { programId: program.id, stepId };
   };
-  return <AppScreen scrollKey="know02-training" footer={<BottomNav active="training" onChange={() => undefined} />}>
+  return <AppScreen scrollKey={`know02-training:${focusGeneration}`} footer={<BottomNav active="training" onChange={() => undefined} />}>
     <PublishedTrainingScreen programs={programs} paused={[]} busyStepKey={null} error="" reviewMode
       onCompleteStep={onCompleteStep} onContinue={() => { window.__know02ContinueCount = (window.__know02ContinueCount ?? 0) + 1; }}
-      onResetProgram={() => undefined} onRetry={() => undefined} />
+      onResetProgram={() => undefined} onUndoStep={async () => {
+        window.__know02CloudWrites = (window.__know02CloudWrites ?? 0) + 1;
+        return false;
+      }} onFocusProgram={() => setFocusGeneration((current) => current + 1)} onRetry={() => undefined} />
   </AppScreen>;
 }
 
 function HomeRoute() {
+  const [openedContentId, setOpenedContentId] = useState<string | null>(null);
   const dog: OwnedDog = { id: DOG_ID, name: 'Luna', breed_id: 'synthetic-mix', birth_date: '2026-08-01' };
+  if (openedContentId) return <KnowledgeRoute pending={null} onPendingChange={() => undefined} sessionKey="synthetic-home-session" dogId={DOG_ID}
+    directContentId={openedContentId} directFromHome onBack={() => setOpenedContentId(null)} />;
   return <AppScreen scrollKey="know02-home-carousel" footer={<BottomNav active="home" onChange={() => undefined} />}>
-    <HomeCarousel dog={dog} plans={[]} selectedDatePlans={[]} content={REVIEW_TRAINING_GUIDES} contentState="ready"
-      onGo={() => undefined} onOpenContent={(id) => { window.__know02OpenedContent = id; }} />
+    <HomeCarousel dog={dog} pottyEvents={[]} pottyHistoryState="ready" pottyRetrying={false} onRetryPotty={() => undefined}
+      today="2026-10-11" plans={[]} selectedDatePlans={[]} content={items} contentState="ready"
+      onGo={() => undefined} onOpenContent={(id) => { window.__know02OpenedContent = id; setOpenedContentId(id); }} />
   </AppScreen>;
 }
 
@@ -152,7 +161,7 @@ function App() {
   if (screen === 'home-carousel') return <HomeRoute />;
   if (!routeMounted) return null;
   if (screen === 'review-training-list' || screen === 'review-training-detail') return <TrainingRoute />;
-  return <KnowledgeRoute key={`scope-${scope}`} pending={pending} onPendingChange={setPending} sessionKey={`synthetic-session-${scope}`} dogId={scope ? `${DOG_ID}-scope-${scope}` : DOG_ID} />;
+  return <KnowledgeRoute pending={pending} onPendingChange={setPending} sessionKey={`synthetic-session-${scope}`} dogId={scope ? `${DOG_ID}-scope-${scope}` : DOG_ID} />;
 }
 
 createRoot(document.getElementById('root')!).render(<App />);

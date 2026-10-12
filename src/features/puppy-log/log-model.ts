@@ -44,6 +44,31 @@ export interface PottyPatternSummary {
   medianIntervalMinutes: number | null;
 }
 
+export interface PottyRhythmSummary {
+  type: 'pee' | 'poop';
+  mode: 'estimated' | 'recommended';
+  todayCount: number;
+  latestOccurredAt: string | null;
+  medianIntervalMinutes: number | null;
+  windowStart: string | null;
+  windowEnd: string | null;
+  timesVary: boolean;
+}
+
+interface TimedLogEvent {
+  event: LogEvent;
+  timestampMicros: number;
+  timestampMs: number;
+}
+
+const POTTY_TYPES = ['pee', 'poop'] as const;
+const POTTY_WINDOW_MICROS = 30 * 24 * 60 * 60 * 1_000_000;
+const INTERVAL_GAP_LIMIT_MINUTES: Record<PottyRhythmSummary['type'], number> = { pee: 12 * 60, poop: 36 * 60 };
+const WINDOW_HALF_WIDTH_MINUTES = 30;
+const OUTING_WINDOW_ROUND_MINUTES = 15;
+const MILLISECONDS_PER_MINUTE = 60_000;
+const MICROSECONDS_PER_MINUTE = 60_000_000;
+
 export type QuickLogPressDecision = 'blocked' | 'confirm-duplicate' | 'submit';
 
 export function decideQuickLogPress({ blocked, force, lastSubmitAt, timestamp, recentDuplicate }: {
@@ -61,6 +86,22 @@ export function decideQuickLogPress({ blocked, force, lastSubmitAt, timestamp, r
 
 export function canStartLogMutation(hasPendingIntent: boolean, inFlight: boolean): boolean {
   return !hasPendingIntent && !inFlight;
+}
+
+export function canStartPottyHistoryRetry(retrying: boolean): boolean {
+  return !retrying;
+}
+
+export function canPublishPottyHistoryResult({ expectedScope, currentScope, generation, currentGeneration, mounted, aborted, deletionInvalidated }: {
+  expectedScope: string;
+  currentScope: string;
+  generation: number;
+  currentGeneration: number;
+  mounted: boolean;
+  aborted: boolean;
+  deletionInvalidated: boolean;
+}): boolean {
+  return mounted && !aborted && !deletionInvalidated && expectedScope === currentScope && generation === currentGeneration;
 }
 
 export interface LogMutationFlight {
@@ -113,6 +154,164 @@ export function summarizePottyPatterns(events: readonly LogEvent[]): PottyPatter
       ? intervals[middle] : (intervals[middle - 1] + intervals[middle]) / 2;
     return { type, count: timestamps.length, medianIntervalMinutes };
   });
+}
+
+/**
+ * Summarizes the active dog's saved potty logs. The projected window is a
+ * rounded description of recorded history, not a statement about the dog's need.
+ */
+export function summarizePottyRhythm(
+  events: readonly LogEvent[],
+  dogId: string | null | undefined,
+  now = new Date(),
+  localToday = localDateForTimestamp(now.getTime()),
+): PottyRhythmSummary[] {
+  if (!dogId?.trim() || !Number.isFinite(now.getTime()) || !isLocalDate(localToday)) return [];
+
+  const nowMicros = now.getTime() * 1000;
+  const uniqueEvents = uniquePottyEvents(events, dogId, nowMicros);
+  return POTTY_TYPES.map((type): PottyRhythmSummary => {
+    const matching = uniqueEvents.filter((item) => item.event.type === type);
+    const todayCount = matching.filter((item) => localDateForTimestamp(item.timestampMs) === localToday).length;
+    const latest = matching.at(-1)?.event ?? null;
+    const sample = matching.filter((item) => item.timestampMicros >= nowMicros - POTTY_WINDOW_MICROS).slice(-10);
+    const personal = sample.length === 10 && coversTwoLocalDatesAnd24Hours(sample);
+    if (!personal) {
+      return {
+        type,
+        mode: 'estimated',
+        todayCount,
+        latestOccurredAt: latest?.occurredAt ?? null,
+        medianIntervalMinutes: null,
+        windowStart: null,
+        windowEnd: null,
+        timesVary: false,
+      };
+    }
+
+    const intervalMinutes = sample.slice(1).map((item, index) => (
+      (item.timestampMicros - sample[index].timestampMicros) / MICROSECONDS_PER_MINUTE
+    )).filter((minutes) => minutes <= INTERVAL_GAP_LIMIT_MINUTES[type]);
+    if (intervalMinutes.length < 8) {
+      return {
+        type,
+        mode: 'estimated',
+        todayCount,
+        latestOccurredAt: latest?.occurredAt ?? null,
+        medianIntervalMinutes: null,
+        windowStart: null,
+        windowEnd: null,
+        timesVary: false,
+      };
+    }
+
+    const medianIntervalMinutes = median(intervalMinutes);
+    const medianAbsoluteDeviation = median(intervalMinutes.map((minutes) => Math.abs(minutes - medianIntervalMinutes)));
+    if (medianAbsoluteDeviation > 60) {
+      return {
+        type,
+        mode: 'recommended',
+        todayCount,
+        latestOccurredAt: latest?.occurredAt ?? null,
+        medianIntervalMinutes,
+        windowStart: null,
+        windowEnd: null,
+        timesVary: true,
+      };
+    }
+
+    const latestSample = sample.at(-1)!;
+    const centerMs = latestSample.timestampMicros / 1000 + medianIntervalMinutes * MILLISECONDS_PER_MINUTE;
+    const halfWidthMs = Math.max(WINDOW_HALF_WIDTH_MINUTES, medianAbsoluteDeviation) * MILLISECONDS_PER_MINUTE;
+    const roundingMs = OUTING_WINDOW_ROUND_MINUTES * MILLISECONDS_PER_MINUTE;
+    const windowStartMs = Math.floor((centerMs - halfWidthMs) / roundingMs) * roundingMs;
+    const windowEndMs = Math.ceil((centerMs + halfWidthMs) / roundingMs) * roundingMs;
+    const hasFutureWindow = windowEndMs > now.getTime();
+
+    return {
+      type,
+      mode: 'recommended',
+      todayCount,
+      latestOccurredAt: latest?.occurredAt ?? null,
+      medianIntervalMinutes,
+      windowStart: hasFutureWindow ? new Date(windowStartMs).toISOString() : null,
+      windowEnd: hasFutureWindow ? new Date(windowEndMs).toISOString() : null,
+      timesVary: false,
+    };
+  });
+}
+
+function uniquePottyEvents(events: readonly LogEvent[], dogId: string, nowMicros: number): TimedLogEvent[] {
+  const byTimestamp = new Map<string, TimedLogEvent>();
+  for (const event of events) {
+    if (!event || event.dogId !== dogId || event.origin !== 'local-test' || (event.type !== 'pee' && event.type !== 'poop')) continue;
+    if (typeof event.id !== 'string' || !event.id.trim()) continue;
+    const timestamp = parseIsoTimestamp(event.occurredAt);
+    if (!timestamp || timestamp.timestampMicros > nowMicros) continue;
+    const key = `${event.type}:${timestamp.timestampMicros}`;
+    const existing = byTimestamp.get(key);
+    if (!existing || event.id < existing.event.id) {
+      byTimestamp.set(key, { event, ...timestamp });
+    }
+  }
+  return [...byTimestamp.values()].sort((left, right) => left.timestampMicros - right.timestampMicros);
+}
+
+function parseIsoTimestamp(value: string): { timestampMicros: number; timestampMs: number } | null {
+  if (typeof value !== 'string') return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?(Z|[+-]\d{2}:\d{2})$/.exec(value);
+  if (!match) return null;
+
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText, fraction = '', zone] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  const second = Number(secondText);
+  const offsetMatch = /^([+-])(\d{2}):(\d{2})$/.exec(zone);
+  const offsetHour = offsetMatch ? Number(offsetMatch[2]) : 0;
+  const offsetMinute = offsetMatch ? Number(offsetMatch[3]) : 0;
+  const calendar = new Date(0);
+  calendar.setUTCFullYear(year, month - 1, day);
+  calendar.setUTCHours(hour, minute, second, 0);
+  if (
+    month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || minute > 59 || second > 59 ||
+    calendar.getUTCFullYear() !== year || calendar.getUTCMonth() !== month - 1 || calendar.getUTCDate() !== day ||
+    calendar.getUTCHours() !== hour || calendar.getUTCMinutes() !== minute || calendar.getUTCSeconds() !== second ||
+    offsetHour > 23 || offsetMinute > 59
+  ) return null;
+
+  const wholeSecondMs = Date.parse(`${yearText}-${monthText}-${dayText}T${hourText}:${minuteText}:${secondText}${zone}`);
+  if (!Number.isFinite(wholeSecondMs)) return null;
+  const microsWithinSecond = Number(fraction.padEnd(6, '0') || '0');
+  const timestampMicros = wholeSecondMs * 1000 + microsWithinSecond;
+  const timestampMs = wholeSecondMs + Math.floor(microsWithinSecond / 1000);
+  return { timestampMicros, timestampMs };
+}
+
+function coversTwoLocalDatesAnd24Hours(sample: readonly TimedLogEvent[]): boolean {
+  const dates = new Set(sample.map((item) => localDateForTimestamp(item.timestampMs)));
+  return dates.size >= 2 && sample.at(-1)!.timestampMicros - sample[0].timestampMicros >= 24 * 60 * MICROSECONDS_PER_MINUTE;
+}
+
+function median(values: readonly number[]): number {
+  const ordered = [...values].sort((left, right) => left - right);
+  const middle = Math.floor(ordered.length / 2);
+  return ordered.length % 2 === 1 ? ordered[middle] : (ordered[middle - 1] + ordered[middle]) / 2;
+}
+
+function localDateForTimestamp(timestampMs: number): string {
+  const value = new Date(timestampMs);
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
+}
+
+function isLocalDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(0);
+  date.setFullYear(year, month - 1, day);
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
 }
 
 export function createLogEvent(input: CreateLogEventInput, now = new Date()): LogEvent {

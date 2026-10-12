@@ -1,6 +1,6 @@
 # Kunskap
 
-`KnowledgeScreen.tsx` har fyra flikar: För dig, Artiklar, Checklistor och FAQ. Publicerade guider kommer från arbetsytans ålders-/rasurval i Supabase. Hem och Kunskap delar samma version-ID, innehåll och källista. Loading, fel med retry och tomt publicerat urval skiljs åt; guideflikarnas tillstånd visas inte ovanpå checklistor/FAQ. En guide visas i en separat läsvy. `guide-body.ts` tolkar rubriker, enkla listor och stycken till native text; rå HTML renderas inte. `source-links.ts` tillåter endast syntaktiskt giltiga HTTPS-länkar utan användaruppgifter, som öppnas efter användartryck med felåterkoppling.
+`KnowledgeScreen.tsx` har fyra flikar: För dig, Artiklar, Checklistor och FAQ. Publicerade guider kommer från arbetsytans ålders-/rasurval i Supabase. Hem och Kunskap delar samma version-ID, innehåll och källista. Loading, fel med retry och tomt publicerat urval skiljs åt; guideflikarnas tillstånd visas inte ovanpå checklistor/FAQ. En guide visas i en separat läsvy. Artiklar som öppnas från Hem-karusellen bär ett explicit `home-carousel`-ursprung och går direkt hem via läsvyns interna Tillbaka; guider öppnade från Kunskapslistan går tillbaka till listan. Fokusintenten är bunden till `focusScopeKey`, och lokalt artikelval rensas när hund-/kontoscope eller parentens fokus ändras. `guide-body.ts` tolkar rubriker, enkla listor och stycken till native text; rå HTML renderas inte. `source-links.ts` tillåter endast syntaktiskt giltiga HTTPS-länkar utan användaruppgifter, som öppnas efter användartryck med felåterkoppling.
 
 ## Checklistor och FAQ
 
@@ -18,4 +18,4 @@ Ingen optimistisk grön sparstatus används. UUID, exakta återläsningar och vi
 
 ## Verifiering
 
-Kör `pnpm check` för typkontroll, lint och API-/intent-/innehållstester. `tools/visual-check/know02-app.tsx` och `verify-know02.py` provar de aktuella skärmarna med syntetisk adapter, CRUD, okända resultat, remount/scope och stor text; evidens och begränsningar finns i `docs/design/KNOW-02/checklista.md`. Native presentation, VoiceOver/riktig Dynamic Type samt verklig SQL/RLS är separata verifieringar.
+Kör `pnpm check` för typkontroll, lint och API-/intent-/innehållstester. `tools/visual-check/know02-app.tsx` och `verify-know02.py` provar de aktuella skärmarna med syntetisk adapter, CRUD, okända resultat, remount/scope, båda backvägarna och stor text; evidens och begränsningar finns i `docs/design/KNOW-02/checklista.md` och `docs/design/CAROUSEL-BACK-01/checklista.md`. Native presentation, VoiceOver/riktig Dynamic Type samt verklig SQL/RLS är separata verifieringar.

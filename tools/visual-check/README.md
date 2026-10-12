@@ -23,6 +23,14 @@ TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_ENTRY=tools/visual-check/know02-a
 python tools/visual-check/verify-know02.py
 ```
 
+DOG-RHYTHM-01 har en separat entry/output med syntetiska uppgifter för kiss-/bajsöversikten på Hem. Den fångar laddning, för få loggar, personlig historik, fel och pågående retry vid 360/430 px samt ett 140 %-textprov till `docs/design/DOG-RHYTHM-01/evidence/`:
+
+```sh
+TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_ENTRY=tools/visual-check/dog-rhythm-app.tsx TASSLA_UI_OUTPUT=/tmp/tassla-preview/site TASSLA_UI_REVIEW=true node tools/visual-check/build.cjs
+python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-preview/site
+python tools/visual-check/verify-dog-rhythm.py
+```
+
 Browserklockan låses till 2026-10-11 kl. 15 UTC för reproducerbara loggtider. `?screen=log&mutation=failed` respektive `unsure` provar återhämtning utan backend. `?state=empty|loading|error` provar lästillstånd.
 
 React Native Web-harnessen registrerar RN `Alert`-alternativen och kan anropa en vald callback via `window.__tasslaAlertActions`; detta verifierar menyvalens kopplade åtgärder, inte native Alert-visning, tangentbords-/VoiceOver-beteende, native PDF eller databas/RLS. Harnessen verifierar inte animationers native bildfrekvens. 140 % text är ett layoutprov, inte fullständig Dynamic Type-verifiering.

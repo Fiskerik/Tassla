@@ -216,6 +216,12 @@ Exempelvis är delning av vardagsloggen med en partner inte beslutad MVP-funktio
 
 För MOTION-paketet godkände Erik mikrorörelse, tips vid första användning och en valpfigur utanför den ursprungliga MVP:n. Omfattning och begränsningar finns i [beslut 0004](decisions/0004-motion-package.md). Detta tillägg gäller endast MOTION-paketets fyra avgränsade slices; det ändrar inte övrig MVP-scope.
 
+### Eriks tillägg 2026-10-12, utanför ursprunglig MVP
+
+Erik beställde följande appändringar med inlinebilder som layoutreferenser. De är godkända krav, men genomförs i separata planerade och granskade slices: (1) deterministisk, hundspecifik uppskattning av nästa vanliga kiss-/bajstillfälle från befintliga loggar och en aktuell Hem-summering; (2) återställbar träningschecklista med återkoppling vid bekräftad completion, programval som bildgrid och rak väg tillbaka till Hem; (3) enhetliga Hem-karusellbilder och kompakta snabbval för fyra ägarvalda loggtyper; (4) dragordning för snabbvalen; (5) profilfoto från enheten, kompakt hundkort och växling mellan flera hundar; (6) Hälsas gröna plusåtgärd och bättre avstånd före träningspåminnelse; (7) mindre Loggknappar.
+
+Detta uttryckliga tillägg utökar flerhunds- och mönsterfunktionerna som tidigare låg utanför scope. Varje del behöver en konkret data-/UI-plan och QA före kod. DOG-RHYTHM-01 hämtar Hemkortets antal och mönster från separat, komplett, aktiv-hund-historik inom ett fångat rullande 30 × 24-timmarsfönster; Loggflödets 40-radersfeed är inte countkälla. Vid fel eller ofullständig laddning döljs antal och uppskattningar, med ett uttryckligt retry på Hem. Före tio giltiga händelser per kategori visas separat, villkorad och källbelagd allmän rutinvägledning; appen härleder inte livsfas från hundens ålder. Från tio loggar visas endast ett deskriptivt typiskt intervall mellan registrerade händelser och, när variationen är tillräckligt låg, ett avrundat historikfönster intill en uttrycklig förklaring. Dessa trösklar och beräkningar är otestade heuristiker, inte veterinär rådgivning eller validerade prognoser om hundens behov. Ny dependency eller databasändring kräver separat Architect-review och följer ordinarie godkännandegrind.
+
 ## Definition av framgång
 
 MVP:n är validerad när pilotdata visar att:

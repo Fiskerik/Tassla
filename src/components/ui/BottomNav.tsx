@@ -19,16 +19,16 @@ export function BottomNav({ active = 'home', onChange }: { active?: BottomNavDes
       const selected = item.key === active;
       return <MotionPressable key={item.key} accessibilityRole="tab" accessibilityLabel={item.label} accessibilityState={{ selected }} onPress={() => onChange(item.key)} style={({ pressed }) => [styles.item, pressed && styles.pressed]}>
         <Ionicons name={selected ? item.activeIcon : item.icon} size={tokens.size.iconMd} color={selected ? tokens.colors.primary : tokens.colors.textSecondary} />
-        <Text style={[styles.label, selected && styles.selectedLabel]}>{item.label}</Text>
+        <Text numberOfLines={1} style={[styles.label, selected && styles.selectedLabel]}>{item.label}</Text>
       </MotionPressable>;
     })}
   </View>;
 }
 
 const styles = StyleSheet.create({
-  nav: { alignSelf: 'stretch', minHeight: tokens.size.navHeight, flexDirection: 'row', gap: tokens.spacing.xs, backgroundColor: tokens.colors.surface, borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border },
+  nav: { alignSelf: 'stretch', minHeight: tokens.size.navHeight, flexDirection: 'row', backgroundColor: tokens.colors.surface, borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border },
   item: { flex: 1, minWidth: tokens.size.touchMin, minHeight: tokens.size.navHeight, alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs },
-  label: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'center', width: '100%', flexShrink: 1 },
+  label: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'center', width: '100%' },
   selectedLabel: { color: tokens.colors.primary, fontWeight: '700' },
   pressed: { backgroundColor: tokens.colors.selectedSurface },
 });

@@ -126,6 +126,40 @@ with sync_playwright() as p:
     faq_home.click(position={'x': 20, 'y': 25})
     check(page.evaluate('window.__know02OpenedContent') == 'review-v1:destination:faq', 'Home FAQ card uses the stable FAQ destination ID')
 
+    # A focused article from the Home carousel returns to Home in one internal back step.
+    for width in (360, 430):
+        direct = browser.new_page(viewport={'width': width, 'height': 844}, device_scale_factor=1)
+        direct.on('pageerror', lambda error: PAGE_ERRORS.append(str(error)))
+        direct.goto(f'{BASE}?screen=home-carousel')
+        direct.get_by_role('button', name=re.compile('En lugn start hemma')).click()
+        direct.get_by_role('heading', name='En lugn start hemma').wait_for(timeout=3000)
+        direct.get_by_role('button', name='Tillbaka', exact=True).click()
+        direct.get_by_text('För dig idag').wait_for(timeout=3000)
+        check(direct.get_by_role('heading', name='En lugn start hemma').count() == 0, f'Home carousel article returns directly to Home at {width}px')
+        check(no_horizontal_overflow(direct), f'Home article return has no horizontal overflow at {width}px')
+        screenshot(direct, f'carousel-article-back-home-{width}.png')
+        direct.close()
+
+    # A guide opened from Knowledge returns to its list; changing dog scope in place clears stale article focus.
+    for width in (360, 430):
+        scoped = browser.new_page(viewport={'width': width, 'height': 844}, device_scale_factor=1)
+        scoped.on('pageerror', lambda error: PAGE_ERRORS.append(str(error)))
+        scoped.goto(f'{BASE}?screen=knowledge')
+        scoped.get_by_role('button', name='Läs En lugn start hemma').click()
+        scoped.get_by_role('heading', name='En lugn start hemma').wait_for(timeout=3000)
+        scoped.get_by_role('button', name='Tillbaka till guider', exact=True).click()
+        scoped.get_by_role('button', name='Läs En lugn start hemma').wait_for(timeout=3000)
+        check(scoped.get_by_role('heading', name='En lugn start hemma').count() == 0, f'Knowledge article returns to its list at {width}px')
+        screenshot(scoped, f'knowledge-article-back-list-{width}.png')
+        scoped.get_by_role('button', name='Läs En lugn start hemma').click()
+        scoped.get_by_role('heading', name='En lugn start hemma').wait_for(timeout=3000)
+        scoped.evaluate('window.__know02ChangeScope()')
+        scoped.get_by_role('button', name='Läs En lugn start hemma').wait_for(timeout=3000)
+        check(scoped.get_by_role('heading', name='En lugn start hemma').count() == 0, f'Mounted KnowledgeScreen clears stale article on scope change at {width}px')
+        screenshot(scoped, f'knowledge-scope-clears-article-{width}.png')
+        check(no_horizontal_overflow(scoped), f'Knowledge scope reset has no horizontal overflow at {width}px')
+        scoped.close()
+
     # Review training is session-local and does not call the cloud progression handler.
     page.goto(f'{BASE}?screen=review-training-list')
     page.get_by_role('button', name='Utforska i egen takt').wait_for(timeout=5000)
@@ -139,6 +173,14 @@ with sync_playwright() as p:
     page.get_by_role('tab', name='Framsteg').click()
     page.get_by_text('1 av 2 genomförda').wait_for(timeout=3000)
     screenshot(page, 'review-training-progress-375.png')
+    page.goto(f'{BASE}?screen=review-training-list')
+    page.get_by_role('button', name='Utforska i egen takt').click()
+    page.get_by_role('button', name='Markera övningen som genomförd').click()
+    page.get_by_role('button', name='Utforska i egen takt, Genomförd').click()
+    page.get_by_role('button', name='Markera som ej genomförd').click()
+    page.get_by_text('0 av 2 genomförda').wait_for(timeout=3000)
+    check(page.evaluate('window.__know02CloudWrites ?? 0') == 0, 'Review training undo also stays out of cloud progression')
+    screenshot(page, 'review-training-undo-local-375.png')
 
     # Loading/error are distinct; error never implies a saved zero count.
     page = browser.new_page(viewport={'width': 375, 'height': 844})

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { AppState, Image, StyleSheet, Text, View } from 'react-native';
 import { AppBar, Button, Card, ListRow, SectionHeader, Skeleton } from '../../components/ui';
 import { MotionPressable, ScreenTransition } from '../../components/ui/Motion';
 import type { HomeContent, OwnedDog } from '../../data/app-data';
@@ -11,14 +11,48 @@ import { HomeCarousel } from './HomeCarousel';
 import { homeTimelineForDate } from './home-timeline';
 
 type Destination = 'log' | 'training' | 'health' | 'profile' | 'notification-settings' | 'planned-health' | 'knowledge';
-export function HomeScreen({ dog, breed = '', events, healthHistory = [], healthHistoryState = 'ready', plans = [], content, contentState, logState = 'ready', planState = 'ready', nextStep, onGo, onOpenContent, onRetryContent, onRetryHealthHistory }: {
-  dog: OwnedDog; breed?: string; events: readonly LogEvent[]; healthHistory?: readonly HealthHistoryRecord[]; healthHistoryState?: 'loading' | 'ready' | 'error'; plans?: readonly PlannedHealthRecord[];
+export function HomeScreen({ dog, breed = '', events, pottyEvents, pottyHistoryState, pottyRetrying, onRetryPotty, healthHistory = [], healthHistoryState = 'ready', plans = [], content, contentState, logState = 'ready', planState = 'ready', nextStep, onGo, onOpenContent, onRetryContent, onRetryHealthHistory }: {
+  dog: OwnedDog; breed?: string; events: readonly LogEvent[]; pottyEvents: readonly LogEvent[]; pottyHistoryState: 'loading' | 'ready' | 'error'; pottyRetrying: boolean; onRetryPotty: () => void; healthHistory?: readonly HealthHistoryRecord[]; healthHistoryState?: 'loading' | 'ready' | 'error'; plans?: readonly PlannedHealthRecord[];
   content: readonly HomeContent[]; contentState: 'loading' | 'ready' | 'error';
   logState?: 'loading' | 'ready' | 'error'; planState?: 'loading' | 'ready' | 'error'; nextStep?: string;
   onGo: (page: Destination) => void; onOpenContent: (id: string) => void; onRetryContent: () => void; onRetryHealthHistory: () => void;
 }) {
-  const today = localDate();
+  const [today, setToday] = useState(localDate);
   const [selected, setSelected] = useState(today);
+  const todayRef = useRef(today);
+  const selectedRef = useRef(selected);
+  useEffect(() => { selectedRef.current = selected; }, [selected]);
+  useEffect(() => {
+    let active = true;
+    let midnightTimer: ReturnType<typeof setTimeout> | undefined;
+    const refreshLocalDay = () => {
+      if (!active) return;
+      const nextToday = localDate();
+      const previousToday = todayRef.current;
+      todayRef.current = nextToday;
+      if (nextToday !== previousToday) {
+        setToday(nextToday);
+        if (selectedRef.current === previousToday) {
+          selectedRef.current = nextToday;
+          setSelected(nextToday);
+        }
+      }
+      if (midnightTimer) clearTimeout(midnightTimer);
+      const now = new Date();
+      const nextMidnight = new Date(now);
+      nextMidnight.setHours(24, 0, 0, 0);
+      midnightTimer = setTimeout(refreshLocalDay, Math.max(0, nextMidnight.getTime() - now.getTime() + 50));
+    };
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refreshLocalDay();
+    });
+    refreshLocalDay();
+    return () => {
+      active = false;
+      if (midnightTimer) clearTimeout(midnightTimer);
+      subscription.remove();
+    };
+  }, []);
   const dates = Array.from({ length: 5 }, (_, index) => {
     const date = new Date(`${today}T12:00:00`);
     date.setDate(date.getDate() + index - 2);
@@ -41,9 +75,9 @@ export function HomeScreen({ dog, breed = '', events, healthHistory = [], health
         </MotionPressable>
       </View>
     </Card>
-    <HomeCarousel dog={dog} plans={plans} selectedDatePlans={planState === 'ready' ? dailyPlans : []} content={content} contentState={contentState} nextStep={nextStep} onGo={onGo} onOpenContent={onOpenContent} />
+    <HomeCarousel dog={dog} pottyEvents={pottyEvents} pottyHistoryState={pottyHistoryState} pottyRetrying={pottyRetrying} onRetryPotty={onRetryPotty} today={today} plans={plans} selectedDatePlans={planState === 'ready' ? dailyPlans : []} content={content} contentState={contentState} nextStep={nextStep} onGo={onGo} onOpenContent={onOpenContent} />
     <View style={styles.week} accessibilityRole="tablist" accessibilityLabel="Välj dag">
-      {dates.map(({ key, date }) => <MotionPressable key={key} accessibilityRole="tab" accessibilityLabel={date.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' })} accessibilityState={{ selected: key === selected }} onPress={() => setSelected(key)} style={[styles.day, key === selected && styles.selectedDay]}>
+      {dates.map(({ key, date }) => <MotionPressable key={key} accessibilityRole="tab" accessibilityLabel={date.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' })} accessibilityState={{ selected: key === selected }} onPress={() => { selectedRef.current = key; setSelected(key); }} style={[styles.day, key === selected && styles.selectedDay]}>
         <Text style={[styles.weekday, key === selected && styles.selectedText]}>{date.toLocaleDateString('sv-SE', { weekday: 'short' }).replace('.', '')}</Text>
         <Text style={[styles.date, key === selected && styles.selectedText]}>{date.getDate()}</Text>
         <View style={[styles.dayDot, key === today && (key === selected ? styles.lightDot : styles.todayDot)]} />

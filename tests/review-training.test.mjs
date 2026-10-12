@@ -17,6 +17,19 @@ test('review completion and reset remain local, unique, and scoped by synthetic 
   assert.equal(state.isReviewTrainingProgram('published-program-id'), false);
 });
 
+test('review undo removes only the selected synthetic step without changing other steps or programs', () => {
+  const programId = 'review-v1:training:contact';
+  const otherProgramId = 'review-v1:training:calm';
+  const current = {
+    [programId]: ['one', 'two'],
+    [otherProgramId]: ['other'],
+  };
+  const result = state.undoReviewTrainingStep(current, programId, 'one');
+  assert.deepEqual(result[programId], ['two']);
+  assert.deepEqual(result[otherProgramId], ['other']);
+  assert.deepEqual(current[programId], ['one', 'two']);
+});
+
 test('review completion does not invoke the cloud progression callback', async () => {
   let cloudCalls = 0;
   let localCalls = 0;

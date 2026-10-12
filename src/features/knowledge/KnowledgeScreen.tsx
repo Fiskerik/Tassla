@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { Image, Linking, StyleSheet, Text, View } from 'react-native';
 import { useFonts } from 'expo-font';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -22,6 +22,8 @@ export function KnowledgeScreen({
   items = [],
   contentState = 'ready',
   focusedContentId = null,
+  focusedContentOrigin = null,
+  focusScopeKey = '',
   onSelectContent = () => undefined,
   onRetry = () => undefined,
   client,
@@ -35,7 +37,9 @@ export function KnowledgeScreen({
   items?: readonly HomeContent[];
   contentState?: ContentState;
   focusedContentId?: string | null;
-  onSelectContent?: (id: string) => void;
+  focusedContentOrigin?: 'home-carousel' | 'knowledge-list' | null;
+  focusScopeKey?: string;
+  onSelectContent?: (id: string, origin: 'knowledge-list') => void;
   onRetry?: () => void;
   client?: SupabaseClient;
   dogId?: string;
@@ -47,12 +51,22 @@ export function KnowledgeScreen({
   const [iconsLoaded] = useFonts(Ionicons.font);
   const [sourceMessage, setSourceMessage] = useState('');
   const [openedId, setOpenedId] = useState<string | null>(focusedContentId);
+  const [articleOrigin, setArticleOrigin] = useState<'home-carousel' | 'knowledge-list' | null>(focusedContentOrigin);
+  const lastFocusScope = useRef(focusScopeKey);
   const [tab, setTab] = useState(() => focusedContentId === CHECKLIST_DESTINATION_ID ? 'Checklistor' : focusedContentId === FAQ_DESTINATION_ID ? 'FAQ' : 'För dig');
   const [checklistDetailOpen, setChecklistDetailOpen] = useState(false);
   const checklistInvalidate = useRef<(() => void) | null>(null);
   const selectedItem = items.find((item) => item.id === openedId) ?? null;
   const visibleItems = items.filter((item) => tab === 'För dig' || (tab === 'Artiklar' && item.contentType !== 'checklist' && item.contentType !== 'training_program'));
-  function openArticle(id: string) { setOpenedId(id); setSourceMessage(''); onSelectContent(id); }
+  useLayoutEffect(() => {
+    if (lastFocusScope.current !== focusScopeKey || focusedContentId === null) {
+      lastFocusScope.current = focusScopeKey;
+      setOpenedId(focusedContentId);
+      setArticleOrigin(focusedContentOrigin);
+    }
+  }, [focusScopeKey, focusedContentId, focusedContentOrigin]);
+
+  function openArticle(id: string) { setOpenedId(id); setArticleOrigin('knowledge-list'); setSourceMessage(''); onSelectContent(id, 'knowledge-list'); }
   function changeTab(nextTab: string) {
     if (tab === 'Checklistor' && nextTab !== 'Checklistor') { checklistInvalidate.current?.(); checklistInvalidate.current = null; }
     setTab(nextTab);
@@ -71,7 +85,7 @@ export function KnowledgeScreen({
 
   return (
     <View>
-      {!(tab === 'Checklistor' && checklistDetailOpen) ? <AppBar mode="Back" title={selectedItem ? 'Läsning' : 'Kunskap'} actionLabel={selectedItem ? 'Tillbaka till guider' : 'Tillbaka'} onAction={selectedItem ? () => setOpenedId(null) : () => { checklistInvalidate.current?.(); onBack(); }} /> : null}
+      {!(tab === 'Checklistor' && checklistDetailOpen) ? <AppBar mode="Back" title={selectedItem ? 'Läsning' : 'Kunskap'} actionLabel={selectedItem ? articleOrigin === 'home-carousel' ? 'Tillbaka' : 'Tillbaka till guider' : 'Tillbaka'} onAction={selectedItem ? articleOrigin === 'home-carousel' ? onBack : () => { setOpenedId(null); setArticleOrigin(null); } : () => { checklistInvalidate.current?.(); onBack(); }} /> : null}
       {!selectedItem && !(tab === 'Checklistor' && checklistDetailOpen) && <Tabs items={["För dig", "Artiklar", "Checklistor", "FAQ"]} active={tab} onChange={changeTab} />}
       {(tab === 'För dig' || tab === 'Artiklar' || selectedItem) && contentState === 'loading' && <Skeleton shape="card" lines={4} />}
       {(tab === 'För dig' || tab === 'Artiklar' || selectedItem) && contentState === 'error' && <>

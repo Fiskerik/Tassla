@@ -6,6 +6,12 @@ export function completeReviewTrainingStep(state: Readonly<Record<string, readon
   return { ...state, [programId]: [...new Set([...(state[programId] ?? []), stepId])] } as Record<string, string[]>;
 }
 
+export function undoReviewTrainingStep(state: Readonly<Record<string, readonly string[]>>, programId: string, stepId: string) {
+  const completedStepIds = state[programId] ?? [];
+  if (!completedStepIds.includes(stepId)) return state as Record<string, string[]>;
+  return { ...state, [programId]: completedStepIds.filter((id) => id !== stepId) } as Record<string, string[]>;
+}
+
 export function resetReviewTrainingProgram(state: Readonly<Record<string, readonly string[]>>, programId: string) {
   return { ...state, [programId]: [] } as Record<string, string[]>;
 }

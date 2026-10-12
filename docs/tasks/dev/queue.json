@@ -2874,6 +2874,7 @@
       "write_paths": [
         "src/features/puppy-log/LogScreen.tsx",
         "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/review-training-state.ts",
         "src/features/home/ProductWorkspace.tsx",
         "src/components/ui/ListRow.tsx",
         "src/components/README.md",
@@ -3572,6 +3573,315 @@
         }
       ],
       "next_step": "Implementerat, QA44PASS, ReviewerPASS, SecurityPASS; commit `7b9da840d2ca2ac8f5d5ed998d73495858c98eae` pushad till origin/puppy-checklists-faq-qa11 och fjärr-SHA verifierad. pnpm check461pass/1skip, lint0fel38varningar; pre-commit/pre-push PASS. Migrationer/native/TestFlight ej körda."
+    },
+    {
+      "id": "DOG-RHYTHM-01",
+      "title": "Hundspecifikt kiss-/bajsmönster i Hem-summeringen",
+      "mvp_requirement": "Eriks uttryckliga scopeändring i docs/mvp.md, 2026-10-12: loggbaserad kiss-/bajsuppskattning och dagsfärsk Hem-summering",
+      "plan": "docs/tasks/dev/DOG-RHYTHM-01.md v2.9; docs/plans/DOG-RHYTHM-01-ux-spec.md v2.9 (Architect APPROVE, Critic PROCEED)",
+      "write_paths": [
+        "src/features/puppy-log/log-model.ts",
+        "src/features/home/HomeCarousel.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/data/workspace-data.ts",
+        "src/features/home/HomeScreen.tsx",
+        "src/components/ui/ChecklistItem.tsx",
+        "tests/log-model.test.mjs",
+        "tests/workspace-data.test.mjs",
+        "tests/home-carousel.test.mjs",
+        "src/features/puppy-log/README.md",
+        "src/features/home/README.md",
+        "docs/mvp.md",
+        "docs/tasks/dev/DOG-RHYTHM-01.md",
+        "docs/plans/DOG-RHYTHM-01-ux-spec.md",
+        "docs/tasks/dev/feedback-2026-10-12.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/design/DOG-RHYTHM-01",
+        "tools/visual-check/dog-rhythm-app.tsx",
+        "tools/visual-check/verify-dog-rhythm.py",
+        "tools/visual-check/README.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Architect and Critic review the exact v2.8 complete-history correction before code; dog_expert approved the unchanged source copy/framing in v2.5.",
+        "Per kategori: Estimerad källbelagd, villkorad vägledning före 10 loggar; från 10 loggar under 30×24 h, över minst två lokala datum/24 h, hundanpassad Rekommenderad logghistorik med avgränsad MAD och fallback; hög MAD döljer fönstret",
+        "Endast aktiv hunds sparade pee/poop events; example, främmande, ogiltiga/framtida/dubbla tider ignoreras; dagens lokala count och karusellens datum/färskhet är sanningsenliga",
+        "Loading/error suppressar både count och uppskattning; passerat eller för varierande fönster visar ingen prognos; kortet öppnar Logg utan dataskrivning",
+        "Renderad QA 360/430 px, 140 % text och designchecklista §14; annars NOT TESTABLE",
+        "Hemkortets kiss-/bajstal och personliga tröskel baseras på komplett paginerad 30×24h-historik i separat pottyEvents/pottyHistoryState, aldrig LogScreens 40-radersfeed; inga partiella/stale resultat vid loading/fel/scopebyte och tillgänglig Försök igen kör om hela queryn utan navigation, visar loading och dubblettskyddar retries.",
+        "v2.9 copy correction: each explanatory guidance/disclosure body fits at most two lines at 360px; condition/source labels remain readable. Browser test clicks retry, observes loading/disabled state, remains on Home, confirms the error disappears and the ready summary returns."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/log-model.test.mjs tests/home-carousel.test.mjs tests/workspace-data.test.mjs",
+        "pnpm check",
+        "TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_ENTRY=tools/visual-check/dog-rhythm-app.tsx TASSLA_UI_OUTPUT=/tmp/tassla-preview/site TASSLA_UI_REVIEW=true node tools/visual-check/build.cjs",
+        "python tools/visual-check/verify-dog-rhythm.py",
+        "EXPO_NO_TELEMETRY=1 pnpm bundle:ios",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "Renderad UI-matris och separat QA enligt docs/design-rules.md §14"
+      ],
+      "depends_on": [
+        "UI-06"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE DOG-RHYTHM-01 v2.5; Critic PROCEED; dog_expert APPROVE source copy/constrained framing; review decisions saved in task plan. Heuristics remain unvalidated and explicit."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Eriks explicit request to execute all planned changes on feedback-2026-10-12; DOG-RHYTHM-01 v2.5 has Architect APPROVE and Critic/dog_expert review. Implement first slice only."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v2.5 implementation complete within approved paths; targeted Node suite PASS (2 modules); git diff --check PASS; pnpm check blocked/not testable because npm registry returned EPERM with dependencies absent; iOS bundle and rendered 360/430/140% UI QA NOT TESTABLE, recorded in docs/design/DOG-RHYTHM-01/checklista.md; ready for separate QA, no later slice started."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "QA independent FAIL: first 40 Home events are a partial page, so the ready-state 30-day model can miss same-day rows and qualifying history. Reopen bounded complete-window fetch correction v2.6 before closeout; rendered/typecheck still NT."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Planera korrigering DOG-RHYTHM-01 v2.8 efter Architect APPROVE v2.7 och Critic CHANGES v2.7. UX-spec kompletterad med exakt svensk feltext, retry utan navigation, loading/dubbeltrycksskydd och UI-testkrav; ny Architect APPROVE och Critic PROCEED krävs före kod."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v2.8 and Critic PROCEED v2.8 saved in docs/tasks/dev/DOG-RHYTHM-01.md; complete-history correction is ready for implementation."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement approved DOG-RHYTHM-01 v2.8 correction only, using Luna extra high; no later feedback slice starts before QA/reviewer/checkpoint."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Approved v2.8 correction implemented; model and Home source suites PASS (2 files); Workspace test file syntax PASS but suite cannot load absent @supabase/supabase-js; diffcheck and queue validation PASS; iOS/typecheck/lint and rendered QA remain NOT TESTABLE. Hand off to independent QA; no later slice started."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA code review found no remaining implementation defect, but FAILs sign-off because workspace query tests, typecheck/build/integration, and rendered 360/430/140% UI/a11y evidence are NOT TESTABLE in this environment. Checklist typo corrected; request independent Reviewer decision; no commit/push."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer BLOCK final acceptance; code review found no new defect, but required Workspace query tests cannot load without @supabase/supabase-js, typecheck/build and rendered 360/430/140% UI/a11y are NOT TESTABLE. Preserve implementation; resume in environment with dependencies and renderer, rerun Workspace/pnpm check/build and rendered checklist before DONE or next feedback slice."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Erik authorizes completing the remaining checklist and committing/pushing this feedback branch. Locked app dependencies and separate React Native Web/Chromium renderer are now available; plan DOG-RHYTHM-01 correction 2 v2.9."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE correction plan 2 v2.9: exact paths, copy, two-line requirement, retry interaction test, and duplicate import cleanup saved in task/UX spec."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement the approved DOG-RHYTHM-01 v2.9 copy/render/evidence correction only; no later slice before QA/reviewer checkpoint."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v2.9 implemented; targeted tests, 38/38 pnpm check, review iOS bundle, rendered/retry/line-wrap/44×44 checks, diff and queue validation PASS."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS v2.9 after source/screenshot inspection; two-line copy, retry recovery, 360/430 and 140% render checks pass. Native VoiceOver/device and live Supabase RLS remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS after exact copy/docs synchronization; reran focused suites (3/3), pnpm check (38/38 tests, 0 lint errors), diff check and queue validation. Rendered browser QA and review iOS bundle PASS; native/device and live RLS remain NOT TESTABLE. Local durable checkpoint recorded; next sequential slice TRAINING-01."
+        }
+      ],
+      "next_step": "DOG-RHYTHM-01 checkpointed. Start TRAINING-01 plan/reviews; do not mark the overall MVP approved until every owner feedback slice and remaining acceptance gate is complete."
+    },
+    {
+      "id": "TRAINING-01",
+      "title": "Programöversikt, checkliståterställning och genomföranderörelse",
+      "mvp_requirement": "Ägarfeedback 2026-10-12 punkterna 2, 4 och 5: träningstoa bort, återställ genomförd övning, konfetti, bildgrid och luft.",
+      "plan": "docs/tasks/dev/TRAINING-01.md v1.0; docs/plans/TRAINING-01-ux-spec.md v1.0 (Architect APPROVE, Critic PROCEED)",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/components/ui/BottomNav.tsx",
+        "src/data/workspace-data.ts",
+        "src/components/ui",
+        "tests/workspace-data.test.mjs",
+        "tests/training-screen.test.mjs",
+        "tests/review-training.test.mjs",
+        "tests/dog-mascot-policy.test.mjs",
+        "tests/training-model.test.mjs",
+        "tests/app-screen-ux.test.mjs",
+        "src/features/training/README.md",
+        "tools/visual-check/training-app.tsx",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify-training.py",
+        "docs/tasks/dev/TRAINING-01.md",
+        "docs/plans/TRAINING-01-ux-spec.md",
+        "docs/tasks/dev/feedback-2026-10-12.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/design/TRAINING-01",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Programkort med befintliga foton visas i tvåkolumnsgrid; valt program får fokus högst upp och scroll reset sker via parent AppScreen.scrollKey utan att lämna Valpprogram.",
+        "Programkort märks Program; programmets innehåll hålls åtskilt från den tydligt rubriksatta checklistan Övningar.",
+        "Toast “Övningen är genomförd” tas bort. En kort 180 ms confetti-rörelse med tokens.motion.check startar endast efter bekräftad write + server readback; canceled on unmount, reduced motion visar statisk bock och ingen konfetti.",
+        "Completed exercise details expose exact action “Markera som ej genomförd”. UI clears mark only after delete + fresh scoped readback verifies the exact dog/version/step absent and confirms that exact program version exists; a missing version is unresolved. Review-v1 undo remains local and never invokes cloud progression handlers. Failure/unresolved keeps checked and exposes recovery; exact owner/account/dog/program/version/step scope guard ignores late results and protects RLS.",
+        "Workspace delete helper tests cover exact dog/version/step filters, successful delete, lost response with absence verified by readback, unresolved outcome, and duplicate mutation guard.",
+        "Träning får tokeniserad toppspacing och kontrolleras vid 360/430 px, 140% text, 44×44 touch targets, reduced motion and §14 evidence."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/workspace-data.test.mjs tests/training-screen.test.mjs tests/review-training.test.mjs tests/dog-mascot-policy.test.mjs",
+        "pnpm check",
+        "review-channel iOS bundle: TASSLA_BUILD_CHANNEL=review EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=true EXPO_NO_TELEMETRY=1 pnpm bundle:ios",
+        "Rendered visual/browser matrix: python3 tools/visual-check/verify-training.py (15 cases); docs/design/TRAINING-01/checklista.md",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "DOG-RHYTHM-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1.0 after scoped workspace-data delete/readback tests, account/dog/program race guard, retry/recovery behavior and parent AppScreen.scrollKey test contract. Critic PROCEED exact undo copy and 180ms tokens.motion.check celebration with reduced-motion/unmount handling."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "Erik authorized all remaining checklist items on branch feedback-2026-10-12; DOG-RHYTHM-01 is DONE and independently reviewed/checkpointed. Start TRAINING-01 only."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Final local gates PASS: pnpm check (39/39 tests, 0 lint errors; 36 warnings), iOS review export, verify-training.py (15 rendered cases incl. post-action modal-exit screenshot), verify-know02.py after required HomeCarousel fixture props, git diff --check, queue validation. Independent QA PASS; native VoiceOver/Dynamic Type/scroll and live RLS remain NOT TESTABLE. Overall MVP remains unapproved."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA PASS: refreshed undo evidence shows sheet closed and 0/2; completion, failure and reduced-motion proofs match; full/focused tests and workflow checks pass. Native/live-RLS checks NOT TESTABLE; no overall MVP approval."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS on exact version/readback guard and local-only review undo; Architect APPROVE/Critic PROCEED; independent QA PASS; pnpm check 39/39; iOS review export and 15-case browser evidence PASS; diff and queue validation pass. Slice checkpoint only; overall MVP not approved."
+        }
+      ],
+      "next_step": "TRAINING-01 is DONE and checkpointed. CAROUSEL-BACK-01 plan is under independent Architect/Critic review; do not implement it until approved. Overall MVP is not approved."
+    },
+    {
+      "id": "CAROUSEL-BACK-01",
+      "title": "Direkt tillbaka från innehåll öppnat i Hem-karusellen",
+      "mvp_requirement": "Ägarfeedback 2026-10-12 punkt 3: läsning öppnad från Hem-karusellen går direkt tillbaka till Hem; läsning från Kunskap går tillbaka till listan.",
+      "plan": "docs/tasks/dev/CAROUSEL-BACK-01.md v1.1; docs/plans/CAROUSEL-BACK-01-ux-spec.md v1.1 (Architect APPROVE, Critic PROCEED)",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "tests/knowledge-review-content.test.mjs",
+        "tests/content-delivery.test.mjs",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify-know02.py",
+        "src/features/knowledge/README.md",
+        "docs/tasks/dev/CAROUSEL-BACK-01.md",
+        "docs/plans/CAROUSEL-BACK-01-ux-spec.md",
+        "docs/tasks/dev/feedback-2026-10-12.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/design/CAROUSEL-BACK-01"
+      ],
+      "acceptance": [
+        "Hem-karusellartikelns interna Tillbaka-knapp landar direkt på Hem; ingen Kunskapslista visas emellan.",
+        "Artikel öppnad från Kunskapslistan har kvar Tillbaka till guider och återställer listan.",
+        "Kunskapens externa back-knapp går till ursprungsvyn home/more; detta hålls åtskilt från artikelns origin.",
+        "Explicit focusScopeKey ändrar/rensar KnowledgeScreens lokala article-id/origin; konto-/hund-scope testas medan samma KnowledgeScreen är monterad.",
+        "360/430 browser-matris verifierar båda backvägarna och scope-byte, utan browserfel/overflow."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/knowledge-review-content.test.mjs tests/home-carousel.test.mjs",
+        "pnpm check",
+        "TASSLA_BUILD_CHANNEL=review EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=true EXPO_NO_TELEMETRY=1 EXPO_OFFLINE=1 pnpm bundle:ios",
+        "Rendered visual/browser matrix: python3 tools/visual-check/verify-know02.py",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "TRAINING-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan/spec v1.1 independently reviewed: Architect APPROVE after adding explicit focusScopeKey reset and mounted-screen scope-change test; Critic PROCEED preserving separate carousel/article/list/returnPage destinations. No production code before review."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Architect APPROVE/Critic PROCEED v1.1; implement only this approved slice after TRAINING-01 checkpoint. QA/Reviewer/checkpoint required before next slice; MVP remains unapproved."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "CAROUSEL-BACK v1.1 implemented. Browser verifier: 55 passes, zero failures/browser errors; direct Home/list-back/same-mounted-scope at 360/430. Focused tests 3/3; pnpm check 39/39; iOS review export PASS; typechecks pass, lint 0 errors/36 warnings. QA/Reviewer PASS. Diff and queue checks pass."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS. Direct Home return, list return and mounted-scope stale-article reset render at 360/430; verifier 55 passes/0 failures/errors; focused tests 3/3. Home onBack callback is stubbed in browser harness; ProductWorkspace integration is source-reviewed. Native iOS gesture/accessibility/live RLS NOT TESTABLE; overall MVP not approved."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS; v1.1 source/scope review, ProductWorkspace returnPage/origin distinction, local reset, tests and evidence verified. Full pnpm check 39/39; 55-case browser result; iOS review export PASS after final scope code; diff and queue validation. Slice checkpoint only, remaining checklist paused per owner, overall MVP not approved."
+        }
+      ],
+      "next_step": "CAROUSEL-BACK-01 is DONE and checkpointed. Pause per owner request; resume with HOME-LOG-01 when requested. PROFILE-DOG-01 requires a separately approved data/dependency plan. Overall MVP remains unapproved."
     }
   ]
 }

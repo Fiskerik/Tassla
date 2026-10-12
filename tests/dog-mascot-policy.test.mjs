@@ -33,8 +33,9 @@ test('owner decision keeps the mascot out of Logg and Träning while confirmed f
   assert.doesNotMatch(logScreen, /DogMascot|dogReaction/);
   assert.doesNotMatch(trainingScreen, /DogMascot|dogReaction/);
   assert.match(logScreen, /const successToast = <Toast visible=\{mutation\?\.status === 'saved'/);
-  assert.match(trainingScreen, /<Toast visible=\{saved\} tone="success" confirmed message="Övningen är genomförd"/);
   assert.match(trainingScreen, /if \(confirmed && confirmed\.programId === selectedProgram\.id && confirmed\.stepId === selectedStep\.id\)/);
+  assert.match(trainingScreen, /if \(!reducedMotion\) setCelebrationKey\(key\)/);
+  assert.doesNotMatch(trainingScreen, /tone="success" confirmed message="Övningen är genomförd"/);
 });
 
 test('mascot asset is a transparent square PNG within the approved byte budget', async () => {

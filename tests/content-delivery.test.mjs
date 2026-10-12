@@ -163,14 +163,14 @@ test('Home opens the exact fetched version and Knowledge resolves that exact row
   const onOpenContent = new Function('setKnowledgeFocus', 'setPage', 'currentSelectionKey',
     `return (contentId) => {${body}}`)((value) => { focus = value; }, (value) => { page = value; }, 'dog-age-breed-generation');
   onOpenContent(selectedVersion.id);
-  assert.deepEqual(focus, { selectionKey: 'dog-age-breed-generation', contentId: selectedVersion.id, returnPage: 'home' });
+  assert.deepEqual(focus, { selectionKey: 'dog-age-breed-generation', contentId: selectedVersion.id, returnPage: 'home', origin: 'home-carousel' });
   assert.equal(page, 'knowledge');
 
   const selectionExpression = knowledgeSource.match(/const selectedItem = ([^;]+);/)?.[1];
   assert.ok(selectionExpression, 'expected Knowledge exact version selection');
   const selected = new Function('items', 'openedId', `return ${selectionExpression};`)([selectedVersion], focus.contentId);
   assert.equal(selected, selectedVersion);
-  assert.match(knowledgeSource, /setOpenedId\(id\); setSourceMessage\(''\); onSelectContent\(id\)/);
+  assert.match(knowledgeSource, /setOpenedId\(id\); setArticleOrigin\('knowledge-list'\); setSourceMessage\(''\); onSelectContent\(id, 'knowledge-list'\)/);
 });
 
 function contentRow({ slug, contentType, minAge, versionId, sourceUrls = [], contentId = versionId.replace(/^62/, '61') }) {

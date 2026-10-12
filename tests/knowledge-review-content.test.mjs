@@ -34,3 +34,17 @@ test('Home review shortcuts open the same stable Knowledge destinations', async 
   assert.match(workspace, /knowledgeFocus\.contentId === CHECKLIST_DESTINATION_ID/);
   assert.match(workspace, /knowledgeFocus\.contentId === FAQ_DESTINATION_ID/);
 });
+
+test('carousel article origin and internal back action stay separate from the Knowledge return page', async () => {
+  const workspace = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
+  const screen = await readFile(new URL('../src/features/knowledge/KnowledgeScreen.tsx', import.meta.url), 'utf8');
+  assert.match(workspace, /returnPage: 'home', origin: 'home-carousel'/);
+  assert.match(workspace, /returnPage: 'more', origin: null/);
+  assert.match(workspace, /focusedContentOrigin=\{knowledgeFocus\?\.selectionKey === currentSelectionKey \? knowledgeFocus\.origin : null\}/);
+  assert.match(workspace, /focusScopeKey=\{currentSelectionKey\}/);
+  assert.match(screen, /actionLabel=\{selectedItem \? articleOrigin === 'home-carousel' \? 'Tillbaka' : 'Tillbaka till guider'/);
+  assert.match(screen, /selectedItem \? articleOrigin === 'home-carousel' \? onBack/);
+  assert.match(screen, /lastFocusScope\.current !== focusScopeKey \|\| focusedContentId === null/);
+  assert.match(screen, /setOpenedId\(focusedContentId\)/);
+  assert.match(screen, /onSelectContent\(id, 'knowledge-list'\)/);
+});

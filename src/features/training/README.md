@@ -10,4 +10,6 @@ UI-RESET: produktionsvyn `PublishedTrainingScreen` visar ett program med foto, f
 
 Bekräftad träningsåterkoppling visas utan valpfigur. Spara- och radstatusen är fortsatt knuten till den bekräftade serverposten.
 
+`PublishedTrainingScreen.tsx` visar alternativa publicerade program som fotokort i grid och valt kort flyttar fokus till vyns början. Övning är en separat checklista. Efter bekräftad completion kan ägaren återställa markeringen från detaljarket; serverstatus läses om innan bocken tas bort. Den korta dekorativa konfettin startar först efter bekräftelse och utelämnas vid reducerad rörelse. Completion-toasten används inte. Se [TRAINING-01](../../../docs/tasks/dev/TRAINING-01.md) och [renderad §14-checklista](../../../docs/design/TRAINING-01/checklista.md).
+
 Explicit review builds may use three versioned `review-v1:training:*` layout examples when the real published program query succeeds with an empty list. These rows use `PublishedTrainingScreen` with `reviewMode`; completion and reset live only in component memory and never call `training_progress` handlers. A real fetch error remains an error with retry and does not reveal examples. Copy is marked as an unreviewed temporary example in the view.
