@@ -16,7 +16,27 @@ I en annan terminal, med Python Playwright och `/usr/bin/chromium` installerade:
 python tools/visual-check/verify.py
 ```
 
-QA-11-resultat och skärmbilder sparas i `docs/design/QA-11/evidence/`. KNOW-02 har en separat entry/output och skriver till `docs/design/KNOW-02/evidence/`:
+QA-11-resultat och skärmbilder sparas som standard i `docs/design/QA-11/evidence/`. `TASSLA_UI_EVIDENCE` kan styra resultatkatalogen. HOME-NEXT-01 v7.2 public/review-körningar sparas under `/tmp/tassla-home-next-01-v7.2/{public,review}`; använd `TASSLA_UI_SCOPE=home` för att verifiera Home-/navigationsytan oberoende av äldre Kunskapsflödesassertioner. Checklistan i designregler §14 och oberoende renderade skärmdumpar jämförda med `vision_rev02.jpg` är obligatoriska QA-grindar; saknad evidens är inte ett godkännande.
+
+Publicläge och Home-scoped verifiering:
+
+```sh
+TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/home-next-public node tools/visual-check/build.cjs
+python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-preview/home-next-public
+TASSLA_UI_SCOPE=home TASSLA_UI_REVIEW=false TASSLA_UI_EVIDENCE=/tmp/tassla-home-next-01-v7.2/public python tools/visual-check/verify.py
+```
+
+Reviewläge:
+
+```sh
+TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/home-next-review node tools/visual-check/build.cjs
+python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-preview/home-next-review
+TASSLA_UI_SCOPE=home TASSLA_UI_REVIEW=true TASSLA_UI_EVIDENCE=/tmp/tassla-home-next-01-v7.2/review python tools/visual-check/verify.py
+```
+
+Home-harnessen täcker träningssteg, laddning/fel/tomt/färdigt/urvalsbyte, publicerat reviewgated innehåll, en tät dagens-fixture med minst fem valplogghändelser, träningssteg och plan, dagens tre grupper, inline-länk, genvägar, vald femfliksnavigation, Hälsa/Tassla-pass i Mer, 375/430 px och 140 % text. Den verifierar att dagens grupper och genvägar ligger ovanför bottenmenyn. `app.tsx` använder `homeScenario` för syntetiska tillstånd; `TASSLA_UI_REVIEW` avgör om reviewfixture byggs in. Harnessen är bara en React Native Web-rendering med syntetiska data.
+
+KNOW-02 har en separat entry/output och skriver till `docs/design/KNOW-02/evidence/`:
 
 ```sh
 TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_ENTRY=tools/visual-check/know02-app.tsx TASSLA_UI_OUTPUT=/tmp/tassla-preview/site/know02 TASSLA_UI_REVIEW=true node tools/visual-check/build.cjs

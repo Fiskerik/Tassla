@@ -1,0 +1,231 @@
+{
+  "mode": "review",
+  "results": [
+    {
+      "criterion": "dense groups, link, and tiles fit above nav at 375px",
+      "pass": false,
+      "details": "{\"nav\": {\"x\": 0, \"y\": 785, \"width\": 375, \"height\": 59}, \"controls\": {\"Visa dagens logg\": {\"x\": 168.703125, \"y\": 369, \"width\": 165.296875, \"height\": 56}, \"Logga\": {\"x\": 24, \"y\": 718, \"width\": 103.65625, \"height\": 78}, \"Träna\": {\"x\": 135.65625, \"y\": 718, \"width\": 103.671875, \"height\": 78}, \"Kunskap\": {\"x\": 247.328125, \"y\": 718, \"width\": 103.671875, \"height\": 78}}}"
+    },
+    {
+      "criterion": "Home tab exposed selected at 375px",
+      "pass": true,
+      "details": "aria-selected='true'"
+    },
+    "Home states captured at 375px",
+    {
+      "criterion": "dense groups, link, and tiles fit above nav at 430px",
+      "pass": false,
+      "details": "{\"nav\": {\"x\": 0, \"y\": 785, \"width\": 430, \"height\": 59}, \"controls\": {\"Visa dagens logg\": {\"x\": 223.703125, \"y\": 369, \"width\": 165.296875, \"height\": 56}, \"Logga\": {\"x\": 24, \"y\": 718, \"width\": 122, \"height\": 78}, \"Träna\": {\"x\": 154, \"y\": 718, \"width\": 122, \"height\": 78}, \"Kunskap\": {\"x\": 284, \"y\": 718, \"width\": 122, \"height\": 78}}}"
+    },
+    {
+      "criterion": "Home tab exposed selected at 430px",
+      "pass": true,
+      "details": "aria-selected='true'"
+    },
+    "Home states captured at 430px",
+    {
+      "criterion": "140% text and reduced motion at 375px without horizontal overflow",
+      "pass": true,
+      "details": "overflow=False"
+    },
+    {
+      "criterion": "Visa dagens logg CTA opens Logg",
+      "pass": true,
+      "details": "Tassla\nLogga\nSnabb logg\n\nKiss\nBajs\n\nMat\n\nSömn\n\nFler\nDagens logg\n\n12:05\nMat\n"
+    },
+    {
+      "criterion": "Logg navigation destination and selected state",
+      "pass": true,
+      "details": "aria-selected='true'; page contains 'Tassla\\nLogga\\nSnabb logg\\n\\uf62f\\nKiss\\nBajs\\n\\uf536\\nMat\\n\\uf461\\nSömn\\n\\uf356\\nFler\\nDagens logg\\n\\uf536\\n12:05\\nMat\\nÅt allt\\n\\uf23b\\n\\uf62f\\n10:30\\nKiss\\n\\uf23b\\n08:20\\nBajs\\n\\uf23b\\n\\uf32f\\n'"
+    },
+    {
+      "criterion": "Träning navigation destination and selected state",
+      "pass": true,
+      "details": "aria-selected='true'; page contains 'Tassla\\nTräning\\nValpprogram\\nAlla övningar\\nFramsteg\\nVecka 11\\nEtt steg i taget\\n1 av 5 genomförda\\nÖvningar\\n\\uf55d\\nHantering (tass'"
+    },
+    {
+      "criterion": "Kunskap navigation destination and selected state",
+      "pass": true,
+      "details": "aria-selected='true'; page contains 'Tassla\\n\\uf229\\nKunskap\\nFör dig\\nArtiklar\\nChecklistor\\nFAQ\\n\\uf55d\\nChecklistor\\nGröna listor för valpens olika faser\\n\\uf461\\nVanliga frågor\\nSv'"
+    },
+    {
+      "criterion": "Health remains a Health destination via More",
+      "pass": true,
+      "details": "Tassla\nHälsa\nÖversikt\nVaccinationer\nVeterinär\nVikt\nDatum har passerat\n\nUppföljning\nPlanerad 10 okt. 2026\n\nKommande\n\n10:30\nVaccination valp 2\nOm 12 dagar · 23 okt. 2026\n\nGenomfö"
+    },
+    {
+      "criterion": "Health page keeps More selected",
+      "pass": true,
+      "details": "true"
+    },
+    {
+      "criterion": "review step routes to Training destination",
+      "pass": true,
+      "details": "Tassla\nTräning\nValpprogram\nAlla övningar\nFramsteg\nVecka 11\nEtt steg i taget\n1 av 5 genomförda\nÖvningar\n\nHantering (tassar, öron, mun)\n\n\n\nMiljöträn"
+    },
+    {
+      "criterion": "no uncaught page errors",
+      "pass": true,
+      "details": "[]"
+    }
+  ],
+  "layout": [
+    {
+      "width": 375,
+      "nav": {
+        "x": 0,
+        "y": 785,
+        "width": 375,
+        "height": 59
+      },
+      "boxes": {
+        "Loggat idag": {
+          "x": 41,
+          "y": 385,
+          "width": 119.703125,
+          "height": 24
+        },
+        "Nästa träningssteg": {
+          "x": 41,
+          "y": 485,
+          "width": 293,
+          "height": 24
+        },
+        "Hantering av tassar": {
+          "x": 89,
+          "y": 525,
+          "width": 209,
+          "height": 20
+        },
+        "Planerat idag": {
+          "x": 41,
+          "y": 569,
+          "width": 293,
+          "height": 24
+        },
+        "Visa dagens logg": {
+          "x": 168.703125,
+          "y": 369,
+          "width": 165.296875,
+          "height": 56
+        },
+        "Vad vill du göra nu?": {
+          "x": 24,
+          "y": 682,
+          "width": 327,
+          "height": 28
+        },
+        "12:05, Mat": {
+          "x": 41,
+          "y": 429,
+          "width": 293,
+          "height": 44
+        },
+        "16:30, Vaccination idag": {
+          "x": 41,
+          "y": 597,
+          "width": 293,
+          "height": 44
+        },
+        "Logga": {
+          "x": 24,
+          "y": 718,
+          "width": 103.65625,
+          "height": 78
+        },
+        "Träna": {
+          "x": 135.65625,
+          "y": 718,
+          "width": 103.671875,
+          "height": 78
+        },
+        "Kunskap": {
+          "x": 247.328125,
+          "y": 718,
+          "width": 103.671875,
+          "height": 78
+        }
+      },
+      "fit_above_nav": false
+    },
+    {
+      "width": 430,
+      "nav": {
+        "x": 0,
+        "y": 785,
+        "width": 430,
+        "height": 59
+      },
+      "boxes": {
+        "Loggat idag": {
+          "x": 41,
+          "y": 385,
+          "width": 174.703125,
+          "height": 24
+        },
+        "Nästa träningssteg": {
+          "x": 41,
+          "y": 485,
+          "width": 348,
+          "height": 24
+        },
+        "Hantering av tassar": {
+          "x": 89,
+          "y": 525,
+          "width": 264,
+          "height": 20
+        },
+        "Planerat idag": {
+          "x": 41,
+          "y": 569,
+          "width": 348,
+          "height": 24
+        },
+        "Visa dagens logg": {
+          "x": 223.703125,
+          "y": 369,
+          "width": 165.296875,
+          "height": 56
+        },
+        "Vad vill du göra nu?": {
+          "x": 24,
+          "y": 682,
+          "width": 382,
+          "height": 28
+        },
+        "12:05, Mat": {
+          "x": 41,
+          "y": 429,
+          "width": 348,
+          "height": 44
+        },
+        "16:30, Vaccination idag": {
+          "x": 41,
+          "y": 597,
+          "width": 348,
+          "height": 44
+        },
+        "Logga": {
+          "x": 24,
+          "y": 718,
+          "width": 122,
+          "height": 78
+        },
+        "Träna": {
+          "x": 154,
+          "y": 718,
+          "width": 122,
+          "height": 78
+        },
+        "Kunskap": {
+          "x": 284,
+          "y": 718,
+          "width": 122,
+          "height": 78
+        }
+      },
+      "fit_above_nav": false
+    }
+  ],
+  "pageErrors": []
+}

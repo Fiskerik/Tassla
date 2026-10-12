@@ -29,8 +29,17 @@ test('each synthetic training program has a matching guide content ID', () => {
 test('Home review shortcuts open the same stable Knowledge destinations', async () => {
   const carousel = await readFile(new URL('../src/features/home/HomeCarousel.tsx', import.meta.url), 'utf8');
   const workspace = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
+  assert.match(workspace, /nextStep=\{visibleTrainingState === 'ready' \? nextStep\?\.title : undefined\}/);
+  assert.match(carousel, /if \(nextStep\) cards\.push\(\{ key: 'training', title: nextStep,/);
+  assert.doesNotMatch(carousel, /key: 'training', title: 'Fortsätt träna'/);
+
+  assert.match(carousel, /if \(process\.env\.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true'\) cards\.push\(\{ key: 'checklists'/);
   assert.match(carousel, /onOpenContent\(CHECKLIST_DESTINATION_ID\)/);
-  assert.match(carousel, /onOpenContent\(FAQ_DESTINATION_ID\)/);
+
+  const faqCard = carousel.match(/cards\.push\(\{ key: 'faq',[^\n]+/);
+  assert.ok(faqCard, 'FAQ card remains unconditionally available');
+  assert.match(faqCard[0], /title: 'Vanliga frågor'/);
+  assert.match(faqCard[0], /onOpenContent\(FAQ_DESTINATION_ID\)/);
   assert.match(workspace, /knowledgeFocus\.contentId === CHECKLIST_DESTINATION_ID/);
   assert.match(workspace, /knowledgeFocus\.contentId === FAQ_DESTINATION_ID/);
 });

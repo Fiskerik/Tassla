@@ -61,12 +61,11 @@ function buildCards({ dog, plans, selectedDatePlans, content, contentState, next
   const reviewTraining = contentState === 'ready' ? content.find((item) => item.contentType === 'training_program' && item.id.startsWith('review-v1:training:')) : undefined;
   const ageLabel = formatDogAge(dog.birth_date, localDate());
   const upcomingPlan = plans.filter((plan) => plan.due_on >= localDate()).sort((left, right) => left.due_on.localeCompare(right.due_on))[0];
-  const cards: CarouselCard[] = [
-    { key: 'training', title: nextStep ?? 'Fortsätt träna', meta: `${ageLabel} · ${reviewTraining ? 'Tillfälligt exempel – innehållet är inte sakgranskat' : 'Nästa steg i valpprogrammet'}`, image: require('../../../assets/images/puppy-training.png'), onPress: () => reviewTraining ? onOpenContent(reviewTraining.id) : onGo('training') },
-    { key: 'knowledge', title: article?.title ?? 'Kunskap för er', meta: article ? `${ageLabel} · Läs ett tips för er` : contentState === 'error' ? 'Guider och checklistor för er' : `${ageLabel} · Guider och checklistor för er`, image: require('../../../assets/images/puppy-resting-carousel.png'), onPress: () => article ? onOpenContent(article.id) : onGo('knowledge') },
-    { key: 'checklists', title: 'Checklistor för valptiden', meta: `${ageLabel} · Se listor för er fas${process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true' ? ' · Tillfälligt exempel' : ''}`, image: require('../../../assets/images/puppy-training.png'), category: 'training', onPress: () => onOpenContent(CHECKLIST_DESTINATION_ID) },
-    { key: 'faq', title: 'Vanliga frågor', meta: `Svar sorterade efter fas${process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true' ? ' · Tillfälligt exempel' : ''}`, image: require('../../../assets/images/puppy-resting-carousel.png'), category: 'sleep', onPress: () => onOpenContent(FAQ_DESTINATION_ID) },
-  ];
+  const cards: CarouselCard[] = [];
+  if (nextStep) cards.push({ key: 'training', title: nextStep, meta: `${ageLabel} · ${reviewTraining ? 'Tillfälligt exempel – innehållet är inte sakgranskat' : 'Nästa steg i valpprogrammet'}`, image: require('../../../assets/images/puppy-training.png'), onPress: () => reviewTraining ? onOpenContent(reviewTraining.id) : onGo('training') });
+  cards.push({ key: 'knowledge', title: article?.title ?? 'Kunskap för er', meta: article ? `${ageLabel} · Läs ett tips för er` : contentState === 'error' ? 'Guider och checklistor för er' : `${ageLabel} · Guider och checklistor för er`, image: require('../../../assets/images/puppy-resting-carousel.png'), onPress: () => article ? onOpenContent(article.id) : onGo('knowledge') });
+  if (process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true') cards.push({ key: 'checklists', title: 'Checklistor för valptiden', meta: `${ageLabel} · Se listor för er fas · Tillfälligt exempel`, image: require('../../../assets/images/puppy-training.png'), category: 'training', onPress: () => onOpenContent(CHECKLIST_DESTINATION_ID) });
+  cards.push({ key: 'faq', title: 'Vanliga frågor', meta: `Svar sorterade efter fas${process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true' ? ' · Tillfälligt exempel' : ''}`, image: require('../../../assets/images/puppy-resting-carousel.png'), category: 'sleep', onPress: () => onOpenContent(FAQ_DESTINATION_ID) });
   if (upcomingPlan && !selectedDatePlans.some((plan) => plan.id === upcomingPlan.id)) {
     const details = [`Kommer ${shortDate(upcomingPlan.due_on)}`];
     if (upcomingPlan.due_time) details.push(`Tid ${upcomingPlan.due_time.slice(0, 5)}`);

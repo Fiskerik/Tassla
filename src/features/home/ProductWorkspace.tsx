@@ -80,7 +80,8 @@ import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
 import { checklistMemoryScope, keepChecklistMemoryForScope, updateChecklistMemory, type PendingChecklistMemory } from '../knowledge/checklist-intent';
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, REVIEW_TRAINING_PROGRAMS } from '../knowledge/review-content';
 import { HomeScreen } from './HomeScreen';
-import { AppBar, BottomNav, MainSwipeNavigation, type BottomNavDestination } from '../../components/ui';
+import { activeMainTabDestination, isMainTabDestination, mainTabTransitionDirection, nextMainTabDestination } from './main-navigation';
+import { AppBar, BottomNav, MainSwipeNavigation } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
 import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
 import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
@@ -120,7 +121,6 @@ type PendingPlannedHealthMutation =
 type PendingProfileMutation = { previous: OwnedDog; changes: OwnedDogProfileChanges; knownBreeds: readonly BreedOption[]; lifetime: string };
 
 const PAGE_SIZE = 40;
-const MAIN_PAGES: ProductPage[] = ['home', 'log', 'training', 'health', 'knowledge', 'passport'];
 
 export function ProductWorkspace({ client, dog, onDogUpdated }: { client: SupabaseClient; dog: OwnedDog; onDogUpdated?: (updated: OwnedDog) => void }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
@@ -133,9 +133,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   }, []);
   const handleMainSwipe = useCallback((direction: 'left' | 'right') => {
     setNavigation((current) => {
-      const index = MAIN_PAGES.indexOf(current.page);
-      if (index < 0) return current;
-      const next = MAIN_PAGES[index + (direction === 'left' ? 1 : -1)];
+      const next = nextMainTabDestination(current.page, direction);
       return next ? { page: next, previousPage: current.page } : current;
     });
   }, []);
@@ -1895,8 +1893,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
 
   const pageContent = renderPage();
   const transitionDirection = navigationDirection(previousPage, page);
-  return <AppScreen scrollKey={page} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={mainDestination(page)} onChange={setPage} />}>
-    <MainSwipeNavigation enabled={MAIN_PAGES.includes(page)} onSwipe={handleMainSwipe}>
+  return <AppScreen scrollKey={page} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={activeMainTabDestination(page)} onChange={(destination) => {
+    if (destination === 'knowledge') setKnowledgeFocus(null);
+    setPage(destination);
+  }} />}>
+    <MainSwipeNavigation enabled={isMainTabDestination(page)} onSwipe={handleMainSwipe}>
       <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x">{pageContent}</ScreenTransition>
     </MainSwipeNavigation>
   </AppScreen>;
@@ -1911,11 +1912,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       plans={plannedHealth}
       logState={logState}
       planState={plannedHealthState}
-      nextStep={nextStep?.title}
+      nextStep={visibleTrainingState === 'ready' ? nextStep?.title : undefined}
+      trainingState={visibleTrainingState}
+      reviewTrainingStep={hasReviewTraining}
       content={visibleGuideContent}
       contentState={visibleContentState}
-      onRetryHealthHistory={() => { void retryHealthHistory(); }}
-      onGo={setPage}
+      onGo={(destination) => {
+        if (destination === 'knowledge') setKnowledgeFocus(null);
+        setPage(destination);
+      }}
       onOpenContent={(contentId) => {
         setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId, returnPage: 'home' });
         setPage('knowledge');
@@ -2082,9 +2087,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
 }
 
 function navigationDirection(previous: ProductPage, current: ProductPage): 'forward' | 'backward' {
-  const previousIndex = MAIN_PAGES.indexOf(previous);
-  const currentIndex = MAIN_PAGES.indexOf(current);
-  return currentIndex >= 0 && previousIndex >= 0 && currentIndex < previousIndex ? 'backward' : 'forward';
+  return mainTabTransitionDirection(previous, current);
 }
 
 function MorePage({ onNavigate, signOutError, signingOut, onSignOut, onOpenNotifications, onOpenAccount }: {
@@ -2093,7 +2096,7 @@ function MorePage({ onNavigate, signOutError, signingOut, onSignOut, onOpenNotif
 }) {
   return <View>
     <AppBar mode="Title" title="Mer" />
-    <MenuRow icon="book-outline" title="Kunskap" detail="Guider och checklistor" onPress={() => onNavigate('knowledge')} />
+    <MenuRow icon="heart-outline" title="Hälsa" detail="Vikt, hälsohistorik och planer" onPress={() => onNavigate('health')} />
     <MenuRow icon="id-card-outline" title="Tassla-pass" detail="Hundens uppgifter som PDF" onPress={() => onNavigate('passport')} />
     <MenuRow icon="paw-outline" title="Hundprofil" detail="Din hunds uppgifter" onPress={() => onNavigate('profile')} />
     <MenuRow icon="notifications-outline" title="Påminnelser" detail="Dina valda påminnelser" onPress={onOpenNotifications} />
@@ -2122,11 +2125,6 @@ function MenuRow({ icon, title, detail, onPress }: { icon: ComponentProps<typeof
     <View style={styles.menuCopy}><Text style={styles.menuTitle}>{title}</Text><Text style={styles.menuDetail}>{detail}</Text></View>
     <Ionicons name="chevron-forward" size={18} color={theme.colors.mutedText} />
   </Pressable>;
-}
-
-function mainDestination(page: ProductPage): BottomNavDestination {
-  if (page === 'planned-health') return 'health';
-  return page === 'home' || page === 'log' || page === 'training' || page === 'health' ? page : 'more';
 }
 
 function reminderStatusSummary(result: ReminderReconcileResult | null, preferences: NotificationPreferences, permission: 'unknown' | 'granted' | 'denied'): string {
