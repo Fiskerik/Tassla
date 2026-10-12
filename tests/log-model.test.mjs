@@ -11,9 +11,11 @@ import {
   decideQuickLogPress,
   deleteLogEvent,
   finishLogMutationFlight,
+  formatLogEventDetails,
   groupLogEventsByLocalDate,
   hasRecentCategoryLog,
   isLogMutationLifetimeCurrent,
+  logAmountUnitForDraft,
   localDateTimeParts,
   logMutationStatusForWriteOutcome,
   parseLocalDateTime,
@@ -187,6 +189,24 @@ test('optional accident, food, and water details normalize and validate against 
     { type: 'water', foodType: 'Synthetic food' },
     { type: 'food', foodType: '🐕'.repeat(61) },
   ]) assert.throws(() => event(invalid), /Accident kind|Amount|Food amount|Water amount|Food type/);
+});
+
+test('editor amount unit defaults legacy water events to ml and keeps valid saved units', () => {
+  assert.equal(logAmountUnitForDraft('water', null), 'ml');
+  assert.equal(logAmountUnitForDraft('water'), 'ml');
+  assert.equal(logAmountUnitForDraft('water', 'dl'), 'dl');
+  assert.equal(logAmountUnitForDraft('food', 'dl'), 'g');
+});
+
+test('log detail summaries stay type-specific and omit absent values', () => {
+  assert.equal(formatLogEventDetails(event({ type: 'accident', accidentKind: 'pee' })), 'Olycka · kiss');
+  assert.equal(formatLogEventDetails(event({ type: 'accident', accidentKind: 'poop' })), 'Olycka · bajs');
+  assert.equal(formatLogEventDetails(event({ type: 'accident', accidentKind: 'both' })), 'Olycka · kiss och bajs');
+  assert.equal(formatLogEventDetails(event({ type: 'food', amount: 80, amountUnit: 'g', foodType: 'Synthetic kibble' })), 'Mat · 80 g · Synthetic kibble');
+  assert.equal(formatLogEventDetails(event({ type: 'food', foodType: 'Synthetic kibble' })), 'Mat · Synthetic kibble');
+  assert.equal(formatLogEventDetails(event({ type: 'water', amount: 200, amountUnit: 'ml' })), 'Vatten · 200 ml');
+  assert.equal(formatLogEventDetails(event({ type: 'food', amount: 0.00000000001, amountUnit: 'g' })), 'Mat · 0,00000000001 g');
+  assert.equal(formatLogEventDetails(event({ type: 'water' })), null);
 });
 
 test('detail updates preserve omitted values, clear explicit nulls, and reset incompatible details on type changes', () => {

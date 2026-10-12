@@ -552,3 +552,11 @@ Verifiering: `pnpm check` PASS (typechecks PASS; lint 0 fel/38 varningar; 37/37 
 2026-10-11. Implementerat lokalt och granskat enligt plan v4. Tillagda nullable fält i `dog_events`: olyckstyp, mängd/enhet för mat eller vatten och fodertyp. Separata constraints bevarar befintliga tids-/shape-regler och RLS; UPDATE-grant gäller endast de fyra nya kolumnerna. Modellen normaliserar ASCII-trimning, validerar fälten och bevarar patchsemantik; UI-handoff ligger i nästa UPD-LOG-UI-paket.
 
 Product/Critic PROCEED, Architect APPROVE, Dog Expert PASS, Security statiskt PASS, QA PASS, Reviewer PASS. `pnpm check` PASS (37/37 testfiler, lint 0 fel/38 varningar); fokuserade logg-/workspace-tester PASS (2/2); kövalidering och diff-check PASS. SQL-runtime NOT TESTABLE utan lokal PostgreSQL/Supabase-miljö. Ingen push, publicering eller TestFlight. Paketcommit: `cb30f50325a72207fc5bf9d9bae2ba3ae51de16d` (`feat: add optional puppy log details`) på `codex/repo-grounding`; normal pre-commit-hook passerade.
+
+## UPD-LOG-UI — valfria detaljer i valploggen
+
+2026-10-12. Lokalt färdig på `codex/repo-grounding`; paketcommit/push återstår. Product/Critic `PROCEED`, Architect `APPROVE`, Eriks scopegodkännande, oberoende QA `PASS`, Security `PASS` och Reviewer `PASS`. Snabb loggning kan följas av valfria olycks-, mat- eller vattendetaljer, som även går att redigera. Den befintliga senaste-mönster-sammanfattningen kräver nu en visa-handling; ingen knapp visas utan data, och befintlig tröskel/text/beräkning är oförändrade.
+
+Verifierat: `pnpm check` (37/37 testfiler; lint 0 fel/38 varningar), riktade tester (3/3 filer), visual build, browser harness 45/45 och 0 sidfel, kövalidering, `git diff --check` och Python-kompilering av harness. QA-evidens/checklista: `docs/design/UPD-LOG-UI/`.
+
+Begränsningar: React Native Web med syntetiska data; native rendering/tangentbord/skärmläsare och live backend/RLS är NOT TESTABLE. En samtidig ändring av tid/anteckning/varaktighet från en annan klient kan skrivas över av detaljpatchens befintliga snapshot-baserade uppdatering. Vid 140 % text radbryts den delade bottenmenyns `Träning`-etikett i två rader utan overflow eller kontrollförlust. Ingen Codemagic/TestFlight; commit-ID läggs till i dokumentationscheckpoint efter paketcommit.

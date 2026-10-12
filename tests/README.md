@@ -38,6 +38,8 @@
 
 `dog-mascot-policy.test.mjs` kontrollerar dekorativ skärmläsarsemantik, reducerad rörelse och one-shot-nyckel, grinden till bekräftad loggning/tränings-readback, avmonteringsskydd, befintlig träningssekvens efter återställning samt PNG-format/mått/bytesbudget. Källmatrisen ersätter inte renderad animation, layout, VoiceOver/TalkBack eller fysisk mobilkontroll.
 
+`log-screen-policy.test.mjs` kontrollerar att valfria olycks-, mat- och vattendetaljer öppnas efter bekräftad snabbregistrering, använder fodertypförslag från den aktiva hundens redan inlästa loggar och går genom samma läs-/uppdateringskontrakt i `ProductWorkspace`. Källkontrollerna kompletterar `log-model.test.mjs` och `workspace-data.test.mjs`; de ersätter inte renderad visuell QA eller databasruntime.
+
 `toast-compact-policy.test.mjs` kontrollerar att endast bekräftad framgång får kompakt stil och dekorativ grön bock, att undo-/fel-/retry-/cancel-semantiken består, samt att loggens bekräftade add/edit/delete ligger efter vanliga snabbval och före Fler. Det kontrollerar att en success-toast visas före både Fler-raden och de expanderade valen, och att ett val i Fler stänger extrarutorna innan sparning. Källkontrollerna ersätter inte renderad kontroll av smal mobilhöjd, stor text eller skärmläsarträd.
 
 Fysisk UI-/telefonkontroll av navigation, tangentbord/stor text, bekräftelsedialoger, animationer och appomstart kan inte göras med Node-testerna. Supabase-integrationen, RLS/ägarsisolering, e-postleverans och signerad iPhone-callback kan inte verifieras här. Foundation-testet finns separat i `supabase/tests/foundation.sql` och kräver en Supabase-utvecklingsdatabas.

@@ -5,6 +5,12 @@ export type LogEventOrigin = 'example' | 'local-test';
 export type LogAccidentKind = 'pee' | 'poop' | 'both';
 export type LogAmountUnit = 'g' | 'ml' | 'dl';
 
+export function logAmountUnitForDraft(type: LogEventType, unit?: LogAmountUnit | null): LogAmountUnit {
+  if (type === 'food') return 'g';
+  if (type === 'water') return unit === 'dl' ? 'dl' : 'ml';
+  return 'g';
+}
+
 export interface LogEventDetailInput {
   accidentKind?: LogAccidentKind | null;
   amount?: number | null;
@@ -142,6 +148,19 @@ export function normalizeLogEventDetails(type: LogEventType, input: LogEventDeta
   }
 
   return { accidentKind, amount, amountUnit, foodType };
+}
+
+export function formatLogEventDetails(event: LogEvent): string | null {
+  if (event.type === 'accident' && event.accidentKind) {
+    const label = event.accidentKind === 'both' ? 'kiss och bajs' : event.accidentKind === 'pee' ? 'kiss' : 'bajs';
+    return `Olycka · ${label}`;
+  }
+  if ((event.type === 'food' || event.type === 'water') && event.amount != null && event.amountUnit) {
+    const amount = event.amount.toLocaleString('sv-SE', { maximumSignificantDigits: 15 });
+    return [event.type === 'food' ? 'Mat' : 'Vatten', `${amount} ${event.amountUnit}`, event.type === 'food' ? event.foodType : null].filter(Boolean).join(' · ');
+  }
+  if (event.type === 'food' && event.foodType) return `Mat · ${event.foodType}`;
+  return null;
 }
 
 export async function checkInsertRetryOperation<Operation extends { id: string }, Row>(

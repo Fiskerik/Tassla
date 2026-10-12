@@ -59,6 +59,15 @@ test('quick log hides sparse patterns and keeps edit/delete inside the row edito
   assert.doesNotMatch(screen, /SPARAD|ActionFeedbackModal/);
 });
 
+test('latest patterns stay collapsed until requested and have no toggle without data', () => {
+  assert.match(screen, /patterns\.length > 0 \? <LatestPatternSummary key=\{`\$\{events\.find\(\(event\) => event\.dogId\)\?\.dogId \?\? 'none'\}:available`\}/);
+  assert.match(screen, /function LatestPatternSummary\(/);
+  assert.match(screen, /const \[visible, setVisible\] = useState\(false\)/);
+  assert.match(screen, /label=\{visible \? 'Dölj dina senaste mönster' : 'Visa dina senaste mönster'\}/);
+  assert.match(screen, /visible \? <Card accessibilityLabel="Dina senaste mönster för Kiss och Bajs">/);
+  assert.match(screen, /setVisible\(\(current\) => !current\)/);
+});
+
 test('legacy row editing and deletion remain reachable from workspace and preview', () => {
   assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); setEditingId\(event\.id\); \}\}/);
   assert.match(screen, /function LogEventEditor/);
@@ -105,4 +114,51 @@ test('quick add labels, rapid-tap guard, retry propagation and Swedish decimal f
   assert.match(workspace, /setQuickLogMutation\(toQuickLogMutationView\(mutation, 'pending'\)\);[\s\S]*?checkInsertRetryOperation/);
   assert.match(workspace, /finishLogMutationFlight\(logMutationFlight\.current, flightToken\)/);
   assert.match(screen, /toLocaleString\('sv-SE'\)/);
+});
+
+test('optional detail sheets follow confirmed quick adds and settle without adding a required step', () => {
+  assert.match(screen, /const detailSheet = useMemo\(\(\) => \{[\s\S]*?mutation\?\.kind === 'add' && mutation\.status === 'saved' && mutation\.detailsHandled !== true/);
+  assert.match(screen, /events\.some\(\(event\) => event\.id === mutation\.id\)/);
+  assert.match(screen, /dismissedDetailsMutationKey !== addKey/);
+  assert.match(screen, /mutation\?\.kind === 'update' && mutation\.source === 'quick-add-details'/);
+  assert.match(screen, /onUpdate\?\.\(detailSheet\.id, changes, 'quick-add-details'\)/);
+  assert.match(screen, /onQuickDetailsSettled\?\.\(detailSheet\.id\)/);
+  assert.match(screen, /label="Hoppa över"[\s\S]*?onPress=\{onSkip\}/);
+  assert.match(screen, /setUndoDetailsSheet\(detailSheet\)/);
+  assert.match(workspace, /detailsHandled: true/);
+});
+
+test('detail entry and row copy use the dog local history and the shared log model', () => {
+  assert.match(screen, /events\.filter\(\(event\) => event\.dogId === dogId && event\.type === 'food' && event\.foodType\?\.trim\(\)\)/);
+  assert.match(screen, /Dina tidigare fodertyper/);
+  assert.match(screen, /formatLogEventDetails\(event\)/);
+  assert.match(screen, /CheckboxCard label="Kiss"/);
+  assert.match(screen, /CheckboxCard label="Bajs"/);
+  assert.match(screen, /accessibilityRole="radiogroup" accessibilityLabel="Enhet"/);
+  assert.match(screen, /Du kan ange högst 2 000 g per loggpost\./);
+  assert.match(screen, /Fodertypen får innehålla högst 60 tecken\./);
+});
+
+test('workspace updates preserve untouched fields and serialize quick-add undo after detail writes', () => {
+  assert.match(workspace, /accidentKind: row\.accident_kind, amount: row\.amount, amountUnit: row\.amount_unit, foodType: row\.food_type/);
+  assert.match(workspace, /description: changes\.note === undefined \? previous\.description : changes\.note\?\.trim\(\) \|\| null/);
+  assert.match(workspace, /if \(typeChanged \|\| changes\.amount !== undefined\)/);
+  assert.match(workspace, /undoAfterDetailPatch\.current = id/);
+  assert.match(workspace, /if \(shouldUndoQuickAdd && isCurrent\(\)\) void deleteEvent\(mutation\.id, 'undo'\)/);
+  assert.match(workspace, /if \(mutation\?\.kind === 'update' && mutation\.source === 'quick-add-details' && undoAfterDetailPatch\.current === mutation\.id\) return false/);
+});
+
+test('quick-add detail update stays pending through readback so Undo can queue during reload', () => {
+  const mutationStart = workspace.indexOf('async function runLogMutation(');
+  const mutationEnd = workspace.indexOf('\n  function addEvent', mutationStart);
+  const mutationSource = workspace.slice(mutationStart, mutationEnd);
+  const savedBranchStart = mutationSource.indexOf("if (outcome.status === 'saved') {");
+  const savedBranchEnd = mutationSource.indexOf("const presentationStatus =", savedBranchStart);
+  const savedBranch = mutationSource.slice(savedBranchStart, savedBranchEnd);
+  const reloadPosition = savedBranch.indexOf('await reloadEvents()');
+  const clearPosition = savedBranch.indexOf('pendingLogMutation.current === mutation) pendingLogMutation.current = null');
+  assert.match(savedBranch, /const deferQuickDetailsClearUntilReload = mutation\.kind === 'update' && mutation\.source === 'quick-add-details'/);
+  assert.ok(reloadPosition >= 0, 'saved writes reload the event list');
+  assert.ok(clearPosition > reloadPosition, 'the pending detail update stays available to Undo until readback finishes');
+  assert.match(workspace, /undoAfterDetailPatch\.current = id;\s+if \(logMutationFlight\.current\) return/);
 });

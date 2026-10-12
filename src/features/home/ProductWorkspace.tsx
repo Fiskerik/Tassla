@@ -42,6 +42,7 @@ import {
   updateHealthHistory,
   updatePlannedHealth,
   type DogEventOperation,
+  type DogEventChanges,
   type DogEventRecord,
   type HealthWeightChanges,
   type HealthWeightOperation,
@@ -82,7 +83,7 @@ import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, R
 import { HomeScreen } from './HomeScreen';
 import { AppBar, BottomNav, MainSwipeNavigation, type BottomNavDestination } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
-import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
+import { LogScreen, type LogUpdateSource, type QuickLogMutationView } from '../puppy-log/LogScreen';
 import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
 import { PassportScreen } from '../passport/PassportScreen';
 import { PublishedTrainingScreen } from '../training/PublishedTrainingScreen';
@@ -103,7 +104,7 @@ const reviewContentEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === '
 type ProductPage = 'home' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings' | 'account-settings' | 'beta-info';
 type PendingLogMutation =
   | { kind: 'insert'; operation: DogEventOperation; lifetime: string }
-  | { kind: 'update'; mutationId: string; id: string; type: LogEventType; occurredAt: string; changes: { event_type: LogEventType; occurred_at: string; duration_minutes: number | null; description: string | null }; lifetime: string }
+  | { kind: 'update'; mutationId: string; id: string; type: LogEventType; occurredAt: string; changes: DogEventChanges; source: LogUpdateSource; lifetime: string }
   | { kind: 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; lifetime: string };
 type PendingHealthMutation =
   | { kind: 'insert'; operation: HealthWeightOperation }
@@ -221,6 +222,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const signOutInFlight = useRef(false);
   const pendingLogMutation = useRef<PendingLogMutation | null>(null);
   const logMutationFlight = useRef<LogMutationFlight | null>(null);
+  const undoAfterDetailPatch = useRef<string | null>(null);
   const pendingHealthMutation = useRef<PendingHealthMutation | null>(null);
   const healthMutationInFlight = useRef(false);
   const pendingHealthHistoryMutation = useRef<PendingHealthHistoryMutation | null>(null);
@@ -282,6 +284,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   useLayoutEffect(() => {
     if (previousLogLifetime.current && previousLogLifetime.current !== currentLogLifetime) {
       pendingLogMutation.current = null;
+      undoAfterDetailPatch.current = null;
       logMutationFlight.current = retainLogMutationFlightForLifetime(logMutationFlight.current, currentLogLifetime);
       setLogBusy(false);
       setQuickLogMutation(null);
@@ -888,11 +891,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       else outcome = await deleteDogEvent(client, dog.id, mutation.id);
       if (!isCurrent()) return false;
       if (outcome.status === 'saved') {
+        const deferQuickDetailsClearUntilReload = mutation.kind === 'update' && mutation.source === 'quick-add-details';
         if (mutation.kind === 'insert') {
           const firstConfirmedLog = logState === 'ready' && eventRows.current.length === 0;
           void analyticsService.track(firstConfirmedLog ? 'first_log' : 'meaningful_return');
         }
-        pendingLogMutation.current = null;
+        if (!deferQuickDetailsClearUntilReload) pendingLogMutation.current = null;
         if (mutation.kind === 'insert') {
           const confirmedEvent = outcome.value;
           if (confirmedEvent) {
@@ -908,7 +912,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
             eventRows.current = [...eventRows.current.filter((event) => event.id !== mutation.id), outcome.value].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
             setEvents(eventRows.current);
           }
-          setQuickLogMutation(toQuickLogMutationView(mutation, 'saved'));
+          setQuickLogMutation(mutation.source === 'quick-add-details'
+            ? { kind: 'add', mutationId: mutation.id, id: mutation.id, type: mutation.type, occurredAt: mutation.occurredAt, status: 'saved', detailsHandled: true }
+            : toQuickLogMutationView(mutation, 'saved'));
         }
         if (mutation.kind === 'delete' || mutation.kind === 'undo') {
           const remaining = eventRows.current.filter((event) => event.id !== mutation.id);
@@ -921,6 +927,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         } catch {
           // The confirmed local row remains authoritative until a later reload succeeds.
         }
+        if (deferQuickDetailsClearUntilReload && pendingLogMutation.current === mutation) pendingLogMutation.current = null;
         return isCurrent();
       }
       const presentationStatus = logMutationStatusForWriteOutcome(outcome.status);
@@ -938,10 +945,16 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       setQuickLogMutation(toQuickLogMutationView(mutation, 'unsure'));
       return false;
     } finally {
+      const shouldUndoQuickAdd = mutation.kind === 'update' && mutation.source === 'quick-add-details' && undoAfterDetailPatch.current === mutation.id;
       const ownsFlight = logMutationFlight.current?.token === flightToken;
       logMutationFlight.current = finishLogMutationFlight(logMutationFlight.current, flightToken);
       if (pendingLogMutation.current === mutation && !isCurrent()) pendingLogMutation.current = null;
+      if (shouldUndoQuickAdd && isCurrent()) {
+        undoAfterDetailPatch.current = null;
+        pendingLogMutation.current = null;
+      }
       if (mounted.current && ownsFlight) setLogBusy(false);
+      if (shouldUndoQuickAdd && isCurrent()) void deleteEvent(mutation.id, 'undo');
     }
   }
 
@@ -960,20 +973,28 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     void runLogMutation(mutation);
   }
 
-  async function updateEvent(id: string, changes: LogEventChanges): Promise<boolean> {
+  async function updateEvent(id: string, changes: LogEventChanges, source: LogUpdateSource = 'edit'): Promise<boolean> {
     if (!canStartLogMutation(Boolean(pendingLogMutation.current), Boolean(logMutationFlight.current))) return false;
     const previous = eventRows.current.find((event) => event.id === id);
     if (!previous) return false;
     const type = changes.type ?? previous.event_type;
     const occurredAt = changes.occurredAt ?? previous.occurred_at;
+    const typeChanged = type !== previous.event_type;
+    const detailChanges: Pick<DogEventChanges, 'accident_kind' | 'amount' | 'amount_unit' | 'food_type'> = {};
+    if (typeChanged || changes.accidentKind !== undefined) detailChanges.accident_kind = type === 'accident' ? changes.accidentKind ?? null : null;
+    if (typeChanged || changes.amount !== undefined) detailChanges.amount = type === 'food' || type === 'water' ? changes.amount ?? null : null;
+    if (typeChanged || changes.amountUnit !== undefined) detailChanges.amount_unit = type === 'food' || type === 'water' ? changes.amountUnit ?? null : null;
+    if (typeChanged || changes.foodType !== undefined) detailChanges.food_type = type === 'food' ? changes.foodType ?? null : null;
     const mutation: PendingLogMutation = {
       kind: 'update', mutationId: ExpoCrypto.randomUUID(), id, type, occurredAt,
       changes: {
         event_type: type,
         occurred_at: occurredAt,
         duration_minutes: type === 'sleep' || type === 'walk' ? previous.duration_minutes : null,
-        description: changes.note?.trim() || null,
+        description: changes.note === undefined ? previous.description : changes.note?.trim() || null,
+        ...detailChanges,
       },
+      source,
       lifetime: logLifetime.current,
     };
     pendingLogMutation.current = mutation;
@@ -990,9 +1011,23 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   }
 
   async function undoQuickLog(id: string) {
+    const pending = pendingLogMutation.current;
+    if (pending?.kind === 'update' && pending.source === 'quick-add-details' && pending.id === id) {
+      if (undoAfterDetailPatch.current === id) return;
+      undoAfterDetailPatch.current = id;
+      if (logMutationFlight.current) return;
+      pendingLogMutation.current = null;
+      try { await deleteEvent(id, 'undo'); }
+      finally { if (undoAfterDetailPatch.current === id) undoAfterDetailPatch.current = null; }
+      return;
+    }
     const current = quickLogMutation;
     if (!current || current.kind !== 'add' || current.id !== id || current.status !== 'saved' || pendingLogMutation.current || logMutationFlight.current) return;
     await deleteEvent(id, 'undo');
+  }
+
+  function markQuickLogDetailsHandled(id: string) {
+    setQuickLogMutation((current) => current?.kind === 'add' && current.id === id ? { ...current, detailsHandled: true } : current);
   }
 
   function cancelLogMutation() {
@@ -1000,11 +1035,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     const pending = pendingLogMutation.current;
     if (!pending || quickLogMutation.id !== (pending.kind === 'insert' ? pending.operation.id : pending.id)) return;
     pendingLogMutation.current = null;
-    setQuickLogMutation(null);
+    setQuickLogMutation(pending.kind === 'update' && pending.source === 'quick-add-details'
+      ? { kind: 'add', mutationId: pending.id, id: pending.id, type: pending.type, occurredAt: pending.occurredAt, status: 'saved', detailsHandled: true }
+      : null);
   }
 
   async function retryLogMutation(): Promise<boolean> {
     const mutation = pendingLogMutation.current;
+    if (mutation?.kind === 'update' && mutation.source === 'quick-add-details' && undoAfterDetailPatch.current === mutation.id) return false;
     if (mutation?.kind === 'insert') {
       const lifetime = mutation.lifetime;
       const flightToken = ExpoCrypto.randomUUID();
@@ -1927,7 +1965,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       layoutOwnerId={session?.user.id}
       loading={logState === 'loading'} loadError={logState === 'error'} onReload={() => { void retryEvents(); }}
       busy={logBusy} mutation={quickLogMutation} loadMoreError={loadMoreError} onRetry={retryLogMutation} onCancel={cancelLogMutation}
-      onUndo={(id) => { void undoQuickLog(id); }} hasMore={hasMore} loadingMore={loadingMore}
+      onUndo={(id) => { void undoQuickLog(id); }} onQuickDetailsSettled={markQuickLogDetailsHandled} hasMore={hasMore} loadingMore={loadingMore}
       onLoadMore={() => { void loadMoreEvents(); }} />;
     if (page === 'training') return <>
       {visibleTrainingState === 'loading' && <PageHeading title="Träning" description="Hämtar publicerade program…" />}
@@ -2140,13 +2178,18 @@ function reminderStatusSummary(result: ReminderReconcileResult | null, preferenc
 }
 
 function toLogEvent(row: DogEventRecord): LogEvent {
-  return { id: row.id, dogId: row.dog_id, type: row.event_type, occurredAt: row.occurred_at, note: row.description, origin: 'local-test' };
+  return { id: row.id, dogId: row.dog_id, type: row.event_type, occurredAt: row.occurred_at, note: row.description, origin: 'local-test',
+    accidentKind: row.accident_kind, amount: row.amount, amountUnit: row.amount_unit, foodType: row.food_type };
 }
 
 function toQuickLogMutationView(mutation: PendingLogMutation, status: QuickLogMutationView['status']): QuickLogMutationView {
-  return mutation.kind === 'insert'
-    ? { kind: 'add', mutationId: mutation.operation.id, id: mutation.operation.id, type: mutation.operation.event_type, occurredAt: mutation.operation.occurred_at, status }
-    : { kind: mutation.kind, mutationId: mutation.mutationId, id: mutation.id, type: mutation.type, occurredAt: mutation.occurredAt, status };
+  if (mutation.kind === 'insert') {
+    const type = mutation.operation.event_type;
+    const detailsHandled = type !== 'accident' && type !== 'food' && type !== 'water';
+    return { kind: 'add', mutationId: mutation.operation.id, id: mutation.operation.id, type, occurredAt: mutation.operation.occurred_at, status, detailsHandled };
+  }
+  if (mutation.kind === 'update') return { kind: 'update', mutationId: mutation.mutationId, id: mutation.id, type: mutation.type, occurredAt: mutation.occurredAt, status, source: mutation.source };
+  return { kind: mutation.kind, mutationId: mutation.mutationId, id: mutation.id, type: mutation.type, occurredAt: mutation.occurredAt, status };
 }
 
 function sameHealthWeight(
