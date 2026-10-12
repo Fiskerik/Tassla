@@ -367,3 +367,81 @@ Begränsningar och nästa faktiska steg: inga commits/push eller körda migratio
 Avslutande dokumentationsstädning: Knowledge README uppdaterad från tidigare treflikars/public-only-text till faktisk v2-data/intent/review-flow, migrationskrav och verifieringsbegränsningar. Codemagic-grindens genererade logg/metadata-katalog ignoreras i Git; .gitignore registrerad i scope och fortsatt artefakt i Codemagic. Ingen runtime-/test-/beroendeändring efter slutliga kontroller.
 
 KNOW-02 levererat: commit `7b9da840d2ca2ac8f5d5ed998d73495858c98eae` (`feat: add puppy checklists and QA refinements`) på `puppy-checklists-faq-qa11`. Pushad till `origin` och `git ls-remote` bekräftade exakt samma SHA. Pre-commit och pre-push körde repots hooks; pnpm check PASS (461 pass, 1 skip; 37 testfiler; lint0fel38varningar), staged/ref diffcheck PASS. Inget --no-verify. TestFlight ej distribuerat.
+
+## HOME-NEXT-01 — 2026-10-12
+
+Erik godkände det avgränsade paketet för tränings- och checklistkort; FAQ ska vara oförändrad. Plan v6 har Architect APPROVE och Critic PROCEED. Implementationen gate:ar träning på redo träningsurval + aktuellt nästa steg och checklistkortet på befintlig reviewflagga. FAQ-kortets destination och flaggbeteende har regressionassertions. Visual-harnessen har separata public-/reviewbyggen, syntetiska träningsscenarier och reviewdestination.
+
+Verifiering: Node regression 1/1 PASS; `pnpm check` 37/37 PASS, lint 0 fel/38 varningar; public iOS-bundle PASS; båda UI-byggena PASS. Efter en locatorrättning godkänd av Architect passerar Home-kontrollerna i public och review vid 375/430 px och 140 % text, inklusive reviewmarkering/destination. Båda fulla `verify.py`-körningarna avslutas senare med exit 1 i orelaterat Kunskapsflöde (“Läs Inför hemkomsten” saknas). `git diff --check` och `python tools/dev_flow.py validate` PASS.
+
+Visuell kontroll mot `vision_rev01.jpg`: §14 punkt 16 Nej, eftersom befintlig Hem-layout placerar carousel före datumremsa/lista; punkt 17 Nej, eftersom Hemmets varumärke är centrerat i stället för vänsterställt. Övriga punkter Ja enligt QA. Därmed UNDERKÄND enligt designregeln att varje Nej underkänner. Screenshots och bedömning: [HOME-NEXT-01 evidens](../../design/evidence/home-next-01/); detalj och korrigeringsplan: [HOME-NEXT-01](HOME-NEXT-01.md).
+
+Kön står BLOCKED. Ingen commit, push, release-note eller UI-layoutändring. Nästa steg kräver Eriks beslut om separat scope för att rätta Home-layout/appbar eller uttryckligen acceptera dokumenterade visuella avvikelser; nuvarande kortmandat utökas inte.
+
+### HOME-NEXT-01 v7.1 planrevision — 2026-10-12
+
+Erik utökade scope till vision_rev02. Architect granskade v7 och returnerade CHANGES: komplettera den typade `ComponentGalleryScreen`-ytan, namnge regressionstester med exakt kommando, precisera dagemantik och svepnavigering samt redovisa ägarskap för releaseanteckningen. v7.1 har nu dessa ändringar i plan, uppgift och kö. Dagens vy ska visa källriktiga grupper (”Loggat idag”, ”Nästa träningssteg”, ”Planerat idag”) och beskrivas som källöversikt, inte fullständig checklista. Svepordningen följer de fem flikarna; Hälsa och Tassla-pass nås via Mer. Regranskning av Architect och Critic pågår. Fortsatt status `planned`, ingen kodstart.
+
+Architect har slutligt APPROVE på HOME-NEXT-01 plan v7.1 efter att acceptanskriterium 1 synkats med rubriken ”Idag” och de tre källriktiga grupperna. Critic PROCEED återstår; HOME-NEXT-01 står kvar som planned och ingen v7-implementation har startat.
+
+Critic har lämnat PROCEED på HOME-NEXT-01 plan v7.1. Skälen: tydlig skillnad mellan ägarregistrerade loggar, tillgängligt träningssteg och planerade hälsoposter; inget stöd för 2/5-räknare; Health/Tassla-pass kan hittas under Mer och verifieras i QA. Architect APPROVE och Eriks scopemandat finns registrerade. Planen är redo för implementation inom ägarsatta sökvägar.
+
+HOME-NEXT-01 har gått till `implementing` via dev_flow efter Architect APPROVE och Critic PROCEED på plan v7.1. Implementer arbetar endast i godkända produkt-/visual-harnessvägar; QA äger namngivna tester och koordinatorn docs/evidens. Ingen commit eller push.
+
+Implementer har lämnat in HOME-NEXT-01 v7.1-diffen: `pnpm exec tsc --noEmit`, Python-syntaxkontroll för verifieraren, `git diff --check` samt public-/review-harnessbyggen passerade enligt handoff. V6-gating behållen. Queue flyttas `implementing → qa`; oberoende fullcheck och renderad designgranskning återstår.
+
+## HOME-NEXT-01 v7.1 QA — UNDERKÄND och korrigeringsplan v7.2 — 2026-10-12
+
+Oberoende QA bedömde renderad Home mot vision_rev02.jpg och designregler §14. Resultat UNDERKÄND: punkt 5 avstånd mellan sektioner (12 i stället för 24); punkt 6 rå storlek på hundplatshållaren (82 × 92); punkt 10 upprepad källetikett ”Ägarregistrerat”; punkt 16 eftersom dagens logglista skjuter nästa träningssteg, plan och genvägar under bottenmenyn vid 375/430. Punkterna 17–18 godkända.
+
+Kontroller: fokuserade tre testfiler PASS; full pnpm check 38 pass/1 fail; iOS-export PASS med __UNSAFE_EXPO_HOME_DIRECTORY=/tmp/tassla-home-next-01-v7/expo-home; public/review UI-byggen PASS; manuella Home-tillstånd, navigation, More och review-gating PASS. Båda scoped verify.py-körningarna stoppade vid aria-selected-assertion trots manuell fungerande navigation/aktiv grön markering. Tester och rapporteringen av Home README pekar på gamla v7.1-antaganden. Ingen phone/backend/native-verifiering gjordes. QA:s slutliga rapport finns i agentens HOME-NEXT-01-resultat; renderade filer finns ännu endast under /tmp/tassla-home-next-01-v7/.
+
+Korrigeringsplan v7.2 är sparad i docs/plans/HOME-NEXT-01-ux-spec-v7.2.md. Den förkortar Home till högst senaste logghändelsen och ”Visa dagens logg”, komprimerar ”Just nu”, anger 24-tokenen, storlekstoken, tar bort upprepad källa, kräver att alla grupper/tiles ryms ovanför menyn, rättar aktiv tab-semantik, gamla README-texter och utdaterade Home-assertioner i tests/planned-health.test.mjs. QA får den testfilen som ägd sökväg. Scope/schema/dataflöden/FAQ/checklistor förblir oförändrade. Kö flyttas qa → blocked → planned; v7.2 väntar på Architect APPROVE och Critic PROCEED. Inga v7.2-källändringar har gjorts.
+
+
+### HOME-NEXT-01 v7.2 planrevision — 2026-10-12
+
+Architect och Critic returnerade CHANGES på första v7.2-utkastet. Planen är sedan preciserad med en gemensam Idag-Card, listGap mellan dess grupper, borttagen förklaringsrad, befintlig kompakt QuickLogTile-variant, tät fixture med minst fem valploggshändelser samt inline-länk i loggruppens rubrik. ”Visa dagens logg” gäller endast valploggen; utförd hälsohistorik stannar i Hälsa. Redundanta metadata ”Tillgänglig handling” och ”Planerat” tas bort. Task och queue anger nu samma ägarskap och evidensväg `docs/design/evidence/home-next-01/v7.2/`. Därefter godkände Architect och Critic den synkade v7.2-planen; status ändrades planned → ready → implementing och källkorrigeringen startade inom tilldelade sökvägar.
+
+Architect gav APPROVE och Critic gav PROCEED på synkad HOME-NEXT-01 v7.2-plan och task/queue den 2026-10-12. Båda bekräftade tät Home-fixture, valplogg kontra Hälsa, inline-länk, borttagna redundanta etiketter, evidensväg och ansvar. Queue får lämna planned; implementation är tillåten enbart inom v7.2:s ägarsatta sökvägar. §14 renderad QA förblir blockerande.
+
+Implementer har lämnat v7.2-korrigeringen inom tilldelade sökvägar. `pnpm exec tsc --noEmit`, public/review harnessbyggen, Python syntaxkontroll och `git diff --check` PASS enligt handoff. Lokal Chromium-start misslyckades med `setsockopt: Operation not permitted`; därför återstår oberoende tester, renderad Home-layout och full §14-bedömning. Queue går implementing → qa. Ingen commit/push/release.
+
+
+### HOME-NEXT-01 v7.2 QA — fit correction
+
+Independent public/review QA UNDERKÄNDE endast §14 punkt 16. Vid 375/430 px tiles började på y=754, höjd 78, medan fast meny började på y=785: 47px hamnade bakom menyn. Focused tests 4/4 och `pnpm check` (39 tests) PASS; public iOS-export, båda builds, diffcheck och queue validation PASS. Public/review navigation, tab-val, More → Hälsa, review-gating, FAQ/checklista, 140% text/reduced motion och noll browser errors PASS. Renderad evidens + §14-matris: `docs/design/evidence/home-next-01/v7.2/QA-REPORT.md`. QA blockerade. Architect bekräftade att samma godkända plan/sökväg täcker korrigering med Home-lokala sammanfattningsrader vars tryckytor är minst 44pt. Queue har återgått planned→ready→implementing; ny renderad QA krävs.
+
+Implementer ändrade enbart `HomeScreen.tsx`: de tre Today-raderna använder nu Home-lokala, tokeniserade tryckrader med minsta träffyta 44pt. Typecheck, public/reviewbyggen, verifierarsyntax och diffcheck PASS enligt handoff. Nuvarande queue-status `qa`; oberoende renderad matris och §14-omgranskning återstår.
+
+
+### HOME-NEXT-01 v7.2 second QA rerun — UNDERKÄND
+
+Kompakta Home-lokala tryckrader sparade 36px men räcker inte: tiles slutar y=796 och fast meny börjar y=785, alltså 11px överlapp vid både 375/430 i public/review. Alla övriga kontroller PASS, bland annat “Visa dagens logg” → Logg, vald tab, More → Hälsa, review-gate/destination, FAQ/checklista och 140%/reduced-motion. Fokustester, `pnpm check` (39 pass, 38 lintvarningar/0 fel), iOS-export, båda byggena, diffcheck och queue validation PASS. Den officiella Home-verifieraren stannar dessutom på en gammal exact-text-locator för `Mat`; dess geometry assertion behöver uppdateras för den kompakta raden. Rapport/evidens: `docs/design/evidence/home-next-01/v7.2/QA-REPORT-rerun.md`, screenshots i `rerun/public/` och `rerun/review/`; första felomgången bevaras i `first-fit-failure/`. Queue återgår `qa → blocked → planned`. Architect behöver bekräfta samma-scope korrigering i HomeScreen och verifieraren innan ny implementation; acceptansen är oförändrad.
+
+Architect confirmed that v7.2 approval covers moving “Idag” inside the shared Today Card and updating the compact-row locator in `tools/visual-check/verify.py`; this is same-scope and does not alter acceptance, behavior, or write paths. Queue returns planned → ready → implementing for that correction.
+
+Implementer flyttade “Idag” in i den gemensamma Today-Carden med befintlig headingGap och uppdaterade bara selektorn för den kompakta loggradens tillgängliga namn i `tools/visual-check/verify.py`. Endast `HomeScreen.tsx` och verifieraren ändrades i denna korrigering. Typecheck, public/reviewbyggen, Python syntax och diffcheck PASS enligt handoff. Queue → qa för oberoende renderad kontroll och §14.
+
+
+### HOME-NEXT-01 v7.2 final QA — 2026-10-12
+
+Oberoende QA UNDERKÄNDE §14 punkt 16 efter korrigeringen med gemensam Today-Card och flyttad ”Idag”-rubrik: tiles ligger y=718–796 och fast meny börjar y=785, alltså 11px överlapp vid 375/430 i både public och review. Slutbilden visar klippta tile-etiketter. CTA, tabbar, More → Hälsa, review-training-gating/destination, FAQ/checklist, 140% text/reduced motion och browser errors PASS. Fokustester 4 filer, `pnpm check` (39 pass, 38 varningar/0 fel), iOS-bundle, båda byggena, diffcheck och kövalidering PASS. Home-verifieraren passerar loggselektorn men stannar på exakt Vaccination-locator (`Vaccination idag` i stället för tillgängliga namnet `16:30, Vaccination idag`) innan geometriassertionen; oberoende matris mätte bounds.
+
+Rapport: `docs/design/evidence/home-next-01/v7.2/QA-REPORT-final.md`; final public/review-renderingar och JSON är sparade under `docs/design/evidence/home-next-01/v7.2/final/`; tidigare failure evidence är orörd. Queue: `qa → blocked → planned`. Nästa föreslagna korrigering inom samma godkända scope är att låta den inline-tertiary-logglänken uppta minsta 44pt tryckyta i stället för 56px, vilket ger 12px höjd tillbaka, samt uppdatera Vaccination-selectorn. Varken data, navigation, acceptanskriterier eller FAQ/checklistbeteende ändras; Architect-bekräftelse inväntas före implementering och ny QA.
+
+
+Architect bekräftade efter v7.2 final-QA att befintligt godkännande täcker HomeScreen-lokal 44pt inline-tertiary-länk och Vaccination-radens accessible-name-locator i `tools/visual-check/verify.py`. Ingen ändring av kriterier, beteende eller paths. Queue har gått `planned → ready → implementing`; implementer gör endast de två ändringarna. Oberoende public/review-QA vid 375/430 och §14 krävs efter handoff.
+
+
+Implementer genomförde Architect-bekräftad korrigering i endast `HomeScreen.tsx` och `tools/visual-check/verify.py`. Inline-tertiary CTA behåller 44pt träffyta, tillgänglig roll/etikett/handling; verifieraren matchar `16:30, Vaccination idag` och fortsätter till geometriassertion. Typecheck, public/review builds, Python-syntax och diffcheck PASS enligt handoff. Queue → qa; ny oberoende fullrunda krävs.
+
+
+### HOME-NEXT-01 v7.2 final-correction QA — 2026-10-12
+
+Slutlig oberoende QA GODKÄND: verifierare och fixturematris pass i public/review vid 375/430; action tiles y=706–784 ovanför fast meny y=785 (1px marginal). Inline-CTA är 44px och öppnar Logg. Review-gate/destination, tab state, More → Health, FAQ/checklist, 140% text/reduced motion, inga browser errors och §14 1–18 PASS. Fokustester 4 filer, `pnpm check` 39 pass/38 varningar/0 fel, public iOS-bundle, båda UI-byggena, diffcheck och kövalidering PASS. Full rapport och exakta kommandon i `docs/design/evidence/home-next-01/v7.2/QA-REPORT-final-correction.md`; slutbilder/resultat under `final-correction/`, tidigare fail evidens oförändrad. Queue → review; oberoende read-only slutgranskning återstår.
+
+
+### HOME-NEXT-01 final review — 2026-10-12
+
+Separat read-only Reviewer PASS på fryst produkt-/navigation-/harnessdiff och slutbevis. Bekräftat: 44px logg-CTA; dense tiles bottom 784/nav top 785 i public/review 375/430; källriktiga logg/träning/plan-grupper; fem huvudflikar, More → Hälsa/Tassla-pass, vald tab och reviewgating/destination; FAQ/checklistskärmar och dataflöden oförändrade; §14 och äldre fail-evidens bevarade. Task → done. Begränsning: lokala React Native Web-renders med syntetiska data; ingen native device/backend/RLS/TestFlight-certifiering. Inga commits, pushar eller publiceringar.

@@ -3,13 +3,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 import { tokens } from '../../theme/tokens';
 
-export type BottomNavDestination = 'home' | 'log' | 'training' | 'health' | 'more';
+export type BottomNavDestination = 'home' | 'log' | 'training' | 'knowledge' | 'more';
 type Item = { key: BottomNavDestination; label: string; icon: React.ComponentProps<typeof Ionicons>['name']; activeIcon: React.ComponentProps<typeof Ionicons>['name'] };
 const items: Item[] = [
   { key: 'home', label: 'Hem', icon: 'home-outline', activeIcon: 'home' },
   { key: 'log', label: 'Logg', icon: 'create-outline', activeIcon: 'create' },
   { key: 'training', label: 'Träning', icon: 'school-outline', activeIcon: 'school' },
-  { key: 'health', label: 'Hälsa', icon: 'heart-outline', activeIcon: 'heart' },
+  { key: 'knowledge', label: 'Kunskap', icon: 'book-outline', activeIcon: 'book' },
   { key: 'more', label: 'Mer', icon: 'grid-outline', activeIcon: 'grid' },
 ];
 
@@ -17,7 +17,7 @@ export function BottomNav({ active = 'home', onChange }: { active?: BottomNavDes
   return <View accessibilityRole="tablist" accessibilityLabel="Huvudmeny" style={styles.nav}>
     {items.map((item) => {
       const selected = item.key === active;
-      return <MotionPressable key={item.key} accessibilityRole="tab" accessibilityLabel={item.label} accessibilityState={{ selected }} onPress={() => onChange(item.key)} style={({ pressed }) => [styles.item, pressed && styles.pressed]}>
+      return <MotionPressable key={item.key} accessibilityRole="tab" accessibilityLabel={item.label} accessibilityState={{ selected }} aria-selected={selected} onPress={() => onChange(item.key)} style={({ pressed }) => [styles.item, pressed && styles.pressed]}>
         <Ionicons name={selected ? item.activeIcon : item.icon} size={tokens.size.iconMd} color={selected ? tokens.colors.primary : tokens.colors.textSecondary} />
         <Text style={[styles.label, selected && styles.selectedLabel]}>{item.label}</Text>
       </MotionPressable>;

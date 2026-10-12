@@ -15,7 +15,6 @@ const data = await import('../src/data/workspace-data.ts');
 tsResolution.deregister();
 const workspaceSource = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
 const homeScreenSource = await readFile(new URL('../src/features/home/HomeScreen.tsx', import.meta.url), 'utf8');
-const homeCarouselSource = await readFile(new URL('../src/features/home/HomeCarousel.tsx', import.meta.url), 'utf8');
 const healthScreenSource = await readFile(new URL('../src/features/health/HealthScreen.tsx', import.meta.url), 'utf8');
 
 const baseUrl = 'https://local-test.supabase.invalid';
@@ -529,16 +528,13 @@ test('actual workspace lifetime change suppresses delayed status replay and keep
   assert.equal(harness.state.pendingMutation.current, intent);
 });
 
-test('Home and Health show planned event time separately from explicitly labeled reminder time', () => {
+test('Home shows planned event time without reminder details; Health shows both separately', () => {
   assert.match(homeScreenSource, /time=\{plan\.due_time\?\.slice\(0, 5\)\}/);
-  assert.match(homeScreenSource, /Påminnelse \$\{formatMinutes\(plan\.reminder_minutes\)\}/);
+  assert.doesNotMatch(homeScreenSource, /reminder_minutes|formatMinutes/);
+  assert.match(homeScreenSource, /onPress=\{\(\) => onGo\('planned-health'\)\}/);
   assert.match(healthScreenSource, /time=\{row\.due_time\?\.slice\(0, 5\)\}/);
   assert.match(healthScreenSource, /Påminnelse \$\{formatMinutes\(row\.reminder_minutes\)\}/);
   assert.match(workspaceSource, /normalizePlannedHealthTime\(record\.due_time\) === normalizePlannedHealthTime\(expected\.due_time\)/);
-  assert.match(homeCarouselSource, /Tid \$\{upcomingPlan\.due_time\.slice\(0, 5\)\}/);
-  assert.match(homeScreenSource, /onPress=\{onRetryHealthHistory\}/);
-  assert.match(homeScreenSource, /Tidigare hälsohändelser kunde inte visas/);
-  assert.doesNotMatch(homeScreenSource, /healthHistoryState === 'error' \? <ListRow/);
 });
 
 test('planned health is linked from the health workspace and remains a separate screen/contract', async () => {

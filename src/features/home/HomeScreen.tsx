@@ -1,99 +1,198 @@
-import { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { AppBar, Button, Card, ListRow, SectionHeader, Skeleton } from '../../components/ui';
-import { MotionPressable, ScreenTransition } from '../../components/ui/Motion';
+import type { ReactNode } from 'react';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Button, Card, IconChip, ListRow, QuickLogTile, Skeleton } from '../../components/ui';
+import type { IconCategory } from '../../components/ui';
+import { MotionPressable } from '../../components/ui/Motion';
 import type { HomeContent, OwnedDog } from '../../data/app-data';
 import type { HealthHistoryRecord, PlannedHealthRecord } from '../../data/workspace-data';
 import { tokens } from '../../theme/tokens';
-import { formatDogAge, localDate } from '../onboarding/dog';
+import { localDate, formatDogAge } from '../onboarding/dog';
 import type { LogEvent } from '../puppy-log/log-model';
-import { HomeCarousel } from './HomeCarousel';
-import { homeTimelineForDate } from './home-timeline';
+import { homeAgeInWeeks, homeTodaySources, homeWeekStrip } from './home-today';
+import type { HomeTimelineEntry } from './home-timeline';
 
-type Destination = 'log' | 'training' | 'health' | 'profile' | 'notification-settings' | 'planned-health' | 'knowledge';
-export function HomeScreen({ dog, breed = '', events, healthHistory = [], healthHistoryState = 'ready', plans = [], content, contentState, logState = 'ready', planState = 'ready', nextStep, onGo, onOpenContent, onRetryContent, onRetryHealthHistory }: {
-  dog: OwnedDog; breed?: string; events: readonly LogEvent[]; healthHistory?: readonly HealthHistoryRecord[]; healthHistoryState?: 'loading' | 'ready' | 'error'; plans?: readonly PlannedHealthRecord[];
-  content: readonly HomeContent[]; contentState: 'loading' | 'ready' | 'error';
-  logState?: 'loading' | 'ready' | 'error'; planState?: 'loading' | 'ready' | 'error'; nextStep?: string;
-  onGo: (page: Destination) => void; onOpenContent: (id: string) => void; onRetryContent: () => void; onRetryHealthHistory: () => void;
+type Destination = 'log' | 'training' | 'knowledge' | 'health' | 'planned-health';
+type LoadState = 'loading' | 'ready' | 'error';
+
+export function HomeScreen({ dog, breed = '', events, healthHistory = [], plans = [], content, contentState, logState = 'ready', planState = 'ready', trainingState = 'loading', nextStep, reviewTrainingStep = false, onGo, onOpenContent, onRetryContent }: {
+  dog: OwnedDog;
+  breed?: string;
+  events: readonly LogEvent[];
+  healthHistory?: readonly HealthHistoryRecord[];
+  healthHistoryState?: LoadState;
+  plans?: readonly PlannedHealthRecord[];
+  content: readonly HomeContent[];
+  contentState: LoadState;
+  logState?: LoadState;
+  planState?: LoadState;
+  trainingState?: LoadState;
+  nextStep?: string;
+  reviewTrainingStep?: boolean;
+  onGo: (page: Destination) => void;
+  onOpenContent: (id: string) => void;
+  onRetryContent: () => void;
 }) {
   const today = localDate();
-  const [selected, setSelected] = useState(today);
-  const dates = Array.from({ length: 5 }, (_, index) => {
-    const date = new Date(`${today}T12:00:00`);
-    date.setDate(date.getDate() + index - 2);
-    return { key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`, date };
-  });
-  const timeline = homeTimelineForDate(selected, events, healthHistory);
-  const dailyPlans = plans.filter((plan) => plan.due_on === selected);
-  const age = formatDogAge(dog.birth_date, today);
-  return <View>
-    <AppBar mode="Home" title="Tassla" onAction={() => onGo('notification-settings')} />
-    <Card accessibilityLabel={`${dog.name}. ${age}${breed ? ` · ${breed}` : ''}`}>
-      <View style={styles.dogSummary}>
-        <Image source={require('../../../assets/images/dog-placeholder.png')} style={styles.dogImage} resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-        <View style={styles.dogCopy}>
-          <Text style={styles.dogName}>{dog.name}</Text>
-          <Text style={styles.dogMeta}>{breed ? `${age} · ${breed}` : age}</Text>
+  const ageWeeks = homeAgeInWeeks(dog.birth_date, today);
+  const age = ageWeeks === null ? null : formatDogAge(dog.birth_date, today);
+  const weekStrip = homeWeekStrip(dog.birth_date, today);
+  const todaySources = homeTodaySources(today, events, healthHistory, plans);
+  const latestLog = logState === 'ready' ? todaySources.logged.find((entry) => entry.source === 'log') : undefined;
+  const relevantContent = contentState === 'ready'
+    ? content.find((item) => item.contentType !== 'training_program')
+    : undefined;
+  const preview = relevantContent ? previewText(relevantContent.body) : '';
+
+  return <View style={styles.page}>
+    <View style={styles.identity}>
+      <View style={styles.greeting}>
+        <View style={styles.greetingCopy}>
+          <Text style={styles.greetingTitle} accessibilityRole="header">God morgon! ☀️</Text>
+          <Text style={styles.dogMeta}>{dog.name}{age ? ` · ${ageWeeks} ${ageWeeks === 1 ? 'vecka' : 'veckor'}` : ''}{breed ? ` · ${breed}` : ''}</Text>
         </View>
-        <MotionPressable accessibilityRole="button" accessibilityLabel={`Visa ${dog.name}s profil`} onPress={() => onGo('profile')} style={styles.profileButton}>
-          <Text style={styles.profileText}>Profil</Text>
-        </MotionPressable>
+        <Image source={require('../../../assets/images/dog-placeholder.png')} style={styles.dogImage} resizeMode="contain" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+      </View>
+      {weekStrip.length > 0 ? <View style={styles.weekStrip} accessibilityLabel="Hundens ålder i veckor">
+        {weekStrip.map(({ week, current }) => <View key={week} style={styles.weekItem} accessible accessibilityRole="text" accessibilityLabel={`${week} ${week === 1 ? 'vecka' : 'veckor'}${current ? ', aktuell ålder' : ''}`}>
+          <Text style={[styles.weekNumber, current && styles.currentWeekNumber]}>{week}</Text>
+          <View style={[styles.weekDot, current && styles.currentWeekDot]} />
+        </View>)}
+      </View> : null}
+    </View>
+
+    <Card onPress={relevantContent ? () => onOpenContent(relevantContent.id) : nextStep && trainingState === 'ready' ? () => onGo('training') : undefined}
+      accessibilityLabel={`Just nu med ${dog.name}${relevantContent ? `: ${relevantContent.title}` : nextStep && trainingState === 'ready' ? `: ${nextStep}` : ''}`}>
+      <View style={styles.currentCard}>
+        <View style={styles.cardHeadingRow}>
+          <Ionicons name="bulb" size={tokens.size.iconMd} color={tokens.colors.warning} accessibilityElementsHidden />
+          <Text style={styles.cardHeading}>Just nu med {dog.name}</Text>
+        </View>
+        {contentState === 'loading' ? <Skeleton shape="line" lines={2} /> : null}
+        {contentState === 'error' ? <Text style={styles.body}>Kunskapen kunde inte hämtas just nu. Öppna Kunskap för att försöka igen.</Text> : null}
+        {relevantContent ? <Text numberOfLines={2} style={styles.body}>{preview}</Text> : null}
+        {!relevantContent && contentState === 'ready' && trainingState === 'loading' ? <Skeleton shape="line" lines={2} /> : null}
+        {!relevantContent && contentState === 'ready' && trainingState === 'error' ? <Text style={styles.body}>Träningen kunde inte hämtas just nu.</Text> : null}
+        {!relevantContent && contentState === 'ready' && trainingState === 'ready' && nextStep ? <>
+          <Text numberOfLines={2} style={styles.body}>{nextStep}</Text>
+          {reviewTrainingStep ? <Text style={styles.exampleLabel}>Tillfälligt exempel – innehållet är inte sakgranskat</Text> : null}
+        </> : null}
+        {!relevantContent && contentState === 'ready' && trainingState === 'ready' && !nextStep ? <Text style={styles.body}>Inget nytt innehåll att visa just nu.</Text> : null}
+        {contentState === 'error' ? <Button variant="tertiary" label="Hämta guider igen" accessibilityLabel="Hämta guider igen" onPress={onRetryContent} /> : null}
       </View>
     </Card>
-    <HomeCarousel dog={dog} plans={plans} selectedDatePlans={planState === 'ready' ? dailyPlans : []} content={content} contentState={contentState} nextStep={nextStep} onGo={onGo} onOpenContent={onOpenContent} />
-    <View style={styles.week} accessibilityRole="tablist" accessibilityLabel="Välj dag">
-      {dates.map(({ key, date }) => <MotionPressable key={key} accessibilityRole="tab" accessibilityLabel={date.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' })} accessibilityState={{ selected: key === selected }} onPress={() => setSelected(key)} style={[styles.day, key === selected && styles.selectedDay]}>
-        <Text style={[styles.weekday, key === selected && styles.selectedText]}>{date.toLocaleDateString('sv-SE', { weekday: 'short' }).replace('.', '')}</Text>
-        <Text style={[styles.date, key === selected && styles.selectedText]}>{date.getDate()}</Text>
-        <View style={[styles.dayDot, key === today && (key === selected ? styles.lightDot : styles.todayDot)]} />
-      </MotionPressable>)}
-    </View>
-    <SectionHeader title={selected === today ? `Idag för ${dog.name}` : new Date(`${selected}T12:00:00`).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' })} />
-    {selected === today ? <Button label="Logga nu" accessibilityLabel="Logga en händelse nu" onPress={() => onGo('log')} /> : null}
-    {healthHistoryState === 'error' ? <View style={styles.historyError}>
-      <Text style={styles.errorText}>Tidigare hälsohändelser kunde inte visas.</Text>
-      <Button variant="tertiary" label="Försök igen" accessibilityLabel="Försök igen" onPress={onRetryHealthHistory} />
-    </View> : null}
-    <ScreenTransition transitionKey={selected}>
-      <View style={[styles.rows, selected === today && styles.todayRows]}>
-        {logState === 'loading' || planState === 'loading' ? <Skeleton shape="row" lines={2} /> : null}
-        {logState === 'error' ? <ListRow category="pee" title="Loggen kunde inte hämtas" meta="Öppna loggen för att försöka igen" onPress={() => onGo('log')} /> : null}
+
+    <Card accessibilityLabel="Idag. Dagens logg, träningssteg och planer">
+      <View style={styles.todayCardContent}>
+      <Text style={styles.sectionTitle} accessibilityRole="header">Idag</Text>
+      <View style={styles.todayGroups}>
+      <TodayGroup title="Loggat idag" action={<MotionPressable accessibilityRole="button" accessibilityLabel="Visa dagens logg" onPress={() => onGo('log')} style={styles.inlineAction}><Text style={styles.inlineActionText}>Visa dagens logg</Text></MotionPressable>}>
+        {logState === 'loading' ? <Skeleton shape="row" lines={1} /> : null}
+        {logState === 'error' ? <ListRow category="pee" title="Loggen kunde inte hämtas" meta="Öppna Logg för att försöka igen" onPress={() => onGo('log')} /> : null}
+        {logState === 'ready' && !latestLog ? <Text style={styles.emptyText}>Inget loggat idag.</Text> : null}
+        {latestLog ? <LoggedTodayRow entry={latestLog} onPress={() => onGo('log')} /> : null}
+      </TodayGroup>
+      <TodayGroup title="Nästa träningssteg">
+        {trainingState === 'loading' ? <Skeleton shape="row" lines={1} /> : null}
+        {trainingState === 'error' ? <ListRow category="training" title="Träningen kunde inte hämtas" meta="Öppna Träning för att försöka igen" onPress={() => onGo('training')} /> : null}
+        {trainingState === 'ready' && nextStep ? <TodaySummaryRow category="training" title={nextStep} meta={reviewTrainingStep ? 'Tillfälligt exempel – innehållet är inte sakgranskat' : undefined} onPress={() => onGo('training')} /> : null}
+        {trainingState === 'ready' && !nextStep ? <Text style={styles.emptyText}>Inget nästa steg tillgängligt just nu.</Text> : null}
+      </TodayGroup>
+      <TodayGroup title="Planerat idag">
+        {planState === 'loading' ? <Skeleton shape="row" lines={1} /> : null}
         {planState === 'error' ? <ListRow category="vaccination" title="Planerna kunde inte hämtas" onPress={() => onGo('planned-health')} /> : null}
-        {healthHistoryState === 'loading' ? <Skeleton shape="row" lines={2} /> : null}
-        {planState === 'ready' && dailyPlans.map((plan) => <ListRow key={plan.id} category={plan.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} title={plan.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök'} time={plan.due_time?.slice(0, 5)} meta={planMeta(plan)} onPress={() => onGo('planned-health')} />)}
-        {logState === 'ready' && healthHistoryState === 'ready' && planState === 'ready' && timeline.length === 0 && dailyPlans.length === 0 ? <Text style={styles.empty}>{selected > today ? 'Inget planerat den här dagen.' : 'Inget loggat den här dagen.'}</Text> : null}
-        {timeline.filter((entry) => entry.source === 'log' ? logState === 'ready' : healthHistoryState === 'ready').map((entry) => <ListRow key={`${entry.source}:${entry.id}`} category={entry.category} title={entry.title} time={entry.time ?? undefined} detail={entry.detail ?? undefined} onPress={() => onGo(entry.source === 'log' ? 'log' : 'health')} />)}
+        {planState === 'ready' && todaySources.planned.length === 0 ? <Text style={styles.emptyText}>Inget planerat idag.</Text> : null}
+        {planState === 'ready' ? todaySources.planned.map((plan) => <TodaySummaryRow key={plan.id}
+          category={plan.event_type === 'vaccination' ? 'vaccination' : 'veterinary'}
+          title={plan.description || (plan.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök')}
+          time={plan.due_time?.slice(0, 5)} onPress={() => onGo('planned-health')} />) : null}
+      </TodayGroup>
       </View>
-    </ScreenTransition>
-    {contentState === 'error' ? <Button label="Hämta guider igen" accessibilityLabel="Hämta guider igen" variant="tertiary" onPress={onRetryContent} /> : null}
+      </View>
+    </Card>
+
+    <View style={styles.actionsSection}>
+      <Text style={styles.sectionTitle} accessibilityRole="header">Vad vill du göra nu?</Text>
+      <View style={styles.actions}>
+        <QuickLogTile label="Logga" category="pee" compact onPress={() => onGo('log')} />
+        <QuickLogTile label="Träna" category="training" compact onPress={() => onGo('training')} />
+        <QuickLogTile label="Kunskap" category="awake" compact onPress={() => onGo('knowledge')} />
+      </View>
+    </View>
   </View>;
 }
+
+function TodayGroup({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
+  return <View style={styles.todayGroup}>
+    <View style={styles.groupHeading}><Text style={styles.groupTitle} accessibilityRole="header">{title}</Text>{action}</View>
+    <View style={styles.groupRows}>{children}</View>
+  </View>;
+}
+
+function LoggedTodayRow({ entry, onPress }: { entry: HomeTimelineEntry; onPress: () => void }) {
+  return <TodaySummaryRow category={entry.category} title={entry.title} time={entry.time ?? undefined} onPress={onPress} />;
+}
+
+function TodaySummaryRow({ category, title, time, meta, onPress }: {
+  category: IconCategory;
+  title: string;
+  time?: string;
+  meta?: string;
+  onPress: () => void;
+}) {
+  const label = [time, title, meta].filter(Boolean).join(', ');
+  return <MotionPressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress}
+    style={({ pressed }) => [styles.summaryRow, pressed && styles.summaryRowPressed]}>
+    <IconChip category={category} size="medium" />
+    <View style={styles.summaryCopy}>
+      <Text style={styles.summaryTitle}>{time ? <><Text style={styles.summaryTime}>{time} </Text>{title}</> : title}</Text>
+      {meta ? <Text style={styles.summaryMeta}>{meta}</Text> : null}
+    </View>
+    <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+  </MotionPressable>;
+}
+
+function previewText(body: string): string {
+  const paragraph = body.split(/\n\s*\n/).find((part) => part.trim() && !/^\s*#{1,6}\s/.test(part));
+  const text = (paragraph ?? body).replace(/^\s*[-*]\s+/gm, '').trim();
+  return text.length > 150 ? `${text.slice(0, 147).trimEnd()}…` : text;
+}
+
 const styles = StyleSheet.create({
-  dogSummary: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md },
-  dogImage: { width: tokens.size.quickLogCompactHeight, height: tokens.size.quickLogCompactHeight, borderRadius: tokens.radius.md },
-  dogCopy: { flex: 1, gap: tokens.spacing.xs },
-  dogName: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
+  page: { gap: tokens.layout.sectionGap, paddingBottom: tokens.spacing.xl },
+  identity: { gap: tokens.spacing.sm },
+  greeting: { minHeight: tokens.size.quickLogCompactHeight, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm },
+  greetingCopy: { flex: 1, gap: tokens.spacing.xs },
+  greetingTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
   dogMeta: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
-  profileButton: { minHeight: tokens.size.touchMin, justifyContent: 'center', paddingHorizontal: tokens.spacing.sm },
-  profileText: { ...tokens.typography.label, color: tokens.colors.primary },
-  week: { flexDirection: 'row', gap: tokens.spacing.sm, marginTop: tokens.spacing.lg },
-  day: { flex: 1, minWidth: tokens.size.touchMin, minHeight: tokens.size.buttonHeight, paddingVertical: tokens.spacing.sm, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface, gap: tokens.spacing.xs },
-  selectedDay: { backgroundColor: tokens.colors.primary },
-  weekday: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textTransform: 'capitalize' },
-  date: { ...tokens.typography.label, color: tokens.colors.textPrimary }, selectedText: { color: tokens.colors.onPrimary },
-  dayDot: { height: tokens.spacing.xs, width: tokens.spacing.xs, borderRadius: tokens.radius.full }, todayDot: { backgroundColor: tokens.colors.primary }, lightDot: { backgroundColor: tokens.colors.onPrimary },
-  rows: { gap: tokens.spacing.xs }, todayRows: { marginTop: tokens.layout.listGap }, empty: { ...tokens.typography.body, color: tokens.colors.textSecondary, paddingVertical: tokens.spacing.lg },
-  historyError: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: tokens.spacing.sm, marginTop: tokens.spacing.md },
-  errorText: { ...tokens.typography.caption, color: tokens.colors.danger, flex: 1, flexShrink: 1 },
+  dogImage: { width: tokens.size.quickLogCompactHeight, height: tokens.size.quickLogCompactHeight },
+  weekStrip: { flexDirection: 'row', gap: tokens.spacing.xs, alignSelf: 'stretch', marginBottom: tokens.spacing.sm },
+  weekItem: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs },
+  weekNumber: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  currentWeekNumber: { minWidth: tokens.size.touchMin - tokens.spacing.xs, minHeight: tokens.size.touchMin, textAlign: 'center', textAlignVertical: 'center', borderRadius: tokens.radius.full, overflow: 'hidden', backgroundColor: tokens.colors.primary, color: tokens.colors.onPrimary, fontWeight: '700' },
+  weekDot: { width: tokens.spacing.sm, height: tokens.spacing.sm, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.border },
+  currentWeekDot: { backgroundColor: tokens.colors.primary },
+  currentCard: { gap: tokens.spacing.sm },
+  cardHeadingRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
+  cardHeading: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1 },
+  body: { ...tokens.typography.body, color: tokens.colors.textPrimary, flexShrink: 1 },
+  exampleLabel: { ...tokens.typography.caption, color: tokens.colors.warning },
+  sectionTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
+  todayCardContent: { gap: tokens.layout.headingGap },
+  todayGroups: { gap: tokens.layout.listGap },
+  todayGroup: { gap: tokens.spacing.xs },
+  groupHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm },
+  groupTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1 },
+  inlineAction: { minHeight: tokens.size.touchMin, justifyContent: 'center', paddingHorizontal: tokens.spacing.xs },
+  inlineActionText: { ...tokens.typography.caption, color: tokens.colors.primary, textDecorationLine: 'underline' },
+  groupRows: { gap: tokens.layout.listGap },
+  summaryRow: { minHeight: tokens.size.touchMin, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.sm, paddingVertical: tokens.spacing.xs, borderRadius: tokens.radius.md },
+  summaryRowPressed: { backgroundColor: tokens.colors.selectedSurface },
+  summaryCopy: { flex: 1, minWidth: 0, gap: tokens.spacing.xs },
+  summaryTitle: { ...tokens.typography.caption, color: tokens.colors.textPrimary, fontWeight: '700', flexShrink: 1 },
+  summaryTime: { ...tokens.typography.caption, color: tokens.colors.textSecondary, fontWeight: '400' },
+  summaryMeta: { ...tokens.typography.caption, color: tokens.colors.warning, flexShrink: 1 },
+  emptyText: { ...tokens.typography.caption, color: tokens.colors.textSecondary, paddingVertical: tokens.spacing.sm },
+  actionsSection: { gap: tokens.layout.headingGap },
+  actions: { flexDirection: 'row', gap: tokens.spacing.sm },
 });
-
-function planMeta(plan: PlannedHealthRecord): string | undefined {
-  const parts = [plan.description];
-  if (plan.reminder_minutes !== null) parts.push(`Påminnelse ${formatMinutes(plan.reminder_minutes)}`);
-  return parts.filter(Boolean).join(' · ') || undefined;
-}
-
-function formatMinutes(minutes: number): string {
-  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
-}

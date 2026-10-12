@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { tokens } from '../../theme/tokens';
 import { AppBar } from './AppBar';
 import { ActionMenu } from './ActionMenu';
-import { BottomNav } from './BottomNav';
+import { BottomNav, type BottomNavDestination } from './BottomNav';
 import { BottomSheet } from './BottomSheet';
 import { Button } from './Button';
 import { Card } from './Card';
@@ -32,7 +32,7 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
   const [showDialog, setShowDialog] = useState(false);
   const [showSheet, setShowSheet] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [activeNav, setActiveNav] = useState<'home' | 'log' | 'training' | 'health' | 'more'>('home');
+  const [activeNav, setActiveNav] = useState<BottomNavDestination>('home');
   return <View style={styles.page}>
     <AppBar mode="Back" title="Komponentgalleri" onAction={onBack} />
     <Text style={styles.note}>Visuell provyta · Exempeltexter och lokala tillstånd. Håll in en knapp för tryckläget.</Text>
