@@ -3,7 +3,7 @@
 Datum: 2026-10-11
 
 Planversion: v7 – Product/Critic PROCEED; Architect APPROVE; Erik godkände scopeutökningen 2026-10-12
-Status: v7 implementation, oberoende QA, Security och Reviewer PASS; commit/push till `codex/repo-grounding` återstår
+Status: v7 implementation, oberoende QA, Security och Reviewer PASS; implementation committad och pushad till `origin/codex/repo-grounding`
 
 ## Mandat och mål
 
@@ -166,4 +166,4 @@ Verifiering körd på aktuell arbetskopia:
 
 Oberoende QA granskade den faktiska ändringen, alla tillämpliga checklistpunkter och skärmbilderna och gav **PASS**. Security och oberoende Reviewer gav **PASS** utan blockerare. Reviewerna bekräftade hund-/postavgränsad datahantering, fältbevarande, typbytesrensning, undo-sekvensering, befintliga API-kontrakt och mönstersammanfattningens datagrind. En detaljpatch skickar även aktuell posttid, anteckning och varaktighet från den lokala ögonblicksbilden; en samtidig ändring från en annan klient kan skriva över dessa fält enligt det befintliga uppdateringskontraktet. Ingen versionskontroll/konfliktlösning ingår.
 
-Native tangentbord/skärmläsare, enhetsrendering och backend/RLS är inte verifierade. Vid 140 % text radbryts delade bottenmenyns `Träning`-etikett i två rader utan overflow eller kontrollförlust; komponenten ligger utanför paketets skrivvägar. Commit/push till `codex/repo-grounding` återstår enligt Eriks instruktion. Ingen Codemagic/TestFlight.
+Native tangentbord/skärmläsare, enhetsrendering och backend/RLS är inte verifierade. Vid 140 % text radbryts delade bottenmenyns `Träning`-etikett i två rader utan overflow eller kontrollförlust; komponenten ligger utanför paketets skrivvägar. Implementation commit `4f36b12` (`feat: complete puppy log details and QA`) är pushad till `origin/codex/repo-grounding`; pre-commit och pre-push hooks passerade. Ingen Codemagic/TestFlight.

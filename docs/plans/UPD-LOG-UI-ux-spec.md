@@ -1,6 +1,6 @@
 # UPD-LOG-UI – UX-specifikation
 
-Status: v7 har Product/Critic PROCEED, Architect APPROVE, Eriks scopegodkännande 2026-10-12 samt oberoende QA, Security och Reviewer PASS; commit/push till `codex/repo-grounding` återstår
+Status: v7 har Product/Critic PROCEED, Architect APPROVE, Eriks scopegodkännande 2026-10-12 samt oberoende QA, Security och Reviewer PASS; implementation commit `4f36b12` är pushad till `origin/codex/repo-grounding`
 
 ## Mål och startpunkt
 

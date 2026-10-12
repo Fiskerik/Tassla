@@ -3813,7 +3813,7 @@
           "evidence": "Independent Reviewer PASS and Security PASS; all checks pass, QA evidence complete. Package is ready for the user-authorized commit and push to codex/repo-grounding; no build or distribution."
         }
       ],
-      "next_step": "Independent Reviewer PASS and Security PASS; all checks pass, QA evidence complete. Package is ready for the user-authorized commit and push to codex/repo-grounding; no build or distribution."
+      "next_step": "UPD-LOG-UI is complete and pushed; wait for the next package’s separate plan and review gate before implementation."
     },
     {
       "id": "UPD-HEALTH-TIME",
