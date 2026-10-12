@@ -26,7 +26,7 @@ Grundprincip: **en hundägare ska förstå skärmen på 3 sekunder, med en hand,
 
 ## 0. Målbilden är facit
 
-Projektets tillgängliga målbild är `vision_rev01.jpg` i projektroten, visuellt inspekterad 2026-10-07. Originalets föreslagna sökväg `docs/design/malbild.png` finns inte. Använd den befintliga bilden; endast övre delen ”MVP – 6 skärmar” styr aktuella skärmar.
+Projektets tillgängliga målbild är `vision_rev02.jpg` i projektroten, visuellt inspekterad 2026-10-12. Originalets föreslagna sökväg `docs/design/malbild.png` finns inte. Använd den befintliga bilden; endast övre delen ”MVP – 6 skärmar” styr aktuella skärmar.
 
 Rangordning när något är oklart:
 
