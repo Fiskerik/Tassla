@@ -1,5 +1,6 @@
 # AGENTS.md – Tassla
 ## UI och design (obligatoriskt)
+Aktuell målbild är `vision_rev02.jpg`. Samlat regelverk: `docs/design-rules.md`; skärm-/komponent- och objektkontrakt länkas därifrån. Bygginstruktion för Hem: `docs/prompts/build-home-rev02.md`. Skilj dokumenterat designmål från redan implementerad funktion och verifierad produktionsdata. Äldre rev01-hänvisningar i historiska paket är inte aktuell visuell auktoritet.
 Innan du planerar, skapar, ändrar eller granskar UI: läs `docs/design-rules.md` och följ den.
 Alla UI-ändringar granskas separat med skärmdump mot målbilden och ifylld checklista (avsnitt 14). Saknad visuell evidens är NOT TESTABLE, inte visuellt GODKÄND.
 Vid konflikt med äldre visuella råd gäller docs/design-rules.md inom godkänt scope. Aktuella mänskliga beslut, säkerhet, tillgänglighet och sanningsenlighet kvarstår.

@@ -1,373 +1,168 @@
-# Införd designpolicy — 2026-10-07
+# Tassla — designregelverk för vision_rev02
 
-Kanonisk policy för alla nya och reviderade UI-uppgifter. Införd på Eriks begäran från originalet DESIGN_RULES (1).md och jämförd med Tassla-design-policy.zip. Originalets regler och 18 kontrollpunkter följer nedan. Bilagorna är designunderlag; deras installationskommandon och gamla statusuppgifter är inte projektmandat.
+Version 2.0, 2026-10-13. Kanonisk instruktion för nya och reviderade UI-uppgifter, på Eriks beställning av ett sammanhängande regelverk och byggunderlag mot [vision_rev02.jpg](../vision_rev02.jpg).
 
-## Tillämpning i aktuellt Tassla
-- Detta dokument preciserar och ersätter motstridiga äldre visuella råd i docs/dev/ui-and-code-standards.md. Följ varm, lugn målbild framför äldre krav på ”modig” färg. Målstyrd rörelse som svar på en användarhandling är tillåten; loopande dekorativ rörelse är inte tillåten.
-- Ingen ny appfunktion, datainsamling, delningslänk, foder-/allergi-/medicinfält, flik, flerhundsstöd eller schemaändring godkänns automatiskt av en bild eller komponentlista. Godkänt MVP-scope och faktiska uppgifter styr innehållet. Framtida design ska inte skapa spekulativa abstraktioner nu.
-- ”Luna” i målbilden är exempel. Visa aktuell hunds riktiga namn. Befintliga dekorbilder får inte presenteras som ägarens hundfoto; använd en tydlig vänlig platshållare när foto saknas.
-- Tvåradersregeln gäller kort förklarande copy i arbetsflöden. Flytta fördjupning till läsvy eller Läs mer; klipp inte viktig text och minska inte text/tryckytor för att uppfylla raden vid stor text. Nödvändiga säkerhetsvarningar och information som behövs för ett aktivt val måste fortfarande gå att förstå och läsa.
-- Ingen teknisk drifttext i vanliga ägarflöden. Beskriv resultat och nästa handling vardagligt. Dölj inte osäker sparstatus/raderingsstatus: ”Vi kunde inte kontrollera om det sparades” är bättre än tekniska förklaringar eller falskt ”Sparat”. En toast får säga Sparat först efter verkligt lyckat sparande; ångra måste fungera. Notistext beskriver faktiskt inställnings-/tillståndsläge utan löfte om leverans.
-- Delade komponenter finns i src/components/ och tokens i src/theme/tokens.ts. Inför de efterfrågade komponentvarianterna och tokens i berörd godkänd slice; befintlig kod är inte retroaktivt ombyggd genom detta dokument.
-- Product har UX-copy-ansvaret och Critic granskar begriplighet och friktion. Implementer skriver korta svenska texter; Product/Critic granskar nya eller ändrade texter före leverans. Ingen ny agentorganisation införs.
-- Referensskärm är ännu inte utsedd. För fler loggtyper än målbildens fyra är placeringen fortfarande ett ägarbeslut; dölj eller ta inte bort godkända funktioner som en tyst designändring.
-- Visuell QA görs av en annan roll än Implementer. Dokumentera skärmdumpar bredvid målbilden, liten/större mobilbredd, stor text och relevanta tillstånd samt samtliga kontrollpunkter. Icke tillämpliga punkter motiveras; saknad rendering/evidens = NOT TESTABLE, inte GODKÄND. Konkreta Nej blockerar berörd UI-leverans tills rättade. Kodkontroll ensam är aldrig visuell QA.
-- Detta inför ingen automatisk TestFlight-grind. Lokal rendering kan ge layoutbevis men bevisar inte nativebeteende. Erik väljer när fysisk telefon/TestFlight behövs. Teknisk lokal checkpoint får sparas med tydlig visuell verifieringslucka, men UI får inte påstås visuellt klart.
+## 0. Auktoritet och leveransstatus
 
----
-# Tassla – Design Rules
+`vision_rev02.jpg` är aktuell visuell målbild. Dess åtta paneler är designmål, inte åtta redan implementerade funktioner. `vision_rev01.jpg` och äldre paketspecifikationer är historik. Detta regelverk ersätter motstridiga äldre visuella anvisningar för kommande arbete; tidigare leveranser skrivs inte om retroaktivt.
 
-Gäller **alla** agenter och alla som ändrar UI i appen (Expo / React Native).
-Reglerna är bindande för designarbetet inom godkänt scope. Dokumentera och motivera avvikelser i uppgiftsplan och PR-beskrivning när en PR finns. Aktuella mänskliga beslut, hälsosäkerhet, tillgänglighet och sanningsenlig återkoppling gäller även när målbilden förenklar något.
+Rangordning: aktuella ägarbeslut → sanningsenlighet, säkerhet och tillgänglighet → detta regelverk och rev02-specifikationen → UX-skillens beteenderegler → befintlig kod. Bilden styr komposition, objekt, komponentformer, bildspråk och innehållshierarki. Namn, räknetal och råd i bilden är exempel, inte datakällor. Olösta faktiska konflikter dokumenteras; redan fattade beslut frågas inte om igen.
 
-Grundprincip: **en hundägare ska förstå skärmen på 3 sekunder, med en hand, utan att läsa teknisk text.**
+Läs tillsammans:
 
----
+- [Skärmar, komponenter och Hem-specifikation](design/vision-rev02-spec.md).
+- [Produktobjekt, datakopplingar och innehåll](design/vision-rev02-objects.md).
+- [Bygginstruktion för Hem](prompts/build-home-rev02.md).
+- [Byggordning, mandat och granskningar](tasks/VISION-REV02.md).
 
-## 0. Målbilden är facit
+Statusord: **befintligt** = kod finns; **föreslaget** = kontrakt att implementera; **granskningsläge** = syntetisk interaktion; **produktionskopplat** = verklig läsning/skrivning verifierad; **visuellt godkänt** = jämfört med målbilden. Ingen status ersätter en annan.
 
-Projektets tillgängliga målbild är `vision_rev01.jpg` i projektroten, visuellt inspekterad 2026-10-07. Originalets föreslagna sökväg `docs/design/malbild.png` finns inte. Använd den befintliga bilden; endast övre delen ”MVP – 6 skärmar” styr aktuella skärmar.
+## 1. Arbetsordning
 
-Rangordning när något är oklart:
+1. Läs regelverk, UX-skill, aktuell skärmspecifikation och exakt taskmandat.
+2. Öppna rev02 och aktuell render. Identifiera motsvarande panel, synliga objekt och resan från tryck till resultat.
+3. Ange skrivfiler, befintliga API:er, beroenden och avvikelser. Följ planreview i `docs/dev/workflow.md`.
+4. Implementera en vertikal del med gemensamma komponenter. Föreslagna API:er får inte beskrivas som befintliga.
+5. Rendera jämförbara skärmar med samma data/viewport. Kör beteendekontroll och §14.
+6. Separat QA och Reviewer bedömer helheten. Spara bilder, resultat, luckor och nästa steg.
 
-1. **Målbilden** (utseende, struktur, innehåll, ton)
-2. **Denna fil**
-3. Befintlig kod
+## 2. Visuellt språk
 
-Regler:
-- Bygger du en MVP-skärm: öppna målbilden och matcha **layout, komponenter, ikonstil, texter och ton**. Hitta inte på egna lösningar.
-- Är målbilden tyst om något: använd tokens och komponenter i denna fil, och skriv ned antagandet i PR-beskrivningen.
-- Vill du avvika från målbilden: gör det inte tyst. Lista avvikelsen och motivera den.
-- Skärmarna under "Om tre år" **byggs inte nu**. De används för att inte låsa oss: flera hundar, delad åtkomst, roller (ägare/dagis/veterinär) och en tidslinje ska kunna läggas till utan omskrivning av datamodell och komponenter.
+Varm gräddvit bakgrund, ljusa mjukt rundade kort, gröna markeringar och mjuka kategorifärger. Bilder är bärande delar av kompositionen. Rubriker har tydlig hierarki; metadata är dämpad och relevant. Följ målbildens visuella vikt: hundporträtt, kort relevant text, sammanhängande uppgiftslista och tre tonade genvägar.
 
----
+Undvik ett kort runt varje rad. Grupperade rader ligger på gemensam yta med diskreta avdelare. Välj färre synliga uppgifter och tydlig fördjupning framför ett fullt första skärmfält.
 
-## 1. Arbetsordning (obligatorisk)
+## 3. Tokens och proportioner
 
-1. Läs denna fil och `AGENTS.md` innan du rör UI.
-2. Öppna målbilden och den skärm du ska bygga. Titta även på referensskärmen (avsnitt 12).
-3. Använd **befintliga komponenter** i `src/components/ui/` (eller motsvarande). Saknas en komponent: skapa den där, med varianter, i stället för att styla inline.
-4. Efter ändring: ta skärmdump av varje berörd skärm och lägg den bredvid motsvarande skärm i målbilden.
-5. Kör checklistan i avsnitt 14.
-6. Den som byggt får inte vara den enda som granskar. Visuell QA görs av en separat granskningsroll.
+`src/theme/tokens.ts` är kodens gemensamma källa. Befintliga värden är utgångspunkt, inte ett hinder för att matcha rev02. Kalibrera gemensamt i en granskad komponentdel.
 
----
-
-## 2. Visuellt språk (så här ska Tassla kännas)
-
-Målbilden är **varm, lugn och personlig**, inte teknisk.
-
-- **Bakgrund:** varm gräddvit. **Ytor/kort:** vita eller svagt tonade, mjukt rundade hörn, lätt ram, inga hårda skuggor.
-- **Primärfärg:** mörkgrön (en enda). Används till huvudknapp, aktiv flik, aktiv ikon i bottenmenyn och bockar.
-- **Kategorifärger:** mjuka pastellfärger som *ikon-chips* (tonad bakgrund + mättad ikon). Se avsnitt 3.
-- **Foto:** hunden syns. Hunden Luna med foto på Hem, Träning (hero), Kunskap, Tassla-pass. Stora, varma foton med rundade hörn. Saknas foto: använd en vänlig platshållare (hundsilhuett), aldrig en tom grå ruta.
-- **Rubrik/typografi:** tydlig hierarki. Sidtitel centrerad i appbaren, sektionsrubriker fetare, metadata liten och dämpad.
-- **Personligt språk:** "Idag för Luna", inte "Dagens uppgifter".
-- **Luft:** hellre färre element med luft än tätt packat.
-
----
-
-## 3. Designtokens – inga hårdkodade värden
-
-All styling hämtas från tokens (t.ex. `src/theme/tokens.ts`). **Förbjudet:** hårdkodade hex-färger, magiska px-tal, egna `fontSize`/`borderRadius` i skärmfiler.
-
-| Token | Regel |
+| Område | Regel |
 |---|---|
-| Spacing | Endast skalan 4 / 8 / 12 / 16 / 24 / 32. |
-| Radius | Tre nivåer: `sm` (chips, fält), `md` (knappar, listrader), `lg` (kort, hero, sheets). |
-| Färg (bas) | Semantiska namn: `primary`, `surface`, `background`, `textPrimary`, `textSecondary`, `border`, `success`, `warning`, `danger`. Behåll appens befintliga värden, de ligger nära målbilden. |
-| Färg (kategori) | `category.<namn>.fg` + `category.<namn>.bg` (se nedan). Endast dessa för ikon-chips. |
-| Typografi | Stilarna `title`, `heading`, `body`, `caption`, `label`. Max 3 olika storlekar per skärm. |
-| Kort/ram | Ett enda kortutseende i hela appen. |
+| Avstånd | Skala 4/8/12/16/24/32; huvudsektion normalt 24, rubrik–innehåll 8, kortpadding 16 |
+| Sidmarginal | Gemensam token, utgångspunkt 24; ändringar bedöms på hela berörda kompositionen |
+| Typografi | Semantiska title/heading/body/caption/label; ingen lokal textkrympning för att pressa in innehåll |
+| Ytor | Gemensam kortbas med namngivna neutral/tonad/bild/list-varianter |
+| Färger | Semantiska tokens; normal text har minst 4,5:1 kontrast |
+| Träffytor | Minst 44×44 pt; visuell ikon kan vara mindre |
+| Bilder | Gemensamma porträtt-/kortformat, radier och definierad beskärning |
 
-**Kategorifärger (förslag, lägg som tokens och justera mot målbilden):**
+Inga råa hexvärden eller ad hoc-mått i skärmfiler. Nya komponentbehov får dokumenterade tokens. Telefonram, systemklocka och statusikoner i målbilden är inte appkomponenter.
 
-| Kategori | Ton | Ikon |
-|---|---|---|
-| Kiss | blå | droppe |
-| Bajs | brun | bajs (vektorikon, inte emoji) |
-| Mat | grön | matskål |
-| Sömn/Vila | lila | måne |
-| Promenad | (välj, ej grön/blå) | fotspår/gå |
-| Träning | grön | träningsikon |
-| Vaccination | korall/röd | spruta/skydd |
-| Avmaskning | lila | pill/kapsel |
-| Veterinär | blå | stetoskop |
+## 4. Komponentfamiljer
 
-Samma kategori har **alltid** samma färg och ikon i hela appen (logg, hem, hälsa, tidslinje).
+Utveckla befintliga `Card`, `Tabs`, `Button`, `ListRow`, `ChecklistItem`, `Progress`, `HeroCard`, `IconChip` och `BottomNav` med avgränsade varianter. [Komponentmatrisen](design/vision-rev02-spec.md#komponentkontrakt) skiljer nuvarande API från föreslaget.
 
-Hittar du ett värde som saknas: lägg till token, använd den, skapa inga lokala undantag.
+Rev02 behöver segmenterade flikar, filterchips, bild över text, kompakt checklistrad, tonat destinationskort och progress med definierad uppgiftsmängd. Visa varianterna i komponentgalleriet med stor text och relevanta tillstånd.
 
----
+Hem har personlig hälsning som huvudrubrik. Lägg inte till extra Tassla-appbar/notisknapp från rev01. Logga/Träning/Kunskap har vänsterställda titlar; detaljvyer kan ha centrerad titel och bakåtknapp enligt motsvarande panel.
 
-## 4. Skärmanatomi (komponenter som ska finnas)
+## 5. Layout, scrollning och safe area
 
-Bygg dessa som delade komponenter. Skärmfiler sätter ihop dem, de styr inte utseendet själva.
+Bottenmenyn respekterar safe area. Scrollinnehållet får utrymme för meny och safe area utan dubbel kompensation. Allt innehåll ska gå att nå.
 
-**Appbar (`AppBar`)**
-- Centrerad sidtitel. Bakåtchevron till vänster på underskärmar. Åtgärd (t.ex. klocka/notiser) till höger.
-- Hemskärmen har varumärket "Tassla" till vänster och notis-ikon till höger.
+Normal Hem-fixture vid 375×844 och 430×844 med standardskrift och korta titlar: hälsning, åldersremsa, Just nu, upp till fem dagsrader och tre genvägar ska rymmas med **minst 16 pt fri marginal** ovanför menyn. Detta är nytt rev02-mål; den gamla leveransens 1 px marginal är ingen kvalitetsreferens.
 
-**Flikar (`Tabs`)**
-- Textflikar överst i skärmen (Översikt / Vaccinationer / Veterinär / Vikt). Aktiv flik: primärfärg + understreck. Inaktiv: dämpad.
+Långa titlar, reviewmarkering, fler uppgifter eller större text får ge naturlig scrollning. Krymp aldrig text/tryckytor och dölj aldrig innehåll bakom menyn. Mindre skärmhöjder och stora textlägen bedöms separat från standardskärmens första vy. Visningsgräns och total progressmängd får inte blandas ihop.
 
-**Bottenmeny (`BottomNav`)**
-- Fem lika stora poster: Hem, Logg, Träning, Hälsa, Mer. Aktiv: fylld ikon + primärfärg + fet text. Inaktiv: konturikon, dämpad.
-- Ikonerna är alltid samma stil (kontur/fylld-par). Ingen blandning.
+## 6. Handlingar och navigation
 
-**Sektion (`Section`)**
-- Rubrik + innehåll. Alltid samma marginaler (se avsnitt 5).
+- Högst en primär handling per vy; Hemmets tre destinationskort är jämställda genvägar.
+- Logga öppnar Logg, Träna öppnar Träning, Kunskap öppnar Kunskap. Dessa kort loggar ingen händelse.
+- Fem huvudflikar: **Hem, Logg, Träning, Kunskap, Mer**. Hälsa och Tassla-pass ligger under Mer.
+- Föreslagna detaljvyer: Utveckling och Dagens framsteg tillhör Hem, Insikter tillhör Logg. Nuvarande navigator mappar ännu alla undersidor till Mer; föräldramappningen måste utökas när dessa vyer byggs.
+- Kunskaps Checklistor och FAQ ska vara lätta att hitta även med nya filterchips.
+- Radtext öppnar detalj; separat checkbox ändrar status där funktionen finns. Undvik nästlade tryckytor med dubbla handlingar.
+- Radera ligger i detalj/åtgärdsmeny med bekräftelse eller fungerande ångra. Bevara återhämtning och inmatning.
 
-**Listrad (`ListRow`)**
-- Ikon-chip till vänster, text i mitten (titel + dämpad metarad), chevron till höger. Hela raden är tryckbar.
-- Används för "Idag för Luna", Dagens logg, Hälsohändelser, Tassla-pass-rader.
+## 7. Bilder och ikoner
 
-**Kort (`Card`)**
-- Ett kortutseende. Höjden följer innehållet.
+Skilj **personligt foto**, **redaktionellt foto** och **illustration**. Redaktionella hundbilder kan användas i guider och träningskort utan att föreställa ägarens hund. Saknat profilfoto blockerar inte dessa bildkort.
 
-**Hero-kort (`HeroCard`)**
-- Stort foto med rundade hörn, text lagd över foto med tillräcklig kontrast (mörk gradient bakom texten). Används på Träning och Kunskap.
+Hem/Utveckling visar ägarens foto när stödet finns; annars tydligt illustrerad platshållare med motsvarande visuella utrymme. Syntetiskt granskningsläge kan ha exempelhund/exempelfoto, avgränsat från produktionsdata. Bildmanifest anger fil, källa/generation, användningsrätt, roll, alt-text och beskärning. Ingen skärmbild från visionen används som fungerande UI.
 
-**Snabbloggs-ruta (`QuickLogTile`)**
-- Stor, kvadratisk/rektangulär ruta med ikon-chip i kategorifärg + etikett under. Två kolumner (2×2 i målbilden). Tryck = logga direkt, med toast + ångra.
+En ikonfamilj: destinationskort kan använda tass/logg, träningshatt och bok. Händelser använder kategorisymboler: droppe, matskål, måne. Vaken/ögat får inte återanvändas som Kunskapsikon. Verifiera att symbolen finns i installerat ikonpaket eller befintlig vektorkomponent. Solen i hälsningen kan återges med samma ikonstil; inga emoji som interaktiva kategoriikoner.
 
-**Framsteg (`Progress`)**
-- Tunn stapel med etiketten under ("3 av 5 genomförda").
+## 8. Status och återkoppling
 
-**Checklista (`ChecklistItem`)**
-- Rund bock (grön fylld när klar, kontur när ej klar), text, hel rad tryckbar.
+Pending visar Sparar…; först bekräftat sparande ändrar bock och räknare. Failed ger retry med kvarvarande inmatning. Unsure ger ”Vi kunde inte kontrollera om det sparades” och kontrollhandling. Inga rutinmässiga SPARAD-/ÄGARREGISTRERAD-badges.
 
-**Datumgrupp**
-- Relativa etiketter: "Idag", "Igår", sedan datum. Tider före text: `12:05  Mat (åt allt)`.
+Tillgängligt träningssteg, öppnad artikel och planerad vaccination betyder inte utförd aktivitet. Ingen global progress beräknas av blandade källor utan definierad uppgiftsmängd.
 
-**Bottom sheet / Tassla-pass**
-- Stängknapp (✕) uppe till höger. Innehåll i rader med ikon-chip. Primär åtgärd ("Dela som PDF") längst ned i full bredd, med en sekundär ikonknapp (delningslänk) intill.
+Högst en handlingskrävande banner per vy. Målbildens uppmuntrande kort är en separat valfri sammanfattning, bara vid verifierat resultat. Det får inte tolka hundens känslor, hälsa eller färdighet.
 
----
+## 9. Innehåll och svensk copy
 
-## 5. Avstånd och layout
+Kort, varmt, konkret: ”Dagens att göra”, ”Fortsätt där ni var”, ”Just nu med {namn}”. Verkligt hundnamn; hälsning följer lokal tid eller använder neutrala ”Hej!”. Hårdkoda inte God morgon hela dygnet.
 
-- Sidmarginal är densamma på alla skärmar.
-- **Avstånd mellan sektioner:** 24. **Rubrik → innehåll:** 8–12. **Mellan kort/rader i lista:** 12.
-- Rubriker sitter aldrig ihop med blocket ovanför. Varje sektionsrubrik har samma ovanmarginal.
-- Inga tomma utrymmen i kort. Kortet är lika högt som innehållet plus padding (16).
-- Allt tryckbart är minst **44×44 pt**.
-- Huvudåtgärder ska nås med tummen (nedre halvan) när det är rimligt.
-- Innehåll ska inte döljas bakom bottenmenyn: lägg tillräcklig bottenpadding i scrollvyer.
+Förklarande korttext är normalt högst två rader vid standardskrift. Läsvyer visar hela innehållet och källorna. Viktig information får växa med större text.
 
----
+Publicerat, versionsmärkt och ålders-/rasrelevant innehåll driver råd och övningar. ”Tandbyte 20 veckor” i bilden är inte sakgranskat innehåll. Skriv inte ”Milo har blivit tryggare” från loggantal. Återkoppling beskriver registreringen: ”Ni har markerat två aktiviteter idag”.
 
-## 6. Knappar – en hierarki, inga undantag
+Tekniska driftord hör hemma i rapporter. Medicinsk säkerhetsinformation och sanningsenlig osäker sparstatus får aldrig döljas för att passa målbilden.
 
-Använd bara `Button` med en av varianterna:
+## 10. Tillstånd och tillgänglighet
 
-| Variant | Används till | Utseende |
-|---|---|---|
-| `primary` | Skärmens huvudåtgärd ("Dela som PDF", "Spara", "Lägg till händelse") | Fylld mörkgrön, full bredd |
-| `secondary` | Viktig men inte huvudåtgärd | Konturad |
-| `tertiary` | Diskreta åtgärder | Textknapp med full tryckyta |
-| `icon` | Små stödåtgärder (t.ex. dela länk) | Fyrkantig/rund ikonknapp med kontur |
-| `destructive` | Radera/ta bort | Röd text/kontur, **aldrig fylld som primär** |
+Varje del har ready/loading/empty/error och relevanta partial/pending/failed/unsure-lägen. Läsfel är inte noll aktiviteter. Konto-/hundbyte tömmer gamla data och ignorerar sena svar. Publicerings- och reviewgränser gäller vid både läsning och skrivning.
 
-Regler:
-- **Max en `primary` per skärm/vy.** Två gröna fyllda knappar under varandra är alltid fel.
-- Knappar i samma grupp har samma höjd, radie och typografi.
-- Radera ser aldrig ut som Ändra. Radera kräver bekräftelse (sheet/dialog) eller erbjuder ångra.
-- **Ändra/Radera på listrader:** lägg inte två stora textlänkar på varje rad. Tryck på raden öppnar detaljer/redigering, och Radera ligger i redigeringsvyn eller bakom en liten meny (⋯) / svep.
-- Knappar har verb: "Spara", "Lägg till", "Radera". Inte "OK".
-- Alla knappar har disabled- och laddningsläge.
+Skärmläsare ska skilja ålder, vald flik, bock, destination och progress. Färg/bild/rörelse är aldrig enda information. Prova standardskrift, 140 %, lång svensk copy, reducerad rörelse och tangentbord. Webbsimulering är inte verklig Dynamic Type/VoiceOver.
 
----
+## 11. Skärmar och produktresor
 
-## 7. Ikoner
+[Skärmspecifikationen](design/vision-rev02-spec.md) täcker Hem, Utveckling, Dagens framsteg, daglig Checklista, Logga, Träning, Kunskap och Insikter. Hälsa, Tassla-pass, profil, inställningar och FAQ bevaras som stödresor.
 
-- **En ikonuppsättning** i hela appen. Inga emojis som ikoner (💩 i Snabb logg är ett exempel på fel).
-- Ikoner ligger i **ikon-chips**: tonad bakgrund i kategorins färg + mättad ikon, samma chipstorlek i samma grupp.
-- Samma storlek och linjetjocklek för ikoner i samma grupp.
-- Ikonen ska vara begriplig utan förklaring. Annars byt (halvfylld cirkel för "Mat" och prick-i-cirkel för "Vaken" är inte begripliga).
-- Samma kategori = samma ikon överallt.
+Dagliga uppgifter är ett föreslaget nytt kontrakt. Kunskapens faschecklista ska inte byta innebörd eller nollställas varje morgon. ”2 av 5” är bara ett granskningsscenario tills fem verkliga uppgifter och två bekräftade slutföranden finns.
 
----
+## 12. Referens och avvikelser
 
-## 8. Status, meddelanden och feedback
+En kommande godkänd R02-1 Hem-render och komponentgalleri blir kodreferens. Fram till dess är rev02 bilden referens; `HomeScreen.tsx` är implementationsbas, inte fullt visuellt facit.
 
-**Visa bara status när något avviker.**
+Avvikelser får ID, panel/objekt, orsak, påverkan, ansvarig, beslut och åtgärd. Dokumenterad betyder inte accepterad. Permanenta undantag behöver verkligt ägarbeslut. Tillfälliga dataluckor kan ha godkända fallbacklägen men får inte beskrivas som full målbildsleverans.
 
-- Inga "SPARAD"-etiketter på varje listrad. Sparat är normalläget och visas inte.
-- Tillåtna statusar: `Sparar…`, `Väntar på uppkoppling`, `Kunde inte spara – försök igen`.
-- Ingen "ÄGARREGISTRERAD"-badge på varje post. Källa visas bara när olika källor förekommer (t.ex. dagispersonal vs ägare i framtiden) och då som diskret avatar/namn, inte versaler.
-- Bekräftelse efter lyckad åtgärd: kort toast (2–3 s) med ångra där det går. **Aldrig** statusruta med "Stäng status".
-- Fel visas intill det som gick fel, med vad användaren kan göra.
-- Informationsrutor (beige banners): högst **en per skärm**, bara om användaren måste agera.
-- Tidsangivelser för kommande saker är relativa: "Om 12 dagar" + datum på rad 2.
+## 13. Produktobjekt och byggordning
 
----
+[Objektkontraktet](design/vision-rev02-objects.md) beskriver befintliga källor, föreslagna objekt, skrivning, datum, progress och innehåll. Presentationskomponenter läser inte databasen; återanvänd workspace/data-gränsen.
 
-## 9. Språk och copy (svenska)
+Byggordning: Hem-referens och komponenter → dagliga uppgifter med persistens → övriga huvudvyer → utveckling/framsteg/insikter. Foto är en separat vertikal del. Dokumenterat mål skiljs från färdig kod och miljöaktivering.
 
-Ton: kort, varm, vardaglig. Skriv till hundägaren, inte till en utvecklare eller jurist.
+## 14. Obligatorisk visuell och funktionell granskning
 
-**Förbjudna ord/begrepp i UI-text:** server, synk/synkronisera, backend, databas, request, cache, token, endpoint, "bekräftats av servern", "underlag", "registreringar", disclaimers om vad appen *inte* förutsäger.
+Numreringen 1–18 behålls. Svara Ja, Nej eller Ej tillämpligt med motivering. Saknade bevis = NOT TESTABLE. Nej blockerar berörd acceptans; inget medelvärde kan dölja det.
 
-| Istället för | Skriv |
-|---|---|
-| "Loggen hämtas från ditt konto. Ändringar visas som sparade först när servern har bekräftat dem." | *(ta bort helt)* |
-| "Historiskt mönsterunderlag" | "Dina senaste mönster" |
-| "Sammanfattningen beskriver bara tidigare ägarregistreringar. Den förutsäger inte…" | *(ta bort, eller:* "Baserat på dina senaste loggar"*)* |
-| "Enheten tillåter notiser. Det säger inte att varje påminnelse visas eller levereras." | "Notiser är på." |
-| "Kiss: 0 registreringar" | "Inga kiss loggade än" |
-| "Bajs: 2 registreringar · typiskt intervall 33 h 30 min" | "Bajs: 2 gånger · vanligtvis var 33:e timme" |
-| "Ändringen är sparad." + "Stäng status" | Toast: "Sparat" |
-
-Mönster från målbilden att återanvända: "Idag för Luna", "Dagens logg", "Kommande" / "Genomfört", "3 av 5 genomförda", "Lägg till händelse", "Rapportera idag", "Dela som PDF".
-
-Regler:
-- Max 2 rader förklarande text per block. Mer: länka till "Läs mer".
-- Tider som människor säger dem ("33 tim 30 min" → "ca 1,5 dygn").
-- Tomma tillstånd har en vänlig text och en tydlig nästa handling.
-- Alla texter går via UX-copy-rollen innan de går in.
-- Samma sak heter samma sak överallt. Använd hundens namn där det går.
-
----
-
-## 10. Skärmar och tillstånd
-
-Varje skärm/lista har design för fyra tillstånd:
-
-1. **Laddar** (skeleton, inte tom skärm)
-2. **Tom** (förklaring + knapp)
-3. **Fel** (vad hände + vad kan jag göra)
-4. **Normal**
-
-Övrigt:
-- **Dubbletter:** loggas samma sak med samma tid/datum igen: fråga "Du har redan loggat det här. Lägga till ändå?"
-- Formulär: etikett ovanför fält, hjälptext under, fel under fältet, spara-knapp längst ned.
-- Checkboxar/switchar: hela etiketten är tryckbar.
-- Tillgänglighet: kontrast minst 4,5:1, `accessibilityLabel` på allt tryckbart, layouten klarar större textstorlek.
-
----
-
-## 11. MVP-skärmarna (vad målbilden kräver)
-
-Kort sammanfattning. Detaljer finns i målbilden.
-
-1. **Hem:** appbar med varumärke + notis. Hundkort med foto, namn, ålder, ras. Veckoremsa med dagar (aktiv dag markerad). "Idag för Luna" som `ListRow`-lista (måltid, promenad, träning, vila, tips) med chevron.
-2. **Logga:** "Snabb logg" som 2×2 `QuickLogTile` (Kiss, Bajs, Mat, Sömn). "Dagens logg" som kompakt lista med tid, händelse (+ detalj, t.ex. "Promenad (20 min)") och chevron. Ingen statusetikett per rad.
-3. **Träning:** flikar (Valpprogram / Alla övningar / Mina mål). `HeroCard` med veckans fokus och framsteg ("3 av 5 genomförda"). Checklista med övningar.
-4. **Hälsa:** flikar (Översikt / Vaccinationer / Veterinär / Vikt). Sektionerna "Kommande" och "Genomfört" med kort (ikon-chip, titel, "Om 12 dagar", datum). Genomfört markeras med grön bock. En `primary` knapp: "Lägg till händelse".
-5. **Kunskap:** flikar (För dig / Artiklar / Checklistor / FAQ). Stort artikelkort med foto, rubrik, ingress och lästid. Två kolumner med mindre kort under.
-6. **Tassla-pass:** sheet med ✕. Kort ingress, hundens kort (foto, namn, ras, födelsedatum, ålder), rader med ikon-chip (Foder, Allergier, Medicin, Viktiga rutiner). `primary` "Dela som PDF" + `icon`-knapp för länk.
-
-**Avvikelser i nuvarande bygge att rätta (exempel):**
-- Logga visar 6 lika stora rutor med blandade ikoner och emoji. Målbilden har 2×2 kategoriruta + lista. Promenad och Vaken ska lösas enligt beslut i avsnitt 12.
-- Statusetiketter, tekniska banners och dubbla gröna knappar ska bort (avsnitt 6, 8, 9).
-- Appbar saknas på flera skärmar.
-
----
-
-## 12. Referensskärm och öppna beslut
-
-> **Fyll i:** `src/…` – den skärm som idag ligger närmast målbilden. Nya skärmar ska följa dess mönster.
-
-**Öppna beslut (ägaren avgör, agenter gissar inte):**
-- Hur loggas fler typer än de fyra i målbilden (t.ex. Promenad, Vaken)? Alternativ: extra rad av rutor, "+"-knapp eller menyval.
-
----
-
-## 13. Framtidssäkring ("Om tre år")
-
-Bygg inget av följande nu, men gör det inte omöjligt:
-- Flera hundar per konto och en hundväxlare.
-- Delad åtkomst och roller (ägare, familj, dagis, veterinär): komponenter får inte anta en enda användare.
-- Tidslinje som samlar händelser från alla källor.
-- Tjänster/partnernätverk (karta, listor).
-- Källa/avsändare på en händelse är ett datafält som kan visas, men visas inte som standardbrus.
-
----
-
-## 14. Granskningschecklista (för visuell QA-roll)
-
-Granska skärmdumpar (liten och stor telefon, stor textstorlek) **bredvid målbilden**. Varje punkt är **Ja/Nej**. Ett Nej = underkänd.
-
-**Struktur och hierarki**
-1. Finns max en `primary`-knapp i vyn?
-2. Är knappar i samma grupp lika höga och likadant stylade?
-3. Skiljer sig Radera tydligt från Ändra, och finns bekräftelse eller fungerande ångra? Irreversibel kontoradering behåller sin uttryckliga bekräftelse.
-4. Saknas stora "Ändra/Radera"-textlänkar på varje listrad?
-
-**Tokens och kod**
-5. Följer alla avstånd spacingskalan, och har varje sektionsrubrik samma ovanmarginal?
-6. Finns inga hårdkodade färger eller px-värden i diffen?
-
-**Ikoner och färg**
-7. Kommer alla ikoner från samma uppsättning, utan emoji?
-8. Har varje kategori sin avsedda färg och ikon, och är den densamma överallt?
-9. Är ikonerna begripliga utan förklaring?
-
-**Status och copy**
-10. Finns inga statusetiketter på normala poster ("SPARAD", "ÄGARREGISTRERAD")?
-11. Är det högst en informationsruta, och kräver den att användaren agerar?
-12. Innehåller texten inga förbjudna ord?
-13. Är förklarande text max 2 rader och i samma ton som målbilden?
-
-**Tillstånd och tillgänglighet**
-14. Finns design för laddar/tom/fel/normal?
-15. Är tryckytor minst 44×44 pt och fungerar skärmen med stor textstorlek?
-
-**Målbild**
-16. Matchar skärmen målbilden i layout, komponenter och innehåll? Är avvikelser listade och motiverade?
-17. Har skärmen appbar, flikar och bottenmeny enligt målbilden?
-18. Används foto/hundens namn där målbilden gör det?
-
-Granskaren svarar:
-
-```
-Resultat: GODKÄND | UNDERKÄND
-Underkända punkter: [nummer + en rad om vad som är fel + förslag]
-```
-
-### Förslag till kompletterande checklistpunkter 19–22 – väntar Eriks granskning
-
-Punkterna nedan är förslag för framtida visuell QA. De ändrar inte checklistans beslutade punkter 1–18.
-
-19. Är rörelse kopplad till bekräftat tillstånd och inom tokeniserad tidsgräns?
-20. Försvinner eller förenklas rörelsen vid reducerad rörelse utan att information går förlorad?
-21. Är valpfiguren enbart positiv eller neutral och finns betydelsen även i text bredvid?
-22. Finns högst ett första-användningstips per skärm och ryms det på högst två rader?
-
----
+1. Högst en primär handling och tydlig nästa handling?
+2. Jämställda handlingar har samma visuella vikt, format och storlek?
+3. Radera skiljs från normal handling och har rätt bekräftelse/ångra?
+4. Rader saknar stora repetitiva Ändra/Radera-länkar?
+5. Avstånd, sektioner, safe area och fri marginal följer specifikationen?
+6. Delade tokens/komponenter används utan lokala stylingundantag?
+7. Ikoner använder samma familj och verifierade symboler?
+8. Kategori-/destinationsfärger är konsekventa och kontrast kontrollerad?
+9. Symbol, etikett och faktisk handling betyder samma sak?
+10. Normala poster saknar onödiga statusbadges; bockar är bekräftade?
+11. Banners/uppmuntran följer §8 utan brus eller falska slutsatser?
+12. Copy är vardaglig och korrekt utan interna driftbeskrivningar?
+13. Copy, metadata och bildandel har målbildens ton och hierarki?
+14. Relevanta loading/empty/error/partial/sparlägen har renderats?
+15. Minst 44×44 pt, skärmläsarsemantik, större text och reducerad rörelse fungerar?
+16. **Matchar layout, komponentformer, objekt, innehållstäthet och bildspråk rev02-panelen?** Jämförelse sida vid sida krävs. Överlappstest ensamt räcker inte.
+17. Rubriker, segment/filter, huvudflikar, aktiv förälder och tillbakaresor stämmer?
+18. Hundnamn, bildroll och relevant innehåll används där målbilden visar dem?
+
+Spara referenspanel och aktuell skärmbild i jämförbar skala, komponentdetaljer, viewport/safe-area-antagande, textskala, fixture, public/reviewläge, diff/commit och datum. Bedöm separat **visuell likhet**, **fungerande resa**, **produktionsdata**. Alla tre behöver verifierad status innan full rev02-funktion rapporteras levererad.
 
 ## 15. Rörelse
 
-- Använd React Natives inbyggda `Animated`; lägg inte till Lottie, Rive, Reanimated, `react-native-svg` eller haptikpaket för MOTION.
-- Alla animationstider hämtas från `tokens.motion`. Varje animation varar 120–350 ms, kan avbrytas och blockerar aldrig input.
-- Rörelse visar ett bekräftat tillstånd, aldrig själva trycket som om det vore en lyckad skrivning. Framgångsrörelse startar först när status är `saved` eller när data som kommer från sparat tillstånd ändras. Vid `failed` eller `unsure` visas befintlig fel-/osäkerfeedback utan framgångsrörelse.
-- Animera inte vid första rendering; animera bara ändringar efter mount. Ingen idle-loop eller dekorativ rörelse.
-- Respektera `useReducedMotion`: ändringen sker direkt och samma status, text, ikon och skärmläsarbetydelse finns kvar.
-- Rörelse är aldrig enda feedbackkanal. Native driver används för opacity/transform. Layout får använda JS-driver endast för ett litet element, exempelvis den befintliga 4 px progressfyllningen.
-- UI-copy och bekräftelse får aldrig antyda att data sparats före verkligt lyckad skrivning.
+Befintlig React Native Animated och `tokens.motion`, 120–350 ms, avbrytbar, ingen initial eller loopande dekoranimation. Reducerad rörelse ger direkt tillståndsbyte. Framgångsrörelse följer bekräftat sparande. Bildens konfetti kräver ingen animation eller nytt bibliotek. Nya dependencies kräver konkret behov och gällande mandat.
 
-## 16. Tips vid första användning
+## 16. Första användning
 
-- Högst ett litet, avfärdbart tips per skärm och endast vid användarens första besök på den skärmen.
-- Tipset har högst två rader, försvinner vid första interaktion och tar inte plats från formulär, huvudhandling eller sparstatus.
-- Tipset är inte en `InfoBanner` och räknas inte som den tillåtna handlingskrävande informationsrutan. Det ska vara diskret och inte kräva att användaren agerar.
-- Spara en "sett"-flagga per ägare i SecureStore enligt `src/notifications/notification-storage.ts`. Rensa flaggorna vid kontoborttagning. Inget nytt databasfält eller analytics-event.
-- Hälsotips ger inte veterinärmedicinska råd. Ny svensk copy granskas av Product och Critic före leverans.
+Befintliga avfärdbara tips kan stödja huvudhandlingen. Högst ett per skärm, ingen kritisk funktion bakom tipset, ingen påtvingad ny onboarding. Behåll ägarspecifik seen-status och radering enligt befintlig implementation.
 
-## 17. Valpfigur
+## 17. Illustrationer och valpfigur
 
-- Figuren får endast ha positiva eller neutrala lägen: lugn, glad, stolt och vilar. Inga ledsna, besvikna, sjuka eller skuldbeläggande lägen.
-- Figuren speglar endast appaktivitet: bekräftad logg, bekräftat träningssteg eller ett klart program. Den antyder aldrig hundens hälsa, känslor, lydnad eller färdighet. Träningsdelens reservation får inte motsägas.
-- Reaktionen spelas en gång efter bekräftad händelse, aldrig som loop. En text bär alltid betydelsen bredvid figuren.
-- Figuren är dekorativ för skärmläsare. Första placering är vid första bekräftade loggen och bekräftat träningssteg; ingen hälsobaserad eller Hem-baserad hälsning.
-- Illustration ska vara varm och lugn i Tasslas cream/gröna palett, tydligt illustrerad, utan specifik ras, text eller logotyp och får inte kunna misstas för ägarens hund.
+Illustration är dekorativ och kan ersätta saknat foto. Reaktioner beskriver bekräftad appaktivitet, aldrig hundens känsla, hälsa eller lydnad. Inga ledsna/skuldbeläggande lägen. Porträtt på Hem innebär inte att en animerad maskot ska återinföras.
 
-## 18. Vad agenter inte får göra
+## 18. Leveransgränser
 
-- Lägga till nya färger, ikonstilar eller knappstilar utan att uppdatera tokens/komponenter.
-- Lägga till förklarande bannertexter "för säkerhets skull".
-- Visa interna tillstånd (synk, serverstatus) för användaren.
-- Bygga skärmar från "Om tre år" nu.
-- Ändra skärmar som inte ingår i uppgiften.
-- Markera en UI-uppgift som klar utan skärmdump jämförd med målbilden och ifylld checklista.
+Regelverket är inte bevis på implementerade vyer. Bilden godkänner inte externa tjänster, nya kostnader, fotoinsamling eller produktionsmigreringar. Hantera konkreta frågor i respektive vertikal del och fortsätt med oberoende arbete.
+
+Commit/push, signerad build, distribution och verklig databasverifiering redovisas var för sig. Ingen automatisk telefon-/TestFlight-grind införs. Källor, säkerhet och tillgänglighet gäller även där målbilden förenklar dem.
