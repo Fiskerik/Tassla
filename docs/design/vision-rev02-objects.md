@@ -2,6 +2,8 @@
 
 Version 1.0, 2026-10-13. Status: byggunderlag. Befintliga källor är kodverifierade; föreslagna objekt är ännu inte API:er eller databasändringar.
 
+**Aktuell status 2026-10-13:** Inventeringen nedan beskriver startläget före R02-2. Ägarval och completion-regeln är senare beslutade: egna rutiner markeras av ägaren; träning härleds från sparad träningsprogress. Guideöppning, vårdplan och olänkad logg räknas inte. R02-2-koden finns i QA; databasens runtimeprov kvarstår. Se [paketstatus](../tasks/VISION-REV02.md) och [preciserat Hem-kontrakt](../plans/HOME-REV02-visual-ux-spec.md). Presentationstitel, fotoexempel och färgroller får inte ändra dessa datakällor.
+
 ## Gemensam betydelse
 
 **Loggat** = ägarregistrerad händelse. **Planerat** = framtida avsikt. **Markerat klart** = uttrycklig bekräftad markering. **Härlett** = beräknad presentation från identifierade källor. Ingen av dessa betyder automatiskt verifierad färdighet, välmående eller att en vårdåtgärd utförts.

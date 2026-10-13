@@ -1,69 +1,41 @@
-# Bygginstruktion — Tassla Hem enligt vision_rev02
+# Bygginstruktion — Hem med vision_rev02:s form, färger och innehåll
 
-Version 1.0, 2026-10-13. Kopiera instruktionen nedan till en implementationtask. Den är avsiktligt komplett med läsordning, delmål och stoppvillkor. Paketstatus/mandat kontrolleras i repot innan arbete; detta är inte ett påstående om redan godkänd teknisk plan.
+Version 1.1, 2026-10-13. Uppdaterad efter Eriks jämförelse av R02-2 med målbilden. Detta är instruktion för nästa designkorrigering, inte ett påstående att koden eller en exakt teknisk plan är granskad.
 
----
+## Läs och inspektera
 
-Du arbetar i Tassla-repot. Målet är ett Hem som ligger så nära första panelen i `vision_rev02.jpg` som möjligt i komposition, komponenter, bildspråk, innehåll och fungerande användarresa.
+1. `AGENTS.md`, aktuell checkpoint/kö, `docs/dev/workflow.md` och `.agents/skills/tassla-consumer-ux/SKILL.md`.
+2. `docs/design-rules.md` och **`docs/plans/HOME-REV02-visual-ux-spec.md`**. Det senare är konkret Hem-kontrakt för färger, mått, porträtt, rader, innehåll och interaktion.
+3. `docs/design/vision-rev02-spec.md`, `docs/design/vision-rev02-objects.md`, `docs/tasks/VISION-REV02.md`. Startinventering skiljs från nuvarande R02-2-kod/QA-status.
+4. Öppna panel 1 i `vision_rev02.jpg` och senaste R02-2-render, inte bara den äldre R02-1-fixturen.
+5. Läs faktisk `HomeScreen.tsx`, `DailyActivityItem.tsx`, `DestinationTile.tsx`, `daily-activity-model.ts`, workspacekoppling, tokens och bildmanifest. Kontrollera befintliga API:er innan några nya importer föreslås.
 
-## Läs och inspektera först
+## Resultat att bygga
 
-1. `AGENTS.md`, `docs/dev/workflow.md`, aktuell uppgiftskö och senaste checkpoint.
-2. `docs/design-rules.md`, `.agents/skills/tassla-consumer-ux/SKILL.md`.
-3. `docs/design/vision-rev02-spec.md`, `docs/design/vision-rev02-objects.md`, `docs/tasks/VISION-REV02.md`.
-4. Öppna `vision_rev02.jpg`, panel 1. Öppna aktuell Hem-render från HOME-NEXT-01:s `final-correction`-evidens. Den gamla renderingen är bas, inte nytt facit.
-5. Inspektera verkliga definitioner i `HomeScreen.tsx`, `ProductWorkspace.tsx`, `home-today.ts`, `main-navigation.ts`, `src/components/ui/`, `src/theme/tokens.ts` och relevanta dataläsare. Föreslagna API:er i dokumenten är inte befintliga imports.
+Bygg Hem med en personlig hälsning, varm bild, levnadsveckor, ett Just nu-kort, en kompakt dagslista och tre tydliga pastellfärgade destinationskort. Referensen styr komponenternas synliga form och färg, inte bara deras ordning.
 
-## Första avslutningsbara del: R02-1
+- En enda rubrik `Dagens att göra`; räknaren och diskret chevron till hantering på samma rad, progress under.
+- Manuell rutin: fyrkantig visuell checkbox inom egen 44×44 pt träffyta, kort uppgiftstitel och fungerande detaljchevron. Träningsrad: en öppningshandling med fyrkantig icke-interaktiv statusindikator och tydlig skärmläsaretikett. Ta bort kategoriikon, separat `Visa` och `Ta bort` från Hem-raderna.
+- Visa stegets titel på Hem; program/vecka finns i fördjupningen. Bevara samma ID/version och källstyrda completion.
+- Flytta befintlig rutin-/träningshantering till fungerande fördjupning som nås från dagsrubriken, `Visa alla` och tomt läge enligt kontraktet. Flytta även teknisk källförklaring dit. Bevara tillägg, redigering, borttagning och återhämtning.
+- Inför namngivna färgtokens: varm bakgrund/kort, grön progress/status, gul tips-/solaccent, blå Logga-yta med tass, grön Träna-yta med träningshatt, lila Kunskap-yta med bok. Destinationer har egna semantiska färger och är inte kopplade till loggkategorier.
+- Använd de nya kompakta typografi-/kortvarianterna och hela måttbudgeten i kontraktets §4. Ingen text-/träffytekrympning för att klara ett höjdtest. Standardfixturens fem uppgifter och tre genvägar ryms vid 375×844/430×844 med minst 16 pt ovanför menyn.
+- Ta fram spårbar bildasset för fotografisk exempelrender. Grön silhuett är inte ett godkänt substitut för fotoestetik. Personligt foto kräver separat fotostöd; produktionsfallback och exempelbild provas som olika bildroller.
 
-Ta fram en exakt implementationplan för en Hem-referens och nödvändiga gemensamma komponentvarianter. Använd redan tillgängliga publicerade källor i produktionsläget och explicit märkta syntetiska dagsuppgifter i befintligt granskningsläge. Inga reviewskrivningar får nå produktionsadaptrar. Rapportera produktionens saknade dagsfunktion som kvarstående beroende.
+## Arbetsordning och skyddat beteende
 
-Förslagna skrivområden att precisera till faktiska filer i planen:
+Spara exakt plan med skrivfiler, beroenden och acceptans. Använd redan givet ägarmandat; följ erforderlig Architect/Critic-review enligt arbetsflödet. Bygg först tokens och återanvändbara komponentvarianter, sedan komposition/fördjupning och bildasset, därefter visuell kalibrering. Uppdatera berörda README och galleri.
 
-- `src/components/ui/`: namngivna kort-/flik-/knapp-/rads-/destinationsvarianter och galleriexempel.
-- `src/theme/tokens.ts`: gemensamma mått/format som faktiskt behövs.
-- `src/features/home/HomeScreen.tsx`: H1–H4-komposition och typade presentationsprops.
-- `src/features/home/ProductWorkspace.tsx`: enbart nödvändig adapterkoppling/scopehantering.
-- `tools/visual-check/app.tsx`, `build.cjs`, `verify.py`: explicit mode, täta och långa fixtures, jämförbar rendering.
-- Berörda README, specifika QA-tester och evidensvägar med separat ägarskap.
+Tänkta skrivområden: `src/theme/tokens.ts`, avgränsade varianter i `src/components/ui/`, `HomeScreen.tsx`, presentationsmappning i `daily-activity-model.ts`, nödvändiga callbacks i `ProductWorkspace.tsx`, bildmanifest/assets och `tools/visual-check/`. Ingen global omläggning av andra skärmar genom ändrade defaulttokens.
 
-Skydda befintlig loggsparning, träningens versionsprogress, hälsoplaner/historik, FAQ/checklistsparning, auth och radering. Om en sådan del måste ändras, beskriv den exakta ändringen och granska den berörda planen. Återanvänd ägarmandat där det redan finns. Följ Architect/Critic före implementation, QA och separat Reviewer efteråt.
+Bevara R02-2:s datakontrakt: ägarbekräftade rutiner, sparad versionsbunden träningsprogress, hela dagsmängdens räknare, datum/tidszon, scopebyte och pending/failed/unsure. Ingen ny databasmigration, fotoinsamling, automatisk dagsplan eller falsk progress för visuell effekt.
 
-## Komposition att bygga
+**Samma presentationskomponenter ska användas av både referensfixture och R02-2:s verkliga adapter.** En snygg separat demo godkänner inte produktvyn. Syntetisk märkning för referensrender ligger permanent i verktygsram utanför den deklarerade viewporten och följer med bildexporten. Reviewdata och skrivningar förblir isolerade. Befintligt läge med banner i appytan redovisas separat med faktisk banneryta, aldrig dolt.
 
-- Personlig hälsning, namn/ålder och porträtt med verklig foto-/illustrationsroll.
-- Levnadsveckor direkt under hälsningen. Ingen carousel före remsan.
-- Ett Just nu-kort med publicerad relevant ingress och fungerande läsdestination.
-- Dagens att göra med sammanhållen lista, progress och upp till fem synliga rader när dagskontraktet är tillgängligt. Full räknare omfattar hela mängden; fler rader nås genom Visa alla.
-- Tre tonade jämställda destinationskort: Logga, Träna, Kunskap. Använd destinationssymboler, inte godtyckliga eventkategorier.
-- Femfliksmeny Hem/Logg/Träning/Kunskap/Mer med korrekt safe area.
+## Verifiering och rapport
 
-Ingen ny extra Hem-appbar från rev01. Inga individuella stora kort för varje dagsrad. Bildens fasta namn, råd och 2/5 får inte kopieras som produktionsfakta.
-
-## Komponent- och objektregler
-
-Utveckla gemensamma komponentvarianter före skärmlokala speciallösningar. Migrera berörda konsumenter uttryckligen; ett globalt defaultbyte får inte förändra alla andra skärmar av misstag. Varje ny variant har ett tydligt galleri-exempel och relevanta tillstånd.
-
-Håll läsningar/skrivningar i workspace/dataadaptrar. Loading, error, ready-empty och partial är skilda. Scope är ägare/kontogeneration/hund; dagsberäkning uppdateras vid resume/midnatt. Foto-, aktivitet- och innehållsdata från tidigare scope får inte återkomma genom sena svar.
-
-Den första referensdelen kan visa verklig interaktion med syntetiska dagsobjekt i isolerat review-state. Skriv inte en ny tabell eller importera påhittade daily-API:er för att få det att se produktionsklart ut. Ny dagspersistens är nästa vertikala del med exakt produkt-/datakontrakt.
-
-## Nästa del: R02-2 med verkliga aktiviteter
-
-Efter R02-1:s sparade checkpoint konkretiseras de rekommenderade produktvalen i objektkontraktet: urval, stabil identitet, datum/tidszon, källa, manuell/källstyrd markering, borttagning/ångra och progressmängd. Oavgjorda detaljval tas upp med Erik endast om de faktiskt behövs för berörd funktion.
-
-Architect granskar schema/API och Security åtkomst/radering. Därefter kopplas ett helt flöde: välja dagsaktivitet → spara → visa → markera via rätt källa → återläsa efter appstart → samma count i Hem och lista → ångra. Behåll befintlig tränings-/faschecklistprogress som auktoritativa källor. Inga dubbla completion-flaggor och ingen falsk progress vid okänt sparresultat.
-
-Fortsätt sedan enligt paketordningen för övriga skärmar. Ett godkänt granskningsläge räknas inte som färdig produktionskoppling.
-
-## Verifiering och slutrapport
-
-- `pnpm check`, `git diff --check` och `python tools/dev_flow.py validate` för implementationstasken.
-- Relevant iOS-bundle vid produktkodändring enligt taskplan; kontrollera publicflaggan.
-- Använd `tools/visual-check/README.md` för befintliga build-/serve-kommandon. Bygg public och review separat, kör Home-scopet mot rätt bygge och spara resultaten i taskens evidenskatalog. Gammal verifierare kan behöva uppdateras för nya kontrakt; sänk inte acceptansen för att få PASS.
-- Standardskrift vid 375×844/430×844: hela genvägskort minst 16pt över menyytan i specificerad normalfixture. 375×667, lång text och 140 %: naturlig scroll, full nåbarhet, inget horisontellt överflöde.
-- Jämför verkliga renderbilder med panel 1 sida vid sida. Bedöm porträttstorlek, åldersremsa, ytor, radhöjd, bildandel, typografi, ikoner och innehåll, inte bara geometri.
-- Prova tomt/fel/loading/partial, dubbeltryck, retry/unsure, konto-/hundbyte, dagsbyte, reviewgräns, navigering och relevant ångra. Tester ska kontrollera beteende, inte bara matcha källkodstext.
-- Separat QA/Reviewer fyller regelverkets §14 och listar avvikelser med beslut. Inga visuella PASS från enbart typkontroll.
-
-Rapportera: vad som finns i kod, vad som fungerar endast med fixtures, vad som är verifierat mot verkliga data, återstående beslut och exakt nästa del. Visa renderbild och länka evidens. Commit/push/deployment följer aktuellt uttryckligt mandat, inte denna prompt.
+- Kör berörda beteendekontroller och projektets föreskrivna checks för kodändringen. Databasprov och nativeprov som inte körts redovisas separat.
+- Rendera standard, långtext, 140 %, 375×667, fler än fem, loading, empty, error/partial och sparfel/osäkert svar. Prova checkbox, träningsresa, hantering, genvägar och tillbaka/fokus.
+- Visa referens och faktisk render sida vid sida. Granska färgytor, typografisk vikt, fyrkantiga bockar, porträttets motiv/roll, radbredd, ytor och synliga genvägar. Kontrast och geometri måste också klara kontraktet.
+- Separat QA/Reviewer fyller §14 samt det preciserade Hem-kontraktets acceptans. Inget visuellt PASS från enbart geometri, godkända tester eller historisk R02-1-render.
+- Rapportera kvarstående skillnader och status separat för layout, bildasset, dataflöde och databasaktivering. Ändra inte R02-2 från QA till done på grund av en dokumentuppdatering.

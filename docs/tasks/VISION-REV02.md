@@ -6,7 +6,36 @@ Datum: 2026-10-13. Branch: `design/vision-rev02`. Bas: `9128cdd` på `work`; des
 
 Erik beställer specifikation, byggprompt för Hem, komponentutvecklingsunderlag och koppling av produktobjekt, sammanställda i ett uppdaterat designregelverk mot `vision_rev02.jpg`, på ny branch. Den 2026-10-13 bad Erik att R02-1, R02-2 och R02-3 ingår i samma implementationpaket efter att designunderlaget pushats.
 
-Denna dokumentleverans konkretiserar hela förflyttningen. Komponent-API:er, nya produktobjekt och skärmar som beskrivs som föreslagna är ännu inte implementerade. Befintlig layout ligger kvar på bascommitten. Ingen backendmigrering eller innehållspublicering sker genom dokumentändringarna.
+Denna dokumentleverans konkretiserar hela förflyttningen. Komponent-API:er, nya produktobjekt och skärmar som beskrivs som föreslagna är ännu inte implementerade. Vid första dokumentleveransen låg layouten på bascommitten; R02-1/R02-2 har därefter implementerats. Se aktuella checkpointar nedan. Ingen backendmigrering eller innehållspublicering sker genom dokumentändringarna.
+
+## Aktuell designprecisering — 2026-10-13
+
+Erik jämförde R02-2:s Hem med rev02 och efterfrågade en specifikation som matchar layout, objekt, komponenter, innehåll **och färger**. Detta mandat avser nu en dokumentprecisering; dokumenten är inte en ny appimplementation eller visuell QA.
+
+| # | Ägare | Beroende | Skrivfiler / resultat | Acceptans / status |
+|---|---|---|---|---|
+| V1 | Koordinator | Ägarens två bilder och kodinventering | Diagnos i `docs/plans/HOME-REV02-visual-ux-spec.md` | Klar: konkreta skillnader knutna till faktisk kod |
+| V2 | Koordinator | V1 | Samma UX-spec, regelverk, skärmspec, objektstatus och byggprompt | Klar: färgtokens, måttbudget, bildroller, komponent-/innehållskontrakt och hanteringsvägar |
+| V3 | Critic läsande, koordinator sparar | V2 | Denna checkpoint och slutlig dokumentkontroll | Klar: Critic PROCEED, diffcheck och lokala dokumentlänkar kontrollerade; ingen produktkod ändrad |
+
+Nya kontraktet har företräde för Hem-presentationen. Tidigare R02-1-PASS gäller sin historiska version; den senare R02-2-bilden uppfyller inte det preciserade designmålet. R02-2 står kvar i QA och R02-3 är fortsatt separat kommande arbete. Ingen databasaktivering eller ny produktionsverifiering har utförts.
+
+Critic hittade tre konkreta luckor i första utkastet: otydlig skillnad mellan rutincheckbox och träningsindikator, dold ingång till hantering samt 4 pt fel i dagskortets höjdsumma och otillräcklig progresskontrast. Dokumentet har rättats med två radvarianter, synlig rubrikchevron, korrekt summa 288 pt och progressfärg `#35875A` (3,51:1 mot banan). Förnyad Critic-granskning: **PROCEED**; inga betydande dokumentinvändningar kvarstår. Detta godkänner specifikationen som underlag, inte kod, interaktioner, bildasset eller visuell likhet. Diffcheck och lokala dokumentlänkar passerade; ingen app-/databasprovning har gjorts i detta dokumentpaket.
+
+Nästa implementationssteg: konkret plan för Home-tokens/komponentvarianter och samma presentation i referensfixture och R02-2-adapter, följt av fungerande hanteringsfördjupning och bildasset. Exakta skrivfiler/review enligt arbetsflödet; inga ändringar av completion, auth eller schema för designens skull.
+
+## Uppföljning: bindande designregler v2.2
+
+Erik bad uttryckligen att även designreglerna skulle styra genomförandet mot vision_rev02 och utökade sedan dokumentbeställningen till övriga skärmar så att Codex kan bygga hela det sammanhängande uttrycket. Dokumentarbete inom befintligt mandat, inga UI-kodändringar.
+
+1. Koordinator: precisera `docs/design-rules.md` med direkt färgtabell, obligatoriska Hem-former, jämförelsematris före kod och separat visuell acceptans per designområde. Beroende: föregående Hem-kontrakt. Utfört.
+2. Koordinator: uppdatera `AGENTS.md` och `docs/dev/ui-and-code-standards.md` så att nya arbetspass följer samma krav. Beroende: 1. Utfört.
+3. Koordinator: tillagt `docs/design/vision-rev02-screen-contracts.md` för samtliga åtta paneler/stödskärmar och `docs/prompts/build-rev02-screens.md`; länkat från skärmöversikt, regelverk, AGENTS och UI-guide. Beroende: 1–2. Utfört.
+4. Critic läsande, koordinator sparar: kontrollera konsekvens med Hem-kontraktet och verifiera dokumentlänkar/diff. Beroende: 1–3. Klar: Critic PROCEED, lokala länkar och diffcheck passerade.
+
+Första Critic-genomgången av åttapanelkontraktet hittade tre luckor: Loggs snabbregistrering riskerade ett extra tryck, matens gröna färg avvek från panelen, och tillbakaresorna för Framsteg/Insikter var visuellt oklara. Rättat med synliga primära snabbval och ett-trycksregel, varm matvariant samt synlig tillbaka-knapp som uttryckligt dokumenterad avvikelse i båda detaljvyerna. Förnyad granskning: **Critic PROCEED**, inga kvarstående betydande dokumentinvändningar. Dokumentgodkännandet avser byggunderlaget; faktisk navigation, renderkontrast och visuell panellikhet är ännu inte verifierade.
+
+Acceptans: referensen styr även färg och komponentform; befintliga komponenter är anpassningsbara; avvikelser kan inte döljas bakom ett funktionellt PASS; sanningsenlighet, tillgänglighet och redan beslutat mandat bevaras. Kodrender och appstatus ändras inte av denna dokumentleverans.
 
 ## Deluppgifter
 
