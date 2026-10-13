@@ -10,6 +10,7 @@ export type HomeDailyActivity = {
   trainingSelection?: DailyTrainingSelection;
   programId?: string;
   stepId?: string;
+  programTitle?: string;
 };
 
 export type TrainingProgressStamp = {
@@ -101,7 +102,7 @@ export function deriveHomeDailyActivities(
     const stamp = trainingProgressStamp(dogId, program, row.step_id);
     activities.push({
       id: `training:${row.id}`,
-      label: `${program.title}: ${step.title}`,
+      label: step.title,
       kind: 'training',
       completed: stamp ? isTrainingCompletionForDay(stamp, {
         dogId,
@@ -111,6 +112,7 @@ export function deriveHomeDailyActivities(
       trainingSelection: row,
       programId: program.id,
       stepId: step.id,
+      programTitle: program.title,
     });
   }
   return activities;

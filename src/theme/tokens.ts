@@ -31,6 +31,24 @@ const semanticColors = {
   transparent: primitives.transparent,
 } as const;
 
+const visionRev02Colors = {
+  canvas: '#F5F0E8',
+  card: '#FFFCF7',
+  text: '#20262D',
+  textMuted: '#626871',
+  greenFill: '#35875A',
+  greenStrong: '#217448',
+  progressTrack: '#E9E5DE',
+  bulb: '#F5B63F',
+  sun: '#F5B63F',
+} as const;
+
+const destinationColors = {
+  log: { surface: '#E9F0FB', icon: '#3978D4' },
+  training: { surface: '#E8F2E7', icon: '#277A49' },
+  knowledge: { surface: '#F1EAF7', icon: '#8061B5' },
+} as const;
+
 export const categoryColors = {
   pee: { fg: primitives.blue700, bg: primitives.blue100 },
   poop: { fg: primitives.brown700, bg: primitives.brown100 },
@@ -56,11 +74,11 @@ const typography = {
 
 export const tokens = {
   primitives,
-  colors: { ...semanticColors, category: categoryColors },
+  colors: { ...semanticColors, category: categoryColors, home: visionRev02Colors, destination: destinationColors },
   spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 },
   layout: { headingGap: 8, listGap: 12, cardPadding: 16, pageInset: 24, sectionGap: 24 },
   radius: { sm: 8, md: 14, lg: 20, full: 999 },
-  size: { quickLogHeight: 104, quickLogCompactHeight: 76, touchMin: 44, buttonHeight: 56, navHeight: 56, iconSm: 20, iconMd: 24, chipMd: 32, chipLg: 44, stroke: 1, progress: 4, heroHeight: 200 },
+  size: { quickLogHeight: 104, quickLogCompactHeight: 76, homeDestinationTile: 76, homeCheckbox: 20, touchMin: 44, buttonHeight: 56, navHeight: 56, iconSm: 20, iconMd: 24, chipMd: 32, chipLg: 44, stroke: 1, progress: 4, heroHeight: 200 },
   motion: { press: 120, enter: 240, release: 180, progress: 220, toastEnter: 240, toastExit: 180, check: 180, distance: 8, pressedScale: 0.98 },
   typography: { ...typography, display: typography.title },
 } as const;

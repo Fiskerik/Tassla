@@ -20,18 +20,22 @@ insert into public.content_versions(id,content_id,version,title,body,min_age_wee
   ('40000000-0000-4000-8000-000000000001','30000000-0000-4000-8000-000000000001',1,'Daily v1','Synthetic only.',0,20,'draft'),
   ('40000000-0000-4000-8000-000000000002','30000000-0000-4000-8000-000000000001',2,'Daily v2','Synthetic only.',0,5,'draft'),
   ('40000000-0000-4000-8000-000000000003','30000000-0000-4000-8000-000000000001',3,'Daily v3','Synthetic only.',0,20,'draft'),
-  ('40000000-0000-4000-8000-000000000004','30000000-0000-4000-8000-000000000001',4,'Daily v4','Synthetic only.',20,null,'draft');
+  ('40000000-0000-4000-8000-000000000004','30000000-0000-4000-8000-000000000001',4,'Daily v4','Synthetic only.',20,null,'draft'),
+  ('40000000-0000-4000-8000-000000000005','30000000-0000-4000-8000-000000000001',5,'Daily v5','Synthetic only.',0,20,'draft');
 insert into public.training_steps(id,program_version_id,step_key,position,title,instruction) values
   ('50000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000001','one',1,'Version one','Synthetic only.'),
   ('50000000-0000-4000-8000-000000000002','40000000-0000-4000-8000-000000000002','one',1,'Step one','Synthetic only.'),
   ('50000000-0000-4000-8000-000000000003','40000000-0000-4000-8000-000000000002','two',2,'Step two','Synthetic only.'),
   ('50000000-0000-4000-8000-000000000004','40000000-0000-4000-8000-000000000002','three',3,'Step three','Synthetic only.'),
   ('50000000-0000-4000-8000-000000000005','40000000-0000-4000-8000-000000000003','one',1,'Breed targeted step','Synthetic only.'),
-  ('50000000-0000-4000-8000-000000000006','40000000-0000-4000-8000-000000000004','one',1,'Too young step','Synthetic only.');
+  ('50000000-0000-4000-8000-000000000006','40000000-0000-4000-8000-000000000004','one',1,'Too young step','Synthetic only.'),
+  ('50000000-0000-4000-8000-000000000007','40000000-0000-4000-8000-000000000005','one',1,'Nonmatching breed step','Synthetic only.');
 insert into public.content_breed_targets(content_version_id,breed_id)
-  values('40000000-0000-4000-8000-000000000003','daily-activity-other');
+  values('40000000-0000-4000-8000-000000000003','daily-activity-other'),
+        ('40000000-0000-4000-8000-000000000003','daily-activity-probe'),
+        ('40000000-0000-4000-8000-000000000005','daily-activity-other');
 update public.content_versions set status='published', reviewed_at=clock_timestamp(), review_reference='synthetic probe', published_at=clock_timestamp()
-where id in ('40000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000002','40000000-0000-4000-8000-000000000003','40000000-0000-4000-8000-000000000004');
+where id in ('40000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000002','40000000-0000-4000-8000-000000000003','40000000-0000-4000-8000-000000000004','40000000-0000-4000-8000-000000000005');
 select set_config('request.jwt.claims','{"sub":"10000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 insert into public.dog_daily_routines(id,dog_id,label) values
   ('60000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','Morning routine A');
@@ -118,11 +122,6 @@ begin
   exception when invalid_parameter_value then null; end;
   begin
     insert into public.dog_daily_training_selections(id,dog_id,program_version_id,step_id,date_key,time_zone)
-      values('80000000-0000-4000-8000-000000000095','20000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000003','50000000-0000-4000-8000-000000000005',local_today,'UTC');
-    raise exception 'breed-mismatched program was accepted';
-  exception when invalid_parameter_value then null; end;
-  begin
-    insert into public.dog_daily_training_selections(id,dog_id,program_version_id,step_id,date_key,time_zone)
       values('80000000-0000-4000-8000-000000000094','20000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000004','50000000-0000-4000-8000-000000000006',local_today,'UTC');
     raise exception 'too-young program was accepted';
   exception when invalid_parameter_value then null; end;
@@ -142,6 +141,19 @@ begin
     insert into public.dog_daily_training_selections(id,dog_id,program_version_id,step_id,date_key,time_zone)
       values('80000000-0000-4000-8000-000000000096','20000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000002','50000000-0000-4000-8000-000000000003',local_today,'UTC');
     raise exception 'already completed training step was selectable again';
+  exception when invalid_parameter_value then null; end;
+end $$;
+
+-- Breed-target eligibility follows the application rule: no targets, or at least one matching target.
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"10000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+do $$ declare local_today date := (clock_timestamp() at time zone 'UTC')::date; begin
+  insert into public.dog_daily_training_selections(id,dog_id,program_version_id,step_id,date_key,time_zone)
+    values('80000000-0000-4000-8000-000000000004','20000000-0000-4000-8000-000000000002','40000000-0000-4000-8000-000000000003','50000000-0000-4000-8000-000000000005',local_today,'UTC');
+  begin
+    insert into public.dog_daily_training_selections(id,dog_id,program_version_id,step_id,date_key,time_zone)
+      values('80000000-0000-4000-8000-000000000005','20000000-0000-4000-8000-000000000002','40000000-0000-4000-8000-000000000005','50000000-0000-4000-8000-000000000007',local_today,'UTC');
+    raise exception 'program with only nonmatching breed targets was accepted';
   exception when invalid_parameter_value then null; end;
 end $$;
 

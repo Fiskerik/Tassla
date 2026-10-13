@@ -1,6 +1,6 @@
 # Tassla — designregelverk för vision_rev02
 
-Version 2.2, 2026-10-13. Kanonisk instruktion för nya och reviderade UI-uppgifter, på Eriks beställning av ett sammanhängande regelverk och byggunderlag mot [vision_rev02.jpg](../vision_rev02.jpg).
+Version 2.3, 2026-10-13. Kanonisk instruktion för nya och reviderade UI-uppgifter, på Eriks beställning av ett sammanhängande regelverk och byggunderlag mot [vision_rev02.jpg](../vision_rev02.jpg).
 
 ## 0. Auktoritet och leveransstatus
 
@@ -117,13 +117,15 @@ Långa titlar, reviewmarkering, fler uppgifter eller större text får ge naturl
 
 ## 7. Bilder och ikoner
 
-Skilj **personligt foto**, **redaktionellt foto** och **illustration**. Redaktionella hundbilder kan användas i guider och träningskort utan att föreställa ägarens hund. Saknat profilfoto blockerar inte dessa bildkort.
+Skilj **personligt foto**, **generiskt porträtt**, **redaktionellt foto** och **illustration**. Redaktionella hundbilder kan användas i guider och träningskort utan att föreställa ägarens hund. Saknat profilfoto blockerar inte dessa bildkort.
 
-Hem/Utveckling visar ägarens foto när stödet finns; annars tydligt illustrerad platshållare med motsvarande visuella utrymme. Syntetiskt granskningsläge kan ha exempelhund/exempelfoto, avgränsat från produktionsdata. Bildmanifest anger fil, källa/generation, användningsrätt, roll, alt-text och beskärning. Ingen skärmbild från visionen används som fungerande UI.
+**Hem har ett uttryckligt visuellt undantag:** tills personligt fotostöd finns använder public Home och granskningsläget samma runda, fotoestetiska generiska hundbild som standardplatshållare enligt Eriks önskemål 2026-10-13. Visa den korta synliga etiketten **Standardbild** direkt på porträttet i båda lägena, med solid varm bakning och mörk text som behåller minst 4,5:1 kontrast vid standardskrift och 140 % text. Etiketten får inte klippas. Den nuvarande asseten är AI-genererad bildkonst, inte ett fotografi av en verklig hund och inte ägarens hund. Den får inte kopplas till hundens namn/ras i alternativtext, copy, data eller produktanspråk. Skärmläsaren får annonsera den synliga etiketten `Standardbild`; den dekorativa bilden är fortsatt utanför skärmläsarens fokus. Detta ger Hem rätt porträttform och varma bildspråk men bevisar inte en personlig hundidentitet eller att en faktisk fotografisk asset används. Ersättning med ägarens foto kräver separat stöd för val, behörighet, lagring och radering; inget sådant byggs här.
+
+Utveckling använder ägarfoto när verifierat stöd finns; annars en tydligt beskriven generisk platshållare eller illustration enligt sitt eget kontrakt. Syntetiska granskningsdata och standardplatshållare hålls åtskilda från produktionsidentitet. Bildmanifest anger fil, källa/generation, användningsrätt, roll, tillgänglighet och beskärning. Ingen skärmbild från visionen används som fungerande UI.
 
 En ikonfamilj: Hemmets destinationskort använder tass, träningshatt och bok med samma visuella tyngd som referensen. Händelser använder kategorisymboler: droppe, matskål, måne. Vaken/ögat får inte återanvändas som Kunskapsikon. Verifiera att symbolen finns i installerat ikonpaket eller befintlig vektorkomponent. Solen i hälsningen kan återges med samma ikonstil; inga emoji som interaktiva kategoriikoner.
 
-En godkänd fallback verifierar fallbackbeteendet. Den verifierar inte fotografisk likhet. Foto-/illustrationsasset, färgvariation, fokus och mask/beskärning är egna leveranspunkter; en förstorad grön platshållare får inte godkännas som visionens varma valpporträtt. Jämför referensrender med spårbart exempelfoto i märkt granskningsläge och prova produktionsfallback separat.
+En godkänd fallback verifierar fallbackbeteendet. Den verifierar inte fotografisk likhet. Foto-/illustrationsasset, färgvariation, fokus och mask/beskärning är egna leveranspunkter; en förstorad grön platshållare får inte godkännas som visionens varma valpporträtt. Jämför referensrender med spårbar generisk porträttasset i märkt granskningsläge och prova eventuellt framtida personligt foto separat.
 
 ## 8. Status och återkoppling
 

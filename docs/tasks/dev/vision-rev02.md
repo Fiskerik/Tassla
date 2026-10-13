@@ -1,6 +1,6 @@
-# VISION-REV02 — implementeringsplan v8
+# VISION-REV02 — implementeringsplan v8 med R02-2 v11-checkpoint
 
-Status: R02-1 avslutad efter Architect APPROVE/Critic PROCEED, correction-10/12 QA PASS och separat Reviewer PASS. R02-2 v8 implementation är överlämnad till QA efter lokal verifiering; oberoende QA och Reviewer återstår. Använd endast syntetiska data, ingen live migration eller produktion. SQL/RLS, purge, scheduler och tvåsessionsprov över midnatt är `NOT TESTABLE` utan lokal databas. v8 definierar att samma fångade klockslag efter låsning används för lokal-datumskontroll och sparad completion, så ett skrivförsök som väntar över midnatt avvisas. R02-2 har Architect APPROVE, Critic PROCEED, Security APPROVE och Compliance APPROVE för exakt scope. R02-1:s kodscope är avslutad och låst.
+Status: R02-1 avslutad efter Architect APPROVE/Critic PROCEED, correction-10/12 QA PASS och separat Reviewer PASS. R02-2 v11 är implementerad med Architect APPROVE, Critic PROCEED, ny oberoende QA PASS och Reviewer PASS för lokal Home-visuell checkpoint. Aktuell portrait-/week-strip-scope: `vision-rev02-r02-2-v11.md`. Använd endast syntetiska data, ingen live migration eller produktion. Supabase SQL/RLS, purge, scheduler och tvåsessionsprov över midnatt är `NOT TESTABLE` utan lokal databas; native Dynamic Type/VoiceOver är inte verifierat. R02-1:s kodscope är avslutad och låst.
 
 ## Mandat och beslut
 
@@ -83,6 +83,10 @@ Implementationen kopplar samma fulla dagmängd till rader och progressindikator;
 
 Riktade tester, full `pnpm check` (45 test), public iOS-export och dev-flow-validering passerade. Supabase CLI finns inte och Docker-daemonen nekas; SQL-test, faktisk RLS, gallringsjobb/scheduler och tvåsessionsprovet är inte körda. Status är QA; oberoende QA/Reviewer återstår. R02-3 får inte starta förrän R02-2-checkpointen är stabil och dess separata exakta plan har granskats.
 
+### R02-2 v8 QA-fail och v9 plan
+
+Oberoende QA underkände v8 både funktionellt och enligt §14. SQL-guard avvisar blandade ras mål trots minst ett matchande mål; dagens Hem-rendering gömmer destinationerna under första vyn/nav och upprepar “Ta bort” per rad. QA-rapport: `docs/design/evidence/vision-rev02/r02-2/QA-REPORT.md`. Queue `qa → blocked`; ingen korrigeringskod har börjat. Den separata `HOME-REV02-VISUAL-01` v2-planen fick Architect/Critic CHANGES och är superseded. Integrerad plan v9: `docs/tasks/dev/vision-rev02-r02-2-v9.md`, i väntan på exakt Architect/Critic/Security-review. R02-3 förblir planned tills R02-2 har stabil, oberoende checkpoint.
+
 ## R02-3 — migrering av Logg, Träning och Kunskap
 
 **Ägare:** Implementer för respektive vy och komponentadaption; QA för beteende- och skärmfångst; koordinator för guider. Architect/Critic granskar exakt R02-3 plan innan denna del startar.
@@ -95,6 +99,12 @@ Riktade tester, full `pnpm check` (45 test), public iOS-export och dev-flow-vali
 
 **Acceptans:** Render för panelerna 5–7 bedöms mot bild och §14 vid 375/430, stor text och relevant tom-/fel-/reviewstatus. Alla befintliga destinationer, dataflöden, text, type routes och mutationstillstånd behålls; ingen FAQ/checkliståtkomst eller reviewgating försvinner. Komponentändringar är opt-in och bevarar övriga konsumenters API/defaults.
 
+### Senaste R02-2 Home-checkpoint — 2026-10-13
+
+v11 implementation och lokal verifiering är klara. `pnpm check` passerade (45/45, 0 lintfel, 36 varningar); public iOS export och public/review browser-render passerade, inklusive 375/430, 375×667 och 140% text. Oberoende QA och Reviewer PASS finns i `docs/design/evidence/vision-rev02/r02-2/correction-v11/`. SQL-fixturens v5-åldersinvändning drogs tillbaka efter kontroll av 0–20 veckorsgräns. Supabase/native-runtime kvarstår NOT TESTABLE.
+
+Eriks nya instruktion utökar nästa designmigrering till samtliga befintliga MVP- och stödskärmar. Innan R02-3-kod skrivs skapas en ny exakt plan som inventerar Logg, Träning, Kunskap, Hälsa, Mer, Tassla-pass, profil, konto/notiser, Checklistor/FAQ och befintliga detalj-/formvyer. Avgränsa en skärm/resa i taget, bevara användarbeteende och data/API samt varje panels egen färghierarki. Nya rev02-paneler som kräver nya produktobjekt utgör separata planerade delar och läggs inte in som färdiga funktioner utan MVP-kontrakt.
+
 ## Checkpoints och öppna grindar
 
 1. R02-1 plan v8: Architect APPROVE, Critic PROCEED, correction-10/12 QA PASS och Reviewer PASS dokumenterade. Fit, porträtt/kontrast och 140 %-skrollningens reachability är godkända. Public Home saknar completion-kontroll/state; endast syntetisk fixture togglar lokalt. Köstatus done.
@@ -106,3 +116,8 @@ Riktade tester, full `pnpm check` (45 test), public iOS-export och dev-flow-vali
 ## Produktgranskning av omfattning
 
 Product rekommenderar paketets tre grindar i denna ordning. Källfakta från befintlig kod: Home saknar daglig mängd; Träning är versionsbunden och ägarregistrerad; loggen har åtta eventtyper; checklistor är fasbundna och kan vara review-gated; FAQ är inte completion; planer är inte utförd hälsa. Datamängd och antal ska inte byggas från godtyckliga kategorirader eller fem hårdkodade uppgifter. Eriks val av completion-/urvalsregel finns i avsnittet ovan.
+
+
+## VISION-REV02 R02-2 v10 — planreview checkpoint
+
+V8 QA-resultat: FAIL; se `docs/design/evidence/vision-rev02/r02-2/QA-REPORT.md`. V9 är bevarad som superseded efter Architect/Critic CHANGES. Integrerad v10-plan (`docs/tasks/dev/vision-rev02-r02-2-v10.md`) har Architect APPROVE och Critic PROCEED; Security APPROVE gäller endast SQL eligibility-delta och de tre regressionerna. Detaljer: `docs/tasks/dev/vision-rev02-r02-2-v10-reviews.md`. Home-planen är integrerad i samma task eftersom skrivfilerna överlappar. Före `blocked → planned` synkas queue-plan, scope, acceptans och kommandon till v10. Ingen v10 sourcekod är ändrad ännu.

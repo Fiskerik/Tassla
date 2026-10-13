@@ -56,16 +56,23 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
     <ListRow title="Träningssteg" meta="Genomfört" category="training" complete onPress={() => undefined} />
     <ListRow title="Vila" category="sleep" disabled onPress={() => undefined} />
     <Card accessibilityLabel="Lugnt exempelkort"><Text style={styles.body}>Ett lugnt kort med innehållsstyrd höjd.</Text></Card>
+    <Card variant="home" accessibilityLabel="Varmt Hem-kort"><Text style={styles.body}>Opt-in yta för Hem enligt rev02.</Text></Card>
     <Card onPress={() => undefined} accessibilityLabel="Öppna kort"><Text style={styles.body}>Tryckbart kort</Text></Card>
     <Card selected accessibilityLabel="Valt kort"><Text style={styles.body}>Valt kort</Text></Card>
     <HeroCard title="Veckans fokus" meta="3 av 5 genomförda" onPress={() => undefined} />
     <SectionHeader title="Hemaktiviteter och destinationer" />
     <DailyActivityItem label="Öva lugn hantering" detail="Tassar och öron" category="training" completed={activityChecked}
       onToggle={() => setActivityChecked(!activityChecked)} onOpen={() => undefined} />
+    <DailyActivityItem variant="home" kind="training" label="Miljöträning – nya ljud" completed={false} onOpen={() => undefined} />
     <View style={styles.destinationTiles}>
       <DestinationTile destination="log" onPress={() => undefined} />
       <DestinationTile destination="training" onPress={() => undefined} />
       <DestinationTile destination="knowledge" onPress={() => undefined} />
+    </View>
+    <View style={styles.destinationTiles}>
+      <DestinationTile destination="log" compact variant="home" onPress={() => undefined} />
+      <DestinationTile destination="training" compact variant="home" onPress={() => undefined} />
+      <DestinationTile destination="knowledge" compact variant="home" onPress={() => undefined} />
     </View>
     <SectionHeader title="Snabblogg och ikoner" />
     <View style={styles.tiles}><QuickLogTile label="Kiss" category="pee" onPress={() => undefined} /><QuickLogTile label="Bajs" category="poop" onPress={() => undefined} /></View>

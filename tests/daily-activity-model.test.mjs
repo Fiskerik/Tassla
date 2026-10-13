@@ -47,9 +47,9 @@ test('daily activities count owner marks and exact saved training source while e
   const selection = { id: 'selection-1', dog_id: 'dog-a', program_version_id: 'version-2', step_id: 'step-1', date_key: '2026-10-12', time_zone: 'America/Los_Angeles' };
   const snapshot = { routines: [routine], routineDays: [selectedRoutine], trainingSelections: [selection] };
   const activeProgram = { id: 'version-2', title: 'Trygg vardag', steps: [{ id: 'step-1', position: 1, title: 'Sitt lugnt', instruction: '' }], completedStepIds: ['step-1'], completedAtByStepId: { 'step-1': '2026-10-13T00:30:00.000Z' } };
-  assert.deepEqual(deriveHomeDailyActivities(snapshot, [activeProgram], 'dog-a', '2026-10-12').map(({ label, kind, completed }) => ({ label, kind, completed })), [
-    { label: 'Kvällsrutin', kind: 'routine', completed: true },
-    { label: 'Trygg vardag: Sitt lugnt', kind: 'training', completed: true },
+  assert.deepEqual(deriveHomeDailyActivities(snapshot, [activeProgram], 'dog-a', '2026-10-12').map(({ label, kind, completed, programTitle }) => ({ label, kind, completed, programTitle })), [
+    { label: 'Kvällsrutin', kind: 'routine', completed: true, programTitle: undefined },
+    { label: 'Sitt lugnt', kind: 'training', completed: true, programTitle: 'Trygg vardag' },
   ]);
   assert.deepEqual(deriveHomeDailyActivities(snapshot, [], 'dog-a', '2026-10-12').map(({ kind }) => kind), ['routine']);
   assert.deepEqual(deriveHomeDailyActivities(snapshot, [activeProgram], 'dog-b', '2026-10-12'), []);

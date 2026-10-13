@@ -1,5 +1,11 @@
 # VISION-REV02 — sammanhängande design- och byggunderlag
 
+## Pågående uppföljning — HOME-REV02-VISUAL-01
+
+Erik bad 2026-10-13 att först uppdatera Hem efter det nya regelverket. Exakt task/plan v2 finns i `docs/tasks/dev/HOME-REV02-VISUAL-01.md`; status är **väntar på förnyad Architect/Critic-granskning**. Inga kodändringar för denna skiva har startat.
+
+Scope är Hem-presentation, tokens och opt-in komponentvarianter, en hanteringssheet för befintliga R02-2-åtgärder, rätt produktcopy/radbeteende, syntetisk review-bild kontra public illustrationsfallback, och renderad jämförelse. Andra skärmar får de uppdaterade designkontrakten men deras implementation väntar på egna exakta planer. Dagsuppgiftskällor, databas och completionregler skyddas. Critic begärde planförtydliganden om köordning, valpporträttets beskärning och radbunden sparåterkoppling; de är nu inskrivna i v2 och behöver förnyad review.
+
 Datum: 2026-10-13. Branch: `design/vision-rev02`. Bas: `9128cdd` på `work`; designunderlag commit `1686cca` är pushat till `origin/design/vision-rev02`.
 
 ## Beställning och leverans
@@ -89,6 +95,14 @@ Queue-status är `qa`. Implementerevidens, checkresultat och screenshots ligger 
 
 Supabase CLI saknas och Docker-daemonen är inte tillgänglig. Migration, SQL/RLS, serverstämpling, gallring/scheduler och tvåsessionsprovet över midnatt är `NOT TESTABLE`; SQL-filen innehåller separat instruktion för senare lokalt syntetiskt tvåsessionsprov. Därför är detta implementerens QA-handoff, inte QA- eller Reviewer-godkännande. R02-3 ligger kvar planerad till stabil R02-2-checkpoint och ny exakt planreview.
 
+## R02-2 v8 oberoende QA — 2026-10-13
+
+QA **FAIL** på funktionell och §14-visuell acceptans. Rasguard avvisar en publicerad version som har flera ras mål när ett av dem matchar hunden, i motsats till appens “inga mål eller minst ett matchande mål”-regel. Tillgängliga Hem-bilder har “Ta bort” på upprepade rader och destinationskorten under första vyn. Full rapport och filreferenser: `docs/design/evidence/vision-rev02/r02-2/QA-REPORT.md`. De gröna handoff-kommandona är dokumenterade som implementerresultat, inte en oberoende verifiering av Supabase-runtime.
+
+Queue `VISION-R02-2` är korrekt flyttad `qa → blocked`. R02-3 är kvar `planned`. Architect/Critic lämnade CHANGES för separat Home-plan v2 och integrerad v9. V10 rättar dessa punkter med ett genererat fixture-porträtt, opt-in-komponentvarianter, separat rutinåtgärd och en review-banner utanför den uppmätta appytan. Exakta v10-granskningar är sparade i `docs/tasks/dev/vision-rev02-r02-2-v10-reviews.md`: Architect APPROVE, Critic PROCEED, Security APPROVE för SQL-predikatet/regressionerna. Compliance v8-godkännandet är oförändrat eftersom dataändamålet inte ändras. Källkod är ännu inte ändrad; köposten ska nu synkroniseras till v10 före `blocked → planned`.
+
+Push av branchens redan committade designregeländring (`38e7b90`) försöktes denna session två gånger. Nätverksåtkomst nådde GitHub, men körmiljön har ingen HTTPS GitHub-inloggning (`could not read Username for 'https://github.com'`). Committen är fortfarande lokal. V9-arbetet fortsätter först efter planreview; efter verifierad checkpoint skapas ett uppdaterat Git-bundle om credential saknas.
+
 ## Sparad inventering
 
 Product bekräftar att målbilden innehåller åtta vyer och att befintligt Hem är en källöversikt. Daglig completion, milstolpar, progressring och fullständiga insiktsgrafer är nya produktkontrakt. Kunskapens faschecklista får inte beskrivas som en redan fungerande dagslista. Befintliga loggtyper och FAQ/checkliståtkomst ska bevaras.
@@ -119,3 +133,13 @@ Erik har uttryckligen beställt och godkänt att arbetspaketet omfattar R02-1, R
 
 - R02-2 v8 använder en enda `clock_timestamp()` tagen efter relevanta lås för både lokal-datumskontroll och completionstämpel. `now()` får inte användas för aktivitetsdatum-/completion-guards eftersom transaktionstid kan vara gammal efter en lång låsväntan. SQL-regression ska täcka ett skrivförsök som startar före midnatt och fortsätter efter låsning efter midnatt. Architect APPROVE, Critic PROCEED, Security APPROVE och Compliance APPROVE är registrerade för exakt v8. Förebyggande R02-1-checkpoint var grinden vid planbeslutet; den är stängd och implementationen är nu överlämnad till QA enligt checkpointen ovan.
 - R02-1:s ursprungliga QA blockerades på första-vy-fit; rapport finns i `docs/design/evidence/vision-rev02/r02-1/qa-failure/`. Samma-scope korrigeringar passerade därefter public/review initialfit: kortens nederkant y=768 och nav börjar y=785, vilket ger 17 px marginal vid 375/430. Porträttet ökades till cirka 108×124 px synlig yta inom den fasta 120×124-ramen. Corrections 5–9 rapporterade först överlapp mellan illustration och datum, därefter underkänd glyphkontrast eller för svag illustration. Correction-10 flyttade den godkända gräddbakgrunden till en wrapper-View kring berörda veckotal; oberoende QA mätte minst 6,55:1 för alla veckoglypher vid 375/430 och 140 % text. Correction-12 verifierade scrollreachability vid 140 %: sista knappen lämnar 55,39 px till navigationen vid 375 och 47,59 px vid 430; reviewbannern är fast efter textskalning. Public/review fixture, destinationsnavigation, reducerad rörelse, stora texter, 17 px initial clearance och porträttnärvaro passerade. QA-evidens för slutgrind: `docs/design/evidence/vision-rev02/r02-1/qa-correction-12/`; tidigare omgångar och blockerande rapporter finns kvar under `r02-1/`. Checklistflikens innehåll är ej testbart i harness utan checklistklient/hund; native-enhet är inte testad. Huvudsessionen körde fokustester 3/3, `pnpm check` (41 test, 38 lint-varningar/0 fel), public iOS-export, Python syntax, diffcheck och queue validation med PASS. Separat Reviewer PASS. R02-1 queue→done; R02-2 implementing endast med syntetiska lokala data. Ingen live migration, produktion eller extern publicering.
+
+## R02-2 v11 — Home-porträtt och veckoremsa, lokal checkpoint 2026-10-13
+
+v11 implementerades enligt exakt plan och fick Architect APPROVE, Critic PROCEED, oberoende Home-QA PASS samt Reviewer PASS. Public och review använder samma generiska, AI-genererade hundporträtt med synlig `Standardbild`-etikett; granskningsramen identifierar AI-standardbilden. Veckoremsan ligger över porträttet med verifierad fade och kontrast.
+
+Verifiering: `pnpm check` 45/45 (0 lintfel, 36 varningar), public iOS-export, public/review browser-körning vid 375/430, 375×667, 140 % text och reducerad rörelse, diffcheck och queue validation passerade. Rapporter och skärmbilder: `docs/design/evidence/vision-rev02/r02-2/correction-v11/`.
+
+SQL-fixtureinvändningen om ålder drogs tillbaka efter kontroll: hund B är cirka 11 veckor och fixtureversionen tillåter 0–20 veckor. Supabase SQL/RLS, gallring/scheduler, midnatts-låsväntan och native Dynamic Type/VoiceOver är fortfarande NOT TESTABLE. Porträttasseten är genererad bildkonst, inte ett faktiskt foto av hunden.
+
+Efter denna checkpoint fortsätter den separat granskade designmigreringen till befintliga MVP- och stödskärmar, en skärm/resa åt gången. Nya rev02-funktioner utan befintliga produktobjekt får inte smygbyggas som del av en visuell migration.

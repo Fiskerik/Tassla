@@ -236,6 +236,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [dailyStateLifetime, setDailyStateLifetime] = useState('');
   const [dailyClock, setDailyClock] = useState(() => new Date());
   const [dailyBusyKey, setDailyBusyKey] = useState<string | null>(null);
+  const [dailyMessageKey, setDailyMessageKey] = useState('');
   const [dailyMessage, setDailyMessage] = useState('');
   const [dailyMessageError, setDailyMessageError] = useState(false);
   const [signOutError, setSignOutError] = useState(false);
@@ -1864,6 +1865,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
     dailyMutationInFlight.current = true;
     setDailyBusyKey(key);
+    setDailyMessageKey(key);
     setDailyMessage('');
     setDailyMessageError(false);
     let outcome: WriteOutcome<unknown>;
@@ -1891,7 +1893,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       setDailyMessage('Vi kunde inte bekräfta om ändringen sparades. Ingen ny bock visas. Kontrollera samma ändring innan du fortsätter.');
       setDailyMessageError(true);
     } else {
-      pendingDailyRetry.current = null;
+      pendingDailyRetry.current = { lifetime, key, run: operation };
       setDailyMessage('Ändringen sparades inte. Kontrollera anslutningen och försök igen.');
       setDailyMessageError(true);
     }
@@ -2097,6 +2099,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       routineTemplates={dailySnapshotForView?.routines ?? []}
       dailyTrainingOptions={dailyTrainingOptions}
       dailyMutationBusy={Boolean(dailyBusyKey)}
+      dailyMutationKey={dailyMessageKey}
       dailyMutationMessage={dailyMessage}
       dailyMutationError={dailyMessageError}
       onRetryDaily={() => { void reloadDailyActivity(); }}

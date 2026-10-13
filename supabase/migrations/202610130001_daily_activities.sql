@@ -210,7 +210,10 @@ begin
   end if;
   if exists (
     select 1 from public.content_breed_targets t
-    where t.content_version_id = new.program_version_id and t.breed_id <> v_dog.breed_id
+    where t.content_version_id = new.program_version_id
+  ) and not exists (
+    select 1 from public.content_breed_targets t
+    where t.content_version_id = new.program_version_id and t.breed_id = v_dog.breed_id
   ) then
     raise exception using errcode = '22023', message = 'Training program is not available for this breed';
   end if;

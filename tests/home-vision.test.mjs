@@ -9,50 +9,79 @@ const harness = source('../tools/visual-check/app.tsx');
 const activityItem = source('../src/components/ui/DailyActivityItem.tsx');
 const destinationTile = source('../src/components/ui/DestinationTile.tsx');
 const gallery = source('../src/components/ui/ComponentGalleryScreen.tsx');
+const tokens = source('../src/theme/tokens.ts');
+const manager = source('../src/features/home/DailyActivityManagerSheet.tsx');
 
-test('public Home has no daily fixture; local completion is mounted only with a fixture', () => {
-  assert.match(home, /dailyFixture\s*\?\s*<ReviewDailyFixture/);
-  assert.match(home, /function ReviewDailyFixture[\s\S]*?useState/);
+test('Home follows the rev02 content order without duplicate Today groups', () => {
+  assert.match(home, /homeGreetingAt\(new Date\(\)\)/);
+  assert.match(home, /Just nu med \{dog\.name\}/);
+  assert.match(home, /Dagens att göra/);
+  assert.match(home, /dailyActivities\.slice\(0, 5\)/);
+  assert.match(home, /DestinationTile destination="log" compact variant="home"/);
+  assert.match(home, /DestinationTile destination="training" compact variant="home"/);
+  assert.match(home, /DestinationTile destination="knowledge" compact variant="home"/);
+  for (const removedHeading of ['Idag', 'Loggat idag', 'Nästa träningssteg', 'Planerat idag', 'Vad vill du göra nu?']) {
+    if (removedHeading === 'Vad vill du göra nu?') assert.match(home, /Vad vill du göra nu\?/);
+    else assert.doesNotMatch(home, new RegExp(`>${removedHeading}<`));
+  }
   assert.doesNotMatch(workspace, /dailyFixture|ReviewDailyFixture/);
-  assert.match(harness, /reviewFixtureEnabled&&homeScenario==='ready'\?homeReviewFixture:undefined/);
-  assert.match(harness, /SYNTETISKT GRANSKNINGSLÄGE/);
-  assert.match(harness, /reviewBanner[\s\S]*?<AppScreen/);
-  assert.match(harness, /reviewBanner:\{[^}]*minHeight:tokens\.spacing\.xxl/);
-  assert.match(harness, /homeReviewFixture(?::[^=]+)?=\[[\s\S]*?completed:true[\s\S]*?completed:false/);
-  assert.match(home, /!dailyFixture\s*\?\s*<Text[^>]*>Idag<\/Text>\s*:\s*null/);
-  assert.match(home, /fixtureItems:\s*\{\s*gap:\s*tokens\.spacing\.sm\s*\}/);
-  assert.match(home, /fixtureSection:\s*\{\s*gap:\s*tokens\.layout\.headingGap\s*-\s*tokens\.spacing\.xs\s*\}/);
-});
-
-test('Home review activity toggles locally and detail action routes separately', () => {
-  assert.match(activityItem, /accessibilityRole="checkbox"/);
-  assert.match(activityItem, /onPress=\{\(\) => onToggle\?\.\(\)\}/);
-  assert.match(activityItem, /accessibilityRole="button" accessibilityLabel=\{`Visa detaljer:/);
-  assert.match(activityItem, /minHeight: tokens\.size\.touchMin/);
-  assert.match(home, /onOpen=\{\(\) => onGo\(item\.destination\)\}/);
-  assert.doesNotMatch(activityItem, /AsyncStorage|SecureStore|supabase|fetch\(/i);
-});
-
-test('destination tiles use navigation icons and real Home callbacks, not activity categories', () => {
-  assert.match(destinationTile, /log: \{ label: 'Logga', icon: 'create-outline'/);
-  assert.match(destinationTile, /training: \{ label: 'Träna', icon: 'school-outline'/);
-  assert.match(destinationTile, /knowledge: \{ label: 'Kunskap', icon: 'book-outline'/);
-  assert.match(home, /DestinationTile destination="log" compact onPress=\{\(\) => onGo\('log'\)\}/);
-  assert.match(home, /DestinationTile destination="training" compact onPress=\{\(\) => onGo\('training'\)\}/);
-  assert.match(home, /DestinationTile destination="knowledge" compact onPress=\{\(\) => onGo\('knowledge'\)\}/);
   assert.match(gallery, /<DailyActivityItem/);
   assert.match(gallery, /<DestinationTile destination="knowledge"/);
 });
 
-test('Home portrait matches reference space without adding identity flow height', () => {
-  assert.match(home, /style=\{styles\.dogMeta\}>\{dog\.name\}\{age \?/);
-  assert.match(home, /const dogPortraitSize = tokens\.size\.quickLogCompactHeight \+ tokens\.size\.touchMin/);
-  assert.match(home, /dogPortrait: \{ position: 'absolute', top: 0, right: 0, width: dogPortraitSize, height: dogPortraitHeight, overflow: 'hidden', borderRadius: tokens\.radius\.full \}/);
-  assert.match(home, /dogImage: \{ width: dogPortraitSize, height: dogPortraitHeight, transform: \[\{ scale: 1\.8 \}\], opacity: 0\.7 \}/);
-  assert.match(home, /weekNumber: \{ \.\.\.tokens\.typography\.caption, color: tokens\.colors\.textPrimary \}/);
-  assert.match(home, /<View style=\{\[styles\.weekNumberWrap, current && styles\.currentWeekNumberWrap, !current && index >= weekStrip\.length - 3 && styles\.weekNumberPortraitBacking\]\}>/);
-  assert.match(home, /weekNumberPortraitBacking: \{ backgroundColor: tokens\.colors\.background, borderRadius: tokens\.radius\.sm/);
-  assert.match(home, /weekStrip: \{ position: 'relative', zIndex: 1/);
-  assert.match(home, /dog-placeholder\.png/);
-  assert.match(home, /<View style=\{styles\.dogPortrait\} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">/);
+test('public and review Home share a generic portrait without attaching the dog identity', () => {
+  assert.match(home, /source=\{require\('\.\.\/\.\.\/\.\.\/assets\/images\/home-dog-portrait-placeholder\.png'\)\}/);
+  assert.doesNotMatch(home, /review-puppy-portrait|dog-mascot\.png/);
+  assert.match(home, /accessibilityRole="text" accessibilityLabel="Standardbild"/);
+  assert.match(home, /homeWeekDecorationOpacity\(portraitFrame\.left, portraitFrame\.right, markerCenter\)/);
+  assert.match(home, /const fadeStart = left - 16/);
+  assert.match(home, /const z = \(markerCenter - fadeStart\) \/ \(right - fadeStart\)/);
+  assert.match(home, /return 0\.78/);
+  assert.match(home, /return 0\.56/);
+  assert.match(home, /return 0\.38/);
+  assert.match(home, /weekStrip: \{ position: 'relative', zIndex: 2/);
+  assert.match(home, /dogPortrait: \{ position: 'absolute'.*zIndex: 1/);
+  assert.match(home, /styles\.weekNumberBacked/);
+  assert.match(home, /rgba\(245, 240, 232, \$\{washOpacity\}\)/);
+  assert.match(home, /dailyFixture\s*\?\s*<ReviewDailyFixture/);
+  assert.match(harness, /reviewFixtureEnabled&&homeScenario==='ready'\?homeReviewFixture:undefined/);
+  assert.match(harness, /testID="review-banner"/);
+  assert.match(harness, /testID="review-app-viewport"/);
+  assert.match(harness, /AI-GENERERAD STANDARDBILD/);
+  assert.match(harness, /Syntetiskt granskningsläge\. AI-genererad standardbild\./);
+  assert.match(harness, /appViewport:\{flex:1,minHeight:0\}/);
+  assert.match(harness, /height:tokens\.spacing\.xxl,minHeight:tokens\.spacing\.xxl/);
+});
+
+test('Home routines use a checkbox, training rows open training, and the manager preserves actions in a BottomSheet', () => {
+  assert.match(activityItem, /accessibilityRole="checkbox"/);
+  assert.match(activityItem, /accessibilityRole="button" accessibilityLabel=\{rowLabel\}/);
+  const homeVariant = activityItem.slice(activityItem.indexOf('function HomeDailyActivityItem'), activityItem.indexOf('const styles'));
+  assert.doesNotMatch(homeVariant, /Ta bort|>Visa</);
+  assert.doesNotMatch(homeVariant, /<IconChip|list-outline|school-outline/);
+  assert.match(homeVariant, /homeTrainingStatusCell/);
+  assert.match(homeVariant, /homeTrainingStatusChecked/);
+  assert.match(home, /onToggle=\{routineDay \? \(\) => onSetRoutineCompletion/);
+  assert.match(home, /item\.kind === 'training' \? \(\) => onGo\('training'\)/);
+  for (const action of ['onCreateRoutine', 'onUpdateRoutine', 'onDeleteRoutine', 'onAddRoutineToDay', 'onRemoveRoutineFromDay', 'onAddTrainingToDay', 'onRemoveTrainingFromDay']) {
+    assert.match(manager, new RegExp(action));
+  }
+  assert.match(manager, /<BottomSheet/);
+  assert.match(home, /dailyMutationKey/);
+});
+
+test('rev02 uses tokenized warm and blue green purple Home surfaces with opt-in component variants', () => {
+  for (const color of ['#F5F0E8', '#FFFCF7', '#35875A', '#217448', '#E9F0FB', '#E8F2E7', '#F1EAF7']) assert.ok(tokens.includes(color));
+  assert.match(activityItem, /variant === 'home'/);
+  assert.match(destinationTile, /variant === 'home'/);
+  assert.match(home, /variant="home"/);
+});
+
+test('destination tiles route to existing Home destinations and gallery keeps defaults available', () => {
+  assert.match(destinationTile, /log: \{ label: 'Logga', icon: 'paw-outline'/);
+  assert.match(destinationTile, /training: \{ label: 'Träna', icon: 'school-outline'/);
+  assert.match(destinationTile, /knowledge: \{ label: 'Kunskap', icon: 'book-outline'/);
+  assert.match(home, /onPress=\{\(\) => onGo\('log'\)\}/);
+  assert.match(home, /onPress=\{\(\) => onGo\('training'\)\}/);
+  assert.match(home, /onPress=\{\(\) => onGo\('knowledge'\)\}/);
 });

@@ -56,13 +56,29 @@ test('Home activity and destination components keep independent accessible actio
   assert.match(daily, /accessibilityRole="checkbox"[\s\S]*?accessibilityState=\{\{ checked: completed/);
   assert.match(daily, /accessibilityRole="button" accessibilityLabel=\{`Visa detaljer:/);
   assert.match(daily, /minHeight: tokens\.size\.touchMin/);
-  for (const icon of ["'create-outline'", "'school-outline'", "'book-outline'"]) {
+  for (const icon of ["'paw-outline'", "'school-outline'", "'book-outline'"]) {
     assert.ok(destination.includes(icon), `missing destination icon ${icon}`);
   }
   assert.match(gallery, /<DailyActivityItem/);
   assert.match(gallery, /<DestinationTile destination="log"/);
   assert.match(gallery, /<DestinationTile destination="training"/);
   assert.match(gallery, /<DestinationTile destination="knowledge"/);
+});
+
+test('vision variants are opt-in and leave shared component defaults on their original styles', () => {
+  const card = source('Card.tsx');
+  const daily = source('DailyActivityItem.tsx');
+  const destination = source('DestinationTile.tsx');
+  const gallery = source('ComponentGalleryScreen.tsx');
+  assert.match(card, /variant = 'default'/);
+  assert.match(card, /variant === 'home' \? styles\.homeCard : styles\.card/);
+  assert.match(daily, /if \(props\.variant === 'home'\) return <HomeDailyActivityItem/);
+  assert.match(daily, /variant\?: 'default' \| 'home'/);
+  assert.match(destination, /variant = 'default'/);
+  assert.match(destination, /variant === 'home' \? homeItem\.surface : item\.background/);
+  assert.match(gallery, /<Card variant="home"/);
+  assert.match(gallery, /<DailyActivityItem variant="home"/);
+  assert.match(gallery, /<DestinationTile destination="log" compact variant="home"/);
 });
 
 test('Button stretches every non-icon variant and keeps icon controls square at touch minimum', () => {

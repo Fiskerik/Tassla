@@ -4362,62 +4362,88 @@
       "id": "VISION-R02-2",
       "title": "Ägarvalda dagsrutiner och källhärledd träningsprogress",
       "mvp_requirement": "Eriks uttryckliga VISION-REV02-beställning och completion-regel 2026-10-13; docs/mvp.md: Home/Training",
-      "plan": "docs/tasks/dev/vision-rev02.md v8, R02-2; exact Architect/Critic/Security/Compliance reviews recorded",
+      "plan": "docs/tasks/dev/vision-rev02-r02-2-v10.md v10 baseline + docs/tasks/dev/vision-rev02-r02-2-v11.md v11 portrait amendment; review records in corresponding v10/v11 review files",
       "write_paths": [
         "src/features/home/daily-activity-model.ts",
         "src/features/home/daily-activity-data.ts",
         "src/features/home/ProductWorkspace.tsx",
         "src/features/home/HomeScreen.tsx",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/home/README.md",
         "src/components/ui/DailyActivityItem.tsx",
+        "src/components/ui/DestinationTile.tsx",
+        "src/components/ui/Card.tsx",
+        "src/components/ui/ComponentGalleryScreen.tsx",
+        "src/theme/tokens.ts",
         "src/data/workspace-data.ts",
         "src/data/README.md",
-        "src/features/home/README.md",
         "supabase/migrations/202610130001_daily_activities.sql",
         "supabase/tests/daily-activities.sql",
         "supabase/tests/account-deletion.sql",
         "supabase/daily-activities-retention-job.sql",
+        "supabase/README.md",
         "tests/daily-activity-model.test.mjs",
         "tests/daily-activity-data.test.mjs",
         "tests/daily-activity-ui.test.mjs",
         "tests/training-activity-date.test.mjs",
         "tests/account-delete.test.mjs",
+        "tests/home-vision.test.mjs",
+        "tests/planned-health.test.mjs",
+        "tests/ui-library-policy.test.mjs",
+        "assets/images/README.md",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/README.md",
+        "tools/visual-check/verify.py",
+        "docs/design/evidence/vision-rev02/r02-2",
         "docs/mvp.md",
         "docs/privacy/beta-information.md",
         "docs/dev/beta-data-lifecycle.md",
-        "supabase/README.md",
-        "docs/design/evidence/vision-rev02/r02-2",
+        "docs/tasks/dev/vision-rev02-r02-2-v10.md",
+        "docs/tasks/dev/vision-rev02-r02-2-v10-reviews.md",
         "docs/tasks/dev/vision-rev02.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
-        "docs/tasks/VISION-REV02.md"
+        "docs/tasks/VISION-REV02.md",
+        "docs/tasks/dev/HOME-REV02-VISUAL-01.md",
+        "docs/design-rules.md",
+        "docs/plans/HOME-REV02-visual-ux-spec.md",
+        "docs/prompts/build-home-rev02.md",
+        "assets/images/home-dog-portrait-placeholder.png",
+        "docs/design/evidence/vision-rev02/r02-2/correction-v11",
+        "docs/tasks/dev/vision-rev02-r02-2-v11.md",
+        "docs/tasks/dev/vision-rev02-r02-2-v11-reviews.md",
+        "assets/images/review-puppy-portrait.png"
       ],
       "acceptance": [
-        "Ägaren väljer egna rutiner och träningssteg per lokal dag; ingen rutinrecurrence sker automatiskt",
-        "Manuella completioner bekräftas först efter verified save; träningscompletion härleds från exakt training_progress step/version och activity date",
-        "Guideöppning, vårdplan och olänkad logg påverkar inte count; checklistfasprogress kopieras inte",
-        "Hem och full dagslista visar samma kompletta mängd och confirmed count; fem rader är bara presentationsgräns",
-        "Tvåägar-RLS, minsta kolumngrants, sammansatt hund-/rutin-FK, dog/date/breed-eligible published training source, current-next-step ordering, withdrawn-source exclusion from Home/count, serverstämplad completion med stale-Home/midnight guard after lock waits; one post-lock clock_timestamp is used for validation and completion timestamp, stale-undo compare-and-set, immutabla scope/source/date, radering och idempotent readback granskas med syntetiska data",
-        "workspace-data exponerar training_progress.completed_at; regressionsprov bekräftar projicering till vald lokal dag",
-        "Daterade val/completions har ingen historikvy, gallras per stored IANA zone när local date_key är 30 dagar gammal och raderas vid nästa dagliga körning (normalt inom 24h); template/nyare/annan hund bevaras och anon/authenticated saknar purge execute",
-        "Routine create, daily routine selection and training selection retries reuse stable UUID/logical key and reconcile exact readback",
-        "Åtkomst-/kopieringsförfrågan inkluderar rutinmallar/labels och daterade urval/completions",
-        "MVP, beta-informationens arbetsutkast och datalivscykel beskriver ändamål/minimering/åtkomst/kopia/radering/gallring före beta; ingen partnerdelning, analytics, profilering eller Tassla-pass"
+        "Ägarvalda rutiner och valda träningssteg behåller v8-datakällor, dagscope, completion- och retrysemantik.",
+        "SQL rasguard accepterar inga ras mål eller minst ett matchande mål, avvisar endast icke-matchande mål och har regression för samtliga tre fall; övriga v8 RLS/grants/locks/tidszon/gallring/idempotens/radering bevaras.",
+        "Home följer panel 1:s ordning, varm grund, gul tipsaccent, grön progress och blå/grön/lila destinationskort; alla tre genvägar syns i första vyn vid 375×844 och 430×844 med minst 16 px navmarginal.",
+        "En enda Dagens att göra-yta visar total count/progress och högst fem rader utan per-rad kort, kategoriikoner eller Visa/Ta bort-länkar; rutincheckbox är fyrkantig och träningsrad saknar checkbox.",
+        "Separat rutintext/chevron öppnar hanteringssheetens rutin-detalj; checkbox ändrar endast completion. Träningsrad öppnar befintlig Träning-callback. Visa alla, rubrikchevron och tomläge öppnar samma sheet.",
+        "Home-rad visar pending/failure/unknown och exakt retry nära samma rutinrad utan optimism; sheetens mutationer visar sin egen återkoppling/retry där.",
+        "Delade komponenters default-props och andra skärmars standardutseende är oförändrade; Home använder endast opt-in-varianter.",
+        "§14 QA sparar jämförbara public/review-renders och bedömer komposition, färg, typografi, former, bildroll och innehållstäthet var för sig; SQL-runtime/native anges separat och får inte rapporteras PASS utan faktisk verifiering.",
+        "Planerade hälsohändelser räknas inte som Home-dagsuppgifter eller Home-count; separat Hälsa → planerade händelser-resan bevaras. Endast inaktuell presentationstest uppdateras.",
+        "Public och review Home använder samma runda AI-genererade generiska bildkonst-asset; en synlig Standardbild-etikett visas direkt på porträttet i båda lägena med solid varm bakning, mörk text och kontrast ≥4,5:1 vid standardskrift och 140 % text, utan klippning. Skärmläsaren kan annonsera etiketten medan själva bilden är dekorativ, och ingen text/data/accessibility kopplar den till hundnamn eller ras. Reviewramen anger syntetisk AI-standardplatshållare.",
+        "Veckoremsan ligger över porträttets nederdel. För porträttkanter L/R och markörcentrum x gäller fade exakt endast när L−16 pt ≤ x ≤ R, z=(x−(L−16))/(R−(L−16)); icke-aktuell dekor har opacity 0,78 för 0≤z<1/3, 0,56 för 1/3≤z<2/3 och 0,38 för 2/3≤z≤1. Utanför zonen oförändrat; siffror och aktuell markör har full opacity, siffror har varm solid kontrastbakning och kontrast ≥4,5:1 vid 375/430 och 140 % text."
       ],
       "checks": [
-        "node --experimental-strip-types --test tests/daily-activity-model.test.mjs tests/daily-activity-data.test.mjs tests/daily-activity-ui.test.mjs tests/training-activity-date.test.mjs tests/account-delete.test.mjs",
+        "node --experimental-strip-types --test tests/daily-activity-model.test.mjs tests/daily-activity-data.test.mjs tests/daily-activity-ui.test.mjs tests/training-activity-date.test.mjs tests/account-delete.test.mjs tests/home-vision.test.mjs tests/planned-health.test.mjs tests/ui-library-policy.test.mjs",
         "pnpm check",
         "git diff --check",
         "python tools/dev_flow.py validate",
-        "Supabase daily-activities SQL test in local synthetic database if available",
-        "SQL/data tests reject out-of-order training selection and exclude subsequently withdrawn source from visible count",
-        "Retention purge and pg_cron job setup documented; scheduler status NOT TESTABLE until target Supabase setup",
-        "Public/review Home visual verification and independent QA/Reviewer",
-        "Architect, Critic, Security and Compliance review before implementation"
+        "__UNSAFE_EXPO_HOME_DIRECTORY=/tmp/tassla-expo-home-r02-2-v11 TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false pnpm bundle:ios",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-2-v11/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-2-v11/review node tools/visual-check/build.cjs",
+        "python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-preview/r02-2-v11/public (review output in separate run)",
+        "TASSLA_UI_SCOPE=home TASSLA_UI_REVIEW=false TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/r02-2/correction-v11/public python tools/visual-check/verify.py",
+        "TASSLA_UI_SCOPE=home TASSLA_UI_REVIEW=true TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/r02-2/correction-v11/review python tools/visual-check/verify.py",
+        "Disposable local Supabase: execute supabase/tests/daily-activities.sql and supabase/tests/account-deletion.sql; save actual runtime output or mark NOT TESTABLE."
       ],
       "depends_on": [
         "VISION-R02-1"
       ],
-      "status": "qa",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -4466,9 +4492,81 @@
           "to": "qa",
           "actor": "implementer",
           "evidence": "R02-2 implementation handoff saved at docs/design/evidence/vision-rev02/r02-2/IMPLEMENTER-REPORT.md. pnpm check 45/45, iOS bundle, targeted checks and React Native Web synthetic visual checks pass; SQL/RLS/scheduler/midnight runtime remains NOT TESTABLE. Independent QA and Reviewer are next."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent QA v8 FAIL: SQL breed guard rejects a matching breed target when other targets also exist; §14 Home visual FAIL because destination cards are below first view and repeated row removal links remain. Report: docs/design/evidence/vision-rev02/r02-2/QA-REPORT.md. Replan exact v9 before any code; Supabase/native remain NOT TESTABLE."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Exact v10 plan and review record now synchronized into queue metadata: plan, write paths, acceptance and runnable checks; v8 QA fail history retained. Architect APPROVE, Critic PROCEED and Security APPROVE for SQL predicate delta saved in docs/tasks/dev/vision-rev02-r02-2-v10-reviews.md."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact v10 in docs/tasks/dev/vision-rev02-r02-2-v10-reviews.md; Critic PROCEED and narrow Security APPROVE recorded. Existing v8 Compliance approval remains applicable; no data purpose changed."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik authorized implementation of the combined R02-1/R02-2/R02-3 package and now directly requested the Home update. Start exact v10 correction within the synchronized write scope; synthetic/local data only."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "v10 correction implemented locally; portrait/week-strip owner direction is an approved design change, but exact v11 plan review is pending; no portrait source delta has started"
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "v11 plan draft and queue metadata synchronized for the owner-approved portrait/week-strip amendment. Exact Architect/Critic review required before source delta; R02-3 remains untouched."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Exact v11 plan is synchronized across queue/design docs; Architect APPROVE and Critic PROCEED are recorded in docs/tasks/dev/vision-rev02-r02-2-v11-reviews.md. User-authorized portrait/week-strip delta only; no source edits started yet."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact current v11 and Critic PROCEED recorded. Public/review Standardbild cue, contrast, generic AI image role, exact fade bands, paths and evidence are approved."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin Erik-authorized exact v11 Home portrait/week-strip implementation. Preserve all v10 R02-2 semantics and existing data/mutation contracts; only v11 source paths. User separately asked to migrate remaining screens after Home clears QA/Reviewer."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-2 v11 source stable; pnpm check 45/45; public iOS export and public/review browser 375/430 + 140% text pass; handoff docs/design/evidence/vision-rev02/r02-2/correction-v11/IMPLEMENTER-REPORT.md"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent R02-2 v11 Home QA PASS; banner/glyph contrast/fade/layout pass; SQL age-fixture concern withdrawn against actual 0–20 week bounds; Supabase/native runtime NOT TESTABLE. docs/design/evidence/vision-rev02/r02-2/correction-v11/QA-REPORT.md"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent v11 source review PASS; fresh public/review results, 140% banner fit and week-glyph contrast checks verified. Supabase/native runtime NOT TESTABLE. docs/design/evidence/vision-rev02/r02-2/correction-v11/REVIEW-REPORT.md"
         }
       ],
-      "next_step": "Independent QA and Reviewer on the implementation handoff; run migration, RLS, purge scheduler, and two-session midnight probe only in a disposable local Supabase database. Keep VISION-R02-3 planned until R02-2 has a stable reviewed checkpoint and its exact plan review."
+      "next_step": "Local Home checkpoint complete: Architect APPROVE, Critic PROCEED, QA PASS and Reviewer PASS saved under docs/tasks/dev/vision-rev02-r02-2-v11-reviews.md and docs/design/evidence/vision-rev02/r02-2/correction-v11/. Supabase/RLS and native runtime remain NOT TESTABLE. Next: commit/push this checkpoint, then write and review a separate exact plan for all remaining existing MVP/support screens before source edits."
     },
     {
       "id": "VISION-R02-3",
@@ -4513,7 +4611,7 @@
       ],
       "status": "planned",
       "history": [],
-      "next_step": "After R02-2 stable checkpoint, approve a new exact R02-3 plan and file list with Architect/Critic before code; shared component paths remain excluded until then"
+      "next_step": "Efter stabil Home checkpoint: skapa exakt Architect/Critic-granskad plan för Logg, Träning och Kunskap, plus inventera Hälsa, Mer och övriga panel-/stödskärmar som omfattas av Eriks instruktion. Migrera en skärm/resa åt gången; behåll varje panels egna färghierarki och använd inga globala Home-färgbyten."
     }
   ]
 }

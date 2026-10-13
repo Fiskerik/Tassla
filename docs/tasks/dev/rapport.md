@@ -472,3 +472,23 @@ R02-2 v8 kopplar ägarvalda dagliga rutiner och urval av nästa tillåtna public
 `pnpm check` PASS: app-/edge-typecheck, lint med 36 varningar i andra filer och 45/45 tester. Fokuserade dagaktivitets-/workspace-/kontoraderingstester 5/5 PASS. Public iOS-export och `python tools/dev_flow.py validate` PASS. Lokal React Native Web-reviewrendering vid 375/430 utan browser errors: count 3/7, fem första rader och “Visa alla” expanderade till sju; rutinhanterare och träningsval öppnades. CTA-undersida till navigation: 20 px vid 375 och 40 px vid 430. Fixture och exakta screenshots finns i `docs/design/evidence/vision-rev02/r02-2/`; handoff är inte oberoende QA- eller Reviewer-PASS.
 
 Migration, RLS, retention, scheduler och cross-session midnight-probe är `NOT TESTABLE`: Supabase CLI saknas och Docker-daemonen är inte åtkomlig. `supabase/tests/daily-activities.sql` innehåller syntetiskt single-session-prov samt manual för tvåsessionstest när en disposable lokal Supabase-miljö finns; inget sådant runtime-resultat hävdas. Köstatus `implementing → qa`; R02-3 ligger kvar planerad tills R02-2 har stabil QA-/Reviewer-checkpoint och R02-3:s exakta plan har godkänts.
+
+### VISION-R02-2 v8 — oberoende QA blockerad
+
+Eriks nya Hem-direktiv gäller inom den redan godkända rev02-beställningen. Oberoende QA lämnade **FAIL** för v8: SQL-triggern avvisar träningsversioner med blandade ras mål trots minst ett matchande mål; befintliga Home-reviewbilder placerar destinationskort under första vyn och upprepar “Ta bort” på rader. Fullt underlag i `docs/design/evidence/vision-rev02/r02-2/QA-REPORT.md`. Queue gick `qa → blocked`; R02-3 förblir planned. Handoffens tidigare gröna kommandon är inte omtolkade till runtime-verifiering.
+
+Plan v2 för separat `HOME-REV02-VISUAL-01` fick **CHANGES** av Architect och Critic. V9 fick också CHANGES för användning av visionsskärmbild som UI-asset, saknad rutin-detaljhandling och otydlig banner-/viewport-mätning. V10 löser detta med genererad fixturebild, separat rutinåtgärd, utanförliggande banner, opt-in-varianter, exakt viewport/verifiering och queue-synk före unblock. Slutgranskningar: Architect **APPROVE**, Critic **PROCEED**, Security **APPROVE** för SQL-predikat/regressioner; underlag i `docs/tasks/dev/vision-rev02-r02-2-v10-reviews.md`. Ingen appkod är ännu ändrad; queue-posten ska synkas till v10 före `blocked → planned`.
+
+`git push origin design/vision-rev02` försöktes efter Eriks uttryckliga push-besked. Nätverksåtkomst nådde GitHub men saknad HTTPS-inloggning stoppade pushen (`could not read Username for 'https://github.com'`). Commit `38e7b90` och dagens reviewplan/checkpoint ligger lokalt; uppdaterat bundle skapas efter verifierad korrigeringscheckpoint om autentisering fortsatt saknas.
+
+### VISION-R02-2 v11 Home checkpoint — 2026-10-13
+
+Home v11 är implementerad med rund generisk AI-hundbild, synlig `Standardbild`-etikett, fast AI-standardbildsmarkering i syntetisk reviewram och mätbar veckoremsa ovanpå porträttet. Färska visuella kontroller testar week-glyph-kontrast för veckorna 8–14 vid 375/430 och 140 % text.
+
+- Exakt plan: `docs/tasks/dev/vision-rev02-r02-2-v11.md`; planreviews: `docs/tasks/dev/vision-rev02-r02-2-v11-reviews.md`.
+- Handoff, oberoende QA och Reviewer PASS: `docs/design/evidence/vision-rev02/r02-2/correction-v11/`.
+- Verifiering: `pnpm check` 45/45, 36 lintvarningar/0 fel; public iOS-export PASS; public/review RN Web-byggen och browser-evidens PASS; `git diff --check` och `python tools/dev_flow.py validate` PASS.
+- QA korrigerade den föregående SQL-fixturebedömningen: hund B är 80 dagar gammal och v5:s åldersspann är 0–20 veckor, så breed-target-regressionen är åldersgiltig.
+- Supabase SQL/RLS, retention job/scheduler, lock-wait-over-midnight och native Dynamic Type/VoiceOver är NOT TESTABLE här. Hundporträttet är genererad bildkonst, inte ett verkligt personligt fotografi.
+
+Nästa: commit/push den verifierade checkpointen på `design/vision-rev02`, därefter exaktspecificerad och Architect/Critic-granskad plan för visuell migrering av resterande befintliga MVP- och stödskärmar. Migrera en skärm/resa åt gången; bevara befintliga produktkontrakt och panelunika färger.

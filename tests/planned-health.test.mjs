@@ -528,10 +528,9 @@ test('actual workspace lifetime change suppresses delayed status replay and keep
   assert.equal(harness.state.pendingMutation.current, intent);
 });
 
-test('Home shows planned event time without reminder details; Health shows both separately', () => {
-  assert.match(homeScreenSource, /time=\{plan\.due_time\?\.slice\(0, 5\)\}/);
-  assert.doesNotMatch(homeScreenSource, /reminder_minutes|formatMinutes/);
-  assert.match(homeScreenSource, /onPress=\{\(\) => onGo\('planned-health'\)\}/);
+test('Home excludes planned events from daily tasks; Health keeps the separate planned-event flow', () => {
+  assert.doesNotMatch(homeScreenSource, /time=\{plan\.due_time\?\.slice\(0, 5\)\}/);
+  assert.doesNotMatch(homeScreenSource, /onGo\('planned-health'\)/);
   assert.match(healthScreenSource, /time=\{row\.due_time\?\.slice\(0, 5\)\}/);
   assert.match(healthScreenSource, /Påminnelse \$\{formatMinutes\(row\.reminder_minutes\)\}/);
   assert.match(workspaceSource, /normalizePlannedHealthTime\(record\.due_time\) === normalizePlannedHealthTime\(expected\.due_time\)/);
