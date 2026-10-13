@@ -4566,52 +4566,195 @@
           "evidence": "Independent v11 source review PASS; fresh public/review results, 140% banner fit and week-glyph contrast checks verified. Supabase/native runtime NOT TESTABLE. docs/design/evidence/vision-rev02/r02-2/correction-v11/REVIEW-REPORT.md"
         }
       ],
-      "next_step": "Local Home checkpoint complete: Architect APPROVE, Critic PROCEED, QA PASS and Reviewer PASS saved under docs/tasks/dev/vision-rev02-r02-2-v11-reviews.md and docs/design/evidence/vision-rev02/r02-2/correction-v11/. Supabase/RLS and native runtime remain NOT TESTABLE. Next: commit/push this checkpoint, then write and review a separate exact plan for all remaining existing MVP/support screens before source edits."
+      "next_step": "Local Home checkpoint committed as 96e6882; Architect APPROVE, Critic PROCEED, QA PASS and Reviewer PASS are saved under docs/tasks/dev/vision-rev02-r02-2-v11-reviews.md and docs/design/evidence/vision-rev02/r02-2/correction-v11/. Push was attempted and is blocked because this environment cannot authenticate to GitHub; complete it later from the supplied bundle. Supabase/RLS and native runtime remain NOT TESTABLE. R02-3 exact plan is at docs/tasks/dev/vision-rev02-r02-3.md with UX spec docs/plans/VISION-REV02-REMAINING-UX-SPEC.md; Architect/Critic plan review is pending."
     },
     {
       "id": "VISION-R02-3",
-      "title": "Migrera Logg, Träning och Kunskap mot vision rev02",
-      "mvp_requirement": "Eriks uttryckliga VISION-REV02-beställning 2026-10-13; docs/mvp.md: Logg/Training/Knowledge",
-      "plan": "docs/tasks/dev/vision-rev02.md v6, R02-3; exact plan review required after R02-2",
+      "title": "Logga — visuell migration enligt panel 5",
+      "mvp_requirement": "Eriks uttryckliga 2026-10-13-direktiv för övriga sidor; docs/mvp.md: befintlig Loggresa",
+      "plan": "docs/tasks/dev/vision-rev02-r02-3.md v6 §R02-3A; UX: docs/plans/VISION-REV02-REMAINING-UX-SPEC.md v3",
       "write_paths": [
         "src/features/puppy-log/LogScreen.tsx",
-        "src/features/training/PublishedTrainingScreen.tsx",
-        "src/features/knowledge/KnowledgeScreen.tsx",
         "src/features/puppy-log/README.md",
-        "src/features/training/README.md",
-        "src/features/knowledge/README.md",
+        "src/components/ui/QuickLogTile.tsx",
+        "src/components/ui/IconChip.tsx",
+        "src/components/ui/ListRow.tsx",
+        "src/components/ui/ComponentGalleryScreen.tsx",
+        "src/theme/tokens.ts",
         "tools/visual-check/app.tsx",
-        "tools/visual-check/verify.py",
-        "tests/log-screen-policy.test.mjs",
-        "tests/training-model.test.mjs",
-        "tests/knowledge-review-content.test.mjs",
-        "docs/design/evidence/vision-rev02/r02-3",
-        "docs/tasks/dev/vision-rev02.md",
+        "docs/tasks/dev/vision-rev02-r02-3.md",
+        "docs/plans/VISION-REV02-REMAINING-UX-SPEC.md",
+        "docs/tasks/dev/vision-rev02-r02-3-reviews.md",
+        "docs/design/evidence/vision-rev02/r02-3a",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
         "docs/tasks/VISION-REV02.md"
       ],
       "acceptance": [
-        "Logg, Träning och Kunskap närmar sig respektive målpanel med befintliga verkliga publicerade data",
-        "Alla åtta loggtyper, CRUD/undo/uncertain status/paginering och huvud-/flerflöde bevaras",
-        "Versionsbunden träningsprogress och review-gating bevaras; ingen completedStep kopieras till separat dagsflagga",
-        "Publicerade guider, FAQ och faschecklistor förblir synliga med nuvarande review- och completionregler",
-        "Opt-in komponentmigrering ändrar inte beteendet hos andra skärmar; QA fyller §14 för panel 5–7"
+        "Panel 5 ordning är titel → fungerande datumrad → befintliga snabbval → tidslinje för vald dag i lokal tidsordning",
+        "Datumraden bläddrar mellan dagar med befintliga event och paginering; snabbval på äldre dag återgår till idag före ett-trycksregistrering",
+        "Vald dags läsning betraktas komplett först när äldsta inlästa lokaldag är strikt tidigare än vald dag eller hasMore är falskt",
+        "Manual-fixture kan visa en dag delad över sidor, auto-load/laddning/fel/återförsök samt komplett respektive tom dag",
+        "Reviewfixture har synlig syntetisk datamärkning och styrs enbart av lokal minnestatus utan tjänsteanrop/datawrites",
+        "Alla åtta loggtyper, ett-trycksregistrering, Fler/layoutedit, CRUD, undo, unsure/failure och paginering bevaras",
+        "Semantiska loggfärger och nya komponentvarianter är opt-in; defaultutseende för andra vyer är oförändrat",
+        "Komponentgalleriet visar default och nya loggvarianter",
+        "Public/review renders jämförs med panel 5, §14 rapporteras per visuell dimension och Security granskar fryst persondata-renderingsdiff"
       ],
       "checks": [
-        "Focused Log/Training/Knowledge regression tests",
-        "pnpm check",
+        "pnpm typecheck",
+        "pnpm lint",
         "git diff --check",
         "python tools/dev_flow.py validate",
-        "Rendered panel 5–7 at 375/430, large text and relevant loading/empty/error/review states",
-        "Independent QA and Reviewer against vision_rev02.jpg and docs/design-rules.md §14"
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-3a/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-3a/review node tools/visual-check/build.cjs",
+        "python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-preview/r02-3a/public",
+        "python -m http.server 4174 --bind 127.0.0.1 --directory /tmp/tassla-preview/r02-3a/review"
       ],
       "depends_on": [
         "VISION-R02-2"
       ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED for exact plan v6; reviews saved in docs/tasks/dev/vision-rev02-r02-3-reviews.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik authorized continuation of all remaining screens; begin only R02-3A Logg within plan v6 write scope"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-3A Logg implementation complete; typecheck, lint, diff check, queue validation and public/review builds pass. Manual renders and §14 record saved under docs/design/evidence/vision-rev02/r02-3a/; independent QA starts."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Behavior QA PASS; public/review viewport matrix and uniquely named fixture-marker evidence complete; QA confirms marker pixels; visible §14 deviations remain accurately reported."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS for bounded Logg slice; Security PASS; typecheck, lint, diff check, queue validation and public/review builds pass. §14 full panel likeness remains No and is documented."
+        }
+      ],
+      "next_step": "Reviewer PASS for bounded Logg slice; Security PASS; typecheck, lint, diff check, queue validation and public/review builds pass. §14 full panel likeness remains No and is documented."
+    },
+    {
+      "id": "VISION-R02-3B",
+      "title": "Träning — visuell migration enligt panel 6",
+      "mvp_requirement": "Eriks uttryckliga 2026-10-13-direktiv för övriga sidor; docs/mvp.md: befintlig Training-resa",
+      "plan": "docs/tasks/dev/vision-rev02-r02-3.md v6.1 §R02-3B; UX: docs/plans/VISION-REV02-REMAINING-UX-SPEC.md v3",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/components/ui/HeroCard.tsx",
+        "src/components/ui/Tabs.tsx",
+        "src/components/ui/ComponentGalleryScreen.tsx",
+        "src/theme/tokens.ts",
+        "docs/tasks/dev/vision-rev02-r02-3.md",
+        "docs/plans/VISION-REV02-REMAINING-UX-SPEC.md",
+        "docs/tasks/dev/vision-rev02-r02-3-reviews.md",
+        "docs/design/evidence/vision-rev02/r02-3b",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md",
+        "tools/visual-check/app.tsx"
+      ],
+      "acceptance": [
+        "Panel 6 uses segmented tabs, age-relevant currently selected programs, two image-above-text cards when data permits and a real continue-progress card",
+        "Public Mina uses confirmed training_progress; review Mina uses only visibly marked local review state",
+        "Program versions, step order, source/detail, retry, reset confirmation and progress write source remain unchanged",
+        "HeroCard and Tabs variants are opt-in and shown alongside defaults in the component gallery",
+        "Public/review renders compare to panel 6; §14 and Security review of the frozen progress presentation are complete",
+        "Local harness passes the existing deterministic dog age; public uses visibly labeled synthetic programs with seeded progress, review uses review-v1:training programs with reviewMode and local-only marks; no service calls or writes."
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm lint",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-3b/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-3b/review node tools/visual-check/build.cjs",
+        "python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-preview/r02-3b/public",
+        "python -m http.server 4174 --bind 127.0.0.1 --directory /tmp/tassla-preview/r02-3b/review"
+      ],
+      "depends_on": [
+        "VISION-R02-3"
+      ],
+      "status": "qa",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "R02-3A Logg checkpointed done with QA marker evidence closed, Reviewer PASS and Security PASS; approved v6 defines exact R02-3B scope."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin the approved Träning slice after its VISION-R02-3A dependency passed QA, Reviewer, Security and §14 evidence checkpoint."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-3B implementation handoff: public/review builds and viewport renders, tabs, detail, progress, local review, empty/error inspected; typecheck/lint/diff checks pass. See docs/design/evidence/vision-rev02/r02-3b/RENDER-REPORT.md. Independent QA, Reviewer and Security still required; §14 full panel match is No."
+        }
+      ],
+      "next_step": "R02-3B implementation handoff: public/review builds and viewport renders, tabs, detail, progress, local review, empty/error inspected; typecheck/lint/diff checks pass. See docs/design/evidence/vision-rev02/r02-3b/RENDER-REPORT.md. Independent QA, Reviewer and Security still required; §14 full panel match is No."
+    },
+    {
+      "id": "VISION-R02-3C",
+      "title": "Kunskap — visuell migration enligt panel 7",
+      "mvp_requirement": "Eriks uttryckliga 2026-10-13-direktiv för övriga sidor; docs/mvp.md: befintlig Knowledge-resa",
+      "plan": "docs/tasks/dev/vision-rev02-r02-3.md v6 §R02-3C; UX: docs/plans/VISION-REV02-REMAINING-UX-SPEC.md v3",
+      "write_paths": [
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/FAQScreen.tsx",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/README.md",
+        "docs/tasks/dev/vision-rev02-r02-3.md",
+        "docs/plans/VISION-REV02-REMAINING-UX-SPEC.md",
+        "docs/tasks/dev/vision-rev02-r02-3-reviews.md",
+        "docs/design/evidence/vision-rev02/r02-3c",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md"
+      ],
+      "acceptance": [
+        "Panel 7 image-over-text hierarchy and warm article surfaces use existing editorial assets",
+        "Four current Knowledge destinations, reader/citations, FAQ, checklist progress and review gate keep their current data/actions",
+        "No search/filter UI appears unless a real existing taxonomy/query contract is identified and separately approved",
+        "Public/review renders compare to panel 7; §14 and Security review of the frozen owner/dog checklist presentation are complete"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm lint",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-3c/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-3c/review node tools/visual-check/build.cjs",
+        "python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-preview/r02-3c/public",
+        "python -m http.server 4174 --bind 127.0.0.1 --directory /tmp/tassla-preview/r02-3c/review"
+      ],
+      "depends_on": [
+        "VISION-R02-3B"
+      ],
       "status": "planned",
       "history": [],
-      "next_step": "Efter stabil Home checkpoint: skapa exakt Architect/Critic-granskad plan för Logg, Träning och Kunskap, plus inventera Hälsa, Mer och övriga panel-/stödskärmar som omfattas av Eriks instruktion. Migrera en skärm/resa åt gången; behåll varje panels egna färghierarki och använd inga globala Home-färgbyten."
+      "next_step": "Wait for VISION-R02-3B Träning QA/Reviewer checkpoint. Then begin only Knowledge, FAQ and checklist presentation."
     }
   ]
 }

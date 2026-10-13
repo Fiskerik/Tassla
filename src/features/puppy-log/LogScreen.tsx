@@ -1,23 +1,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { AccessibilityInfo, Alert, Animated, Easing, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { AppBar, BottomSheet, Button, Card, Dialog, FirstUseTip, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast, useFirstUseTip } from '../../components/ui';
+import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { BottomSheet, Button, Card, Dialog, FirstUseTip, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast, useFirstUseTip } from '../../components/ui';
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
-import { decideQuickLogPress, groupLogEventsByLocalDate, hasRecentCategoryLog, localDateTimeParts, LOG_ENTRY_TYPES, LOG_EVENT_LABELS, parseLocalDateTime, summarizePottyPatterns, type LogEvent, type LogEventChanges, type LogEventType } from './log-model';
+import { decideQuickLogPress, hasRecentCategoryLog, localDateTimeParts, LOG_ENTRY_TYPES, LOG_EVENT_LABELS, parseLocalDateTime, summarizePottyPatterns, type LogEvent, type LogEventChanges, type LogEventType } from './log-model';
 import { loadQuickLogLayout, saveQuickLogLayout } from './quick-log-layout-storage';
 import { DEFAULT_QUICK_LOG_LAYOUT, moveQuickLogType, type QuickLogLayout, type QuickLogLayoutType } from './quick-log-layout';
 
 export type QuickLogMutationView = { kind: 'add' | 'update' | 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; status: 'pending' | 'failed' | 'unsure' | 'saved' };
 
-export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, busy = false, loading = false, loadError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore }: {
+export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore }: {
   events: readonly LogEvent[];
   onAdd: (type: LogEventType) => void;
   onUpdate?: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
   onDelete?: (id: string) => boolean | void | Promise<boolean | void>;
   mode?: 'preview' | 'cloud';
   layoutOwnerId?: string;
+  persistLayout?: boolean;
   busy?: boolean;
   loading?: boolean;
   loadError?: boolean;
@@ -40,6 +41,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const [layout, setLayout] = useState<QuickLogLayout>(DEFAULT_QUICK_LOG_LAYOUT);
   const [layoutEditing, setLayoutEditing] = useState(false);
   const [layoutError, setLayoutError] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(() => localDate());
   const [deleteSnapshot, setDeleteSnapshot] = useState<{ token: number; event: LogEvent; phase: 'pending' | 'exiting' } | null>(null);
   const deleteToken = useRef(0);
   const [entryAnimationTarget, setEntryAnimationTarget] = useState<{ eventId: string; key: string } | null>(null);
@@ -50,7 +52,24 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     if (!deleteSnapshot) return events;
     return [...events.filter((event) => event.id !== deleteSnapshot.event.id), deleteSnapshot.event];
   }, [deleteSnapshot, events]);
-  const groups = useMemo(() => groupLogEventsByLocalDate(displayedEvents), [displayedEvents]);
+  const todayDate = localDate();
+  const selectedDateEvents = useMemo(() => displayedEvents
+    .filter((event) => localDateTimeParts(event.occurredAt).date === selectedDate)
+    .sort((a, b) => Date.parse(a.occurredAt) - Date.parse(b.occurredAt) || a.id.localeCompare(b.id)), [displayedEvents, selectedDate]);
+  const oldestLoadedEvent = useMemo(() => displayedEvents.reduce<LogEvent | null>((current, event) => !current || Date.parse(event.occurredAt) < Date.parse(current.occurredAt) ? event : current, null), [displayedEvents]);
+  const oldestLoadedDate = oldestLoadedEvent ? localDateTimeParts(oldestLoadedEvent.occurredAt).date : null;
+  const hasOlderDateBoundary = oldestLoadedDate !== null && oldestLoadedDate < selectedDate;
+  const dayReadComplete = !hasMore || hasOlderDateBoundary;
+  const pendingAdd = mutation?.kind === 'add' && mutation.status === 'pending'
+    && localDateTimeParts(mutation.occurredAt).date === selectedDate
+    && !displayedEvents.some((event) => event.id === mutation.id)
+    ? mutation : null;
+  const timelineItems = useMemo(() => [
+    ...selectedDateEvents.map((event) => ({ kind: 'event' as const, event, occurredAt: event.occurredAt })),
+    ...(pendingAdd ? [{ kind: 'pending' as const, event: pendingAdd, occurredAt: pendingAdd.occurredAt }] : []),
+  ].sort((a, b) => Date.parse(a.occurredAt) - Date.parse(b.occurredAt) || a.event.id.localeCompare(b.event.id)), [pendingAdd, selectedDateEvents]);
+  const autoLoadAnchor = useRef('');
+  const needsDatePage = hasMore && !hasOlderDateBoundary && !loadMoreError && !loadError && !loading;
   const patterns = useMemo(() => summarizePottyPatterns(events).filter((item) => item.count >= 2), [events]);
   const editingEvent = events.find((event) => event.id === editingId) ?? null;
   const editLocked = busy || Boolean(editingEvent && mutation?.id === editingEvent.id && mutation.status !== 'saved');
@@ -78,12 +97,24 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   }, []);
 
   useEffect(() => {
+    if (!persistLayout) return;
     let active = true;
     void loadQuickLogLayout(layoutOwnerId).then((saved) => {
       if (active) setLayout(saved);
     }).catch(() => undefined);
     return () => { active = false; };
-  }, [layoutOwnerId]);
+  }, [layoutOwnerId, persistLayout]);
+
+  useEffect(() => {
+    if (!needsDatePage || loadingMore || !onLoadMore) {
+      if (!loadingMore) autoLoadAnchor.current = '';
+      return;
+    }
+    const anchor = `${selectedDate}:${displayedEvents.length}:${oldestLoadedEvent?.id ?? 'empty'}`;
+    if (autoLoadAnchor.current === anchor) return;
+    autoLoadAnchor.current = anchor;
+    onLoadMore();
+  }, [displayedEvents, loadingMore, loadError, loadMoreError, needsDatePage, onLoadMore, oldestLoadedEvent, selectedDate]);
 
   function selectType(type: LogEventType, timestamp: number, force = false) {
     const recentDuplicate = hasRecentCategoryLog(events, type);
@@ -103,6 +134,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     lastSubmitAt.current = timestamp;
     setDuplicate(null);
     setMoreVisible(false);
+    if (selectedDate !== todayDate) setSelectedDate(todayDate);
     firstUseTip.dismiss();
     onAdd(type);
   }
@@ -122,12 +154,14 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     const next = moveQuickLogType(layout, type, destination);
     setLayout(next);
     setLayoutError(false);
+    if (!persistLayout) return;
     void saveQuickLogLayout(next, layoutOwnerId).catch(() => setLayoutError(true));
   }
 
   const disabled = busy || Boolean(mutation && mutation.status !== 'saved');
   const renderQuickTile = (type: QuickLogLayoutType) => <QuickLogTile
     key={type}
+    variant="rev02-log"
     label={LOG_EVENT_LABELS[type]}
     accessibilityLabel={`Logga ${LOG_EVENT_LABELS[type].toLocaleLowerCase('sv-SE')}`}
     accessibilityHint="Håll inne för att ändra vilka snabbval som visas först"
@@ -180,11 +214,20 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     onUndo={mutation?.status === 'saved' && mutation.kind === 'add' ? () => { firstUseTip.dismiss(); onUndo?.(mutation.id); } : undefined} autoDismissMs={2500}
     onAutoDismiss={() => setDismissedMutationKey(successMutationKey)} />;
   return <View style={styles.screen}>
-    <AppBar mode="Title" title="Logga" />
+    <Text accessibilityRole="header" style={styles.pageTitle}>Logga</Text>
     {firstUseTip.visible ? <FirstUseTip text="Tryck på Fler för fler loggtyper." onDismiss={firstUseTip.dismiss} /> : null}
     <Toast visible={loadMoreError} tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore ? () => { firstUseTip.dismiss(); return onLoadMore(); } : undefined} />
     <Toast visible={!editingEvent && mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} onCancel={() => { firstUseTip.dismiss(); onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
     <Toast visible={!editingEvent && mutation?.status === 'unsure'} tone="uncertain" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} />
+    <View style={styles.dateNavigator}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Visa föregående dag" onPress={() => setSelectedDate((date) => shiftLocalDate(date, -1))} style={({ pressed }) => [styles.dateButton, pressed && styles.datePressed]}>
+        <Ionicons name="chevron-back" size={tokens.size.iconMd} color={tokens.colors.textPrimary} />
+      </Pressable>
+      <Text accessibilityLiveRegion="polite" style={styles.selectedDate}>{formatSelectedDate(selectedDate, todayDate)}</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel="Visa nästa dag" accessibilityState={{ disabled: selectedDate >= todayDate }} disabled={selectedDate >= todayDate} onPress={() => setSelectedDate((date) => shiftLocalDate(date, 1))} style={({ pressed }) => [styles.dateButton, pressed && styles.datePressed]}>
+        <Ionicons name="chevron-forward" size={tokens.size.iconMd} color={selectedDate >= todayDate ? tokens.colors.textSecondary : tokens.colors.textPrimary} />
+      </Pressable>
+    </View>
     {loading ? <>
       <SectionHeader title="Snabb logg" />
       <Skeleton shape="card" lines={3} />
@@ -207,23 +250,25 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         <LogEventEditor key={editingEvent.id} event={editingEvent} disabled={editLocked} onCancel={() => { firstUseTip.dismiss(); setEditingId(null); }} onSave={(changes) => { firstUseTip.dismiss(); return saveEdit(editingEvent, changes); }} onDelete={() => { firstUseTip.dismiss(); askToDelete(editingEvent); }} />
       </BottomSheet> : null}
 
-      <SectionHeader title="Dagens logg" />
-      {!events.some((event) => localDateTimeParts(event.occurredAt).date === localDate()) && !(mutation?.kind === 'add' && mutation.status === 'pending') ? <View style={styles.empty}><Text style={styles.emptyTitle}>Inget loggat än idag</Text><Text style={styles.emptyBody}>Tryck på en ruta ovan för att lägga till dagens första händelse.</Text></View> : null}
-      {mutation?.kind === 'add' && mutation.status === 'pending' && <ListRow title={LOG_EVENT_LABELS[mutation.type]} meta="Sparar…" time={localDateTimeParts(mutation.occurredAt).time} category={mutation.type} accessibilityLabel={`${LOG_EVENT_LABELS[mutation.type]} ${localDateTimeParts(mutation.occurredAt).time}, sparar`} />}
-      {groups.map((group) => <View key={group.date} style={styles.logGroup}>
-        {group.date !== localDate() ? <SectionHeader title={heading(group.date)} variant="date" /> : null}
-        {group.events.map((event) => {
+      <SectionHeader title={selectedDate === todayDate ? 'Dagens logg' : 'Händelser'} />
+      {timelineItems.map((item, index) => {
+        if (item.kind === 'pending') {
+          const parts = localDateTimeParts(item.event.occurredAt);
+          return <ListRow key={`pending-${item.event.mutationId}`} variant="log-timeline" showDivider={index < timelineItems.length - 1} title={LOG_EVENT_LABELS[item.event.type]} meta="Sparar…" time={parts.time} category={item.event.type} accessibilityLabel={`${LOG_EVENT_LABELS[item.event.type]} ${parts.time}, sparar`} chevron={false} />;
+        }
+        const event = item.event;
           const rowPending = mutation?.id === event.id && mutation.status === 'pending';
           const deleting = deleteSnapshot?.event.id === event.id;
           const detail = [event.note, rowPending ? 'Sparar…' : null, event.origin === 'example' ? 'Exempel' : mode === 'preview' ? 'Testpost' : null].filter(Boolean).join(' · ');
           const parts = localDateTimeParts(event.occurredAt);
           if (deleting && deleteSnapshot.phase === 'exiting') return <DeleteExitRow key={event.id} token={deleteSnapshot.token} event={event} reduceMotion={reduceMotion} onFinished={onDeleteAnimationEnd} />;
-          const row = <ListRow title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}${event.note ? `, ${event.note}` : ''}${deleting ? ', raderar' : rowPending ? ', sparar' : ''}${deleting ? '' : ', tryck för att ändra'}`} accessibilityState={deleting && deleteSnapshot.phase === 'pending' ? { busy: true, disabled: true } : undefined} category={event.type} time={parts.time} detail={deleting ? 'Raderar…' : detail || undefined} onPress={deleting ? undefined : () => { firstUseTip.dismiss(); setEditingId(event.id); }} disabled={deleting || busy || Boolean(mutation && mutation.status !== 'saved')} />;
+          const row = <ListRow variant="log-timeline" showDivider={index < timelineItems.length - 1} title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}${event.note ? `, ${event.note}` : ''}${deleting ? ', raderar' : rowPending ? ', sparar' : ''}${deleting ? '' : ', tryck för att ändra'}`} accessibilityState={deleting && deleteSnapshot.phase === 'pending' ? { busy: true, disabled: true } : undefined} category={event.type} time={parts.time} detail={deleting ? 'Raderar…' : detail || undefined} onPress={deleting ? undefined : () => { firstUseTip.dismiss(); setEditingId(event.id); }} disabled={deleting || busy || Boolean(mutation && mutation.status !== 'saved')} />;
           const entryTarget = entryAnimationTarget?.eventId === event.id ? entryAnimationTarget : null;
           if (entryTarget) return <LogEntryTransition key={event.id} transitionKey={consumedEntryAnimationKey === entryTarget.key ? undefined : entryTarget.key} reduceMotion={reduceMotion} onAnimationStart={consumeEntryAnimation}>{row}</LogEntryTransition>;
           return <View key={event.id}>{row}</View>;
-        })}
-      </View>)}
+      })}
+      {!dayReadComplete && !loadMoreError ? <View style={styles.loadingOlder} accessibilityLiveRegion="polite"><ActivityIndicator color={tokens.colors.primary} size="small" /><Text style={styles.loadingOlderText}>{loadingMore ? 'Hämtar fler händelser…' : 'Söker efter fler händelser…'}</Text></View> : null}
+      {dayReadComplete && timelineItems.length === 0 ? <View style={styles.empty}><Text style={styles.emptyTitle}>Inga händelser den här dagen</Text><Text style={styles.emptyBody}>Välj en annan dag eller tryck på en ruta ovan för att logga en händelse idag.</Text></View> : null}
       {patterns.length > 0 ? <>
         <SectionHeader title="Dina senaste mönster" />
         <Card accessibilityLabel="Dina senaste mönster för Kiss och Bajs">
@@ -231,7 +276,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         </Card>
       </> : null}
 
-      {!loadMoreError && hasMore ? <Button label={loadingMore ? 'Hämtar…' : 'Visa äldre poster'} accessibilityLabel={loadingMore ? 'Hämtar äldre poster' : 'Visa äldre poster'} disabled={loadingMore} loading={loadingMore} onPress={() => { firstUseTip.dismiss(); onLoadMore?.(); }} /> : null}
+      {!loadMoreError && dayReadComplete && hasMore ? <Button label={loadingMore ? 'Hämtar…' : 'Visa äldre poster'} accessibilityLabel={loadingMore ? 'Hämtar äldre poster' : 'Visa äldre poster'} disabled={loadingMore} loading={loadingMore} onPress={() => { firstUseTip.dismiss(); onLoadMore?.(); }} /> : null}
     </>}
 
     <Dialog visible={duplicate !== null} title="Du har redan loggat det här. Lägga till ändå?" onRequestClose={() => setDuplicate(null)} onConfirm={() => { if (duplicate) selectType(duplicate.type, duplicate.timestamp, true); }} confirmLabel="Lägg till ändå" confirmVariant="primary"><View /></Dialog>
@@ -343,15 +388,30 @@ function formatInterval(minutes: number): string {
   return `var ${(halfDays / 2).toLocaleString('sv-SE')} dygn`;
 }
 
-function heading(date: string): string {
-  const today = new Date();
-  const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
-  const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-  return date === yesterdayKey ? 'Igår' : date;
+function shiftLocalDate(dateKey: string, amount: number): string {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const shifted = new Date(year, month - 1, day + amount, 12);
+  return localDateTimeParts(shifted.toISOString()).date;
+}
+
+function formatSelectedDate(dateKey: string, today: string): string {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const date = new Date(year, month - 1, day, 12);
+  const readableDate = date.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' });
+  if (dateKey === today) return `Idag · ${readableDate}`;
+  if (dateKey === shiftLocalDate(today, -1)) return `Igår · ${readableDate}`;
+  const label = date.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' });
+  return `${label.charAt(0).toLocaleUpperCase('sv-SE')}${label.slice(1)}`;
 }
 
 const styles = StyleSheet.create({
-  screen: { gap: tokens.spacing.xs }, logGroup: { gap: tokens.spacing.xs }, grid: { gap: tokens.spacing.sm }, gridRow: { flexDirection: 'row', gap: tokens.spacing.sm }, moreRow: { marginTop: tokens.spacing.sm }, moreIcon: { width: tokens.size.chipLg, minHeight: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.selectedSurface },
+  screen: { gap: tokens.spacing.xs }, pageTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.xs },
+  dateNavigator: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.xs, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface },
+  dateButton: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full },
+  datePressed: { backgroundColor: tokens.colors.selectedSurface },
+  selectedDate: { ...tokens.typography.label, flex: 1, flexShrink: 1, color: tokens.colors.textPrimary, textAlign: 'center' },
+  grid: { gap: tokens.spacing.sm }, gridRow: { flexDirection: 'row', gap: tokens.spacing.sm }, moreRow: { marginTop: tokens.spacing.sm }, moreIcon: { width: tokens.size.chipLg, minHeight: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.selectedSurface },
+  loadingOlder: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.sm }, loadingOlderText: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   patternText: { ...tokens.typography.body, color: tokens.colors.textPrimary, paddingVertical: tokens.spacing.xs },
   empty: { padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, gap: tokens.spacing.xs },
   emptyTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary }, emptyBody: { ...tokens.typography.body, color: tokens.colors.textSecondary },

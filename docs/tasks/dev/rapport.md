@@ -492,3 +492,26 @@ Home v11 är implementerad med rund generisk AI-hundbild, synlig `Standardbild`-
 - Supabase SQL/RLS, retention job/scheduler, lock-wait-over-midnight och native Dynamic Type/VoiceOver är NOT TESTABLE här. Hundporträttet är genererad bildkonst, inte ett verkligt personligt fotografi.
 
 Nästa: commit/push den verifierade checkpointen på `design/vision-rev02`, därefter exaktspecificerad och Architect/Critic-granskad plan för visuell migrering av resterande befintliga MVP- och stödskärmar. Migrera en skärm/resa åt gången; bevara befintliga produktkontrakt och panelunika färger.
+
+### R02-3 — planreview för övriga skärmar
+
+Efter Hem-checkpointen `96e6882` har Erik bett att resten av de befintliga sidorna får samma rev02-riktning. Exakt scope, vyordning, filscope, beteenden och acceptans finns i `docs/tasks/dev/vision-rev02-r02-3.md` och `docs/plans/VISION-REV02-REMAINING-UX-SPEC.md`. Kön är uppdaterad men `VISION-R02-3` står kvar `planned` tills Architect APPROVE och Critic PROCEED är dokumenterade. Första implementationen blir Logg; därefter Träning, Kunskap och stödskärmarna en slice i taget. Inga nya rev02-funktioner eller datakontrakt ingår. Ingen R02-3-källkod är ändrad ännu.
+
+Push av `96e6882` är blockerad av saknad GitHub-autentisering i Codex-miljön. Full bundle finns i `/workspace/vision-rev02-96e6882.bundle` för senare push från användarens autentiserade miljö.
+
+### R02-3 planreview v6 — datumresa och pagineringsfixture
+
+Architects v2- och v3-reviews hittade att Logg saknade faktisk datumbläddring trots designkontraktets datumrad, att previewserver-kommandon inte var exakta och att persondata-renderingar behöver Security-grind. Architect godkände v4 efter att datumraden blev lokal dagsfiltrering över befintliga `occurred_at`-värden och befintlig paginering; snabbval från äldre dag återgår till idag och behåller ett tryck. Critic hittade sedan att befintlig visuell provyta inte kan nå sidgräns-/fel-/återförsökstillstånd; v5 lade till en pagineringsfixture, och Architect krävde dessutom synlig syntetisk banner samt uttryckligt lokal minnesstyrning utan tjänsteanrop/datawrites. v6 begränsar dessa ändringar till `tools/visual-check/app.tsx`. Sidladdning når slutet av vald dag: fortsätt tills äldsta inlästa händelse ligger på en lokaldag strikt tidigare än vald dag, eller historiken är uttömd, annars får listan inte visas som komplett/tom. Ingen ny tabell, tjänst, dataadapter eller `Idag/Översikt` utan fungerande Insikter-destination tillkommer. Serverportar och Security-review är angivna i plan/kö.
+
+Critic PROCEED finns för v2/v5 och Architect APPROVE för v4. Exakt v6 behöver ny Architect/Critic-review innan implementation. Inga appkällor är ändrade. Automatiska testkommandon läggs inte till eller körs enligt arbetsinstruktionen; planen använder typecheck/lint, kö-/diffkontroller och manuell public/review-rendering. Kön står kvar `planned` tills exakt v6 har godkänts.
+
+### VISION-R02-3A Logg checkpoint och R02-3B Träning handoff — 2026-10-13
+
+R02-3A Logg har stängts efter QA:s slutliga markörkontroll: unikt namngivna bilder för pending/failed/unsure/sidfel visar granskningsmarkeringen. Reviewer och Security PASS; §14 fortsätter ärligt att markera Nej för hela panel 5 där befintliga funktioner saknas. Underlag: `docs/design/evidence/vision-rev02/r02-3a/RENDER-REPORT.md`.
+
+R02-3B Träning är implementerad enligt godkänd v6.1: vänsterställd rubrik, kapselsegmenten Rekommenderat/Alla övningar/Mina, befintlig hundålder, bildkort i två kolumner, beskrivningar från befintlig programtext och ett liggande fortsättkort efter korten när bekräftad progress och nästa tillåtna steg finns. `Mina` i public följer bekräftade `completedStepIds`; reviewmarkeringar lever endast i lokal komponentstate och reviewbannern förblir synlig. `HeroCard`/`Tabs`-varianter är opt-in. Inga produktionsdata, skrivkontrakt eller träningsråd lades till. Kortbildens höjd sänktes efter manuell 375×667-rendering så fortsättkortet avslutas cirka 9 px före bottenmenyn.
+
+Public/review React Native Web-renderingar sparas i `docs/design/evidence/vision-rev02/r02-3b/` med §14-egenkontroll och redovisad Nej-avvikelse för exakt panelmatch. `pnpm typecheck`, `pnpm lint` (0 fel; 36 befintliga varningar), `git diff --check`, public/review builds och `python tools/dev_flow.py validate` PASS; manuell browserrendering gav inga sidfel. Inga tester lades till eller kördes. Oberoende QA, Reviewer och Security återstår, så queue är `qa` och R02-3C väntar på denna grind. Native rendering, Dynamic Type/VoiceOver, RLS och produktionsprogrammen är NOT TESTABLE här.
+### VISION-R02-3 — planreview och Logg startad
+
+Plan v6 godkänd av Architect (**APPROVE**) och Critic (**PROCEED**) 2026-10-13; besluten sparade i `vision-rev02-r02-3-reviews.md`. Köposten VISION-R02-3 flyttad till `implementing`. Scope är endast R02-3A Logg enligt godkänd plan. Träning/Kunskap samt övriga stödskärmar väntar på Loggs QA, Reviewer, Security, §14 och checkpoint. Ingen appkod ändrad ännu.

@@ -2149,7 +2149,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         <MessageCard tone="error">{trainingError}</MessageCard>
         <PrimaryButton title="Försök igen" onPress={() => { void retryTraining(); }} />
       </>}
-      {visibleTrainingState === 'ready' && <PublishedTrainingScreen programs={training.programs} paused={training.paused}
+      {visibleTrainingState === 'ready' && <PublishedTrainingScreen ageWeeks={age} programs={training.programs} paused={training.paused}
         reviewMode={reviewContentEnabled && training.programs.some((program) => program.id.startsWith('review-v1:training:'))}
         busyStepKey={busyStepKey} error={trainingError} onCompleteStep={completeStep}
         onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}

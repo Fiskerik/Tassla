@@ -4,16 +4,14 @@ import { readFileSync } from 'node:fs';
 
 const screen = readFileSync('src/features/puppy-log/LogScreen.tsx', 'utf8');
 const workspace = readFileSync('src/features/home/ProductWorkspace.tsx', 'utf8');
-const appBar = readFileSync('src/components/ui/AppBar.tsx', 'utf8');
 const quickTile = readFileSync('src/components/ui/QuickLogTile.tsx', 'utf8');
 const listRow = readFileSync('src/components/ui/ListRow.tsx', 'utf8');
 const toast = readFileSync('src/components/ui/Toast.tsx', 'utf8');
 
-test('quick log uses shared controls and keeps the approved two by two plus more layout', () => {
-  assert.match(screen, /<AppBar mode="Title" title="Logga"/);
-  assert.match(appBar, /'Home' \| 'Back' \| 'Close' \| 'Title'/);
-  assert.match(appBar, /mode === 'Back' \? control\('chevron-back'/);
-  assert.match(appBar, /mode === 'Close' \? control\('close'/);
+test('quick log uses the approved page heading, date navigator, two column grid and more tile', () => {
+  assert.match(screen, /<Text accessibilityRole="header" style=\{styles\.pageTitle\}>Logga<\/Text>/);
+  assert.match(screen, /<View style=\{styles\.dateNavigator\}>/);
+  assert.match(screen, /accessibilityLabel="Visa föregående dag"/);
   assert.match(screen, /DEFAULT_QUICK_LOG_LAYOUT/);
   assert.match(screen, /layout\.primary/);
   assert.match(screen, /layout\.more/);
@@ -29,7 +27,7 @@ test('quick log uses shared controls and keeps the approved two by two plus more
 });
 
 test('quick log has truthful loading, empty, failure, mutation and confirmed undo states', () => {
-  for (const copy of ['Loggen kunde inte hämtas.', 'Försök igen', 'Inget loggat än idag', 'Tryck på en ruta ovan för att lägga till dagens första händelse.', 'Sparar…', 'Kunde inte spara']) {
+  for (const copy of ['Loggen kunde inte hämtas.', 'Försök igen', 'Inga händelser den här dagen', 'Välj en annan dag eller tryck på en ruta ovan för att logga en händelse idag.', 'Sparar…', 'Kunde inte spara']) {
     assert.ok(screen.includes(copy), `missing state copy: ${copy}`);
   }
   assert.match(screen, /mutation\?\.status === 'unsure'/);
@@ -69,7 +67,7 @@ test('legacy row editing and deletion remain reachable from workspace and previe
   assert.match(screen, /DatePickerField/);
   assert.match(screen, /TimePickerField/);
   assert.match(screen, /Anteckning \(valfri\)/);
-  assert.match(listRow, /<IconChip[\s\S]*?\{time \? <Text style=\{styles\.time\}>\{time\}<\/Text> : null\}<Text style=\{styles\.title\}>/);
+  assert.match(listRow, /<IconChip[\s\S]*?\{time \? <Text style=\{\[styles\.time, isLogTimeline && styles\.logTime\]\}>\{time\}<\/Text> : null\}[\s\S]*?<Text style=\{styles\.title\}>/);
   assert.match(screen, /tryck för att ändra/);
 });
 
