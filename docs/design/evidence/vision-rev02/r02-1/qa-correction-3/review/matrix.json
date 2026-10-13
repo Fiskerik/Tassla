@@ -1,0 +1,285 @@
+{
+  "mode": "review",
+  "measurements": [
+    {
+      "mode": "review",
+      "width": 375,
+      "height": 844,
+      "large_text": false,
+      "nav": {
+        "x": 0,
+        "y": 785,
+        "width": 375,
+        "height": 59
+      },
+      "tiles": {
+        "Öppna Logga": {
+          "x": 24,
+          "y": 694,
+          "width": 103.65625,
+          "height": 74
+        },
+        "Öppna Träna": {
+          "x": 135.65625,
+          "y": 694,
+          "width": 103.671875,
+          "height": 74
+        },
+        "Öppna Kunskap": {
+          "x": 247.328125,
+          "y": 694,
+          "width": 103.671875,
+          "height": 74
+        }
+      },
+      "banner_ancestry": [
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 12,
+          "y": 6,
+          "width": 351,
+          "height": 20
+        },
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 32
+        },
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 844
+        },
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 844
+        }
+      ],
+      "all_clearance_16": true
+    },
+    {
+      "mode": "review",
+      "width": 430,
+      "height": 844,
+      "large_text": false,
+      "nav": {
+        "x": 0,
+        "y": 785,
+        "width": 430,
+        "height": 59
+      },
+      "tiles": {
+        "Öppna Logga": {
+          "x": 24,
+          "y": 694,
+          "width": 122,
+          "height": 74
+        },
+        "Öppna Träna": {
+          "x": 154,
+          "y": 694,
+          "width": 122,
+          "height": 74
+        },
+        "Öppna Kunskap": {
+          "x": 284,
+          "y": 694,
+          "width": 122,
+          "height": 74
+        }
+      },
+      "banner_ancestry": [
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 12,
+          "y": 6,
+          "width": 406,
+          "height": 20
+        },
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 32
+        },
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 844
+        },
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 844
+        }
+      ],
+      "all_clearance_16": true
+    },
+    {
+      "mode": "review",
+      "width": 375,
+      "height": 844,
+      "large_text": true,
+      "nav": {
+        "x": 0,
+        "y": 738.59375,
+        "width": 375,
+        "height": 105.40625
+      },
+      "tiles": {
+        "Öppna Logga": {
+          "x": 24,
+          "y": 868.40625,
+          "width": 103.65625,
+          "height": 82
+        },
+        "Öppna Träna": {
+          "x": 135.65625,
+          "y": 868.40625,
+          "width": 103.671875,
+          "height": 82
+        },
+        "Öppna Kunskap": {
+          "x": 247.328125,
+          "y": 868.40625,
+          "width": 103.671875,
+          "height": 82
+        }
+      },
+      "banner_ancestry": [
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 12,
+          "y": 2,
+          "width": 351,
+          "height": 28
+        },
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 32
+        },
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 844
+        },
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 844
+        }
+      ],
+      "all_clearance_16": false
+    },
+    {
+      "mode": "review",
+      "width": 430,
+      "height": 844,
+      "large_text": true,
+      "nav": {
+        "x": 0,
+        "y": 766.59375,
+        "width": 430,
+        "height": 77.40625
+      },
+      "tiles": {
+        "Öppna Logga": {
+          "x": 24,
+          "y": 781.203125,
+          "width": 122,
+          "height": 82
+        },
+        "Öppna Träna": {
+          "x": 154,
+          "y": 781.203125,
+          "width": 122,
+          "height": 82
+        },
+        "Öppna Kunskap": {
+          "x": 284,
+          "y": 781.203125,
+          "width": 122,
+          "height": 82
+        }
+      },
+      "banner_ancestry": [
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 12,
+          "y": 2,
+          "width": 406,
+          "height": 28
+        },
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 32
+        },
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 844
+        },
+        {
+          "tag": "DIV",
+          "role": null,
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 844
+        }
+      ],
+      "all_clearance_16": false
+    }
+  ],
+  "checks": [
+    "initial 375: 5 review rows, 2/5, banner, three destination bounds captured",
+    "fixture checkbox toggles 2/5 -> 1/5 -> 2/5",
+    "review banner remains fixed after scrolling",
+    "initial 430: 5 review rows, 2/5, banner, three destination bounds captured",
+    "140% text and reduced motion render/scroll at 375; no horizontal overflow=True",
+    "140% text and reduced motion render/scroll at 430; no horizontal overflow=True",
+    "375x667 scroll reaches last tile and banner stays fixed",
+    "Checklistor tab is available/clickable; checklist content is NOT TESTABLE because visual harness passes no checklist client/dog",
+    "three destinations select expected main tab; More exposes Health and Tassla-pass; Knowledge retains FAQ and Checklistor tabs"
+  ],
+  "pageErrors": []
+}

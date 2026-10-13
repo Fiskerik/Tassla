@@ -9,6 +9,8 @@ import { Button } from './Button';
 import { Card } from './Card';
 import { CheckboxCard } from './CheckboxCard';
 import { ChecklistItem } from './ChecklistItem';
+import { DailyActivityItem } from './DailyActivityItem';
+import { DestinationTile } from './DestinationTile';
 import { Dialog } from './Dialog';
 import { EmptyState } from './EmptyState';
 import { Field } from './Field';
@@ -28,6 +30,7 @@ const categories: IconCategory[] = ['pee', 'poop', 'food', 'sleep', 'awake', 'wa
 export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
   const [activeTab, setActiveTab] = useState('Översikt');
   const [checked, setChecked] = useState(false);
+  const [activityChecked, setActivityChecked] = useState(false);
   const [field, setField] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [showSheet, setShowSheet] = useState(false);
@@ -56,6 +59,14 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
     <Card onPress={() => undefined} accessibilityLabel="Öppna kort"><Text style={styles.body}>Tryckbart kort</Text></Card>
     <Card selected accessibilityLabel="Valt kort"><Text style={styles.body}>Valt kort</Text></Card>
     <HeroCard title="Veckans fokus" meta="3 av 5 genomförda" onPress={() => undefined} />
+    <SectionHeader title="Hemaktiviteter och destinationer" />
+    <DailyActivityItem label="Öva lugn hantering" detail="Tassar och öron" category="training" completed={activityChecked}
+      onToggle={() => setActivityChecked(!activityChecked)} onOpen={() => undefined} />
+    <View style={styles.destinationTiles}>
+      <DestinationTile destination="log" onPress={() => undefined} />
+      <DestinationTile destination="training" onPress={() => undefined} />
+      <DestinationTile destination="knowledge" onPress={() => undefined} />
+    </View>
     <SectionHeader title="Snabblogg och ikoner" />
     <View style={styles.tiles}><QuickLogTile label="Kiss" category="pee" onPress={() => undefined} /><QuickLogTile label="Bajs" category="poop" onPress={() => undefined} /></View>
     <View style={styles.tiles}><QuickLogTile label="Mat" category="food" onPress={() => undefined} /><QuickLogTile label="Sömn" category="sleep" onPress={() => undefined} disabled /></View>
@@ -96,4 +107,4 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
   </View>;
 }
 
-const styles = StyleSheet.create({ page: { alignSelf: 'stretch', padding: tokens.layout.pageInset, gap: tokens.spacing.md, backgroundColor: tokens.colors.background }, note: { ...tokens.typography.caption, color: tokens.colors.textSecondary }, group: { alignSelf: 'stretch', gap: tokens.spacing.sm }, caption: { ...tokens.typography.caption, color: tokens.colors.textSecondary }, body: { ...tokens.typography.body, color: tokens.colors.textPrimary, flexShrink: 1 }, tiles: { alignSelf: 'stretch', flexDirection: 'row', gap: tokens.spacing.md }, chips: { alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm } });
+const styles = StyleSheet.create({ page: { alignSelf: 'stretch', padding: tokens.layout.pageInset, gap: tokens.spacing.md, backgroundColor: tokens.colors.background }, note: { ...tokens.typography.caption, color: tokens.colors.textSecondary }, group: { alignSelf: 'stretch', gap: tokens.spacing.sm }, caption: { ...tokens.typography.caption, color: tokens.colors.textSecondary }, body: { ...tokens.typography.body, color: tokens.colors.textPrimary, flexShrink: 1 }, tiles: { alignSelf: 'stretch', flexDirection: 'row', gap: tokens.spacing.md }, destinationTiles: { alignSelf: 'stretch', flexDirection: 'row', gap: tokens.spacing.sm }, chips: { alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm } });

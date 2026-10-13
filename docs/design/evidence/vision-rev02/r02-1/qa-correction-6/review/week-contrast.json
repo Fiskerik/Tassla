@@ -1,0 +1,1790 @@
+[
+  {
+    "mode": "review",
+    "width": 375,
+    "height": 844,
+    "large_text_140": false,
+    "rows": [
+      {
+        "week": "8",
+        "item": {
+          "x": 24,
+          "y": 120,
+          "w": 43.28125,
+          "h": 56
+        },
+        "text": {
+          "x": 41.734375,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "14px"
+        },
+        "dot": {
+          "x": 41.640625,
+          "y": 156,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              40,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              52,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "9",
+        "item": {
+          "x": 71.28125,
+          "y": 120,
+          "w": 43.296875,
+          "h": 56
+        },
+        "text": {
+          "x": 89.03125,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "14px"
+        },
+        "dot": {
+          "x": 88.921875,
+          "y": 156,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              87,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              99,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "10",
+        "item": {
+          "x": 118.578125,
+          "y": 120,
+          "w": 43.28125,
+          "h": 56
+        },
+        "text": {
+          "x": 132.421875,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "14px"
+        },
+        "dot": {
+          "x": 136.21875,
+          "y": 156,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              130,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              150,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "12",
+        "item": {
+          "x": 213.15625,
+          "y": 120,
+          "w": 43.28125,
+          "h": 56
+        },
+        "text": {
+          "x": 227,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "14px"
+        },
+        "dot": {
+          "x": 230.796875,
+          "y": 156,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              225,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              245,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "13",
+        "item": {
+          "x": 260.4375,
+          "y": 120,
+          "w": 43.28125,
+          "h": 56
+        },
+        "text": {
+          "x": 274.28125,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "14px"
+        },
+        "dot": {
+          "x": 278.078125,
+          "y": 156,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              272,
+              142
+            ],
+            "background_rgb": [
+              231,
+              229,
+              217
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.11
+          },
+          {
+            "pixel": [
+              292,
+              142
+            ],
+            "background_rgb": [
+              220,
+              220,
+              207
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 4.67
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "14",
+        "item": {
+          "x": 307.71875,
+          "y": 120,
+          "w": 43.28125,
+          "h": 56
+        },
+        "text": {
+          "x": 321.5625,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "14px"
+        },
+        "dot": {
+          "x": 325.359375,
+          "y": 156,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              320,
+              142
+            ],
+            "background_rgb": [
+              220,
+              220,
+              207
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 4.67
+          },
+          {
+            "pixel": [
+              339,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      }
+    ],
+    "screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-6/review/week-contrast-375.png"
+  },
+  {
+    "mode": "review",
+    "width": 430,
+    "height": 844,
+    "large_text_140": false,
+    "rows": [
+      {
+        "week": "8",
+        "item": {
+          "x": 24,
+          "y": 120,
+          "w": 51.140625,
+          "h": 56
+        },
+        "text": {
+          "x": 45.671875,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "14px"
+        },
+        "dot": {
+          "x": 45.5625,
+          "y": 156,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              44,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              55,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "9",
+        "item": {
+          "x": 79.140625,
+          "y": 120,
+          "w": 51.15625,
+          "h": 56
+        },
+        "text": {
+          "x": 100.8125,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "14px"
+        },
+        "dot": {
+          "x": 100.71875,
+          "y": 156,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              99,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              111,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "10",
+        "item": {
+          "x": 134.296875,
+          "y": 120,
+          "w": 51.140625,
+          "h": 56
+        },
+        "text": {
+          "x": 152.078125,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "14px"
+        },
+        "dot": {
+          "x": 155.859375,
+          "y": 156,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              150,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              170,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "12",
+        "item": {
+          "x": 244.578125,
+          "y": 120,
+          "w": 51.140625,
+          "h": 56
+        },
+        "text": {
+          "x": 262.359375,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "14px"
+        },
+        "dot": {
+          "x": 266.140625,
+          "y": 156,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              260,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              280,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "13",
+        "item": {
+          "x": 299.71875,
+          "y": 120,
+          "w": 51.140625,
+          "h": 56
+        },
+        "text": {
+          "x": 317.5,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "14px"
+        },
+        "dot": {
+          "x": 321.28125,
+          "y": 156,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              316,
+              142
+            ],
+            "background_rgb": [
+              220,
+              220,
+              207
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 4.67
+          },
+          {
+            "pixel": [
+              335,
+              142
+            ],
+            "background_rgb": [
+              220,
+              220,
+              207
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 4.67
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "14",
+        "item": {
+          "x": 354.859375,
+          "y": 120,
+          "w": 51.140625,
+          "h": 56
+        },
+        "text": {
+          "x": 372.640625,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "14px"
+        },
+        "dot": {
+          "x": 376.421875,
+          "y": 156,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              371,
+              142
+            ],
+            "background_rgb": [
+              220,
+              220,
+              207
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 4.67
+          },
+          {
+            "pixel": [
+              390,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      }
+    ],
+    "screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-6/review/week-contrast-430.png"
+  },
+  {
+    "mode": "review",
+    "width": 375,
+    "height": 844,
+    "large_text_140": true,
+    "rows": [
+      {
+        "week": "8",
+        "item": {
+          "x": 24,
+          "y": 120,
+          "w": 43.28125,
+          "h": 56
+        },
+        "text": {
+          "x": 40.1875,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "19.6px"
+        },
+        "dot": {
+          "x": 41.640625,
+          "y": 160,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              38,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              53,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "9",
+        "item": {
+          "x": 71.28125,
+          "y": 120,
+          "w": 43.296875,
+          "h": 56
+        },
+        "text": {
+          "x": 87.46875,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "19.6px"
+        },
+        "dot": {
+          "x": 88.921875,
+          "y": 160,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              85,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              100,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "10",
+        "item": {
+          "x": 118.578125,
+          "y": 120,
+          "w": 43.28125,
+          "h": 56
+        },
+        "text": {
+          "x": 129.3125,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "19.6px"
+        },
+        "dot": {
+          "x": 136.21875,
+          "y": 160,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              127,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              153,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "12",
+        "item": {
+          "x": 213.15625,
+          "y": 120,
+          "w": 43.28125,
+          "h": 56
+        },
+        "text": {
+          "x": 223.890625,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "19.6px"
+        },
+        "dot": {
+          "x": 230.796875,
+          "y": 160,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              222,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              248,
+              142
+            ],
+            "background_rgb": [
+              189,
+              195,
+              179
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 3.57
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "13",
+        "item": {
+          "x": 260.4375,
+          "y": 120,
+          "w": 43.28125,
+          "h": 56
+        },
+        "text": {
+          "x": 271.171875,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "19.6px"
+        },
+        "dot": {
+          "x": 278.078125,
+          "y": 160,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              269,
+              142
+            ],
+            "background_rgb": [
+              232,
+              229,
+              217
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.12
+          },
+          {
+            "pixel": [
+              295,
+              142
+            ],
+            "background_rgb": [
+              220,
+              220,
+              207
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 4.67
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "14",
+        "item": {
+          "x": 307.71875,
+          "y": 120,
+          "w": 43.28125,
+          "h": 56
+        },
+        "text": {
+          "x": 318.453125,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "19.6px"
+        },
+        "dot": {
+          "x": 325.359375,
+          "y": 160,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              316,
+              142
+            ],
+            "background_rgb": [
+              220,
+              220,
+              207
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 4.67
+          },
+          {
+            "pixel": [
+              342,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      }
+    ],
+    "screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-6/review/week-contrast-375-140.png"
+  },
+  {
+    "mode": "review",
+    "width": 430,
+    "height": 844,
+    "large_text_140": true,
+    "rows": [
+      {
+        "week": "8",
+        "item": {
+          "x": 24,
+          "y": 120,
+          "w": 51.140625,
+          "h": 56
+        },
+        "text": {
+          "x": 44.109375,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "19.6px"
+        },
+        "dot": {
+          "x": 45.5625,
+          "y": 160,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              42,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              57,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "9",
+        "item": {
+          "x": 79.140625,
+          "y": 120,
+          "w": 51.15625,
+          "h": 56
+        },
+        "text": {
+          "x": 99.265625,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "19.6px"
+        },
+        "dot": {
+          "x": 100.71875,
+          "y": 160,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              97,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              112,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "10",
+        "item": {
+          "x": 134.296875,
+          "y": 120,
+          "w": 51.140625,
+          "h": 56
+        },
+        "text": {
+          "x": 148.96875,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "19.6px"
+        },
+        "dot": {
+          "x": 155.859375,
+          "y": 160,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              147,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              173,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "12",
+        "item": {
+          "x": 244.578125,
+          "y": 120,
+          "w": 51.140625,
+          "h": 56
+        },
+        "text": {
+          "x": 259.25,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "19.6px"
+        },
+        "dot": {
+          "x": 266.140625,
+          "y": 160,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              257,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          },
+          {
+            "pixel": [
+              283,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "13",
+        "item": {
+          "x": 299.71875,
+          "y": 120,
+          "w": 51.140625,
+          "h": 56
+        },
+        "text": {
+          "x": 314.390625,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "19.6px"
+        },
+        "dot": {
+          "x": 321.28125,
+          "y": 160,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              312,
+              142
+            ],
+            "background_rgb": [
+              220,
+              220,
+              207
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 4.67
+          },
+          {
+            "pixel": [
+              338,
+              142
+            ],
+            "background_rgb": [
+              220,
+              220,
+              207
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 4.67
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "14",
+        "item": {
+          "x": 354.859375,
+          "y": 120,
+          "w": 51.140625,
+          "h": 56
+        },
+        "text": {
+          "x": 369.53125,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28,
+          "color": "rgb(83, 98, 87)",
+          "fontSize": "19.6px"
+        },
+        "dot": {
+          "x": 376.421875,
+          "y": 160,
+          "w": 8,
+          "h": 8,
+          "color": "rgb(217, 223, 215)"
+        },
+        "contrast_samples": [
+          {
+            "pixel": [
+              368,
+              142
+            ],
+            "background_rgb": [
+              248,
+              242,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.79
+          },
+          {
+            "pixel": [
+              393,
+              142
+            ],
+            "background_rgb": [
+              247,
+              241,
+              231
+            ],
+            "foreground_rgb": [
+              83,
+              98,
+              87
+            ],
+            "contrast_ratio": 5.75
+          }
+        ],
+        "dot_pixels": {
+          "center_rgb": [
+            217,
+            223,
+            215
+          ],
+          "nearby_background_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      }
+    ],
+    "screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-6/review/week-contrast-430-140.png"
+  }
+]

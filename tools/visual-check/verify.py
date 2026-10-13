@@ -19,28 +19,67 @@ with sync_playwright() as p:
   for width in [375,430]:
    page.set_viewport_size({'width':width,'height':844})
    open('home')
-   expect(page.get_by_text('God morgon! ☀️',exact=True)).to_be_visible()
+   expect(page.get_by_text(re.compile(r'^(?:God morgon!|Hej!|God kväll!)$')).first).to_be_visible()
    expect(page.get_by_text('Luna',exact=False).first).to_be_visible()
-   for heading in ['Just nu med Luna','Idag','Loggat idag','Nästa träningssteg','Planerat idag','Vad vill du göra nu?']:
+   for heading in ['Just nu med Luna','Vad vill du göra nu?']:
     expect(page.get_by_text(heading,exact=True)).to_be_visible()
-   expect(page.get_by_role('button',name='12:05, Mat',exact=True)).to_be_visible()
-   expect(page.get_by_text('Kiss',exact=True)).to_have_count(0)
-   expect(page.get_by_role('button',name='16:30, Vaccination idag',exact=True)).to_be_visible()
-   expect(page.get_by_text('Hantering av tassar',exact=True)).to_be_visible()
-   expect(page.get_by_role('button',name='Visa dagens logg')).to_be_visible()
+   if review_mode:
+    expect(page.get_by_text('Idag',exact=True)).to_have_count(0)
+    for heading in ['Dagens uppgifter']:
+     expect(page.get_by_text(heading,exact=True)).to_be_visible()
+    expect(page.get_by_text('2 av 5',exact=True)).to_be_visible()
+    expect(page.get_by_role('checkbox')).to_have_count(5)
+    expect(page.get_by_role('button',name='Visa detaljer: Börja dagen lugnt',exact=True)).to_be_visible()
+   else:
+    expect(page.get_by_text('Idag',exact=True)).to_be_visible()
+    for heading in ['Loggat idag','Nästa träningssteg','Planerat idag']:
+     expect(page.get_by_text(heading,exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name='12:05, Mat',exact=True)).to_be_visible()
+    expect(page.get_by_text('Kiss',exact=True)).to_have_count(0)
+    expect(page.get_by_role('button',name='16:30, Vaccination idag',exact=True)).to_be_visible()
+    expect(page.get_by_text('Hantering av tassar',exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name='Visa dagens logg')).to_be_visible()
    for label in ['Logga','Träna','Kunskap']:
-    expect(page.get_by_role('button',name=label,exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name=f'Öppna {label}',exact=True)).to_be_visible()
+   review_banner=page.get_by_text('SYNTETISKT GRANSKNINGSLÄGE',exact=True)
+   fixture_checkboxes=page.get_by_role('checkbox')
+   if review_mode:
+    expect(review_banner).to_be_visible()
+    expect(page.get_by_text('2 av 5',exact=True)).to_be_visible()
+    expect(fixture_checkboxes).to_have_count(5)
+    banner_top=review_banner.bounding_box()['y']
+   else:
+    expect(review_banner).to_have_count(0)
+    expect(page.get_by_text('Dagens uppgifter',exact=True)).to_have_count(0)
+    expect(fixture_checkboxes).to_have_count(0)
    selected_tab=page.get_by_role('tab',name='Hem')
    expect(selected_tab).to_have_attribute('aria-selected','true')
    nav_box=page.get_by_role('tablist',name='Huvudmeny').bounding_box()
    assert nav_box is not None
-   above_nav=[page.get_by_text(name,exact=True) for name in ['Loggat idag','Nästa träningssteg','Hantering av tassar','Planerat idag','Visa dagens logg','Vad vill du göra nu?']]
-   above_nav += [page.get_by_role('button',name=name,exact=True) for name in ['12:05, Mat','16:30, Vaccination idag','Logga','Träna','Kunskap']]
-   for item in above_nav:
-    box=item.bounding_box()
-    assert box is not None and box['y']+box['height'] <= nav_box['y'],f'{item} overlaps or falls below fixed navigation: {box} / {nav_box}'
-   expect(page.get_by_text('2 av 5',exact=False)).to_have_count(0)
-   page.screenshot(path=str(out/f'home-ready-{width}.png'))
+   if review_mode:
+    page.screenshot(path=str(out/f'home-ready-{width}.png'))
+    for label in ['Öppna Logga','Öppna Träna','Öppna Kunskap']:
+     tile=page.get_by_role('button',name=label,exact=True)
+     box=tile.bounding_box()
+     assert box is not None and box['y']+box['height'] <= nav_box['y']-16,f'{label} lacks 16pt clearance above fixed navigation: {box} / {nav_box}'
+    expect(review_banner).to_be_visible()
+    page.screenshot(path=str(out/f'home-review-destinations-{width}.png'))
+    fixture_checkboxes.nth(4).scroll_into_view_if_needed()
+    expect(review_banner).to_be_visible()
+    assert review_banner.bounding_box()['y']==banner_top,'review banner moved with Home scroll content'
+    fixture_checkboxes.first.click();expect(page.get_by_text('1 av 5',exact=True)).to_be_visible()
+    fixture_checkboxes.first.click();expect(page.get_by_text('2 av 5',exact=True)).to_be_visible()
+    page.screenshot(path=str(out/f'home-review-fixture-scroll-{width}.png'))
+   else:
+    above_nav=[page.get_by_text(name,exact=True) for name in ['Loggat idag','Nästa träningssteg','Hantering av tassar','Planerat idag','Visa dagens logg','Vad vill du göra nu?']]
+    above_nav += [page.get_by_role('button',name=name,exact=True) for name in ['12:05, Mat','16:30, Vaccination idag','Öppna Logga','Öppna Träna','Öppna Kunskap']]
+    for item in above_nav:
+     box=item.bounding_box()
+     assert box is not None and box['y']+box['height'] <= nav_box['y']-16,f'{item} lacks 16pt clearance above fixed navigation: {box} / {nav_box}'
+   if not review_mode:
+    expect(page.get_by_text('2 av 5',exact=False)).to_have_count(0)
+    expect(page.get_by_text('SYNTETISKT GRANSKNINGSLÄGE',exact=True)).to_have_count(0)
+   if not review_mode: page.screenshot(path=str(out/f'home-ready-{width}.png'))
    for scenario in ['loading','error','no-program','all-complete','stale-selection']:
     open('home','&homeScenario='+scenario)
     step=page.get_by_text('Hantering av tassar',exact=True)
@@ -54,21 +93,57 @@ with sync_playwright() as p:
    expect(page.get_by_text('Inget planerat idag.',exact=True)).to_be_visible()
    page.screenshot(path=str(out/f'home-empty-{width}.png'))
    passed(f'Home source states and layout at {width}px')
-  page.set_viewport_size({'width':375,'height':844})
-  open('home')
+  page.set_viewport_size({'width':375,'height':667});open('home')
+  page.screenshot(path=str(out/'home-short-viewport-375.png'))
+  if review_mode:
+   banner=page.get_by_text('SYNTETISKT GRANSKNINGSLÄGE',exact=True);expect(banner).to_be_visible();banner_top=banner.bounding_box()['y']
+  last_tile=page.get_by_role('button',name='Öppna Kunskap',exact=True);last_tile.scroll_into_view_if_needed()
+  expect(last_tile).to_be_visible()
+  last_tile_box=last_tile.bounding_box();short_nav=page.get_by_role('tablist',name='Huvudmeny').bounding_box()
+  assert last_tile_box is not None and short_nav is not None and last_tile_box['y']+last_tile_box['height']<=short_nav['y'],f'short viewport clips the last destination tile: {last_tile_box} / {short_nav}'
+  if review_mode:
+   expect(banner).to_be_visible();assert banner.bounding_box()['y']==banner_top,'review banner moved in short viewport'
+  page.screenshot(path=str(out/'home-short-viewport-scrolled-375.png'))
   page.emulate_media(reduced_motion='reduce')
-  page.evaluate('''() => {document.querySelectorAll('[dir="auto"]').forEach(el => { const s=getComputedStyle(el);el.style.fontSize=(parseFloat(s.fontSize)*1.4)+'px';el.style.lineHeight=(parseFloat(s.lineHeight)*1.4)+'px'; });}''')
-  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-  page.screenshot(path=str(out/'home-large-text-reduced-motion-375.png'))
+  for width in [375,430]:
+   page.set_viewport_size({'width':width,'height':844})
+   open('home')
+   large_banner=page.get_by_text('SYNTETISKT GRANSKNINGSLÄGE',exact=True)
+   page.evaluate('''() => {document.querySelectorAll('[dir="auto"]').forEach(el => { const s=getComputedStyle(el);el.style.fontSize=(parseFloat(s.fontSize)*1.4)+'px';el.style.lineHeight=(parseFloat(s.lineHeight)*1.4)+'px'; });}''')
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+   expect(page.get_by_role('button',name='Öppna Logga')).to_be_visible()
+   expect(page.get_by_role('button',name='Öppna Träna')).to_be_visible()
+   expect(page.get_by_role('button',name='Öppna Kunskap')).to_be_visible()
+   if review_mode:
+    expect(large_banner).to_be_visible()
+    large_banner_top=large_banner.bounding_box()['y']
+   page.screenshot(path=str(out/f'home-large-text-reduced-motion-{width}.png'))
+   large_last_tile=page.get_by_role('button',name='Öppna Kunskap',exact=True)
+   large_last_tile.scroll_into_view_if_needed()
+   large_tile_before_scroll=large_last_tile.bounding_box()
+   assert large_tile_before_scroll is not None
+   page.mouse.move(width/2,large_tile_before_scroll['y']+large_tile_before_scroll['height']/2)
+   page.mouse.wheel(0,48)
+   page.wait_for_timeout(100)
+   expect(large_last_tile).to_be_visible()
+   large_tile_box=large_last_tile.bounding_box()
+   large_nav=page.get_by_role('tablist',name='Huvudmeny').bounding_box()
+   assert large_tile_box is not None and large_nav is not None and large_tile_box['y']+large_tile_box['height']<=large_nav['y'],f'140% text clips the last destination behind fixed navigation at {width}px: {large_tile_box} / {large_nav}'
+   if review_mode:
+    expect(large_banner).to_be_visible()
+    large_banner_box=large_banner.bounding_box()
+    assert large_banner_box is not None and large_banner_box['y']==large_banner_top,'review banner moved while revealing the last destination at 140% text'
+   page.screenshot(path=str(out/f'home-large-text-scrolled-reduced-motion-{width}.png'))
+  page.set_viewport_size({'width':375,'height':844});open('home')
   expect(page.get_by_role('tab',name='Hem')).to_be_visible()
   expect(page.get_by_role('tab',name='Logg')).to_be_visible()
   expect(page.get_by_role('tab',name='Träning')).to_be_visible()
   expect(page.get_by_role('tab',name='Kunskap')).to_be_visible()
   expect(page.get_by_role('tab',name='Mer')).to_be_visible()
   expect(page.get_by_role('tab',name='Hälsa')).to_have_count(0)
-  page.get_by_role('button',name='Logga',exact=True).click();expect(page.get_by_role('tab',name='Logg')).to_have_attribute('aria-selected','true')
-  page.get_by_role('tab',name='Hem').click();page.get_by_role('button',name='Träna',exact=True).click();expect(page.get_by_role('tab',name='Träning')).to_have_attribute('aria-selected','true')
-  page.get_by_role('tab',name='Hem').click();page.get_by_role('button',name='Kunskap',exact=True).click();expect(page.get_by_role('tab',name='Kunskap')).to_have_attribute('aria-selected','true')
+  page.get_by_role('button',name='Öppna Logga',exact=True).click();expect(page.get_by_role('tab',name='Logg')).to_have_attribute('aria-selected','true')
+  page.get_by_role('tab',name='Hem').click();page.get_by_role('button',name='Öppna Träna',exact=True).click();expect(page.get_by_role('tab',name='Träning')).to_have_attribute('aria-selected','true')
+  page.get_by_role('tab',name='Hem').click();page.get_by_role('button',name='Öppna Kunskap',exact=True).click();expect(page.get_by_role('tab',name='Kunskap')).to_have_attribute('aria-selected','true')
   page.get_by_role('tab',name='Mer').click();expect(page.get_by_role('button',name='Hälsa',exact=False)).to_be_visible();expect(page.get_by_role('button',name='Tassla-pass',exact=False)).to_be_visible();expect(page.get_by_role('button',name='Kunskap',exact=False)).to_have_count(0)
   page.screenshot(path=str(out/'home-navigation-more-375.png'))
   open('home','&homeScenario=review-training')

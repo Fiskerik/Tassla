@@ -1,0 +1,72 @@
+[
+  {
+    "width": 375,
+    "before_scale": {
+      "x": 12,
+      "y": 6,
+      "width": 351,
+      "height": 20
+    },
+    "after_scale": {
+      "x": 12,
+      "y": 2,
+      "width": 351,
+      "height": 28
+    },
+    "after_scroll": {
+      "x": 12,
+      "y": 2,
+      "width": 351,
+      "height": 28
+    },
+    "nav": {
+      "x": 0,
+      "y": 738.59375,
+      "width": 375,
+      "height": 105.40625
+    },
+    "tile": {
+      "x": 247.328125,
+      "y": 601.203125,
+      "width": 103.671875,
+      "height": 82
+    },
+    "scrollY": 0,
+    "documentScrollTop": null
+  },
+  {
+    "width": 430,
+    "before_scale": {
+      "x": 12,
+      "y": 6,
+      "width": 406,
+      "height": 20
+    },
+    "after_scale": {
+      "x": 12,
+      "y": 2,
+      "width": 406,
+      "height": 28
+    },
+    "after_scroll": {
+      "x": 12,
+      "y": 2,
+      "width": 406,
+      "height": 28
+    },
+    "nav": {
+      "x": 0,
+      "y": 766.59375,
+      "width": 430,
+      "height": 77.40625
+    },
+    "tile": {
+      "x": 284,
+      "y": 685,
+      "width": 122,
+      "height": 82
+    },
+    "scrollY": 0,
+    "documentScrollTop": null
+  }
+]

@@ -1,0 +1,96 @@
+[
+  {
+    "width": 375,
+    "before": {
+      "x": 247.328125,
+      "y": 601.203125,
+      "width": 103.671875,
+      "height": 82
+    },
+    "after": {
+      "x": 247.328125,
+      "y": 601.203125,
+      "width": 103.671875,
+      "height": 82
+    },
+    "scrollables_before": [
+      {
+        "tag": "DIV",
+        "cls": "css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-flexShrink-1wbh5a2 r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-flex-13awgt0 r-scrollbarWidth-2eszeu",
+        "top": 244,
+        "client": 707,
+        "height": 951
+      },
+      {
+        "tag": "DIV",
+        "cls": "css-view-g5y9jx r-borderRadius-cpet4d r-height-1pmudt1 r-overflow-1udh08x r-position-u8s1d r-right-zchlnj r-top-ipm5af r-width-y3rmyz r-pointerEvents-633pao",
+        "top": 0,
+        "client": 124,
+        "height": 174
+      }
+    ],
+    "scrollables_after": [
+      {
+        "tag": "DIV",
+        "cls": "css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-flexShrink-1wbh5a2 r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-flex-13awgt0 r-scrollbarWidth-2eszeu",
+        "top": 244,
+        "client": 707,
+        "height": 951
+      },
+      {
+        "tag": "DIV",
+        "cls": "css-view-g5y9jx r-borderRadius-cpet4d r-height-1pmudt1 r-overflow-1udh08x r-position-u8s1d r-right-zchlnj r-top-ipm5af r-width-y3rmyz r-pointerEvents-633pao",
+        "top": 0,
+        "client": 124,
+        "height": 174
+      }
+    ]
+  },
+  {
+    "width": 430,
+    "before": {
+      "x": 284,
+      "y": 685,
+      "width": 122,
+      "height": 82
+    },
+    "after": {
+      "x": 284,
+      "y": 637,
+      "width": 122,
+      "height": 82
+    },
+    "scrollables_before": [
+      {
+        "tag": "DIV",
+        "cls": "css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-flexShrink-1wbh5a2 r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-flex-13awgt0 r-scrollbarWidth-2eszeu",
+        "top": 73,
+        "client": 735,
+        "height": 864
+      },
+      {
+        "tag": "DIV",
+        "cls": "css-view-g5y9jx r-borderRadius-cpet4d r-height-1pmudt1 r-overflow-1udh08x r-position-u8s1d r-right-zchlnj r-top-ipm5af r-width-y3rmyz r-pointerEvents-633pao",
+        "top": 0,
+        "client": 124,
+        "height": 174
+      }
+    ],
+    "scrollables_after": [
+      {
+        "tag": "DIV",
+        "cls": "css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-flexShrink-1wbh5a2 r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-flex-13awgt0 r-scrollbarWidth-2eszeu",
+        "top": 121,
+        "client": 735,
+        "height": 864
+      },
+      {
+        "tag": "DIV",
+        "cls": "css-view-g5y9jx r-borderRadius-cpet4d r-height-1pmudt1 r-overflow-1udh08x r-position-u8s1d r-right-zchlnj r-top-ipm5af r-width-y3rmyz r-pointerEvents-633pao",
+        "top": 0,
+        "client": 124,
+        "height": 174
+      }
+    ]
+  }
+]

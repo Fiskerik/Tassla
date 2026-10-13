@@ -1,0 +1,742 @@
+[
+  {
+    "width": 375,
+    "large_text_140": false,
+    "rows": [
+      {
+        "week": "8",
+        "bbox": {
+          "x": 41.640625,
+          "y": 156,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 46,
+          "y": 160,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "9",
+        "bbox": {
+          "x": 88.921875,
+          "y": 156,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 93,
+          "y": 160,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "10",
+        "bbox": {
+          "x": 136.21875,
+          "y": 156,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 140,
+          "y": 160,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "11",
+        "bbox": {
+          "x": 183.5,
+          "y": 168,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(24, 106, 77)",
+        "center": {
+          "x": 188,
+          "y": 172,
+          "dot_rgb": [
+            24,
+            106,
+            77
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 5.83
+        }
+      },
+      {
+        "week": "12",
+        "bbox": {
+          "x": 230.796875,
+          "y": 158,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 235,
+          "y": 162,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "13",
+        "bbox": {
+          "x": 278.078125,
+          "y": 158,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 282,
+          "y": 162,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "14",
+        "bbox": {
+          "x": 325.359375,
+          "y": 158,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 329,
+          "y": 162,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      }
+    ],
+    "screenshots": [
+      "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/dot-normal-375.png",
+      "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/dot-underlay-375.png"
+    ]
+  },
+  {
+    "width": 430,
+    "large_text_140": false,
+    "rows": [
+      {
+        "week": "8",
+        "bbox": {
+          "x": 45.5625,
+          "y": 156,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 50,
+          "y": 160,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "9",
+        "bbox": {
+          "x": 100.71875,
+          "y": 156,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 105,
+          "y": 160,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "10",
+        "bbox": {
+          "x": 155.859375,
+          "y": 156,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 160,
+          "y": 160,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "11",
+        "bbox": {
+          "x": 211,
+          "y": 168,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(24, 106, 77)",
+        "center": {
+          "x": 215,
+          "y": 172,
+          "dot_rgb": [
+            24,
+            106,
+            77
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 5.83
+        }
+      },
+      {
+        "week": "12",
+        "bbox": {
+          "x": 266.140625,
+          "y": 158,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 270,
+          "y": 162,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "13",
+        "bbox": {
+          "x": 321.28125,
+          "y": 158,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 325,
+          "y": 162,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "14",
+        "bbox": {
+          "x": 376.421875,
+          "y": 158,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 380,
+          "y": 162,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      }
+    ],
+    "screenshots": [
+      "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/dot-normal-430.png",
+      "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/dot-underlay-430.png"
+    ]
+  },
+  {
+    "width": 375,
+    "large_text_140": true,
+    "rows": [
+      {
+        "week": "8",
+        "bbox": {
+          "x": 41.640625,
+          "y": 160,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 46,
+          "y": 164,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "9",
+        "bbox": {
+          "x": 88.921875,
+          "y": 160,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 93,
+          "y": 164,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "10",
+        "bbox": {
+          "x": 136.21875,
+          "y": 160,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 140,
+          "y": 164,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "11",
+        "bbox": {
+          "x": 183.5,
+          "y": 168,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(24, 106, 77)",
+        "center": {
+          "x": 188,
+          "y": 172,
+          "dot_rgb": [
+            24,
+            106,
+            77
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 5.83
+        }
+      },
+      {
+        "week": "12",
+        "bbox": {
+          "x": 230.796875,
+          "y": 162,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 235,
+          "y": 166,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "13",
+        "bbox": {
+          "x": 278.078125,
+          "y": 162,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 282,
+          "y": 166,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "14",
+        "bbox": {
+          "x": 325.359375,
+          "y": 162,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 329,
+          "y": 166,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      }
+    ],
+    "screenshots": [
+      "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/dot-normal-375-140.png",
+      "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/dot-underlay-375-140.png"
+    ]
+  },
+  {
+    "width": 430,
+    "large_text_140": true,
+    "rows": [
+      {
+        "week": "8",
+        "bbox": {
+          "x": 45.5625,
+          "y": 160,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 50,
+          "y": 164,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "9",
+        "bbox": {
+          "x": 100.71875,
+          "y": 160,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 105,
+          "y": 164,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "10",
+        "bbox": {
+          "x": 155.859375,
+          "y": 160,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 160,
+          "y": 164,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "11",
+        "bbox": {
+          "x": 211,
+          "y": 168,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(24, 106, 77)",
+        "center": {
+          "x": 215,
+          "y": 172,
+          "dot_rgb": [
+            24,
+            106,
+            77
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 5.83
+        }
+      },
+      {
+        "week": "12",
+        "bbox": {
+          "x": 266.140625,
+          "y": 162,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 270,
+          "y": 166,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "13",
+        "bbox": {
+          "x": 321.28125,
+          "y": 162,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 325,
+          "y": 166,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      },
+      {
+        "week": "14",
+        "bbox": {
+          "x": 376.421875,
+          "y": 162,
+          "w": 8,
+          "h": 8
+        },
+        "fg": "rgb(217, 223, 215)",
+        "center": {
+          "x": 380,
+          "y": 166,
+          "dot_rgb": [
+            217,
+            223,
+            215
+          ],
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ],
+          "contrast_ratio": 1.21
+        }
+      }
+    ],
+    "screenshots": [
+      "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/dot-normal-430-140.png",
+      "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/dot-underlay-430-140.png"
+    ]
+  }
+]

@@ -1,0 +1,338 @@
+[
+  {
+    "width": 375,
+    "large_text_140": false,
+    "week_labels": [
+      {
+        "week": "8",
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 43,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "9",
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 90,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "10",
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 135,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "12",
+        "min_glyph_background_contrast": 11.42,
+        "worst_pixel": {
+          "x": 241,
+          "y": 134,
+          "underlay_rgb": [
+            236,
+            232,
+            221
+          ]
+        }
+      },
+      {
+        "week": "13",
+        "min_glyph_background_contrast": 6.44,
+        "worst_pixel": {
+          "x": 276,
+          "y": 137,
+          "underlay_rgb": [
+            170,
+            179,
+            161
+          ]
+        }
+      },
+      {
+        "week": "14",
+        "min_glyph_background_contrast": 6.37,
+        "worst_pixel": {
+          "x": 332,
+          "y": 141,
+          "underlay_rgb": [
+            169,
+            178,
+            161
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "width": 430,
+    "large_text_140": false,
+    "week_labels": [
+      {
+        "week": "8",
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 47,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "9",
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 102,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "10",
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 154,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "12",
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 264,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "13",
+        "min_glyph_background_contrast": 6.44,
+        "worst_pixel": {
+          "x": 327,
+          "y": 137,
+          "underlay_rgb": [
+            170,
+            179,
+            161
+          ]
+        }
+      },
+      {
+        "week": "14",
+        "min_glyph_background_contrast": 6.44,
+        "worst_pixel": {
+          "x": 384,
+          "y": 137,
+          "underlay_rgb": [
+            170,
+            179,
+            161
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "width": 375,
+    "large_text_140": true,
+    "week_labels": [
+      {
+        "week": "8",
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 42,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "9",
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 90,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "10",
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 133,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "12",
+        "min_glyph_background_contrast": 6.46,
+        "worst_pixel": {
+          "x": 243,
+          "y": 135,
+          "underlay_rgb": [
+            171,
+            179,
+            162
+          ]
+        }
+      },
+      {
+        "week": "13",
+        "min_glyph_background_contrast": 6.37,
+        "worst_pixel": {
+          "x": 289,
+          "y": 148,
+          "underlay_rgb": [
+            169,
+            178,
+            161
+          ]
+        }
+      },
+      {
+        "week": "14",
+        "min_glyph_background_contrast": 6.37,
+        "worst_pixel": {
+          "x": 332,
+          "y": 141,
+          "underlay_rgb": [
+            169,
+            178,
+            161
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "width": 430,
+    "large_text_140": true,
+    "week_labels": [
+      {
+        "week": "8",
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 46,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "9",
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 101,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "10",
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 152,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "12",
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 263,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "13",
+        "min_glyph_background_contrast": 6.44,
+        "worst_pixel": {
+          "x": 329,
+          "y": 135,
+          "underlay_rgb": [
+            170,
+            179,
+            161
+          ]
+        }
+      },
+      {
+        "week": "14",
+        "min_glyph_background_contrast": 6.37,
+        "worst_pixel": {
+          "x": 387,
+          "y": 141,
+          "underlay_rgb": [
+            169,
+            178,
+            161
+          ]
+        }
+      }
+    ]
+  }
+]

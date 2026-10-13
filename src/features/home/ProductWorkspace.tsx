@@ -59,6 +59,21 @@ import {
   type WriteOutcome,
 } from '../../data/workspace-data';
 import {
+  addRoutineToDay,
+  addTrainingSelection,
+  createDailyRoutine,
+  deleteDailyRoutine,
+  fetchDailyActivitySnapshot,
+  removeRoutineFromDay,
+  removeTrainingSelection,
+  setRoutineDayCompletion,
+  updateDailyRoutineLabel,
+  type DailyActivitySnapshot,
+  type DailyRoutine,
+  type DailyRoutineDay,
+  type DailyTrainingSelection,
+} from './daily-activity-data';
+import {
   fetchOwnedDogAttribution,
   fetchOwnedDogById,
   fetchBreeds,
@@ -79,7 +94,8 @@ import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
 import { checklistMemoryScope, keepChecklistMemoryForScope, updateChecklistMemory, type PendingChecklistMemory } from '../knowledge/checklist-intent';
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, REVIEW_TRAINING_PROGRAMS } from '../knowledge/review-content';
-import { HomeScreen } from './HomeScreen';
+import { HomeScreen, type HomeDailyTrainingOption } from './HomeScreen';
+import { deriveHomeDailyActivities, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep } from './daily-activity-model';
 import { activeMainTabDestination, isMainTabDestination, mainTabTransitionDirection, nextMainTabDestination } from './main-navigation';
 import { AppBar, BottomNav, MainSwipeNavigation } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
@@ -214,6 +230,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [trainingSelectionKey, setTrainingSelectionKey] = useState<string | null>(null);
   const [trainingError, setTrainingError] = useState('');
   const [busyStepKey, setBusyStepKey] = useState<string | null>(null);
+  const [dailySnapshot, setDailySnapshot] = useState<DailyActivitySnapshot | null>(null);
+  const [dailySnapshotLifetime, setDailySnapshotLifetime] = useState('');
+  const [dailyState, setDailyState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [dailyStateLifetime, setDailyStateLifetime] = useState('');
+  const [dailyClock, setDailyClock] = useState(() => new Date());
+  const [dailyBusyKey, setDailyBusyKey] = useState<string | null>(null);
+  const [dailyMessage, setDailyMessage] = useState('');
+  const [dailyMessageError, setDailyMessageError] = useState(false);
   const [signOutError, setSignOutError] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const signOutInFlight = useRef(false);
@@ -230,6 +254,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const pendingProfileMutation = useRef<PendingProfileMutation | null>(null);
   const profileMutationInFlight = useRef(false);
   const trainingMutationInFlight = useRef(false);
+  const dailyGeneration = useRef(0);
+  const dailyMutationInFlight = useRef(false);
+  const pendingDailyRetry = useRef<{ lifetime: string; key: string; run: () => Promise<WriteOutcome<unknown>> } | null>(null);
   const mounted = useRef(false);
   const eventReadQueue = useRef<Promise<void>>(Promise.resolve());
   const healthReadQueue = useRef<Promise<void>>(Promise.resolve());
@@ -241,7 +268,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const analyticsService = useMemo(() => createAnalyticsService(async (name, args) => {
     const result = await client.rpc(name, args as never);
     return { data: result.data, error: result.error };
-  }), [client, session?.user.id]);
+  }), [client]);
 
   useEffect(() => {
     let active = true;
@@ -261,6 +288,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   useEffect(() => {
     if (page === 'home' && analyticsConsent === true) void analyticsService.track('home_viewed');
   }, [analyticsConsent, analyticsService, page]);
+  useEffect(() => {
+    if (page !== 'home') return undefined;
+    const refreshClock = () => setDailyClock(new Date());
+    const interval = setInterval(refreshClock, 30_000);
+    const subscription = AppState.addEventListener('change', (state) => { if (state === 'active') refreshClock(); });
+    return () => { clearInterval(interval); subscription.remove(); };
+  }, [page]);
   const currentHealthHistoryLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const currentLogLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const healthHistoryLifetime = useRef('');
@@ -297,6 +331,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const trainingGeneration = useRef(0);
   const age = ageInWeeks(dog.birth_date, localDate());
   const currentSelectionKey = `${dog.id}:${dog.breed_id}:${age}`;
+  const dailyTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const validDailyTimeZone = isValidIanaTimeZone(dailyTimeZone);
+  const dailyDateKey = validDailyTimeZone ? localDateKeyAt(dailyClock, dailyTimeZone) : null;
+  const currentDailyLifetime = `${accountGeneration}:${currentSelectionKey}:${dailyDateKey ?? 'invalid-date'}:${dailyTimeZone}`;
+  const dailyLifetime = useRef('');
   const checklistMemory = useRef<{ scope: string; state: PendingChecklistMemory } | null>(null);
   const [checklistMemoryView, setChecklistMemoryView] = useState<{ scope: string; state: PendingChecklistMemory } | null>(null);
   const currentChecklistMemoryScope = checklistMemoryScope(session?.user.id ?? null, accountGeneration, dog.id);
@@ -309,6 +348,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   useLayoutEffect(() => {
     currentSelectionKeyRef.current = currentSelectionKey;
   }, [currentSelectionKey]);
+
+  useLayoutEffect(() => {
+    if (dailyLifetime.current && dailyLifetime.current !== currentDailyLifetime) {
+      pendingDailyRetry.current = null;
+      setDailyMessage('');
+      setDailyMessageError(false);
+    }
+    dailyLifetime.current = currentDailyLifetime;
+  }, [currentDailyLifetime]);
 
   useLayoutEffect(() => {
     profileLifetime.current = currentProfileLifetime;
@@ -422,11 +470,64 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     const generation = trainingGeneration.current;
     const result = await fetchTrainingWorkspace(client, dog, age, undefined, signal);
     if (!mounted.current || signal?.aborted || trainingGeneration.current !== generation || currentSelectionKeyRef.current !== currentSelectionKey) return false;
-    setTraining(result);
+    const visibleResult = reviewContentEnabled && result.programs.length === 0
+      ? { programs: [...REVIEW_TRAINING_PROGRAMS], paused: [] } : result;
+    setTraining(visibleResult);
     setTrainingSelectionKey(currentSelectionKey);
     setTrainingState('ready');
-    return result;
+    return visibleResult;
   }, [age, client, currentSelectionKey, dog]);
+
+  const reloadDailyActivity = useCallback(async (signal?: AbortSignal) => {
+    const lifetime = currentDailyLifetime;
+    const generation = ++dailyGeneration.current;
+    const trainingRevision = ++trainingGeneration.current;
+    if (!dailyDateKey || !validDailyTimeZone) {
+      setDailySnapshot(null);
+      setDailySnapshotLifetime('');
+      setDailyState('error');
+      setDailyStateLifetime(lifetime);
+      return false;
+    }
+    setDailySnapshot(null);
+    setDailySnapshotLifetime('');
+    setDailyState('loading');
+    setDailyStateLifetime(lifetime);
+    const [trainingResult, dailyResult] = await Promise.allSettled([
+      fetchTrainingWorkspace(client, dog, age, undefined, signal),
+      fetchDailyActivitySnapshot(client, dog.id, dailyDateKey, signal),
+    ]);
+    if (!mounted.current || signal?.aborted || generation !== dailyGeneration.current
+      || trainingRevision !== trainingGeneration.current || dailyLifetime.current !== lifetime
+      || currentSelectionKeyRef.current !== currentSelectionKey) return false;
+    if (trainingResult.status === 'fulfilled') {
+      const visibleTraining = reviewContentEnabled && trainingResult.value.programs.length === 0
+        ? { programs: [...REVIEW_TRAINING_PROGRAMS], paused: [] } : trainingResult.value;
+      setTraining(visibleTraining);
+      setTrainingSelectionKey(currentSelectionKey);
+      setTrainingState('ready');
+      setTrainingError('');
+    } else {
+      setTraining({ programs: [], paused: [] });
+      setTrainingSelectionKey(currentSelectionKey);
+      setTrainingState('error');
+      setTrainingError('Publicerade träningssteg kunde inte hämtas. Dagens urval kunde därför inte räknas.');
+    }
+    if (dailyResult.status === 'fulfilled' && trainingResult.status === 'fulfilled') {
+      setDailySnapshot(dailyResult.value);
+      setDailySnapshotLifetime(lifetime);
+      setDailyState('ready');
+      setDailyStateLifetime(lifetime);
+      setDailyMessage('');
+      setDailyMessageError(false);
+      return true;
+    }
+    setDailySnapshot(null);
+    setDailySnapshotLifetime('');
+    setDailyState('error');
+    setDailyStateLifetime(lifetime);
+    return false;
+  }, [age, client, currentDailyLifetime, currentSelectionKey, dailyDateKey, dog, validDailyTimeZone]);
 
   useEffect(() => {
     const ownerId = session?.user.id;
@@ -643,9 +744,29 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     return () => controller.abort();
   }, [age, client, currentSelectionKey, dog]);
 
+  useEffect(() => {
+    if (page !== 'home') return undefined;
+    const controller = new AbortController();
+    const timer = setTimeout(() => { void reloadDailyActivity(controller.signal); }, 0);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [page, reloadDailyActivity]);
+
   const visibleContent = contentSelectionKey === currentSelectionKey ? content : [];
   const visibleContentState = contentSelectionKey === currentSelectionKey ? contentState : 'loading';
   const visibleTrainingState = trainingSelectionKey === currentSelectionKey ? trainingState : 'loading';
+  const dailyStateForView = dailyStateLifetime === currentDailyLifetime ? dailyState : 'loading';
+  const dailySnapshotForView = dailySnapshotLifetime === currentDailyLifetime ? dailySnapshot : null;
+  const dailyActivities = dailyStateForView === 'ready' && dailySnapshotForView && dailyDateKey
+    ? deriveHomeDailyActivities(dailySnapshotForView, training.programs.filter((program) => !program.id.startsWith('review-v1:training:')), dog.id, dailyDateKey)
+    : [];
+  const selectedTrainingKeys = new Set(dailySnapshotForView?.trainingSelections.map((row) => `${row.program_version_id}:${row.step_id}`) ?? []);
+  const dailyTrainingOptions: HomeDailyTrainingOption[] = dailyStateForView === 'ready' && dailyDateKey
+    ? training.programs.filter((program) => !program.id.startsWith('review-v1:training:')).flatMap((program) => {
+      const step = nextSelectableTrainingStep(program);
+      if (!step || selectedTrainingKeys.has(`${program.id}:${step.id}`)) return [];
+      return [{ programId: program.content_id, versionId: program.id, stepId: step.id, programTitle: program.title, stepTitle: step.title }];
+    })
+    : [];
   const publishedGuides = visibleContent.filter((item) => item.contentType !== 'training_program');
   const hasReviewTraining = reviewContentEnabled && visibleTrainingState === 'ready'
     && training.programs.some((program) => program.id.startsWith('review-v1:training:'));
@@ -1733,6 +1854,57 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
+  async function runDailyMutation(key: string, operation: () => Promise<WriteOutcome<unknown>>, retry = false) {
+    const lifetime = currentDailyLifetime;
+    if (!dailyDateKey || !validDailyTimeZone || dailyMutationInFlight.current) return;
+    if (pendingDailyRetry.current && pendingDailyRetry.current.lifetime === lifetime && !retry) {
+      setDailyMessage('Kontrollera den föregående ändringen innan du gör en ny.');
+      setDailyMessageError(true);
+      return;
+    }
+    dailyMutationInFlight.current = true;
+    setDailyBusyKey(key);
+    setDailyMessage('');
+    setDailyMessageError(false);
+    let outcome: WriteOutcome<unknown>;
+    try {
+      outcome = await operation();
+    } catch {
+      outcome = { status: 'unknown' };
+    }
+    if (!mounted.current || dailyLifetime.current !== lifetime || currentSelectionKeyRef.current !== currentSelectionKey) {
+      dailyMutationInFlight.current = false;
+      if (mounted.current) setDailyBusyKey(null);
+      return;
+    }
+    if (outcome.status === 'saved') {
+      pendingDailyRetry.current = null;
+      setDailyMessage('');
+      setDailyMessageError(false);
+      const refreshed = await reloadDailyActivity();
+      if (!refreshed && mounted.current && dailyLifetime.current === lifetime) {
+        setDailyMessage('Ändringen sparades, men dagens lista kunde inte hämtas. Status räknas först efter en ny avläsning.');
+        setDailyMessageError(true);
+      }
+    } else if (outcome.status === 'unknown') {
+      pendingDailyRetry.current = { lifetime, key, run: operation };
+      setDailyMessage('Vi kunde inte bekräfta om ändringen sparades. Ingen ny bock visas. Kontrollera samma ändring innan du fortsätter.');
+      setDailyMessageError(true);
+    } else {
+      pendingDailyRetry.current = null;
+      setDailyMessage('Ändringen sparades inte. Kontrollera anslutningen och försök igen.');
+      setDailyMessageError(true);
+    }
+    dailyMutationInFlight.current = false;
+    if (mounted.current) setDailyBusyKey(null);
+  }
+
+  function retryDailyMutation() {
+    const pending = pendingDailyRetry.current;
+    if (!pending || pending.lifetime !== currentDailyLifetime) return;
+    void runDailyMutation(pending.key, pending.run, true);
+  }
+
   async function handleAccountDeletion(): Promise<AccountDeleteResult> {
     const capturedSession = session;
     const ownerId = capturedSession?.user.id;
@@ -1744,7 +1916,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       || pendingHealthHistoryMutation.current || pendingPlannedHealthMutation.current
       || pendingProfileMutation.current || logMutationFlight.current || healthMutationInFlight.current
       || healthHistoryMutationInFlight.current || plannedHealthMutationInFlight.current
-      || profileMutationInFlight.current || trainingMutationInFlight.current || notificationBusy || attributionBusy || accountDeleteBusy;
+      || profileMutationInFlight.current || trainingMutationInFlight.current || dailyMutationInFlight.current
+      || pendingDailyRetry.current || notificationBusy || attributionBusy || accountDeleteBusy;
     if (unresolvedWrite) {
       setAccountDeleteStatus('blocked');
       return { status: 'failed' };
@@ -1917,6 +2090,38 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       reviewTrainingStep={hasReviewTraining}
       content={visibleGuideContent}
       contentState={visibleContentState}
+      dailyState={dailyStateForView}
+      dailyDateKey={dailyDateKey ?? '—'}
+      dailyScopeKey={currentDailyLifetime}
+      dailyActivities={dailyActivities}
+      routineTemplates={dailySnapshotForView?.routines ?? []}
+      dailyTrainingOptions={dailyTrainingOptions}
+      dailyMutationBusy={Boolean(dailyBusyKey)}
+      dailyMutationMessage={dailyMessage}
+      dailyMutationError={dailyMessageError}
+      onRetryDaily={() => { void reloadDailyActivity(); }}
+      onCreateRoutine={(label) => {
+        const row: DailyRoutine = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, label: label.trim() };
+        void runDailyMutation('create-routine', () => createDailyRoutine(client, row));
+      }}
+      onUpdateRoutine={(routine, label) => {
+        void runDailyMutation(`update-routine:${routine.id}`, () => updateDailyRoutineLabel(client, dog.id, routine.id, routine.label, label));
+      }}
+      onDeleteRoutine={(routine) => { void runDailyMutation(`delete-routine:${routine.id}`, () => deleteDailyRoutine(client, routine)); }}
+      onAddRoutineToDay={(routine) => {
+        if (!dailyDateKey) return;
+        const row: DailyRoutineDay = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, routine_id: routine.id, date_key: dailyDateKey, time_zone: dailyTimeZone, completed_at: null };
+        void runDailyMutation(`select-routine:${routine.id}`, () => addRoutineToDay(client, row));
+      }}
+      onRemoveRoutineFromDay={(row) => { void runDailyMutation(`remove-routine:${row.id}`, () => removeRoutineFromDay(client, row)); }}
+      onSetRoutineCompletion={(row, completed) => { void runDailyMutation(`complete-routine:${row.id}`, () => setRoutineDayCompletion(client, row, completed)); }}
+      onAddTrainingToDay={(option) => {
+        if (!dailyDateKey) return;
+        const row: DailyTrainingSelection = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, program_version_id: option.versionId, step_id: option.stepId, date_key: dailyDateKey, time_zone: dailyTimeZone };
+        void runDailyMutation(`select-training:${option.versionId}:${option.stepId}`, () => addTrainingSelection(client, row));
+      }}
+      onRemoveTrainingFromDay={(row) => { void runDailyMutation(`remove-training:${row.id}`, () => removeTrainingSelection(client, row)); }}
+      onRetryDailyMutation={pendingDailyRetry.current?.lifetime === currentDailyLifetime ? retryDailyMutation : undefined}
       onGo={(destination) => {
         if (destination === 'knowledge') setKnowledgeFocus(null);
         setPage(destination);

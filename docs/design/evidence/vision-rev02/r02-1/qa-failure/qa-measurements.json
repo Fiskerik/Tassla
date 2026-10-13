@@ -1,0 +1,193 @@
+[
+  {
+    "width": 375,
+    "nav": {
+      "x": 0,
+      "y": 785,
+      "width": 375,
+      "height": 59
+    },
+    "heading": {
+      "x": 24,
+      "y": 670,
+      "width": 327,
+      "height": 28
+    },
+    "rows": {
+      "Loggat idag": {
+        "x": 41,
+        "y": 379,
+        "width": 169.828125,
+        "height": 24
+      },
+      "Nästa träningssteg": {
+        "x": 41,
+        "y": 473,
+        "width": 293,
+        "height": 24
+      },
+      "Planerat idag": {
+        "x": 41,
+        "y": 557,
+        "width": 293,
+        "height": 24
+      }
+    },
+    "tiles": {
+      "Logga": {
+        "x": 24,
+        "y": 706,
+        "width": 103.65625,
+        "height": 86
+      },
+      "Träna": {
+        "x": 135.65625,
+        "y": 706,
+        "width": 103.671875,
+        "height": 86
+      },
+      "Kunskap": {
+        "x": 247.328125,
+        "y": 706,
+        "width": 103.671875,
+        "height": 86
+      }
+    },
+    "fit": false,
+    "cta_to_log": true
+  },
+  {
+    "width": 430,
+    "nav": {
+      "x": 0,
+      "y": 785,
+      "width": 430,
+      "height": 59
+    },
+    "heading": {
+      "x": 24,
+      "y": 670,
+      "width": 382,
+      "height": 28
+    },
+    "rows": {
+      "Loggat idag": {
+        "x": 41,
+        "y": 379,
+        "width": 224.828125,
+        "height": 24
+      },
+      "Nästa träningssteg": {
+        "x": 41,
+        "y": 473,
+        "width": 348,
+        "height": 24
+      },
+      "Planerat idag": {
+        "x": 41,
+        "y": 557,
+        "width": 348,
+        "height": 24
+      }
+    },
+    "tiles": {
+      "Logga": {
+        "x": 24,
+        "y": 706,
+        "width": 122,
+        "height": 86
+      },
+      "Träna": {
+        "x": 154,
+        "y": 706,
+        "width": 122,
+        "height": 86
+      },
+      "Kunskap": {
+        "x": 284,
+        "y": 706,
+        "width": 122,
+        "height": 86
+      }
+    },
+    "fit": false,
+    "cta_to_log": true
+  },
+  {
+    "large_text_width": 375,
+    "scrollWidth": 375,
+    "viewport": 375,
+    "tiles": {
+      "Logga": {
+        "x": 24,
+        "y": 800.390625,
+        "width": 103.65625,
+        "height": 94
+      },
+      "Träna": {
+        "x": 135.65625,
+        "y": 800.390625,
+        "width": 103.671875,
+        "height": 94
+      },
+      "Kunskap": {
+        "x": 247.328125,
+        "y": 800.390625,
+        "width": 103.671875,
+        "height": 94
+      }
+    },
+    "nav": {
+      "x": 0,
+      "y": 738.59375,
+      "width": 375,
+      "height": 105.40625
+    }
+  },
+  {
+    "large_text_width": 430,
+    "scrollWidth": 430,
+    "viewport": 430,
+    "tiles": {
+      "Logga": {
+        "x": 24,
+        "y": 800.390625,
+        "width": 122,
+        "height": 94
+      },
+      "Träna": {
+        "x": 154,
+        "y": 800.390625,
+        "width": 122,
+        "height": 94
+      },
+      "Kunskap": {
+        "x": 284,
+        "y": 800.390625,
+        "width": 122,
+        "height": 94
+      }
+    },
+    "nav": {
+      "x": 0,
+      "y": 766.59375,
+      "width": 430,
+      "height": 77.40625
+    }
+  },
+  {
+    "short_375": {
+      "x": 247.328125,
+      "y": 466,
+      "width": 103.671875,
+      "height": 86
+    },
+    "nav": {
+      "x": 0,
+      "y": 608,
+      "width": 375,
+      "height": 59
+    },
+    "last_tile_visible_above_nav": true
+  }
+]

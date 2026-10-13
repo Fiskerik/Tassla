@@ -2,7 +2,7 @@
 Datum: 2026-10-07. P10. Förberedd driftinstruktion; inga riktiga konton har raderats eller jobb aktiverats.
 
 ## 1. Före verklig beta
-Bekräfta utvecklingsmiljö, utförda migrationer och ägarisolering med två syntetiska konton. Inventera relationer från auth-användare till hundar, medlemskap, logg, hälsoplaner, träningsprogress, attribution och produktmått mot faktiskt schema. Kontrollera transaktionsrollback vid fel. P10:s SQL-prober är förberedda, inte körda. Nya tabeller i P08/P09 kräver förnyad inventering och prov. Eventuella framtida Storage-objekt kräver separat raderingshantering.
+Bekräfta utvecklingsmiljö, utförda migrationer och ägarisolering med två syntetiska konton. Inventera relationer från auth-användare till hundar, medlemskap, logg, hälsoplaner, träningsprogress, attribution, produktmått och dagliga aktiviteter mot faktiskt schema. Kontrollera transaktionsrollback vid fel. P10- och R02-2-SQL-prober är förberedda, inte körda. Eventuella framtida Storage-objekt kräver separat raderingshantering.
 
 Driftsätt den granskade serverfunktionen först i godkänd utvecklingsmiljö. Verifiera autentisering, endast verifierad användare som mål, bekräftat resultat, fel och okänt svar. Hemlig servernyckel får aldrig hamna i appen eller testutdata. Kontrollera appflödet mot den faktiska funktionen innan betaaktivering.
 
@@ -31,3 +31,7 @@ Dokumentera exakt godkänt miljö-/projekt-ID, namngiven ansvarig operatör, min
 ## KNOW-02 – privata checklistor, 2026-10-11
 
 Inventeringen ska även omfatta dog_checklist_progress, dog_checklist_custom_items och dog_checklist_preferences. Koppling via dog_id gör konto-/hundradering till avsedd cascade; verifiera faktiskt tvåägarskydd och cascade i syntetisk utvecklingsdatabas innan liveaktivering. Egna texter max160 Unicode-tecken är personuppgifter kopplade till konto. Rättighetsförfrågningar/export behöver ta med bockar, egna texter och fasval; de ingår inte automatiskt i Tassla-pass PDF. Ändamålet är endast ägarens privata progression, ingen partnerdelning/profilering/analytics. Ingen faktisk SQL/gallrings-/exportrutin är genomförd genom detta dokument. Katalognycklar innehåller inte personuppgifter.
+
+## R02-2 – privata dagsaktiviteter, 2026-10-13
+
+Inventeringen omfattar `dog_daily_routines`, `dog_daily_routine_days` och `dog_daily_training_selections`. Rutinens label är en ägarägd mall som ligger kvar tills den tas bort eller hund/konto raderas. Daterade rutin-/träningsval och serverstämplade rutinmarkeringar visas endast för vald dag; purge-funktionen gör dem gallringsbara när lagrat lokalt datum är minst 30 dagar gammalt i just den sparade IANA-zonen. Daglig körning tar bort dem vid nästa körning, normalt inom 24 timmar efter gränsen. Träningsmarkering dupliceras inte: den härleds från befintlig `training_progress.completed_at` och lagras inte i nya dagsrelationer. Åtkomst-/kopiebegäran omfattar rutinmallar/labels, dagsval och rutinmarkeringar; ingen ny export i appen. Ändamålet är privat dagsplanering för ägaren, ingen partnerdelning, analytics, profilering eller Tassla-pass. Hund-/kontoradering cascade-raderar aktiviteter. Migration, RLS, syntetiska SQL-prov, scheduler och verklig retention måste verifieras innan beta; inget jobb aktiveras genom denna guide.

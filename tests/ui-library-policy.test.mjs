@@ -44,9 +44,25 @@ test('category identity and accessible example copy are centrally defined', () =
 
 test('index exports the requested shared component families', () => {
   const index = readFileSync(path.join(uiDir, 'index.ts'), 'utf8');
-  for (const component of ['Button', 'AppBar', 'Tabs', 'ListRow', 'Card', 'HeroCard', 'QuickLogTile', 'ChecklistItem', 'Progress', 'Toast', 'IconChip', 'Field', 'CheckboxCard', 'Dialog', 'BottomSheet', 'EmptyState', 'SectionHeader', 'StatusBadge']) {
+  for (const component of ['Button', 'AppBar', 'Tabs', 'ListRow', 'Card', 'HeroCard', 'QuickLogTile', 'DailyActivityItem', 'DestinationTile', 'ChecklistItem', 'Progress', 'Toast', 'IconChip', 'Field', 'CheckboxCard', 'Dialog', 'BottomSheet', 'EmptyState', 'SectionHeader', 'StatusBadge']) {
     assert.match(index, new RegExp(`export \\{ .*${component}`));
   }
+});
+
+test('Home activity and destination components keep independent accessible actions', () => {
+  const daily = source('DailyActivityItem.tsx');
+  const destination = source('DestinationTile.tsx');
+  const gallery = source('ComponentGalleryScreen.tsx');
+  assert.match(daily, /accessibilityRole="checkbox"[\s\S]*?accessibilityState=\{\{ checked: completed/);
+  assert.match(daily, /accessibilityRole="button" accessibilityLabel=\{`Visa detaljer:/);
+  assert.match(daily, /minHeight: tokens\.size\.touchMin/);
+  for (const icon of ["'create-outline'", "'school-outline'", "'book-outline'"]) {
+    assert.ok(destination.includes(icon), `missing destination icon ${icon}`);
+  }
+  assert.match(gallery, /<DailyActivityItem/);
+  assert.match(gallery, /<DestinationTile destination="log"/);
+  assert.match(gallery, /<DestinationTile destination="training"/);
+  assert.match(gallery, /<DestinationTile destination="knowledge"/);
 });
 
 test('Button stretches every non-icon variant and keeps icon controls square at touch minimum', () => {

@@ -1,0 +1,76 @@
+[
+  {
+    "width": 375,
+    "height": 844,
+    "nav": {
+      "x": 0,
+      "y": 785,
+      "width": 375,
+      "height": 59
+    },
+    "banner": {
+      "x": 12,
+      "y": 6,
+      "width": 351,
+      "height": 20
+    },
+    "tiles": {
+      "Öppna Logga": {
+        "x": 24,
+        "y": 698,
+        "width": 103.65625,
+        "height": 74
+      },
+      "Öppna Träna": {
+        "x": 135.65625,
+        "y": 698,
+        "width": 103.671875,
+        "height": 74
+      },
+      "Öppna Kunskap": {
+        "x": 247.328125,
+        "y": 698,
+        "width": 103.671875,
+        "height": 74
+      }
+    },
+    "each_meets_16": false
+  },
+  {
+    "width": 430,
+    "height": 844,
+    "nav": {
+      "x": 0,
+      "y": 785,
+      "width": 430,
+      "height": 59
+    },
+    "banner": {
+      "x": 12,
+      "y": 6,
+      "width": 406,
+      "height": 20
+    },
+    "tiles": {
+      "Öppna Logga": {
+        "x": 24,
+        "y": 698,
+        "width": 122,
+        "height": 74
+      },
+      "Öppna Träna": {
+        "x": 154,
+        "y": 698,
+        "width": 122,
+        "height": 74
+      },
+      "Öppna Kunskap": {
+        "x": 284,
+        "y": 698,
+        "width": 122,
+        "height": 74
+      }
+    },
+    "each_meets_16": false
+  }
+]

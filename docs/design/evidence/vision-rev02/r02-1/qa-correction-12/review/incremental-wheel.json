@@ -1,0 +1,97 @@
+[
+  {
+    "width": 375,
+    "initial_tile": {
+      "x": 247.328125,
+      "y": 845.203125,
+      "width": 103.671875,
+      "height": 82
+    },
+    "wheel_steps": [
+      {
+        "step": 1,
+        "tile_y": 765.203125,
+        "nav_y": 738.59375
+      },
+      {
+        "step": 2,
+        "tile_y": 685.203125,
+        "nav_y": 738.59375
+      }
+    ],
+    "partial_tile": {
+      "x": 247.328125,
+      "y": 685.203125,
+      "width": 103.671875,
+      "height": 82
+    },
+    "final_tile": {
+      "x": 247.328125,
+      "y": 621.203125,
+      "width": 103.671875,
+      "height": 82
+    },
+    "nav": {
+      "x": 0,
+      "y": 738.59375,
+      "width": 375,
+      "height": 105.40625
+    },
+    "clearance": 35.390625,
+    "banner_before_scale": {
+      "x": 12,
+      "y": 2,
+      "width": 351,
+      "height": 28
+    },
+    "banner_after_scroll": {
+      "x": 12,
+      "y": 2,
+      "width": 351,
+      "height": 28
+    },
+    "scrollTop": 224
+  },
+  {
+    "width": 430,
+    "initial_tile": {
+      "x": 284,
+      "y": 758,
+      "width": 122,
+      "height": 82
+    },
+    "wheel_steps": [],
+    "partial_tile": {
+      "x": 284,
+      "y": 758,
+      "width": 122,
+      "height": 82
+    },
+    "final_tile": {
+      "x": 284,
+      "y": 758,
+      "width": 122,
+      "height": 82
+    },
+    "nav": {
+      "x": 0,
+      "y": 766.59375,
+      "width": 430,
+      "height": 77.40625
+    },
+    "clearance": -73.40625,
+    "banner_before_scale": {
+      "x": 12,
+      "y": 2,
+      "width": 406,
+      "height": 28
+    },
+    "banner_after_scroll": {
+      "x": 12,
+      "y": 2,
+      "width": 406,
+      "height": 28
+    },
+    "scrollTop": 0
+  }
+]

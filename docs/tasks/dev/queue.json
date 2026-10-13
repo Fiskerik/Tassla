@@ -3915,6 +3915,605 @@
         }
       ],
       "next_step": "Independent read-only Reviewer PASS on frozen v7.2 product/navigation/harness diff and saved public/review evidence. Verified 44px CTA, 375/430 tile bottom y=784 vs nav y=785, truthful source groups, 5-tab/More navigation, review gating/destination, FAQ/checklist untouched, §14 and preserved failed evidence. Limitation: React Native Web with synthetic data; not device/backend certification."
+    },
+    {
+      "id": "VISION-R02-1",
+      "title": "Hem rev02-referens och delade aktivitetskomponenter",
+      "mvp_requirement": "Eriks uttryckliga VISION-REV02-beställning 2026-10-13; docs/mvp.md: Home",
+      "plan": "docs/tasks/dev/vision-rev02.md v8, R02-1 (approved scope unchanged)",
+      "write_paths": [
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/home-greeting.ts",
+        "src/features/home/README.md",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/components/ui/DestinationTile.tsx",
+        "src/components/ui/ComponentGalleryScreen.tsx",
+        "src/components/ui/index.ts",
+        "src/components/README.md",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tests/ui-library-policy.test.mjs",
+        "tests/home-vision.test.mjs",
+        "tests/home-greeting.test.mjs",
+        "docs/design/evidence/vision-rev02/r02-1",
+        "docs/tasks/dev/vision-rev02.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md"
+      ],
+      "acceptance": [
+        "Home visar målbildens hälsning/porträtt/veckor, Just nu, dagsyta och destinationskort i rätt ordning; tidsstyrd hälsning har Hej!-fallback",
+        "Syntetiska aktivitetsrader förekommer endast i uttrycklig review-fixture med permanent synlig syntetisk märkning; public visar befintliga riktiga källor",
+        "Checkbox-interaktion finns endast i syntetisk review-fixture; public saknar completion-control och completion-state före R02-2",
+        "Fixture checkbox och detaljnavigation har egna handlers; tryckytor är minst 44x44",
+        "DestinationTile använder destinationsikoner för Logg, Träning och Kunskap; nya komponentvarianter syns i ComponentGalleryScreen",
+        "Aktivitetskategorier får inte användas som destinationsikon",
+        "Renderad 375/430 och 140-procentsgranskning jämför komposition, komponentformer, densitet, bilder och safe area mot vision_rev02.jpg §14",
+        "At 375×844 and 430×844, all three public and review destination buttons are visible in the initial viewport and end at least 16 pt above fixed navigation; verify review geometry before scrolling."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/ui-library-policy.test.mjs tests/home-vision.test.mjs",
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "Public and review React Native Web visual builds and Home fixture at 375/430 and large text",
+        "Independent QA and Reviewer with docs/design-rules.md §14 checklist",
+        "Review initial viewport geometry before scrolling; separately verify scrolling at 375×667 and large text."
+      ],
+      "depends_on": [
+        "HOME-NEXT-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE R02-1 v2; Critic PROCEED R02-1 v3 after public Home was explicitly required to have no completion control/state and all toggles remain synthetic review-only. R02-1 scope unchanged in plan v4; visual and component acceptance recorded."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementer handoff started for the exact R02-1 v4 scope after Architect APPROVE and Critic PROCEED. Public has no completion state; review fixture alone toggles local synthetic state. No R02-2 schema/data or R02-3 screen migration is authorized in this slice."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Independent QA BLOCK: public destinations ended y=792 vs nav top y=785 at both 375/430 (7px overlap; required bottom ≤769). Review destinations initially y=834/794 below nav and the verifier measured only after scrolling. Focused/full checks, iOS bundle and builds PASS. Failure screenshots and matrices saved in docs/design/evidence/vision-rev02/r02-1/qa-failure. Architect confirms same-plan Home-local fit correction; preserve 5 rows, banner, source content, navigation, 44pt targets and shared spacing tokens."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction plan accepted within existing approved v8: no scope or file-path expansion. New implementation/QA checkpoint required."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect confirms v8 approval covers same-scope visual correction in HomeScreen.tsx, optional DestinationTile.tsx and visual-check/verify.py; initial 375/430 public and review tiles must be at least 16 pt above nav, with 44 pt targets and all five rows/banner/content retained."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start Architect-confirmed R02-1 visual fit correction; Home-local density only, preserve 5-row fixture/banner/source content/shared tokens/44 pt targets; verifier measures initial review tiles before scrolling."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Same-scope visual fit correction implemented in HomeScreen.tsx, DestinationTile.tsx, verify.py and home-vision.test.mjs. Preserved shared spacing tokens, five fixture rows, banner, source content and 44 pt targets; verifier checks review initial geometry before scrolling. Typecheck, public/review builds, focused tests 3/3, Python syntax and diffcheck PASS; independent rerender QA required."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent rerender interim: public initial tiles now pass 16pt clearance at 375/430. Review still fails at 375: first tile y=762 h=74, nav top 785, bottom y=836 (51pt overlap). Awaiting final current-run QA report; Architect approved a review-only same-scope density refinement with 32pt min-height fixed banner that can grow for large text."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Return to implementation for only the review-fixture fit failure; public geometry passes. Same-plan Architect confirmation: remove redundant Idag heading in synthetic review, set review row gap 8pt, banner minHeight 32pt (may grow with large text); retain all five rows, labels/categories/actions/full accessible descriptions, fixed banner, public source rows, shared tokens and 44pt targets."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect confirms review-only heading/gap/banner adjustment is in-scope under v8. Banner remains outside scroll, minHeight 32pt and may grow for large text. At both widths verify all destinations initially, bottom ≤ nav top−16; preserve all five rows and 44pt actions."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement review-only same-scope correction; public fit already passes. Remove redundant review-only Idag heading, use 8pt review row gap, 32pt minimum fixed synthetic banner; preserve five rows, accessible descriptions, source content, nav and 44pt targets."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Architect-approved review-only fit correction implemented: synthetic review omits redundant Idag heading, rows use 8pt gap, fixed banner minHeight 32pt and may grow. All five rows/actions/accessibility remain; public Home content is unchanged. TypeScript, public/review builds, Python syntax, focused tests (3/3), and diffcheck PASS per implementer. Independent rendered QA required on final source."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent correction-2 QA BLOCK. Public Home official verifier PASS at 375/430; review still fails initial unscrolled clearance at both widths: tile y=698 h=74 ends 772; nav starts 785; gap 13px, 3px short of required 16px. QA stopped before review interactions/§14 after capturing exact bounds and screenshots. Focused tests, pnpm check (41 tests, 38 warnings, 0 errors), public iOS export, both builds, diffcheck and queue validation PASS. Full report/evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-2/QA-REPORT.md. Architect review requested for a final review-only correction; R02-2 remains gated."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Independent QA found only a 3px review-fixture shortfall at both widths; public passes. Architect confirms existing v8 approval covers a 4pt reduction of the review-only fixture heading-to-rows gap. Preserve public layout, 32pt-min growth-capable banner, five rows, labels/actions/accessibility and 44pt targets. No acceptance changes."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect confirms the 4pt review-only fixtureSection heading gap reduction is covered by existing v8 approval. It only compacts review fixture spacing; public layout, five rows, 44pt hit targets and acceptance remain unchanged. Re-run initial 375/430 geometry and then all deferred review checks."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement final Architect-approved review-only adjustment: reduce fixtureSection heading-to-rows gap by 4pt, preserving already-approved 8pt row gap and all other constraints. Then hand off for full independent QA."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Final Architect-approved review-only fit adjustment implemented: fixture heading-to-rows gap reduced 4pt; existing 8pt row gap, 32pt-min growth-capable banner, five rows/actions/accessibility, public layout, shared tokens and 44pt hit targets preserved. TypeScript, public/review builds, focused tests 3/3, Python syntax and diffcheck PASS per implementer. Independent QA required at both widths, initial viewport before scroll."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Final independent QA: normal 375/430 initial fit PASS in public (tiles bottom 748/nav 785=37px) and review (bottom 768/nav 785=17px). Review fixture, banner, toggles, 375x667, 140% text/reduced motion, navigation and builds/checks pass. §14 BLOCK at point 16: current Tassla placeholder visual footprint (~76x80) is materially smaller than target portrait (~120x125), violating plan’s same-visual-space requirement. Do not use unrelated editorial dog photo as owner portrait. Full report/evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-3/QA-REPORT.md. Need a same-scope image-size/placement correction, then repeat §14 and layout QA."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "§14 blocker is within accepted v8 requirement: existing dog-placeholder must occupy target portrait visual space; no photo field, editorial photo or data change. Architect confirms Home-local 120×125pt absolute upper-right illustration, overlapping the week strip without increasing identity height, plus reserving greeting text space. Architect also confirms removing breed from Home greeting is in-scope because panel 1 shows dog name+age; breed remains in profile/data."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect confirms image scale/placement and name+age-only Home greeting are within v8. Use dog-placeholder.png as decorative, screen-reader-hidden illustration at ~120×125pt; absolute at identity top-right, overlap right week-strip edge without adding vertical layout height. Reserve text space, keep week strip in normal flow, preserve 44pt controls and normal initial destination clearance. Do not use dog-welcome or alter dog data."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement v8-approved portrait footprint/placement and Home greeting content: dog-placeholder around 120×125pt, absolute at identity upper-right; reserve title/name+age text width; week strip stays in flow and may underlap portrait as target does. Remove breed from Home header only; breed remains stored/displayed in profile. Preserve flow height, public/review clearance, accessibility hiding and all other behavior."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Architect-approved portrait correction implemented in HomeScreen.tsx: existing dog-placeholder is 120×124pt using tokens, absolutely placed at identity top-right without increasing flow height; week strip remains in flow above image via z-index. Greeting reserves portrait width and shows dog name+age only as panel 1; breed data/profile unchanged. Focused tests 3/3, pnpm check (41 tests, 38 pre-existing lint warnings/0 errors), TypeScript, public/review visual builds, public iOS export, Python verifier syntax, diffcheck and queue validation PASS. Independent rerender and §14 assessment required."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Correction-4 QA BLOCK remains at §14 point16: 120×124 Image element but visible placeholder silhouette only ~59×78 px at both widths, compared with reference portrait filling substantially more visual area. Name/age/week strip clear; public fit 37px and review fit 17px above nav at 375/430. Focused/full checks, public iOS bundle, public/review builds/verifiers, diffcheck and queue validation PASS. Detailed report/screenshots: docs/design/evidence/vision-rev02/r02-1/qa-correction-4/QA-REPORT.md. Architect approves centered crop/magnification of same image inside fixed 120×124 viewport; no new asset/data."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Architecture-approved correction remains in R02-1: crop/magnify dog-placeholder.png inside fixed 120×124pt decorative frame to fill portrait visual space; preserve flow height, week strip, name/age reserved width and existing product data. No new image, dependency, token or DB field."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect approves fixed 120×124pt portrait viewport with centered enlarged placeholder image clipped to frame, decorative/hidden from screen readers. Tune crop without distortion; preserve image position, name/age text, week strip, 375/430 fit and 17pt review clearance. Retest 140% and §14."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Apply final approved crop of same placeholder image inside fixed portrait viewport; no asset/data/layout height change. Rerun focused/full checks and hand off for independent public/review render and §14."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-5 crop implemented in the fixed 120x124 frame; independent QA handoff."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Correction-5 BLOCK: portrait prominence restored, but week 13/14 labels and dots overlap the silhouette; §14 points 5/8/16 fail. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-5/QA-REPORT.md."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Keep the same 120x124 decorative portrait and flow geometry; Architect approved a Home-only cream fade beneath the week strip to recover contrast."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Existing R02-1 approval covers a Home-only contrast treatment beneath the week strip; preserve portrait footprint, destination clearance, no new asset/data/dependency."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction-6: implement a cream fade under the affected week strip within approved Home scope; retest contrast and portrait prominence."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-6 fade implemented; public/review builds, Home verifiers, focused tests, full checks, iOS export and format/queue checks passed per report; independent visual QA required."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Correction-6 BLOCK: stepped fade and week 12 contrast 3.57:1 at 375px/140% text; §14 points 8/16 fail. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-6/QA-REPORT.md."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Revise only the Home fade; make it smooth and ensure every week glyph reaches 4.5:1 at standard and 140% text."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect approved a smooth Home-only fade approach; preserve portrait prominence, fixed footprint and layout."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction-7: replace stepped fade with smooth fade and verify all glyph contrast and portrait appearance."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-7 smooth fade implemented; independent contrast and §14 rerender required."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Correction-7 BLOCK: week 14 remained below 4.5:1 and week 12 at 375px/140% failed; the fade also weakened portrait prominence. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-7/QA-REPORT.md."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Replace whole-image fade with uniform placeholder opacity and textPrimary week labels, preserving a prominent portrait; seek localized backing if contrast still fails."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect approved uniform placeholder opacity tuned from render, textPrimary labels, and localized cream backing behind affected week markers if required; keep 120x124 frame, 17px clearance, decorative image."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction-8: tune uniform portrait opacity and label color within Architect-approved same-scope approach; rerun contrast QA."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-8 opacity/text treatment implemented; independent glyph contrast, portrait prominence and §14 rerender required."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Correction-8 BLOCK: contrast passed, but the portrait was too faint to satisfy §14 point 16. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-8/QA-REPORT.md."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Restore portrait prominence and add a small cream backing behind only affected week labels; do not fade the full portrait further."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect guidance explicitly supports localized cream backing under affected markers while preserving a prominent illustration and fixed layout."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction-9: increase portrait opacity to preserve prominence and add localized backing for rightmost affected labels."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-9 image prominence restored and localized backing added; independent glyph-level contrast measurement required."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Correction-9 BLOCK: backing applied to Text did not cover every glyph pixel; minimum contrast 3.49:1 at 430px normal text. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-9/QA-REPORT.md."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Move the already-approved small cream backing to a wrapping View around each affected week label so the full glyph bounds sit over cream; keep portrait at .7 opacity and preserve current frame/layout."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Existing Architect approval for localized backing behind affected markers covers the wrapper-View implementation; no scope, data, dependency or layout-height change."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction-10: wrap affected week label Text in a View carrying the localized cream background; retain portrait prominence and current marker geometry."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-10 implemented in the approved Home-only scope: week-label cream backing now wraps each affected Text in a View so the backing covers full glyphs; portrait opacity .7, fixed 120x124 frame/crop, week-strip flow, current marker and layout are preserved. Focused tests 3/3, pnpm check (41 tests; 38 lint warnings, 0 errors), public iOS export, Python syntax, diffcheck and queue validation PASS. Independent rendered QA required."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Correction-10 independent QA PASS: every week label measured at least 6.55:1 at 375/430 and 140% text; wrapper coverage, portrait prominence, 17px fit clearance, public/review fixture interactions, both Home verifier builds, focused tests and visual evidence passed. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-10/QA-REPORT.md. Main session separately passed pnpm check (41 tests, 38 lint warnings, 0 errors) and public iOS export."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer BLOCK: 140% text acceptance lacks reachability evidence. Existing verifier checks that destination buttons exist and document width does not overflow, but does not scroll to the last destination or compare its bounds to fixed navigation. 375x667 scrolling is checked only at normal text. Reviewer states no UI failure is demonstrated, but acceptance remains unverified."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Close only the verification gap within existing v8 scope and unchanged acceptance: extend tools/visual-check/verify.py to scroll to the last Home destination at 140% text for public/review, assert it is visible above fixed navigation, and retain the synthetic banner position. No product UI change or file-path expansion."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "coordinator",
+          "evidence": "Existing Architect APPROVE for R02-1 v8 includes tools/visual-check/verify.py and acceptance for 140% text/scroll reachability; this adds evidence to that acceptance without changing product behavior or scope."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement the approved visual-check-only reachability assertion and capture public/review 375/430 large-text scrolled screenshots; request independent QA and Reviewer recheck."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-11 added a large-text destination scroll assertion; focused tests, verifier syntax, diffcheck and queue validation passed. Independent QA report: docs/design/evidence/vision-rev02/r02-1/qa-correction-11/QA-REPORT.md."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Correction-11 BLOCK: public verifier passed; review verifier compared the banner to a pre-scale baseline (y=6) after the label grew (y=2), so the assertion was invalid. Independent measurements show banner stays at y=2 through scroll. At 430 px the final tile reaches y=767 vs nav y=766.594 (0.406 px overlap) because scrollIntoViewIfNeeded did not scroll a nearly visible item. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-11/QA-REPORT.md."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correct only the verifier: capture the review-banner baseline after 140% text scaling; apply a real downward user-like scroll over Home content so the final destination clears fixed nav at both widths; keep banner fixed and assert final bounds. No product UI change or acceptance change."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "coordinator",
+          "evidence": "Existing Architect APPROVE for R02-1 v8 covers tools/visual-check/verify.py, 140% text and scroll reachability; this correction improves proof within approved scope."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction-12: fix post-scale banner measurement and perform an explicit wheel scroll before asserting the last destination is fully above fixed navigation in public/review at 375/430."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-12 fixed the review banner baseline to be recorded after 140% scaling and exercises actual scroll-to-last-destination plus a 48px mouse-wheel input. Python syntax, focused tests, diffcheck and queue validation PASS."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Correction-12 independent QA PASS: fresh public/review builds and both Home verifiers passed at 375/430. Final destination is fully above nav after scroll; review clearance 55.39px at 375 and 47.59px at 430. Banner remains y=2 before/after scroll following text scaling. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-12/QA-REPORT.md."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS after correction-12. Confirms post-scale banner baseline, real scroll to last destination and bounds above fixed navigation at 140% text in public/review 375/430; 55.39px clearance at 375 and 47.59px at 430; banner fixed at y=2. No new scope, truthfulness or §14 blocker. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-12/QA-REPORT.md and visual captures."
+        }
+      ],
+      "next_step": "R02-1 completed. Begin approved R02-2 v8 implementation using synthetic local data; no live database or production data."
+    },
+    {
+      "id": "VISION-R02-2",
+      "title": "Ägarvalda dagsrutiner och källhärledd träningsprogress",
+      "mvp_requirement": "Eriks uttryckliga VISION-REV02-beställning och completion-regel 2026-10-13; docs/mvp.md: Home/Training",
+      "plan": "docs/tasks/dev/vision-rev02.md v8, R02-2; exact Architect/Critic/Security/Compliance reviews recorded",
+      "write_paths": [
+        "src/features/home/daily-activity-model.ts",
+        "src/features/home/daily-activity-data.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/data/workspace-data.ts",
+        "src/data/README.md",
+        "src/features/home/README.md",
+        "supabase/migrations/202610130001_daily_activities.sql",
+        "supabase/tests/daily-activities.sql",
+        "supabase/tests/account-deletion.sql",
+        "supabase/daily-activities-retention-job.sql",
+        "tests/daily-activity-model.test.mjs",
+        "tests/daily-activity-data.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/training-activity-date.test.mjs",
+        "tests/account-delete.test.mjs",
+        "docs/mvp.md",
+        "docs/privacy/beta-information.md",
+        "docs/dev/beta-data-lifecycle.md",
+        "supabase/README.md",
+        "docs/design/evidence/vision-rev02/r02-2",
+        "docs/tasks/dev/vision-rev02.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md"
+      ],
+      "acceptance": [
+        "Ägaren väljer egna rutiner och träningssteg per lokal dag; ingen rutinrecurrence sker automatiskt",
+        "Manuella completioner bekräftas först efter verified save; träningscompletion härleds från exakt training_progress step/version och activity date",
+        "Guideöppning, vårdplan och olänkad logg påverkar inte count; checklistfasprogress kopieras inte",
+        "Hem och full dagslista visar samma kompletta mängd och confirmed count; fem rader är bara presentationsgräns",
+        "Tvåägar-RLS, minsta kolumngrants, sammansatt hund-/rutin-FK, dog/date/breed-eligible published training source, current-next-step ordering, withdrawn-source exclusion from Home/count, serverstämplad completion med stale-Home/midnight guard after lock waits; one post-lock clock_timestamp is used for validation and completion timestamp, stale-undo compare-and-set, immutabla scope/source/date, radering och idempotent readback granskas med syntetiska data",
+        "workspace-data exponerar training_progress.completed_at; regressionsprov bekräftar projicering till vald lokal dag",
+        "Daterade val/completions har ingen historikvy, gallras per stored IANA zone när local date_key är 30 dagar gammal och raderas vid nästa dagliga körning (normalt inom 24h); template/nyare/annan hund bevaras och anon/authenticated saknar purge execute",
+        "Routine create, daily routine selection and training selection retries reuse stable UUID/logical key and reconcile exact readback",
+        "Åtkomst-/kopieringsförfrågan inkluderar rutinmallar/labels och daterade urval/completions",
+        "MVP, beta-informationens arbetsutkast och datalivscykel beskriver ändamål/minimering/åtkomst/kopia/radering/gallring före beta; ingen partnerdelning, analytics, profilering eller Tassla-pass"
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/daily-activity-model.test.mjs tests/daily-activity-data.test.mjs tests/daily-activity-ui.test.mjs tests/training-activity-date.test.mjs tests/account-delete.test.mjs",
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "Supabase daily-activities SQL test in local synthetic database if available",
+        "SQL/data tests reject out-of-order training selection and exclude subsequently withdrawn source from visible count",
+        "Retention purge and pg_cron job setup documented; scheduler status NOT TESTABLE until target Supabase setup",
+        "Public/review Home visual verification and independent QA/Reviewer",
+        "Architect, Critic, Security and Compliance review before implementation"
+      ],
+      "depends_on": [
+        "VISION-R02-1"
+      ],
+      "status": "qa",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "security-review",
+          "evidence": "R02-2 v7 Security CHANGES: transaction-start now() could allow stale previous-day writes after a lock wait across midnight. v8 uses one post-lock clock_timestamp for both local-date validation and completed_at and adds the lock-wait boundary regression."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "critic",
+          "evidence": "R02-2 exact plan v8 PROCEED: post-lock single clock_timestamp closes the lock-wait-across-midnight race; same captured instant validates local date and stamps completion."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "security-review",
+          "evidence": "R02-2 exact plan v8 Security APPROVE for synthetic local implementation: hardened private trigger boundary, locked source validation, shared post-lock timestamp, RLS/grants and service-only purge are sufficiently specified. No runtime DB approval implied."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "compliance-review",
+          "evidence": "R02-2 exact plan v8 Compliance APPROVE for synthetic/local implementation. The timestamp/lock-wait correction adds no data purpose or fields; beta-only gates remain."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact R02-2 v8 and confirms R02-1 approved scope unchanged. One post-lock clock_timestamp is used for local-date validation and completion stamp; lock-wait-over-midnight regression required. R02-2 implementation still waits for R02-1 checkpoint."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "R02-2 exact v8 reviews are recorded: Architect APPROVE, Critic PROCEED, Security APPROVE, Compliance APPROVE. The only gate was R02-1 Reviewer checkpoint, now PASS. Scope remains synthetic/local implementation with no live migration or production data."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start Erik-authorized R02-2 v8 now that R02-1 is done. Preserve owner-selected per-day routines, completion only by confirmed owner mark or exact saved training_progress for the chosen local day; no guide-open, planned-health, unlinked-log or checklist completion."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-2 implementation handoff saved at docs/design/evidence/vision-rev02/r02-2/IMPLEMENTER-REPORT.md. pnpm check 45/45, iOS bundle, targeted checks and React Native Web synthetic visual checks pass; SQL/RLS/scheduler/midnight runtime remains NOT TESTABLE. Independent QA and Reviewer are next."
+        }
+      ],
+      "next_step": "Independent QA and Reviewer on the implementation handoff; run migration, RLS, purge scheduler, and two-session midnight probe only in a disposable local Supabase database. Keep VISION-R02-3 planned until R02-2 has a stable reviewed checkpoint and its exact plan review."
+    },
+    {
+      "id": "VISION-R02-3",
+      "title": "Migrera Logg, Träning och Kunskap mot vision rev02",
+      "mvp_requirement": "Eriks uttryckliga VISION-REV02-beställning 2026-10-13; docs/mvp.md: Logg/Training/Knowledge",
+      "plan": "docs/tasks/dev/vision-rev02.md v6, R02-3; exact plan review required after R02-2",
+      "write_paths": [
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/puppy-log/README.md",
+        "src/features/training/README.md",
+        "src/features/knowledge/README.md",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tests/log-screen-policy.test.mjs",
+        "tests/training-model.test.mjs",
+        "tests/knowledge-review-content.test.mjs",
+        "docs/design/evidence/vision-rev02/r02-3",
+        "docs/tasks/dev/vision-rev02.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md"
+      ],
+      "acceptance": [
+        "Logg, Träning och Kunskap närmar sig respektive målpanel med befintliga verkliga publicerade data",
+        "Alla åtta loggtyper, CRUD/undo/uncertain status/paginering och huvud-/flerflöde bevaras",
+        "Versionsbunden träningsprogress och review-gating bevaras; ingen completedStep kopieras till separat dagsflagga",
+        "Publicerade guider, FAQ och faschecklistor förblir synliga med nuvarande review- och completionregler",
+        "Opt-in komponentmigrering ändrar inte beteendet hos andra skärmar; QA fyller §14 för panel 5–7"
+      ],
+      "checks": [
+        "Focused Log/Training/Knowledge regression tests",
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "Rendered panel 5–7 at 375/430, large text and relevant loading/empty/error/review states",
+        "Independent QA and Reviewer against vision_rev02.jpg and docs/design-rules.md §14"
+      ],
+      "depends_on": [
+        "VISION-R02-2"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "After R02-2 stable checkpoint, approve a new exact R02-3 plan and file list with Architect/Critic before code; shared component paths remain excluded until then"
     }
   ]
 }

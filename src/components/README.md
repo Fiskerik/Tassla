@@ -4,9 +4,11 @@
 
 ## Entry points och dataflöde
 
-- `ui/index.ts` exporterar knappar, AppBar/BottomNav, kort/rader, kategori-chip, formulär, återkoppling, ActionMenu, Skeleton, modaler och förstaanvändningstips.
+- `ui/index.ts` exporterar knappar, AppBar/BottomNav, kort/rader, kategori-chip, formulär, återkoppling, ActionMenu, Skeleton, modaler, förstaanvändningstips och `DailyActivityItem`/`DestinationTile`.
 - `IconChip` äger kategoriikonernas och kategorifärgernas gemensamma mappning. `PoopIcon` ritar bajsikonen med React Native-vyer eftersom ikonbiblioteket saknar motivet.
-- `ComponentGalleryScreen` visar svenska exempel och tillstånd. Den nås endast från den redan flaggade `DevelopmentPreview`; ingen produktionsroute används.
+- `DailyActivityItem` visar en kategori, beskrivning och två separata kontroller: valfri completion-toggle och detaljnavigation. Hem använder den bara för sin lokala syntetiska review-fixture; den skapar eller sparar ingen produktprogress.
+- `DestinationTile` visar destinationsikoner för Logg, Träning eller Kunskap och skickar navigation via sin callback. Kategoriernas aktivitetsikoner används inte som genvägsikoner.
+- `ComponentGalleryScreen` visar svenska exempel och tillstånd, inklusive de två nya hemkomponenterna. Den nås endast från den redan flaggade `DevelopmentPreview`; ingen produktionsroute används.
 - `MainSwipeNavigation` ger ett dependencyfritt horisontellt svepresponderlager för produktens sex MVP-ytor. Den aktiveras bara av arbetsytan, använder stora touchmål som tröskel och äger ingen sidstate.
 - Komponentprops går direkt från den sammansättande vyn till nativekontrollerna. Biblioteket lagrar inte data.
 

@@ -1,0 +1,143 @@
+{
+  "mode": "public",
+  "measurements": [
+    {
+      "mode": "public",
+      "width": 375,
+      "height": 844,
+      "large_text": false,
+      "nav": {
+        "x": 0,
+        "y": 785,
+        "width": 375,
+        "height": 59
+      },
+      "tiles": {
+        "Öppna Logga": {
+          "x": 24,
+          "y": 674,
+          "width": 103.65625,
+          "height": 74
+        },
+        "Öppna Träna": {
+          "x": 135.65625,
+          "y": 674,
+          "width": 103.671875,
+          "height": 74
+        },
+        "Öppna Kunskap": {
+          "x": 247.328125,
+          "y": 674,
+          "width": 103.671875,
+          "height": 74
+        }
+      },
+      "all_clearance_16": true
+    },
+    {
+      "mode": "public",
+      "width": 430,
+      "height": 844,
+      "large_text": false,
+      "nav": {
+        "x": 0,
+        "y": 785,
+        "width": 430,
+        "height": 59
+      },
+      "tiles": {
+        "Öppna Logga": {
+          "x": 24,
+          "y": 674,
+          "width": 122,
+          "height": 74
+        },
+        "Öppna Träna": {
+          "x": 154,
+          "y": 674,
+          "width": 122,
+          "height": 74
+        },
+        "Öppna Kunskap": {
+          "x": 284,
+          "y": 674,
+          "width": 122,
+          "height": 74
+        }
+      },
+      "all_clearance_16": true
+    },
+    {
+      "mode": "public",
+      "width": 375,
+      "height": 844,
+      "large_text": true,
+      "nav": {
+        "x": 0,
+        "y": 738.59375,
+        "width": 375,
+        "height": 105.40625
+      },
+      "tiles": {
+        "Öppna Logga": {
+          "x": 24,
+          "y": 768.390625,
+          "width": 103.65625,
+          "height": 82
+        },
+        "Öppna Träna": {
+          "x": 135.65625,
+          "y": 768.390625,
+          "width": 103.671875,
+          "height": 82
+        },
+        "Öppna Kunskap": {
+          "x": 247.328125,
+          "y": 768.390625,
+          "width": 103.671875,
+          "height": 82
+        }
+      },
+      "all_clearance_16": false
+    },
+    {
+      "mode": "public",
+      "width": 430,
+      "height": 844,
+      "large_text": true,
+      "nav": {
+        "x": 0,
+        "y": 766.59375,
+        "width": 430,
+        "height": 77.40625
+      },
+      "tiles": {
+        "Öppna Logga": {
+          "x": 24,
+          "y": 768.390625,
+          "width": 122,
+          "height": 82
+        },
+        "Öppna Träna": {
+          "x": 154,
+          "y": 768.390625,
+          "width": 122,
+          "height": 82
+        },
+        "Öppna Kunskap": {
+          "x": 284,
+          "y": 768.390625,
+          "width": 122,
+          "height": 82
+        }
+      },
+      "all_clearance_16": false
+    }
+  ],
+  "checks": [
+    "375x667 scroll reaches last tile",
+    "public has no synthetic banner, review rows, count, or checkboxes",
+    "three destinations select expected main tab; More exposes Health and Tassla-pass"
+  ],
+  "pageErrors": []
+}

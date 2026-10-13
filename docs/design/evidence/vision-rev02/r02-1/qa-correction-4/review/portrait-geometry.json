@@ -1,0 +1,136 @@
+[
+  {
+    "mode": "review",
+    "viewport": {
+      "width": 375,
+      "height": 844
+    },
+    "portrait": {
+      "src": "./dog-placeholder-ZS45NDWX.png",
+      "x": 231,
+      "y": 36,
+      "width": 120,
+      "height": 124,
+      "alt": ""
+    },
+    "greeting": {
+      "x": 24,
+      "y": 48,
+      "width": 199,
+      "height": 28
+    },
+    "name_age": {
+      "x": 24,
+      "y": 80,
+      "width": 199,
+      "height": 20
+    },
+    "week_strip": {
+      "x": 24,
+      "y": 120,
+      "width": 327,
+      "height": 56
+    },
+    "banner": {
+      "x": 0,
+      "y": 0,
+      "width": 375,
+      "height": 844
+    },
+    "nav": {
+      "x": 0,
+      "y": 785,
+      "width": 375,
+      "height": 59
+    },
+    "tiles": {
+      "Öppna Logga": {
+        "x": 24,
+        "y": 694,
+        "width": 103.65625,
+        "height": 74
+      },
+      "Öppna Träna": {
+        "x": 135.65625,
+        "y": 694,
+        "width": 103.671875,
+        "height": 74
+      },
+      "Öppna Kunskap": {
+        "x": 247.328125,
+        "y": 694,
+        "width": 103.671875,
+        "height": 74
+      }
+    },
+    "name_age_overlaps_portrait": false,
+    "initial_clearance_16": true
+  },
+  {
+    "mode": "review",
+    "viewport": {
+      "width": 430,
+      "height": 844
+    },
+    "portrait": {
+      "src": "./dog-placeholder-ZS45NDWX.png",
+      "x": 286,
+      "y": 36,
+      "width": 120,
+      "height": 124,
+      "alt": ""
+    },
+    "greeting": {
+      "x": 24,
+      "y": 48,
+      "width": 254,
+      "height": 28
+    },
+    "name_age": {
+      "x": 24,
+      "y": 80,
+      "width": 254,
+      "height": 20
+    },
+    "week_strip": {
+      "x": 24,
+      "y": 120,
+      "width": 382,
+      "height": 56
+    },
+    "banner": {
+      "x": 0,
+      "y": 0,
+      "width": 430,
+      "height": 844
+    },
+    "nav": {
+      "x": 0,
+      "y": 785,
+      "width": 430,
+      "height": 59
+    },
+    "tiles": {
+      "Öppna Logga": {
+        "x": 24,
+        "y": 694,
+        "width": 122,
+        "height": 74
+      },
+      "Öppna Träna": {
+        "x": 154,
+        "y": 694,
+        "width": 122,
+        "height": 74
+      },
+      "Öppna Kunskap": {
+        "x": 284,
+        "y": 694,
+        "width": 122,
+        "height": 74
+      }
+    },
+    "name_age_overlaps_portrait": false,
+    "initial_clearance_16": true
+  }
+]

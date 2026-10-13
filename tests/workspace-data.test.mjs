@@ -255,6 +255,7 @@ test('training uses published version and server step UUIDs, preserving in-progr
       'cccccccc-cccc-4ccc-8ccc-ccccccccccc2',
     ]);
     assert.deepEqual(result.programs[0].completedStepIds, [finishedStep.step_id]);
+    assert.deepEqual(result.programs[0].completedAtByStepId, { [finishedStep.step_id]: finishedStep.completed_at });
     assert.deepEqual(result.paused, []);
     assert.ok(requests.every(({ method }) => method === 'GET'));
   } finally {

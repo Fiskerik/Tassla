@@ -52,6 +52,11 @@ Loggning, träning och innehåll ska nås i denna kontext. Användaren ska inte 
 - Flödet förändras över tid med hundens utveckling och visar relevanta råd, aktiviteter, träningssteg och uppmaningar.
 - Användaren kan gå från relevant hjälp till konkret handling.
 - Innehåll distribueras främst genom Home och relevanta flöden. Ett stort fristående artikelbibliotek krävs inte.
+- Ägaren kan välja egna dagsrutiner och nästa tillåtna publicerade träningssteg för en lokal dag; rutiner upprepas inte automatiskt.
+- Egna rutinbockar är ägarens markeringar. Träningsuppgifter blir klara endast genom sparad `training_progress` för exakt hund, innehållsversion, steg och vald lokal dag.
+- Guideöppning, planerad vård, olänkad logg och checklistfas räknas inte som utförda dagsuppgifter.
+- Hem och utökad dagslista visar samma fullständigt hämtade uppgifter och bekräftade count. Unknown save/read visas inte som klart.
+- Daterade val/completions visas bara för vald dag och gallras 30 dagar efter respektive lagrade lokala datum; routine templates finns kvar tills ägaren tar bort dem eller konto/hund raderas.
 
 ### Skärm 2. Snabb vardagsloggning
 

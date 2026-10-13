@@ -7,6 +7,8 @@ export { Card } from './Card';
 export { CheckboxCard } from './CheckboxCard';
 export { ChecklistItem } from './ChecklistItem';
 export { Dialog } from './Dialog';
+export { DailyActivityItem, type DailyActivityItemProps } from './DailyActivityItem';
+export { DestinationTile, type HomeDestination } from './DestinationTile';
 export { DogMascot } from './DogMascot';
 export { EmptyState } from './EmptyState';
 export { FirstUseTip, useFirstUseTip } from './FirstUseTip';
