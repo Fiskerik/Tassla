@@ -16,7 +16,7 @@ Version 1.0, 2026-10-13. Beställt av Erik som underlag för kommande Codex-impl
 
 Normativt detaljkontrakt: [HOME-REV02-visual-ux-spec](../plans/HOME-REV02-visual-ux-spec.md). Ordning: hälsning/porträtt → levnadsveckor → Just nu → Dagens att göra → tre färgade genvägar. Manuella rutiner och träningsstatus har olika interaktion men sammanhängande visuell radform. Genvägarna är blå/grön/lila och fullt synliga i standardfixturen. Fördjupning innehåller hantering.
 
-Kodankare: `src/features/home/HomeScreen.tsx`, `ProductWorkspace.tsx`, `daily-activity-model.ts`, `src/components/ui/DailyActivityItem.tsx`, `DestinationTile.tsx`. R02-2 finns i kod/QA; den nya presentationen är ännu inte implementerad. Historiskt R02-1-PASS är inte acceptans av den senare dagsvyn.
+Kodankare: `src/features/home/HomeScreen.tsx`, `ProductWorkspace.tsx`, `daily-activity-model.ts`, `src/components/ui/DailyActivityItem.tsx`, `DestinationTile.tsx`. R02-2 v10/v11-presentationen är implementerad; v11 fick Home-QA PASS och Reviewer PASS för lokal public/review-rendering. Aktuell paketstatus och verifieringsgränser finns i `docs/tasks/dev/queue.json` och `docs/tasks/dev/vision-rev02-r02-2-v11.md`. Supabase/RLS och native-runtime är inte verifierade.
 
 ## Panel 2 — Utveckling
 

@@ -7,19 +7,20 @@ description: Interaction, feedback and state quality for Tassla. Use whenever yo
 
 Tassla should feel calm, trustworthy and effortless for a new puppy owner. This skill covers how the app BEHAVES (flows, states, feedback, accessibility). How it LOOKS (tokens, components, colors, icons, layout, copy rules, visual checklist) is owned by `docs/design-rules.md`. Do not duplicate or override it.
 
-## Precedence (stop and ask on conflict)
-1. The owner's explicit decisions in the task
-2. `docs/design-rules.md`, its linked rev02 specifications, and the target image `vision_rev02.jpg`
-3. This skill
-4. Existing code
+## Precedence and conflict handling
+1. Current explicit owner decisions and the authorized task scope
+2. Truthfulness, safety, and accessibility
+3. `docs/design-rules.md`, its linked rev02 screen/object specifications, and the target image `vision_rev02.jpg`
+4. This skill
+5. Existing code
 
-If these conflict, stop and ask. Never resolve a conflict silently.
+Apply the highest relevant rule. Design rules govern appearance; this skill governs behavior, feedback, and states. Do not reopen decisions already recorded in the task or governing documents. If the rules leave a material product decision unresolved, record the conflict and ask the owner before dependent work. Follow the repository plan/review gates for scope changes, data, dependencies, and security. A visual component variant explicitly required by an approved design contract is within that contract.
 
 ## Scope limits
 - Do not add features, tabs, fields, onboarding, personalized feeds, share links, notifications, data collection, or schema changes unless the task explicitly approves them. A picture or a component list is not approval.
 - Product strategy (retention, distribution, feed design) is out of scope here. Ask the owner.
-- Do not touch unrelated screens, navigation, copy, data contracts, or shared tokens/components without approval. Declare the files you intend to change before coding.
-- Reuse existing components and tokens. New UI patterns or dependencies need justification and approval.
+- Work only in the approved task scope; declare intended files and protected areas before coding. Do not touch unrelated screens, navigation, copy, data contracts, or components.
+- Reuse and adapt existing components/tokens where they meet the approved design contract. Add named opt-in variants and tokens when that contract requires them. Get plan approval for scope expansion; dependencies follow AGENTS.md and project gates.
 - Do not add new animations, haptics, or sound unless the task asks for them. If asked: subtle, purposeful, 120-350 ms, interruptible, never blocking input, respect reduced motion, never the only feedback channel, and centralize durations as tokens. Haptics need an approved dependency and must not be required for core UX.
 
 ## Principles
@@ -50,7 +51,7 @@ Pending -> Unsure: toast "Vi kunde inte kontrollera om det sparades" + "Försök
 
 ## Delivery workflow
 1. **Inspect:** affected screens, components, references, acceptance criteria, current behavior.
-2. **Specify (before coding):** write a short UX spec in `docs/plans/<TASK>-ux-spec.md` with user goal, entry point, happy path, all relevant states, feedback, accessibility, assumptions, and deviations from the target image.
+2. **Specify (before coding):** write a short UX spec in `docs/plans/<TASK>-ux-spec.md` with user goal, entry point, happy path, all relevant states, feedback, accessibility, and assumptions. For UI work, include a compact comparison: reference element → current difference → token/component/asset → acceptance. List only unresolved deviations from the target image; do not repeat decisions already made in the design contracts.
 3. **Scope:** list intended files and protected areas. Ask before leaving scope.
 4. **Implement** with existing components and tokens.
 5. **Verify:** run typecheck, lint, tests. Check accessibility behavior. Take screenshots in each state, small and large phone, large text. If there is no baseline or no rendering, mark it NOT TESTABLE. Never claim visual approval from code checks. Physical device or TestFlight testing only when the owner asks for it.

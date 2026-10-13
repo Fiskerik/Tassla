@@ -1,6 +1,6 @@
 # Hem rev02 — konkret visuellt och beteendemässigt kontrakt
 
-Datum: 2026-10-13. Status: v10:s Home-korrigering är implementerad lokalt; det här reviderade porträtt-/veckoremskontraktet inväntar exakt v11-planreview och ny visuell verifiering. Ägarunderlag: panel 1 i `vision_rev02.jpg`, jämförelsebilderna i chatten samt Eriks beslut om färger, runt fotoestetiskt hundporträtt och veckoremsa framför porträttet.
+Datum: 2026-10-13. Status: v11:s porträtt-/veckoremsändring är implementerad; Architect APPROVE, Critic PROCEED, oberoende Home-QA PASS och Reviewer PASS gäller lokal public/review-rendering. Supabase/RLS och native-runtime är NOT TESTABLE. Den aktuella statusen för efterföljande arbete finns i kö/checkpoint; v11-godkännandet gäller den avgränsade korrigeringen. Ägarunderlag: panel 1 i `vision_rev02.jpg`, jämförelsebilderna i chatten samt Eriks beslut om färger, runt fotoestetiskt hundporträtt och veckoremsa framför porträttet.
 
 Detta är den preciserade Hem-specifikationen under [designregelverket](../design-rules.md). Den ersätter äldre generella Hem-mått och motstridiga presentationsråd. Produktens regler för datakällor och slutförande består. Bilderna visar olika skala och bildformat; nedanstående pt-värden är byggmål, inte påstått uppmätta originalpixlar.
 
