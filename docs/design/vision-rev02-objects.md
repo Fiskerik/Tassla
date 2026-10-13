@@ -2,7 +2,7 @@
 
 Version 1.0, 2026-10-13. Status: byggunderlag. Befintliga källor är kodverifierade; föreslagna objekt är ännu inte API:er eller databasändringar.
 
-**Aktuell status 2026-10-13:** Inventeringen nedan beskriver kodens startläge före de nya profiländringarna. Ägarval och completion-regeln är senare beslutade: egna rutiner markeras av ägaren; träning härleds från sparad träningsprogress. Guideöppning, vårdplan och olänkad logg räknas inte. R02-2-koden finns i QA; databasens runtimeprov kvarstår. Valbar åldersvisning finns nu i Slice A:s appkod och migration; statisk QA är PASS, Reviewer PASS och Security APPROVE. Queue är fortfarande blockerad för verklig databas/RLS-runtime. Sökbar rassnapshot och Mix-delraser är blockerade: Erik har valt Wikidata CC0 men exportfrågan returnerar HTTP 403 i miljön. Se [profilplanen](../tasks/dev/vision-rev02-dog-profile-v2.md), [renderingsunderlaget](evidence/vision-rev02/dog-profile/README.md), [paketstatus](../tasks/VISION-REV02.md) och [preciserat Hem-kontrakt](../plans/HOME-REV02-visual-ux-spec.md). Presentationstitel, fotoexempel och färgroller får inte ändra dessa datakällor.
+**Aktuell status 2026-10-13:** Inventeringen nedan beskriver kodens startläge före de nya profiländringarna. R02-2 är `done` i den lokala kön; v11 fick Home-QA PASS och Reviewer PASS för public/review-rendering. Supabase/RLS-runtime, gallring/scheduler och tvåsessionsprov kvarstår som NOT TESTABLE. Ägarbeslut om dagsuppgifter: ägaren markerar egna rutiner; träning härleds från sparad träningsprogress; guideöppning, vårdplan och olänkad logg räknas inte. Valbar åldersvisning finns i Slice A:s appkod och migration; statisk QA PASS, Reviewer PASS och Security APPROVE. Verklig databas/RLS-runtime är fortsatt blockerad. Sökbar rassnapshot och Mix-delraser är blockerade: Erik har valt Wikidata CC0 men exportfrågan returnerar HTTP 403 i miljön. Se [profilplanen](../tasks/dev/vision-rev02-dog-profile-v2.md), [renderingsunderlaget](evidence/vision-rev02/dog-profile/README.md), [paketstatus](../tasks/VISION-REV02.md) och [preciserat Hem-kontrakt](../plans/HOME-REV02-visual-ux-spec.md). Presentationstitel, fotoexempel och färgroller får inte ändra dessa datakällor.
 
 ## Gemensam betydelse
 
@@ -101,15 +101,12 @@ Publicerat urval, version och källor återanvänds mellan Hem/Träning/Kunskap.
 
 Personligt foto är föreslagen separat feature: privat stabil asset-referens, ägarinitierat tillägg/byte/radering, läsbehörighet, bildstorlek/metadatahantering, laddningsfel och radering av lagringsobjekt. Spara inte en utgången signerad URL som identitet. Nytt lagringsflöde kräver konkret foto-/säkerhetskontrakt. Redaktionella bilder kan utvecklas oberoende av detta.
 
-## Beslut som återstår för berörda byggdelar
+## Kvarstående beslut för framtida byggdelar
 
-| Fråga | Rekommenderad första version | Blockerar |
+| Fråga | Gällande riktning | Blockerar |
 |---|---|---|
-| Dagliga aktiviteter: vem väljer? | Ägarval från publicerad katalog/tillgängligt steg; inga automatiska nya råd | R02-2:s produktkontrakt |
-| Återkommande rutiner? | Ingen automatisk återkomst först; välj ny dagsinstans uttryckligen | Endast återkomstfunktion |
-| Stabil dag-/tidszonspolicy? | Instansens datum/tidszon låses, aktuell vy följer aktiv lokal dag | R02-2:s schema och tester |
 | Bildens nya vård-/utvecklingsråd? | Publicerade sakgranskade versioner; annars neutralt tomt tillstånd | Berört innehåll, inte komponentlayout |
-| Fotoinsamling? | Eget valfritt fotopaket, illustrerad fallback tills dess | Endast personligt foto |
+| Fotoinsamling? | Eget valfritt fotopaket; ingen insamling utan separat kontrakt | Endast personligt foto |
 | Sömnintervall/veckomål? | Inga påhittade intervall/mål; kontrakt och fullständigt urval först | Berörd graf/veckoprogress |
 
-Rekommendationerna gör nästa plan konkret men är inte registrerade som Eriks detaljbeslut. Visuell referens kan utvecklas med tydliga fixtures medan dessa preciseras. Full funktion levereras först med verkliga objekt och verifierad livscykel.
+Dagsurval, utebliven automatisk återkomst, tidszon och completion är redan beslutade i `docs/tasks/dev/vision-rev02-r02-2-v11.md`; ställ inte dessa frågor på nytt. Tabellen ovan innehåller kvarstående beslut och ska uppdateras när de avgörs. Visuell referens och komponentarbete kan fortsätta med tydliga fixtures när det ligger inom godkänt scope. Full produktfunktion kräver fortfarande verkliga objekt och verifierad livscykel.

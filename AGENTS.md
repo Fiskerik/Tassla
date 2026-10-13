@@ -5,7 +5,7 @@ Innan du planerar, skapar, ändrar eller granskar UI: läs `docs/design-rules.md
 Designreglernas §0–4 och §14 är bindande även när befintliga komponenter avviker: återanvändning ska utveckla dem mot vision_rev02. För Hem läses även `docs/plans/HOME-REV02-visual-ux-spec.md`. Verifiera komposition, färger, typografi, komponentformer, bildspråk och innehållstäthet separat; tidigare QA eller fungerande knappar ersätter inte ny visuell jämförelse efter datakoppling.
 Alla UI-ändringar granskas separat med skärmdump mot målbilden och ifylld checklista (avsnitt 14). Saknad visuell evidens är NOT TESTABLE, inte visuellt GODKÄND.
 Vid konflikt med äldre visuella råd gäller docs/design-rules.md inom godkänt scope. Aktuella mänskliga beslut, säkerhet, tillgänglighet och sanningsenlighet kvarstår.
-Vid varje ändring av skärmar, komponenter, flöden, tillstånd eller UI-texter: följ docs/design-rules.md (utseende) och använd skillen $tassla-consumer-ux (beteende, tillstånd, återkoppling). Vid konflikt mellan dem: stanna och fråga.
+Vid varje ändring av skärmar, komponenter, flöden, tillstånd eller UI-texter: följ docs/design-rules.md (utseende) och använd skillen $tassla-consumer-ux (beteende, tillstånd, återkoppling). Lös konflikter enligt företrädesordningen i designreglernas §0; fråga endast när ett väsentligt produktbeslut fortfarande saknas. Redan dokumenterade ägarbeslut ska inte frågas om igen.
 
 ## What Tassla is
 A free mobile app that follows a puppy's life from before it comes home until it is grown, for new dog owners. Inspired by BabyJourney, but for puppies. Goal: make the first 6–12 months simpler, safer and more enjoyable.
@@ -145,8 +145,8 @@ Varje paket har en UI-designcheckpunkt: använd passande bilder/illustrationer o
 ## Fastställd betakontakt och gallring — Eriks svar 2026-10-06
 Ansvarig: EriMali AB. Postadress: Stenvallavägen 1, 18634 Vallentuna. Support: erimali.ab@gmail.com. Betakonton och hunddata gallras 30 dagar efter avslutad beta. Detta ersätter tidigare obesvarade frågor och förslag ovan. Faktisk leverantörs-/backuphantering och verifierbar radering dokumenteras i betapaketet; uppgifterna i sig bevisar inte genomförd gallring eller rättslig granskning.
 
-## Bindande designpolicy — Eriks beslut 2026-10-07
-Läs docs/design-rules.md före planering, implementation och granskning av UI. Använd originalets målbild, gemensamma tokens/komponenter och 18-punktschecklista: max en huvudknapp, kompakt information, tydlig navigation, enhetliga ikoner och inga tekniska banners eller statusetiketter på normala poster. Product ansvarar för UX-copy; Critic granskar begriplighet. Varje UI-task ska ange användaruppgift, huvudhandling, synlig information, fördjupning, målbild/avvikelser och visuell verifiering. Separat QA/Reviewer jämför renderade skärmdumpar med målbilden; kodkontroll ensam ger inte visuellt PASS. Dokumentera NOT TESTABLE när evidens saknas och rätta konkreta regelbrott i berörd slice. Nyare designpolicy ersätter motstridiga äldre visuella råd; MVP-scope, sanningsenlighet, säkerhet och Eriks TestFlight-policy kvarstår. Befintlig UI är inte ombyggd genom instruktionerna. Nya agentstarter läser policyn; pågående agenter ska uttryckligen få den innan nästa UI-arbete.
+## Historisk notering — designbeslut 2026-10-07
+Den äldre bindande policyn utgick från rev01 och dess 18-punktschecklista. För aktuella UI-uppgifter gäller i stället rev02-hänvisningarna i början av filen och den kanoniska checklistan i `docs/design-rules.md` §14. Historiken innebär inte att befintliga skärmar redan uppfyller den nya målbilden. Product/Critic-ansvar, MVP-scope, sanningsenlighet, säkerhet och Eriks TestFlight-policy gäller fortsatt.
 
 Eriks MOTION-beslut 2026-10-10 finns i `docs/decisions/0004-motion-package.md`; kökonflikter och telefonprov styr slice-ordningen.
 

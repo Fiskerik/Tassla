@@ -2,7 +2,7 @@
 
 Version 1.2, 2026-10-13. Normativ design under [regelverket](../design-rules.md); API-namn märkta föreslagna är inte implementerade. Baseline: `9128cdd`.
 
-**Hem-precisering:** [HOME-REV02-visual-ux-spec](../plans/HOME-REV02-visual-ux-spec.md) definierar bindande färgroller, måttbudget, uppgiftsrader, bildroller och gränsen mellan översikt/hantering. Det gäller framför generella Hem-råd nedan. Övriga panelers kontrakt kvarstår. R02-2 har nu kod och implementerevidens men står i QA; äldre inventeringar beskriver startläget, inte verifierad produktion.
+**Hem-precisering:** [HOME-REV02-visual-ux-spec](../plans/HOME-REV02-visual-ux-spec.md) definierar bindande färgroller, måttbudget, uppgiftsrader, bildroller och gränsen mellan översikt/hantering. Det gäller framför generella Hem-råd nedan. Övriga panelers kontrakt kvarstår. R02-2 v11 är `done` för godkänd lokal implementation och Home-rendering enligt kö/checkpoint; Supabase/RLS-runtime och nativebeteende är inte verifierade. Äldre inventeringar beskriver kodens startläge.
 
 **Alla skärmar:** [Detaljerade skärmkontrakt](vision-rev02-screen-contracts.md) preciserar panel 1–8 och stödskärmar. De styr genomförandet framför denna äldre översikt. Använd [Codex-bygginstruktionen](../prompts/build-rev02-screens.md) för vald vy.
 

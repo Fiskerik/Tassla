@@ -1,12 +1,19 @@
 # VISION-REV02 — sammanhängande design- och byggunderlag
 
-## Pågående uppföljning — HOME-REV02-VISUAL-01
+## Aktuell status — 2026-10-13
 
-Erik bad 2026-10-13 att först uppdatera Hem efter det nya regelverket. Exakt task/plan v2 finns i `docs/tasks/dev/HOME-REV02-VISUAL-01.md`; status är **väntar på förnyad Architect/Critic-granskning**. Inga kodändringar för denna skiva har startat.
+`docs/tasks/dev/queue.json` är källan för arbetsflödets aktuella status. Plan- och QA-historik längre ned är historik och får inte styra nästa steg när kön eller en senare checkpoint säger annat.
 
-Scope är Hem-presentation, tokens och opt-in komponentvarianter, en hanteringssheet för befintliga R02-2-åtgärder, rätt produktcopy/radbeteende, syntetisk review-bild kontra public illustrationsfallback, och renderad jämförelse. Andra skärmar får de uppdaterade designkontrakten men deras implementation väntar på egna exakta planer. Dagsuppgiftskällor, databas och completionregler skyddas. Critic begärde planförtydliganden om köordning, valpporträttets beskärning och radbunden sparåterkoppling; de är nu inskrivna i v2 och behöver förnyad review.
+- `HOME-REV02-VISUAL-01` är superseded och integrerad i R02-2; dess gamla väntan på planreview gäller inte.
+- `VISION-R02-2` är `done`. v11 har lokal Home-QA PASS och Reviewer PASS för public/review-rendering. Supabase/RLS, gallring/scheduler, tvåsessionsprov över midnatt och native-runtime är NOT TESTABLE.
+- `VISION-R02-3A` (Logg) är `done`, men full panel-likhet enligt §14 punkt 16 är Nej och förblir dokumenterad.
+- `VISION-R02-3B/3C` är `blocked`: owner QA PASS finns, oberoende Reviewer/Security återstår.
+- `VISION-R02-4A–4H` är `blocked`: handoff och avgränsad korrigeringsgranskning är inte full owner QA eller slutlig oberoende acceptans.
+- `VISION-R02-GESTURES` är `blocked` tills browser/native-gester kan verifieras.
 
-Datum: 2026-10-13. Branch: `design/vision-rev02`. Bas: `9128cdd` på `work`; designunderlag commit `1686cca` är pushat till `origin/design/vision-rev02`.
+Nästa steg följer de öppna reviewgrindarna och de owner-godkända fortsättningsmandaten i kön. Status på dokument, lokal UI-render, databas/runtime och nativeflöden ska hållas åtskilda.
+
+Datum: 2026-10-13. Branch: `design/vision-rev02`.
 
 ## Beställning och leverans
 
