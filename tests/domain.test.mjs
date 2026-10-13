@@ -13,12 +13,13 @@ test('rejects future births, malformed dates and impossible calendar days', () =
     assert.throws(() => ageInWeeks(date, '2026-10-04'));
   }
 });
-test('formats dog age as completed calendar months and years', () => {
-  assert.equal(formatDogAge('2026-10-09', '2026-10-09'), '0 mån');
-  assert.equal(formatDogAge('2026-02-09', '2026-10-09'), '8 mån');
-  assert.equal(formatDogAge('2025-10-09', '2026-10-09'), '1 år 0 mån');
-  assert.equal(formatDogAge('2025-07-09', '2026-10-09'), '1 år 3 mån');
-  assert.equal(formatDogAge('2026-02-09', '2026-10-08'), '7 mån');
+test('formats dog age in the selected display unit using calendar months and years', () => {
+  assert.equal(formatDogAge('2026-10-09', '2026-10-09', 'weeks'), '0 veckor');
+  assert.equal(formatDogAge('2026-02-09', '2026-10-09', 'months'), '8 månader');
+  assert.equal(formatDogAge('2025-10-09', '2026-10-09', 'years'), '1 år');
+  assert.equal(formatDogAge('2025-07-09', '2026-10-09', 'years'), '1 år 3 mån');
+  assert.equal(formatDogAge('2026-02-09', '2026-10-08', 'months'), '7 månader 4 veckor');
+  assert.equal(formatDogAge('2025-07-09', '2026-10-16', 'months'), '15 månader 1 vecka');
 });
 test('content matches age and breed, deduplicates versions without changing progression', () => {
   const base = {contentId:'one', status:'published', minAgeWeeks:8, maxAgeWeeks:12, breedIds:[]};

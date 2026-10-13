@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { BottomSheet, Button, Card, Dialog, FirstUseTip, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast, useFirstUseTip } from '../../components/ui';
+import { BottomSheet, Button, Card, Dialog, FirstUseTip, HorizontalGestureRegion, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast, useFirstUseTip } from '../../components/ui';
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
@@ -365,7 +365,7 @@ function LogEventEditor({ event, disabled, onCancel, onSave, onDelete }: {
     </View>
     <View style={styles.noteGroup}>
       <Text style={styles.fieldTitle}>Anteckning (valfri)</Text>
-      <TextInput accessibilityLabel="Anteckning, högst 500 tecken" maxLength={1000} multiline editable={!disabled} onChangeText={setNote} placeholder="Lägg till en kort anteckning" placeholderTextColor={tokens.colors.textSecondary} style={styles.noteInput} value={note} />
+      <HorizontalGestureRegion><TextInput accessibilityLabel="Anteckning, högst 500 tecken" maxLength={1000} multiline editable={!disabled} onChangeText={setNote} placeholder="Lägg till en kort anteckning" placeholderTextColor={tokens.colors.textSecondary} style={styles.noteInput} value={note} /></HorizontalGestureRegion>
       <Text style={[styles.characterCount, noteLength > 500 && styles.tooManyCharacters]}>{noteLength}/500</Text>
     </View>
     {error ? <MessageCard tone="error">{error}</MessageCard> : null}

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as Crypto from 'expo-crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { AppBar, Button, Card, ChecklistItem, Field, IconChip, Progress, SectionHeader, Toast } from '../../components/ui';
+import { AppBar, Button, Card, ChecklistItem, Field, Progress, SectionHeader, Toast } from '../../components/ui';
 import { CHECKLIST_TEMPLATES } from './checklist-content';
 import { addChecklistCustomItem, deleteChecklistCustomItem, fetchChecklistOverview, fetchChecklistState, setChecklistItem, setChecklistPreference, updateChecklistCustomItem } from './checklist-data';
 import { checklistPercent, chooseChecklistPhase, normalizeCustomChecklistTitle, type ChecklistContext, type ChecklistCustomItem, type ChecklistTemplate } from './checklist-model';
@@ -367,19 +368,29 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
     {!reviewEnabled ? <Text style={styles.meta}>Inga checklistor publicerade ännu.</Text> : !activeTemplate ? <>
       <SectionHeader title="Var är ni just nu?" />
       <Text style={styles.body}>Välj det som passar er. Du kan ändra senare.</Text>
-      <View style={styles.contextList}>{CONTEXTS.map((item) => <Button key={item.id} variant={context === item.id ? 'secondary' : 'tertiary'} label={item.title} accessibilityLabel={`Välj ${item.title}`} disabled={busy || state !== 'ready' || uncertain} onPress={() => { void chooseContext(item.id); }} />)}</View>
+      <View style={styles.contextList}>{CONTEXTS.map((item) => <View key={item.id} style={styles.contextOption}><Button variant={context === item.id ? 'secondary' : 'tertiary'} label={item.title} accessibilityLabel={`Välj ${item.title}`} disabled={busy || state !== 'ready' || uncertain} onPress={() => { void chooseContext(item.id); }} /></View>)}</View>
       <Text style={styles.selectedContext}>{state === 'ready' ? `Valt: ${activeLabel}` : state === 'error' ? 'Val kunde inte hämtas' : 'Läser in valt läge…'}</Text>
       <SectionHeader title="Checklistor" />
       <Text style={styles.body}>Välj en fas att läsa. Andra faser ändrar inte ditt val.</Text>
+      <View style={styles.reviewInfo}>
+        <Text style={styles.meta}>Tillfälligt exempel – innehållet är inte sakgranskat</Text>
+        <Button variant="tertiary" label={reviewInfoOpen ? 'Dölj information' : 'Läs mer'} accessibilityLabel="Läs mer om tillfälliga exempel" onPress={() => setReviewInfoOpen((open) => !open)} />
+        {reviewInfoOpen ? <Text style={styles.meta}>Exemplen tas bort eller skrivs om före lansering.</Text> : null}
+      </View>
       {templates.map((template) => {
         const isRecommended = state === 'ready' && template.phase === recommended;
-        return <Card key={template.id} onPress={uncertain || busy ? undefined : () => openTemplate(template)} accessibilityLabel={`Öppna ${template.title}${isRecommended ? ', föreslagen fas' : ''}`}>
-          <View style={styles.templateHeading}><IconChip category="training" /><View style={styles.templateCopy}><Text style={styles.categoryLabel}>Checklista</Text><Text style={styles.templateTitle}>{template.title}</Text></View></View>
-          <Text style={styles.meta}>Tillfälligt exempel – innehållet är inte sakgranskat</Text>
-          <Button variant="tertiary" label={reviewInfoOpen ? 'Dölj information' : 'Läs mer'} accessibilityLabel="Läs mer om tillfälliga exempel" onPress={() => setReviewInfoOpen((open) => !open)} />
-          {reviewInfoOpen ? <Text style={styles.meta}>Exemplen tas bort eller skrivs om före lansering.</Text> : null}
-          {isRecommended ? <Text style={styles.meta}>Passar ert val</Text> : null}
-          <Text style={styles.meta}>{state === 'ready' ? `${summaries[template.id]?.done ?? 0} av ${summaries[template.id]?.total ?? template.items.length} genomförda` : state === 'error' ? 'Framsteg kunde inte hämtas' : 'Läser in framsteg…'}</Text>
+        const summary = summaries[template.id] ?? { done: 0, total: template.items.length };
+        return <Card key={template.id} selected={isRecommended} onPress={uncertain || busy ? undefined : () => openTemplate(template)} accessibilityLabel={`Öppna ${template.title}${isRecommended ? ', föreslagen fas' : ''}`}>
+          <View style={styles.templateHeading}>
+            <View style={styles.templateIcon}><Ionicons name="list-outline" size={tokens.size.iconSm} color={tokens.colors.destination.knowledge.icon} /></View>
+            <View style={styles.templateCopy}><Text style={styles.categoryLabel}>Checklista</Text><Text style={styles.templateTitle}>{template.title}</Text></View>
+            <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+          </View>
+          <View style={styles.templateMeta}>
+            {isRecommended ? <Text style={styles.recommendedLabel}>Passar ert val</Text> : null}
+            <Text style={styles.meta}>{state === 'ready' ? `${summary.done} av ${summary.total} genomförda` : state === 'error' ? 'Framsteg kunde inte hämtas' : 'Läser in framsteg…'}</Text>
+          </View>
+          {state === 'ready' ? <Progress value={summary.total > 0 ? summary.done / summary.total * 100 : 0} label={`${summary.done} av ${summary.total} genomförda`} /> : null}
         </Card>;
       })}
     </> : <>
@@ -415,12 +426,17 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
 
 const styles = StyleSheet.create({
   body: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginBottom: tokens.spacing.md },
-  contextList: { gap: tokens.spacing.xs, marginBottom: tokens.spacing.sm },
+  contextList: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs, marginBottom: tokens.spacing.sm },
+  contextOption: { flexGrow: 1, flexBasis: '45%' },
   selectedContext: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginBottom: tokens.spacing.md },
   templateHeading: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
+  templateIcon: { width: tokens.size.chipMd, height: tokens.size.chipMd, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.destination.knowledge.surface, borderRadius: tokens.radius.full },
   templateCopy: { flex: 1, flexShrink: 1 },
   categoryLabel: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   templateTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 },
+  templateMeta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.xs, marginTop: tokens.spacing.sm },
+  recommendedLabel: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
+  reviewInfo: { borderRadius: tokens.radius.md, backgroundColor: tokens.colors.destination.knowledge.surface, padding: tokens.spacing.sm, marginBottom: tokens.spacing.sm },
   meta: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginVertical: tokens.spacing.xs },
   customRow: { marginBottom: tokens.spacing.sm },
   form: { gap: tokens.spacing.sm, borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, marginTop: tokens.spacing.lg, paddingTop: tokens.spacing.md },

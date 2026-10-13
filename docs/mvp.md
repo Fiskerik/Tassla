@@ -34,7 +34,9 @@ Skapa hunden en gång. Grundinformationen driver resten av upplevelsen och följ
 **Acceptanskriterier:**
 
 - Användaren kan skapa en hund med namn, ras och födelsedatum.
+- Ras väljs i sökbar katalog. Mix kan sparas utan kända delraser eller med två olika valbara raser; sökfritext blir aldrig en egen ras.
 - Hundens ålder beräknas automatiskt.
+- Ägaren kan välja om åldern visas i veckor, månader eller år; formatet används på Hem, hundprofil, Tassla-pass preview och exporterad PDF.
 - Hunden får ett permanent hund-ID som används av övriga funktioner.
 - Onboarding leder vidare till relevant hjälp i Home/Today.
 
@@ -49,6 +51,8 @@ Loggning, träning och innehåll ska nås i denna kontext. Användaren ska inte 
 **Acceptanskriterier:**
 
 - Startsidan visar ett dynamiskt flöde baserat på hundens ålder och, där det är relevant, ras.
+- Hem visar `Hundnamn | Ras` och vald ålder under identitetsraden. Åldersremsan fortsätter vara en veckoremsa för navigering.
+- Åldersremsan på Hem kan bläddras mellan vecka 0 och aktuell ålder + 12; bläddring väljer inte en vecka eller ändrar innehåll/data. På huvudflikarna kan vänstersvep gå till nästa flik och högersvep till föregående, med bottenmenyn kvar som fullvärdigt alternativ.
 - Flödet förändras över tid med hundens utveckling och visar relevanta råd, aktiviteter, träningssteg och uppmaningar.
 - Användaren kan gå från relevant hjälp till konkret handling.
 - Innehåll distribueras främst genom Home och relevanta flöden. Ett stort fristående artikelbibliotek krävs inte.

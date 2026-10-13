@@ -15,12 +15,10 @@ export function homeAgeInWeeks(birthDate: string | null | undefined, today: stri
   }
 }
 
-export function homeWeekStrip(birthDate: string | null | undefined, today: string, count = 7): HomeWeek[] {
+export function homeWeekStrip(birthDate: string | null | undefined, today: string): HomeWeek[] {
   const currentWeek = homeAgeInWeeks(birthDate, today);
-  if (currentWeek === null || count < 1) return [];
-  const start = Math.max(0, currentWeek - Math.floor((count - 1) / 2));
-  return Array.from({ length: count }, (_, index) => {
-    const week = start + index;
+  if (currentWeek === null) return [];
+  return Array.from({ length: currentWeek + 13 }, (_, week) => {
     return { week, current: week === currentWeek };
   });
 }

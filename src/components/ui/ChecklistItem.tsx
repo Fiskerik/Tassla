@@ -1,9 +1,8 @@
-import { MotionPressable } from './Motion';
+import { MotionPressable, useReducedMotion } from './Motion';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text } from 'react-native';
 import { tokens } from '../../theme/tokens';
-import { useReducedMotion } from './Motion';
 export function ChecklistItem({ label, checked, confirmed = false, onPress, disabled = false }: { label: string; checked: boolean; confirmed?: boolean; onPress: () => void; disabled?: boolean }) {
   const reduced = useReducedMotion();
   const [checkScale] = useState(() => new Animated.Value(1));

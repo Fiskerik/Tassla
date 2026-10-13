@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import type { HomeContent } from '../../src/data/app-data';
-import type { OwnedDog } from '../../src/data/app-data';
+import type { HomeContent, OwnedDog } from '../../src/data/app-data';
 import type { PublishedTrainingProgram } from '../../src/data/workspace-data';
 import { AppScreen } from '../../src/components/AppPrimitives';
 import { BottomNav } from '../../src/components/ui';
@@ -16,6 +15,7 @@ const FIRST_DAYS = 'review-v1:first-days';
 const CUSTOM_ID = '00000000-0000-4000-8000-000000000002';
 const query = new URLSearchParams(location.search);
 const initialState = query.get('state') ?? 'ready';
+const reviewContentEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
 
 declare global {
   interface Window {
@@ -23,7 +23,7 @@ declare global {
     __know02CloudWrites?: number;
     __know02ContinueCount?: number;
     __know02WriteDelayMs?: number;
-    __know02Mutations?: Array<{ table: string; mode: string; filters: Record<string, unknown>; payload: Record<string, unknown> }>;
+    __know02Mutations?: { table: string; mode: string; filters: Record<string, unknown>; payload: Record<string, unknown> }[];
     __know02OpenedContent?: string;
     __know02UnmountRoute?: () => void;
     __know02RemountRoute?: () => void;
@@ -106,14 +106,13 @@ function makeClient() {
 }
 
 const client = makeClient();
-const items: readonly HomeContent[] = [
-  { id: 'review-v1:guide:first-days', contentId: 'review-v1:guide:first-days', version: 1, title: 'En lugn start hemma', body: 'Tillfälligt exempel – innehållet är inte sakgranskat.\n\nLåt valpen landa i sin egen takt.', contentType: 'article', sources: [] },
-];
+const items: readonly HomeContent[] = reviewContentEnabled ? REVIEW_TRAINING_GUIDES.slice(0, 3) : [];
 
 function KnowledgeRoute({ pending, onPendingChange, sessionKey, dogId }: { pending: PendingChecklistMemory | null; onPendingChange: (state: PendingChecklistMemory | null) => void; sessionKey: string; dogId: string }) {
   const focusedContentId = query.get('screen') === 'faq' ? FAQ_DESTINATION_ID : query.get('screen') === 'checklist-detail' || query.get('screen') === 'checklist-overview' ? CHECKLIST_DESTINATION_ID : null;
-  return <AppScreen scrollKey="know02-knowledge" footer={<BottomNav active="more" onChange={() => undefined} />}>
-    <KnowledgeScreen onBack={() => undefined} items={items} contentState="ready" focusedContentId={focusedContentId}
+  const contentState = initialState === 'empty' ? 'ready' : initialState === 'error' ? 'error' : initialState === 'loading' ? 'loading' : 'ready';
+  return <AppScreen scrollKey="know02-knowledge" footer={<BottomNav active="knowledge" onChange={() => undefined} />}>
+    <KnowledgeScreen onBack={() => undefined} items={items} contentState={contentState} focusedContentId={focusedContentId}
       client={client as never} dogId={dogId} ageWeeks={Number(query.get('ageWeeks') ?? 10)} sessionKey={sessionKey}
       checklistPending={pending} onChecklistPendingChange={onPendingChange} />
   </AppScreen>;
@@ -146,9 +145,16 @@ function App() {
   const [routeMounted, setRouteMounted] = useState(true);
   const [pending, setPending] = useState<PendingChecklistMemory | null>(null);
   const [scope, setScope] = useState(0);
-  window.__know02UnmountRoute = () => setRouteMounted(false);
-  window.__know02RemountRoute = () => setRouteMounted(true);
-  window.__know02ChangeScope = () => { setPending(null); setScope((value) => value + 1); };
+  useEffect(() => {
+    window.__know02UnmountRoute = () => setRouteMounted(false);
+    window.__know02RemountRoute = () => setRouteMounted(true);
+    window.__know02ChangeScope = () => { setPending(null); setScope((value) => value + 1); };
+    return () => {
+      delete window.__know02UnmountRoute;
+      delete window.__know02RemountRoute;
+      delete window.__know02ChangeScope;
+    };
+  }, []);
   if (screen === 'home-carousel') return <HomeRoute />;
   if (!routeMounted) return null;
   if (screen === 'review-training-list' || screen === 'review-training-detail') return <TrainingRoute />;

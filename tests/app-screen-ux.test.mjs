@@ -164,8 +164,9 @@ test('signed-out warning is owned by AuthProvider and survives workspace unmount
     readFile(new URL('../src/features/account/AuthProvider.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8'),
     readFile(new URL('../src/features/account/SignInScreen.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../src/features/account/SignInScreenView.tsx', import.meta.url), 'utf8'),
   ]);
-  const [provider, workspace, signIn] = sources.map((source) => source.replaceAll('\r\n', '\n'));
+  const [provider, workspace, signIn, signInView] = sources.map((source) => source.replaceAll('\r\n', '\n'));
   assert.match(provider, /setSignOutWarning\('Du är utloggad på den här enheten\./);
   assert.match(provider, /localSessionCleared && !serverRevocationConfirmed/);
   assert.match(provider, /signOutWarning,\n\s*\}\), \[accountGeneration, adoptOwner, client, googlePending, isCurrentAccount, reportDeletedAccountCleanupFailure, reportNotificationCleanupFailure, runAuthMutation, session, signOutCurrentAccountLocally, signOutWarning, status\]\)/);
@@ -176,6 +177,7 @@ test('signed-out warning is owned by AuthProvider and survives workspace unmount
   assert.match(workspace, /const \{[^}]*\bsignOut\b[^}]*\} = useAuth\(\);/);
   assert.match(workspace, /setSignOutError\(!result\.localSessionCleared\)/);
   assert.match(workspace, /signOutError/);
-  assert.match(signIn, /signOutWarning &&/);
-  assert.match(signIn, /MessageCard tone="error">\{signOutWarning\}/);
+  assert.match(signIn, /signOutWarning=\{auth\.signOutWarning\}/);
+  assert.match(signInView, /signOutWarning &&/);
+  assert.match(signInView, /MessageCard tone="error">\{signOutWarning\}/);
 });

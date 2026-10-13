@@ -1,4 +1,26 @@
-# FOUNDATION – leveransrapport 2026-10-04
+# FOUNDATION — leveransrapport 2026-10-04
+
+## DOG-PROFILE — Wikidata-källval och plan v4, 2026-10-13
+
+Erik har beställt sökbar raskatalog, Mix-delraser, Hem-identitet `Namn | Ras` och valbar åldersvisning i veckor, månader och år. Han valde Wikidatas strukturerade data under CC0. Plan v4 låser katalogurvalet till Wikidata `dog breed (Q39367)` och dess underklasser, med svensk etikett och engelsk fallback. Exakt SPARQL-fråga och licenskällor finns i `docs/plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md`.
+
+Plan v4 har Architect **APPROVE** och Critic **PROCEED**. Criticens tre villkor är införda: åldersdelen är oberoende av katalogsnapshoten, långa Home-rasnamn radbryts utan kapning och huvudväljaren erbjuder direktvalet `Okänd ras` i tomläget. Därför ligger åldersvisning som Slice A; raslista och Mix är Slice B och förblir blockerad tills en daterad export har verifierats. Slice A använder befintliga ras-ID:n och kan nu börja enligt den godkända planen.
+
+WDQS/QLever API-anrop blockeras i miljön (nätverkstunnel 403; API-endpoints nekas av webbläsarverktyget). Ingen snapshot eller katalogkod har skapats. Innan Slice B startar ska exportens antal, unika QID:n, etikettmappning och kompatibilitet med `breeds.name`-gränsen 1–100 tecken verifieras. Detta är en åtkomstblockerare för katalogdelen, inte ett olöst källval.
+
+Dokumentationskontroller: `python tools/dev_flow.py validate` **PASS** och `git diff --check` **PASS**. Inga testsviter har lagts till eller körts. Plan approval är inte SQL/RLS/runtime-godkännande.
+
+## DOG-PROFILE — plan v5–v8 tillägg för PDF-ålder
+
+Slice A:s godkända UI-kontrakt kräver samma valda åldersformat i Tassla-pass. För att detta även ska gälla den frysta PDF-snapshoten lade plan v5 till `src/features/passport/passport-model.ts` i write paths och lintkontrollen. Architect godkände v5; Critic begärde ett fryst `ageLabel`, samma `createdOn`, gemensam användning i preview/HTML samt kontroll av alla enheter och profil-off. Plan v6 fick Architect APPROVE och Critic PROCEED WITH CHANGES eftersom QA saknade explicit inspektion av `createPassportSnapshot` och `renderPassportHtml` för alla enheter. Plan v7 lade till kontrollen; Critic gav PROCEED WITH CHANGES och Architect CHANGES för kvarvarande v6-referenser. Plan v8 rättade dem och fick Architect **APPROVE** och Critic **PROCEED**. PDF-snapshoten implementerades först efter v8-godkännandet.
+
+## DOG-PROFILE-AGE-DISPLAY — implementation handoff, 2026-10-13
+
+Slice A är implementerad lokalt: migration för `age_display_unit`, validerad villkorad profiluppdatering/återläsning, svensk åldersformatterare i veckor/månader/år, Hem-identitet `Namn | Ras` med separat åldersrad, val i profilredigering, läsvy samt fryst Tassla-pass-`ageLabel` som återanvänds av preview och HTML. Raskatalog och Mix ingår inte i denna slice.
+
+Efter första Reviewer-granskningen hittades två fel: sparstatusjämförelsen utelämnade `age_display_unit`, och årsformatets restmånader utgick från en klämd årsdag i stället för direkt från födelsedatumet. Båda rättades i `ProductWorkspace.tsx` och `dog.ts`. Färsk kontroll efter rättning: `pnpm typecheck` PASS; `pnpm typecheck:edge-account` PASS; riktad ESLint PASS med 0 fel och 3 befintliga varningar i `tools/visual-check/app.tsx`; public/review-byggen PASS; `git diff --check` PASS. Oberoende QA har granskat korrigeringarna och gav PASS för lokal/statisk acceptans; Reviewer gav PASS utan kvarvarande statiskt fynd; Security gav APPROVE och bekräftade att det låga inventeringsfyndet är stängt genom att uttryckligen ta med `dogs.age_display_unit` i åtkomst-/kopieuttag. Queue är blockerad för verklig Supabase-migration/RLS, sparad preferens, native PDF/share och native hjälpmedel, som är NOT TESTABLE i miljön. Ingen testsvit lades till eller kördes.
+
+Wikidata CC0 är nu valt av Erik. En ny direkt GET och POST till den exakta WDQS-frågan returnerade HTTP 403; webbläsarverktyget kan inte öppna API-endpoints. Ingen katalogfil eller raslista är skapad och Slice B förblir blockerad tills ett daterat, verifierat snapshot kan hämtas.
 
 ## Förberett
 Architecture-godkännande och mandat registrerade. Supabase migration skapar 13 tabeller, RLS/grants, atomärt hundskapande, versionsskydd, typvillkor och städning av ensamägd hund vid Auth-radering. Endast två rasnamn seedade. Analytics-klientåtkomst avstängd.
@@ -512,6 +534,42 @@ R02-3A Logg har stängts efter QA:s slutliga markörkontroll: unikt namngivna bi
 R02-3B Träning är implementerad enligt godkänd v6.1: vänsterställd rubrik, kapselsegmenten Rekommenderat/Alla övningar/Mina, befintlig hundålder, bildkort i två kolumner, beskrivningar från befintlig programtext och ett liggande fortsättkort efter korten när bekräftad progress och nästa tillåtna steg finns. `Mina` i public följer bekräftade `completedStepIds`; reviewmarkeringar lever endast i lokal komponentstate och reviewbannern förblir synlig. `HeroCard`/`Tabs`-varianter är opt-in. Inga produktionsdata, skrivkontrakt eller träningsråd lades till. Kortbildens höjd sänktes efter manuell 375×667-rendering så fortsättkortet avslutas cirka 9 px före bottenmenyn.
 
 Public/review React Native Web-renderingar sparas i `docs/design/evidence/vision-rev02/r02-3b/` med §14-egenkontroll och redovisad Nej-avvikelse för exakt panelmatch. `pnpm typecheck`, `pnpm lint` (0 fel; 36 befintliga varningar), `git diff --check`, public/review builds och `python tools/dev_flow.py validate` PASS; manuell browserrendering gav inga sidfel. Inga tester lades till eller kördes. Oberoende QA, Reviewer och Security återstår, så queue är `qa` och R02-3C väntar på denna grind. Native rendering, Dynamic Type/VoiceOver, RLS och produktionsprogrammen är NOT TESTABLE här.
+
+
+### VISION-REV02 R02-4A–H — samlat implementeringshandoff, 2026-10-13
+
+Erik bad om en fortsättning till samtliga kvarvarande befintliga sidor. R02-4A–H har nu varsin UX-spec, avgränsad presentation, public/review-fixtures, bildbevis och §14-rapport:
+
+- Mer — `docs/design/evidence/vision-rev02/r02-4a/RENDER-REPORT.md`
+- Hälsa, vikt och utförd historik — `docs/design/evidence/vision-rev02/r02-4b/RENDER-REPORT.md`
+- Planerad hälsa — `docs/design/evidence/vision-rev02/r02-4c/RENDER-REPORT.md`
+- Tassla-pass — `docs/design/evidence/vision-rev02/r02-4d/RENDER-REPORT.md`
+- Hundprofil — `docs/design/evidence/vision-rev02/r02-4e/RENDER-REPORT.md`
+- Påminnelser — `docs/design/evidence/vision-rev02/r02-4f/RENDER-REPORT.md`
+- Konto/Beta — `docs/design/evidence/vision-rev02/r02-4g/RENDER-REPORT.md`
+- Inloggning/onboarding — `docs/design/evidence/vision-rev02/r02-4h/RENDER-REPORT.md`
+
+Ägarens QA-besked före dessa nya implementationer avsåg tidigare arbete genom R02-3C; ingen av R02-4A–H har därför märkts QA-godkänd. Samtliga väntar på ägar-QA och oberoende Reviewer/Security. Typkontroll, riktad ESLint, diffkontroll, kövalidering, public/review-byggen och manuella browser-renderingar passerade. Inga tester lades till eller kördes. Native UI, auth-provider, notisleverans, serverradering, backend/RLS och verkliga kontoåtgärder är NOT TESTABLE enligt respektive rapport. Inga commits eller pushar gjordes.
+
+Efter oberoende QA-fynd kompletterades 4C:s tomkort och pending/unknown/conflict-renderingar; 4D:s urvalssheet fångades med valrader; 4E:s läsprofil fick en 140 %-render; 4F:s 375×667-bilder togs om utan infomodal. För 4H lades 12 px avstånd efter raslistans retry-knapp och sparades Google-startens `google-opened`-render från mockad callback. 4A/4B:s korrigeringar och evidens bevarades. Typkontroll, riktad ESLint (0 fel; tre befintliga harness-varningar), public/review-byggen, diffcheck och kövalidering passerade. Inga tester kördes. Alla R02-4-slices står fortsatt `blocked` för ägar-QA och oberoende Reviewer/Security; detta är en dokumenterad checkpoint, inte ett godkännande.
+
+### R02-4A–H korrigeringsre-QA — 2026-10-13
+
+Separata read-only QA-agenter gav **PASS för de konkreta rättade punkterna** i 4A–H: fixturet öppnar alla fem Mer-destinationer; Hälsas retry stannar på Hälsa och visar planresultatet; 4C:s tom/pending/unknown/conflict-lägen och 4D:s urvalsblad har synliga renders; 4E/F/H:s saknade profil-, 375×667- och google-opened-bilder finns nu; 4G:s tidigare webb-PASS står kvar. Full rapport: `docs/design/evidence/vision-rev02/r02-4/QA-REPORT-2026-10-13.md`. Detta ersätter de tidigare evidensluckorna men är varken helskärmsacceptans eller owner QA. R02-4A–H fortsätter vara `blocked` i kön för owner QA och oberoende Reviewer/Security. Server/RLS och nativeintegrationer är fortsatt NOT TESTABLE.
 ### VISION-R02-3 — planreview och Logg startad
 
 Plan v6 godkänd av Architect (**APPROVE**) och Critic (**PROCEED**) 2026-10-13; besluten sparade i `vision-rev02-r02-3-reviews.md`. Köposten VISION-R02-3 flyttad till `implementing`. Scope är endast R02-3A Logg enligt godkänd plan. Träning/Kunskap samt övriga stödskärmar väntar på Loggs QA, Reviewer, Security, §14 och checkpoint. Ingen appkod ändrad ännu.
+
+### VISION-R02-GESTURES v7 QA och v8-plan — 2026-10-13
+
+Oberoende QA gav v7 **FAIL**: Knowledge-detail och den specificerade checklist-lämna/återvända-lifecyclen fungerar statiskt, men ett tryck på den redan aktiva Kunskap-fliken rensar parent-spärren medan lokal artikel-/checklistdetalj finns kvar. Visual-check-fixturen har samma route-state edge. Browser/native-gester är **NOT TESTABLE**. Rapport: `docs/design/evidence/vision-rev02/gestures/QA-REPORT-v7.md`.
+
+Kön flyttades `qa → blocked → planned → ready → implementing → qa → review → blocked` efter Architect APPROVE, Critic PROCEED, statisk QA PASS och Reviewer PASS. Korrigeringen implementerar active-Kunskap no-op i detalj, reset av fokus/detail vid varje verklig exit eller re-entry via bottom-nav/sidgest samt bevarande av Hemmets direkta artikel-CTA. Typecheck, riktad lint (0 fel; tre befintliga harness-varningar), public/review builds, diffcheck och queue validation PASS. Inga tester kördes. Browser/native-gest och exakt `useEffect`-timing är **NOT TESTABLE**, därför står hela gesture-tasken blocked. QA-matris: `docs/design/evidence/vision-rev02/gestures/QA-REPORT-v8.md`; Reviewer PASS dokumenterad i `docs/tasks/dev/vision-rev02-gestures-v8.md`.
+
+### VISION-REV02 — preflight-fel rättade, 2026-10-13
+
+Commit-preflighten stoppades först av sju äldre testassertioner som inte speglade den staged koden: flyttad sign-out-varning, Home-detail-state, åldersenhet, utökad bläddringsbar veckoremsa, snapshot-ålder, uppdaterad text för planerad hälsa och full profil-preimage med `age_display_unit`. Befintliga testkontrakt uppdaterades. Tassla-passets snapshot visar nu `Kan inte beräknas` om ett redan sparat födelsedatum är ogiltigt, så exporten fortsätter och HTML-escaping gäller även felaktig data. Dubblettimporten i `ChecklistItem.tsx` slogs ihop.
+
+Slutlig `pnpm check`: app-/edge-typecheck PASS, ESLint 0 fel/0 varningar, 45/45 testfiler PASS. `TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false pnpm bundle:ios` exporterade iOS-bundlen; `git diff --check` och `python tools/dev_flow.py validate` PASS. Detta är lokal kod-/bundleverifiering, inte signerad iOS-build, Supabase migration/RLS eller native PDF-/tillgänglighetsprov.
+
+Arbetet fortsätter på `design/vision-rev02` från lokala `f918825`, den senaste tillgängliga branchtoppen. Användarens angivna `19ffb85` finns inte bland lokala refs eller Git-objekt; remote-läsning kunde inte nås genom miljöns proxy. Ingen reset har gjorts. Nästa utvecklingsslice är `DOG-PROFILE-BREED-MIX`, men den ligger kvar `blocked` tills verifierad Wikidata CC0-export finns. Slice A är fortsatt blockerad för verklig DB/RLS och nativeverifiering; övriga R02-slices följer respektive QA-/reviewgrind.

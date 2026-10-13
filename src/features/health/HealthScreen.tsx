@@ -1,6 +1,7 @@
 import { useState, type ComponentProps } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { AppBar, BottomSheet, Button, ListRow, SectionHeader, Skeleton, Tabs } from '../../components/ui';
+import { PageHeading } from '../../components/AppPrimitives';
+import { BottomSheet, Button, ListRow, SectionHeader, Skeleton, Tabs } from '../../components/ui';
 import { tokens } from '../../theme/tokens';
 import type { PlannedHealthRecord } from '../../data/workspace-data';
 import { localDate } from '../onboarding/dog';
@@ -10,6 +11,7 @@ import { WeightScreen } from './WeightScreen';
 type Props = Omit<ComponentProps<typeof WeightScreen>, 'onSaveHistory'> & {
   plannedRecords?: readonly PlannedHealthRecord[];
   plannedLoadState?: 'loading' | 'ready' | 'error';
+  onRetryPlannedHealth?: () => void;
   onSaveHistory?: (id: string | null, type: 'vaccination' | 'vet_visit', date: string, time: string | null, note: string) => Promise<boolean>;
 };
 export function HealthScreen(props: Props) {
@@ -26,11 +28,11 @@ export function HealthScreen(props: Props) {
   const blocked = props.historyBusy || props.historyPending;
   if (tab === 'Vikt') return <WeightScreen {...weightProps} onBack={() => setTab('Översikt')} />;
   return <View>
-    <AppBar mode="Title" title="Hälsa" />
-    <Tabs items={['Översikt', 'Vaccinationer', 'Veterinär', 'Vikt']} active={tab} onChange={setTab} />
+    <PageHeading title="Hälsa" description="Vikt, planerade och genomförda hälsohändelser." />
+    <Tabs items={['Översikt', 'Vaccinationer', 'Veterinär', 'Vikt']} active={tab} onChange={setTab} variant="rev02-segmented" />
     {props.plannedLoadState === 'ready' && overdue.length ? <><SectionHeader title="Datum har passerat" /><View style={styles.rows}>{overdue.map((row) => <ListRow key={row.id} category={row.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} title={row.description || (row.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök')} time={row.due_time?.slice(0, 5)} meta={planMeta(row, `Planerad ${shortDate(row.due_on)}`)} onPress={props.onOpenPlannedHealth} />)}</View></> : null}
     <SectionHeader title="Kommande" />
-    {props.plannedLoadState === 'loading' ? <Skeleton shape="row" lines={2} /> : props.plannedLoadState === 'error' ? <Button variant="secondary" label="Hämta planer igen" accessibilityLabel="Hämta planer igen" onPress={() => props.onOpenPlannedHealth?.()} /> : <View style={styles.rows}>
+    {props.plannedLoadState === 'loading' ? <Skeleton shape="row" lines={2} /> : props.plannedLoadState === 'error' ? <Button variant="secondary" label="Hämta planer igen" accessibilityLabel="Hämta planer igen" disabled={!props.onRetryPlannedHealth} onPress={() => props.onRetryPlannedHealth?.()} /> : <View style={styles.rows}>
       {upcoming.length ? upcoming.map((row) => <ListRow key={row.id} category={row.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} title={row.description || (row.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök')} time={row.due_time?.slice(0, 5)} meta={planMeta(row, `${relativeDate(row.due_on)} · ${shortDate(row.due_on)}`)} onPress={props.onOpenPlannedHealth} />) : <Text style={styles.empty}>Inga kommande händelser.</Text>}
     </View>}
     <SectionHeader title="Genomfört" />

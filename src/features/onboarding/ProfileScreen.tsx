@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
-import { AppScreen, FormField, MessageCard, PageHeading, PrimaryButton } from '../../components/AppPrimitives';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { AppScreen, FormField, MessageCard, PrimaryButton } from '../../components/AppPrimitives';
 import { createDog, fetchBreeds, fetchOwnedDog, ownedDogAttributionMatches, type BreedOption, type OwnedDog } from '../../data/app-data';
 import { clearSecurePendingReferral, normalizeKennelCode, readSecurePendingReferral } from '../../onboarding-referral/referral-secure-storage';
 import { tokens } from '../../theme/tokens';
@@ -133,16 +134,25 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
 
   return (
     <AppScreen>
-      <PageHeading
-        title="Berätta om din hund"
-        description="Det hjälper oss att visa innehåll som passar just er."
-      />
+      <View style={styles.introCard}>
+        <View style={styles.introIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          <Ionicons name="paw-outline" size={tokens.size.iconMd} color={tokens.colors.support.profile.fg} />
+        </View>
+        <View style={styles.introCopy}>
+          <Text accessibilityRole="header" style={styles.introTitle}>Berätta om din hund</Text>
+          <Text style={styles.introDescription}>Det hjälper oss att visa innehåll som passar just er.</Text>
+        </View>
+      </View>
+      <View style={styles.profileCard}>
+        <Text style={styles.sectionTitle} accessibilityRole="header">Hundens uppgifter</Text>
       <FormField label="Hundens namn" onChangeText={(value) => { setName(value); markEdited(); }} onSubmitEditing={() => Keyboard.dismiss()} placeholder="Till exempel Nala" returnKeyType="done" value={name} />
       <Text style={styles.label} accessibilityRole="header">Ras</Text>
       {breedsState === 'loading' && <MessageCard>Hämtar raslistan…</MessageCard>}
       {breedsState === 'error' && <>
         <MessageCard tone="error">Raslistan gick inte att hämta. Kontrollera anslutningen och försök igen.</MessageCard>
-        <PrimaryButton title="Försök igen" onPress={() => { setBreedsState('loading'); setBreedAttempt((count) => count + 1); }} />
+        <View style={styles.breedRetrySpacing}>
+          <PrimaryButton title="Försök igen" onPress={() => { setBreedsState('loading'); setBreedAttempt((count) => count + 1); }} />
+        </View>
       </>}
       {breedsState === 'ready' && (
         <View accessibilityRole="radiogroup" accessibilityLabel="Välj hundras" style={styles.breedList}>
@@ -174,8 +184,9 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
         returnKeyType="done"
         value={birthDate}
       />
+      </View>
       <View style={styles.sourceCard}>
-        <Text style={styles.label} accessibilityRole="header">Kennelkod (valfritt)</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">Kennelkod (valfritt)</Text>
         <FormField
           editable={!busy}
           autoCapitalize="characters"
@@ -219,15 +230,23 @@ function isValidBirthDate(value: string): boolean {
 }
 
 const styles = StyleSheet.create({
+  introCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.spacing.lg, marginBottom: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.support.profile.bg },
+  introIcon: { width: tokens.size.chipLg, minHeight: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.surface },
+  introCopy: { flex: 1 },
+  introTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
+  introDescription: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
+  profileCard: { marginBottom: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  sectionTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
   label: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.sm, marginTop: tokens.spacing.xs },
   breedList: { gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg },
+  breedRetrySpacing: { marginBottom: tokens.spacing.md },
   breedOption: { minHeight: tokens.size.touchMin, borderRadius: tokens.radius.md, paddingHorizontal: tokens.spacing.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  breedSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
+  breedSelected: { borderColor: tokens.colors.support.profile.fg, backgroundColor: tokens.colors.support.profile.bg },
   breedPressed: { opacity: 0.72 },
   breedText: { ...tokens.typography.body, color: tokens.colors.textPrimary },
-  breedTextSelected: { color: tokens.colors.primary, fontWeight: '700' },
-  checkmark: { ...tokens.typography.label, color: tokens.colors.primary },
-  sourceCard: { borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, padding: tokens.spacing.md, marginBottom: tokens.spacing.lg },
+  breedTextSelected: { color: tokens.colors.support.profile.fg, fontWeight: '700' },
+  checkmark: { ...tokens.typography.label, color: tokens.colors.support.profile.fg },
+  sourceCard: { borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, padding: tokens.spacing.md, marginTop: tokens.spacing.md, marginBottom: tokens.spacing.lg },
   sourceInfo: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginBottom: tokens.spacing.md },
   sourceChoice: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   checkbox: { width: tokens.size.touchMin / 2, height: tokens.size.touchMin / 2, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, alignItems: 'center', justifyContent: 'center' },

@@ -1,6 +1,6 @@
 # UX-spec — rev02 för befintliga skärmar efter Hem
 
-Datum: 2026-10-13 · Version: 3 · Status: godkänd inom VISION-R02-3 v6.1; R02-3B implementerad och inväntar oberoende granskning
+Datum: 2026-10-13 · Version: 3.2 · Status: R02-3C har ägar-QA PASS; Reviewer/Security inväntas. R02-4A–H implementation handoffs finns separat i `docs/tasks/dev/vision-rev02-r02-4.md`; dessa väntar på egen owner QA och Reviewer/Security.
 
 ## Användarmål
 

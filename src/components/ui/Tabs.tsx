@@ -1,10 +1,11 @@
 import { MotionPressable } from './Motion';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { HorizontalGestureRegion } from './MainSwipeNavigation';
 import { tokens } from '../../theme/tokens';
 export type TabsVariant = 'underline' | 'rev02-segmented';
 export function Tabs({ items, active, onChange, variant = 'underline' }: { items: readonly string[]; active: string; onChange: (item: string) => void; variant?: TabsVariant }) {
   const segmented = variant === 'rev02-segmented';
-  return <ScrollView style={[styles.scroll, segmented && styles.segmentedScroll]} horizontal showsHorizontalScrollIndicator={false} accessibilityRole="tablist" accessibilityLabel="Avsnitt" contentContainerStyle={[styles.tabs, segmented && styles.segmentedTabs]}>{items.map((item) => { const selected = item === active; return <MotionPressable key={item} accessibilityRole="tab" accessibilityLabel={item} accessibilityState={{ selected }} onPress={() => onChange(item)} style={({ pressed }) => [styles.tab, segmented && styles.segmentedTab, selected && segmented && styles.segmentedSelected, pressed && styles.pressed]}><Text style={[styles.label, selected && styles.active, selected && segmented && styles.segmentedActive]}>{item}</Text>{!segmented ? <View style={[styles.underline, selected && styles.selectedUnderline]} /> : null}</MotionPressable>; })}</ScrollView>;
+  return <HorizontalGestureRegion><ScrollView style={[styles.scroll, segmented && styles.segmentedScroll]} horizontal showsHorizontalScrollIndicator={false} accessibilityRole="tablist" accessibilityLabel="Avsnitt" contentContainerStyle={[styles.tabs, segmented && styles.segmentedTabs]}>{items.map((item) => { const selected = item === active; return <MotionPressable key={item} accessibilityRole="tab" accessibilityLabel={item} accessibilityState={{ selected }} onPress={() => onChange(item)} style={({ pressed }) => [styles.tab, segmented && styles.segmentedTab, selected && segmented && styles.segmentedSelected, pressed && styles.pressed]}><Text style={[styles.label, selected && styles.active, selected && segmented && styles.segmentedActive]}>{item}</Text>{!segmented ? <View style={[styles.underline, selected && styles.selectedUnderline]} /> : null}</MotionPressable>; })}</ScrollView></HorizontalGestureRegion>;
 }
 const styles = StyleSheet.create({
   scroll: { flexGrow: 0, marginBottom: tokens.spacing.lg },

@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AppState, Pressable, StyleSheet, Text, View } from 'react-native';
-import type { ComponentProps } from 'react';
+import { Alert, AppState } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
 import * as ExpoCrypto from 'expo-crypto';
 import * as Notifications from 'expo-notifications';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { AppScreen, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { AppScreen, MessageCard, PageHeading, PrimaryButton } from '../../components/AppPrimitives';
 import {
   deleteDogEvent,
   deleteHealthWeight,
@@ -91,23 +90,24 @@ import { ageInWeeks, localDate } from '../onboarding/dog';
 import { HealthScreen } from '../health/HealthScreen';
 import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
 import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
+import { DogProfileScreen } from '../onboarding/DogProfileScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
 import { checklistMemoryScope, keepChecklistMemoryForScope, updateChecklistMemory, type PendingChecklistMemory } from '../knowledge/checklist-intent';
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, REVIEW_TRAINING_PROGRAMS } from '../knowledge/review-content';
 import { HomeScreen, type HomeDailyTrainingOption } from './HomeScreen';
 import { deriveHomeDailyActivities, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep } from './daily-activity-model';
 import { activeMainTabDestination, isMainTabDestination, mainTabTransitionDirection, nextMainTabDestination } from './main-navigation';
-import { AppBar, BottomNav, MainSwipeNavigation } from '../../components/ui';
+import { BottomNav, MainSwipeNavigation } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
 import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
 import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
 import { PassportScreen } from '../passport/PassportScreen';
 import { PublishedTrainingScreen } from '../training/PublishedTrainingScreen';
-import { theme, tokens } from '../../theme/tokens';
 import { useAuth } from '../account/AuthProvider';
 import { NotificationSettingsScreen } from '../notifications/NotificationSettingsScreen';
 import { AccountSettingsScreen } from '../account/AccountSettingsScreen';
 import { BetaInfoScreen } from '../account/BetaInfoScreen';
+import { MoreScreen } from '../more/MoreScreen';
 import { requestAccountDeletion, type AccountDeleteResult } from '../account/account-delete';
 import { createAnalyticsService } from '../../analytics/analytics-service';
 import { deleteFirstUseTipStatus, deleteNotificationPreferences } from '../../notifications/notification-storage';
@@ -147,12 +147,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       ? current
       : { page: nextPage, previousPage: current.page });
   }, []);
-  const handleMainSwipe = useCallback((direction: 'left' | 'right') => {
-    setNavigation((current) => {
-      const next = nextMainTabDestination(current.page, direction);
-      return next ? { page: next, previousPage: current.page } : current;
-    });
-  }, []);
   const [breeds, setBreeds] = useState<BreedOption[]>([]);
   useEffect(() => {
     let active = true;
@@ -163,6 +157,20 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [contentState, setContentState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [contentSelectionKey, setContentSelectionKey] = useState<string | null>(null);
   const [knowledgeFocus, setKnowledgeFocus] = useState<{ selectionKey: string; contentId: string | null; returnPage: 'home' | 'more' } | null>(null);
+  const [knowledgeDetailOpen, setKnowledgeDetailOpen] = useState(false);
+  const navigateMainTab = useCallback((destination: ProductPage) => {
+    const enteringKnowledge = page !== 'knowledge' && destination === 'knowledge';
+    const leavingKnowledge = page === 'knowledge' && destination !== 'knowledge';
+    if (enteringKnowledge || leavingKnowledge) {
+      setKnowledgeFocus(null);
+      setKnowledgeDetailOpen(false);
+    }
+    setPage(destination);
+  }, [page, setPage]);
+  const handleMainSwipe = useCallback((direction: 'left' | 'right') => {
+    const destination = nextMainTabDestination(page, direction);
+    if (destination) navigateMainTab(destination);
+  }, [navigateMainTab, page]);
   const [events, setEvents] = useState<DogEventRecord[]>([]);
   const eventRows = useRef<DogEventRecord[]>([]);
   const [logState, setLogState] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -2068,11 +2076,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
 
   const pageContent = renderPage();
   const transitionDirection = navigationDirection(previousPage, page);
-  return <AppScreen scrollKey={page} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={activeMainTabDestination(page)} onChange={(destination) => {
-    if (destination === 'knowledge') setKnowledgeFocus(null);
-    setPage(destination);
-  }} />}>
-    <MainSwipeNavigation enabled={isMainTabDestination(page)} onSwipe={handleMainSwipe}>
+  return <AppScreen scrollKey={page} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={activeMainTabDestination(page)} onChange={navigateMainTab} />}>
+    <MainSwipeNavigation enabled={isMainTabDestination(page) && !(page === 'knowledge' && knowledgeDetailOpen)} onSwipe={handleMainSwipe}>
       <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x">{pageContent}</ScreenTransition>
     </MainSwipeNavigation>
   </AppScreen>;
@@ -2126,10 +2131,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       onRemoveTrainingFromDay={(row) => { void runDailyMutation(`remove-training:${row.id}`, () => removeTrainingSelection(client, row)); }}
       onRetryDailyMutation={pendingDailyRetry.current?.lifetime === currentDailyLifetime ? retryDailyMutation : undefined}
       onGo={(destination) => {
-        if (destination === 'knowledge') setKnowledgeFocus(null);
-        setPage(destination);
+        navigateMainTab(destination);
       }}
       onOpenContent={(contentId) => {
+        setKnowledgeDetailOpen(false);
         setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId, returnPage: 'home' });
         setPage('knowledge');
       }}
@@ -2155,12 +2160,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
         onRetry={() => { void retryTraining(); }} />}
     </>;
-    if (page === 'more') return <MorePage onNavigate={(nextPage) => {
-      if (nextPage === 'knowledge') setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId: null, returnPage: 'more' });
-      setPage(nextPage);
-    }} signOutError={signOutError} signingOut={signingOut} onSignOut={confirmSignOut}
-      onOpenNotifications={() => { setNotificationSaved(false); setPage('notification-settings'); }}
-      onOpenAccount={() => setPage('account-settings')} />;
+    if (page === 'more') return <MoreScreen onNavigate={(destination) => {
+      if (destination === 'reminders') {
+        setNotificationSaved(false);
+        setPage('notification-settings');
+      } else if (destination === 'account') setPage('account-settings');
+      else setPage(destination);
+    }} signOutError={signOutError} signingOut={signingOut} onSignOut={confirmSignOut} />;
     if (page === 'account-settings') return <AccountSettingsScreen ownerId={session?.user.id ?? ''} onBack={() => setPage('more')}
       onOpenInformation={() => setPage('beta-info')} busy={accountDeleteBusy} status={accountDeleteStatus}
       localCleanupFailed={accountDeleteCleanupFailed} signOutFailed={accountDeleteSignOutFailed}
@@ -2199,6 +2205,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     if (page === 'health') return <HealthScreen
       plannedRecords={plannedHealth}
       plannedLoadState={plannedHealthState}
+      onRetryPlannedHealth={() => { void retryPlannedHealth(); }}
       onBack={() => setPage('more')}
       records={healthWeights}
       loadState={healthState}
@@ -2244,6 +2251,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       items={visibleGuideContent}
       contentState={visibleContentState}
       focusedContentId={focusedKnowledgeContentId}
+      onDetailChange={setKnowledgeDetailOpen}
       onSelectContent={(contentId) => setKnowledgeFocus({
         selectionKey: currentSelectionKey,
         contentId,
@@ -2281,7 +2289,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       profilePending={profilePending}
       profileConflict={Boolean(profileConflict)}
     />;
-    if (onDogUpdated) return <EditDogProfileScreen key={`${dog.id}:${dog.name}:${dog.breed_id}:${dog.birth_date}`}
+    if (onDogUpdated) return <EditDogProfileScreen key={`${dog.id}:${dog.name}:${dog.breed_id}:${dog.birth_date}:${dog.age_display_unit}`}
       client={client} dog={dog} busy={profileBusy} pending={profilePending} statusMessage={profileMessage}
       statusError={profileMessageError} conflict={profileConflict ?? undefined}
       attribution={dogAttribution} attributionState={attributionState} attributionBusy={attributionBusy}
@@ -2289,50 +2297,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       onBack={() => setPage('more')} onSave={saveDogProfile}
       onSaveAttribution={saveDogAttribution} onRetryAttribution={() => { void retryDogAttribution(); }}
       onRetryStatus={() => { void retryProfileStatus(); }} onAcceptCurrent={() => { void acceptCurrentProfile(); }} />;
-    return <DogProfilePage dog={dog} onBack={() => setPage('more')} />;
+    return <DogProfileScreen dog={dog} breed={breeds.find((breed) => breed.id === dog.breed_id)?.name} onBack={() => setPage('more')} />;
   }
 
 }
 
 function navigationDirection(previous: ProductPage, current: ProductPage): 'forward' | 'backward' {
   return mainTabTransitionDirection(previous, current);
-}
-
-function MorePage({ onNavigate, signOutError, signingOut, onSignOut, onOpenNotifications, onOpenAccount }: {
-  onNavigate: (page: ProductPage) => void; signOutError: boolean; signingOut: boolean; onSignOut: () => void;
-  onOpenNotifications: () => void; onOpenAccount: () => void;
-}) {
-  return <View>
-    <AppBar mode="Title" title="Mer" />
-    <MenuRow icon="heart-outline" title="Hälsa" detail="Vikt, hälsohistorik och planer" onPress={() => onNavigate('health')} />
-    <MenuRow icon="id-card-outline" title="Tassla-pass" detail="Hundens uppgifter som PDF" onPress={() => onNavigate('passport')} />
-    <MenuRow icon="paw-outline" title="Hundprofil" detail="Din hunds uppgifter" onPress={() => onNavigate('profile')} />
-    <MenuRow icon="notifications-outline" title="Påminnelser" detail="Dina valda påminnelser" onPress={onOpenNotifications} />
-    <MenuRow icon="person-circle-outline" title="Konto och support" detail="Information och kontohantering" onPress={onOpenAccount} />
-    {signOutError && <MessageCard tone="error">Det gick inte att logga ut just nu. Försök igen.</MessageCard>}
-    <QuietButton title={signingOut ? 'Loggar ut…' : 'Logga ut'} disabled={signingOut} onPress={onSignOut} />
-  </View>;
-}
-
-function DogProfilePage({ dog, onBack }: { dog: OwnedDog; onBack: () => void }) {
-  return <View>
-    <AppBar mode="Back" title="Hundprofil" actionLabel="Tillbaka till Mer" onAction={onBack} />
-    <Text style={styles.profileIntro}>Uppgifterna används för att välja ålders- och rasrelevant innehåll.</Text>
-    <View style={styles.profileCard}>
-      <Text style={styles.cardEyebrow}>HUNDENS NAMN</Text><Text style={styles.profileValue}>{dog.name}</Text>
-      <Text style={styles.cardEyebrow}>RAS</Text><Text style={styles.profileValue}>{dog.breed_id}</Text>
-      <Text style={styles.cardEyebrow}>FÖDELSEDATUM</Text><Text style={styles.profileValue}>{dog.birth_date}</Text>
-    </View>
-    <MessageCard>Profiländring är inte tillgänglig här ännu. Hundens uppgifter har hämtats från ditt konto.</MessageCard>
-  </View>;
-}
-
-function MenuRow({ icon, title, detail, onPress }: { icon: ComponentProps<typeof Ionicons>['name']; title: string; detail: string; onPress: () => void }) {
-  return <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.menuRow, pressed && styles.pressed]}>
-    <Ionicons name={icon} size={23} color={theme.colors.accent} />
-    <View style={styles.menuCopy}><Text style={styles.menuTitle}>{title}</Text><Text style={styles.menuDetail}>{detail}</Text></View>
-    <Ionicons name="chevron-forward" size={18} color={theme.colors.mutedText} />
-  </Pressable>;
 }
 
 function reminderStatusSummary(result: ReminderReconcileResult | null, preferences: NotificationPreferences, permission: 'unknown' | 'granted' | 'denied'): string {
@@ -2387,21 +2358,10 @@ function samePlannedHealthSnapshot(left: PlannedHealthRecord | null, right: Plan
 
 function sameOwnedDogProfile(
   current: OwnedDog,
-  expected: Pick<OwnedDog, 'name' | 'breed_id' | 'birth_date'>,
+  expected: Pick<OwnedDog, 'name' | 'breed_id' | 'birth_date' | 'age_display_unit'>,
   id: string,
 ): boolean {
   return current.id === id && current.name === expected.name
-    && current.breed_id === expected.breed_id && current.birth_date === expected.birth_date;
+    && current.breed_id === expected.breed_id && current.birth_date === expected.birth_date
+    && current.age_display_unit === expected.age_display_unit;
 }
-
-const styles = StyleSheet.create({
-  cardEyebrow: { color: theme.colors.accent, ...tokens.typography.caption, marginBottom: tokens.spacing.sm },
-  menuRow: { minHeight: 74, flexDirection: 'row', alignItems: 'center', gap: 13, borderRadius: theme.radius.button, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, paddingHorizontal: 14, marginBottom: tokens.layout.listGap },
-  menuCopy: { flex: 1 },
-  menuTitle: { color: theme.colors.text, ...tokens.typography.label },
-  menuDetail: { color: theme.colors.mutedText, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
-  profileIntro: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginBottom: tokens.spacing.md },
-  profileCard: { borderRadius: theme.radius.card, backgroundColor: theme.colors.surface, padding: 18, borderColor: theme.colors.border, borderWidth: 1 },
-  profileValue: { color: theme.colors.text, ...tokens.typography.label, marginBottom: tokens.spacing.lg },
-  pressed: { opacity: 0.72 },
-});

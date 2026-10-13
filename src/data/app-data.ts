@@ -6,12 +6,16 @@ export interface OwnedDog {
   name: string;
   breed_id: string;
   birth_date: string;
+  age_display_unit: AgeDisplayUnit;
 }
+
+export type AgeDisplayUnit = 'weeks' | 'months' | 'years';
 
 export interface OwnedDogProfileChanges {
   name: string;
   breed_id: string;
   birth_date: string;
+  age_display_unit: AgeDisplayUnit;
 }
 
 export interface OwnedDogAttribution {
@@ -61,7 +65,7 @@ export async function fetchOwnedDog(client: SupabaseClient): Promise<OwnedDog | 
   return withRequestDeadline(async (signal) => {
     const { data, error } = await client
       .from('dogs')
-      .select('id,name,breed_id,birth_date')
+      .select('id,name,breed_id,birth_date,age_display_unit')
       .abortSignal(signal)
       .maybeSingle();
     if (error) throw new Error('Could not load the dog profile');
@@ -74,7 +78,7 @@ export async function fetchOwnedDog(client: SupabaseClient): Promise<OwnedDog | 
 export async function fetchOwnedDogById(client: SupabaseClient, dogId: string): Promise<OwnedDog | null> {
   return withRequestDeadline(async (signal) => {
     const { data, error } = await client.from('dogs')
-      .select('id,name,breed_id,birth_date')
+      .select('id,name,breed_id,birth_date,age_display_unit')
       .eq('id', dogId)
       .abortSignal(signal)
       .maybeSingle();
@@ -109,20 +113,22 @@ export async function updateOwnedDog(
 ): Promise<DogProfileWriteOutcome> {
   const name = normalizeDogProfileName(changes.name);
   if (previous.id !== dogId || !name || !isValidDogBirthDate(changes.birth_date)
-    || !knownBreeds.some((breed) => breed.id === changes.breed_id)) {
+    || !knownBreeds.some((breed) => breed.id === changes.breed_id)
+    || !isAgeDisplayUnit(changes.age_display_unit)) {
     return { status: 'failed' };
   }
-  const desired = { id: dogId, name, breed_id: changes.breed_id, birth_date: changes.birth_date };
+  const desired = { id: dogId, name, breed_id: changes.breed_id, birth_date: changes.birth_date, age_display_unit: changes.age_display_unit };
   let failure: unknown = null;
   try {
     const result = await withRequestDeadline(async (signal) => await client.from('dogs')
-      .update({ name, breed_id: changes.breed_id, birth_date: changes.birth_date })
+      .update({ name, breed_id: changes.breed_id, birth_date: changes.birth_date, age_display_unit: changes.age_display_unit })
       .eq('id', dogId)
       .eq('name', previous.name)
       .eq('breed_id', previous.breed_id)
       .eq('birth_date', previous.birth_date)
+      .eq('age_display_unit', previous.age_display_unit)
       .abortSignal(signal)
-      .select('id,name,breed_id,birth_date')
+      .select('id,name,breed_id,birth_date,age_display_unit')
       .maybeSingle());
     if (!result.error && isOwnedDog(result.data) && matchesDogProfile(result.data, desired)) {
       return { status: 'saved', value: result.data };
@@ -247,12 +253,18 @@ function isOwnedDog(value: unknown): value is OwnedDog {
   return typeof row.id === 'string' && row.id.length > 0
     && typeof row.name === 'string' && normalizeDogProfileName(row.name) === row.name
     && typeof row.breed_id === 'string' && row.breed_id.length > 0
-    && typeof row.birth_date === 'string' && isValidDogBirthDate(row.birth_date);
+    && typeof row.birth_date === 'string' && isValidDogBirthDate(row.birth_date)
+    && isAgeDisplayUnit(row.age_display_unit);
+}
+
+function isAgeDisplayUnit(value: unknown): value is AgeDisplayUnit {
+  return value === 'weeks' || value === 'months' || value === 'years';
 }
 
 function matchesDogProfile(current: OwnedDog, expected: OwnedDogProfileChanges & Pick<OwnedDog, 'id'>): boolean {
   return current.id === expected.id && current.name === expected.name
-    && current.breed_id === expected.breed_id && current.birth_date === expected.birth_date;
+    && current.breed_id === expected.breed_id && current.birth_date === expected.birth_date
+    && current.age_display_unit === expected.age_display_unit;
 }
 
 function isDefiniteClientRejection(error: unknown): boolean {

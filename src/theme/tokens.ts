@@ -77,6 +77,15 @@ const trainingColors = {
   accent: primitives.green700,
 } as const;
 
+const supportColors = {
+  health: { fg: primitives.blue700, bg: primitives.blue100 },
+  passport: { fg: primitives.purple700, bg: primitives.purple100 },
+  profile: { fg: primitives.green700, bg: primitives.green100 },
+  reminders: { fg: primitives.amber700, bg: primitives.amber100 },
+  account: { fg: primitives.blue700, bg: primitives.blue100 },
+  plannedHealth: { fg: primitives.amber700, bg: primitives.amber100 },
+} as const;
+
 const typography = {
   title: { fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }), fontSize: 24, lineHeight: 32, fontWeight: '800' as const },
   heading: { fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }), fontSize: 20, lineHeight: 28, fontWeight: '700' as const },
@@ -87,7 +96,7 @@ const typography = {
 
 export const tokens = {
   primitives,
-  colors: { ...semanticColors, category: categoryColors, home: visionRev02Colors, destination: destinationColors, log: { surface: visionRev02Colors.card, category: logCategoryColors }, training: trainingColors },
+  colors: { ...semanticColors, category: categoryColors, home: visionRev02Colors, destination: destinationColors, log: { surface: visionRev02Colors.card, category: logCategoryColors }, training: trainingColors, support: supportColors },
   spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 },
   layout: { headingGap: 8, listGap: 12, cardPadding: 16, pageInset: 24, sectionGap: 24 },
   radius: { sm: 8, md: 14, lg: 20, full: 999 },

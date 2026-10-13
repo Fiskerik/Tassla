@@ -1,11 +1,10 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { AccessibilityInfo, Alert, findNodeHandle, Image, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { DatePickerField, InfoModal, MessageCard, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
-import { AppBar } from '../../components/ui';
+import { DatePickerField, InfoModal, MessageCard, PageHeading, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
 import { Toast } from '../../components/ui/Toast';
 import { IconChip } from '../../components/ui/IconChip';
-import { theme, tokens } from '../../theme/tokens';
+import { tokens } from '../../theme/tokens';
 import {
   isValidPlannedHealthDate,
   normalizePlannedHealthDescription,
@@ -213,13 +212,18 @@ export function PlannedHealthScreen({
   }
 
   return <View>
-    <AppBar mode="Back" title="Planerade hälsohändelser" actionLabel="Tillbaka till Hälsa" disabled={busy} onAction={onBack} />
+    <Pressable accessibilityRole="button" accessibilityLabel="Tillbaka till Hälsa" accessibilityState={{ disabled: busy }} disabled={busy}
+      onPress={onBack} style={({ pressed }) => [styles.backAction, pressed && !busy && styles.actionPressed]}>
+      <Ionicons name="chevron-back" size={tokens.size.iconMd} color={tokens.colors.textPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+      <Text style={styles.backLabel}>Hälsa</Text>
+    </Pressable>
+    <PageHeading title="Planerade hälsohändelser" description="Egna planer för vaccinationer och veterinärbesök." />
     <View style={styles.heroCard}>
       <View style={styles.heroIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        <Ionicons name="calendar-outline" size={tokens.size.iconMd} color={tokens.colors.primary} />
+        <Ionicons name="calendar-outline" size={tokens.size.iconMd} color={tokens.colors.support.plannedHealth.fg} />
       </View>
       <View style={styles.heroCopy}>
-        <Text style={styles.description}>Planera vaccinationer och veterinärbesök.</Text>
+        <Text style={styles.description}>Planerad – inte genomförd.</Text>
       </View>
     </View>
     <View style={styles.infoRow}>
@@ -257,9 +261,9 @@ export function PlannedHealthScreen({
       <View style={styles.formCard}>
         <Text style={styles.formTitle} accessibilityRole="header">{editingRecord ? 'Rätta plan' : 'Lägg till plan'}</Text>
         <View accessibilityRole="radiogroup" accessibilityLabel="Typ av planerad hälsohändelse" style={styles.typeChoices}>
-          <TypeChoice selected={type === 'vaccination'} disabled={blocked || editingRecord !== null}
+          <TypeChoice selected={type === 'vaccination'} disabled={blocked || editingRecord !== null} accent={tokens.colors.category.vaccination}
             icon="bandage-outline" label="Vaccination" onPress={() => setType('vaccination')} />
-          <TypeChoice selected={type === 'vet_visit'} disabled={blocked || editingRecord !== null}
+          <TypeChoice selected={type === 'vet_visit'} disabled={blocked || editingRecord !== null} accent={tokens.colors.category.veterinary}
             icon="medical-outline" label="Veterinärbesök" onPress={() => setType('vet_visit')} />
         </View>
         <DatePickerField label="Planerat datum" disabled={blocked} onChangeText={setDueOn} value={dueOn} />
@@ -332,13 +336,13 @@ export function PlannedHealthScreen({
   </View>;
 }
 
-function TypeChoice({ selected, disabled, icon, label, onPress }: {
-  selected: boolean; disabled: boolean; icon: 'bandage-outline' | 'medical-outline'; label: string; onPress: () => void;
+function TypeChoice({ selected, disabled, icon, label, accent, onPress }: {
+  selected: boolean; disabled: boolean; icon: 'bandage-outline' | 'medical-outline'; label: string; accent: { fg: string; bg: string }; onPress: () => void;
 }) {
   return <Pressable accessibilityRole="radio" accessibilityState={{ checked: selected, disabled }} accessibilityLabel={label}
-    disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.typeChoice, selected && styles.typeChoiceSelected, pressed && !disabled && styles.typeChoicePressed]}>
-    <Ionicons name={icon} size={tokens.size.iconSm} color={selected ? tokens.colors.primary : tokens.colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-    <Text style={[styles.typeChoiceText, selected && styles.typeChoiceTextSelected]}>{label}</Text>
+    disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.typeChoice, selected && { borderColor: accent.fg, backgroundColor: accent.bg }, pressed && !disabled && styles.typeChoicePressed]}>
+    <Ionicons name={icon} size={tokens.size.iconSm} color={selected ? accent.fg : tokens.colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+    <Text style={[styles.typeChoiceText, selected && { color: accent.fg }]}>{label}</Text>
   </Pressable>;
 }
 
@@ -347,53 +351,54 @@ function typeLabel(type: PlannedHealthType): string {
 }
 
 const styles = StyleSheet.create({
-  heroCard: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8, padding: 16, borderRadius: theme.radius.card, backgroundColor: '#F1F5F0', borderWidth: 1, borderColor: theme.colors.border },
-  heroIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#E5EFE8', alignItems: 'center', justifyContent: 'center' },
+  backAction: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: tokens.spacing.xs, marginLeft: -tokens.spacing.sm, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.md },
+  backLabel: { ...tokens.typography.caption, color: tokens.colors.textPrimary, fontWeight: '700' },
+  actionPressed: { backgroundColor: tokens.colors.selectedSurface },
+  heroCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.support.plannedHealth.bg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
+  heroIcon: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.surface, alignItems: 'center', justifyContent: 'center' },
   heroCopy: { flex: 1 },
   description: { ...tokens.typography.body, color: tokens.colors.textSecondary },
-  infoRow: { marginTop: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 },
-  infoHint: { color: theme.colors.mutedText, fontSize: 14 },
-  infoButton: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10 },
-  infoButtonText: { color: theme.colors.accent, fontSize: 15, fontWeight: '700' },
-  infoBody: { color: theme.colors.text, fontSize: 16, lineHeight: 24, marginBottom: 14 },
-  formCard: { marginTop: 18, padding: 17, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: '#FBFCFA' },
-  formTitle: { color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 14 },
-  typeChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-  typeChoice: { flexGrow: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingHorizontal: 11, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  typeChoiceSelected: { borderColor: theme.colors.accent, backgroundColor: '#EAF2EC' },
+  infoRow: { marginTop: tokens.spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: tokens.spacing.sm },
+  infoHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption },
+  infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },
+  infoButtonText: { color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '700' },
+  infoBody: { color: tokens.colors.textPrimary, ...tokens.typography.body, marginBottom: tokens.spacing.md },
+  formCard: { marginTop: tokens.spacing.lg, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  formTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading, marginBottom: tokens.spacing.md },
+  typeChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg },
+  typeChoice: { flexGrow: 1, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   typeChoicePressed: { opacity: 0.78 },
-  typeChoiceText: { color: theme.colors.mutedText, fontSize: 14, fontWeight: '700' },
-  typeChoiceTextSelected: { color: theme.colors.accent },
-  reminderChoice: { flexDirection: 'row', alignItems: 'center', gap: 11, padding: 12, marginBottom: 14, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.button, backgroundColor: '#F5F8F4' },
-  reminderCheck: { width: 26, height: 26, borderRadius: 7, borderWidth: 2, borderColor: theme.colors.mutedText, alignItems: 'center', justifyContent: 'center' },
-  reminderCheckSelected: { backgroundColor: theme.colors.accent, borderColor: theme.colors.accent },
+  typeChoiceText: { color: tokens.colors.textSecondary, ...tokens.typography.caption, fontWeight: '700' },
+  reminderChoice: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, padding: tokens.spacing.md, marginBottom: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface },
+  reminderCheck: { width: tokens.size.iconMd, height: tokens.size.iconMd, borderRadius: tokens.radius.sm, borderWidth: 2, borderColor: tokens.colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  reminderCheckSelected: { backgroundColor: tokens.colors.primary, borderColor: tokens.colors.primary },
   reminderCopy: { flex: 1 },
-  reminderHint: { color: theme.colors.mutedText, fontSize: 13, lineHeight: 18 },
-  reminderRow: { color: theme.colors.mutedText, fontSize: 13, lineHeight: 18, marginTop: 5 },
-  field: { marginBottom: 14 },
-  label: { color: theme.colors.text, fontSize: 15, fontWeight: '700', marginBottom: 7 },
-  dateInputWrap: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 14, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  dateInput: { flex: 1, color: theme.colors.text, fontSize: 17, paddingVertical: 10 },
-  noteInput: { minHeight: 84, paddingHorizontal: 14, paddingVertical: 12, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, fontSize: 16, textAlignVertical: 'top' },
-  characterHint: { color: theme.colors.mutedText, fontSize: 12, textAlign: 'right', marginTop: 5 },
-  listTitle: { color: theme.colors.text, fontSize: 19, fontWeight: '800', marginTop: 22 },
-  conflictCard: { marginTop: 10, padding: 15, borderRadius: theme.radius.card, borderWidth: 1, borderColor: '#D6C59B', backgroundColor: '#FBF6EA' },
-  conflictTitle: { color: theme.colors.text, fontSize: 16, fontWeight: '800' },
-  conflictText: { color: theme.colors.text, fontSize: 15, fontWeight: '700', lineHeight: 22, marginTop: 8 },
-  conflictBody: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 20, marginTop: 8, marginBottom: 10 },
-  emptyCard: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 10, padding: 14, borderRadius: theme.radius.card, backgroundColor: '#F1F5F0', borderWidth: 1, borderColor: theme.colors.border },
-  emptyImage: { width: 48, height: 48, borderRadius: 24 },
+  reminderHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption },
+  reminderRow: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
+  field: { marginBottom: tokens.spacing.md },
+  label: { color: tokens.colors.textPrimary, ...tokens.typography.caption, fontWeight: '700', marginBottom: tokens.spacing.xs },
+  dateInputWrap: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  dateInput: { flex: 1, color: tokens.colors.textPrimary, ...tokens.typography.body, paddingVertical: tokens.spacing.sm },
+  noteInput: { minHeight: tokens.size.touchMin * 2, paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body, textAlignVertical: 'top' },
+  characterHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption, textAlign: 'right', marginTop: tokens.spacing.xs },
+  listTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading, marginTop: tokens.layout.sectionGap },
+  conflictCard: { marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.warning, backgroundColor: tokens.colors.warningSurface },
+  conflictTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
+  conflictText: { color: tokens.colors.textPrimary, ...tokens.typography.caption, fontWeight: '700', marginTop: tokens.spacing.sm },
+  conflictBody: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.md },
+  emptyCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.spacing.md, padding: tokens.spacing.md, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.support.plannedHealth.bg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
+  emptyImage: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full },
   emptyCopy: { flex: 1 },
-  emptyTitle: { color: theme.colors.text, fontSize: 16, fontWeight: '800' },
-  emptyBody: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 19, marginTop: 3 },
-  recordCard: { marginTop: 10, padding: 15, borderRadius: theme.radius.card, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  recordHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  recordType: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  recordTitle: { color: theme.colors.text, fontSize: 16, fontWeight: '800' },
-  timingLabel: { color: theme.colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 0.6 },
-  overdueLabel: { color: '#936324' },
-  recordDate: { color: theme.colors.text, fontSize: 16, fontWeight: '700', marginTop: 7 },
-  recordNote: { color: theme.colors.mutedText, fontSize: 14, lineHeight: 20, marginTop: 5 },
+  emptyTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
+  emptyBody: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
+  recordCard: { marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  recordHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm },
+  recordType: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
+  recordTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
+  timingLabel: { color: tokens.colors.support.plannedHealth.fg, ...tokens.typography.caption, fontWeight: '800' },
+  overdueLabel: { color: tokens.colors.warning },
+  recordDate: { color: tokens.colors.textPrimary, ...tokens.typography.label, marginTop: tokens.spacing.sm },
+  recordNote: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
   actionsButton: { width: tokens.size.touchMin, minWidth: tokens.size.touchMin, height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end', marginTop: tokens.spacing.xs, borderRadius: tokens.radius.full },
   actionsButtonPressed: { backgroundColor: tokens.colors.selectedSurface },
 });

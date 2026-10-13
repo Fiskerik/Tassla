@@ -1,6 +1,6 @@
 # VISION-R02-3 — Logg, Träning och Kunskap enligt vision_rev02
 
-Datum: 2026-10-13 · Version: 6.1 · Status: R02-3A checkpointad; R02-3B implementerad och inväntar oberoende granskning · Branch: `design/vision-rev02`
+Datum: 2026-10-13 · Version: 6.2 · Status: R02-3A checkpointad; ägar-QA har godkänt R02-3B; Reviewer/Security återstår · Branch: `design/vision-rev02`
 
 ## Mål
 
@@ -90,11 +90,15 @@ Visuell render är webbevidens med syntetiska fixtures; den verifierar inte nati
 |---|---|---|---|
 | R02-3A Logga | Implementer + separat QA/Reviewer/Security | Hem commit `96e6882`; planreview APPROVE/PROCEED | Endast Logg, namngivna opt-in-komponenter, gallery; Security granskar fryst persondata-renderingsdiff före checkpoint; egen §14 |
 | R02-3B Träning | Implementer + separat QA/Reviewer/Security | 3A checkpoint och inga öppna fel | Public/review tabs, bildkort och progress; Security granskar fryst progresspresentation före checkpoint; egen §14 |
-| R02-3C Kunskap | Implementer + separat QA/Reviewer/Security | 3B checkpoint | Knowledge, FAQ, faschecklistor och artikelväg; Security granskar ägar-/hundchecklistpresentation före checkpoint; egen §14 |
+| R02-3C Kunskap | Implementer + separat QA/Reviewer/Security | 3A checkpoint; owner override v6.2 tillåter implementation efter ägar-QA på 3B | Knowledge, FAQ, faschecklistor och artikelväg; Security granskar ägar-/hundchecklistpresentation före checkpoint; egen §14 |
 | R02-4+ stödskärmar | Implementer + QA/Reviewer + Security där relevant | 3C checkpoint; separat exact planreview per slice | Egen filscope, review, §14-evidens och checkpoint för varje stödresa |
 
 Plan- och kodgranskning är inte en release-/produktionsgrind. Ingen push, live-migration, kontomodifiering eller publicering görs i detta arbete. Push av Hem är redan separat blockerad av att den här miljön saknar GitHub-autentisering; lokalt är Hem bevarad i commit `96e6882` och bundle `/workspace/vision-rev02-96e6882.bundle`.
 
 ## Planreview och nästa steg
 
-Architect **APPROVE** och Critic **PROCEED** för v6 finns i `docs/tasks/dev/vision-rev02-r02-3-reviews.md`. R02-3A Logg är checkpointad efter beteende-QA PASS, Reviewer PASS, Security PASS och komplett public/review-renderingsmatris; §14 avvikelse för full panellikhet är fortsatt dokumenterad som **Nej**. Architect och Critic godkände en smal v6.1-ändring som lägger till `tools/visual-check/app.tsx` i 3B enbart för sanningsenlig deterministisk ålder/progress-fixture. R02-3B Träning är implementerad och renderad i public/review med syntetiska data; handoff och egen §14-bedömning finns i `docs/design/evidence/vision-rev02/r02-3b/RENDER-REPORT.md`. Oberoende QA, Reviewer och Security återstår, så Kunskap har inte startat.
+Architect **APPROVE** och Critic **PROCEED** för v6 finns i `docs/tasks/dev/vision-rev02-r02-3-reviews.md`. R02-3A Logg är checkpointad efter beteende-QA PASS, Reviewer PASS, Security PASS och komplett public/review-renderingsmatris; §14 avvikelse för full panellikhet är fortsatt dokumenterad som **Nej**. Architect och Critic godkände en smal v6.1-ändring som lägger till `tools/visual-check/app.tsx` i 3B enbart för sanningsenlig deterministisk ålder/progress-fixture. R02-3B Träning är implementerad och renderad i public/review med syntetiska data; handoff och egen §14-bedömning finns i `docs/design/evidence/vision-rev02/r02-3b/RENDER-REPORT.md`.
+
+### Ägarbeslut om fortsatt ordning — v6.2
+
+Erik godkände uttryckligen allt arbete till och med R02-3B i QA och bad att fortsätta med alla återstående delar. Därför får R02-3C börja efter ägarens QA-godkännande utan att vänta på R02-3B:s separata Reviewer- och Security-granskning. Detta ändrar arbetsordningen, inte granskningsresultatet: R02-3B förblir blockerad från checkpoint tills Reviewer och Security lämnar faktiska resultat. R02-3C behåller sin tidigare godkända skärm- och filscope. Dess egen QA-, Reviewer- och Security-granskning krävs före checkpoint.

@@ -40,12 +40,18 @@ test('home week strip includes zero and marks exactly one current week', () => {
     { week: 4, current: false },
     { week: 5, current: false },
     { week: 6, current: false },
+    { week: 7, current: false },
+    { week: 8, current: false },
+    { week: 9, current: false },
+    { week: 10, current: false },
+    { week: 11, current: false },
+    { week: 12, current: false },
   ]);
 
   const birthDate = '2026-01-01';
   const currentWeek = 10;
   const strip = homeWeekStrip(birthDate, dateAfterDays(birthDate, currentWeek * 7));
-  assert.deepEqual(strip.map(({ week }) => week), [7, 8, 9, 10, 11, 12, 13]);
+  assert.deepEqual(strip.map(({ week }) => week), Array.from({ length: 23 }, (_, week) => week));
   assert.equal(strip.filter(({ current }) => current).length, 1);
   assert.equal(strip.find(({ current }) => current)?.week, currentWeek);
   for (const week of [0, 1, 10]) {
@@ -53,7 +59,6 @@ test('home week strip includes zero and marks exactly one current week', () => {
     assert.equal(boundaryStrip.filter(({ current }) => current).length, 1);
     assert.equal(boundaryStrip.find(({ current }) => current)?.week, week);
   }
-  assert.equal(homeWeekStrip(birthDate, '2026-01-01', 0).length, 0);
 });
 
 test('Home today sources use local-day events and performed health while keeping today plans separate', () => {

@@ -160,9 +160,11 @@ test('Home opens the exact fetched version and Knowledge resolves that exact row
   };
   let focus;
   let page;
-  const onOpenContent = new Function('setKnowledgeFocus', 'setPage', 'currentSelectionKey',
-    `return (contentId) => {${body}}`)((value) => { focus = value; }, (value) => { page = value; }, 'dog-age-breed-generation');
+  let detailOpen = true;
+  const onOpenContent = new Function('setKnowledgeDetailOpen', 'setKnowledgeFocus', 'setPage', 'currentSelectionKey',
+    `return (contentId) => {${body}}`)((value) => { detailOpen = value; }, (value) => { focus = value; }, (value) => { page = value; }, 'dog-age-breed-generation');
   onOpenContent(selectedVersion.id);
+  assert.equal(detailOpen, false);
   assert.deepEqual(focus, { selectionKey: 'dog-age-breed-generation', contentId: selectedVersion.id, returnPage: 'home' });
   assert.equal(page, 'knowledge');
 

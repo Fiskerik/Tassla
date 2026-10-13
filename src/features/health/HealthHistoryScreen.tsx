@@ -153,9 +153,9 @@ export function HealthHistoryScreen({
         <View style={styles.formCard}>
           <Text style={styles.formTitle} accessibilityRole="header">{editingRecord ? 'Rätta händelse' : 'Lägg till händelse'}</Text>
           <View accessibilityRole="radiogroup" accessibilityLabel="Typ av händelse" style={styles.typeChoices}>
-            <TypeChoice selected={type === 'vaccination'} disabled={blocked || editingRecord !== null}
+            <TypeChoice selected={type === 'vaccination'} disabled={blocked || editingRecord !== null} accent={tokens.colors.category.vaccination}
               icon="bandage-outline" label="Vaccination" onPress={() => setType('vaccination')} />
-            <TypeChoice selected={type === 'vet_visit'} disabled={blocked || editingRecord !== null}
+            <TypeChoice selected={type === 'vet_visit'} disabled={blocked || editingRecord !== null} accent={tokens.colors.category.veterinary}
               icon="medical-outline" label="Veterinärbesök" onPress={() => setType('vet_visit')} />
           </View>
           <DatePickerField label="Datum" disabled={blocked} onChangeText={setDate} value={date} />
@@ -180,13 +180,13 @@ export function HealthHistoryScreen({
   );
 }
 
-function TypeChoice({ selected, disabled, icon, label, onPress }: {
-  selected: boolean; disabled: boolean; icon: 'bandage-outline' | 'medical-outline'; label: string; onPress: () => void;
+function TypeChoice({ selected, disabled, icon, label, accent, onPress }: {
+  selected: boolean; disabled: boolean; icon: 'bandage-outline' | 'medical-outline'; label: string; accent: { fg: string; bg: string }; onPress: () => void;
 }) {
   return <Pressable accessibilityRole="radio" accessibilityState={{ checked: selected, disabled }} accessibilityLabel={label}
-    disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.typeChoice, selected && styles.typeChoiceSelected, pressed && !disabled && styles.typeChoicePressed]}>
-            <Ionicons name={icon} size={tokens.size.iconSm} color={selected ? tokens.colors.primary : tokens.colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-    <Text style={[styles.typeChoiceText, selected && styles.typeChoiceTextSelected]}>{label}</Text>
+    disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.typeChoice, selected && { borderColor: accent.fg, backgroundColor: accent.bg }, pressed && !disabled && styles.typeChoicePressed]}>
+    <Ionicons name={icon} size={tokens.size.iconSm} color={selected ? accent.fg : tokens.colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+    <Text style={[styles.typeChoiceText, selected && { color: accent.fg }]}>{label}</Text>
   </Pressable>;
 }
 
@@ -205,7 +205,6 @@ const styles = StyleSheet.create({
   formTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label, marginBottom: tokens.spacing.md },
   typeChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg },
   typeChoice: { flexGrow: 1, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
-  typeChoiceSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   typeChoicePressed: { opacity: 0.78 },
   typeChoiceText: { color: tokens.colors.textSecondary, ...tokens.typography.caption, fontWeight: '700' },
   typeChoiceTextSelected: { color: tokens.colors.primary },

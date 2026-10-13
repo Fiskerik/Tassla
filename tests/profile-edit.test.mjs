@@ -20,10 +20,10 @@ const profileEditorSource = await readFile(new URL('../src/features/onboarding/E
 const projectUrl = 'https://local-test.supabase.invalid';
 const dogId = '11111111-1111-4111-8111-111111111111';
 const otherDogId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-const profile = { id: dogId, name: 'Nala', breed_id: 'beagle', birth_date: '2026-02-01' };
-const desired = { id: dogId, name: 'Nala Rose', breed_id: 'mixed', birth_date: '2026-02-15' };
+const profile = { id: dogId, name: 'Nala', breed_id: 'beagle', birth_date: '2026-02-01', age_display_unit: 'weeks' };
+const desired = { id: dogId, name: 'Nala Rose', breed_id: 'mixed', birth_date: '2026-02-15', age_display_unit: 'months' };
 const breeds = [{ id: 'beagle', name: 'Beagle' }, { id: 'mixed', name: 'Blandras' }];
-const changes = { name: '  Nala Rose  ', breed_id: 'mixed', birth_date: '2026-02-15' };
+const changes = { name: '  Nala Rose  ', breed_id: 'mixed', birth_date: '2026-02-15', age_display_unit: 'months' };
 
 test('profile editor keeps transient success feedback in the local action card and pending/error status visible', () => {
   const draftDiffersSource = profileEditorSource.match(/const draftDiffers = ([^;]+);/)?.[1];
@@ -31,12 +31,14 @@ test('profile editor keeps transient success feedback in the local action card a
   assert.ok(draftDiffersSource, 'expected the editor draft comparison');
   assert.ok(statusVisibleSource, 'expected the editor status visibility rule');
   const evaluate = (draft, statusMessage, statusError, pending, busy) => {
-    const draftDiffers = new Function('name', 'dog', 'breedId', 'birthDate', `return ${draftDiffersSource};`)(draft.name, profile, draft.breedId, draft.birthDate);
+    const draftDiffers = new Function('name', 'dog', 'breedId', 'birthDate', 'ageDisplayUnit', `return ${draftDiffersSource};`)(draft.name, profile, draft.breedId, draft.birthDate, draft.ageDisplayUnit ?? profile.age_display_unit);
     const showStatusMessage = new Function('statusMessage', 'statusError', 'pending', 'busy', 'draftDiffers', `return ${statusVisibleSource};`)(statusMessage, statusError, pending, busy, draftDiffers);
     return { draftDiffers, showStatusMessage };
   };
   const savedMessage = evaluate({ name: 'Nala', breedId: 'beagle', birthDate: profile.birth_date }, 'Profilen sparades.', false, false, false);
   assert.deepEqual(savedMessage, { draftDiffers: false, showStatusMessage: false });
+  const changedAgeUnit = evaluate({ name: 'Nala', breedId: 'beagle', birthDate: profile.birth_date, ageDisplayUnit: 'years' }, 'Profilen sparades.', false, false, false);
+  assert.deepEqual(changedAgeUnit, { draftDiffers: true, showStatusMessage: false });
   const editedAfterSave = evaluate({ name: 'Nala ny', breedId: 'beagle', birthDate: profile.birth_date }, 'Profilen sparades.', false, false, false);
   assert.deepEqual(editedAfterSave, { draftDiffers: true, showStatusMessage: false });
   assert.equal(evaluate({ name: 'Nala ny', breedId: 'beagle', birthDate: profile.birth_date }, 'Ändringen väntar.', false, true, false).showStatusMessage, true);
@@ -83,7 +85,8 @@ test('update filters the exact dog and all three captured preimage fields and se
     assert.equal(url.searchParams.get('name'), `eq.${profile.name}`);
     assert.equal(url.searchParams.get('breed_id'), `eq.${profile.breed_id}`);
     assert.equal(url.searchParams.get('birth_date'), `eq.${profile.birth_date}`);
-    assert.deepEqual(body, { name: 'Nala Rose', breed_id: 'mixed', birth_date: '2026-02-15' });
+    assert.equal(url.searchParams.get('age_display_unit'), `eq.${profile.age_display_unit}`);
+    assert.deepEqual(body, { name: 'Nala Rose', breed_id: 'mixed', birth_date: '2026-02-15', age_display_unit: 'months' });
     assert.equal(Object.hasOwn(body, 'id'), false);
     assert.equal(Object.hasOwn(body, 'actor_id'), false);
     return jsonResponse(desired);
@@ -197,7 +200,7 @@ test('fetchOwnedDogById is exact-id scoped and validates the returned id', async
   await t.test('matching dog row', async () => {
     const { client, requests } = localClient(({ method, url }) => {
       assert.equal(method, 'GET');
-      assert.equal(url.searchParams.get('select'), 'id,name,breed_id,birth_date');
+      assert.equal(url.searchParams.get('select'), 'id,name,breed_id,birth_date,age_display_unit');
       assert.equal(url.searchParams.get('id'), `eq.${dogId}`);
       return jsonResponse(profile);
     });
@@ -238,7 +241,7 @@ test('actual workspace profile handler blocks duplicates and keeps unknown inten
   const harness = createProfileHandlerHarness({
     updateOwnedDog: async (...args) => { harness.calls.update.push(args); return deferred.promise; },
   });
-  const saving = harness.handlers.saveDogProfile({ name: 'Nala Rose', breed_id: 'mixed', birth_date: '2026-02-15' }, breeds);
+  const saving = harness.handlers.saveDogProfile({ name: 'Nala Rose', breed_id: 'mixed', birth_date: '2026-02-15', age_display_unit: 'months' }, breeds);
   assert.equal(harness.calls.update.length, 1);
   assert.equal(await harness.handlers.saveDogProfile({ name: 'Other', breed_id: 'mixed', birth_date: '2026-02-15' }, breeds), false);
   assert.equal(harness.calls.update.length, 1, 'same-tick duplicate intent must not send another write');

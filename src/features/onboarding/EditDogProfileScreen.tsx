@@ -4,19 +4,20 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DatePickerField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { Button } from '../../components/ui';
-import { AppBar } from '../../components/ui';
 import { Toast } from '../../components/ui/Toast';
 import {
   fetchBreeds,
   isValidDogBirthDate,
   normalizeDogProfileName,
   type BreedOption,
+  type AgeDisplayUnit,
   type OwnedDog,
   type OwnedDogAttribution,
   type OwnedDogProfileChanges,
 } from '../../data/app-data';
 import { normalizeKennelCode } from '../../onboarding-referral/referral-secure-storage';
 import { tokens } from '../../theme/tokens';
+import { ProfileScreenHeader } from './ProfileScreenHeader';
 
 export function EditDogProfileScreen({
   client,
@@ -63,6 +64,7 @@ export function EditDogProfileScreen({
   const [name, setName] = useState(dog.name);
   const [breedId, setBreedId] = useState(dog.breed_id);
   const [birthDate, setBirthDate] = useState(dog.birth_date);
+  const [ageDisplayUnit, setAgeDisplayUnit] = useState<AgeDisplayUnit>(dog.age_display_unit);
   const [formError, setFormError] = useState('');
   const [kennelCode, setKennelCode] = useState(attribution?.code ?? '');
   const [attributionFormError, setAttributionFormError] = useState('');
@@ -114,7 +116,12 @@ export function EditDogProfileScreen({
       setFormError('Ange ett giltigt födelsedatum som inte ligger i framtiden.');
       return;
     }
-    const changes: OwnedDogProfileChanges = { name: normalizedName, breed_id: breedId, birth_date: normalizedDate };
+    const changes: OwnedDogProfileChanges = {
+      name: normalizedName,
+      breed_id: breedId,
+      birth_date: normalizedDate,
+      age_display_unit: ageDisplayUnit,
+    };
     await onSave(changes, breeds);
   }
 
@@ -132,11 +139,12 @@ export function EditDogProfileScreen({
 
   const currentBreed = breeds.find((breed) => breed.id === dog.breed_id)?.name ?? dog.breed_id;
   const conflictBreed = conflict ? breeds.find((breed) => breed.id === conflict.breed_id)?.name ?? conflict.breed_id : '';
-  const draftDiffers = name.trim() !== dog.name || breedId !== dog.breed_id || birthDate.trim() !== dog.birth_date;
+  const draftDiffers = name.trim() !== dog.name || breedId !== dog.breed_id || birthDate.trim() !== dog.birth_date
+    || ageDisplayUnit !== dog.age_display_unit;
   const showStatusMessage = Boolean(statusMessage) && (statusError || pending || busy);
 
   return <View>
-    <AppBar mode="Back" title="Hundprofil" actionLabel="Tillbaka till Mer" disabled={busy} onAction={onBack} />
+    <ProfileScreenHeader onBack={onBack} disabled={busy} />
     <View style={styles.heroCard}>
       <View style={styles.heroCopy}>
         <Text style={styles.intro}>Håll namn, ras och födelsedatum uppdaterade för innehåll som passar er.</Text>
@@ -187,6 +195,19 @@ export function EditDogProfileScreen({
         {!breeds.some((breed) => breed.id === dog.breed_id) && <MessageCard>Nuvarande ras ({currentBreed}) finns inte i listan. Välj en ras om du vill ändra profilen.</MessageCard>}
       </View>}
       <DatePickerField label="Födelsedatum" disabled={blocked} onChangeText={setBirthDate} value={birthDate} />
+      <View style={styles.ageUnitField}>
+        <Text style={styles.label}>Visa ålder som</Text>
+        <View accessibilityRole="radiogroup" accessibilityLabel="Visa ålder som" style={styles.ageUnitOptions}>
+          {AGE_DISPLAY_OPTIONS.map((option) => {
+            const selected = option.value === ageDisplayUnit;
+            return <Pressable key={option.value} accessibilityRole="radio" accessibilityLabel={option.label}
+              accessibilityState={{ selected, disabled: blocked }} disabled={blocked} onPress={() => setAgeDisplayUnit(option.value)}
+              style={({ pressed }) => [styles.ageUnitOption, selected && styles.ageUnitSelected, pressed && !blocked && styles.breedPressed]}>
+              <Text style={[styles.ageUnitText, selected && styles.ageUnitTextSelected]}>{option.label}</Text>
+            </Pressable>;
+          })}
+        </View>
+      </View>
       {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
       <PrimaryButton title={busy ? 'Sparar…' : statusError && !pending ? 'Försök igen' : 'Spara profil'}
         disabled={blocked || breedState !== 'ready'} onPress={() => { void save(); }} />
@@ -215,12 +236,18 @@ export function EditDogProfileScreen({
   </View>;
 }
 
+const AGE_DISPLAY_OPTIONS: readonly { value: AgeDisplayUnit; label: string }[] = [
+  { value: 'weeks', label: 'Veckor' },
+  { value: 'months', label: 'Månader' },
+  { value: 'years', label: 'År' },
+];
+
 const styles = StyleSheet.create({
   intro: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   heroCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.selectedSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   heroCopy: { flex: 1 },
   heroImage: { width: tokens.size.chipLg + tokens.spacing.md, height: tokens.size.chipLg + tokens.spacing.md, borderRadius: tokens.radius.full },
-  profileNote: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, padding: tokens.spacing.md, marginTop: tokens.spacing.md, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.successSurface },
+  profileNote: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, padding: tokens.spacing.md, marginTop: tokens.spacing.md, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.support.profile.bg },
   profileNoteText: { ...tokens.typography.caption, flex: 1, color: tokens.colors.textPrimary },
   conflictCard: { marginTop: tokens.spacing.md, padding: tokens.spacing.md, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.warning, backgroundColor: tokens.colors.warningSurface },
   conflictTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
@@ -240,4 +267,10 @@ const styles = StyleSheet.create({
   breedPressed: { opacity: 0.75 },
   breedText: { ...tokens.typography.body, color: tokens.colors.textPrimary },
   breedTextSelected: { color: tokens.colors.primary, fontWeight: '700' },
+  ageUnitField: { marginTop: tokens.spacing.md, marginBottom: tokens.spacing.md },
+  ageUnitOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm },
+  ageUnitOption: { minHeight: tokens.size.touchMin, minWidth: tokens.size.touchMin * 2, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.full, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  ageUnitSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
+  ageUnitText: { ...tokens.typography.body, color: tokens.colors.textPrimary },
+  ageUnitTextSelected: { color: tokens.colors.primary, fontWeight: '700' },
 });

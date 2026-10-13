@@ -1,7 +1,8 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { useState } from 'react';
+import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button, Card, DailyActivityItem, DestinationTile, Skeleton } from '../../components/ui';
+import { HorizontalGestureRegion } from '../../components/ui/MainSwipeNavigation';
 import { MotionPressable } from '../../components/ui/Motion';
 import type { HomeContent, OwnedDog } from '../../data/app-data';
 import type { HealthHistoryRecord, PlannedHealthRecord } from '../../data/workspace-data';
@@ -28,7 +29,7 @@ export type HomeDailyFixtureItem = {
   routineId?: string;
 };
 
-export function HomeScreen({ dog, content, contentState, trainingState = 'loading', nextStep, reviewTrainingStep = false,
+export function HomeScreen({ dog, breed, content, contentState, trainingState = 'loading', nextStep, reviewTrainingStep = false,
   dailyFixture, dailyState = 'hidden', dailyDateKey = '', dailyScopeKey, dailyActivities = [], routineTemplates = [], dailyTrainingOptions = [],
   dailyMutationBusy = false, dailyMutationKey = '', dailyMutationMessage = '', dailyMutationError = false, onRetryDaily,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay,
@@ -75,12 +76,10 @@ export function HomeScreen({ dog, content, contentState, trainingState = 'loadin
   const [focusRoutineId, setFocusRoutineId] = useState<string | null>(null);
   const [reviewCompletion, setReviewCompletion] = useState<Record<string, boolean>>(() => Object.fromEntries((dailyFixture ?? []).map((item) => [item.id, item.completed])));
   const [portraitFrame, setPortraitFrame] = useState<{ left: number; right: number } | null>(null);
-  const [weekStripLeft, setWeekStripLeft] = useState(0);
-  const [weekFrames, setWeekFrames] = useState<Record<number, { left: number; width: number }>>({});
   const today = localDate();
   const ageWeeks = homeAgeInWeeks(dog.birth_date, today);
-  const age = ageWeeks === null ? null : formatDogAge(dog.birth_date, today);
-  const weekStrip = homeWeekStrip(dog.birth_date, today);
+  const age = ageWeeks === null ? null : formatDogAge(dog.birth_date, today, dog.age_display_unit);
+  const breedLabel = breed?.trim() || dog.breed_id;
   const relevantContent = contentState === 'ready'
     ? content.find((item) => item.contentType !== 'training_program')
     : undefined;
@@ -100,7 +99,8 @@ export function HomeScreen({ dog, content, contentState, trainingState = 'loadin
             <Text style={styles.greetingTitle} accessibilityRole="header">{homeGreetingAt(new Date())}</Text>
             <Ionicons name="sunny" size={tokens.size.iconSm} color={tokens.colors.home.sun} accessibilityElementsHidden />
           </View>
-          <Text style={styles.dogMeta}>{dog.name}{age ? ` · ${ageWeeks} ${ageWeeks === 1 ? 'vecka' : 'veckor'}` : ''}</Text>
+          <Text style={styles.dogMeta}>{dog.name} | {breedLabel}</Text>
+          {age ? <Text style={styles.dogAge}>{age}</Text> : null}
         </View>
       </View>
       <View style={styles.dogPortrait} pointerEvents="none" testID="home-dog-portrait"
@@ -114,32 +114,7 @@ export function HomeScreen({ dog, content, contentState, trainingState = 'loadin
         </View>
         <Text accessible accessibilityRole="text" accessibilityLabel="Standardbild" testID="home-portrait-standard-label" style={styles.portraitLabel}>Standardbild</Text>
       </View>
-      {weekStrip.length > 0 ? <View style={styles.weekStrip} testID="home-week-strip" accessibilityLabel="Hundens ålder i veckor"
-        onLayout={(event) => setWeekStripLeft(event.nativeEvent.layout.x)}>
-        {weekStrip.map(({ week, current }) => {
-          const frame = weekFrames[week];
-          const markerCenter = frame ? weekStripLeft + frame.left + frame.width / 2 : null;
-          const fadeOpacity = !current && markerCenter !== null && portraitFrame
-            ? homeWeekDecorationOpacity(portraitFrame.left, portraitFrame.right, markerCenter)
-            : null;
-          const washOpacity = fadeOpacity === null ? null : 1 - fadeOpacity;
-          return <View key={week} style={styles.weekItem} testID={`home-week-${week}`}
-            onLayout={(event) => {
-              const { x, width } = event.nativeEvent.layout;
-              setWeekFrames((frames) => frames[week]?.left === x && frames[week]?.width === width
-                ? frames
-                : { ...frames, [week]: { left: x, width } });
-            }}
-            accessible accessibilityRole="text" accessibilityLabel={`${week} ${week === 1 ? 'vecka' : 'veckor'}${current ? ', aktuell ålder' : ''}`}>
-            {washOpacity !== null ? <View pointerEvents="none" testID={`home-week-wash-${week}`}
-              style={[StyleSheet.absoluteFill, styles.weekWash, { backgroundColor: `rgba(245, 240, 232, ${washOpacity})` }]} /> : null}
-            <View testID={`home-week-number-${week}`} style={[styles.weekNumberWrap, fadeOpacity !== null && styles.weekNumberBacked, current && styles.currentWeekNumberWrap]}>
-            <Text testID={`home-week-glyph-${week}`} style={[styles.weekNumber, current && styles.currentWeekNumber]}>{week}</Text>
-            </View>
-            <View testID={`home-week-dot-${week}`} style={[styles.weekDot, current && styles.currentWeekDot, fadeOpacity !== null && { opacity: fadeOpacity }]} />
-          </View>;
-        })}
-      </View> : null}
+      {ageWeeks !== null ? <HomeWeekStrip key={dog.id} birthDate={dog.birth_date} today={today} currentWeek={ageWeeks} portraitFrame={portraitFrame} /> : null}
     </View>
 
     <Card variant="home" onPress={relevantContent ? () => onOpenContent(relevantContent.id) : nextStep && trainingState === 'ready' ? () => onGo('training') : undefined}
@@ -249,7 +224,76 @@ function previewText(body: string): string {
   return text.length > 150 ? `${text.slice(0, 147).trimEnd()}…` : text;
 }
 
+function HomeWeekStrip({ birthDate, today, currentWeek, portraitFrame }: {
+  birthDate: string | null;
+  today: string;
+  currentWeek: number;
+  portraitFrame: { left: number; right: number } | null;
+}) {
+  const [viewport, setViewport] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
+  const [scrollOffset, setScrollOffset] = useState<number | null>(null);
+  const weeks = useMemo(() => homeWeekStrip(birthDate, today), [birthDate, today]);
+  const initialScrollIndex = Math.max(0, currentWeek - 3);
+  const cellWidth = viewport.width > 0
+    ? Math.max(0, (viewport.width - WEEK_GAP * (VISIBLE_WEEK_COUNT - 1)) / VISIBLE_WEEK_COUNT)
+    : 0;
+  const itemExtent = cellWidth + WEEK_GAP;
+  const initialOffset = initialScrollIndex * itemExtent;
+  const fadeOffset = scrollOffset ?? initialOffset;
+
+  function renderWeek({ item, index }: { item: (typeof weeks)[number]; index: number }) {
+    const markerCenter = viewport.left + index * itemExtent + cellWidth / 2 - fadeOffset;
+    const fadeOpacity = !item.current && portraitFrame
+      ? homeWeekDecorationOpacity(portraitFrame.left, portraitFrame.right, markerCenter)
+      : null;
+    const washOpacity = fadeOpacity === null ? null : 1 - fadeOpacity;
+    return <View style={[styles.weekItem, { width: cellWidth }]} testID={`home-week-${item.week}`}
+      accessible accessibilityRole="text" accessibilityLabel={`${item.week} ${item.week === 1 ? 'vecka' : 'veckor'}${item.current ? ', aktuell ålder' : ''}`}>
+      {washOpacity !== null ? <View pointerEvents="none" testID={`home-week-wash-${item.week}`}
+        style={[StyleSheet.absoluteFill, styles.weekWash, { backgroundColor: `rgba(245, 240, 232, ${washOpacity})` }]} /> : null}
+      <View testID={`home-week-number-${item.week}`} style={[styles.weekNumberWrap, fadeOpacity !== null && styles.weekNumberBacked, item.current && styles.currentWeekNumberWrap]}>
+        <Text testID={`home-week-glyph-${item.week}`} style={[styles.weekNumber, item.current && styles.currentWeekNumber]}>{item.week}</Text>
+      </View>
+      <View testID={`home-week-dot-${item.week}`} style={[styles.weekDot, item.current && styles.currentWeekDot, fadeOpacity !== null && { opacity: fadeOpacity }]} />
+    </View>;
+  }
+
+  function onViewportLayout(event: { nativeEvent: { layout: { x: number; width: number } } }) {
+    const { x, width } = event.nativeEvent.layout;
+    setViewport((current) => current.left === x && current.width === width ? current : { left: x, width });
+  }
+
+  return <HorizontalGestureRegion>
+    <View style={styles.weekStrip} testID="home-week-strip" accessibilityLabel="Hundens ålder i veckor" onLayout={onViewportLayout}>
+      {viewport.width > 0 ? <FlatList
+        style={StyleSheet.absoluteFill}
+        data={weeks}
+        horizontal
+        bounces={false}
+        showsHorizontalScrollIndicator={false}
+        initialScrollIndex={initialScrollIndex}
+        getItemLayout={(_, index) => ({ length: itemExtent, offset: itemExtent * index, index })}
+        keyExtractor={(item) => String(item.week)}
+        renderItem={renderWeek}
+        ItemSeparatorComponent={WeekSeparator}
+        extraData={{ scrollOffset, portraitFrame }}
+        scrollEventThrottle={16}
+        onScroll={(event) => {
+          const nextOffset = event.nativeEvent.contentOffset.x;
+          setScrollOffset((current) => current !== null && Math.abs(current - nextOffset) < 0.5 ? current : nextOffset);
+        }}
+      /> : null}
+    </View>
+  </HorizontalGestureRegion>;
+}
+
+function WeekSeparator() {
+  return <View style={styles.weekSeparator} />;
+}
+
 const portraitSize = tokens.size.heroHeight * 0.56;
+const VISIBLE_WEEK_COUNT = 7;
+const WEEK_GAP = tokens.spacing.xs;
 
 function homeWeekDecorationOpacity(left: number, right: number, markerCenter: number): number | null {
   const fadeStart = left - 16;
@@ -267,13 +311,15 @@ const styles = StyleSheet.create({
   greetingCopy: { flex: 1, gap: tokens.spacing.xs, paddingRight: portraitSize + tokens.spacing.sm },
   greetingTitleRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs },
   greetingTitle: { ...tokens.typography.heading, color: tokens.colors.home.text, fontWeight: '600' },
-  dogMeta: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
+  dogMeta: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700' },
+  dogAge: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
   dogPortrait: { position: 'absolute', top: 0, right: 0, zIndex: 1, width: portraitSize, height: portraitSize },
   portraitPhotoClip: { width: portraitSize, height: portraitSize, overflow: 'hidden', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.canvas },
   dogImage: { width: portraitSize, height: portraitSize, transform: [{ scale: 1.08 }] },
   portraitLabel: { position: 'absolute', top: tokens.spacing.sm, right: tokens.spacing.xs, borderRadius: tokens.radius.sm, paddingHorizontal: tokens.spacing.xs, paddingVertical: 2, backgroundColor: tokens.colors.home.card, color: tokens.colors.home.text, fontSize: tokens.typography.caption.fontSize - tokens.spacing.xs, lineHeight: tokens.typography.caption.fontSize, fontWeight: '700' },
-  weekStrip: { position: 'relative', zIndex: 2, flexDirection: 'row', gap: tokens.spacing.xs, alignSelf: 'stretch' },
-  weekItem: { position: 'relative', flex: 1, alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs / 2 },
+  weekStrip: { position: 'relative', zIndex: 2, alignSelf: 'stretch', height: tokens.size.touchMin },
+  weekItem: { position: 'relative', height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs / 2 },
+  weekSeparator: { width: WEEK_GAP },
   weekWash: { borderRadius: tokens.radius.md },
   weekNumberWrap: { width: tokens.size.chipMd, height: tokens.size.chipMd, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full },
   weekNumberBacked: { backgroundColor: tokens.colors.home.canvas },

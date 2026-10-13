@@ -2,7 +2,7 @@
 
 Version 1.0, 2026-10-13. Status: byggunderlag. Befintliga källor är kodverifierade; föreslagna objekt är ännu inte API:er eller databasändringar.
 
-**Aktuell status 2026-10-13:** Inventeringen nedan beskriver startläget före R02-2. Ägarval och completion-regeln är senare beslutade: egna rutiner markeras av ägaren; träning härleds från sparad träningsprogress. Guideöppning, vårdplan och olänkad logg räknas inte. R02-2-koden finns i QA; databasens runtimeprov kvarstår. Se [paketstatus](../tasks/VISION-REV02.md) och [preciserat Hem-kontrakt](../plans/HOME-REV02-visual-ux-spec.md). Presentationstitel, fotoexempel och färgroller får inte ändra dessa datakällor.
+**Aktuell status 2026-10-13:** Inventeringen nedan beskriver kodens startläge före de nya profiländringarna. Ägarval och completion-regeln är senare beslutade: egna rutiner markeras av ägaren; träning härleds från sparad träningsprogress. Guideöppning, vårdplan och olänkad logg räknas inte. R02-2-koden finns i QA; databasens runtimeprov kvarstår. Valbar åldersvisning finns nu i Slice A:s appkod och migration; statisk QA är PASS, Reviewer PASS och Security APPROVE. Queue är fortfarande blockerad för verklig databas/RLS-runtime. Sökbar rassnapshot och Mix-delraser är blockerade: Erik har valt Wikidata CC0 men exportfrågan returnerar HTTP 403 i miljön. Se [profilplanen](../tasks/dev/vision-rev02-dog-profile-v2.md), [renderingsunderlaget](evidence/vision-rev02/dog-profile/README.md), [paketstatus](../tasks/VISION-REV02.md) och [preciserat Hem-kontrakt](../plans/HOME-REV02-visual-ux-spec.md). Presentationstitel, fotoexempel och färgroller får inte ändra dessa datakällor.
 
 ## Gemensam betydelse
 
@@ -14,7 +14,9 @@ Behåll separata källor och bygg gemensamma läsvyer. Skapa inte en universell 
 
 | Objekt | Befintlig källa | Får uttrycka | Får inte antas |
 |---|---|---|---|
-| Hundidentitet | `OwnedDog` i `src/data/app-data.ts`, `dogs`: id/name/breed_id/birth_date | Namn, ras, härledd levnadsålder | Foto, flera hundar per ägare eller utvecklingsobservationer |
+| Hundidentitet | `OwnedDog` i `src/data/app-data.ts`, `dogs`: id/name/breed_id/birth_date/age_display_unit | Namn, ras, härledd levnadsålder och ägarens presentationsval | Foto, flera hundar per ägare eller utvecklingsobservationer |
+| Hundprofilens planerade Mix-utökning | Profilplan v8: två nullable Mix-ras-ID:n på samma `dogs`-rad | Ägarens uppgift om två kända delraser | Delraser får inte påverka innehållsurval. Katalog/Mix är blockerad av verifierat snapshot; Slice A:s åldersenhet finns lokalt med statisk QA-PASS, Reviewer PASS och Security APPROVE, men migration/RLS-runtime återstår. |
+| Raskatalog (planerad) | `breeds`, med vald och dokumenterad licensierad snapshot | Referensnamn för rasval; gemensamma katalogposter | Raskälla får inte importeras utan återanvändningsrätt; katalognamn är inte hundägarens egen text |
 | Vardagslogg | `dog_events`, via `src/data/workspace-data.ts` och `log-model.ts` | Typ, verklig händelsetid, anteckning | Att alla dagens händelser är inlästa; Home har begränsat urval |
 | Vikt/utförd hälsa | Också `dog_events`, andra eventtyper och datumfält | Sparad vikt/vaccination/veterinärhistorik | Att de är valploggens vanliga händelser |
 | Hälsoplan | `dog_health_plans`, `due_on`, valfri `due_time`, separata påminnelsefält | Planerad åtgärd och vald tid | Genomförd vård eller automatisk plan→historik |

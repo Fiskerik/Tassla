@@ -18,7 +18,8 @@ export function PreviewHomeScreen({
   onOpenTraining: () => void;
   trainingShortcut: { programTitle: string; stepTitle: string; stepNumber: number; completedCount: number; totalCount: number } | null;
 }) {
-  const age = formatDogAge(dog.birthDate, localDate());
+  const age = formatDogAge(dog.birthDate, localDate(), dog.ageDisplayUnit ?? 'weeks');
+  const breed = dog.breedId === 'example' ? 'Labrador' : dog.breedId;
   return (
     <View>
       <PageHeading title={`Hej, ${dog.name}!`} description="En lugn överblick för er vardag." />
@@ -27,7 +28,7 @@ export function PreviewHomeScreen({
           <Ionicons name="paw" size={tokens.size.iconMd} color={tokens.colors.primary} />
         </View>
         <View style={styles.dogCopy}>
-          <Text style={styles.dogName}>{dog.name}</Text>
+          <Text style={styles.dogName}>{dog.name} | {breed}</Text>
           <Text style={styles.dogMeta}>{age}</Text>
         </View>
       </View>

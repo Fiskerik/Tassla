@@ -16,6 +16,12 @@ Scope: endast plan och köposter före implementation.
 
 Plan v6 är godkänd för genomförande. Köövergången gäller endast R02-3A Logg; Träning och Kunskap förblir planerade tills föregående slice är granskad och checkpointad.
 
+## Ägar-QA — R02-3B Träning och arbete hittills
+
+**PASS — Erik (QA/ägare), 2026-10-13.** Erik godkände uttryckligen allt arbete hittills till och med R02-3B och bad att fortsätta med återstående skärmar. Detta är QA-godkännande från användaren. Det ersätter inte en separat Reviewer- eller Security-granskning; dessa två resultat är fortfarande **PENDING** för R02-3B.
+
+Eriks fortsättningsbeslut ändrar ordningen så att R02-3C Kunskap får implementeras medan 3B:s Reviewer/Security-granskning inväntas. Det markerar inte R02-3B som checkpointad eller klar. Den avgränsade R02-3C-specen finns i `docs/plans/VISION-REV02-R02-3C-ux-spec.md`.
+
 ## Smal planändring inför R02-3B — v6.1
 
 ### Architect
