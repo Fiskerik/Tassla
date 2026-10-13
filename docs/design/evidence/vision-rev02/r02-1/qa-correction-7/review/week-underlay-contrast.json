@@ -1,0 +1,606 @@
+[
+  {
+    "width": 375,
+    "large_text_140": false,
+    "screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-7/review/week-underlay-375.png",
+    "labels": [
+      {
+        "week": "8",
+        "bbox": {
+          "x": 41.734375,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            247,
+            241,
+            231
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.75,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "9",
+        "bbox": {
+          "x": 89.03125,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            247,
+            241,
+            231
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.75,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "10",
+        "bbox": {
+          "x": 132.421875,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            247,
+            241,
+            231
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.75,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "12",
+        "bbox": {
+          "x": 227,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            193,
+            198,
+            184
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 3.7,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "13",
+        "bbox": {
+          "x": 274.28125,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            241,
+            236,
+            226
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.48,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "14",
+        "bbox": {
+          "x": 321.5625,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            192,
+            197,
+            182
+          ],
+          "max": [
+            249,
+            242,
+            232
+          ]
+        },
+        "min_background_text_contrast": 3.66,
+        "max_background_text_contrast": 5.8
+      }
+    ]
+  },
+  {
+    "width": 430,
+    "large_text_140": false,
+    "screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-7/review/week-underlay-430.png",
+    "labels": [
+      {
+        "week": "8",
+        "bbox": {
+          "x": 45.671875,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            247,
+            241,
+            231
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.75,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "9",
+        "bbox": {
+          "x": 100.8125,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            247,
+            241,
+            231
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.75,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "10",
+        "bbox": {
+          "x": 152.078125,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            247,
+            241,
+            231
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.75,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "12",
+        "bbox": {
+          "x": 262.359375,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            247,
+            241,
+            231
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.75,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "13",
+        "bbox": {
+          "x": 317.5,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            241,
+            236,
+            226
+          ],
+          "max": [
+            247,
+            241,
+            232
+          ]
+        },
+        "min_background_text_contrast": 5.48,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "14",
+        "bbox": {
+          "x": 372.640625,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            192,
+            197,
+            182
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 3.66,
+        "max_background_text_contrast": 5.75
+      }
+    ]
+  },
+  {
+    "width": 375,
+    "large_text_140": true,
+    "screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-7/review/week-underlay-375-140.png",
+    "labels": [
+      {
+        "week": "8",
+        "bbox": {
+          "x": 40.1875,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            247,
+            241,
+            231
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.75,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "9",
+        "bbox": {
+          "x": 87.46875,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            247,
+            241,
+            231
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.75,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "10",
+        "bbox": {
+          "x": 129.3125,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            247,
+            241,
+            231
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.75,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "12",
+        "bbox": {
+          "x": 223.890625,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            191,
+            196,
+            181
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 3.62,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "13",
+        "bbox": {
+          "x": 271.171875,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            237,
+            234,
+            222
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.36,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "14",
+        "bbox": {
+          "x": 318.453125,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            192,
+            197,
+            182
+          ],
+          "max": [
+            249,
+            242,
+            232
+          ]
+        },
+        "min_background_text_contrast": 3.66,
+        "max_background_text_contrast": 5.81
+      }
+    ]
+  },
+  {
+    "width": 430,
+    "large_text_140": true,
+    "screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-7/review/week-underlay-430-140.png",
+    "labels": [
+      {
+        "week": "8",
+        "bbox": {
+          "x": 44.109375,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            247,
+            241,
+            231
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.75,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "9",
+        "bbox": {
+          "x": 99.265625,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            247,
+            241,
+            231
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.75,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "10",
+        "bbox": {
+          "x": 148.96875,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            247,
+            241,
+            231
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.75,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "12",
+        "bbox": {
+          "x": 259.25,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            247,
+            241,
+            231
+          ],
+          "max": [
+            247,
+            241,
+            231
+          ]
+        },
+        "min_background_text_contrast": 5.75,
+        "max_background_text_contrast": 5.75
+      },
+      {
+        "week": "13",
+        "bbox": {
+          "x": 314.390625,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            192,
+            198,
+            182
+          ],
+          "max": [
+            248,
+            242,
+            232
+          ]
+        },
+        "min_background_text_contrast": 3.69,
+        "max_background_text_contrast": 5.78
+      },
+      {
+        "week": "14",
+        "bbox": {
+          "x": 369.53125,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(83, 98, 87)",
+        "underlay_rgb_range": {
+          "min": [
+            193,
+            198,
+            182
+          ],
+          "max": [
+            249,
+            242,
+            232
+          ]
+        },
+        "min_background_text_contrast": 3.7,
+        "max_background_text_contrast": 5.8
+      }
+    ]
+  }
+]

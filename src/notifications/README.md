@@ -2,6 +2,8 @@
 
 `notification-model.ts` validerar det stängda preferensformatet, ägarskopade payloads och lokala datum/tider. `notification-storage.ts` sparar endast val av/på och enhetens valda träningstid i SecureStore under en ägarspecifik nyckel. Preferenser börjar av och är separata från planens serverlagrade påminnelseval.
 
+`NotificationSettingsScreen.tsx` använder rev02:s varma kortlayout och opt-in amberaccent. Appvalen ligger i ett block och enhetens behörighet i ett separat block; båda presenterar befintliga tillstånd och ändrar inte schemaläggningen. `SupportScreenHeader.tsx` ger stödskärmarna en vänsterställd rubrik med minst 44 pt tillbakaåtgärd.
+
 `notification-service.ts` använder endast Expo Notifications lokala schemaläggnings-, avboknings- och behörighets-API:er. Den jämför stabila Tassla-ID:n med den faktiska iOS UTC-kalender- eller Android datum-triggern innan den behåller en notis. Endast egna whitelisted payloads kan avbokas. Kallback från en avisering öppnar endast en aktuell hunds träningsvy eller en serverbekräftad plan.
 
 `notification-storage.ts` håller också status för MOTION-03:s första Logg-tips under en SecureStore-nyckel per kontoägare och skärm-ID. Statusen styr endast om tipset visas. Läs-/skrivfel sätter en volatil minnesspärr tills appprocessen startas om; status raderas efter bekräftad kontoradering genom ProductWorkspace:s befintliga lokala cleanup. Ingen serverpost eller analytics används.

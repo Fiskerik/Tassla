@@ -1,0 +1,9 @@
+{
+  "passes": [
+    "Home source states and layout at 375px",
+    "Home source states and layout at 430px",
+    "Home navigation, review gate, reduced motion and 140% text"
+  ],
+  "pageErrors": [],
+  "scope": "Home and shared navigation; synthetic data and React Native Web, not device/backend certification"
+}

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { InfoModal, MessageCard, TimePickerField } from '../../components/AppPrimitives';
-import { AppBar } from '../../components/ui';
+import { SupportScreenHeader } from '../../components/ui';
 import { Button } from '../../components/ui/Button';
 import { Toast } from '../../components/ui/Toast';
 import { tokens } from '../../theme/tokens';
@@ -75,10 +75,10 @@ export function NotificationSettingsScreen({
   }
 
   return <View>
-    <AppBar mode="Back" title="Påminnelser" actionLabel="Tillbaka till Mer" disabled={busy} onAction={onBack} />
+    <SupportScreenHeader title="Påminnelser" backLabel="Tillbaka till Mer" accent="reminders" disabled={busy} onBack={onBack} />
     <View style={styles.hero}>
       <View style={styles.icon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        <Ionicons name="notifications-outline" size={tokens.size.iconMd} color={tokens.colors.primary} />
+        <Ionicons name="notifications-outline" size={tokens.size.iconMd} color={tokens.colors.support.reminders.fg} />
       </View>
       <View style={styles.heroCopy}>
         <Text style={styles.intro}>Välj om Tassla ska schemalägga lokala påminnelser på den här enheten.</Text>
@@ -87,7 +87,7 @@ export function NotificationSettingsScreen({
     <View style={styles.infoRow}>
       <Text style={styles.infoHint}>Om lokala påminnelser</Text>
       <Pressable accessibilityRole="button" accessibilityLabel="Visa information om lokala påminnelser" onPress={() => setInfoVisible(true)} style={styles.infoButton}>
-        <Ionicons name="information-circle-outline" size={tokens.size.iconMd} color={tokens.colors.primary} />
+        <Ionicons name="information-circle-outline" size={tokens.size.iconMd} color={tokens.colors.support.reminders.fg} />
         <Text style={styles.infoButtonText}>Läs information</Text>
       </Pressable>
     </View>
@@ -96,6 +96,8 @@ export function NotificationSettingsScreen({
       <Text style={styles.infoBody}>Låsskärmen visar bara en generell text. Påminnelser är inte en bekräftelse på leverans.</Text>
     </InfoModal>
 
+    <View style={styles.settingsCard}>
+    <Text style={styles.sectionTitle} accessibilityRole="header">Dina val</Text>
     <Choice selected={enabled} disabled={busy} label="Tillåt Tasslas påminnelser på den här enheten"
       detail="Avbokar Tasslas egna påminnelser när du stänger av. Dina planval sparas."
       onPress={() => setEnabled((value) => !value)} />
@@ -114,18 +116,23 @@ export function NotificationSettingsScreen({
     <TimePickerField label="Träningspåminnelse, lokal tid" disabled={busy}
       onChangeText={setTrainingTime} value={trainingTime} />
 
+    {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
+    {statusMessage && statusError ? <MessageCard tone="error">{statusMessage}</MessageCard> : null}
+    <Button label={busy ? 'Sparar…' : 'Spara val'} accessibilityLabel={busy ? 'Sparar val' : 'Spara val'}
+      loading={busy} disabled={busy} onPress={() => { void save(); }} />
+    </View>
+
+    <View style={styles.permissionCard}>
+    <Text style={styles.sectionTitle} accessibilityRole="header">Enhetens behörighet</Text>
     {permissionMessage ? <MessageCard tone={permissionState === 'denied' ? 'error' : 'neutral'}>{permissionMessage}</MessageCard> : null}
     <Button variant="secondary" label={permissionBusy ? 'Kontrollerar…' : 'Tillåt påminnelser på telefonen'}
       accessibilityLabel={permissionBusy ? 'Kontrollerar tillåtelse för notiser' : 'Tillåt påminnelser på telefonen'}
       loading={permissionBusy} disabled={busy || permissionBusy} onPress={() => { void requestPermission(); }} />
     {permissionState === 'granted' && <MessageCard>Enheten tillåter notiser. Det säger inte att varje påminnelse visas eller levereras.</MessageCard>}
     {permissionState === 'denied' && <MessageCard tone="error">Enheten nekar notiser. Appen fungerar fortfarande.</MessageCard>}
-    {statusMessage && statusError ? <MessageCard tone="error">{statusMessage}</MessageCard> : null}
-    {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
+    </View>
     <Toast visible={toastVisible && showSavedToast && saved && !statusError && !isDirty} tone="success" confirmed message={toastMessage ?? undefined}
       autoDismissMs={2500} onAutoDismiss={() => { setToastVisible(false); setShowSavedToast(false); }} onExitComplete={() => setToastMessage(null)} />
-    <Button label={busy ? 'Sparar…' : 'Spara val'} accessibilityLabel={busy ? 'Sparar val' : 'Spara val'}
-      loading={busy} disabled={busy} onPress={() => { void save(); }} />
   </View>;
 }
 
@@ -157,14 +164,17 @@ const styles = StyleSheet.create({
   infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },
   infoButtonText: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
   infoBody: { ...tokens.typography.body, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
-  hero: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.spacing.sm, padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.selectedSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.spacing.sm, padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.support.reminders.bg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   icon: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.surface, alignItems: 'center', justifyContent: 'center' },
   heroCopy: { flex: 1 },
+  settingsCard: { marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, gap: tokens.spacing.sm },
+  permissionCard: { marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.home.card, gap: tokens.spacing.sm },
+  sectionTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.xs },
   choice: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.layout.listGap, paddingHorizontal: tokens.layout.cardPadding, paddingVertical: tokens.spacing.md, marginTop: tokens.layout.listGap, borderWidth: tokens.size.stroke, borderColor: tokens.colors.borderStrong, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface },
-  choiceSelected: { backgroundColor: tokens.colors.selectedSurface },
+  choiceSelected: { backgroundColor: tokens.colors.support.reminders.bg, borderColor: tokens.colors.support.reminders.fg },
   pressed: { opacity: 0.9 },
   checkbox: { width: tokens.size.iconMd, height: tokens.size.iconMd, borderRadius: tokens.radius.sm, borderWidth: tokens.size.stroke, borderColor: tokens.colors.borderStrong, backgroundColor: tokens.colors.surface, alignItems: 'center', justifyContent: 'center' },
-  checkboxSelected: { backgroundColor: tokens.colors.primary, borderColor: tokens.colors.primary },
+  checkboxSelected: { backgroundColor: tokens.colors.support.reminders.fg, borderColor: tokens.colors.support.reminders.fg },
   choiceCopy: { flex: 1 },
   choiceTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
   choiceDetail: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.layout.headingGap },

@@ -1,0 +1,650 @@
+[
+  {
+    "width": 375,
+    "large_text_140": false,
+    "normal_screenshot": "/tmp/tassla-home-next-01/qa-correction-10/review/week-glyph-normal-375.png",
+    "underlay_screenshot": "/tmp/tassla-home-next-01/qa-correction-10/review/week-glyph-underlay-375.png",
+    "labels": [
+      {
+        "week": "8",
+        "aria": "8 veckor",
+        "bbox": {
+          "x": 41.734375,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 55,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 43,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "9",
+        "aria": "9 veckor",
+        "bbox": {
+          "x": 89.03125,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 52,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 90,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "10",
+        "aria": "10 veckor",
+        "bbox": {
+          "x": 132.421875,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 83,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 135,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "11",
+        "aria": "11 veckor, aktuell ålder",
+        "bbox": {
+          "x": 180.09375,
+          "y": 132,
+          "w": 14.8125,
+          "h": 20
+        },
+        "fg": "rgb(255, 255, 255)",
+        "changed_glyph_pixels": 94,
+        "min_glyph_background_contrast": 6.55,
+        "worst_pixel": {
+          "x": 182,
+          "y": 137,
+          "underlay_rgb": [
+            24,
+            106,
+            77
+          ]
+        }
+      },
+      {
+        "week": "12",
+        "aria": "12 veckor",
+        "bbox": {
+          "x": 227,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 71,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 229,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "13",
+        "aria": "13 veckor",
+        "bbox": {
+          "x": 274.28125,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 90,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 276,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "14",
+        "aria": "14 veckor",
+        "bbox": {
+          "x": 321.5625,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 73,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 324,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "width": 430,
+    "large_text_140": false,
+    "normal_screenshot": "/tmp/tassla-home-next-01/qa-correction-10/review/week-glyph-normal-430.png",
+    "underlay_screenshot": "/tmp/tassla-home-next-01/qa-correction-10/review/week-glyph-underlay-430.png",
+    "labels": [
+      {
+        "week": "8",
+        "aria": "8 veckor",
+        "bbox": {
+          "x": 45.671875,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 55,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 47,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "9",
+        "aria": "9 veckor",
+        "bbox": {
+          "x": 100.8125,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 51,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 102,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "10",
+        "aria": "10 veckor",
+        "bbox": {
+          "x": 152.078125,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 78,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 154,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "11",
+        "aria": "11 veckor, aktuell ålder",
+        "bbox": {
+          "x": 207.59375,
+          "y": 132,
+          "w": 14.8125,
+          "h": 20
+        },
+        "fg": "rgb(255, 255, 255)",
+        "changed_glyph_pixels": 88,
+        "min_glyph_background_contrast": 6.55,
+        "worst_pixel": {
+          "x": 209,
+          "y": 137,
+          "underlay_rgb": [
+            24,
+            106,
+            77
+          ]
+        }
+      },
+      {
+        "week": "12",
+        "aria": "12 veckor",
+        "bbox": {
+          "x": 262.359375,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 79,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 264,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "13",
+        "aria": "13 veckor",
+        "bbox": {
+          "x": 317.5,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 82,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 320,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "14",
+        "aria": "14 veckor",
+        "bbox": {
+          "x": 372.640625,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 70,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 375,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "width": 375,
+    "large_text_140": true,
+    "normal_screenshot": "/tmp/tassla-home-next-01/qa-correction-10/review/week-glyph-normal-375-140.png",
+    "underlay_screenshot": "/tmp/tassla-home-next-01/qa-correction-10/review/week-glyph-underlay-375-140.png",
+    "labels": [
+      {
+        "week": "8",
+        "aria": "8 veckor",
+        "bbox": {
+          "x": 40.1875,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 98,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 42,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "9",
+        "aria": "9 veckor",
+        "bbox": {
+          "x": 87.46875,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 94,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 90,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "10",
+        "aria": "10 veckor",
+        "bbox": {
+          "x": 129.3125,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 134,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 133,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "11",
+        "aria": "11 veckor, aktuell ålder",
+        "bbox": {
+          "x": 177.140625,
+          "y": 128,
+          "w": 20.71875,
+          "h": 28
+        },
+        "fg": "rgb(255, 255, 255)",
+        "changed_glyph_pixels": 156,
+        "min_glyph_background_contrast": 6.55,
+        "worst_pixel": {
+          "x": 180,
+          "y": 135,
+          "underlay_rgb": [
+            24,
+            106,
+            77
+          ]
+        }
+      },
+      {
+        "week": "12",
+        "aria": "12 veckor",
+        "bbox": {
+          "x": 223.890625,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 139,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 227,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "13",
+        "aria": "13 veckor",
+        "bbox": {
+          "x": 271.171875,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 131,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 275,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "14",
+        "aria": "14 veckor",
+        "bbox": {
+          "x": 318.453125,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 135,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 322,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "width": 430,
+    "large_text_140": true,
+    "normal_screenshot": "/tmp/tassla-home-next-01/qa-correction-10/review/week-glyph-normal-430-140.png",
+    "underlay_screenshot": "/tmp/tassla-home-next-01/qa-correction-10/review/week-glyph-underlay-430-140.png",
+    "labels": [
+      {
+        "week": "8",
+        "aria": "8 veckor",
+        "bbox": {
+          "x": 44.109375,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 96,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 46,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "9",
+        "aria": "9 veckor",
+        "bbox": {
+          "x": 99.265625,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 94,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 101,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "10",
+        "aria": "10 veckor",
+        "bbox": {
+          "x": 148.96875,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 149,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 152,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "11",
+        "aria": "11 veckor, aktuell ålder",
+        "bbox": {
+          "x": 204.640625,
+          "y": 128,
+          "w": 20.71875,
+          "h": 28
+        },
+        "fg": "rgb(255, 255, 255)",
+        "changed_glyph_pixels": 150,
+        "min_glyph_background_contrast": 6.55,
+        "worst_pixel": {
+          "x": 208,
+          "y": 135,
+          "underlay_rgb": [
+            24,
+            106,
+            77
+          ]
+        }
+      },
+      {
+        "week": "12",
+        "aria": "12 veckor",
+        "bbox": {
+          "x": 259.25,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 127,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 263,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "13",
+        "aria": "13 veckor",
+        "bbox": {
+          "x": 314.390625,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 145,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 318,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "14",
+        "aria": "14 veckor",
+        "bbox": {
+          "x": 369.53125,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 134,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 373,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      }
+    ]
+  }
+]

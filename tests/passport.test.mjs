@@ -16,7 +16,7 @@ const exporterSource = await readFile(new URL('../src/features/passport/passport
 const appFlowSource = await readFile(new URL('../src/features/home/AppFlow.tsx', import.meta.url), 'utf8');
 const passportScreenSource = await readFile(new URL('../src/features/passport/PassportScreen.tsx', import.meta.url), 'utf8');
 
-const dog = { id: '11111111-1111-4111-8111-111111111111', name: 'Nala', breed_id: 'beagle', birth_date: '2023-02-12' };
+const dog = { id: '11111111-1111-4111-8111-111111111111', name: 'Nala', breed_id: 'beagle', birth_date: '2023-02-12', age_display_unit: 'weeks' };
 const profileSelection = { profile: true, latestWeight: true, healthHistory: true };
 
 test('snapshot contains only saved profile, newest recorded weight, and performed health history', () => {
@@ -32,7 +32,7 @@ test('snapshot contains only saved profile, newest recorded weight, and performe
     selection: profileSelection,
     createdOn: '2026-10-06',
   });
-  assert.deepEqual(snapshot.dog, { name: 'Nala', breed: 'Beagle', birthDate: '2023-02-12' });
+  assert.deepEqual(snapshot.dog, { name: 'Nala', breed: 'Beagle', birthDate: '2023-02-12', ageLabel: '190 veckor' });
   assert.deepEqual(snapshot.latestWeight, { occurredOn: '2025-04-03', weightKg: 12.4 });
   assert.deepEqual(snapshot.healthHistory, [
     { type: 'Veterinärbesök', occurredOn: '2025-04-04', note: 'Checkup' },
@@ -143,6 +143,7 @@ test('all owner-controlled profile, weight, history, and created-on strings are 
   const hostileHealth = health('health-1', 'vet_visit', '2025-04-04"', `& <img src=x onerror="alert('x')"> 'quote'`);
   const snapshot = passport.createPassportSnapshot({ dog: hostileDog, breedName: `Beagle & <img src=x onerror="x"> 'mix'`,
     weights: [hostileWeight], performedHistory: [hostileHealth], selection: profileSelection, createdOn: `2026&<script>alert('x')</script>` });
+  assert.equal(snapshot.dog.ageLabel, 'Kan inte beräknas');
   const html = passport.renderPassportHtml(snapshot);
   for (const raw of [hostileDog.name, hostileDog.birth_date, `Beagle & <img src=x onerror="x"> 'mix'`, hostileWeight.occurred_on, hostileHealth.occurred_on, hostileHealth.description, `2026&<script>alert('x')</script>`]) {
     assert.equal(html.includes(raw), false, `raw HTML must not contain ${raw}`);

@@ -140,6 +140,7 @@ export interface PublishedTrainingProgram {
   sources: string[];
   steps: PublishedTrainingStep[];
   completedStepIds: string[];
+  completedAtByStepId: Record<string, string>;
 }
 
 export interface PausedTrainingProgress {
@@ -537,7 +538,7 @@ export async function fetchHealthHistory(
     if (error && isMissingOccurredTimeColumn(error)) {
       const legacy = await makeQuery(HEALTH_HISTORY_LEGACY_COLUMNS);
       responseData = Array.isArray(legacy.data)
-        ? (legacy.data as unknown as Array<Record<string, unknown>>).map((row) => ({ ...row, occurred_time: null }))
+        ? (legacy.data as unknown as Record<string, unknown>[]).map((row) => ({ ...row, occurred_time: null }))
         : legacy.data;
       error = legacy.error;
     }
@@ -945,6 +946,9 @@ export async function fetchTrainingWorkspace(
     sources: row.sources,
     steps: steps.filter((step) => step.program_version_id === row.id).sort((left, right) => left.position - right.position),
     completedStepIds: progress.filter((item) => item.program_version_id === row.id).map((item) => item.step_id),
+    completedAtByStepId: Object.fromEntries(progress
+      .filter((item) => item.program_version_id === row.id)
+      .map((item) => [item.step_id, item.completed_at])),
   }));
   const activeIds = new Set(activeVersionIds);
   const pausedByVersion = new Map<string, Set<string>>();

@@ -81,7 +81,7 @@ test('reminder display omits an unset off reminder and labels any stored time ex
   assert.equal(fn(false, '2026-10-12', 540), 'Påminnelse 09:00 · av');
   assert.equal(fn(true, '2026-10-12', 600), 'Påminnelse 10:00 · påminnelsetiden har passerat');
   assert.equal(fn(true, '2026-10-12', 540), 'Påminnelse 09:00 · schemaläggs bara om enhetens val tillåter det');
-  assert.match(screenSource, /Planera vaccinationer och veterinärbesök\./);
+  assert.match(screenSource, /Egna planer för vaccinationer och veterinärbesök\./);
   assert.doesNotMatch(screenSource, /Påminnelse av/);
 });
 

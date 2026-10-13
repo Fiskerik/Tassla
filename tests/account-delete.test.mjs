@@ -17,6 +17,8 @@ const hook = registerHooks({
 const { createDeleteAccountHandler } = await import('../supabase/functions/delete-account/handler.ts');
 hook.deregister();
 const authProviderSource = normalizeNewlines(await readFile(new URL('../src/features/account/AuthProvider.tsx', import.meta.url), 'utf8'));
+const dailyActivityMigration = normalizeNewlines(await readFile(new URL('../supabase/migrations/202610130001_daily_activities.sql', import.meta.url), 'utf8'));
+const accountDeletionSql = normalizeNewlines(await readFile(new URL('../supabase/tests/account-deletion.sql', import.meta.url), 'utf8'));
 
 function normalizeNewlines(value) {
   return value.replaceAll('\r\n', '\n');
@@ -25,6 +27,16 @@ function normalizeNewlines(value) {
 const verifiedId = '11111111-1111-4111-8111-111111111111';
 const suppliedOtherId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const bearer = 'synthetic-access-token';
+
+test('daily activity tables cascade with dog deletion and the synthetic account probe checks owner isolation', () => {
+  for (const relation of ['dog_daily_routines', 'dog_daily_routine_days', 'dog_daily_training_selections']) {
+    const table = dailyActivityMigration.match(new RegExp(`create table public\\.${relation} \\(([\\s\\S]*?)\\n\\);`))?.[1] ?? '';
+    assert.match(table, /dog_id uuid not null references public\.dogs\(id\) on delete cascade/);
+  }
+  assert.match(accountDeletionSql, /daily activity cascade escaped failed transaction/);
+  assert.match(accountDeletionSql, /owner A daily activity data remains/);
+  assert.match(accountDeletionSql, /owner A deletion changed owner B daily activity/);
+});
 
 function request(options = {}) {
   const method = options.method ?? 'POST';

@@ -57,8 +57,8 @@ Vanliga relationstabeller med främmande nycklar, datatyper och villkor. Ingen g
 | Föreslagen tabell | Innehåll och relation |
 |---|---|
 | Auth-konto | Supabase hanterar konto; ingen dubblerad användarprofil utan konkret behov |
-| `dogs` | Permanent ID, namn, ras, födelsedatum; ålder beräknas |
-| `breeds` | Litet kontrollerat rasurval med blandras/okänd; ingen komplett rasprodukt |
+| `dogs` | Permanent ID, namn, huvudras, valfria två delraser för Mix, födelsedatum och åldersvisningsval; kronologisk ålder beräknas |
+| `breeds` | Sökbar referenskatalog med Mix och Okänd ras; katalogkälla och återanvändningsrätt ska vara dokumenterade innan snapshot importeras |
 | `dog_memberships` | Hund ↔ konto och roll; endast en ägare per hund i pilot |
 | `kennels` | Distributionskälla och aktiv kod; inget valpköparregister |
 | `dog_attribution` | Hund ↔ verifierad initial distributionskälla |
@@ -70,6 +70,8 @@ Vanliga relationstabeller med främmande nycklar, datatyper och villkor. Ingen g
 | `training_steps` | Programversion, stabilt steg-ID, ordning och instruktion |
 | `training_progress` | Hund + programversion + steg + genomförandetid; unik kombination |
 | `product_events` | Vitlistade mäthändelser, tid och minsta nödvändiga kohortkoppling |
+
+**Scopebeslut 2026-10-13:** Eriks uttryckliga beställning av sökbar fullständig raskatalog, Mix-delraser och valbar åldersvisning ersätter den äldre formuleringen om litet rasurval och ingen komplett rasprodukt. Rasnamn från SKK får inte återpubliceras utan skriftligt medgivande; källa väljs och verifieras innan seed-data läggs till. Se `docs/tasks/dev/vision-rev02-dog-profile-v2.md`.
 
 ```mermaid
 flowchart LR

@@ -32,7 +32,10 @@ export function AppFlow() {
 function AuthenticatedAppFlow() {
   const { client, session, status, accountGeneration, isCurrentAccount } = useAuth();
 
-  if (status === 'loading') return <AppScreen><MessageCard>Öppnar Tassla…</MessageCard></AppScreen>;
+  if (status === 'loading') return <AppScreen>
+    <PageHeading title="Öppnar Tassla" description="Hämtar din hunds plats." />
+    <MessageCard>Öppnar Tassla…</MessageCard>
+  </AppScreen>;
   if (status === 'unavailable' || !client) return <AppScreen><PageHeading title="Tassla vilar en stund" description="Inloggningen är inte tillgänglig just nu. Försök igen senare." /></AppScreen>;
   if (status === 'signedOut' || !session) return <SignInScreen />;
   return <DogWorkspace key={session.user.id + ':' + accountGeneration} client={client} ownerId={session.user.id} accountGeneration={accountGeneration} isCurrentAccount={isCurrentAccount} />;
@@ -60,7 +63,10 @@ function DogWorkspace({ client, ownerId, accountGeneration, isCurrentAccount }: 
     return () => { active = false; };
   }, [attempt, client]);
 
-  if (state === 'loading') return <AppScreen><MessageCard>Hämtar hundens profil…</MessageCard></AppScreen>;
+  if (state === 'loading') return <AppScreen>
+    <PageHeading title="Hundprofil" description="Hämtar hundens sparade uppgifter." />
+    <MessageCard>Hämtar hundens profil…</MessageCard>
+  </AppScreen>;
   if (state === 'error') return <AppScreen>
     <PageHeading title="Vi kunde inte öppna profilen" description="Kontrollera anslutningen och försök hämta profilen igen." />
     <PrimaryButton title="Försök igen" onPress={() => { setState('loading'); setAttempt((count) => count + 1); }} />

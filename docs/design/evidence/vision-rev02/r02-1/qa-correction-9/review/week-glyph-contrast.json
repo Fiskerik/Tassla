@@ -1,0 +1,538 @@
+[
+  {
+    "width": 375,
+    "large_text_140": false,
+    "normal_screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/week-glyph-normal-375.png",
+    "underlay_screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/week-glyph-underlay-375.png",
+    "labels": [
+      {
+        "week": "8",
+        "bbox": {
+          "x": 41.734375,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 55,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 43,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "9",
+        "bbox": {
+          "x": 89.03125,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 52,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 90,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "10",
+        "bbox": {
+          "x": 132.421875,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 83,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 135,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "12",
+        "bbox": {
+          "x": 223,
+          "y": 130,
+          "w": 23.578125,
+          "h": 24
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 71,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 229,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "13",
+        "bbox": {
+          "x": 270.28125,
+          "y": 130,
+          "w": 23.578125,
+          "h": 24
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 93,
+        "min_glyph_background_contrast": 12.34,
+        "worst_pixel": {
+          "x": 292,
+          "y": 149,
+          "underlay_rgb": [
+            246,
+            240,
+            230
+          ]
+        }
+      },
+      {
+        "week": "14",
+        "bbox": {
+          "x": 317.5625,
+          "y": 130,
+          "w": 23.578125,
+          "h": 24
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 81,
+        "min_glyph_background_contrast": 3.82,
+        "worst_pixel": {
+          "x": 318,
+          "y": 134,
+          "underlay_rgb": [
+            119,
+            139,
+            116
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "width": 430,
+    "large_text_140": false,
+    "normal_screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/week-glyph-normal-430.png",
+    "underlay_screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/week-glyph-underlay-430.png",
+    "labels": [
+      {
+        "week": "8",
+        "bbox": {
+          "x": 45.671875,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 55,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 47,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "9",
+        "bbox": {
+          "x": 100.8125,
+          "y": 132,
+          "w": 7.796875,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 51,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 102,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "10",
+        "bbox": {
+          "x": 152.078125,
+          "y": 132,
+          "w": 15.578125,
+          "h": 20
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 78,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 154,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "12",
+        "bbox": {
+          "x": 258.359375,
+          "y": 130,
+          "w": 23.578125,
+          "h": 24
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 83,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 264,
+          "y": 137,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "13",
+        "bbox": {
+          "x": 313.5,
+          "y": 130,
+          "w": 23.578125,
+          "h": 24
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 99,
+        "min_glyph_background_contrast": 3.49,
+        "worst_pixel": {
+          "x": 336,
+          "y": 134,
+          "underlay_rgb": [
+            110,
+            133,
+            109
+          ]
+        }
+      },
+      {
+        "week": "14",
+        "bbox": {
+          "x": 368.640625,
+          "y": 130,
+          "w": 23.578125,
+          "h": 24
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 75,
+        "min_glyph_background_contrast": 3.87,
+        "worst_pixel": {
+          "x": 369,
+          "y": 149,
+          "underlay_rgb": [
+            120,
+            140,
+            119
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "width": 375,
+    "large_text_140": true,
+    "normal_screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/week-glyph-normal-375-140.png",
+    "underlay_screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/week-glyph-underlay-375-140.png",
+    "labels": [
+      {
+        "week": "8",
+        "bbox": {
+          "x": 40.1875,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 98,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 42,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "9",
+        "bbox": {
+          "x": 87.46875,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 94,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 90,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "10",
+        "bbox": {
+          "x": 129.3125,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 134,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 133,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "12",
+        "bbox": {
+          "x": 219.890625,
+          "y": 126,
+          "w": 29.796875,
+          "h": 32
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 139,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 227,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "13",
+        "bbox": {
+          "x": 267.171875,
+          "y": 126,
+          "w": 29.796875,
+          "h": 32
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 131,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 275,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "14",
+        "bbox": {
+          "x": 314.453125,
+          "y": 126,
+          "w": 29.796875,
+          "h": 32
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 138,
+        "min_glyph_background_contrast": 7.54,
+        "worst_pixel": {
+          "x": 314,
+          "y": 152,
+          "underlay_rgb": [
+            185,
+            193,
+            176
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "width": 430,
+    "large_text_140": true,
+    "normal_screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/week-glyph-normal-430-140.png",
+    "underlay_screenshot": "/workspace/Tassla/docs/design/evidence/vision-rev02/r02-1/qa-correction-9/review/week-glyph-underlay-430-140.png",
+    "labels": [
+      {
+        "week": "8",
+        "bbox": {
+          "x": 44.109375,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 96,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 46,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "9",
+        "bbox": {
+          "x": 99.265625,
+          "y": 128,
+          "w": 10.90625,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 94,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 101,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "10",
+        "bbox": {
+          "x": 148.96875,
+          "y": 128,
+          "w": 21.796875,
+          "h": 28
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 149,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 152,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "12",
+        "bbox": {
+          "x": 255.25,
+          "y": 126,
+          "w": 29.796875,
+          "h": 32
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 127,
+        "min_glyph_background_contrast": 12.45,
+        "worst_pixel": {
+          "x": 263,
+          "y": 135,
+          "underlay_rgb": [
+            247,
+            241,
+            231
+          ]
+        }
+      },
+      {
+        "week": "13",
+        "bbox": {
+          "x": 310.390625,
+          "y": 126,
+          "w": 29.796875,
+          "h": 32
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 153,
+        "min_glyph_background_contrast": 7.06,
+        "worst_pixel": {
+          "x": 339,
+          "y": 131,
+          "underlay_rgb": [
+            179,
+            187,
+            170
+          ]
+        }
+      },
+      {
+        "week": "14",
+        "bbox": {
+          "x": 365.53125,
+          "y": 126,
+          "w": 29.796875,
+          "h": 32
+        },
+        "fg": "rgb(28, 48, 39)",
+        "changed_glyph_pixels": 136,
+        "min_glyph_background_contrast": 10.53,
+        "worst_pixel": {
+          "x": 366,
+          "y": 132,
+          "underlay_rgb": [
+            225,
+            224,
+            211
+          ]
+        }
+      }
+    ]
+  }
+]

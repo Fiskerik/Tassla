@@ -1,0 +1,133 @@
+{
+  "mode": "review",
+  "results": [
+    {
+      "width": 375,
+      "mode": "review",
+      "nav": {
+        "x": 0,
+        "y": 785,
+        "width": 375,
+        "height": 59
+      },
+      "initial_tiles": {
+        "Logga": {
+          "x": 24,
+          "y": 834,
+          "width": 103.65625,
+          "height": 86
+        },
+        "Träna": {
+          "x": 135.65625,
+          "y": 834,
+          "width": 103.671875,
+          "height": 86
+        },
+        "Kunskap": {
+          "x": 247.328125,
+          "y": 834,
+          "width": 103.671875,
+          "height": 86
+        }
+      },
+      "initial_fit": false
+    },
+    {
+      "width": 430,
+      "mode": "review",
+      "nav": {
+        "x": 0,
+        "y": 785,
+        "width": 430,
+        "height": 59
+      },
+      "initial_tiles": {
+        "Logga": {
+          "x": 24,
+          "y": 794,
+          "width": 122,
+          "height": 86
+        },
+        "Träna": {
+          "x": 154,
+          "y": 794,
+          "width": 122,
+          "height": 86
+        },
+        "Kunskap": {
+          "x": 284,
+          "y": 794,
+          "width": 122,
+          "height": 86
+        }
+      },
+      "initial_fit": false
+    },
+    {
+      "short_viewport": 375,
+      "tile_after_scroll": {
+        "x": 247.328125,
+        "y": 466,
+        "width": 103.671875,
+        "height": 86
+      },
+      "nav": {
+        "x": 0,
+        "y": 608,
+        "width": 375,
+        "height": 59
+      },
+      "action_reachable": true,
+      "review_banner_fixed": true
+    },
+    {
+      "large_text": 375,
+      "scrollWidth": 375,
+      "viewportWidth": 375,
+      "tile_after_scroll": {
+        "x": 247.328125,
+        "y": 588.609375,
+        "width": 103.671875,
+        "height": 94
+      },
+      "nav": {
+        "x": 0,
+        "y": 738.59375,
+        "width": 375,
+        "height": 105.40625
+      },
+      "last_tile_reachable": true,
+      "banner_visible": true
+    },
+    {
+      "large_text": 430,
+      "scrollWidth": 430,
+      "viewportWidth": 430,
+      "tile_after_scroll": {
+        "x": 284,
+        "y": 617.40625,
+        "width": 122,
+        "height": 94
+      },
+      "nav": {
+        "x": 0,
+        "y": 766.59375,
+        "width": 430,
+        "height": 77.40625
+      },
+      "last_tile_reachable": true,
+      "banner_visible": true
+    },
+    {
+      "review_fixture": true,
+      "checkbox_count": 5,
+      "counts": [
+        "2 av 5",
+        "1 av 5",
+        "2 av 5"
+      ],
+      "banner_fixed_after_scroll": true
+    }
+  ],
+  "page_errors": []
+}

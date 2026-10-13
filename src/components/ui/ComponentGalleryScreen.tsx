@@ -9,6 +9,8 @@ import { Button } from './Button';
 import { Card } from './Card';
 import { CheckboxCard } from './CheckboxCard';
 import { ChecklistItem } from './ChecklistItem';
+import { DailyActivityItem } from './DailyActivityItem';
+import { DestinationTile } from './DestinationTile';
 import { Dialog } from './Dialog';
 import { EmptyState } from './EmptyState';
 import { Field } from './Field';
@@ -27,7 +29,9 @@ const categories: IconCategory[] = ['pee', 'poop', 'food', 'sleep', 'awake', 'wa
 
 export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
   const [activeTab, setActiveTab] = useState('Översikt');
+  const [activeTrainingTab, setActiveTrainingTab] = useState('Rekommenderat');
   const [checked, setChecked] = useState(false);
+  const [activityChecked, setActivityChecked] = useState(false);
   const [field, setField] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [showSheet, setShowSheet] = useState(false);
@@ -48,19 +52,45 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
     <AppBar mode="Home" title="Tassla" />
     <AppBar mode="Close" title="Tassla-pass" onAction={() => undefined} />
     <Tabs items={['Översikt', 'Vaccinationer', 'Veterinär', 'Vikt']} active={activeTab} onChange={setActiveTab} />
+    <Tabs items={['Rekommenderat', 'Alla övningar', 'Mina']} active={activeTrainingTab} onChange={setActiveTrainingTab} variant="rev02-segmented" />
     <SectionHeader title="Rader och kort" />
     <ListRow title="Promenad" meta="Idag · 20 min" category="walk" onPress={() => undefined} />
     <ListRow title="Träningssteg" meta="Genomfört" category="training" complete onPress={() => undefined} />
     <ListRow title="Vila" category="sleep" disabled onPress={() => undefined} />
     <Card accessibilityLabel="Lugnt exempelkort"><Text style={styles.body}>Ett lugnt kort med innehållsstyrd höjd.</Text></Card>
+    <Card variant="home" accessibilityLabel="Varmt Hem-kort"><Text style={styles.body}>Opt-in yta för Hem enligt rev02.</Text></Card>
     <Card onPress={() => undefined} accessibilityLabel="Öppna kort"><Text style={styles.body}>Tryckbart kort</Text></Card>
     <Card selected accessibilityLabel="Valt kort"><Text style={styles.body}>Valt kort</Text></Card>
     <HeroCard title="Veckans fokus" meta="3 av 5 genomförda" onPress={() => undefined} />
+    <View style={styles.trainingTiles}>
+      <View style={styles.trainingCard}><HeroCard variant="training-image-top" image={require('../../../assets/images/puppy-training.png')} title="Trygg vardagsstart" meta="3 övningar" selected onPress={() => undefined} /></View>
+      <View style={styles.trainingCard}><HeroCard variant="training-image-top" image={require('../../../assets/images/puppy-training.png')} title="Kontakt i vardagen" meta="2 övningar" onPress={() => undefined} /></View>
+    </View>
+    <SectionHeader title="Hemaktiviteter och destinationer" />
+    <DailyActivityItem label="Öva lugn hantering" detail="Tassar och öron" category="training" completed={activityChecked}
+      onToggle={() => setActivityChecked(!activityChecked)} onOpen={() => undefined} />
+    <DailyActivityItem variant="home" kind="training" label="Miljöträning – nya ljud" completed={false} onOpen={() => undefined} />
+    <View style={styles.destinationTiles}>
+      <DestinationTile destination="log" onPress={() => undefined} />
+      <DestinationTile destination="training" onPress={() => undefined} />
+      <DestinationTile destination="knowledge" onPress={() => undefined} />
+    </View>
+    <View style={styles.destinationTiles}>
+      <DestinationTile destination="log" compact variant="home" onPress={() => undefined} />
+      <DestinationTile destination="training" compact variant="home" onPress={() => undefined} />
+      <DestinationTile destination="knowledge" compact variant="home" onPress={() => undefined} />
+    </View>
     <SectionHeader title="Snabblogg och ikoner" />
     <View style={styles.tiles}><QuickLogTile label="Kiss" category="pee" onPress={() => undefined} /><QuickLogTile label="Bajs" category="poop" onPress={() => undefined} /></View>
     <View style={styles.tiles}><QuickLogTile label="Mat" category="food" onPress={() => undefined} /><QuickLogTile label="Sömn" category="sleep" onPress={() => undefined} disabled /></View>
+    <View style={styles.tiles}><QuickLogTile variant="rev02-log" compact label="Kiss" category="pee" onPress={() => undefined} /><QuickLogTile variant="rev02-log" compact label="Bajs" category="poop" onPress={() => undefined} /></View>
+    <View style={styles.tiles}><QuickLogTile variant="rev02-log" compact label="Mat" category="food" onPress={() => undefined} /><QuickLogTile variant="rev02-log" compact label="Sömn" category="sleep" onPress={() => undefined} disabled /></View>
     <View style={styles.chips}>{categories.map((category) => <IconChip key={category} category={category} />)}</View>
     <View style={styles.chips}>{categories.map((category) => <IconChip key={category} category={category} size="large" />)}</View>
+    <View style={styles.chips}>{categories.map((category) => <IconChip key={`log-${category}`} category={category} variant="rev02-log" />)}</View>
+    <SectionHeader title="Tidslinje: standard och Logg" />
+    <ListRow title="Promenad" time="09:15" meta="20 minuter" category="walk" onPress={() => undefined} />
+    <View><ListRow variant="log-timeline" showDivider title="Promenad" time="09:15" detail="20 minuter" category="walk" onPress={() => undefined} /><ListRow variant="log-timeline" title="Mat" time="10:05" detail="Åt allt" category="food" onPress={() => undefined} /></View>
     <SectionHeader title="Checklista och framsteg" />
     <ChecklistItem label="Kom när du ropar" checked={checked} onPress={() => setChecked(!checked)} />
     <ChecklistItem label="Vila på sin filt" checked disabled onPress={() => undefined} />
@@ -96,4 +126,4 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
   </View>;
 }
 
-const styles = StyleSheet.create({ page: { alignSelf: 'stretch', padding: tokens.layout.pageInset, gap: tokens.spacing.md, backgroundColor: tokens.colors.background }, note: { ...tokens.typography.caption, color: tokens.colors.textSecondary }, group: { alignSelf: 'stretch', gap: tokens.spacing.sm }, caption: { ...tokens.typography.caption, color: tokens.colors.textSecondary }, body: { ...tokens.typography.body, color: tokens.colors.textPrimary, flexShrink: 1 }, tiles: { alignSelf: 'stretch', flexDirection: 'row', gap: tokens.spacing.md }, chips: { alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm } });
+const styles = StyleSheet.create({ page: { alignSelf: 'stretch', padding: tokens.layout.pageInset, gap: tokens.spacing.md, backgroundColor: tokens.colors.background }, note: { ...tokens.typography.caption, color: tokens.colors.textSecondary }, group: { alignSelf: 'stretch', gap: tokens.spacing.sm }, caption: { ...tokens.typography.caption, color: tokens.colors.textSecondary }, body: { ...tokens.typography.body, color: tokens.colors.textPrimary, flexShrink: 1 }, tiles: { alignSelf: 'stretch', flexDirection: 'row', gap: tokens.spacing.md }, destinationTiles: { alignSelf: 'stretch', flexDirection: 'row', gap: tokens.spacing.sm }, trainingTiles: { alignSelf: 'stretch', flexDirection: 'row', gap: tokens.spacing.md }, trainingCard: { flexBasis: '47%', flexShrink: 1 }, chips: { alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm } });

@@ -6,6 +6,7 @@ import { PillIcon } from './PillIcon';
 
 export type IconCategory = keyof typeof categoryColors;
 export type IconChipSize = 'medium' | 'large';
+export type IconChipVariant = 'default' | 'rev02-log';
 export const categoryIcons: Record<IconCategory, React.ComponentProps<typeof Ionicons>['name'] | 'poop'> = {
   pee: 'water-outline', poop: 'poop', food: 'restaurant-outline', sleep: 'moon-outline', awake: 'eye-outline',
   walk: 'footsteps-outline', accident: 'water-outline', water: 'water-outline', training: 'school-outline', vaccination: 'bandage-outline', deworming: 'medical-outline', veterinary: 'medkit-outline',
@@ -15,11 +16,11 @@ const categoryLabels: Record<IconCategory, string> = {
   accident: 'Olycka', water: 'Vatten', vaccination: 'Vaccination', deworming: 'Avmaskning', veterinary: 'Veterinär',
 };
 
-export function IconChip({ category, size = 'medium' }: { category: IconCategory; size?: IconChipSize }) {
+export function IconChip({ category, size = 'medium', variant = 'default' }: { category: IconCategory; size?: IconChipSize; variant?: IconChipVariant }) {
   const dimension = size === 'large' ? tokens.size.chipLg : tokens.size.chipMd;
   const iconSize = size === 'large' ? tokens.size.iconMd : tokens.size.iconSm;
   const accidentIconSize = size === 'large' ? tokens.size.iconSm : tokens.spacing.md;
-  const color = categoryColors[category];
+  const color = variant === 'rev02-log' ? tokens.colors.log.category[category] : categoryColors[category];
   const icon = categoryIcons[category];
   return (
     <View accessibilityRole="image" accessibilityLabel={`${categoryLabels[category]}-ikon`} style={[styles.chip, { width: dimension, minHeight: dimension, backgroundColor: color.bg, borderRadius: tokens.radius.full }]}>

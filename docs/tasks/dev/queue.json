@@ -3915,6 +3915,1634 @@
         }
       ],
       "next_step": "Independent read-only Reviewer PASS on frozen v7.2 product/navigation/harness diff and saved public/review evidence. Verified 44px CTA, 375/430 tile bottom y=784 vs nav y=785, truthful source groups, 5-tab/More navigation, review gating/destination, FAQ/checklist untouched, §14 and preserved failed evidence. Limitation: React Native Web with synthetic data; not device/backend certification."
+    },
+    {
+      "id": "VISION-R02-1",
+      "title": "Hem rev02-referens och delade aktivitetskomponenter",
+      "mvp_requirement": "Eriks uttryckliga VISION-REV02-beställning 2026-10-13; docs/mvp.md: Home",
+      "plan": "docs/tasks/dev/vision-rev02.md v8, R02-1 (approved scope unchanged)",
+      "write_paths": [
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/home-greeting.ts",
+        "src/features/home/README.md",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/components/ui/DestinationTile.tsx",
+        "src/components/ui/ComponentGalleryScreen.tsx",
+        "src/components/ui/index.ts",
+        "src/components/README.md",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tests/ui-library-policy.test.mjs",
+        "tests/home-vision.test.mjs",
+        "tests/home-greeting.test.mjs",
+        "docs/design/evidence/vision-rev02/r02-1",
+        "docs/tasks/dev/vision-rev02.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md"
+      ],
+      "acceptance": [
+        "Home visar målbildens hälsning/porträtt/veckor, Just nu, dagsyta och destinationskort i rätt ordning; tidsstyrd hälsning har Hej!-fallback",
+        "Syntetiska aktivitetsrader förekommer endast i uttrycklig review-fixture med permanent synlig syntetisk märkning; public visar befintliga riktiga källor",
+        "Checkbox-interaktion finns endast i syntetisk review-fixture; public saknar completion-control och completion-state före R02-2",
+        "Fixture checkbox och detaljnavigation har egna handlers; tryckytor är minst 44x44",
+        "DestinationTile använder destinationsikoner för Logg, Träning och Kunskap; nya komponentvarianter syns i ComponentGalleryScreen",
+        "Aktivitetskategorier får inte användas som destinationsikon",
+        "Renderad 375/430 och 140-procentsgranskning jämför komposition, komponentformer, densitet, bilder och safe area mot vision_rev02.jpg §14",
+        "At 375×844 and 430×844, all three public and review destination buttons are visible in the initial viewport and end at least 16 pt above fixed navigation; verify review geometry before scrolling."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/ui-library-policy.test.mjs tests/home-vision.test.mjs",
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "Public and review React Native Web visual builds and Home fixture at 375/430 and large text",
+        "Independent QA and Reviewer with docs/design-rules.md §14 checklist",
+        "Review initial viewport geometry before scrolling; separately verify scrolling at 375×667 and large text."
+      ],
+      "depends_on": [
+        "HOME-NEXT-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE R02-1 v2; Critic PROCEED R02-1 v3 after public Home was explicitly required to have no completion control/state and all toggles remain synthetic review-only. R02-1 scope unchanged in plan v4; visual and component acceptance recorded."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementer handoff started for the exact R02-1 v4 scope after Architect APPROVE and Critic PROCEED. Public has no completion state; review fixture alone toggles local synthetic state. No R02-2 schema/data or R02-3 screen migration is authorized in this slice."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Independent QA BLOCK: public destinations ended y=792 vs nav top y=785 at both 375/430 (7px overlap; required bottom ≤769). Review destinations initially y=834/794 below nav and the verifier measured only after scrolling. Focused/full checks, iOS bundle and builds PASS. Failure screenshots and matrices saved in docs/design/evidence/vision-rev02/r02-1/qa-failure. Architect confirms same-plan Home-local fit correction; preserve 5 rows, banner, source content, navigation, 44pt targets and shared spacing tokens."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction plan accepted within existing approved v8: no scope or file-path expansion. New implementation/QA checkpoint required."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect confirms v8 approval covers same-scope visual correction in HomeScreen.tsx, optional DestinationTile.tsx and visual-check/verify.py; initial 375/430 public and review tiles must be at least 16 pt above nav, with 44 pt targets and all five rows/banner/content retained."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start Architect-confirmed R02-1 visual fit correction; Home-local density only, preserve 5-row fixture/banner/source content/shared tokens/44 pt targets; verifier measures initial review tiles before scrolling."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Same-scope visual fit correction implemented in HomeScreen.tsx, DestinationTile.tsx, verify.py and home-vision.test.mjs. Preserved shared spacing tokens, five fixture rows, banner, source content and 44 pt targets; verifier checks review initial geometry before scrolling. Typecheck, public/review builds, focused tests 3/3, Python syntax and diffcheck PASS; independent rerender QA required."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent rerender interim: public initial tiles now pass 16pt clearance at 375/430. Review still fails at 375: first tile y=762 h=74, nav top 785, bottom y=836 (51pt overlap). Awaiting final current-run QA report; Architect approved a review-only same-scope density refinement with 32pt min-height fixed banner that can grow for large text."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Return to implementation for only the review-fixture fit failure; public geometry passes. Same-plan Architect confirmation: remove redundant Idag heading in synthetic review, set review row gap 8pt, banner minHeight 32pt (may grow with large text); retain all five rows, labels/categories/actions/full accessible descriptions, fixed banner, public source rows, shared tokens and 44pt targets."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect confirms review-only heading/gap/banner adjustment is in-scope under v8. Banner remains outside scroll, minHeight 32pt and may grow for large text. At both widths verify all destinations initially, bottom ≤ nav top−16; preserve all five rows and 44pt actions."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement review-only same-scope correction; public fit already passes. Remove redundant review-only Idag heading, use 8pt review row gap, 32pt minimum fixed synthetic banner; preserve five rows, accessible descriptions, source content, nav and 44pt targets."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Architect-approved review-only fit correction implemented: synthetic review omits redundant Idag heading, rows use 8pt gap, fixed banner minHeight 32pt and may grow. All five rows/actions/accessibility remain; public Home content is unchanged. TypeScript, public/review builds, Python syntax, focused tests (3/3), and diffcheck PASS per implementer. Independent rendered QA required on final source."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent correction-2 QA BLOCK. Public Home official verifier PASS at 375/430; review still fails initial unscrolled clearance at both widths: tile y=698 h=74 ends 772; nav starts 785; gap 13px, 3px short of required 16px. QA stopped before review interactions/§14 after capturing exact bounds and screenshots. Focused tests, pnpm check (41 tests, 38 warnings, 0 errors), public iOS export, both builds, diffcheck and queue validation PASS. Full report/evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-2/QA-REPORT.md. Architect review requested for a final review-only correction; R02-2 remains gated."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Independent QA found only a 3px review-fixture shortfall at both widths; public passes. Architect confirms existing v8 approval covers a 4pt reduction of the review-only fixture heading-to-rows gap. Preserve public layout, 32pt-min growth-capable banner, five rows, labels/actions/accessibility and 44pt targets. No acceptance changes."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect confirms the 4pt review-only fixtureSection heading gap reduction is covered by existing v8 approval. It only compacts review fixture spacing; public layout, five rows, 44pt hit targets and acceptance remain unchanged. Re-run initial 375/430 geometry and then all deferred review checks."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement final Architect-approved review-only adjustment: reduce fixtureSection heading-to-rows gap by 4pt, preserving already-approved 8pt row gap and all other constraints. Then hand off for full independent QA."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Final Architect-approved review-only fit adjustment implemented: fixture heading-to-rows gap reduced 4pt; existing 8pt row gap, 32pt-min growth-capable banner, five rows/actions/accessibility, public layout, shared tokens and 44pt hit targets preserved. TypeScript, public/review builds, focused tests 3/3, Python syntax and diffcheck PASS per implementer. Independent QA required at both widths, initial viewport before scroll."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Final independent QA: normal 375/430 initial fit PASS in public (tiles bottom 748/nav 785=37px) and review (bottom 768/nav 785=17px). Review fixture, banner, toggles, 375x667, 140% text/reduced motion, navigation and builds/checks pass. §14 BLOCK at point 16: current Tassla placeholder visual footprint (~76x80) is materially smaller than target portrait (~120x125), violating plan’s same-visual-space requirement. Do not use unrelated editorial dog photo as owner portrait. Full report/evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-3/QA-REPORT.md. Need a same-scope image-size/placement correction, then repeat §14 and layout QA."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "§14 blocker is within accepted v8 requirement: existing dog-placeholder must occupy target portrait visual space; no photo field, editorial photo or data change. Architect confirms Home-local 120×125pt absolute upper-right illustration, overlapping the week strip without increasing identity height, plus reserving greeting text space. Architect also confirms removing breed from Home greeting is in-scope because panel 1 shows dog name+age; breed remains in profile/data."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect confirms image scale/placement and name+age-only Home greeting are within v8. Use dog-placeholder.png as decorative, screen-reader-hidden illustration at ~120×125pt; absolute at identity top-right, overlap right week-strip edge without adding vertical layout height. Reserve text space, keep week strip in normal flow, preserve 44pt controls and normal initial destination clearance. Do not use dog-welcome or alter dog data."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement v8-approved portrait footprint/placement and Home greeting content: dog-placeholder around 120×125pt, absolute at identity upper-right; reserve title/name+age text width; week strip stays in flow and may underlap portrait as target does. Remove breed from Home header only; breed remains stored/displayed in profile. Preserve flow height, public/review clearance, accessibility hiding and all other behavior."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Architect-approved portrait correction implemented in HomeScreen.tsx: existing dog-placeholder is 120×124pt using tokens, absolutely placed at identity top-right without increasing flow height; week strip remains in flow above image via z-index. Greeting reserves portrait width and shows dog name+age only as panel 1; breed data/profile unchanged. Focused tests 3/3, pnpm check (41 tests, 38 pre-existing lint warnings/0 errors), TypeScript, public/review visual builds, public iOS export, Python verifier syntax, diffcheck and queue validation PASS. Independent rerender and §14 assessment required."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Correction-4 QA BLOCK remains at §14 point16: 120×124 Image element but visible placeholder silhouette only ~59×78 px at both widths, compared with reference portrait filling substantially more visual area. Name/age/week strip clear; public fit 37px and review fit 17px above nav at 375/430. Focused/full checks, public iOS bundle, public/review builds/verifiers, diffcheck and queue validation PASS. Detailed report/screenshots: docs/design/evidence/vision-rev02/r02-1/qa-correction-4/QA-REPORT.md. Architect approves centered crop/magnification of same image inside fixed 120×124 viewport; no new asset/data."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Architecture-approved correction remains in R02-1: crop/magnify dog-placeholder.png inside fixed 120×124pt decorative frame to fill portrait visual space; preserve flow height, week strip, name/age reserved width and existing product data. No new image, dependency, token or DB field."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect approves fixed 120×124pt portrait viewport with centered enlarged placeholder image clipped to frame, decorative/hidden from screen readers. Tune crop without distortion; preserve image position, name/age text, week strip, 375/430 fit and 17pt review clearance. Retest 140% and §14."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Apply final approved crop of same placeholder image inside fixed portrait viewport; no asset/data/layout height change. Rerun focused/full checks and hand off for independent public/review render and §14."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-5 crop implemented in the fixed 120x124 frame; independent QA handoff."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Correction-5 BLOCK: portrait prominence restored, but week 13/14 labels and dots overlap the silhouette; §14 points 5/8/16 fail. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-5/QA-REPORT.md."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Keep the same 120x124 decorative portrait and flow geometry; Architect approved a Home-only cream fade beneath the week strip to recover contrast."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Existing R02-1 approval covers a Home-only contrast treatment beneath the week strip; preserve portrait footprint, destination clearance, no new asset/data/dependency."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction-6: implement a cream fade under the affected week strip within approved Home scope; retest contrast and portrait prominence."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-6 fade implemented; public/review builds, Home verifiers, focused tests, full checks, iOS export and format/queue checks passed per report; independent visual QA required."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Correction-6 BLOCK: stepped fade and week 12 contrast 3.57:1 at 375px/140% text; §14 points 8/16 fail. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-6/QA-REPORT.md."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Revise only the Home fade; make it smooth and ensure every week glyph reaches 4.5:1 at standard and 140% text."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect approved a smooth Home-only fade approach; preserve portrait prominence, fixed footprint and layout."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction-7: replace stepped fade with smooth fade and verify all glyph contrast and portrait appearance."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-7 smooth fade implemented; independent contrast and §14 rerender required."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Correction-7 BLOCK: week 14 remained below 4.5:1 and week 12 at 375px/140% failed; the fade also weakened portrait prominence. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-7/QA-REPORT.md."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Replace whole-image fade with uniform placeholder opacity and textPrimary week labels, preserving a prominent portrait; seek localized backing if contrast still fails."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect approved uniform placeholder opacity tuned from render, textPrimary labels, and localized cream backing behind affected week markers if required; keep 120x124 frame, 17px clearance, decorative image."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction-8: tune uniform portrait opacity and label color within Architect-approved same-scope approach; rerun contrast QA."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-8 opacity/text treatment implemented; independent glyph contrast, portrait prominence and §14 rerender required."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Correction-8 BLOCK: contrast passed, but the portrait was too faint to satisfy §14 point 16. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-8/QA-REPORT.md."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Restore portrait prominence and add a small cream backing behind only affected week labels; do not fade the full portrait further."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect guidance explicitly supports localized cream backing under affected markers while preserving a prominent illustration and fixed layout."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction-9: increase portrait opacity to preserve prominence and add localized backing for rightmost affected labels."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-9 image prominence restored and localized backing added; independent glyph-level contrast measurement required."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Correction-9 BLOCK: backing applied to Text did not cover every glyph pixel; minimum contrast 3.49:1 at 430px normal text. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-9/QA-REPORT.md."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Move the already-approved small cream backing to a wrapping View around each affected week label so the full glyph bounds sit over cream; keep portrait at .7 opacity and preserve current frame/layout."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Existing Architect approval for localized backing behind affected markers covers the wrapper-View implementation; no scope, data, dependency or layout-height change."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction-10: wrap affected week label Text in a View carrying the localized cream background; retain portrait prominence and current marker geometry."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-10 implemented in the approved Home-only scope: week-label cream backing now wraps each affected Text in a View so the backing covers full glyphs; portrait opacity .7, fixed 120x124 frame/crop, week-strip flow, current marker and layout are preserved. Focused tests 3/3, pnpm check (41 tests; 38 lint warnings, 0 errors), public iOS export, Python syntax, diffcheck and queue validation PASS. Independent rendered QA required."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Correction-10 independent QA PASS: every week label measured at least 6.55:1 at 375/430 and 140% text; wrapper coverage, portrait prominence, 17px fit clearance, public/review fixture interactions, both Home verifier builds, focused tests and visual evidence passed. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-10/QA-REPORT.md. Main session separately passed pnpm check (41 tests, 38 lint warnings, 0 errors) and public iOS export."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer BLOCK: 140% text acceptance lacks reachability evidence. Existing verifier checks that destination buttons exist and document width does not overflow, but does not scroll to the last destination or compare its bounds to fixed navigation. 375x667 scrolling is checked only at normal text. Reviewer states no UI failure is demonstrated, but acceptance remains unverified."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Close only the verification gap within existing v8 scope and unchanged acceptance: extend tools/visual-check/verify.py to scroll to the last Home destination at 140% text for public/review, assert it is visible above fixed navigation, and retain the synthetic banner position. No product UI change or file-path expansion."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "coordinator",
+          "evidence": "Existing Architect APPROVE for R02-1 v8 includes tools/visual-check/verify.py and acceptance for 140% text/scroll reachability; this adds evidence to that acceptance without changing product behavior or scope."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement the approved visual-check-only reachability assertion and capture public/review 375/430 large-text scrolled screenshots; request independent QA and Reviewer recheck."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-11 added a large-text destination scroll assertion; focused tests, verifier syntax, diffcheck and queue validation passed. Independent QA report: docs/design/evidence/vision-rev02/r02-1/qa-correction-11/QA-REPORT.md."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Correction-11 BLOCK: public verifier passed; review verifier compared the banner to a pre-scale baseline (y=6) after the label grew (y=2), so the assertion was invalid. Independent measurements show banner stays at y=2 through scroll. At 430 px the final tile reaches y=767 vs nav y=766.594 (0.406 px overlap) because scrollIntoViewIfNeeded did not scroll a nearly visible item. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-11/QA-REPORT.md."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correct only the verifier: capture the review-banner baseline after 140% text scaling; apply a real downward user-like scroll over Home content so the final destination clears fixed nav at both widths; keep banner fixed and assert final bounds. No product UI change or acceptance change."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "coordinator",
+          "evidence": "Existing Architect APPROVE for R02-1 v8 covers tools/visual-check/verify.py, 140% text and scroll reachability; this correction improves proof within approved scope."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction-12: fix post-scale banner measurement and perform an explicit wheel scroll before asserting the last destination is fully above fixed navigation in public/review at 375/430."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction-12 fixed the review banner baseline to be recorded after 140% scaling and exercises actual scroll-to-last-destination plus a 48px mouse-wheel input. Python syntax, focused tests, diffcheck and queue validation PASS."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Correction-12 independent QA PASS: fresh public/review builds and both Home verifiers passed at 375/430. Final destination is fully above nav after scroll; review clearance 55.39px at 375 and 47.59px at 430. Banner remains y=2 before/after scroll following text scaling. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-12/QA-REPORT.md."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS after correction-12. Confirms post-scale banner baseline, real scroll to last destination and bounds above fixed navigation at 140% text in public/review 375/430; 55.39px clearance at 375 and 47.59px at 430; banner fixed at y=2. No new scope, truthfulness or §14 blocker. Evidence: docs/design/evidence/vision-rev02/r02-1/qa-correction-12/QA-REPORT.md and visual captures."
+        }
+      ],
+      "next_step": "R02-1 completed. Begin approved R02-2 v8 implementation using synthetic local data; no live database or production data."
+    },
+    {
+      "id": "VISION-R02-2",
+      "title": "Ägarvalda dagsrutiner och källhärledd träningsprogress",
+      "mvp_requirement": "Eriks uttryckliga VISION-REV02-beställning och completion-regel 2026-10-13; docs/mvp.md: Home/Training",
+      "plan": "docs/tasks/dev/vision-rev02-r02-2-v10.md v10 baseline + docs/tasks/dev/vision-rev02-r02-2-v11.md v11 portrait amendment; review records in corresponding v10/v11 review files",
+      "write_paths": [
+        "src/features/home/daily-activity-model.ts",
+        "src/features/home/daily-activity-data.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/home/README.md",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/components/ui/DestinationTile.tsx",
+        "src/components/ui/Card.tsx",
+        "src/components/ui/ComponentGalleryScreen.tsx",
+        "src/theme/tokens.ts",
+        "src/data/workspace-data.ts",
+        "src/data/README.md",
+        "supabase/migrations/202610130001_daily_activities.sql",
+        "supabase/tests/daily-activities.sql",
+        "supabase/tests/account-deletion.sql",
+        "supabase/daily-activities-retention-job.sql",
+        "supabase/README.md",
+        "tests/daily-activity-model.test.mjs",
+        "tests/daily-activity-data.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/training-activity-date.test.mjs",
+        "tests/account-delete.test.mjs",
+        "tests/home-vision.test.mjs",
+        "tests/planned-health.test.mjs",
+        "tests/ui-library-policy.test.mjs",
+        "assets/images/README.md",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/README.md",
+        "tools/visual-check/verify.py",
+        "docs/design/evidence/vision-rev02/r02-2",
+        "docs/mvp.md",
+        "docs/privacy/beta-information.md",
+        "docs/dev/beta-data-lifecycle.md",
+        "docs/tasks/dev/vision-rev02-r02-2-v10.md",
+        "docs/tasks/dev/vision-rev02-r02-2-v10-reviews.md",
+        "docs/tasks/dev/vision-rev02.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md",
+        "docs/tasks/dev/HOME-REV02-VISUAL-01.md",
+        "docs/design-rules.md",
+        "docs/plans/HOME-REV02-visual-ux-spec.md",
+        "docs/prompts/build-home-rev02.md",
+        "assets/images/home-dog-portrait-placeholder.png",
+        "docs/design/evidence/vision-rev02/r02-2/correction-v11",
+        "docs/tasks/dev/vision-rev02-r02-2-v11.md",
+        "docs/tasks/dev/vision-rev02-r02-2-v11-reviews.md",
+        "assets/images/review-puppy-portrait.png"
+      ],
+      "acceptance": [
+        "Ägarvalda rutiner och valda träningssteg behåller v8-datakällor, dagscope, completion- och retrysemantik.",
+        "SQL rasguard accepterar inga ras mål eller minst ett matchande mål, avvisar endast icke-matchande mål och har regression för samtliga tre fall; övriga v8 RLS/grants/locks/tidszon/gallring/idempotens/radering bevaras.",
+        "Home följer panel 1:s ordning, varm grund, gul tipsaccent, grön progress och blå/grön/lila destinationskort; alla tre genvägar syns i första vyn vid 375×844 och 430×844 med minst 16 px navmarginal.",
+        "En enda Dagens att göra-yta visar total count/progress och högst fem rader utan per-rad kort, kategoriikoner eller Visa/Ta bort-länkar; rutincheckbox är fyrkantig och träningsrad saknar checkbox.",
+        "Separat rutintext/chevron öppnar hanteringssheetens rutin-detalj; checkbox ändrar endast completion. Träningsrad öppnar befintlig Träning-callback. Visa alla, rubrikchevron och tomläge öppnar samma sheet.",
+        "Home-rad visar pending/failure/unknown och exakt retry nära samma rutinrad utan optimism; sheetens mutationer visar sin egen återkoppling/retry där.",
+        "Delade komponenters default-props och andra skärmars standardutseende är oförändrade; Home använder endast opt-in-varianter.",
+        "§14 QA sparar jämförbara public/review-renders och bedömer komposition, färg, typografi, former, bildroll och innehållstäthet var för sig; SQL-runtime/native anges separat och får inte rapporteras PASS utan faktisk verifiering.",
+        "Planerade hälsohändelser räknas inte som Home-dagsuppgifter eller Home-count; separat Hälsa → planerade händelser-resan bevaras. Endast inaktuell presentationstest uppdateras.",
+        "Public och review Home använder samma runda AI-genererade generiska bildkonst-asset; en synlig Standardbild-etikett visas direkt på porträttet i båda lägena med solid varm bakning, mörk text och kontrast ≥4,5:1 vid standardskrift och 140 % text, utan klippning. Skärmläsaren kan annonsera etiketten medan själva bilden är dekorativ, och ingen text/data/accessibility kopplar den till hundnamn eller ras. Reviewramen anger syntetisk AI-standardplatshållare.",
+        "Veckoremsan ligger över porträttets nederdel. För porträttkanter L/R och markörcentrum x gäller fade exakt endast när L−16 pt ≤ x ≤ R, z=(x−(L−16))/(R−(L−16)); icke-aktuell dekor har opacity 0,78 för 0≤z<1/3, 0,56 för 1/3≤z<2/3 och 0,38 för 2/3≤z≤1. Utanför zonen oförändrat; siffror och aktuell markör har full opacity, siffror har varm solid kontrastbakning och kontrast ≥4,5:1 vid 375/430 och 140 % text."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/daily-activity-model.test.mjs tests/daily-activity-data.test.mjs tests/daily-activity-ui.test.mjs tests/training-activity-date.test.mjs tests/account-delete.test.mjs tests/home-vision.test.mjs tests/planned-health.test.mjs tests/ui-library-policy.test.mjs",
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "__UNSAFE_EXPO_HOME_DIRECTORY=/tmp/tassla-expo-home-r02-2-v11 TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false pnpm bundle:ios",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-2-v11/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-2-v11/review node tools/visual-check/build.cjs",
+        "python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-preview/r02-2-v11/public (review output in separate run)",
+        "TASSLA_UI_SCOPE=home TASSLA_UI_REVIEW=false TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/r02-2/correction-v11/public python tools/visual-check/verify.py",
+        "TASSLA_UI_SCOPE=home TASSLA_UI_REVIEW=true TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/r02-2/correction-v11/review python tools/visual-check/verify.py",
+        "Disposable local Supabase: execute supabase/tests/daily-activities.sql and supabase/tests/account-deletion.sql; save actual runtime output or mark NOT TESTABLE."
+      ],
+      "depends_on": [
+        "VISION-R02-1"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "security-review",
+          "evidence": "R02-2 v7 Security CHANGES: transaction-start now() could allow stale previous-day writes after a lock wait across midnight. v8 uses one post-lock clock_timestamp for both local-date validation and completed_at and adds the lock-wait boundary regression."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "critic",
+          "evidence": "R02-2 exact plan v8 PROCEED: post-lock single clock_timestamp closes the lock-wait-across-midnight race; same captured instant validates local date and stamps completion."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "security-review",
+          "evidence": "R02-2 exact plan v8 Security APPROVE for synthetic local implementation: hardened private trigger boundary, locked source validation, shared post-lock timestamp, RLS/grants and service-only purge are sufficiently specified. No runtime DB approval implied."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "compliance-review",
+          "evidence": "R02-2 exact plan v8 Compliance APPROVE for synthetic/local implementation. The timestamp/lock-wait correction adds no data purpose or fields; beta-only gates remain."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact R02-2 v8 and confirms R02-1 approved scope unchanged. One post-lock clock_timestamp is used for local-date validation and completion stamp; lock-wait-over-midnight regression required. R02-2 implementation still waits for R02-1 checkpoint."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "R02-2 exact v8 reviews are recorded: Architect APPROVE, Critic PROCEED, Security APPROVE, Compliance APPROVE. The only gate was R02-1 Reviewer checkpoint, now PASS. Scope remains synthetic/local implementation with no live migration or production data."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start Erik-authorized R02-2 v8 now that R02-1 is done. Preserve owner-selected per-day routines, completion only by confirmed owner mark or exact saved training_progress for the chosen local day; no guide-open, planned-health, unlinked-log or checklist completion."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-2 implementation handoff saved at docs/design/evidence/vision-rev02/r02-2/IMPLEMENTER-REPORT.md. pnpm check 45/45, iOS bundle, targeted checks and React Native Web synthetic visual checks pass; SQL/RLS/scheduler/midnight runtime remains NOT TESTABLE. Independent QA and Reviewer are next."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent QA v8 FAIL: SQL breed guard rejects a matching breed target when other targets also exist; §14 Home visual FAIL because destination cards are below first view and repeated row removal links remain. Report: docs/design/evidence/vision-rev02/r02-2/QA-REPORT.md. Replan exact v9 before any code; Supabase/native remain NOT TESTABLE."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Exact v10 plan and review record now synchronized into queue metadata: plan, write paths, acceptance and runnable checks; v8 QA fail history retained. Architect APPROVE, Critic PROCEED and Security APPROVE for SQL predicate delta saved in docs/tasks/dev/vision-rev02-r02-2-v10-reviews.md."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact v10 in docs/tasks/dev/vision-rev02-r02-2-v10-reviews.md; Critic PROCEED and narrow Security APPROVE recorded. Existing v8 Compliance approval remains applicable; no data purpose changed."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik authorized implementation of the combined R02-1/R02-2/R02-3 package and now directly requested the Home update. Start exact v10 correction within the synchronized write scope; synthetic/local data only."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "v10 correction implemented locally; portrait/week-strip owner direction is an approved design change, but exact v11 plan review is pending; no portrait source delta has started"
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "v11 plan draft and queue metadata synchronized for the owner-approved portrait/week-strip amendment. Exact Architect/Critic review required before source delta; R02-3 remains untouched."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Exact v11 plan is synchronized across queue/design docs; Architect APPROVE and Critic PROCEED are recorded in docs/tasks/dev/vision-rev02-r02-2-v11-reviews.md. User-authorized portrait/week-strip delta only; no source edits started yet."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact current v11 and Critic PROCEED recorded. Public/review Standardbild cue, contrast, generic AI image role, exact fade bands, paths and evidence are approved."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin Erik-authorized exact v11 Home portrait/week-strip implementation. Preserve all v10 R02-2 semantics and existing data/mutation contracts; only v11 source paths. User separately asked to migrate remaining screens after Home clears QA/Reviewer."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-2 v11 source stable; pnpm check 45/45; public iOS export and public/review browser 375/430 + 140% text pass; handoff docs/design/evidence/vision-rev02/r02-2/correction-v11/IMPLEMENTER-REPORT.md"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent R02-2 v11 Home QA PASS; banner/glyph contrast/fade/layout pass; SQL age-fixture concern withdrawn against actual 0–20 week bounds; Supabase/native runtime NOT TESTABLE. docs/design/evidence/vision-rev02/r02-2/correction-v11/QA-REPORT.md"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent v11 source review PASS; fresh public/review results, 140% banner fit and week-glyph contrast checks verified. Supabase/native runtime NOT TESTABLE. docs/design/evidence/vision-rev02/r02-2/correction-v11/REVIEW-REPORT.md"
+        }
+      ],
+      "next_step": "Local Home checkpoint committed as 96e6882; Architect APPROVE, Critic PROCEED, QA PASS and Reviewer PASS are saved under docs/tasks/dev/vision-rev02-r02-2-v11-reviews.md and docs/design/evidence/vision-rev02/r02-2/correction-v11/. Push was attempted and is blocked because this environment cannot authenticate to GitHub; complete it later from the supplied bundle. Supabase/RLS and native runtime remain NOT TESTABLE. R02-3 exact plan is at docs/tasks/dev/vision-rev02-r02-3.md with UX spec docs/plans/VISION-REV02-REMAINING-UX-SPEC.md; Architect/Critic plan review is pending."
+    },
+    {
+      "id": "VISION-R02-3",
+      "title": "Logga — visuell migration enligt panel 5",
+      "mvp_requirement": "Eriks uttryckliga 2026-10-13-direktiv för övriga sidor; docs/mvp.md: befintlig Loggresa",
+      "plan": "docs/tasks/dev/vision-rev02-r02-3.md v6 §R02-3A; UX: docs/plans/VISION-REV02-REMAINING-UX-SPEC.md v3",
+      "write_paths": [
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/README.md",
+        "src/components/ui/QuickLogTile.tsx",
+        "src/components/ui/IconChip.tsx",
+        "src/components/ui/ListRow.tsx",
+        "src/components/ui/ComponentGalleryScreen.tsx",
+        "src/theme/tokens.ts",
+        "tools/visual-check/app.tsx",
+        "docs/tasks/dev/vision-rev02-r02-3.md",
+        "docs/plans/VISION-REV02-REMAINING-UX-SPEC.md",
+        "docs/tasks/dev/vision-rev02-r02-3-reviews.md",
+        "docs/design/evidence/vision-rev02/r02-3a",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md"
+      ],
+      "acceptance": [
+        "Panel 5 ordning är titel → fungerande datumrad → befintliga snabbval → tidslinje för vald dag i lokal tidsordning",
+        "Datumraden bläddrar mellan dagar med befintliga event och paginering; snabbval på äldre dag återgår till idag före ett-trycksregistrering",
+        "Vald dags läsning betraktas komplett först när äldsta inlästa lokaldag är strikt tidigare än vald dag eller hasMore är falskt",
+        "Manual-fixture kan visa en dag delad över sidor, auto-load/laddning/fel/återförsök samt komplett respektive tom dag",
+        "Reviewfixture har synlig syntetisk datamärkning och styrs enbart av lokal minnestatus utan tjänsteanrop/datawrites",
+        "Alla åtta loggtyper, ett-trycksregistrering, Fler/layoutedit, CRUD, undo, unsure/failure och paginering bevaras",
+        "Semantiska loggfärger och nya komponentvarianter är opt-in; defaultutseende för andra vyer är oförändrat",
+        "Komponentgalleriet visar default och nya loggvarianter",
+        "Public/review renders jämförs med panel 5, §14 rapporteras per visuell dimension och Security granskar fryst persondata-renderingsdiff"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm lint",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-3a/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-3a/review node tools/visual-check/build.cjs",
+        "python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-preview/r02-3a/public",
+        "python -m http.server 4174 --bind 127.0.0.1 --directory /tmp/tassla-preview/r02-3a/review"
+      ],
+      "depends_on": [
+        "VISION-R02-2"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED for exact plan v6; reviews saved in docs/tasks/dev/vision-rev02-r02-3-reviews.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik authorized continuation of all remaining screens; begin only R02-3A Logg within plan v6 write scope"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-3A Logg implementation complete; typecheck, lint, diff check, queue validation and public/review builds pass. Manual renders and §14 record saved under docs/design/evidence/vision-rev02/r02-3a/; independent QA starts."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Behavior QA PASS; public/review viewport matrix and uniquely named fixture-marker evidence complete; QA confirms marker pixels; visible §14 deviations remain accurately reported."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS for bounded Logg slice; Security PASS; typecheck, lint, diff check, queue validation and public/review builds pass. §14 full panel likeness remains No and is documented."
+        }
+      ],
+      "next_step": "Reviewer PASS for bounded Logg slice; Security PASS; typecheck, lint, diff check, queue validation and public/review builds pass. §14 full panel likeness remains No and is documented."
+    },
+    {
+      "id": "VISION-R02-3B",
+      "title": "Träning — visuell migration enligt panel 6",
+      "mvp_requirement": "Eriks uttryckliga 2026-10-13-direktiv för övriga sidor; docs/mvp.md: befintlig Training-resa",
+      "plan": "docs/tasks/dev/vision-rev02-r02-3.md v6.1 §R02-3B; UX: docs/plans/VISION-REV02-REMAINING-UX-SPEC.md v3",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/components/ui/HeroCard.tsx",
+        "src/components/ui/Tabs.tsx",
+        "src/components/ui/ComponentGalleryScreen.tsx",
+        "src/theme/tokens.ts",
+        "docs/tasks/dev/vision-rev02-r02-3.md",
+        "docs/plans/VISION-REV02-REMAINING-UX-SPEC.md",
+        "docs/tasks/dev/vision-rev02-r02-3-reviews.md",
+        "docs/design/evidence/vision-rev02/r02-3b",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md",
+        "tools/visual-check/app.tsx"
+      ],
+      "acceptance": [
+        "Panel 6 uses segmented tabs, age-relevant currently selected programs, two image-above-text cards when data permits and a real continue-progress card",
+        "Public Mina uses confirmed training_progress; review Mina uses only visibly marked local review state",
+        "Program versions, step order, source/detail, retry, reset confirmation and progress write source remain unchanged",
+        "HeroCard and Tabs variants are opt-in and shown alongside defaults in the component gallery",
+        "Public/review renders compare to panel 6; §14 and Security review of the frozen progress presentation are complete",
+        "Local harness passes the existing deterministic dog age; public uses visibly labeled synthetic programs with seeded progress, review uses review-v1:training programs with reviewMode and local-only marks; no service calls or writes."
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm lint",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-3b/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-3b/review node tools/visual-check/build.cjs",
+        "python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-preview/r02-3b/public",
+        "python -m http.server 4174 --bind 127.0.0.1 --directory /tmp/tassla-preview/r02-3b/review"
+      ],
+      "depends_on": [
+        "VISION-R02-3"
+      ],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "R02-3A Logg checkpointed done with QA marker evidence closed, Reviewer PASS and Security PASS; approved v6 defines exact R02-3B scope."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin the approved Träning slice after its VISION-R02-3A dependency passed QA, Reviewer, Security and §14 evidence checkpoint."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-3B implementation handoff: public/review builds and viewport renders, tabs, detail, progress, local review, empty/error inspected; typecheck/lint/diff checks pass. See docs/design/evidence/vision-rev02/r02-3b/RENDER-REPORT.md. Independent QA, Reviewer and Security still required; §14 full panel match is No."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Erik as QA explicitly approves all work delivered through R02-3B (2026-10-13). This records QA PASS only; independent Reviewer and Security reviews remain pending."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Owner QA PASS recorded 2026-10-13. Independent Reviewer PASS and Security PASS remain pending, so the R02-3B checkpoint is blocked. Owner explicitly directs continuation on other screens; R02-3C may proceed under updated v6.2 sequence without marking 3B done."
+        }
+      ],
+      "next_step": "Owner QA PASS recorded 2026-10-13. Independent Reviewer PASS and Security PASS remain pending, so the R02-3B checkpoint is blocked. Owner explicitly directs continuation on other screens; R02-3C may proceed under updated v6.2 sequence without marking 3B done."
+    },
+    {
+      "id": "VISION-R02-3C",
+      "title": "Kunskap — visuell migration enligt panel 7",
+      "mvp_requirement": "Eriks uttryckliga 2026-10-13-direktiv för övriga sidor; docs/mvp.md: befintlig Knowledge-resa",
+      "plan": "docs/tasks/dev/vision-rev02-r02-3.md v6.2 §R02-3C; UX: docs/plans/VISION-REV02-R02-3C-ux-spec.md v1",
+      "write_paths": [
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/FAQScreen.tsx",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/README.md",
+        "tools/visual-check/know02-app.tsx",
+        "docs/plans/VISION-REV02-R02-3C-ux-spec.md",
+        "docs/tasks/dev/vision-rev02-r02-3.md",
+        "docs/plans/VISION-REV02-REMAINING-UX-SPEC.md",
+        "docs/tasks/dev/vision-rev02-r02-3-reviews.md",
+        "docs/design/evidence/vision-rev02/r02-3c",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md"
+      ],
+      "acceptance": [
+        "Panel 7 image-over-text hierarchy and warm article surfaces use existing editorial assets",
+        "Four current Knowledge destinations, reader/citations, FAQ, checklist progress and review gate keep their current data/actions",
+        "No search/filter UI appears unless a real existing taxonomy/query contract is identified and separately approved",
+        "Public/review renders compare to panel 7; no unpublished fixture is shown as public; §14 and Security review of the frozen owner/dog checklist presentation are complete"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm lint",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-3c/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-3c/review node tools/visual-check/build.cjs",
+        "python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-preview/r02-3c/public",
+        "python -m http.server 4174 --bind 127.0.0.1 --directory /tmp/tassla-preview/r02-3c/review"
+      ],
+      "depends_on": [
+        "VISION-R02-3"
+      ],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "owner",
+          "evidence": "Erik explicitly approved continuation of all remaining screens after QA PASS through R02-3B. v6.2 preserves the approved R02-3C screen scope and records that its implementation may proceed while R02-3B Reviewer/Security remain pending."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin R02-3C Knowledge under the exact v6.2 scope and focused UX spec. R02-3B remains blocked pending independent review; no checkpoint approval is inferred."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-3C Knowledge implementation and render handoff complete. Targeted ESLint, pnpm typecheck, git diff --check, queue validation and public/review RN Web builds passed; 375/430/667, 140% zoom, article, FAQ and checklist states rendered under docs/design/evidence/vision-rev02/r02-3c/. RENDER-REPORT records visual deviations and NOT TESTABLE limits. Await owner QA."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Erik explicitly states as QA: “godkänner allt arbete hittills” on 2026-10-13, which includes the completed R02-3C implementation and saved render handoff. Recorded as owner QA PASS only. RENDER-REPORT still records §14 point 16 as Nej for full panel likeness and lists data/native limits; no visual deviation is silently waived. Independent Reviewer and Security remain pending."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Owner QA PASS recorded as explicitly authorized. Independent Reviewer/Security are not available in this task and remain pending; checkpoint blocked. Owner also directs continuation through remaining screens, so R02-4 slices may proceed under the same visual-only mandate and separate exact scopes."
+        }
+      ],
+      "next_step": "Owner QA PASS recorded as explicitly authorized. Independent Reviewer/Security are not available in this task and remain pending; checkpoint blocked. Owner also directs continuation through remaining screens, so R02-4 slices may proceed under the same visual-only mandate and separate exact scopes."
+    },
+    {
+      "id": "VISION-R02-4A",
+      "title": "Mer — visuell migration enligt rev02 stödskärmsregler",
+      "mvp_requirement": "Eriks uttryckliga 2026-10-13-direktiv för återstående skärmar; befintlig More-resa",
+      "plan": "docs/tasks/dev/vision-rev02-r02-4.md v1; UX: docs/plans/VISION-REV02-R02-4A-MER-UX-SPEC.md v1",
+      "write_paths": [
+        "src/features/more/MoreScreen.tsx",
+        "src/features/more/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/theme/tokens.ts",
+        "tools/visual-check/app.tsx",
+        "docs/plans/VISION-REV02-R02-4A-MER-UX-SPEC.md",
+        "docs/tasks/dev/vision-rev02-r02-4.md",
+        "docs/design/evidence/vision-rev02/r02-4a",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md"
+      ],
+      "acceptance": [
+        "Five existing destinations remain reachable through the same callbacks; no route or product behavior is added",
+        "Warm surface, grouped sections and semantic opt-in accent colors distinguish the existing support destinations",
+        "Sign-out confirmation, busy state and failure recovery remain unchanged and adjacent to sign-out",
+        "Public/review renders cover 375x844, 430x844, 375x667 and 140% browser zoom; §14 similarity is assessed against the nearest approved screen patterns because More has no reference panel",
+        "No native accessibility/device claim is inferred from RN Web evidence"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/more/MoreScreen.tsx src/features/home/ProductWorkspace.tsx tools/visual-check/app.tsx",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-4a/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-4a/review node tools/visual-check/build.cjs"
+      ],
+      "depends_on": [
+        "VISION-R02-3C"
+      ],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "owner",
+          "evidence": "Erik explicitly approved all work completed so far as QA and instructed continuation on all remaining screens. Focused 4A spec defines More-only visual scope; R02-3C independent reviews remain pending and no checkpoint is inferred."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin the existing More route redesign under the focused R02-4A spec; preserve all callbacks and sign-out contracts."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-4A implementation and handoff complete. pnpm typecheck, targeted ESLint (0 errors; 3 pre-existing unused-variable warnings in harness), git diff --check, queue validation and public/review RN Web builds pass. Rendered 375/430/667, 140% zoom, signout busy/error; no browser exceptions. §14 report and evidence saved in docs/design/evidence/vision-rev02/r02-4a/."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Implementer handoff and rendered report are complete; this slice still awaits owner QA plus independent review/security. Erik explicitly requested continuation through all other screens, so later scoped work proceeds while this checkpoint remains blocked."
+        }
+      ],
+      "next_step": "Implementer handoff and rendered report are complete; this slice still awaits owner QA plus independent review/security. Erik explicitly requested continuation through all other screens, so later scoped work proceeds while this checkpoint remains blocked."
+    },
+    {
+      "id": "VISION-R02-4B",
+      "title": "Hälsa, vikt och utförd historik — visuell migration enligt rev02 stödskärmsregler",
+      "mvp_requirement": "Eriks uttryckliga 2026-10-13-direktiv för återstående skärmar; befintliga Health/Weight/History-resor",
+      "plan": "docs/tasks/dev/vision-rev02-r02-4.md v1; UX: docs/plans/VISION-REV02-R02-4B-HEALTH-UX-SPEC.md v1",
+      "write_paths": [
+        "src/features/health/HealthScreen.tsx",
+        "src/features/health/WeightScreen.tsx",
+        "src/features/health/HealthHistoryScreen.tsx",
+        "src/features/health/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/plans/VISION-REV02-R02-4B-HEALTH-UX-SPEC.md",
+        "docs/tasks/dev/vision-rev02-r02-4.md",
+        "docs/design/evidence/vision-rev02/r02-4b",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md"
+      ],
+      "acceptance": [
+        "Health overview and weight/history presentation use warm surfaces, the existing opt-in segmented tabs, and truthful category colors",
+        "Performed history remains visually distinct from planned health and uses confirmed saved records only",
+        "All existing input, validation, save/retry/pending/conflict/delete and date/time contracts remain unchanged",
+        "Public/review renders cover overview, weight, empty/loading/error/history and 375/430/667/140% viewports; §14 comparisons use nearest existing design patterns because there is no health panel",
+        "No clinical recommendations, schedule, graph, or unverified record implication is added"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/health/HealthScreen.tsx src/features/health/WeightScreen.tsx src/features/health/HealthHistoryScreen.tsx tools/visual-check/app.tsx",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-4b/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-4b/review node tools/visual-check/build.cjs"
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "implementing",
+          "actor": "owner",
+          "evidence": "Erik explicitly directed implementation of all remaining screens. Owner-approved sequencing override allows the exact 4B visual-only scope to proceed while 4A awaits owner QA/review; no QA or checkpoint result is inferred."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-4B implementation/render handoff complete. Typecheck, targeted lint (0 errors; 3 pre-existing harness warnings), diff check, queue validation, public/review builds and 375/430/667/140%/empty/loading/error/weight/history renders pass. See docs/design/evidence/vision-rev02/r02-4b/RENDER-REPORT.md; native/backend remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Implementation handoff is ready; owner QA plus independent Reviewer/Security remain pending. Erik has explicitly directed continuation through all remaining screens, so separate R02-4C work may proceed without marking 4B checkpointed."
+        }
+      ],
+      "next_step": "Implementation handoff is ready; owner QA plus independent Reviewer/Security remain pending. Erik has explicitly directed continuation through all remaining screens, so separate R02-4C work may proceed without marking 4B checkpointed."
+    },
+    {
+      "id": "VISION-R02-4C",
+      "title": "Planerad hälsa — visuell migration enligt rev02 stödskärmsregler",
+      "mvp_requirement": "Eriks uttryckliga 2026-10-13-direktiv för återstående skärmar; befintlig PlannedHealth-resa",
+      "plan": "docs/tasks/dev/vision-rev02-r02-4.md v1; UX: docs/plans/VISION-REV02-R02-4C-PLANNED-HEALTH-UX-SPEC.md v1",
+      "write_paths": [
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/features/health/README.md",
+        "src/theme/tokens.ts",
+        "tools/visual-check/app.tsx",
+        "docs/plans/VISION-REV02-R02-4C-PLANNED-HEALTH-UX-SPEC.md",
+        "docs/tasks/dev/vision-rev02-r02-4.md",
+        "docs/design/evidence/vision-rev02/r02-4c",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md"
+      ],
+      "acceptance": [
+        "Planerad hälsa is visually distinct from performed records and shows status in words",
+        "Existing form, date/time, reminder, save/retry/pending/conflict/delete/confirmation semantics remain unchanged",
+        "Empty/loading/error and available plan states render with visibly marked synthetic fixtures",
+        "Warm support styling uses an opt-in amber plan accent; no clinical claim or new data behavior is introduced",
+        "§14 nearest-pattern comparison is reported; no exact panel match is claimed"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/health/PlannedHealthScreen.tsx tools/visual-check/app.tsx",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-4c/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-4c/review node tools/visual-check/build.cjs"
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "implementing",
+          "actor": "owner",
+          "evidence": "Erik explicitly authorized continuation through all remaining screens. Owner-approved sequencing override begins the exact visual-only 4C slice while 4A/4B review handoffs remain pending; no checkpoint or review result is inferred."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-4C planned-health implementation and render handoff complete. Typecheck, targeted ESLint (0 errors; 3 existing harness warnings), diff check, queue validation and public/review builds pass. 375/430/667/140%, empty/loading/error/form/saved-plan renders and no browser exceptions are documented in docs/design/evidence/vision-rev02/r02-4c/RENDER-REPORT.md."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Implementation handoff is ready; owner QA plus independent Reviewer/Security remain pending. Erik directed continuation through all remaining screens, so Passport slice may proceed without marking 4C checkpointed."
+        }
+      ],
+      "next_step": "Implementation handoff is ready; owner QA plus independent Reviewer/Security remain pending. Erik directed continuation through all remaining screens, so Passport slice may proceed without marking 4C checkpointed."
+    },
+    {
+      "id": "VISION-R02-4D",
+      "title": "Tassla-pass — visuell migration enligt rev02 stödskärmsregler",
+      "mvp_requirement": "Eriks uttryckliga 2026-10-13-direktiv för återstående skärmar; befintlig Passport-exportresa",
+      "plan": "docs/tasks/dev/vision-rev02-r02-4.md v1; UX: docs/plans/VISION-REV02-R02-4D-PASSPORT-UX-SPEC.md v1",
+      "write_paths": [
+        "src/features/passport/PassportScreen.tsx",
+        "src/features/passport/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/plans/VISION-REV02-R02-4D-PASSPORT-UX-SPEC.md",
+        "docs/tasks/dev/vision-rev02-r02-4.md",
+        "docs/design/evidence/vision-rev02/r02-4d",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md"
+      ],
+      "acceptance": [
+        "Existing preview sections and selections remain truthful to the passport snapshot contract",
+        "Owner-initiated PDF/share, readiness gates, retries, cancellation, error outcomes and lifetime guards remain unchanged",
+        "Purple opt-in passport accent and warm editorial preview improve hierarchy without implying official records",
+        "Public/review renders cover 375/430/667/140%, selection states and missing/loading/error states; native PDF/share is NOT TESTABLE",
+        "§14 comparison is documented against nearest patterns; no exact panel match is claimed"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/passport/PassportScreen.tsx tools/visual-check/app.tsx",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-4d/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-4d/review node tools/visual-check/build.cjs"
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "implementing",
+          "actor": "owner",
+          "evidence": "Erik explicitly authorized continuation through all remaining screens. This exact Passport presentation-only scope starts while prior visual handoffs await owner QA and independent review; no result is inferred."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-4D implementation/render handoff complete. Typecheck, targeted ESLint (0 errors; 3 existing harness warnings), diff check, queue validation, public/review builds and viewport/readiness/selection renderings pass. See docs/design/evidence/vision-rev02/r02-4d/RENDER-REPORT.md. Native PDF/share remains NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Implementation handoff is ready; owner QA plus independent Reviewer/Security remain pending. Erik directed continuation across all remaining screens; profile slice may proceed without checkpointing Tassla-pass."
+        }
+      ],
+      "next_step": "Implementation handoff is ready; owner QA plus independent Reviewer/Security remain pending. Erik directed continuation across all remaining screens; profile slice may proceed without checkpointing Tassla-pass."
+    },
+    {
+      "id": "VISION-R02-4E",
+      "title": "Hundprofil och redigering — visuell migration enligt rev02 stödskärmsregler",
+      "mvp_requirement": "Eriks uttryckliga 2026-10-13-direktiv för återstående skärmar; befintlig hundprofilresa",
+      "plan": "docs/tasks/dev/vision-rev02-r02-4.md v1; UX: docs/plans/VISION-REV02-R02-4E-PROFILE-UX-SPEC.md v1",
+      "write_paths": [
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/onboarding/DogProfileScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/onboarding/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/plans/VISION-REV02-R02-4E-PROFILE-UX-SPEC.md",
+        "docs/tasks/dev/vision-rev02-r02-4.md",
+        "docs/design/evidence/vision-rev02/r02-4e",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md"
+      ],
+      "acceptance": [
+        "Existing read-only and edit routes stay unchanged; account and dog ownership remain the same",
+        "Only existing profile fields and optional kennel attribution are presented; all save, retry, conflict and unknown-state contracts remain unchanged",
+        "Profile accent is opt-in and layout follows rev02 warm cards, left-aligned headings and clear hierarchy",
+        "Public/review renders cover required viewports, profile read view, editor and existing status states; native/server behavior is NOT TESTABLE",
+        "§14 compares the nearest rev02 patterns and does not claim an exact profile panel match"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/onboarding/EditDogProfileScreen.tsx src/features/onboarding/DogProfileScreen.tsx src/features/home/ProductWorkspace.tsx tools/visual-check/app.tsx",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "Public/review visual-check builds and manual browser render review"
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "implementing",
+          "actor": "owner",
+          "evidence": "Erik explicitly approved continuation across all remaining screens. This exact visual-only profile scope begins while previous slices await their separate QA/review checkpoints; no earlier checkpoint is inferred."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-4E implementation/render handoff complete. Typecheck, targeted ESLint (0 errors; 3 existing harness warnings), diff check, queue validation, public/review builds and profile viewport/status renderings pass. See docs/design/evidence/vision-rev02/r02-4e/RENDER-REPORT.md. Native/server behavior remains NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Owner QA for this later slice and independent Reviewer/Security remain pending; Erik authorized continuation through the remaining screens, so R02-4F may proceed without checkpointing profile."
+        }
+      ],
+      "next_step": "Implementation handoff is ready; this slice awaits owner QA plus independent Reviewer/Security. Erik directed continuation across remaining screens; reminders slice may proceed without checkpointing profile."
+    },
+    {
+      "id": "VISION-R02-4F",
+      "title": "Påminnelser — visuell migration enligt rev02 stödskärmsregler",
+      "mvp_requirement": "Eriks uttryckliga 2026-10-13-direktiv för återstående skärmar; befintliga lokala påminnelseval",
+      "plan": "docs/tasks/dev/vision-rev02-r02-4.md v1; UX: docs/plans/VISION-REV02-R02-4F-REMINDERS-UX-SPEC.md v1",
+      "write_paths": [
+        "src/features/notifications/NotificationSettingsScreen.tsx",
+        "src/components/ui/SupportScreenHeader.tsx",
+        "src/components/ui/index.ts",
+        "src/notifications/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/plans/VISION-REV02-R02-4F-REMINDERS-UX-SPEC.md",
+        "docs/tasks/dev/vision-rev02-r02-4.md",
+        "docs/design/evidence/vision-rev02/r02-4f",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md"
+      ],
+      "acceptance": [
+        "Existing opt-in state, device permission, local scheduling, time validation, saving, retry and uncertainty behavior remain unchanged",
+        "Amber reminder accent is opt-in; settings and device permission are visually separated",
+        "Public/review renders cover required viewports and current reminder states; native notification delivery remains NOT TESTABLE",
+        "§14 compares nearest patterns and makes no exact panel-match claim"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/notifications/NotificationSettingsScreen.tsx src/components/ui/SupportScreenHeader.tsx tools/visual-check/app.tsx",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "Public/review visual-check builds and manual browser render review"
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "implementing",
+          "actor": "owner",
+          "evidence": "Erik explicitly authorized continuation across all remaining screens. This exact presentation-only reminder scope starts while earlier slices await their own QA/review checkpoints; no outcome is inferred."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-4F implementation/render handoff complete. Typecheck, targeted ESLint (0 errors; 3 existing harness warnings), diff check, queue validation, public/review builds, and 18 viewport/state/modal Chromium renderings pass. See docs/design/evidence/vision-rev02/r02-4f/RENDER-REPORT.md. Native notification behavior remains NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Owner QA for this later slice and independent Reviewer/Security remain pending. Erik authorized continuation through remaining screens; account/beta slice may proceed without checkpointing reminders."
+        }
+      ],
+      "next_step": "Implementation handoff is ready; this slice awaits owner QA plus independent Reviewer/Security. Erik directed continuation; account/beta screens may proceed without checkpointing reminders."
+    },
+    {
+      "id": "VISION-R02-4G",
+      "title": "Konto och betainformation — visuell migration enligt rev02 stödskärmsregler",
+      "mvp_requirement": "Eriks uttryckliga 2026-10-13-direktiv för återstående skärmar; befintliga konto-/privacyresor",
+      "plan": "docs/tasks/dev/vision-rev02-r02-4.md v1; UX: docs/plans/VISION-REV02-R02-4G-ACCOUNT-UX-SPEC.md v1",
+      "write_paths": [
+        "src/features/account/AccountSettingsScreen.tsx",
+        "src/features/account/BetaInfoScreen.tsx",
+        "src/features/account/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/plans/VISION-REV02-R02-4G-ACCOUNT-UX-SPEC.md",
+        "docs/tasks/dev/vision-rev02-r02-4.md",
+        "docs/design/evidence/vision-rev02/r02-4g",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md"
+      ],
+      "acceptance": [
+        "Existing email link, analytics consent, deletion marker, two-stage confirmation, cleanup, signout and recovery states are unchanged",
+        "Account accent and destructive area improve hierarchy without weakening deletion intent or disclosure",
+        "Public/review renders cover required viewports and declared status states; real deletion/Alert/platform behavior is NOT TESTABLE",
+        "Beta privacy and retention text remains semantically exact",
+        "§14 comparison makes no exact panel-match claim"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/account/AccountSettingsScreen.tsx src/features/account/BetaInfoScreen.tsx tools/visual-check/app.tsx",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "Public/review visual-check builds and manual browser render review"
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "implementing",
+          "actor": "owner",
+          "evidence": "Erik explicitly authorized continuation through all remaining screens. This exact account/beta presentation-only scope starts while prior slices await their own checkpoints; no review outcome is inferred."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-4G implementation/render handoff complete. Typecheck, targeted ESLint (0 errors; 3 existing harness warnings), diff check, queue validation, public/review builds and account/beta viewport/status renderings pass. See docs/design/evidence/vision-rev02/r02-4g/RENDER-REPORT.md. Native/server deletion and Alert remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Owner QA for this later slice and independent Reviewer/Security remain pending. Erik authorized continuation through remaining screens; auth/onboarding may proceed without checkpointing account/beta."
+        }
+      ],
+      "next_step": "Implementation handoff is ready; this slice awaits owner QA plus independent Reviewer/Security. Erik directed continuation; auth/onboarding may proceed without checkpointing account/beta."
+    },
+    {
+      "id": "VISION-R02-4H",
+      "title": "Inloggning och onboarding — visuell migration enligt rev02 stödskärmsregler",
+      "mvp_requirement": "Eriks uttryckliga 2026-10-13-direktiv för återstående skärmar; befintliga auth- och profilskapandeflöden",
+      "plan": "docs/tasks/dev/vision-rev02-r02-4.md v1; UX: docs/plans/VISION-REV02-R02-4H-AUTH-ONBOARDING-UX-SPEC.md v1",
+      "write_paths": [
+        "src/features/account/SignInScreen.tsx",
+        "src/features/account/AuthCallbackScreen.tsx",
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/home/AppFlow.tsx",
+        "src/features/account/README.md",
+        "src/features/onboarding/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/plans/VISION-REV02-R02-4H-AUTH-ONBOARDING-UX-SPEC.md",
+        "docs/tasks/dev/vision-rev02-r02-4.md",
+        "docs/design/evidence/vision-rev02/r02-4h",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md",
+        "src/features/account/SignInScreenView.tsx",
+        "src/features/account/AuthCallbackView.tsx"
+      ],
+      "acceptance": [
+        "Google/email auth, PKCE/callback/session, dog creation, owner/generation checks and referral contracts are unchanged",
+        "Sign-in, callback and profile creation have clear rev02 visual hierarchy and visible status/error states",
+        "Public/review renders cover required viewports with mock-only clients; real mail, Google return, native keyboard and RLS are NOT TESTABLE",
+        "No auth code, token, raw provider error or hidden account detail is displayed",
+        "§14 comparison does not claim an exact panel match"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/account/SignInScreen.tsx src/features/account/SignInScreenView.tsx src/features/account/AuthCallbackScreen.tsx src/features/account/AuthCallbackView.tsx src/features/onboarding/ProfileScreen.tsx src/features/home/AppFlow.tsx tools/visual-check/app.tsx",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "Public/review visual-check builds and manual browser render review"
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "implementing",
+          "actor": "owner",
+          "evidence": "Erik explicitly authorized continuation through all remaining screens. This exact presentation-only auth/onboarding scope starts while prior slices await their own QA/review checkpoints; no earlier outcome is inferred."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-4H implementation/render handoff complete. Typecheck, targeted ESLint (0 errors; 3 existing harness warnings), diff check, queue validation, public/review builds and auth/onboarding viewport/status renderings pass with zero browser page errors. See docs/design/evidence/vision-rev02/r02-4h/RENDER-REPORT.md. Auth provider, real email/Google return, native keyboard and RLS remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Owner QA for this later slice and independent Reviewer/Security remain pending. Erik authorized continuation across all remaining screens; no review outcome is inferred."
+        }
+      ],
+      "next_step": "Implementation handoff is ready; owner QA plus independent Reviewer/Security remain pending. Native auth/email/Google return and real RLS are NOT TESTABLE in the web fixture."
+    },
+    {
+      "id": "VISION-R02-GESTURES",
+      "title": "Bläddringsbar åldersremsa och svep mellan huvudflikar",
+      "mvp_requirement": "docs/mvp.md, Skärm 1 Home/Today: åldersremsa och huvudflikssvep; uttryckligt ägarmandat i chatten 2026-10-13",
+      "plan": "docs/tasks/dev/vision-rev02-gestures-v8.md v8; UX: docs/plans/VISION-REV02-GESTURES-UX-SPEC-v8.md v8",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/home/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/tasks/dev/vision-rev02-gestures-v8.md",
+        "docs/plans/VISION-REV02-GESTURES-UX-SPEC-v8.md",
+        "docs/design/evidence/vision-rev02/gestures",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md"
+      ],
+      "acceptance": [
+        "The v5 age strip remains unchanged: it browses week 0 through current age + 12 and preserves current age, content and saved data.",
+        "Main swipes keep the established Home → Log → Training → Knowledge → More order, direction and no-wrap boundaries.",
+        "Opening a Knowledge article or checklist template disables main-page swipes; the existing back action returns to the Knowledge overview and re-enables them.",
+        "Tapping the already-active Knowledge bottom-nav item while an article or checklist template remains open preserves the detail and keeps main-page swipes disabled.",
+        "Lifecycle: open a checklist template → use bottom navigation to Home → use bottom navigation to Knowledge; the overview appears, detail state is reset on KnowledgeScreen unmount, and both swipe directions work again. Apply the same reset if the article uses the same detail flag.",
+        "From the Knowledge overview, swipe to another main tab and back to Knowledge; stale article focus does not reopen a detail and the overview keeps both swipe directions.",
+        "Home's explicit guide CTA still opens the selected Knowledge article; the exit reset applies only to main-tab exits.",
+        "Knowledge overview, FAQ inline expansion, shared Tabs, the Home week strip and Log note field preserve their existing gesture behavior.",
+        "Public/review builds and checks pass; actual browser/native gestures and screenshots are reported separately and remain NOT TESTABLE unless exercised in an available environment."
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/home/ProductWorkspace.tsx src/features/knowledge/KnowledgeScreen.tsx tools/visual-check/app.tsx",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/gestures/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/gestures/review node tools/visual-check/build.cjs"
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v5 and Critic PROCEED for exact v5; reviews recorded in docs/tasks/dev/vision-rev02-gestures.md. Critic confirms browse-only semantics and requires shared Tabs protection across Knowledge, Training and Health."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Owner explicitly requested a horizontally browsable age strip and left/right navigation swipes. Exact v5 has Architect APPROVE and Critic PROCEED; implementation may begin in its assigned write_paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v5 implementerat och kontrollerat; oberoende QA v5 rapporterad i docs/design/evidence/vision-rev02/gestures/QA-REPORT-v5.md; resultat FAIL för Knowledge-detaljroute; browser/native NOT TESTABLE"
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Oberoende QA v5 FAIL: Knowledge-artikel/checklistdetalj delar fortfarande page=knowledge och kan svepa till annan huvudflik; se docs/design/evidence/vision-rev02/gestures/QA-REPORT-v5.md. Nästa steg: Architect/Critic review av korrigeringsplan v6 innan kodändring."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "v5 QA FAIL saved; correction plan v7 has Architect APPROVE and Critic PROCEED; queue now points to exact v7 and scoped write paths."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact v7 and Critic PROCEED exact v7 recorded in docs/tasks/dev/vision-rev02-gestures-v7.md; owner mandate covers correction."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start the approved v7 correction only: lift Knowledge article/checklist-detail state to ProductWorkspace and clear the flag on KnowledgeScreen unmount; preserve FAQ inline swipes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v7 correction implemented; coordinator reran typecheck, targeted ESLint (0 errors, 3 fixture warnings), public/review visual-check builds, diff-check and queue validation. Actual browser/native lifecycle is NOT TESTABLE. Implementation checkpoint is in docs/tasks/dev/vision-rev02-gestures-v7.md; independent QA requested."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent QA v7 FAIL: tapping the already-active Knowledge bottom-nav item clears the parent detail gate while the mounted article/checklist detail remains visible. Checklist leave-and-return lifecycle is statically correct; browser/native interaction is NOT TESTABLE. See docs/design/evidence/vision-rev02/gestures/QA-REPORT-v7.md. Replan as v8 and obtain Architect/Critic review before source edits."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "v7 QA FAIL saved; exact v8 correction plan and UX spec drafted. Proposed behavior: tapping active Knowledge while a detail remains open is a no-op so local detail and swipe gate stay aligned; mirror the guard in the fixture. Architect and Critic review of exact v8 required before source edits."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED for exact v8 recorded in docs/tasks/dev/vision-rev02-gestures-v8.md and UX spec. Plan covers active Knowledge-tab no-op during details, reset on every actual exit via bottom-nav/swipe, overview on re-entry, and preservation of Home's explicit selected article CTA."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement only approved v8 route-state correction in ProductWorkspace and visual fixture: preserve active Knowledge detail, clear stale focus/detail on actual exits and main-tab re-entry, retain Home direct onOpenContent article selection. Then run static checks and request independent QA/Reviewer; browser/native gestures remain NOT TESTABLE."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v8 implementation and checks complete: active Knowledge-tab no-op during details; focus/detail reset on actual exits/re-entry via bottom-nav and swipe; direct Home onOpenContent preserves selected article; fixture mirrors behavior. Typecheck, targeted ESLint (0 errors, 3 existing fixture warnings), public/review builds, diffcheck and queue validation PASS. No tests run. Browser/native gestures NOT TESTABLE. Independent QA requested; see docs/tasks/dev/vision-rev02-gestures-v8.md."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA v8 static PASS with no blocker. Verified active Knowledge detail reselect, resets on real exits/re-entry through bottom-nav and swipe, Home direct content-id preservation, FAQ/overview gating and no data writes. Browser/native gestures and useEffect timing remain NOT TESTABLE. See docs/design/evidence/vision-rev02/gestures/QA-REPORT-v8.md."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Independent Reviewer PASS with no blocking findings. Keep blocked because actual browser/native gestures and exact useEffect timing remain NOT TESTABLE in this environment; do not claim end-to-end gesture acceptance. Static QA PASS and implementation checkpoint are documented in docs/tasks/dev/vision-rev02-gestures-v8.md and docs/design/evidence/vision-rev02/gestures/QA-REPORT-v8.md."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS with no blocking findings. Keep blocked because actual browser/native gestures and exact useEffect timing remain NOT TESTABLE in this environment; do not claim end-to-end gesture acceptance. Static QA PASS and implementation checkpoint are documented in docs/tasks/dev/vision-rev02-gestures-v8.md and docs/design/evidence/vision-rev02/gestures/QA-REPORT-v8.md."
+    },
+    {
+      "id": "DOG-PROFILE-BREED-MIX",
+      "title": "Sökbar raslista, Mix och Home-identitet",
+      "mvp_requirement": "docs/mvp.md: Stöd — hundprofil/onboarding; Skärm 1 — Home/Today",
+      "plan": "docs/tasks/dev/vision-rev02-dog-profile-v2.md v8; docs/plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md v8",
+      "write_paths": [
+        "supabase/migrations/202610130003_dog_breed_mix_profile.sql",
+        "src/data/app-data.ts",
+        "src/features/onboarding/SearchableBreedPicker.tsx",
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/onboarding/DogProfileScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "tools/visual-check/app.tsx",
+        "src/features/onboarding/README.md",
+        "src/features/home/README.md",
+        "src/data/README.md",
+        "docs/Architecture.md",
+        "docs/mvp.md",
+        "docs/design/vision-rev02-objects.md",
+        "docs/dev/beta-data-lifecycle.md",
+        "docs/privacy/beta-information.md",
+        "docs/tasks/dev/vision-rev02-dog-profile-v2.md",
+        "docs/plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/design/evidence/vision-rev02/dog-profile/",
+        "docs/design/evidence/vision-rev02/dog-profile/README.md"
+      ],
+      "acceptance": [
+        "Catalog source has documented redistribution rights, verified snapshot/date/count and stable IDs; Mix is first, and all remaining breed labels including Okänd ras are sorted together alphabetically using Swedish collation.",
+        "One accessible searchable picker is reused in onboarding and profile edit; arbitrary typed text cannot be persisted. A no-match in the main picker offers direct selection of Okänd ras; Mix component pickers never offer Okänd ras.",
+        "Mix can save without components or with two distinct known breeds; neither Mix nor Okänd ras can be a component.",
+        "Migration, RPC, owner RLS, narrow grants, condition/readback, and create behavior protect the profile fields; no duplicate legacy RPC ambiguity.",
+        "Home shows name | breed or name | Mix, wraps long names without clipping, and preserves the saved age preference. Mix parts remain visible in profile and do not change content targeting.",
+        "Visual fixture uses the same selector/presentation and records public/review states; static checks and §14 evidence are documented."
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm typecheck:edge-account",
+        "pnpm exec eslint src/data/app-data.ts src/features/onboarding/SearchableBreedPicker.tsx src/features/onboarding/ProfileScreen.tsx src/features/onboarding/EditDogProfileScreen.tsx src/features/onboarding/DogProfileScreen.tsx src/features/home/ProductWorkspace.tsx src/features/home/HomeScreen.tsx tools/visual-check/app.tsx",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-dog-profile/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-dog-profile/review node tools/visual-check/build.cjs",
+        "python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-dog-profile/public",
+        "python -m http.server 4174 --bind 127.0.0.1 --directory /tmp/tassla-dog-profile/review",
+        "For public and review fixtures inspect Slice B routes: /?screen=profile-create&profileScenario=ready; /?screen=profile-edit&profileScenario=ready|loading|error; /?screen=profile-edit&state=conflict; /?screen=profile-create&profileScenario=breed-loading|breed-error; /?screen=profile-edit&profileScenario=breed-loading|breed-error; /?screen=home&homeScenario=ready. Here profileScenario=loading|error is dog-profile load/save status; profileScenario=breed-loading|breed-error is the separate breed-catalog request status. On create/edit capture normal and long breed labels, matching and no-match search, direct Okänd ras selection from the main-picker empty state, Mix checkbox off, checkbox on with zero components, with only the first component, and with two distinct breeds. Verify missing-selector status, disabled Save until two distinct breeds are selected, second-picker exclusion of the first, and duplicate-component rejection, Okänd ras exclusion from Mix components, long Home identity wrapping, and preserved age preference. Slice B Home review verifies final name | breed/Mix identity and keeps the age preference saved by Slice A. Capture representative Slice B states at 375x844, 430x844, and 375x667. For 140% text scaling use Firefox View > Zoom > Zoom Text Only on profile-edit-ready and Home; if unavailable, report NOT TESTABLE. Native Dynamic Type/VoiceOver and database runtime are NOT TESTABLE. Save public/review captures to docs/design/evidence/vision-rev02/dog-profile/public/ and docs/design/evidence/vision-rev02/dog-profile/review/. Prefix all filenames with synthetic- and record route/state, viewport, text scale, and fixture mode in docs/design/evidence/vision-rev02/dog-profile/README.md; both fixtures are synthetic even without a review banner. Complete docs/design-rules.md §14; no test suites. SQL/RLS runtime NOT TESTABLE without dev DB."
+      ],
+      "depends_on": [
+        "DOG-PROFILE-AGE-DISPLAY"
+      ],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "At the time of the initial block, the source choice was unresolved. Erik has since selected Wikidata structured data under CC0 (2026-10-13). The exact SPARQL snapshot remains unavailable: WDQS GET and POST both returned HTTP 403 and the web tool cannot access API endpoints. No catalogue snapshot or app code may begin until the dated export is locally verified."
+        }
+      ],
+      "next_step": "Source choice is resolved: Wikidata CC0. Snapshot acquisition remains blocked because the exact WDQS query returned HTTP 403 on both GET and POST; the web tool also cannot access API endpoints. Keep Slice B blocked and do not create a partial/fabricated breed list. Once a dated export is available, verify exact query, count, unique QIDs, Swedish/English label mapping and breeds.name 1–100 character limit; add the snapshot file to write_paths and re-review the updated plan before catalogue code."
+    },
+    {
+      "id": "DOG-PROFILE-AGE-DISPLAY",
+      "title": "Valbar och konsekvent visning av hundens ålder",
+      "mvp_requirement": "docs/mvp.md: Stöd — hundprofil/onboarding; Skärm 1 — Home/Today; Tassla-pass",
+      "plan": "docs/tasks/dev/vision-rev02-dog-profile-v2.md v8; docs/plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md v8",
+      "write_paths": [
+        "supabase/migrations/202610130002_dog_age_display_unit.sql",
+        "src/data/app-data.ts",
+        "src/features/onboarding/dog.ts",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/onboarding/DogProfileScreen.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/HomeCarousel.tsx",
+        "src/features/home/PreviewHomeScreen.tsx",
+        "src/features/home/PreviewProfileScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/passport/PassportScreen.tsx",
+        "src/features/passport/passport-model.ts",
+        "tools/visual-check/app.tsx",
+        "src/features/onboarding/README.md",
+        "src/features/home/README.md",
+        "src/features/passport/README.md",
+        "docs/tasks/dev/vision-rev02-dog-profile-v2.md",
+        "docs/plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md",
+        "docs/mvp.md",
+        "docs/design/vision-rev02-objects.md",
+        "docs/dev/beta-data-lifecycle.md",
+        "docs/privacy/beta-information.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/design/evidence/vision-rev02/dog-profile/",
+        "docs/design/evidence/vision-rev02/dog-profile/README.md"
+      ],
+      "acceptance": [
+        "Age unit is persisted per dog as weeks/months/years, defaults to weeks, and is editable in profile; conditional write/readback covers the current full profile preimage and age_display_unit. Slice B later adds both Mix IDs to that preimage/readback.",
+        "Calendar age formatting follows exact UX examples and month-end/leap-year rules.",
+        "Home shows Name | Breed from the dog profile’s existing breed ID and catalog label, with age below; Home, profile, Tassla-pass preview, and exported PDF use the same formatter and preference. Immutable PassportSnapshot.dog.ageLabel is computed once from saved age_display_unit, birth_date, and the same captured date as createdOn; preview and rendered HTML/PDF reuse it. If profile sharing is off, dog and age are absent from the snapshot. Long breed labels wrap without clipping.",
+        "Display unit never changes ageInWeeks, content targeting, daily tasks, or training progression.",
+        "Conditional profile writes/readback include the new setting; review fixture demonstrates every display unit."
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm typecheck:edge-account",
+        "pnpm exec eslint src/data/app-data.ts src/features/onboarding/dog.ts src/features/onboarding/EditDogProfileScreen.tsx src/features/onboarding/DogProfileScreen.tsx src/features/home/ProductWorkspace.tsx src/features/home/HomeScreen.tsx src/features/home/HomeCarousel.tsx src/features/home/PreviewHomeScreen.tsx src/features/home/PreviewProfileScreen.tsx src/features/passport/PassportScreen.tsx src/features/passport/passport-model.ts tools/visual-check/app.tsx",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-dog-profile/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-dog-profile/review node tools/visual-check/build.cjs",
+        "python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-dog-profile/public",
+        "python -m http.server 4174 --bind 127.0.0.1 --directory /tmp/tassla-dog-profile/review",
+        "For public and review fixtures inspect Slice A age routes: /?screen=profile-edit&profileScenario=ready for the age-unit selector, plus /?screen=profile&ageUnit=weeks|months|years, /?screen=home&ageUnit=weeks|months|years, and /?screen=passport&ageUnit=weeks|months|years. Verify that one saved dog preference is consistent across read-only Dog Profile, Home, and Tassla-pass, while Home keeps its full name | breed identity above the age line and wraps a long breed label without clipping. Manually inspect createPassportSnapshot and renderPassportHtml for weeks, months, and years: each PassportSnapshot.dog.ageLabel must equal the rendered HTML age and derive from that snapshot createdOn; with profile sharing off, both dog and age are omitted. This is a manual non-test-suite check; native PDF rendering remains NOT TESTABLE. Capture every profile/Home/Passport age-unit route at 375x844, 430x844, and 375x667. For 140% text scaling use Firefox View > Zoom > Zoom Text Only on profile-edit-ready and Home; if unavailable, report NOT TESTABLE. Native Dynamic Type/VoiceOver and database runtime are NOT TESTABLE. Save public/review captures to docs/design/evidence/vision-rev02/dog-profile/public/ and docs/design/evidence/vision-rev02/dog-profile/review/. Prefix all filenames with synthetic- and record route/state, viewport, text scale, and fixture mode in docs/design/evidence/vision-rev02/dog-profile/README.md; both fixtures are synthetic even without a review banner. Complete docs/design-rules.md §14; no test suites. SQL/RLS runtime NOT TESTABLE without dev DB."
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact plan v4 has Architect APPROVE and Critic PROCEED, recorded in the plan and report. Age display is independent of the Wikidata snapshot; start Slice A using current breed IDs."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Slice A starts after Architect APPROVE and Critic PROCEED for exact plan v4. Implement only persistent age-display preference and Home Name | Breed identity using existing breed IDs; catalog/Mix remain blocked pending verified Wikidata export."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Slice A implementation/static checks and manual public/review screenshot handoff recorded in docs/tasks/dev/vision-rev02-dog-profile-v2.md and docs/design/evidence/vision-rev02/dog-profile/README.md; no tests run; QA/Reviewer/Security remain pending."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Fresh independent QA passes the corrected local Slice A: retry comparison includes age_display_unit and leap-year residual months are anchored to the original birth date. Security statically approved; access/copy inventory now names dogs.age_display_unit. Reviewer re-review is next. Supabase migration/RLS, native PDF and native accessibility remain NOT TESTABLE, so no integration or beta completion is claimed."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Local Slice A static handoff passes independent QA and Reviewer; Security APPROVE, including closure of the access/copy inventory note. Keep blocked for integration completion: actual Supabase migration, owner RLS, saved-preference persistence, native PDF and native accessibility are NOT TESTABLE in this environment. No database/runtime pass is claimed."
+        }
+      ],
+      "next_step": "Local Slice A static handoff passes independent QA and Reviewer; Security APPROVE, including closure of the access/copy inventory note. Keep blocked for integration completion: actual Supabase migration, owner RLS, saved-preference persistence, native PDF and native accessibility are NOT TESTABLE in this environment. No database/runtime pass is claimed."
     }
   ]
 }

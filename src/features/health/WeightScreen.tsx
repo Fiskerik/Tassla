@@ -4,7 +4,7 @@ import { DatePickerField, MessageCard, PrimaryButton, QuietButton } from '../../
 import { isValidHealthWeightDate, isValidHealthWeightKg, type HealthHistoryRecord, type HealthHistoryType, type HealthWeightRecord } from '../../data/workspace-data';
 import { localDate } from '../onboarding/dog';
 import { tokens } from '../../theme/tokens';
-import { AppBar, Button, ListRow } from '../../components/ui';
+import { AppBar, Button, IconChip, ListRow, SectionHeader } from '../../components/ui';
 import { Toast } from '../../components/ui/Toast';
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -148,7 +148,7 @@ export function WeightScreen({
         </> : null}
         {isBusy && <MessageCard>Sparar och kontrollerar ändringen…</MessageCard>}
         {!editingId && <View style={styles.formCard}>
-          <Text style={styles.formTitle} accessibilityRole="header">Lägg till vikt</Text>
+          <View style={styles.formHeader}><IconChip category="veterinary" /><Text style={styles.formTitle} accessibilityRole="header">Lägg till vikt</Text></View>
           <DatePickerField label="Datum" disabled={isBlocked || Boolean(editingId)} onChangeText={setDate} value={date} />
           <View style={styles.field}>
             <Text style={styles.label}>Vikt (kg)</Text>
@@ -174,12 +174,12 @@ export function WeightScreen({
               setToastRecordId(null);
             }} />
         </View>}
-        <Text style={styles.sectionTitle} accessibilityRole="header">Vikthistorik</Text>
+        <SectionHeader title="Vikthistorik" />
         {cloudRecords.length === 0 && <MessageCard>Ingen vikt har registrerats ännu.</MessageCard>}
         {cloudRecords.map((record) => (
           <View key={record.id} style={styles.recordCard}>
             {editingId === record.id ? <>
-              <Text style={styles.formTitle} accessibilityRole="header">Rätta viktpost</Text>
+              <View style={styles.formHeader}><IconChip category="veterinary" /><Text style={styles.formTitle} accessibilityRole="header">Rätta viktpost</Text></View>
               <DatePickerField label="Datum" disabled={isBlocked} onChangeText={setEditDate} value={editDate} />
               <View style={styles.field}>
                 <Text style={styles.label}>Vikt (kg)</Text>
@@ -221,9 +221,9 @@ function formatWeight(value: number): string {
 }
 
 const styles = StyleSheet.create({
-  sectionTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading, marginTop: tokens.layout.sectionGap },
   formCard: { marginTop: tokens.layout.headingGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
-  formTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label, marginBottom: tokens.spacing.md },
+  formHeader: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, marginBottom: tokens.spacing.md },
+  formTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label, flexShrink: 1 },
   field: { marginBottom: tokens.spacing.md },
   label: { color: tokens.colors.textPrimary, ...tokens.typography.caption, fontWeight: '700', marginBottom: tokens.spacing.xs },
   input: { minHeight: tokens.size.touchMin + tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body },

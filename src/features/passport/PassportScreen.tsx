@@ -7,9 +7,9 @@ import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPri
 import { Toast } from '../../components/ui/Toast';
 import { fetchBreeds, type BreedOption, type OwnedDog } from '../../data/app-data';
 import type { HealthHistoryRecord, HealthWeightRecord } from '../../data/workspace-data';
-import { formatDogAge, localDate } from '../onboarding/dog';
+import { localDate } from '../onboarding/dog';
 import { tokens } from '../../theme/tokens';
-import { AppBar, BottomSheet, Button, DogCard } from '../../components/ui';
+import { BottomSheet, Button, DogCard } from '../../components/ui';
 import { createAndSharePassportPdf, type PassportExportResult } from './passport-export';
 import { createPassportSnapshot, type PassportSelection, type PassportSnapshot } from './passport-model';
 
@@ -152,8 +152,16 @@ export function PassportScreen(props: PassportScreenProps) {
 
   return (
     <View>
-      <AppBar mode="Close" title="Tassla-pass" onAction={() => { if (!busy) props.onBack(); }} />
-      <Text style={styles.intro}>Hundens viktigaste uppgifter, samlade för den som tar hand om din hund.</Text>
+      <View style={styles.headerRow}>
+        <View style={styles.headerCopy}>
+          <Text accessibilityRole="header" style={styles.title}>Tassla-pass</Text>
+          <Text style={styles.intro}>Hundens uppgifter som du väljer att dela.</Text>
+        </View>
+        <Pressable accessibilityRole="button" accessibilityLabel="Tillbaka till Mer" accessibilityState={{ disabled: busy }} disabled={busy}
+          onPress={props.onBack} style={({ pressed }) => [styles.closeButton, pressed && !busy && styles.closePressed]}>
+          <Ionicons name="close" size={tokens.size.iconMd} color={tokens.colors.textPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+        </Pressable>
+      </View>
 
       {!props.client || !dog ? <MessageCard>Ingen hundinformation visas i den lokala förhandsvisningen. En PDF skapas inte här.</MessageCard> : <>
 
@@ -200,7 +208,7 @@ function SelectionRow({ iconsLoaded, icon, title, detail, checked, disabled, onP
 }) {
   return <Pressable accessibilityRole="checkbox" accessibilityState={{ checked, disabled }} disabled={disabled} onPress={onPress} style={[styles.selectionRow, disabled && styles.disabled]}>
     <View style={styles.selectionIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      {iconsLoaded ? <Ionicons name={icon} size={tokens.size.iconSm} color={tokens.colors.primary} /> : <Text style={styles.fallback}>•</Text>}
+      {iconsLoaded ? <Ionicons name={icon} size={tokens.size.iconSm} color={tokens.colors.support.passport.fg} /> : <Text style={styles.fallback}>•</Text>}
     </View>
     <View style={styles.selectionCopy}><Text style={styles.selectionTitle}>{title}</Text><Text style={styles.body}>{detail}</Text></View>
     <View style={[styles.checkbox, checked && styles.checkboxChecked]}><Text style={[styles.checkmark, checked && styles.checkmarkChecked]}>{checked ? '✓' : ''}</Text></View>
@@ -210,7 +218,7 @@ function SelectionRow({ iconsLoaded, icon, title, detail, checked, disabled, onP
 function SnapshotPreview({ snapshot }: { snapshot: PassportSnapshot }) {
   return <View>
     {snapshot.selected.profile && <View>
-      {snapshot.dog ? <DogCard name={snapshot.dog.name} breed={snapshot.dog.breed} age={`${formatDogAge(snapshot.dog.birthDate, localDate())} · Född ${snapshot.dog.birthDate}`} /> : <Text style={styles.body}>Hunduppgifter saknas.</Text>}
+      {snapshot.dog ? <DogCard name={snapshot.dog.name} breed={snapshot.dog.breed} age={`${snapshot.dog.ageLabel} · Född ${snapshot.dog.birthDate}`} /> : <Text style={styles.body}>Hunduppgifter saknas.</Text>}
     </View>}
     {snapshot.selected.latestWeight && <View style={styles.snapshotSection}>
       <Text style={styles.snapshotHeading}>Senaste vikten</Text>
@@ -234,21 +242,26 @@ function exportMessage(result: PassportExportResult): { text: string; error: boo
 }
 
 const styles = StyleSheet.create({
-  intro: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'center', marginBottom: tokens.spacing.md },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, marginBottom: tokens.spacing.md },
+  headerCopy: { flex: 1 },
+  title: { ...tokens.typography.title, color: tokens.colors.textPrimary },
+  intro: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
+  closeButton: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  closePressed: { backgroundColor: tokens.colors.selectedSurface },
   body: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
-  fallback: { color: tokens.colors.primary, ...tokens.typography.label },
+  fallback: { color: tokens.colors.support.passport.fg, ...tokens.typography.label },
   selectionRow: { minHeight: tokens.size.touchMin + tokens.spacing.xxl, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.spacing.md, marginTop: tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md },
-  selectionIcon: { width: tokens.size.chipMd + tokens.spacing.sm, height: tokens.size.chipMd + tokens.spacing.sm, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.selectedSurface, alignItems: 'center', justifyContent: 'center' },
+  selectionIcon: { width: tokens.size.chipMd + tokens.spacing.sm, height: tokens.size.chipMd + tokens.spacing.sm, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.support.passport.bg, alignItems: 'center', justifyContent: 'center' },
   selectionCopy: { flex: 1 },
   selectionTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
   checkbox: { width: tokens.spacing.xxl, height: tokens.spacing.xxl, borderRadius: tokens.radius.sm, borderWidth: 2, borderColor: tokens.colors.primary, alignItems: 'center', justifyContent: 'center' },
   checkboxChecked: { backgroundColor: tokens.colors.primary },
-  checkmark: { color: tokens.colors.primary, fontWeight: '900', fontSize: 17, lineHeight: 19 },
+  checkmark: { color: tokens.colors.primary, fontWeight: '900', fontSize: tokens.typography.body.fontSize, lineHeight: tokens.typography.body.lineHeight },
   checkmarkChecked: { color: tokens.colors.onPrimary },
   disabled: { opacity: 0.6 },
-  previewCard: { borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, marginTop: tokens.spacing.sm },
+  previewCard: { borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.home.card, padding: tokens.layout.cardPadding, marginTop: tokens.spacing.sm },
   snapshotSection: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, paddingTop: tokens.spacing.md, marginTop: tokens.spacing.md },
-  snapshotHeading: { color: tokens.colors.primary, ...tokens.typography.label, marginBottom: tokens.spacing.sm },
+  snapshotHeading: { color: tokens.colors.support.passport.fg, ...tokens.typography.label, marginBottom: tokens.spacing.sm },
   previewValue: { color: tokens.colors.textPrimary, ...tokens.typography.caption, fontWeight: '700', marginTop: tokens.spacing.xs },
   historyRow: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, paddingTop: tokens.spacing.sm, marginTop: tokens.spacing.sm },
   limitNotice: { color: tokens.colors.textPrimary, ...tokens.typography.caption, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.background, padding: tokens.spacing.md, marginTop: tokens.spacing.md },

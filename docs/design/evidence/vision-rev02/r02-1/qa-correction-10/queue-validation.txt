@@ -1,0 +1,48 @@
+Segment: Full MVP beta delivery: Erik authorized implementation 2026-10-06, Luna medium; phone tests chosen by Erik, real beta activation separate Erik approval: True
+FOUNDATION-PREP done Förbered schema, källgrund och installationsguide
+FOUNDATION-DB-VERIFY planned Verifiera migration och RLS i verklig Supabase-utvecklingsmiljö
+APP-01-LOCAL done Första lokala appflödet; checkpoints A–D
+APP-01-PHONE done Signerad iPhone och verklig auth/dataintegration
+DEV-PREVIEW-01 done Local development preview without app login
+APP-02-LOCAL done Six MVP screen foundations, local daily log and training
+APP-03-LOCAL done Google, real owner workspace, Codemagic and vision UI
+CI-01 done Fix Codemagic pnpm executable collision
+CI-02 done Align Expo 57 native animation packages for iOS build
+APP-04A-UX done Make sign-out discoverable and keep form actions reachable above the keyboard
+APP-04A-PHONE planned Verify APP-04A keyboard and sign-out UX on a small signed iPhone build
+APP-05-B1-WEIGHT done Health B1: owner-registered weight history
+APP-05-PHONE-DB planned Verify health weight form on phone and real Supabase/RLS
+MVP-CONTENT-INVENTORY done Editorial MVP content inventory, metadata only
+APP-04B2-HISTORY done Health B2: performed vaccination and veterinary history
+APP-04C-PROFILE done Edit dog profile and refresh derived content
+MVP-P03-PLANNED-HEALTH done Owner-entered planned health dates separate from performed history
+MVP-P04-CONTENT done Sourced content drafts and versioned draft import
+MVP-P05-CONTENT-UI done Relevant Home and Knowledge with shared published versions
+MVP-P06-PASSPORT done Saved passport snapshot PDF and owner-initiated local sharing
+MVP-P07-REMINDERS done Owner opt-in local health and training reminders
+MVP-P10-ACCOUNT done Local undeployed beta account and deletion candidate
+UX-01 done Planned health information and action feedback
+BUILD-01 done Fix Codemagic release-age dependency failure and validate build stages
+BUILD-02 done Expose raw Xcode archive logs as Codemagic artifacts
+UX-02 done Återstående UX-korrigeringar, varumärkesikon och granskningsläge
+DS-CODE-01 blocked Kodtokens, delat komponentbibliotek och utvecklingsgalleri
+LOGGA-QUICK blocked Logga snabbflöde, sanningsenlig status och skärmtillstånd
+LOGGA-EDIT done Logga redigering, radering och ägaraccepterad closeout
+BUILD-35 done Rätta Codemagic Check application för remove-ai-slop
+UI-06 done Förbättra Hem och Logg med lugn hierarki och foto-carousel
+UI-07 done Centrerat Tassla-varumärke och täckande bottenmeny
+FIX-36 done Rätta påminnelsetid och verifiera Olycka/Vatten
+UI-08 blocked Toastkanter och finjustering av Hem, Kunskap, Mer och Träning
+MOTION-01 done Rörelsegrund och bekräftelse
+MOTION-02 done Dynamisk logg och bekräftade träningssteg
+MOTION-03 done Tips vid första användning
+MOTION-04 done Valpfigur
+HOME-TIME-01 blocked Valbar tid för logg/hälsohändelser och visning på Hem
+UI-09 blocked Kompakt loggbekräftelse med grön bock
+FIX-38 done Rätta Toast lintfel och kör preflight inför commit/push
+QA-11 done Mobilkorrigeringar från Eriks fem bilder
+KNOW-02 done Faschecklistor och FAQ med konto-/hundprogress och reviewinnehåll
+HOME-NEXT-01 done Hem kopplar ihop dagens upplevelse
+VISION-R02-1 qa Hem rev02-referens och delade aktivitetskomponenter
+VISION-R02-2 planned Ägarvalda dagsrutiner och källhärledd träningsprogress
+VISION-R02-3 planned Migrera Logg, Träning och Kunskap mot vision rev02

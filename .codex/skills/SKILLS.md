@@ -9,7 +9,7 @@ Tassla should feel calm, trustworthy and effortless for a new puppy owner. This 
 
 ## Precedence (stop and ask on conflict)
 1. The owner's explicit decisions in the task
-2. `docs/design-rules.md` and the target image `vision_rev01.jpg`
+2. `docs/design-rules.md`, its linked rev02 specifications, and the target image `vision_rev02.jpg`
 3. This skill
 4. Existing code
 

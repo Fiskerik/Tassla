@@ -1,4 +1,26 @@
-# FOUNDATION – leveransrapport 2026-10-04
+# FOUNDATION — leveransrapport 2026-10-04
+
+## DOG-PROFILE — Wikidata-källval och plan v4, 2026-10-13
+
+Erik har beställt sökbar raskatalog, Mix-delraser, Hem-identitet `Namn | Ras` och valbar åldersvisning i veckor, månader och år. Han valde Wikidatas strukturerade data under CC0. Plan v4 låser katalogurvalet till Wikidata `dog breed (Q39367)` och dess underklasser, med svensk etikett och engelsk fallback. Exakt SPARQL-fråga och licenskällor finns i `docs/plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md`.
+
+Plan v4 har Architect **APPROVE** och Critic **PROCEED**. Criticens tre villkor är införda: åldersdelen är oberoende av katalogsnapshoten, långa Home-rasnamn radbryts utan kapning och huvudväljaren erbjuder direktvalet `Okänd ras` i tomläget. Därför ligger åldersvisning som Slice A; raslista och Mix är Slice B och förblir blockerad tills en daterad export har verifierats. Slice A använder befintliga ras-ID:n och kan nu börja enligt den godkända planen.
+
+WDQS/QLever API-anrop blockeras i miljön (nätverkstunnel 403; API-endpoints nekas av webbläsarverktyget). Ingen snapshot eller katalogkod har skapats. Innan Slice B startar ska exportens antal, unika QID:n, etikettmappning och kompatibilitet med `breeds.name`-gränsen 1–100 tecken verifieras. Detta är en åtkomstblockerare för katalogdelen, inte ett olöst källval.
+
+Dokumentationskontroller: `python tools/dev_flow.py validate` **PASS** och `git diff --check` **PASS**. Inga testsviter har lagts till eller körts. Plan approval är inte SQL/RLS/runtime-godkännande.
+
+## DOG-PROFILE — plan v5–v8 tillägg för PDF-ålder
+
+Slice A:s godkända UI-kontrakt kräver samma valda åldersformat i Tassla-pass. För att detta även ska gälla den frysta PDF-snapshoten lade plan v5 till `src/features/passport/passport-model.ts` i write paths och lintkontrollen. Architect godkände v5; Critic begärde ett fryst `ageLabel`, samma `createdOn`, gemensam användning i preview/HTML samt kontroll av alla enheter och profil-off. Plan v6 fick Architect APPROVE och Critic PROCEED WITH CHANGES eftersom QA saknade explicit inspektion av `createPassportSnapshot` och `renderPassportHtml` för alla enheter. Plan v7 lade till kontrollen; Critic gav PROCEED WITH CHANGES och Architect CHANGES för kvarvarande v6-referenser. Plan v8 rättade dem och fick Architect **APPROVE** och Critic **PROCEED**. PDF-snapshoten implementerades först efter v8-godkännandet.
+
+## DOG-PROFILE-AGE-DISPLAY — implementation handoff, 2026-10-13
+
+Slice A är implementerad lokalt: migration för `age_display_unit`, validerad villkorad profiluppdatering/återläsning, svensk åldersformatterare i veckor/månader/år, Hem-identitet `Namn | Ras` med separat åldersrad, val i profilredigering, läsvy samt fryst Tassla-pass-`ageLabel` som återanvänds av preview och HTML. Raskatalog och Mix ingår inte i denna slice.
+
+Efter första Reviewer-granskningen hittades två fel: sparstatusjämförelsen utelämnade `age_display_unit`, och årsformatets restmånader utgick från en klämd årsdag i stället för direkt från födelsedatumet. Båda rättades i `ProductWorkspace.tsx` och `dog.ts`. Färsk kontroll efter rättning: `pnpm typecheck` PASS; `pnpm typecheck:edge-account` PASS; riktad ESLint PASS med 0 fel och 3 befintliga varningar i `tools/visual-check/app.tsx`; public/review-byggen PASS; `git diff --check` PASS. Oberoende QA har granskat korrigeringarna och gav PASS för lokal/statisk acceptans; Reviewer gav PASS utan kvarvarande statiskt fynd; Security gav APPROVE och bekräftade att det låga inventeringsfyndet är stängt genom att uttryckligen ta med `dogs.age_display_unit` i åtkomst-/kopieuttag. Queue är blockerad för verklig Supabase-migration/RLS, sparad preferens, native PDF/share och native hjälpmedel, som är NOT TESTABLE i miljön. Ingen testsvit lades till eller kördes.
+
+Wikidata CC0 är nu valt av Erik. En ny direkt GET och POST till den exakta WDQS-frågan returnerade HTTP 403; webbläsarverktyget kan inte öppna API-endpoints. Ingen katalogfil eller raslista är skapad och Slice B förblir blockerad tills ett daterat, verifierat snapshot kan hämtas.
 
 ## Förberett
 Architecture-godkännande och mandat registrerade. Supabase migration skapar 13 tabeller, RLS/grants, atomärt hundskapande, versionsskydd, typvillkor och städning av ensamägd hund vid Auth-radering. Endast två rasnamn seedade. Analytics-klientåtkomst avstängd.
@@ -445,3 +467,109 @@ Slutlig oberoende QA GODKÄND: verifierare och fixturematris pass i public/revie
 ### HOME-NEXT-01 final review — 2026-10-12
 
 Separat read-only Reviewer PASS på fryst produkt-/navigation-/harnessdiff och slutbevis. Bekräftat: 44px logg-CTA; dense tiles bottom 784/nav top 785 i public/review 375/430; källriktiga logg/träning/plan-grupper; fem huvudflikar, More → Hälsa/Tassla-pass, vald tab och reviewgating/destination; FAQ/checklistskärmar och dataflöden oförändrade; §14 och äldre fail-evidens bevarade. Task → done. Begränsning: lokala React Native Web-renders med syntetiska data; ingen native device/backend/RLS/TestFlight-certifiering. Inga commits, pushar eller publiceringar.
+
+## VISION-REV02 R02-1 — implementation och QA checkpoint
+
+Plan v8 R02-1 implementerad inom godkänd scope. Första QA-rundan blockerade första-vy-fit: public tiles slutade y=792 mot nav y=785 vid 375/430; review-fixturens initialtiles låg under nav och verifieraren mätte efter scroll. Rapport och bevarad failure-evidens finns i `docs/design/evidence/vision-rev02/r02-1/qa-failure/`.
+
+Architect bekräftade att samma plan täcker en Home-lokal korrigering utan sänkta spacing-token, borttagna fixture-rader eller ändrade globala defaults. Implementern har nu gjort Home-local tätare spacing, kompakt destinationsvariant och tagit bort endast syntetiska sekundärbeskrivningar i review-fixturen (full detalj finns kvar för skärmläsare). `tools/visual-check/verify.py` mäter review-kortens initialgeometri före scroll. Alla fem uppgifter, banner, verkligt public-innehåll, navigation och minst 44 pt träffytor är bevarade.
+
+Korrigeringshandoff: `pnpm exec tsc --noEmit`, public/review builds, fokuserade tester 3/3, verifierarens Python syntax och `git diff --check` PASS enligt implementer. Oberoende renderad QA och Reviewer på korrigerad källa återstår. R02-2 v8 har Architect APPROVE, Critic PROCEED, Security APPROVE och Compliance APPROVE, men migrations-/datakod väntar tills R02-1 är klar.
+
+Oberoende QA efter den första fit-korrigeringen: public initialkort lämnar 37 px till nav vid 375/430; syntetisk review överlappar nav 51 px. Efter Architect-godkänd review-tätning passade public; review nådde 13 px fri yta vid båda bredderna, tre px under 16 px-kravet. Rapporter och bilder bevarade separat i `qa-correction/` och `qa-correction-2/`. Efter ytterligare 4 pt review-heading-gap passerade normal första-vy-fit: public bottom y=748/nav y=785 (37 px), review bottom y=768/nav y=785 (17 px). Toggle, fixed banner, 375×667, stor text/reducerad rörelse och navigation passerar. Fokustester, `pnpm check` (41 pass, 38 varningar/0 fel), public iOS-export, båda byggena, diffcheck och queue validation passerar. §14 punkt 16 blockerade: Tassla-placeholdern upptar ca 76×80 px där målbilden har ca 120×125 px porträtt. Modellen saknar hundfoto; använd inte redaktionell bild som användarens hund. Rapport/bevis: `docs/design/evidence/vision-rev02/r02-1/qa-correction-3/QA-REPORT.md`. Architect har godkänt Home-lokal förstoring/absolut placering av befintlig illustration utan att öka layoutflödet samt namn+ålder i headern enligt panel 1; ras visas fortfarande i profil/data. Implementer arbetar med detta. Checklistans innehåll gick inte att testa i harness som saknar checklistklient/hund. R02-2 väntar på godkänd R02-1-checkpoint.
+
+### VISION-REV02 R02-1 — correction-10 QA handoff
+
+Corrections 5–9 gick tillbaka till samma R02-1 checkpoint efter oberoende §14-fel: först datumöverlapp, därefter glyphkontrast under 4,5:1 eller för svag illustration. Korrigeringar, arkitekturbekräftelser och varje QA-rapport/evidensmapp är bevarade i `docs/design/evidence/vision-rev02/r02-1/` och köhistoriken.
+
+Correction 10 placerade den godkända gräddfärgade lokala bakgrunden på en wrapper-View runt veckotalen som möter porträttet. QA PASS: alla veckoglypher klarade minst 6,55:1 vid 375/430 px och 140 % text; portrait (~108×124 synlig illustration), dots, public/review initialvyer, 17 px navmarginal, syntetisk review-checkbox/scroll/banner, destinationsnavigation, stor text och reducerad rörelse passerade. Full evidens: `docs/design/evidence/vision-rev02/r02-1/qa-correction-10/QA-REPORT.md`.
+
+Huvudsessionens fokustester (3/3), `pnpm check` (41 test; 38 lint-varningar, 0 fel), public iOS-export, Python syntax, `git diff --check` och `python tools/dev_flow.py validate` passerade. Correction-specifik QA återkörde public/review verifieringar och byggen samt fokustester; full pnpm-check och iOS-export återanvändes inte inom just QA-körningen. Checklistskärmens innehåll är ej testbart i harness utan checklistklient/hund; ingen native-device-granskning eller backendbeteende påstås. Reviewer gav därefter BLOCK på ett avgränsat evidensgap: verifieraren kontrollerade 140 % text men scrollade inte fram sista destinationen och jämförde den med bottennavigationen. Correction-11 QA hittade två harnessproblem: bannerbaslinjen mättes före textskalning och `scroll_into_view_if_needed` lämnade 0,406 px fractional överlapp vid 430. Correction 12 rättade verifierarens tidsordning och använde explicit scroll; QA PASS vid 375/430, 140 % text och reducerad rörelse. Separat Reviewer PASS bekräftade verifiering, scope och sanningsenlighet. Köstatus: `VISION-R02-1` done och `VISION-R02-2` implementing. R02-2 genomförs endast med syntetiska lokala data; ingen live migration eller produktionsdata.
+
+
+## VISION-REV02 R02-2 — implementation handoff till QA, 2026-10-13
+
+R02-2 v8 kopplar ägarvalda dagliga rutiner och urval av nästa tillåtna publicerade träningssteg till Hem. Rutincompletion skrivs först efter bekräftad save och serverstämplas; träningscompletion härleds från exakt hund/version/steg och sparad `training_progress.completed_at` projicerad till urvalets lokala dag. Dagsrader och count använder samma fulla datamängd; fem rader visas först och “Visa alla” expanderar listan. Progressindikatorn är tillgänglighetsmärkt. Rutinhantering och träningsval finns kvar inline men startar hopfällda för att hålla huvudlistan och initial fit i fokus; snapshot och lokal formulärtext scopesätts till konto/hund/dag/tidszon för att gamla data inte ska blinka fram vid byte.
+
+`pnpm check` PASS: app-/edge-typecheck, lint med 36 varningar i andra filer och 45/45 tester. Fokuserade dagaktivitets-/workspace-/kontoraderingstester 5/5 PASS. Public iOS-export och `python tools/dev_flow.py validate` PASS. Lokal React Native Web-reviewrendering vid 375/430 utan browser errors: count 3/7, fem första rader och “Visa alla” expanderade till sju; rutinhanterare och träningsval öppnades. CTA-undersida till navigation: 20 px vid 375 och 40 px vid 430. Fixture och exakta screenshots finns i `docs/design/evidence/vision-rev02/r02-2/`; handoff är inte oberoende QA- eller Reviewer-PASS.
+
+Migration, RLS, retention, scheduler och cross-session midnight-probe är `NOT TESTABLE`: Supabase CLI saknas och Docker-daemonen är inte åtkomlig. `supabase/tests/daily-activities.sql` innehåller syntetiskt single-session-prov samt manual för tvåsessionstest när en disposable lokal Supabase-miljö finns; inget sådant runtime-resultat hävdas. Köstatus `implementing → qa`; R02-3 ligger kvar planerad tills R02-2 har stabil QA-/Reviewer-checkpoint och R02-3:s exakta plan har godkänts.
+
+### VISION-R02-2 v8 — oberoende QA blockerad
+
+Eriks nya Hem-direktiv gäller inom den redan godkända rev02-beställningen. Oberoende QA lämnade **FAIL** för v8: SQL-triggern avvisar träningsversioner med blandade ras mål trots minst ett matchande mål; befintliga Home-reviewbilder placerar destinationskort under första vyn och upprepar “Ta bort” på rader. Fullt underlag i `docs/design/evidence/vision-rev02/r02-2/QA-REPORT.md`. Queue gick `qa → blocked`; R02-3 förblir planned. Handoffens tidigare gröna kommandon är inte omtolkade till runtime-verifiering.
+
+Plan v2 för separat `HOME-REV02-VISUAL-01` fick **CHANGES** av Architect och Critic. V9 fick också CHANGES för användning av visionsskärmbild som UI-asset, saknad rutin-detaljhandling och otydlig banner-/viewport-mätning. V10 löser detta med genererad fixturebild, separat rutinåtgärd, utanförliggande banner, opt-in-varianter, exakt viewport/verifiering och queue-synk före unblock. Slutgranskningar: Architect **APPROVE**, Critic **PROCEED**, Security **APPROVE** för SQL-predikat/regressioner; underlag i `docs/tasks/dev/vision-rev02-r02-2-v10-reviews.md`. Ingen appkod är ännu ändrad; queue-posten ska synkas till v10 före `blocked → planned`.
+
+`git push origin design/vision-rev02` försöktes efter Eriks uttryckliga push-besked. Nätverksåtkomst nådde GitHub men saknad HTTPS-inloggning stoppade pushen (`could not read Username for 'https://github.com'`). Commit `38e7b90` och dagens reviewplan/checkpoint ligger lokalt; uppdaterat bundle skapas efter verifierad korrigeringscheckpoint om autentisering fortsatt saknas.
+
+### VISION-R02-2 v11 Home checkpoint — 2026-10-13
+
+Home v11 är implementerad med rund generisk AI-hundbild, synlig `Standardbild`-etikett, fast AI-standardbildsmarkering i syntetisk reviewram och mätbar veckoremsa ovanpå porträttet. Färska visuella kontroller testar week-glyph-kontrast för veckorna 8–14 vid 375/430 och 140 % text.
+
+- Exakt plan: `docs/tasks/dev/vision-rev02-r02-2-v11.md`; planreviews: `docs/tasks/dev/vision-rev02-r02-2-v11-reviews.md`.
+- Handoff, oberoende QA och Reviewer PASS: `docs/design/evidence/vision-rev02/r02-2/correction-v11/`.
+- Verifiering: `pnpm check` 45/45, 36 lintvarningar/0 fel; public iOS-export PASS; public/review RN Web-byggen och browser-evidens PASS; `git diff --check` och `python tools/dev_flow.py validate` PASS.
+- QA korrigerade den föregående SQL-fixturebedömningen: hund B är 80 dagar gammal och v5:s åldersspann är 0–20 veckor, så breed-target-regressionen är åldersgiltig.
+- Supabase SQL/RLS, retention job/scheduler, lock-wait-over-midnight och native Dynamic Type/VoiceOver är NOT TESTABLE här. Hundporträttet är genererad bildkonst, inte ett verkligt personligt fotografi.
+
+Nästa: commit/push den verifierade checkpointen på `design/vision-rev02`, därefter exaktspecificerad och Architect/Critic-granskad plan för visuell migrering av resterande befintliga MVP- och stödskärmar. Migrera en skärm/resa åt gången; bevara befintliga produktkontrakt och panelunika färger.
+
+### R02-3 — planreview för övriga skärmar
+
+Efter Hem-checkpointen `96e6882` har Erik bett att resten av de befintliga sidorna får samma rev02-riktning. Exakt scope, vyordning, filscope, beteenden och acceptans finns i `docs/tasks/dev/vision-rev02-r02-3.md` och `docs/plans/VISION-REV02-REMAINING-UX-SPEC.md`. Kön är uppdaterad men `VISION-R02-3` står kvar `planned` tills Architect APPROVE och Critic PROCEED är dokumenterade. Första implementationen blir Logg; därefter Träning, Kunskap och stödskärmarna en slice i taget. Inga nya rev02-funktioner eller datakontrakt ingår. Ingen R02-3-källkod är ändrad ännu.
+
+Push av `96e6882` är blockerad av saknad GitHub-autentisering i Codex-miljön. Full bundle finns i `/workspace/vision-rev02-96e6882.bundle` för senare push från användarens autentiserade miljö.
+
+### R02-3 planreview v6 — datumresa och pagineringsfixture
+
+Architects v2- och v3-reviews hittade att Logg saknade faktisk datumbläddring trots designkontraktets datumrad, att previewserver-kommandon inte var exakta och att persondata-renderingar behöver Security-grind. Architect godkände v4 efter att datumraden blev lokal dagsfiltrering över befintliga `occurred_at`-värden och befintlig paginering; snabbval från äldre dag återgår till idag och behåller ett tryck. Critic hittade sedan att befintlig visuell provyta inte kan nå sidgräns-/fel-/återförsökstillstånd; v5 lade till en pagineringsfixture, och Architect krävde dessutom synlig syntetisk banner samt uttryckligt lokal minnesstyrning utan tjänsteanrop/datawrites. v6 begränsar dessa ändringar till `tools/visual-check/app.tsx`. Sidladdning når slutet av vald dag: fortsätt tills äldsta inlästa händelse ligger på en lokaldag strikt tidigare än vald dag, eller historiken är uttömd, annars får listan inte visas som komplett/tom. Ingen ny tabell, tjänst, dataadapter eller `Idag/Översikt` utan fungerande Insikter-destination tillkommer. Serverportar och Security-review är angivna i plan/kö.
+
+Critic PROCEED finns för v2/v5 och Architect APPROVE för v4. Exakt v6 behöver ny Architect/Critic-review innan implementation. Inga appkällor är ändrade. Automatiska testkommandon läggs inte till eller körs enligt arbetsinstruktionen; planen använder typecheck/lint, kö-/diffkontroller och manuell public/review-rendering. Kön står kvar `planned` tills exakt v6 har godkänts.
+
+### VISION-R02-3A Logg checkpoint och R02-3B Träning handoff — 2026-10-13
+
+R02-3A Logg har stängts efter QA:s slutliga markörkontroll: unikt namngivna bilder för pending/failed/unsure/sidfel visar granskningsmarkeringen. Reviewer och Security PASS; §14 fortsätter ärligt att markera Nej för hela panel 5 där befintliga funktioner saknas. Underlag: `docs/design/evidence/vision-rev02/r02-3a/RENDER-REPORT.md`.
+
+R02-3B Träning är implementerad enligt godkänd v6.1: vänsterställd rubrik, kapselsegmenten Rekommenderat/Alla övningar/Mina, befintlig hundålder, bildkort i två kolumner, beskrivningar från befintlig programtext och ett liggande fortsättkort efter korten när bekräftad progress och nästa tillåtna steg finns. `Mina` i public följer bekräftade `completedStepIds`; reviewmarkeringar lever endast i lokal komponentstate och reviewbannern förblir synlig. `HeroCard`/`Tabs`-varianter är opt-in. Inga produktionsdata, skrivkontrakt eller träningsråd lades till. Kortbildens höjd sänktes efter manuell 375×667-rendering så fortsättkortet avslutas cirka 9 px före bottenmenyn.
+
+Public/review React Native Web-renderingar sparas i `docs/design/evidence/vision-rev02/r02-3b/` med §14-egenkontroll och redovisad Nej-avvikelse för exakt panelmatch. `pnpm typecheck`, `pnpm lint` (0 fel; 36 befintliga varningar), `git diff --check`, public/review builds och `python tools/dev_flow.py validate` PASS; manuell browserrendering gav inga sidfel. Inga tester lades till eller kördes. Oberoende QA, Reviewer och Security återstår, så queue är `qa` och R02-3C väntar på denna grind. Native rendering, Dynamic Type/VoiceOver, RLS och produktionsprogrammen är NOT TESTABLE här.
+
+
+### VISION-REV02 R02-4A–H — samlat implementeringshandoff, 2026-10-13
+
+Erik bad om en fortsättning till samtliga kvarvarande befintliga sidor. R02-4A–H har nu varsin UX-spec, avgränsad presentation, public/review-fixtures, bildbevis och §14-rapport:
+
+- Mer — `docs/design/evidence/vision-rev02/r02-4a/RENDER-REPORT.md`
+- Hälsa, vikt och utförd historik — `docs/design/evidence/vision-rev02/r02-4b/RENDER-REPORT.md`
+- Planerad hälsa — `docs/design/evidence/vision-rev02/r02-4c/RENDER-REPORT.md`
+- Tassla-pass — `docs/design/evidence/vision-rev02/r02-4d/RENDER-REPORT.md`
+- Hundprofil — `docs/design/evidence/vision-rev02/r02-4e/RENDER-REPORT.md`
+- Påminnelser — `docs/design/evidence/vision-rev02/r02-4f/RENDER-REPORT.md`
+- Konto/Beta — `docs/design/evidence/vision-rev02/r02-4g/RENDER-REPORT.md`
+- Inloggning/onboarding — `docs/design/evidence/vision-rev02/r02-4h/RENDER-REPORT.md`
+
+Ägarens QA-besked före dessa nya implementationer avsåg tidigare arbete genom R02-3C; ingen av R02-4A–H har därför märkts QA-godkänd. Samtliga väntar på ägar-QA och oberoende Reviewer/Security. Typkontroll, riktad ESLint, diffkontroll, kövalidering, public/review-byggen och manuella browser-renderingar passerade. Inga tester lades till eller kördes. Native UI, auth-provider, notisleverans, serverradering, backend/RLS och verkliga kontoåtgärder är NOT TESTABLE enligt respektive rapport. Inga commits eller pushar gjordes.
+
+Efter oberoende QA-fynd kompletterades 4C:s tomkort och pending/unknown/conflict-renderingar; 4D:s urvalssheet fångades med valrader; 4E:s läsprofil fick en 140 %-render; 4F:s 375×667-bilder togs om utan infomodal. För 4H lades 12 px avstånd efter raslistans retry-knapp och sparades Google-startens `google-opened`-render från mockad callback. 4A/4B:s korrigeringar och evidens bevarades. Typkontroll, riktad ESLint (0 fel; tre befintliga harness-varningar), public/review-byggen, diffcheck och kövalidering passerade. Inga tester kördes. Alla R02-4-slices står fortsatt `blocked` för ägar-QA och oberoende Reviewer/Security; detta är en dokumenterad checkpoint, inte ett godkännande.
+
+### R02-4A–H korrigeringsre-QA — 2026-10-13
+
+Separata read-only QA-agenter gav **PASS för de konkreta rättade punkterna** i 4A–H: fixturet öppnar alla fem Mer-destinationer; Hälsas retry stannar på Hälsa och visar planresultatet; 4C:s tom/pending/unknown/conflict-lägen och 4D:s urvalsblad har synliga renders; 4E/F/H:s saknade profil-, 375×667- och google-opened-bilder finns nu; 4G:s tidigare webb-PASS står kvar. Full rapport: `docs/design/evidence/vision-rev02/r02-4/QA-REPORT-2026-10-13.md`. Detta ersätter de tidigare evidensluckorna men är varken helskärmsacceptans eller owner QA. R02-4A–H fortsätter vara `blocked` i kön för owner QA och oberoende Reviewer/Security. Server/RLS och nativeintegrationer är fortsatt NOT TESTABLE.
+### VISION-R02-3 — planreview och Logg startad
+
+Plan v6 godkänd av Architect (**APPROVE**) och Critic (**PROCEED**) 2026-10-13; besluten sparade i `vision-rev02-r02-3-reviews.md`. Köposten VISION-R02-3 flyttad till `implementing`. Scope är endast R02-3A Logg enligt godkänd plan. Träning/Kunskap samt övriga stödskärmar väntar på Loggs QA, Reviewer, Security, §14 och checkpoint. Ingen appkod ändrad ännu.
+
+### VISION-R02-GESTURES v7 QA och v8-plan — 2026-10-13
+
+Oberoende QA gav v7 **FAIL**: Knowledge-detail och den specificerade checklist-lämna/återvända-lifecyclen fungerar statiskt, men ett tryck på den redan aktiva Kunskap-fliken rensar parent-spärren medan lokal artikel-/checklistdetalj finns kvar. Visual-check-fixturen har samma route-state edge. Browser/native-gester är **NOT TESTABLE**. Rapport: `docs/design/evidence/vision-rev02/gestures/QA-REPORT-v7.md`.
+
+Kön flyttades `qa → blocked → planned → ready → implementing → qa → review → blocked` efter Architect APPROVE, Critic PROCEED, statisk QA PASS och Reviewer PASS. Korrigeringen implementerar active-Kunskap no-op i detalj, reset av fokus/detail vid varje verklig exit eller re-entry via bottom-nav/sidgest samt bevarande av Hemmets direkta artikel-CTA. Typecheck, riktad lint (0 fel; tre befintliga harness-varningar), public/review builds, diffcheck och queue validation PASS. Inga tester kördes. Browser/native-gest och exakt `useEffect`-timing är **NOT TESTABLE**, därför står hela gesture-tasken blocked. QA-matris: `docs/design/evidence/vision-rev02/gestures/QA-REPORT-v8.md`; Reviewer PASS dokumenterad i `docs/tasks/dev/vision-rev02-gestures-v8.md`.
+
+### VISION-REV02 — preflight-fel rättade, 2026-10-13
+
+Commit-preflighten stoppades först av sju äldre testassertioner som inte speglade den staged koden: flyttad sign-out-varning, Home-detail-state, åldersenhet, utökad bläddringsbar veckoremsa, snapshot-ålder, uppdaterad text för planerad hälsa och full profil-preimage med `age_display_unit`. Befintliga testkontrakt uppdaterades. Tassla-passets snapshot visar nu `Kan inte beräknas` om ett redan sparat födelsedatum är ogiltigt, så exporten fortsätter och HTML-escaping gäller även felaktig data. Dubblettimporten i `ChecklistItem.tsx` slogs ihop.
+
+Slutlig `pnpm check`: app-/edge-typecheck PASS, ESLint 0 fel/0 varningar, 45/45 testfiler PASS. `TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false pnpm bundle:ios` exporterade iOS-bundlen; `git diff --check` och `python tools/dev_flow.py validate` PASS. Detta är lokal kod-/bundleverifiering, inte signerad iOS-build, Supabase migration/RLS eller native PDF-/tillgänglighetsprov.
+
+Arbetet fortsätter på `design/vision-rev02` från lokala `f918825`; commit `6313b2f` innehåller felrättningarna och rev02-paketet. GitHub-anslutningen hittade `19ffb85`, som låg tre commits på en parallell gren från gemensamma `9128cdd` medan vision-branchen hade sex egna commits. Merge `4c7052e` tar nu med `19ffb85` och dess granskade artikelkällor utan att skriva om publicerad historik. Konflikten i `docs/design-rules.md` löstes genom att behålla branchens fullständiga vision_rev02-regelverk. Nästa utvecklingsslice är `DOG-PROFILE-BREED-MIX`, fortsatt `blocked` tills en verifierad Wikidata CC0-export finns. Slice A är fortsatt blockerad för verklig DB/RLS och nativeverifiering; övriga R02-slices följer respektive QA-/reviewgrind.

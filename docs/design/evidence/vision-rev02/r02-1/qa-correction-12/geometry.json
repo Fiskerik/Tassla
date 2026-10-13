@@ -1,0 +1,82 @@
+[
+  {
+    "mode": "public",
+    "width": 375,
+    "last_tile": {
+      "x": 247.328125,
+      "y": 601.203125,
+      "width": 103.671875,
+      "height": 82
+    },
+    "tile_bottom": 683.203125,
+    "nav_top": 738.59375,
+    "clearance": 55.390625,
+    "banner_before_scroll": null,
+    "banner_after_scroll": null
+  },
+  {
+    "mode": "public",
+    "width": 430,
+    "last_tile": {
+      "x": 284,
+      "y": 637,
+      "width": 122,
+      "height": 82
+    },
+    "tile_bottom": 719,
+    "nav_top": 766.59375,
+    "clearance": 47.59375,
+    "banner_before_scroll": null,
+    "banner_after_scroll": null
+  },
+  {
+    "mode": "review",
+    "width": 375,
+    "last_tile": {
+      "x": 247.328125,
+      "y": 601.203125,
+      "width": 103.671875,
+      "height": 82
+    },
+    "tile_bottom": 683.203125,
+    "nav_top": 738.59375,
+    "clearance": 55.390625,
+    "banner_before_scroll": {
+      "x": 12,
+      "y": 2,
+      "width": 351,
+      "height": 28
+    },
+    "banner_after_scroll": {
+      "x": 12,
+      "y": 2,
+      "width": 351,
+      "height": 28
+    }
+  },
+  {
+    "mode": "review",
+    "width": 430,
+    "last_tile": {
+      "x": 284,
+      "y": 637,
+      "width": 122,
+      "height": 82
+    },
+    "tile_bottom": 719,
+    "nav_top": 766.59375,
+    "clearance": 47.59375,
+    "banner_before_scroll": {
+      "x": 12,
+      "y": 2,
+      "width": 406,
+      "height": 28
+    },
+    "banner_after_scroll": {
+      "x": 12,
+      "y": 2,
+      "width": 406,
+      "height": 28
+    }
+  }
+]

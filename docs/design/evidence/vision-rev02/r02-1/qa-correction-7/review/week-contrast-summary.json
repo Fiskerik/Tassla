@@ -1,0 +1,146 @@
+[
+  {
+    "width": 375,
+    "large_text_140": false,
+    "week_labels": [
+      {
+        "week": "8",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "9",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "10",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "12",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "13",
+        "min_adjacent_contrast": 5.7,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "14",
+        "min_adjacent_contrast": 5.7,
+        "dot_contrast": 1.21
+      }
+    ]
+  },
+  {
+    "width": 430,
+    "large_text_140": false,
+    "week_labels": [
+      {
+        "week": "8",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "9",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "10",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "12",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "13",
+        "min_adjacent_contrast": 5.7,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "14",
+        "min_adjacent_contrast": 5.7,
+        "dot_contrast": 1.21
+      }
+    ]
+  },
+  {
+    "width": 375,
+    "large_text_140": true,
+    "week_labels": [
+      {
+        "week": "8",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "9",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "10",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "12",
+        "min_adjacent_contrast": 3.73,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "13",
+        "min_adjacent_contrast": 5.7,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "14",
+        "min_adjacent_contrast": 5.7,
+        "dot_contrast": 1.21
+      }
+    ]
+  },
+  {
+    "width": 430,
+    "large_text_140": true,
+    "week_labels": [
+      {
+        "week": "8",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "9",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "10",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "12",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "13",
+        "min_adjacent_contrast": 5.7,
+        "dot_contrast": 1.21
+      },
+      {
+        "week": "14",
+        "min_adjacent_contrast": 5.75,
+        "dot_contrast": 1.21
+      }
+    ]
+  }
+]

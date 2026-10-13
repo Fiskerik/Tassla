@@ -1,6 +1,8 @@
 # AGENTS.md – Tassla
 ## UI och design (obligatoriskt)
+Aktuell målbild är `vision_rev02.jpg`. Samlat regelverk: `docs/design-rules.md`; skärm-/komponent- och objektkontrakt länkas därifrån. Skärmkontrakt för panel 1–8 och stödskärmar: `docs/design/vision-rev02-screen-contracts.md`. Gemensam bygginstruktion: `docs/prompts/build-rev02-screens.md`; för Hem: `docs/prompts/build-home-rev02.md`. Skilj dokumenterat designmål från redan implementerad funktion och verifierad produktionsdata. Äldre rev01-hänvisningar i historiska paket är inte aktuell visuell auktoritet.
 Innan du planerar, skapar, ändrar eller granskar UI: läs `docs/design-rules.md` och följ den.
+Designreglernas §0–4 och §14 är bindande även när befintliga komponenter avviker: återanvändning ska utveckla dem mot vision_rev02. För Hem läses även `docs/plans/HOME-REV02-visual-ux-spec.md`. Verifiera komposition, färger, typografi, komponentformer, bildspråk och innehållstäthet separat; tidigare QA eller fungerande knappar ersätter inte ny visuell jämförelse efter datakoppling.
 Alla UI-ändringar granskas separat med skärmdump mot målbilden och ifylld checklista (avsnitt 14). Saknad visuell evidens är NOT TESTABLE, inte visuellt GODKÄND.
 Vid konflikt med äldre visuella råd gäller docs/design-rules.md inom godkänt scope. Aktuella mänskliga beslut, säkerhet, tillgänglighet och sanningsenlighet kvarstår.
 Vid varje ändring av skärmar, komponenter, flöden, tillstånd eller UI-texter: följ docs/design-rules.md (utseende) och använd skillen $tassla-consumer-ux (beteende, tillstånd, återkoppling). Vid konflikt mellan dem: stanna och fråga.

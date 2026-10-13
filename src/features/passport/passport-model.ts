@@ -1,5 +1,6 @@
 import type { OwnedDog } from '../../data/app-data';
 import type { HealthHistoryRecord, HealthWeightRecord } from '../../data/workspace-data';
+import { formatDogAge } from '../onboarding/dog';
 
 export const PASSPORT_HEALTH_ROW_LIMIT = 50;
 
@@ -12,7 +13,7 @@ export interface PassportSelection {
 export interface PassportSnapshot {
   readonly createdOn: string;
   readonly selected: PassportSelection;
-  readonly dog: Readonly<{ name: string; breed: string; birthDate: string }> | null;
+  readonly dog: Readonly<{ name: string; breed: string; birthDate: string; ageLabel: string }> | null;
   /** Local Tassla artwork used as a labelled fallback; never a user/dog photo. */
   readonly showIllustration: boolean;
   readonly latestWeight: Readonly<{ occurredOn: string; weightKg: number }> | null;
@@ -34,7 +35,12 @@ export function createPassportSnapshot(input: {
 }): PassportSnapshot {
   const selected = Object.freeze({ ...input.selection });
   const dog = input.selection.profile && input.breedName
-    ? Object.freeze({ name: input.dog.name, breed: input.breedName, birthDate: input.dog.birth_date })
+    ? Object.freeze({
+      name: input.dog.name,
+      breed: input.breedName,
+      birthDate: input.dog.birth_date,
+      ageLabel: formatPassportDogAge(input.dog.birth_date, input.createdOn, input.dog.age_display_unit ?? 'weeks'),
+    })
     : null;
   const latestWeight = input.selection.latestWeight
     ? [...input.weights]
@@ -63,6 +69,14 @@ export function createPassportSnapshot(input: {
   });
 }
 
+function formatPassportDogAge(birthDate: string, createdOn: string, unit: OwnedDog['age_display_unit']): string {
+  try {
+    return formatDogAge(birthDate, createdOn, unit);
+  } catch {
+    return 'Kan inte beräknas';
+  }
+}
+
 const TASSLA_ILLUSTRATION = '<svg class="tassla-illustration" viewBox="0 0 120 120" role="img" aria-label="Tassla-illustration"><circle cx="60" cy="60" r="54" fill="#E8F1EB"/><path d="M60 27c-14 0-25 11-25 25v5H20a8 8 0 0 0 0 16h15v10c0 14 11 25 25 25s25-11 25-25V73h15a8 8 0 0 0 0-16H85v-5c0-14-11-25-25-25Zm-9 25a9 9 0 1 1 18 0v5H51v-5Zm9 42a9 9 0 0 1-9-9V73h18v12a9 9 0 0 1-9 9Z" fill="#186A4D"/></svg>';
 
 export function escapePassportHtml(value: string): string {
@@ -81,7 +95,7 @@ export function renderPassportHtml(snapshot: PassportSnapshot): string {
   const sections: string[] = [];
   if (snapshot.selected.profile) {
     sections.push(`<section><h2>Hund</h2>${snapshot.dog
-      ? `${snapshot.showIllustration ? `<div class="illustration-wrap">${TASSLA_ILLUSTRATION}<span>Tassla-illustration</span></div>` : ''}<dl><dt>Namn</dt><dd>${escapePassportHtml(snapshot.dog.name)}</dd><dt>Ras</dt><dd>${escapePassportHtml(snapshot.dog.breed)}</dd><dt>Född</dt><dd>${escapePassportHtml(snapshot.dog.birthDate)}</dd></dl>`
+      ? `${snapshot.showIllustration ? `<div class="illustration-wrap">${TASSLA_ILLUSTRATION}<span>Tassla-illustration</span></div>` : ''}<dl><dt>Namn</dt><dd>${escapePassportHtml(snapshot.dog.name)}</dd><dt>Ras</dt><dd>${escapePassportHtml(snapshot.dog.breed)}</dd><dt>Ålder</dt><dd>${escapePassportHtml(snapshot.dog.ageLabel)}</dd><dt>Född</dt><dd>${escapePassportHtml(snapshot.dog.birthDate)}</dd></dl>`
       : '<p>Hunduppgifter saknas.</p>'}</section>`);
   }
   if (snapshot.selected.latestWeight) {

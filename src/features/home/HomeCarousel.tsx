@@ -59,7 +59,7 @@ function buildCards({ dog, plans, selectedDatePlans, content, contentState, next
 }): CarouselCard[] {
   const article = contentState === 'ready' ? content[0] : undefined;
   const reviewTraining = contentState === 'ready' ? content.find((item) => item.contentType === 'training_program' && item.id.startsWith('review-v1:training:')) : undefined;
-  const ageLabel = formatDogAge(dog.birth_date, localDate());
+  const ageLabel = formatDogAge(dog.birth_date, localDate(), dog.age_display_unit);
   const upcomingPlan = plans.filter((plan) => plan.due_on >= localDate()).sort((left, right) => left.due_on.localeCompare(right.due_on))[0];
   const cards: CarouselCard[] = [];
   if (nextStep) cards.push({ key: 'training', title: nextStep, meta: `${ageLabel} · ${reviewTraining ? 'Tillfälligt exempel – innehållet är inte sakgranskat' : 'Nästa steg i valpprogrammet'}`, image: require('../../../assets/images/puppy-training.png'), onPress: () => reviewTraining ? onOpenContent(reviewTraining.id) : onGo('training') });

@@ -1,0 +1,148 @@
+{
+  "mode": "review",
+  "measurements": [
+    {
+      "mode": "review",
+      "width": 375,
+      "height": 844,
+      "large_text": false,
+      "nav": {
+        "x": 0,
+        "y": 785,
+        "width": 375,
+        "height": 59
+      },
+      "tiles": {
+        "Öppna Logga": {
+          "x": 24,
+          "y": 762,
+          "width": 103.65625,
+          "height": 74
+        },
+        "Öppna Träna": {
+          "x": 135.65625,
+          "y": 762,
+          "width": 103.671875,
+          "height": 74
+        },
+        "Öppna Kunskap": {
+          "x": 247.328125,
+          "y": 762,
+          "width": 103.671875,
+          "height": 74
+        }
+      },
+      "all_clearance_16": false
+    },
+    {
+      "mode": "review",
+      "width": 430,
+      "height": 844,
+      "large_text": false,
+      "nav": {
+        "x": 0,
+        "y": 785,
+        "width": 430,
+        "height": 59
+      },
+      "tiles": {
+        "Öppna Logga": {
+          "x": 24,
+          "y": 762,
+          "width": 122,
+          "height": 74
+        },
+        "Öppna Träna": {
+          "x": 154,
+          "y": 762,
+          "width": 122,
+          "height": 74
+        },
+        "Öppna Kunskap": {
+          "x": 284,
+          "y": 762,
+          "width": 122,
+          "height": 74
+        }
+      },
+      "all_clearance_16": false
+    },
+    {
+      "mode": "review",
+      "width": 375,
+      "height": 844,
+      "large_text": true,
+      "nav": {
+        "x": 0,
+        "y": 738.59375,
+        "width": 375,
+        "height": 105.40625
+      },
+      "tiles": {
+        "Öppna Logga": {
+          "x": 24,
+          "y": 947.609375,
+          "width": 103.65625,
+          "height": 82
+        },
+        "Öppna Träna": {
+          "x": 135.65625,
+          "y": 947.609375,
+          "width": 103.671875,
+          "height": 82
+        },
+        "Öppna Kunskap": {
+          "x": 247.328125,
+          "y": 947.609375,
+          "width": 103.671875,
+          "height": 82
+        }
+      },
+      "all_clearance_16": false
+    },
+    {
+      "mode": "review",
+      "width": 430,
+      "height": 844,
+      "large_text": true,
+      "nav": {
+        "x": 0,
+        "y": 766.59375,
+        "width": 430,
+        "height": 77.40625
+      },
+      "tiles": {
+        "Öppna Logga": {
+          "x": 24,
+          "y": 860.40625,
+          "width": 122,
+          "height": 82
+        },
+        "Öppna Träna": {
+          "x": 154,
+          "y": 860.40625,
+          "width": 122,
+          "height": 82
+        },
+        "Öppna Kunskap": {
+          "x": 284,
+          "y": 860.40625,
+          "width": 122,
+          "height": 82
+        }
+      },
+      "all_clearance_16": false
+    }
+  ],
+  "checks": [
+    "initial 375: 5 review rows, 2/5, banner, three destination bounds captured",
+    "fixture checkbox toggles 2/5 -> 1/5 -> 2/5",
+    "review banner remains fixed after scrolling",
+    "initial 430: 5 review rows, 2/5, banner, three destination bounds captured",
+    "140% text and reduced motion render at 375; no horizontal overflow=True",
+    "140% text and reduced motion render at 430; no horizontal overflow=True",
+    "375x667 scroll reaches last tile and banner stays fixed",
+    "three destinations select expected main tab; More exposes Health and Tassla-pass"
+  ],
+  "pageErrors": []
+}
