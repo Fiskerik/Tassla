@@ -3,12 +3,12 @@ import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, Text, View 
 import { AppScreen } from '../../components/AppPrimitives';
 import { ComponentGalleryScreen } from '../../components/ui/ComponentGalleryScreen';
 import { tokens } from '../../theme/tokens';
-import type { Dog } from '../onboarding/dog';
+import { localDate, type Dog } from '../onboarding/dog';
 import { HealthScreen } from '../health/HealthScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
 import { DraftContentPreview, DRAFT_PREVIEW_ENABLED } from '../knowledge/DraftContentPreview';
 import { LogScreen } from '../puppy-log/LogScreen';
-import { addLogEvent, createLogEvent, createSampleLogEvents, updateLogEvent, deleteLogEvent, type LogEvent, type LogEventChanges, type LogEventType } from '../puppy-log/log-model';
+import { addLogEvent, createLogEvent, createSampleLogEvents, isCanonicalAccidentKinds, updateLogEvent, deleteLogEvent, type AccidentLogIntent, type LogEvent, type LogEventChanges, type LogEventType } from '../puppy-log/log-model';
 import { PassportScreen } from '../passport/PassportScreen';
 import { TrainingScreen } from '../training/TrainingScreen';
 import { completeNextStep, getCompletedStepIds, resetProgramProgress, TRAINING_PROGRAMS, type TrainingCompletion, type TrainingProgram } from '../training/training-model';
@@ -27,6 +27,7 @@ export function DevelopmentPreview() {
   const [reduceMotion, setReduceMotion] = useState(true);
   const [pageOpacity] = useState(() => new Animated.Value(1));
   const nextLogId = useRef(0);
+  const today = localDate();
 
   useEffect(() => {
     void AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => undefined);
@@ -50,14 +51,17 @@ export function DevelopmentPreview() {
     return () => pageOpacity.stopAnimation();
   }, [pageOpacity, reduceMotion, screen]);
 
-  function addEvent(type: LogEventType) {
-    const now = new Date();
+  function addEvent(type: LogEventType, accidentIntent?: AccidentLogIntent) {
+    if (type === 'accident' && (!accidentIntent || !isCanonicalAccidentKinds(accidentIntent.accidentKinds))) return;
+    if (type !== 'accident' && accidentIntent) return;
+    const now = accidentIntent ? new Date(accidentIntent.occurredAt) : new Date();
     const event = createLogEvent({
-      id: `${dog.id}-local-${++nextLogId.current}`,
+      id: accidentIntent?.id ?? `${dog.id}-local-${++nextLogId.current}`,
       dogId: dog.id,
       type,
       occurredAt: now.toISOString(),
       origin: 'local-test',
+      accidentKinds: accidentIntent?.accidentKinds ?? null,
     }, now);
     setLogEvents((current) => addLogEvent(current, event));
   }
@@ -115,6 +119,7 @@ export function DevelopmentPreview() {
       page = (
         <PreviewHomeScreen
           dog={dog}
+          today={today}
           onEditProfile={() => setScreen('profile')}
           onOpenLog={() => setScreen('log')}
           onOpenTraining={() => setScreen('training')}

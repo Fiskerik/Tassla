@@ -27,6 +27,7 @@ test('dog-event history filters the supported everyday types and has determinist
     weight_kg: null,
     duration_minutes: 12,
     description: null,
+    accident_kinds: null,
   };
   const { client, requests } = localClient(({ method, url }) => {
     assert.equal(method, 'GET');
@@ -55,6 +56,7 @@ test('recovers an uncertain event update when the server returns an equivalent t
     occurred_at: '2026-10-04T10:00:00.000Z',
     duration_minutes: 15,
     description: 'kort runda',
+    accident_kinds: null,
   };
   const serverRow = {
     id: '55555555-5555-4555-8555-555555555555',
@@ -65,6 +67,7 @@ test('recovers an uncertain event update when the server returns an equivalent t
     weight_kg: null,
     duration_minutes: 15,
     description: 'kort runda',
+    accident_kinds: null,
   };
   const { client, requests } = localClient(async (request) => {
     if (request.method === 'PATCH') {
@@ -104,6 +107,7 @@ test('recovers an event insert after response loss by reading the same stable UU
         occurred_at: '2026-10-04T10:00:00.000Z',
         duration_minutes: null,
         description: null,
+        accident_kinds: null,
       });
       const saved = { ...input, occurred_on: null, weight_kg: null };
       storedEvents.set(input.id, saved);
@@ -125,6 +129,7 @@ test('recovers an event insert after response loss by reading the same stable UU
       occurred_at: '2026-10-04T10:00:00.000Z',
       duration_minutes: null,
       description: null,
+      accident_kinds: null,
     });
 
     assert.equal(result.status, 'saved');
@@ -149,6 +154,7 @@ test('does not report an event as saved after a definite database rejection', as
       occurred_at: '2026-10-04T10:00:00.000Z',
       duration_minutes: null,
       description: null,
+      accident_kinds: null,
     });
 
     assert.deepEqual(result, { status: 'failed' });
@@ -182,6 +188,7 @@ test('marks a timed out event insert unknown and forwards the real SDK abort sig
       occurred_at: '2026-10-04T10:00:00.000Z',
       duration_minutes: 12,
       description: null,
+      accident_kinds: null,
     }, 15);
 
     assert.equal(result.status, 'unknown');

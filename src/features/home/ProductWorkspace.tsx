@@ -32,6 +32,7 @@ import {
   normalizeHealthHistoryDescription,
   normalizePlannedHealthDescription,
   insertDogEvent,
+  matchesDogEventOperation,
   insertHealthWeight,
   insertHealthHistory,
   insertPlannedHealth,
@@ -41,6 +42,7 @@ import {
   updateHealthHistory,
   updatePlannedHealth,
   type DogEventOperation,
+  type DogEventChanges,
   type DogEventRecord,
   type HealthWeightChanges,
   type HealthWeightOperation,
@@ -65,11 +67,11 @@ import {
   fetchDailyActivitySnapshot,
   removeRoutineFromDay,
   removeTrainingSelection,
+  replaceDailyRoutine,
   setRoutineDayCompletion,
-  updateDailyRoutineLabel,
   type DailyActivitySnapshot,
-  type DailyRoutine,
-  type DailyRoutineDay,
+  type DailyRoutineCreateInput,
+  type DailyRoutineDayDraft,
   type DailyTrainingSelection,
 } from './daily-activity-data';
 import {
@@ -86,7 +88,8 @@ import {
   type OwnedDogAttribution,
   type OwnedDogProfileChanges,
 } from '../../data/app-data';
-import { ageInWeeks, localDate } from '../onboarding/dog';
+import { localDate } from '../onboarding/dog';
+import { homeAgeInWeeks } from './home-today';
 import { HealthScreen } from '../health/HealthScreen';
 import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
 import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
@@ -100,7 +103,7 @@ import { activeMainTabDestination, isMainTabDestination, mainTabTransitionDirect
 import { BottomNav, MainSwipeNavigation } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
 import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
-import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
+import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isCanonicalAccidentKinds, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type AccidentKind, type AccidentLogIntent, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
 import { PassportScreen } from '../passport/PassportScreen';
 import { PublishedTrainingScreen } from '../training/PublishedTrainingScreen';
 import { useAuth } from '../account/AuthProvider';
@@ -120,7 +123,7 @@ const reviewContentEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === '
 type ProductPage = 'home' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings' | 'account-settings' | 'beta-info';
 type PendingLogMutation =
   | { kind: 'insert'; operation: DogEventOperation; lifetime: string }
-  | { kind: 'update'; mutationId: string; id: string; type: LogEventType; occurredAt: string; changes: { event_type: LogEventType; occurred_at: string; duration_minutes: number | null; description: string | null }; lifetime: string }
+  | { kind: 'update'; mutationId: string; id: string; type: LogEventType; occurredAt: string; changes: DogEventChanges; lifetime: string }
   | { kind: 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; lifetime: string };
 type PendingHealthMutation =
   | { kind: 'insert'; operation: HealthWeightOperation }
@@ -338,8 +341,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const previousProfileLifetime = useRef('');
   const contentGeneration = useRef(0);
   const trainingGeneration = useRef(0);
-  const age = ageInWeeks(dog.birth_date, localDate());
-  const currentSelectionKey = `${dog.id}:${dog.breed_id}:${age}`;
+  const homeToday = localDate();
+  // An unknown date has no age-based content selection and must not crash Home.
+  const age = homeAgeInWeeks(dog.birth_date, homeToday);
+  const currentSelectionKey = `${dog.id}:${dog.breed_id}:${age ?? 'unknown-age'}`;
   const dailyTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const validDailyTimeZone = isValidIanaTimeZone(dailyTimeZone);
   const dailyDateKey = validDailyTimeZone ? localDateKeyAt(dailyClock, dailyTimeZone) : null;
@@ -504,7 +509,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     setDailyStateLifetime(lifetime);
     const [trainingResult, dailyResult] = await Promise.allSettled([
       fetchTrainingWorkspace(client, dog, age, undefined, signal),
-      fetchDailyActivitySnapshot(client, dog.id, dailyDateKey, signal),
+      fetchDailyActivitySnapshot(client, dog.id, dailyDateKey, dailyTimeZone, signal),
     ]);
     if (!mounted.current || signal?.aborted || generation !== dailyGeneration.current
       || trainingRevision !== trainingGeneration.current || dailyLifetime.current !== lifetime
@@ -536,7 +541,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     setDailyState('error');
     setDailyStateLifetime(lifetime);
     return false;
-  }, [age, client, currentDailyLifetime, currentSelectionKey, dailyDateKey, dog, validDailyTimeZone]);
+  }, [age, client, currentDailyLifetime, currentSelectionKey, dailyDateKey, dailyTimeZone, dog, validDailyTimeZone]);
 
   useEffect(() => {
     const ownerId = session?.user.id;
@@ -1073,15 +1078,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
-  function addEvent(type: LogEventType) {
+  function addEvent(type: LogEventType, accidentIntent?: AccidentLogIntent) {
     if (!canStartLogMutation(Boolean(pendingLogMutation.current), Boolean(logMutationFlight.current))) return;
+    if (type === 'accident' && (!accidentIntent || !isCanonicalAccidentKinds(accidentIntent.accidentKinds))) return;
+    if (type !== 'accident' && accidentIntent) return;
     const operation: DogEventOperation = {
-      id: ExpoCrypto.randomUUID(),
+      id: accidentIntent?.id ?? ExpoCrypto.randomUUID(),
       dog_id: dog.id,
       event_type: type,
-      occurred_at: new Date().toISOString(),
+      occurred_at: accidentIntent?.occurredAt ?? new Date().toISOString(),
       duration_minutes: null,
       description: null,
+      accident_kinds: type === 'accident' ? accidentIntent?.accidentKinds ?? null : null,
     };
     const mutation: PendingLogMutation = { kind: 'insert', operation, lifetime: logLifetime.current };
     pendingLogMutation.current = mutation;
@@ -1094,6 +1102,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     if (!previous) return false;
     const type = changes.type ?? previous.event_type;
     const occurredAt = changes.occurredAt ?? previous.occurred_at;
+    const accidentKinds = type !== 'accident' ? null
+      : changes.accidentKinds !== undefined ? changes.accidentKinds === null ? null : [...changes.accidentKinds]
+        : previous.event_type === 'accident' ? previous.accident_kinds : ['pee'] as AccidentKind[];
+    if (type === 'accident' && (accidentKinds === null
+      ? previous.event_type !== 'accident' || previous.accident_kinds !== null
+      : !isCanonicalAccidentKinds(accidentKinds))) return false;
     const mutation: PendingLogMutation = {
       kind: 'update', mutationId: ExpoCrypto.randomUUID(), id, type, occurredAt,
       changes: {
@@ -1101,6 +1115,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         occurred_at: occurredAt,
         duration_minutes: type === 'sleep' || type === 'walk' ? previous.duration_minutes : null,
         description: changes.note?.trim() || null,
+        accident_kinds: accidentKinds,
       },
       lifetime: logLifetime.current,
     };
@@ -1143,7 +1158,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       setLogBusy(true);
       setQuickLogMutation(toQuickLogMutationView(mutation, 'pending'));
       try {
-        const retryCheck = await checkInsertRetryOperation(mutation.operation, (id) => fetchDogEventById(client, dog.id, id));
+        const retryCheck = await checkInsertRetryOperation(mutation.operation, async (id) => {
+          const found = await fetchDogEventById(client, dog.id, id);
+          return found && matchesDogEventOperation(found, mutation.operation) ? found : null;
+        });
         const found = retryCheck.found;
         if (!isCurrent()) return false;
         if (found) {
@@ -1863,20 +1881,20 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
-  async function runDailyMutation(key: string, operation: () => Promise<WriteOutcome<unknown>>, retry = false) {
+  async function runDailyMutation<T>(key: string, operation: () => Promise<WriteOutcome<T>>, retry = false): Promise<WriteOutcome<T> | undefined> {
     const lifetime = currentDailyLifetime;
-    if (!dailyDateKey || !validDailyTimeZone || dailyMutationInFlight.current) return;
+    if (!dailyDateKey || !validDailyTimeZone || dailyMutationInFlight.current) return undefined;
     if (pendingDailyRetry.current && pendingDailyRetry.current.lifetime === lifetime && !retry) {
       setDailyMessage('Kontrollera den föregående ändringen innan du gör en ny.');
       setDailyMessageError(true);
-      return;
+      return undefined;
     }
     dailyMutationInFlight.current = true;
     setDailyBusyKey(key);
     setDailyMessageKey(key);
     setDailyMessage('');
     setDailyMessageError(false);
-    let outcome: WriteOutcome<unknown>;
+    let outcome: WriteOutcome<T>;
     try {
       outcome = await operation();
     } catch {
@@ -1907,6 +1925,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
     dailyMutationInFlight.current = false;
     if (mounted.current) setDailyBusyKey(null);
+    return outcome;
   }
 
   function retryDailyMutation() {
@@ -2085,6 +2104,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   function renderPage() {
     if (page === 'home') return <HomeScreen
       dog={dog}
+      today={homeToday}
       breed={breeds.find((breed) => breed.id === dog.breed_id)?.name ?? ''}
       events={displayEvents}
       healthHistory={healthHistory}
@@ -2102,27 +2122,34 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       dailyScopeKey={currentDailyLifetime}
       dailyActivities={dailyActivities}
       routineTemplates={dailySnapshotForView?.routines ?? []}
+      routineDaySkips={dailySnapshotForView?.routineDaySkips ?? []}
       dailyTrainingOptions={dailyTrainingOptions}
       dailyMutationBusy={Boolean(dailyBusyKey)}
       dailyMutationKey={dailyMessageKey}
       dailyMutationMessage={dailyMessage}
       dailyMutationError={dailyMessageError}
       onRetryDaily={() => { void reloadDailyActivity(); }}
-      onCreateRoutine={(label) => {
-        const row: DailyRoutine = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, label: label.trim() };
-        void runDailyMutation('create-routine', () => createDailyRoutine(client, row));
+      onCreateRoutine={(input: DailyRoutineCreateInput) => {
+        const row = { ...input, dog_id: dog.id };
+        return runDailyMutation(`create-routine:${row.id}`, () => createDailyRoutine(client, row, dailyTimeZone));
       }}
-      onUpdateRoutine={(routine, label) => {
-        void runDailyMutation(`update-routine:${routine.id}`, () => updateDailyRoutineLabel(client, dog.id, routine.id, routine.label, label));
+      onUpdateRoutine={(routine, label, checklist, repeat) => {
+        return runDailyMutation(`update-routine:${routine.id}`, () => replaceDailyRoutine(client, routine, label, checklist, repeat, dailyTimeZone));
       }}
-      onDeleteRoutine={(routine) => { void runDailyMutation(`delete-routine:${routine.id}`, () => deleteDailyRoutine(client, routine)); }}
+      onDeleteRoutine={(routine) => runDailyMutation(`delete-routine:${routine.id}`, () => deleteDailyRoutine(client, routine))}
       onAddRoutineToDay={(routine) => {
         if (!dailyDateKey) return;
-        const row: DailyRoutineDay = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, routine_id: routine.id, date_key: dailyDateKey, time_zone: dailyTimeZone, completed_at: null };
-        void runDailyMutation(`select-routine:${routine.id}`, () => addRoutineToDay(client, row));
+        const skipped = dailySnapshotForView?.routineDaySkips.find((row) => row.routine_id === routine.id) ?? null;
+        const row: DailyRoutineDayDraft = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, routine_id: routine.id,
+          date_key: dailyDateKey, time_zone: dailyTimeZone, routine_label_snapshot: routine.label, checklist_snapshot: routine.checklist };
+        const mutationId = ExpoCrypto.randomUUID();
+        void runDailyMutation(`select-routine:${routine.id}`, () => addRoutineToDay(client, row, skipped, mutationId));
       }}
-      onRemoveRoutineFromDay={(row) => { void runDailyMutation(`remove-routine:${row.id}`, () => removeRoutineFromDay(client, row)); }}
-      onSetRoutineCompletion={(row, completed) => { void runDailyMutation(`complete-routine:${row.id}`, () => setRoutineDayCompletion(client, row, completed)); }}
+      onRemoveRoutineFromDay={(row, routine) => {
+        const mutationId = ExpoCrypto.randomUUID();
+        void runDailyMutation(`remove-routine:${row.id}`, () => removeRoutineFromDay(client, row, routine, mutationId));
+      }}
+      onSetRoutineCompletion={(row, itemId, completed) => { void runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed)); }}
       onAddTrainingToDay={(option) => {
         if (!dailyDateKey) return;
         const row: DailyTrainingSelection = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, program_version_id: option.versionId, step_id: option.stepId, date_key: dailyDateKey, time_zone: dailyTimeZone };
@@ -2317,7 +2344,7 @@ function reminderStatusSummary(result: ReminderReconcileResult | null, preferenc
 }
 
 function toLogEvent(row: DogEventRecord): LogEvent {
-  return { id: row.id, dogId: row.dog_id, type: row.event_type, occurredAt: row.occurred_at, note: row.description, origin: 'local-test' };
+  return { id: row.id, dogId: row.dog_id, type: row.event_type, occurredAt: row.occurred_at, note: row.description, origin: 'local-test', accidentKinds: row.accident_kinds };
 }
 
 function toQuickLogMutationView(mutation: PendingLogMutation, status: QuickLogMutationView['status']): QuickLogMutationView {

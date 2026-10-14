@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import * as ExpoCrypto from 'expo-crypto';
 import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { BottomSheet, Button, Card, Dialog, FirstUseTip, HorizontalGestureRegion, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast, useFirstUseTip } from '../../components/ui';
+import { BottomSheet, Button, Card, CheckboxCard, Dialog, FirstUseTip, HorizontalGestureRegion, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast, useFirstUseTip } from '../../components/ui';
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
-import { decideQuickLogPress, hasRecentCategoryLog, localDateTimeParts, LOG_ENTRY_TYPES, LOG_EVENT_LABELS, parseLocalDateTime, summarizePottyPatterns, type LogEvent, type LogEventChanges, type LogEventType } from './log-model';
+import { canonicalAccidentKinds, decideQuickLogPress, hasRecentCategoryLog, isCanonicalAccidentKinds, localDateTimeParts, LOG_ENTRY_TYPES, LOG_EVENT_LABELS, parseLocalDateTime, summarizePottyPatterns, type AccidentKind, type AccidentLogIntent, type LogEvent, type LogEventChanges, type LogEventType } from './log-model';
 import { loadQuickLogLayout, saveQuickLogLayout } from './quick-log-layout-storage';
 import { DEFAULT_QUICK_LOG_LAYOUT, moveQuickLogType, type QuickLogLayout, type QuickLogLayoutType } from './quick-log-layout';
 
@@ -13,7 +14,7 @@ export type QuickLogMutationView = { kind: 'add' | 'update' | 'delete' | 'undo';
 
 export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore }: {
   events: readonly LogEvent[];
-  onAdd: (type: LogEventType) => void;
+  onAdd: (type: LogEventType, intent?: AccidentLogIntent) => void;
   onUpdate?: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
   onDelete?: (id: string) => boolean | void | Promise<boolean | void>;
   mode?: 'preview' | 'cloud';
@@ -34,7 +35,9 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
 }) {
   const [moreVisible, setMoreVisible] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(true);
-  const [duplicate, setDuplicate] = useState<{ type: LogEventType; timestamp: number } | null>(null);
+  const [duplicate, setDuplicate] = useState<{ type: LogEventType; timestamp: number; accidentIntent?: AccidentLogIntent } | null>(null);
+  const [accidentDraft, setAccidentDraft] = useState<{ kinds: AccidentKind[]; error: string; submitting: boolean } | null>(null);
+  const accidentSubmitLocked = useRef(false);
   const lastSubmitAt = useRef<number | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dismissedMutationKey, setDismissedMutationKey] = useState<string | null>(null);
@@ -117,6 +120,13 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   }, [displayedEvents, loadingMore, loadError, loadMoreError, needsDatePage, onLoadMore, oldestLoadedEvent, selectedDate]);
 
   function selectType(type: LogEventType, timestamp: number, force = false) {
+    if (type === 'accident') {
+      if (disabled) return;
+      accidentSubmitLocked.current = false;
+      setAccidentDraft({ kinds: ['pee'], error: '', submitting: false });
+      setMoreVisible(false);
+      return;
+    }
     const recentDuplicate = hasRecentCategoryLog(events, type);
     const decision = decideQuickLogPress({
       blocked: busy || Boolean(mutation && mutation.status !== 'saved'),
@@ -137,6 +147,67 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     if (selectedDate !== todayDate) setSelectedDate(todayDate);
     firstUseTip.dismiss();
     onAdd(type);
+  }
+
+  function closeAccidentSelector() {
+    if (accidentDraft?.submitting && duplicate?.accidentIntent) {
+      accidentSubmitLocked.current = false;
+      setAccidentDraft((current) => current ? { ...current, submitting: false } : null);
+      setDuplicate(null);
+      return;
+    }
+    if (accidentDraft?.submitting) return;
+    accidentSubmitLocked.current = false;
+    setAccidentDraft(null);
+  }
+
+  function submitAccidentIntent(intent: AccidentLogIntent, timestamp: number) {
+    lastSubmitAt.current = timestamp;
+    setDuplicate(null);
+    setAccidentDraft(null);
+    if (selectedDate !== todayDate) setSelectedDate(todayDate);
+    firstUseTip.dismiss();
+    onAdd('accident', intent);
+  }
+
+  function submitAccidentDraft() {
+    if (!accidentDraft || disabled || accidentSubmitLocked.current) return;
+    const accidentKinds = canonicalAccidentKinds(accidentDraft.kinds);
+    if (!isCanonicalAccidentKinds(accidentKinds)) {
+      setAccidentDraft((current) => current ? { ...current, error: 'Välj minst Kiss eller Bajs för att spara olyckan.' } : null);
+      return;
+    }
+    accidentSubmitLocked.current = true;
+    const occurredAt = new Date().toISOString();
+    const intent: AccidentLogIntent = { id: ExpoCrypto.randomUUID(), occurredAt, accidentKinds };
+    const timestamp = Date.parse(occurredAt);
+    const decision = decideQuickLogPress({
+      blocked: Boolean(mutation && mutation.status !== 'saved'),
+      force: false,
+      lastSubmitAt: lastSubmitAt.current,
+      timestamp,
+      recentDuplicate: hasRecentCategoryLog(events, 'accident', timestamp),
+    });
+    if (decision === 'blocked') {
+      accidentSubmitLocked.current = false;
+      return;
+    }
+    if (decision === 'confirm-duplicate') {
+      setAccidentDraft((current) => current ? { ...current, submitting: true } : null);
+      setDuplicate({ type: 'accident', timestamp, accidentIntent: intent });
+      return;
+    }
+    submitAccidentIntent(intent, timestamp);
+  }
+
+  function toggleAccidentKind(kind: AccidentKind, checked: boolean) {
+    setAccidentDraft((current) => {
+      if (!current || current.submitting) return current;
+      const kinds = canonicalAccidentKinds(checked
+        ? [...current.kinds, kind]
+        : current.kinds.filter((value) => value !== kind));
+      return { ...current, kinds, error: kinds.length > 0 ? '' : 'Välj minst Kiss eller Bajs för att spara olyckan.' };
+    });
   }
 
   function toggleMore() {
@@ -244,6 +315,19 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       {!layoutEditing && <View style={styles.moreRow}><QuickLogTile subtle label="Fler" accessibilityLabel={moreVisible ? 'Dölj fler loggtyper' : 'Visa fler loggtyper'} accessibilityHint="Håll inne för att ändra snabbvalens layout" icon={<View style={styles.moreIcon}><Ionicons name={moreVisible ? 'close-outline' : 'grid-outline'} size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></View>} disabled={disabled} onLongPress={() => { firstUseTip.dismiss(); startLayoutEdit(); }} onPress={() => { firstUseTip.dismiss(); toggleMore(); }} /></View>}
       {!layoutEditing && moreVisible ? <View style={styles.grid} accessibilityLabel="Fler loggtyper">{renderRows(layout.more)}</View> : null}
 
+      {accidentDraft ? <BottomSheet visible={!duplicate?.accidentIntent} title="Logga olycka" onRequestClose={closeAccidentSelector}>
+        <View style={styles.accidentTypeGroup}>
+          <Text accessibilityRole="header" accessibilityLabel="Vad hände?" style={styles.fieldTitle}>Vad hände?</Text>
+          <Text style={styles.accidentHelp}>Välj Kiss, Bajs eller båda så räknas olyckan i dina mönster.</Text>
+          <CheckboxCard label="Kiss" checked={accidentDraft.kinds.includes('pee')} disabled={accidentDraft.submitting} onChange={(checked) => toggleAccidentKind('pee', checked)} />
+          <CheckboxCard label="Bajs" checked={accidentDraft.kinds.includes('poop')} disabled={accidentDraft.submitting} onChange={(checked) => toggleAccidentKind('poop', checked)} />
+        </View>
+        {accidentDraft.error ? <MessageCard tone="error">{accidentDraft.error}</MessageCard> : null}
+        <View style={styles.accidentActions}>
+          <View style={styles.accidentAction}><Button variant="secondary" label="Avbryt" accessibilityLabel="Avbryt olycksloggning" disabled={accidentDraft.submitting} onPress={closeAccidentSelector} /></View>
+          <View style={styles.accidentAction}><Button label="Spara olycka" accessibilityLabel={accidentDraft.submitting ? 'Sparar olycka' : 'Spara olycka'} disabled={accidentDraft.kinds.length === 0 || accidentDraft.submitting || disabled} loading={accidentDraft.submitting && !duplicate} onPress={submitAccidentDraft} /></View>
+        </View>
+      </BottomSheet> : null}
       {editingEvent ? <BottomSheet visible title="Ändra händelse" onRequestClose={() => { if (!editLocked) setEditingId(null); }}>
         <Toast visible={mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} onCancel={() => { firstUseTip.dismiss(); onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
         <Toast visible={mutation?.status === 'unsure'} tone="uncertain" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} />
@@ -279,7 +363,17 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       {!loadMoreError && dayReadComplete && hasMore ? <Button label={loadingMore ? 'Hämtar…' : 'Visa äldre poster'} accessibilityLabel={loadingMore ? 'Hämtar äldre poster' : 'Visa äldre poster'} disabled={loadingMore} loading={loadingMore} onPress={() => { firstUseTip.dismiss(); onLoadMore?.(); }} /> : null}
     </>}
 
-    <Dialog visible={duplicate !== null} title="Du har redan loggat det här. Lägga till ändå?" onRequestClose={() => setDuplicate(null)} onConfirm={() => { if (duplicate) selectType(duplicate.type, duplicate.timestamp, true); }} confirmLabel="Lägg till ändå" confirmVariant="primary"><View /></Dialog>
+    <Dialog visible={duplicate !== null} title="Du har redan loggat det här. Lägga till ändå?" onRequestClose={() => {
+      setDuplicate(null);
+      if (duplicate?.accidentIntent) {
+        accidentSubmitLocked.current = false;
+        setAccidentDraft((current) => current ? { ...current, submitting: false } : null);
+      }
+    }} onConfirm={() => {
+      if (!duplicate) return;
+      if (duplicate.accidentIntent) submitAccidentIntent(duplicate.accidentIntent, duplicate.timestamp);
+      else selectType(duplicate.type, duplicate.timestamp, true);
+    }} confirmLabel="Lägg till ändå" confirmVariant="primary"><View /></Dialog>
   </View>;
 }
 
@@ -332,6 +426,7 @@ function LogEventEditor({ event, disabled, onCancel, onSave, onDelete }: {
 }) {
   const initial = localDateTimeParts(event.occurredAt);
   const [type, setType] = useState(event.type);
+  const [accidentKinds, setAccidentKinds] = useState<AccidentKind[]>(event.accidentKinds ?? []);
   const [date, setDate] = useState(initial.date);
   const [time, setTime] = useState(initial.time);
   const [note, setNote] = useState(event.note ?? '');
@@ -339,16 +434,27 @@ function LogEventEditor({ event, disabled, onCancel, onSave, onDelete }: {
   const [saving, setSaving] = useState(false);
   const timestamp = parseLocalDateTime(date, time, new Date());
   const noteLength = Array.from(note).length;
-  const valid = Boolean(timestamp) && noteLength <= 500;
+  const legacyUnknownAccident = event.type === 'accident' && event.accidentKinds === null
+    && type === 'accident' && accidentKinds.length === 0;
+  const accidentKindsValid = type !== 'accident' || isCanonicalAccidentKinds(accidentKinds) || legacyUnknownAccident;
+  const valid = Boolean(timestamp) && noteLength <= 500 && accidentKindsValid;
+
+  function changeType(nextType: LogEventType) {
+    if (nextType === type) return;
+    setType(nextType);
+    if (nextType === 'accident') setAccidentKinds(['pee']);
+    else if (type === 'accident') setAccidentKinds([]);
+  }
 
   async function save() {
     if (saving || disabled) return;
     const occurredAt = parseLocalDateTime(date, time, new Date());
     if (!occurredAt) { setError('Ange ett giltigt datum och en tid som inte ligger i framtiden.'); return; }
     if (noteLength > 500) { setError('Anteckningen får innehålla högst 500 tecken.'); return; }
+    if (!accidentKindsValid) { setError('Välj minst Kiss eller Bajs för att spara olyckan.'); return; }
     setError('');
     setSaving(true);
-    try { if (await onSave({ type, occurredAt, note })) onCancel(); }
+    try { if (await onSave({ type, occurredAt, note, accidentKinds: type === 'accident' ? legacyUnknownAccident ? null : accidentKinds : null })) onCancel(); }
     finally { setSaving(false); }
   }
 
@@ -357,8 +463,17 @@ function LogEventEditor({ event, disabled, onCancel, onSave, onDelete }: {
     <Text style={styles.fieldTitle}>Typ</Text>
     <View style={styles.typeGrid}>{LOG_ENTRY_TYPES.map((option) => {
       const selected = type === option;
-      return <Pressable key={option} accessibilityRole="radio" accessibilityState={{ selected, disabled }} disabled={disabled} onPress={() => setType(option)} style={({ pressed }) => [styles.typeOption, selected && styles.selectedTypeOption, pressed && styles.pressed]}><Text style={[styles.typeOptionText, selected && styles.selectedTypeText]}>{LOG_EVENT_LABELS[option]}</Text></Pressable>;
+      return <Pressable key={option} accessibilityRole="radio" accessibilityState={{ selected, disabled }} disabled={disabled} onPress={() => changeType(option)} style={({ pressed }) => [styles.typeOption, selected && styles.selectedTypeOption, pressed && styles.pressed]}><Text style={[styles.typeOptionText, selected && styles.selectedTypeText]}>{LOG_EVENT_LABELS[option]}</Text></Pressable>;
     })}</View>
+    {type === 'accident' ? <View style={styles.accidentTypeGroup}>
+      <Text accessibilityRole="header" accessibilityLabel="Vad hände?" style={styles.fieldTitle}>Vad hände?</Text>
+      <Text style={styles.accidentHelp}>{legacyUnknownAccident
+        ? 'Typen saknas på den äldre posten. Lämna den okänd eller välj bara det du vet.'
+        : 'Välj Kiss, Bajs eller båda så räknas olyckan i dina mönster.'}</Text>
+      <CheckboxCard label="Kiss" checked={accidentKinds.includes('pee')} disabled={disabled} onChange={(checked) => setAccidentKinds((current) => canonicalAccidentKinds(checked ? [...current, 'pee'] : current.filter((kind) => kind !== 'pee')))} />
+      <CheckboxCard label="Bajs" checked={accidentKinds.includes('poop')} disabled={disabled} onChange={(checked) => setAccidentKinds((current) => canonicalAccidentKinds(checked ? [...current, 'poop'] : current.filter((kind) => kind !== 'poop')))} />
+      {accidentKinds.length === 0 && !legacyUnknownAccident ? <Text accessibilityLiveRegion="polite" style={styles.accidentValidation}>Välj minst Kiss eller Bajs för att spara olyckan.</Text> : null}
+    </View> : null}
     <View style={styles.dateTimeRow}>
       <View style={styles.dateField}><DatePickerField label="Datum" disabled={disabled} onChangeText={setDate} value={date} /></View>
       <View style={styles.timeField}><TimePickerField label="Tid" disabled={disabled} onChangeText={setTime} value={time} /></View>
@@ -382,8 +497,8 @@ function LogEventEditor({ event, disabled, onCancel, onSave, onDelete }: {
 }
 
 function formatInterval(minutes: number): string {
-  if (minutes < 120) return `var ${Math.round(minutes)} minuter`;
-  if (minutes < 36 * 60) return `var ${Math.round(minutes / 60)} timmar`;
+  if (minutes < 120) return `var ${Math.round(minutes)} minut`;
+  if (minutes < 36 * 60) return `var ${Math.round(minutes / 60)} timme`;
   const halfDays = Math.max(1, Math.round(minutes / (12 * 60)));
   return `var ${(halfDays / 2).toLocaleString('sv-SE')} dygn`;
 }
@@ -406,6 +521,10 @@ function formatSelectedDate(dateKey: string, today: string): string {
 
 const styles = StyleSheet.create({
   screen: { gap: tokens.spacing.xs }, pageTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.xs },
+  accidentTypeGroup: { gap: tokens.spacing.sm },
+  accidentHelp: { ...tokens.typography.body, color: tokens.colors.textSecondary },
+  accidentValidation: { ...tokens.typography.caption, color: tokens.colors.danger },
+  accidentActions: { flexDirection: 'row', gap: tokens.spacing.sm }, accidentAction: { flex: 1 },
   dateNavigator: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.xs, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface },
   dateButton: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full },
   datePressed: { backgroundColor: tokens.colors.selectedSurface },

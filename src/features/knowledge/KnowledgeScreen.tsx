@@ -40,7 +40,7 @@ export function KnowledgeScreen({
   onRetry?: () => void;
   client?: SupabaseClient;
   dogId?: string;
-  ageWeeks?: number;
+  ageWeeks?: number | null;
   sessionKey?: string;
   checklistPending?: PendingChecklistMemory | null;
   onChecklistPendingChange?: (state: PendingChecklistMemory | null) => void;
@@ -146,7 +146,7 @@ export function KnowledgeScreen({
         </View>
       </View> : null}
       {client && dogId ? <View style={{ display: tab === 'Checklistor' ? 'flex' : 'none' }}>
-        <PuppyChecklistScreen key={`${sessionKey}:${dogId}`} client={client} dogId={dogId} ageWeeks={ageWeeks ?? 0} active={tab === 'Checklistor'} pendingState={checklistPending} onPendingStateChange={onChecklistPendingChange} onDetailChange={setChecklistDetailOpen} onBack={() => changeTab('För dig')} registerInvalidate={(invalidate) => { checklistInvalidate.current = invalidate; }} />
+        <PuppyChecklistScreen key={`${sessionKey}:${dogId}`} client={client} dogId={dogId} ageWeeks={ageWeeks} active={tab === 'Checklistor'} pendingState={checklistPending} onPendingStateChange={onChecklistPendingChange} onDetailChange={setChecklistDetailOpen} onBack={() => changeTab('För dig')} registerInvalidate={(invalidate) => { checklistInvalidate.current = invalidate; }} />
       </View> : null}
     </View>
   );

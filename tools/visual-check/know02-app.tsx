@@ -15,6 +15,8 @@ const FIRST_DAYS = 'review-v1:first-days';
 const CUSTOM_ID = '00000000-0000-4000-8000-000000000002';
 const query = new URLSearchParams(location.search);
 const initialState = query.get('state') ?? 'ready';
+const ageWeeksQuery = query.get('ageWeeks');
+const ageWeeks = ageWeeksQuery === 'missing' ? null : ageWeeksQuery === null ? 10 : Number.isFinite(Number(ageWeeksQuery)) ? Number(ageWeeksQuery) : null;
 const reviewContentEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
 
 declare global {
@@ -133,7 +135,7 @@ function KnowledgeRoute({ pending, onPendingChange, sessionKey, dogId }: { pendi
   const contentState = initialState === 'empty' ? 'ready' : initialState === 'error' ? 'error' : initialState === 'loading' ? 'loading' : 'ready';
   return <AppScreen scrollKey="know02-knowledge" footer={<BottomNav active="knowledge" onChange={() => undefined} />}>
     <KnowledgeScreen onBack={() => undefined} items={items} contentState={contentState} focusedContentId={focusedContentId}
-      client={client as never} dogId={dogId} ageWeeks={Number(query.get('ageWeeks') ?? 10)} sessionKey={sessionKey}
+      client={client as never} dogId={dogId} ageWeeks={ageWeeks} sessionKey={sessionKey}
       checklistPending={pending} onChecklistPendingChange={onPendingChange} />
   </AppScreen>;
 }

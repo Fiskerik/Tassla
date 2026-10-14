@@ -35,7 +35,7 @@ test('quick log has truthful loading, empty, failure, mutation and confirmed und
   assert.match(screen, /onUndo=\{mutation\?\.status === 'saved' && mutation\.kind === 'add'[\s\S]*?onUndo\?\.\(mutation\.id\)/);
   assert.match(workspace, /setQuickLogMutation\(toQuickLogMutationView\(mutation, 'saved'\)\)/);
   assert.match(workspace, /pendingLogMutation\.current = mutation/);
-  assert.match(workspace, /checkInsertRetryOperation\(mutation\.operation, \(id\) => fetchDogEventById\(client, dog\.id, id\)\)/);
+  assert.match(workspace, /const retryCheck = await checkInsertRetryOperation\(mutation\.operation, async \(id\) =>/);
 });
 
 test('delete snapshot replaces its source row and exits only after a token-matched saved result', () => {

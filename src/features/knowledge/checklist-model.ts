@@ -22,9 +22,10 @@ export function checklistPercent(completed: number, total: number): number {
   return total > 0 ? Math.round(Math.min(Math.max(completed, 0), total) / total * 100) : 0;
 }
 
-export function chooseChecklistPhase(ageWeeks: number, context: ChecklistContext): ChecklistTemplate['phase'] {
+export function chooseChecklistPhase(ageWeeks: number | null, context: ChecklistContext): ChecklistTemplate['phase'] | null {
   if (context === 'before_homecoming') return 'before_homecoming';
   if (context === 'first_days') return 'first_days';
+  if (ageWeeks === null) return null;
   if (ageWeeks < 8) return 'before_homecoming';
   if (ageWeeks < 13) return '8_12_weeks';
   if (ageWeeks < 26) return '3_6_months';

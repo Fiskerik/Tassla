@@ -1,7 +1,7 @@
 # Hundprofil och onboarding
 APP-04A: Profilens textfält använder keyboard-aware scrollning, dragavvisning och Klar.
 
-`dog.ts` validerar kalenderdatum, räknar oförändrade interna åldersveckor för innehållsurval och exponerar `formatDogAge` för användarsynlig ålder i sparad enhet: hela veckor, kalendermånader + veckor eller år + återstående månader. Standardformatet är veckor. `ProfileScreen.tsx` hämtar rasval, validerar namn/födelsedatum och skapar hunden genom `create_dog`. `EditDogProfileScreen.tsx` låter ägaren ändra namn, ras, födelsedatum och åldersvisning för samma hund. Lokalförhandsvisningen speglar de tre valen.
+`dog.ts` validerar kalenderdatum, räknar oförändrade interna åldersveckor för innehållsurval och exponerar `formatDogAge` för profilens sparade åldersenhet: hela veckor, kalendermånader + veckor eller år + återstående månader. `automaticDogAge` används av Hem för dess separata automatiska veckor/månader/år och ungefärliga livsfas. Profilens formatval påverkar inte Hem. `ProfileScreen.tsx` hämtar rasval, validerar namn/födelsedatum och skapar hunden genom `create_dog`. `EditDogProfileScreen.tsx` låter ägaren ändra namn, ras, födelsedatum och åldersvisning för samma hund. Lokalförhandsvisningen speglar de tre profilvalen.
 
 Hundprofilens befintliga läsvy och redigeringsvy använder rev02:s varma kortytor, vänsterställda rubrik och opt-in gröna profilaccent. `DogProfileScreen.tsx` visar namn, ras, vald åldersvisning och födelsedatum. `ProfileScreenHeader.tsx` äger den gemensamma tillbakaåtgärden. Presentationen ändrar inte validering, rasval, kennelkoppling, ägarskap eller profilens säkra spar-/konflikthantering. Första profilskapandet i `ProfileScreen.tsx` hålls separat.
 

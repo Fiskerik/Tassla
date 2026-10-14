@@ -35,3 +35,21 @@ Eriks fortsättningsbeslut ändrar ordningen så att R02-3C Kunskap får impleme
 ### Beslut
 
 Version 6.1 ersätter inte 3A:s godkända scope; den preciserar endast R02-3B:s visningsharness. Köpost och filscope är synkade innan 3B-implementationen fortsätter.
+
+## Static Security review — R02-3B Träning och R02-3C Kunskap, 2026-10-14
+
+**R02-3B Security PASS.** Public progress uses `training_progress` for the active dog and existing database handlers; insert ownership and the foreign key bind writes to the program version/step. Review-mode completion/reset stays in component memory behind the review flag and `review-v1:training:` IDs, with no public handler or completion analytics. The local handoff harness uses fixtures. Live RLS, two-account isolation and native behavior are NOT TESTABLE.
+
+**R02-3C Security PASS.** Public articles remain sourced from published content, external source links require HTTPS without embedded credentials, and FAQ/training drafts are gated behind the explicit review flag. Checklist progress, preferences and custom items retain current-dog scoping, client validation/readback and owner-scoped RLS. Persistent review checklist progress follows the already approved KNOW-02 contract; review-training marks remain local. Live RLS/two-account isolation, migration state, native behavior and built-artifact flag/credentials are NOT TESTABLE.
+
+The shared `ProductWorkspace`/Home-age sources have since received the separate approved HOME-AGE-LIFECYCLE-01 v4.3 correction and its fresh QA/Reviewer PASS.
+
+## Fresh Reviewer closeout — R02-3B PASS, R02-3C CHANGES, 2026-10-14
+
+**R02-3B Träning — PASS.** Reviewer confirmed public progress still uses confirmed `training_progress`, review completion/reset stays local and visibly marked, step completion remains sequential, reset retains its confirmation, public/review renders show the intended tabs/detail/progress and review banner, and §14 records the known panel-match deviation. Reviewer relied on recorded owner QA and Security PASS and did not rerun checks/builds.
+
+**R02-3C Kunskap — CHANGES.** Reviewer confirmed published-content gating, source and safe-link handling, FAQ context, and dog-scoped checklist actions. Public shows empty content when no articles are published; review-only examples are labeled. Finding: with `ageWeeks=null` and no saved checklist preference, copy still said `Er fas`, `Efter ålder`, and `Förslag utifrån hundens ålder` despite there being no age-derived recommendation. The current 3C render evidence did not include this state. Keep C blocked; correction is scoped in R02-3C v1.1 / main plan v6.3 pending Architect/Critic review. Native behavior and live DB/RLS remain NOT TESTABLE.
+
+## Fresh Reviewer closeout — R02-3C v6.3/v1.1 PASS, 2026-10-14
+
+**PASS.** Reviewer inspected the approved correction in `PuppyChecklistScreen.tsx` and `know02-app.tsx`, plus fresh public/review screenshots. With unknown age and no saved phase, review now says `Checklistkontext` / `Ingen fas vald`, gives the birth-date/manual-choice hint, highlights no template, and leaves all templates accessible. Public still shows `Inga checklistor publicerade ännu` and exposes no review examples. The screenshot matches the reviewed behavior. This resolves the earlier C-only CHANGES. No tests, builds or DB checks were rerun by Reviewer. Native accessibility and live Supabase/RLS remain **NOT TESTABLE**.

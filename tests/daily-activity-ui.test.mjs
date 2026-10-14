@@ -16,14 +16,14 @@ test('Home derives count and progress from the full daily activity array and sho
   assert.match(home, /Visa alla/);
   assert.match(home, /accessibilityRole="progressbar"/);
   assert.match(home, /progressFill/);
-  assert.match(home, /Välj dagens aktiviteter/);
+  assert.match(home, /Hantera dagens aktiviteter/);
   assert.match(home, /DailyActivityManagerSheet/);
   assert.match(workspace, /dailyStateLifetime === currentDailyLifetime/);
   assert.match(workspace, /dailySnapshotLifetime === currentDailyLifetime/);
 });
 
 test('routine and training rows expose separate accessible actions and truthful state', () => {
-  assert.match(home, /onToggle=\{routineDay \? \(\) => onSetRoutineCompletion/);
+  assert.match(home, /onToggle=\{routineDay \? \(\) => item\.routineItemId && onSetRoutineCompletion/);
   assert.match(home, /item\.kind === 'training' \? \(\) => onGo\('training'\)/);
   assert.match(item, /accessibilityRole="checkbox"/);
   assert.match(item, /accessibilityRole="button" accessibilityLabel=\{rowLabel\}/);
@@ -34,7 +34,7 @@ test('routine and training rows expose separate accessible actions and truthful 
   assert.match(homeVariant, /homeTrainingStatusCell/);
   assert.match(homeVariant, /homeTrainingStatusChecked/);
   assert.match(item, /homeTrainingStatus:[^{]*\{[^}]*borderRadius: tokens\.radius\.full/);
-  assert.match(workspace, /setRoutineDayCompletion\(client, row, completed\)/);
+  assert.match(workspace, /setRoutineDayCompletion\(client, row, itemId, completed\)/);
   assert.match(workspace, /Ingen ny bock visas/);
   assert.match(manager, /onRemoveRoutineFromDay/);
   assert.match(manager, /onRemoveTrainingFromDay/);
@@ -43,7 +43,8 @@ test('routine and training rows expose separate accessible actions and truthful 
   assert.match(manager, /onDeleteRoutine/);
   assert.match(manager, /<BottomSheet/);
   assert.doesNotMatch(manager, /useEffect|setCreating/);
-  assert.match(manager, /createContext/);
+  assert.match(manager, /type RoutineDraft/);
+  assert.match(manager, /function startCreate\(/);
 });
 
 test('training row presents the step title and keeps full program title in detail data', () => {
@@ -55,7 +56,8 @@ test('training row presents the step title and keeps full program title in detai
 test('daily activity derivation excludes unrelated log, guide, health plan and checklist data', () => {
   assert.match(model, /snapshot\.routineDays/);
   assert.match(model, /snapshot\.trainingSelections/);
-  assert.doesNotMatch(model, /dog_events|planned_health|checklist|content_open/i);
+  assert.doesNotMatch(model, /dog_events|planned_health|content_open/i);
+  assert.match(model, /row\.checklist_snapshot/);
   assert.match(model, /programById\.get\(row\.program_version_id\)/);
   assert.match(model, /program\?\.steps\.find/);
 });

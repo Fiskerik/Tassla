@@ -2,6 +2,14 @@ export const LOG_EVENT_TYPES = ['pee', 'poop', 'food', 'sleep', 'awake', 'walk',
 export const LOG_ENTRY_TYPES = ['pee', 'poop', 'food', 'sleep', 'walk', 'accident', 'water'] as const;
 export type LogEventType = typeof LOG_EVENT_TYPES[number];
 export type LogEventOrigin = 'example' | 'local-test';
+export const ACCIDENT_KINDS = ['pee', 'poop'] as const;
+export type AccidentKind = typeof ACCIDENT_KINDS[number];
+
+export interface AccidentLogIntent {
+  id: string;
+  occurredAt: string;
+  accidentKinds: AccidentKind[];
+}
 
 export const LOG_EVENT_LABELS: Record<LogEventType, string> = {
   pee: 'Kiss',
@@ -21,6 +29,7 @@ export interface LogEvent {
   occurredAt: string;
   note: string | null;
   origin: LogEventOrigin;
+  accidentKinds: AccidentKind[] | null;
 }
 
 export interface CreateLogEventInput {
@@ -30,12 +39,14 @@ export interface CreateLogEventInput {
   occurredAt: string;
   note?: string | null;
   origin?: LogEventOrigin;
+  accidentKinds?: readonly AccidentKind[] | null;
 }
 
 export interface LogEventChanges {
   type?: LogEventType;
   occurredAt?: string;
   note?: string | null;
+  accidentKinds?: readonly AccidentKind[] | null;
 }
 
 export interface PottyPatternSummary {
@@ -102,10 +113,22 @@ export function hasRecentCategoryLog(events: readonly LogEvent[], type: LogEvent
   });
 }
 
+export function isCanonicalAccidentKinds(value: unknown): value is AccidentKind[] {
+  if (!Array.isArray(value)) return false;
+  return value.length === 1
+    ? value[0] === 'pee' || value[0] === 'poop'
+    : value.length === 2 && value[0] === 'pee' && value[1] === 'poop';
+}
+
+export function canonicalAccidentKinds(values: readonly AccidentKind[]): AccidentKind[] {
+  return ACCIDENT_KINDS.filter((kind) => values.includes(kind));
+}
+
 /** Retrospective owner-entered history only; this never predicts or recommends an outing. */
 export function summarizePottyPatterns(events: readonly LogEvent[]): PottyPatternSummary[] {
   return (['pee', 'poop'] as const).map((type) => {
-    const timestamps = events.filter((event) => event.type === type)
+    const timestamps = events.filter((event) => event.type === type
+      || event.type === 'accident' && event.accidentKinds?.includes(type))
       .map((event) => Date.parse(event.occurredAt)).filter(Number.isFinite).sort((a, b) => a - b);
     const intervals = timestamps.slice(1).map((timestamp, index) => (timestamp - timestamps[index]) / 60000).filter((minutes) => minutes > 0 && Number.isFinite(minutes));
     const middle = Math.floor(intervals.length / 2);
@@ -118,6 +141,10 @@ export function summarizePottyPatterns(events: readonly LogEvent[]): PottyPatter
 export function createLogEvent(input: CreateLogEventInput, now = new Date()): LogEvent {
   if (!input.id.trim() || !input.dogId.trim()) throw new Error('Event and dog IDs are required');
   if (!LOG_EVENT_TYPES.includes(input.type)) throw new Error('Unknown log event type');
+  if (input.type === 'accident' && input.accidentKinds != null && !isCanonicalAccidentKinds(input.accidentKinds)) {
+    throw new Error('Accident kinds must be a canonical non-empty selection');
+  }
+  if (input.type !== 'accident' && input.accidentKinds != null) throw new Error('Only accidents can have accident kinds');
   const timestamp = Date.parse(input.occurredAt);
   if (!Number.isFinite(timestamp) || new Date(timestamp).toISOString() !== input.occurredAt) {
     throw new Error('Expected a canonical ISO timestamp');
@@ -133,6 +160,7 @@ export function createLogEvent(input: CreateLogEventInput, now = new Date()): Lo
     occurredAt: input.occurredAt,
     note,
     origin: input.origin ?? 'local-test',
+    accidentKinds: input.type === 'accident' && input.accidentKinds != null ? [...input.accidentKinds] : null,
   };
 }
 
@@ -166,9 +194,15 @@ export function updateLogEvent(
 ): LogEvent[] {
   const current = events.find((event) => event.id === id);
   if (!current) return [...events];
+  const type = changes.type ?? current.type;
+  const accidentKinds = type !== 'accident' ? null
+    : changes.accidentKinds !== undefined ? changes.accidentKinds
+      : current.type === 'accident' ? current.accidentKinds : ['pee'] as const;
   const updated = createLogEvent({
     ...current,
     ...changes,
+    type,
+    accidentKinds,
     id: current.id,
     dogId: current.dogId,
     origin: current.origin,

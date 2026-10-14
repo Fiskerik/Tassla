@@ -36,7 +36,7 @@ Skapa hunden en gång. Grundinformationen driver resten av upplevelsen och följ
 - Användaren kan skapa en hund med namn, ras och födelsedatum.
 - Ras väljs i sökbar katalog. Mix kan sparas utan kända delraser eller med två olika valbara raser; sökfritext blir aldrig en egen ras.
 - Hundens ålder beräknas automatiskt.
-- Ägaren kan välja om åldern visas i veckor, månader eller år; formatet används på Hem, hundprofil, Tassla-pass preview och exporterad PDF.
+- Ägaren kan välja om profilåldern visas i veckor, månader eller år; valet används i hundprofil, Tassla-pass preview och exporterad PDF. Hem räknar sin ålder automatiskt enligt den separata Hem-specifikationen.
 - Hunden får ett permanent hund-ID som används av övriga funktioner.
 - Onboarding leder vidare till relevant hjälp i Home/Today.
 
@@ -51,8 +51,8 @@ Loggning, träning och innehåll ska nås i denna kontext. Användaren ska inte 
 **Acceptanskriterier:**
 
 - Startsidan visar ett dynamiskt flöde baserat på hundens ålder och, där det är relevant, ras.
-- Hem visar `Hundnamn | Ras` och vald ålder under identitetsraden. Åldersremsan fortsätter vara en veckoremsa för navigering.
-- Åldersremsan på Hem kan bläddras mellan vecka 0 och aktuell ålder + 12; bläddring väljer inte en vecka eller ändrar innehåll/data. På huvudflikarna kan vänstersvep gå till nästa flik och högersvep till föregående, med bottenmenyn kvar som fullvärdigt alternativ.
+- Hem visar `Hundnamn | Ras`, automatisk ålder och separat ungefärlig livsfas. Remsan visar veckor till och med 20 veckor, månader till och med första födelsedagen och år därefter; den går att bläddra visuellt men väljer inte innehåll eller ändrar data.
+- Hem använder samma automatiska hela ålder i identitetsraden och `Just nu`. Ålder saknas visuellt när födelsedatum saknas, är ogiltigt eller ligger i framtiden. På huvudflikarna kan vänstersvep gå till nästa flik och högersvep till föregående, med bottenmenyn kvar som fullvärdigt alternativ.
 - Flödet förändras över tid med hundens utveckling och visar relevanta råd, aktiviteter, träningssteg och uppmaningar.
 - Användaren kan gå från relevant hjälp till konkret handling.
 - Innehåll distribueras främst genom Home och relevanta flöden. Ett stort fristående artikelbibliotek krävs inte.

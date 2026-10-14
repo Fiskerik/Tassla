@@ -33,7 +33,7 @@ test('public and review Home share a generic portrait without attaching the dog 
   assert.match(home, /source=\{require\('\.\.\/\.\.\/\.\.\/assets\/images\/home-dog-portrait-placeholder\.png'\)\}/);
   assert.doesNotMatch(home, /review-puppy-portrait|dog-mascot\.png/);
   assert.match(home, /accessibilityRole="text" accessibilityLabel="Standardbild"/);
-  assert.match(home, /homeWeekDecorationOpacity\(portraitFrame\.left, portraitFrame\.right, markerCenter\)/);
+  assert.match(home, /homeAgeDecorationOpacity\(portraitFrame\.left, portraitFrame\.right, markerCenter\)/);
   assert.match(home, /const fadeStart = left - 16/);
   assert.match(home, /const z = \(markerCenter - fadeStart\) \/ \(right - fadeStart\)/);
   assert.match(home, /return 0\.78/);
@@ -61,7 +61,7 @@ test('Home routines use a checkbox, training rows open training, and the manager
   assert.doesNotMatch(homeVariant, /<IconChip|list-outline|school-outline/);
   assert.match(homeVariant, /homeTrainingStatusCell/);
   assert.match(homeVariant, /homeTrainingStatusChecked/);
-  assert.match(home, /onToggle=\{routineDay \? \(\) => onSetRoutineCompletion/);
+  assert.match(home, /onToggle=\{routineDay \? \(\) => item\.routineItemId && onSetRoutineCompletion/);
   assert.match(home, /item\.kind === 'training' \? \(\) => onGo\('training'\)/);
   for (const action of ['onCreateRoutine', 'onUpdateRoutine', 'onDeleteRoutine', 'onAddRoutineToDay', 'onRemoveRoutineFromDay', 'onAddTrainingToDay', 'onRemoveTrainingFromDay']) {
     assert.match(manager, new RegExp(action));

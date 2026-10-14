@@ -4692,7 +4692,7 @@
       "depends_on": [
         "VISION-R02-3"
       ],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -4723,15 +4723,51 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Owner QA PASS recorded 2026-10-13. Independent Reviewer PASS and Security PASS remain pending, so the R02-3B checkpoint is blocked. Owner explicitly directs continuation on other screens; R02-3C may proceed under updated v6.2 sequence without marking 3B done."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Owner QA PASS was already recorded 2026-10-13. Independent Reviewer PASS and static Security PASS received 2026-10-14; reopen the completed handoff for its final checkpoint."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "The approved R02-3B v6.1 scope and its sequencing approval remain in docs/tasks/dev/vision-rev02-r02-3-reviews.md; independent closeout reviews are now complete."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Reopen existing Träning handoff for checkpoint after the separately approved HOME-AGE v4.3 change. No R02-3B source change; owner QA, Security and fresh Reviewer PASS now recorded."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Local Träning handoff: recorded owner QA PASS, static Security PASS, scoped typecheck/lint and public/review builds/renders; fresh Reviewer PASS after shared-file age correction. §14 panel-match deviation remains explicit; no tests run."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA PASS is Erik’s explicit 2026-10-13 approval through R02-3B; fresh 2026-10-14 Reviewer PASS confirms current source/evidence after HOME-AGE v4.3; static Security PASS is recorded in vision-rev02-r02-3-reviews.md."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Fresh Reviewer PASS 2026-10-14, recorded owner QA PASS, static Security PASS, current source/evidence reviewed. Local UI checkpoint; §14 full panel-match deviation is retained. Native and live RLS remain NOT TESTABLE."
         }
       ],
-      "next_step": "Owner QA PASS recorded 2026-10-13. Independent Reviewer PASS and Security PASS remain pending, so the R02-3B checkpoint is blocked. Owner explicitly directs continuation on other screens; R02-3C may proceed under updated v6.2 sequence without marking 3B done."
+      "next_step": "Fresh Reviewer PASS 2026-10-14, recorded owner QA PASS, static Security PASS, current source/evidence reviewed. Local UI checkpoint; §14 full panel-match deviation is retained. Native and live RLS remain NOT TESTABLE."
     },
     {
       "id": "VISION-R02-3C",
       "title": "Kunskap — visuell migration enligt panel 7",
       "mvp_requirement": "Eriks uttryckliga 2026-10-13-direktiv för övriga sidor; docs/mvp.md: befintlig Knowledge-resa",
-      "plan": "docs/tasks/dev/vision-rev02-r02-3.md v6.2 §R02-3C; UX: docs/plans/VISION-REV02-R02-3C-ux-spec.md v1",
+      "plan": "docs/tasks/dev/vision-rev02-r02-3.md v6.3 §R02-3C; UX: docs/plans/VISION-REV02-R02-3C-ux-spec.md v1.1",
       "write_paths": [
         "src/features/knowledge/KnowledgeScreen.tsx",
         "src/features/knowledge/FAQScreen.tsx",
@@ -4751,7 +4787,8 @@
         "Panel 7 image-over-text hierarchy and warm article surfaces use existing editorial assets",
         "Four current Knowledge destinations, reader/citations, FAQ, checklist progress and review gate keep their current data/actions",
         "No search/filter UI appears unless a real existing taxonomy/query contract is identified and separately approved",
-        "Public/review renders compare to panel 7; no unpublished fixture is shown as public; §14 and Security review of the frozen owner/dog checklist presentation are complete"
+        "Public/review renders compare to panel 7; no unpublished fixture is shown as public; §14 and Security review of the frozen owner/dog checklist presentation are complete",
+        "When ageWeeks is null, context remains the unsaved by_age default and no age-derived recommendation exists: show neutral checklist context copy, no calculated-phase claim, and all checklist templates remain accessible without a recommendation highlight; cover this state in fresh public/review renders"
       ],
       "checks": [
         "pnpm typecheck",
@@ -4766,7 +4803,7 @@
       "depends_on": [
         "VISION-R02-3"
       ],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -4797,9 +4834,45 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Owner QA PASS recorded as explicitly authorized. Independent Reviewer/Security are not available in this task and remain pending; checkpoint blocked. Owner also directs continuation through remaining screens, so R02-4 slices may proceed under the same visual-only mandate and separate exact scopes."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "HOME-AGE-LIFECYCLE-01 and R02-3B are now checkpointed. Replanned from Reviewer CHANGES for null-age checklist overview copy; exact v6.3/v1.1 plan and queue are synchronized."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED 2026-10-14 for exact R02-3 v6.3 §3C and UX v1.1. Narrow unknown-age/unsaved-by_age copy contract, unchanged data/actions and fresh public/review render are approved."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin only approved v6.3 copy correction in PuppyChecklistScreen plus fresh missing-birthdate overview renders/evidence. Do not change checklist selection, preference writes, content gate or other page contracts."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R02-3C v6.3 copy correction and fresh unknown-age public/review renders are complete. Typecheck, full lint, diff check, queue validation, public/review RN Web builds and manual Chromium inspection passed; review screenshot verifies neutral no-birthdate state, while public preserves the published-content gate. Existing owner QA PASS and Security PASS are recorded; next step is fresh independent Reviewer closeout."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Owner QA PASS previously explicitly covered work through R02-3C, including the current approved copy-only correction; this fresh render handoff is complete and recorded. Request independent Reviewer verification of null-age wording, absence of an age recommendation, and unchanged public content gate."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS 2026-10-14 for approved v6.3/v1.1 copy correction and fresh null-age public/review screenshots. Reviewer confirmed neutral context, no recommended template, all templates accessible, and unchanged honest public content gate; earlier CHANGES is resolved."
         }
       ],
-      "next_step": "Owner QA PASS recorded as explicitly authorized. Independent Reviewer/Security are not available in this task and remain pending; checkpoint blocked. Owner also directs continuation through remaining screens, so R02-4 slices may proceed under the same visual-only mandate and separate exact scopes."
+      "next_step": "Independent Reviewer PASS 2026-10-14 for approved v6.3/v1.1 copy correction and fresh null-age public/review screenshots. Reviewer confirmed neutral context, no recommended template, all templates accessible, and unchanged honest public content gate; earlier CHANGES is resolved."
     },
     {
       "id": "VISION-R02-4A",
@@ -4837,7 +4910,7 @@
       "depends_on": [
         "VISION-R02-3C"
       ],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -4862,9 +4935,27 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Implementer handoff and rendered report are complete; this slice still awaits owner QA plus independent review/security. Erik explicitly requested continuation through all other screens, so later scoped work proceeds while this checkpoint remains blocked."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Erik reports external owner QA PASS for all R02-4A–H on 2026-10-14; recorded from his explicit message, not rerun by Codex."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Static Security PASS and no blocking findings for the R02-4A–H group; actual Supabase/RLS/native behavior remains NOT TESTABLE. Evidence: docs/tasks/dev/vision-rev02-r02-4-closeout.md."
+        },
+        {
+          "from": "blocked",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS, no blocking code findings. Combined with Erik-reported owner QA PASS and static Security PASS, close local UI checkpoint. External backend/native limits remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
         }
       ],
-      "next_step": "Implementer handoff and rendered report are complete; this slice still awaits owner QA plus independent review/security. Erik explicitly requested continuation through all other screens, so later scoped work proceeds while this checkpoint remains blocked."
+      "next_step": "Local R02-4 UI checkpoint complete. Native/backend/RLS limitations remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
     },
     {
       "id": "VISION-R02-4B",
@@ -4900,7 +4991,7 @@
         "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-4b/review node tools/visual-check/build.cjs"
       ],
       "depends_on": [],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -4919,9 +5010,27 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Implementation handoff is ready; owner QA plus independent Reviewer/Security remain pending. Erik has explicitly directed continuation through all remaining screens, so separate R02-4C work may proceed without marking 4B checkpointed."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Erik reports external owner QA PASS for all R02-4A–H on 2026-10-14; recorded from his explicit message, not rerun by Codex."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Static Security PASS and no blocking findings for the R02-4A–H group; actual Supabase/RLS/native behavior remains NOT TESTABLE. Evidence: docs/tasks/dev/vision-rev02-r02-4-closeout.md."
+        },
+        {
+          "from": "blocked",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS, no blocking code findings. Combined with Erik-reported owner QA PASS and static Security PASS, close local UI checkpoint. External backend/native limits remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
         }
       ],
-      "next_step": "Implementation handoff is ready; owner QA plus independent Reviewer/Security remain pending. Erik has explicitly directed continuation through all remaining screens, so separate R02-4C work may proceed without marking 4B checkpointed."
+      "next_step": "Local R02-4 UI checkpoint complete. Native/backend/RLS limitations remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
     },
     {
       "id": "VISION-R02-4C",
@@ -4956,7 +5065,7 @@
         "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-4c/review node tools/visual-check/build.cjs"
       ],
       "depends_on": [],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -4975,9 +5084,27 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Implementation handoff is ready; owner QA plus independent Reviewer/Security remain pending. Erik directed continuation through all remaining screens, so Passport slice may proceed without marking 4C checkpointed."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Erik reports external owner QA PASS for all R02-4A–H on 2026-10-14; recorded from his explicit message, not rerun by Codex."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Static Security PASS and no blocking findings for the R02-4A–H group; actual Supabase/RLS/native behavior remains NOT TESTABLE. Evidence: docs/tasks/dev/vision-rev02-r02-4-closeout.md."
+        },
+        {
+          "from": "blocked",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS, no blocking code findings. Combined with Erik-reported owner QA PASS and static Security PASS, close local UI checkpoint. External backend/native limits remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
         }
       ],
-      "next_step": "Implementation handoff is ready; owner QA plus independent Reviewer/Security remain pending. Erik directed continuation through all remaining screens, so Passport slice may proceed without marking 4C checkpointed."
+      "next_step": "Local R02-4 UI checkpoint complete. Native/backend/RLS limitations remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
     },
     {
       "id": "VISION-R02-4D",
@@ -5011,7 +5138,7 @@
         "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/r02-4d/review node tools/visual-check/build.cjs"
       ],
       "depends_on": [],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -5030,9 +5157,27 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Implementation handoff is ready; owner QA plus independent Reviewer/Security remain pending. Erik directed continuation across all remaining screens; profile slice may proceed without checkpointing Tassla-pass."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Erik reports external owner QA PASS for all R02-4A–H on 2026-10-14; recorded from his explicit message, not rerun by Codex."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Static Security PASS and no blocking findings for the R02-4A–H group; actual Supabase/RLS/native behavior remains NOT TESTABLE. Evidence: docs/tasks/dev/vision-rev02-r02-4-closeout.md."
+        },
+        {
+          "from": "blocked",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS, no blocking code findings. Combined with Erik-reported owner QA PASS and static Security PASS, close local UI checkpoint. External backend/native limits remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
         }
       ],
-      "next_step": "Implementation handoff is ready; owner QA plus independent Reviewer/Security remain pending. Erik directed continuation across all remaining screens; profile slice may proceed without checkpointing Tassla-pass."
+      "next_step": "Local R02-4 UI checkpoint complete. Native/backend/RLS limitations remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
     },
     {
       "id": "VISION-R02-4E",
@@ -5067,7 +5212,7 @@
         "Public/review visual-check builds and manual browser render review"
       ],
       "depends_on": [],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -5086,9 +5231,27 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Owner QA for this later slice and independent Reviewer/Security remain pending; Erik authorized continuation through the remaining screens, so R02-4F may proceed without checkpointing profile."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Erik reports external owner QA PASS for all R02-4A–H on 2026-10-14; recorded from his explicit message, not rerun by Codex."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Static Security PASS and no blocking findings for the R02-4A–H group; actual Supabase/RLS/native behavior remains NOT TESTABLE. Evidence: docs/tasks/dev/vision-rev02-r02-4-closeout.md."
+        },
+        {
+          "from": "blocked",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS, no blocking code findings. Combined with Erik-reported owner QA PASS and static Security PASS, close local UI checkpoint. External backend/native limits remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
         }
       ],
-      "next_step": "Implementation handoff is ready; this slice awaits owner QA plus independent Reviewer/Security. Erik directed continuation across remaining screens; reminders slice may proceed without checkpointing profile."
+      "next_step": "Local R02-4 UI checkpoint complete. Native/backend/RLS limitations remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
     },
     {
       "id": "VISION-R02-4F",
@@ -5122,7 +5285,7 @@
         "Public/review visual-check builds and manual browser render review"
       ],
       "depends_on": [],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -5141,9 +5304,27 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Owner QA for this later slice and independent Reviewer/Security remain pending. Erik authorized continuation through remaining screens; account/beta slice may proceed without checkpointing reminders."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Erik reports external owner QA PASS for all R02-4A–H on 2026-10-14; recorded from his explicit message, not rerun by Codex."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Static Security PASS and no blocking findings for the R02-4A–H group; actual Supabase/RLS/native behavior remains NOT TESTABLE. Evidence: docs/tasks/dev/vision-rev02-r02-4-closeout.md."
+        },
+        {
+          "from": "blocked",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS, no blocking code findings. Combined with Erik-reported owner QA PASS and static Security PASS, close local UI checkpoint. External backend/native limits remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
         }
       ],
-      "next_step": "Implementation handoff is ready; this slice awaits owner QA plus independent Reviewer/Security. Erik directed continuation; account/beta screens may proceed without checkpointing reminders."
+      "next_step": "Local R02-4 UI checkpoint complete. Native/backend/RLS limitations remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
     },
     {
       "id": "VISION-R02-4G",
@@ -5177,7 +5358,7 @@
         "Public/review visual-check builds and manual browser render review"
       ],
       "depends_on": [],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -5196,9 +5377,27 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Owner QA for this later slice and independent Reviewer/Security remain pending. Erik authorized continuation through remaining screens; auth/onboarding may proceed without checkpointing account/beta."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Erik reports external owner QA PASS for all R02-4A–H on 2026-10-14; recorded from his explicit message, not rerun by Codex."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Static Security PASS and no blocking findings for the R02-4A–H group; actual Supabase/RLS/native behavior remains NOT TESTABLE. Evidence: docs/tasks/dev/vision-rev02-r02-4-closeout.md."
+        },
+        {
+          "from": "blocked",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS, no blocking code findings. Combined with Erik-reported owner QA PASS and static Security PASS, close local UI checkpoint. External backend/native limits remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
         }
       ],
-      "next_step": "Implementation handoff is ready; this slice awaits owner QA plus independent Reviewer/Security. Erik directed continuation; auth/onboarding may proceed without checkpointing account/beta."
+      "next_step": "Local R02-4 UI checkpoint complete. Native/backend/RLS limitations remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
     },
     {
       "id": "VISION-R02-4H",
@@ -5237,7 +5436,7 @@
         "Public/review visual-check builds and manual browser render review"
       ],
       "depends_on": [],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -5256,9 +5455,27 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Owner QA for this later slice and independent Reviewer/Security remain pending. Erik authorized continuation across all remaining screens; no review outcome is inferred."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Erik reports external owner QA PASS for all R02-4A–H on 2026-10-14; recorded from his explicit message, not rerun by Codex."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Static Security PASS and no blocking findings for the R02-4A–H group; actual Supabase/RLS/native behavior remains NOT TESTABLE. Evidence: docs/tasks/dev/vision-rev02-r02-4-closeout.md."
+        },
+        {
+          "from": "blocked",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS, no blocking code findings. Combined with Erik-reported owner QA PASS and static Security PASS, close local UI checkpoint. External backend/native limits remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
         }
       ],
-      "next_step": "Implementation handoff is ready; owner QA plus independent Reviewer/Security remain pending. Native auth/email/Google return and real RLS are NOT TESTABLE in the web fixture."
+      "next_step": "Local R02-4 UI checkpoint complete. Native/backend/RLS limitations remain NOT TESTABLE; see docs/tasks/dev/vision-rev02-r02-4-closeout.md."
     },
     {
       "id": "VISION-R02-GESTURES",
@@ -5794,6 +6011,410 @@
         }
       ],
       "next_step": "Custom QA PASS and independent Reviewer PASS 2026-10-14; frozen diff and SHA-256 manifest: docs/design/evidence/vision-rev02/checklist-luna/custom/CHECKPOINT-CUSTOM.patch. External QA will recheck after actual release per user caveat; no commit/push/release."
+    },
+    {
+      "id": "LOG-ACCIDENT-DETAILS-01",
+      "title": "Olycka: Kiss/Bajs-val och mönsterräkning",
+      "mvp_requirement": "Eriks uttryckliga uppföljningsmandat 2026-10-14: olyckstyper, mönsterräkning och singular intervalltext",
+      "plan": "docs/tasks/dev/log-accident-home-age.md v4.1, deluppgift A",
+      "write_paths": [
+        "src/features/puppy-log/log-model.ts",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/components/ui/CheckboxCard.tsx",
+        "src/features/puppy-log/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/DevelopmentPreview.tsx",
+        "src/data/workspace-data.ts",
+        "supabase/migrations/202610140001_accident_kinds.sql",
+        "docs/tasks/dev/log-accident-home-age.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "tools/visual-check/app.tsx",
+        "docs/design/evidence/vision-rev02/log-accident-types"
+      ],
+      "acceptance": [
+        "Nya/omklassade olyckor kräver Kiss/Bajs eller båda; Kiss är förvalt, gruppen har tydlig label/hjälp och Spara-låsning stoppar dubbel intent",
+        "En ny olycka får ingen skrivning vid avbryt/bakåt; dubblettbekräftelse skickar samma väntande val/tid/mutations-ID; avbryt släpper intentet men behåller valen i formuläret och nästa Spara skapar en ny avsikt; failed/unsure retry återanvänder samma val, tid och mutations-ID",
+        "Lagrad accident_kinds är kanoniskt ordnad [pee], [poop] eller [pee,poop]; SQL kräver detta för nya olyckor, bevarar bara legacy NULL och kan aldrig nolla en typad olycka; authenticated får kolumnspecifik update-grant",
+        "Legacy NULL visar båda valen av; kan sparas fortsatt okänd vid andra fältändringar, men nya/omklassade eller uttryckligen typade olyckor kräver minst en typ",
+        "Pattern counts include direct events and explicit accident kinds; legacy NULL counts in neither; intervals preserve approximate text and use singular minut/timme",
+        "Local source/UI delivery may be done after static checks, render QA and QA/Reviewer/Security; live SQL persistence/readback/RLS and automated mutation regression remain NOT TESTABLE and require LOG-ACCIDENT-RUNTIME-VERIFY-01 before a live/release verification claim"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/puppy-log/log-model.ts src/features/puppy-log/LogScreen.tsx src/features/home/ProductWorkspace.tsx src/features/home/DevelopmentPreview.tsx src/data/workspace-data.ts tools/visual-check/app.tsx",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "Static end-to-end data and SQL inspection plus production-component render evidence; no unit/integration suite or live Supabase/RLS run"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE och Critic PROCEED för log-accident-home-age.md v4; Erik har beställt implementation i denna konversation"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Eriks genomförandemandat 2026-10-14; avgränsad lokal A-deluppgift"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "A local code/UI handoff complete; pnpm typecheck, scoped ESLint, diffcheck, queue validation, static data/SQL inspection and RN Web render report PASS. No tests or live Supabase run; early B hunks in shared files remain explicitly unreviewed per v4.1."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent Dog Expert QA PASS 2026-10-14 for A-only local acceptance after clarified duplicate-cancel contract; runtime DB/native remain NOT TESTABLE. See docs/tasks/dev/rapport.md and log-accident-home-age.md v4.1."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS 2026-10-14 for A-only v4.1 acceptance; Dog Expert QA PASS, Architect APPROVE, Critic PROCEED and static Security PASS. Local source diff fingerprint and unreviewed B-hunk limits: docs/design/evidence/vision-rev02/log-accident-types/A-CHECKPOINT.md. Supabase persistence/readback/RLS and native behavior remain NOT TESTABLE."
+        }
+      ],
+      "next_step": "Reviewer PASS 2026-10-14 for A-only v4.1 acceptance; Dog Expert QA PASS, Architect APPROVE, Critic PROCEED and static Security PASS. Local source diff fingerprint and unreviewed B-hunk limits: docs/design/evidence/vision-rev02/log-accident-types/A-CHECKPOINT.md. Supabase persistence/readback/RLS and native behavior remain NOT TESTABLE."
+    },
+    {
+      "id": "LOG-ACCIDENT-RUNTIME-VERIFY-01",
+      "title": "Olyckstyper: verifiera Supabase-persistens och RLS",
+      "mvp_requirement": "Release-verifiering av nya olyckstyper efter lokal kod/UI-leverans",
+      "plan": "docs/tasks/dev/log-accident-home-age.md v4.1, DB-verifieringsgräns",
+      "write_paths": [
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Apply the reviewed accident_kinds migration in the intended development database and confirm existing legacy NULL rows remain readable",
+        "As an authenticated owner, insert Kiss, Bajs and both; read back exact canonical values and update a typed event without allowing it to revert to NULL",
+        "Confirm a legacy unknown accident remains NULL when only time/note changes and can be explicitly assigned a type",
+        "Confirm a non-accident event has NULL kinds, a new accident without kinds is rejected, and RLS limits access to the owning dog",
+        "Confirm uncertain write/readback retry reuses the same mutation ID and does not create duplicate events"
+      ],
+      "checks": [
+        "Run migration and owner-scoped integration checks in the intended Supabase development environment",
+        "Record environment identity, migration result, readback/RLS outcomes and any NOT TESTABLE behavior; do not use production data"
+      ],
+      "depends_on": [
+        "LOG-ACCIDENT-DETAILS-01"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Schedule when an authorized development Supabase environment is available; this verification does not block local Home work."
+    },
+    {
+      "id": "HOME-AGE-LIFECYCLE-01",
+      "title": "Hem: automatisk åldersremsa och ungefärlig livsfas",
+      "mvp_requirement": "Eriks uttryckliga uppföljningsmandat 2026-10-14: veckor till 20, månader till passerad ettårsdag, därefter år och ungefärliga faser",
+      "plan": "docs/tasks/dev/log-accident-home-age.md v4.3, deluppgift B",
+      "write_paths": [
+        "src/features/onboarding/dog.ts",
+        "src/content/select-content.ts",
+        "src/data/workspace-data.ts",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/checklist-model.ts",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/PreviewHomeScreen.tsx",
+        "src/features/home/home-today.ts",
+        "src/features/home/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/design/evidence/vision-rev02/home-age-stages",
+        "docs/tasks/VISION-REV02.md",
+        "docs/tasks/dev/log-accident-home-age.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "src/features/onboarding/README.md",
+        "docs/plans/HOME-REV02-visual-ux-spec.md",
+        "docs/mvp.md",
+        "docs/design/vision-rev02-spec.md",
+        "src/features/home/ProductWorkspace.tsx"
+      ],
+      "acceptance": [
+        "One captured local today is passed through Home identity, active strip, phase and active Just nu card; visual fixtures inject today into the same production helper",
+        "Home uses weeks through day 140, calendar months from day 141 through first anniversary inclusive, and years the next day; Feb 29 clamps to Feb 28 in non-leap years",
+        "Strip sequences are weeks 0–20, months 0–12 or years 1 through current completed year plus three; current marker and initial position are deterministic; portrait/fade/gesture behavior remains",
+        "Active HomeScreen Just nu card and identity show the same whole-unit automatic age; profile preference and content/training age-week selection remain unchanged",
+        "Missing/invalid/future birth dates have no calculated age/strip/stage; the strip wrapper does not group cells and each cell announces its own value/unit/current state",
+        "Unknown age passes as null through content, training and knowledge consumers: no fabricated puppy recommendations/age; saved progress remains under Mina and a distinct ‘Fortsätt där ni var’ continuation section, never under ‘Passar just nu’",
+        "Separate approximate stage is VALP under 6 completed calendar months, UNGHUND 6 to under 24, VUXEN from 24; no SENIOR or universal veterinary claim",
+        "Production-component evidence covers week/month/year thresholds, first birthday/day after, leap day, invalid dates, 6/24 month stages, and a null-age Training screen with resumable progress shown without an age-fit label; §14 and real viewport/platform limits are recorded"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/onboarding/dog.ts src/features/home/ProductWorkspace.tsx src/content/select-content.ts src/data/workspace-data.ts src/features/knowledge/KnowledgeScreen.tsx src/features/knowledge/PuppyChecklistScreen.tsx src/features/knowledge/checklist-model.ts src/features/training/PublishedTrainingScreen.tsx src/features/home/HomeScreen.tsx src/features/home/PreviewHomeScreen.tsx src/features/home/home-today.ts tools/visual-check/app.tsx",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "Production helper render-fixture evidence; no unit/integration suite is added or run"
+      ],
+      "depends_on": [
+        "LOG-ACCIDENT-DETAILS-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED for exact plan v4.1; A local checkpoint is frozen. Reopen B for fresh checks, renders and its independent review as the plan requires."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume the existing early B source only after A checkpoint; B remains unaccepted. Rerun B-specific typecheck/lint/diff/queue/build/render and save fresh evidence; no edits outside v4.1 write_paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "B handoff after frozen A checkpoint: pnpm typecheck, scoped ESLint, git diff --check, dev_flow validate and React Native Web build passed; Chromium freshly rendered 14 date-boundary/invalid-input cases from HomeScreen production components, with no browser errors. Evidence: docs/design/evidence/vision-rev02/home-age-stages/RENDER-REPORT.md. Independent QA and Reviewer pending; no unit/integration suite or native behavior claimed."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Reviewer CHANGES after v4.1 QA handoff: accessibility grouping could hide individual cells and null-age consumers exceeded approved write scope. Replan as v4.2 before implementation correction; the previous QA handoff is not acceptance of the correction."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Replanned from Reviewer CHANGES: v4.2 adds null-age write paths and cell-level screen-reader contract. Fresh Architect/Critic approval required before correction; old v4.1 QA checkpoint does not approve it."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED 2026-10-14 for synchronized exact v4.2 plan and queue. Fresh implementation/QA required; prior v4.1 QA evidence does not approve corrections."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume v4.2 correction: remove parent accessibility grouping while retaining independently labelled unit/value/current cells; v4.2 null-age consumer paths were already introduced and are now authorized. Rerun fresh checks, build, renders, QA and Reviewer."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v4.2 correction handoff: pnpm typecheck, scoped ESLint including all six null-age consumers, git diff --check, queue validation passed; fresh RN Web build passed; 14 Chromium date/viewport renders refreshed. DOM inspection confirms the strip parent has no aria-label and the individual week-20 cell keeps “20 veckor, aktuell ålder”. RENDER-REPORT.md records §14 and NOT TESTABLE native behavior. Fresh independent QA/Reviewer pending; no automated tests run."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Dog Expert QA PASS 2026-10-14 for v4.2 local age/null-age behaviors; 14 fresh Chromium renders and web a11y DOM inspection included. Reviewer found no source blocker but returned CHANGES for stale v4.2 plan status only. Sync durable plan status and request final Reviewer pass; no automated tests/native verification claimed."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Reviewer CHANGES v4.2: unknown age leaves saved resumable programs available, but default Training renders them under “Passar just nu”, implying an age-fit match. Replan v4.3 to keep this progress in a separate continuation section and require explicit age-unknown copy; prior v4.2 review does not accept the behavior."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Replanned from Reviewer CHANGES: v4.3 adds continuation-only presentation for resumable programs when ageWeeks is null, prevents the “Passar just nu” age-fit heading, and requires fresh training render plus Reviewer/QA. Obtain Architect/Critic approval before source changes."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED 2026-10-14 for exact B-only v4.3 plan + queue. Existing v4.2 implementation scope includes the correction files; fresh implementation/QA/review required."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin v4.3 continuation presentation correction: when ageWeeks is null, resumable saved progress stays under Mina and a distinct Fortsätt där ni var section; never label as Passar just nu. Add fresh null-age Training render; no edits outside approved plan paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v4.3 handoff: pnpm typecheck, scoped ESLint, git diff --check and dev_flow validate PASS. Fresh RN Web build at /tmp/tassla-preview/home-age-v43; Chromium at 375x876 rendered ageExample=missing with saved incomplete progress under FORTSÄTT DÄR NI VAR, then clicked Visa mina program and confirmed the same progress under Mina. No page errors. Screenshots/report: docs/design/evidence/vision-rev02/home-age-stages/RENDER-REPORT.md. No tests or database operations. Focused Dog Expert QA and Reviewer pending."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Dog Expert QA PASS 2026-10-14 for v4.3 unknown-age Training continuation, preserved Mina progress, age boundaries, leap day, stages and neutral invalid/missing/future dates. Plan, queue and RENDER-REPORT now record exact v4.3 approvals, checks, two fresh renders and QA result; prior Reviewer CHANGES was only stale handoff status. Reviewer re-review requested."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS 2026-10-14 for v4.3 handoff and source. Reviewer confirmed unknown-age saved progress appears only in a separate Fortsätt där ni var card, Mina retains progress, previous per-cell accessibility/null-age consumers remain correct, and both fresh screenshots match the plan. Local source/UI checkpoint only; native accessibility and live backend are NOT TESTABLE. Dog Expert QA PASS, scoped checks PASS, no tests or DB operations."
+        }
+      ],
+      "next_step": "Reviewer PASS 2026-10-14 for v4.3 handoff and source. Reviewer confirmed unknown-age saved progress appears only in a separate Fortsätt där ni var card, Mina retains progress, previous per-cell accessibility/null-age consumers remain correct, and both fresh screenshots match the plan. Local source/UI checkpoint only; native accessibility and live backend are NOT TESTABLE. Dog Expert QA PASS, scoped checks PASS, no tests or DB operations."
+    },
+    {
+      "id": "HOME-ROUTINE-CHECKLIST-01",
+      "title": "Hem: named routines with independent checklists and repeat schedules",
+      "mvp_requirement": "Ägarens UI-mandat 2026-10-14: rutinnamn och separata checklistor, en samlad Redigera-knapp per rutin, förklaringar bakom (i), samt valfri daglig eller egen dags-/vecko-/månadsupprepning",
+      "plan": "docs/tasks/dev/daily-routines-checklists.md v5",
+      "write_paths": [
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "tools/visual-check/app.tsx",
+        "docs/design/evidence/vision-rev02/routine-checklists",
+        "src/features/home/README.md",
+        "docs/plans/HOME-REV02-visual-ux-spec.md",
+        "docs/plans/HOME-ROUTINE-CHECKLIST-01-ux-spec.md",
+        "docs/tasks/dev/daily-routines-checklists.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "New routine form starts with Name on top, its own mandatory first checklist item, then optional recurrence; routines retain separate ordered item labels and stable IDs",
+        "Each saved routine has one accessible pencil-and-text Redigera button beside its name; it opens whole-routine edit mode for name, all checklist labels and recurrence. Add appends a row with a stable ID; minus removes that row and keeps remaining order/IDs. No per-item edit controls or long-press menu in read mode. Only one routine may be edited; all routine/day selections, including training selections, are blocked while a draft or pending/unknown mutation exists.",
+        "Long intro and repeated explanatory paragraphs are removed; one (i) button exposes concise help; routine cards show only name, checklist, and short repeat summary",
+        "Recurrence defaults to Never; daily or custom 1-30 day/week/month interval uses dog-local date rules and an immutable anchor; monthly dates clamp to month end without anchor drift",
+        "Same-name/list edits preserve the anchor; actual schedule changes reset it using the IANA zone captured in the save intent; identical retry after midnight reads back the original anchor",
+        "Home loading materializes due routines idempotently for the current local date; an owner can still add a one-off occurrence off schedule",
+        "An existing active or skipped day copy is never overwritten when a rule is created/changed; due recurring removal stores full tombstone, preserves original day ID/completed_at, and legacy DELETE remains hidden from old clients",
+        "Same-day re-add restores the frozen copy; schedule-change-then-remove uses frozen recurring status or current due rule; monotonic day revision and mutation ID prevent stale skip retries after ABA changes",
+        "Template and repeat-rule writes use atomic revision CAS/readback; frozen daily snapshots and completion state are not rewritten by future template edits",
+        "Backfill preserves old routines/day selections/completion timestamps and creates no recurrence for legacy rows; old-client create/rename/add/complete/delete paths remain compatible with newly scheduled routines",
+        "Lifecycle/privacy docs cover template schedule, anchor, occurrence tombstone access/copy inventory, cascade deletion and existing 30-day purge",
+        "A cross-screen copy inventory identifies redundant intros for optional info buttons and preserves consent, privacy, safety, status, and recovery text in context",
+        "Public create/replace/ensure/skip RPC grants, owner isolation, recurrence calculation/skip behavior and trigger chain receive static Security review; database runtime verification remains a separate release blocker",
+        "Fresh RN Web screenshots cover pencil, info help, create/edit recurrence, interval summaries, due date, skip/re-add, active/manual/skipped rule-change states, pending/failed/unknown/retry, separate routines, compact Home card and §14 viewport/large-text assessment",
+        "Dirty drafts require explicit discard confirmation on sheet close/back/scope exit; pending/unknown cannot be abandoned before exact retry/readback, and forced account/session unmount may clear only the local dog-scoped draft without writing. Render discard confirmation and failed/unknown states with all fields retained; block all routine/day selections, including training selections, during draft/pending."
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint on all changed TS/TSX files",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "RN Web build and manual 375/430/667 plus 140% text render",
+        "Static SQL/RLS/security review only; do not run tests or migration in this local task"
+      ],
+      "depends_on": [
+        "VISION-R02-2"
+      ],
+      "status": "implementing",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED 2026-10-14 for exact daily-routines-checklists.md v3. Locked-down public.replace_daily_routine is PostgREST-reachable; private helpers/triggers remain unexposed. Routine product implementation waits until HOME-AGE review closes shared Home files."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "HOME-AGE-LIFECYCLE-01 and R02-3C are checkpointed. Begin the already Architect APPROVE/Critic PROCEED v3 routine checklist implementation with the approved Home file scope, public RPC security contract and manual render; do not apply the migration or run tests."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "UI/data layer, checklist migration source, public/review RN Web builds, typecheck, lint and manual Home/routine-sheet renders are complete. Evidence: docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md. Captured 375x844, 430x844, 375x667 and 140% text proxy; verified visible Hantera entry, name-first form, icon/text edit/insert/delete, long-press reveal and exact add/remove labels; no browser page errors. No test suite or database action. Independent QA/Reviewer and static Security signoff remain pending; runtime verification is separate."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Owner expanded scope after v3 QA implementation: pencil-only checklist control, info-button help, and recurring day/week/month schedules require fresh architecture/critic approval and renewed UI evidence. Prior v3 QA/reviewer/security does not approve these additions."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Replanned as v4 at docs/tasks/dev/daily-routines-checklists.md: recurrence anchor/date semantics, due-day idempotent RPC, durable skip/re-add, compact copy and pencil/info interactions are specified. Await Architect and Critic review before continuing recurrence implementation."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED 2026-10-14 for exact daily-routines-checklists.md v4 and synchronized runtime contract: repeat anchors, four RPCs, ABA-safe skip/re-add, complete tombstones, shared lock order, old-client compatibility and lifecycle are specified."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Owner authorized v4 behavior. VISION-R02-2 dependency is done. Begin v4 UI/data/migration changes on top of local v3 routine implementation; request fresh static Security and fresh UI QA/Reviewer after code and render. Do not apply migration or run tests."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "V4 UI/data/model and unapplied migration source are implemented. Typecheck, changed-file eslint, public/review RN Web builds, manual Chromium captures, diff check and queue validation pass; browser captures have no page errors. The v4 render report and cross-screen info-copy inventory are current. No tests or database operations were run. Fresh independent UI QA/Reviewer and v4 static Security review are still pending; runtime verification remains separate."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Eriks nya beslut ersätter v4:s punktvisa redigeringsmodell med en Redigera-knapp per rutin och samlat edit mode; plan v5 och oberoende Architect/Critic-review krävs före implementation."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Korrigerad v5: synkade rutin-/träningsvalslås, explicit discard vid dirty close/scopebyte, pending/unknown låst till readback/retry. Väntar nu på nytt Architect/Critic-godkännande av exakt revision."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE + Critic PROCEED för exakt docs/tasks/dev/daily-routines-checklists.md v5 och synkade UX-spec/queue, 2026-10-14; implementation inom nio v5 write paths, V4-data/RPC/migration frysta."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementer-plan mottagen: samlat read/edit/save/cancel, stabil append/minus, single-edit/dagsvalslås, dirty discard och renderfixture/evidence inom exakt v5 paths; V4 data/RPC/schema frozen."
+        }
+      ],
+      "next_step": "V5 UI-kod och statiska kontroller är klara. RENDER-REPORT.md dokumenterar tre befintliga 375x844 reviewbilder och Chromium SIGTRAP/crashpad-felet som stoppade återstående Playwright-captures; 430x844, 375x667, 140%-proxy och failed/unknown/retry saknar ännu färska v5-bilder. Återuppta rendering i fungerande Chromium, uppdatera evidence och slutför därefter oberoende UI QA/Reviewer. V4 data/RPC/schema är oförändrat."
+    },
+    {
+      "id": "HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01",
+      "title": "Hem: verifyera rutinchecklistors migration, RLS och legacy-klient",
+      "mvp_requirement": "Releaseverifiering av lokala HOME-ROUTINE-CHECKLIST-01 efter migrationskälla och UI är färdig",
+      "plan": "docs/tasks/dev/daily-routines-checklists.md v4, runtime-verify boundary",
+      "write_paths": [
+        "docs/design/evidence/vision-rev02/routine-checklists/runtime-verify/",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/dev/queue.json"
+      ],
+      "acceptance": [
+        "Apply the reviewed migration only in the approved disposable Supabase development project and record its environment identity",
+        "Backfill old routines/day selections preserves IDs, labels, completion timestamps and creates Never recurrence with false occurrence flags and an empty skip table",
+        "Verify due dates for daily, every-N-days, same-weekday every-N-weeks, monthly dates and end-of-month clamping without anchor drift across short months",
+        "Verify create/replace derives local anchor from a validated IANA zone, unchanged rules preserve the anchor, changed rules reset it, and retry across midnight returns the original anchor",
+        "Verify ensure_due_daily_routine_days is idempotent, authenticated owner-only, current-local-date scoped, and does not create rows for non-due schedules",
+        "Verify skip tombstones survive reload and concurrent ensure; re-add restores exact day ID, snapshot, completion IDs and completed_at; next due occurrence snapshots edited template",
+        "Verify manual existing day row → rule changed to make it due → remove → concurrent ensure remains suppressed; stored recurring rows remain skippable after rule changes",
+        "Verify skip → re-add → skip followed by a stale retry of the original mutation ID is rejected/conflicted and cannot alter current state",
+        "Verify legacy direct DELETE of a scheduled routine selection remains absent to the old client and prevents ensure from recreating it; legacy INSERT restores the frozen skipped snapshot",
+        "Owner A cannot read or mutate owner B routine/template/day/skip snapshots; triggers reject forged snapshots, invalid schedule values, invalid zones and stale revision",
+        "Retry after uncertain writes does not duplicate routine templates, day rows or completion state; delete/cascade and existing 30-day purge cover free-text day and skip snapshots",
+        "Call all four public routine RPCs through PostgREST and verify PUBLIC/anon denial, owner success, other-owner denial and private-schema isolation without using production"
+      ],
+      "checks": [
+        "Use synthetic data with two authenticated owners in a disposable development database",
+        "Apply reviewed migration transactionally; probe daily/interval recurrence, date-zone, month-end, anchor retry, legacy delete/restore, skip/re-add, ABA retry, snapshot, RPC grants, RLS, CAS/readback, cascade and purge behavior",
+        "Record outputs without real owner data; do not use production"
+      ],
+      "depends_on": [
+        "HOME-ROUTINE-CHECKLIST-01"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Release verification only. Schedule after v4 migration is reviewed and an authorized disposable development Supabase project and legacy-client probe are available; no database action is part of the local UI task."
     }
   ]
 }

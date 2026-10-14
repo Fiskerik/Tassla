@@ -1,7 +1,7 @@
 # R02-3B Träning — implementeringsrender och §14 egenkontroll
 
 Datum: 2026-10-13 · Branch: `design/vision-rev02` · Plan: R02-3 v6.1 §R02-3B
-Status: implementerad i lokal arbetskopia; renderad egenkontroll klar. Oberoende QA, Reviewer och Security återstår. Panel 6:s fulla visuella matchning är **Nej** enligt §14 punkt 16.
+Status: R02-3B lokal UI-checkpoint klar efter owner-QA PASS, statisk Security PASS och Reviewer PASS. Panel 6:s fulla visuella matchning är **Nej** enligt §14 punkt 16 och avvikelsen är kvar.
 
 ## Omfattning och fixture
 
@@ -64,4 +64,4 @@ Browsern rapporterade inga JavaScript-sidfel. `ProductWorkspace` har ett separat
 17. **Ja** — Träning är aktiv huvudflik; segmenten byter mellan faktiskt befintlig program-/stegmängd och Mina-progress.
 18. **Ej tillämpligt** — panelen visar inte en identifierad hund; träningsbilden är generisk och redaktionell.
 
-Den här egenkontrollen är inte den separata QA-, Reviewer- eller Security-granskning som krävs för checkpoint. Nästa tillåtna steg är oberoende granskning av fryst diff och evidens; Kunskapsslicen väntar tills dess.
+Oberoende Reviewer PASS 2026-10-14 granskade nuvarande källa och befintliga public/review-renderingar efter HOME-AGE v4.3. Ägar-QA PASS och statisk Security PASS är dokumenterade i `docs/tasks/dev/vision-rev02-r02-3-reviews.md`. Ingen check/build/test kördes av Reviewer; native och live RLS är NOT TESTABLE. Panelavvikelsen enligt §14 punkt 16 förblir dokumenterad.
