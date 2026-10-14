@@ -20,6 +20,10 @@ const reviewContentEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === '
 declare global {
   interface Window {
     __know02MutationFault?: string;
+    __know02WriteAttempts?: { table: string; mode: string; filters: Record<string, unknown>; payload: Record<string, unknown> }[];
+    __know02PreferenceFailuresRemaining?: number;
+    __know02ChecklistReads?: number;
+    __know02ChecklistWrites?: number;
     __know02CloudWrites?: number;
     __know02ContinueCount?: number;
     __know02WriteDelayMs?: number;
@@ -32,9 +36,11 @@ declare global {
 }
 
 function makeClient() {
+  const completedPresetRows = ['quiet-start', 'routine', 'rest'].map((item_key) => ({ dog_id: DOG_ID, template_id: FIRST_DAYS, item_key }));
+  let failDetailRead = initialState === 'detail-error';
   const tables: Record<string, Record<string, unknown>[]> = {
-    dog_checklist_progress: initialState === 'empty' ? [] : [{ dog_id: DOG_ID, template_id: FIRST_DAYS, item_key: 'quiet-start' }],
-    dog_checklist_custom_items: initialState === 'empty' ? [] : [{ id: CUSTOM_ID, dog_id: DOG_ID, template_id: FIRST_DAYS, title: 'Boka valpkurs', completed: false }],
+    dog_checklist_progress: initialState === 'empty' || initialState === 'zero' ? [] : initialState === 'complete' ? completedPresetRows : [completedPresetRows[0]],
+    dog_checklist_custom_items: initialState === 'empty' ? [] : [{ id: CUSTOM_ID, dog_id: DOG_ID, template_id: FIRST_DAYS, title: 'Boka valpkurs', completed: initialState === 'complete' }],
     dog_checklist_preferences: initialState === 'empty' ? [] : [{ dog_id: DOG_ID, context: 'first_days' }],
   };
   let failNextRead = initialState === 'error';
@@ -46,14 +52,28 @@ function makeClient() {
     let selected = false;
     const matches = (row: Record<string, unknown>) => Object.entries(filters).every(([key, value]) => row[key] === value);
     async function execute() {
+      if (table.startsWith('dog_checklist_')) {
+        if (mode === 'select') window.__know02ChecklistReads = (window.__know02ChecklistReads ?? 0) + 1;
+        else {
+          window.__know02ChecklistWrites = (window.__know02ChecklistWrites ?? 0) + 1;
+          (window.__know02WriteAttempts ??= []).push({ table, mode, filters: { ...filters }, payload: { ...payload } });
+        }
+      }
       const rows = tables[table] ?? (tables[table] = []);
       let data: unknown = null;
       if (initialState === 'loading') await new Promise((resolve) => setTimeout(resolve, 1600));
       if (mode !== 'select' && window.__know02WriteDelayMs) await new Promise((resolve) => setTimeout(resolve, window.__know02WriteDelayMs));
       if (mode === 'select' && failNextRead) { failNextRead = false; return { data: null, error: { message: 'Synthetic read error' } }; }
+      if (mode === 'select' && failDetailRead && filters.template_id === FIRST_DAYS) { failDetailRead = false; return { data: null, error: { message: 'Synthetic detail read error' } }; }
       if (mode === 'select' && window.__know02MutationFault === 'unknown-read') {
         window.__know02MutationFault = undefined;
         return { data: null, error: { message: 'Synthetic uncertain read' } };
+      }
+      if (mode !== 'select' && table === 'dog_checklist_preferences' && (window.__know02PreferenceFailuresRemaining ?? 0) > 0) {
+        window.__know02Mutations ??= [];
+        window.__know02Mutations.push({ table, mode, filters: { ...filters }, payload: { ...payload } });
+        window.__know02PreferenceFailuresRemaining = (window.__know02PreferenceFailuresRemaining ?? 1) - 1;
+        return { data: null, error: { message: 'Synthetic preference write error' } };
       }
       if (mode !== 'select' && window.__know02MutationFault === 'failed') {
         window.__know02MutationFault = undefined;
