@@ -74,14 +74,14 @@ with sync_playwright() as p:
         screenshot(page, f'checklist-overview-{width}.png')
 
         open_template(page)
-        check('25 % · 1 av 4 genomförda' in page.locator('body').inner_text(), f'Detail progress percentage and count at {width}px')
+        check('1 av 4 genomförda' in page.locator('body').inner_text(), f'Detail progress count at {width}px')
         check(no_horizontal_overflow(page), f'Checklist detail has no horizontal overflow at {width}px')
         screenshot(page, f'checklist-detail-{width}.png')
 
         if width == 375:
             before_mark = checkbox_mark(page, 'Boka valpkurs')
             page.get_by_role('checkbox', name='Boka valpkurs').click()
-            page.get_by_text('50 % · 2 av 4 genomförda').wait_for(timeout=3000)
+            page.get_by_text('2 av 4 genomförda').wait_for(timeout=3000)
             check(checkbox_mark(page, 'Boka valpkurs') != before_mark, 'Own checklist item toggles directly and updates progress')
             screenshot(page, 'checklist-custom-checked-375.png')
 

@@ -4,7 +4,8 @@ import { tokens } from '../../theme/tokens';
 import { MotionPressable } from './Motion';
 
 type Mode = 'Home' | 'Back' | 'Close' | 'Title';
-export function AppBar({ mode, title, onAction, actionLabel, disabled = false }: { mode: Mode; title: string; onAction?: () => void; actionLabel?: string; disabled?: boolean }) {
+type AppBarVariant = 'default' | 'compact';
+export function AppBar({ mode, title, onAction, actionLabel, disabled = false, variant = 'default' }: { mode: Mode; title: string; onAction?: () => void; actionLabel?: string; disabled?: boolean; variant?: AppBarVariant }) {
   const control = (icon: 'chevron-back' | 'close' | 'notifications-outline', label: string) => (
     <MotionPressable accessibilityRole="button" accessibilityLabel={actionLabel ?? label} accessibilityState={{ disabled }} disabled={disabled} onPress={onAction} style={({ pressed }) => [styles.action, pressed && !disabled && styles.pressed]}>
       <Ionicons name={icon} size={tokens.size.iconMd} color={tokens.colors.textPrimary} />
@@ -18,7 +19,7 @@ export function AppBar({ mode, title, onAction, actionLabel, disabled = false }:
   </View>;
 
   return <View style={[styles.bar, styles.titleBar]}>
-    <Text style={styles.brand} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">Tassla</Text>
+    {variant === 'default' ? <Text style={styles.brand} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">Tassla</Text> : null}
     <View style={styles.titleRow}>
       <View style={styles.side}>{mode === 'Back' ? control('chevron-back', 'Tillbaka') : null}</View>
       <Text accessibilityRole="header" style={styles.title}>{title}</Text>

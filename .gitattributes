@@ -1,2 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Checkpoint patches preserve source whitespace as serialized unified diffs.
+/docs/design/evidence/vision-rev02/checklist-luna/**/CHECKPOINT-*.patch -whitespace
+/docs/design/evidence/vision-rev02/checklist-luna/detail/CHECKPOINT-DETAIL.md -whitespace
+/docs/design/evidence/vision-rev02/checklist-luna/overview/CHECKPOINT-OVERVIEW.md -whitespace

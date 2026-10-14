@@ -5543,6 +5543,257 @@
         }
       ],
       "next_step": "Local Slice A static handoff passes independent QA and Reviewer; Security APPROVE, including closure of the access/copy inventory note. Keep blocked for integration completion: actual Supabase migration, owner RLS, saved-preference persistence, native PDF and native accessibility are NOT TESTABLE in this environment. No database/runtime pass is claimed."
+    },
+    {
+      "id": "CHECKLIST-UI-LUNA-DETAIL",
+      "title": "Grupperad och kompakt detaljvy för faschecklistor",
+      "mvp_requirement": "docs/mvp.md: §Skärm 5 Kunskap; Eriks uttryckliga UI-beställning 2026-10-13",
+      "plan": "docs/tasks/dev/CHECKLIST-UI-LUNA-01.md v4; docs/plans/CHECKLIST-UI-LUNA-01-ux-spec.md v4",
+      "write_paths": [
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/components/ui/ChecklistItem.tsx",
+        "src/components/ui/AppBar.tsx",
+        "src/features/knowledge/README.md",
+        "tests/checklist-ui.test.mjs",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify-know02.py",
+        "docs/design/evidence/vision-rev02/checklist-luna/detail",
+        "docs/tasks/dev/CHECKLIST-UI-LUNA-01.md",
+        "docs/plans/CHECKLIST-UI-LUNA-01-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Samlad ljus uppgiftsyta och diskreta radseparatorer med minst 44 pt tryckyta",
+        "En enda progressetikett utan procent; confirmed total/done semantik bevaras",
+        "Reviewmärkning visas en gång och kompakt opt-in AppBar behåller fungerande back",
+        "Befintlig loading/error/pending/saved/failed/unknown bevaras; reviewflagga false ger ingen reviewpresentation och noll checklistläsningar/skrivningar",
+        "Vid pågående bockning visar endast aktuell rad synlig Sparar… och tillgänglig namn/state; bock/count ändras efter confirmed save"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm lint",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "Manuell jämförelse och skärmbilder 375x844/430x844/375x667/140% text; inga tester körs",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_ENTRY=tools/visual-check/know02-app.tsx TASSLA_UI_OUTPUT=/tmp/tassla-preview/checklist-luna/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_ENTRY=tools/visual-check/know02-app.tsx TASSLA_UI_OUTPUT=/tmp/tassla-preview/checklist-luna/review node tools/visual-check/build.cjs",
+        "Manuell no-I/O-kontroll i publicläge och renderingsjämförelse 375x844/430x844/375x667/140% text; kontrollera checkboxens roll/namn/checked/busy state; inga tester körs"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact task/UX v2 and Critic PROCEED; reviews saved in docs/tasks/dev/rapport.md. User mandate is 2026-10-13 request to implement checklist-ui-luna-plan.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin only the detail-view slice under approved plan v2; overview/custom remain planned behind its QA/reviewer checkpoint."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Plan v3 adds required per-row pending feedback; v2 approvals no longer authorize current plan. Await fresh Architect/Critic review before further implementation."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v3 is ready for fresh review; prior v2 approval superseded and no QA checkpoint exists."
+        },
+        {
+          "from": "planned",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Plan v4 adds accessible-name/state exposure for the pending row after Critic found the v3 visual-only status inaccessible; v3 APPROVE is superseded by CHANGES."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "V4 task, UX spec and queue are synchronized; await fresh Architect/Critic review, with source work paused."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact task/UX v4 and Critic PROCEED; both reviews saved in docs/tasks/dev/rapport.md. V4 acceptance includes visible and accessible pending status; public no-I/O gate retained."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin only CHECKLIST-UI-LUNA-DETAIL under approved v4; add target-row visible/accessibility pending feedback while preserving confirmed-save semantics. Overview/custom remain planned behind QA/Reviewer checkpoint."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation report and renders: docs/design/evidence/vision-rev02/checklist-luna/detail/RENDER-REPORT.md; typecheck, lint, public/review builds, diffcheck, and queue validation PASS. Independent QA requested."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent read-only QA PASS 2026-10-13; report and render matrix: docs/design/evidence/vision-rev02/checklist-luna/detail/RENDER-REPORT.md. Reviewer requested next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS 2026-10-13 following QA PASS; reports: docs/design/evidence/vision-rev02/checklist-luna/detail/RENDER-REPORT.md and docs/tasks/dev/rapport.md. No commit/push; documented frozen-diff checkpoint will precede Overview."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS 2026-10-13 following QA PASS; reports: docs/design/evidence/vision-rev02/checklist-luna/detail/RENDER-REPORT.md and docs/tasks/dev/rapport.md. No commit/push; documented frozen-diff checkpoint will precede Overview."
+    },
+    {
+      "id": "CHECKLIST-UI-LUNA-OVERVIEW",
+      "title": "Fasöversikt och kontextval för checklistor",
+      "mvp_requirement": "docs/mvp.md: §Skärm 5 Kunskap; Eriks uttryckliga UI-beställning 2026-10-13",
+      "plan": "docs/tasks/dev/CHECKLIST-UI-LUNA-01.md v4.3",
+      "write_paths": [
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/components/ui/BottomSheet.tsx",
+        "src/features/knowledge/README.md",
+        "tests/checklist-ui.test.mjs",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify-know02.py",
+        "docs/design/evidence/vision-rev02/checklist-luna/overview",
+        "docs/tasks/dev/CHECKLIST-UI-LUNA-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Kompakt sammanfattning skiljer sparad preference från osparad by_age-fallback; BottomSheet har exakt before_homecoming, first_days och by_age",
+        "Nytt kontextval blir inte sammanfattningens sparade läge förrän confirmed saved; pending/failed och upprepat misslyckad retry behåller tidigare sparat val eller fallback i både sammanfattning och rekommendation; varje Försök igen skickar om exakt samma val; unknown väntar på Kontrollera/reconciliation",
+        "Rekommenderad fas först och återstående fem faser utan dubbelkort",
+        "Progress/read-state är sanningsenliga under loading/error och alla sex faser öppnas; fasläsning ändrar inte sparat val"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm lint",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "Manuell jämförelse och skärmbilder 375x844/430x844/375x667/140% text; inga tester körs",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_ENTRY=tools/visual-check/know02-app.tsx TASSLA_UI_OUTPUT=/tmp/tassla-preview/checklist-luna/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_ENTRY=tools/visual-check/know02-app.tsx TASSLA_UI_OUTPUT=/tmp/tassla-preview/checklist-luna/review node tools/visual-check/build.cjs",
+        "Manuell no-I/O-kontroll i publicläge och renderingsjämförelse 375x844/430x844/375x667/140% text; inga tester körs",
+        "För både befintlig preference och by_age fallback prova pending, saved, failed + Försök igen med samma target, låt retry också misslyckas och kontrollera att summary/rekommendation behåller gamla värdet/fallback även efter upprepad failure och ny retry; prova unknown före/efter Kontrollera och bekräfta att summary/rekommendation ändras först efter confirmed save eller reconciliation"
+      ],
+      "depends_on": [
+        "CHECKLIST-UI-LUNA-DETAIL"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED for exact CHECKLIST-UI-LUNA-01 v4.3; reports in docs/tasks/dev/rapport.md. Queue/task synchronized and detail dependency is QA PASS, Reviewer PASS, checkpointed."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin only the approved Overview v4.3 slice after both plan reviews and detail checkpoint; Custom stays planned behind Overview QA/Reviewer/checkpoint."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Overview v4.3 implementation and manual render/state report: docs/design/evidence/vision-rev02/checklist-luna/overview/RENDER-REPORT.md. Typecheck, lint, public/review builds, diffcheck, queue validation PASS. Request independent QA; no tests were run."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS 2026-10-13 after corrected review-mode unknown and reconciled captures. Both show the review marker; fallback is preserved before Kontrollera and confirmed preference follows reconciliation. Render report updated."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS 2026-10-13 for exact Overview v4.3 after QA PASS and corrected matching review-mode captures. No source blocker; Custom remains planned. Freeze and hash-verify the Overview diff checkpoint before Custom starts."
+        }
+      ],
+      "next_step": "Overview v4.3 is frozen and hash-verified in docs/design/evidence/vision-rev02/checklist-luna/overview/CHECKPOINT-OVERVIEW.patch. Handoff to CHECKLIST-UI-LUNA-CUSTOM; keep the approved checkpoint intact while starting that separate slice."
+    },
+    {
+      "id": "CHECKLIST-UI-LUNA-CUSTOM",
+      "title": "Sheetflöde för egna checklistpunkter",
+      "mvp_requirement": "docs/mvp.md: §Skärm 5 Kunskap; Eriks uttryckliga UI-beställning 2026-10-13",
+      "plan": "docs/tasks/dev/CHECKLIST-UI-LUNA-01.md v4.3",
+      "write_paths": [
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/components/ui/ChecklistItem.tsx",
+        "src/components/ui/BottomSheet.tsx",
+        "src/features/knowledge/README.md",
+        "tests/checklist-ui.test.mjs",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify-know02.py",
+        "docs/design/evidence/vision-rev02/checklist-luna/custom",
+        "docs/tasks/dev/CHECKLIST-UI-LUNA-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Add/edit/delete i sheet med separat accessible editkontroll och samma lagringskontrakt; grouped-checkboxen följer fyrkantig rev02-form",
+        "Pending/failed/unknown/Kontrollera syns där användaren kan agera och utkast/UUID bevaras",
+        "Inga falska sparmarkeringar, ny offlinekö eller beständig lokal lagring"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm lint",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "Manuell jämförelse och skärmbilder 375x844/430x844/375x667/140% text; inga nya testfall läggs till; repo-hookarna kör pnpm check inklusive testsviten före commit och push",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_ENTRY=tools/visual-check/know02-app.tsx TASSLA_UI_OUTPUT=/tmp/tassla-preview/checklist-luna/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_ENTRY=tools/visual-check/know02-app.tsx TASSLA_UI_OUTPUT=/tmp/tassla-preview/checklist-luna/review node tools/visual-check/build.cjs",
+        "Manuell no-I/O-kontroll i publicläge och renderingsjämförelse 375x844/430x844/375x667/140% text; inga nya testfall läggs till; repo-hookarna kör pnpm check inklusive testsviten före commit och push"
+      ],
+      "depends_on": [
+        "CHECKLIST-UI-LUNA-OVERVIEW"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED apply to the exact staged checklist plan v4.3. Overview QA PASS, Reviewer PASS, checkpoint SHA-256 verified; Custom is now ready as the next separate slice."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start only the approved Custom slice after the Overview v4.3 QA PASS, Reviewer PASS, and hash-verified frozen checkpoint. Implement Add/Edit/Delete in BottomSheet while preserving drafts, UUID and existing write/reconciliation behavior. Detail and Overview checkpoints remain frozen."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Custom implementation and manual render report: docs/design/evidence/vision-rev02/checklist-luna/custom/RENDER-REPORT.md. Typecheck, lint, public/review builds, diffcheck and queue validation PASS; no tests run. Request independent read-only QA."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent read-only QA re-review PASS 2026-10-14 after requested render-matrix and square rev02 checkbox corrections. Report: docs/design/evidence/vision-rev02/checklist-luna/custom/RENDER-REPORT.md. Request independent read-only Reviewer."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS 2026-10-14 after focused QA PASS for the cancel-after-failure correction. Custom implementation and documentation gates pass; static QA disclosed no fresh interactive cancel reproduction and platform/backend limitations remain NOT TESTABLE. Freeze and hash the Custom checkpoint now; no commit/push."
+        }
+      ],
+      "next_step": "Custom QA PASS and independent Reviewer PASS 2026-10-14; frozen diff and SHA-256 manifest: docs/design/evidence/vision-rev02/checklist-luna/custom/CHECKPOINT-CUSTOM.patch. External QA will recheck after actual release per user caveat; no commit/push/release."
     }
   ]
 }
