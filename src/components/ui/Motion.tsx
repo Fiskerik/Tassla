@@ -26,14 +26,29 @@ export function useReducedMotion() {
 }
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function MotionPressable({ style, onPressIn, onPressOut, ...props }: PressableProps) {
+export function MotionPressable({ style, onPressIn, onPressOut, onHoverIn, onHoverOut, ...props }: PressableProps) {
   const reduced = useReducedMotion();
   const [pressed, setPressed] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [wasDisabled, setWasDisabled] = useState(false);
   const [scale] = useState(() => new Animated.Value(1));
   useEffect(() => {
-    if (reduced || props.disabled) { scale.stopAnimation(); scale.setValue(1); }
+    if (props.disabled) {
+      scale.stopAnimation();
+      scale.setValue(1);
+    } else if (reduced) {
+      scale.stopAnimation();
+      scale.setValue(1);
+    }
     return () => scale.stopAnimation();
   }, [props.disabled, reduced, scale]);
+  if (props.disabled && !wasDisabled) {
+    setPressed(false);
+    setHovered(false);
+    setWasDisabled(true);
+  } else if (!props.disabled && wasDisabled) {
+    setWasDisabled(false);
+  }
   function animate(pressed: boolean) {
     scale.stopAnimation();
     Animated.timing(scale, {
@@ -42,10 +57,15 @@ export function MotionPressable({ style, onPressIn, onPressOut, ...props }: Pres
       easing: Easing.out(Easing.cubic), useNativeDriver: true,
     }).start();
   }
+  const resolvedStyle = typeof style === 'function'
+    ? style({ pressed: pressed && !props.disabled, hovered: hovered && !props.disabled })
+    : style;
   return <AnimatedPressable {...props}
-    onPressIn={(event) => { setPressed(true); animate(true); onPressIn?.(event); }}
+    onPressIn={(event) => { const isPressed = !props.disabled; setPressed(isPressed); animate(isPressed); onPressIn?.(event); }}
     onPressOut={(event) => { setPressed(false); animate(false); onPressOut?.(event); }}
-    style={[typeof style === 'function' ? style({ pressed: pressed && !props.disabled }) : style, { transform: [{ scale }] }]} />;
+    onHoverIn={(event) => { const isHovered = !props.disabled; setHovered(isHovered); onHoverIn?.(event); }}
+    onHoverOut={(event) => { setHovered(false); onHoverOut?.(event); }}
+    style={[resolvedStyle, { transform: [{ scale }] }]} />;
 }
 
 export function ScreenTransition({ children, transitionKey, direction = 'forward', axis = 'y' }: {

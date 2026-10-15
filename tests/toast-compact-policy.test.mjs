@@ -4,7 +4,7 @@ import test from 'node:test';
 
 const read = (path) => readFileSync(path, 'utf8');
 const toast = read('src/components/ui/Toast.tsx');
-const logScreen = read('src/features/puppy-log/LogScreen.tsx');
+const logScreen = read('src/features/puppy-log/LogScreen.tsx').replace(/\r\n?/g, '\n');
 
 test('only confirmed success receives the decorative green check and compact success styles', () => {
   assert.match(toast, /effectiveTone = tone === 'success' && !confirmed \? 'uncertain' : tone/);

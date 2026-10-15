@@ -6303,7 +6303,7 @@
       "depends_on": [
         "VISION-R02-2"
       ],
-      "status": "implementing",
+      "status": "blocked",
       "history": [
         {
           "from": "planned",
@@ -6376,9 +6376,15 @@
           "to": "implementing",
           "actor": "implementer",
           "evidence": "Implementer-plan mottagen: samlat read/edit/save/cancel, stabil append/minus, single-edit/dagsvalslås, dirty discard och renderfixture/evidence inom exakt v5 paths; V4 data/RPC/schema frozen."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Kandidat 9a81815 har v5-kod men saknar färska renders vid 430x844, 375x667, 140% och create/saved/failed/unknown/retry; Chromium dog med SIGTRAP/crashpad. Oberoende UI QA/Reviewer väntar. UX-FIX v1.1 omarbetar rutineditorn; frys skrivningar och bevara koden tills den nya planen återupptar rutindelen."
         }
       ],
-      "next_step": "V5 UI-kod och statiska kontroller är klara. RENDER-REPORT.md dokumenterar tre befintliga 375x844 reviewbilder och Chromium SIGTRAP/crashpad-felet som stoppade återstående Playwright-captures; 430x844, 375x667, 140%-proxy och failed/unknown/retry saknar ännu färska v5-bilder. Återuppta rendering i fungerande Chromium, uppdatera evidence och slutför därefter oberoende UI QA/Reviewer. V4 data/RPC/schema är oförändrat."
+      "next_step": "Kandidat 9a81815 har v5-kod men saknar färska renders vid 430x844, 375x667, 140% och create/saved/failed/unknown/retry; Chromium dog med SIGTRAP/crashpad. Oberoende UI QA/Reviewer väntar. UX-FIX v1.1 omarbetar rutineditorn; frys skrivningar och bevara koden tills den nya planen återupptar rutindelen."
     },
     {
       "id": "HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01",
@@ -6415,6 +6421,138 @@
       "status": "planned",
       "history": [],
       "next_step": "Release verification only. Schedule after v4 migration is reviewed and an authorized disposable development Supabase project and legacy-client probe are available; no database action is part of the local UI task."
+    },
+    {
+      "id": "UX-FIX-BASELINE-WINDOWS-01",
+      "title": "Korrigera Windows-portabilitet i två baslinjetester",
+      "mvp_requirement": "docs/mvp.md: lokal UX-fix-verifiering; ingen ändring av produktkrav",
+      "plan": "docs/tasks/dev/ux-fix-baseline-windows.md v1; UX-FIX plan v1.1",
+      "write_paths": [
+        "tests/content-release-guard.test.mjs",
+        "tests/toast-compact-policy.test.mjs"
+      ],
+      "acceptance": [
+        "Fem content-release-scenarier behåller review/public/invalid/missing/unknown-kontrakten och passerar på Windows.",
+        "Toast-test normaliserar radslut men behåller strikt grid → successToast → Fler-ordning och samtliga befintliga feedbackassertioner.",
+        "Endast de två godkända testfilerna ändras; inga scenarier/tester tas bort eller försvagas."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/content-release-guard.test.mjs tests/toast-compact-policy.test.mjs",
+        "pnpm test",
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE UX-FIX-BASELINE-WINDOWS-01 v1 och Critic PROCEED 2026-10-15; endast testportabilitet, två exakta write paths."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementer gpt-6-luna medium börjar den Architect APPROVE/Critic PROCEED-granskade testportabilitetsfixen på kandidat 9a81815; ägda filer är de två registrerade testfilerna."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "I vanlig checkout efter sync mot låst pnpm-lock.yaml passerar pnpm test 492/492 men pnpm check stoppar vid verkligt RN 0.86.3/Expo 57-typfel i Motion.tsx:48: style callback saknar hovered. Architect kräver separat avgränsad Motion-basfix innan full check kan godkänna denna testcheckpoint. Teständringarna är kvar och verifierade riktat samt i full testsvit; ingen Motion-kod ändrad ännu."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Återupptar exakt godkänd testportabilitetsplan v1 efter separat Motion-typbasfix; write scope och acceptance oförändrade."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Återanvänder sparat Architect APPROVE och Critic PROCEED 2026-10-15 för exakt plan v1; ingen planändring."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "De två godkända testfilerna har ändrats enligt plan v1; inga andra produktfiler eller scenarier har ändrats."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Riktad testkörning 10/10 PASS; pnpm check PASS med typecheck, edge, lint och 492/492 tester; python tools/dev_flow.py validate PASS; git diff --check PASS. Oberoende QA har granskat exakt testdiff och rapporterat PASS."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende QA PASS: exakt testdiff; riktad 10/10, pnpm check 492/492, queue validate och diff check PASS."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Oberoende Reviewer PASS: URL konverteras till native path före spawnSync; CR/CRLF-normalisering bevarar ordnings- och feedbackassertioner; inga tester/scenarier försvagade."
+        }
+      ],
+      "next_step": "Oberoende Reviewer PASS: URL konverteras till native path före spawnSync; CR/CRLF-normalisering bevarar ordnings- och feedbackassertioner; inga tester/scenarier försvagade."
+    },
+    {
+      "id": "UX-FIX-BASELINE-MOTION-01",
+      "title": "Rätta MotionPressables Pressable-statekontrakt",
+      "mvp_requirement": "docs/mvp.md: gemensamma UI-kontroller bevarar plattformsriktig press- och hoveråterkoppling",
+      "plan": "docs/tasks/dev/ux-fix-baseline-motion.md v1.1; UX-FIX plan v1.1",
+      "write_paths": [
+        "src/components/ui/Motion.tsx"
+      ],
+      "acceptance": [
+        "Konsumentens befintliga pressed-stilar och native-driven presskala bevaras; Animated.Value ligger kvar i konkret style-array.",
+        "Webbens hover-state skickas som { pressed, hovered }; konsumentens onPressIn/onPressOut/onHoverIn/onHoverOut kedjas exakt en gång.",
+        "När disabled blir true nollställs pressed, hovered och skalan; återaktivering utan out-event förblir neutral tills ny interaktion.",
+        "Reduced-motion och unmount cleanup fungerar; inga casts, focused-fält, konsumentändringar eller nya dependencies."
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/components/ui/Motion.tsx",
+        "pnpm check",
+        "git diff --check",
+        "RN Web interaction probe: hover/press handlers, disabled during interaction then re-enable, concrete Animated transform"
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exakt UX-FIX-BASELINE-MOTION-01 v1.1 2026-10-15 efter Critic PROCEED WITH CHANGES; disabled reset- och RN Web-probekrav införda."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementer gpt-6-luna medium börjar den Architect APPROVE/Critic-granskade enfilfixen; enda write path är src/components/ui/Motion.tsx."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Enfilimplementering klar; typecheck, riktad ESLint, full pnpm check (edge/lint/492 tester) och git diff --check PASS. Oberoende QA har granskat statiskt men kräver RN Web-probe som är NOT TESTABLE här."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Oberoende QA BLOCK och Reviewer BLOCK endast på obligatorisk RN Web interaction probe: react-native-web, react-dom, esbuild, Playwright och Chromium saknas i checkoutmiljön. Inga fel i statisk granskning; kör proben i dokumenterad isolerad harness innan done."
+        }
+      ],
+      "next_step": "Oberoende QA BLOCK och Reviewer BLOCK endast på obligatorisk RN Web interaction probe: react-native-web, react-dom, esbuild, Playwright och Chromium saknas i checkoutmiljön. Inga fel i statisk granskning; kör proben i dokumenterad isolerad harness innan done."
     }
   ]
 }
