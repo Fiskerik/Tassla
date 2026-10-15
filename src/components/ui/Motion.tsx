@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Animated, Easing, Pressable, type PressableProps } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 import { tokens } from '../../theme/tokens';
 
 export function useReducedMotionPreference() {
@@ -26,7 +26,11 @@ export function useReducedMotion() {
 }
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function MotionPressable({ style, onPressIn, onPressOut, onHoverIn, onHoverOut, ...props }: PressableProps) {
+type MotionPressableProps = Omit<PressableProps, 'style'> & {
+  style?: StyleProp<ViewStyle> | ((state: { pressed: boolean; hovered: boolean }) => StyleProp<ViewStyle>);
+};
+
+export function MotionPressable({ style, onPressIn, onPressOut, onHoverIn, onHoverOut, ...props }: MotionPressableProps) {
   const reduced = useReducedMotion();
   const [pressed, setPressed] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -57,8 +61,9 @@ export function MotionPressable({ style, onPressIn, onPressOut, onHoverIn, onHov
       easing: Easing.out(Easing.cubic), useNativeDriver: true,
     }).start();
   }
+  const styleState = { pressed: pressed && !props.disabled, hovered: hovered && !props.disabled };
   const resolvedStyle = typeof style === 'function'
-    ? style({ pressed: pressed && !props.disabled, hovered: hovered && !props.disabled })
+    ? style(styleState)
     : style;
   return <AnimatedPressable {...props}
     onPressIn={(event) => { const isPressed = !props.disabled; setPressed(isPressed); animate(isPressed); onPressIn?.(event); }}
