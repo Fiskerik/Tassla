@@ -259,7 +259,7 @@ Följande scenarier är acceptans för kontrollerad pilot. De är **krav att ver
 | E | Misslyckad eller okänd skrivning | Ingen falsk bock eller förlorad avsikt; begriplig återhämtning |
 | F | Individuellt vald senior-/slutskedesstatus | Begripliga separata etiketter, ingen klinisk slutsats eller historikförlust |
 
-Innan v2 kallas pilotredo ska nytt innehåll vara sakgranskat och kontrollerat publicerat, scenarierna ha faktiskt QA-underlag, och berörda backend-/RLS-, native-, PDF-, notis-, raderings- och distributionskontroller ha egen status. Kod, syntetiska tester och designrenderingar är inte bevis på live Supabase, fysisk iPhone eller TestFlight. [GAP-analysens prioritering](GAP_analys_Tassla%202026-10-16.md) är arbetsunderlag för små slices; den daterade statusen verifieras mot aktuell branch före varje uppgift.
+Innan v2 kallas pilotredo ska nytt innehåll vara sakgranskat och kontrollerat publicerat, scenarierna A–F ha faktiskt QA-underlag och alla tillämpliga kritiska kontroller för åtkomst/RLS, dataskydd, radering, notifieringar, native PDF, verklig backend och fysisk enhet vara **PASS med evidens för aktuell commit, build och miljö**. FAIL eller NOT TESTED håller berörd pilotgate öppen. Pilotens mätdefinitioner och verkliga insamlingsväg ska vara granskade, och faktisk pilotdistribution kräver sitt separata beslut. Kod, syntetiska tester och designrenderingar är inte bevis på live Supabase, fysisk iPhone eller TestFlight. [GAP-analysens prioritering](GAP_analys_Tassla%202026-10-16.md) är arbetsunderlag för små slices; den daterade statusen verifieras mot aktuell branch före varje uppgift.
 
 ## Utanför MVP
 
