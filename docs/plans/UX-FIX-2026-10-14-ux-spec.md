@@ -1,4 +1,6 @@
-# UX-FIX-2026-10-14 — UX-kontrakt v1.1
+# UX-FIX-2026-10-14 — UX-kontrakt v1.1 (historiskt)
+
+Status 2026-10-15: Eriks underkännande gäller de visuella underlagen för punkterna 2–7. Wireframes och jämförelsetabellen nedan är historiska och inte visuell acceptans. Nya UI-beslut finns i [UX-FIX-2026-10-15 v2.0](UX-FIX-2026-10-15-ux-spec.md); uttryckliga beteende-/datakontrakt återanvänds bara där den nya planen hänvisar till dem.
 
 Planförslag från Eriks sex telefonbilder 2026-10-14. Implementationsordning, basversion och tester finns i [uppgiftsplanen](../tasks/UX-FIX-2026-10-14.md). Följer `design-rules.md`, rev02 panel 1/4/5/6/7 och `tassla-consumer-ux`. Detta är inte en renderad eller visuellt godkänd leverans.
 

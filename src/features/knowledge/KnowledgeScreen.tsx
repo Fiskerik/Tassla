@@ -11,6 +11,7 @@ import { getSafeContentSourceUrl } from './source-links';
 import { getGuidePreviewText, parseGuideBody } from './guide-body';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { PuppyChecklistScreen } from './PuppyChecklistScreen';
+import { checklistReadCacheScope } from './checklist-data';
 import type { PendingChecklistMemory } from './checklist-intent';
 import { FAQScreen } from './FAQScreen';
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID } from './review-content';
@@ -75,6 +76,7 @@ export function KnowledgeScreen({
   }
 
   const reviewEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
+  const checklistScope = checklistReadCacheScope(sessionKey, dogId, reviewEnabled);
   return (
     <View style={styles.screen}>
       {selectedItem ? <AppBar mode="Back" title="Kunskap" actionLabel="Tillbaka till guider" onAction={() => { setOpenedId(null); onSelectContent(null); }} /> : null}
@@ -146,7 +148,7 @@ export function KnowledgeScreen({
         </View>
       </View> : null}
       {client && dogId ? <View style={{ display: tab === 'Checklistor' ? 'flex' : 'none' }}>
-        <PuppyChecklistScreen key={`${sessionKey}:${dogId}`} client={client} dogId={dogId} ageWeeks={ageWeeks} active={tab === 'Checklistor'} pendingState={checklistPending} onPendingStateChange={onChecklistPendingChange} onDetailChange={setChecklistDetailOpen} onBack={() => changeTab('För dig')} registerInvalidate={(invalidate) => { checklistInvalidate.current = invalidate; }} />
+        <PuppyChecklistScreen key={`${sessionKey}:${dogId}`} cacheScope={checklistScope} client={client} dogId={dogId} ageWeeks={ageWeeks} active={tab === 'Checklistor'} pendingState={checklistPending} onPendingStateChange={onChecklistPendingChange} onDetailChange={setChecklistDetailOpen} onBack={() => changeTab('För dig')} registerInvalidate={(invalidate) => { checklistInvalidate.current = invalidate; }} />
       </View> : null}
     </View>
   );

@@ -5,6 +5,28 @@ import type { HomeContent, OwnedDog } from './app-data';
 
 export const WORKSPACE_PAGE_SIZE = 40;
 const DEFAULT_REQUEST_TIMEOUT_MS = 12_000;
+
+export type WorkspaceSnapshotReadDecision = 'cache' | 'join' | 'request';
+
+export function workspaceSnapshotReadDecision(input: {
+  scope: string;
+  cacheScope?: string | null;
+  cachedAt?: number | null;
+  inFlightScope?: string | null;
+  now: number;
+  maxAgeMs: number;
+  cacheValid?: boolean;
+  force?: boolean;
+  supersede?: boolean;
+}): WorkspaceSnapshotReadDecision {
+  const cacheIsFresh = input.cacheValid !== false && input.cacheScope === input.scope
+    && typeof input.cachedAt === 'number' && input.now >= input.cachedAt
+    && input.now - input.cachedAt < input.maxAgeMs;
+  if (!input.force && cacheIsFresh) return 'cache';
+  if (input.inFlightScope === input.scope && !input.supersede) return 'join';
+  return 'request';
+}
+
 const EVENT_COLUMNS = 'id,dog_id,event_type,occurred_at,occurred_on,weight_kg,duration_minutes,description,accident_kinds';
 const HEALTH_WEIGHT_COLUMNS = 'id,dog_id,actor_id,occurred_on,weight_kg';
 const HEALTH_HISTORY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,occurred_time,description';

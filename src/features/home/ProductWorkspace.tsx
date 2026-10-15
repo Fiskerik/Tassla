@@ -41,6 +41,7 @@ import {
   updateHealthWeight,
   updateHealthHistory,
   updatePlannedHealth,
+  workspaceSnapshotReadDecision,
   type DogEventOperation,
   type DogEventChanges,
   type DogEventRecord,
@@ -96,6 +97,7 @@ import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
 import { DogProfileScreen } from '../onboarding/DogProfileScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
 import { checklistMemoryScope, keepChecklistMemoryForScope, updateChecklistMemory, type PendingChecklistMemory } from '../knowledge/checklist-intent';
+import { checklistReadCacheScope, clearChecklistReadCache, keepChecklistReadCacheForScope } from '../knowledge/checklist-data';
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, REVIEW_TRAINING_PROGRAMS } from '../knowledge/review-content';
 import { HomeScreen, type HomeDailyTrainingOption } from './HomeScreen';
 import { deriveHomeDailyActivities, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep } from './daily-activity-model';
@@ -140,6 +142,9 @@ type PendingPlannedHealthMutation =
 type PendingProfileMutation = { previous: OwnedDog; changes: OwnedDogProfileChanges; knownBreeds: readonly BreedOption[]; lifetime: string };
 
 const PAGE_SIZE = 40;
+const WORKSPACE_REFRESH_AFTER_MS = 60_000;
+type TrainingWorkspaceSnapshot = Awaited<ReturnType<typeof fetchTrainingWorkspace>>;
+type WorkspaceResourceFlight<T> = { scope: string; generation: number; controller: AbortController; promise: Promise<T> };
 
 export function ProductWorkspace({ client, dog, onDogUpdated }: { client: SupabaseClient; dog: OwnedDog; onDogUpdated?: (updated: OwnedDog) => void }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
@@ -242,9 +247,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [trainingError, setTrainingError] = useState('');
   const [busyStepKey, setBusyStepKey] = useState<string | null>(null);
   const [dailySnapshot, setDailySnapshot] = useState<DailyActivitySnapshot | null>(null);
+  const [dailyTrainingSnapshot, setDailyTrainingSnapshot] = useState<TrainingWorkspaceSnapshot | null>(null);
   const [dailySnapshotLifetime, setDailySnapshotLifetime] = useState('');
   const [dailyState, setDailyState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [dailyStateLifetime, setDailyStateLifetime] = useState('');
+  const [dailyRefreshing, setDailyRefreshing] = useState(false);
+  const [dailyRefreshError, setDailyRefreshError] = useState(false);
   const [dailyClock, setDailyClock] = useState(() => new Date());
   const [dailyBusyKey, setDailyBusyKey] = useState<string | null>(null);
   const [dailyMessageKey, setDailyMessageKey] = useState('');
@@ -268,6 +276,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const trainingMutationInFlight = useRef(false);
   const dailyGeneration = useRef(0);
   const dailyMutationInFlight = useRef(false);
+  const trainingSnapshotRef = useRef<{ scope: string; value: TrainingWorkspaceSnapshot; updatedAt: number } | null>(null);
+  const trainingReadFlight = useRef<WorkspaceResourceFlight<TrainingWorkspaceSnapshot> | null>(null);
+  const dailySnapshotRef = useRef<{ scope: string; daily: DailyActivitySnapshot; training: TrainingWorkspaceSnapshot; dailyUpdatedAt: number } | null>(null);
+  const dailyReadFlight = useRef<WorkspaceResourceFlight<boolean> | null>(null);
   const pendingDailyRetry = useRef<{ lifetime: string; key: string; run: () => Promise<WriteOutcome<unknown>> } | null>(null);
   const mounted = useRef(false);
   const eventReadQueue = useRef<Promise<void>>(Promise.resolve());
@@ -301,7 +313,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     if (page === 'home' && analyticsConsent === true) void analyticsService.track('home_viewed');
   }, [analyticsConsent, analyticsService, page]);
   useEffect(() => {
-    if (page !== 'home') return undefined;
+    if (page !== 'home' && page !== 'training') return undefined;
     const refreshClock = () => setDailyClock(new Date());
     const interval = setInterval(refreshClock, 30_000);
     const subscription = AppState.addEventListener('change', (state) => { if (state === 'active') refreshClock(); });
@@ -344,27 +356,53 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const homeToday = localDate();
   // An unknown date has no age-based content selection and must not crash Home.
   const age = homeAgeInWeeks(dog.birth_date, homeToday);
-  const currentSelectionKey = `${dog.id}:${dog.breed_id}:${age ?? 'unknown-age'}`;
+  const currentSelectionKey = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${dog.id}:${dog.breed_id}:${age ?? 'unknown-age'}:${reviewContentEnabled ? 'review' : 'public'}`;
   const dailyTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const validDailyTimeZone = isValidIanaTimeZone(dailyTimeZone);
   const dailyDateKey = validDailyTimeZone ? localDateKeyAt(dailyClock, dailyTimeZone) : null;
-  const currentDailyLifetime = `${accountGeneration}:${currentSelectionKey}:${dailyDateKey ?? 'invalid-date'}:${dailyTimeZone}`;
+  const currentDailyLifetime = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${currentSelectionKey}:${dailyDateKey ?? 'invalid-date'}:${dailyTimeZone}:${reviewContentEnabled ? 'review' : 'public'}`;
   const dailyLifetime = useRef('');
   const checklistMemory = useRef<{ scope: string; state: PendingChecklistMemory } | null>(null);
   const [checklistMemoryView, setChecklistMemoryView] = useState<{ scope: string; state: PendingChecklistMemory } | null>(null);
   const currentChecklistMemoryScope = checklistMemoryScope(session?.user.id ?? null, accountGeneration, dog.id);
+  const currentChecklistReadScope = checklistReadCacheScope(`${session?.user.id ?? 'signed-out'}:${accountGeneration}`, dog.id, reviewContentEnabled);
   useLayoutEffect(() => {
+    keepChecklistReadCacheForScope(currentChecklistReadScope);
     checklistMemory.current = keepChecklistMemoryForScope(checklistMemory.current, currentChecklistMemoryScope);
     setChecklistMemoryView(checklistMemory.current);
-  }, [currentChecklistMemoryScope]);
+  }, [currentChecklistMemoryScope, currentChecklistReadScope]);
+  useEffect(() => () => clearChecklistReadCache(currentChecklistReadScope), [currentChecklistReadScope]);
   const currentSelectionKeyRef = useRef(currentSelectionKey);
+  const previousTrainingLifetime = useRef(currentSelectionKey);
 
   useLayoutEffect(() => {
     currentSelectionKeyRef.current = currentSelectionKey;
+    if (previousTrainingLifetime.current !== currentSelectionKey) {
+      trainingGeneration.current += 1;
+      trainingReadFlight.current?.controller.abort();
+      trainingReadFlight.current = null;
+      trainingSnapshotRef.current = null;
+      setTraining({ programs: [], paused: [] });
+      setTrainingSelectionKey(null);
+      setTrainingState('loading');
+      setTrainingError('');
+    }
+    previousTrainingLifetime.current = currentSelectionKey;
   }, [currentSelectionKey]);
 
   useLayoutEffect(() => {
     if (dailyLifetime.current && dailyLifetime.current !== currentDailyLifetime) {
+      dailyGeneration.current += 1;
+      dailyReadFlight.current?.controller.abort();
+      dailyReadFlight.current = null;
+      dailySnapshotRef.current = null;
+      setDailySnapshot(null);
+      setDailyTrainingSnapshot(null);
+      setDailySnapshotLifetime('');
+      setDailyState('loading');
+      setDailyStateLifetime(currentDailyLifetime);
+      setDailyRefreshing(false);
+      setDailyRefreshError(false);
       pendingDailyRetry.current = null;
       setDailyMessage('');
       setDailyMessageError(false);
@@ -480,68 +518,179 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }, [client, dog.id, notificationPreferences, notificationPreferencesReady, plannedHealthBusy, plannedHealthState]);
 
-  const reloadTraining = useCallback(async (signal?: AbortSignal) => {
-    const generation = trainingGeneration.current;
-    const result = await fetchTrainingWorkspace(client, dog, age, undefined, signal);
-    if (!mounted.current || signal?.aborted || trainingGeneration.current !== generation || currentSelectionKeyRef.current !== currentSelectionKey) return false;
-    const visibleResult = reviewContentEnabled && result.programs.length === 0
-      ? { programs: [...REVIEW_TRAINING_PROGRAMS], paused: [] } : result;
-    setTraining(visibleResult);
-    setTrainingSelectionKey(currentSelectionKey);
-    setTrainingState('ready');
-    return visibleResult;
-  }, [age, client, currentSelectionKey, dog]);
-
-  const reloadDailyActivity = useCallback(async (signal?: AbortSignal) => {
-    const lifetime = currentDailyLifetime;
-    const generation = ++dailyGeneration.current;
-    const trainingRevision = ++trainingGeneration.current;
-    if (!dailyDateKey || !validDailyTimeZone) {
-      setDailySnapshot(null);
-      setDailySnapshotLifetime('');
-      setDailyState('error');
-      setDailyStateLifetime(lifetime);
-      return false;
+  const reloadTraining = useCallback(async (options: { force?: boolean; supersede?: boolean; publishToDaily?: boolean; deferCommit?: boolean } = {}): Promise<TrainingWorkspaceSnapshot> => {
+    const { force = false, supersede = false, publishToDaily = false, deferCommit = false } = options;
+    const scope = currentSelectionKey;
+    const cached = trainingSnapshotRef.current;
+    const hasSnapshot = cached?.scope === scope;
+    const existing = trainingReadFlight.current;
+    const decision = workspaceSnapshotReadDecision({
+      scope,
+      cacheScope: cached?.scope,
+      cachedAt: cached?.updatedAt,
+      inFlightScope: existing?.scope,
+      now: Date.now(),
+      maxAgeMs: WORKSPACE_REFRESH_AFTER_MS,
+      force,
+      supersede,
+    });
+    if (decision === 'cache' && cached) return cached.value;
+    if (decision === 'join' && existing?.scope === scope) return existing.promise;
+    if (existing && supersede) {
+      existing.controller.abort();
+      if (trainingReadFlight.current === existing) trainingReadFlight.current = null;
     }
-    setDailySnapshot(null);
-    setDailySnapshotLifetime('');
-    setDailyState('loading');
-    setDailyStateLifetime(lifetime);
-    const [trainingResult, dailyResult] = await Promise.allSettled([
-      fetchTrainingWorkspace(client, dog, age, undefined, signal),
-      fetchDailyActivitySnapshot(client, dog.id, dailyDateKey, dailyTimeZone, signal),
-    ]);
-    if (!mounted.current || signal?.aborted || generation !== dailyGeneration.current
-      || trainingRevision !== trainingGeneration.current || dailyLifetime.current !== lifetime
-      || currentSelectionKeyRef.current !== currentSelectionKey) return false;
-    if (trainingResult.status === 'fulfilled') {
-      const visibleTraining = reviewContentEnabled && trainingResult.value.programs.length === 0
-        ? { programs: [...REVIEW_TRAINING_PROGRAMS], paused: [] } : trainingResult.value;
-      setTraining(visibleTraining);
-      setTrainingSelectionKey(currentSelectionKey);
+    if (supersede) {
+      dailyGeneration.current += 1;
+      dailyReadFlight.current?.controller.abort();
+      dailyReadFlight.current = null;
+      setDailyRefreshing(false);
+    }
+    const generation = ++trainingGeneration.current;
+    const controller = new AbortController();
+    if (!hasSnapshot) {
+      setTrainingSelectionKey(scope);
+      setTrainingState('loading');
+    }
+    setTrainingError('');
+    let promise: Promise<TrainingWorkspaceSnapshot>;
+    promise = fetchTrainingWorkspace(client, dog, age, undefined, controller.signal).then((result) => {
+      const visibleResult = reviewContentEnabled && result.programs.length === 0
+        ? { programs: [...REVIEW_TRAINING_PROGRAMS], paused: [] } : result;
+      if (!mounted.current || controller.signal.aborted || trainingGeneration.current !== generation
+        || currentSelectionKeyRef.current !== scope) return visibleResult;
+      if (deferCommit) return visibleResult;
+      const updatedAt = Date.now();
+      trainingSnapshotRef.current = { scope, value: visibleResult, updatedAt };
+      setTraining(visibleResult);
+      setTrainingSelectionKey(scope);
       setTrainingState('ready');
       setTrainingError('');
-    } else {
-      setTraining({ programs: [], paused: [] });
-      setTrainingSelectionKey(currentSelectionKey);
-      setTrainingState('error');
-      setTrainingError('Publicerade träningssteg kunde inte hämtas. Dagens urval kunde därför inte räknas.');
+      if (publishToDaily && dailySnapshotRef.current?.scope === currentDailyLifetime) {
+        dailySnapshotRef.current = { ...dailySnapshotRef.current, training: visibleResult };
+        setDailyTrainingSnapshot(visibleResult);
+      }
+      return visibleResult;
+    }).catch((error: unknown) => {
+      const current = mounted.current && !controller.signal.aborted && trainingGeneration.current === generation
+        && currentSelectionKeyRef.current === scope;
+      if (current) {
+        if (trainingSnapshotRef.current?.scope === scope) {
+          setTrainingState('ready');
+          setTrainingError('Programmen kunde inte uppdateras. Du ser senast hämtade program.');
+        } else {
+          setTraining({ programs: [], paused: [] });
+          setTrainingSelectionKey(scope);
+          setTrainingState('error');
+          setTrainingError('Publicerat träningsinnehåll kunde inte hämtas. Inga exempelprogram visas.');
+        }
+      }
+      throw error;
+    }).finally(() => {
+      if (trainingReadFlight.current?.promise === promise) trainingReadFlight.current = null;
+    });
+    trainingReadFlight.current = { scope, generation, controller, promise };
+    return promise;
+  }, [age, client, currentDailyLifetime, currentSelectionKey, dog]);
+
+  const reloadDailyActivity = useCallback(async (force = false, supersede = false): Promise<boolean> => {
+    const scope = currentDailyLifetime;
+    if (!dailyDateKey || !validDailyTimeZone) {
+      setDailyState('error');
+      setDailyStateLifetime(scope);
+      setDailyRefreshError(false);
+      return false;
     }
-    if (dailyResult.status === 'fulfilled' && trainingResult.status === 'fulfilled') {
-      setDailySnapshot(dailyResult.value);
-      setDailySnapshotLifetime(lifetime);
-      setDailyState('ready');
-      setDailyStateLifetime(lifetime);
-      setDailyMessage('');
-      setDailyMessageError(false);
-      return true;
+    const cached = dailySnapshotRef.current;
+    const trainingCached = trainingSnapshotRef.current;
+    const hasSnapshot = cached?.scope === scope;
+    const isFresh = hasSnapshot && Date.now() - cached.dailyUpdatedAt < WORKSPACE_REFRESH_AFTER_MS
+      && trainingCached?.scope === currentSelectionKey
+      && Date.now() - trainingCached.updatedAt < WORKSPACE_REFRESH_AFTER_MS;
+    const existing = dailyReadFlight.current;
+    const decision = workspaceSnapshotReadDecision({
+      scope,
+      cacheScope: cached?.scope,
+      cachedAt: cached?.dailyUpdatedAt,
+      inFlightScope: existing?.scope,
+      now: Date.now(),
+      maxAgeMs: WORKSPACE_REFRESH_AFTER_MS,
+      cacheValid: isFresh,
+      force,
+      supersede,
+    });
+    if (decision === 'cache') return true;
+    if (decision === 'join' && existing?.scope === scope) return existing.promise;
+    if (existing && supersede) {
+      existing.controller.abort();
+      if (dailyReadFlight.current === existing) dailyReadFlight.current = null;
     }
-    setDailySnapshot(null);
-    setDailySnapshotLifetime('');
-    setDailyState('error');
-    setDailyStateLifetime(lifetime);
-    return false;
-  }, [age, client, currentDailyLifetime, currentSelectionKey, dailyDateKey, dailyTimeZone, dog, validDailyTimeZone]);
+    if (supersede) {
+      trainingReadFlight.current?.controller.abort();
+      trainingReadFlight.current = null;
+      trainingGeneration.current += 1;
+    }
+    const generation = ++dailyGeneration.current;
+    const controller = new AbortController();
+    if (!hasSnapshot) {
+      setDailyState('loading');
+      setDailyStateLifetime(scope);
+    }
+    setDailyRefreshing(true);
+    setDailyRefreshError(false);
+    const trainingPromise = reloadTraining({ force, deferCommit: true });
+    const trainingRevision = trainingGeneration.current;
+    let promise: Promise<boolean>;
+    promise = Promise.allSettled([
+      trainingPromise,
+      fetchDailyActivitySnapshot(client, dog.id, dailyDateKey, dailyTimeZone, controller.signal),
+    ]).then(([trainingResult, dailyResult]) => {
+      if (!mounted.current || controller.signal.aborted || generation !== dailyGeneration.current
+        || trainingRevision !== trainingGeneration.current || dailyLifetime.current !== scope
+        || currentSelectionKeyRef.current !== currentSelectionKey) return false;
+      if (trainingResult.status === 'fulfilled' && dailyResult.status === 'fulfilled') {
+        const trainingUpdatedAt = Date.now();
+        trainingSnapshotRef.current = { scope: currentSelectionKey, value: trainingResult.value, updatedAt: trainingUpdatedAt };
+        setTraining(trainingResult.value);
+        setTrainingSelectionKey(currentSelectionKey);
+        setTrainingState('ready');
+        setTrainingError('');
+        dailySnapshotRef.current = { scope, daily: dailyResult.value, training: trainingResult.value, dailyUpdatedAt: Date.now() };
+        setDailySnapshot(dailyResult.value);
+        setDailyTrainingSnapshot(trainingResult.value);
+        setDailySnapshotLifetime(scope);
+        setDailyState('ready');
+        setDailyStateLifetime(scope);
+        setDailyRefreshError(false);
+        setDailyMessage('');
+        setDailyMessageError(false);
+        return true;
+      }
+      if (hasSnapshot) {
+        setDailyRefreshError(true);
+      } else {
+        setDailySnapshot(null);
+        setDailyTrainingSnapshot(null);
+        setDailySnapshotLifetime('');
+        setDailyState('error');
+        setDailyStateLifetime(scope);
+        if (trainingResult.status === 'fulfilled') {
+          trainingSnapshotRef.current = { scope: currentSelectionKey, value: trainingResult.value, updatedAt: Date.now() };
+          setTraining(trainingResult.value);
+          setTrainingSelectionKey(currentSelectionKey);
+          setTrainingState('ready');
+        }
+      }
+      return false;
+    }).finally(() => {
+      if (dailyReadFlight.current?.promise === promise) dailyReadFlight.current = null;
+      if (mounted.current && generation === dailyGeneration.current && dailyLifetime.current === scope) {
+        setDailyRefreshing(false);
+      }
+    });
+    dailyReadFlight.current = { scope, generation, controller, promise };
+    return promise;
+  }, [client, currentDailyLifetime, currentSelectionKey, dailyDateKey, dailyTimeZone, dog.id, reloadTraining, validDailyTimeZone]);
 
   useEffect(() => {
     const ownerId = session?.user.id;
@@ -721,6 +870,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     return () => {
       mounted.current = false;
       controller.abort();
+      trainingReadFlight.current?.controller.abort();
+      dailyReadFlight.current?.controller.abort();
     };
   }, [client, currentHealthHistoryLifetime, currentPlannedHealthLifetime, currentProfileLifetime, dog.id, serializeEventRead, serializeHealthRead, serializeHealthHistoryRead, serializePlannedHealthRead]);
 
@@ -739,30 +890,20 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       setContentState('error');
     });
 
-    const trainingRevision = ++trainingGeneration.current;
-    void fetchTrainingWorkspace(client, dog, age, undefined, controller.signal).then((result) => {
-      if (!mounted.current || controller.signal.aborted || trainingGeneration.current !== trainingRevision || currentSelectionKeyRef.current !== currentSelectionKey) return;
-      setTraining(reviewContentEnabled && result.programs.length === 0
-        ? { programs: [...REVIEW_TRAINING_PROGRAMS], paused: [] }
-        : result);
-      setTrainingSelectionKey(currentSelectionKey);
-      setTrainingError('');
-      setTrainingState('ready');
-    }).catch(() => {
-      if (!mounted.current || controller.signal.aborted || trainingGeneration.current !== trainingRevision || currentSelectionKeyRef.current !== currentSelectionKey) return;
-      setTraining({ programs: [], paused: [] });
-      setTrainingSelectionKey(currentSelectionKey);
-      setTrainingError('Publicerat träningsinnehåll kunde inte hämtas. Inga exempelprogram visas.');
-      setTrainingState('error');
-    });
     return () => controller.abort();
   }, [age, client, currentSelectionKey, dog]);
 
   useEffect(() => {
-    if (page !== 'home') return undefined;
-    const controller = new AbortController();
-    const timer = setTimeout(() => { void reloadDailyActivity(controller.signal); }, 0);
-    return () => { clearTimeout(timer); controller.abort(); };
+    if (page !== 'home' && page !== 'training') return;
+    const refresh = setTimeout(() => { void reloadDailyActivity(); }, 0);
+    return () => clearTimeout(refresh);
+  }, [currentDailyLifetime, page, reloadDailyActivity]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && (page === 'home' || page === 'training')) void reloadDailyActivity();
+    });
+    return () => subscription.remove();
   }, [page, reloadDailyActivity]);
 
   const visibleContent = contentSelectionKey === currentSelectionKey ? content : [];
@@ -770,12 +911,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const visibleTrainingState = trainingSelectionKey === currentSelectionKey ? trainingState : 'loading';
   const dailyStateForView = dailyStateLifetime === currentDailyLifetime ? dailyState : 'loading';
   const dailySnapshotForView = dailySnapshotLifetime === currentDailyLifetime ? dailySnapshot : null;
-  const dailyActivities = dailyStateForView === 'ready' && dailySnapshotForView && dailyDateKey
-    ? deriveHomeDailyActivities(dailySnapshotForView, training.programs.filter((program) => !program.id.startsWith('review-v1:training:')), dog.id, dailyDateKey)
+  const dailyTrainingForView = dailySnapshotLifetime === currentDailyLifetime ? dailyTrainingSnapshot : null;
+  const dailyActivities = dailyStateForView === 'ready' && dailySnapshotForView && dailyTrainingForView && dailyDateKey
+    ? deriveHomeDailyActivities(dailySnapshotForView, dailyTrainingForView.programs.filter((program) => !program.id.startsWith('review-v1:training:')), dog.id, dailyDateKey)
     : [];
   const selectedTrainingKeys = new Set(dailySnapshotForView?.trainingSelections.map((row) => `${row.program_version_id}:${row.step_id}`) ?? []);
   const dailyTrainingOptions: HomeDailyTrainingOption[] = dailyStateForView === 'ready' && dailyDateKey
-    ? training.programs.filter((program) => !program.id.startsWith('review-v1:training:')).flatMap((program) => {
+    ? (dailyTrainingForView?.programs ?? []).filter((program) => !program.id.startsWith('review-v1:training:')).flatMap((program) => {
       const step = nextSelectableTrainingStep(program);
       if (!step || selectedTrainingKeys.has(`${program.id}:${step.id}`)) return [];
       return [{ programId: program.content_id, versionId: program.id, stepId: step.id, programTitle: program.title, stepTitle: step.title }];
@@ -1787,22 +1929,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   }
 
   async function retryTraining() {
-    const generation = ++trainingGeneration.current;
-    const selectionKey = currentSelectionKey;
-    setTraining({ programs: [], paused: [] });
-    setTrainingSelectionKey(null);
-    setTrainingState('loading');
-    try {
-      const loaded = await reloadTraining();
-      if (!mounted.current || trainingGeneration.current !== generation) return;
-      if (loaded) setTrainingError('');
-    } catch {
-      if (mounted.current && trainingGeneration.current === generation && currentSelectionKeyRef.current === selectionKey) {
-        setTraining({ programs: [], paused: [] });
-        setTrainingSelectionKey(selectionKey);
-        setTrainingState('error');
-      }
-    }
+    await reloadDailyActivity(true, true);
   }
 
   async function completeStep(program: PublishedTrainingProgram, stepId: string): Promise<{ programId: string; stepId: string } | false> {
@@ -1815,7 +1942,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       const outcome = await insertTrainingProgress(client, { dog_id: dog.id, program_version_id: program.id, step_id: stepId });
       if (outcome.status === 'saved') {
         try {
-          const refreshed = await reloadTraining();
+          const refreshed = await reloadTraining({ force: true, supersede: true, publishToDaily: true });
           if (!mounted.current) return false;
           const confirmedProgram = refreshed ? refreshed.programs.find((item) => item.id === program.id) : undefined;
           if (program.completedStepIds.includes(stepId) || !confirmedProgram?.completedStepIds.includes(stepId)) {
@@ -1833,7 +1960,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       }
       let progressChecked = true;
       try {
-        await reloadTraining();
+        await reloadTraining({ force: true, supersede: true, publishToDaily: true });
       } catch {
         progressChecked = false;
       }
@@ -1854,6 +1981,36 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
+  async function unmarkStep(program: PublishedTrainingProgram, stepId: string): Promise<{ programId: string; stepId: string } | false> {
+    if (trainingMutationInFlight.current) return false;
+    const selectionKey = currentSelectionKey;
+    const key = `${program.id}:${stepId}:unmark`;
+    trainingMutationInFlight.current = true;
+    setBusyStepKey(key);
+    setTrainingError('');
+    try {
+      const outcome = await deleteTrainingProgress(client, dog.id, program.id, stepId);
+      if (!mounted.current || currentSelectionKeyRef.current !== selectionKey) return false;
+      const refreshed = await reloadTraining({ force: true, supersede: true, publishToDaily: true });
+      if (!mounted.current || currentSelectionKeyRef.current !== selectionKey) return false;
+      const confirmedProgram = refreshed.programs.find((item) => item.id === program.id);
+      if (confirmedProgram && !confirmedProgram.completedStepIds.includes(stepId)) return { programId: program.id, stepId };
+      setTrainingError(!confirmedProgram
+        ? 'Programmet kunde inte verifieras efter ändringen. Hämta programmet igen innan du fortsätter.'
+        : outcome.status === 'failed'
+          ? 'Steget är fortfarande markerat. Kontrollera anslutningen och försök igen.'
+          : 'Vi kunde inte bekräfta att steget avmarkerades. Programmet har hämtats igen; kontrollera statusen innan du försöker på nytt.');
+      return false;
+    } catch {
+      if (!mounted.current || currentSelectionKeyRef.current !== selectionKey) return false;
+      setTrainingError('Vi kunde inte kontrollera om steget avmarkerades. Hämta programmet igen innan du ändrar det.');
+      return false;
+    } finally {
+      trainingMutationInFlight.current = false;
+      if (mounted.current) setBusyStepKey(null);
+    }
+  }
+
   async function resetProgram(program: PublishedTrainingProgram) {
     if (trainingMutationInFlight.current) return;
     trainingMutationInFlight.current = true;
@@ -1865,11 +2022,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         if (!mounted.current) return;
         if (outcome.status !== 'saved') throw new Error('Progress could not be cleared');
       }
-      await reloadTraining();
+      await reloadTraining({ force: true, supersede: true, publishToDaily: true });
     } catch {
       if (!mounted.current) return;
       try {
-        await reloadTraining();
+        await reloadTraining({ force: true, supersede: true, publishToDaily: true });
         setTrainingError('Alla genomförda steg kunde inte rensas. Kontrollera programmet och försök igen.');
       } catch {
         setTrainingState('error');
@@ -1909,7 +2066,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       pendingDailyRetry.current = null;
       setDailyMessage('');
       setDailyMessageError(false);
-      const refreshed = await reloadDailyActivity();
+      const refreshed = await reloadDailyActivity(true, true);
       if (!refreshed && mounted.current && dailyLifetime.current === lifetime) {
         setDailyMessage('Ändringen sparades, men dagens lista kunde inte hämtas. Status räknas först efter en ny avläsning.');
         setDailyMessageError(true);
@@ -2118,6 +2275,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       content={visibleGuideContent}
       contentState={visibleContentState}
       dailyState={dailyStateForView}
+      dailyRefreshing={dailyRefreshing}
+      dailyRefreshError={dailyRefreshError}
       dailyDateKey={dailyDateKey ?? '—'}
       dailyScopeKey={currentDailyLifetime}
       dailyActivities={dailyActivities}
@@ -2128,7 +2287,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       dailyMutationKey={dailyMessageKey}
       dailyMutationMessage={dailyMessage}
       dailyMutationError={dailyMessageError}
-      onRetryDaily={() => { void reloadDailyActivity(); }}
+      onRetryDaily={() => { void reloadDailyActivity(true); }}
       onCreateRoutine={(input: DailyRoutineCreateInput) => {
         const row = { ...input, dog_id: dog.id };
         return runDailyMutation(`create-routine:${row.id}`, () => createDailyRoutine(client, row, dailyTimeZone));
@@ -2183,7 +2342,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       </>}
       {visibleTrainingState === 'ready' && <PublishedTrainingScreen ageWeeks={age} programs={training.programs} paused={training.paused}
         reviewMode={reviewContentEnabled && training.programs.some((program) => program.id.startsWith('review-v1:training:'))}
-        busyStepKey={busyStepKey} error={trainingError} onCompleteStep={completeStep}
+        busyStepKey={busyStepKey} error={trainingError} onCompleteStep={completeStep} onUnmarkStep={unmarkStep}
         onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
         onRetry={() => { void retryTraining(); }} />}
     </>;
@@ -2349,7 +2508,7 @@ function toLogEvent(row: DogEventRecord): LogEvent {
 
 function toQuickLogMutationView(mutation: PendingLogMutation, status: QuickLogMutationView['status']): QuickLogMutationView {
   return mutation.kind === 'insert'
-    ? { kind: 'add', mutationId: mutation.operation.id, id: mutation.operation.id, type: mutation.operation.event_type, occurredAt: mutation.operation.occurred_at, status }
+    ? { kind: 'add', mutationId: mutation.operation.id, id: mutation.operation.id, type: mutation.operation.event_type, occurredAt: mutation.operation.occurred_at, accidentKinds: mutation.operation.accident_kinds, status }
     : { kind: mutation.kind, mutationId: mutation.mutationId, id: mutation.id, type: mutation.type, occurredAt: mutation.occurredAt, status };
 }
 
