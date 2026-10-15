@@ -1,6 +1,6 @@
 # Tassla — samlat besluts- och leveransregister
 
-Status: kanonisk sammanfattning för produkt-, design- och utvecklingsagenter. Baslinje för branchuppdateringen: codex/ux-rethink-2026-10-15 @ 2e230be44c1bdd74e74173064fdce5e60e7e9dbc. Senast sammanställd 2026-10-15.
+Status: kanonisk sammanfattning för produkt-, design- och utvecklingsagenter. Baslinje för branchuppdateringen: codex/ux-rethink-2026-10-15 @ 2e230be44c1bdd74e74173064fdce5e60e7e9dbc. Senast sammanställd 2026-10-16.
 
 Läs denna fil först när ett beslut eller tidigare paket efterfrågas. Läs sedan bara den länkade detaljplanen för uppgiften. Vid konflikt gäller senaste uttryckliga ägarbeslutet och den aktuella posten här. De numrerade beslutsfilerna behålls som historiska underlag; de är inte separata, uppdaterade styrkällor. Detaljerade testresultat finns i respektive task- och releaseunderlag.
 
@@ -33,6 +33,12 @@ Källor: [0004-motion-package.md](0004-motion-package.md), [0005-motion-batched-
 Varje resa ska nås i appen, utföra en verklig uppgift med korrekt källa, visa bekräftat eller ärligt okänt resultat och återvända med bekräftad data intakt. Alla synliga filter, perioder, mål, diagram och destinationer behöver faktisk funktion för att panelen ska bli klar. Bevara de ursprungliga sex användarområdena samt Hälsa, Tassla-pass, konto, onboarding, samtycken, notifieringar, distribution och mätning. Beslutet lägger inte till nya persondataändamål, kostnader, migrationskörningar, partneråtkomst eller publicering.
 
 Källor: [MVP EXPERIENCE CONTRACT](../MVP-EXPERIENCE-CONTRACT.md), [MVP](../mvp.md), [utvecklingsflöde](../dev/workflow.md), [panelkontrakt](../design/vision-rev02-screen-contracts.md). Källa: Eriks uttryckliga beslut i konversationen ”GAP analys Tassla MVP”, 2026-10-15; fastställandet återges i den här sammanslagna posten.
+
+### MVP v2 och livsloppsrelevans
+
+**Ägarbeslut 2026-10-16 — MVP v2 godkänd.** Erik bad att nuvarande MVP ändras med den upplagda GAP-analysen och MVP v2 samt att framtida byggagenter hänvisas till båda. Han bekräftade därefter uttryckligen: ”Jag godkänner MVP v2, besluten är redan tagna”. Det fastställer **ja** för alla fem produktbeslut i [MVP v2 §14](../MVP%20v2%20-%202026-10-16.md). `docs/mvp.md` är den uppdaterade styrande sammanställningen; [föregående MVP](../archive/mvp-before-v2-2026-10-15.md) är historik. [GAP-analysen](../GAP_analys_Tassla%202026-10-16.md) är en daterad granskning av `c71f554`; dess kodstatus måste kontrolleras på aktuell branch. Be inte om samma fem scopebeslut igen.
+
+Scope innebär valp först och en användbar start för vuxen hund utan valphistorik, samma hund-ID och historik över perioder, ett litet vuxenrelevant paket om minst tre användbara sakgranskade innehållsobjekt, cirka 8–12 vuxenhundsägare i en kompletterande kvalitativ pilotgrupp samt sanningsenlig progression från befintliga källor. Sex produktområden ersätter inte de åtta funktionella rev02-panelerna. Innehållsbeslutet är inte ett förhandsgodkännande av texter eller publicering; pilotbeslutet är inte ett tillstånd att rekrytera, samla personuppgifter eller distribuera appen utan separata kontroller. Nya analyticsfält/ändamål, längre retention, migration i ansluten miljö, faktisk persondatabehandling, TestFlight och release kräver respektive besluts- och verifieringsväg. Scenarier A–F i `docs/mvp.md` är pilotacceptans som återstår att verifiera.
 
 ## Risknivå för granskning
 
