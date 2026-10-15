@@ -6263,7 +6263,7 @@
       "id": "HOME-ROUTINE-CHECKLIST-01",
       "title": "Hem: named routines with independent checklists and repeat schedules",
       "mvp_requirement": "Ägarens UI-mandat 2026-10-14: rutinnamn och separata checklistor, en samlad Redigera-knapp per rutin, förklaringar bakom (i), samt valfri daglig eller egen dags-/vecko-/månadsupprepning",
-      "plan": "docs/tasks/dev/daily-routines-checklists.md v5",
+      "plan": "docs/tasks/dev/ux-fix-2026-10-15.md v2.1; HOME visual contract docs/plans/UX-FIX-2026-10-15-ux-spec.md v2.1; behavior docs/tasks/dev/daily-routines-checklists.md v5",
       "write_paths": [
         "src/features/home/DailyActivityManagerSheet.tsx",
         "tools/visual-check/app.tsx",
@@ -6276,34 +6276,27 @@
         "docs/tasks/dev/rapport.md"
       ],
       "acceptance": [
-        "New routine form starts with Name on top, its own mandatory first checklist item, then optional recurrence; routines retain separate ordered item labels and stable IDs",
-        "Each saved routine has one accessible pencil-and-text Redigera button beside its name; it opens whole-routine edit mode for name, all checklist labels and recurrence. Add appends a row with a stable ID; minus removes that row and keeps remaining order/IDs. No per-item edit controls or long-press menu in read mode. Only one routine may be edited; all routine/day selections, including training selections, are blocked while a draft or pending/unknown mutation exists.",
-        "Long intro and repeated explanatory paragraphs are removed; one (i) button exposes concise help; routine cards show only name, checklist, and short repeat summary",
-        "Recurrence defaults to Never; daily or custom 1-30 day/week/month interval uses dog-local date rules and an immutable anchor; monthly dates clamp to month end without anchor drift",
-        "Same-name/list edits preserve the anchor; actual schedule changes reset it using the IANA zone captured in the save intent; identical retry after midnight reads back the original anchor",
-        "Home loading materializes due routines idempotently for the current local date; an owner can still add a one-off occurrence off schedule",
-        "An existing active or skipped day copy is never overwritten when a rule is created/changed; due recurring removal stores full tombstone, preserves original day ID/completed_at, and legacy DELETE remains hidden from old clients",
-        "Same-day re-add restores the frozen copy; schedule-change-then-remove uses frozen recurring status or current due rule; monotonic day revision and mutation ID prevent stale skip retries after ABA changes",
-        "Template and repeat-rule writes use atomic revision CAS/readback; frozen daily snapshots and completion state are not rewritten by future template edits",
-        "Backfill preserves old routines/day selections/completion timestamps and creates no recurrence for legacy rows; old-client create/rename/add/complete/delete paths remain compatible with newly scheduled routines",
-        "Lifecycle/privacy docs cover template schedule, anchor, occurrence tombstone access/copy inventory, cascade deletion and existing 30-day purge",
-        "A cross-screen copy inventory identifies redundant intros for optional info buttons and preserves consent, privacy, safety, status, and recovery text in context",
-        "Public create/replace/ensure/skip RPC grants, owner isolation, recurrence calculation/skip behavior and trigger chain receive static Security review; database runtime verification remains a separate release blocker",
-        "Fresh RN Web screenshots cover pencil, info help, create/edit recurrence, interval summaries, due date, skip/re-add, active/manual/skipped rule-change states, pending/failed/unknown/retry, separate routines, compact Home card and §14 viewport/large-text assessment",
-        "Dirty drafts require explicit discard confirmation on sheet close/back/scope exit; pending/unknown cannot be abandoned before exact retry/readback, and forced account/session unmount may clear only the local dog-scoped draft without writing. Render discard confirmation and failed/unknown states with all fields retained; block all routine/day selections, including training selections, during draft/pending."
+        "Routine management follows panel 4 and Home follows panel 1: warm grouped surfaces, compact separators and a clear deeper-management entry; no stack of large routine cards",
+        "One saved routine has one accessible Edit entry; create/edit is a single mode with stable IDs, append/remove, dirty discard and exact retry/readback",
+        "The selected-day action is visually distinct from completion and whole-routine deletion; deletion copy matches cascade behavior",
+        "Existing daily/day/week/month recurrence and weekday rule summary are truthful; no fake Week/All tabs or incomplete future list",
+        "Home checklist stays compact and uses the same production presentation component; routine and training selection lock under draft/pending/unknown",
+        "Fresh production-component renders cover 375x844, 430x844, 375x667, 140% text proxy, create, saved, failure, unknown, retry, separate routines and completion; design-rules §14 is completed",
+        "Static SQL/security, native interaction and Supabase runtime claims are kept separate; migration is not executed here"
       ],
       "checks": [
         "pnpm typecheck",
         "pnpm exec eslint on all changed TS/TSX files",
+        "RN Web public/review fixture builds and manual browser render/interaction review",
         "git diff --check",
         "python3 tools/dev_flow.py validate",
-        "RN Web build and manual 375/430/667 plus 140% text render",
-        "Static SQL/RLS/security review only; do not run tests or migration in this local task"
+        "Static Architect/Security inspection only; no tests and no migration/database operation"
       ],
       "depends_on": [
-        "VISION-R02-2"
+        "VISION-R02-2",
+        "HOME-ROUTINE-WEEKDAYS-01"
       ],
-      "status": "blocked",
+      "status": "qa",
       "history": [
         {
           "from": "planned",
@@ -6382,15 +6375,39 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Kandidat 9a81815 har v5-kod men saknar färska renders vid 430x844, 375x667, 140% och create/saved/failed/unknown/retry; Chromium dog med SIGTRAP/crashpad. Oberoende UI QA/Reviewer väntar. UX-FIX v1.1 omarbetar rutineditorn; frys skrivningar och bevara koden tills den nya planen återupptar rutindelen."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Replan v2.1 per Eriks mandat 2026-10-15: visuellt omtag mot rev02; beroende på separat veckodagsslice. Gamla v5-skärmbilder ogiltiga som acceptans. Architect APPROVE and Critic PROCEED recorded; väntar på sekvensens föregångare."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact UX-FIX v2.1 plan was Architect APPROVE/Critic PROCEED on 2026-10-15; no plan change. Both dependencies are now done: VISION-R02-2 and HOME-ROUTINE-WEEKDAYS-01 (QA/Reviewer PASS). Resume with fresh UI evidence and compact panel-4 routine management; keep migration/data logic frozen, no tests or DB operations."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin the exact previously approved v2.1 HOME routine checklist scope on its listed write_paths. Refresh routine manager to compact grouped rows with separators; preserve v5 atomic edit/save/discard/pending behavior, weekday recurrence and all other data/RPC/migration contracts. Add fresh public/review production-component captures and functional review for required viewports/states. No tests or database operations."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "HOME routine UI handoff 2026-10-15: compact shared warm routine surface with separators, distinct horizontal day/select and red whole-routine delete actions, single primary action while draft is open. Fresh review Chromium renders cover 375x844, 430x844, 375x667 and 140% text proxy; create/saved/failed/unknown/exact retry/discard, several routines, delete-cancel and Home completion verified without page errors. Public/review builds pass. User-approved pnpm check passes (typecheck, edge typecheck, lint, 45/45 test files); existing stale expectations/fixtures aligned, no test cases added. Evidence: docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md and review-compact-v6/. Independent code QA/Reviewer after this UI delta pending. Panel-4 reference comparison is NOT TESTABLE because vision_rev02.jpg is absent; no full visual match claim. No DB or migration operation."
         }
       ],
-      "next_step": "Kandidat 9a81815 har v5-kod men saknar färska renders vid 430x844, 375x667, 140% och create/saved/failed/unknown/retry; Chromium dog med SIGTRAP/crashpad. Oberoende UI QA/Reviewer väntar. UX-FIX v1.1 omarbetar rutineditorn; frys skrivningar och bevara koden tills den nya planen återupptar rutindelen."
+      "next_step": "HOME routine UI handoff 2026-10-15: compact shared warm routine surface with separators, distinct horizontal day/select and red whole-routine delete actions, single primary action while draft is open. Fresh review Chromium renders cover 375x844, 430x844, 375x667 and 140% text proxy; create/saved/failed/unknown/exact retry/discard, several routines, delete-cancel and Home completion verified without page errors. Public/review builds pass. User-approved pnpm check passes (typecheck, edge typecheck, lint, 45/45 test files); existing stale expectations/fixtures aligned, no test cases added. Evidence: docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md and review-compact-v6/. Independent code QA/Reviewer after this UI delta pending. Panel-4 reference comparison is NOT TESTABLE because vision_rev02.jpg is absent; no full visual match claim. No DB or migration operation."
     },
     {
       "id": "HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01",
       "title": "Hem: verifyera rutinchecklistors migration, RLS och legacy-klient",
       "mvp_requirement": "Releaseverifiering av lokala HOME-ROUTINE-CHECKLIST-01 efter migrationskälla och UI är färdig",
-      "plan": "docs/tasks/dev/daily-routines-checklists.md v4, runtime-verify boundary",
+      "plan": "docs/tasks/dev/daily-routines-checklists.md v5+ and UX-FIX 2026-10-15 v2.1 weekday runtime boundary",
       "write_paths": [
         "docs/design/evidence/vision-rev02/routine-checklists/runtime-verify/",
         "docs/tasks/dev/rapport.md",
@@ -6399,20 +6416,22 @@
       "acceptance": [
         "Apply the reviewed migration only in the approved disposable Supabase development project and record its environment identity",
         "Backfill old routines/day selections preserves IDs, labels, completion timestamps and creates Never recurrence with false occurrence flags and an empty skip table",
-        "Verify due dates for daily, every-N-days, same-weekday every-N-weeks, monthly dates and end-of-month clamping without anchor drift across short months",
+        "Verify legacy repeat_weekdays NULL keeps exact anchor-weekday and interval-modulo due dates before and after migration",
+        "Verify selected weekday sets use Monday-anchored weeks, suppress dates before anchor, and reset anchor only when the weekday set changes",
+        "Verify due dates for daily, every-N-days, legacy and selected-weekday every-N-weeks, monthly dates and end-of-month clamping without anchor drift across short months, year-end and leap-year boundaries",
         "Verify create/replace derives local anchor from a validated IANA zone, unchanged rules preserve the anchor, changed rules reset it, and retry across midnight returns the original anchor",
         "Verify ensure_due_daily_routine_days is idempotent, authenticated owner-only, current-local-date scoped, and does not create rows for non-due schedules",
         "Verify skip tombstones survive reload and concurrent ensure; re-add restores exact day ID, snapshot, completion IDs and completed_at; next due occurrence snapshots edited template",
         "Verify manual existing day row → rule changed to make it due → remove → concurrent ensure remains suppressed; stored recurring rows remain skippable after rule changes",
         "Verify skip → re-add → skip followed by a stale retry of the original mutation ID is rejected/conflicted and cannot alter current state",
-        "Verify legacy direct DELETE of a scheduled routine selection remains absent to the old client and prevents ensure from recreating it; legacy INSERT restores the frozen skipped snapshot",
+        "Verify legacy direct DELETE of a scheduled routine selection remains absent to the old client and prevents ensure from recreating it; legacy INSERT restores the frozen skipped snapshot, including NULL weekday-array compatibility",
         "Owner A cannot read or mutate owner B routine/template/day/skip snapshots; triggers reject forged snapshots, invalid schedule values, invalid zones and stale revision",
         "Retry after uncertain writes does not duplicate routine templates, day rows or completion state; delete/cascade and existing 30-day purge cover free-text day and skip snapshots",
-        "Call all four public routine RPCs through PostgREST and verify PUBLIC/anon denial, owner success, other-owner denial and private-schema isolation without using production"
+        "Call legacy and v2 create/replace RPCs plus ensure and skip through PostgREST; verify PUBLIC/anon denial, owner success, other-owner denial and private-schema isolation without using production"
       ],
       "checks": [
         "Use synthetic data with two authenticated owners in a disposable development database",
-        "Apply reviewed migration transactionally; probe daily/interval recurrence, date-zone, month-end, anchor retry, legacy delete/restore, skip/re-add, ABA retry, snapshot, RPC grants, RLS, CAS/readback, cascade and purge behavior",
+        "Apply reviewed migration transactionally; probe TS/SQL weekday parity, daily/interval recurrence, date-zone, month-end, anchor retry, legacy delete/restore, skip/re-add, ABA retry, snapshot, RPC grants, RLS, CAS/readback, cascade and purge behavior",
         "Record outputs without real owner data; do not use production"
       ],
       "depends_on": [
@@ -6420,7 +6439,7 @@
       ],
       "status": "planned",
       "history": [],
-      "next_step": "Release verification only. Schedule after v4 migration is reviewed and an authorized disposable development Supabase project and legacy-client probe are available; no database action is part of the local UI task."
+      "next_step": "Release verification only, separate from local weekday implementation and HOME UI. Schedule after the v2.1 migration and both legacy/v2 RPCs receive local review, and an approved disposable development Supabase project is available; no database action is part of local UX-FIX or HOME implementation."
     },
     {
       "id": "UX-FIX-BASELINE-WINDOWS-01",
@@ -6553,6 +6572,434 @@
         }
       ],
       "next_step": "Oberoende QA BLOCK och Reviewer BLOCK endast på obligatorisk RN Web interaction probe: react-native-web, react-dom, esbuild, Playwright och Chromium saknas i checkoutmiljön. Inga fel i statisk granskning; kör proben i dokumenterad isolerad harness innan done."
+    },
+    {
+      "id": "UX-CONTINUE-CARD-01",
+      "title": "Träning: bygg om Fortsätt där ni var mot panel 6",
+      "mvp_requirement": "docs/design/vision-rev02-screen-contracts.md: panel 6; UX-FIX 2026-10-15 v2.1 slice 2",
+      "plan": "docs/tasks/dev/ux-fix-2026-10-15.md v2.1; UX contract docs/plans/UX-FIX-2026-10-15-ux-spec.md v2.1",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/theme/tokens.ts",
+        "src/features/training/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/design/evidence/vision-rev02/ux-fix-2026-10-15/continue-card",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Liggande fortsättkort har en explicit kompakt bildyta med panel 6:s 76–88 pt storleksmål och kort program-/stegtext",
+        "Nästa steg och progress kommer från verkliga program/progressdata; ingen fabricerad bildetikett eller progress",
+        "0/2 och 2/2 visar inte ett fortsättkort; 1/2 visar rätt nästa steg/progress; flera påbörjade program använder en faktisk fortsättning",
+        "Okänd ålder behåller sparad fortsättning i en separat sektion och visar den aldrig som en åldersmatchning under Passar just nu",
+        "Lång svensk program-/stegtext och 140% text får växa utan klippning och utan att bilden styr kortets höjd",
+        "Ändring påverkar inte progresslagring eller ordningsregler"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint on exact changed TS/TSX files",
+        "RN Web visual-check build and manual production-component render review for default, unstarted, half, complete, several, long-title and unknown-age scenarios",
+        "Manual functional/scope inspection; no test suites",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED for exact UX-FIX v2.1, recorded in docs/tasks/dev/ux-fix-2026-10-15.md; no dependency; Erik authorized the 2–7 sequence 2026-10-15."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin first approved UX slice: panel 6 continuation card; exact write paths include PublishedTrainingScreen.tsx and src/theme/tokens.ts; no progress/schema behavior changes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implemented compact panel 6 continuation section and fixed 84x76 tokenized thumbnail; preserved unknown-age continuation. Public/review RN Web builds and manual Chromium renders for 375x844, 430x844, 375x667, 0/2, 1/2, 2/2, several, long title, unknown age, empty/error and 140% text proxy are recorded in docs/design/evidence/vision-rev02/ux-fix-2026-10-15/continue-card/RENDER-REPORT.md. Correct next-step click, no browser page errors. ESLint/diffcheck/queue validation PASS. Typecheck blocked only by pre-existing Motion.tsx:61 PressableStateCallbackType hovered error. No test suites/DB. Independent QA and Reviewer pending."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent UI QA PASS recorded in docs/design/evidence/vision-rev02/ux-fix-2026-10-15/continue-card/RENDER-REPORT.md; 375/430/667, 140% text proxy, progress states, unknown age, public/review, click path and changed-file lint/build/diffcheck PASS. No tests or DB operations. Reviewer pending; native SR/Dynamic Type/safe area remain NOT TESTABLE; typecheck has unrelated baseline Motion.tsx:61 hovered error."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS for the approved panel 6 contract. Verified the production component and fresh public/review captures; fixed 84x76 image remains bounded as copy grows, progress/next step derive from program state, no card at 0/2 or 2/2, 1/2 opens the correct step, and unknown-age/empty/error states are covered. git diff --check PASS. Typecheck remains blocked only by pre-existing Motion.tsx:61 hovered error. No tests or DB actions; native accessibility/safe-area remain NOT TESTABLE. Next: UX-LOG-EDITOR-01."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS for the approved panel 6 contract. Verified the production component and fresh public/review captures; fixed 84x76 image remains bounded as copy grows, progress/next step derive from program state, no card at 0/2 or 2/2, 1/2 opens the correct step, and unknown-age/empty/error states are covered. git diff --check PASS. Typecheck remains blocked only by pre-existing Motion.tsx:61 hovered error. No tests or DB actions; native accessibility/safe-area remain NOT TESTABLE. Next: UX-LOG-EDITOR-01."
+    },
+    {
+      "id": "UX-LOG-EDITOR-01",
+      "title": "Logga: revidera tidslinje och redigerare mot panel 5",
+      "mvp_requirement": "docs/design/vision-rev02-screen-contracts.md: panel 5; UX-FIX 2026-10-15 v2.1 slice 3",
+      "plan": "docs/tasks/dev/ux-fix-2026-10-15.md v2.1; UX contract docs/plans/UX-FIX-2026-10-15-ux-spec.md v2.1",
+      "write_paths": [
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/components/AppPrimitives.tsx",
+        "src/components/ui/BottomSheet.tsx",
+        "src/components/ui/IconChip.tsx",
+        "src/components/ui/ListRow.tsx",
+        "src/theme/tokens.ts",
+        "src/features/puppy-log/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/design/evidence/vision-rev02/ux-fix-2026-10-15/log-editor",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Tidslinjen använder panel 5:s grupperade rader, tidskolumn och semantiska kategorifärger",
+        "Snabbvalets befintliga en-trycksregistrering och händelsetyper bevaras",
+        "Editor visar fullständigt datum/tid, olyckssymbol från sparade accidentKinds, tangentbord/safe-area-footer och en tydlig primärhandling",
+        "Save/delete/undo/fel/unknown/dubblettflöde behåller avsikt och bekräftad status; sparning och radering kan inte ske samtidigt",
+        "§14-evidens täcker 375x844, 430x844, 375x667 och 140% textproxy"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint on exact changed TS/TSX files",
+        "RN Web visual-check build and manual production-component render review",
+        "Manual functional/scope inspection; no test suites",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UX-CONTINUE-CARD-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE for exact UX-FIX v2.1 covers panel 5 slice 3, its implementation scope, and preserved log save/delete/undo recovery. Critic PROCEED recorded in docs/tasks/dev/ux-fix-2026-10-15.md. Predecessor UX-CONTINUE-CARD-01 is complete with independent QA and Reviewer PASS. No plan change."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin panel 5 Log slice within queue write paths: grouped timeline and editor visual hierarchy while preserving primary quick-log actions, date/time editing, accidentKinds, save/delete/undo, and recovery. Fresh synthetic render and §14 evidence required; Security review follows code because write flow changes. No test suites."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation and current evidence complete in docs/design/evidence/vision-rev02/ux-fix-2026-10-15/log-editor/RENDER-REPORT.md. Added the panel-5 Lägg till händelse entry while preserving Fler and primary quick logs; timeline/editor use fixed time column, semantic accident icons and anchored Save. Fresh public/review renders at 375x844, 430x844 and 375x667 plus 140% proxy. Manual Chromium covered supplemental input, quick-log undo, unknown accident type-toggle/save/reopen, delete cancel/confirm and failed/retry; no page errors. Scoped ESLint and both builds PASS. Typecheck remains blocked only by existing Motion.tsx:61 error. Critic static Security PASS; no tests or DB actions. Independent QA and Reviewer requested."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS 2026-10-15 after rerendering the new CTA, supplemental types and legacy unknown toggle/save/reopen evidence. Confirmed CTA reachability at 375x667, existing action routing, no blocking visual/functional issue, and report/evidence coherence. Native keyboard/safe-area, VoiceOver, Dynamic Type and reduced motion remain NOT TESTABLE; no test suites. Reviewer closeout remains."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Renewed independent read-only Reviewer PASS 2026-10-15 after first BLOCK was fixed. Shared selectType closes the add-event sheet for normal, accident and duplicate paths; four Chromium captures plus independent delta-QA PASS. Updated RENDER-REPORT/queue align. Preserve existing Motion.tsx:61 typecheck error and native NOT TESTABLE limits; proceed to UX-WORKSPACE-RETENTION-01."
+        }
+      ],
+      "next_step": "Renewed independent read-only Reviewer PASS 2026-10-15 after first BLOCK was fixed. Shared selectType closes the add-event sheet for normal, accident and duplicate paths; four Chromium captures plus independent delta-QA PASS. Updated RENDER-REPORT/queue align. Preserve existing Motion.tsx:61 typecheck error and native NOT TESTABLE limits; proceed to UX-WORKSPACE-RETENTION-01."
+    },
+    {
+      "id": "UX-WORKSPACE-RETENTION-01",
+      "title": "Hem/Träning: behåll bekräftad data mellan flikar",
+      "mvp_requirement": "docs/plans/UX-FIX-2026-10-15-ux-spec.md: slice 4; workspace data-scope contracts",
+      "plan": "docs/tasks/dev/ux-fix-2026-10-15.md v2.1; UX contract docs/plans/UX-FIX-2026-10-15-ux-spec.md v2.1",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/daily-activity-data.ts",
+        "src/data/workspace-data.ts",
+        "src/features/home/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/design/evidence/vision-rev02/ux-fix-2026-10-15/workspace-retention",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Varm Home/Training-vy visar senast bekräftade sammanhängande snapshot direkt under refresh",
+        "Samtidiga läsningar per scope dedupliceras; sent svar får inte skriva över nyare bekräftad write",
+        "Konto, hund, dag, tidszon och public/reviewläge isoleras; scopebyte tömmer privat data innan ny render",
+        "Refreshfel behåller tidigare data och visar återhämtningsväg; okända delmängder ger ingen fabricerad total",
+        "20 varma flikresor verifieras med instrumenterat lokalt fixture/requestspår utan telemetri eller live-ägardata"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint on exact changed TS/TSX files",
+        "RN Web visual-check build and manual production-component render review",
+        "Manual functional/scope inspection; no test suites",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "Static Security review of the changed in-memory/network lifecycle before review"
+      ],
+      "depends_on": [
+        "UX-LOG-EDITOR-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED for exact UX-FIX v2.1 are recorded in docs/tasks/dev/ux-fix-2026-10-15.md; those reviews cover slice 4's in-memory scope and data isolation. Predecessor UX-LOG-EDITOR-01 now done. No plan change; static Security review remains required before final review."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik's 2026-10-15 mandate covers UX-FIX points 2–7 and then Home routine checklist; begin slice 4 after Log checkpoint. Preserve same-scope confirmed Home/Training snapshot across warm refresh, dedupe per scope, guard newer confirmed writes from stale reads, and synchronously isolate account/dog/day/time-zone/mode changes. In-memory only; no persistence/backend/telemetry; no test suites. Exact files are the queue write_paths; synthetic fixture/render and Security review required."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Public/review RN Web builds and Chromium captures cover the Home refresh/loading/empty/error states, Training and the 20-warm-trip synthetic trace: two fixture reads, one joined read, 40 cache hits. Changed-file ESLint, git diff --check and queue validation pass. pnpm typecheck still stops only at baseline Motion.tsx:61. No tests or DB operations. Independent QA, static Security and Reviewer remain pending. See docs/design/evidence/vision-rev02/ux-fix-2026-10-15/workspace-retention/RENDER-REPORT.md."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Erik reports 2026-10-15 that QA, static Security and Reviewer approved this completed slice. Coordinator records this as owner-reported signoff; existing implementation and render evidence remain in docs/design/evidence/vision-rev02/ux-fix-2026-10-15/workspace-retention/. No new independent review is claimed here."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Erik reports QA, static Security and Reviewer PASS for UX-WORKSPACE-RETENTION-01. This is recorded as owner-reported approval, not a new independent signoff. Existing render/request-trace evidence is unchanged."
+        }
+      ],
+      "next_step": "Erik reports QA, static Security and Reviewer PASS for UX-WORKSPACE-RETENTION-01. This is recorded as owner-reported approval, not a new independent signoff. Existing render/request-trace evidence is unchanged."
+    },
+    {
+      "id": "UX-KNOWLEDGE-CACHE-01",
+      "title": "Kunskap: återanvänd lästa checklistor utan att blanda scope",
+      "mvp_requirement": "docs/design/vision-rev02-screen-contracts.md: panels 4 and 7; UX-FIX 2026-10-15 v2.1 slice 5",
+      "plan": "docs/tasks/dev/ux-fix-2026-10-15.md v2.1; UX contract docs/plans/UX-FIX-2026-10-15-ux-spec.md v2.1",
+      "write_paths": [
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/checklist-data.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/knowledge/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/design/evidence/vision-rev02/ux-fix-2026-10-15/knowledge-cache",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Previously loaded overview/detail remains available on warm return; first load of an unseen template remains honest",
+        "Cache is keyed by account/dog/template-version/review mode and never by Home local day",
+        "Confirmed checklist writes update detail and overview consistently; pending/failed/unknown keeps intent and recovery action",
+        "Search/chips only claim their existing real data scope; FAQ/checklist public/review gates remain unchanged",
+        "Production Knowledge cards and checklist controls are rendered and §14 evidence is recorded"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint on exact changed TS/TSX files",
+        "RN Web visual-check build and manual production-component render review",
+        "Manual functional/scope inspection; no test suites",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "Static Security review of changed read/write-scope handling before review"
+      ],
+      "depends_on": [
+        "UX-WORKSPACE-RETENTION-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact UX-FIX v2.1 plan and slice 5 already have recorded Architect APPROVE and Critic PROCEED in docs/tasks/dev/ux-fix-2026-10-15.md; predecessor UX-WORKSPACE-RETENTION-01 is now owner-reported done. No plan change."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik's 2026-10-15 mandate authorizes points 2–7 and then HOME-ROUTINE-CHECKLIST-01. Begin slice 5 within its exact queue write_paths; preserve checklist scope isolation, confirmed writes, intent recovery and public/review gates. No test suites or database operations."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation handoff 2026-10-15: account/dog/template-version/review-scoped in-memory read cache, confirmed writes update detail/overview, explicit retry forces fresh read, prior unknown intent retained. pnpm typecheck, scoped ESLint (including know02 fixture), RN Web review build, manual Chromium cold/warm/remount/scope probe, git diff --check and dev_flow validate PASS. Screenshots and §14 delta: docs/design/evidence/vision-rev02/ux-fix-2026-10-15/knowledge-cache/RENDER-REPORT.md. No test suites or DB operations. Independent QA, static Security and Reviewer pending."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA delta PASS 2026-10-15: synthetic detail-newer fixture verifies the visible summary follows the newer detail read and remains 2/4 on warm overview. Static Security delta PASS 2026-10-15: ProductWorkspace deletes its exact read-cache scope on unmount/sign-out; runtime auth transition remains NOT TESTABLE. Typecheck, scoped ESLint, RN Web build, manual cache/scope/reconciliation probes, diff-check and queue validation PASS. Reviewer final pass pending; no tests or DB operations."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS 2026-10-15: cache scope/purge, honest unseen-template loading, retry, confirmed write and pending/unknown recovery, and newer detail-to-overview reconciliation match slice 5. QA delta PASS and static Security delta PASS are recorded. Typecheck/scoped ESLint, RN Web render, manual cold/warm/remount/scope and 1/4→2/4→2/4 probes, diff-check and queue validation PASS. Native, live Supabase/RLS and persistent cache remain NOT TESTABLE; no tests or DB operations."
+        }
+      ],
+      "next_step": "Reviewer PASS 2026-10-15: cache scope/purge, honest unseen-template loading, retry, confirmed write and pending/unknown recovery, and newer detail-to-overview reconciliation match slice 5. QA delta PASS and static Security delta PASS are recorded. Typecheck/scoped ESLint, RN Web render, manual cold/warm/remount/scope and 1/4→2/4→2/4 probes, diff-check and queue validation PASS. Native, live Supabase/RLS and persistent cache remain NOT TESTABLE; no tests or DB operations."
+    },
+    {
+      "id": "UX-TRAINING-UNMARK-01",
+      "title": "Träning: avmarkera ett enskilt genomfört steg",
+      "mvp_requirement": "docs/design/vision-rev02-screen-contracts.md: panel 6; UX-FIX 2026-10-15 v2.1 slice 6",
+      "plan": "docs/tasks/dev/ux-fix-2026-10-15.md v2.1; UX contract docs/plans/UX-FIX-2026-10-15-ux-spec.md v2.1",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/review-training-state.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/training/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/design/evidence/vision-rev02/ux-fix-2026-10-15/training-unmark",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "A step can be unmarked by reusing deleteTrainingProgress for the exact dog/program version/step",
+        "Bock/progress changes only after confirmed delete/readback; pending, failed and unknown do not claim success",
+        "Confirmed result is consistent in detail, Mina, Fortsätt där ni var and Home",
+        "Later completed steps stay completed; reset-program behavior remains separate",
+        "Accessible label names the step and action; no delete/trash metaphor"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint on exact changed TS/TSX files",
+        "RN Web visual-check build and manual production-component render review",
+        "Manual functional/scope inspection; no test suites",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "Static Security review of the changed progress write path before review"
+      ],
+      "depends_on": [
+        "UX-KNOWLEDGE-CACHE-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED 2026-10-15 cover exact UX-FIX v2.1 plan/slice 6: preserve reset behavior, unmark exact program-version/step by confirmed delete and keep Mina/Home/continue snapshots consistent. Dependency UX-KNOWLEDGE-CACHE-01 is done. No plan change."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin UX-FIX v2.1 slice 6 on exact queue write_paths. Reuse deleteTrainingProgress for exact dog/program-version/step; keep the completion checkbox confirmed-only, preserve later steps and reset-program behavior, then reconcile Home/Mina/Fortsätt snapshots. No tests, DB operations or new persistence."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation and local render stable; typecheck, scoped ESLint, RN Web build, Chromium pending/confirmed/failed/unknown probes, diff-check pass. Synthetic scenario proves exact single-step removal and later-step preservation. Evidence: docs/design/evidence/vision-rev02/ux-fix-2026-10-15/training-unmark/RENDER-REPORT.md. Independent QA and static Security review next; Reviewer follows."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS 2026-10-15 after scope-guard correction: exact delete/readback, pending/failed/unknown, later-step preservation, Mina/Home/continue coherence, reset separation, accessible label and single retry verified. Typecheck, scoped ESLint, diff-check PASS. Static Security delta PASS; live DB/RLS/native remain NOT TESTABLE. Independent Reviewer next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS 2026-10-15. Exact delete/readback and captured selection-scope fence verified; pending/failed/unknown retain confirmed progress; Mina/continue/Home update from refreshed snapshot; later steps and separate reset preserved; accessible action names the step. Typecheck, scoped ESLint and diff-check independently PASS. Synthetic renders substantiate the changed detail flow only; full panel 6, native, live Supabase/RLS remain NOT TESTABLE."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS 2026-10-15. Exact delete/readback and captured selection-scope fence verified; pending/failed/unknown retain confirmed progress; Mina/continue/Home update from refreshed snapshot; later steps and separate reset preserved; accessible action names the step. Typecheck, scoped ESLint and diff-check independently PASS. Synthetic renders substantiate the changed detail flow only; full panel 6, native, live Supabase/RLS remain NOT TESTABLE."
+    },
+    {
+      "id": "HOME-ROUTINE-WEEKDAYS-01",
+      "title": "Hem: lägg till valbara veckodagar för egen upprepning",
+      "mvp_requirement": "docs/mvp.md routine requirement; UX-FIX 2026-10-15 v2.1 slice 7; daily routines data contract",
+      "plan": "docs/tasks/dev/ux-fix-2026-10-15.md v2.1; UX contract docs/plans/UX-FIX-2026-10-15-ux-spec.md v2.1",
+      "write_paths": [
+        "docs/mvp.md",
+        "supabase/README.md",
+        "docs/design/vision-rev02-objects.md",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/home/daily-activity-model.ts",
+        "src/features/home/daily-activity-data.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "supabase/migrations/202610150001_routine_repeat_weekdays.sql",
+        "docs/dev/beta-data-lifecycle.md",
+        "docs/privacy/beta-information.md",
+        "src/features/home/README.md",
+        "docs/tasks/dev/daily-routines-checklists.md",
+        "docs/plans/HOME-ROUTINE-CHECKLIST-01-ux-spec.md",
+        "tools/visual-check/app.tsx",
+        "docs/design/evidence/vision-rev02/ux-fix-2026-10-15/routine-weekdays",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "MVP contract no longer contradicts owner-approved daily/custom recurrence and selected weekday behavior",
+        "Weekly interval allows one or more Mån–Sön choices with 44 pt targets, truthful selected state and an explicit minimum-one-day rule",
+        "Changing the selected weekday set is a recurrence-rule change and resets the anchor to the saved local date; name/checklist changes and an identical weekday set preserve the anchor",
+        "Existing weekly rules with repeat_weekdays NULL preserve exactly the current due rule: anchor weekday and interval modulo; name/checklist edits do not populate the new array",
+        "Existing daily/day interval/month rules, anchors, frozen snapshots, skip tombstones, CAS/readback/retry and old-client writes remain compatible",
+        "Architect and Security statically review migration/RPC/legacy behavior; Compliance confirms the weekday metadata continues the existing routine purpose and adds no collection purpose",
+        "Local formula acceptance is static source inspection against dated hand vectors only; SQL/TypeScript runtime parity belongs to HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01",
+        "Migration has a unique forward-only version and receives Architect/Security static review; it is not applied to any database",
+        "A documented date vector covers an anchor Wednesday 2026-10-14, every two weeks, Monday/Friday selected: first due Friday 2026-10-16, next due week starts Monday 2026-10-26"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint on exact changed TS/TSX files",
+        "RN Web visual-check build and manual production-component render review",
+        "Manual functional/scope inspection and static TS/SQL formula comparison against hand vectors; no test suites",
+        "git diff --check",
+        "python3 tools/dev_flow.py validate",
+        "Architect, Critic, static Security and Compliance reviews of exact schema/data purpose; no live DB or runtime parity claim"
+      ],
+      "depends_on": [
+        "UX-TRAINING-UNMARK-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE och Critic PROCEED för exakt UX-FIX v2.1 slice 7; Security plan-PASS; Compliance PASS 2026-10-15. UX-TRAINING-UNMARK-01 är done. Planen är oförändrad. Nästa steg: implementera v2-datakontrakt, forward-only migration och UI enligt datumvektorn; granska legacy RPC-kompatibilitet."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Startar implementation inom godkänt v2.1-kontrakt. Read-only review: Architect APPROVE, Critic PROCEED, Security plan PASS, Compliance PASS. Ändrar bara queue write_paths; migration skapas men appliceras inte."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation handoff 2026-10-15: repeat_weekdays UI/TS/RPC compatibility and unapplied migration source complete. Architect and Security static review PASS after legacy-create and retention-trigger fixes; plan Critic/Security and Compliance PASS. Typecheck, scoped ESLint, public/review RN Web builds, manual Chromium weekday-state/44pt/minimum checks, diff-check and queue validation PASS. Evidence: docs/design/evidence/vision-rev02/ux-fix-2026-10-15/routine-weekdays/RENDER-REPORT.md. No test suite or SQL/database operation. Independent QA and Reviewer pending; full panel 4 composition is deferred to dependent HOME-ROUTINE-CHECKLIST-01."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS 2026-10-15 for the local weekday slice. Verified TS Monday-week due formula and exact legacy NULL modulo behavior; sorted/unique-day validation, NULL-preserving anchor normalization, CAS/retry equality, seven accessible full-name checkboxes, ≥44pt targets, minimum-one-day guidance and disabled save. Review screenshots/report and prior local check results are in docs/design/evidence/vision-rev02/ux-fix-2026-10-15/routine-weekdays/RENDER-REPORT.md. QA accepts this slice with the existing stacked manager composition explicitly deferred to HOME-ROUTINE-CHECKLIST-01; no full panel 4 claim. No tests or SQL. Static Architect/Security PASS; live DB/RLS, runtime parity and native remain NOT TESTABLE. Independent Reviewer next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS 2026-10-15. RPC argument names match migration; readback/equality includes weekdays; legacy NULL and anchor are preserved; 375x844 render evidence supports checkbox state, minimum rule, and ≥44pt targets. No scope/evidence finding. QA PASS, Architect/Security static PASS, Critic PROCEED, Compliance PASS. Full panel 4, native accessibility, migration/runtime parity and live RLS remain NOT TESTABLE. Evidence: docs/design/evidence/vision-rev02/ux-fix-2026-10-15/routine-weekdays/RENDER-REPORT.md. No test suite or database operation."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS 2026-10-15. RPC argument names match migration; readback/equality includes weekdays; legacy NULL and anchor are preserved; 375x844 render evidence supports checkbox state, minimum rule, and ≥44pt targets. No scope/evidence finding. QA PASS, Architect/Security static PASS, Critic PROCEED, Compliance PASS. Full panel 4, native accessibility, migration/runtime parity and live RLS remain NOT TESTABLE. Evidence: docs/design/evidence/vision-rev02/ux-fix-2026-10-15/routine-weekdays/RENDER-REPORT.md. No test suite or database operation."
     }
   ]
 }

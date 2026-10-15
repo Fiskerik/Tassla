@@ -46,8 +46,8 @@ export function isValidDateKey(value: string): boolean {
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
 
-export function isRoutineDueOnDate(routine: Pick<DailyRoutine, 'repeat_unit' | 'repeat_interval' | 'repeat_anchor_date'>, dateKey: string): boolean {
-  const { repeat_unit: unit, repeat_interval: interval, repeat_anchor_date: anchor } = routine;
+export function isRoutineDueOnDate(routine: Pick<DailyRoutine, 'repeat_unit' | 'repeat_interval' | 'repeat_weekdays' | 'repeat_anchor_date'>, dateKey: string): boolean {
+  const { repeat_unit: unit, repeat_interval: interval, repeat_weekdays: weekdays, repeat_anchor_date: anchor } = routine;
   if (!unit || !interval || !anchor || !isValidDateKey(dateKey) || !isValidDateKey(anchor) || dateKey < anchor) return false;
   const [anchorYear, anchorMonth, anchorDay] = anchor.split('-').map(Number);
   const [year, month, day] = dateKey.split('-').map(Number);
@@ -57,7 +57,12 @@ export function isRoutineDueOnDate(routine: Pick<DailyRoutine, 'repeat_unit' | '
   }
   if (unit === 'week') {
     const elapsedDays = (Date.UTC(year, month - 1, day) - Date.UTC(anchorYear, anchorMonth - 1, anchorDay)) / 86_400_000;
-    return Number.isInteger(elapsedDays) && elapsedDays % (interval * 7) === 0;
+    if (!Number.isInteger(elapsedDays)) return false;
+    if (weekdays === null) return elapsedDays % (interval * 7) === 0;
+    const anchorWeekStart = Date.UTC(anchorYear, anchorMonth - 1, anchorDay) - (isoWeekdayForDateKey(anchor) - 1) * 86_400_000;
+    const dateWeekStart = Date.UTC(year, month - 1, day) - (isoWeekdayForDateKey(dateKey) - 1) * 86_400_000;
+    const elapsedWeeks = (dateWeekStart - anchorWeekStart) / (7 * 86_400_000);
+    return Number.isInteger(elapsedWeeks) && elapsedWeeks % interval === 0 && weekdays.includes(isoWeekdayForDateKey(dateKey));
   }
   if (unit === 'month') {
     const monthsElapsed = (year - anchorYear) * 12 + month - anchorMonth;
@@ -67,14 +72,22 @@ export function isRoutineDueOnDate(routine: Pick<DailyRoutine, 'repeat_unit' | '
   return false;
 }
 
-export function dailyRoutineRepeatSummary(routine: Pick<DailyRoutine, 'repeat_unit' | 'repeat_interval'>): string {
+export function dailyRoutineRepeatSummary(routine: Pick<DailyRoutine, 'repeat_unit' | 'repeat_interval' | 'repeat_weekdays' | 'repeat_anchor_date'>): string {
   const { repeat_unit: unit, repeat_interval: interval } = routine;
   if (!unit || !interval) return 'Aldrig';
-  if (unit === 'day' && interval === 1) return 'Dagligen';
-  if (interval === 1) return unit === 'week' ? 'Varje vecka' : 'Varje månad';
-  if (interval === 2) return unit === 'day' ? 'Varannan dag' : unit === 'week' ? 'Varannan vecka' : 'Varannan månad';
-  const units = unit === 'day' ? 'dagar' : unit === 'week' ? 'veckor' : 'månader';
-  return `Med ${interval} ${units} mellanrum`;
+  const cadence = unit === 'day' && interval === 1 ? 'Dagligen'
+    : interval === 1 ? unit === 'week' ? 'Varje vecka' : 'Varje månad'
+      : interval === 2 ? unit === 'day' ? 'Varannan dag' : unit === 'week' ? 'Varannan vecka' : 'Varannan månad'
+        : `Med ${interval} ${unit === 'day' ? 'dagar' : unit === 'week' ? 'veckor' : 'månader'} mellanrum`;
+  const weekdays = routine.repeat_weekdays ?? (unit === 'week' && routine.repeat_anchor_date ? [isoWeekdayForDateKey(routine.repeat_anchor_date)] : null);
+  return unit === 'week' && weekdays ? `${cadence} · ${weekdays.map((day) => WEEKDAY_SHORT_NAMES[day - 1]).join(', ')}` : cadence;
+}
+
+const WEEKDAY_SHORT_NAMES = ['mån', 'tis', 'ons', 'tors', 'fre', 'lör', 'sön'];
+
+export function isoWeekdayForDateKey(dateKey: string): number {
+  const day = new Date(`${dateKey}T00:00:00.000Z`).getUTCDay();
+  return day === 0 ? 7 : day;
 }
 
 export function isTrainingCompletionForDay(

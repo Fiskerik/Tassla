@@ -33,7 +33,8 @@ test('owner decision keeps the mascot out of Logg and Träning while confirmed f
   assert.doesNotMatch(logScreen, /DogMascot|dogReaction/);
   assert.doesNotMatch(trainingScreen, /DogMascot|dogReaction/);
   assert.match(logScreen, /const successToast = <Toast visible=\{mutation\?\.status === 'saved'/);
-  assert.match(trainingScreen, /<Toast visible=\{saved\} tone="success" confirmed message="Övningen är genomförd"/);
+  assert.match(trainingScreen, /<Toast visible=\{Boolean\(successMessage\) && !selectedProgram\} tone="success" confirmed message=\{successMessage\}/);
+  assert.match(trainingScreen, /<Toast visible=\{Boolean\(successMessage\) && Boolean\(selectedProgram\)\} tone="success" confirmed message=\{successMessage \|\| undefined\}/);
   assert.match(trainingScreen, /if \(confirmed && confirmed\.programId === selectedProgram\.id && confirmed\.stepId === selectedStep\.id\)/);
 });
 

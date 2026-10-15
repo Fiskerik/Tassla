@@ -8,6 +8,16 @@ Datum: 2026-10-14 · Version: 1 · Uppgift: `HOME-ROUTINE-CHECKLIST-01` · Plan:
 
 Varje sparad rutin visar sitt namn, sin checklista och en kort upprepningssammanfattning. En pennknapp med texten `Redigera` placeras direkt intill rutinens namn. Den öppnar rutinens kompletta redigeringsläge.
 
+## Kompakt rutinöversikt
+
+Flera rutiner grupperas på en gemensam varm kortyta med en diskret avdelare mellan rutinerna. Ge inte varje rutin en egen inramad kortyta. Den rutin som sheeten öppnades för kan få en mild varm canvasmarkering.
+
+Rutinens namn och dess enda `Redigera`-knapp ligger på samma rad. Redigera-knappen är visuellt lugnare än dagsvalet. Checklistan visas som enkla punktlistor med tunna avdelare; frekvensen ligger som kort sekundär text under listan.
+
+`Lägg till på Hemskärmen` eller `Ta bort från Hemskärmen` ligger bredvid `Ta bort rutin`. Dagsvalet använder en mjuk grön yta och hela rutinen använder röd kontur och bekräftelse. Båda har minst 44×44 pt träffyta; bekräftelsetexten för helradering behåller den redan tillagda dagskopian.
+
+När ett create/edit-utkast är aktivt är `Spara rutin` den enda visuella huvudåtgärden; sheetens fasta `Klar`-knapp döljs. Stängknappen finns kvar och följer utkastets befintliga avbryt-/bekräftelseflöde.
+
 ## Flöde och tillstånd
 
 1. **Läs:** namn och punkter visas utan punktvisa redigeringsknappar eller redigeringsgester. Upprepning visas kortfattat. `Redigera` är den tydliga vägen till rutinens inställningar.

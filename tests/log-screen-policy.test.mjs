@@ -19,7 +19,8 @@ test('quick log uses the approved page heading, date navigator, two column grid 
   assert.match(screen, /onLongPress=\{\(\) => \{ firstUseTip\.dismiss\(\); startLayoutEdit\(\); \}\}/);
   assert.match(screen, /accessibilityLabel="Fler loggtyper"/);
   assert.match(screen, /LayoutAnimation\.configureNext/);
-  assert.doesNotMatch(screen, /<BottomSheet[\s\S]*?Fler loggtyper/);
+  assert.doesNotMatch(screen, /<BottomSheet[^>]*title="Fler loggtyper"/);
+  assert.match(screen, /title="Lägg till händelse"[\s\S]*?accessibilityLabel="Fler loggtyper"/);
   assert.match(screen, /label="Fler"[\s\S]*?icon=\{/);
   assert.match(quickTile, /icon\?: ReactNode/);
   assert.match(screen, /<QuickLogTile/);
@@ -52,13 +53,13 @@ test('delete snapshot replaces its source row and exits only after a token-match
 
 test('quick log hides sparse patterns and keeps edit/delete inside the row editor', () => {
   assert.match(screen, /summarizePottyPatterns\(events\)\.filter\(\(item\) => item\.count >= 2\)/);
-  assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); setEditingId\(event\.id\); \}\}/);
+  assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); editorSubmitRef\.current = null; setEditorActionState\(\{ canSave: false, saving: false \}\); setEditingId\(event\.id\); \}\}/);
   assert.match(screen, /<Button variant="destructive" label="Radera"/);
   assert.doesNotMatch(screen, /SPARAD|ActionFeedbackModal/);
 });
 
 test('legacy row editing and deletion remain reachable from workspace and preview', () => {
-  assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); setEditingId\(event\.id\); \}\}/);
+  assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); editorSubmitRef\.current = null; setEditorActionState\(\{ canSave: false, saving: false \}\); setEditingId\(event\.id\); \}\}/);
   assert.match(screen, /function LogEventEditor/);
   assert.match(screen, /onUpdate\?:/);
   assert.match(screen, /onDelete\?:/);
@@ -67,7 +68,7 @@ test('legacy row editing and deletion remain reachable from workspace and previe
   assert.match(screen, /DatePickerField/);
   assert.match(screen, /TimePickerField/);
   assert.match(screen, /Anteckning \(valfri\)/);
-  assert.match(listRow, /<IconChip[\s\S]*?\{time \? <Text style=\{\[styles\.time, isLogTimeline && styles\.logTime\]\}>\{time\}<\/Text> : null\}[\s\S]*?<Text style=\{styles\.title\}>/);
+  assert.match(listRow, /const content = isLogTimeline \? <>[\s\S]*?<View style=\{styles\.logTimeColumn\}>\{time \? <Text style=\{styles\.logTime\}>\{time\}<\/Text> : null\}<\/View>[\s\S]*?<IconChip category=\{category\} variant="rev02-log"[\s\S]*?<View style=\{styles\.copy\}><View style=\{styles\.headline\}>\{titleText\}<\/View>/);
   assert.match(screen, /tryck för att ändra/);
 });
 

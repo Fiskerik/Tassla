@@ -1,4 +1,4 @@
-import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, StyleSheet, Text, View } from 'react-native';
 import { useMemo, useState } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button, Card, DailyActivityItem, DestinationTile, Skeleton } from '../../components/ui';
@@ -32,6 +32,7 @@ export type HomeDailyFixtureItem = {
 
 export function HomeScreen({ dog, breed, content, contentState, trainingState = 'loading', nextStep, reviewTrainingStep = false, today: todayValue,
   dailyFixture, dailyState = 'hidden', dailyDateKey = '', dailyScopeKey, dailyActivities = [], routineTemplates = [], routineDaySkips = [], dailyTrainingOptions = [],
+  dailyRefreshing = false, dailyRefreshError = false,
   dailyMutationBusy = false, dailyMutationKey = '', dailyMutationMessage = '', dailyMutationError = false, onRetryDaily,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay,
   onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, onGo, onOpenContent, onRetryContent }: {
@@ -51,6 +52,8 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   reviewTrainingStep?: boolean;
   dailyFixture?: readonly HomeDailyFixtureItem[];
   dailyState?: 'hidden' | 'loading' | 'ready' | 'error';
+  dailyRefreshing?: boolean;
+  dailyRefreshError?: boolean;
   dailyDateKey?: string;
   dailyScopeKey?: string;
   dailyActivities?: readonly HomeDailyActivity[];
@@ -149,6 +152,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
       <View style={styles.dailyCardContent}>
         <View style={styles.dailyHeading}>
           <Text style={styles.dailyTitle} accessibilityRole="header">Dagens att göra</Text>
+          {dailyRefreshing && dailyState === 'ready' ? <ActivityIndicator accessibilityRole="progressbar" accessibilityLabel="Dagens uppgifter uppdateras" size="small" color={tokens.colors.home.textMuted} /> : null}
           {dailyFixture ? <Text style={styles.dailyCount}>{dailyFixture.filter((item) => reviewCompletion[item.id] ?? item.completed).length} av {dailyFixture.length} klara</Text> : dailyState === 'ready' && dailyActivities.length > 0
             ? <Text style={styles.dailyCount}>{dailyActivities.filter((item) => item.completed).length} av {dailyActivities.length} klara</Text>
             : null}
@@ -158,6 +162,10 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
             <Text style={styles.manageDailyLabel}>Hantera</Text>
           </MotionPressable>
         </View>
+        {dailyRefreshError && dailyState === 'ready' ? <View style={styles.dailyRefreshError} accessibilityLiveRegion="polite">
+          <Text style={styles.emptyText}>Uppdateringen kunde inte hämtas. Du ser senast hämtade uppgifter.</Text>
+          {onRetryDaily ? <Button variant="tertiary" label="Försök igen" accessibilityLabel="Försök uppdatera dagens uppgifter igen" onPress={onRetryDaily} /> : null}
+        </View> : null}
         {dailyFixture ? <ReviewDailyFixture items={dailyFixture} completion={reviewCompletion} onCompletionChange={setReviewCompletion} onGo={onGo} onOpenRoutine={(routineId) => openManager(routineId)} /> : dailyState === 'loading' ? <Skeleton shape="row" lines={2} />
           : dailyState === 'error' ? <View style={styles.dailyState}>
             <Text style={styles.emptyText}>Dagens uppgifter kunde inte hämtas. Ingen status räknas just nu.</Text>
@@ -361,6 +369,7 @@ const styles = StyleSheet.create({
   progressFill: { height: '100%', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.greenFill },
   activityRows: { gap: 0 },
   dailyState: { gap: tokens.spacing.xs },
+  dailyRefreshError: { gap: tokens.spacing.xs },
   emptyText: { ...tokens.typography.caption, color: tokens.colors.home.textMuted, paddingVertical: tokens.spacing.xs },
   showAll: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs },
   showAllText: { ...tokens.typography.caption, color: tokens.colors.primary, textDecorationLine: 'underline' },

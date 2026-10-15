@@ -694,7 +694,9 @@ Tre reviewbilder finns för 375×844: läsvy, samlat edit mode och discard-bekr�
 
 Eriks önskemål om mindre beskrivande text inventerades separat i `docs/tasks/dev/ui-info-copy-inventory.md`. Kandidater är redundanta introtexter i Hälsa, Träning, Mer, Konto, hundprofil och påminnelser samt dubbel informationslänk i historik/planerad hälsa. Integritets-/samtyckestext, säkerhetsråd, statushjälp, fel/återhämtning och artikel-/programsammanfattningar föreslås ligga kvar synligt. Ingen separat copyändring gjordes på dessa skärmar.
 
-## UX-FIX — lokal checkpoint 2026-10-15
+## UX-FIX — första lokala checkpoint (historisk), 2026-10-15
+
+Nedanstående var status vid den första checkpointen och har senare kompletterats av aktuella slice-rapporter längre ned i dokumentet.
 
 Arbetet fortsätter i den vanliga repoklonen på branchen `codex/ux-fix-2026-10-15`, baserad på kandidat `9a81815993f015478be480f9c8d19b0923b05f76`. Den bredare UX-FIX-planen är inte stängd: `HOME-ROUTINE-CHECKLIST-01` är fortsatt blockerad i väntan på de färska renderstorlekarna och tillstånden som står i kön.
 
@@ -703,3 +705,73 @@ Arbetet fortsätter i den vanliga repoklonen på branchen `codex/ux-fix-2026-10-
 `UX-FIX-BASELINE-MOTION-01` är blockerad, inte klar. Den typade implementationen i `src/components/ui/Motion.tsx` bevarar den konkreta Animated-stilen, skickar `{ pressed, hovered }` och kedjar callbacks; typkontroll, riktad lint och full check passerar. Oberoende QA och Reviewer hittade inget statiskt kodfel, men blockerar DONE eftersom RN Web-proben för hover/press, callbackantal, disable→enable och transform inte kan köras här: verktygen React Native Web, React DOM, esbuild, Playwright och Chromium saknas. Native-runtime är också NOT TESTABLE.
 
 Nästa steg är att köra den godkända Motion-proben i den isolerade RN Web-harnessen och därefter återuppta den blockerade Home-rutin/UX-verifieringen enligt respektive köpost. Ingen Supabase-migration, runtime/RLS-kontroll, native- eller TestFlight-verifiering har utförts i denna checkpoint.
+
+## UX-CONTINUE-CARD-01 — första UX-FIX-slicen, 2026-10-15
+
+Efter Architect APPROVE och Critic PROCEED för exakt UX-FIX v2.1 är panel 6:s `Fortsätt där ni var` omarbetad. Rubriken ligger nu före raden, bildytan använder separata 84×76 pt theme-tokenvärden och är oberoende av radens text-höjd. Kortet fortsätter att öppna samma programversion och nästa ofärdiga steg. Sparad fortsättning visas också när åldern saknas, separat från åldersbaserade rekommendationer.
+
+Public/review RN Web-bundles byggdes och färska Chromium-renders finns i `docs/design/evidence/vision-rev02/ux-fix-2026-10-15/continue-card/`. 375×844, 430×844 och 375×667 samt 0/2, 1/2, 2/2, flera påbörjade program, lång titel, okänd ålder, tomt och fel renderades. Den manuella 1/2-klickresan öppnade rätt nästa steg. Under 140% textproxy växte långkortet 178→259 px medan bildytan förblev 84×76 px. Ingen browser page error observerades.
+
+ESLint för de ändrade TS/TSX-filerna, `git diff --check`, kövalidering och RN Web-byggen passerar. `pnpm typecheck` stoppas av befintligt orelaterat fel i `src/components/ui/Motion.tsx:61`: `hovered` finns inte på `PressableStateCallbackType`. Inga testsviter eller databasoperationer kördes. Native Dynamic Type, VoiceOver, safe area och riktig publicerad progress är ej verifierade. §14-implementerbedömning och varje render finns i RENDER-REPORT; oberoende QA/Reviewer inväntas.
+
+## UX-LOG-EDITOR-01 — implementering till QA, 2026-10-15
+
+Panel 5 har nu en fast tidskolumn, semantiska olyckssymboler som läser sparade `accidentKinds`, läsbara datum-/tidsfält och en förankrad Spara-footer. Den gröna `Lägg till händelse`-knappen efter tidslinjen öppnar befintliga kompletterande loggtyper; snabbvalen, `Fler` och layoutredigeringen finns kvar. Äldre olyckor med `accident_kinds = NULL` behåller okänd status när typen växlas bort och tillbaka, och även efter sparning/återöppning. Render, målbildsjämförelse och §14 finns i `docs/design/evidence/vision-rev02/ux-fix-2026-10-15/log-editor/RENDER-REPORT.md`.
+
+Public/review RN Web-byggen och scoped ESLint passerar. Chromium-granskning täckte 375×844, 430×844, 375×667, kompletterande inmatning, add/undo, unknown toggle/save/reopen, delete cancel/confirm, failed/retry och 140 %-textproxy; inga browser errors. Critic/Security PASS efter rättning av legacy-unknown-hörnfallet. Oberoende QA PASS efter uppdaterad kontroll av CTA, tillgängliga supplemental types och legacy-beteende. `pnpm typecheck` stoppas endast av det befintliga, orelaterade `Motion.tsx:61`-felet. Inga testsviter eller DB-operationer kördes. Native keyboard/safe area, VoiceOver, Dynamic Type och reduced motion är NOT TESTABLE.
+
+Första oberoende Reviewer-granskning gav BLOCK: valet av kompletterande typ kunde lämna `Lägg till händelse`-arket kvar över tidslinjen eller olycksselectorn. `LogScreen.tsx` stänger nu arket i den gemensamma `selectType`-dispatchern, också för dubblettflödet. Scoped ESLint för filen, nya public/review-byggen och manuell Chromium-granskning passerar. Nya bilderna `add-event-walk-selected-sheet-closed-375x844.png`, `add-event-accident-selector-only-375x844.png`, `add-event-duplicate-dialog-sheet-closed-375x844.png` och `add-event-duplicate-confirmed-sheet-closed-375x844.png` visar stängt ark vid val och bekräftelse. Oberoende delta-QA PASS; förnyad read-only Reviewer PASS. UX-LOG-EDITOR-01 är `done`; nästa checkpoint är `UX-WORKSPACE-RETENTION-01`.
+
+### UX-WORKSPACE-RETENTION-01 — behavior checkpoint before code, 2026-10-15
+
+**User goal:** Home- och träningsdata som redan bekräftats ska finnas kvar vid varm flikresa och medan en förfallen uppdatering pågår.
+
+**Avgränsad UX/dataregel:** resursminnet ägs av `ProductWorkspace` och försvinner vid avmontering. Dagsnyckel omfattar konto, `accountGeneration`, hund, lokal dag, IANA-tidszon och public/review-läge. Tränings-/innehållsnyckel omfattar konto, `accountGeneration`, hund, relevant ras/ålder och public/review-läge. Samma-scope kallstart visar befintligt laddningstillstånd; varm refresh behåller hela senast bekräftade dags-/träningsunderlaget. Ett enda refreshfel visar senast bekräftat innehåll och en återförsökshandling; ofullständiga källor ger ingen fabricerad dags-total. Bekräftade writes invalidaterar läsningar med äldre revision.
+
+**Refresh:** högst en läsning per scope-flight; inom det queue-godkända 60 s-fönstret gör de 20 kontrollresorna inga extra dags-/träningsrequests. Efter förfallotid eller explicit retry startar en bakgrundsläsning utan att först rensa samma-scope data. Konto-/hund-/dag-/zon-/lägesbyte rensar den gamla privata vyn före ny render; sena svar får inte appliceras.
+
+**Tillgänglighet:** refreshindikatorn har en svensk accessible label; fel och Försök igen går att nå och aktivera utan färg eller dold gest. Ingen ändring av produktflikar, server/datamodell, persistent cache eller telemetri. Testfönstret använder endast syntetisk fixtur/request-trace; inga testsviter enligt v2.1.
+
+### UX-WORKSPACE-RETENTION-01 — implementering och QA-handoff, 2026-10-15
+
+`ProductWorkspace` återanvänder nu ett bekräftat dags-/träningssnapshot mellan Home och Training, med 60 sekunders in-memory-färskhet och delad läsning per scope. Scope omfattar konto och kontogeneration, hund, ras/ålderurval, lokal dag, IANA-tidszon och public/review-läge. Vid scopebyte aborteras äldre läsningar och gamla dags-/träningsdata rensas före ny synlig vy. Dagliga och träningsbaserade läsningar publiceras tillsammans när Home-snapshot saknas eller refresh lyckas; vid ett warm refreshfel behålls senast bekräftade data. Bekräftade writes supersederar äldre flights. Initialt fel med okänd datamängd visar ingen dags-total.
+
+Home visar en accessible refreshindikator och en kort retry-väg när varm refresh misslyckas. README beskriver cachegräns och scope. Den isolerade visual fixture använder samma `workspaceSnapshotReadDecision`; public/review spårar 20 syntetiska Home → Training → Knowledge → Home-resor med 2 initiala fixture-läsningar, 1 join och 40 cacheträffar. Detta är inte live nätverks- eller Supabase-mätning.
+
+Public/review RN Web-byggen och Chromium-renderingar passerar för Home ready/refreshing/refresh error/loading/empty/initial error, Training ready och fixture trace vid 375×844; inga page errors. Riktad ESLint, `git diff --check` och `python3 tools/dev_flow.py validate` passerar. `pnpm typecheck` stoppas av det befintliga orelaterade `Motion.tsx:61`-felet. Ingen testsvit eller databasoperation kördes. Render och implementerarens §14-bedömning finns i `docs/design/evidence/vision-rev02/ux-fix-2026-10-15/workspace-retention/RENDER-REPORT.md`.
+
+Queue är `qa`. Oberoende QA, separat statisk Security-review och Reviewer-signoff återstår; tills dess får slice 5 inte starta. Native VoiceOver, Dynamic Type, safe area och reduced motion är NOT TESTABLE.
+
+### UX-KNOWLEDGE-CACHE-01 — QA/Security findings, 2026-10-15
+
+Första oberoende QA-granskningen blockerade en möjlig sammanfattningsskillnad: overview och oläst detail hämtas parallellt, och en nyare detail-read uppdaterade cache men inte alltid den synliga översiktsräknaren. Detail-load sätter nu UI-summeringen från den cacheöversikt som detail-resultatet just uppdaterade. Den syntetiska `detail-newer`-rendern bekräftade 1/4 overview → 2/4 detail med två bockar → 2/4 varm overview; QA delta PASS.
+
+Statisk Security-granskning bekräftade korrekt konto-/hund-/version-/review-scope och begränsad minnescache, men fann att sign-out avmonterar ProductWorkspace utan att ett nytt cache-scope mountas. En scope-specifik cleanup körs nu vid ProductWorkspace-unmount. Security delta PASS; runtime sign-out är fortsatt NOT TESTABLE. Reviewer PASS bekräftade scope, återhämtning och summary/detail consistency. `UX-KNOWLEDGE-CACHE-01` är stängd som lokal UI-/källkodsslice. Ingen testsvit eller databaskörning.
+
+### UX-TRAINING-UNMARK-01 — lokal implementation och granskningar, 2026-10-15
+
+Detaljbladet kan avmarkera ett enskilt genomfört steg. Public write path återanvänder `deleteTrainingProgress` för aktuell hund, programversion och steg; framgång visas först när en forced readback bekräftar att steget saknas. Samma refresh uppdaterar Mina, Fortsätt och Hemmets scoped snapshot. Senare steg ligger kvar; programåterställning är oförändrad och separat. Reviewexempel ändrar bara lokal komponentstate.
+
+Oberoende Security hittade först en scope-fence-lucka vid hund-/konto-/urvalsbyte under nätanrop. `unmarkStep` fångar nu `currentSelectionKey` och avbryter status-/feluppdatering om scopen ändrats efter delete, readback eller fel. Security delta PASS, QA PASS och Reviewer PASS 2026-10-15. Reviewer noterade att retry först hämtar aktuell status; om steget fortfarande är markerat gör ägaren en separat Avmarkera-handling. Detta är dokumenterat i fixture-rapporten.
+
+Typecheck, ESLint för de fyra ändrade TS/TSX-filerna, RN Web-build, Chromium pending/confirmed/failed/unknown-klickresor, `git diff --check` och kövalidering passerar. Syntetiskt 375×844-underlag finns i `docs/design/evidence/vision-rev02/ux-fix-2026-10-15/training-unmark/RENDER-REPORT.md`. Inga testsviter eller databasoperationer kördes. Native tillgänglighet, Supabase/RLS och full panel-6-visuell acceptans är NOT TESTABLE i denna slice.
+
+### HOME-ROUTINE-WEEKDAYS-01 — implementation till QA, 2026-10-15
+
+Veckointervall kan nu välja en eller flera ISO-veckodagar. Sammanfattning, validering, equality/CAS/readback/retry och due-beräkning omfattar `repeat_weekdays`. Äldre `NULL` behåller exakt ankardags-/intervallregel och lämnas NULL vid namn-/checkliständring. De gamla create/replace RPC-namnen bevaras; gamla create-retries med matchande legacy-fält returnerar befintlig veckodagsregel utan att skriva om den. Migrationen är framåtriktad, oapplicerad.
+
+Architect och Security har statiskt granskat den exakta SQL-/RPC-/legacy-källan och gett PASS. Rättningar omfattar legacy-create idempotens och att 30-dagars service-purge kan ta bort förfallna dagsrader utan att skapa skip-tombstones; ej utgångna klientrader kräver fortsatt ägarkontroll och skyddas av befintliga grants/RLS. Compliance PASS, Critic PROCEED och plan-Security PASS gäller oförändrat kontrakt.
+
+`pnpm typecheck`, riktad ESLint, public/review RN Web-byggen, `git diff --check` och queue validation PASS. Manuell Chromium-kontroll vid 375×844 verifierar måndag/fredag selected state, fulla checkbox-namn, minst 44×44 pt, minimumfel med avstängd sparning och legacy-sammanfattning. Evidence: `docs/design/evidence/vision-rev02/ux-fix-2026-10-15/routine-weekdays/RENDER-REPORT.md`. Oberoende QA PASS och Reviewer PASS 2026-10-15. Ingen testsvit eller databasoperation kördes. Referensbild för panel 4 saknas i checkout; rutinhallens staplade separata block ska komprimeras i beroendeuppgiften `HOME-ROUTINE-CHECKLIST-01`; full rev02-visuell acceptans påstås inte.
+
+### HOME-ROUTINE-CHECKLIST-01 — kompakt rutinöversikt till QA, 2026-10-15
+
+Rutinhanteringen visar nu alla rutinmallar på en gemensam varm yta med diskreta avdelare. Namnradens enda `Redigera`-knapp är lågmäld. Dagsvalet `Lägg till på Hemskärmen`/`Ta bort från Hemskärmen` ligger bredvid helradering; den första åtgärden har mjuk grön yta, helradering röd kontur och bekräftelse. Vid aktivt create/edit-utkast döljs den fasta `Klar`-knappen, så `Spara rutin` är enda visuella huvudåtgärden. Stängning går via stängknappen och befintlig discard-bekräftelse.
+
+Public/review RN Web-byggen och manuell Chromium QA passerar vid 375×844, 430×844, 375×667 och 140 % textproxy. Granskningen verifierade separata rutiner, create/saved, failed/unknown/exakt retry, fortsätt/discard, helraderingsbekräftelse med Avbryt och dagsmarkering på Hem utan browser errors. Webbkontrollerna är syntetiska; native Dynamic Type/VoiceOver och live Supabase/RLS/migration-runtime är NOT TESTABLE. Full panel-4-jämförelse är NOT TESTABLE eftersom `vision_rev02.jpg` saknas i checkouten.
+
+Efter ägarens godkännande av obligatorisk hookcheck passerar `pnpm check`: app- och edge-typecheck, lint och 45/45 testfiler. Stale assertions/fixtures för redan införda weekday-, Home-fixture-, training-, log- och scoped profile-read-kontrakt uppdaterades utan nya testfall. Ingen databasåtgärd gjordes. Underlag: `docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md`. Köstatus är `qa`; oberoende kod-QA och Reviewer efter denna UI-delta återstår.
+
+### MotionPressable-typkontroll, 2026-10-15
+
+`Motion.tsx:61` använder nu ett explicit typat hover-tillstånd för React Native Web utan att förlora den konkreta Animated-stilen eller `pressed`-callbacken. `pnpm typecheck` och full `pnpm check` passerar. Fixen finns i commit `617680b`; den separata UX-FIX-baseline Motion-posten har ytterligare runtime-kriterier och hålls åtskild från detta typfel.

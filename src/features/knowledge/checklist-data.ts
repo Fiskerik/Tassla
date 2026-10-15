@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { CHECKLIST_TEMPLATES } from './checklist-content';
-import { isChecklistContext, normalizeCustomChecklistTitle, type ChecklistContext, type ChecklistCustomItem, type ChecklistPreference, type ChecklistProgress, type ChecklistWriteOutcome } from './checklist-model';
+import { CHECKLIST_VERSION, isChecklistContext, normalizeCustomChecklistTitle, type ChecklistContext, type ChecklistCustomItem, type ChecklistPreference, type ChecklistProgress, type ChecklistWriteOutcome } from './checklist-model';
 
 const deadlineMs = 12_000;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -77,6 +77,95 @@ export async function fetchChecklistOverview(client: SupabaseClient, dogId: stri
     }));
     return { summary, preference: preferenceRow ? { dogId, context: preferenceRow.context as ChecklistContext } : null };
   }, signal);
+}
+
+export type ChecklistOverview = Awaited<ReturnType<typeof fetchChecklistOverview>>;
+export type ChecklistTemplateState = Awaited<ReturnType<typeof fetchChecklistState>>;
+type ChecklistReadCacheEntry = { overview: ChecklistOverview | null; templates: Map<string, ChecklistTemplateState> };
+const checklistReadCache = new Map<string, ChecklistReadCacheEntry>();
+const maxChecklistReadCacheScopes = 4;
+
+export function checklistReadCacheScope(sessionKey: string, dogId: string, reviewMode: boolean) {
+  return JSON.stringify([sessionKey, dogId, CHECKLIST_VERSION, reviewMode ? 'review' : 'public']);
+}
+
+function cloneOverview(overview: ChecklistOverview): ChecklistOverview {
+  return {
+    summary: Object.fromEntries(Object.entries(overview.summary).map(([id, summary]) => [id, { ...summary }])),
+    preference: overview.preference ? { ...overview.preference } : null,
+  };
+}
+
+function cloneTemplateState(state: ChecklistTemplateState): ChecklistTemplateState {
+  return {
+    progress: state.progress.map((item) => ({ ...item })),
+    customItems: state.customItems.map((item) => ({ ...item })),
+    preference: state.preference ? { ...state.preference } : null,
+  };
+}
+
+function touchChecklistReadCache(scope: string, entry: ChecklistReadCacheEntry) {
+  checklistReadCache.delete(scope);
+  checklistReadCache.set(scope, entry);
+  while (checklistReadCache.size > maxChecklistReadCacheScopes) {
+    const oldest = checklistReadCache.keys().next().value;
+    if (oldest === undefined) return;
+    checklistReadCache.delete(oldest);
+  }
+}
+
+export function checklistOverviewSnapshot(scope: string): ChecklistOverview | null {
+  const entry = checklistReadCache.get(scope);
+  if (!entry?.overview) return null;
+  touchChecklistReadCache(scope, entry);
+  return cloneOverview(entry.overview);
+}
+
+export function checklistTemplateSnapshot(scope: string, templateId: string): ChecklistTemplateState | null {
+  const entry = checklistReadCache.get(scope);
+  const state = entry?.templates.get(templateId);
+  if (!entry || !state) return null;
+  touchChecklistReadCache(scope, entry);
+  return cloneTemplateState(state);
+}
+
+export function keepChecklistReadCacheForScope(scope: string) {
+  for (const cachedScope of checklistReadCache.keys()) {
+    if (cachedScope !== scope) checklistReadCache.delete(cachedScope);
+  }
+}
+
+export function clearChecklistReadCache(scope: string) {
+  checklistReadCache.delete(scope);
+}
+
+export function cacheChecklistOverview(scope: string, overview: ChecklistOverview) {
+  const entry = checklistReadCache.get(scope) ?? { overview: null, templates: new Map<string, ChecklistTemplateState>() };
+  entry.overview = cloneOverview(overview);
+  touchChecklistReadCache(scope, entry);
+}
+
+export function cacheChecklistTemplateState(scope: string, templateId: string, state: ChecklistTemplateState) {
+  const entry = checklistReadCache.get(scope) ?? { overview: null, templates: new Map<string, ChecklistTemplateState>() };
+  const snapshot = cloneTemplateState(state);
+  entry.templates.set(templateId, snapshot);
+  const template = CHECKLIST_TEMPLATES.find((item) => item.id === templateId);
+  if (entry.overview && template) {
+    const total = template.items.length + snapshot.customItems.length;
+    const done = snapshot.progress.length + snapshot.customItems.filter((item) => item.completed).length;
+    entry.overview = { ...entry.overview, summary: { ...entry.overview.summary, [templateId]: { done, total } } };
+  }
+  touchChecklistReadCache(scope, entry);
+}
+
+export function cacheChecklistPreference(scope: string, preference: ChecklistPreference) {
+  const entry = checklistReadCache.get(scope);
+  if (!entry) return;
+  entry.overview = entry.overview ? { ...entry.overview, preference: { ...preference } } : null;
+  for (const [templateId, state] of entry.templates) {
+    entry.templates.set(templateId, { ...state, preference: { ...preference } });
+  }
+  touchChecklistReadCache(scope, entry);
 }
 
 export async function setChecklistItem(client: SupabaseClient, dogId: string, templateId: string, itemKey: string, completed: boolean, signal?: AbortSignal): Promise<ChecklistWriteOutcome<ChecklistProgress | null>> {

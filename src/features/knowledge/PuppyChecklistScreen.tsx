@@ -5,7 +5,7 @@ import * as Crypto from 'expo-crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { AppBar, BottomSheet, Button, Card, ChecklistItem, Field, Progress, SectionHeader, Toast } from '../../components/ui';
 import { CHECKLIST_TEMPLATES } from './checklist-content';
-import { addChecklistCustomItem, deleteChecklistCustomItem, fetchChecklistOverview, fetchChecklistState, setChecklistItem, setChecklistPreference, updateChecklistCustomItem } from './checklist-data';
+import { addChecklistCustomItem, cacheChecklistOverview, cacheChecklistPreference, cacheChecklistTemplateState, checklistOverviewSnapshot, checklistTemplateSnapshot, deleteChecklistCustomItem, fetchChecklistOverview, fetchChecklistState, setChecklistItem, setChecklistPreference, updateChecklistCustomItem } from './checklist-data';
 import { checklistPercent, chooseChecklistPhase, normalizeCustomChecklistTitle, type ChecklistContext, type ChecklistCustomItem, type ChecklistTemplate } from './checklist-model';
 import { classifyPendingChecklistOperation, freezePendingChecklistMemory, type PendingChecklistMemory, type PendingChecklistOperation } from './checklist-intent';
 import { tokens } from '../../theme/tokens';
@@ -20,18 +20,20 @@ function sameCustom(left: ChecklistCustomItem, right: ChecklistCustomItem) {
   return left.id === right.id && left.dogId === right.dogId && left.templateId === right.templateId && left.title === right.title && left.completed === right.completed;
 }
 
-export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, registerInvalidate, active = true, pendingState = null, onPendingStateChange, onDetailChange }: { client: SupabaseClient; dogId: string; ageWeeks: number | null; onBack: () => void; registerInvalidate?: (invalidate: (() => void) | null) => void; active?: boolean; pendingState?: PendingChecklistMemory | null; onPendingStateChange?: (state: PendingChecklistMemory | null) => void; onDetailChange?: (open: boolean) => void }) {
+export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBack, registerInvalidate, active = true, pendingState = null, onPendingStateChange, onDetailChange }: { client: SupabaseClient; dogId: string; ageWeeks: number | null; cacheScope: string; onBack: () => void; registerInvalidate?: (invalidate: (() => void) | null) => void; active?: boolean; pendingState?: PendingChecklistMemory | null; onPendingStateChange?: (state: PendingChecklistMemory | null) => void; onDetailChange?: (open: boolean) => void }) {
+  const reviewEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
+  const initialOverview = checklistOverviewSnapshot(cacheScope);
   const [templateId, setTemplateId] = useState<string | null>(null);
-  const [state, setState] = useState<LoadState>('loading');
+  const [state, setState] = useState<LoadState>(() => !reviewEnabled || initialOverview ? 'ready' : 'loading');
   const [progress, setProgress] = useState<Set<string>>(new Set());
   const [customItems, setCustomItems] = useState<ChecklistCustomItem[]>([]);
-  const [summaries, setSummaries] = useState<Record<string, { done: number; total: number }>>({});
+  const [summaries, setSummaries] = useState<Record<string, { done: number; total: number }>>(() => initialOverview?.summary ?? {});
   const [uncertain, setUncertain] = useState(pendingState?.uncertain ?? false);
   const [pendingOperation, setPendingOperation] = useState<PendingChecklistOperation | null>(pendingState?.operation ?? null);
   const [reviewInfoOpen, setReviewInfoOpen] = useState(false);
   const [formError, setFormError] = useState('');
-  const [context, setContext] = useState<ChecklistContext>('by_age');
-  const [preferenceSaved, setPreferenceSaved] = useState(false);
+  const [context, setContext] = useState<ChecklistContext>(() => initialOverview?.preference?.context ?? 'by_age');
+  const [preferenceSaved, setPreferenceSaved] = useState(() => initialOverview?.preference !== null && initialOverview?.preference !== undefined);
   const [contextSheetOpen, setContextSheetOpen] = useState(false);
   const [failedContext, setFailedContext] = useState<ChecklistContext | null>(null);
   const [busy, setBusy] = useState(false);
@@ -52,7 +54,6 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
   const generation = useRef(0);
   const templates = CHECKLIST_TEMPLATES;
   const activeTemplate = templates.find((item) => item.id === templateId) ?? null;
-  const reviewEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
 
   const invalidateCurrentView = useCallback(() => {
     if (pending.current && writeIntent.current) {
@@ -87,6 +88,14 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
     setPendingOperation(null); setUncertain(false);
   }
 
+  function storeTemplateSnapshot(id: string, itemKeys: Iterable<string>, items: readonly ChecklistCustomItem[]) {
+    cacheChecklistTemplateState(cacheScope, id, {
+      progress: [...itemKeys].map((itemKey) => ({ dogId, templateId: id, itemKey })),
+      customItems: [...items],
+      preference: preferenceSaved ? { dogId, context } : null,
+    });
+  }
+
   function openAddForm() {
     if (form) { setFormSheetOpen(true); return; }
     setFormError('');
@@ -110,22 +119,41 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
     setFormSheetOpen(false);
   }
 
-  const load = useCallback(async (selectedId: string | null, withSpinner = true): Promise<boolean> => {
+  const load = useCallback(async (selectedId: string | null, withSpinner = true, forceRefresh = false): Promise<boolean> => {
     controllerRef.current?.abort();
     const controller = new AbortController();
     controllerRef.current = controller;
-    if (withSpinner) setState('loading');
+    const previousOverview = checklistOverviewSnapshot(cacheScope);
+    const previousTemplate = selectedId ? checklistTemplateSnapshot(cacheScope, selectedId) : null;
+    const cachedOverview = forceRefresh ? null : previousOverview;
+    const cachedTemplate = forceRefresh ? null : previousTemplate;
+    const hasRequiredCache = Boolean(cachedOverview && (!selectedId || cachedTemplate));
+    if (withSpinner && !hasRequiredCache) setState('loading');
+    if (hasRequiredCache && !forceRefresh) {
+      setSummaries(cachedOverview!.summary);
+      setContext(cachedOverview!.preference?.context ?? 'by_age');
+      setPreferenceSaved(cachedOverview!.preference !== null);
+      if (cachedTemplate) {
+        setProgress(new Set(cachedTemplate.progress.map((row) => row.itemKey)));
+        setCustomItems(cachedTemplate.customItems);
+      }
+      setState('ready');
+      return true;
+    }
     setBusy(false);
     try {
       const [overview, loaded] = await Promise.all([
-        fetchChecklistOverview(client, dogId, controller.signal),
-        selectedId ? fetchChecklistState(client, dogId, selectedId, controller.signal) : Promise.resolve(null),
+        cachedOverview ?? fetchChecklistOverview(client, dogId, controller.signal),
+        selectedId ? cachedTemplate ?? fetchChecklistState(client, dogId, selectedId, controller.signal) : Promise.resolve(null),
       ]);
       if (controller.signal.aborted) return false;
+      cacheChecklistOverview(cacheScope, overview);
       setSummaries(overview.summary);
       setContext(overview.preference?.context ?? 'by_age');
       setPreferenceSaved(overview.preference !== null);
       if (loaded) {
+        cacheChecklistTemplateState(cacheScope, selectedId!, loaded);
+        setSummaries(checklistOverviewSnapshot(cacheScope)?.summary ?? overview.summary);
         setProgress(new Set(loaded.progress.map((row) => row.itemKey)));
         setCustomItems(loaded.customItems);
       }
@@ -133,12 +161,15 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
       return true;
     } catch {
       if (controller.signal.aborted) return false;
-      setState('error');
-      setMessage('Listan kunde inte läsas in. Försök igen.');
+      const canKeepConfirmedState = Boolean(previousOverview && (!selectedId || previousTemplate));
+      setState(canKeepConfirmedState ? 'ready' : 'error');
+      setMessage(canKeepConfirmedState
+        ? 'Uppdateringen misslyckades. Visar senast bekräftade data. Försök igen.'
+        : 'Listan kunde inte läsas in. Försök igen.');
       setMessageTone('error');
       return false;
     }
-  }, [client, dogId]);
+  }, [cacheScope, client, dogId]);
 
   useEffect(() => {
     const scope = ++generation.current;
@@ -179,7 +210,14 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
 
   function openTemplate(template: ChecklistTemplate) {
     invalidateCurrentView();
-    setState('loading'); setProgress(new Set()); setCustomItems([]);
+    const cached = checklistTemplateSnapshot(cacheScope, template.id);
+    if (cached) {
+      setState('ready');
+      setProgress(new Set(cached.progress.map((row) => row.itemKey)));
+      setCustomItems(cached.customItems);
+    } else {
+      setState('loading'); setProgress(new Set()); setCustomItems([]);
+    }
     setForm(null); setFormError(''); if (!uncertain) setMessage(''); setTemplateId(template.id);
   }
 
@@ -194,7 +232,7 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
     try {
       const result = await setChecklistPreference(client, dogId, next, controller.signal);
       if (scope !== generation.current || controller.signal.aborted) return;
-      if (result.status === 'saved') { resolveWrite(); setContext(next); setPreferenceSaved(true); setContextSheetOpen(false); setMessage('Valet är sparat.'); setMessageTone('success'); }
+      if (result.status === 'saved') { resolveWrite(); cacheChecklistPreference(cacheScope, { dogId, context: next }); setContext(next); setPreferenceSaved(true); setContextSheetOpen(false); setMessage('Valet är sparat.'); setMessageTone('success'); }
       else if (result.status === 'unknown') { markUnknown(operation); setContextSheetOpen(false); setMessage('Det gick inte att kontrollera om valet sparades.'); setMessageTone('uncertain'); }
       else { resolveWrite(); setFailedContext(next); setContextSheetOpen(false); setMessage('Kunde inte spara valet. Försök igen.'); setMessageTone('error'); }
     } finally { if (scope === generation.current) { pending.current = false; setBusy(false); } }
@@ -214,7 +252,10 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
       if (scope !== generation.current || controller.signal.aborted) return;
       if (result.status === 'saved') {
         resolveWrite();
-        setProgress((current) => { const next = new Set(current); if (completed) next.add(key); else next.delete(key); return next; });
+        const nextProgress = new Set(progress);
+        if (completed) nextProgress.add(key); else nextProgress.delete(key);
+        setProgress(nextProgress);
+        storeTemplateSnapshot(activeTemplate.id, nextProgress, customItems);
         setSummaries((current) => ({ ...current, [activeTemplate.id]: { done: done + (completed ? 1 : -1), total } }));
         setMessage('Sparat'); setMessageTone('success');
       } else if (result.status === 'unknown') { markUnknown(operation); setMessage('Det gick inte att kontrollera om ändringen sparades.'); setMessageTone('uncertain'); }
@@ -236,7 +277,9 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
       if (scope !== generation.current || controller.signal.aborted) return;
       if (result.status === 'saved') {
         resolveWrite();
-        setCustomItems((current) => current.map((row) => row.id === item.id ? result.value : row));
+        const nextItems = customItems.map((row) => row.id === item.id ? result.value : row);
+        setCustomItems(nextItems);
+        storeTemplateSnapshot(item.templateId, progress, nextItems);
         setSummaries((current) => ({ ...current, [item.templateId]: { done: done + (completed ? 1 : -1), total } }));
         setMessage('Sparat'); setMessageTone('success');
       } else if (result.status === 'unknown') { markUnknown(operation); setMessage('Det gick inte att kontrollera om ändringen sparades.'); setMessageTone('uncertain'); }
@@ -265,13 +308,13 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
         if (!previous) { resolveWrite(); setMessage('Punkten saknas. Läs in listan igen.'); setMessageTone('error'); return; }
         const result = await updateChecklistCustomItem(client, previous, { title: normalizedTitle, completed: form.completed }, controller.signal);
         if (scope !== generation.current || controller.signal.aborted) return;
-        if (result.status === 'saved') { resolveWrite(); setCustomItems((current) => current.map((item) => item.id === result.value.id ? result.value : item)); setSummaries((current) => ({ ...current, [activeTemplate.id]: { done: done + Number(result.value.completed) - Number(previous.completed), total } })); setForm(null); setFormSheetOpen(false); setMessage('Sparat'); setMessageTone('success'); }
+        if (result.status === 'saved') { resolveWrite(); const nextItems = customItems.map((item) => item.id === result.value.id ? result.value : item); setCustomItems(nextItems); storeTemplateSnapshot(activeTemplate.id, progress, nextItems); setSummaries((current) => ({ ...current, [activeTemplate.id]: { done: done + Number(result.value.completed) - Number(previous.completed), total } })); setForm(null); setFormSheetOpen(false); setMessage('Sparat'); setMessageTone('success'); }
         else if (result.status === 'conflict') { resolveWrite(); setMessage('Punkten har ändrats. Läs in listan igen.'); setMessageTone('error'); }
         else { if (result.status === 'unknown') markUnknown(operation); else { resolveWrite(); setFailedFormAction('save'); } setMessage(result.status === 'unknown' ? 'Det gick inte att kontrollera om ändringen sparades.' : 'Kunde inte spara. Försök igen.'); setMessageTone(result.status === 'unknown' ? 'uncertain' : 'error'); }
       } else {
         const result = await addChecklistCustomItem(client, dogId, activeTemplate.id, form.requestId, form.title, controller.signal);
         if (scope !== generation.current || controller.signal.aborted) return;
-        if (result.status === 'saved') { resolveWrite(); setCustomItems((current) => current.some((item) => item.id === result.value.id) ? current : [...current, result.value]); setSummaries((current) => ({ ...current, [activeTemplate.id]: { done, total: total + 1 } })); setForm(null); setFormSheetOpen(false); setMessage('Sparat'); setMessageTone('success'); }
+        if (result.status === 'saved') { resolveWrite(); const nextItems = customItems.some((item) => item.id === result.value.id) ? customItems : [...customItems, result.value]; setCustomItems(nextItems); storeTemplateSnapshot(activeTemplate.id, progress, nextItems); setSummaries((current) => ({ ...current, [activeTemplate.id]: { done, total: total + 1 } })); setForm(null); setFormSheetOpen(false); setMessage('Sparat'); setMessageTone('success'); }
         else { if (result.status === 'unknown') markUnknown(operation); else { resolveWrite(); setFailedFormAction('save'); } setMessage(result.status === 'unknown' ? 'Det gick inte att kontrollera om ändringen sparades.' : 'Kunde inte spara. Försök igen.'); setMessageTone(result.status === 'unknown' ? 'uncertain' : 'error'); }
       }
     } finally { if (scope === generation.current) { pending.current = false; setBusy(false); } }
@@ -289,13 +332,14 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
     try {
       const result = await deleteChecklistCustomItem(client, item, controller.signal);
       if (scope !== generation.current || controller.signal.aborted) return;
-      if (result.status === 'saved') { resolveWrite(); setCustomItems((current) => current.filter((row) => row.id !== item.id)); setSummaries((current) => ({ ...current, [item.templateId]: { done: done - Number(item.completed), total: total - 1 } })); setForm(null); setFormSheetOpen(false); setMessage('Punkten är borttagen.'); setMessageTone('success'); }
+      if (result.status === 'saved') { resolveWrite(); const nextItems = customItems.filter((row) => row.id !== item.id); setCustomItems(nextItems); storeTemplateSnapshot(item.templateId, progress, nextItems); setSummaries((current) => ({ ...current, [item.templateId]: { done: done - Number(item.completed), total: total - 1 } })); setForm(null); setFormSheetOpen(false); setMessage('Punkten är borttagen.'); setMessageTone('success'); }
       else if (result.status === 'conflict') { resolveWrite(); setMessage('Punkten har ändrats. Läs in listan igen.'); setMessageTone('error'); }
       else { if (result.status === 'unknown') markUnknown(operation); else { resolveWrite(); setFailedFormAction('delete'); } setMessage(result.status === 'unknown' ? 'Det gick inte att kontrollera om punkten togs bort.' : 'Kunde inte ta bort punkten. Försök igen.'); setMessageTone(result.status === 'unknown' ? 'uncertain' : 'error'); }
     } finally { if (scope === generation.current) { pending.current = false; setBusy(false); } }
   }
 
   function applyLoadedTemplate(template: ChecklistTemplate, loaded: Awaited<ReturnType<typeof fetchChecklistState>>) {
+    cacheChecklistTemplateState(cacheScope, template.id, loaded);
     const completed = loaded.progress.length + loaded.customItems.filter((row) => row.completed).length;
     setSummaries((current) => ({ ...current, [template.id]: { done: completed, total: template.items.length + loaded.customItems.length } }));
     if (templateId === template.id) {
@@ -321,11 +365,13 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
       if (operation.kind === 'preference') {
         const overview = await fetchChecklistOverview(client, dogId, controller.signal);
         if (!current()) return;
+        cacheChecklistOverview(cacheScope, overview);
+        setSummaries(overview.summary);
         const decision = classifyPendingChecklistOperation(operation, { preference: overview.preference?.context ?? null, progress: [], customItems: [] });
-        if (decision === 'saved') { setContext(operation.context); setPreferenceSaved(true); setFailedContext(null); finish('Valet är sparat.'); return; }
+        if (decision === 'saved') { cacheChecklistPreference(cacheScope, { dogId, context: operation.context }); setContext(operation.context); setPreferenceSaved(true); setFailedContext(null); finish('Valet är sparat.'); return; }
         const result = await setChecklistPreference(client, dogId, operation.context, controller.signal);
         if (!current()) return;
-        if (result.status === 'saved') { setContext(result.value.context); setPreferenceSaved(true); setFailedContext(null); finish('Valet är sparat.'); }
+        if (result.status === 'saved') { cacheChecklistPreference(cacheScope, result.value); setContext(result.value.context); setPreferenceSaved(true); setFailedContext(null); finish('Valet är sparat.'); }
         else if (result.status === 'unknown') setMessage('Det gick inte att kontrollera om valet sparades.');
         else { setFailedContext(operation.context); finish('Kunde inte spara valet. Försök igen.', 'error'); }
         return;
@@ -414,7 +460,7 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
       const item = customItems.find((row) => row.id === form.id);
       if (item) { setFormSheetOpen(true); await removeCustom(item); return; }
     }
-    if (await load(templateId)) setMessage('');
+    if (await load(templateId, true, true)) setMessage('');
   };
   const activeLabel = useMemo(() => CONTEXTS.find((item) => item.id === context)?.title ?? 'Efter ålder', [context]);
   const recommendedTemplate = state === 'ready' ? templates.find((item) => item.phase === recommended) ?? null : null;

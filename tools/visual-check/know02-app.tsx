@@ -26,6 +26,7 @@ declare global {
     __know02PreferenceFailuresRemaining?: number;
     __know02ChecklistReads?: number;
     __know02ChecklistWrites?: number;
+    __know02ReadDelayMs?: number;
     __know02CloudWrites?: number;
     __know02ContinueCount?: number;
     __know02WriteDelayMs?: number;
@@ -64,6 +65,7 @@ function makeClient() {
       const rows = tables[table] ?? (tables[table] = []);
       let data: unknown = null;
       if (initialState === 'loading') await new Promise((resolve) => setTimeout(resolve, 1600));
+      if (mode === 'select' && window.__know02ReadDelayMs) await new Promise((resolve) => setTimeout(resolve, window.__know02ReadDelayMs));
       if (mode !== 'select' && window.__know02WriteDelayMs) await new Promise((resolve) => setTimeout(resolve, window.__know02WriteDelayMs));
       if (mode === 'select' && failNextRead) { failNextRead = false; return { data: null, error: { message: 'Synthetic read error' } }; }
       if (mode === 'select' && failDetailRead && filters.template_id === FIRST_DAYS) { failDetailRead = false; return { data: null, error: { message: 'Synthetic detail read error' } }; }
@@ -82,7 +84,12 @@ function makeClient() {
         return { data: null, error: { message: 'Synthetic write error' } };
       }
       if (mode !== 'select') (window.__know02Mutations ??= []).push({ table, mode, filters: { ...filters }, payload: { ...payload } });
-      if (mode === 'select') data = rows.filter(matches);
+      if (mode === 'select') {
+        data = rows.filter(matches);
+        if (initialState === 'detail-newer' && table === 'dog_checklist_progress' && filters.template_id === FIRST_DAYS) {
+          data = [...(data as Record<string, unknown>[]), { dog_id: DOG_ID, template_id: FIRST_DAYS, item_key: 'routine' }];
+        }
+      }
       if (mode === 'upsert') {
         const keys = table === 'dog_checklist_progress' ? ['dog_id', 'template_id', 'item_key'] : ['dog_id'];
         const existing = rows.find((row) => keys.every((key) => row[key] === payload[key]));
