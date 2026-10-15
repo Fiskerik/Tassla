@@ -65,6 +65,8 @@ export function EditDogProfileScreen({
   const [breedId, setBreedId] = useState(dog.breed_id);
   const [birthDate, setBirthDate] = useState(dog.birth_date);
   const [ageDisplayUnit, setAgeDisplayUnit] = useState<AgeDisplayUnit>(dog.age_display_unit);
+  const [seniorConfirmed, setSeniorConfirmed] = useState(dog.senior_confirmed ?? false);
+  const [endOfLife, setEndOfLife] = useState(dog.end_of_life ?? false);
   const [formError, setFormError] = useState('');
   const [kennelCode, setKennelCode] = useState(attribution?.code ?? '');
   const [attributionFormError, setAttributionFormError] = useState('');
@@ -121,6 +123,8 @@ export function EditDogProfileScreen({
       breed_id: breedId,
       birth_date: normalizedDate,
       age_display_unit: ageDisplayUnit,
+      senior_confirmed: seniorConfirmed,
+      end_of_life: endOfLife,
     };
     await onSave(changes, breeds);
   }
@@ -140,7 +144,8 @@ export function EditDogProfileScreen({
   const currentBreed = breeds.find((breed) => breed.id === dog.breed_id)?.name ?? dog.breed_id;
   const conflictBreed = conflict ? breeds.find((breed) => breed.id === conflict.breed_id)?.name ?? conflict.breed_id : '';
   const draftDiffers = name.trim() !== dog.name || breedId !== dog.breed_id || birthDate.trim() !== dog.birth_date
-    || ageDisplayUnit !== dog.age_display_unit;
+    || ageDisplayUnit !== dog.age_display_unit || seniorConfirmed !== (dog.senior_confirmed ?? false)
+    || endOfLife !== (dog.end_of_life ?? false);
   const showStatusMessage = Boolean(statusMessage) && (statusError || pending || busy);
 
   return <View>
@@ -208,6 +213,23 @@ export function EditDogProfileScreen({
           })}
         </View>
       </View>
+      <View style={styles.lifeContextField}>
+        <Text style={styles.label}>Individuell livsfas</Text>
+        <Text style={styles.lifeContextHint}>Ras, storlek och individ kan påverka när hunden blir senior. Här anger du din bedömning; Tassla sätter ingen fast seniorålder.</Text>
+        <Pressable accessibilityRole="checkbox" accessibilityLabel="Min hund är senior"
+          accessibilityState={{ checked: seniorConfirmed, disabled: blocked }} disabled={blocked}
+          onPress={() => setSeniorConfirmed((value) => !value)} style={styles.lifeContextRow}>
+          <Ionicons name={seniorConfirmed ? 'checkbox' : 'square-outline'} size={tokens.size.iconMd} color={tokens.colors.primary} accessibilityElementsHidden />
+          <Text style={styles.lifeContextText}>Min hund är senior</Text>
+        </Pressable>
+        <Pressable accessibilityRole="checkbox" accessibilityLabel="Min hund är i livets slutskede"
+          accessibilityState={{ checked: endOfLife, disabled: blocked }} disabled={blocked}
+          onPress={() => setEndOfLife((value) => !value)} style={styles.lifeContextRow}>
+          <Ionicons name={endOfLife ? 'checkbox' : 'square-outline'} size={tokens.size.iconMd} color={tokens.colors.primary} accessibilityElementsHidden />
+          <Text style={styles.lifeContextText}>Min hund är i livets slutskede</Text>
+        </Pressable>
+        <Text style={styles.lifeContextHint}>Livets slutskede väljs separat och styrs aldrig av ålder.</Text>
+      </View>
       {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
       <PrimaryButton title={busy ? 'Sparar…' : statusError && !pending ? 'Försök igen' : 'Spara profil'}
         disabled={blocked || breedState !== 'ready'} onPress={() => { void save(); }} />
@@ -270,6 +292,10 @@ const styles = StyleSheet.create({
   ageUnitField: { marginTop: tokens.spacing.md, marginBottom: tokens.spacing.md },
   ageUnitOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm },
   ageUnitOption: { minHeight: tokens.size.touchMin, minWidth: tokens.size.touchMin * 2, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.full, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  lifeContextField: { gap: tokens.spacing.sm, marginTop: tokens.spacing.md },
+  lifeContextHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  lifeContextRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
+  lifeContextText: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1 },
   ageUnitSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   ageUnitText: { ...tokens.typography.body, color: tokens.colors.textPrimary },
   ageUnitTextSelected: { color: tokens.colors.primary, fontWeight: '700' },

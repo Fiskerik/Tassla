@@ -6,12 +6,12 @@ Utgångspunkt: `main` vid `f1c272d13d21b2160094dcdf91eea868ccebceff` (2026-10-15
 
 1. **Modell och Hem** – `src/features/onboarding/life-stages.ts`, `dog.ts`, `src/features/home/*`, periodtester. Klart när tio perioder har entydiga gränser, Hem visar rätt period och saknat/ogiltigt datum hanteras. Ingen ändring av profilfält.
 2. **Befintligt innehåll och progression** – `src/features/knowledge/checklist-model.ts`, tester och dokumentation. Klart när gamla ID:n, item keys, innehållsversioner och träningsprogression bevaras och historiska veckofönster översätts centralt. Ingen databasradering.
-3. **Individuell seniorstatus** – endast efter beslut om källa, ansvar och användarflöde. Den centrala modellen tar redan emot individuell bedömning; nuvarande hundprofil saknar storlek, bedömning och proveniens. Ingen seniorstatus gissas av enbart ålder.
+3. **Individuell seniorstatus** – två additiva profilfält sparar ägarens val av seniorstatus och livets slutskede. Befintliga hundar får `false` som standard. Ras och storlek vägs in av ägaren; appen saknar granskade rasspecifika gränser och sätter ingen automatisk seniorålder.
 4. **Publicerat nytt innehåll** – separat redaktionellt paket med hundexpertgranskning. Nuvarande elva innehållsversioner ändras inte tyst; senare perioder saknar egna granskade artiklar.
 
 ## Gränskontrakt
 
-Perioderna har inkluderad start och exkluderat slut: 0–<8 veckor, 8 veckor–<3 kalendermånader, 3–<6, 6–<9, 9–<18, 18–<36, 36–<84, 84–<120, 120–<156 och ≥156 kalendermånader. Formuleringen ”8–12 veckor” är en läsetikett; 12 veckor och tre kalendermånader infaller inte alltid samma dag. Åldern beräknas från kalenderdatum utan tidszonsförskjutning. De fem övergripande faserna är `VALP`, `UNGHUND`, `VUXEN`, `SENIOR` och `LIVETS_SLUTSKEDE`. För vuxna hundar från sju år utan individuell seniorbedömning kan övergripande fas vara okänd; den kronologiska perioden visas ändå. Livets slutskede kräver uttrycklig vårdkontext och följer aldrig av ålder.
+Perioderna har inkluderad start och exkluderat slut: 0–<8 veckor, 8 veckor–<3 kalendermånader, 3–<6, 6–<9, 9–<18, 18–<36, 36–<84, 84–<120, 120–<156 och ≥156 kalendermånader. Formuleringen ”8–12 veckor” är en läsetikett; 12 veckor och tre kalendermånader infaller inte alltid samma dag. Åldern beräknas från kalenderdatum utan tidszonsförskjutning. De fem övergripande faserna är `VALP`, `UNGHUND`, `VUXEN`, `SENIOR` och `LIVETS_SLUTSKEDE`. Utan individuell seniorbedömning ligger hunden kvar i `VUXEN`, oavsett kronologisk ålder; periodnamnet visas separat. Livets slutskede kräver uttrycklig vårdkontext och följer aldrig av ålder.
 
 `before_homecoming`, `homecoming` och `first_days_home` är milstolpar/kontext, inte åldersperioder. Den äldre checklistkontexten `before_homecoming` eller `first_days` förblir ett uttryckligt val. En hund under åtta veckor får därför ingen automatisk ”inför hemkomsten”-rekommendation.
 
@@ -46,7 +46,7 @@ Innehålls-ID:n börjar `61000000-0000-4000-8000-0000000000` och versions-ID:n `
 
 | Område | Nuvarande beroende | Åtgärd |
 |---|---|---|
-| Hundprofil/onboarding | födelsedatum, ras-ID; ålder i veckor | gemensam resolver, ingen ny insamling |
+| Hundprofil/onboarding | födelsedatum, ras-ID; ålder i veckor | gemensam resolver; två bedömningsval i befintlig profilredigering |
 | Hem | separat grov 3-fasberäkning | visar en av tio kronologiska perioder |
 | Artiklar/Kunskap | publiceringsstatus, ras och inkluderande veckointervall | gamla fönster/ID:n kvar; mappning ovan |
 | Checklistor | sex mallar och tre sparade kontextvärden | samma mall-ID:n, central vecköversättning |
@@ -56,4 +56,5 @@ Innehålls-ID:n börjar `61000000-0000-4000-8000-0000000000` och versions-ID:n `
 
 ## Kvarstående beslut och spärrar
 
-Raslistan innehåller bara ID och namn, hundprofilen saknar storlek och en individuell seniorbedömning. En automatisk seniorgräns per ras skulle därför bygga på data som ännu inte finns och kräver sakkunnigt granskade riktvärden. Detsamma gäller nytt material för senioråren. Destruktiva migreringar av checklistor eller innehåll ska läggas fram för uttryckligt godkännande innan de körs.
+Raslistan innehåller bara ID och namn och hundprofilen saknar storlek. En automatisk seniorgräns per ras skulle därför bygga på data som ännu inte finns och kräver sakkunnigt granskade riktvärden. De två explicita bedömningarna lagras med den additiva migreringen `202610150002_dog_life_context.sql`, som måste köras före en appversion som läser fälten. Nytt material för senare år kräver hundexpertgranskning. Destruktiva migreringar av checklistor eller innehåll ska läggas fram för uttryckligt godkännande innan de körs.
+

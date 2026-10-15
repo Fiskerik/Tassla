@@ -7,6 +7,8 @@ export interface Dog {
   breedId: string;
   birthDate: string;
   ageDisplayUnit?: AgeDisplayUnit;
+  seniorConfirmed?: boolean;
+  endOfLife?: boolean;
 }
 
 const DAY_MS = 86_400_000;
@@ -20,6 +22,7 @@ export interface AutomaticDogAge {
   value: number;
   label: string;
   stage: ApproximateDogLifeStage;
+  broadPhase: ReturnType<typeof resolveDogLife>['broadPhase'];
 }
 
 export function ageInWeeks(birthDate: string, today: string): number {
@@ -63,18 +66,19 @@ export function automaticDogAge(birthDate: string | null | undefined, today: str
     const life = resolveDogLife(birthDate, today, assessment);
     const months = life.completedMonths;
     const stage: ApproximateDogLifeStage = life.period.title;
+    const broadPhase = life.broadPhase;
     if (elapsedDays <= 20 * 7) {
       const value = fullWeeks(birth, current);
-      return { unit: 'weeks', unitLabel: 'veckor', value, label: formatWeeks(value), stage };
+      return { unit: 'weeks', unitLabel: 'veckor', value, label: formatWeeks(value), stage, broadPhase };
     }
 
     const firstBirthday = parseDate(addMonthsClamped(birthDate, 12));
     if (current <= firstBirthday) {
-      return { unit: 'months', unitLabel: 'månader', value: months, label: formatCount(months, 'månad', 'månader'), stage };
+      return { unit: 'months', unitLabel: 'månader', value: months, label: formatCount(months, 'månad', 'månader'), stage, broadPhase };
     }
 
     const years = fullCalendarYears(birthDate, today);
-    return { unit: 'years', unitLabel: 'år', value: years, label: formatCount(years, 'år', 'år'), stage };
+    return { unit: 'years', unitLabel: 'år', value: years, label: formatCount(years, 'år', 'år'), stage, broadPhase };
   } catch {
     return null;
   }

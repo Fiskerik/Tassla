@@ -83,7 +83,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   const [reviewCompletion, setReviewCompletion] = useState<Record<string, boolean>>(() => Object.fromEntries((dailyFixture ?? []).map((item) => [item.id, item.completed])));
   const [portraitFrame, setPortraitFrame] = useState<{ left: number; right: number } | null>(null);
   const today = todayValue ?? localDate();
-  const age = automaticDogAge(dog.birth_date, today);
+  const age = automaticDogAge(dog.birth_date, today, { seniorConfirmed: dog.senior_confirmed, endOfLife: dog.end_of_life });
   const breedLabel = breed?.trim() || dog.breed_id;
   const relevantContent = contentState === 'ready'
     ? content.find((item) => item.contentType !== 'training_program')

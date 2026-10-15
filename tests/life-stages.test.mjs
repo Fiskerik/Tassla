@@ -36,7 +36,8 @@ test('broad senior and end-of-life phases require individual input', () => {
   const birth = '2013-10-15';
   const today = '2026-10-15';
   assert.equal(resolveDogLife(birth, today).period.id, 'older_years');
-  assert.equal(resolveDogLife(birth, today).broadPhase, null);
+  assert.equal(resolveDogLife(birth, today).broadPhase, 'VUXEN');
+  assert.equal(resolveDogLife('2020-10-15', today, { seniorConfirmed: true }).broadPhase, 'SENIOR');
   assert.equal(resolveDogLife(birth, today, { seniorFromMonths: 120 }).broadPhase, 'SENIOR');
   assert.equal(resolveDogLife(birth, today, { seniorConfirmed: true }).broadPhase, 'SENIOR');
   assert.equal(resolveDogLife('2026-01-01', today, { endOfLife: true }).broadPhase, 'LIVETS_SLUTSKEDE');

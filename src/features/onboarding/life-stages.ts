@@ -14,6 +14,9 @@ export const DOG_LIFE_PERIODS = [
 
 export type DogLifePeriodId = typeof DOG_LIFE_PERIODS[number]['id'];
 export type DogBroadPhase = 'VALP' | 'UNGHUND' | 'VUXEN' | 'SENIOR' | 'LIVETS_SLUTSKEDE';
+export const DOG_BROAD_PHASE_LABELS: Record<DogBroadPhase, string> = {
+  VALP: 'Valp', UNGHUND: 'Unghund', VUXEN: 'Vuxen', SENIOR: 'Senior', LIVETS_SLUTSKEDE: 'Livets slutskede',
+};
 export type DogLifeMilestone = 'before_homecoming' | 'homecoming' | 'first_days_home';
 export type LegacyChecklistPhase = '8_12_weeks' | '3_6_months' | '6_12_months' | 'over_1_year';
 
@@ -30,8 +33,8 @@ export interface ResolvedDogLife {
   ageWeeks: number;
   completedMonths: number;
   period: typeof DOG_LIFE_PERIODS[number];
-  /** Null means adult/senior classification needs individual context. */
-  broadPhase: DogBroadPhase | null;
+  /** Senior and end-of-life override the default age-based broad phase only by assessment. */
+  broadPhase: DogBroadPhase;
   legacyChecklistPhase: LegacyChecklistPhase | null;
 }
 
@@ -52,9 +55,9 @@ export function resolveDogLife(birthDate: string, today: string, assessment: Dog
   }
   const senior = assessment.seniorConfirmed === true
     || (seniorFromMonths != null && completedMonths >= seniorFromMonths);
-  const broadPhase: DogBroadPhase | null = assessment.endOfLife ? 'LIVETS_SLUTSKEDE'
+  const broadPhase: DogBroadPhase = assessment.endOfLife ? 'LIVETS_SLUTSKEDE'
     : senior ? 'SENIOR' : completedMonths < 6 ? 'VALP'
-      : completedMonths < 18 ? 'UNGHUND' : completedMonths < 84 ? 'VUXEN' : null;
+      : completedMonths < 18 ? 'UNGHUND' : 'VUXEN';
   return { ageWeeks, completedMonths, period: DOG_LIFE_PERIODS[periodIndex], broadPhase,
     legacyChecklistPhase: legacyChecklistPhaseForAgeWeeks(ageWeeks) };
 }

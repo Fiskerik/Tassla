@@ -4,9 +4,11 @@ import { MessageCard } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import type { OwnedDog } from '../../data/app-data';
 import { formatDogAge, localDate } from './dog';
+import { DOG_BROAD_PHASE_LABELS, resolveDogLife } from './life-stages';
 import { ProfileScreenHeader } from './ProfileScreenHeader';
 
 export function DogProfileScreen({ dog, breed, onBack }: { dog: OwnedDog; breed?: string; onBack: () => void }) {
+  const life = resolveDogLife(dog.birth_date, localDate(), { seniorConfirmed: dog.senior_confirmed, endOfLife: dog.end_of_life });
   return <View>
     <ProfileScreenHeader onBack={onBack} />
     <View style={styles.introCard}>
@@ -20,6 +22,8 @@ export function DogProfileScreen({ dog, breed, onBack }: { dog: OwnedDog; breed?
       <ProfileFact label="Hundens namn" value={dog.name} icon="heart-outline" />
       <ProfileFact label="Ras" value={breed || dog.breed_id} icon="paw-outline" />
       <ProfileFact label="Ålder" value={formatDogAge(dog.birth_date, localDate(), dog.age_display_unit)} icon="hourglass-outline" />
+      <ProfileFact label="Åldersperiod" value={life.period.title} icon="hourglass-outline" />
+      <ProfileFact label="Livsfas" value={DOG_BROAD_PHASE_LABELS[life.broadPhase]} icon="paw-outline" />
       <ProfileFact label="Födelsedatum" value={dog.birth_date} icon="calendar-outline" last />
     </View>
     <MessageCard>Profiländring är inte tillgänglig här ännu. Hundens uppgifter har hämtats från ditt konto.</MessageCard>

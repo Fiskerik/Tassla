@@ -20,7 +20,7 @@ export function PreviewHomeScreen({
   onOpenTraining: () => void;
   trainingShortcut: { programTitle: string; stepTitle: string; stepNumber: number; completedCount: number; totalCount: number } | null;
 }) {
-  const age = automaticDogAge(dog.birthDate, todayValue ?? localDate());
+  const age = automaticDogAge(dog.birthDate, todayValue ?? localDate(), { seniorConfirmed: dog.seniorConfirmed, endOfLife: dog.endOfLife });
   const breed = dog.breedId === 'example' ? 'Labrador' : dog.breedId;
   return (
     <View>
