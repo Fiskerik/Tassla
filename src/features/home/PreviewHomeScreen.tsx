@@ -33,7 +33,7 @@ export function PreviewHomeScreen({
           <Text style={styles.dogName}>{dog.name} | {breed}</Text>
           {age ? <>
             <Text style={styles.dogMeta}>{age.label}</Text>
-            <Text style={styles.dogMeta}>Ungefärlig fas: {age.stage}</Text>
+            <Text style={styles.dogMeta}>Åldersperiod: {age.stage}</Text>
           </> : null}
         </View>
       </View>

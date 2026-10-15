@@ -107,7 +107,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
           <Text style={styles.dogMeta}>{dog.name} | {breedLabel}</Text>
           {age ? <>
             <Text style={styles.dogAge}>{age.label}</Text>
-            <Text style={styles.dogPhase}>Ungefärlig fas: {age.stage}</Text>
+            <Text style={styles.dogPhase}>Åldersperiod: {age.stage}</Text>
           </> : null}
         </View>
       </View>
