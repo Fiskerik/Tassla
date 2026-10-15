@@ -62,7 +62,7 @@ Följande är lokala köstatusar på 2e230be, inte ett påstående om live datab
 | UX-KNOWLEDGE-CACHE-01 | done | Scopad checklistcache och review-gating; runtime sign-out/servergränser separat. |
 | UX-TRAINING-UNMARK-01 | done | Källstyrd avmarkering med readback och scope fence; Supabase/RLS och native separat. |
 | HOME-ROUTINE-WEEKDAYS-01 | done | Veckodagsval och legacy NULL-regel; migrationen är inte applicerad och runtime-paritet ej verifierad. |
-| HOME-ROUTINE-CHECKLIST-01 | qa | Kompakt hantering implementerad; tasken är inte klar eftersom oberoende QA/Reviewer saknas. |
+| HOME-ROUTINE-CHECKLIST-01 | done | Kompakt rutinhall och Hem-åtgärder passerade oberoende QA/Reviewer efter att helraderingsbekräftelsen korrigerats; fullskärmsresan för panel 4 är fortfarande separat. |
 
 Tidigare MVP- och byggpaket har detaljerad historik i [HISTORY-2026.md](../releases/HISTORY-2026.md). Denna tabell ersätter inte dess exakta commit- och QA-notiser. Nya rev02-paket och efterföljande slutförda tasks får en egen post ovan med verkliga resultat.
 
@@ -83,3 +83,7 @@ Följande behålls för spårbarhet. Läs sammanfattningen ovan först; original
 - [0004-motion-package.md](0004-motion-package.md)
 - [0005-motion-batched-mobile-qa.md](0005-motion-batched-mobile-qa.md)
 - [0000-template.md](0000-template.md) — endast mall, inte ett godkänt beslut.
+
+### HOME-ROUTINE-CHECKLIST-01 — lokal UI-slice klar, 2026-10-15
+
+Rutinhallen har en gemensam kompakt yta, samlad redigering, sanningsenlig upprepning, dagsval och bekräftad helradering. Raderingsbekräftelsen anger nu att rutinen, dess dagskopior och sparade överhoppningar tas bort. Oberoende QA PASS och Reviewer PASS. App-/edge-typecheck, full ESLint och Node-testsviten passerade igen; 492/492 tester. Checkpoint: committen `fix: clarify routine deletion cascade` på `codex/ux-rethink-2026-10-15`. Underlag: [taskrapport](../tasks/dev/rapport.md) och [renderunderlag](../design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md). Live Supabase/RLS/migration, native Alert/tillgänglighet och fullskärmslistans filter är inte verifierade; denna slice stänger inte hela panel 4.

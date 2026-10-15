@@ -6273,7 +6273,9 @@
         "docs/plans/HOME-ROUTINE-CHECKLIST-01-ux-spec.md",
         "docs/tasks/dev/daily-routines-checklists.md",
         "docs/tasks/dev/queue.json",
-        "docs/tasks/dev/rapport.md"
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/releases/HISTORY-2026.md"
       ],
       "acceptance": [
         "Routine management follows panel 4 and Home follows panel 1: warm grouped surfaces, compact separators and a clear deeper-management entry; no stack of large routine cards",
@@ -6296,7 +6298,7 @@
         "VISION-R02-2",
         "HOME-ROUTINE-WEEKDAYS-01"
       ],
-      "status": "qa",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -6399,9 +6401,23 @@
           "to": "qa",
           "actor": "implementer",
           "evidence": "HOME routine UI handoff 2026-10-15: compact shared warm routine surface with separators, distinct horizontal day/select and red whole-routine delete actions, single primary action while draft is open. Fresh review Chromium renders cover 375x844, 430x844, 375x667 and 140% text proxy; create/saved/failed/unknown/exact retry/discard, several routines, delete-cancel and Home completion verified without page errors. Public/review builds pass. User-approved pnpm check passes (typecheck, edge typecheck, lint, 45/45 test files); existing stale expectations/fixtures aligned, no test cases added. Evidence: docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md and review-compact-v6/. Independent code QA/Reviewer after this UI delta pending. Panel-4 reference comparison is NOT TESTABLE because vision_rev02.jpg is absent; no full visual match claim. No DB or migration operation."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent UI QA PASS 2026-10-15 after correcting whole-routine deletion copy. Confirms cascade removal of day snapshots and saved skips; Cancel preserves the routine. Native Alert appearance is NOT TESTABLE in RN Web."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS 2026-10-15 for exact deletion copy and cancel/destructive handlers. App and edge TypeScript, full ESLint, and Node test suite pass in isolated copy; 492/492. No database or migration operation; live RLS/native remain separate."
         }
       ],
-      "next_step": "HOME routine UI handoff 2026-10-15: compact shared warm routine surface with separators, distinct horizontal day/select and red whole-routine delete actions, single primary action while draft is open. Fresh review Chromium renders cover 375x844, 430x844, 375x667 and 140% text proxy; create/saved/failed/unknown/exact retry/discard, several routines, delete-cancel and Home completion verified without page errors. Public/review builds pass. User-approved pnpm check passes (typecheck, edge typecheck, lint, 45/45 test files); existing stale expectations/fixtures aligned, no test cases added. Evidence: docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md and review-compact-v6/. Independent code QA/Reviewer after this UI delta pending. Panel-4 reference comparison is NOT TESTABLE because vision_rev02.jpg is absent; no full visual match claim. No DB or migration operation."
+      "next_step": "Next P1: FLOW-HOME-CHECKLIST-01. Define real Idag/Denna vecka/Alla scopes and actual upcoming plan sources in an exact reviewed plan before implementation. Full panel-4 screen comparison and live routine migration/RLS/native checks remain open.",
+      "implementation_state": "Compact routine manager and Home completion actions implemented and independently reviewed as a local UI slice; this does not complete the full-screen panel-4 checklist journey.",
+      "evidence_status": "local PASS: independent QA/Reviewer; app and edge typecheck, lint, 492/492 tests. NOT TESTABLE: native Alert rendering, live Supabase/RLS/migration, native accessibility, and full panel-4 screen because the full-screen list is a later flow."
     },
     {
       "id": "HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01",

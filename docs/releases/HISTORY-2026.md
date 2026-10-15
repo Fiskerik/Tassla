@@ -29,6 +29,7 @@ Avslutade paketnotiser har samlats här. Varje post bevarar ursprunglig status o
 | [MOTION-04](#motion-04) | 2026-10-10 | implementerad, oberoende QA/Reviewer PASS och pushad på `motion-03-first-use-tip`; rendering/native/telefon kvar för samlad mobil-QA | `ac2b940`, `f2b1afc` |
 | [UI-06](#ui-06) | 2026-10-10 | implementerad lokalt; teknisk QA och code review PASS; visuell QA PASS med begränsningar efter UI-07; native iPhone safe-area/motion ej verifierad | `4d230688fd6acae204112bf475eb1828bcb01231` |
 | [UI-07](#ui-07) | 2026-10-10 | implementerad och pushad; QA PASS; oberoende code review PASS | `e50da50`, `3adf73d` |
+| [HOME-ROUTINE-CHECKLIST-01](#home-routine-checklist-01) | 2026-10-15 | lokal UI-slice klar; QA/Reviewer PASS; live DB/native ej verifierat | `fix: clarify routine deletion cascade` på `codex/ux-rethink-2026-10-15` |
 | [P04-CONTENT](#p04-content) | okänt | `published` i bundlen, medan onboarding-only-versionen förblir `draft` för att inte läcka till den vanliga åldersbaserade feeden | ej angivet |
 
 ## APP-01-PHONE
@@ -538,3 +539,9 @@ Tidsbekräftelse, separat planerad händelsetid på Hem/Hälsa, enhetlig chevron
 Verifierat lokalt: oberoende pnpm check37testfilerPASS, lint0fel38varningar, diffPASS; senaste visuella/flödes-QA44PASS utan pageerrors vid375/430/140%; Reviewer och SecurityPASS; båda sista iOS-exporter1427modulerPASS. Underlag docs/design/KNOW-02/checklista.md och docs/tasks/dev/rapport.md. Begränsningar: liveSQL/RLS/cascade och native/TestFlight/VoiceOver/riktig DynamicType ej verifierade. Nya migrationer202610110001 och202610110002 ej körda.
 
 Paketcommit: `7b9da840d2ca2ac8f5d5ed998d73495858c98eae`. Bascommit617fb67. Pushad och verifierad mot origin: `puppy-checklists-faq-qa11` pekar på `7b9da840d2ca2ac8f5d5ed998d73495858c98eae`. TestFlight-build: ingen genom detta paket. Utkasten måste sakgranskas/revideras eller tas bort före publik release.
+
+## HOME-ROUTINE-CHECKLIST-01
+
+2026-10-15: rutinhallens kompakta gruppering, samlade editläge, dagsval och Home-status är implementerade. QA hittade att helraderingsbekräftelsen påstod att dagskopior behålls fast migrationen cascade-raderar kopior och sparade överhoppningar. Texten korrigerades; endast den destruktiva knappen raderar och `Avbryt` bevarar rutinen. Oberoende QA och Reviewer PASS.
+
+I den isolerade källkopian passerade app-typecheck, edge-typecheck, full ESLint och Node-testsviten (492/492). Ingen databas-/migrationsåtgärd genomfördes. Native Alert-rendering, VoiceOver/Dynamic Type, live Supabase/RLS och migration är ej verifierade. Den fullständiga panel-4-resan med fungerande filter och kommande planer återstår som `FLOW-HOME-CHECKLIST-01`. Underlag: `docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md` och `docs/tasks/dev/rapport.md`. Checkpoint: committen `fix: clarify routine deletion cascade` på `codex/ux-rethink-2026-10-15`.

@@ -39,11 +39,11 @@ Manuella kontroller: tre separata rutiner visas inom samma yta; dagsval och helr
 | 13 | Ja, enligt kontrakt | Namn, checklistpunkter och upprepning har tydlig hierarki och metadata är dämpad. |
 | 14 | Ja | Create, saved, failed, unknown, retry, discard, flera rutiner och completion renderades. |
 | 15 | Ja, webb | Knappar har minst 44×44 pt, semantik verifierades och 140 % textproxy renderades; native Dynamic Type/VoiceOver är NOT TESTABLE. |
-| 16 | NOT TESTABLE | `vision_rev02.jpg` saknas i checkouten; sida-vid-sida-jämförelse av panel 4 kan därför inte göras. Ingen full visuell matchning hävdas. |
+| 16 | NOT TESTABLE | `vision_rev02.jpg` finns, men denna checkpoint implementerar rutinhallen och Hemmets dagskort, inte panelens fullskärmslista med filter. Ingen full visuell matchning hävdas. |
 | 17 | Ja | Hemmets fem huvudflikar syns; denna ändring påverkar inte navigationsordning eller returvägar. |
 | 18 | Ja, begränsat | Home-fixturen behåller hundidentitet/standardbild med synlig etikett; ingen bildroll ändrades här. |
 
-UI-funktion och lokal webbrender har verifierats; live Supabase/RLS, migrationens runtime, native interaktion och panel-4-likhet mot bildreferensen är fortsatt separata och ej verifierade. Oberoende QA/Reviewer efter denna visuella ändring återstår.
+UI-funktion och lokal webbrender har verifierats; live Supabase/RLS, migrationens runtime och native interaktion är fortsatt separata och ej verifierade. Full panel-4-likhet återstår tills fullskärmslistan är implementerad.
 
 Efter ägarens godkännande att köra obligatoriska Git-hookar passerade `pnpm check`: app- och edge-typecheck, full lint samt 45/45 testfiler. Befintliga assertions/fixturer uppdaterades till redan införda weekday-, review-gating-, Träning-, Logga- och scoped profile-read-kontrakt; inga testfall lades till. Ingen databas- eller migrationsåtgärd kördes.
 
@@ -88,3 +88,7 @@ Browsern bekräftade en synlig `Hantera`-ingång som öppnar sheeten. Skapaflöd
 ## V3 — historiska begränsningar
 
 Detta bevisar lokal källkod och webbrender, inte iOS/Android-layout, native long-press, tangentbord, VoiceOver, riktig Dynamic Type eller sparning mot Supabase. `202610140002_routine_checklists.sql` finns i källan men kördes inte. Backfill, owner-RLS, public RPC/PostgREST-grants, gamla klienter, samtidiga writes, CAS/readback, cascade och 30-dagars purge kräver separat syntetisk verifiering i godkänd disposable utvecklingsdatabas. Statisk Security-review gav PASS 2026-10-14. Oberoende QA/Reviewer återstår innan den lokala köposten kan stängas.
+
+### QA-/Reviewer-rättning — raderingsbekräftelse, 2026-10-15
+
+Oberoende QA hittade att bekräftelsen felaktigt lovade att valda dagskopior överlever helradering. Texten är ändrad till `Rutinen ”…” och alla dess dagskopior och sparade överhoppningar tas bort.` Den destruktiva knappen är den enda som anropar radering; `Avbryt` lämnar rutinen kvar. QA PASS och oberoende Reviewer PASS. Native Alertens faktiska dialogrendering är NOT TESTABLE i RN Web-fixturen; den ändrade copyt påverkar inte de redan fångade skärmlayouterna. App-typecheck, edge-typecheck, full ESLint och Node-testsviten passerade igen: 492/492 tester. Ingen databas- eller migrationsåtgärd kördes.
