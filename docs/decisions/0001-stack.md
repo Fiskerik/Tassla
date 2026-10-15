@@ -1,4 +1,6 @@
 # 0001 – Teknikstack för Tasslas MVP
+> Historisk källpost. Aktuell beslutssammanfattning och paketstatus finns i [MASTER-LOG.md](MASTER-LOG.md). Läs den först; vid konflikt gäller dess aktuella status och senare ägarbeslut.
+
 
 Status: accepterat av Erik 2026-10-04 i chatten: ”Jag godkänner MVP och stack (Erik)”. Kärnstack: Expo/React Native/TypeScript/Expo Router, Supabase och Codemagic. Villkorade alternativ (offline, redaktörsmiljö) och öppna drift-/notifieringsdetaljer är fortsatt särskilda beslut, inte automatiskt valda komponenter.
 

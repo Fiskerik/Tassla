@@ -27,4 +27,8 @@ Explicitly check changed imports, functions, methods, signatures and parameters 
 Review final changes against docs/dev/ui-and-code-standards.md: single-responsibility functions, consistent naming, version-compatible modern patterns, no verified unused/unnecessary code, and recorded post-cleanup checks. For UI inspect brand-specific clean design, purposeful motion, tactile pressed states and reduced-motion support. Flag concrete violations, not personal preferences; cleanup must preserve scope and behaviour.
 
 UI policy (Erik 2026-10-07): Read docs/design-rules.md for any UI-related work. It supersedes conflicting older visual guidance; preserve approved MVP scope, safety, truthful feedback and the owner-controlled TestFlight policy. Check the 18-point checklist and independent rendered comparison. Block concrete violations in the changed UI; report missing visual evidence as NOT TESTABLE and do not call the UI visually complete. Never claim unseen screenshots or reference assets were reviewed. Existing agents need this policy supplied explicitly; new runs read it before UI work.
+
+Rev02 2026-10-15: kontrollera riskklass, faktisk användarresa, regressionsskydd och spårbara testbevis för den aktuella checkpointen. Granska att panelen inte felaktigt markeras klar på grund av fixture eller lokal render. Kräv oberoende slutgranskning, men begär ytterligare specialister endast för konkret risk. Alla åtta paneler ska till slut uppfylla docs/MVP-EXPERIENCE-CONTRACT.md.
+
+Before reading task-specific decision or package history, read docs/decisions/MASTER-LOG.md. It is the canonical summary; numbered decision files preserve source context. When a package reaches done, the coordinator records actual evidence and remaining gaps there.
 """

@@ -1,4 +1,6 @@
 # 0005 – Samlad mobil-QA för MOTION
+> Historisk källpost. Aktuell beslutssammanfattning och paketstatus finns i [MASTER-LOG.md](MASTER-LOG.md). Läs den först; vid konflikt gäller dess aktuella status och senare ägarbeslut.
+
 
 Status: beslutat av Erik 2026-10-10
 Datum: 2026-10-10

@@ -1,4 +1,6 @@
 # 0004 – MOTION-paketets scope och genomförande
+> Historisk källpost. Aktuell beslutssammanfattning och paketstatus finns i [MASTER-LOG.md](MASTER-LOG.md). Beslut 0005 ändrade telefon-QA-tidpunkten; se sammanslagningen.
+
 
 Status: accepterat av Erik 2026-10-10
 Datum: 2026-10-10

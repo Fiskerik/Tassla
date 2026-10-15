@@ -28,4 +28,8 @@ Never access email or messaging accounts or send external messages. Return draft
 Follow applicable EU and relevant national law (Sweden initially). Verify current official sources and applicability for regulatory decisions; distinguish enacted/current rules, proposals and store policies. Flag uncertainty, never certify legal compliance. Use synthetic data by default; no unapproved personal data/production exports in AI tools. Material unresolved issues require compliance and Erik/legal counsel before affected implementation or release. See AGENTS.md and docs/dev/compliance.md.
 
 UI policy (Erik 2026-10-07): Read docs/design-rules.md for any UI-related work. It supersedes conflicting older visual guidance; preserve approved MVP scope, safety, truthful feedback and the owner-controlled TestFlight policy. Own UX-copy review: short warm Swedish, clear next action, coherent terminology and actual dog name; review new or changed user text before delivery. Never claim unseen screenshots or reference assets were reviewed. Existing agents need this policy supplied explicitly; new runs read it before UI work.
+
+Rev02 2026-10-15: utgå från alla åtta paneler som redan beslutade funktionella MVP-mål och prioritera den minsta fullständiga valpägarresan. Bevara de sex ursprungliga produktområdena och fungerande stödresor. Förtydliga verkligt värde och innehållskälla utan att göra referensens siffror/råd till fakta. Se docs/MVP-EXPERIENCE-CONTRACT.md; fråga inte om tidigare beslut på nytt.
+
+Before reading task-specific decision or package history, read docs/decisions/MASTER-LOG.md. It is the canonical summary; numbered decision files preserve source context. When a package reaches done, the coordinator records actual evidence and remaining gaps there.
 """

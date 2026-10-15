@@ -4,7 +4,7 @@ Version 2.3, 2026-10-13. Kanonisk instruktion för nya och reviderade UI-uppgift
 
 ## 0. Auktoritet och leveransstatus
 
-`vision_rev02.jpg` är aktuell visuell målbild. Dess åtta paneler är designmål, inte åtta redan implementerade funktioner. `vision_rev01.jpg` och äldre paketspecifikationer är historik. Detta regelverk ersätter motstridiga äldre visuella anvisningar för kommande arbete; tidigare leveranser skrivs inte om retroaktivt.
+`vision_rev02.jpg` är aktuell visuell målbild. Dess åtta paneler är enligt Eriks beslut 2026-10-15 obligatoriska funktionella MVP-mål, men är inte åtta redan verifierade funktioner. `vision_rev01.jpg` och äldre paketspecifikationer är historik. Detta regelverk ersätter motstridiga äldre visuella anvisningar för kommande arbete; tidigare leveranser skrivs inte om retroaktivt.
 
 Rangordning: aktuella ägarbeslut → sanningsenlighet, säkerhet och tillgänglighet → detta regelverk och rev02-specifikationen → UX-skillens beteenderegler → befintlig kod. Bilden styr komposition, objekt, komponentformer, bildspråk och innehållshierarki. Namn, räknetal och råd i bilden är exempel, inte datakällor. Olösta faktiska konflikter dokumenteras; redan fattade beslut frågas inte om igen.
 
@@ -17,6 +17,8 @@ Läs tillsammans:
 - [Produktobjekt, datakopplingar och innehåll](design/vision-rev02-objects.md).
 - [Bygginstruktion för Hem](prompts/build-home-rev02.md).
 - [Byggordning, mandat och granskningar](tasks/VISION-REV02.md).
+
+Läs även [MVP:s upplevelsekontrakt](MVP-EXPERIENCE-CONTRACT.md): en panel godkänns först när dess riktiga användarresa fungerar och skärmens form jämförts mot referensen. Behåll alla befintliga fungerande flöden, rättigheter och sanningsenliga tillstånd. Renderbevis för ett delmoment får inte stänga hela panelen.
 
 Statusord: **befintligt** = kod finns; **föreslaget** = kontrakt att implementera; **granskningsläge** = syntetisk interaktion; **produktionskopplat** = verklig läsning/skrivning verifierad; **visuellt godkänt** = jämfört med målbilden. Ingen status ersätter en annan.
 
@@ -152,6 +154,8 @@ Varje del har ready/loading/empty/error och relevanta partial/pending/failed/uns
 Skärmläsare ska skilja ålder, vald flik, bock, destination och progress. Färg/bild/rörelse är aldrig enda information. Prova standardskrift, 140 %, lång svensk copy, reducerad rörelse och tangentbord. Webbsimulering är inte verklig Dynamic Type/VoiceOver.
 
 ## 11. Skärmar och produktresor
+
+Alla åtta paneler måste nås via riktiga ingångar och ha verkliga destinationer för synliga kontroller. Inför inte dekorativa filter, diagram, veckomål eller milstolpar. Dela leveransen i små fungerande resor; status för panelen redovisas separat från status för varje deluppgift. Se `docs/MVP-EXPERIENCE-CONTRACT.md`.
 
 [Skärmkontrakten](design/vision-rev02-screen-contracts.md) preciserar varje panels blockordning, färgroller, bildandel, komponentformer, handlingar, datakällor och acceptans. De gäller före den äldre översiktens generella råd. Stödskärmar får samma formspråk med bevarade användarresor.
 

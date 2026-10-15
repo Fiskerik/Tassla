@@ -1,4 +1,11 @@
 # AGENTS.md – Tassla
+
+## Aktuellt MVP-mandat och företräde
+Eriks beslut 2026-10-15: leverera åtta funktionella `vision_rev02.jpg`-paneler genom små, kompletta användarresor med hållbara checkpoints och riskbaserad QA. Se `docs/MVP-EXPERIENCE-CONTRACT.md`, `docs/mvp.md`, `docs/design-rules.md` och `docs/dev/workflow.md`. Panelmålen är Hem, Utveckling, Dagens framsteg, daglig Checklista, Logga, Träning, Kunskap och Insikter. Skärmdump, review-fixture eller lokal kod betyder inte verifierad produktionsfunktion.
+
+Företräde: aktuella uttryckliga ägarbeslut, säkerhet/sanningsenlighet/tillgänglighet, MVP-kontrakt, sedan äldre plantext. Äldre fas-0-förbud, rev01 som aktuell referens och krav på nytt segmentgodkännande för redan beställd MVP gäller inte. Beslutet godkänner inte nya persondataändamål, live-migration, dependencies, kostnader, extern pilot eller publicering. Bevara befintliga fungerande resor och verifiera regressioner.
+
+Köns `done` betyder endast avslutad avgränsad uppgift med angivet bevis. En panel är färdig först när funktion, datakoppling och visuell likhet har varsin verifierad status. Väsentliga NOT TESTABLE hålls öppna. Koordinatorn driver en aktiv resa åt gången, högst två utan överlappande skrivytor. Agenter är gransknings- och specialistresurser, inte ett obligatoriskt nätverk för enkel UI. Riskklass styr QA-omfattning; oberoende slutgranskning kvarstår.
 ## UI och design (obligatoriskt)
 Aktuell målbild är `vision_rev02.jpg`. Samlat regelverk: `docs/design-rules.md`; skärm-/komponent- och objektkontrakt länkas därifrån. Skärmkontrakt för panel 1–8 och stödskärmar: `docs/design/vision-rev02-screen-contracts.md`. Gemensam bygginstruktion: `docs/prompts/build-rev02-screens.md`; för Hem: `docs/prompts/build-home-rev02.md`. Skilj dokumenterat designmål från redan implementerad funktion och verifierad produktionsdata. Äldre rev01-hänvisningar i historiska paket är inte aktuell visuell auktoritet.
 Innan du planerar, skapar, ändrar eller granskar UI: läs `docs/design-rules.md` och följ den.
@@ -19,9 +26,9 @@ The app is free for users. Revenue comes from partners, in five legs (see `docs/
 - Kennels (breeders) join gradually. A user joins through a kennel QR code or without one. Sharing owner data with a kennel or partner requires explicit consent.
 - Content is the product. Every login shows new content fitted to the puppy's age, needs and breed. Health content is checked by `dog_expert` before it is published.
 
-## Current phase: 0 – Discovery
+## Historisk fas-0-kontext (ersatt av senare genomförandemandat)
 - Stack, six-screen MVP and Architecture approved by Erik on 2026-10-04: Expo/React Native/TypeScript/Expo Router, Supabase, Codemagic. Erik separately authorized project files and SQL foundation; see docs/tasks/dev/foundation.md. APP-01 plan v2 and listed packages were also approved through “godkänner”; local app implementation is authorized. Phone auth tests, external builds and pilot remain separate manual steps. Explicitly unresolved options remain open.
-- In this phase: no app code or scaffolding. Outputs are documents in `docs/`. Human-approved exception: SDK infrastructure in `test_agent.py`, `run_team.py` and `tassla_team/`; no new dependencies without approval.
+- Historical phase-0 rule, superseded by the approved MVP implementation mandate: no app code or scaffolding. Outputs are documents in `docs/`. Human-approved exception: SDK infrastructure in `test_agent.py`, `run_team.py` and `tassla_team/`; no new dependencies without approval.
 - Additional explicit owner exception 2026-10-04: foundation source/contracts/module guides and Supabase schema/test files, without dependency installation or external resources. This does not approve a pilot, real data processing or all implementation segments.
 - Configured agents: `product`, `architect`, `critic`, `dog_expert`, `compliance`, `implementer`, `qa`, `reviewer`, `security` in `.codex/agents/`. Dev definitions are available, but app work requires an approved segment and plan; Discovery restrictions still apply.
 - Phase 0 is done when the human has approved `docs/vision.md`, `docs/revenue.md` and `docs/mvp.md`, and accepted `docs/decisions/0001-stack.md`.
@@ -43,8 +50,8 @@ The app is free for users. Revenue comes from partners, in five legs (see `docs/
 ## Source of truth
 - `docs/vision.md` – idea, problem, target user, principles, non-goals, open questions
 - `docs/revenue.md` – the five revenue legs and partner status
-- `docs/mvp.md` – what is in scope. **Anything not under "Måste med" is out of scope** until the human adds it.
-- `docs/decisions/` – numbered decision records (start from `0000-template.md`)
+- `docs/mvp.md` och `docs/MVP-EXPERIENCE-CONTRACT.md` – aktuellt scope. De åtta rev02-panelerna är uttryckligen tillagda 2026-10-15; annat utanför "Måste med" kräver mänskligt beslut.
+- `docs/decisions/MASTER-LOG.md` – canonical current decisions and completed package ledger; read it first. Numbered `docs/decisions/000*.md` are historical source records.
 
 Read-only agents cannot write files. They return text; the main session saves it to `docs/`.
 
@@ -88,7 +95,7 @@ Rules:
 6. Never say tests pass or work is done unless the `check` command below has actually been run and passed.
 7. `compliance` is not a lawyer. Anything it marks "needs a lawyer" goes to the human as an open decision; do not build around an assumed answer.
 
-## First tasks (phase 0)
+## Historiska första uppgifter (fas 0)
 1. The main session asks the human the open questions in `docs/vision.md` one at a time, starting with the fifth revenue leg, and writes the answers into `docs/`.
 2. `product` reviews the owner input for gaps and contradictions, compares with BabyJourney (what works, how it earns) and with Swedish competitors, and proposes an MVP cut in `docs/mvp.md`. Then `critic`.
 3. `compliance` reviews `docs/revenue.md`: ad labelling, insurance distribution, GDPR for kennel and owner data, vet Q&A liability. The human decides what goes to a lawyer.
@@ -148,7 +155,7 @@ Ansvarig: EriMali AB. Postadress: Stenvallavägen 1, 18634 Vallentuna. Support: 
 ## Historisk notering — designbeslut 2026-10-07
 Den äldre bindande policyn utgick från rev01 och dess 18-punktschecklista. För aktuella UI-uppgifter gäller i stället rev02-hänvisningarna i början av filen och den kanoniska checklistan i `docs/design-rules.md` §14. Historiken innebär inte att befintliga skärmar redan uppfyller den nya målbilden. Product/Critic-ansvar, MVP-scope, sanningsenlighet, säkerhet och Eriks TestFlight-policy gäller fortsatt.
 
-Eriks MOTION-beslut 2026-10-10 finns i `docs/decisions/0004-motion-package.md`; kökonflikter och telefonprov styr slice-ordningen.
+Kanoniskt besluts- och paketregister: `docs/decisions/MASTER-LOG.md`. Läs äldre nummerfiler endast vid behov av ursprungligt underlag.
 
 
 ## INNAN COMMIT OCH PUSH TILL GITHUB

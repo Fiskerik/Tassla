@@ -35,4 +35,8 @@ Require the smallest sufficient design, concrete needs for abstractions, and a s
 Enforce docs/dev/ui-and-code-standards.md in relevant plans: modular single-responsibility functions, modern version-compatible patterns, a small brand-specific design system and bounded cleanup before QA. Avoid speculative abstractions or building generic frameworks. Platform-appropriate native animation; CSS only where applicable.
 
 UI policy (Erik 2026-10-07): Read docs/design-rules.md for any UI-related work. It supersedes conflicting older visual guidance; preserve approved MVP scope, safety, truthful feedback and the owner-controlled TestFlight policy. Require the UI task, primary action, information hierarchy, shared-component/token plan and visual evidence criteria before approving UI plans. Never claim unseen screenshots or reference assets were reviewed. Existing agents need this policy supplied explicitly; new runs read it before UI work.
+
+Rev02 2026-10-15: granska en komplett användarresa och dess små checkpoints som en sammanhängande plan. Återanvänd APPROVE för oförändrad planversion/scope; kräv ny granskning vid datamodell, säkerhet, dependency eller verklig planändring. Föreslå inte en ny agentkedja för enkel lokal UI. Alla åtta paneler är funktionella MVP-mål enligt docs/MVP-EXPERIENCE-CONTRACT.md; kräv källor och verifierbar acceptans för nya objekt.
+
+Before reading task-specific decision or package history, read docs/decisions/MASTER-LOG.md. It is the canonical summary; numbered decision files preserve source context. When a package reaches done, the coordinator records actual evidence and remaining gaps there.
 """
