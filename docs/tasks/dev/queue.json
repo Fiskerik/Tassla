@@ -6273,7 +6273,9 @@
         "docs/plans/HOME-ROUTINE-CHECKLIST-01-ux-spec.md",
         "docs/tasks/dev/daily-routines-checklists.md",
         "docs/tasks/dev/queue.json",
-        "docs/tasks/dev/rapport.md"
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/releases/HISTORY-2026.md"
       ],
       "acceptance": [
         "Routine management follows panel 4 and Home follows panel 1: warm grouped surfaces, compact separators and a clear deeper-management entry; no stack of large routine cards",
@@ -6296,7 +6298,7 @@
         "VISION-R02-2",
         "HOME-ROUTINE-WEEKDAYS-01"
       ],
-      "status": "qa",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -6399,9 +6401,23 @@
           "to": "qa",
           "actor": "implementer",
           "evidence": "HOME routine UI handoff 2026-10-15: compact shared warm routine surface with separators, distinct horizontal day/select and red whole-routine delete actions, single primary action while draft is open. Fresh review Chromium renders cover 375x844, 430x844, 375x667 and 140% text proxy; create/saved/failed/unknown/exact retry/discard, several routines, delete-cancel and Home completion verified without page errors. Public/review builds pass. User-approved pnpm check passes (typecheck, edge typecheck, lint, 45/45 test files); existing stale expectations/fixtures aligned, no test cases added. Evidence: docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md and review-compact-v6/. Independent code QA/Reviewer after this UI delta pending. Panel-4 reference comparison is NOT TESTABLE because vision_rev02.jpg is absent; no full visual match claim. No DB or migration operation."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent UI QA PASS 2026-10-15 after correcting whole-routine deletion copy. Confirms cascade removal of day snapshots and saved skips; Cancel preserves the routine. Native Alert appearance is NOT TESTABLE in RN Web."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS 2026-10-15 for exact deletion copy and cancel/destructive handlers. App and edge TypeScript, full ESLint, and Node test suite pass in isolated copy; 492/492. No database or migration operation; live RLS/native remain separate."
         }
       ],
-      "next_step": "HOME routine UI handoff 2026-10-15: compact shared warm routine surface with separators, distinct horizontal day/select and red whole-routine delete actions, single primary action while draft is open. Fresh review Chromium renders cover 375x844, 430x844, 375x667 and 140% text proxy; create/saved/failed/unknown/exact retry/discard, several routines, delete-cancel and Home completion verified without page errors. Public/review builds pass. User-approved pnpm check passes (typecheck, edge typecheck, lint, 45/45 test files); existing stale expectations/fixtures aligned, no test cases added. Evidence: docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md and review-compact-v6/. Independent code QA/Reviewer after this UI delta pending. Panel-4 reference comparison is NOT TESTABLE because vision_rev02.jpg is absent; no full visual match claim. No DB or migration operation."
+      "next_step": "Next P1: FLOW-HOME-CHECKLIST-01. Define real Idag/Denna vecka/Alla scopes and actual upcoming plan sources in an exact reviewed plan before implementation. Full panel-4 screen comparison and live routine migration/RLS/native checks remain open.",
+      "implementation_state": "Compact routine manager and Home completion actions implemented and independently reviewed as a local UI slice; this does not complete the full-screen panel-4 checklist journey.",
+      "evidence_status": "local PASS: independent QA/Reviewer; app and edge typecheck, lint, 492/492 tests. NOT TESTABLE: native Alert rendering, live Supabase/RLS/migration, native accessibility, and full panel-4 screen because the full-screen list is a later flow."
     },
     {
       "id": "HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01",
@@ -7000,6 +7016,317 @@
         }
       ],
       "next_step": "Independent Reviewer PASS 2026-10-15. RPC argument names match migration; readback/equality includes weekdays; legacy NULL and anchor are preserved; 375x844 render evidence supports checkbox state, minimum rule, and ≥44pt targets. No scope/evidence finding. QA PASS, Architect/Security static PASS, Critic PROCEED, Compliance PASS. Full panel 4, native accessibility, migration/runtime parity and live RLS remain NOT TESTABLE. Evidence: docs/design/evidence/vision-rev02/ux-fix-2026-10-15/routine-weekdays/RENDER-REPORT.md. No test suite or database operation."
+    },
+    {
+      "id": "FLOW-ONBOARD-01",
+      "title": "Onboarding och hundprofil till personligt Hem",
+      "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "write_paths": [
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/data/app-data.ts"
+      ],
+      "acceptance": [
+        "Skapa hund och nå Hem med korrekt hund-ID, ålder och fallback vid saknat datum",
+        "Sökbar licensierad raskatalog och Mix fungerar enligt godkänd profilplan när källsnapshot finns",
+        "Konto-/hundbyte visar aldrig föregående hunds data"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "DOG-PROFILE-AGE-DISPLAY",
+        "DOG-PROFILE-BREED-MIX"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "priority": "P1",
+      "panels": [
+        "1",
+        "2"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Första fungerande profil till Hem; separat blockerare för katalog om källsnapshot saknas.",
+      "test_evidence": [
+        "Profil- och scopeprov, kataloglicensbevis, RLS där dataskrivning ändras, 375/430-render"
+      ],
+      "implementation_state": "föreslagen; ingen kod i denna diff",
+      "evidence_status": "not_run — required evidence listed in test_evidence"
+    },
+    {
+      "id": "FLOW-HOME-CHECKLIST-01",
+      "title": "Hem till daglig Checklista och tillbaka",
+      "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "write_paths": [
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/home/ProductWorkspace.tsx"
+      ],
+      "acceptance": [
+        "Hem och dagslista har samma fullständiga population och bekräftade count",
+        "Skapa/ändra/ta bort/ångra rutin fungerar; träningsrad öppnar källsteg",
+        "Synliga filter fungerar; pending/failed/unknown döljer falsk progress",
+        "För full panelacceptans fungerar Idag/Denna vecka/Alla och Kommande med definierat urval och verkliga planposter"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "HOME-ROUTINE-CHECKLIST-01"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "priority": "P1",
+      "panels": [
+        "1",
+        "4"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Hel Hem till Checklista till Hem lokalt QA/Reviewer; live status separat från FLOW-ROUTINE-RUNTIME-01.",
+      "test_evidence": [
+        "Riktat lyckat/fel/unknown-prov, datum/scope-regression, §14-bilder public/review"
+      ],
+      "implementation_state": "föreslagen; ingen kod i denna diff",
+      "evidence_status": "not_run — required evidence listed in test_evidence"
+    },
+    {
+      "id": "FLOW-LOG-01",
+      "title": "Logga med bevarad snabbresa och historik",
+      "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "write_paths": [
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx"
+      ],
+      "acceptance": [
+        "Ett tryck på primärt snabbval registrerar eller begär befintlig dublettbekräftelse",
+        "Datumbyte, redigering, radering och ångra använder bekräftade händelser",
+        "Översikt öppnar Insikter när panel 8 finns; ingen död flik"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UX-LOG-EDITOR-01"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "priority": "P2",
+      "panels": [
+        "5"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Panel 5 funktionellt regressionsprov; hänvisa till tidigare design- och editor-checkpoints.",
+      "test_evidence": [
+        "Riktade logg-/datumprov, fel/unknown/undo, public/review §14 och 140 %"
+      ],
+      "implementation_state": "föreslagen; ingen kod i denna diff",
+      "evidence_status": "not_run — required evidence listed in test_evidence"
+    },
+    {
+      "id": "FLOW-TRAINING-01",
+      "title": "Träning från rekommendation till återupptagen progress",
+      "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx"
+      ],
+      "acceptance": [
+        "Rätt publicerad version och steg öppnas och markering/avmarkering bekräftas",
+        "Mina/Rekommenderat/Alla har dokumenterat fungerande urval eller syns inte",
+        "Fortsättkort och Hem visar samma sparade progress efter flikresa"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UX-TRAINING-UNMARK-01"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "priority": "P2",
+      "panels": [
+        "6"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Full panel 6-resa med visuell och funktionell evidens; live progress-scope separat om inte provat.",
+      "test_evidence": [
+        "0/halv/klar, okänd ålder, unknown/readback, public/review och bildmanifest"
+      ],
+      "implementation_state": "föreslagen; ingen kod i denna diff",
+      "evidence_status": "not_run — required evidence listed in test_evidence"
+    },
+    {
+      "id": "FLOW-KNOWLEDGE-01",
+      "title": "Kunskap från sök till källmärkt läsning",
+      "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "write_paths": [
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/FAQScreen.tsx"
+      ],
+      "acceptance": [
+        "Visade sök- och filterkontroller ändrar verkligt publicerat urval",
+        "Guide öppnas med källa; FAQ och faschecklistor nås",
+        "Reviewinnehåll läcker inte till public och cache blandar inte hund/konto"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UX-KNOWLEDGE-CACHE-01"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "priority": "P2",
+      "panels": [
+        "7"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Panel 7 full resa med bevarad FAQ och faschecklista.",
+      "test_evidence": [
+        "Sök/filter/tomt/läsfel, public/review-spärr, 375/430/140 %"
+      ],
+      "implementation_state": "föreslagen; ingen kod i denna diff",
+      "evidence_status": "not_run — required evidence listed in test_evidence"
+    },
+    {
+      "id": "FLOW-DEVELOPMENT-01",
+      "title": "Utveckling från Hem till publicerad milstolpe",
+      "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "write_paths": [
+        "src/features/home/DevelopmentPreview.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/main-navigation.ts"
+      ],
+      "acceptance": [
+        "Ålder och fas härleds utan påstådd uppnådd färdighet",
+        "Publicerad sakgranskad milstolpe öppnar verklig guide och tillbaka till Hem",
+        "Saknade/ogiltiga/framtida datum och saknat innehåll visas ärligt"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "FLOW-ONBOARD-01"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "priority": "P3",
+      "panels": [
+        "2"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Panel 2 funktionell detaljresa; nytt milstolpsinnehåll sakgranskas före public.",
+      "test_evidence": [
+        "Datum-/publiceringsprov, navigationsresa, 375/430/140 % och bildroll",
+        "Dog Expert granskar milstolpetexter före publicering"
+      ],
+      "implementation_state": "föreslagen; ingen kod i denna diff",
+      "evidence_status": "not_run — required evidence listed in test_evidence"
+    },
+    {
+      "id": "FLOW-PROGRESS-01",
+      "title": "Dagens framsteg med källhärledd progress",
+      "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/main-navigation.ts"
+      ],
+      "acceptance": [
+        "Ring och lista bygger på exakt samma fullständiga dagsmängd som Hem",
+        "Manuell och träningskällans markering/ångra uppdaterar båda vyer",
+        "Unknown/partial ger ingen komplett ring; inget påhittat veckomål",
+        "Veckomål har godkänd målpopulation, period och verifierad källa före full panelacceptans"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "FLOW-HOME-CHECKLIST-01"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "priority": "P3",
+      "panels": [
+        "3"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Panel 3 full resa med tillbaka till samma Hem-kontext.",
+      "test_evidence": [
+        "Dagsgräns, partial/error, källa/undo, 375/430/140 % visuell jämförelse",
+        "Architect/Security om ny målpersistens, datum-/periodprov"
+      ],
+      "implementation_state": "föreslagen; ingen kod i denna diff",
+      "evidence_status": "not_run — required evidence listed in test_evidence"
+    },
+    {
+      "id": "FLOW-INSIGHTS-01",
+      "title": "Insikter med korrekt period och täckning",
+      "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "write_paths": [
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/log-model.ts",
+        "src/features/home/ProductWorkspace.tsx"
+      ],
+      "acceptance": [
+        "Vecka/Månad/Sedan start läser hela relevanta perioden och visar täckning",
+        "Kiss/bajs-graf har korrekta tal, legend och tillgänglig numerisk text",
+        "Sömngrafen bygger på godkänt intervallkontrakt; överlapp, luckor och saknat slut visas som okänt"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "FLOW-LOG-01"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "priority": "P3",
+      "panels": [
+        "8"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Panel 8 beskrivande loggresa; sömnens verifierade intervallmodell är del av samma slutacceptans.",
+      "test_evidence": [
+        "Periodgräns, paginering, tomt/partiellt/okänt, skärmläsartext, 375/430 render",
+        "Dog Expert granskar eventuell tolkningscopy; Architect granskar sömnintervall"
+      ],
+      "implementation_state": "föreslagen; ingen kod i denna diff",
+      "evidence_status": "not_run — required evidence listed in test_evidence"
     }
   ]
 }

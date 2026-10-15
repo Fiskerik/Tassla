@@ -6,7 +6,7 @@ Status: godkänt av Erik 2026-10-04 i chatten: ”Jag godkänner MVP och stack (
 >
 > MVP:n ska validera detta produktlöfte och lägga grunden för Tasslas långsiktiga princip: **En hund. En profil. En tidslinje.**
 >
-> All funktionalitet som inte direkt krävs för att validera **Distribution → Activation → Engagement → Retention** är utanför MVP-scope, om den inte uttryckligen godkänns.
+> All funktionalitet som inte direkt krävs för att validera **Distribution → Activation → Engagement → Retention** är utanför MVP-scope, om den inte uttryckligen godkänns. De åtta rev02-panelerna är ett sådant uttryckligt senare godkänt funktionellt MVP-mål.
 
 ## Syfte
 
@@ -14,7 +14,9 @@ Tassla ska bevisa att produkten kan nå nya valpägare genom uppfödare, ge omed
 
 MVP-leveransen utgår från **sex användarområden: Hem, Valplogg, Träning, Hälsa, Kunskap och ett enkelt Tassla-pass**, med hundprofil/onboarding, retention, distribution och mätning som stöd. Den ska vara liten nog att pilottesta utan färdiga kommersiella partners.
 
-Eriks leveransreferens 2026-10-04 är **övre delen ”MVP – 6 skärmar” i vision_rev01.jpg** i projektroten. Sex skärmar beskriver sex huvudsakliga användarytor, inte en gräns på exakt sex tekniska vyer; onboarding, formulär och innehållsdetaljer kan behövas. Bildens exempeltexter, data, dekorativa flikar och alla tänkbara underfunktioner är inte självständiga krav. Nedre delen ”Om tre år” ingår inte. Visuell riktning och rörelse följer docs/dev/ui-and-code-standards.md.
+Den ursprungliga sexområdes-MVP:n är fortsatt grund för användarnytta och datamodell. Eriks senare beslut 2026-10-15 gör **alla åtta paneler i `vision_rev02.jpg` till obligatoriska funktionella MVP-mål**: Hem, Utveckling, Dagens framsteg, daglig Checklista, Logga, Träning, Kunskap och Insikter. Referensens exempelvärden, råd, dekor och påhittade framsteg är inte datakällor. `docs/MVP-EXPERIENCE-CONTRACT.md` anger resor, leveransgräns och verifiering; `docs/design/vision-rev02-screen-contracts.md` anger panelernas detaljkrav. Hälsa, Tassla-pass, onboarding/profil, notifieringar, distribution och mätning kvarstår enligt detta dokument. Rev01 är historisk referens.
+
+Varje panel måste vara nåbar i verklig app, ha fungerande huvudhandling och tillbakaresa, använda korrekt hund- och innehållskälla samt visa sanningsenliga loading/empty/error/pending/unknown-lägen. Enbart visuell mock, död flik eller review-fixture uppfyller inte MVP. Leverera i små resor: ingång → handling/läsning → bekräftat resultat → återgång, med egen checkpoint och testbevis. Bevara redan fungerande snabbvägar och stödresor.
 
 | Hypotes | Vad MVP:n ska validera |
 |---|---|
@@ -197,6 +199,21 @@ MVP:n ska validera att denna loop ger verkligt värde och upprepas över tid. In
 ## App-design
 **Appen ska kännas levande. Animationer som infriar detta måste premieras**
 
+
+## Rev02-panelernas minsta funktionella innebörd
+
+| Panel | Verifierbar användarresa |
+|---|---|
+| 1 Hem | Se rätt hund/dag och relevant innehåll, öppna dagsuppgift eller destination, se endast bekräftad progress. |
+| 2 Utveckling | Öppna från Hem, se härledd ålder/fas och publicerade milstolpar, öppna verklig guide, gå tillbaka. Ingen bedömning av uppnådd utveckling utan observation. |
+| 3 Dagens framsteg | Öppna från Hem, se samma fullständiga dagsmängd och bekräftade markeringar, öppna källa och återvänd med uppdaterat läge. Veckomål visas först när en verklig målpopulation och periodmodell finns; full panelacceptans kräver att denna del är byggd och verifierad. |
+| 4 Daglig Checklista | Se och hantera samma dagsuppgifter som Hem; skapa/ändra/ta bort rutin och markera/ångra med bekräftat resultat. Träningsstatus kommer från träningskällan. Idag/Denna vecka/Alla och Kommande får visas stegvis, men full panelacceptans kräver verkliga avgränsningar, komplett läsning och fungerande filter/planunderlag. |
+| 5 Logga | Snabbregistrera, se rätt daterad historik, redigera/radera/ångra och gå till Insikter. Befintlig etttrycksresa bevaras. |
+| 6 Träning | Hitta publicerat program, öppna rätt version/steg, spara/ångra progress och fortsätta där man var. Filter och bildmetadata måste ha verklig betydelse. |
+| 7 Kunskap | Hitta publicerad relevant guide via fungerande sök/filter där de visas, läsa med källa och återvända; FAQ/faschecklistor förblir tillgängliga och review spärras. |
+| 8 Insikter | Öppna från Logg, välja period och se täckningsmärkt sammanställning ur fullständigt relevant loggurval. Sömn visas endast när validerade intervall finns; luckor och osäkra data visas ärligt. |
+
+En panel får levereras i flera checkpoints men kallas inte klar förrän hela raden fungerar och har relevant QA, oberoende review och visuell evidens. Säkerhet, innehållsgranskning, dataskydd och existerande användargodkännanden gäller vid varje steg. Påhittade råd, djurtillstånd, tider eller progress ingår inte.
 
 ## Utanför MVP
 

@@ -440,7 +440,7 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
         accessibilityLabel={`${selected ? 'Ta bort' : skippedDay ? 'Lägg tillbaka' : 'Lägg till'} rutinen ${routine.label} ${selected ? 'från' : 'på'} Hemskärmen`}
         disabled={disabled} onPress={selected ? onRemove : onAdd} dayAction />
       <ActionButton icon="trash-outline" label="Ta bort rutin" accessibilityLabel={`Ta bort rutin ${routine.label}`}
-        disabled={disabled} danger onPress={() => Alert.alert('Ta bort rutin?', `”${routine.label}” tas bort. Redan tillagda dagar behåller sin sparade kopia.`, [
+        disabled={disabled} danger onPress={() => Alert.alert('Ta bort rutin?', `Rutinen ”${routine.label}” och alla dess dagskopior och sparade överhoppningar tas bort.`, [
           { text: 'Avbryt', style: 'cancel' }, { text: 'Ta bort rutin', style: 'destructive', onPress: () => { void onDelete(); } },
         ])} />
     </View>
