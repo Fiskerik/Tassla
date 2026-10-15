@@ -1,11 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { selectContent } from '../content/select-content';
-import { LOG_EVENT_TYPES, type LogEventType } from '../features/puppy-log/log-model';
+import { isCanonicalAccidentKinds, LOG_EVENT_TYPES, type AccidentKind, type LogEventType } from '../features/puppy-log/log-model';
 import type { HomeContent, OwnedDog } from './app-data';
 
 export const WORKSPACE_PAGE_SIZE = 40;
 const DEFAULT_REQUEST_TIMEOUT_MS = 12_000;
-const EVENT_COLUMNS = 'id,dog_id,event_type,occurred_at,occurred_on,weight_kg,duration_minutes,description';
+const EVENT_COLUMNS = 'id,dog_id,event_type,occurred_at,occurred_on,weight_kg,duration_minutes,description,accident_kinds';
 const HEALTH_WEIGHT_COLUMNS = 'id,dog_id,actor_id,occurred_on,weight_kg';
 const HEALTH_HISTORY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,occurred_time,description';
 const HEALTH_HISTORY_LEGACY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,description';
@@ -20,6 +20,7 @@ export interface DogEventRecord {
   weight_kg: number | null;
   duration_minutes: number | null;
   description: string | null;
+  accident_kinds: AccidentKind[] | null;
 }
 
 export interface DogEventOperation {
@@ -29,6 +30,7 @@ export interface DogEventOperation {
   occurred_at: string;
   duration_minutes: number | null;
   description: string | null;
+  accident_kinds: AccidentKind[] | null;
 }
 
 export interface DogEventChanges {
@@ -36,6 +38,7 @@ export interface DogEventChanges {
   occurred_at: string;
   duration_minutes: number | null;
   description: string | null;
+  accident_kinds: AccidentKind[] | null;
 }
 
 export interface HealthWeightRecord {
@@ -242,6 +245,7 @@ export async function insertDogEvent(
   operation: DogEventOperation,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
 ): Promise<WriteOutcome<DogEventRecord>> {
+  if (!isValidDogEventKinds(operation.event_type, operation.accident_kinds)) return { status: 'failed' };
   let failure: unknown = null;
   try {
     const result = await withRequestDeadline(async (signal) => await client.from('dog_events')
@@ -249,7 +253,9 @@ export async function insertDogEvent(
       .abortSignal(signal)
       .select(EVENT_COLUMNS)
       .single(), timeoutMs);
-    if (!result.error && isDogEventRecord(result.data)) return { status: 'saved', value: result.data };
+    if (!result.error && isDogEventRecord(result.data) && matchesDogEventOperation(result.data, operation)) {
+      return { status: 'saved', value: result.data };
+    }
     failure = result.error ?? new Error('Empty insert response');
   } catch (error) {
     failure = error;
@@ -257,7 +263,7 @@ export async function insertDogEvent(
 
   try {
     const found = await fetchDogEventById(client, operation.dog_id, operation.id, timeoutMs);
-    if (found) return { status: 'saved', value: found };
+    if (found && matchesDogEventOperation(found, operation)) return { status: 'saved', value: found };
     return isDefiniteClientRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
   } catch {
     return { status: 'unknown' };
@@ -271,6 +277,7 @@ export async function updateDogEvent(
   changes: DogEventChanges,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
 ): Promise<WriteOutcome<DogEventRecord>> {
+  if (!isValidDogEventKinds(changes.event_type, changes.accident_kinds, true)) return { status: 'failed' };
   let failure: unknown = null;
   try {
     const result = await withRequestDeadline(async (signal) => await client.from('dog_events')
@@ -280,7 +287,8 @@ export async function updateDogEvent(
       .abortSignal(signal)
       .select(EVENT_COLUMNS)
       .maybeSingle(), timeoutMs);
-    if (!result.error && isDogEventRecord(result.data)) return { status: 'saved', value: result.data };
+    if (!result.error && isDogEventRecord(result.data) && result.data.id === id && result.data.dog_id === dogId
+      && matchesChanges(result.data, changes)) return { status: 'saved', value: result.data };
     failure = result.error ?? new Error('Empty update response');
   } catch (error) {
     failure = error;
@@ -875,7 +883,7 @@ export async function fetchPublishedContentVersions(
 export async function fetchHomeContent(
   client: SupabaseClient,
   dog: OwnedDog,
-  ageWeeks: number,
+  ageWeeks: number | null,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   parentSignal?: AbortSignal,
 ): Promise<HomeContent[]> {
@@ -902,7 +910,7 @@ export async function fetchHomeContent(
 export async function fetchTrainingWorkspace(
   client: SupabaseClient,
   dog: OwnedDog,
-  ageWeeks: number,
+  ageWeeks: number | null,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   parentSignal?: AbortSignal,
 ): Promise<{ programs: PublishedTrainingProgram[]; paused: PausedTrainingProgress[] }> {
@@ -914,7 +922,7 @@ export async function fetchTrainingWorkspace(
   const inProgressVersionIds = new Set(progress.map((item) => item.program_version_id));
   const resumable = publishedPrograms.filter((row) => inProgressVersionIds.has(row.id)
     && (row.content_breed_targets.length === 0 || row.content_breed_targets.some((target) => target.breed_id === dog.breed_id)));
-  const current = selectContent(publishedPrograms.map((row) => ({
+  const current = ageWeeks === null ? [] : selectContent(publishedPrograms.map((row) => ({
     id: row.id,
     contentId: row.content_id,
     version: row.version,
@@ -1078,7 +1086,13 @@ function isDogEventRecord(value: unknown): value is DogEventRecord {
     && (row.occurred_on === null || typeof row.occurred_on === 'string')
     && (row.weight_kg === null || typeof row.weight_kg === 'number')
     && (row.duration_minutes === null || typeof row.duration_minutes === 'number')
-    && (row.description === null || typeof row.description === 'string' && Array.from(row.description).length <= 500);
+    && (row.description === null || typeof row.description === 'string' && Array.from(row.description).length <= 500)
+    && isValidDogEventKinds(row.event_type as LogEventType, row.accident_kinds, true);
+}
+
+function isValidDogEventKinds(type: LogEventType, value: unknown, allowLegacyUnknown = false): value is AccidentKind[] | null {
+  if (type === 'accident') return value === null ? allowLegacyUnknown : isCanonicalAccidentKinds(value);
+  return value === null;
 }
 
 function isHealthWeightRecord(value: unknown): value is HealthWeightRecord {
@@ -1184,7 +1198,20 @@ function isDisplayableContentType(value: string | undefined): value is 'article'
 
 function matchesChanges(event: DogEventRecord, changes: DogEventChanges): boolean {
   return event.event_type === changes.event_type && Date.parse(event.occurred_at) === Date.parse(changes.occurred_at)
-    && event.duration_minutes === changes.duration_minutes && event.description === changes.description;
+    && event.duration_minutes === changes.duration_minutes && event.description === changes.description
+    && sameAccidentKinds(event.accident_kinds, changes.accident_kinds);
+}
+
+export function matchesDogEventOperation(event: DogEventRecord, operation: DogEventOperation): boolean {
+  return event.id === operation.id && event.dog_id === operation.dog_id && event.event_type === operation.event_type
+    && Date.parse(event.occurred_at) === Date.parse(operation.occurred_at)
+    && event.duration_minutes === operation.duration_minutes && event.description === operation.description
+    && sameAccidentKinds(event.accident_kinds, operation.accident_kinds);
+}
+
+function sameAccidentKinds(left: readonly AccidentKind[] | null, right: readonly AccidentKind[] | null): boolean {
+  return left === null ? right === null : right !== null && left.length === right.length
+    && left.every((kind, index) => kind === right[index]);
 }
 
 function matchesHealthWeight(

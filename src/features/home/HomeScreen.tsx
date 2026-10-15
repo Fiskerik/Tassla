@@ -6,12 +6,12 @@ import { HorizontalGestureRegion } from '../../components/ui/MainSwipeNavigation
 import { MotionPressable } from '../../components/ui/Motion';
 import type { HomeContent, OwnedDog } from '../../data/app-data';
 import type { HealthHistoryRecord, PlannedHealthRecord } from '../../data/workspace-data';
-import type { DailyRoutine, DailyRoutineDay, DailyTrainingSelection } from './daily-activity-data';
+import type { DailyRoutine, DailyRoutineChecklistItem, DailyRoutineCreateInput, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineRepeatValues, DailyTrainingSelection } from './daily-activity-data';
 import type { HomeDailyActivity } from './daily-activity-model';
 import { tokens } from '../../theme/tokens';
-import { localDate, formatDogAge } from '../onboarding/dog';
+import { automaticDogAge, localDate } from '../onboarding/dog';
 import type { LogEvent } from '../puppy-log/log-model';
-import { homeAgeInWeeks, homeWeekStrip } from './home-today';
+import { homeAgeMarkerLabel, homeAgeStrip } from './home-today';
 import { homeGreetingAt } from './home-greeting';
 import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
 
@@ -27,15 +27,17 @@ export type HomeDailyFixtureItem = {
   destination: 'log' | 'training' | 'knowledge';
   kind?: 'routine' | 'training';
   routineId?: string;
+  routineLabel?: string;
 };
 
-export function HomeScreen({ dog, breed, content, contentState, trainingState = 'loading', nextStep, reviewTrainingStep = false,
-  dailyFixture, dailyState = 'hidden', dailyDateKey = '', dailyScopeKey, dailyActivities = [], routineTemplates = [], dailyTrainingOptions = [],
+export function HomeScreen({ dog, breed, content, contentState, trainingState = 'loading', nextStep, reviewTrainingStep = false, today: todayValue,
+  dailyFixture, dailyState = 'hidden', dailyDateKey = '', dailyScopeKey, dailyActivities = [], routineTemplates = [], routineDaySkips = [], dailyTrainingOptions = [],
   dailyMutationBusy = false, dailyMutationKey = '', dailyMutationMessage = '', dailyMutationError = false, onRetryDaily,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay,
   onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, onGo, onOpenContent, onRetryContent }: {
   dog: OwnedDog;
   breed?: string;
+  today?: string;
   events: readonly LogEvent[];
   healthHistory?: readonly HealthHistoryRecord[];
   healthHistoryState?: LoadState;
@@ -53,18 +55,19 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   dailyScopeKey?: string;
   dailyActivities?: readonly HomeDailyActivity[];
   routineTemplates?: readonly DailyRoutine[];
+  routineDaySkips?: readonly DailyRoutineDaySkip[];
   dailyTrainingOptions?: readonly HomeDailyTrainingOption[];
   dailyMutationBusy?: boolean;
   dailyMutationKey?: string;
   dailyMutationMessage?: string;
   dailyMutationError?: boolean;
   onRetryDaily?: () => void;
-  onCreateRoutine?: (label: string) => void;
-  onUpdateRoutine?: (routine: DailyRoutine, label: string) => void;
-  onDeleteRoutine?: (routine: DailyRoutine) => void;
+  onCreateRoutine?: (routine: DailyRoutineCreateInput) => Promise<{ status: 'saved' | 'failed' | 'unknown' } | void>;
+  onUpdateRoutine?: (routine: DailyRoutine, label: string, checklist: DailyRoutineChecklistItem[], repeat: DailyRoutineRepeatValues) => Promise<{ status: 'saved' | 'failed' | 'unknown' } | void>;
+  onDeleteRoutine?: (routine: DailyRoutine) => Promise<{ status: 'saved' | 'failed' | 'unknown' } | void>;
   onAddRoutineToDay?: (routine: DailyRoutine) => void;
-  onRemoveRoutineFromDay?: (row: DailyRoutineDay) => void;
-  onSetRoutineCompletion?: (row: DailyRoutineDay, completed: boolean) => void;
+  onRemoveRoutineFromDay?: (row: DailyRoutineDay, routine: DailyRoutine) => void;
+  onSetRoutineCompletion?: (row: DailyRoutineDay, itemId: string, completed: boolean) => void;
   onAddTrainingToDay?: (option: HomeDailyTrainingOption) => void;
   onRemoveTrainingFromDay?: (row: DailyTrainingSelection) => void;
   onRetryDailyMutation?: () => void;
@@ -76,9 +79,8 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   const [focusRoutineId, setFocusRoutineId] = useState<string | null>(null);
   const [reviewCompletion, setReviewCompletion] = useState<Record<string, boolean>>(() => Object.fromEntries((dailyFixture ?? []).map((item) => [item.id, item.completed])));
   const [portraitFrame, setPortraitFrame] = useState<{ left: number; right: number } | null>(null);
-  const today = localDate();
-  const ageWeeks = homeAgeInWeeks(dog.birth_date, today);
-  const age = ageWeeks === null ? null : formatDogAge(dog.birth_date, today, dog.age_display_unit);
+  const today = todayValue ?? localDate();
+  const age = automaticDogAge(dog.birth_date, today);
   const breedLabel = breed?.trim() || dog.breed_id;
   const relevantContent = contentState === 'ready'
     ? content.find((item) => item.contentType !== 'training_program')
@@ -100,7 +102,10 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
             <Ionicons name="sunny" size={tokens.size.iconSm} color={tokens.colors.home.sun} accessibilityElementsHidden />
           </View>
           <Text style={styles.dogMeta}>{dog.name} | {breedLabel}</Text>
-          {age ? <Text style={styles.dogAge}>{age}</Text> : null}
+          {age ? <>
+            <Text style={styles.dogAge}>{age.label}</Text>
+            <Text style={styles.dogPhase}>Ungefärlig fas: {age.stage}</Text>
+          </> : null}
         </View>
       </View>
       <View style={styles.dogPortrait} pointerEvents="none" testID="home-dog-portrait"
@@ -114,17 +119,18 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
         </View>
         <Text accessible accessibilityRole="text" accessibilityLabel="Standardbild" testID="home-portrait-standard-label" style={styles.portraitLabel}>Standardbild</Text>
       </View>
-      {ageWeeks !== null ? <HomeWeekStrip key={dog.id} birthDate={dog.birth_date} today={today} currentWeek={ageWeeks} portraitFrame={portraitFrame} /> : null}
+      {age ? <HomeAgeStrip key={`${dog.id}:${age.unit}`} birthDate={dog.birth_date} today={today} unit={age.unit} portraitFrame={portraitFrame} /> : null}
     </View>
 
     <Card variant="home" onPress={relevantContent ? () => onOpenContent(relevantContent.id) : nextStep && trainingState === 'ready' ? () => onGo('training') : undefined}
-      accessibilityLabel={`Just nu med ${dog.name}${relevantContent ? `: ${relevantContent.title}` : nextStep && trainingState === 'ready' ? `: ${nextStep}` : ''}`}>
+      accessibilityLabel={`Just nu med ${dog.name}${relevantContent ? `: ${relevantContent.title}` : nextStep && trainingState === 'ready' ? `: ${nextStep}` : ''}${age ? `, hundens ålder ${age.label}` : ''}`}>
       <View style={styles.currentCard}>
         <View style={styles.cardHeadingRow}>
           <Ionicons name="bulb" size={tokens.size.iconSm} color={tokens.colors.home.bulb} accessibilityElementsHidden />
           <Text style={styles.cardHeading}>Just nu med {dog.name}</Text>
           {relevantContent || (nextStep && trainingState === 'ready') ? <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden /> : null}
         </View>
+        {age ? <Text style={styles.dogAge}>Hundens ålder: {age.label}</Text> : null}
         {contentState === 'loading' ? <Skeleton shape="line" lines={2} /> : null}
         {contentState === 'error' ? <Text style={styles.body}>Kunskapen kunde inte hämtas just nu. Öppna Kunskap för att försöka igen.</Text> : null}
         {relevantContent ? <Text numberOfLines={3} style={styles.body}>{preview}</Text> : null}
@@ -141,22 +147,25 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
 
     <Card variant="home" accessibilityLabel="Dagens att göra">
       <View style={styles.dailyCardContent}>
-        <MotionPressable accessibilityRole="button" accessibilityLabel="Visa och hantera dagens uppgifter"
-          onPress={() => openManager()} style={({ pressed }) => [styles.dailyHeading, pressed && styles.headingPressed]}>
+        <View style={styles.dailyHeading}>
           <Text style={styles.dailyTitle} accessibilityRole="header">Dagens att göra</Text>
           {dailyFixture ? <Text style={styles.dailyCount}>{dailyFixture.filter((item) => reviewCompletion[item.id] ?? item.completed).length} av {dailyFixture.length} klara</Text> : dailyState === 'ready' && dailyActivities.length > 0
             ? <Text style={styles.dailyCount}>{dailyActivities.filter((item) => item.completed).length} av {dailyActivities.length} klara</Text>
             : null}
-          <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
-        </MotionPressable>
+          <MotionPressable accessibilityRole="button" accessibilityLabel="Hantera rutiner och dagens aktiviteter"
+            onPress={() => openManager()} style={({ pressed }) => [styles.manageDaily, pressed && styles.headingPressed]}>
+            <Ionicons name="create-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
+            <Text style={styles.manageDailyLabel}>Hantera</Text>
+          </MotionPressable>
+        </View>
         {dailyFixture ? <ReviewDailyFixture items={dailyFixture} completion={reviewCompletion} onCompletionChange={setReviewCompletion} onGo={onGo} onOpenRoutine={(routineId) => openManager(routineId)} /> : dailyState === 'loading' ? <Skeleton shape="row" lines={2} />
           : dailyState === 'error' ? <View style={styles.dailyState}>
             <Text style={styles.emptyText}>Dagens uppgifter kunde inte hämtas. Ingen status räknas just nu.</Text>
             {onRetryDaily ? <Button variant="tertiary" label="Hämta dagens uppgifter igen" accessibilityLabel="Hämta dagens uppgifter igen" onPress={onRetryDaily} /> : null}
           </View>
             : dailyState === 'ready' && dailyActivities.length === 0 ? <View style={styles.dailyState}>
-              <Text style={styles.emptyText}>Välj rutiner eller ett träningssteg att ha med idag.</Text>
-              <Button variant="tertiary" label="Välj dagens aktiviteter" accessibilityLabel="Välj dagens aktiviteter" onPress={() => openManager()} />
+              <Text style={styles.emptyText}>Skapa en rutin eller välj ett träningssteg att ha med idag.</Text>
+              <Button variant="tertiary" label="Hantera dagens aktiviteter" accessibilityLabel="Hantera dagens aktiviteter" onPress={() => openManager()} />
             </View>
               : dailyState === 'ready' ? <View style={styles.dailyList}>
                 <View accessibilityRole="progressbar" accessibilityLabel={`${dailyActivities.filter((item) => item.completed).length} av ${dailyActivities.length} dagsuppgifter klara`}
@@ -165,14 +174,14 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
                 </View>
                 {dailyActivities.slice(0, 5).map((item) => {
                   const routineDay = item.routineDay;
-                  const itemMutationKey = routineDay ? `complete-routine:${routineDay.id}` : '';
+                  const itemMutationKey = routineDay && item.routineItemId ? `complete-routine:${routineDay.id}:${item.routineItemId}` : '';
                   const itemMutation = Boolean(itemMutationKey && dailyMutationKey === itemMutationKey);
                   const isReadbackError = itemMutation && dailyMutationMessage.startsWith('Ändringen sparades, men dagens lista');
-                  return <DailyActivityItem key={item.id} variant="home" kind={item.kind} label={item.label}
-                    accessibilityLabel={item.kind === 'routine' ? `Egen rutin: ${item.label}` : `Träningsuppgift: ${item.label}`}
+                  return <DailyActivityItem key={item.id} variant="home" kind={item.kind} label={item.label} routineLabel={item.routineLabel}
+                    accessibilityLabel={item.kind === 'routine' ? `Rutin ${item.routineLabel ?? ''}, punkt ${item.label}` : `Träningsuppgift: ${item.label}`}
                     completed={item.completed} pending={itemMutation && dailyMutationBusy}
                     statusMessage={itemMutation ? dailyMutationMessage : ''} statusError={itemMutation && dailyMutationError}
-                    onToggle={routineDay ? () => onSetRoutineCompletion?.(routineDay, !item.completed) : undefined}
+                    onToggle={routineDay ? () => item.routineItemId && onSetRoutineCompletion?.(routineDay, item.routineItemId, !item.completed) : undefined}
                     onOpen={item.kind === 'training' ? () => onGo('training') : () => openManager(routineDay?.routine_id ?? null)}
                     onRetry={itemMutation ? (onRetryDailyMutation ?? (isReadbackError ? onRetryDaily : undefined)) : undefined} />;
                 })}
@@ -194,8 +203,9 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
       </View>
     </View>
 
-    <DailyActivityManagerSheet visible={managerVisible} onClose={() => setManagerVisible(false)} focusRoutineId={focusRoutineId}
-      dateKey={dailyDateKey} activities={dailyActivities} routines={routineTemplates} trainingOptions={dailyTrainingOptions}
+    <DailyActivityManagerSheet key={`${dailyScopeKey ?? ''}:${dailyDateKey}:${focusRoutineId ?? 'all'}:${managerVisible}`}
+      visible={managerVisible} dailyScopeKey={dailyScopeKey} onClose={() => setManagerVisible(false)} focusRoutineId={focusRoutineId}
+      activities={dailyActivities} routines={routineTemplates} routineDaySkips={routineDaySkips} trainingOptions={dailyTrainingOptions}
       busy={dailyMutationBusy} mutationMessage={dailyMutationMessage} mutationError={dailyMutationError}
       onRetryMutation={onRetryDailyMutation} onCreateRoutine={onCreateRoutine} onUpdateRoutine={onUpdateRoutine}
       onDeleteRoutine={onDeleteRoutine} onAddRoutineToDay={onAddRoutineToDay} onRemoveRoutineFromDay={onRemoveRoutineFromDay}
@@ -214,6 +224,7 @@ function ReviewDailyFixture({ items, completion, onCompletionChange, onGo, onOpe
       kind={item.kind ?? 'routine'} label={item.label} accessibilityLabel={item.label}
       completed={completion[item.id] ?? item.completed}
       onToggle={item.kind === 'training' ? undefined : () => onCompletionChange((current) => ({ ...current, [item.id]: !(current[item.id] ?? item.completed) }))}
+      routineLabel={item.routineLabel}
       onOpen={() => item.kind === 'training' ? onGo('training') : onOpenRoutine(item.routineId)} />)}</View>
   </View>;
 }
@@ -224,37 +235,41 @@ function previewText(body: string): string {
   return text.length > 150 ? `${text.slice(0, 147).trimEnd()}…` : text;
 }
 
-function HomeWeekStrip({ birthDate, today, currentWeek, portraitFrame }: {
+function HomeAgeStrip({ birthDate, today, unit, portraitFrame }: {
   birthDate: string | null;
   today: string;
-  currentWeek: number;
+  unit: 'weeks' | 'months' | 'years';
   portraitFrame: { left: number; right: number } | null;
 }) {
   const [viewport, setViewport] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
   const [scrollOffset, setScrollOffset] = useState<number | null>(null);
-  const weeks = useMemo(() => homeWeekStrip(birthDate, today), [birthDate, today]);
-  const initialScrollIndex = Math.max(0, currentWeek - 3);
+  const ageStrip = useMemo(() => homeAgeStrip(birthDate, today), [birthDate, today]);
+  const markers = ageStrip?.unit === unit ? ageStrip.markers : [];
+  const currentIndex = markers.findIndex((marker) => marker.current);
+  const initialScrollIndex = Math.max(0, currentIndex - 3);
   const cellWidth = viewport.width > 0
-    ? Math.max(0, (viewport.width - WEEK_GAP * (VISIBLE_WEEK_COUNT - 1)) / VISIBLE_WEEK_COUNT)
+    ? Math.max(0, (viewport.width - WEEK_GAP * (VISIBLE_AGE_COUNT - 1)) / VISIBLE_AGE_COUNT)
     : 0;
   const itemExtent = cellWidth + WEEK_GAP;
   const initialOffset = initialScrollIndex * itemExtent;
   const fadeOffset = scrollOffset ?? initialOffset;
 
-  function renderWeek({ item, index }: { item: (typeof weeks)[number]; index: number }) {
+  function renderAge({ item, index }: { item: (typeof markers)[number]; index: number }) {
     const markerCenter = viewport.left + index * itemExtent + cellWidth / 2 - fadeOffset;
     const fadeOpacity = !item.current && portraitFrame
-      ? homeWeekDecorationOpacity(portraitFrame.left, portraitFrame.right, markerCenter)
+      ? homeAgeDecorationOpacity(portraitFrame.left, portraitFrame.right, markerCenter)
       : null;
     const washOpacity = fadeOpacity === null ? null : 1 - fadeOpacity;
-    return <View style={[styles.weekItem, { width: cellWidth }]} testID={`home-week-${item.week}`}
-      accessible accessibilityRole="text" accessibilityLabel={`${item.week} ${item.week === 1 ? 'vecka' : 'veckor'}${item.current ? ', aktuell ålder' : ''}`}>
-      {washOpacity !== null ? <View pointerEvents="none" testID={`home-week-wash-${item.week}`}
+    const valueLabel = homeAgeMarkerLabel(item.value, unit);
+    const legacyWeekTestId = unit === 'weeks' ? item.value : null;
+    return <View style={[styles.weekItem, { width: cellWidth }]} testID={legacyWeekTestId === null ? `home-age-${unit}-${item.value}` : `home-week-${legacyWeekTestId}`}
+      accessible accessibilityRole="text" accessibilityLabel={`${valueLabel}${item.current ? ', aktuell ålder' : ''}`}>
+      {washOpacity !== null ? <View pointerEvents="none" testID={legacyWeekTestId === null ? `home-age-wash-${unit}-${item.value}` : `home-week-wash-${legacyWeekTestId}`}
         style={[StyleSheet.absoluteFill, styles.weekWash, { backgroundColor: `rgba(245, 240, 232, ${washOpacity})` }]} /> : null}
-      <View testID={`home-week-number-${item.week}`} style={[styles.weekNumberWrap, fadeOpacity !== null && styles.weekNumberBacked, item.current && styles.currentWeekNumberWrap]}>
-        <Text testID={`home-week-glyph-${item.week}`} style={[styles.weekNumber, item.current && styles.currentWeekNumber]}>{item.week}</Text>
+      <View testID={legacyWeekTestId === null ? `home-age-number-${unit}-${item.value}` : `home-week-number-${legacyWeekTestId}`} style={[styles.weekNumberWrap, fadeOpacity !== null && styles.weekNumberBacked, item.current && styles.currentWeekNumberWrap]}>
+        <Text testID={legacyWeekTestId === null ? `home-age-glyph-${unit}-${item.value}` : `home-week-glyph-${legacyWeekTestId}`} style={[styles.weekNumber, item.current && styles.currentWeekNumber]}>{item.value}</Text>
       </View>
-      <View testID={`home-week-dot-${item.week}`} style={[styles.weekDot, item.current && styles.currentWeekDot, fadeOpacity !== null && { opacity: fadeOpacity }]} />
+      <View testID={legacyWeekTestId === null ? `home-age-dot-${unit}-${item.value}` : `home-week-dot-${legacyWeekTestId}`} style={[styles.weekDot, item.current && styles.currentWeekDot, fadeOpacity !== null && { opacity: fadeOpacity }]} />
     </View>;
   }
 
@@ -264,18 +279,18 @@ function HomeWeekStrip({ birthDate, today, currentWeek, portraitFrame }: {
   }
 
   return <HorizontalGestureRegion>
-    <View style={styles.weekStrip} testID="home-week-strip" accessibilityLabel="Hundens ålder i veckor" onLayout={onViewportLayout}>
-      {viewport.width > 0 ? <FlatList
+    <View style={styles.weekStrip} testID="home-week-strip" onLayout={onViewportLayout}>
+      {viewport.width > 0 && markers.length > 0 ? <FlatList
         style={StyleSheet.absoluteFill}
-        data={weeks}
+        data={markers}
         horizontal
         bounces={false}
         showsHorizontalScrollIndicator={false}
         initialScrollIndex={initialScrollIndex}
         getItemLayout={(_, index) => ({ length: itemExtent, offset: itemExtent * index, index })}
-        keyExtractor={(item) => String(item.week)}
-        renderItem={renderWeek}
-        ItemSeparatorComponent={WeekSeparator}
+        keyExtractor={(item) => `${unit}-${item.value}`}
+        renderItem={renderAge}
+        ItemSeparatorComponent={AgeSeparator}
         extraData={{ scrollOffset, portraitFrame }}
         scrollEventThrottle={16}
         onScroll={(event) => {
@@ -287,15 +302,15 @@ function HomeWeekStrip({ birthDate, today, currentWeek, portraitFrame }: {
   </HorizontalGestureRegion>;
 }
 
-function WeekSeparator() {
+function AgeSeparator() {
   return <View style={styles.weekSeparator} />;
 }
 
 const portraitSize = tokens.size.heroHeight * 0.56;
-const VISIBLE_WEEK_COUNT = 7;
+const VISIBLE_AGE_COUNT = 7;
 const WEEK_GAP = tokens.spacing.xs;
 
-function homeWeekDecorationOpacity(left: number, right: number, markerCenter: number): number | null {
+function homeAgeDecorationOpacity(left: number, right: number, markerCenter: number): number | null {
   const fadeStart = left - 16;
   if (markerCenter < fadeStart || markerCenter > right) return null;
   const z = (markerCenter - fadeStart) / (right - fadeStart);
@@ -313,6 +328,7 @@ const styles = StyleSheet.create({
   greetingTitle: { ...tokens.typography.heading, color: tokens.colors.home.text, fontWeight: '600' },
   dogMeta: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700' },
   dogAge: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
+  dogPhase: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
   dogPortrait: { position: 'absolute', top: 0, right: 0, zIndex: 1, width: portraitSize, height: portraitSize },
   portraitPhotoClip: { width: portraitSize, height: portraitSize, overflow: 'hidden', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.canvas },
   dogImage: { width: portraitSize, height: portraitSize, transform: [{ scale: 1.08 }] },
@@ -337,6 +353,8 @@ const styles = StyleSheet.create({
   dailyHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   dailyTitle: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },
   dailyCount: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
+  manageDaily: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.xs, borderRadius: tokens.radius.sm },
+  manageDailyLabel: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
   headingPressed: { backgroundColor: tokens.colors.selectedSurface },
   dailyList: { gap: tokens.spacing.xs },
   progressTrack: { height: tokens.size.progress, borderRadius: tokens.radius.full, overflow: 'hidden', backgroundColor: tokens.colors.home.progressTrack },

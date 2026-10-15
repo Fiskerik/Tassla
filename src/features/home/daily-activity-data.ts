@@ -1,18 +1,57 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { withRequestDeadline, type WriteOutcome } from '../../data/workspace-data';
-import { isValidDateKey, isValidIanaTimeZone } from './daily-activity-model';
+import { isRoutineDueOnDate, isValidDateKey, isValidIanaTimeZone } from './daily-activity-model';
 
 const REQUEST_TIMEOUT_MS = 12_000;
+const DAILY_ROUTINE_COLUMNS = 'id,dog_id,label,checklist,checklist_revision,legacy_single_item,repeat_unit,repeat_interval,repeat_anchor_date';
+const DAILY_ROUTINE_DAY_COLUMNS = 'id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence,routine_revision_snapshot,routine_day_revision,last_state_mutation_id';
+const DAILY_ROUTINE_DAY_SKIP_COLUMNS = 'day_id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence,routine_revision_snapshot,routine_day_revision,last_state_mutation_id';
 
-export type DailyRoutine = { id: string; dog_id: string; label: string };
+export type DailyRoutineChecklistItem = { id: string; label: string };
+export type DailyRoutineRepeatUnit = 'day' | 'week' | 'month';
+export type DailyRoutine = {
+  id: string;
+  dog_id: string;
+  label: string;
+  checklist: DailyRoutineChecklistItem[];
+  checklist_revision: number;
+  legacy_single_item: boolean;
+  repeat_unit: DailyRoutineRepeatUnit | null;
+  repeat_interval: number | null;
+  repeat_anchor_date: string | null;
+};
+export type DailyRoutineDraft = Pick<DailyRoutine, 'id' | 'dog_id' | 'label' | 'checklist' | 'repeat_unit' | 'repeat_interval'>;
+export type DailyRoutineCreateInput = Pick<DailyRoutine, 'id' | 'label' | 'checklist' | 'repeat_unit' | 'repeat_interval'>;
+export type DailyRoutineDayDraft = Pick<DailyRoutineDay, 'id' | 'dog_id' | 'routine_id' | 'date_key' | 'time_zone'> & {
+  routine_label_snapshot: string;
+  checklist_snapshot: DailyRoutineChecklistItem[];
+};
 export type DailyRoutineDay = {
   id: string;
   dog_id: string;
   routine_id: string;
   date_key: string;
   time_zone: string;
+  routine_label_snapshot: string;
+  checklist_snapshot: DailyRoutineChecklistItem[];
+  completed_item_ids: string[];
   completed_at: string | null;
+  is_recurring_occurrence: boolean;
+  routine_revision_snapshot: number;
+  routine_day_revision: number;
+  last_state_mutation_id: string | null;
 };
+export type DailyRoutineDaySkip = Omit<DailyRoutineDay, 'id'> & { day_id: string };
+export type DailyRoutineRepeatRule = Pick<DailyRoutine, 'repeat_unit' | 'repeat_interval'>;
+export type DailyRoutineSaveInput = Pick<DailyRoutine, 'label' | 'checklist' | 'repeat_unit' | 'repeat_interval'>;
+export type DailyRoutineWriteResult = WriteOutcome<DailyRoutine>;
+export type DailyRoutineSkipSnapshot = Pick<DailyRoutineDaySkip, 'day_id' | 'routine_day_revision' | 'last_state_mutation_id'>;
+export type DailyRoutineDayRevision = Pick<DailyRoutineDay, 'routine_day_revision' | 'last_state_mutation_id'>;
+export type DailyRoutineRepeatValues = {
+  repeat_unit: DailyRoutineRepeatUnit | null;
+  repeat_interval: number | null;
+};
+type RoutineSaveValues = Pick<DailyRoutine, 'label' | 'checklist' | 'repeat_unit' | 'repeat_interval'>;
 export type DailyTrainingSelection = {
   id: string;
   dog_id: string;
@@ -24,6 +63,7 @@ export type DailyTrainingSelection = {
 export type DailyActivitySnapshot = {
   routines: DailyRoutine[];
   routineDays: DailyRoutineDay[];
+  routineDaySkips: DailyRoutineDaySkip[];
   trainingSelections: DailyTrainingSelection[];
 };
 
@@ -31,16 +71,25 @@ export async function fetchDailyActivitySnapshot(
   client: SupabaseClient,
   dogId: string,
   dateKey: string,
+  timeZone: string,
   parentSignal?: AbortSignal,
 ): Promise<DailyActivitySnapshot> {
-  if (!dogId || !isValidDateKey(dateKey)) throw new Error('Invalid daily activity scope');
-  const [routines, routineDays, trainingSelections] = await Promise.all([
+  if (!dogId || !isValidDateKey(dateKey) || !isValidIanaTimeZone(timeZone)) throw new Error('Invalid daily activity scope');
+  const due = await withRequestDeadline(async (signal) => await client.rpc('ensure_due_daily_routine_days', {
+    p_dog_id: dogId, p_date_key: dateKey, p_time_zone: timeZone,
+  }).abortSignal(signal), REQUEST_TIMEOUT_MS, parentSignal);
+  if (due.error) throw new Error('Could not prepare today’s routines');
+  const [routines, routineDays, routineDaySkips, trainingSelections] = await Promise.all([
     withRequestDeadline(async (signal) => await client.from('dog_daily_routines')
-      .select('id,dog_id,label').eq('dog_id', dogId).order('label').order('id')
+      .select(DAILY_ROUTINE_COLUMNS).eq('dog_id', dogId).order('label').order('id')
       .retry(false).abortSignal(signal), REQUEST_TIMEOUT_MS, parentSignal),
     withRequestDeadline(async (signal) => await client.from('dog_daily_routine_days')
-      .select('id,dog_id,routine_id,date_key,time_zone,completed_at')
+      .select(DAILY_ROUTINE_DAY_COLUMNS)
       .eq('dog_id', dogId).eq('date_key', dateKey).order('id')
+      .retry(false).abortSignal(signal), REQUEST_TIMEOUT_MS, parentSignal),
+    withRequestDeadline(async (signal) => await client.from('dog_daily_routine_day_skips')
+      .select(DAILY_ROUTINE_DAY_SKIP_COLUMNS)
+      .eq('dog_id', dogId).eq('date_key', dateKey).order('day_id')
       .retry(false).abortSignal(signal), REQUEST_TIMEOUT_MS, parentSignal),
     withRequestDeadline(async (signal) => await client.from('dog_daily_training_selections')
       .select('id,dog_id,program_version_id,step_id,date_key,time_zone')
@@ -53,57 +102,99 @@ export async function fetchDailyActivitySnapshot(
   if (routineDays.error || !Array.isArray(routineDays.data) || !routineDays.data.every((row) => isDailyRoutineDay(row) && row.dog_id === dogId && row.date_key === dateKey)) {
     throw new Error('Could not load daily routine selections');
   }
+  if (routineDaySkips.error || !Array.isArray(routineDaySkips.data) || !routineDaySkips.data.every((row) => isDailyRoutineDaySkip(row) && row.dog_id === dogId && row.date_key === dateKey)) {
+    throw new Error('Could not load skipped routine selections');
+  }
   if (trainingSelections.error || !Array.isArray(trainingSelections.data) || !trainingSelections.data.every((row) => isDailyTrainingSelection(row) && row.dog_id === dogId && row.date_key === dateKey)) {
     throw new Error('Could not load daily training selections');
   }
   return {
     routines: routines.data,
     routineDays: routineDays.data,
+    routineDaySkips: routineDaySkips.data,
     trainingSelections: trainingSelections.data,
   };
 }
 
 export async function createDailyRoutine(
   client: SupabaseClient,
-  row: DailyRoutine,
+  row: DailyRoutineDraft,
+  timeZone: string,
 ): Promise<WriteOutcome<DailyRoutine>> {
-  if (!isDailyRoutine(row) || !row.label.trim() || row.label.trim() !== row.label) return { status: 'failed' };
+  if (!isDailyRoutineDraft(row) || !isValidIanaTimeZone(timeZone)) return { status: 'failed' };
   let failure: unknown = null;
   try {
-    const result = await withRequestDeadline(async (signal) => await client.from('dog_daily_routines')
-      .insert(row).retry(false).abortSignal(signal).select('id,dog_id,label').single());
-    if (!result.error && isDailyRoutine(result.data) && sameRoutine(result.data, row)) return { status: 'saved', value: result.data };
+    const result = await withRequestDeadline(async (signal) => await client.rpc('create_daily_routine', {
+      p_dog_id: row.dog_id,
+      p_routine_id: row.id,
+      p_label: row.label,
+      p_checklist: row.checklist,
+      p_repeat_unit: row.repeat_unit,
+      p_repeat_interval: row.repeat_interval,
+      p_time_zone: timeZone,
+    }).abortSignal(signal), REQUEST_TIMEOUT_MS);
+    const rpcRow = Array.isArray(result.data) ? result.data[0] : result.data;
+    if (!result.error && isDailyRoutine(rpcRow) && sameRoutineSave(rpcRow, row) && hasValidAnchor(rpcRow)) return { status: 'saved', value: rpcRow };
     failure = result.error ?? new Error('Empty routine create response');
   } catch (error) { failure = error; }
   try {
     const found = await fetchRoutineById(client, row.dog_id, row.id);
-    if (found && sameRoutine(found, row)) return { status: 'saved', value: found };
+    if (found && sameRoutineSave(found, row) && hasValidAnchor(found)) return { status: 'saved', value: found };
     return isDefiniteRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
   } catch { return { status: 'unknown' }; }
 }
 
-export async function updateDailyRoutineLabel(
+export async function replaceDailyRoutine(
   client: SupabaseClient,
-  dogId: string,
-  routineId: string,
-  expectedLabel: string,
+  routine: DailyRoutine,
   label: string,
+  checklist: DailyRoutineChecklistItem[],
+  repeat: DailyRoutineRepeatValues,
+  timeZone: string,
 ): Promise<WriteOutcome<DailyRoutine>> {
   const normalized = label.trim();
-  if (!normalized || Array.from(normalized).length > 160 || normalized === expectedLabel) return { status: 'failed' };
+  if (!isValidRoutineDefinition(normalized, checklist) || !isValidRepeatRule(repeat.repeat_unit, repeat.repeat_interval)
+    || !isValidIanaTimeZone(timeZone)) return { status: 'failed' };
+  const expectedRevision = routine.checklist_revision;
+  const desired: DailyRoutineSaveInput = { label: normalized, checklist, ...repeat };
+  if (sameRoutineSave(routine, desired)) return { status: 'failed' };
+  const sameRepeat = routine.repeat_unit === repeat.repeat_unit && routine.repeat_interval === repeat.repeat_interval;
   let failure: unknown = null;
   try {
-    const result = await withRequestDeadline(async (signal) => await client.from('dog_daily_routines')
-      .update({ label: normalized }).eq('dog_id', dogId).eq('id', routineId).eq('label', expectedLabel)
-      .retry(false).abortSignal(signal).select('id,dog_id,label').maybeSingle());
-    if (!result.error && isDailyRoutine(result.data) && sameRoutine(result.data, { id: routineId, dog_id: dogId, label: normalized })) {
-      return { status: 'saved', value: result.data };
+    const result = await withRequestDeadline(async (signal) => await client.rpc('replace_daily_routine', {
+      p_dog_id: routine.dog_id,
+      p_routine_id: routine.id,
+      p_expected_revision: expectedRevision,
+      p_label: normalized,
+      p_checklist: checklist,
+      p_repeat_unit: repeat.repeat_unit,
+      p_repeat_interval: repeat.repeat_interval,
+      p_time_zone: timeZone,
+    }).abortSignal(signal));
+    const rpcRow = Array.isArray(result.data) ? result.data[0] : result.data;
+    if (!result.error && isDailyRoutine(rpcRow) && sameRoutineSave(rpcRow, desired) && hasValidAnchor(rpcRow)
+      && (!sameRepeat || rpcRow.repeat_anchor_date === routine.repeat_anchor_date)
+      && rpcRow.checklist_revision === expectedRevision + 1) {
+      return { status: 'saved', value: rpcRow };
     }
-    failure = result.error ?? new Error('Routine label changed before save');
+    if (!result.error && rpcRow !== null && rpcRow !== undefined) {
+      failure = new Error('Routine replacement response did not match the requested revision');
+    } else {
+      failure = result.error ?? new Error('Empty routine replacement response');
+    }
+    const found = await fetchRoutineById(client, routine.dog_id, routine.id);
+    if (found && sameRoutineSave(found, desired) && hasValidAnchor(found)
+      && (!sameRepeat || found.repeat_anchor_date === routine.repeat_anchor_date)
+      && found.checklist_revision === expectedRevision + 1) {
+      return { status: 'saved', value: found };
+    }
   } catch (error) { failure = error; }
   try {
-    const found = await fetchRoutineById(client, dogId, routineId);
-    if (found && found.label === normalized) return { status: 'saved', value: found };
+    const found = await fetchRoutineById(client, routine.dog_id, routine.id);
+    if (found && sameRoutineSave(found, desired) && hasValidAnchor(found)
+      && (!sameRepeat || found.repeat_anchor_date === routine.repeat_anchor_date)
+      && found.checklist_revision === expectedRevision + 1) return { status: 'saved', value: found };
+    if (found && found.checklist_revision !== expectedRevision) return { status: 'failed' };
     return isDefiniteRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
   } catch { return { status: 'unknown' }; }
 }
@@ -115,7 +206,7 @@ export async function deleteDailyRoutine(
   let failure: unknown = null;
   try {
     const result = await withRequestDeadline(async (signal) => await client.from('dog_daily_routines')
-      .delete().eq('dog_id', row.dog_id).eq('id', row.id).eq('label', row.label)
+      .delete().eq('dog_id', row.dog_id).eq('id', row.id).eq('checklist_revision', row.checklist_revision)
       .retry(false).abortSignal(signal).select('id').maybeSingle());
     if (!result.error && result.data?.id === row.id) return { status: 'saved', value: null };
     if (!result.error && result.data === null) {
@@ -133,22 +224,25 @@ export async function deleteDailyRoutine(
 
 export async function addRoutineToDay(
   client: SupabaseClient,
-  row: DailyRoutineDay,
-): Promise<WriteOutcome<DailyRoutineDay>> {
-  if (!isDailyRoutineDay(row) || row.completed_at !== null || !isValidIanaTimeZone(row.time_zone)) return { status: 'failed' };
+  row: DailyRoutineDayDraft,
+  skipped: DailyRoutineDaySkip | null,
+  mutationId: string,
+): Promise<WriteOutcome<DailyRoutineDay | DailyRoutineDaySkip>> {
+  if (!isDailyRoutineDayDraft(row)) return { status: 'failed' };
+  if (skipped) return await setRoutineDaySkipped(client, skipped, false, mutationId);
   let failure: unknown = null;
   try {
     const result = await withRequestDeadline(async (signal) => await client.from('dog_daily_routine_days')
       .insert({ id: row.id, dog_id: row.dog_id, routine_id: row.routine_id, date_key: row.date_key, time_zone: row.time_zone })
-      .retry(false).abortSignal(signal).select('id,dog_id,routine_id,date_key,time_zone,completed_at').single());
-    if (!result.error && isDailyRoutineDay(result.data) && sameRoutineDay(result.data, row)) return { status: 'saved', value: result.data };
+      .retry(false).abortSignal(signal).select(DAILY_ROUTINE_DAY_COLUMNS).single());
+    if (!result.error && isDailyRoutineDay(result.data) && matchesRoutineDayDraft(result.data, row)) return { status: 'saved', value: result.data };
     failure = result.error ?? new Error('Empty routine selection response');
   } catch (error) { failure = error; }
   try {
     const found = await fetchRoutineDay(client, row.dog_id, row.id, row.routine_id, row.date_key);
-    if (found && sameRoutineDay(found, row)) return { status: 'saved', value: found };
+    if (found && matchesRoutineDayDraft(found, row)) return { status: 'saved', value: found };
     const logical = await fetchRoutineDayByKey(client, row.dog_id, row.routine_id, row.date_key);
-    if (logical && sameRoutineDay(logical, row, false)) return { status: 'saved', value: logical };
+    if (logical && matchesRoutineDayDraft(logical, row, false)) return { status: 'saved', value: logical };
     return isDefiniteRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
   } catch { return { status: 'unknown' }; }
 }
@@ -156,7 +250,12 @@ export async function addRoutineToDay(
 export async function removeRoutineFromDay(
   client: SupabaseClient,
   row: DailyRoutineDay,
-): Promise<WriteOutcome<null>> {
+  routine: DailyRoutine,
+  mutationId: string,
+): Promise<WriteOutcome<null | DailyRoutineDay | DailyRoutineDaySkip>> {
+  if (row.is_recurring_occurrence || isRoutineDueOnDate(routine, row.date_key)) {
+    return await setRoutineDaySkipped(client, row, true, mutationId);
+  }
   let failure: unknown = null;
   try {
     const result = await withRequestDeadline(async (signal) => await client.from('dog_daily_routine_days')
@@ -176,32 +275,81 @@ export async function removeRoutineFromDay(
   } catch { return { status: 'unknown' }; }
 }
 
+async function setRoutineDaySkipped(
+  client: SupabaseClient,
+  row: DailyRoutineDay | DailyRoutineDaySkip,
+  skipped: boolean,
+  mutationId: string,
+): Promise<WriteOutcome<DailyRoutineDay | DailyRoutineDaySkip>> {
+  if (!isDailyRoutineDay(row) && !isDailyRoutineDaySkip(row)) return { status: 'failed' };
+  if (!isCanonicalUuid(mutationId)) return { status: 'failed' };
+  const id = 'id' in row ? row.id : row.day_id;
+  let failure: unknown = null;
+  try {
+    const result = await withRequestDeadline(async (signal) => await client.rpc('set_daily_routine_day_skipped', {
+      p_dog_id: row.dog_id,
+      p_routine_id: row.routine_id,
+      p_date_key: row.date_key,
+      p_time_zone: row.time_zone,
+      p_expected_revision: row.routine_day_revision,
+      p_mutation_id: mutationId,
+      p_skipped: skipped,
+    }).abortSignal(signal), REQUEST_TIMEOUT_MS);
+    if (result.error) failure = result.error;
+  } catch (error) { failure = error; }
+
+  try {
+    const [active, skip] = await Promise.all([
+      fetchRoutineDayByKey(client, row.dog_id, row.routine_id, row.date_key),
+      fetchRoutineDaySkipByKey(client, row.dog_id, row.routine_id, row.date_key),
+    ]);
+    if (skipped && !active && skip && isDailyRoutineDaySkip(skip)
+      && sameRoutineOccurrence(row, skip) && skip.routine_day_revision === row.routine_day_revision + 1
+      && skip.last_state_mutation_id === mutationId && skip.day_id === id) {
+      return { status: 'saved', value: skip };
+    }
+    if (!skipped && !skip && active && isDailyRoutineDay(active)
+      && sameRoutineOccurrence(row, active) && active.routine_day_revision === row.routine_day_revision + 1
+      && active.last_state_mutation_id === mutationId && active.id === id) {
+      return { status: 'saved', value: active };
+    }
+    if (failure) return isDefiniteRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
+    return { status: 'failed' };
+  } catch {
+    return failure && isDefiniteRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
+  }
+}
+
 export async function setRoutineDayCompletion(
   client: SupabaseClient,
   row: DailyRoutineDay,
+  itemId: string,
   completed: boolean,
 ): Promise<WriteOutcome<DailyRoutineDay>> {
-  if (completed && row.completed_at !== null || !completed && row.completed_at === null) return { status: 'failed' };
-  const expected = row.completed_at;
+  if (!isDailyRoutineDay(row) || !row.checklist_snapshot.some((item) => item.id === itemId)
+    || row.completed_item_ids.includes(itemId) === completed) return { status: 'failed' };
+  const expected = row.completed_item_ids;
+  const desired = row.checklist_snapshot.map((item) => item.id).filter((id) => id === itemId ? completed : expected.includes(id));
   let failure: unknown = null;
   try {
-    let query = client.from('dog_daily_routine_days').update({ completed_at: completed ? new Date().toISOString() : null })
-      .eq('dog_id', row.dog_id).eq('id', row.id).eq('date_key', row.date_key);
-    query = expected === null ? query.is('completed_at', null) : query.eq('completed_at', expected);
+    const query = client.from('dog_daily_routine_days').update({ completed_item_ids: desired })
+      .eq('dog_id', row.dog_id).eq('id', row.id).eq('routine_id', row.routine_id).eq('date_key', row.date_key)
+      .eq('completed_item_ids', expected);
     const result = await withRequestDeadline(async (signal) => await query.retry(false).abortSignal(signal)
-      .select('id,dog_id,routine_id,date_key,time_zone,completed_at').maybeSingle());
-    if (!result.error && isDailyRoutineDay(result.data) && result.data.completed_at !== expected && Boolean(result.data.completed_at) === completed) {
+      .select(DAILY_ROUTINE_DAY_COLUMNS).maybeSingle());
+    if (!result.error && isDailyRoutineDay(result.data) && sameRoutineDayDefinition(result.data, row)
+      && sameStringArray(result.data.completed_item_ids, desired)) {
       return { status: 'saved', value: result.data };
     }
     if (!result.error && result.data === null) {
       const current = await fetchRoutineDay(client, row.dog_id, row.id, row.routine_id, row.date_key);
-      if (current && Boolean(current.completed_at) === completed) return { status: 'saved', value: current };
+      if (current && sameRoutineDayDefinition(current, row) && sameStringArray(current.completed_item_ids, desired)) return { status: 'saved', value: current };
     }
     failure = result.error ?? new Error('Routine completion changed before save');
   } catch (error) { failure = error; }
   try {
     const current = await fetchRoutineDay(client, row.dog_id, row.id, row.routine_id, row.date_key);
-    if (current && Boolean(current.completed_at) === completed) return { status: 'saved', value: current };
+    if (current && sameRoutineDayDefinition(current, row) && sameStringArray(current.completed_item_ids, desired)) return { status: 'saved', value: current };
     return isDefiniteRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
   } catch { return { status: 'unknown' }; }
 }
@@ -252,7 +400,7 @@ export async function removeTrainingSelection(
 
 async function fetchRoutineById(client: SupabaseClient, dogId: string, id: string): Promise<DailyRoutine | null> {
   const result = await withRequestDeadline(async (signal) => await client.from('dog_daily_routines')
-    .select('id,dog_id,label').eq('dog_id', dogId).eq('id', id).retry(false).abortSignal(signal).maybeSingle());
+    .select(DAILY_ROUTINE_COLUMNS).eq('dog_id', dogId).eq('id', id).retry(false).abortSignal(signal).maybeSingle());
   if (result.error) throw new Error('Could not confirm routine status');
   if (result.data === null) return null;
   if (!isDailyRoutine(result.data)) throw new Error('Routine response did not match the database contract');
@@ -261,7 +409,7 @@ async function fetchRoutineById(client: SupabaseClient, dogId: string, id: strin
 
 async function fetchRoutineDay(client: SupabaseClient, dogId: string, id: string, routineId: string, dateKey: string): Promise<DailyRoutineDay | null> {
   const result = await withRequestDeadline(async (signal) => await client.from('dog_daily_routine_days')
-    .select('id,dog_id,routine_id,date_key,time_zone,completed_at').eq('dog_id', dogId).eq('id', id)
+    .select(DAILY_ROUTINE_DAY_COLUMNS).eq('dog_id', dogId).eq('id', id)
     .eq('routine_id', routineId).eq('date_key', dateKey).retry(false).abortSignal(signal).maybeSingle());
   if (result.error) throw new Error('Could not confirm daily routine status');
   if (result.data === null) return null;
@@ -271,11 +419,21 @@ async function fetchRoutineDay(client: SupabaseClient, dogId: string, id: string
 
 async function fetchRoutineDayByKey(client: SupabaseClient, dogId: string, routineId: string, dateKey: string): Promise<DailyRoutineDay | null> {
   const result = await withRequestDeadline(async (signal) => await client.from('dog_daily_routine_days')
-    .select('id,dog_id,routine_id,date_key,time_zone,completed_at').eq('dog_id', dogId)
+    .select(DAILY_ROUTINE_DAY_COLUMNS).eq('dog_id', dogId)
     .eq('routine_id', routineId).eq('date_key', dateKey).retry(false).abortSignal(signal).maybeSingle());
   if (result.error) throw new Error('Could not confirm daily routine status');
   if (result.data === null) return null;
   if (!isDailyRoutineDay(result.data)) throw new Error('Daily routine response did not match the database contract');
+  return result.data;
+}
+
+async function fetchRoutineDaySkipByKey(client: SupabaseClient, dogId: string, routineId: string, dateKey: string): Promise<DailyRoutineDaySkip | null> {
+  const result = await withRequestDeadline(async (signal) => await client.from('dog_daily_routine_day_skips')
+    .select(DAILY_ROUTINE_DAY_SKIP_COLUMNS).eq('dog_id', dogId)
+    .eq('routine_id', routineId).eq('date_key', dateKey).retry(false).abortSignal(signal).maybeSingle());
+  if (result.error) throw new Error('Could not confirm skipped routine status');
+  if (result.data === null) return null;
+  if (!isDailyRoutineDaySkip(result.data)) throw new Error('Skipped routine response did not match the database contract');
   return result.data;
 }
 
@@ -302,16 +460,93 @@ async function fetchTrainingSelectionByKey(client: SupabaseClient, dogId: string
 function isDailyRoutine(value: unknown): value is DailyRoutine {
   if (!value || typeof value !== 'object') return false;
   const row = value as Record<string, unknown>;
-  return typeof row.id === 'string' && typeof row.dog_id === 'string' && typeof row.label === 'string'
-    && row.label.trim().length > 0 && Array.from(row.label).length <= 160;
+  return isCanonicalUuid(row.id) && isCanonicalUuid(row.dog_id) && typeof row.label === 'string'
+    && row.label.trim() === row.label && Array.from(row.label).length > 0 && Array.from(row.label).length <= 160
+    && isValidRoutineChecklist(row.checklist) && Number.isInteger(row.checklist_revision) && Number(row.checklist_revision) >= 1
+    && typeof row.legacy_single_item === 'boolean'
+    && isValidStoredRepeatRule(row.repeat_unit, row.repeat_interval, row.repeat_anchor_date);
+}
+
+function isDailyRoutineDraft(value: unknown): value is DailyRoutineDraft {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return isCanonicalUuid(row.id) && isCanonicalUuid(row.dog_id) && typeof row.label === 'string'
+    && isValidRoutineDefinition(row.label, row.checklist)
+    && isValidRepeatRule(row.repeat_unit as DailyRoutineRepeatUnit | null, row.repeat_interval as number | null);
+}
+
+function isValidRoutineDefinition(label: string, checklist: unknown): checklist is DailyRoutineChecklistItem[] {
+  return typeof label === 'string' && label.trim() === label && Array.from(label).length > 0 && Array.from(label).length <= 160
+    && isValidRoutineChecklist(checklist);
+}
+
+function isValidRoutineChecklist(value: unknown): value is DailyRoutineChecklistItem[] {
+  if (!Array.isArray(value) || value.length < 1 || value.length > 50) return false;
+  const seen = new Set<string>();
+  return value.every((item) => {
+    if (!item || typeof item !== 'object') return false;
+    const row = item as Record<string, unknown>;
+    if (Object.keys(row).sort().join(',') !== 'id,label' || !isCanonicalUuid(row.id)
+      || typeof row.label !== 'string' || row.label.trim() !== row.label
+      || Array.from(row.label).length < 1 || Array.from(row.label).length > 160 || seen.has(row.id)) return false;
+    seen.add(row.id);
+    return true;
+  });
+}
+
+function isDailyRoutineDayDraft(value: unknown): value is DailyRoutineDayDraft {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return isCanonicalUuid(row.id) && isCanonicalUuid(row.dog_id) && isCanonicalUuid(row.routine_id)
+    && typeof row.date_key === 'string' && isValidDateKey(row.date_key) && typeof row.time_zone === 'string'
+    && isValidIanaTimeZone(row.time_zone) && typeof row.routine_label_snapshot === 'string'
+    && row.routine_label_snapshot.trim() === row.routine_label_snapshot && row.routine_label_snapshot.length > 0
+    && isValidRoutineChecklist(row.checklist_snapshot);
 }
 
 function isDailyRoutineDay(value: unknown): value is DailyRoutineDay {
   if (!value || typeof value !== 'object') return false;
   const row = value as Record<string, unknown>;
-  return typeof row.id === 'string' && typeof row.dog_id === 'string' && typeof row.routine_id === 'string'
-    && typeof row.date_key === 'string' && isValidDateKey(row.date_key) && typeof row.time_zone === 'string'
-    && isValidIanaTimeZone(row.time_zone) && (row.completed_at === null || typeof row.completed_at === 'string' && Number.isFinite(Date.parse(row.completed_at)));
+  if (!isCanonicalUuid(row.id) || !isCanonicalUuid(row.dog_id) || !isCanonicalUuid(row.routine_id)
+    || typeof row.date_key !== 'string' || !isValidDateKey(row.date_key) || typeof row.time_zone !== 'string'
+    || !isValidIanaTimeZone(row.time_zone) || typeof row.routine_label_snapshot !== 'string'
+    || row.routine_label_snapshot.trim() !== row.routine_label_snapshot || row.routine_label_snapshot.length < 1
+    || !isValidRoutineChecklist(row.checklist_snapshot) || !Array.isArray(row.completed_item_ids)
+    || !row.completed_item_ids.every(isCanonicalUuid) || typeof row.is_recurring_occurrence !== 'boolean'
+    || !Number.isInteger(row.routine_revision_snapshot) || Number(row.routine_revision_snapshot) < 1
+    || !Number.isInteger(row.routine_day_revision) || Number(row.routine_day_revision) < 1
+    || !(row.last_state_mutation_id === null || isCanonicalUuid(row.last_state_mutation_id))) return false;
+  const snapshotIds = row.checklist_snapshot.map((item) => item.id);
+  const completed = row.completed_item_ids as string[];
+  const canonicalCompleted = snapshotIds.filter((id) => completed.includes(id));
+  return completed.length === canonicalCompleted.length && sameStringArray(completed, canonicalCompleted)
+    && (row.completed_at === null || typeof row.completed_at === 'string' && Number.isFinite(Date.parse(row.completed_at)))
+    && (row.completed_at !== null) === (completed.length === snapshotIds.length);
+}
+
+function isDailyRoutineDaySkip(value: unknown): value is DailyRoutineDaySkip {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  if (!isCanonicalUuid(row.day_id)) return false;
+  return isDailyRoutineDay({ ...row, id: row.day_id });
+}
+
+function isValidRepeatRule(unit: DailyRoutineRepeatUnit | null, interval: number | null): boolean {
+  if (unit === null) return interval === null;
+  return (unit === 'day' || unit === 'week' || unit === 'month')
+    && Number.isInteger(interval) && Number(interval) >= 1 && Number(interval) <= 30;
+}
+
+function isValidStoredRepeatRule(unit: unknown, interval: unknown, anchor: unknown): boolean {
+  if (unit === null) return interval === null && anchor === null;
+  return (unit === 'day' || unit === 'week' || unit === 'month')
+    && Number.isInteger(interval) && Number(interval) >= 1 && Number(interval) <= 30
+    && typeof anchor === 'string' && isValidDateKey(anchor);
+}
+
+function hasValidAnchor(routine: DailyRoutine): boolean {
+  return routine.repeat_unit === null ? routine.repeat_interval === null && routine.repeat_anchor_date === null
+    : routine.repeat_interval !== null && routine.repeat_anchor_date !== null && isValidDateKey(routine.repeat_anchor_date);
 }
 
 function isDailyTrainingSelection(value: unknown): value is DailyTrainingSelection {
@@ -322,13 +557,46 @@ function isDailyTrainingSelection(value: unknown): value is DailyTrainingSelecti
     && typeof row.time_zone === 'string' && isValidIanaTimeZone(row.time_zone);
 }
 
-function sameRoutine(left: DailyRoutine, right: DailyRoutine): boolean {
-  return left.id === right.id && left.dog_id === right.dog_id && left.label === right.label;
+function sameRoutineSave(left: RoutineSaveValues & Partial<Pick<DailyRoutine, 'id' | 'dog_id'>>, right: RoutineSaveValues & Partial<Pick<DailyRoutine, 'id' | 'dog_id'>>): boolean {
+  return (!left.id || !right.id || left.id === right.id) && (!left.dog_id || !right.dog_id || left.dog_id === right.dog_id)
+    && left.label === right.label && sameChecklist(left.checklist, right.checklist)
+    && left.repeat_unit === right.repeat_unit && left.repeat_interval === right.repeat_interval;
 }
 
-function sameRoutineDay(left: DailyRoutineDay, right: DailyRoutineDay, includeId = true): boolean {
+function matchesRoutineDayDraft(left: DailyRoutineDay, right: DailyRoutineDayDraft, includeId = true): boolean {
   return (!includeId || left.id === right.id) && left.dog_id === right.dog_id && left.routine_id === right.routine_id
-    && left.date_key === right.date_key && left.time_zone === right.time_zone;
+    && left.date_key === right.date_key && left.time_zone === right.time_zone
+    && left.routine_label_snapshot === right.routine_label_snapshot && sameChecklist(left.checklist_snapshot, right.checklist_snapshot)
+    && left.completed_item_ids.length === 0 && left.completed_at === null;
+}
+
+function sameRoutineDayDefinition(left: DailyRoutineDay, right: DailyRoutineDay): boolean {
+  return left.id === right.id && left.dog_id === right.dog_id && left.routine_id === right.routine_id
+    && left.date_key === right.date_key && left.time_zone === right.time_zone
+    && left.routine_label_snapshot === right.routine_label_snapshot && sameChecklist(left.checklist_snapshot, right.checklist_snapshot);
+}
+
+function sameRoutineOccurrence(left: DailyRoutineDay | DailyRoutineDaySkip, right: DailyRoutineDay | DailyRoutineDaySkip): boolean {
+  const leftId = 'id' in left ? left.id : left.day_id;
+  const rightId = 'id' in right ? right.id : right.day_id;
+  return leftId === rightId && left.dog_id === right.dog_id && left.routine_id === right.routine_id
+    && left.date_key === right.date_key && left.time_zone === right.time_zone
+    && left.routine_label_snapshot === right.routine_label_snapshot && sameChecklist(left.checklist_snapshot, right.checklist_snapshot)
+    && sameStringArray(left.completed_item_ids, right.completed_item_ids) && left.completed_at === right.completed_at
+    && left.is_recurring_occurrence === right.is_recurring_occurrence
+    && left.routine_revision_snapshot === right.routine_revision_snapshot;
+}
+
+function sameChecklist(left: readonly DailyRoutineChecklistItem[], right: readonly DailyRoutineChecklistItem[]): boolean {
+  return left.length === right.length && left.every((item, index) => item.id === right[index]?.id && item.label === right[index]?.label);
+}
+
+function sameStringArray(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((item, index) => item === right[index]);
+}
+
+function isCanonicalUuid(value: unknown): value is string {
+  return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value);
 }
 
 function sameTrainingSelection(left: DailyTrainingSelection, right: DailyTrainingSelection, includeId = true): boolean {

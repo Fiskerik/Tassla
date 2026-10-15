@@ -1,6 +1,6 @@
 # R02-3C UX-spec — Kunskap
 
-Datum: 2026-10-13 · Version: 1 · Branch: `design/vision-rev02`
+Datum: 2026-10-14 · Version: 1.1 · Branch: `design/vision-rev02`
 
 ## Mål och scope
 
@@ -34,6 +34,10 @@ Panel 7 innehåller sök och ämnesfilter. De läggs inte till i denna slice: pr
 
 Behåll minst 44 pt tryckytor, synliga val för tabs/kontekst, skärmläsarroller och labels, full scroll för text och formulär samt respektera reducerad rörelse. Webbrendering är inte native Dynamic Type/VoiceOver-verifiering. Granska 375×667, 375×844, 430×844 och 140 % browserzoom.
 
+## Ålder saknas i checklistöversikten
+
+När `ageWeeks` är `null`, kontexten fortfarande är standarden `by_age` och ingen preferens är sparad, finns inget beräknat fasförslag. Översiktskortet ska då säga `Ingen fas vald` och `Lägg till hundens födelsedatum för ett åldersförslag, eller välj en fas själv.` Använd en neutral rubrik som `Checklistkontext`; visa inte `Er fas`, `Efter ålder` eller `Förslag utifrån hundens ålder` som om en fas beräknats. Alla befintliga checklistor är fortfarande åtkomliga utan markering som rekommenderad.
+
 ## Acceptans
 
 - De fyra existerande ingångarna fungerar och vald tab annonseras.
@@ -42,3 +46,4 @@ Behåll minst 44 pt tryckytor, synliga val för tabs/kontekst, skärmläsarrolle
 - FAQ-frågor expanderas/kollapsas och behåller kontext.
 - Public/review renderar med korrekt review-gating, utan falska publicerade fixtures.
 - §14 redovisar layout, färger, typografi, former, bildspråk, densitet och saknade paneldata var för sig.
+- Vid saknat födelsedatum och osparad standardkontext visas neutral copy utan påstående om beräknad fas; alla checklistor förblir öppningsbara och ingen får rekommendationsmarkering. Rendera detta tillstånd färskt i public/review-harnessen.

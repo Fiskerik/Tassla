@@ -20,7 +20,7 @@ function sameCustom(left: ChecklistCustomItem, right: ChecklistCustomItem) {
   return left.id === right.id && left.dogId === right.dogId && left.templateId === right.templateId && left.title === right.title && left.completed === right.completed;
 }
 
-export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, registerInvalidate, active = true, pendingState = null, onPendingStateChange, onDetailChange }: { client: SupabaseClient; dogId: string; ageWeeks: number; onBack: () => void; registerInvalidate?: (invalidate: (() => void) | null) => void; active?: boolean; pendingState?: PendingChecklistMemory | null; onPendingStateChange?: (state: PendingChecklistMemory | null) => void; onDetailChange?: (open: boolean) => void }) {
+export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, registerInvalidate, active = true, pendingState = null, onPendingStateChange, onDetailChange }: { client: SupabaseClient; dogId: string; ageWeeks: number | null; onBack: () => void; registerInvalidate?: (invalidate: (() => void) | null) => void; active?: boolean; pendingState?: PendingChecklistMemory | null; onPendingStateChange?: (state: PendingChecklistMemory | null) => void; onDetailChange?: (open: boolean) => void }) {
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [state, setState] = useState<LoadState>('loading');
   const [progress, setProgress] = useState<Set<string>>(new Set());
@@ -168,7 +168,7 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
 
   const total = activeTemplate ? summaries[activeTemplate.id]?.total ?? activeTemplate.items.length + customItems.length : 0;
   const done = activeTemplate ? summaries[activeTemplate.id]?.done ?? (activeTemplate.items.filter((item) => progress.has(item.key)).length + customItems.filter((item) => item.completed).length) : 0;
-  const recommended = chooseChecklistPhase(ageWeeks, context);
+  const recommended = ageWeeks === null ? null : chooseChecklistPhase(ageWeeks, context);
   const percentage = checklistPercent(done, total);
   const allItemsComplete = state === 'ready' && total > 0 && done === total;
   function leaveChecklist() {
@@ -418,7 +418,8 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
   };
   const activeLabel = useMemo(() => CONTEXTS.find((item) => item.id === context)?.title ?? 'Efter ålder', [context]);
   const recommendedTemplate = state === 'ready' ? templates.find((item) => item.phase === recommended) ?? null : null;
-  const contextSummary = context === 'by_age' && recommendedTemplate ? `${activeLabel} · ${recommendedTemplate.title}` : activeLabel;
+  const unknownAgeDefault = state === 'ready' && ageWeeks === null && context === 'by_age' && !preferenceSaved;
+  const contextSummary = unknownAgeDefault ? 'Ingen fas vald' : context === 'by_age' && recommendedTemplate ? `${activeLabel} · ${recommendedTemplate.title}` : activeLabel;
   const otherTemplates = recommendedTemplate ? templates.filter((item) => item.id !== recommendedTemplate.id) : templates;
   const preferencePending = busy && pendingOperation?.kind === 'preference' && !activeTemplate;
   const preferenceUncertain = uncertain && pendingOperation?.kind === 'preference' && !activeTemplate;
@@ -441,9 +442,9 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, onBack, register
     {!reviewEnabled ? <Text style={styles.meta}>Inga checklistor publicerade ännu.</Text> : !activeTemplate ? <>
       <View style={styles.contextSummary}>
         <View style={styles.contextCopy}>
-          <Text style={styles.contextEyebrow}>Er fas</Text>
+          <Text style={styles.contextEyebrow}>{unknownAgeDefault ? 'Checklistkontext' : 'Er fas'}</Text>
           <Text style={styles.contextTitle}>{state === 'ready' ? contextSummary : state === 'error' ? 'Valet kunde inte hämtas' : 'Läser in ert val…'}</Text>
-          <Text style={styles.contextHint}>{preferencePending ? 'Sparar nytt val…' : state !== 'ready' ? 'Checklistorna visas när valet har lästs in.' : preferenceSaved ? 'Sparat val' : 'Förslag utifrån hundens ålder'}</Text>
+          <Text style={styles.contextHint}>{preferencePending ? 'Sparar nytt val…' : unknownAgeDefault ? 'Lägg till hundens födelsedatum för ett åldersförslag, eller välj en fas själv.' : state !== 'ready' ? 'Checklistorna visas när valet har lästs in.' : preferenceSaved ? 'Sparat val' : 'Förslag utifrån hundens ålder'}</Text>
         </View>
         <Button variant="tertiary" label="Ändra" accessibilityLabel="Ändra checklistornas fas" disabled={busy || state !== 'ready' || uncertain} onPress={() => setContextSheetOpen(true)} />
       </View>

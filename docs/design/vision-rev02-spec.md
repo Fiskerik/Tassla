@@ -12,7 +12,7 @@ Panelerna numreras vänster till höger, övre raden 1–4, undre 5–8. Bilden 
 
 | Panel | Komposition och primär resa | Källa / nuläge | Mål att bygga |
 |---|---|---|---|
-| 1 Hem | Hälsning + hundporträtt; levnadsveckor; Just nu; Dagens att göra + progress; Logga/Träna/Kunskap | Hund/innehåll/träningssteg/logg/plan finns. Hem har idag tre källgrupper | Samlad dagslista när dagskontrakt finns; större porträtt, kompakt grupplista, tonade destinationskort |
+| 1 Hem | Hälsning + hundporträtt; automatisk ålder och ungefärlig livsfas; Just nu; Dagens att göra + progress; Logga/Träna/Kunskap | Hund/innehåll/träningssteg/logg/plan finns. Hem har idag tre källgrupper | Enhetsväxlande åldersremsa, separat ungefärlig fas, kompakt grupplista och tonade destinationskort |
 | 2 Utveckling | Bakåt + {namn}s utveckling; stort hundporträtt; åldersbåge; aktuell fas; kommande milstolpar | Födelsedatum och innehållsurval finns; ingen milstolpsmodell | Hemmets ålder öppnar åldersguide. Bågen visar kronologisk ålder, inte uppnådd färdighet. Milstolpar är sakgranskade ungefärliga faser |
 | 3 Dagens framsteg | Ring med hundbild och dagsantal; utförda aktiviteter med tid; saklig uppmuntran; veckomål | Loggar/träningsmarkeringar finns separat; gemensamma dag-/veckomål saknas | Hemmets dagsantal öppnar samma uppgiftsmängd som dagslistan. Veckomål visas först när definierade |
 | 4 Checklista | Idag/Denna vecka/Alla; progress + aktivitetsrader; kommande aktiviteter | Befintliga checklistor är fasbaserade, delvis review-gated | Föreslagen daglig aktivitetsvy, separat från faschecklistor. Bock och detaljlänk är separata handlingar |
@@ -29,7 +29,7 @@ Detaljvyer under Hem håller Hem vald, Insikter håller Logg vald. Daglig Checkl
 
 ```text
 Hälsning + namn/ålder             Hundporträtt
-                 Levnadsveckor
+           Automatisk ålder · ungefärlig fas
 ┌ Just nu med {namn}                          ┐
 │ Kort publicerad ingress                 ›  │
 └────────────────────────────────────────────┘
@@ -46,12 +46,14 @@ Fri marginal över meny + safe area
 Hem       Logg       Träning       Kunskap       Mer
 ```
 
-### H1. Hälsning, identitet och veckor
+### H1. Hälsning, identitet och automatisk ålder
 
 - Verkligt namn och levnadsålder; ras kan ligga i profil om metaraden annars blir för lång.
 - Hundporträttet har tydlig visuell vikt och konsekvent beskärning. Fallback har samma layoututrymme.
-- Veckoremsan visar levnadsveckor, inte veckodagar. Aktuell vecka är markerad, framtida veckor innebär inte uppnådd färdighet.
-- Saknat/ogiltigt födelsedatum ger neutral ålderspresentation och profilväg; ingen falsk vecka 0.
+- Hem visar hela veckor till och med 20 veckor, hela kalendermånader till och med första födelsedagen och hela år därefter. Identitetsrad, remsa och `Just nu` använder samma automatiska ålder.
+- En separat, ungefärlig livsfas visas som VALP före 6 hela kalendermånader, UNGHUND från 6 till före 24 månader och VUXEN från 24 månader. Faserna är inte universella veterinärklassificeringar.
+- Remsan visar veckor 0–20, månader 0–12 eller år 1 till aktuell ålder +3; aktuell markör är vald. Framtida markörer innebär inte uppnådd färdighet.
+- Saknat/ogiltigt/framtida födelsedatum ger neutral ålderspresentation; ingen falsk vecka 0, remsa eller fas.
 - Åldersområdet öppnar Utveckling först när den vyn finns. Före det är remsan informativ utan falsk tryckaffordans.
 
 ### H2. Just nu
@@ -90,7 +92,7 @@ Kontrollera faktiska exporter i `src/components/ui/index.ts` före implementatio
 | `Progress(value, label)` | Gemensam progresspresentation med explicit unavailable/empty-status före rendering | Befintlig Progress tolkar ogiltigt värde som 0; adaptern måste stoppa okänd data från att se ut som noll |
 | Ingen ringkomponent | Föreslagen `ProgressRing` för panel 3 | Samma count/total som listan; åtkomlig text; bedöm befintlig teknik före eventuellt nytt bibliotek |
 | `DogCard`, `PhotoPlaceholder` | Föreslaget delat porträttformat för Hem/Utveckling | Foto/illustration explicit; belastning/läsfel ger samma reservformat |
-| Hemmets veckoremsa | Delad åldersremsa när Utveckling byggs | Birth-date-beräkning återanvänds; vald ålder är inte datumfilter |
+| Hemmets automatiska åldersremsa | Delad åldersremsa när Utveckling byggs | Födelsedatumets kalendergränser återanvänds; ålder är inte datumfilter |
 | `BottomNav`, `main-navigation.ts` | Behåll fem huvudflikar, lägg till explicit detalj→förälder | Fungerande tryck, tillbaka, vald-semantik och svep endast mellan huvudflikar |
 
 Presentationskomponenter tar data/status/callbacks. Featurekompositionen väljer innehåll; dataadaptrar hanterar sparning. Skapa inget generellt sidbyggarramverk.

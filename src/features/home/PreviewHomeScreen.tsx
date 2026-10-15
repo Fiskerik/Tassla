@@ -3,22 +3,24 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import type { Dog } from '../onboarding/dog';
-import { formatDogAge, localDate } from '../onboarding/dog';
+import { automaticDogAge, localDate } from '../onboarding/dog';
 
 export function PreviewHomeScreen({
   dog,
+  today: todayValue,
   onEditProfile,
   onOpenLog,
   onOpenTraining,
   trainingShortcut,
 }: {
   dog: Dog;
+  today?: string;
   onEditProfile: () => void;
   onOpenLog: () => void;
   onOpenTraining: () => void;
   trainingShortcut: { programTitle: string; stepTitle: string; stepNumber: number; completedCount: number; totalCount: number } | null;
 }) {
-  const age = formatDogAge(dog.birthDate, localDate(), dog.ageDisplayUnit ?? 'weeks');
+  const age = automaticDogAge(dog.birthDate, todayValue ?? localDate());
   const breed = dog.breedId === 'example' ? 'Labrador' : dog.breedId;
   return (
     <View>
@@ -29,7 +31,10 @@ export function PreviewHomeScreen({
         </View>
         <View style={styles.dogCopy}>
           <Text style={styles.dogName}>{dog.name} | {breed}</Text>
-          <Text style={styles.dogMeta}>{age}</Text>
+          {age ? <>
+            <Text style={styles.dogMeta}>{age.label}</Text>
+            <Text style={styles.dogMeta}>Ungefärlig fas: {age.stage}</Text>
+          </> : null}
         </View>
       </View>
       <Text style={styles.sectionTitle} accessibilityRole="header">Idag för {dog.name}</Text>

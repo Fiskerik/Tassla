@@ -42,16 +42,43 @@ test('training stamp preserves the original saved completion time and exact vers
 });
 
 test('daily activities count owner marks and exact saved training source while excluding withdrawn sources', () => {
-  const routine = { id: 'routine-1', dog_id: 'dog-a', label: 'Kvällsrutin' };
-  const selectedRoutine = { id: 'routine-day-1', dog_id: 'dog-a', routine_id: routine.id, date_key: '2026-10-12', time_zone: 'America/Los_Angeles', completed_at: '2026-10-13T00:30:00.000Z' };
+  const routine = {
+    id: 'routine-1',
+    dog_id: 'dog-a',
+    label: 'Kvällsrutin',
+    checklist: [{ id: 'routine-item-1', label: 'Kissa' }, { id: 'routine-item-2', label: 'Fyll på vatten' }],
+    checklist_revision: 1,
+    legacy_single_item: false,
+    repeat_unit: null,
+    repeat_interval: null,
+    repeat_anchor_date: null,
+  };
+  const selectedRoutine = {
+    id: 'routine-day-1',
+    dog_id: 'dog-a',
+    routine_id: routine.id,
+    date_key: '2026-10-12',
+    time_zone: 'America/Los_Angeles',
+    routine_label_snapshot: 'Kvällsrutin',
+    checklist_snapshot: routine.checklist,
+    completed_item_ids: ['routine-item-1'],
+    completed_at: null,
+    is_recurring_occurrence: false,
+    routine_revision_snapshot: 1,
+    routine_day_revision: 1,
+    last_state_mutation_id: null,
+  };
   const selection = { id: 'selection-1', dog_id: 'dog-a', program_version_id: 'version-2', step_id: 'step-1', date_key: '2026-10-12', time_zone: 'America/Los_Angeles' };
-  const snapshot = { routines: [routine], routineDays: [selectedRoutine], trainingSelections: [selection] };
+  const snapshot = { routines: [routine], routineDays: [selectedRoutine], routineDaySkips: [], trainingSelections: [selection] };
   const activeProgram = { id: 'version-2', title: 'Trygg vardag', steps: [{ id: 'step-1', position: 1, title: 'Sitt lugnt', instruction: '' }], completedStepIds: ['step-1'], completedAtByStepId: { 'step-1': '2026-10-13T00:30:00.000Z' } };
-  assert.deepEqual(deriveHomeDailyActivities(snapshot, [activeProgram], 'dog-a', '2026-10-12').map(({ label, kind, completed, programTitle }) => ({ label, kind, completed, programTitle })), [
-    { label: 'Kvällsrutin', kind: 'routine', completed: true, programTitle: undefined },
-    { label: 'Sitt lugnt', kind: 'training', completed: true, programTitle: 'Trygg vardag' },
+  assert.deepEqual(deriveHomeDailyActivities(snapshot, [activeProgram], 'dog-a', '2026-10-12').map(({ label, routineLabel, kind, completed, programTitle }) => ({ label, routineLabel, kind, completed, programTitle })), [
+    { label: 'Kissa', routineLabel: 'Kvällsrutin', kind: 'routine', completed: true, programTitle: undefined },
+    { label: 'Fyll på vatten', routineLabel: 'Kvällsrutin', kind: 'routine', completed: false, programTitle: undefined },
+    { label: 'Sitt lugnt', routineLabel: undefined, kind: 'training', completed: true, programTitle: 'Trygg vardag' },
   ]);
-  assert.deepEqual(deriveHomeDailyActivities(snapshot, [], 'dog-a', '2026-10-12').map(({ kind }) => kind), ['routine']);
+  assert.deepEqual(deriveHomeDailyActivities(snapshot, [], 'dog-a', '2026-10-12').map(({ label, completed }) => [label, completed]), [
+    ['Kissa', true], ['Fyll på vatten', false],
+  ]);
   assert.deepEqual(deriveHomeDailyActivities(snapshot, [activeProgram], 'dog-b', '2026-10-12'), []);
   assert.deepEqual(deriveHomeDailyActivities(snapshot, [activeProgram], 'dog-a', '2026-10-13'), []);
 });

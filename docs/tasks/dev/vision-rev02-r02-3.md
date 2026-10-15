@@ -1,6 +1,6 @@
 # VISION-R02-3 — Logg, Träning och Kunskap enligt vision_rev02
 
-Datum: 2026-10-13 · Version: 6.2 · Status: R02-3A checkpointad; ägar-QA har godkänt R02-3B; Reviewer/Security återstår · Branch: `design/vision-rev02`
+Datum: 2026-10-14 · Version: 6.3 · Status: 3A/3B/3C checkpointade; R02-3C null-age-korrigering har färsk Reviewer PASS · Branch: `work`
 
 ## Mål
 
@@ -51,7 +51,7 @@ En slice i taget. Varje slice lämnar repot begripligt och komplett innan nästa
 - **Färg/form:** varma redaktionella bilder över korttext, rundade kort, diskreta ämnesmarkeringar och vald grön flik/chip där den finns; lila kunskapsaccent används men hemmets blå/grön/lila destinationsfärger tvingas inte på guideinnehåll. Sök/filter läggs inte till: nuvarande kod har inget verkligt sök-/filterkontrakt.
 - **Filer:** `src/features/knowledge/KnowledgeScreen.tsx`, `FAQScreen.tsx`, `PuppyChecklistScreen.tsx`, `src/features/knowledge/README.md`; `assets/images/README.md` endast vid specificerad ändring av bildroll/beskärning. Återanvänd redan införda segmentvarianten från 3B och befintliga semantiska bild-/korttokens. Bevara befintliga källor och review-gating.
 - **Acceptans:** alla fyra befintliga destinationer går att nå; artikeltext/källor och säkra externa länkar bevaras; checklistans bockar, fasval, synkstatus, egna punkter, fel/konflikt/osäkert resultat och FAQ-funktion behåller samma kontrakt; ingen reviewtext läcker till public-läge. Öppen artikel/checklista återvänder till rätt tab och scroll-/detaljkontext när den redan stöds.
-- **Kommandon/evidens:** kör `pnpm typecheck`, `pnpm lint`, `git diff --check`, `python tools/dev_flow.py validate`; bygg public/review med `tools/visual-check/build.cjs`; starta separata lokala servrar på port 4173/4174 och spara manuella Knowledge/FAQ/checklist-renderingar i `docs/design/evidence/vision-rev02/r02-3c/{public,review}/`. Använd 375×844, 430×844 och 375×667, 140 % text samt content loading/empty/error, FAQ, checklist partial/error/detail. Ingen testfil läggs till eller körs i detta arbetspaket.
+- **Kommandon/evidens:** kör `pnpm typecheck`, `pnpm lint`, `git diff --check`, `python tools/dev_flow.py validate`; bygg public/review med `tools/visual-check/build.cjs`; starta separata lokala servrar på port 4173/4174 och spara manuella Knowledge/FAQ/checklist-renderingar i `docs/design/evidence/vision-rev02/r02-3c/{public,review}/`. Använd 375×844, 430×844 och 375×667, 140 % text samt content loading/empty/error, FAQ, checklist partial/error/detail och checklistöversikt med saknat födelsedatum. Ingen testfil läggs till eller körs i detta arbetspaket.
 
 ## Stödskärmar i samma ägardirektiv — egna exakta uppgifter krävs
 
@@ -98,6 +98,16 @@ Plan- och kodgranskning är inte en release-/produktionsgrind. Ingen push, live-
 ## Planreview och nästa steg
 
 Architect **APPROVE** och Critic **PROCEED** för v6 finns i `docs/tasks/dev/vision-rev02-r02-3-reviews.md`. R02-3A Logg är checkpointad efter beteende-QA PASS, Reviewer PASS, Security PASS och komplett public/review-renderingsmatris; §14 avvikelse för full panellikhet är fortsatt dokumenterad som **Nej**. Architect och Critic godkände en smal v6.1-ändring som lägger till `tools/visual-check/app.tsx` i 3B enbart för sanningsenlig deterministisk ålder/progress-fixture. R02-3B Träning är implementerad och renderad i public/review med syntetiska data; handoff och egen §14-bedömning finns i `docs/design/evidence/vision-rev02/r02-3b/RENDER-REPORT.md`.
+
+### Reviewer CHANGES för R02-3C och avgränsad replan v6.3
+
+Reviewer PASS för R02-3B mottogs 2026-10-14 efter HOME-AGE v4.3: befintlig publicerad träningsprogress, lokala reviewmarkeringar, stegordning/reset och public/review-renderingar är godkända inom lokal scope; §14 panelavvikelsen kvarstår.
+
+Reviewer gav CHANGES för R02-3C 2026-10-14: när `ageWeeks=null` och ingen faspreferens är sparad visar checklistöversikten ändå `Er fas`, `Efter ålder` och `Förslag utifrån hundens ålder`, trots att rekommenderad mall saknas. v6.3 begränsas till neutral, sanningsenlig copy för detta enda okända-ålder-/osparade-preferensläge och fresh rendering av checklistöversikten med saknat födelsedatum. Befintligt data-, save-, review-gating- och checklistbeteende ändras inte. UX-specen uppdateras till v1.1 och köposten för 3C håller sig blockerad tills Architect APPROVE/Critic PROCEED för exakt v6.3; ingen copy-korrigering eller render har ännu gjorts.
+
+### Lösning av R02-3C reviewer-fyndet — 2026-10-14
+
+Architect APPROVE och Critic PROCEED mottogs för v6.3/v1.1. Den avgränsade copy-korrigeringen och färska public/review-renderingarna är klara; reviewbilden visar `Checklistkontext` / `Ingen fas vald`, ingen rekommenderad mall och samtliga checklistor åtkomliga. Publicbilden visar fortsatt tomläge när publicerat material saknas. Oberoende Reviewer gav **PASS** efter att ha granskat koden och båda bilderna. R02-3C är checkpointad som lokal UI/source-leverans; publicerat liveinnehåll, Supabase/RLS och native-tillgänglighet är fortsatt **NOT TESTABLE**.
 
 ### Ägarbeslut om fortsatt ordning — v6.2
 

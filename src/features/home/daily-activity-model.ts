@@ -1,9 +1,11 @@
 import type { PublishedTrainingProgram, PublishedTrainingStep } from '../../data/workspace-data';
-import type { DailyActivitySnapshot, DailyRoutineDay, DailyTrainingSelection } from './daily-activity-data';
+import type { DailyActivitySnapshot, DailyRoutine, DailyRoutineDay, DailyTrainingSelection } from './daily-activity-data';
 
 export type HomeDailyActivity = {
   id: string;
   label: string;
+  routineLabel?: string;
+  routineItemId?: string;
   kind: 'routine' | 'training';
   completed: boolean;
   routineDay?: DailyRoutineDay;
@@ -42,6 +44,37 @@ export function isValidDateKey(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const parsed = new Date(`${value}T00:00:00.000Z`);
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+export function isRoutineDueOnDate(routine: Pick<DailyRoutine, 'repeat_unit' | 'repeat_interval' | 'repeat_anchor_date'>, dateKey: string): boolean {
+  const { repeat_unit: unit, repeat_interval: interval, repeat_anchor_date: anchor } = routine;
+  if (!unit || !interval || !anchor || !isValidDateKey(dateKey) || !isValidDateKey(anchor) || dateKey < anchor) return false;
+  const [anchorYear, anchorMonth, anchorDay] = anchor.split('-').map(Number);
+  const [year, month, day] = dateKey.split('-').map(Number);
+  if (unit === 'day') {
+    const elapsedDays = (Date.UTC(year, month - 1, day) - Date.UTC(anchorYear, anchorMonth - 1, anchorDay)) / 86_400_000;
+    return Number.isInteger(elapsedDays) && elapsedDays % interval === 0;
+  }
+  if (unit === 'week') {
+    const elapsedDays = (Date.UTC(year, month - 1, day) - Date.UTC(anchorYear, anchorMonth - 1, anchorDay)) / 86_400_000;
+    return Number.isInteger(elapsedDays) && elapsedDays % (interval * 7) === 0;
+  }
+  if (unit === 'month') {
+    const monthsElapsed = (year - anchorYear) * 12 + month - anchorMonth;
+    const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    return monthsElapsed >= 0 && monthsElapsed % interval === 0 && day === Math.min(anchorDay, lastDay);
+  }
+  return false;
+}
+
+export function dailyRoutineRepeatSummary(routine: Pick<DailyRoutine, 'repeat_unit' | 'repeat_interval'>): string {
+  const { repeat_unit: unit, repeat_interval: interval } = routine;
+  if (!unit || !interval) return 'Aldrig';
+  if (unit === 'day' && interval === 1) return 'Dagligen';
+  if (interval === 1) return unit === 'week' ? 'Varje vecka' : 'Varje månad';
+  if (interval === 2) return unit === 'day' ? 'Varannan dag' : unit === 'week' ? 'Varannan vecka' : 'Varannan månad';
+  const units = unit === 'day' ? 'dagar' : unit === 'week' ? 'veckor' : 'månader';
+  return `Med ${interval} ${units} mellanrum`;
 }
 
 export function isTrainingCompletionForDay(
@@ -83,13 +116,14 @@ export function deriveHomeDailyActivities(
   const routinesById = new Map(snapshot.routines.filter((routine) => routine.dog_id === dogId).map((routine) => [routine.id, routine]));
   const activities: HomeDailyActivity[] = [];
   for (const row of snapshot.routineDays) {
-    const routine = routinesById.get(row.routine_id);
-    if (row.dog_id !== dogId || row.date_key !== dateKey || !routine) continue;
-    activities.push({
-      id: `routine:${row.id}`,
-      label: routine.label,
+    if (row.dog_id !== dogId || row.date_key !== dateKey || !routinesById.has(row.routine_id)) continue;
+    for (const item of row.checklist_snapshot) activities.push({
+      id: `routine:${row.id}:${item.id}`,
+      label: item.label,
+      routineLabel: row.routine_label_snapshot,
+      routineItemId: item.id,
       kind: 'routine',
-      completed: row.completed_at !== null,
+      completed: row.completed_item_ids.includes(item.id),
       routineDay: row,
     });
   }

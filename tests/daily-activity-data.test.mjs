@@ -15,54 +15,106 @@ resolution.deregister();
 const baseUrl = 'https://local-test.supabase.invalid';
 const dogId = '11111111-1111-4111-8111-111111111111';
 const dateKey = '2026-10-13';
-const routine = { id: '22222222-2222-4222-8222-222222222222', dog_id: dogId, label: 'Morgonrunda' };
-const routineDay = { id: '33333333-3333-4333-8333-333333333333', dog_id: dogId, routine_id: routine.id, date_key: dateKey, time_zone: 'Europe/Stockholm', completed_at: null };
+const checklist = [{ id: '77777777-7777-4777-8777-777777777777', label: 'Morgonrunda' }];
+const routine = {
+  id: '22222222-2222-4222-8222-222222222222',
+  dog_id: dogId,
+  label: 'Morgonrunda',
+  checklist,
+  checklist_revision: 1,
+  legacy_single_item: false,
+  repeat_unit: null,
+  repeat_interval: null,
+  repeat_anchor_date: null,
+};
+const routineDraft = {
+  id: routine.id,
+  dog_id: dogId,
+  label: routine.label,
+  checklist,
+  repeat_unit: null,
+  repeat_interval: null,
+};
+const routineDay = {
+  id: '33333333-3333-4333-8333-333333333333',
+  dog_id: dogId,
+  routine_id: routine.id,
+  date_key: dateKey,
+  time_zone: 'Europe/Stockholm',
+  routine_label_snapshot: routine.label,
+  checklist_snapshot: checklist,
+  completed_item_ids: [],
+  completed_at: null,
+  is_recurring_occurrence: false,
+  routine_revision_snapshot: 1,
+  routine_day_revision: 1,
+  last_state_mutation_id: null,
+};
 const trainingSelection = { id: '44444444-4444-4444-8444-444444444444', dog_id: dogId, program_version_id: '55555555-5555-4555-8555-555555555555', step_id: '66666666-6666-4666-8666-666666666666', date_key: dateKey, time_zone: 'Europe/Stockholm' };
 
 test('daily activity snapshot rejects partial responses and enforces requested dog/date scope', async () => {
   const { client, requests } = localClient(({ url }) => {
+    if (url.pathname.endsWith('/rpc/ensure_due_daily_routine_days')) return jsonResponse([]);
     if (url.pathname.endsWith('/dog_daily_routines')) return jsonResponse([routine]);
     if (url.pathname.endsWith('/dog_daily_routine_days')) return jsonResponse([routineDay]);
+    if (url.pathname.endsWith('/dog_daily_routine_day_skips')) return jsonResponse([]);
     if (url.pathname.endsWith('/dog_daily_training_selections')) return jsonResponse([trainingSelection]);
-    throw new Error(`Unexpected request ${url.pathname}`);
+    throw new Error('Unexpected request ' + url.pathname);
   });
   try {
-    assert.deepEqual(await data.fetchDailyActivitySnapshot(client, dogId, dateKey), {
-      routines: [routine], routineDays: [routineDay], trainingSelections: [trainingSelection],
+    assert.deepEqual(await data.fetchDailyActivitySnapshot(client, dogId, dateKey, 'Europe/Stockholm'), {
+      routines: [routine], routineDays: [routineDay], routineDaySkips: [], trainingSelections: [trainingSelection],
     });
-    assert.equal(requests.length, 3);
-    assert.ok(requests.every(({ url }) => url.searchParams.get('dog_id') === `eq.${dogId}`));
-    assert.ok(requests.filter(({ url }) => !url.pathname.endsWith('/dog_daily_routines')).every(({ url }) => url.searchParams.get('date_key') === `eq.${dateKey}`));
+    assert.equal(requests.length, 5);
+    const prepare = requests[0];
+    assert.equal(prepare.url.pathname, '/rest/v1/rpc/ensure_due_daily_routine_days');
+    assert.deepEqual(prepare.body, { p_dog_id: dogId, p_date_key: dateKey, p_time_zone: 'Europe/Stockholm' });
+    const reads = requests.slice(1);
+    assert.ok(reads.every(({ url }) => url.searchParams.get('dog_id') === 'eq.' + dogId));
+    assert.ok(reads.filter(({ url }) => !url.pathname.endsWith('/dog_daily_routines')).every(({ url }) => url.searchParams.get('date_key') === 'eq.' + dateKey));
   } finally { await client.auth.dispose(); }
 
-  const { client: foreignClient } = localClient(({ url }) => url.pathname.endsWith('/dog_daily_routines')
-    ? jsonResponse([routine])
-    : jsonResponse([{ ...routineDay, dog_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }]));
+  const { client: foreignClient } = localClient(({ url }) => {
+    if (url.pathname.endsWith('/rpc/ensure_due_daily_routine_days')) return jsonResponse([]);
+    if (url.pathname.endsWith('/dog_daily_routines')) return jsonResponse([routine]);
+    if (url.pathname.endsWith('/dog_daily_routine_days')) return jsonResponse([{ ...routineDay, dog_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }]);
+    return jsonResponse([]);
+  });
   try {
-    await assert.rejects(data.fetchDailyActivitySnapshot(foreignClient, dogId, dateKey), /Could not load daily routine selections/);
+    await assert.rejects(data.fetchDailyActivitySnapshot(foreignClient, dogId, dateKey, 'Europe/Stockholm'), /Could not load daily routine selections/);
   } finally { await foreignClient.auth.dispose(); }
 });
 
 test('routine create recovers a lost response only after exact owner/id/label readback', async () => {
   const { client, requests } = localClient(async ({ method, url, body }) => {
-    if (method === 'POST') {
-      assert.equal(url.pathname, '/rest/v1/dog_daily_routines');
-      assert.deepEqual(body, routine);
+    if (method === 'POST' && url.pathname === '/rest/v1/rpc/create_daily_routine') {
+      assert.deepEqual(body, {
+        p_dog_id: dogId,
+        p_routine_id: routine.id,
+        p_label: routine.label,
+        p_checklist: checklist,
+        p_repeat_unit: null,
+        p_repeat_interval: null,
+        p_time_zone: 'Europe/Stockholm',
+      });
       throw new TypeError('simulated lost response after server commit');
     }
     assert.equal(method, 'GET');
+    assert.equal(url.pathname, '/rest/v1/dog_daily_routines');
     return jsonResponse(routine);
   });
   try {
-    assert.deepEqual(await data.createDailyRoutine(client, routine), { status: 'saved', value: routine });
+    assert.deepEqual(await data.createDailyRoutine(client, routineDraft, 'Europe/Stockholm'), { status: 'saved', value: routine });
     assert.deepEqual(requests.map(({ method }) => method), ['POST', 'GET']);
   } finally { await client.auth.dispose(); }
 
-  const { client: mismatchClient } = localClient(({ method }) => method === 'POST'
+  const { client: mismatchClient } = localClient(({ method, url }) => method === 'POST'
     ? jsonResponse({ code: '23505', message: 'duplicate key' }, 409)
-    : jsonResponse({ ...routine, label: 'Annan rutin' }));
+    : url.pathname.endsWith('/dog_daily_routines')
+      ? jsonResponse({ ...routine, label: 'Annan rutin' })
+      : jsonResponse([]));
   try {
-    assert.deepEqual(await data.createDailyRoutine(mismatchClient, routine), { status: 'failed' });
+    assert.deepEqual(await data.createDailyRoutine(mismatchClient, routineDraft, 'Europe/Stockholm'), { status: 'failed' });
   } finally { await mismatchClient.auth.dispose(); }
 });
 
@@ -81,18 +133,19 @@ test('daily training retry reconciles the existing logical key when its stable U
 });
 
 test('routine completion becomes checked only from a server-confirmed timestamp', async () => {
-  const saved = { ...routineDay, completed_at: '2026-10-13T08:15:00.000Z' };
+  const itemId = checklist[0].id;
+  const saved = { ...routineDay, completed_item_ids: [itemId], completed_at: '2026-10-13T08:15:00.000Z', routine_day_revision: 2 };
   const { client, requests } = localClient(({ method, url, body }) => {
     assert.equal(method, 'PATCH');
-    assert.equal(url.searchParams.get('completed_at'), 'is.null');
-    assert.ok(Number.isFinite(Date.parse(body.completed_at)));
-    return jsonResponse({ ...saved, completed_at: body.completed_at });
+    assert.deepEqual(body, { completed_item_ids: [itemId] });
+    assert.equal(url.searchParams.get('completed_at'), null);
+    return jsonResponse(saved);
   });
   try {
-    const result = await data.setRoutineDayCompletion(client, routineDay, true);
+    const result = await data.setRoutineDayCompletion(client, routineDay, itemId, true);
     assert.equal(result.status, 'saved');
     if (result.status === 'saved') {
-      assert.deepEqual(result.value, { ...saved, completed_at: result.value.completed_at });
+      assert.deepEqual(result.value, saved);
       assert.ok(Number.isFinite(Date.parse(result.value.completed_at ?? '')));
     }
     assert.equal(requests.length, 1);
@@ -104,7 +157,7 @@ test('routine completion does not claim success when the write and readback are 
     return jsonResponse({ code: 'gateway_timeout', message: 'status unavailable' }, 503);
   });
   try {
-    assert.deepEqual(await data.setRoutineDayCompletion(client, routineDay, true), { status: 'unknown' });
+    assert.deepEqual(await data.setRoutineDayCompletion(client, routineDay, checklist[0].id, true), { status: 'unknown' });
     assert.equal(requests.length, 2);
   } finally { await client.auth.dispose(); }
 });

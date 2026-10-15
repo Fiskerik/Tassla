@@ -533,7 +533,7 @@ R02-3A Logg har stängts efter QA:s slutliga markörkontroll: unikt namngivna bi
 
 R02-3B Träning är implementerad enligt godkänd v6.1: vänsterställd rubrik, kapselsegmenten Rekommenderat/Alla övningar/Mina, befintlig hundålder, bildkort i två kolumner, beskrivningar från befintlig programtext och ett liggande fortsättkort efter korten när bekräftad progress och nästa tillåtna steg finns. `Mina` i public följer bekräftade `completedStepIds`; reviewmarkeringar lever endast i lokal komponentstate och reviewbannern förblir synlig. `HeroCard`/`Tabs`-varianter är opt-in. Inga produktionsdata, skrivkontrakt eller träningsråd lades till. Kortbildens höjd sänktes efter manuell 375×667-rendering så fortsättkortet avslutas cirka 9 px före bottenmenyn.
 
-Public/review React Native Web-renderingar sparas i `docs/design/evidence/vision-rev02/r02-3b/` med §14-egenkontroll och redovisad Nej-avvikelse för exakt panelmatch. `pnpm typecheck`, `pnpm lint` (0 fel; 36 befintliga varningar), `git diff --check`, public/review builds och `python tools/dev_flow.py validate` PASS; manuell browserrendering gav inga sidfel. Inga tester lades till eller kördes. Oberoende QA, Reviewer och Security återstår, så queue är `qa` och R02-3C väntar på denna grind. Native rendering, Dynamic Type/VoiceOver, RLS och produktionsprogrammen är NOT TESTABLE här.
+Public/review React Native Web-renderingar sparas i `docs/design/evidence/vision-rev02/r02-3b/` med §14-egenkontroll och redovisad Nej-avvikelse för exakt panelmatch. `pnpm typecheck`, `pnpm lint` (0 fel; 36 befintliga varningar), `git diff --check`, public/review builds och `python tools/dev_flow.py validate` PASS; manuell browserrendering gav inga sidfel. Inga tester lades till eller kördes. Den ursprungliga implementation handoffen följdes av owner QA PASS och statisk Security PASS; en färsk Reviewer-closeout efter HOME-AGE v4.3 återstår. 3B står i `ready`; 3C är `blocked` tills dess closeout kan registreras. Native rendering, Dynamic Type/VoiceOver, RLS och produktionsprogrammen är NOT TESTABLE här.
 
 
 ### VISION-REV02 R02-4A–H — samlat implementeringshandoff, 2026-10-13
@@ -649,3 +649,57 @@ Oberoende Reviewer omgranskade cancel-korrigeringen och gav **PASS 2026-10-14**.
 ## CHECKLIST-UI-LUNA — förberedelse för commit/push 2026-10-14
 
 Obligatorisk pre-commit `pnpm check` hittade en föråldrad `checklist-ui.test.mjs`-förväntan på den gamla reviewtexten. Efter den uppdateringen riktat test kördes igen och fann ytterligare en föråldrad assertion för Add-knappens label. Båda assertionerna uppdaterades till aktuellt UI-kontrakt; riktat test passerar 5/5 subtests. Inga nya testfall lades till. Full `pnpm check` körs automatiskt i pre-commit och pre-push.
+
+
+### VISION-R02-4A–H — closeout, 2026-10-14
+
+Erik rapporterade att extern QA redan godkänt R02-4A–H och bad att paketet markeras klart. Oberoende Reviewer gav PASS utan blockerande kodfynd; statisk Security gav PASS utan blockerande fynd. Samtliga åtta köposter är stängda som lokal UI-leverans. Inga tester eller byggen kördes av dessa två granskare; deras resultat är separata från Eriks QA. Faktisk Supabase/RLS, kontoåtgärder, OAuth/e-post, notisleverans, native PDF/share och plattformstillgänglighet förblir NOT TESTABLE. Fullt closeout-underlag: `docs/tasks/dev/vision-rev02-r02-4-closeout.md`.
+
+## 2026-10-14 — olyckstyper och Hemmets åldersfaser, plan v4.1
+
+Erik beställde att olyckor kräver typval Kiss/Bajs (Kiss förvalt), att dessa val räknas in i respektive kiss-/bajsmönster, singularformerna `ungefär var N minut/timme`, och att Hem-remsan växlar veckor → månader → år med separata ungefärliga livsfaser. Han instruerade också att R02-4 ska räknas klar utifrån redan genomförd extern QA. R02-4 har separat closeout i `vision-rev02-r02-4-closeout.md`.
+
+- Exakt plan v4.1 i `log-accident-home-age.md` fick Architect APPROVE och Critic PROCEED 2026-10-14 för A och B. A:s lokalcheckpoint begränsas till A-acceptansen och märker befintliga B-hunks ogranskade; B återöppnas separat efter A.
+- LOG-ACCIDENT-DETAILS-01: lokal kod/UI-deluppgift. Live Supabase-persistens, readback, RLS och automatiserad mutationsregression får inte anges som verifierade. Separat `LOG-ACCIDENT-RUNTIME-VERIFY-01` kräver utvecklingsdatabasgranskning före live-/releasepåstående.
+- HOME-AGE-LIFECYCLE-01: börjar efter A:s granskade lokala checkpoint; beroende på live DB-verifiering behövs inte.
+- Ingen unit-/integrationstestsvit har lagts till eller körts.
+- Content blockers (diagnos): Knowledge loaders frågar bara `content_versions.status = 'published'`. De godkända bundleposterna/import- och publiceringsskripten är lokala; draft-importen och efterföljande publiceringstransaktion har inte körts i Supabase. FAQ saknar runtime publicerade Q&A-poster och visar endast granskningsfixturer när review-flaggan är på. `before-homecoming` förblir draft eftersom onboarding-kontext inte finns i urvalsmodellen.
+- A:s lokala kod/UI och renderunderlag finns; Dog Expert QA PASS, Security PASS, Architect APPROVE, Critic PROCEED och Reviewer PASS för A:s avgränsade scope är registrerade. B-hunks i delade filer är uttryckligen uteslutna från A:s acceptans. A:s lokala checkpoint får frysas som exact source-diff fingerprint; B:s kod/render räknas inte som checkpoint. Efter A granskas B separat och dess kontroller/render körs på nytt. Live Supabase/RLS och nativebeteende är NOT TESTABLE. Ingen unit-/integrationstestsvit eller extern SQL-körning.
+
+## HOME-ROUTINE-CHECKLIST-01 — v2 arkitekturgranskning och v3
+
+Architect CHANGES för v2: klientens `private.replace_daily_routine` kan inte anropas via PostgREST eftersom `private` inte är exponerat. v3 flyttar den enda kliententrypointen till `public.replace_daily_routine`, med `SECURITY DEFINER`, tom `search_path`, fullt kvalificerade referenser och explicit hundägarkontroll. EXECUTE ska nekas `PUBLIC`/`anon` och ges endast till `authenticated`; helpers och triggers ligger kvar i oexponerat `private`. Static Security och runtime-verifieringen med två ägare/PostgREST omfattar nu RPC:n. Plan och båda köposter är synkade till v3. Implementering väntar på exakt v3 Architect APPROVE/Critic PROCEED och på att HOME-AGE stänger delade Home-filer; ingen kod eller migration har startat.
+
+### HOME-AGE-LIFECYCLE-01 B v4.3 — QA-handoff
+
+Efter v4.3 UI-korrigeringen passerar `pnpm typecheck`, ESLint för samtliga ändrade B-filer, `git diff --check`, `python3 tools/dev_flow.py validate` och RN Web-bygge. Två fresh Chromium-renders visar unknown-age rekommenderat och Mina, med ofärdig sparad progression, separat Fortsätt där ni var och ingen Passar just nu-rubrik; klick från Rekommenderat till Mina behåller progressionen. Dog Expert QA PASS för korrigerad träningspresentation samt tidigare gränser, skottdagsbeteende, faser och neutralt okänt födelsedatum. Reviewer PASS efter att handoffstatus synkats; HOME-AGE-LIFECYCLE-01 är `done` som lokal source/UI-checkpoint. Inga tester, databaskörningar eller nativepåståenden.
+
+### R02-3C v6.3 — null-age-copy och färsk render
+
+Den godkända v6.3/v1.1-korrigeringen för Kunskap-checklistor är implementerad. När hundens ålder saknas och ägaren inte valt fas visas `Checklistkontext` / `Ingen fas vald` samt vägledning att ange födelsedatum eller välja fas själv; checklistor förblir öppna utan åldersrekommendation. Fresh public/review builds och Chromium-renderingar finns i `docs/design/evidence/vision-rev02/r02-3c/{public,review}/checklist-unknown-age-375x844.png`. Reviewrender verifierar den neutrala copyn och mallarnas tillgänglighet; public visar fortsatt korrekt tom/published-content-gate. `pnpm typecheck`, `pnpm lint`, `git diff --check`, queue validation och båda byggena passerar. Owner QA PASS och statisk Security PASS är tidigare registrerade; färsk Reviewer-granskning av den korrigerade null-age-rendern pågår. Native/Dynamic Type, live Supabase/RLS och publicerat liveinnehåll är **NOT TESTABLE**.
+
+## HOME-ROUTINE-CHECKLIST-01 v4 — lokal implementation till QA, 2026-10-14
+
+Erik lade till pennikon för checklistpunkter, kort hjälp bakom `(i)`, valfri daglig/egen dags-, vecko- eller månadsupprepning samt att hoppade förekomster inte återskapas. v4-planen hade Architect APPROVE och Critic PROCEED före implementation. Formuläret börjar med rutinens namn och egna checklista; upprepningen startar med `Aldrig`. Aktiva dagskopior förblir frysta, och upprepade rader får skip-tombstone som gör omladdning och återläggning idempotent. Migrationskällan innehåller create/replace/ensure/skip RPC och 30-dagars purge för skip-data; migrationen kördes inte.
+
+Public- och reviewbundle byggdes. Manuell Chromium-capture täckte 375×844, 430×844, 375×667 samt 140 %-zoomproxy utan page errors. Aktuella bilder och begränsningar: `docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md`. `pnpm typecheck`, ESLint för ändrade TS/TSX-filer, `git diff --check` och `python3 tools/dev_flow.py validate` passerar. Inga testsviter eller databasoperationer kördes. Köstatus är `qa`; ny oberoende UI QA/Reviewer och statisk Security-granskning av v4 återstår. Separat release-köpost kräver runtime/RLS-verifiering.
+
+## HOME-ROUTINE-CHECKLIST-01 v5 — implementation och begränsat renderunderlag, 2026-10-14
+
+Den efter v4-frågan godkända v5-interaktionen är implementerad inom de nio godkända skrivvägarna. Varje rutin har en enda `Redigera`-knapp vid namnet; namn, checklista och upprepning ingår i samma utkast/sparning. Plus skapar ett stabilt ID en gång per ny punkt, minus tar bort vald punkt och läsvyn har inga punktvisa redigeringskontroller/long-press. Utkastet låser rutin- och dagsval inklusive träningsval och hel-rutin-radering. Dirty close visar discard-bekräftelse. Pending/unknown låser och bevarar fälten tills befintlig retry/readback löser status. V4 data-, RPC- och migrationsfiler ändrades inte av v5.
+
+`pnpm typecheck`, riktad ESLint för `DailyActivityManagerSheet.tsx` och `tools/visual-check/app.tsx`, `git diff --check` på v5-sökvägar och `python3 tools/dev_flow.py validate` passerar. Public- och reviewbundle byggdes tidigare i v5-arbetet. Ingen testsvit eller databasoperation kördes.
+
+Tre reviewbilder finns för 375×844: läsvy, samlat edit mode och discard-bekräftelse. Återstående Playwright-renders kunde inte köras: `/usr/bin/chromium` avslutas vid start med `SIGTRAP` och `setsockopt: Operation not permitted` från crashpad, även med projektets headless- och no-sandbox-flaggor. Därför saknas 430×844, 375×667, 140 %-textproxy samt create/saved/failed/unknown/retry-lägen i färskt v5-underlag. Renderbegränsningen är dokumenterad i `docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md`; detta är inte visuellt QA-godkännande. Queue är fortsatt `implementing` i väntan på fungerande rendering och oberoende UI QA/Reviewer. Native- och Supabase-runtime verifieras separat.
+
+Eriks önskemål om mindre beskrivande text inventerades separat i `docs/tasks/dev/ui-info-copy-inventory.md`. Kandidater är redundanta introtexter i Hälsa, Träning, Mer, Konto, hundprofil och påminnelser samt dubbel informationslänk i historik/planerad hälsa. Integritets-/samtyckestext, säkerhetsråd, statushjälp, fel/återhämtning och artikel-/programsammanfattningar föreslås ligga kvar synligt. Ingen separat copyändring gjordes på dessa skärmar.
+
+## UX-FIX — lokal checkpoint 2026-10-15
+
+Arbetet fortsätter i den vanliga repoklonen på branchen `codex/ux-fix-2026-10-15`, baserad på kandidat `9a81815993f015478be480f9c8d19b0923b05f76`. Den bredare UX-FIX-planen är inte stängd: `HOME-ROUTINE-CHECKLIST-01` är fortsatt blockerad i väntan på de färska renderstorlekarna och tillstånden som står i kön.
+
+`UX-FIX-BASELINE-WINDOWS-01` är klar efter oberoende QA och Reviewer PASS. De två testfilerna använder nu Windows-säker sökvägskonvertering och radslutsnormalisering utan att ta bort eller lätta på testassertioner. Riktat test passerar 10/10; full `pnpm check` passerar typecheck, edge typecheck, lint och 492/492 tester. `python tools/dev_flow.py validate` och `git diff --check` passerar.
+
+`UX-FIX-BASELINE-MOTION-01` är blockerad, inte klar. Den typade implementationen i `src/components/ui/Motion.tsx` bevarar den konkreta Animated-stilen, skickar `{ pressed, hovered }` och kedjar callbacks; typkontroll, riktad lint och full check passerar. Oberoende QA och Reviewer hittade inget statiskt kodfel, men blockerar DONE eftersom RN Web-proben för hover/press, callbackantal, disable→enable och transform inte kan köras här: verktygen React Native Web, React DOM, esbuild, Playwright och Chromium saknas. Native-runtime är också NOT TESTABLE.
+
+Nästa steg är att köra den godkända Motion-proben i den isolerade RN Web-harnessen och därefter återuppta den blockerade Home-rutin/UX-verifieringen enligt respektive köpost. Ingen Supabase-migration, runtime/RLS-kontroll, native- eller TestFlight-verifiering har utförts i denna checkpoint.

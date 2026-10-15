@@ -1,9 +1,10 @@
 import type { HomeTimelineEntry } from './home-timeline';
-import { ageInWeeks } from '../onboarding/dog';
+import { ageInWeeks, automaticDogAge, type AutomaticDogAgeUnit } from '../onboarding/dog';
 import type { HealthHistoryRecord, PlannedHealthRecord } from '../../data/workspace-data';
 import type { LogEvent } from '../puppy-log/log-model';
 import { homeTimelineForDate } from './home-timeline';
 
+export type HomeAgeMarker = { value: number; current: boolean };
 export type HomeWeek = { week: number; current: boolean };
 
 export function homeAgeInWeeks(birthDate: string | null | undefined, today: string): number | null {
@@ -15,12 +16,31 @@ export function homeAgeInWeeks(birthDate: string | null | undefined, today: stri
   }
 }
 
+/** Retained for compatibility with older non-Home consumers; HomeScreen uses homeAgeStrip. */
 export function homeWeekStrip(birthDate: string | null | undefined, today: string): HomeWeek[] {
   const currentWeek = homeAgeInWeeks(birthDate, today);
   if (currentWeek === null) return [];
-  return Array.from({ length: currentWeek + 13 }, (_, week) => {
-    return { week, current: week === currentWeek };
-  });
+  return Array.from({ length: currentWeek + 13 }, (_, week) => ({ week, current: week === currentWeek }));
+}
+
+export function homeAgeStrip(birthDate: string | null | undefined, today: string): { unit: AutomaticDogAgeUnit; markers: HomeAgeMarker[] } | null {
+  const age = automaticDogAge(birthDate, today);
+  if (!age) return null;
+  const first = age.unit === 'years' ? 1 : 0;
+  const last = age.unit === 'weeks' ? 20 : age.unit === 'months' ? 12 : age.value + 3;
+  return {
+    unit: age.unit,
+    markers: Array.from({ length: Math.max(0, last - first + 1) }, (_, index) => {
+      const value = first + index;
+      return { value, current: value === age.value };
+    }),
+  };
+}
+
+export function homeAgeMarkerLabel(value: number, unit: AutomaticDogAgeUnit): string {
+  const singular = unit === 'weeks' ? 'vecka' : unit === 'months' ? 'månad' : 'år';
+  const plural = unit === 'weeks' ? 'veckor' : unit === 'months' ? 'månader' : 'år';
+  return `${value} ${value === 1 ? singular : plural}`;
 }
 
 export type HomeTodaySources = {

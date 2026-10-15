@@ -1,7 +1,18 @@
 # R02-3C Kunskap — renderingsrapport och §14-egenkontroll
 
-Datum: 2026-10-13 · Branch: `design/vision-rev02` · Plan: R02-3 v6.2 §R02-3C<br>
-Status: Implementerad och renderad. Erik har uttryckligen godkänt QA-arbetet hittills. Oberoende Reviewer och Security återstår. Full visuell match med panel 7 är **Nej**.
+Datum: 2026-10-14 · Branch: `work` · Plan: R02-3 v6.3 §R02-3C<br>
+Status: Implementerad och renderad. Owner QA PASS, statisk Security PASS och färsk oberoende Reviewer PASS för v6.3/v1.1 finns. Full visuell match med panel 7 är **Nej**.
+
+## Uppdatering v6.3 — okänd ålder i checklistöversikten, 2026-10-14
+
+Den godkända copy-korrigeringen för `ageWeeks === null`, osparat standardval `by_age` och inget åldersförslag är implementerad. Ytan visar nu `Checklistkontext`, `Ingen fas vald` och `Lägg till hundens födelsedatum för ett åldersförslag, eller välj en fas själv.` Alla checklistor finns kvar och ingen fas markeras som rekommenderad.
+
+- Publictillstånd utan publicerade checklistor visar fortsatt den ärliga grinden: [375×844](public/checklist-unknown-age-375x844.png).
+- Reviewtillstånd med saknat födelsedatum och tomt/osparat val visar neutral copy och samtliga mallar utan rekommendationsmarkering: [375×844](review/checklist-unknown-age-375x844.png).
+- Separata public- och reviewbyggen passerade. Manuell Chromium-render gav inga sidfel; den exakta review-copyn och att ingen åldersförslagstext visas verifierades visuellt.
+- `pnpm typecheck` och riktad ESLint för `PuppyChecklistScreen.tsx`/`know02-app.tsx` passerade. Native VoiceOver/TalkBack, Dynamic Type, RLS och publicerat liveinnehåll är fortsatt **NOT TESTABLE**.
+
+Den tidigare Reviewer-granskningen av C gav CHANGES enbart för just denna saknade ålderscopy/render. Färsk Reviewer PASS efter v6.3 bekräftar att fyndet är löst. V6.3 ändrar inte innehållsgrind, data, fasval, skrivningar eller checkliståtgärder.
 
 ## Omfattning och render
 
@@ -53,4 +64,4 @@ Public- och reviewbyggen använder produktionskomponenterna. Reviewmaterial är 
 17. **Ja** — fyra befintliga sektioner och detaljernas tillbakaresor fungerar i renderad harness.
 18. **Ej tillämpligt** — panel 7 visar generiskt innehåll, inte en identifierad hund.
 
-Ägarens QA-godkännande registreras separat i kön. Det är inte en oberoende Reviewer/Security-granskning och upphäver inte §14 punkt 16:s dokumenterade skillnader. Checkpointen är därför fortfarande blockerad tills de oberoende granskningarna finns.
+Ägarens QA-godkännande och Security PASS registreras separat från Reviewer-granskningen; de upphäver inte §14 punkt 16:s dokumenterade skillnader. Checkpointen är därför fortfarande blockerad tills färsk Reviewer PASS finns.

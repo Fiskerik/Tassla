@@ -9,6 +9,7 @@ export type DailyActivityItemProps = {
   label: string;
   category?: IconCategory;
   kind?: 'routine' | 'training';
+  routineLabel?: string;
   detail?: string;
   completed: boolean;
   onToggle?: () => void;
@@ -49,10 +50,11 @@ export function DailyActivityItem(props: DailyActivityItemProps) {
   </View>;
 }
 
-function HomeDailyActivityItem({ label, kind = 'routine', completed, onToggle, onOpen, accessibilityLabel = label,
+function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, completed, onToggle, onOpen, accessibilityLabel = label,
   pending = false, statusMessage = '', statusError = false, onRetry }: DailyActivityItemProps) {
   const status = pending ? 'Sparar…' : statusMessage;
   const rowLabel = accessibilityLabel + (kind === 'training' ? `, ${completed ? 'klar' : 'inte klar'}, öppna Träning` : '');
+  const routineItemLabel = routineLabel ? `Rutin ${routineLabel}, punkt ${label}` : `Egen rutin: ${label}`;
   const routineCheckbox = <View accessibilityElementsHidden style={[styles.homeCheckbox, completed && styles.homeCheckboxChecked]}>
     {completed ? <Ionicons name="checkmark" size={tokens.size.iconSm} color={tokens.colors.onPrimary} /> : null}
   </View>;
@@ -76,12 +78,12 @@ function HomeDailyActivityItem({ label, kind = 'routine', completed, onToggle, o
 
   return <View style={styles.homeRowWrap}>
     <View style={styles.homeRoutineRow}>
-      <MotionPressable accessibilityRole="checkbox" accessibilityLabel={`Egen rutin: ${label}`}
+      <MotionPressable accessibilityRole="checkbox" accessibilityLabel={`${routineItemLabel}, ${completed ? 'klar' : 'inte klar'}`}
         accessibilityState={{ checked: completed, disabled: !onToggle || pending }} disabled={!onToggle || pending}
         onPress={onToggle} style={({ pressed }) => [styles.homeToggleTarget, pressed && styles.pressed]}>
         {routineCheckbox}
       </MotionPressable>
-      <MotionPressable accessibilityRole="button" accessibilityLabel={`Öppna rutindetaljer: ${label}`} onPress={onOpen}
+      <MotionPressable accessibilityRole="button" accessibilityLabel={`Öppna ${routineItemLabel}`} onPress={onOpen}
         style={({ pressed }) => [styles.homeDetailTarget, pressed && styles.pressed]}>
         <View style={styles.homeCopy}>
           <Text numberOfLines={2} style={styles.homeLabel}>{label}</Text>

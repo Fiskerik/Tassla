@@ -10,6 +10,17 @@ export interface Dog {
 
 const DAY_MS = 86_400_000;
 
+export type AutomaticDogAgeUnit = 'weeks' | 'months' | 'years';
+export type ApproximateDogLifeStage = 'VALP' | 'UNGHUND' | 'VUXEN';
+
+export interface AutomaticDogAge {
+  unit: AutomaticDogAgeUnit;
+  unitLabel: 'veckor' | 'månader' | 'år';
+  value: number;
+  label: string;
+  stage: ApproximateDogLifeStage;
+}
+
 export function ageInWeeks(birthDate: string, today: string): number {
   const birth = parseDate(birthDate);
   const current = parseDate(today);
@@ -40,6 +51,34 @@ export function formatDogAge(birthDate: string, today: string, unit: AgeDisplayU
   }
   const yearLabel = formatCount(years, 'år', 'år');
   return [yearLabel, remainingMonths > 0 ? `${remainingMonths} mån` : ''].filter(Boolean).join(' ');
+}
+
+/** Home's automatic age display. Life stages are broad product labels, not veterinary classifications. */
+export function automaticDogAge(birthDate: string | null | undefined, today: string): AutomaticDogAge | null {
+  if (!birthDate) return null;
+  try {
+    const birth = parseDate(birthDate);
+    const current = parseDate(today);
+    if (birth > current) return null;
+
+    const elapsedDays = (current - birth) / DAY_MS;
+    const months = fullCalendarMonths(birthDate, today);
+    const stage: ApproximateDogLifeStage = months < 6 ? 'VALP' : months < 24 ? 'UNGHUND' : 'VUXEN';
+    if (elapsedDays <= 20 * 7) {
+      const value = fullWeeks(birth, current);
+      return { unit: 'weeks', unitLabel: 'veckor', value, label: formatWeeks(value), stage };
+    }
+
+    const firstBirthday = parseDate(addMonthsClamped(birthDate, 12));
+    if (current <= firstBirthday) {
+      return { unit: 'months', unitLabel: 'månader', value: months, label: formatCount(months, 'månad', 'månader'), stage };
+    }
+
+    const years = fullCalendarYears(birthDate, today);
+    return { unit: 'years', unitLabel: 'år', value: years, label: formatCount(years, 'år', 'år'), stage };
+  } catch {
+    return null;
+  }
 }
 
 export function localDate(): string {
