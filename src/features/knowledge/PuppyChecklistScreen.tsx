@@ -464,8 +464,8 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
   };
   const activeLabel = useMemo(() => CONTEXTS.find((item) => item.id === context)?.title ?? 'Efter ålder', [context]);
   const recommendedTemplate = state === 'ready' ? templates.find((item) => item.phase === recommended) ?? null : null;
-  const unknownAgeDefault = state === 'ready' && ageWeeks === null && context === 'by_age' && !preferenceSaved;
-  const contextSummary = unknownAgeDefault ? 'Ingen fas vald' : context === 'by_age' && recommendedTemplate ? `${activeLabel} · ${recommendedTemplate.title}` : activeLabel;
+  const noAgeRecommendation = state === 'ready' && context === 'by_age' && !recommendedTemplate;
+  const contextSummary = noAgeRecommendation ? 'Ingen ålderschecklista' : context === 'by_age' && recommendedTemplate ? `${activeLabel} · ${recommendedTemplate.title}` : activeLabel;
   const otherTemplates = recommendedTemplate ? templates.filter((item) => item.id !== recommendedTemplate.id) : templates;
   const preferencePending = busy && pendingOperation?.kind === 'preference' && !activeTemplate;
   const preferenceUncertain = uncertain && pendingOperation?.kind === 'preference' && !activeTemplate;
@@ -488,9 +488,9 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
     {!reviewEnabled ? <Text style={styles.meta}>Inga checklistor publicerade ännu.</Text> : !activeTemplate ? <>
       <View style={styles.contextSummary}>
         <View style={styles.contextCopy}>
-          <Text style={styles.contextEyebrow}>{unknownAgeDefault ? 'Checklistkontext' : 'Er fas'}</Text>
+          <Text style={styles.contextEyebrow}>{noAgeRecommendation ? 'Checklistkontext' : 'Er fas'}</Text>
           <Text style={styles.contextTitle}>{state === 'ready' ? contextSummary : state === 'error' ? 'Valet kunde inte hämtas' : 'Läser in ert val…'}</Text>
-          <Text style={styles.contextHint}>{preferencePending ? 'Sparar nytt val…' : unknownAgeDefault ? 'Lägg till hundens födelsedatum för ett åldersförslag, eller välj en fas själv.' : state !== 'ready' ? 'Checklistorna visas när valet har lästs in.' : preferenceSaved ? 'Sparat val' : 'Förslag utifrån hundens ålder'}</Text>
+          <Text style={styles.contextHint}>{preferencePending ? 'Sparar nytt val…' : noAgeRecommendation ? ageWeeks === null ? 'Lägg till hundens födelsedatum för ett åldersförslag, eller välj en fas själv.' : 'Ingen ålderschecklista före åtta veckor. Välj en händelselista vid behov.' : state !== 'ready' ? 'Checklistorna visas när valet har lästs in.' : preferenceSaved ? 'Sparat val' : 'Förslag utifrån hundens ålder'}</Text>
         </View>
         <Button variant="tertiary" label="Ändra" accessibilityLabel="Ändra checklistornas fas" disabled={busy || state !== 'ready' || uncertain} onPress={() => setContextSheetOpen(true)} />
       </View>

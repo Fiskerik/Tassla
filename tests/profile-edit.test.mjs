@@ -31,7 +31,7 @@ test('profile editor keeps transient success feedback in the local action card a
   assert.ok(draftDiffersSource, 'expected the editor draft comparison');
   assert.ok(statusVisibleSource, 'expected the editor status visibility rule');
   const evaluate = (draft, statusMessage, statusError, pending, busy) => {
-    const draftDiffers = new Function('name', 'dog', 'breedId', 'birthDate', 'ageDisplayUnit', `return ${draftDiffersSource};`)(draft.name, profile, draft.breedId, draft.birthDate, draft.ageDisplayUnit ?? profile.age_display_unit);
+    const draftDiffers = new Function('name', 'dog', 'breedId', 'birthDate', 'ageDisplayUnit', 'seniorConfirmed', 'endOfLife', `return ${draftDiffersSource};`)(draft.name, profile, draft.breedId, draft.birthDate, draft.ageDisplayUnit ?? profile.age_display_unit, draft.seniorConfirmed ?? false, draft.endOfLife ?? false);
     const showStatusMessage = new Function('statusMessage', 'statusError', 'pending', 'busy', 'draftDiffers', `return ${statusVisibleSource};`)(statusMessage, statusError, pending, busy, draftDiffers);
     return { draftDiffers, showStatusMessage };
   };
@@ -39,6 +39,8 @@ test('profile editor keeps transient success feedback in the local action card a
   assert.deepEqual(savedMessage, { draftDiffers: false, showStatusMessage: false });
   const changedAgeUnit = evaluate({ name: 'Nala', breedId: 'beagle', birthDate: profile.birth_date, ageDisplayUnit: 'years' }, 'Profilen sparades.', false, false, false);
   assert.deepEqual(changedAgeUnit, { draftDiffers: true, showStatusMessage: false });
+  assert.equal(evaluate({ name: 'Nala', breedId: 'beagle', birthDate: profile.birth_date, seniorConfirmed: true }, '', false, false, false).draftDiffers, true);
+  assert.equal(evaluate({ name: 'Nala', breedId: 'beagle', birthDate: profile.birth_date, endOfLife: true }, '', false, false, false).draftDiffers, true);
   const editedAfterSave = evaluate({ name: 'Nala ny', breedId: 'beagle', birthDate: profile.birth_date }, 'Profilen sparades.', false, false, false);
   assert.deepEqual(editedAfterSave, { draftDiffers: true, showStatusMessage: false });
   assert.equal(evaluate({ name: 'Nala ny', breedId: 'beagle', birthDate: profile.birth_date }, 'Ändringen väntar.', false, true, false).showStatusMessage, true);
@@ -93,6 +95,24 @@ test('update filters the exact dog and all three captured preimage fields and se
   });
   try {
     assert.deepEqual(await appData.updateOwnedDog(client, dogId, profile, changes, breeds), { status: 'saved', value: desired });
+    assert.equal(requests.length, 1);
+  } finally { await client.auth.dispose(); }
+});
+
+test('individual senior and end-of-life choices persist with exact preimage checks', async () => {
+  const previous = { ...profile, senior_confirmed: false, end_of_life: false };
+  const requested = { ...changes, senior_confirmed: true, end_of_life: true };
+  const saved = { ...desired, senior_confirmed: true, end_of_life: true };
+  const { client, requests } = localClient(({ method, url, body }) => {
+    assert.equal(method, 'PATCH');
+    assert.equal(url.searchParams.get('senior_confirmed'), 'eq.false');
+    assert.equal(url.searchParams.get('end_of_life'), 'eq.false');
+    assert.equal(body.senior_confirmed, true);
+    assert.equal(body.end_of_life, true);
+    return jsonResponse(saved);
+  });
+  try {
+    assert.deepEqual(await appData.updateOwnedDog(client, dogId, previous, requested, breeds), { status: 'saved', value: saved });
     assert.equal(requests.length, 1);
   } finally { await client.auth.dispose(); }
 });
@@ -200,7 +220,7 @@ test('fetchOwnedDogById is exact-id scoped and validates the returned id', async
   await t.test('matching dog row', async () => {
     const { client, requests } = localClient(({ method, url }) => {
       assert.equal(method, 'GET');
-      assert.equal(url.searchParams.get('select'), 'id,name,breed_id,birth_date,age_display_unit');
+      assert.equal(url.searchParams.get('select'), 'id,name,breed_id,birth_date,age_display_unit,senior_confirmed,end_of_life');
       assert.equal(url.searchParams.get('id'), `eq.${dogId}`);
       return jsonResponse(profile);
     });

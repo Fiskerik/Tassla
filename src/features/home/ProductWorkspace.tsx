@@ -2475,7 +2475,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       profilePending={profilePending}
       profileConflict={Boolean(profileConflict)}
     />;
-    if (onDogUpdated) return <EditDogProfileScreen key={`${dog.id}:${dog.name}:${dog.breed_id}:${dog.birth_date}:${dog.age_display_unit}`}
+    if (onDogUpdated) return <EditDogProfileScreen key={`${dog.id}:${dog.name}:${dog.breed_id}:${dog.birth_date}:${dog.age_display_unit}:${dog.senior_confirmed}:${dog.end_of_life}`}
       client={client} dog={dog} busy={profileBusy} pending={profilePending} statusMessage={profileMessage}
       statusError={profileMessageError} conflict={profileConflict ?? undefined}
       attribution={dogAttribution} attributionState={attributionState} attributionBusy={attributionBusy}
@@ -2544,10 +2544,12 @@ function samePlannedHealthSnapshot(left: PlannedHealthRecord | null, right: Plan
 
 function sameOwnedDogProfile(
   current: OwnedDog,
-  expected: Pick<OwnedDog, 'name' | 'breed_id' | 'birth_date' | 'age_display_unit'>,
+  expected: Pick<OwnedDog, 'name' | 'breed_id' | 'birth_date' | 'age_display_unit' | 'senior_confirmed' | 'end_of_life'>,
   id: string,
 ): boolean {
   return current.id === id && current.name === expected.name
     && current.breed_id === expected.breed_id && current.birth_date === expected.birth_date
-    && current.age_display_unit === expected.age_display_unit;
+    && current.age_display_unit === expected.age_display_unit
+    && (expected.senior_confirmed === undefined || current.senior_confirmed === expected.senior_confirmed)
+    && (expected.end_of_life === undefined || current.end_of_life === expected.end_of_life);
 }

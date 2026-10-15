@@ -15,7 +15,7 @@ test('checklist catalogue has stable review-v1 IDs and item keys across all phas
 test('explicit owner context wins; age selection has clear phase boundaries', () => {
   assert.equal(model.chooseChecklistPhase(40, 'before_homecoming'), 'before_homecoming');
   assert.equal(model.chooseChecklistPhase(40, 'first_days'), 'first_days');
-  assert.equal(model.chooseChecklistPhase(7, 'by_age'), 'before_homecoming');
+  assert.equal(model.chooseChecklistPhase(7, 'by_age'), null);
   assert.equal(model.chooseChecklistPhase(8, 'by_age'), '8_12_weeks');
   assert.equal(model.chooseChecklistPhase(13, 'by_age'), '3_6_months');
   assert.equal(model.chooseChecklistPhase(26, 'by_age'), '6_12_months');

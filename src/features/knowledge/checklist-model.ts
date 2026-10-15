@@ -1,3 +1,5 @@
+import { legacyChecklistPhaseForAgeWeeks } from '../onboarding/life-stages.ts';
+
 export const CHECKLIST_VERSION = 'review-v1';
 export const CHECKLIST_CONTEXTS = ['before_homecoming', 'first_days', 'by_age'] as const;
 export type ChecklistContext = typeof CHECKLIST_CONTEXTS[number];
@@ -26,11 +28,7 @@ export function chooseChecklistPhase(ageWeeks: number | null, context: Checklist
   if (context === 'before_homecoming') return 'before_homecoming';
   if (context === 'first_days') return 'first_days';
   if (ageWeeks === null) return null;
-  if (ageWeeks < 8) return 'before_homecoming';
-  if (ageWeeks < 13) return '8_12_weeks';
-  if (ageWeeks < 26) return '3_6_months';
-  if (ageWeeks < 52) return '6_12_months';
-  return 'over_1_year';
+  return legacyChecklistPhaseForAgeWeeks(ageWeeks);
 }
 
 export function isChecklistContext(value: unknown): value is ChecklistContext {

@@ -20,7 +20,7 @@ export function PreviewHomeScreen({
   onOpenTraining: () => void;
   trainingShortcut: { programTitle: string; stepTitle: string; stepNumber: number; completedCount: number; totalCount: number } | null;
 }) {
-  const age = automaticDogAge(dog.birthDate, todayValue ?? localDate());
+  const age = automaticDogAge(dog.birthDate, todayValue ?? localDate(), { seniorConfirmed: dog.seniorConfirmed, endOfLife: dog.endOfLife });
   const breed = dog.breedId === 'example' ? 'Labrador' : dog.breedId;
   return (
     <View>
@@ -33,7 +33,7 @@ export function PreviewHomeScreen({
           <Text style={styles.dogName}>{dog.name} | {breed}</Text>
           {age ? <>
             <Text style={styles.dogMeta}>{age.label}</Text>
-            <Text style={styles.dogMeta}>Ungefärlig fas: {age.stage}</Text>
+            <Text style={styles.dogMeta}>Åldersperiod: {age.stage}</Text>
           </> : null}
         </View>
       </View>
