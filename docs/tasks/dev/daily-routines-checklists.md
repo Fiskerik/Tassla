@@ -142,6 +142,16 @@ Före v4-tillägget började skapaformuläret med `Namn på rutin` och en obliga
 
 Schemaändringen och klienten finns i källan, men migrationen har inte körts. V4:s typecheck/lint, public/review-byggen och RN Web-rendering gäller inte V5:s ändrade interaktion. Migrationen berörs inte av denna UI-ändring. Statisk Security-review från v4 gäller fortsatt oförändrad SQL-källa; ny UI QA/Reviewer krävs efter V5-render. Inga tester eller live DB-åtgärder körs i denna leverans. Separat runtime-verify-task för godkänd disposable utvecklingsmiljö ligger kvar som releaseblockerare.
 
+## Veckodagsutökning — `HOME-ROUTINE-WEEKDAYS-01`, 2026-10-15
+
+Ägarens godkända veckointervall kan välja en eller flera ISO-veckodagar (`1=Mån` … `7=Sön`). Måndag är veckogräns; ankardagen behålls som startpunkt och förekomster före den hoppas över. En ändring i veckodagsmängden är en regeländring och använder lokalt datum vid sparning som nytt ankare. Namn-/checkliständringar och identiska mängder behåller ankaret.
+
+`repeat_weekdays smallint[] NULL` är nullable och serverstyrt. Endast sorterade, unika 1–7-arrayer med en till sju dagar tillåts för veckointervall. `NULL` bevarar äldre förfallologik exakt: samma veckodag som ankaret och modulo `repeat_interval × 7`. En äldre rad förblir `NULL` vid namn-/checkliständring och när den enda valda dagen motsvarar ankardagen. Nya veckor använder separata `create_daily_routine_v2`/`replace_daily_routine_v2`-funktioner; gamla create/replace-namn behålls, och gammal replace bevarar valen vid samma enhet/intervall men återgår till NULL-regeln vid faktiskt intervallbyte. Direkt authenticated INSERT/UPDATE-rättigheter för fältet tillkommer inte.
+
+Ny veckoregel räknar förfalloveckor från måndagen i ankarets vecka, använder ISO-dag och kalenderdatum (ingen DST-känslig millisekundsräkning). Handvektor: ankare onsdag 2026-10-14, varannan vecka, måndag/fredag ger första förekomst fredag 2026-10-16; måndag 2026-10-12 ligger före ankaret. Nästa förfallovecka startar måndag 2026-10-26 och innehåller 26 och 30 oktober. TypeScript och SQL-formler jämförs statiskt mot denna vektor samt legacy-vektorn; ingen runtime-paritet påstås.
+
+Granskning före implementation: Architect APPROVE, Critic PROCEED, Security plan PASS och Compliance PASS 2026-10-15 för exakt UX-FIX v2.1 slice 7. Securitys implementationsvillkor kräver full arrayformvalidering, owner-check/grants, CAS/readback/retry, ankarets effective-rule-jämförelse och legacy RPC-kompatibilitet. Compliance bekräftar fortsatt privat dagsplanering som enda ändamål; veckodagar är rutinmetadata som följer rutinmallens åtkomst-/kopie- och konto-/hundraderingslivscykel. Migrationen får inte appliceras i denna uppgift. Oberoende migration-/kodreview, QA och Reviewer dokumenteras i queue/rapport innan `done`.
+
 ## Öppna och förbjudna sidospår
 
 Planen omfattar återkommande dagsrutiner enligt V4 och den samlade rutinredigeringen enligt V5, men inte påminnelser, mallkategorier, checklist-progress i Knowledge eller redesign av Hemmets dagskort. Den ändrar inte källor för träningsprogress.

@@ -332,22 +332,19 @@ test('actual workspace suppresses profile replay and owner callback after a life
   });
 });
 
-test('derived content and training return to loading on age/breed changes and ignore old generations', async () => {
+test('derived content resets on age/breed changes and ignores old generations', async () => {
   const firstDog = profile;
   const firstAge = dogModel.ageInWeeks(firstDog.birth_date, dogModel.localDate());
   const firstKey = `${firstDog.id}:${firstDog.breed_id}:${firstAge}`;
-  const state = { content: ['old content'], contentKey: firstKey, contentState: 'ready', training: { programs: ['old'], paused: [] }, trainingKey: firstKey, trainingError: '', trainingState: 'ready' };
-  const generations = { content: { current: 0 }, training: { current: 0 } };
-  const requests = { content: [], training: [] };
+  const state = { content: ['old content'], contentKey: firstKey, contentState: 'ready' };
+  const generations = { content: { current: 0 } };
+  const requests = { content: [] };
   const firstContent = deferredResult();
-  const firstTraining = deferredResult();
   const secondContent = deferredResult();
-  const secondTraining = deferredResult();
   const first = buildDerivedEffect({ state, generations, dog: firstDog, age: firstAge, selectionKey: firstKey,
-    homeResult: firstContent.promise, trainingResult: firstTraining.promise, requests });
+    homeResult: firstContent.promise, requests });
   const cleanupFirst = first();
   assert.equal(state.contentKey, firstKey);
-  assert.equal(state.trainingKey, firstKey);
 
   const updatedDog = { ...profile, breed_id: 'mixed', birth_date: '2026-08-01' };
   const updatedAge = dogModel.ageInWeeks(updatedDog.birth_date, dogModel.localDate());
@@ -357,57 +354,50 @@ test('derived content and training return to loading on age/breed changes and ig
   const visibleForUpdatedProfile = () => ({
     content: state.contentKey === updatedKey ? state.content : [],
     contentState: state.contentKey === updatedKey ? state.contentState : 'loading',
-    training: state.trainingKey === updatedKey ? state.training : { programs: [], paused: [] },
-    trainingState: state.trainingKey === updatedKey ? state.trainingState : 'loading',
   });
-  assert.deepEqual(visibleForUpdatedProfile(), { content: [], contentState: 'loading', training: { programs: [], paused: [] }, trainingState: 'loading' });
+  assert.deepEqual(visibleForUpdatedProfile(), { content: [], contentState: 'loading' });
   const second = buildDerivedEffect({ state, generations, dog: updatedDog, age: updatedAge, selectionKey: updatedKey,
-    homeResult: secondContent.promise, trainingResult: secondTraining.promise, requests });
+    homeResult: secondContent.promise, requests });
   const cleanupSecond = second();
   assert.equal(requests.content.length, 2);
   assert.deepEqual(requests.content.map(({ dog, age }) => [dog.breed_id, dog.birth_date, age]), [
     [firstDog.breed_id, firstDog.birth_date, firstAge], [updatedDog.breed_id, updatedDog.birth_date, updatedAge],
   ]);
   assert.equal(visibleForUpdatedProfile().contentState, 'loading');
-  assert.equal(visibleForUpdatedProfile().trainingState, 'loading');
 
   firstContent.resolve([{ id: 'old', title: 'Old', body: 'Old body', contentType: 'guide' }]);
-  firstTraining.resolve({ programs: [{ id: 'old-program' }], paused: [] });
   await flushMicrotasks();
   assert.deepEqual(state.content, ['old content'], 'late first-generation content cannot replace the previous generation');
-  assert.deepEqual(state.training.programs, ['old'], 'late first-generation training cannot replace the previous generation');
   assert.deepEqual(visibleForUpdatedProfile().content, [], 'old profile content remains hidden');
   assert.equal(visibleForUpdatedProfile().contentState, 'loading');
 
   secondContent.resolve([{ id: 'new', title: 'New', body: 'New body', contentType: 'guide' }]);
-  secondTraining.resolve({ programs: [{ id: 'new-program' }], paused: [] });
   await flushMicrotasks();
   assert.deepEqual(visibleForUpdatedProfile().content.map(({ id }) => id), ['new']);
   assert.equal(state.contentKey, updatedKey);
   assert.equal(state.contentState, 'ready');
-  assert.deepEqual(visibleForUpdatedProfile().training.programs.map(({ id }) => id), ['new-program']);
-  assert.equal(state.trainingKey, updatedKey);
-  assert.equal(state.trainingState, 'ready');
+  const trainingReload = productWorkspaceSource.slice(productWorkspaceSource.indexOf('const reloadTraining ='), productWorkspaceSource.indexOf('const reloadDailyActivity ='));
+  assert.match(trainingReload, /currentSelectionKeyRef\.current !== scope/);
+  assert.match(trainingReload, /setTrainingSelectionKey\(scope\)/);
+  assert.match(productWorkspaceSource, /trainingSelectionKey === currentSelectionKey \? trainingState : 'loading'/);
   cleanupSecond();
 });
 
-test('failed derived reads clear stale selections and expose error states for the current profile', async () => {
-  const state = { content: ['old content'], contentKey: 'old', contentState: 'ready', training: { programs: ['old'], paused: [] }, trainingKey: 'old', trainingError: '', trainingState: 'ready' };
+test('failed derived content reads clear stale data and expose an error state for the current profile', async () => {
+  const state = { content: ['old content'], contentKey: 'old', contentState: 'ready' };
   const dog = { ...profile, breed_id: 'mixed', birth_date: '2026-08-01' };
   const age = dogModel.ageInWeeks(dog.birth_date, dogModel.localDate());
   const selectionKey = `${dog.id}:${dog.breed_id}:${age}`;
   const run = buildDerivedEffect({ state, generations: { content: { current: 0 }, training: { current: 0 } }, dog, age,
-    selectionKey, homeResult: Promise.reject(new Error('content fetch failed')),
-    trainingResult: Promise.reject(new Error('training fetch failed')), requests: { content: [], training: [] } });
+    selectionKey, homeResult: Promise.reject(new Error('content fetch failed')), requests: { content: [] } });
   const cleanup = run();
   await flushMicrotasks();
   assert.deepEqual(state.content, []);
   assert.equal(state.contentKey, selectionKey);
   assert.equal(state.contentState, 'error');
-  assert.deepEqual(state.training, { programs: [], paused: [] });
-  assert.equal(state.trainingKey, selectionKey);
-  assert.equal(state.trainingState, 'error');
-  assert.match(state.trainingError, /could not be fetched|kunde inte hämtas/i);
+  const trainingReload = productWorkspaceSource.slice(productWorkspaceSource.indexOf('const reloadTraining ='), productWorkspaceSource.indexOf('const reloadDailyActivity ='));
+  assert.match(trainingReload, /setTrainingState\('error'\)/);
+  assert.match(trainingReload, /Publicerat träningsinnehåll kunde inte hämtas/);
   cleanup();
 });
 
@@ -538,7 +528,6 @@ function buildDerivedEffect({ state, generations, dog, age, selectionKey, homeRe
   const dependencies = {
     useEffect(callback) { return callback(); },
     contentGeneration: generations.content,
-    trainingGeneration: generations.training,
     currentSelectionKey: selectionKey,
     currentSelectionKeyRef: state.selectionKeyRef,
     dog,
@@ -548,14 +537,9 @@ function buildDerivedEffect({ state, generations, dog, age, selectionKey, homeRe
     REVIEW_TRAINING_PROGRAMS: [],
     mounted: { current: true },
     fetchHomeContent: async (...args) => { requests.content.push({ dog: args[1], age: args[2], signal: args[4] }); return homeResult; },
-    fetchTrainingWorkspace: async (...args) => { requests.training.push({ dog: args[1], age: args[2], signal: args[4] }); return trainingResult; },
     setContent(value) { state.content = value; },
     setContentSelectionKey(value) { state.contentKey = value; },
     setContentState(value) { state.contentState = value; },
-    setTraining(value) { state.training = value; },
-    setTrainingSelectionKey(value) { state.trainingKey = value; },
-    setTrainingError(value) { state.trainingError = value; },
-    setTrainingState(value) { state.trainingState = value; },
   };
   const build = new Function(...Object.keys(dependencies), compiled.outputText);
   let cleanup;

@@ -12,6 +12,41 @@ Försök att fortsätta Playwright-renderingen stoppades innan fler vyer kunde f
 
 Senast körda statiska kontroller efter källändring: `pnpm typecheck`, riktad ESLint på `DailyActivityManagerSheet.tsx` och `tools/visual-check/app.tsx`, `git diff --check` för v5-paths samt `python3 tools/dev_flow.py validate` — PASS. Public- och reviewbundle byggdes tidigare i samma v5-arbete — PASS. Inga testsviter eller databasoperationer kördes. Oberoende QA/Reviewer och native-/backendverifiering återstår.
 
+## V6 — kompakt rutinhantering, 2026-10-15
+
+Panel-4-listan är nu en gemensam varm yta med tunna avdelare, enkla checklistrader och en kort upprepningsrad per rutin. Namnradens enda `Redigera`-knapp är lågmäld. Dagsvalet `Lägg till på Hemskärmen`/`Ta bort från Hemskärmen` har mjuk grön yta och ligger bredvid röd, bekräftad helradering. Ett aktivt create/edit-utkast visar `Spara rutin` som enda visuella huvudåtgärd; den fasta `Klar`-knappen döljs tills utkastet är sparat eller lämnat. Stängknappen behåller det befintliga discard-flödet.
+
+Public- och reviewbundle byggdes om från aktuell källa. React Native Web/Chromium med syntetiska reviewdata verifierades manuellt. Nya reviewbilder finns i `review-compact-v6/`: `manager-375x844.png`, `manager-430x844.png`, `manager-375x667.png`, `manager-375x844-scrolled.png`, `manager-375x844-text-140.png`, `routine-create-375x844.png`, `routine-created-375x844.png`, `routine-edit-failed-375x844.png`, `routine-edit-unknown-375x844.png`, `routine-edit-retry-saved-375x844.png`, `routine-discard-confirm-375x844.png` och `home-routine-completion-375x844.png`. Jämförelse före ändringen finns i `home-manager-before-compact-375x844.png`.
+
+Manuella kontroller: tre separata rutiner visas inom samma yta; dagsval och helradering har skilda etiketter, färg och ikoner; create och bekräftat saved readback fungerar; failed och unknown behåller utkast och exakta retry; retry bekräftar ändringen; fortsätt redigera och uttryckligt discard fungerar; helradering erbjuder Avbryt och lämnar rutinen kvar; Hemmets punktmarkering ändrar endast bekräftad progress. Inga Chromium page errors. Vid 375×844, 430×844 och 375×667 gick vyn att läsa och scrolla. Vid 140 % textproxy var sidbredden fortsatt 375 px; de tre dagsknapparnas höjd var 86 px och texten höll sig inom knapparna. Webbsemantik och 44 pt målyta kontrollerades. Detta är inte native Dynamic Type/VoiceOver.
+
+### Designregler §14 — panel-4-delta
+
+| # | Bedömning | Underlag |
+| --- | --- | --- |
+| 1 | Ja | En tydlig huvudåtgärd per läge; `Klar` döljs medan `Spara rutin` är aktiv. |
+| 2 | Ja | Dagsval och helradering har olika konsekvens och därmed avsiktligt olika färg; de ligger jämsides. |
+| 3 | Ja | Helradering är röd, bekräftad och separat från dagsvalets minusåtgärd. |
+| 4 | Ja | En fördjupningsväg från Hem och en Edit-knapp per rutin; inga punktvisa editknappar. |
+| 5 | Ja, webb | Alla fyra viewport-/textlägen renderade; innehållet scrollar bakom fast `Klar` när ingen draft är öppen. Native safe area ingår inte. |
+| 6 | Ja | Befintliga semantiska färg-, typografi-, avstånds- och touchmålstokens används. |
+| 7 | Ja | Ikonerna använder projektets Ionicons-familj och motsvarar tillägg, borttagning, redigering och radering. |
+| 8 | Ja, begränsat | Home-bilden visar varm yta, grön status samt blå/grön/lila genvägar och gul tipsaccent; exakt jämförelse med målbilden saknas. |
+| 9 | Ja | Synliga etiketter och knapphandlingar skiljer dagsval från radering av rutinmallen. |
+| 10 | Ja | Endast bekräftade dagsmarkeringar visas som klara. |
+| 11 | Ja | Failed/unknown visar en återhämtningshandling och ingen falsk sparad markering. |
+| 12 | Ja | Kort svensk copy; feltexten beskriver nästa steg. |
+| 13 | Ja, enligt kontrakt | Namn, checklistpunkter och upprepning har tydlig hierarki och metadata är dämpad. |
+| 14 | Ja | Create, saved, failed, unknown, retry, discard, flera rutiner och completion renderades. |
+| 15 | Ja, webb | Knappar har minst 44×44 pt, semantik verifierades och 140 % textproxy renderades; native Dynamic Type/VoiceOver är NOT TESTABLE. |
+| 16 | NOT TESTABLE | `vision_rev02.jpg` saknas i checkouten; sida-vid-sida-jämförelse av panel 4 kan därför inte göras. Ingen full visuell matchning hävdas. |
+| 17 | Ja | Hemmets fem huvudflikar syns; denna ändring påverkar inte navigationsordning eller returvägar. |
+| 18 | Ja, begränsat | Home-fixturen behåller hundidentitet/standardbild med synlig etikett; ingen bildroll ändrades här. |
+
+UI-funktion och lokal webbrender har verifierats; live Supabase/RLS, migrationens runtime, native interaktion och panel-4-likhet mot bildreferensen är fortsatt separata och ej verifierade. Oberoende QA/Reviewer efter denna visuella ändring återstår.
+
+Efter ägarens godkännande att köra obligatoriska Git-hookar passerade `pnpm check`: app- och edge-typecheck, full lint samt 45/45 testfiler. Befintliga assertions/fixturer uppdaterades till redan införda weekday-, review-gating-, Träning-, Logga- och scoped profile-read-kontrakt; inga testfall lades till. Ingen databas- eller migrationsåtgärd kördes.
+
 ## V4 — historical implementation and render record
 
 - `pnpm typecheck`, ändrade TS/TSX-filers `eslint`, `git diff --check` och `python3 tools/dev_flow.py validate` — PASS. En lintvarning om saknat `dailyTimeZone`-beroende rättades; slutlig lint är omkörd.

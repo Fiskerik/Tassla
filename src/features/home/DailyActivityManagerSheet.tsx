@@ -6,7 +6,7 @@ import { BottomSheet, Button } from '../../components/ui';
 import { MotionPressable } from '../../components/ui/Motion';
 import { tokens } from '../../theme/tokens';
 import type { DailyRoutine, DailyRoutineChecklistItem, DailyRoutineCreateInput, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineRepeatValues, DailyTrainingSelection } from './daily-activity-data';
-import { dailyRoutineRepeatSummary, type HomeDailyActivity } from './daily-activity-model';
+import { dailyRoutineRepeatSummary, isoWeekdayForDateKey, type HomeDailyActivity } from './daily-activity-model';
 import type { HomeDailyTrainingOption } from './HomeScreen';
 
 type ActionResult = { status: 'saved' | 'failed' | 'unknown' } | void;
@@ -19,6 +19,8 @@ type RoutineDraft = {
   initialLabel: string;
   initialChecklist: DailyRoutineChecklistItem[];
   initialRepeat: DailyRoutineRepeatValues;
+  anchorDate: string;
+  newAnchorDate: string;
   label: string;
   checklist: DailyRoutineChecklistItem[];
   repeat: DailyRoutineRepeatValues;
@@ -40,21 +42,42 @@ function sameChecklist(left: readonly DailyRoutineChecklistItem[], right: readon
   return left.length === right.length && left.every((item, index) => item.id === right[index]?.id && item.label === right[index]?.label);
 }
 
-function sameRepeat(left: DailyRoutineRepeatValues, right: DailyRoutineRepeatValues) {
-  return left.repeat_unit === right.repeat_unit && left.repeat_interval === right.repeat_interval;
+function isValidDateKey(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function localDateKeyToday() {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+}
+
+function sameWeekdays(left: readonly number[] | null, right: readonly number[] | null, anchorDate: string) {
+  const fallback = isValidDateKey(anchorDate) ? [isoWeekdayForDateKey(anchorDate)] : [];
+  const effectiveLeft = left ?? fallback;
+  const effectiveRight = right ?? fallback;
+  return effectiveLeft.length === effectiveRight.length && effectiveLeft.every((day, index) => day === effectiveRight[index]);
+}
+
+function sameRepeat(left: DailyRoutineRepeatValues, right: DailyRoutineRepeatValues, anchorDate: string) {
+  return left.repeat_unit === right.repeat_unit && left.repeat_interval === right.repeat_interval
+    && (left.repeat_unit !== 'week' || sameWeekdays(left.repeat_weekdays, right.repeat_weekdays, anchorDate));
 }
 
 function routineDraftIsDirty(draft: RoutineDraft) {
   return cleanRoutineLabel(draft.label) !== cleanRoutineLabel(draft.initialLabel)
     || !sameChecklist(cleanChecklist(draft.checklist), cleanChecklist(draft.initialChecklist))
-    || !sameRepeat(draft.repeat, draft.initialRepeat);
+    || !sameRepeat(draft.repeat, draft.initialRepeat, draft.anchorDate);
 }
 
 function routineDraftIsValid(draft: RoutineDraft) {
   const label = cleanRoutineLabel(draft.label);
   const checklist = cleanChecklist(draft.checklist);
+  const weekdaysValid = draft.repeat.repeat_unit !== 'week' || (draft.repeat.repeat_weekdays === null
+    ? isValidDateKey(draft.anchorDate) : draft.repeat.repeat_weekdays.length > 0);
   return label.length > 0 && Array.from(label).length <= 160 && checklist.length >= 1 && checklist.length <= 50
-    && checklist.every((item) => item.label.length > 0 && Array.from(item.label).length <= 160);
+    && checklist.every((item) => item.label.length > 0 && Array.from(item.label).length <= 160) && weekdaysValid;
 }
 
 function routineDraftHasReadback(draft: RoutineDraft, routines: readonly DailyRoutine[]) {
@@ -64,7 +87,7 @@ function routineDraftHasReadback(draft: RoutineDraft, routines: readonly DailyRo
   if (!routine) return false;
   const matchesDraft = routine.label === cleanRoutineLabel(draft.label)
     && sameChecklist(routine.checklist, cleanChecklist(draft.checklist))
-    && sameRepeat(routine, draft.repeat);
+    && sameRepeat(routine, draft.repeat, routine.repeat_anchor_date ?? draft.anchorDate);
   return draft.mode === 'create' ? matchesDraft : routine.checklist_revision > (draft.baseRevision ?? routine.checklist_revision) && matchesDraft;
 }
 
@@ -134,17 +157,19 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
 
   function startCreate() {
     const firstItem = { id: Crypto.randomUUID(), label: '' };
+    const anchorDate = localDateKeyToday();
     setDraft({ mode: 'create', submissionId: Crypto.randomUUID(), routineId: null, baseRevision: null,
-      initialLabel: '', initialChecklist: [firstItem], initialRepeat: { repeat_unit: null, repeat_interval: null },
-      label: '', checklist: [firstItem], repeat: { repeat_unit: null, repeat_interval: null } });
+      initialLabel: '', initialChecklist: [firstItem], initialRepeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null }, anchorDate, newAnchorDate: anchorDate,
+      label: '', checklist: [firstItem], repeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null } });
   }
 
   function startEdit(routine: DailyRoutine) {
     if (selectionLocked) return;
     const checklist = copyChecklist(routine.checklist);
-    const repeat = { repeat_unit: routine.repeat_unit, repeat_interval: routine.repeat_interval };
+    const repeat = { repeat_unit: routine.repeat_unit, repeat_interval: routine.repeat_interval, repeat_weekdays: routine.repeat_weekdays };
+    const newAnchorDate = localDateKeyToday();
     setDraft({ mode: 'edit', submissionId: Crypto.randomUUID(), routineId: routine.id, baseRevision: routine.checklist_revision,
-      initialLabel: routine.label, initialChecklist: checklist, initialRepeat: repeat,
+      initialLabel: routine.label, initialChecklist: checklist, initialRepeat: repeat, anchorDate: routine.repeat_anchor_date ?? newAnchorDate, newAnchorDate,
       label: routine.label, checklist, repeat });
   }
 
@@ -179,7 +204,7 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   }
 
   return <BottomSheet visible={visible} title={focusedRoutine ? `Hantera ${focusedRoutine.label}` : 'Rutiner och aktiviteter'}
-    onRequestClose={closeSheet} onPrimaryAction={closeSheet} primaryLabel="Klar">
+    onRequestClose={closeSheet} onPrimaryAction={activeDraft ? undefined : closeSheet} primaryLabel="Klar">
     {mutationMessage ? <View style={[styles.message, mutationError && styles.errorMessage]}>
       <Text accessibilityRole={mutationError ? 'alert' : undefined} style={[styles.body, mutationError && styles.errorText]}>{mutationMessage}</Text>
       {onRetryMutation ? <Button variant="tertiary" label="Kontrollera samma ändring igen" accessibilityLabel="Kontrollera samma ändring igen" disabled={busy} onPress={onRetryMutation} /> : null}
@@ -202,22 +227,24 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
         <ActionButton icon="add-outline" label={creating ? 'Avbryt' : 'Skapa rutin'} accessibilityLabel={creating ? 'Avbryt skapa rutin' : 'Skapa en ny rutin'}
           disabled={unresolvedMutation || (Boolean(draft) && !creating)} onPress={() => creating ? requestLeave(() => setDraft(null)) : startCreate()} />
       </View>
-      {helpOpen ? <Text style={styles.helpText}>Startar idag. Veckor följer veckodagen, månader datumet. Upprepade rutiner kan hoppas över idag. Malländringar gäller nästa gång; engångsrutiner tas bort från dagen.</Text> : null}
+      {helpOpen ? <Text style={styles.helpText}>Startar idag. Veckor följer valda veckodagar och månader datumet. Upprepade rutiner kan hoppas över idag. Malländringar gäller nästa gång; engångsrutiner tas bort från dagen.</Text> : null}
       {creating && activeDraft ? <CreateRoutineForm draft={activeDraft} disabled={unresolvedMutation || savingDraft || showDiscardConfirmation}
         onChange={updateDraft} onCancel={() => requestLeave(() => setDraft(null))} onSave={() => { void saveDraft(); }} /> : null}
-      {routines.map((routine) => <RoutineTemplateRow key={`${dailyScopeKey ?? ''}:${visible}:${focusRoutineId ?? 'all'}:${routine.id}`}
-        routine={routine} selectedDay={selectedRoutines.get(routine.id) ?? null} skippedDay={skippedRoutines.get(routine.id) ?? null}
-        draft={activeDraft?.mode === 'edit' && activeDraft.routineId === routine.id ? activeDraft : null}
-        disabled={selectionLocked} fieldsDisabled={unresolvedMutation || savingDraft || showDiscardConfirmation}
-        highlighted={routine.id === focusRoutineId}
-        onStartEdit={() => startEdit(routine)} onChangeDraft={updateDraft}
-        onCancelEdit={() => requestLeave(() => setDraft(null))} onSave={() => { void saveDraft(); }}
-        onDelete={() => onDeleteRoutine?.(routine)}
-        onAdd={() => onAddRoutineToDay?.(routine)}
-        onRemove={() => {
-          const row = selectedRoutines.get(routine.id);
-          if (row) onRemoveRoutineFromDay?.(row, routine);
-        }} />)}
+      {routines.length > 0 ? <View style={styles.routineList}>
+        {routines.map((routine, index) => <RoutineTemplateRow key={`${dailyScopeKey ?? ''}:${visible}:${focusRoutineId ?? 'all'}:${routine.id}`}
+          routine={routine} selectedDay={selectedRoutines.get(routine.id) ?? null} skippedDay={skippedRoutines.get(routine.id) ?? null}
+          draft={activeDraft?.mode === 'edit' && activeDraft.routineId === routine.id ? activeDraft : null}
+          disabled={selectionLocked} fieldsDisabled={unresolvedMutation || savingDraft || showDiscardConfirmation}
+          highlighted={routine.id === focusRoutineId} isLast={index === routines.length - 1}
+          onStartEdit={() => startEdit(routine)} onChangeDraft={updateDraft}
+          onCancelEdit={() => requestLeave(() => setDraft(null))} onSave={() => { void saveDraft(); }}
+          onDelete={() => onDeleteRoutine?.(routine)}
+          onAdd={() => onAddRoutineToDay?.(routine)}
+          onRemove={() => {
+            const row = selectedRoutines.get(routine.id);
+            if (row) onRemoveRoutineFromDay?.(row, routine);
+          }} />)}
+      </View> : null}
     </View>
 
     <View style={styles.section}>
@@ -270,7 +297,8 @@ function CreateRoutineForm({ draft, disabled, onChange, onCancel, onSave }: {
     </View>)}
     {draft.checklist.length >= 50 ? <Text style={styles.muted}>En rutin kan ha högst 50 punkter.</Text> : <IconOnlyButton icon="add-outline" accessibilityLabel="Lägg till checklistepunkt sist"
       disabled={disabled} onPress={() => { const item = { id: Crypto.randomUUID(), label: '' }; onChange({ checklist: [...draft.checklist, item] }); }} />}
-    <RepeatRuleControls value={draft.repeat} onChange={(repeat) => onChange({ repeat })} disabled={disabled} />
+    <RepeatRuleControls value={draft.repeat} anchorDate={draft.anchorDate} newAnchorDate={draft.newAnchorDate}
+      onChange={(repeat) => onChange({ repeat })} disabled={disabled} />
     <View style={styles.formActions}>
       <Button variant="primary" label="Spara rutin" accessibilityLabel="Spara rutin" disabled={!valid || !routineDraftIsDirty(draft) || disabled} onPress={onSave} />
       <Button variant="tertiary" label="Avbryt" accessibilityLabel="Avbryt skapa rutin" disabled={disabled} onPress={onCancel} />
@@ -278,8 +306,10 @@ function CreateRoutineForm({ draft, disabled, onChange, onCancel, onSave }: {
   </View>;
 }
 
-function RepeatRuleControls({ value, onChange, disabled }: {
+function RepeatRuleControls({ value, anchorDate, newAnchorDate, onChange, disabled }: {
   value: DailyRoutineRepeatValues;
+  anchorDate: string;
+  newAnchorDate: string;
   onChange: (next: DailyRoutineRepeatValues) => void;
   disabled: boolean;
 }) {
@@ -288,27 +318,54 @@ function RepeatRuleControls({ value, onChange, disabled }: {
   const custom = !never && !daily;
   const unit = value.repeat_unit ?? 'day';
   const interval = value.repeat_interval ?? 2;
+  const anchorWeekday = isValidDateKey(anchorDate) ? isoWeekdayForDateKey(anchorDate) : 1;
+  const newAnchorWeekday = isValidDateKey(newAnchorDate) ? isoWeekdayForDateKey(newAnchorDate) : anchorWeekday;
+  const selectedWeekdays = value.repeat_weekdays ?? (unit === 'week' ? [anchorWeekday] : []);
+  const weekdayNames = ['Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag', 'Söndag'];
+  const weekdayShortNames = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön'];
+  function selectUnit(nextUnit: 'day' | 'week' | 'month') {
+    const repeat_weekdays = nextUnit === 'week'
+      ? unit === 'week' ? value.repeat_weekdays : [newAnchorWeekday]
+      : null;
+    onChange({ repeat_unit: nextUnit, repeat_interval: interval, repeat_weekdays });
+  }
   return <View style={styles.repeatControls}>
     <Text style={styles.listHeading} accessibilityRole="header">Upprepning</Text>
     <View style={styles.repeatChoices}>
-      <ChoiceButton label="Aldrig" selected={never} disabled={disabled} onPress={() => onChange({ repeat_unit: null, repeat_interval: null })} />
-      <ChoiceButton label="Dagligen" selected={daily} disabled={disabled} onPress={() => onChange({ repeat_unit: 'day', repeat_interval: 1 })} />
+      <ChoiceButton label="Aldrig" selected={never} disabled={disabled} onPress={() => onChange({ repeat_unit: null, repeat_interval: null, repeat_weekdays: null })} />
+      <ChoiceButton label="Dagligen" selected={daily} disabled={disabled} onPress={() => onChange({ repeat_unit: 'day', repeat_interval: 1, repeat_weekdays: null })} />
       <ChoiceButton label="Eget intervall" selected={custom} disabled={disabled}
-        onPress={() => onChange(custom ? value : { repeat_unit: 'day', repeat_interval: 2 })} />
+        onPress={() => onChange(custom ? value : { repeat_unit: 'day', repeat_interval: 2, repeat_weekdays: null })} />
     </View>
     {custom ? <>
       <View style={styles.intervalControl}>
         <IconOnlyButton icon="remove-outline" accessibilityLabel="Minska intervall" disabled={disabled || interval <= 1}
-          onPress={() => onChange({ repeat_unit: unit, repeat_interval: Math.max(1, interval - 1) })} />
+          onPress={() => onChange({ ...value, repeat_unit: unit, repeat_interval: Math.max(1, interval - 1) })} />
         <Text style={styles.intervalValue}>{interval}</Text>
         <IconOnlyButton icon="add-outline" accessibilityLabel="Öka intervall" disabled={disabled || interval >= 30}
-          onPress={() => onChange({ repeat_unit: unit, repeat_interval: Math.min(30, interval + 1) })} />
+          onPress={() => onChange({ ...value, repeat_unit: unit, repeat_interval: Math.min(30, interval + 1) })} />
       </View>
       <View style={styles.repeatChoices}>
         {(['day', 'week', 'month'] as const).map((option) => <ChoiceButton key={option}
           label={option === 'day' ? 'Dagar' : option === 'week' ? 'Veckor' : 'Månader'}
-          selected={unit === option} disabled={disabled} onPress={() => onChange({ repeat_unit: option, repeat_interval: interval })} />)}
+          selected={unit === option} disabled={disabled} onPress={() => selectUnit(option)} />)}
       </View>
+      {unit === 'week' ? <View style={styles.weekdayPicker} accessibilityLabel="Välj veckodagar">
+        <Text style={styles.muted}>Välj minst en veckodag. Första dagen följer startdagen.</Text>
+        <View style={styles.weekdayChoices}>{weekdayNames.map((name, index) => {
+          const day = index + 1;
+          const selected = selectedWeekdays.includes(day);
+          return <MotionPressable key={name} accessibilityRole="checkbox" accessibilityLabel={name}
+            accessibilityState={{ checked: selected, disabled }} aria-checked={selected} disabled={disabled}
+            onPress={() => onChange({ ...value, repeat_weekdays: selected
+              ? selectedWeekdays.filter((selectedDay) => selectedDay !== day)
+              : [...selectedWeekdays, day].sort((left, right) => left - right) })}
+            style={({ pressed }) => [styles.weekdayButton, selected && styles.choiceButtonSelected, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
+            <Text style={[styles.choiceLabel, selected && styles.choiceLabelSelected]}>{weekdayShortNames[index]}</Text>
+          </MotionPressable>;
+        })}</View>
+        {selectedWeekdays.length === 0 ? <Text style={[styles.helper, styles.errorText]}>Välj minst en veckodag.</Text> : null}
+      </View> : null}
     </> : null}
   </View>;
 }
@@ -320,7 +377,7 @@ function ChoiceButton({ label, selected, disabled, onPress }: { label: string; s
   </MotionPressable>;
 }
 
-function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled, fieldsDisabled, highlighted,
+function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled, fieldsDisabled, highlighted, isLast,
   onStartEdit, onChangeDraft, onCancelEdit, onSave, onDelete, onAdd, onRemove }: {
   routine: DailyRoutine;
   selectedDay: DailyRoutineDay | null;
@@ -329,6 +386,7 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
   disabled: boolean;
   fieldsDisabled: boolean;
   highlighted: boolean;
+  isLast: boolean;
   onStartEdit: () => void;
   onChangeDraft: (patch: Partial<Pick<RoutineDraft, 'label' | 'checklist' | 'repeat'>>) => void;
   onCancelEdit: () => void;
@@ -341,13 +399,13 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
   const value = editing ? draft : null;
   const selected = selectedDay !== null;
 
-  return <View style={[styles.routineCard, highlighted && styles.highlightedRow]}>
+  return <View style={[styles.routineGroup, !isLast && styles.routineGroupSeparator, highlighted && styles.highlightedRoutineGroup]}>
     <View style={styles.routineHeading}>
       {editing && value ? <TextInput accessibilityLabel={`Namn på rutin ${routine.label}`} placeholder="Namn på rutin" value={value.label}
         onChangeText={(label) => onChangeDraft({ label })} editable={!fieldsDisabled} maxLength={160} style={[styles.input, styles.routineNameInput]} />
         : <Text style={styles.routineName} accessibilityRole="header">{routine.label}</Text>}
       {!editing ? <ActionButton icon="create-outline" label="Redigera" accessibilityLabel={`Redigera rutin ${routine.label}`}
-        disabled={disabled} onPress={onStartEdit} /> : null}
+        disabled={disabled} onPress={onStartEdit} quiet /> : null}
     </View>
     <Text style={styles.listHeading} accessibilityRole="header">Checklista</Text>
     {(value?.checklist ?? routine.checklist).map((item, index) => <View key={item.id} style={styles.editItemRow}>
@@ -366,7 +424,8 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
         accessibilityLabel="Lägg till checklistepunkt sist" disabled={fieldsDisabled}
         onPress={() => { const item = { id: Crypto.randomUUID(), label: '' }; onChangeDraft({ checklist: [...value.checklist, item] }); }} />}
       {value.checklist.length === 1 ? <Text style={styles.helper}>En rutin behöver minst en checklistepunkt.</Text> : null}
-      <RepeatRuleControls value={value.repeat} onChange={(repeat) => onChangeDraft({ repeat })} disabled={fieldsDisabled} />
+      <RepeatRuleControls value={value.repeat} anchorDate={value.anchorDate} newAnchorDate={value.newAnchorDate}
+        onChange={(repeat) => onChangeDraft({ repeat })} disabled={fieldsDisabled} />
       <View style={styles.formActions}>
         <Button variant="primary" label="Spara rutin" accessibilityLabel={`Spara rutin ${routine.label}`}
           disabled={!routineDraftIsValid(value) || !routineDraftIsDirty(value) || fieldsDisabled} onPress={onSave} />
@@ -377,9 +436,9 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
       <Text style={styles.repeatSummary}>{dailyRoutineRepeatSummary(routine)}</Text>
     </View>}
     <View style={styles.routineActions}>
-      <ActionButton icon={selected ? 'trash-outline' : 'add-outline'} label={selected ? 'Ta bort från Hemskärmen' : 'Lägg till på Hemskärmen'}
+      <ActionButton icon={selected ? 'remove-outline' : 'add-outline'} label={selected ? 'Ta bort från Hemskärmen' : 'Lägg till på Hemskärmen'}
         accessibilityLabel={`${selected ? 'Ta bort' : skippedDay ? 'Lägg tillbaka' : 'Lägg till'} rutinen ${routine.label} ${selected ? 'från' : 'på'} Hemskärmen`}
-        disabled={disabled} onPress={selected ? onRemove : onAdd} primary />
+        disabled={disabled} onPress={selected ? onRemove : onAdd} dayAction />
       <ActionButton icon="trash-outline" label="Ta bort rutin" accessibilityLabel={`Ta bort rutin ${routine.label}`}
         disabled={disabled} danger onPress={() => Alert.alert('Ta bort rutin?', `”${routine.label}” tas bort. Redan tillagda dagar behåller sin sparade kopia.`, [
           { text: 'Avbryt', style: 'cancel' }, { text: 'Ta bort rutin', style: 'destructive', onPress: () => { void onDelete(); } },
@@ -388,20 +447,21 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
   </View>;
 }
 
-function ActionButton({ icon, label, accessibilityLabel, disabled = false, onPress, primary = false, danger = false }: {
+function ActionButton({ icon, label, accessibilityLabel, disabled = false, onPress, dayAction = false, danger = false, quiet = false }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   accessibilityLabel: string;
   disabled?: boolean;
   onPress: () => void;
-  primary?: boolean;
+  dayAction?: boolean;
   danger?: boolean;
+  quiet?: boolean;
 }) {
   return <MotionPressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} accessibilityState={{ disabled }}
-    disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.actionButton, primary && styles.actionButtonPrimary,
-      danger && styles.actionButtonDanger, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
-    <Ionicons name={icon} size={tokens.size.iconSm} color={danger ? tokens.colors.danger : primary ? tokens.colors.onPrimary : tokens.colors.primary} accessibilityElementsHidden />
-    <Text style={[styles.actionButtonText, primary && styles.actionButtonPrimaryText, danger && styles.actionButtonDangerText]}>{label}</Text>
+    disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.actionButton, dayAction && styles.actionButtonDay,
+      danger && styles.actionButtonDanger, quiet && styles.actionButtonQuiet, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
+    <Ionicons name={icon} size={tokens.size.iconSm} color={danger ? tokens.colors.danger : tokens.colors.primary} accessibilityElementsHidden />
+    <Text style={[styles.actionButtonText, dayAction && styles.actionButtonDayText, danger && styles.actionButtonDangerText]}>{label}</Text>
   </MotionPressable>;
 }
 
@@ -435,8 +495,10 @@ const styles = StyleSheet.create({
   input: { minHeight: tokens.size.touchMin, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, paddingHorizontal: tokens.spacing.sm, color: tokens.colors.textPrimary, backgroundColor: tokens.colors.surface },
   itemInput: { flex: 1 },
   createItemRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: tokens.spacing.xs },
-  routineCard: { gap: tokens.spacing.xs, padding: tokens.spacing.sm, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
-  highlightedRow: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.home.canvas },
+  routineList: { overflow: 'hidden', borderRadius: tokens.radius.md, backgroundColor: tokens.colors.home.card },
+  routineGroup: { gap: tokens.spacing.xs, padding: tokens.spacing.md },
+  routineGroupSeparator: { borderBottomWidth: tokens.size.stroke, borderBottomColor: tokens.colors.border },
+  highlightedRoutineGroup: { backgroundColor: tokens.colors.home.canvas },
   routineHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: tokens.spacing.xs },
   routineName: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 },
   routineNameInput: { flex: 1 },
@@ -447,12 +509,15 @@ const styles = StyleSheet.create({
   itemLabel: { ...tokens.typography.caption, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 },
   itemActions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
   inlineEditor: { gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs },
-  routineActions: { gap: tokens.spacing.xs, paddingTop: tokens.spacing.xs },
+  routineActions: { flexDirection: 'row', alignItems: 'stretch', gap: tokens.spacing.xs, paddingTop: tokens.spacing.xs },
   scheduleSummaryRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, paddingTop: tokens.spacing.xs },
   repeatSummary: { ...tokens.typography.caption, color: tokens.colors.textSecondary, flex: 1 },
   scheduleEdit: { gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs },
   repeatControls: { gap: tokens.spacing.xs },
   repeatChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
+  weekdayPicker: { gap: tokens.spacing.xs, paddingTop: tokens.spacing.xs },
+  weekdayChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
+  weekdayButton: { flexBasis: '22%', flexGrow: 1, minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },
   choiceButton: { minHeight: tokens.size.touchMin, justifyContent: 'center', paddingHorizontal: tokens.spacing.sm, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },
   choiceButtonSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   choiceLabel: { ...tokens.typography.caption, color: tokens.colors.textSecondary, fontWeight: '600' },
@@ -460,11 +525,12 @@ const styles = StyleSheet.create({
   intervalControl: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.md },
   intervalValue: { ...tokens.typography.label, color: tokens.colors.textPrimary, minWidth: 40, textAlign: 'center' },
   iconOnlyButton: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.sm },
-  actionButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.sm, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
-  actionButtonPrimary: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.primary },
+  actionButton: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.sm, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  actionButtonDay: { flex: 2, borderColor: tokens.colors.selectedSurface, backgroundColor: tokens.colors.selectedSurface },
   actionButtonDanger: { borderColor: tokens.colors.danger, backgroundColor: tokens.colors.surface },
+  actionButtonQuiet: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto', borderColor: 'transparent', backgroundColor: 'transparent', paddingHorizontal: tokens.spacing.xs },
   actionButtonText: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700', flexShrink: 1, textAlign: 'center' },
-  actionButtonPrimaryText: { color: tokens.colors.onPrimary },
+  actionButtonDayText: { color: tokens.colors.primary },
   actionButtonDangerText: { color: tokens.colors.danger },
   disabled: { opacity: 0.5 },
   pressed: { backgroundColor: tokens.colors.selectedSurface },

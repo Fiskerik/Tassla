@@ -25,6 +25,7 @@ const routine = {
   legacy_single_item: false,
   repeat_unit: null,
   repeat_interval: null,
+  repeat_weekdays: null,
   repeat_anchor_date: null,
 };
 const routineDraft = {
@@ -34,6 +35,7 @@ const routineDraft = {
   checklist,
   repeat_unit: null,
   repeat_interval: null,
+  repeat_weekdays: null,
 };
 const routineDay = {
   id: '33333333-3333-4333-8333-333333333333',
@@ -87,7 +89,7 @@ test('daily activity snapshot rejects partial responses and enforces requested d
 
 test('routine create recovers a lost response only after exact owner/id/label readback', async () => {
   const { client, requests } = localClient(async ({ method, url, body }) => {
-    if (method === 'POST' && url.pathname === '/rest/v1/rpc/create_daily_routine') {
+    if (method === 'POST' && url.pathname === '/rest/v1/rpc/create_daily_routine_v2') {
       assert.deepEqual(body, {
         p_dog_id: dogId,
         p_routine_id: routine.id,
@@ -95,6 +97,7 @@ test('routine create recovers a lost response only after exact owner/id/label re
         p_checklist: checklist,
         p_repeat_unit: null,
         p_repeat_interval: null,
+        p_repeat_weekdays: null,
         p_time_zone: 'Europe/Stockholm',
       });
       throw new TypeError('simulated lost response after server commit');

@@ -694,7 +694,9 @@ Tre reviewbilder finns för 375×844: läsvy, samlat edit mode och discard-bekr�
 
 Eriks önskemål om mindre beskrivande text inventerades separat i `docs/tasks/dev/ui-info-copy-inventory.md`. Kandidater är redundanta introtexter i Hälsa, Träning, Mer, Konto, hundprofil och påminnelser samt dubbel informationslänk i historik/planerad hälsa. Integritets-/samtyckestext, säkerhetsråd, statushjälp, fel/återhämtning och artikel-/programsammanfattningar föreslås ligga kvar synligt. Ingen separat copyändring gjordes på dessa skärmar.
 
-## UX-FIX — lokal checkpoint 2026-10-15
+## UX-FIX — första lokala checkpoint (historisk), 2026-10-15
+
+Nedanstående var status vid den första checkpointen och har senare kompletterats av aktuella slice-rapporter längre ned i dokumentet.
 
 Arbetet fortsätter i den vanliga repoklonen på branchen `codex/ux-fix-2026-10-15`, baserad på kandidat `9a81815993f015478be480f9c8d19b0923b05f76`. Den bredare UX-FIX-planen är inte stängd: `HOME-ROUTINE-CHECKLIST-01` är fortsatt blockerad i väntan på de färska renderstorlekarna och tillstånden som står i kön.
 
@@ -753,3 +755,23 @@ Detaljbladet kan avmarkera ett enskilt genomfört steg. Public write path återa
 Oberoende Security hittade först en scope-fence-lucka vid hund-/konto-/urvalsbyte under nätanrop. `unmarkStep` fångar nu `currentSelectionKey` och avbryter status-/feluppdatering om scopen ändrats efter delete, readback eller fel. Security delta PASS, QA PASS och Reviewer PASS 2026-10-15. Reviewer noterade att retry först hämtar aktuell status; om steget fortfarande är markerat gör ägaren en separat Avmarkera-handling. Detta är dokumenterat i fixture-rapporten.
 
 Typecheck, ESLint för de fyra ändrade TS/TSX-filerna, RN Web-build, Chromium pending/confirmed/failed/unknown-klickresor, `git diff --check` och kövalidering passerar. Syntetiskt 375×844-underlag finns i `docs/design/evidence/vision-rev02/ux-fix-2026-10-15/training-unmark/RENDER-REPORT.md`. Inga testsviter eller databasoperationer kördes. Native tillgänglighet, Supabase/RLS och full panel-6-visuell acceptans är NOT TESTABLE i denna slice.
+
+### HOME-ROUTINE-WEEKDAYS-01 — implementation till QA, 2026-10-15
+
+Veckointervall kan nu välja en eller flera ISO-veckodagar. Sammanfattning, validering, equality/CAS/readback/retry och due-beräkning omfattar `repeat_weekdays`. Äldre `NULL` behåller exakt ankardags-/intervallregel och lämnas NULL vid namn-/checkliständring. De gamla create/replace RPC-namnen bevaras; gamla create-retries med matchande legacy-fält returnerar befintlig veckodagsregel utan att skriva om den. Migrationen är framåtriktad, oapplicerad.
+
+Architect och Security har statiskt granskat den exakta SQL-/RPC-/legacy-källan och gett PASS. Rättningar omfattar legacy-create idempotens och att 30-dagars service-purge kan ta bort förfallna dagsrader utan att skapa skip-tombstones; ej utgångna klientrader kräver fortsatt ägarkontroll och skyddas av befintliga grants/RLS. Compliance PASS, Critic PROCEED och plan-Security PASS gäller oförändrat kontrakt.
+
+`pnpm typecheck`, riktad ESLint, public/review RN Web-byggen, `git diff --check` och queue validation PASS. Manuell Chromium-kontroll vid 375×844 verifierar måndag/fredag selected state, fulla checkbox-namn, minst 44×44 pt, minimumfel med avstängd sparning och legacy-sammanfattning. Evidence: `docs/design/evidence/vision-rev02/ux-fix-2026-10-15/routine-weekdays/RENDER-REPORT.md`. Oberoende QA PASS och Reviewer PASS 2026-10-15. Ingen testsvit eller databasoperation kördes. Referensbild för panel 4 saknas i checkout; rutinhallens staplade separata block ska komprimeras i beroendeuppgiften `HOME-ROUTINE-CHECKLIST-01`; full rev02-visuell acceptans påstås inte.
+
+### HOME-ROUTINE-CHECKLIST-01 — kompakt rutinöversikt till QA, 2026-10-15
+
+Rutinhanteringen visar nu alla rutinmallar på en gemensam varm yta med diskreta avdelare. Namnradens enda `Redigera`-knapp är lågmäld. Dagsvalet `Lägg till på Hemskärmen`/`Ta bort från Hemskärmen` ligger bredvid helradering; den första åtgärden har mjuk grön yta, helradering röd kontur och bekräftelse. Vid aktivt create/edit-utkast döljs den fasta `Klar`-knappen, så `Spara rutin` är enda visuella huvudåtgärden. Stängning går via stängknappen och befintlig discard-bekräftelse.
+
+Public/review RN Web-byggen och manuell Chromium QA passerar vid 375×844, 430×844, 375×667 och 140 % textproxy. Granskningen verifierade separata rutiner, create/saved, failed/unknown/exakt retry, fortsätt/discard, helraderingsbekräftelse med Avbryt och dagsmarkering på Hem utan browser errors. Webbkontrollerna är syntetiska; native Dynamic Type/VoiceOver och live Supabase/RLS/migration-runtime är NOT TESTABLE. Full panel-4-jämförelse är NOT TESTABLE eftersom `vision_rev02.jpg` saknas i checkouten.
+
+Efter ägarens godkännande av obligatorisk hookcheck passerar `pnpm check`: app- och edge-typecheck, lint och 45/45 testfiler. Stale assertions/fixtures för redan införda weekday-, Home-fixture-, training-, log- och scoped profile-read-kontrakt uppdaterades utan nya testfall. Ingen databasåtgärd gjordes. Underlag: `docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md`. Köstatus är `qa`; oberoende kod-QA och Reviewer efter denna UI-delta återstår.
+
+### MotionPressable-typkontroll, 2026-10-15
+
+`Motion.tsx:61` använder nu ett explicit typat hover-tillstånd för React Native Web utan att förlora den konkreta Animated-stilen eller `pressed`-callbacken. `pnpm typecheck` och full `pnpm check` passerar. Fixen finns i commit `617680b`; den separata UX-FIX-baseline Motion-posten har ytterligare runtime-kriterier och hålls åtskild från detta typfel.

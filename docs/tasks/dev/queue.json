@@ -6296,7 +6296,7 @@
         "VISION-R02-2",
         "HOME-ROUTINE-WEEKDAYS-01"
       ],
-      "status": "planned",
+      "status": "qa",
       "history": [
         {
           "from": "planned",
@@ -6381,9 +6381,27 @@
           "to": "planned",
           "actor": "coordinator",
           "evidence": "Replan v2.1 per Eriks mandat 2026-10-15: visuellt omtag mot rev02; beroende på separat veckodagsslice. Gamla v5-skärmbilder ogiltiga som acceptans. Architect APPROVE and Critic PROCEED recorded; väntar på sekvensens föregångare."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact UX-FIX v2.1 plan was Architect APPROVE/Critic PROCEED on 2026-10-15; no plan change. Both dependencies are now done: VISION-R02-2 and HOME-ROUTINE-WEEKDAYS-01 (QA/Reviewer PASS). Resume with fresh UI evidence and compact panel-4 routine management; keep migration/data logic frozen, no tests or DB operations."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin the exact previously approved v2.1 HOME routine checklist scope on its listed write_paths. Refresh routine manager to compact grouped rows with separators; preserve v5 atomic edit/save/discard/pending behavior, weekday recurrence and all other data/RPC/migration contracts. Add fresh public/review production-component captures and functional review for required viewports/states. No tests or database operations."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "HOME routine UI handoff 2026-10-15: compact shared warm routine surface with separators, distinct horizontal day/select and red whole-routine delete actions, single primary action while draft is open. Fresh review Chromium renders cover 375x844, 430x844, 375x667 and 140% text proxy; create/saved/failed/unknown/exact retry/discard, several routines, delete-cancel and Home completion verified without page errors. Public/review builds pass. User-approved pnpm check passes (typecheck, edge typecheck, lint, 45/45 test files); existing stale expectations/fixtures aligned, no test cases added. Evidence: docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md and review-compact-v6/. Independent code QA/Reviewer after this UI delta pending. Panel-4 reference comparison is NOT TESTABLE because vision_rev02.jpg is absent; no full visual match claim. No DB or migration operation."
         }
       ],
-      "next_step": "v2.1 plan Architect APPROVE and Critic PROCEED recorded 2026-10-15. Keep planned until HOME-ROUTINE-WEEKDAYS-01 and VISION-R02-2 are done; then resume with fresh visual evidence. The separate runtime task remains downstream of HOME."
+      "next_step": "HOME routine UI handoff 2026-10-15: compact shared warm routine surface with separators, distinct horizontal day/select and red whole-routine delete actions, single primary action while draft is open. Fresh review Chromium renders cover 375x844, 430x844, 375x667 and 140% text proxy; create/saved/failed/unknown/exact retry/discard, several routines, delete-cancel and Home completion verified without page errors. Public/review builds pass. User-approved pnpm check passes (typecheck, edge typecheck, lint, 45/45 test files); existing stale expectations/fixtures aligned, no test cases added. Evidence: docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md and review-compact-v6/. Independent code QA/Reviewer after this UI delta pending. Panel-4 reference comparison is NOT TESTABLE because vision_rev02.jpg is absent; no full visual match claim. No DB or migration operation."
     },
     {
       "id": "HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01",
@@ -6948,9 +6966,40 @@
       "depends_on": [
         "UX-TRAINING-UNMARK-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Await exact v2.1 Architect and Critic review; no implementation started."
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE och Critic PROCEED för exakt UX-FIX v2.1 slice 7; Security plan-PASS; Compliance PASS 2026-10-15. UX-TRAINING-UNMARK-01 är done. Planen är oförändrad. Nästa steg: implementera v2-datakontrakt, forward-only migration och UI enligt datumvektorn; granska legacy RPC-kompatibilitet."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Startar implementation inom godkänt v2.1-kontrakt. Read-only review: Architect APPROVE, Critic PROCEED, Security plan PASS, Compliance PASS. Ändrar bara queue write_paths; migration skapas men appliceras inte."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation handoff 2026-10-15: repeat_weekdays UI/TS/RPC compatibility and unapplied migration source complete. Architect and Security static review PASS after legacy-create and retention-trigger fixes; plan Critic/Security and Compliance PASS. Typecheck, scoped ESLint, public/review RN Web builds, manual Chromium weekday-state/44pt/minimum checks, diff-check and queue validation PASS. Evidence: docs/design/evidence/vision-rev02/ux-fix-2026-10-15/routine-weekdays/RENDER-REPORT.md. No test suite or SQL/database operation. Independent QA and Reviewer pending; full panel 4 composition is deferred to dependent HOME-ROUTINE-CHECKLIST-01."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS 2026-10-15 for the local weekday slice. Verified TS Monday-week due formula and exact legacy NULL modulo behavior; sorted/unique-day validation, NULL-preserving anchor normalization, CAS/retry equality, seven accessible full-name checkboxes, ≥44pt targets, minimum-one-day guidance and disabled save. Review screenshots/report and prior local check results are in docs/design/evidence/vision-rev02/ux-fix-2026-10-15/routine-weekdays/RENDER-REPORT.md. QA accepts this slice with the existing stacked manager composition explicitly deferred to HOME-ROUTINE-CHECKLIST-01; no full panel 4 claim. No tests or SQL. Static Architect/Security PASS; live DB/RLS, runtime parity and native remain NOT TESTABLE. Independent Reviewer next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS 2026-10-15. RPC argument names match migration; readback/equality includes weekdays; legacy NULL and anchor are preserved; 375x844 render evidence supports checkbox state, minimum rule, and ≥44pt targets. No scope/evidence finding. QA PASS, Architect/Security static PASS, Critic PROCEED, Compliance PASS. Full panel 4, native accessibility, migration/runtime parity and live RLS remain NOT TESTABLE. Evidence: docs/design/evidence/vision-rev02/ux-fix-2026-10-15/routine-weekdays/RENDER-REPORT.md. No test suite or database operation."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS 2026-10-15. RPC argument names match migration; readback/equality includes weekdays; legacy NULL and anchor are preserved; 375x844 render evidence supports checkbox state, minimum rule, and ≥44pt targets. No scope/evidence finding. QA PASS, Architect/Security static PASS, Critic PROCEED, Compliance PASS. Full panel 4, native accessibility, migration/runtime parity and live RLS remain NOT TESTABLE. Evidence: docs/design/evidence/vision-rev02/ux-fix-2026-10-15/routine-weekdays/RENDER-REPORT.md. No test suite or database operation."
     }
   ]
 }

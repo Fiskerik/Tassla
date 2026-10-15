@@ -3,7 +3,7 @@ import { withRequestDeadline, type WriteOutcome } from '../../data/workspace-dat
 import { isRoutineDueOnDate, isValidDateKey, isValidIanaTimeZone } from './daily-activity-model';
 
 const REQUEST_TIMEOUT_MS = 12_000;
-const DAILY_ROUTINE_COLUMNS = 'id,dog_id,label,checklist,checklist_revision,legacy_single_item,repeat_unit,repeat_interval,repeat_anchor_date';
+const DAILY_ROUTINE_COLUMNS = 'id,dog_id,label,checklist,checklist_revision,legacy_single_item,repeat_unit,repeat_interval,repeat_weekdays,repeat_anchor_date';
 const DAILY_ROUTINE_DAY_COLUMNS = 'id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence,routine_revision_snapshot,routine_day_revision,last_state_mutation_id';
 const DAILY_ROUTINE_DAY_SKIP_COLUMNS = 'day_id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence,routine_revision_snapshot,routine_day_revision,last_state_mutation_id';
 
@@ -18,10 +18,11 @@ export type DailyRoutine = {
   legacy_single_item: boolean;
   repeat_unit: DailyRoutineRepeatUnit | null;
   repeat_interval: number | null;
+  repeat_weekdays: number[] | null;
   repeat_anchor_date: string | null;
 };
-export type DailyRoutineDraft = Pick<DailyRoutine, 'id' | 'dog_id' | 'label' | 'checklist' | 'repeat_unit' | 'repeat_interval'>;
-export type DailyRoutineCreateInput = Pick<DailyRoutine, 'id' | 'label' | 'checklist' | 'repeat_unit' | 'repeat_interval'>;
+export type DailyRoutineDraft = Pick<DailyRoutine, 'id' | 'dog_id' | 'label' | 'checklist' | 'repeat_unit' | 'repeat_interval' | 'repeat_weekdays'>;
+export type DailyRoutineCreateInput = Pick<DailyRoutine, 'id' | 'label' | 'checklist' | 'repeat_unit' | 'repeat_interval' | 'repeat_weekdays'>;
 export type DailyRoutineDayDraft = Pick<DailyRoutineDay, 'id' | 'dog_id' | 'routine_id' | 'date_key' | 'time_zone'> & {
   routine_label_snapshot: string;
   checklist_snapshot: DailyRoutineChecklistItem[];
@@ -42,16 +43,17 @@ export type DailyRoutineDay = {
   last_state_mutation_id: string | null;
 };
 export type DailyRoutineDaySkip = Omit<DailyRoutineDay, 'id'> & { day_id: string };
-export type DailyRoutineRepeatRule = Pick<DailyRoutine, 'repeat_unit' | 'repeat_interval'>;
-export type DailyRoutineSaveInput = Pick<DailyRoutine, 'label' | 'checklist' | 'repeat_unit' | 'repeat_interval'>;
+export type DailyRoutineRepeatRule = Pick<DailyRoutine, 'repeat_unit' | 'repeat_interval' | 'repeat_weekdays'>;
+export type DailyRoutineSaveInput = Pick<DailyRoutine, 'label' | 'checklist' | 'repeat_unit' | 'repeat_interval' | 'repeat_weekdays'>;
 export type DailyRoutineWriteResult = WriteOutcome<DailyRoutine>;
 export type DailyRoutineSkipSnapshot = Pick<DailyRoutineDaySkip, 'day_id' | 'routine_day_revision' | 'last_state_mutation_id'>;
 export type DailyRoutineDayRevision = Pick<DailyRoutineDay, 'routine_day_revision' | 'last_state_mutation_id'>;
 export type DailyRoutineRepeatValues = {
   repeat_unit: DailyRoutineRepeatUnit | null;
   repeat_interval: number | null;
+  repeat_weekdays: number[] | null;
 };
-type RoutineSaveValues = Pick<DailyRoutine, 'label' | 'checklist' | 'repeat_unit' | 'repeat_interval'>;
+type RoutineSaveValues = Pick<DailyRoutine, 'label' | 'checklist' | 'repeat_unit' | 'repeat_interval' | 'repeat_weekdays'>;
 export type DailyTrainingSelection = {
   id: string;
   dog_id: string;
@@ -124,13 +126,14 @@ export async function createDailyRoutine(
   if (!isDailyRoutineDraft(row) || !isValidIanaTimeZone(timeZone)) return { status: 'failed' };
   let failure: unknown = null;
   try {
-    const result = await withRequestDeadline(async (signal) => await client.rpc('create_daily_routine', {
+    const result = await withRequestDeadline(async (signal) => await client.rpc('create_daily_routine_v2', {
       p_dog_id: row.dog_id,
       p_routine_id: row.id,
       p_label: row.label,
       p_checklist: row.checklist,
       p_repeat_unit: row.repeat_unit,
       p_repeat_interval: row.repeat_interval,
+      p_repeat_weekdays: row.repeat_weekdays,
       p_time_zone: timeZone,
     }).abortSignal(signal), REQUEST_TIMEOUT_MS);
     const rpcRow = Array.isArray(result.data) ? result.data[0] : result.data;
@@ -154,21 +157,23 @@ export async function replaceDailyRoutine(
 ): Promise<WriteOutcome<DailyRoutine>> {
   const normalized = label.trim();
   if (!isValidRoutineDefinition(normalized, checklist) || !isValidRepeatRule(repeat.repeat_unit, repeat.repeat_interval)
-    || !isValidIanaTimeZone(timeZone)) return { status: 'failed' };
+    || !isValidRepeatWeekdays(repeat.repeat_unit, repeat.repeat_weekdays) || !isValidIanaTimeZone(timeZone)) return { status: 'failed' };
   const expectedRevision = routine.checklist_revision;
-  const desired: DailyRoutineSaveInput = { label: normalized, checklist, ...repeat };
+  const desiredRepeat = normalizeRoutineRepeat(routine, repeat);
+  const desired: DailyRoutineSaveInput = { label: normalized, checklist, ...desiredRepeat };
   if (sameRoutineSave(routine, desired)) return { status: 'failed' };
-  const sameRepeat = routine.repeat_unit === repeat.repeat_unit && routine.repeat_interval === repeat.repeat_interval;
+  const sameRepeat = sameRoutineRepeat(routine, desiredRepeat);
   let failure: unknown = null;
   try {
-    const result = await withRequestDeadline(async (signal) => await client.rpc('replace_daily_routine', {
+    const result = await withRequestDeadline(async (signal) => await client.rpc('replace_daily_routine_v2', {
       p_dog_id: routine.dog_id,
       p_routine_id: routine.id,
       p_expected_revision: expectedRevision,
       p_label: normalized,
       p_checklist: checklist,
-      p_repeat_unit: repeat.repeat_unit,
-      p_repeat_interval: repeat.repeat_interval,
+      p_repeat_unit: desiredRepeat.repeat_unit,
+      p_repeat_interval: desiredRepeat.repeat_interval,
+      p_repeat_weekdays: desiredRepeat.repeat_weekdays,
       p_time_zone: timeZone,
     }).abortSignal(signal));
     const rpcRow = Array.isArray(result.data) ? result.data[0] : result.data;
@@ -464,7 +469,7 @@ function isDailyRoutine(value: unknown): value is DailyRoutine {
     && row.label.trim() === row.label && Array.from(row.label).length > 0 && Array.from(row.label).length <= 160
     && isValidRoutineChecklist(row.checklist) && Number.isInteger(row.checklist_revision) && Number(row.checklist_revision) >= 1
     && typeof row.legacy_single_item === 'boolean'
-    && isValidStoredRepeatRule(row.repeat_unit, row.repeat_interval, row.repeat_anchor_date);
+    && isValidStoredRepeatRule(row.repeat_unit, row.repeat_interval, row.repeat_weekdays, row.repeat_anchor_date);
 }
 
 function isDailyRoutineDraft(value: unknown): value is DailyRoutineDraft {
@@ -472,7 +477,8 @@ function isDailyRoutineDraft(value: unknown): value is DailyRoutineDraft {
   const row = value as Record<string, unknown>;
   return isCanonicalUuid(row.id) && isCanonicalUuid(row.dog_id) && typeof row.label === 'string'
     && isValidRoutineDefinition(row.label, row.checklist)
-    && isValidRepeatRule(row.repeat_unit as DailyRoutineRepeatUnit | null, row.repeat_interval as number | null);
+    && isValidRepeatRule(row.repeat_unit as DailyRoutineRepeatUnit | null, row.repeat_interval as number | null)
+    && isValidRepeatWeekdays(row.repeat_unit as DailyRoutineRepeatUnit | null, row.repeat_weekdays);
 }
 
 function isValidRoutineDefinition(label: string, checklist: unknown): checklist is DailyRoutineChecklistItem[] {
@@ -537,16 +543,18 @@ function isValidRepeatRule(unit: DailyRoutineRepeatUnit | null, interval: number
     && Number.isInteger(interval) && Number(interval) >= 1 && Number(interval) <= 30;
 }
 
-function isValidStoredRepeatRule(unit: unknown, interval: unknown, anchor: unknown): boolean {
-  if (unit === null) return interval === null && anchor === null;
+function isValidStoredRepeatRule(unit: unknown, interval: unknown, weekdays: unknown, anchor: unknown): boolean {
+  if (unit === null) return interval === null && weekdays === null && anchor === null;
   return (unit === 'day' || unit === 'week' || unit === 'month')
     && Number.isInteger(interval) && Number(interval) >= 1 && Number(interval) <= 30
+    && isValidRepeatWeekdays(unit, weekdays)
     && typeof anchor === 'string' && isValidDateKey(anchor);
 }
 
 function hasValidAnchor(routine: DailyRoutine): boolean {
-  return routine.repeat_unit === null ? routine.repeat_interval === null && routine.repeat_anchor_date === null
-    : routine.repeat_interval !== null && routine.repeat_anchor_date !== null && isValidDateKey(routine.repeat_anchor_date);
+  return routine.repeat_unit === null ? routine.repeat_interval === null && routine.repeat_weekdays === null && routine.repeat_anchor_date === null
+    : routine.repeat_interval !== null && isValidRepeatWeekdays(routine.repeat_unit, routine.repeat_weekdays)
+      && routine.repeat_anchor_date !== null && isValidDateKey(routine.repeat_anchor_date);
 }
 
 function isDailyTrainingSelection(value: unknown): value is DailyTrainingSelection {
@@ -560,7 +568,42 @@ function isDailyTrainingSelection(value: unknown): value is DailyTrainingSelecti
 function sameRoutineSave(left: RoutineSaveValues & Partial<Pick<DailyRoutine, 'id' | 'dog_id'>>, right: RoutineSaveValues & Partial<Pick<DailyRoutine, 'id' | 'dog_id'>>): boolean {
   return (!left.id || !right.id || left.id === right.id) && (!left.dog_id || !right.dog_id || left.dog_id === right.dog_id)
     && left.label === right.label && sameChecklist(left.checklist, right.checklist)
-    && left.repeat_unit === right.repeat_unit && left.repeat_interval === right.repeat_interval;
+    && left.repeat_unit === right.repeat_unit && left.repeat_interval === right.repeat_interval
+    && sameWeekdaySet(left.repeat_weekdays, right.repeat_weekdays);
+}
+
+function isValidRepeatWeekdays(unit: DailyRoutineRepeatUnit | null, value: unknown): value is number[] | null {
+  if (value === null) return true;
+  return unit === 'week' && Array.isArray(value) && value.length >= 1 && value.length <= 7
+    && value.every((day, index) => Number.isInteger(day) && day >= 1 && day <= 7 && (index === 0 || day > value[index - 1]));
+}
+
+function sameWeekdaySet(left: readonly number[] | null, right: readonly number[] | null): boolean {
+  return left === null ? right === null : right !== null && left.length === right.length && left.every((day, index) => day === right[index]);
+}
+
+function sameRoutineRepeat(left: DailyRoutine, right: DailyRoutineRepeatValues): boolean {
+  if (left.repeat_unit !== right.repeat_unit || left.repeat_interval !== right.repeat_interval) return false;
+  if (sameWeekdaySet(left.repeat_weekdays, right.repeat_weekdays)) return true;
+  if (left.repeat_unit !== 'week' || left.repeat_weekdays !== null || !left.repeat_anchor_date || !right.repeat_weekdays) return false;
+  const legacyWeekday = isoWeekdayForDateKey(left.repeat_anchor_date);
+  return right.repeat_weekdays.length === 1 && right.repeat_weekdays[0] === legacyWeekday;
+}
+
+function normalizeRoutineRepeat(routine: DailyRoutine, repeat: DailyRoutineRepeatValues): DailyRoutineRepeatValues {
+  if (routine.repeat_unit === 'week' && repeat.repeat_unit === 'week' && routine.repeat_weekdays === null
+    && routine.repeat_anchor_date && repeat.repeat_weekdays) {
+    const legacyWeekday = isoWeekdayForDateKey(routine.repeat_anchor_date);
+    if (repeat.repeat_weekdays.length === 1 && repeat.repeat_weekdays[0] === legacyWeekday) {
+      return { ...repeat, repeat_weekdays: null };
+    }
+  }
+  return { ...repeat, repeat_weekdays: repeat.repeat_weekdays === null ? null : [...repeat.repeat_weekdays] };
+}
+
+function isoWeekdayForDateKey(dateKey: string): number {
+  const day = new Date(`${dateKey}T00:00:00.000Z`).getUTCDay();
+  return day === 0 ? 7 : day;
 }
 
 function matchesRoutineDayDraft(left: DailyRoutineDay, right: DailyRoutineDayDraft, includeId = true): boolean {

@@ -44,7 +44,7 @@ test('public and review Home share a generic portrait without attaching the dog 
   assert.match(home, /styles\.weekNumberBacked/);
   assert.match(home, /rgba\(245, 240, 232, \$\{washOpacity\}\)/);
   assert.match(home, /dailyFixture\s*\?\s*<ReviewDailyFixture/);
-  assert.match(harness, /reviewFixtureEnabled&&homeScenario==='ready'\?homeReviewFixture:undefined/);
+  assert.match(harness, /reviewFixtureEnabled&&homeScenario==='ready'&&state==='ready'\?homeReviewFixture:undefined/);
   assert.match(harness, /testID="review-banner"/);
   assert.match(harness, /testID="review-app-viewport"/);
   assert.match(harness, /AI-GENERERAD STANDARDBILD/);

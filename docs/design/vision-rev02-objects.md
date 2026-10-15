@@ -29,6 +29,8 @@ Behåll separata källor och bygg gemensamma läsvyer. Skapa inte en universell 
 
 Checklistor/FAQ har review-gating som måste respekteras. När daglig aktivitet väljs får en reviewmall aldrig behandlas som publicerad produktionskälla. Migrationers förekomst bevisar inte att målmiljön använder dem.
 
+Ägarens egna rutiner lagras i `dog_daily_routines` med fristående namn/checklista, lokalt ankardatum och dag-/vecko-/månadsintervall. Veckointervall kan dessutom ha `repeat_weekdays smallint[]` med sorterade ISO-dagar 1–7; NULL behåller äldre en-dag-per-ankardag-regeln. Fältet är en del av den befintliga privata planeringsuppgiften, stannar på rutinmallen och följer samma åtkomst-/kopie- och konto-/hundraderingsregler. Dagssnapshots och skip-tombstones får inte skrivas om vid schemaändring. Den forward-only veckodagsmigrationen finns lokalt men är inte applicerad; runtime/RLS/paritet är inte verifierad.
+
 ## Föreslagen läsmodell för Hem
 
 Föreslagna fältnamn, inte nuvarande exporter:
