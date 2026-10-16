@@ -7199,7 +7199,7 @@
       ],
       "status": "planned",
       "history": [],
-      "next_step": "Panel 4 delas i beroende checkpoints: Idag, Alla, Denna vecka och Kommande. Alla är redan beslutat som samtliga aktiva rutinmallar, även utan dagsval. Börja med FLOW-HOME-CHECKLIST-IDAG-01; Kommande får endast verkliga framtida planposter.",
+      "next_step": "Idag and Alla are complete. Next P1: FLOW-HOME-CHECKLIST-WEEK-01, which must map real daily snapshots/training progress across a week and obtain Architect/Security approval before code. FLOW-HOME-CHECKLIST-UPCOMING-01 depends on Week and must use only confirmed future plan sources. Complete both, then integrate and close this parent flow.",
       "priority": "P1",
       "panels": [
         "1",
@@ -7295,7 +7295,7 @@
           "evidence": "Final Reviewer PASS 2026-10-16 after delta-QA PASS; 19/19 plan/queue write paths, 494/494 full check, focused 15/15, public/review UTF-8 browser results and zero page errors. Local-only checkpoint; native/live-backend NOT TESTABLE. Next: FLOW-HOME-CHECKLIST-ALL-01 exact plan and risk review before code; no GitHub write."
         }
       ],
-      "next_step": "Done locally after delta-QA and final Reviewer PASS. Next P1: FLOW-HOME-CHECKLIST-ALL-01. Verify existing routine-row activity semantics, write its exact H-risk plan, and obtain Architect/Security/Critic before runtime code; no GitHub write.",
+      "next_step": "Done locally after QA and final Reviewer PASS. FLOW-HOME-CHECKLIST-ALL-01 is now also done. Next P1: FLOW-HOME-CHECKLIST-WEEK-01; obtain Architect/Security approval of its exact week/date/timezone source plan before runtime code. Then complete FLOW-HOME-CHECKLIST-UPCOMING-01 and close the parent FLOW-HOME-CHECKLIST-01.",
       "priority": "P1",
       "panels": [
         "1",
