@@ -40,7 +40,6 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
     void fetchBreeds(client).then((options) => {
       if (!active || !isCurrentAccount(ownerId, accountGeneration)) return;
       setBreeds(options);
-      setBreedId((current) => current || options[0]?.id || '');
       setBreedsState('ready');
     }).catch(() => {
       if (active && isCurrentAccount(ownerId, accountGeneration)) setBreedsState('error');
@@ -129,6 +128,11 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
     setSaveState((current) => current === 'unknown' ? 'unknown' : 'idle');
   }
 
+  function retryBreedCatalog() {
+    setBreedsState('loading');
+    setBreedAttempt((count) => count + 1);
+  }
+
   const canSubmit = name.trim().length > 0 && name.trim().length <= 80 && Boolean(breedId)
     && isValidBirthDate(birthDate) && (!sourceSelected || Boolean(normalizeKennelCode(kennelCode)));
 
@@ -151,10 +155,17 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
       {breedsState === 'error' && <>
         <MessageCard tone="error">Raslistan gick inte att hämta. Kontrollera anslutningen och försök igen.</MessageCard>
         <View style={styles.breedRetrySpacing}>
-          <PrimaryButton title="Försök igen" onPress={() => { setBreedsState('loading'); setBreedAttempt((count) => count + 1); }} />
+          <PrimaryButton title="Försök igen" onPress={retryBreedCatalog} />
         </View>
       </>}
-      {breedsState === 'ready' && (
+      {breedsState === 'ready' && breeds.length === 0 && <>
+        <MessageCard>Raslistan är tom just nu.</MessageCard>
+        <View style={styles.breedRetrySpacing}>
+          <PrimaryButton title="Försök igen" onPress={retryBreedCatalog} />
+        </View>
+      </>}
+      {breedsState === 'ready' && breeds.length > 0 && <>
+        {!breedId && <Text accessibilityLiveRegion="polite" style={styles.breedGuidance}>Välj en ras för att fortsätta.</Text>}
         <View accessibilityRole="radiogroup" accessibilityLabel="Välj hundras" style={styles.breedList}>
           {breeds.map((breed) => {
             const selected = breedId === breed.id;
@@ -164,6 +175,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
                 accessibilityRole="radio"
                 accessibilityLabel={breed.name}
                 accessibilityState={{ selected }}
+                aria-checked={selected}
                 onPress={() => { setBreedId(breed.id); markEdited(); }}
                 style={({ pressed }) => [styles.breedOption, selected && styles.breedSelected, pressed && styles.breedPressed]}
               >
@@ -173,7 +185,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
             );
           })}
         </View>
-      )}
+      </>}
       <FormField
         autoCapitalize="none"
         autoComplete="off"
@@ -238,6 +250,7 @@ const styles = StyleSheet.create({
   profileCard: { marginBottom: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   sectionTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
   label: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.sm, marginTop: tokens.spacing.xs },
+  breedGuidance: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginBottom: tokens.spacing.sm },
   breedList: { gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg },
   breedRetrySpacing: { marginBottom: tokens.spacing.md },
   breedOption: { minHeight: tokens.size.touchMin, borderRadius: tokens.radius.md, paddingHorizontal: tokens.spacing.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

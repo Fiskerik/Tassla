@@ -1,0 +1,41 @@
+{
+  "passes": [
+    "Production reminder screen clean/dirty layouts fit 375x844, 430x844, 375x667 and 140% web text proxy",
+    "Same More tab is a no-op; guarded header back Stay keeps the unsaved reminder choice",
+    "Explicit discard commits the first requested main tab",
+    "Repeated route requests while the Alert is open keep the first destination",
+    "Initial preference readiness disables form controls without trapping header navigation",
+    "A permission request remains separate from the dirty-draft exit guard",
+    "Failed save keeps the dirty field and requires explicit Stay or discard",
+    "Synchronous save flight blocks route work and failure releases the lock without losing fields",
+    "TimePickerField cancel keeps its uncommitted modal value; reverting to saved HH:mm is clean",
+    "Existing scope-key change remounts a clean local reminder draft"
+  ],
+  "pageErrors": [],
+  "scope": "Production NotificationSettingsScreen; synthetic public/review callbacks, guarded navigation and local reminder draft only",
+  "bundle": "public",
+  "viewports": [
+    [
+      375,
+      844,
+      "375x844"
+    ],
+    [
+      430,
+      844,
+      "430x844"
+    ],
+    [
+      375,
+      667,
+      "375x667"
+    ]
+  ],
+  "limitations": [
+    "SecureStore and local scheduled delivery are not exercised",
+    "Android BackHandler, native Alert and Modal back priority are NOT TESTABLE in RN Web",
+    "Real OS permission prompt and owner/account transitions are not exercised",
+    "VoiceOver, Dynamic Type and physical keyboard/safe area are not exercised",
+    "The 140% text proxy is a web CSS approximation"
+  ]
+}

@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   feedbackCard: { padding: 14, marginTop: 12, borderRadius: theme.radius.button, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: '#EAF3EC' },
   datePickerField: { marginBottom: 18 },
   datePickerRow: { minHeight: 54, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.button, backgroundColor: theme.colors.surface },
-  datePickerInput: { flex: 1, minHeight: 52, paddingHorizontal: 14, color: theme.colors.text, fontSize: 17 },
+  datePickerInput: { flex: 1, minWidth: 0, minHeight: 52, paddingHorizontal: 14, color: theme.colors.text, fontSize: 17 },
   pickerButton: { minHeight: 52, paddingHorizontal: 13, justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: theme.colors.border },
   pickerButtonText: { color: theme.colors.accent, fontSize: 13, fontWeight: '800' },
   calendarHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

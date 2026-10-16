@@ -53,13 +53,13 @@ test('delete snapshot replaces its source row and exits only after a token-match
 
 test('quick log hides sparse patterns and keeps edit/delete inside the row editor', () => {
   assert.match(screen, /summarizePottyPatterns\(events\)\.filter\(\(item\) => item\.count >= 2\)/);
-  assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); editorSubmitRef\.current = null; setEditorActionState\(\{ canSave: false, saving: false \}\); setEditingId\(event\.id\); \}\}/);
+  assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); editorSubmitRef\.current = null; setEditorActionState\(\{ canSave: false, saving: false, dirty: false \}\); setEditingId\(event\.id\); \}\}/);
   assert.match(screen, /<Button variant="destructive" label="Radera"/);
   assert.doesNotMatch(screen, /SPARAD|ActionFeedbackModal/);
 });
 
 test('legacy row editing and deletion remain reachable from workspace and preview', () => {
-  assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); editorSubmitRef\.current = null; setEditorActionState\(\{ canSave: false, saving: false \}\); setEditingId\(event\.id\); \}\}/);
+  assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); editorSubmitRef\.current = null; setEditorActionState\(\{ canSave: false, saving: false, dirty: false \}\); setEditingId\(event\.id\); \}\}/);
   assert.match(screen, /function LogEventEditor/);
   assert.match(screen, /onUpdate\?:/);
   assert.match(screen, /onDelete\?:/);
@@ -104,4 +104,22 @@ test('quick add labels, rapid-tap guard, retry propagation and Swedish decimal f
   assert.match(workspace, /setQuickLogMutation\(toQuickLogMutationView\(mutation, 'pending'\)\);[\s\S]*?checkInsertRetryOperation/);
   assert.match(workspace, /finishLogMutationFlight\(logMutationFlight\.current, flightToken\)/);
   assert.match(screen, /toLocaleString\('sv-SE'\)/);
+});
+
+
+test('log editor protects dirty drafts and keeps pending, failed, and unsure outcomes distinct', () => {
+  assert.match(screen, /isLogEventDraftDirty\(event, \{ type, date, time, note, accidentKinds \}\)/);
+  assert.match(screen, /registerEditorLeaveGuard\(editorOwnerToken\.current/);
+  assert.match(screen, /const requestEditorLeave = useCallback\(\(commit: \(\) => void\): boolean/);
+  assert.match(screen, /if \(leaveAlertOpen\.current \|\| editLocked\) return false;/);
+  assert.match(screen, /commit\(\);\s*return true;/);
+  assert.match(screen, /\], \{ cancelable: true, onDismiss: \(\) => \{ leaveAlertOpen\.current = false; \} \}\);\s*return false;/);
+  assert.match(screen, /Alert\.alert\('Osparade ändringar', 'Vill du lämna utan att spara\?'/);
+  assert.match(screen, /Ändringen sparas\. Vänta tills resultatet har bekräftats innan du lämnar\./);
+  assert.match(screen, /Ändringen sparades inte\. Försök igen eller fortsätt redigera\./);
+  assert.match(screen, /cancelLabel="Fortsätt redigera"/);
+  assert.match(screen, /Vi kunde inte kontrollera om ändringen sparades\. Kontrollera status innan du lämnar\./);
+  const editSheet = screen.slice(screen.indexOf('{editingEvent ? <BottomSheet'), screen.indexOf('</BottomSheet>', screen.indexOf('{editingEvent ? <BottomSheet')));
+  assert.match(editSheet, /dragToDismiss/);
+  assert.match(editSheet, /onCancel=\{onCancel \? \(\) => \{ firstUseTip\.dismiss\(\); onCancel\(\); \} : undefined\}/);
 });

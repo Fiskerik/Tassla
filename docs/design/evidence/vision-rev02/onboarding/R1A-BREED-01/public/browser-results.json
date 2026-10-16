@@ -1,0 +1,36 @@
+{
+  "passes": [
+    "A fresh non-empty catalog stays unselected; Continue requires an explicit breed and valid name/date while kennel code stays optional",
+    "A successful empty catalog offers retry without an empty radio group; retry recovers to ready and unselected",
+    "Catalog error retry recovers to the ready/unselected state",
+    "Persistent catalog failure preserves the existing visible retry state",
+    "Catalog loading transitions to the ready/unselected state",
+    "A harness-only subsequent catalog fetch preserves an existing explicit selection",
+    "Ready profile renders at 375x844, 430x844, and 375x667, plus 140% text proxy at 375px without horizontal overflow"
+  ],
+  "pageErrors": [],
+  "scope": "Onboarding ProfileScreen; public/review React Native Web fixture with synthetic catalog responses; does not prove native accessibility or live profile persistence",
+  "bundle": "public",
+  "viewports": [
+    [
+      375,
+      844,
+      "375x844"
+    ],
+    [
+      430,
+      844,
+      "430x844"
+    ],
+    [
+      375,
+      667,
+      "375x667"
+    ]
+  ],
+  "limitations": [
+    "Live Supabase/RLS and profile save/readback are not tested",
+    "Native Dynamic Type and VoiceOver are not tested",
+    "The 140% text proxy is a web CSS approximation"
+  ]
+}

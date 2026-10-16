@@ -1,0 +1,42 @@
+{
+  "passes": [
+    "Unknown removal alone has explicit removal copy, a locked blank field, Stäng, and readback-only null confirmation",
+    "Removal mismatch displays actual linked server state; Use current adopts it without a write",
+    "Unknown link has distinct copy; mismatch exposes no-link server state and preserves intent without a write",
+    "Dirty profile fields show Avbryt ändringar; leaving discards only those fields and the unknown removal survives revisit",
+    "A mismatched saved state with no kennel link is explicit and Use current adopts the empty state",
+    "Clean profile editor fits 375x844, 430x844, 375x667, and 140% web text proxy",
+    "Dirty profile navigation confirms; Stay preserves the form and active tab, same active tab is a no-op",
+    "Confirmed discard commits only the requested main-tab destination",
+    "Profile header Back uses the same guard; Stay preserves the draft and explicit discard returns to More without saving",
+    "The first requested destination remains authoritative while the discard Alert is open",
+    "Profile-pending is parent-owned recovery, while a separate dirty kennel code remains locally discardable",
+    "An in-flight profile and attribution write disables every exit path"
+  ],
+  "pageErrors": [],
+  "scope": "Production EditDogProfileScreen; public/review React Native Web fixture with synthetic attribution callbacks; no backend writes",
+  "bundle": "public",
+  "viewports": [
+    [
+      375,
+      844,
+      "375x844"
+    ],
+    [
+      430,
+      844,
+      "430x844"
+    ],
+    [
+      375,
+      667,
+      "375x667"
+    ]
+  ],
+  "limitations": [
+    "Android BackHandler and native Alert presentation are NOT TESTABLE in RN Web",
+    "Live Supabase/RLS and attribution persistence are NOT TESTABLE",
+    "Native VoiceOver/Dynamic Type and physical keyboard/gestures are NOT TESTABLE",
+    "The 140% text proxy is a web CSS approximation"
+  ]
+}

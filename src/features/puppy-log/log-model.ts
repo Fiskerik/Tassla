@@ -244,6 +244,29 @@ export function localDateTimeParts(occurredAt: string): { date: string; time: st
   return { date: localDate(value), time: localTime(value) };
 }
 
+export type LogEventDraftValues = {
+  type: LogEventType;
+  date: string;
+  time: string;
+  note: string;
+  accidentKinds: readonly AccidentKind[];
+};
+
+export function isLogEventDraftDirty(event: Pick<LogEvent, 'type' | 'occurredAt' | 'note' | 'accidentKinds'>, draft: LogEventDraftValues): boolean {
+  const originalDateTime = localDateTimeParts(event.occurredAt);
+  const originalKinds = event.type === 'accident' ? canonicalAccidentKinds(event.accidentKinds ?? []) : null;
+  const draftKinds = draft.type === 'accident' ? canonicalAccidentKinds(draft.accidentKinds) : null;
+  const accidentKindsChanged = originalKinds === null || draftKinds === null
+    ? originalKinds !== draftKinds
+    : originalKinds.length !== draftKinds.length || originalKinds.some((kind, index) => kind !== draftKinds[index]);
+
+  return draft.type !== event.type
+    || draft.date !== originalDateTime.date
+    || draft.time !== originalDateTime.time
+    || (draft.note ?? '') !== (event.note ?? '')
+    || accidentKindsChanged;
+}
+
 export function groupLogEventsByLocalDate(events: readonly LogEvent[]): { date: string; events: LogEvent[] }[] {
   const groups = new Map<string, LogEvent[]>();
   for (const event of [...events].sort(newestFirst)) {

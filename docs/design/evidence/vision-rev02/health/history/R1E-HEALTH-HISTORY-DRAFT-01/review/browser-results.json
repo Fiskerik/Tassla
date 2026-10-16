@@ -1,0 +1,41 @@
+{
+  "passes": [
+    "Health history sheet close and main-tab route share the discard guard; Stay preserves the draft and same tab is a no-op",
+    "The first requested route remains authoritative while the discard Alert is open",
+    "A delayed discard action from the previous account generation cannot close the new health editor",
+    "Delete cancel keeps all draft fields; confirmed update closes once, keeps the refreshed row, and shows parent-owned success feedback",
+    "Confirmed delete removes the row and produces a distinct parent-owned confirmation",
+    "A supported type swap remains a visible conflict, retains the opening draft/type, and requires explicit recovery",
+    "Rejected writes retain the draft and release the synchronous write-flight for an explicit retry",
+    "Unknown update has no early success; exact later confirmation gives one toast and preserves the reload warning",
+    "Synchronous write-flight blocks sheet close and duplicate submission while preserving fields",
+    "Unknown create stays open until readback and then reports one parent-owned confirmation",
+    "Health history editor fits 375px at 140% and both picker buttons remain inside their field rows"
+  ],
+  "pageErrors": [],
+  "scope": "Production HealthScreen and HealthHistoryScreen in React Native Web with synthetic callbacks and records; no backend writes",
+  "bundle": "review",
+  "viewports": [
+    [
+      375,
+      844,
+      "375x844"
+    ],
+    [
+      430,
+      844,
+      "430x844"
+    ],
+    [
+      375,
+      667,
+      "375x667"
+    ]
+  ],
+  "limitations": [
+    "Native Alert presentation, Android BackHandler, iOS/Android Modal ordering and real device gestures are NOT TESTABLE",
+    "Live Supabase/RLS and actual unknown-write/readback timing are NOT TESTABLE",
+    "Native VoiceOver/Dynamic Type, physical keyboard and safe-area behavior are NOT TESTABLE",
+    "The 140% text proxy is a web CSS approximation"
+  ]
+}

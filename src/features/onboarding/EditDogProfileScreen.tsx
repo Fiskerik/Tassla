@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Image, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Alert, BackHandler, Image, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DatePickerField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
@@ -18,6 +18,7 @@ import {
 import { normalizeKennelCode } from '../../onboarding-referral/referral-secure-storage';
 import { tokens } from '../../theme/tokens';
 import { ProfileScreenHeader } from './ProfileScreenHeader';
+import { isDogProfileDraftDirty, isKennelCodeDraftDirty, isProfileEditorDraftDirty, type KennelAttributionIntent } from './profile-draft';
 
 export function EditDogProfileScreen({
   client,
@@ -32,10 +33,13 @@ export function EditDogProfileScreen({
   attributionBusy = false,
   attributionMessage = '',
   attributionMessageError = false,
+  attributionIntent = null,
+  registerEditorLeaveGuard,
   onBack,
   onSave,
   onSaveAttribution,
   onRetryAttribution,
+  onAcceptCurrentAttribution,
   onRetryStatus,
   onAcceptCurrent,
 }: {
@@ -51,10 +55,13 @@ export function EditDogProfileScreen({
   attributionBusy?: boolean;
   attributionMessage?: string;
   attributionMessageError?: boolean;
+  attributionIntent?: Pick<KennelAttributionIntent, 'attemptedCode' | 'operationId' | 'status'> | null;
+  registerEditorLeaveGuard?: (owner: symbol, requestLeave: (commit: () => void) => void) => () => void;
   onBack: () => void;
   onSave: (changes: OwnedDogProfileChanges, knownBreeds: readonly BreedOption[]) => Promise<boolean>;
   onSaveAttribution?: (code: string | null) => Promise<boolean>;
   onRetryAttribution?: () => void;
+  onAcceptCurrentAttribution?: (operationId: number) => void;
   onRetryStatus: () => void;
   onAcceptCurrent: () => void;
 }) {
@@ -70,15 +77,66 @@ export function EditDogProfileScreen({
   const [attributionFormError, setAttributionFormError] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
+  const editorOwnerToken = useRef(Symbol('profile-editor'));
+  const leaveAlertOpen = useRef(false);
+  const onBackRef = useRef(onBack);
   const confirmedMessage = statusMessage === 'Hundprofilen är sparad.' && !statusError && !pending && !busy
     ? statusMessage : null;
   const blocked = busy || pending;
+  const profileDirty = isDogProfileDraftDirty(dog, { name, breedId, birthDate, ageDisplayUnit });
+  const kennelDirty = attributionState === 'ready' && !attributionIntent
+    && isKennelCodeDraftDirty(attribution?.code ?? null, kennelCode);
+  const discardableDraft = isProfileEditorDraftDirty({
+    profileDirty,
+    kennelDirty,
+    profilePending: pending,
+    hasKennelIntent: Boolean(attributionIntent),
+  });
+
+  useLayoutEffect(() => { onBackRef.current = onBack; }, [onBack]);
+
+  const requestLeave = useCallback((commit: () => void) => {
+    if (leaveAlertOpen.current || busy || attributionBusy) return;
+    if (!discardableDraft) {
+      commit();
+      return;
+    }
+    leaveAlertOpen.current = true;
+    Alert.alert('Osparade ändringar', 'Vill du lämna utan att spara?', [
+      { text: 'Stanna kvar', style: 'cancel', onPress: () => { leaveAlertOpen.current = false; } },
+      { text: 'Lämna utan att spara', style: 'destructive', onPress: () => {
+        leaveAlertOpen.current = false;
+        commit();
+      } },
+    ], { cancelable: true, onDismiss: () => { leaveAlertOpen.current = false; } });
+  }, [attributionBusy, busy, discardableDraft]);
+  const requestLeaveRef = useRef(requestLeave);
+  useLayoutEffect(() => { requestLeaveRef.current = requestLeave; }, [requestLeave]);
+  const requestBack = useCallback(() => requestLeaveRef.current(() => onBackRef.current()), []);
+  const leaveNow = useCallback(() => {
+    if (busy || attributionBusy) return;
+    onBackRef.current();
+  }, [attributionBusy, busy]);
+
+  useEffect(() => {
+    if (!registerEditorLeaveGuard) return undefined;
+    return registerEditorLeaveGuard(editorOwnerToken.current, (commit) => requestLeaveRef.current(commit));
+  }, [registerEditorLeaveGuard]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return undefined;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      requestBack();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [requestBack]);
 
   useEffect(() => {
     // The profile read is asynchronous; mirror a completed read into the local field.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (attributionState === 'ready') setKennelCode(attribution?.code ?? '');
-  }, [attribution?.code, attributionState]);
+    if (attributionState === 'ready' && !attributionIntent) setKennelCode(attribution?.code ?? '');
+  }, [attribution?.code, attributionIntent, attributionState]);
 
   useEffect(() => {
     // The toast mirrors an external save-status prop and is intentionally reset here.
@@ -139,12 +197,11 @@ export function EditDogProfileScreen({
 
   const currentBreed = breeds.find((breed) => breed.id === dog.breed_id)?.name ?? dog.breed_id;
   const conflictBreed = conflict ? breeds.find((breed) => breed.id === conflict.breed_id)?.name ?? conflict.breed_id : '';
-  const draftDiffers = name.trim() !== dog.name || breedId !== dog.breed_id || birthDate.trim() !== dog.birth_date
-    || ageDisplayUnit !== dog.age_display_unit;
+  const draftDiffers = discardableDraft;
   const showStatusMessage = Boolean(statusMessage) && (statusError || pending || busy);
 
   return <View>
-    <ProfileScreenHeader onBack={onBack} disabled={busy} />
+    <ProfileScreenHeader onBack={requestBack} disabled={busy || attributionBusy} />
     <View style={styles.heroCard}>
       <View style={styles.heroCopy}>
         <Text style={styles.intro}>Håll namn, ras och födelsedatum uppdaterade för innehåll som passar er.</Text>
@@ -216,23 +273,49 @@ export function EditDogProfileScreen({
     <View style={styles.attributionCard}>
       <Text style={styles.formTitle} accessibilityRole="header">Kennelkoppling (valfri)</Text>
       <Text style={styles.attributionBody}>Du kan koppla en kennel nu eller senare. Det påverkar inte din hundprofil.</Text>
-      {attributionState === 'loading' && <MessageCard>Hämtar kennelkopplingen…</MessageCard>}
-      {attributionState === 'error' && <>
-        <MessageCard tone="error">Kennelkopplingen kunde inte hämtas. Du kan försöka igen utan att ändra hundprofilen.</MessageCard>
-        <Button variant="secondary" label="Försök igen" accessibilityLabel="Försök hämta kennelkopplingen igen" disabled={attributionBusy} onPress={onRetryAttribution ?? (() => undefined)} />
-      </>}
-      {attributionState === 'ready' && <>
-        {attribution ? <Text style={styles.attributionConnected}>Kopplad till {attribution.name}.</Text> : null}
-        <TextInput accessibilityLabel="Kennelkod, valfri" autoCapitalize="characters" editable={!attributionBusy}
-          onChangeText={(value) => { setKennelCode(value.toUpperCase()); setAttributionFormError(''); }} placeholder="Till exempel ABC123"
-          placeholderTextColor={tokens.colors.textSecondary} style={styles.input} value={kennelCode} />
-        {attributionFormError ? <MessageCard tone="error">{attributionFormError}</MessageCard> : null}
-        {attributionMessage ? <MessageCard tone={attributionMessageError ? 'error' : 'neutral'}>{attributionMessage}</MessageCard> : null}
-        <Button variant="secondary" label={attributionBusy ? 'Sparar…' : attribution ? (kennelCode.trim() ? 'Spara kennelkoppling' : 'Ta bort kennelkoppling') : 'Spara kennelkoppling'} accessibilityLabel="Spara kennelkoppling" loading={attributionBusy}
-          disabled={attributionBusy || !onSaveAttribution || kennelCode.trim() === (attribution?.code ?? '')} onPress={() => { void saveAttribution(); }} />
+      {attributionIntent ? <>
+        <MessageCard tone="error">{attributionIntent.attemptedCode === null
+          ? 'Vi kunde inte kontrollera om kennelkopplingen togs bort.'
+          : 'Vi kunde inte kontrollera om kennelkopplingen sparades.'}</MessageCard>
+        <TextInput accessibilityLabel="Kennelkod, valfri" autoCapitalize="characters" editable={false}
+          placeholder={attributionIntent.attemptedCode === null ? 'Borttagningsförsök' : 'Försökt kennelkoppling'}
+          placeholderTextColor={tokens.colors.textSecondary} style={styles.input} value={attributionIntent.attemptedCode ?? ''} />
+        {attributionIntent.status === 'mismatch' ? <>
+          <Text style={styles.attributionConnected}>{attribution
+            ? `Kopplad till ${attribution.name}.`
+            : 'Ingen kennelkoppling.'}</Text>
+          <Button variant="secondary" label={attributionBusy ? 'Kontrollerar…' : 'Kontrollera igen'}
+            accessibilityLabel="Kontrollera kennelkopplingen igen" loading={attributionBusy} disabled={attributionBusy}
+            onPress={onRetryAttribution ?? (() => undefined)} />
+          <Button variant="secondary" label="Använd aktuell koppling" accessibilityLabel="Använd den aktuella kennelkopplingen"
+            disabled={attributionBusy || !onAcceptCurrentAttribution}
+            onPress={() => onAcceptCurrentAttribution?.(attributionIntent.operationId)} />
+        </> : <>
+          {attributionState === 'loading' && <MessageCard>Hämtar kennelkopplingen…</MessageCard>}
+          {attributionMessage ? <MessageCard tone={attributionMessageError ? 'error' : 'neutral'}>{attributionMessage}</MessageCard> : null}
+          <Button variant="secondary" label={attributionBusy ? 'Kontrollerar…' : 'Kontrollera kennelkopplingen'}
+            accessibilityLabel="Kontrollera kennelkopplingen" loading={attributionBusy} disabled={attributionBusy}
+            onPress={onRetryAttribution ?? (() => undefined)} />
+        </>}
+      </> : <>
+        {attributionState === 'loading' && <MessageCard>Hämtar kennelkopplingen…</MessageCard>}
+        {attributionState === 'error' && <>
+          <MessageCard tone="error">Kennelkopplingen kunde inte hämtas. Du kan försöka igen utan att ändra hundprofilen.</MessageCard>
+          <Button variant="secondary" label="Försök igen" accessibilityLabel="Försök hämta kennelkopplingen igen" disabled={attributionBusy} onPress={onRetryAttribution ?? (() => undefined)} />
+        </>}
+        {attributionState === 'ready' && <>
+          {attribution ? <Text style={styles.attributionConnected}>Kopplad till {attribution.name}.</Text> : null}
+          <TextInput accessibilityLabel="Kennelkod, valfri" autoCapitalize="characters" editable={!attributionBusy}
+            onChangeText={(value) => { setKennelCode(value.toUpperCase()); setAttributionFormError(''); }} placeholder="Till exempel ABC123"
+            placeholderTextColor={tokens.colors.textSecondary} style={styles.input} value={kennelCode} />
+          {attributionFormError ? <MessageCard tone="error">{attributionFormError}</MessageCard> : null}
+          {attributionMessage ? <MessageCard tone={attributionMessageError ? 'error' : 'neutral'}>{attributionMessage}</MessageCard> : null}
+          <Button variant="secondary" label={attributionBusy ? 'Sparar…' : attribution ? (kennelCode.trim() ? 'Spara kennelkoppling' : 'Ta bort kennelkoppling') : 'Spara kennelkoppling'} accessibilityLabel="Spara kennelkoppling" loading={attributionBusy}
+            disabled={attributionBusy || !onSaveAttribution || !isKennelCodeDraftDirty(attribution?.code ?? null, kennelCode)} onPress={() => { void saveAttribution(); }} />
+        </>}
       </>}
     </View>
-    <QuietButton title="Avbryt" disabled={busy} onPress={onBack} />
+    <QuietButton title={discardableDraft ? 'Avbryt ändringar' : 'Stäng'} disabled={busy || attributionBusy} onPress={leaveNow} />
   </View>;
 }
 

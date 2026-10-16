@@ -582,7 +582,6 @@ export async function fetchHealthHistory(
 export async function fetchHealthHistoryById(
   client: SupabaseClient,
   dogId: string,
-  eventType: HealthHistoryType,
   id: string,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
 ): Promise<HealthHistoryRecord | null> {
@@ -590,14 +589,13 @@ export async function fetchHealthHistoryById(
     const { data, error } = await client.from('dog_events')
       .select(HEALTH_HISTORY_COLUMNS)
       .eq('dog_id', dogId)
-      .eq('event_type', eventType)
       .eq('id', id)
       .abortSignal(signal)
       .maybeSingle();
     if (error) throw new Error('Could not check health history status');
     if (data === null) return null;
     const row = normalizeHealthHistoryRecord(data);
-    if (!row || row.dog_id !== dogId || row.event_type !== eventType || row.id !== id) {
+    if (!row || row.dog_id !== dogId || row.id !== id) {
       throw new Error('Health history response did not match the database contract');
     }
     return row;
@@ -632,7 +630,7 @@ export async function insertHealthHistory(
     failure = result.error ?? new Error('Empty health history insert response');
   } catch (error) { failure = error; }
   try {
-    const found = await fetchHealthHistoryById(client, operation.dog_id, operation.event_type, operation.id, timeoutMs);
+    const found = await fetchHealthHistoryById(client, operation.dog_id, operation.id, timeoutMs);
     if (found && matchesHealthHistory(found, normalized)) return { status: 'saved', value: found };
     return isDefiniteClientRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
   } catch { return { status: 'unknown' }; }
@@ -667,7 +665,7 @@ export async function updateHealthHistory(
     failure = result.error ?? new Error('Empty health history update response');
   } catch (error) { failure = error; }
   try {
-    const found = await fetchHealthHistoryById(client, dogId, eventType, id, timeoutMs);
+    const found = await fetchHealthHistoryById(client, dogId, id, timeoutMs);
     if (found && matchesHealthHistory(found, { id, dog_id: dogId, event_type: eventType, ...normalizedChanges })) return { status: 'saved', value: found };
     return isDefiniteClientRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
   } catch { return { status: 'unknown' }; }
@@ -691,13 +689,13 @@ export async function deleteHealthHistory(
     const result = await withRequestDeadline(async (signal) => await query.abortSignal(signal).select('id').maybeSingle(), timeoutMs);
     if (!result.error && result.data && result.data.id === id) return { status: 'saved', value: null };
     if (!result.error && result.data === null) {
-      const current = await fetchHealthHistoryById(client, dogId, eventType, id, timeoutMs);
+      const current = await fetchHealthHistoryById(client, dogId, id, timeoutMs);
       return current ? { status: 'unknown' } : { status: 'saved', value: null };
     }
     failure = result.error ?? new Error('Empty health history delete response');
   } catch (error) { failure = error; }
   try {
-    const found = await fetchHealthHistoryById(client, dogId, eventType, id, timeoutMs);
+    const found = await fetchHealthHistoryById(client, dogId, id, timeoutMs);
     if (!found) return { status: 'saved', value: null };
     return isDefiniteClientRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
   } catch { return { status: 'unknown' }; }

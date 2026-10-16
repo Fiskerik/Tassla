@@ -5660,7 +5660,8 @@
         "For public and review fixtures inspect Slice B routes: /?screen=profile-create&profileScenario=ready; /?screen=profile-edit&profileScenario=ready|loading|error; /?screen=profile-edit&state=conflict; /?screen=profile-create&profileScenario=breed-loading|breed-error; /?screen=profile-edit&profileScenario=breed-loading|breed-error; /?screen=home&homeScenario=ready. Here profileScenario=loading|error is dog-profile load/save status; profileScenario=breed-loading|breed-error is the separate breed-catalog request status. On create/edit capture normal and long breed labels, matching and no-match search, direct Okänd ras selection from the main-picker empty state, Mix checkbox off, checkbox on with zero components, with only the first component, and with two distinct breeds. Verify missing-selector status, disabled Save until two distinct breeds are selected, second-picker exclusion of the first, and duplicate-component rejection, Okänd ras exclusion from Mix components, long Home identity wrapping, and preserved age preference. Slice B Home review verifies final name | breed/Mix identity and keeps the age preference saved by Slice A. Capture representative Slice B states at 375x844, 430x844, and 375x667. For 140% text scaling use Firefox View > Zoom > Zoom Text Only on profile-edit-ready and Home; if unavailable, report NOT TESTABLE. Native Dynamic Type/VoiceOver and database runtime are NOT TESTABLE. Save public/review captures to docs/design/evidence/vision-rev02/dog-profile/public/ and docs/design/evidence/vision-rev02/dog-profile/review/. Prefix all filenames with synthetic- and record route/state, viewport, text scale, and fixture mode in docs/design/evidence/vision-rev02/dog-profile/README.md; both fixtures are synthetic even without a review banner. Complete docs/design-rules.md §14; no test suites. SQL/RLS runtime NOT TESTABLE without dev DB."
       ],
       "depends_on": [
-        "DOG-PROFILE-AGE-DISPLAY"
+        "DOG-PROFILE-AGE-DISPLAY",
+        "UIUX-REVAMP-R1A-BREED-01"
       ],
       "status": "blocked",
       "history": [
@@ -7130,6 +7131,89 @@
       "evidence_status": "v1.8 JSON/queue/TOML/31-link/diff PASS; independent QA PASS; Architect APPROVE; Critic PROCEED; final Reviewer PASS"
     },
     {
+      "id": "UIUX-REVAMP-R1A-BREED-01",
+      "title": "Onboarding: kräver aktivt rasval",
+      "mvp_requirement": "docs/mvp.md §4.1; docs/MVP-EXPERIENCE-CONTRACT.md: skapa hundprofil",
+      "plan": "docs/tasks/dev/UIUX-REVAMP-R1A-BREED-01.md v3; docs/plans/UIUX-REVAMP-R1A-BREED-01-ux-spec.md v1",
+      "write_paths": [
+        "src/features/onboarding/ProfileScreen.tsx",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "docs/plans/UIUX-REVAMP-R1A-BREED-01-ux-spec.md",
+        "docs/tasks/dev/UIUX-REVAMP-R0-R1A-CHECKPOINT.md",
+        "docs/tasks/dev/UIUX-REVAMP-R1A-BREED-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/onboarding/R1A-BREED-01/"
+      ],
+      "acceptance": [
+        "No breed is selected until the owner explicitly chooses one; Continue remains disabled without that choice.",
+        "Ready, empty, loading, error and error-retry states provide honest visible feedback; empty and error states can retry.",
+        "Selecting a breed updates the radio selection and clears the guidance; kennel code remains optional.",
+        "CreateDog, readback, error/unknown/status-check, data contracts, permissions and persistence code remain unchanged.",
+        "Synthetic browser evidence is separate from live DB/RLS, native accessibility and phone-build claims."
+      ],
+      "checks": [
+        "pnpm check",
+        "Run the production ProfileScreen visual verifier in public and review bundles at 375x844, 430x844 and 375x667, including 140% text proxy",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "MVP-V2-ADOPT-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v3 and Critic PROCEED recorded in the task plan; R1a is the approved first UI/UX checkpoint."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "In-scope MVP v2 work under the 2026-10-06 owner mandate; exact plan v3 has Architect APPROVE and Critic PROCEED; team-routing task remains planned to serialize shared queue/report/master-log writes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation and planned local checks passed: pnpm check (502/502 Node tests), profile-create verifier public 7/7 and review 7/7 with no browser errors, Python verifier syntax, queue validation, and git diff --check. Evidence: docs/design/evidence/vision-rev02/onboarding/R1A-BREED-01/. Native VoiceOver/Dynamic Type, live Supabase/RLS and profile persistence remain NOT TESTABLE. Next: independent QA."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS for the local checkpoint: reviewed changed behavior and UX contract, public/review results (7/7 each, no browser errors), and six screenshots; visible states and viewport/large-text fit pass. QA used recorded command results and did not rerun shell checks after its first check attempt was interrupted. pnpm check 502/502, py_compile, queue validation, and git diff --check are recorded as passing. Native/live limitations remain NOT TESTABLE. Next: independent final Reviewer."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent QA PASS and final Reviewer PASS; master-log outcome recorded with actual local checks, public/review render evidence, and native/live limitations. Uncommitted local checkpoint on the approved branch; no commit or push. Next: begin approved TASSLA-TEAM-MODEL-ROUTING-01."
+        }
+      ],
+      "next_step": "Independent QA PASS and final Reviewer PASS; master-log outcome recorded with actual local checks, public/review render evidence, and native/live limitations. Uncommitted local checkpoint on the approved branch; no commit or push. Next: begin approved TASSLA-TEAM-MODEL-ROUTING-01.",
+      "priority": "P0",
+      "panels": [
+        "1"
+      ],
+      "risk_class": "M",
+      "checkpoint": "A newly created dog profile is not submitted with an unchosen catalog default; save and recovery contracts are unchanged.",
+      "test_evidence": [
+        "Fresh non-empty catalog has no selected radio and disabled Continue until explicit choice.",
+        "Empty, loading, failed fetch and retry-to-success paths are verified with the production component in a synthetic RN Web fixture.",
+        "Public/review screenshots at 375x844, 430x844 and 375x667; 140% text proxy checked without horizontal overflow.",
+        "Live Supabase/RLS and native device behavior remain NOT TESTABLE."
+      ],
+      "implementation_state": "implemented; independent QA PASS; Reviewer PASS; local checkpoint done",
+      "evidence_status": "public/review 7/7 each; QA screenshot review and Reviewer PASS; pnpm check 502/502, py_compile, queue validation, diff check pass; live/native limits NOT TESTABLE"
+    },
+    {
       "id": "TASSLA-TEAM-MODEL-ROUTING-01",
       "title": "Tassla Team: modell och reasoning per SDK-roll",
       "mvp_requirement": "docs/ai-team.md: Projektunderlag och modellöversikt; SDK-teamets modellrouting",
@@ -7235,7 +7319,8 @@
       ],
       "depends_on": [
         "DOG-PROFILE-AGE-DISPLAY",
-        "DOG-PROFILE-BREED-MIX"
+        "DOG-PROFILE-BREED-MIX",
+        "UIUX-REVAMP-R1A-BREED-01"
       ],
       "status": "planned",
       "history": [],
@@ -7685,7 +7770,7 @@
       "id": "FLOW-LOG-01",
       "title": "Logga med bevarad snabbresa och historik",
       "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; first dependency UIUX-REVAMP-R1B-LOG-DRAFT-01 v5, then exact journey plan",
       "write_paths": [
         "src/features/puppy-log/LogScreen.tsx",
         "src/features/home/ProductWorkspace.tsx"
@@ -7701,11 +7786,12 @@
         "python tools/dev_flow.py validate"
       ],
       "depends_on": [
-        "UX-LOG-EDITOR-01"
+        "UX-LOG-EDITOR-01",
+        "UIUX-REVAMP-R1B-LOG-DRAFT-01"
       ],
       "status": "planned",
       "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "next_step": "Först slutför UIUX-REVAMP-R1B-LOG-DRAFT-01; därefter exakt delplan för full Loggresa, utan att stänga hela panelen före datakoppling och visuell QA.",
       "priority": "P2",
       "panels": [
         "5"
@@ -7911,6 +7997,618 @@
       ],
       "implementation_state": "föreslagen; ingen kod i denna diff",
       "evidence_status": "not_run — required evidence listed in test_evidence"
+    },
+    {
+      "id": "UIUX-REVAMP-R1B-LOG-DRAFT-01",
+      "title": "Skydda Loggeditorns osparade utkast",
+      "mvp_requirement": "docs/mvp.md: panel 5 Logga; docs/plans/UIUX-REVAMP-MASTERPLAN-2026-10-16.md F02/R1b",
+      "plan": "docs/tasks/dev/UIUX-REVAMP-R1B-LOG-DRAFT-01.md v5 + docs/plans/UIUX-REVAMP-R1B-LOG-DRAFT-01-ux-spec.md v5",
+      "write_paths": [
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/log-model.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/main-navigation.ts",
+        "src/components/ui/Toast.tsx",
+        "tests/log-screen-policy.test.mjs",
+        "tests/toast-compact-policy.test.mjs",
+        "tests/log-event-draft.test.mjs",
+        "tests/main-navigation.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "docs/tasks/dev/UIUX-REVAMP-R1B-LOG-DRAFT-01.md",
+        "docs/plans/UIUX-REVAMP-R1B-LOG-DRAFT-01-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/log/R1B-LOG-DRAFT-01/"
+      ],
+      "acceptance": [
+        "Canonical dirty compare normaliserar local date/minute, note null/empty, type och accidentKinds; revert-to-clean inklusive legacy accidentKinds=null.",
+        "Same tab is a no-op; repeated nav requests while the Alert is open are ignored so first requested destination alone can commit. Stay/locked produce zero parent side effects.",
+        "Same editor guard covers BottomSheet close/backdrop/system-back and Home main-tab button/swipe; explicit leave confirms exact destination.",
+        "Pending, failed, unsure have separate truthful status surfaces/actions. Failed Toast says `Ändringen sparades inte. Försök igen eller fortsätt redigera.`; its `Fortsätt redigera` action clears only failed intent while retaining editor/draft; unsure has retry/readback only. Toast optional `cancelLabel` keeps default `Avbryt` for all other consumers and preserves the selected label through retained/exiting state; the Toast policy test covers default and custom labels.",
+        "Confirmed save, quick log, duplicate, date, failure/unknown, retry, delete and undo remain correct; one mutation status surface per state.",
+        "Behavior tests prove dirty cases, nav callback order/no-op/double request and actual LogScreen public/review interactions. Native Alert/system-back remain NOT TESTABLE."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/log-event-draft.test.mjs tests/main-navigation.test.mjs tests/log-screen-policy.test.mjs tests/toast-compact-policy.test.mjs",
+        "Public/review tools/visual-check build and verify",
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UX-LOG-EDITOR-01",
+        "UIUX-REVAMP-R1A-BREED-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v5 and Critic PROCEED v5 recorded in task plan; exact scope and Toast default-label test included."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementation starts under Erik's existing MVP mandate after Architect APPROVE v5 and Critic PROCEED v5; edits limited to reviewed write paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete. QA identified the missing pure dirty-helper test; it was added under the approved write path. Updated results: focused R1b 27/27, pnpm check 512/512, public/review log-draft 9/9 each, py_compile, queue validation and diff check PASS; evidence README updated. QA is active."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: focused R1b 27/27, pnpm check 512/512, public/review log-draft 9/9 each, no page errors; ren stängning och lyckad redigering verifierade. Separat äldre Home-titelassertion dokumenterad."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS 2026-10-16; 512/512 full, 27/27 focused, public/review 9/9, queue validation and diff check; master log and final checkpoint updated."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS 2026-10-16; 512/512 full, 27/27 focused, public/review 9/9, queue validation and diff check; master log and final checkpoint updated.",
+      "priority": "P0",
+      "panels": [
+        "5"
+      ],
+      "risk_class": "M",
+      "checkpoint": "R1b första formresa: Loggeditor. Separata efterföljande checkpoints gäller Profil, Påminnelser och Hälsa.",
+      "test_evidence": [
+        "Dirty/clean/revert/cancel/discard/stay; close/backdrop/system-back/tab/swipe; saved/pending/failed/unsure.",
+        "Public/review RN Web publicerade komponent-renderingar och §14-checklista; native/phone separeras som NOT TESTABLE."
+      ],
+      "implementation_state": "implemented; helper, editor guard, status feedback, navigation gate, focused tests and public/review evidence are present",
+      "evidence_status": "QA PASS and independent Reviewer PASS: focused R1b 27/27, pnpm check 512/512, public/review log-draft 9/9 each, no page errors; native/live integration NOT TESTABLE"
+    },
+    {
+      "id": "UIUX-REVAMP-R1C-PROFILE-DRAFT-01",
+      "title": "Skydda Hundprofilens osparade utkast",
+      "mvp_requirement": "docs/mvp.md: stödskärm Hundprofil; docs/plans/UIUX-REVAMP-MASTERPLAN-2026-10-16.md F02/R1c",
+      "plan": "docs/tasks/dev/UIUX-REVAMP-R1C-PROFILE-DRAFT-01.md v4 + docs/plans/UIUX-REVAMP-R1C-PROFILE-DRAFT-01-ux-spec.md v4",
+      "write_paths": [
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/onboarding/profile-draft.ts",
+        "tests/profile-draft-guard.test.mjs",
+        "tests/profile-edit.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "docs/tasks/dev/UIUX-REVAMP-R1C-PROFILE-DRAFT-01.md",
+        "docs/plans/UIUX-REVAMP-R1C-PROFILE-DRAFT-01-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/profile/R1C-PROFILE-DRAFT-01/"
+      ],
+      "acceptance": [
+        "Canonical dirty compare covers name, breed, birth date, age display and local kennel code; invalid changes are dirty and reverting to saved values is clean.",
+        "Header back, main tab, swipe and Android system back protect dirty input. Stay causes no effects; discard commits only the first requested route; repeated requests cannot replace its destination.",
+        "Explicit Avbryt ändringar remains a direct discard choice only when separate local input exists; parent-owned profile/kennel unknown intents are not local dirty and cannot be discarded. It never saves; all exit paths are disabled while a profile or attribution write is in flight.",
+        "Profile unknown retains its parent-owned intent; kennel unknown retains tagged {ownerId, accountGeneration, dogId, attemptedCode: string | null, operationId} intent in workspace memory. Confirmed attribution/read state and active write/busy state are also scope-tagged. All attribution props are synchronously filtered before render; stale completion can affect only its matching scope/token. Existing owner-scoped readback never writes. Both unknown link and removal are tested for match, mismatch/current status, stale scope, and superseded operation.",
+        "Unknown link/removal use separate exact Swedish status copy; mismatch displays `Kopplad till {namn}` or `Ingen kennelkoppling` beside recheck/use-current. Actual component tests cover unknown removal alone (Stäng) and with dirty profile fields (Avbryt ändringar leaves parent intent intact).",
+        "The guard uses owner-matched registration/cleanup and applies only to profile edit. Public/review actual-component fixture covers clean/dirty/revert/stay/discard and save states; native/live limits are explicit."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/profile-draft-guard.test.mjs tests/profile-edit.test.mjs tests/main-navigation.test.mjs",
+        "Public/review tools/visual-check build and focused profile-draft verify",
+        "pnpm check",
+        "python -m py_compile tools/visual-check/verify.py",
+        "Security review of owner-scoped in-memory attribution intent/readback",
+        "python tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "APP-04C-PROFILE",
+        "UIUX-REVAMP-R1B-LOG-DRAFT-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v4; Critic PROCEED v4; Security PASS v4; plan and UX spec validated; implementation may begin."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin implementation against reviewed plan v4 write paths only; Architect APPROVE, Critic PROCEED, Security PASS recorded."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete under approved plan v4; focused 47/47, pnpm check 524/524, public/review profile-draft 12/12 each without page errors, py_compile, queue validation and diff check PASS. Independent QA next; native/live limits and §14 evidence recorded."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: focused 47/47, pnpm check 524/524, rebuilt public/review profile-draft 12/12 each with no page errors, screenshots inspected, py_compile, queue validation and diffcheck PASS; no QA edits. Independent Reviewer is next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS, no findings; verified v4 scope, guarded dirty/discard semantics, owner/account-generation/dog scoping, operation fences, read-only attribution recovery and NOT TESTABLE boundaries. Checkpoint closed after plan gates and QA PASS. R1d is the next separate slice."
+        }
+      ],
+      "next_step": "R1c closed. Proceed to R1d reminders draft protection as a separate exact-plan checkpoint.",
+      "priority": "P0",
+      "panels": [],
+      "risk_class": "H",
+      "checkpoint": "R1c first protected profile-editor journey; later R1d reminders and R1e health remain separate.",
+      "test_evidence": [
+        "Canonical dirty/revert, header/tab/swipe/system-back, first destination lock, explicit cancel, in-flight/unknown, profile recovery and attribution separate action. Unknown-link/removal match/mismatch, visible server status, full scope fences, scoped confirmed/read/busy state, and stale-operation tokens are covered.",
+        "Public/review actual-screen screenshots at 375x844, 430x844, 375x667 and 140% text proxy; unknown removal alone (Stäng) and with dirty profile input (Avbryt ändringar; intent retained) at 375x844. Direct editor-to-rev02 matching is NOT TESTABLE because no editor panel exists."
+      ],
+      "implementation_state": "implemented; canonical local dirty state, owner-scoped kennel intent/readback/busy fences, guarded editor navigation, matching/mismatch recovery and public/review fixtures are present",
+      "evidence_status": "Architect APPROVE v4; Critic PROCEED v4; Security PASS v4; independent QA PASS; independent Reviewer PASS without findings. Focused 47/47; pnpm check 524/524; public/review 12/12 each; py_compile, queue validate and git diff --check PASS. Native/live/editor-reference limits remain NOT TESTABLE."
+    },
+    {
+      "id": "UIUX-REVAMP-R1D-REMINDER-DRAFT-01",
+      "title": "Skydda Påminnelsernas osparade utkast",
+      "mvp_requirement": "docs/mvp.md: stödskärm Påminnelser; docs/plans/UIUX-REVAMP-MASTERPLAN-2026-10-16.md F02/R1d",
+      "plan": "docs/tasks/dev/UIUX-REVAMP-R1D-REMINDER-DRAFT-01.md v3 + docs/plans/UIUX-REVAMP-R1D-REMINDER-DRAFT-01-ux-spec.md v3",
+      "write_paths": [
+        "src/features/notifications/NotificationSettingsScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/notifications/reminder-preferences-draft.ts",
+        "tests/reminder-preferences-draft.test.mjs",
+        "tests/notification-settings-screen.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "docs/tasks/dev/UIUX-REVAMP-R1D-REMINDER-DRAFT-01.md",
+        "docs/plans/UIUX-REVAMP-R1D-REMINDER-DRAFT-01-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/reminders/R1D-REMINDER-DRAFT-01/"
+      ],
+      "acceptance": [
+        "Dirty helper covers every saved preference and invalid time; reverting to saved HH:mm becomes clean.",
+        "Header back, owner-selected different main tab and Android system back protect dirty draft. Stay has no route or save side effects; explicit leave commits only the first requested route; same More tab is a no-op. Swipe has no destination from the support screen and remains unchanged.",
+        "Form busy/readiness does not itself block navigation. Only an actual preference write blocks exits; a synchronous flight lock before the first await prevents duplicate write callbacks and save→immediate back/tab until the write Promise settles. Initial readiness and separate permission request do not set this lock.",
+        "Failed storage write releases the flight lock, retains local values and existing error; retry is explicit and confirmed save preserves the existing parent/service contract.",
+        "Android back with InfoModal or TimePickerField modal open uses that modal’s existing close callback first; page leave guard applies only when no child modal is open. Native callback order is NOT TESTABLE in RN Web.",
+        "When the existing owner/account-generation/dog/saved-snapshot key changes, local dirty state does not survive into the new editor instance; no parent snapshot reload/readiness behavior is claimed or changed. Stale guard cleanup cannot remove a newer owner token.",
+        "Public/review fixture verifies actual screen interactions, route callbacks, retained failure state, scope reset, reduced motion and §14 layouts; native/live gaps are recorded as NOT TESTABLE."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/reminder-preferences-draft.test.mjs tests/notification-settings-screen.test.mjs tests/main-navigation.test.mjs tests/local-notification-config.test.mjs",
+        "Public/review tools/visual-check build and focused notification-draft verify",
+        "pnpm check",
+        "python -m py_compile tools/visual-check/verify.py",
+        "Security review of notification preference draft protection",
+        "python tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "MVP-P07-REMINDERS",
+        "UIUX-REVAMP-R1C-PROFILE-DRAFT-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v3, Critic PROCEED v3, Security PASS v3 recorded in exact task plan; save-flight, busy/readiness and nested modal semantics reviewed."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin only R1d plan v3 write paths; synchronous save-flight lock follows validation and is independent of readiness/permission busy."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete; focused suite 18/18, typecheck PASS, public/review notification-draft 10/10 each, Python syntax and diff checks PASS. Evidence and §14 are in the R1D evidence directory; independent QA and Reviewer remain required. Native permission, BackHandler, Alert, Modal ordering, VoiceOver and installed app remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS without code changes: focused 18/18; pnpm check passed app/edge typecheck, ESLint and 531/531 tests; py_compile, queue validation and diff check PASS. QA inspected source, actual workspace wiring, public/review JSON and screenshots; no concrete defect. Fresh public/review browser runs by implementer passed 10/10 each with zero page errors. QA could not rerun browser harness in isolated environment. Native and live integration limitations remain NOT TESTABLE; proceed to independent Reviewer."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS without concrete findings after inspecting the root-verified working-tree snapshot, source, helper, tests and evidence; review environment lacked .git. Security PASS v3; independent QA PASS; focused 18/18; pnpm check 531/531; public/review browser verify 10/10 each; py_compile, queue validation, diff check PASS. Native/live limits remain NOT TESTABLE. Local checkpoint is intentionally uncommitted per the owner’s requested batch."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS without concrete findings after inspecting the root-verified working-tree snapshot, source, helper, tests and evidence; review environment lacked .git. Security PASS v3; independent QA PASS; focused 18/18; pnpm check 531/531; public/review browser verify 10/10 each; py_compile, queue validation, diff check PASS. Native/live limits remain NOT TESTABLE. Local checkpoint is intentionally uncommitted per the owner’s requested batch.",
+      "priority": "P0",
+      "panels": [],
+      "risk_class": "H",
+      "checkpoint": "R1d protects local reminder settings draft; permission and delivery remain existing separate contracts.",
+      "test_evidence": [
+        "Pure dirty/revert; header/main-tab/system-back; first destination; readiness vs save flight; synchronous double-submit and save→back/tab lock; failed/retry/saved states; local draft reset on existing key change.",
+        "Modal close callback priority is covered at component-contract level; actual Android BackHandler/Modal order remains NOT TESTABLE in RN Web.",
+        "Public/review actual-component screenshots at 375x844, 430x844, 375x667 and 140% text proxy; native Alert/back, SecureStore, real permission and delivery remain separate NOT TESTABLE evidence."
+      ],
+      "implementation_state": "implemented; canonical local reminder dirty state, owner/account/dog/saved-snapshot editor key, guarded header/tab/Android-back exits, save-flight lock and public/review fixture are present",
+      "evidence_status": "Implementer: focused 18/18, typecheck PASS, public/review notification-draft 10/10 each, py_compile and diff check PASS. Independent QA PASS; pnpm check 531/531, focused 18/18, queue validation and diff check PASS. Independent Reviewer PASS without findings after reviewing the root-verified working-tree snapshot; reviewer environment lacked .git. QA reviewed saved public/review JSON/screenshots. Native permission, SecureStore, delivery, Android BackHandler/Modal order, VoiceOver/Dynamic Type and installed build remain NOT TESTABLE."
+    },
+    {
+      "id": "UIUX-REVAMP-R1E-HEALTH-HISTORY-DRAFT-01",
+      "title": "Protect health history drafts and preserve confirmed feedback",
+      "mvp_requirement": "MVP v2; UI/UX masterplan 2026-10-16 F02 and F11; existing APP-04B2-HISTORY contract",
+      "plan": "docs/tasks/dev/UIUX-REVAMP-R1E-HEALTH-HISTORY-DRAFT-01.md v4; docs/plans/UIUX-REVAMP-R1E-HEALTH-HISTORY-DRAFT-01-ux-spec.md v4",
+      "write_paths": [
+        "src/features/health/HealthScreen.tsx",
+        "src/features/health/HealthHistoryScreen.tsx",
+        "src/components/AppPrimitives.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/data/workspace-data.ts",
+        "src/features/health/health-history-draft.ts",
+        "tests/health-history-draft.test.mjs",
+        "tests/health-history-screen.test.mjs",
+        "tests/health-history.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "src/features/health/README.md",
+        "docs/tasks/dev/UIUX-REVAMP-R1E-HEALTH-HISTORY-DRAFT-01.md",
+        "docs/plans/UIUX-REVAMP-R1E-HEALTH-HISTORY-DRAFT-01-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/health/history/R1E-HEALTH-HISTORY-DRAFT-01"
+      ],
+      "acceptance": [
+        "Dirty helper covers all local history form fields, invalid changed values and revert-to-clean.",
+        "Update/delete use the opening baseline; dog+id readback detects a supported history row whose type changed, and surfaces a conflict without false delete-success.",
+        "A refreshed event type cannot remount the open editor or discard its dirty draft; opening type remains fixed until explicit conflict recovery.",
+        "History operation reads, writes, retry, state updates and confirmation events are fenced by ownerId + accountGeneration + dogId.",
+        "Owner-token-matched sheet close and workspace guard ignore stale callbacks after editor/scope change.",
+        "Unknown → exact readback-confirmed create/update/delete emits one current-scope event, closes the matching sheet and shows one accurate toast.",
+        "Confirmed mutation plus reload failure retains the truthful reload warning in HealthScreen.",
+        "Dirty cancel/delete copy and behavior make draft discard explicit; Cancel retains values.",
+        "Public/review covers changed-type draft/conflict recovery, write-flight/retry, unknown/readback confirmation, reload warning, post-unmount feedback, three viewports, reduced motion and 140% web text proxy; both date/time picker buttons remain within their respective rows with no row overflow.",
+        "Public/review verifies real components and separates visual/native/live evidence with unsupported claims NOT TESTABLE."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/health-history-draft.test.mjs tests/health-history-screen.test.mjs tests/health-history.test.mjs tests/main-navigation.test.mjs",
+        "Public/review tools/visual-check build and focused health-history-draft verify",
+        "Public/review 140% proxy verifies calendar/time picker bounds against field rows and asserts no internal row overflow",
+        "pnpm check",
+        "python -m py_compile tools/visual-check/verify.py",
+        "python tools/dev_flow.py validate",
+        "git diff --check",
+        "Architect, Critic and Security v3 plan review; independent QA and Reviewer after correction implementation"
+      ],
+      "depends_on": [
+        "APP-04B2-HISTORY",
+        "UIUX-REVAMP-R1D-REMINDER-DRAFT-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v2; Critic PROCEED v2; Security PASS v2; plan v2 review protocol saved."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin only R1e v2 write paths; history generation fence, opening baseline CAS and sequenced confirmation event are mandatory."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation v2 complete; focused suite 60/60 and pnpm check 538/538 pass. Independent QA and Reviewer found blockers: query-by-type can misclassify concurrent event-type change as delete; edit key can remount and lose dirty draft; required 140% and UI recovery cases still need evidence. See review reports; plan v3 required before correction code."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent QA BLOCK: acceptance §10 coverage incomplete (140% text proxy, save failure/retry, in-flight close/double submit, unknown/readback event, selected-row conflict, reload error and unmount confirmation require coverage or a reviewed test-plan adjustment). Independent Reviewer BLOCK: event-type change can be misreported as deletion and remount can discard draft. Both reports received 2026-10-16; plan v3 and renewed Architect/Critic/Security reviews required before code."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "V3 correction plan/UX spec complete after QA/Reviewer BLOCK; Architect APPROVE, Critic PROCEED, Security PASS recorded 2026-10-16. Reviewed scope includes dog+id readback, stable opening type, conflict handling and expanded RN Web matrix."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v3; Critic PROCEED v3; Security PASS v3 for exact plan/UX v3, including id-only readback, type-stable editor, fail-closed conflict and expanded verification."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin only approved R1e v3 paths: id-based readback without type filtering, stable opening-type identity, changed-type conflict recovery, and remaining planned test/visual evidence. No schema or policy change."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "R1e v3 implementation and public/review interaction suite run. Visual inspection of 140% proxy found clipped shared date/time controls despite zero document overflow. v4 adds only datePickerInput minWidth:0 plus row-bound assertions; Architect APPROVE and Critic PROCEED required before the shared component edit."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Version 4 adds a single shared date/time input shrink rule and row-bound visual assertions after an observed 140% clipping failure. Exact amended task/spec are saved; Architect and Critic review requested before changing AppPrimitives.tsx."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact v4 plan synced to queue with AppPrimitives.tsx sole shared-style addition and 140% button-row bounds acceptance. Architect APPROVE and Critic PROCEED are documented in the task and UX spec; Security PASS v3 remains applicable because access/data contracts are unchanged."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Exact v4 Architect APPROVE and Critic PROCEED recorded; queue write_paths and acceptance synced. Starting the approved datePickerInput minWidth:0 correction and field-bound assertions only."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R1e v4 implementation complete; focused health-history/navigation 67/67, pnpm check 545/545 with app/edge typecheck and ESLint, public/review 11/11 each, Python verifier syntax, queue validation and git diff --check PASS. v4 visual evidence includes 140% picker-row bounds; independent QA starts now."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent QA v4 BLOCK solely because the evidence directory lacks the required design-rules §14 checklist, 18 items with statuses/reasons. QA independently reran focused 67/67, pnpm check 545/545, public/review 11/11 each, py_compile, queue validation and diff check; inspected screenshots and confirmed 140% date/time buttons fit their rows. Add the §14 evidence checklist, then rerun QA."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "QA v4 documentation blocker corrected in the evidence README with all 18 §14 statuses and reasons. No app code or task scope changed; proceed to the previously approved v4 verification checkpoint."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "The existing exact v4 plan remains unchanged and its recorded Architect APPROVE/Critic PROCEED still apply. The §14 checklist is required evidence within the already-approved evidence path; ready for QA recheck."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Added only the missing §14 evidence checklist and provenance/status details under the existing approved evidence directory; no app source or plan change."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R1e v4 source and checks remain unchanged; corrected §14 evidence README is ready for independent QA recheck."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "QA checklist recheck confirms §14 has 18 items, paths and screenshot claims, but item 16 is required to assess composition, colors, typography, component shapes, imagery and density separately, each with an image reference. Current single grouped row is insufficient. All technical checks and screenshots remain verified; split item 16 into six NOT TESTABLE rows with public/review image links."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "The §14 point-16 gap is documented and corrected in six linked subrows. No source or plan scope changed; use the previously approved v4 plan for re-verification."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Existing exact v4 Architect APPROVE and Critic PROCEED still apply; only required evidence formatting was corrected, with no plan/source scope change."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Added six separately assessed §14 point-16 subrows with public/review screenshot links under the existing evidence path; no application source changed."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Corrected §14 evidence is ready for independent recheck. Source, visual run outputs and technical checks remain unchanged."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA v4 PASS after confirming 11/11 public/review each, 140% picker bounds, relevant screenshots, focused/full checks, §14 all 18 items plus six separate image-linked point-16 assessments, valid links, queue validation and diff check. No remaining findings; independent Reviewer starts."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer v4 found no code/API/test issue; BLOCK only because the evidence README still said QA recheck pending although QA PASS was recorded. Correct the stale documentation status and request reviewer recheck. Report saved at docs/design/evidence/vision-rev02/health/history/R1E-HEALTH-HISTORY-DRAFT-01/review/INDEPENDENT-REVIEW-v4.md."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Corrected the stale evidence README sentence: QA v4 is PASS, Reviewer documentation recheck is pending. No code or plan scope changed; use the already-approved v4 plan."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Existing exact v4 Architect APPROVE and Critic PROCEED remain applicable; only one evidence-status sentence changed."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Applied the Reviewer-requested documentation-only status correction; no source or plan changes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "QA v4 technical and §14 review remain valid; only README status sentence changed. Queue and diff checks ready for short documentation QA recheck."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Final QA documentation-only recheck PASS: evidence README correctly states QA v4 PASS and Reviewer recheck pending. Queue validation and git diff --check pass; no source changed. Ready for Reviewer recheck."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer v4 implementation review and documentation recheck PASS. Prior type-filtered readback/editor-remount issues are closed; v4 APIs/scopes and AppPrimitives fix verified. QA v4 PASS, 67 focused/545 full tests, public/review 11/11 each, §14 evidence complete. Live/native limitations remain NOT TESTABLE; checkpoint retained uncommitted for the user's combined batch."
+        }
+      ],
+      "next_step": "Independent Reviewer v4 implementation review and documentation recheck PASS. Prior type-filtered readback/editor-remount issues are closed; v4 APIs/scopes and AppPrimitives fix verified. QA v4 PASS, 67 focused/545 full tests, public/review 11/11 each, §14 evidence complete. Live/native limitations remain NOT TESTABLE; checkpoint retained uncommitted for the user's combined batch.",
+      "priority": "P0",
+      "panels": [],
+      "risk_class": "H",
+      "checkpoint": "R1e covers completed health history editor draft protection and feedback only; weight and planned-health screens remain separate.",
+      "test_evidence": [
+        "PASS: focused health-history/navigation command 67/67 (three history-specific files 59/59).",
+        "PASS: pnpm check — app and edge TypeScript, ESLint, and 545/545 tests.",
+        "PASS: public/review RN Web health-history-draft 11/11 each, zero page errors; independent QA inspected 140% picker bounds and relevant state screenshots.",
+        "PASS: Python verifier syntax, queue validation, and git diff --check.",
+        "Independent QA v4 PASS after two documentation-only corrections: all 18 §14 items are assessed; item 16 is split into six screenshot-linked NOT TESTABLE subcriteria. No source changes were made during correction.",
+        "NOT TESTABLE: live Supabase/RLS timing, native Alert/Modal/back, physical gestures, VoiceOver/native Dynamic Type, keyboard/safe area, installed app behavior, and direct comparison to a dedicated health-history editor reference.",
+        "Reviewer v4 first pass BLOCK solely because README still had a stale QA-pending sentence; sentence corrected. No source/API/test finding; QA technical and §14 evidence PASS remains valid. Short QA/Reviewer documentation recheck pending.",
+        "Final documentation-only QA recheck PASS: evidence README now accurately says QA PASS and Reviewer recheck pending; queue validation and git diff --check pass. No source changed.",
+        "Independent Reviewer v4 documentation recheck PASS; confirms no code/API/test findings and status consistency. QA/Reviewer gates complete."
+      ],
+      "implementation_state": "v4 implementation complete; independent QA and Reviewer PASS; local aggregate batch checkpoint saved",
+      "evidence_status": "§14 checklist and item-16 subassessments complete; all test/evidence status lines are consistent; native/live/reference limitations remain NOT TESTABLE."
+    },
+    {
+      "id": "UIUX-REVAMP-R2B-SHARED-SHEET-01",
+      "title": "Gemensam BottomSheet: styrd dragstängning i Loggs redigerare",
+      "mvp_requirement": "docs/mvp.md §4.3 Logg – snabb registrering vid behov; UI/UX masterplan 2026-10-16 F04/R2b; befintligt Logga-utkastskontrakt",
+      "plan": "docs/tasks/dev/UIUX-REVAMP-R2B-SHARED-SHEET-01.md v2; UX: docs/plans/UIUX-REVAMP-R2B-SHARED-SHEET-01-ux-spec.md v2",
+      "write_paths": [
+        "src/components/ui/BottomSheet.tsx",
+        "src/components/ui/bottom-sheet-gesture.ts",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/theme/tokens.ts",
+        "tests/bottom-sheet-gesture.test.mjs",
+        "tests/log-screen-policy.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "src/features/puppy-log/README.md",
+        "docs/tasks/dev/UIUX-REVAMP-R2B-SHARED-SHEET-01.md",
+        "docs/plans/UIUX-REVAMP-R2B-SHARED-SHEET-01-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/VISION-REV02.md",
+        "docs/design/evidence/vision-rev02/shared-sheet/R2B-SHARED-SHEET-01"
+      ],
+      "acceptance": [
+        "A downward gesture from the existing sheet heading follows the finger and is opt-in only for Log event editing; opt-out consumers have no responder handlers or behavior-affecting wrapper.",
+        "A subtle decorative affordance appears only when opted in; upward/horizontal, short, cancelled and terminated gestures settle safely; only 120 pt downward travel can accept a close (velocity alone never closes); reduced motion restores directly.",
+        "A qualifying drag calls the same Log owner guard exactly once. The boolean close result is typed only for the opt-in variant, and only owner-controlled visible/remount state closes the sheet.",
+        "Dirty, pending, failed, unsure, locked and already-confirming states cannot be dismissed by gesture; retry/readback, confirmed status and draft remain intact. Explicit discard stays the only dirty-draft discard action.",
+        "The sheet's ScrollView, text inputs, keyboard-aware layout, focus, safe area and anchored footer remain usable.",
+        "Public/review verification uses the real LogScreen/BottomSheet and asserts held finger tracking, distance boundaries, cancel/terminate settling, callback count, denied-close reset, draft equality, zero mutation writes, scroll/focus and clean/dirty/pending/failed/unsure/keyboard states.",
+        "The design-rules §14 checklist and exact screenshots/results are recorded; native and live claims are kept separate.",
+        "Independent QA and Reviewer pass the local checkpoint."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/bottom-sheet-gesture.test.mjs tests/log-screen-policy.test.mjs tests/main-navigation.test.mjs",
+        "Public and review visual-check scenario log-sheet-gesture, including interaction and screenshot checks",
+        "pnpm check",
+        "python -m py_compile tools/visual-check/verify.py",
+        "python tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "UIUX-REVAMP-R1B-LOG-DRAFT-01"
+      ],
+      "status": "done",
+      "priority": "P1",
+      "panels": [
+        "Logga"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Opt-in shared-sheet drag behavior is enabled for Log event editing only; no other consumers are migrated.",
+      "test_evidence": [
+        "PASS: focused command node --experimental-strip-types --test tests/bottom-sheet-gesture.test.mjs tests/log-screen-policy.test.mjs tests/main-navigation.test.mjs — 21/21; full pnpm check — 549/549 plus app/edge typecheck and ESLint.",
+        "PASS: final-source public and review RN Web log-sheet-gesture — 12/12 each, zero browser page errors; focusProbe true→true after cancelled gesture; dirty Stay/explicit discard/open-prompt protection; rapid re-drag during an active return spring preserves position and continues tracking without a sub-threshold close. Active-spring assertions and visible post-return screenshot: docs/design/evidence/vision-rev02/shared-sheet/R2B-SHARED-SHEET-01/{public,review}/sheet-redrag-returned-after-active-spring-375x844.png and browser-results.json.",
+        "PASS: python -m py_compile tools/visual-check/verify.py; python tools/dev_flow.py validate; git diff --check.",
+        "PASS: Independent QA v5/v6 recheck of lifecycle cleanup and upward-reversal clamp; focused 21/21, pnpm check 549/549 plus app/edge typecheck and ESLint, public/review browser 12/12 each through Node Playwright, py_compile, queue validation, diffcheck, and persisted JSON/new screenshot hash check. Report: docs/design/evidence/vision-rev02/shared-sheet/R2B-SHARED-SHEET-01/qa/INDEPENDENT-QA-v5-lifecycle-upward-reversal.md. Native/live remain NOT TESTABLE."
+      ],
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact plan v2; Critic PROCEED exact v2; review record in task file."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin R2b implementation under approved v2 write paths; no scope expansion."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation v2 complete; focused 19/19, pnpm check 547/547, public/review 10/10 each and Python/queue/diff checks pass. Evidence README includes full §14 assessment and RN Web focusProbe true-to-false limitation; independent QA begins."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA recheck PASS 2026-10-17; report saved at docs/design/evidence/vision-rev02/shared-sheet/R2B-SHARED-SHEET-01/qa/INDEPENDENT-QA-v2-recheck.md. Current source passed focused 19/19, pnpm check 547/547, public/review 11/11 each, py_compile, queue validation and diffcheck. Independent Reviewer is next; native/live remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS v5; independent QA v5/v6 PASS; 21 focused tests and 549 total checks passed; public/review browser lifecycle checks 12/12 each; native/live checks documented as not testable."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS v5; independent QA v5/v6 PASS; 21 focused tests and 549 total checks passed; public/review browser lifecycle checks 12/12 each; native/live checks documented as not testable."
     }
   ]
 }

@@ -16,7 +16,12 @@ test('only confirmed success receives the decorative green check and compact suc
 test('success keeps undo and errors keep retry and cancel semantics', () => {
   assert.match(toast, /displayContent\.tone === 'success' && displayContent\.onUndo \? \{ label: 'Ångra'/);
   assert.match(toast, /displayContent\.tone === 'error' \|\| displayContent\.tone === 'uncertain'\) \? \{ label: 'Försök igen'/);
-  assert.match(toast, /displayContent\.tone === 'error' && displayContent\.onCancel \? <Button variant="secondary" label="Avbryt"/);
+  assert.match(toast, /displayContent\.tone === 'error' && displayContent\.onCancel \? <Button variant="secondary" label=\{displayContent\.cancelLabel \?\? 'Avbryt'\} accessibilityLabel=\{displayContent\.cancelLabel \?\? 'Avbryt'\}/);
+  assert.match(toast, /cancelLabel\?: string/);
+  assert.match(toast, /effectiveMessage = effectiveTone === 'uncertain' \? message \?\? 'Vi kunde inte kontrollera om det sparades'/);
+  assert.match(toast, /const currentContent = \{ tone: effectiveTone, message: effectiveMessage, onUndo, onRetry, onCancel, cancelLabel \}/);
+  assert.match(toast, /retainedContent\.cancelLabel !== currentContent\.cancelLabel/);
+  assert.match(toast, /const displayContent = visible \? currentContent : retainedContent/);
 });
 
 test('all visible and exiting toasts use the shared tokenized vertical margin and hidden toast returns no layout node', () => {

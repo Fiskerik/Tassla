@@ -34,6 +34,839 @@ with sync_playwright() as p:
  def open(screen,extra=''):
   page.goto(f'{ui_base}?screen={screen}{extra}');page.wait_for_timeout(350)
  def passed(label): results.append(label);print('PASS',label)
+ if os.environ.get('TASSLA_UI_SCOPE')=='log-sheet-gesture':
+  page.set_default_timeout(8000)
+  page.emulate_media(reduced_motion='no-preference')
+  review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
+  viewports=[(375,844,'375x844'),(430,844,'430x844'),(375,667,'375x667')]
+  def sheet_top():
+   box=page.get_by_test_id('bottom-sheet-surface').bounding_box()
+   assert box is not None,'opt-in sheet surface is visible'
+   return box['y']
+  def wait_for_sheet_return(start):
+   stable_samples=0
+   for _ in range(40):
+    current=sheet_top()
+    if abs(current-start)<=2: stable_samples+=1
+    else: stable_samples=0
+    if stable_samples>=2: return
+    page.wait_for_timeout(50)
+   current=sheet_top();assert abs(current-start)<=2,f'denied drag spring returns to its initial position: start={start:.2f}, current={current:.2f}'
+  def drag_header(distance,steps=8,dx=0):
+   region=page.get_by_test_id('bottom-sheet-drag-region');box=region.bounding_box()
+   assert box is not None,'drag region is visible'
+   x=box['x']+box['width']/2;y=box['y']+box['height']/2
+   page.mouse.move(x,y);page.mouse.down();page.mouse.move(x+dx,y+distance,steps=steps)
+   page.wait_for_timeout(40)
+   held_top=sheet_top()
+   page.mouse.up()
+   return held_top
+  def touch_drag_header(distance,cancel=False):
+   region=page.get_by_test_id('bottom-sheet-drag-region');box=region.bounding_box()
+   assert box is not None,'touch drag region is visible'
+   x=box['x']+box['width']/2;y=box['y']+box['height']/2
+   return page.evaluate('''async ({x,y,distance,cancel})=>{
+    const region=document.querySelector('[data-testid="bottom-sheet-drag-region"]');
+    const point=(nextY)=>new Touch({identifier:1,target:region,clientX:x,clientY:nextY,pageX:x,pageY:nextY,screenX:x,screenY:nextY});
+    const dispatch=(type,nextY,active)=>{const changed=point(nextY);const current=active?[changed]:[];region.dispatchEvent(new TouchEvent(type,{touches:current,targetTouches:current,changedTouches:[changed],bubbles:true,cancelable:true}));};
+    dispatch('touchstart',y,true);
+    for(let step=1;step<=8;step++){await new Promise(resolve=>setTimeout(resolve,8));dispatch('touchmove',y+distance*step/8,true);}
+    const surface=document.querySelector('[data-testid="bottom-sheet-surface"]');const held=surface.getBoundingClientRect().top;
+    dispatch(cancel?'touchcancel':'touchend',y+distance,false);
+    return held;
+   }''',{'x':x,'y':y,'distance':distance,'cancel':cancel})
+  def open_log(extra=''):
+   page.set_viewport_size({'width':375,'height':844})
+   open('log',extra)
+   expect(page.get_by_role('tab',name='Logg')).to_have_attribute('aria-selected','true')
+  def open_editor():
+   page.get_by_role('button',name=re.compile(r'tryck för att ändra')).first.click()
+   expect(page.get_by_role('heading',name='Ändra händelse',exact=True)).to_be_visible()
+  def change_note(value): page.get_by_label('Anteckning, högst 500 tecken').fill(value)
+
+  page.set_viewport_size({'width':375,'height':844})
+  open('sheet-gesture-fixture')
+  expect(page.get_by_test_id('bottom-sheet-surface')).to_be_visible()
+  start=sheet_top();held=drag_header(40)
+  assert held >= start+25,f'held sheet follows finger: start={start}, held={held}'
+  assert page.evaluate('window.__tasslaSheetCloseCount()')==0,'held sub-threshold drag has no close callback'
+  wait_for_sheet_return(start)
+  drag_header(119);wait_for_sheet_return(start)
+  assert page.evaluate('window.__tasslaSheetCloseCount()')==0,'short drag does not request close'
+  page.screenshot(path=str(out/'sheet-short-drag-returned-375x844.png'),animations='disabled')
+  passed('Production BottomSheet tracks a held downward drag and returns below the 120 pt threshold')
+  for distance,dx,label in [(-35,0,'upward'),(0,35,'horizontal')]:
+   start=sheet_top();drag_header(distance,dx=dx);wait_for_sheet_return(start)
+   assert page.evaluate('window.__tasslaSheetCloseCount()')==0,f'{label} movement never requests close'
+  passed('Upward and horizontal header movement do not take over or dismiss the sheet')
+
+  open('sheet-gesture-fixture','&denyClose=true')
+  start=sheet_top();drag_header(150)
+  assert page.evaluate('window.__tasslaSheetCloseCount()')==1,'denied drag requests close once and leaves the controlled sheet visible'
+  expect(page.get_by_test_id('bottom-sheet-surface')).to_be_visible()
+  region=page.get_by_test_id('bottom-sheet-drag-region');box=region.bounding_box()
+  for _ in range(40):
+   if box is not None and box['y']+box['height']/2<=page.viewport_size['height']-10: break
+   page.wait_for_timeout(10);box=region.bounding_box()
+  assert box is not None and box['y']+box['height']/2<=page.viewport_size['height']-10,'drag region becomes reachable before the return spring settles'
+  spring_top=sheet_top()
+  assert spring_top>=start+20,'the first denied drag is still moving back toward its origin when the next drag begins'
+  x=box['x']+box['width']/2;y=box['y']+box['height']/2
+  page.mouse.move(x,y);page.mouse.down();page.mouse.move(x,y+8,steps=1);page.wait_for_timeout(16)
+  claimed_top=sheet_top()
+  assert claimed_top>=start+12 and claimed_top>=spring_top-90,f'new gesture preserves the active spring offset instead of snapping to the sheet origin: origin={start:.2f}, spring={spring_top:.2f}, claimed={claimed_top:.2f}'
+  page.mouse.move(x,y+40,steps=2);page.wait_for_timeout(16)
+  held_top=sheet_top()
+  assert held_top>=claimed_top+16,f'the re-drag continues to follow the finger: claimed={claimed_top:.2f}, held={held_top:.2f}'
+  page.screenshot(path=str(out/'sheet-redrag-during-return-spring-375x844.png'),animations='disabled')
+  page.mouse.up()
+  assert page.evaluate('window.__tasslaSheetCloseCount()')==1,'the sub-threshold re-drag does not request another close'
+  expect(page.get_by_test_id('bottom-sheet-surface')).to_be_visible()
+  wait_for_sheet_return(start)
+  page.screenshot(path=str(out/'sheet-redrag-returned-after-active-spring-375x844.png'),animations='disabled')
+  passed('A second header drag interrupts the return spring from its current position without snapping')
+
+  open('sheet-gesture-fixture')
+  expect(page.get_by_test_id('bottom-sheet-surface')).to_be_visible()
+  drag_header(130)
+  assert page.evaluate('window.__tasslaSheetCloseCount()')==1,f'qualifying drag calls the owner once; actual count={page.evaluate("window.__tasslaSheetCloseCount()")}'
+  expect(page.get_by_test_id('bottom-sheet-surface')).to_be_hidden()
+  passed('A qualifying drag calls the controlled owner exactly once and closes through visible state')
+
+  page.emulate_media(reduced_motion='reduce');page.reload();page.wait_for_timeout(250)
+  expect(page.get_by_test_id('bottom-sheet-surface')).to_be_visible()
+  start=sheet_top();drag_header(40);page.wait_for_timeout(40)
+  assert abs(sheet_top()-start)<=1,'reduced motion resets directly without a spring'
+  page.screenshot(path=str(out/'sheet-reduced-motion-returned-375x844.png'),animations='disabled')
+  passed('Reduced motion returns the denied drag directly')
+
+  open_log()
+  for width,height,label in viewports:
+   page.set_viewport_size({'width':width,'height':height});open('log');open_editor()
+   expect(page.get_by_test_id('bottom-sheet-drag-region')).to_be_visible()
+   assert page.get_by_test_id('bottom-sheet-scroll-view').count()==1
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'editor horizontal overflow at {label}'
+   page.screenshot(path=str(out/f'log-editor-clean-{label}.png'),animations='disabled')
+   if width==375:
+    change_note('Utkast före dragning');page.screenshot(path=str(out/'log-editor-dirty-375x844.png'),animations='disabled')
+    scaled=page.evaluate('''() => {const nodes=[...document.querySelectorAll('[dir="auto"]')];nodes.forEach(el=>{const s=getComputedStyle(el);const size=parseFloat(s.fontSize);const line=parseFloat(s.lineHeight);if(Number.isFinite(size))el.style.fontSize=(size*1.4)+'px';if(Number.isFinite(line))el.style.lineHeight=(line*1.4)+'px';});return nodes.length;}''')
+    assert scaled>0 and page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'140% text proxy remains within the editor viewport'
+    page.screenshot(path=str(out/'log-editor-dirty-140-text.png'),animations='disabled')
+  passed('Production LogScreen keeps the opt-in editor usable across the target viewport and text matrix')
+
+  open_log();open_editor();clean_start=sheet_top();drag_header(130)
+  expect(page.get_by_role('heading',name='Ändra händelse',exact=True)).to_have_count(0)
+  assert page.evaluate('window.__tasslaLogWriteCount()')==0,'clean editor drag closes without an update write'
+  passed('Clean LogScreen editor accepts drag close with no write')
+
+  open_log();open_editor();page.set_viewport_size({'width':375,'height':430})
+  note=page.get_by_label('Anteckning, högst 500 tecken');note.fill('Behåll fokusprov');note.focus()
+  scroll=page.get_by_test_id('bottom-sheet-scroll-view')
+  before=scroll.evaluate('(el)=>({top:el.scrollTop,height:el.clientHeight,content:el.scrollHeight})')
+  scroll_box=scroll.bounding_box();assert scroll_box is not None
+  page.mouse.move(scroll_box['x']+scroll_box['width']/2,scroll_box['y']+scroll_box['height']/2);page.mouse.wheel(0,220);page.wait_for_timeout(80)
+  after=scroll.evaluate('(el)=>({top:el.scrollTop,height:el.clientHeight,content:el.scrollHeight})')
+  assert after['content']>after['height'] and after['top']>before['top'],'keyboard-height proxy leaves the editor vertically scrollable'
+  note.focus()
+  expect(note).to_be_focused()
+  focus_before=note.evaluate('(el)=>document.activeElement===el')
+  start=sheet_top();held=touch_drag_header(40,cancel=True)
+  assert held>=start+25,'touch gesture follows finger before cancellation'
+  wait_for_sheet_return(start)
+  focus_after=note.evaluate('(el)=>document.activeElement===el')
+  expect(note).to_have_value('Behåll fokusprov')
+  assert page.evaluate('window.__tasslaLogWriteCount()')==0,'cancelled touch has no update write'
+  assert focus_after,'cancelled header drag restores the field that was focused before the gesture'
+  focus_probe={'before':focus_before,'after':focus_after,'note':'RN Web focus was restored after the cancelled header drag; native keyboard/focus behavior is not established by this browser check.'}
+  page.screenshot(path=str(out/'log-editor-keyboard-proxy-scroll-focus-cancel-375x430.png'),animations='disabled')
+  passed('Keyboard-height proxy remains scrollable; cancelled header touch resets, restores focus, and preserves the draft')
+
+  open_log();open_editor();note=page.get_by_label('Anteckning, högst 500 tecken');change_note('Behåll det här utkastet')
+  page.evaluate("window.__tasslaAlertOptions=[];window.__tasslaAlertActions=['Stanna kvar']")
+  before_writes=page.evaluate('window.__tasslaLogWriteCount()')
+  start=sheet_top();held=drag_header(150)
+  assert held>=start+100,'dirty drag follows the finger before release'
+  assert page.evaluate('window.__tasslaAlertOptions')==['Stanna kvar','Lämna utan att spara'],'dirty drag uses the existing discard choices'
+  expect(page.get_by_role('heading',name='Ändra händelse',exact=True)).to_be_visible()
+  expect(note).to_have_value('Behåll det här utkastet')
+  assert page.evaluate('window.__tasslaLogWriteCount()')==before_writes,'dirty drag creates no mutation'
+  page.screenshot(path=str(out/'log-editor-dirty-drag-stay-375x844.png'),animations='disabled')
+  passed('Dirty drag preserves the draft, routes to the existing discard prompt and writes nothing')
+
+  open_log();open_editor();note=page.get_by_label('Anteckning, högst 500 tecken');change_note('Kasta endast på uttryckligt val')
+  page.evaluate('''() => {
+   let current=window.__tasslaAlertOptions ?? [];
+   let calls=0;
+   Object.defineProperty(window,'__tasslaAlertOptions',{configurable:true,get:()=>current,set:value=>{current=value;calls++;}});
+   window.__tasslaAlertCallCount=()=>calls;
+   window.__tasslaAlertActions=['Lämna utan att spara'];
+   window.__tasslaDeferNextAlert=true;
+  }''')
+  before_writes=page.evaluate('window.__tasslaLogWriteCount()')
+  start=sheet_top();drag_header(150);wait_for_sheet_return(start)
+  expect(page.get_by_role('heading',name='Ändra händelse',exact=True)).to_be_visible()
+  assert page.evaluate('window.__tasslaAlertOptions')==['Stanna kvar','Lämna utan att spara'],'drag exposes existing explicit discard choices'
+  assert page.evaluate('window.__tasslaAlertCallCount()')==1,'first qualifying dirty drag opens one discard prompt'
+  assert page.evaluate('typeof window.__tasslaDelayedAlertConfirm')=='function','the fixture defers the selected discard callback'
+  delayed_prompt=page.evaluate('window.__tasslaDelayedAlertConfirm.toString()')
+  start=sheet_top();drag_header(150);wait_for_sheet_return(start)
+  assert page.evaluate('window.__tasslaAlertCallCount()')==1,'an already-open discard prompt is not duplicated by another drag'
+  assert page.evaluate('window.__tasslaDelayedAlertConfirm.toString()')==delayed_prompt,'the existing prompt decision remains authoritative'
+  expect(note).to_have_value('Kasta endast på uttryckligt val')
+  assert page.evaluate('window.__tasslaLogWriteCount()')==before_writes,'drag and open prompt do not write'
+  page.screenshot(path=str(out/'log-editor-dirty-drag-discard-375x844.png'),animations='disabled')
+  page.evaluate('window.__tasslaDelayedAlertConfirm()')
+  expect(page.get_by_role('heading',name='Ändra händelse',exact=True)).to_have_count(0)
+  assert page.evaluate('window.__tasslaLogWriteCount()')==before_writes,'explicit discard closes without mutation'
+  passed('Dirty drag keeps the draft until explicit discard; an open prompt is not replaced and discard writes nothing')
+
+  for scenario in ['pending','failed','unsure']:
+   open_log(f'&editScenario={scenario}');open_editor();change_note(f'Behåll {scenario}')
+   page.get_by_role('button',name='Spara ändring',exact=True).click()
+   status='Ändringen sparas. Vänta tills resultatet har bekräftats innan du lämnar.' if scenario=='pending' else 'Ändringen sparades inte. Försök igen eller fortsätt redigera.' if scenario=='failed' else 'Vi kunde inte kontrollera om ändringen sparades. Kontrollera status innan du lämnar.'
+   expect(page.get_by_text(status,exact=True)).to_be_visible()
+   baseline=page.evaluate('window.__tasslaLogWriteCount()')
+   page.evaluate('window.__tasslaAlertOptions=[]')
+   start=sheet_top();drag_header(150);wait_for_sheet_return(start)
+   expect(page.get_by_role('heading',name='Ändra händelse',exact=True)).to_be_visible()
+   expect(page.get_by_label('Anteckning, högst 500 tecken')).to_have_value(f'Behåll {scenario}')
+   expect(page.get_by_text(status,exact=True)).to_be_visible()
+   assert page.evaluate('window.__tasslaLogWriteCount()')==baseline,f'{scenario} drag creates no extra mutation'
+   assert page.evaluate('window.__tasslaAlertOptions.length')==0,f'{scenario} locked state does not open discard prompt'
+   page.screenshot(path=str(out/f'log-editor-{scenario}-drag-denied-375x844.png'),animations='disabled')
+  passed('Pending, failed and unsure states deny drag closure while preserving draft, recovery and write count')
+
+  open_log()
+  page.get_by_role('button',name='Lägg till händelse',exact=True).click()
+  expect(page.get_by_role('heading',name='Lägg till händelse',exact=True)).to_be_visible()
+  assert page.get_by_test_id('bottom-sheet-drag-region').count()==0,'opt-out sheet has no drag region or responder wrapper'
+  assert page.get_by_test_id('bottom-sheet-surface').count()==0,'opt-out sheet has no animated drag wrapper'
+  page.screenshot(path=str(out/'log-add-event-opt-out-375x844.png'),animations='disabled')
+  passed('The existing Log add-event sheet remains on the legacy opt-out path')
+  assert not errors,errors
+  browser.close()
+  (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'focusProbe':focus_probe,'scope':'Production BottomSheet and LogScreen drag-to-dismiss behavior in synthetic public/review RN Web fixtures','bundle':'review' if review_mode else 'public','viewports':viewports,'limitations':['Native iOS/Android touch, real system keyboard, VoiceOver, Modal/back priority and physical Dynamic Type are NOT TESTABLE','The cancelled RN Web header touch restores the focused textarea; native keyboard/focus behavior must still be checked on a device','Live Supabase/RLS and mutation persistence are not exercised','The 140% text proxy is a web CSS approximation']},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+  raise SystemExit(0)
+ if os.environ.get('TASSLA_UI_SCOPE')=='health-history-draft':
+  page.set_default_timeout(8000)
+  page.emulate_media(reduced_motion='reduce')
+  review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
+  viewports=[(375,844,'375x844'),(430,844,'430x844'),(375,667,'375x667')]
+  def open_health(width=375,height=844,scenario=''):
+   page.set_viewport_size({'width':width,'height':height+44})
+   open('health',f'&historyDraftTest=true&historyDraftScenario={scenario}')
+   expect(page.get_by_test_id('health-fixture-banner')).to_be_visible()
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'health draft fixture overflows horizontally'
+  def open_history_entry(name='Vaccination valp 1'):
+   page.get_by_text(name,exact=False).click()
+   expect(page.get_by_label('Kort anteckning, högst 500 tecken')).to_be_visible()
+  for width,height,label in viewports:
+   open_health(width,height);open_history_entry()
+   page.screenshot(path=str(out/f'health-history-editor-clean-{label}.png'),animations='disabled')
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'horizontal overflow at {label}'
+  open_health();open_history_entry()
+  note=page.get_by_label('Kort anteckning, högst 500 tecken');note.fill('Rättad vaccination')
+  page.evaluate('window.__tasslaRefreshHealthHistory()')
+  expect(note).to_have_value('Rättad vaccination')
+  expect(page.get_by_text('Orelaterad uppdatering',exact=False)).to_be_visible()
+  page.evaluate("window.__tasslaAlertOptions=[];window.__tasslaAlertActions=['Stanna kvar']")
+  page.get_by_role('button',name='Stäng',exact=True).last.click()
+  expect(note).to_have_value('Rättad vaccination')
+  assert page.evaluate('window.__tasslaAlertOptions')==['Stanna kvar','Lämna utan att spara']
+  page.screenshot(path=str(out/'health-history-dirty-close-alert-375x844.png'),animations='disabled')
+  page.evaluate("window.__tasslaAlertOptions=[];window.__tasslaAlertActions=['Stanna kvar'];window.__tasslaNavigateMainTab('more')")
+  assert page.evaluate('window.__tasslaAlertOptions.length')==0,'the active More tab should not prompt'
+  page.evaluate("window.__tasslaAlertActions=['Stanna kvar'];window.__tasslaNavigateMainTab('home')")
+  expect(note).to_have_value('Rättad vaccination')
+  expect(page.get_by_role('tab',name='Mer')).to_have_attribute('aria-selected','true')
+  assert page.evaluate('window.__tasslaAlertOptions')==['Stanna kvar','Lämna utan att spara']
+  page.evaluate("window.__tasslaAlertActions=['Lämna utan att spara'];window.__tasslaNavigateMainTab('home')")
+  expect(page.get_by_role('tab',name='Hem')).to_have_attribute('aria-selected','true')
+  passed('Health history sheet close and main-tab route share the discard guard; Stay preserves the draft and same tab is a no-op')
+
+  open_health();open_history_entry();note=page.get_by_label('Kort anteckning, högst 500 tecken');note.fill('Första destination')
+  page.evaluate("window.__tasslaAlertOptions=[];window.__tasslaAlertActions=['Lämna utan att spara'];window.__tasslaDeferNextAlert=true;window.__tasslaNavigateMainTab('home')")
+  page.evaluate("window.__tasslaNavigateMainTab('more')")
+  page.evaluate('window.__tasslaDelayedAlertConfirm()')
+  expect(page.get_by_role('tab',name='Hem')).to_have_attribute('aria-selected','true')
+  passed('The first requested route remains authoritative while the discard Alert is open')
+
+  open_health();open_history_entry();note=page.get_by_label('Kort anteckning, högst 500 tecken');note.fill('Första redigering')
+  page.evaluate("window.__tasslaAlertOptions=[];window.__tasslaAlertActions=['Lämna utan att spara'];window.__tasslaDeferNextAlert=true")
+  page.get_by_role('button',name='Avbryt rättning',exact=True).click()
+  assert page.evaluate('window.__tasslaAlertOptions')==['Stanna kvar','Lämna utan att spara']
+  page.evaluate('window.__tasslaChangeHealthScope()')
+  open_history_entry();current_note=page.get_by_label('Kort anteckning, högst 500 tecken');current_note.fill('Ny scope-utkast')
+  page.evaluate('window.__tasslaDelayedAlertConfirm()')
+  expect(current_note).to_have_value('Ny scope-utkast')
+  passed('A delayed discard action from the previous account generation cannot close the new health editor')
+
+  page.evaluate("window.__tasslaAlertActions=['Avbryt']")
+  page.get_by_role('button',name='Radera händelse',exact=True).click()
+  expect(page.get_by_label('Kort anteckning, högst 500 tecken')).to_have_value('Ny scope-utkast')
+  assert page.evaluate('window.__tasslaAlertOptions')==['Avbryt','Radera']
+  page.get_by_label('Kort anteckning, högst 500 tecken').fill('Sparad rättning')
+  page.get_by_role('button',name='Spara rättning',exact=True).click()
+  expect(page.get_by_text('Hälsohändelsen uppdaterades.',exact=True)).to_be_visible()
+  expect(page.get_by_text('Sparad rättning',exact=False)).to_be_visible()
+  toast_box=page.get_by_text('Hälsohändelsen uppdaterades.',exact=True).bounding_box()
+  assert toast_box and toast_box['y']>=0 and toast_box['y']+toast_box['height']<=page.viewport_size['height'],'confirmed feedback must remain inside the health viewport'
+  page.screenshot(path=str(out/'health-history-update-confirmed-375x844.png'),animations='disabled')
+  passed('Delete cancel keeps all draft fields; confirmed update closes once, keeps the refreshed row, and shows parent-owned success feedback')
+
+  open_history_entry('Sparad rättning')
+  page.get_by_label('Kort anteckning, högst 500 tecken').fill('Osparad rättning')
+  page.evaluate("window.__tasslaAlertActions=['Radera']")
+  page.get_by_role('button',name='Radera händelse',exact=True).click()
+  assert page.evaluate('window.__tasslaAlertOptions')==['Avbryt','Radera']
+  expect(page.get_by_text('Hälsohändelsen raderades.',exact=True)).to_be_visible()
+  expect(page.get_by_text('Sparad rättning',exact=False)).to_have_count(0)
+  passed('Confirmed delete removes the row and produces a distinct parent-owned confirmation')
+
+  open_health(scenario='type-swap');open_history_entry();note=page.get_by_label('Kort anteckning, högst 500 tecken');note.fill('Utkast vid typbyte')
+  page.evaluate('window.__tasslaChangeHealthHistoryType()')
+  expect(note).to_have_value('Utkast vid typbyte')
+  page.get_by_role('button',name='Spara rättning',exact=True).click()
+  expect(page.get_by_text('Vi kunde inte bekräfta ändringen. Kontrollera status innan du försöker igen.',exact=True)).to_be_visible()
+  expect(page.get_by_text('Hälsohändelsen uppdaterades.',exact=True)).to_have_count(0)
+  page.get_by_role('button',name='Kontrollera status',exact=True).click()
+  expect(page.get_by_text('Aktuell sparad version',exact=True)).to_be_visible()
+  expect(page.get_by_text('Aktuell veterinärpost',exact=False).last).to_be_visible()
+  expect(note).to_have_value('Utkast vid typbyte')
+  page.screenshot(path=str(out/'health-history-type-swap-conflict-draft-375x844.png'),animations='disabled')
+  page.get_by_role('button',name='Använd aktuell historik och börja om',exact=True).click()
+  expect(page.get_by_text('Aktuell veterinärpost',exact=False)).to_be_visible()
+  expect(page.get_by_label('Kort anteckning, högst 500 tecken')).to_have_count(0)
+  passed('A supported type swap remains a visible conflict, retains the opening draft/type, and requires explicit recovery')
+
+  open_health(scenario='reject-once');open_history_entry();note=page.get_by_label('Kort anteckning, högst 500 tecken');note.fill('Spara efter avslag')
+  page.get_by_role('button',name='Spara rättning',exact=True).click()
+  expect(page.get_by_text('Ändringen kunde inte sparas. Dina fält finns kvar.',exact=True)).to_be_visible()
+  expect(note).to_have_value('Spara efter avslag')
+  page.get_by_role('button',name='Spara rättning',exact=True).click()
+  expect(page.get_by_text('Hälsohändelsen uppdaterades.',exact=True)).to_be_visible()
+  assert page.evaluate('window.__tasslaHealthHistoryWriteCount()')==2,'a rejected write should unlock exactly one explicit retry'
+  passed('Rejected writes retain the draft and release the synchronous write-flight for an explicit retry')
+
+  open_health(scenario='reload-error');open_history_entry();note=page.get_by_label('Kort anteckning, högst 500 tecken');note.fill('Bekräftas vid readback')
+  page.get_by_role('button',name='Spara rättning',exact=True).click()
+  expect(page.get_by_text('Hälsohändelsen uppdaterades.',exact=True)).to_have_count(0)
+  expect(page.get_by_text('Vi kunde inte bekräfta ändringen. Kontrollera status innan du försöker igen.',exact=True)).to_be_visible()
+  page.get_by_role('button',name='Kontrollera status',exact=True).click()
+  expect(page.get_by_text('Hälsohändelsen uppdaterades.',exact=True)).to_be_visible()
+  expect(page.get_by_text('Ändringen är sparad, men historiken kunde inte uppdateras.',exact=True)).to_be_visible()
+  assert page.get_by_text('Hälsohändelsen uppdaterades.',exact=True).count()==1,'one later confirmation event must produce exactly one toast'
+  page.screenshot(path=str(out/'health-history-readback-confirmed-reload-warning-375x844.png'),animations='disabled')
+  passed('Unknown update has no early success; exact later confirmation gives one toast and preserves the reload warning')
+
+  open_health(scenario='deferred');open_history_entry();note=page.get_by_label('Kort anteckning, högst 500 tecken');note.fill('Väntande rättning')
+  page.get_by_role('button',name='Spara rättning',exact=True).click()
+  expect(page.get_by_role('button',name='Sparar…',exact=True)).to_be_disabled()
+  page.get_by_role('button',name='Stäng',exact=True).last.click(force=True)
+  page.get_by_role('button',name='Sparar…',exact=True).click(force=True)
+  assert page.evaluate('window.__tasslaHealthHistoryWriteCount()')==1,'write-flight must reject close and duplicate submission'
+  expect(note).to_have_value('Väntande rättning')
+  page.screenshot(path=str(out/'health-history-write-flight-draft-375x844.png'),animations='disabled')
+  page.evaluate('window.__tasslaResolveHealthHistoryWrite()')
+  expect(page.get_by_label('Kort anteckning, högst 500 tecken')).to_have_value('Väntande rättning')
+  passed('Synchronous write-flight blocks sheet close and duplicate submission while preserving fields')
+
+  open_health(scenario='unknown');page.get_by_role('button',name='Lägg till hälsohändelse',exact=True).click()
+  page.get_by_text('Något som har hänt',exact=True).click()
+  page.get_by_label('Kort anteckning, högst 500 tecken').fill('Ny bekräftad händelse')
+  page.get_by_role('button',name='Spara händelse',exact=True).click()
+  expect(page.get_by_text('Hälsohändelsen lades till.',exact=True)).to_have_count(0)
+  page.get_by_role('button',name='Kontrollera status',exact=True).click()
+  expect(page.get_by_text('Hälsohändelsen lades till.',exact=True)).to_be_visible()
+  assert page.get_by_text('Hälsohändelsen lades till.',exact=True).count()==1
+  passed('Unknown create stays open until readback and then reports one parent-owned confirmation')
+
+  open_health();open_history_entry()
+  scaled=page.evaluate('''() => {const nodes=[...document.querySelectorAll('[dir="auto"]')];nodes.forEach(el=>{const s=getComputedStyle(el);const size=parseFloat(s.fontSize);const line=parseFloat(s.lineHeight);if(Number.isFinite(size))el.style.fontSize=(size*1.4)+'px';if(Number.isFinite(line))el.style.lineHeight=(line*1.4)+'px';});return nodes.length;}''')
+  assert scaled>0,'text proxy found no rendered health-history text'
+  field_bounds=page.evaluate('''() => [['date','Datum, år-månad-dag','Välj datum i kalender'],['time','Tid (valfri), timmar och minuter','Välj tid (valfri) från tider']].map(([name,inputLabel,buttonLabel])=>{const input=document.querySelector(`[aria-label="${inputLabel}"]`),button=document.querySelector(`[aria-label="${buttonLabel}"]`),row=input?.parentElement;if(!input||!button||!row)return {name,missing:true};const r=row.getBoundingClientRect(),b=button.getBoundingClientRect();return {name,missing:false,withinRow:b.left>=r.left-1&&b.right<=r.right+1,noRowOverflow:row.scrollWidth<=row.clientWidth+1,rowWidth:r.width,rowScrollWidth:row.scrollWidth};})''')
+  assert all(not item['missing'] and item['withinRow'] and item['noRowOverflow'] for item in field_bounds),f'140% field control clipping: {field_bounds}'
+  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'health history overflows at 140% text proxy'
+  page.screenshot(path=str(out/'health-history-editor-large-text-140-375x844.png'),animations='disabled')
+  passed('Health history editor fits 375px at 140% and both picker buttons remain inside their field rows')
+
+  assert not errors,errors
+  browser.close()
+  (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'Production HealthScreen and HealthHistoryScreen in React Native Web with synthetic callbacks and records; no backend writes','bundle':'review' if review_mode else 'public','viewports':viewports,'limitations':['Native Alert presentation, Android BackHandler, iOS/Android Modal ordering and real device gestures are NOT TESTABLE','Live Supabase/RLS and actual unknown-write/readback timing are NOT TESTABLE','Native VoiceOver/Dynamic Type, physical keyboard and safe-area behavior are NOT TESTABLE','The 140% text proxy is a web CSS approximation']},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+  raise SystemExit(0)
+ if os.environ.get('TASSLA_UI_SCOPE')=='profile-draft':
+  page.set_default_timeout(8000)
+  page.emulate_media(reduced_motion='reduce')
+  review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
+  viewports=[(375,844,'375x844'),(430,844,'430x844'),(375,667,'375x667')]
+  def open_profile_edit(scenario='',extra='',width=375,height=844):
+   page.set_viewport_size({'width':width,'height':height+44})
+   query=f'&profileEditScenario={scenario}{extra}'
+   open('profile-edit',query)
+   expect(page.get_by_test_id('profile-fixture-banner')).to_be_visible()
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'horizontal overflow for {scenario or "clean"} at {width}x{height}'
+  def profile_counts(): return page.evaluate('window.__profileAttributionCounts()')
+
+  open_profile_edit('unknown-removal')
+  removal_copy='Vi kunde inte kontrollera om kennelkopplingen togs bort.'
+  expect(page.get_by_text(removal_copy,exact=True)).to_be_visible()
+  expect(page.get_by_label('Kennelkod, valfri')).to_have_attribute('readonly','')
+  expect(page.get_by_label('Kennelkod, valfri')).to_have_value('')
+  expect(page.get_by_role('button',name='Stäng',exact=True)).to_be_visible()
+  page.get_by_text(removal_copy,exact=True).scroll_into_view_if_needed()
+  page.screenshot(path=str(out/'profile-unknown-removal-alone-375x844.png'),animations='disabled',full_page=True)
+  expect(page.get_by_role('button',name='Kontrollera kennelkopplingen',exact=True)).to_be_visible()
+  page.get_by_role('button',name='Kontrollera kennelkopplingen',exact=True).click()
+  expect(page.get_by_label('Kennelkod, valfri')).to_be_enabled()
+  assert profile_counts()['reads']==1 and profile_counts()['writes']==0,'readback action must not invoke a write'
+  assert profile_counts()['intent'] is None,'exact null readback confirms only the explicit removal intent'
+  passed('Unknown removal alone has explicit removal copy, a locked blank field, Stäng, and readback-only null confirmation')
+
+  open_profile_edit('unknown-removal','&profileReadback=linked')
+  page.get_by_role('button',name='Kontrollera kennelkopplingen',exact=True).click()
+  expect(page.get_by_text('Kopplad till Exempelkennel B.',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Kontrollera kennelkopplingen igen',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Använd den aktuella kennelkopplingen',exact=True)).to_be_visible()
+  page.screenshot(path=str(out/'profile-removal-mismatch-current-link-375x844.png'),animations='disabled',full_page=True)
+  page.get_by_role('button',name='Använd den aktuella kennelkopplingen',exact=True).click()
+  expect(page.get_by_label('Kennelkod, valfri')).to_have_value('XYZ789')
+  assert profile_counts()['writes']==0 and profile_counts()['intent'] is None,'use-current must accept the fetched value without writing'
+  passed('Removal mismatch displays actual linked server state; Use current adopts it without a write')
+
+  open_profile_edit('unknown-link','&profileReadback=none')
+  expect(page.get_by_text('Vi kunde inte kontrollera om kennelkopplingen sparades.',exact=True)).to_be_visible()
+  expect(page.get_by_label('Kennelkod, valfri')).to_have_value('ABC123')
+  page.get_by_role('button',name='Kontrollera kennelkopplingen',exact=True).click()
+  expect(page.get_by_text('Ingen kennelkoppling.',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Kontrollera kennelkopplingen igen',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Använd den aktuella kennelkopplingen',exact=True)).to_be_visible()
+  assert profile_counts()['writes']==0 and profile_counts()['intent']['attemptedCode']=='ABC123'
+  page.screenshot(path=str(out/'profile-link-mismatch-no-link-375x844.png'),animations='disabled',full_page=True)
+  passed('Unknown link has distinct copy; mismatch exposes no-link server state and preserves intent without a write')
+
+  open_profile_edit('unknown-removal-dirty')
+  page.get_by_label('Hundens namn',exact=True).fill('Luna ny')
+  expect(page.get_by_role('button',name='Avbryt ändringar',exact=True)).to_be_visible()
+  page.get_by_text(removal_copy,exact=True).scroll_into_view_if_needed()
+  page.screenshot(path=str(out/'profile-removal-with-dirty-profile-375x844.png'),animations='disabled',full_page=True)
+  page.get_by_role('button',name='Avbryt ändringar',exact=True).click()
+  expect(page.get_by_role('tab',name='Mer')).to_have_attribute('aria-selected','true')
+  assert profile_counts()['intent']['attemptedCode'] is None,'discarding local profile fields must leave the parent removal intent intact'
+  page.evaluate('window.__fixtureOpenProfileEdit()')
+  expect(page.get_by_text(removal_copy,exact=True)).to_be_visible()
+  expect(page.get_by_label('Hundens namn',exact=True)).to_have_value('Luna')
+  assert profile_counts()['writes']==0
+  passed('Dirty profile fields show Avbryt ändringar; leaving discards only those fields and the unknown removal survives revisit')
+
+  open_profile_edit('mismatch-none')
+  expect(page.get_by_text('Ingen kennelkoppling.',exact=True)).to_be_visible()
+  page.get_by_role('button',name='Använd den aktuella kennelkopplingen',exact=True).click()
+  expect(page.get_by_label('Kennelkod, valfri')).to_have_value('')
+  assert profile_counts()['writes']==0
+  passed('A mismatched saved state with no kennel link is explicit and Use current adopts the empty state')
+
+  for width,height,label in viewports:
+   open_profile_edit('',width=width,height=height)
+   expect(page.get_by_role('button',name='Stäng',exact=True)).to_be_visible()
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'horizontal overflow at {label}'
+   page.screenshot(path=str(out/f'profile-clean-{label}.png'),animations='disabled')
+   if width==375:
+    scaled=page.evaluate('''() => {const nodes=[...document.querySelectorAll('[dir="auto"]')];nodes.forEach(el=>{const s=getComputedStyle(el);const size=parseFloat(s.fontSize);const line=parseFloat(s.lineHeight);if(Number.isFinite(size))el.style.fontSize=(size*1.4)+'px';if(Number.isFinite(line))el.style.lineHeight=(line*1.4)+'px';});return nodes.length;}''')
+    assert scaled>0,'text proxy found no rendered profile text'
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'horizontal overflow with 140% text proxy'
+    page.screenshot(path=str(out/'profile-clean-large-text-140-375x844.png'),animations='disabled')
+  passed('Clean profile editor fits 375x844, 430x844, 375x667, and 140% web text proxy')
+
+  open_profile_edit()
+  page.get_by_label('Hundens namn',exact=True).fill('Luna ändrad')
+  page.evaluate("window.__tasslaAlertOptions=[];window.__tasslaNavigateMainTab('more')")
+  expect(page.get_by_label('Hundens namn',exact=True)).to_have_value('Luna ändrad')
+  assert page.evaluate('window.__tasslaAlertOptions.length')==0,'selecting the already active More tab must be a no-op'
+  page.evaluate("window.__tasslaAlertActions=['Stanna kvar'];window.__tasslaNavigateMainTab('training')")
+  expect(page.get_by_label('Hundens namn',exact=True)).to_have_value('Luna ändrad')
+  expect(page.get_by_role('tab',name='Mer')).to_have_attribute('aria-selected','true')
+  assert page.evaluate('window.__tasslaAlertOptions')==['Stanna kvar','Lämna utan att spara']
+  page.screenshot(path=str(out/'profile-dirty-discard-alert-375x844.png'),animations='disabled')
+  passed('Dirty profile navigation confirms; Stay preserves the form and active tab, same active tab is a no-op')
+
+  page.evaluate("window.__tasslaAlertActions=['Lämna utan att spara'];window.__tasslaNavigateMainTab('training')")
+  expect(page.get_by_role('tab',name='Träning')).to_have_attribute('aria-selected','true')
+  passed('Confirmed discard commits only the requested main-tab destination')
+
+  open_profile_edit()
+  page.get_by_label('Hundens namn',exact=True).fill('Header-utkast')
+  page.evaluate("window.__tasslaAlertOptions=[];window.__tasslaAlertActions=['Stanna kvar']")
+  page.get_by_role('button',name='Tillbaka till Mer',exact=True).click()
+  expect(page.get_by_label('Hundens namn',exact=True)).to_have_value('Header-utkast')
+  expect(page.get_by_role('tab',name='Mer')).to_have_attribute('aria-selected','true')
+  assert page.evaluate('window.__tasslaAlertOptions')==['Stanna kvar','Lämna utan att spara']
+  page.screenshot(path=str(out/'profile-header-back-alert-375x844.png'),animations='disabled')
+  page.evaluate("window.__tasslaAlertActions=['Lämna utan att spara']")
+  page.get_by_role('button',name='Tillbaka till Mer',exact=True).click()
+  expect(page.get_by_role('tab',name='Mer')).to_have_attribute('aria-selected','true')
+  assert profile_counts()['writes']==0
+  passed('Profile header Back uses the same guard; Stay preserves the draft and explicit discard returns to More without saving')
+
+  open_profile_edit()
+  page.get_by_label('Hundens namn',exact=True).fill('Första destination')
+  page.evaluate("window.__tasslaAlertActions=['Lämna utan att spara'];window.__tasslaDeferNextAlert=true;window.__tasslaNavigateMainTab('training')")
+  expect(page.get_by_label('Hundens namn',exact=True)).to_have_value('Första destination')
+  page.evaluate("window.__tasslaNavigateMainTab('more')")
+  page.evaluate('window.__tasslaDelayedAlertConfirm()')
+  expect(page.get_by_role('tab',name='Träning')).to_have_attribute('aria-selected','true')
+  passed('The first requested destination remains authoritative while the discard Alert is open')
+
+  open_profile_edit('', '&state=pending')
+  expect(page.get_by_role('button',name='Stäng',exact=True)).to_be_visible()
+  expect(page.get_by_label('Hundens namn',exact=True)).to_have_attribute('readonly','')
+  page.get_by_label('Kennelkod, valfri').fill('ZZZ123')
+  expect(page.get_by_role('button',name='Avbryt ändringar',exact=True)).to_be_visible()
+  passed('Profile-pending is parent-owned recovery, while a separate dirty kennel code remains locally discardable')
+
+  open_profile_edit('', '&state=saving')
+  expect(page.get_by_role('button',name='Stäng',exact=True)).to_be_disabled()
+  page.evaluate("window.__tasslaAlertOptions=[];window.__tasslaNavigateMainTab('training')")
+  expect(page.get_by_label('Hundens namn',exact=True)).to_be_visible()
+  assert page.evaluate('window.__tasslaAlertOptions.length')==0,'busy write locks navigation without opening discard confirmation'
+  passed('An in-flight profile and attribution write disables every exit path')
+
+  assert not errors,errors
+  browser.close()
+  (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'Production EditDogProfileScreen; public/review React Native Web fixture with synthetic attribution callbacks; no backend writes','bundle':'review' if review_mode else 'public','viewports':viewports,'limitations':['Android BackHandler and native Alert presentation are NOT TESTABLE in RN Web','Live Supabase/RLS and attribution persistence are NOT TESTABLE','Native VoiceOver/Dynamic Type and physical keyboard/gestures are NOT TESTABLE','The 140% text proxy is a web CSS approximation']},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+  raise SystemExit(0)
+ if os.environ.get('TASSLA_UI_SCOPE')=='profile-create':
+  page.set_default_timeout(8000)
+  page.emulate_media(reduced_motion='reduce')
+  review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
+  viewports=[(375,844,'375x844'),(430,844,'430x844'),(375,667,'375x667')]
+  def open_profile(scenario,width=375,height=844):
+   page.set_viewport_size({'width':width,'height':height+44})
+   open('profile-create','&breedScenario='+scenario)
+   expect(page.get_by_test_id('auth-fixture-banner')).to_be_visible()
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'horizontal overflow at {width}x{height} for {scenario}'
+  def fill_profile_fields():
+   page.get_by_label('Hundens namn',exact=True).fill('Nala')
+   page.get_by_label('Födelsedatum',exact=True).fill('2026-07-01')
+  open_profile('ready')
+  guidance=page.get_by_text('Välj en ras för att fortsätta.',exact=True)
+  radio=page.get_by_role('radio',name='Golden retriever',exact=True)
+  continue_button=page.get_by_role('button',name='Fortsätt',exact=True)
+  expect(guidance).to_be_visible()
+  expect(page.get_by_role('radiogroup',name='Välj hundras')).to_be_visible()
+  expect(page.get_by_role('radio')).to_have_count(1)
+  expect(radio).not_to_be_checked()
+  expect(continue_button).to_be_disabled()
+  page.screenshot(path=str(out/'profile-ready-unselected-375x844.png'),animations='disabled')
+  fill_profile_fields()
+  expect(continue_button).to_be_disabled()
+  radio.click()
+  expect(radio).to_be_checked()
+  expect(guidance).to_have_count(0)
+  expect(continue_button).to_be_enabled()
+  expect(page.get_by_label('Kennelkod',exact=True)).to_have_value('')
+  page.screenshot(path=str(out/'profile-ready-selected-375x844.png'),animations='disabled')
+  passed('A fresh non-empty catalog stays unselected; Continue requires an explicit breed and valid name/date while kennel code stays optional')
+
+  open_profile('empty-then-success')
+  expect(page.get_by_text('Raslistan är tom just nu.',exact=True)).to_be_visible()
+  expect(page.get_by_role('radio')).to_have_count(0)
+  expect(page.get_by_role('button',name='Fortsätt',exact=True)).to_be_disabled()
+  page.screenshot(path=str(out/'profile-catalog-empty-375x844.png'),animations='disabled')
+  page.get_by_role('button',name='Försök igen',exact=True).click()
+  expect(page.get_by_role('radio',name='Golden retriever',exact=True)).to_be_visible()
+  expect(page.get_by_text('Välj en ras för att fortsätta.',exact=True)).to_be_visible()
+  expect(page.get_by_role('radio',name='Golden retriever',exact=True)).not_to_be_checked()
+  page.screenshot(path=str(out/'profile-empty-retry-ready-375x844.png'),animations='disabled')
+  passed('A successful empty catalog offers retry without an empty radio group; retry recovers to ready and unselected')
+
+  open_profile('error-then-success')
+  expect(page.get_by_text('Raslistan gick inte att hämta. Kontrollera anslutningen och försök igen.',exact=True)).to_be_visible()
+  expect(page.get_by_role('radio')).to_have_count(0)
+  expect(page.get_by_role('button',name='Fortsätt',exact=True)).to_be_disabled()
+  page.screenshot(path=str(out/'profile-catalog-error-375x844.png'),animations='disabled')
+  page.get_by_role('button',name='Försök igen',exact=True).click()
+  expect(page.get_by_role('radio',name='Golden retriever',exact=True)).to_be_visible()
+  expect(page.get_by_text('Välj en ras för att fortsätta.',exact=True)).to_be_visible()
+  expect(page.get_by_role('radio',name='Golden retriever',exact=True)).not_to_be_checked()
+  passed('Catalog error retry recovers to the ready/unselected state')
+
+  open_profile('error')
+  expect(page.get_by_text('Raslistan gick inte att hämta. Kontrollera anslutningen och försök igen.',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Försök igen',exact=True)).to_be_enabled()
+  expect(page.get_by_role('radio')).to_have_count(0)
+  passed('Persistent catalog failure preserves the existing visible retry state')
+
+  open_profile('loading')
+  expect(page.get_by_text('Hämtar raslistan…',exact=True)).to_be_visible()
+  expect(page.get_by_role('radio')).to_have_count(0)
+  page.screenshot(path=str(out/'profile-catalog-loading-375x844.png'),animations='disabled')
+  expect(page.get_by_role('radio',name='Golden retriever',exact=True)).to_be_visible(timeout=8000)
+  expect(page.get_by_text('Välj en ras för att fortsätta.',exact=True)).to_be_visible()
+  passed('Catalog loading transitions to the ready/unselected state')
+
+  open_profile('selection-preserve')
+  preserve_radio=page.get_by_role('radio',name='Golden retriever',exact=True)
+  preserve_radio.click()
+  expect(preserve_radio).to_be_checked()
+  page.evaluate('window.__profileRefetchCatalog()')
+  expect(page.get_by_role('radio',name='Golden retriever',exact=True)).to_be_visible()
+  expect(page.get_by_role('radio',name='Golden retriever',exact=True)).to_be_checked()
+  passed('A harness-only subsequent catalog fetch preserves an existing explicit selection')
+
+  for width,height,label in viewports:
+   open_profile('ready',width,height)
+   expect(page.get_by_text('Välj en ras för att fortsätta.',exact=True)).to_be_visible()
+   expect(page.get_by_role('radio',name='Golden retriever',exact=True)).not_to_be_checked()
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'horizontal overflow at {label}'
+   page.screenshot(path=str(out/f'profile-ready-unselected-{label}.png'),animations='disabled')
+   if width==375:
+    scaled=page.evaluate('''() => {const nodes=[...document.querySelectorAll('[dir="auto"]')];nodes.forEach(el=>{const s=getComputedStyle(el);const size=parseFloat(s.fontSize);const line=parseFloat(s.lineHeight);if(Number.isFinite(size))el.style.fontSize=(size*1.4)+'px';if(Number.isFinite(line))el.style.lineHeight=(line*1.4)+'px';});return nodes.length;}''')
+    assert scaled>0,'text proxy found no rendered text nodes'
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'horizontal overflow with 140% text proxy'
+    page.screenshot(path=str(out/f'profile-large-text-140-{label}.png'),animations='disabled')
+  assert not errors,errors
+  passed('Ready profile renders at 375x844, 430x844, and 375x667, plus 140% text proxy at 375px without horizontal overflow')
+  browser.close()
+  (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'Onboarding ProfileScreen; public/review React Native Web fixture with synthetic catalog responses; does not prove native accessibility or live profile persistence','bundle':'review' if review_mode else 'public','viewports':viewports,'limitations':['Live Supabase/RLS and profile save/readback are not tested','Native Dynamic Type and VoiceOver are not tested','The 140% text proxy is a web CSS approximation']},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+  raise SystemExit(0)
+ if os.environ.get('TASSLA_UI_SCOPE')=='notification-draft':
+  page.set_default_timeout(8000)
+  page.emulate_media(reduced_motion='reduce')
+  review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
+  viewports=[(375,844,'375x844'),(430,844,'430x844'),(375,667,'375x667')]
+  def open_reminders(scenario='ready'):
+   page.set_viewport_size({'width':375,'height':844})
+   open('reminders',f'&reminderScenario={scenario}')
+   expect(page.get_by_role('heading',name='Påminnelser',exact=True)).to_be_visible()
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'reminder screen has horizontal overflow'
+  def counts(): return page.evaluate('window.__tasslaReminderCounters()')
+  def dirty_reminder(): page.get_by_role('checkbox',name='Tillåt Tasslas påminnelser på den här enheten').click()
+
+  for width,height,label in viewports:
+   open_reminders()
+   page.set_viewport_size({'width':width,'height':height})
+   page.screenshot(path=str(out/f'reminders-clean-{label}.png'),animations='disabled',full_page=True)
+   dirty_reminder()
+   expect(page.get_by_role('checkbox',name='Tillåt Tasslas påminnelser på den här enheten')).to_have_attribute('aria-checked','true')
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'horizontal overflow at {label}'
+   page.screenshot(path=str(out/f'reminders-dirty-{label}.png'),animations='disabled',full_page=True)
+   if width==375:
+    scaled=page.evaluate('''() => {const nodes=[...document.querySelectorAll('[dir="auto"]')];nodes.forEach(el=>{const s=getComputedStyle(el);const size=parseFloat(s.fontSize);const line=parseFloat(s.lineHeight);if(Number.isFinite(size))el.style.fontSize=(size*1.4)+'px';if(Number.isFinite(line))el.style.lineHeight=(line*1.4)+'px';});return nodes.length;}''')
+    assert scaled>0,'reminder text proxy found no text nodes'
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'reminder screen overflows at 140% text proxy'
+    page.screenshot(path=str(out/'reminders-dirty-140-text-375x844.png'),animations='disabled',full_page=True)
+  passed('Production reminder screen clean/dirty layouts fit 375x844, 430x844, 375x667 and 140% web text proxy')
+
+  open_reminders()
+  page.evaluate('window.__tasslaAlertOptions=[];window.__tasslaNavigateMainTab("more")')
+  assert page.evaluate('window.__tasslaAlertOptions.length')==0,'same active More tab must be a no-op'
+  dirty_reminder()
+  page.evaluate("window.__tasslaAlertActions=['Stanna kvar']")
+  page.get_by_role('button',name='Tillbaka till Mer',exact=True).click()
+  assert page.evaluate('window.__tasslaAlertOptions')==['Stanna kvar','Lämna utan att spara']
+  expect(page.get_by_role('heading',name='Påminnelser',exact=True)).to_be_visible()
+  expect(page.get_by_role('checkbox',name='Tillåt Tasslas påminnelser på den här enheten')).to_have_attribute('aria-checked','true')
+  passed('Same More tab is a no-op; guarded header back Stay keeps the unsaved reminder choice')
+
+  open_reminders()
+  dirty_reminder()
+  page.evaluate("window.__tasslaAlertActions=['Lämna utan att spara']")
+  page.evaluate('window.__tasslaNavigateMainTab("training")')
+  expect(page.get_by_role('tab',name='Träning')).to_have_attribute('aria-selected','true')
+  passed('Explicit discard commits the first requested main tab')
+
+  open_reminders()
+  dirty_reminder()
+  page.evaluate("window.__tasslaAlertActions=['Lämna utan att spara'];window.__tasslaDeferNextAlert=true")
+  page.evaluate('window.__tasslaNavigateMainTab("training")')
+  page.evaluate('window.__tasslaNavigateMainTab("home")')
+  page.evaluate('window.__tasslaDelayedAlertConfirm()')
+  expect(page.get_by_role('tab',name='Träning')).to_have_attribute('aria-selected','true')
+  passed('Repeated route requests while the Alert is open keep the first destination')
+
+  open_reminders('loading')
+  expect(page.get_by_role('button',name='Tillbaka till Mer',exact=True)).to_be_enabled()
+  page.get_by_role('button',name='Tillbaka till Mer',exact=True).click()
+  expect(page.get_by_role('heading',name='Påminnelser',exact=True)).to_have_count(0)
+  passed('Initial preference readiness disables form controls without trapping header navigation')
+
+  open_reminders('permission-deferred')
+  dirty_reminder()
+  page.get_by_role('button',name='Tillåt påminnelser på telefonen',exact=True).click()
+  expect(page.get_by_role('button',name='Kontrollerar tillåtelse för notiser',exact=True)).to_be_disabled()
+  page.evaluate("window.__tasslaAlertActions=['Lämna utan att spara'];window.__tasslaNavigateMainTab('training')")
+  expect(page.get_by_role('tab',name='Träning')).to_have_attribute('aria-selected','true')
+  assert counts()['permissions']==1
+  page.evaluate("window.__tasslaResolveReminderPermission('granted')")
+  passed('A permission request remains separate from the dirty-draft exit guard')
+
+  open_reminders('failed')
+  dirty_reminder()
+  page.get_by_role('button',name='Spara val',exact=True).click()
+  expect(page.get_by_text('Valen kunde inte sparas säkert. Kontrollera status innan du försöker igen.',exact=True)).to_be_visible()
+  expect(page.get_by_role('checkbox',name='Tillåt Tasslas påminnelser på den här enheten')).to_have_attribute('aria-checked','true')
+  page.screenshot(path=str(out/'reminders-failed-retains-draft-375x844.png'),animations='disabled',full_page=True)
+  page.evaluate("window.__tasslaAlertActions=['Stanna kvar']")
+  page.get_by_role('button',name='Tillbaka till Mer',exact=True).click()
+  expect(page.get_by_role('checkbox',name='Tillåt Tasslas påminnelser på den här enheten')).to_have_attribute('aria-checked','true')
+  passed('Failed save keeps the dirty field and requires explicit Stay or discard')
+
+  open_reminders('deferred')
+  dirty_reminder()
+  save_button=page.get_by_role('button',name='Spara val',exact=True)
+  save_button.click()
+  expect(page.get_by_role('button',name='Sparar val',exact=True)).to_be_disabled()
+  page.evaluate('window.__tasslaAlertOptions=[];window.__tasslaNavigateMainTab("training")')
+  assert page.evaluate('window.__tasslaAlertOptions.length')==0,'save flight must block navigation without opening discard alert'
+  expect(page.get_by_role('heading',name='Påminnelser',exact=True)).to_be_visible()
+  page.evaluate("window.__tasslaAlertActions=['Lämna utan att spara'];window.__tasslaNavigateMainTab('home')")
+  assert page.evaluate('window.__tasslaAlertOptions.length')==0,'save flight must consume route requests'
+  assert counts()['writes']==1,'at most one preference write may be started'
+  page.evaluate('window.__tasslaResolveReminderSave(false)')
+  expect(page.get_by_text('Valen kunde inte sparas säkert. Kontrollera status innan du försöker igen.',exact=True)).to_be_visible()
+  expect(page.get_by_role('checkbox',name='Tillåt Tasslas påminnelser på den här enheten')).to_have_attribute('aria-checked','true')
+  page.screenshot(path=str(out/'reminders-save-flight-failed-375x844.png'),animations='disabled',full_page=True)
+  passed('Synchronous save flight blocks route work and failure releases the lock without losing fields')
+
+  open_reminders('ready')
+  page.get_by_label('Träningspåminnelse, lokal tid, timmar och minuter').fill('08:45')
+  page.get_by_role('button',name='Välj träningspåminnelse, lokal tid från tider',exact=True).click()
+  page.get_by_role('button',name='Välj 09:00',exact=True).click()
+  page.get_by_role('button',name='Avbryt tid',exact=True).click()
+  expect(page.get_by_label('Träningspåminnelse, lokal tid, timmar och minuter')).to_have_value('08:45')
+  page.get_by_label('Träningspåminnelse, lokal tid, timmar och minuter').fill('08:30')
+  page.evaluate('window.__tasslaAlertOptions=[]')
+  page.get_by_role('button',name='Tillbaka till Mer',exact=True).click()
+  expect(page.get_by_role('heading',name='Påminnelser',exact=True)).to_have_count(0)
+  assert page.evaluate('window.__tasslaAlertOptions.length')==0,'reverting all fields should make the form clean'
+  passed('TimePickerField cancel keeps its uncommitted modal value; reverting to saved HH:mm is clean')
+
+  open_reminders()
+  dirty_reminder()
+  page.evaluate('window.__tasslaChangeReminderScope()')
+  expect(page.get_by_role('checkbox',name='Tillåt Tasslas påminnelser på den här enheten')).to_have_attribute('aria-checked','false')
+  page.evaluate('window.__tasslaAlertOptions=[]')
+  page.get_by_role('button',name='Tillbaka till Mer',exact=True).click()
+  assert page.evaluate('window.__tasslaAlertOptions.length')==0,'scope-key remount should discard the old local draft'
+  passed('Existing scope-key change remounts a clean local reminder draft')
+
+  assert not errors,errors
+  browser.close()
+  (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'Production NotificationSettingsScreen; synthetic public/review callbacks, guarded navigation and local reminder draft only','bundle':'review' if review_mode else 'public','viewports':viewports,'limitations':['SecureStore and local scheduled delivery are not exercised','Android BackHandler, native Alert and Modal back priority are NOT TESTABLE in RN Web','Real OS permission prompt and owner/account transitions are not exercised','VoiceOver, Dynamic Type and physical keyboard/safe area are not exercised','The 140% text proxy is a web CSS approximation']},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+  raise SystemExit(0)
+
+ if os.environ.get('TASSLA_UI_SCOPE')=='log-draft':
+  page.set_default_timeout(8000)
+  page.emulate_media(reduced_motion='reduce')
+  review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
+  viewports=[(375,844,'375x844'),(430,844,'430x844'),(375,667,'375x667')]
+  def open_log(extra=''):
+   page.set_viewport_size({'width':375,'height':844})
+   open('log',extra)
+   expect(page.get_by_role('tab',name='Logg')).to_have_attribute('aria-selected','true')
+  def open_editor():
+   page.get_by_role('button',name=re.compile(r'tryck för att ändra')).first.click()
+   expect(page.get_by_role('heading',name='Ändra händelse',exact=True)).to_be_visible()
+  def change_note(value='Ändrad anteckning'):
+   page.get_by_label('Anteckning, högst 500 tecken').fill(value)
+  def capture_editor(width,height,label):
+   page.set_viewport_size({'width':width,'height':height})
+   open('log')
+   open_editor()
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'horizontal overflow at {label}'
+   page.screenshot(path=str(out/f'editor-clean-{label}.png'),animations='disabled')
+   change_note()
+   expect(page.get_by_role('button',name='Spara ändring',exact=True)).to_be_enabled()
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'horizontal overflow for dirty editor at {label}'
+   page.screenshot(path=str(out/f'editor-dirty-{label}.png'),animations='disabled')
+   if width==375:
+    scaled=page.evaluate('''() => {const nodes=[...document.querySelectorAll('[dir="auto"]')];nodes.forEach(el=>{const s=getComputedStyle(el);const size=parseFloat(s.fontSize);const line=parseFloat(s.lineHeight);if(Number.isFinite(size))el.style.fontSize=(size*1.4)+'px';if(Number.isFinite(line))el.style.lineHeight=(line*1.4)+'px';});return nodes.length;}''')
+    assert scaled>0,'text proxy found no rendered text nodes'
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'horizontal overflow with 140% text proxy'
+    page.screenshot(path=str(out/f'editor-dirty-large-text-140-{label}.png'),animations='disabled')
+  for width,height,label in viewports: capture_editor(width,height,label)
+  passed('Production LogScreen editor renders clean and dirty states at 375x844, 430x844, 375x667, and with a 140% text proxy at 375px')
+
+  open_log()
+  open_editor();change_note('Stanna kvar')
+  page.evaluate('window.__tasslaAlertOptions=[]')
+  page.evaluate("window.__tasslaNavigateMainTab('log')")
+  assert page.evaluate('window.__tasslaAlertOptions?.length ?? 0')==0,'the current tab must be a no-op'
+  page.get_by_role('button',name='Stäng',exact=True).last.click()
+  assert page.evaluate('window.__tasslaAlertOptions')==['Stanna kvar','Lämna utan att spara']
+  expect(page.get_by_role('heading',name='Ändra händelse',exact=True)).to_be_visible()
+  expect(page.get_by_label('Anteckning, högst 500 tecken')).to_have_value('Stanna kvar')
+  passed('Same-tab is a no-op; close prompts and Stay preserves editor fields')
+
+  open_log();open_editor();change_note('Bekräftad lämning')
+  page.evaluate("window.__tasslaAlertActions=['Lämna utan att spara']")
+  page.evaluate("window.__tasslaNavigateMainTab('training')")
+  expect(page.get_by_role('tab',name='Träning')).to_have_attribute('aria-selected','true')
+  passed('Explicit discard commits only the requested tab after confirmation')
+
+  open_log();open_editor();change_note('Första destination')
+  page.evaluate("window.__tasslaAlertActions=['Lämna utan att spara'];window.__tasslaDeferNextAlert=true")
+  page.evaluate("window.__tasslaNavigateMainTab('training')")
+  expect(page.get_by_role('heading',name='Ändra händelse',exact=True)).to_be_visible()
+  page.evaluate("window.__tasslaNavigateMainTab('more')")
+  page.evaluate('window.__tasslaDelayedAlertConfirm()')
+  expect(page.get_by_role('tab',name='Träning')).to_have_attribute('aria-selected','true')
+  expect(page.get_by_role('tab',name='Mer')).to_have_attribute('aria-selected','false')
+  passed('Repeated navigation while Alert is open is ignored; the first destination alone commits')
+
+  for width,height,label in viewports:
+   open('log','&editScenario=pending')
+   page.set_viewport_size({'width':width,'height':height})
+   open_editor();change_note('Pending edit')
+   page.get_by_role('button',name='Spara ändring',exact=True).click()
+   pending_copy='Ändringen sparas. Vänta tills resultatet har bekräftats innan du lämnar.'
+   expect(page.get_by_text(pending_copy,exact=True)).to_have_count(1)
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'pending status overflow at {label}'
+   page.screenshot(path=str(out/f'editor-pending-{label}.png'),animations='disabled')
+   if width==375:
+    scaled=page.evaluate('''() => {const nodes=[...document.querySelectorAll('[dir="auto"]')];nodes.forEach(el=>{const s=getComputedStyle(el);const size=parseFloat(s.fontSize);const line=parseFloat(s.lineHeight);if(Number.isFinite(size))el.style.fontSize=(size*1.4)+'px';if(Number.isFinite(line))el.style.lineHeight=(line*1.4)+'px';});return nodes.length;}''')
+    assert scaled>0,'pending text proxy found no rendered text nodes'
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'pending overflow with 140% text proxy'
+    page.screenshot(path=str(out/f'editor-pending-large-text-140-{label}.png'),animations='disabled')
+  passed('Locked pending status renders across the viewport matrix and 140% text proxy')
+
+  open_log('&editScenario=pending');open_editor();change_note('Pending edit')
+  page.get_by_role('button',name='Spara ändring',exact=True).click()
+  pending='Ändringen sparas. Vänta tills resultatet har bekräftats innan du lämnar.'
+  expect(page.get_by_text(pending,exact=True)).to_have_count(1)
+  page.get_by_role('button',name='Stäng',exact=True).last.click()
+  expect(page.get_by_role('heading',name='Ändra händelse',exact=True)).to_be_visible()
+  assert page.evaluate('window.__tasslaAlertOptions?.length ?? 0')==0,'locked close must not prompt'
+  passed('Pending save displays one locked status and prevents sheet close without prompting')
+
+  open_log('&editScenario=failed');open_editor();change_note('Keep failed draft')
+  page.get_by_role('button',name='Spara ändring',exact=True).click()
+  expect(page.get_by_text('Ändringen sparades inte. Försök igen eller fortsätt redigera.',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Fortsätt redigera',exact=True)).to_be_visible()
+  page.screenshot(path=str(out/'editor-failed-375x844.png'),animations='disabled')
+  page.get_by_role('button',name='Fortsätt redigera',exact=True).click()
+  expect(page.get_by_role('heading',name='Ändra händelse',exact=True)).to_be_visible()
+  expect(page.get_by_label('Anteckning, högst 500 tecken')).to_have_value('Keep failed draft')
+  expect(page.get_by_text('Ändringen sparades inte. Försök igen eller fortsätt redigera.',exact=True)).to_have_count(0)
+  passed('Failed save has one truthful Toast; Continue editing clears only failure intent and preserves fields')
+
+  open_log('&editScenario=unsure');open_editor();change_note('Keep unknown draft')
+  page.get_by_role('button',name='Spara ändring',exact=True).click()
+  expect(page.get_by_text('Vi kunde inte kontrollera om ändringen sparades. Kontrollera status innan du lämnar.',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Försök igen',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Fortsätt redigera',exact=True)).to_have_count(0)
+  expect(page.get_by_label('Anteckning, högst 500 tecken')).to_have_value('Keep unknown draft')
+  page.screenshot(path=str(out/'editor-unsure-375x844.png'),animations='disabled')
+  passed('Unknown save outcome offers readback/retry only and keeps the draft locked')
+
+  open_log('&mutation=failed')
+  expect(page.get_by_role('button',name='Avbryt',exact=True)).to_be_visible()
+  passed('Existing Toast consumers keep the default Avbryt label')
+  assert not errors,errors
+  browser.close()
+  (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'Production LogScreen dirty draft protection and shared navigation gate in a synthetic public/review RN Web fixture','bundle':'review' if review_mode else 'public','viewports':viewports,'limitations':['Native Alert appearance and Android system-back are not tested','Live Supabase mutation/readback, VoiceOver, Dynamic Type, physical swipe/keyboard behavior, and app build are not tested','The 140% text proxy is a web CSS approximation']},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+  raise SystemExit(0)
+
  if os.environ.get('TASSLA_UI_SCOPE')=='home-checklist':
   page.set_default_timeout(8000)
   page.emulate_media(reduced_motion='reduce')

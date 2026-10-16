@@ -23,3 +23,15 @@ export function mainTabTransitionDirection(previous: string, current: string): '
   const currentIndex = MAIN_TAB_DESTINATIONS.findIndex((destination) => destination === current);
   return currentIndex >= 0 && previousIndex >= 0 && currentIndex < previousIndex ? 'backward' : 'forward';
 }
+
+
+export function requestMainTabNavigation<Destination extends string>(
+  currentPage: string,
+  destination: Destination,
+  requestLeave: (commit: () => void) => void,
+  commit: (destination: Destination) => void,
+): 'same' | 'requested' {
+  if (currentPage === destination) return 'same';
+  requestLeave(() => commit(destination));
+  return 'requested';
+}

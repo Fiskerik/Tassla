@@ -105,3 +105,78 @@ try {
 ```
 
 Screenshots and UTF-8 `browser-results.json` are stored under `docs/design/evidence/vision-rev02/checklist/ALL-01/{public,review}/`. Compare both rendered variants with Panel 4 and complete the applicable §14 checklist; a passing synthetic interaction run does not mark the whole panel complete.
+
+
+## UIUX-REVAMP-R1A-BREED-01 — explicit breed choice
+
+The `profile-create` scope renders the production `ProfileScreen` with a synthetic breed catalog. `breedScenario` supports `ready`, `empty`, `empty-then-success`, `loading`, `error`, `error-then-success`, and `selection-preserve`. The verifier checks explicit choice, disabled Continue, optional kennel code, empty/error recovery, loading, preservation of an existing choice after a later synthetic fetch, viewport fit, and a 140% text proxy. It does not submit a profile or read live account data.
+
+Build separate public and review bundles with the existing temporary RN Web tools. In PowerShell from the repository root:
+
+```powershell
+$toolRoot = Join-Path $env:TEMP 'tassla-ui-tools'
+$venvRoot = Join-Path $env:TEMP 'tassla-ui-venv'
+$uiPython = Join-Path $venvRoot 'Scripts/python.exe'
+$outputRoot = Join-Path $env:TEMP 'tassla-r1a-breed-01'
+$env:TASSLA_UI_TOOLS = $toolRoot
+
+$env:TASSLA_UI_OUTPUT = Join-Path $outputRoot 'public'
+$env:TASSLA_UI_REVIEW = 'false'
+node tools/visual-check/build.cjs
+$env:TASSLA_UI_OUTPUT = Join-Path $outputRoot 'review'
+$env:TASSLA_UI_REVIEW = 'true'
+node tools/visual-check/build.cjs
+```
+
+Serve each output directory on a separate local port, then run:
+
+```powershell
+$env:TASSLA_UI_SCOPE = 'profile-create'
+$env:TASSLA_UI_BASE_URL = 'http://127.0.0.1:4183/'
+$env:TASSLA_UI_REVIEW = 'false'
+$env:TASSLA_UI_EVIDENCE = Join-Path (Get-Location) 'docs/design/evidence/vision-rev02/onboarding/R1A-BREED-01/public'
+& $uiPython tools/visual-check/verify.py
+
+$env:TASSLA_UI_BASE_URL = 'http://127.0.0.1:4184/'
+$env:TASSLA_UI_REVIEW = 'true'
+$env:TASSLA_UI_EVIDENCE = Join-Path (Get-Location) 'docs/design/evidence/vision-rev02/onboarding/R1A-BREED-01/review'
+& $uiPython tools/visual-check/verify.py
+```
+
+The evidence directory contains the public/review screenshots and UTF-8 `browser-results.json` files. This is a React Native Web fixture: native VoiceOver/Dynamic Type, live Supabase/RLS, and profile persistence remain outside its coverage.
+
+
+## UIUX-REVAMP-R1B-LOG-DRAFT-01 — protect log editor drafts
+
+The `log-draft` scope drives the production `LogScreen` and production `requestMainTabNavigation` helper in the public and review RN Web bundles. It checks clean/dirty rendering at 375×844, 430×844, and 375×667; a 140% text proxy; same-tab no-op; close/Stay preservation; explicit discard and destination; first-destination locking while the Alert shim is deferred; pending lock feedback; distinct failed and unsure recovery; failed-state draft retention; and the unchanged default `Avbryt` label for existing Toast consumers. It captures clean, dirty, pending, failed, and unsure states in both bundles. The Alert shim records named button callbacks but does not draw the native Alert.
+
+Build public and review bundles with `build.cjs`, serve them separately, then run `verify.py` with `TASSLA_UI_SCOPE=log-draft`, each base URL, and separate evidence paths. Use `docs/design/evidence/vision-rev02/log/R1B-LOG-DRAFT-01/{public,review}/`. The evidence is synthetic; native Alert appearance, Android system-back, live Supabase save/readback, VoiceOver, Dynamic Type, physical gestures/keyboard, and the app build remain NOT TESTABLE.
+
+
+## UIUX-REVAMP-R1C-PROFILE-DRAFT-01 — protect profile drafts
+
+The `profile-draft` scope renders the production `EditDogProfileScreen` with synthetic parent-owned profile and kennel attribution states. It checks unknown kennel link/removal readback match and mismatch, visible current server state, read-only retry and use-current callbacks, preservation of a parent-owned removal intent when local profile fields are discarded, clean/dirty/pending/busy behavior, same-tab no-op, guarded navigation, first-destination locking, and 375×844, 430×844, 375×667 plus a 140% web text proxy. Public and review captures are stored in `docs/design/evidence/vision-rev02/profile/R1C-PROFILE-DRAFT-01/{public,review}/`.
+
+Build public/review bundles with `build.cjs`, serve them separately, then run `verify.py` with `TASSLA_UI_SCOPE=profile-draft` and the appropriate `TASSLA_UI_BASE_URL`, `TASSLA_UI_REVIEW`, and `TASSLA_UI_EVIDENCE`. The RN Web fixture uses synthetic callbacks and does not test live Supabase/RLS, native Alert or Android system-back, native VoiceOver/Dynamic Type, physical keyboard/gestures, or the installed app build. The dedicated profile editor has no direct panel in `vision_rev02.jpg`, so visual likeness to that editor is NOT TESTABLE.
+
+
+## UIUX-REVAMP-R1D-REMINDER-DRAFT-01 — reminder preference draft
+
+The `notification-draft` scope renders the production `NotificationSettingsScreen` with synthetic reminder preferences and route/save callbacks. It verifies the same-tab no-op, dirty header/tab leave guard, first destination lock, preference-readiness navigation, independent permission request, failed-write draft retention, a deferred save flight that blocks route work, TimePickerField cancel/revert semantics, scope-key remount, and 375×844, 430×844, 375×667 plus 140% text-proxy layouts. Public and review evidence is stored under `docs/design/evidence/vision-rev02/reminders/R1D-REMINDER-DRAFT-01/{public,review}/`.
+
+Build both bundles with `build.cjs`, serve them separately, then run `verify.py` with `TASSLA_UI_SCOPE=notification-draft` and separate base/evidence paths. The fixture uses synthetic callbacks only. SecureStore/local scheduling, the real OS permission prompt, Android BackHandler and native Modal/Alert ordering, VoiceOver/Dynamic Type, physical keyboard/safe area and the installed app remain NOT TESTABLE in RN Web.
+
+
+## UIUX-REVAMP-R1E-HEALTH-HISTORY-DRAFT-01 — health history drafts
+
+The `health-history-draft` scope renders the production `HealthScreen` and `HealthHistoryScreen` with synthetic history rows. It checks dirty sheet close and main-tab guards, same-tab no-op, first-destination retention, unrelated row refresh, a delayed Alert callback across an account-generation remount, delete cancellation with fields preserved, supported event-type swap with retained opening type/draft and explicit conflict recovery, rejected-write retry, synchronous write-flight close/double-submit protection, unknown update/create with later single confirmation, confirmed update/delete feedback, reload warning, the three standard viewports, reduced motion and a 140% web text proxy. Public/review evidence belongs in `docs/design/evidence/vision-rev02/health/history/R1E-HEALTH-HISTORY-DRAFT-01/{public,review}/`.
+
+Build public and review bundles separately, serve them, and run `verify.py` with `TASSLA_UI_SCOPE=health-history-draft`, the matching `TASSLA_UI_BASE_URL` and `TASSLA_UI_REVIEW`, and a separate evidence directory. The fixture uses in-memory callbacks only. Native Alert and Modal ordering, Android BackHandler, VoiceOver/Dynamic Type, physical keyboard/safe area, live Supabase/RLS, and actual unknown-write/readback timing remain NOT TESTABLE in RN Web. `vision_rev02.jpg` contains no dedicated history-editor panel, so direct editor visual matching is NOT TESTABLE.
+
+## UIUX-REVAMP-R2B-SHARED-SHEET-01 — opt-in Logg sheet drag-to-dismiss
+
+The log-sheet-gesture scope renders the production BottomSheet and LogScreen in synthetic public/review fixtures. It checks held downward finger tracking, a short drag below the 120 pt threshold, upward/horizontal non-takeover, a second drag that interrupts an active denied-close return spring without snapping, cancelled/terminated reset, reduced-motion reset, exactly one owner close request, owner-controlled visible state, clean close, dirty prompt/draft preservation, pending/failed/unsure denial with zero writes, keyboard-height scrolling, browser focus before/after, three mobile viewports, 140% CSS text proxy, and the legacy opt-out Add-event sheet.
+
+Build public and review bundles with build.cjs, serve each output directory on a separate loopback port, then run verify.py with TASSLA_UI_SCOPE=log-sheet-gesture, its TASSLA_UI_BASE_URL, TASSLA_UI_REVIEW, and a separate TASSLA_UI_EVIDENCE. Evidence is stored in docs/design/evidence/vision-rev02/shared-sheet/R2B-SHARED-SHEET-01/{public,review}/. Each result JSON records 12 passes, zero browser page errors, and focus true → true, including active-spring re-drag continuity, cancelled-gesture focus restoration, and explicit dirty-draft discard. The verifier also captures the sheet after the interrupted return spring settles. The latest lifecycle recheck used the same 12 browser assertions through Node Playwright because the Python Playwright binding was unavailable in that environment.
+
+The cancelled RN Web header-touch probe records focusProbe.before=true and after=true: the textarea is restored after the cancelled gesture while the draft and scroll position remain intact. This is browser-only evidence; physical focus and keyboard behavior still require an app check. Native touch, VoiceOver, physical Dynamic Type, Android back/Modal ordering, live Supabase/RLS, and the installed app remain NOT TESTABLE by this scope.

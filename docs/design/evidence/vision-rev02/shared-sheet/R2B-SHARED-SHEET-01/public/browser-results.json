@@ -1,0 +1,47 @@
+{
+  "passes": [
+    "Production BottomSheet tracks a held downward drag and returns below the 120 pt threshold",
+    "Upward and horizontal header movement do not take over or dismiss the sheet",
+    "A second header drag interrupts the return spring from its current position without snapping",
+    "A qualifying drag calls the controlled owner exactly once and closes through visible state",
+    "Reduced motion returns the denied drag directly",
+    "Production LogScreen keeps the opt-in editor usable across the target viewport and text matrix",
+    "Clean LogScreen editor accepts drag close with no write",
+    "Keyboard-height proxy remains scrollable; cancelled header touch resets, restores focus, and preserves the draft",
+    "Dirty drag preserves the draft, routes to the existing discard prompt and writes nothing",
+    "Dirty drag keeps the draft until explicit discard; an open prompt is not replaced and discard writes nothing",
+    "Pending, failed and unsure states deny drag closure while preserving draft, recovery and write count",
+    "The existing Log add-event sheet remains on the legacy opt-out path"
+  ],
+  "pageErrors": [],
+  "focusProbe": {
+    "before": true,
+    "after": true,
+    "note": "RN Web focus was restored after cancelled header drag; native keyboard/focus behavior is not established by this browser check."
+  },
+  "scope": "Production BottomSheet and LogScreen drag-to-dismiss behavior in synthetic public/review RN Web fixtures",
+  "bundle": "public",
+  "viewports": [
+    [
+      375,
+      844,
+      "375x844"
+    ],
+    [
+      430,
+      844,
+      "430x844"
+    ],
+    [
+      375,
+      667,
+      "375x667"
+    ]
+  ],
+  "limitations": [
+    "Native iOS/Android touch, real system keyboard, VoiceOver, Modal/back priority and physical Dynamic Type are NOT TESTABLE",
+    "The cancelled RN Web header touch restores the focused textarea; native keyboard/focus behavior must still be checked on a device",
+    "Live Supabase/RLS and mutation persistence are not exercised",
+    "The 140% text proxy is a web CSS approximation"
+  ]
+}

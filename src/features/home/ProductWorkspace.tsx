@@ -96,9 +96,10 @@ import {
 } from '../../data/app-data';
 import { automaticDogAge, localDate } from '../onboarding/dog';
 import { homeAgeInWeeks } from './home-today';
-import { HealthScreen } from '../health/HealthScreen';
+import { HealthScreen, type HealthHistoryConfirmation } from '../health/HealthScreen';
 import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
 import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
+import { filterScopedValue, matchesAttributionPostimage, resolveAttributionReadback, sameAttributionScope, type AttributionReadbackToken, type AttributionScope, type KennelAttributionIntent, type ScopedValue } from '../onboarding/profile-draft';
 import { DogProfileScreen } from '../onboarding/DogProfileScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
 import { checklistMemoryScope, keepChecklistMemoryForScope, updateChecklistMemory, type PendingChecklistMemory } from '../knowledge/checklist-intent';
@@ -106,7 +107,7 @@ import { checklistReadCacheScope, clearChecklistReadCache, keepChecklistReadCach
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, REVIEW_TRAINING_PROGRAMS } from '../knowledge/review-content';
 import { HomeScreen, type HomeDailyTrainingOption } from './HomeScreen';
 import { ADULT_APPROVED_DAILY_TRAINING_VERSION_IDS, deriveHomeDailyActivities, isDailyActivityDateCurrent, isDailyActivitySnapshotWritable, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep, runDailyActivityActionIfWritable, runDailyActivityMutationGateway, scheduleDailyActivitySnapshotExpiry, type DailyMutationOrigin } from './daily-activity-model';
-import { activeMainTabDestination, isMainTabDestination, mainTabTransitionDirection, nextMainTabDestination } from './main-navigation';
+import { activeMainTabDestination, isMainTabDestination, mainTabTransitionDirection, nextMainTabDestination, requestMainTabNavigation } from './main-navigation';
 import { BottomNav, MainSwipeNavigation } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
 import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
@@ -139,18 +140,21 @@ type PendingHealthMutation =
   | { kind: 'delete'; id: string; previous: HealthWeightRecord };
 type PendingHealthHistoryMutation =
   | { kind: 'insert'; operation: HealthHistoryOperation; lifetime: string }
-  | { kind: 'update'; id: string; eventType: HealthHistoryType; previous: HealthHistoryRecord; changes: HealthHistoryChanges; lifetime: string }
-  | { kind: 'delete'; id: string; eventType: HealthHistoryType; previous: HealthHistoryRecord; lifetime: string };
+  | { kind: 'update'; id: string; eventType: HealthHistoryType; previous: Pick<HealthHistoryRecord, 'id' | 'dog_id' | 'event_type' | 'occurred_on' | 'occurred_time' | 'description'>; changes: HealthHistoryChanges; lifetime: string }
+  | { kind: 'delete'; id: string; eventType: HealthHistoryType; previous: Pick<HealthHistoryRecord, 'id' | 'dog_id' | 'event_type' | 'occurred_on' | 'occurred_time' | 'description'>; lifetime: string };
 type PendingPlannedHealthMutation =
   | { kind: 'insert'; operation: PlannedHealthOperation; lifetime: string }
   | { kind: 'update'; id: string; previous: PlannedHealthRecord; changes: PlannedHealthChanges; localToday: string; lifetime: string }
   | { kind: 'delete'; id: string; previous: PlannedHealthRecord; lifetime: string };
 type PendingProfileMutation = { previous: OwnedDog; changes: OwnedDogProfileChanges; knownBreeds: readonly BreedOption[]; lifetime: string };
+type AttributionSnapshot = { value: OwnedDogAttribution | null; state: 'loading' | 'ready' | 'error'; message: string; messageError: boolean };
+type AttributionOperation = AttributionReadbackToken & { kind: 'write' | 'read' };
 
 const PAGE_SIZE = 40;
 const WORKSPACE_REFRESH_AFTER_MS = 60_000;
 type TrainingWorkspaceSnapshot = Awaited<ReturnType<typeof fetchTrainingWorkspace>>;
 type WorkspaceResourceFlight<T> = { scope: string; generation: number; controller: AbortController; promise: Promise<T> };
+type EditorLeaveRequest = (commit: () => void) => void;
 
 export function ProductWorkspace({ client, dog, onDogUpdated }: { client: SupabaseClient; dog: OwnedDog; onDogUpdated?: (updated: OwnedDog) => void }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
@@ -173,7 +177,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [contentSelectionKey, setContentSelectionKey] = useState<string | null>(null);
   const [knowledgeFocus, setKnowledgeFocus] = useState<{ selectionKey: string; contentId: string | null; returnPage: 'home' | 'more' } | null>(null);
   const [knowledgeDetailOpen, setKnowledgeDetailOpen] = useState(false);
-  const navigateMainTab = useCallback((destination: ProductPage) => {
+  const editorLeaveGuard = useRef<{ owner: symbol; requestLeave: EditorLeaveRequest } | null>(null);
+  const registerEditorLeaveGuard = useCallback((owner: symbol, requestLeave: EditorLeaveRequest) => {
+    editorLeaveGuard.current = { owner, requestLeave };
+    return () => { if (editorLeaveGuard.current?.owner === owner) editorLeaveGuard.current = null; };
+  }, []);
+  const commitMainTabNavigation = useCallback((destination: ProductPage) => {
     if (destination !== 'checklist') setTrainingEntry(null);
     const enteringKnowledge = page !== 'knowledge' && destination === 'knowledge';
     const leavingKnowledge = page === 'knowledge' && destination !== 'knowledge';
@@ -183,6 +192,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
     setPage(destination);
   }, [page, setPage]);
+  const navigateMainTab = useCallback((destination: ProductPage) => {
+    if (activeMainTabDestination(page) === destination) return;
+    requestMainTabNavigation(page, destination, (commit) => {
+      const guard = editorLeaveGuard.current;
+      if (guard) guard.requestLeave(commit);
+      else commit();
+    }, commitMainTabNavigation);
+  }, [commitMainTabNavigation, page]);
   const handleMainSwipe = useCallback((direction: 'left' | 'right') => {
     const destination = nextMainTabDestination(page, direction);
     if (destination) navigateMainTab(destination);
@@ -210,6 +227,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [healthHistoryMessage, setHealthHistoryMessage] = useState('');
   const [healthHistoryMessageError, setHealthHistoryMessageError] = useState(false);
   const [healthHistoryConflict, setHealthHistoryConflict] = useState<{ lifetime: string; mutationId: string; current: HealthHistoryRecord | null } | null>(null);
+  const [healthHistoryConfirmation, setHealthHistoryConfirmation] = useState<HealthHistoryConfirmation | null>(null);
   const [plannedHealth, setPlannedHealth] = useState<PlannedHealthRecord[]>([]);
   const plannedHealthRows = useRef<PlannedHealthRecord[]>([]);
   const [plannedHealthState, setPlannedHealthState] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -244,11 +262,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [profileMessage, setProfileMessage] = useState('');
   const [profileMessageError, setProfileMessageError] = useState(false);
   const [profileConflict, setProfileConflict] = useState<OwnedDog | null>(null);
-  const [dogAttribution, setDogAttribution] = useState<OwnedDogAttribution | null>(null);
-  const [attributionState, setAttributionState] = useState<'loading' | 'ready' | 'error'>('loading');
-  const [attributionBusy, setAttributionBusy] = useState(false);
-  const [attributionMessage, setAttributionMessage] = useState('');
-  const [attributionMessageError, setAttributionMessageError] = useState(false);
+  const [attributionSnapshot, setAttributionSnapshot] = useState<ScopedValue<AttributionSnapshot> | null>(null);
+  const [attributionIntent, setAttributionIntent] = useState<KennelAttributionIntent | null>(null);
+  const [attributionOperation, setAttributionOperation] = useState<AttributionOperation | null>(null);
   const [training, setTraining] = useState<{ programs: PublishedTrainingProgram[]; paused: PausedTrainingProgress[] }>({ programs: [], paused: [] });
   const [trainingState, setTrainingState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [trainingSelectionKey, setTrainingSelectionKey] = useState<string | null>(null);
@@ -275,11 +291,16 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const pendingHealthMutation = useRef<PendingHealthMutation | null>(null);
   const healthMutationInFlight = useRef(false);
   const pendingHealthHistoryMutation = useRef<PendingHealthHistoryMutation | null>(null);
+  const healthHistoryConfirmationSequence = useRef(0);
   const healthHistoryMutationInFlight = useRef(false);
   const healthHistoryFlightToken = useRef<object | null>(null);
   const pendingPlannedHealthMutation = useRef<PendingPlannedHealthMutation | null>(null);
   const plannedHealthMutationInFlight = useRef(false);
   const plannedHealthFlightToken = useRef<object | null>(null);
+  const attributionIntentRef = useRef<KennelAttributionIntent | null>(null);
+  const attributionOperationRef = useRef<AttributionOperation | null>(null);
+  const attributionReadTokenRef = useRef<AttributionReadbackToken | null>(null);
+  const attributionOperationId = useRef(0);
   const pendingProfileMutation = useRef<PendingProfileMutation | null>(null);
   const profileMutationInFlight = useRef(false);
   const trainingMutationInFlight = useRef(false);
@@ -336,13 +357,46 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     const subscription = AppState.addEventListener('change', (state) => { if (state === 'active') refreshClock(); });
     return () => { clearInterval(interval); subscription.remove(); };
   }, [page]);
-  const currentHealthHistoryLifetime = `${dog.id}:${session?.user.id ?? ''}`;
+  const currentHealthHistoryLifetime = JSON.stringify([session?.user.id ?? '', accountGeneration, dog.id]);
+  const currentAttributionScope = useMemo<AttributionScope>(() => ({ ownerId: session?.user.id ?? '', accountGeneration, dogId: dog.id }), [session?.user.id, accountGeneration, dog.id]);
+  const currentAttributionScopeRef = useRef(currentAttributionScope);
+  const previousAttributionScope = useRef(currentAttributionScope);
+  const isCurrentAttributionScope = useCallback((scope: AttributionScope) => mounted.current
+    && !accountDeletionInvalidated.current
+    && sameAttributionScope(scope, currentAttributionScopeRef.current), []);
+  useLayoutEffect(() => {
+    currentAttributionScopeRef.current = currentAttributionScope;
+    if (!sameAttributionScope(previousAttributionScope.current, currentAttributionScope)) {
+      const currentIntent = attributionIntentRef.current;
+      if (currentIntent && !sameAttributionScope(currentIntent, currentAttributionScope)) {
+        attributionIntentRef.current = null;
+        setAttributionIntent(null);
+      }
+      if (attributionOperationRef.current && !sameAttributionScope(attributionOperationRef.current, currentAttributionScope)) {
+        attributionOperationRef.current = null;
+        setAttributionOperation(null);
+      }
+      if (attributionReadTokenRef.current && !sameAttributionScope(attributionReadTokenRef.current, currentAttributionScope)) {
+        attributionReadTokenRef.current = null;
+      }
+      setAttributionSnapshot((current) => current && sameAttributionScope(current.scope, currentAttributionScope) ? current : null);
+    }
+    previousAttributionScope.current = currentAttributionScope;
+  }, [currentAttributionScope]);
+  const visibleAttributionSnapshot = filterScopedValue(attributionSnapshot, currentAttributionScope);
+  const visibleAttributionIntent = attributionIntent && sameAttributionScope(attributionIntent, currentAttributionScope) ? attributionIntent : null;
+  const visibleAttributionOperation = attributionOperation && sameAttributionScope(attributionOperation, currentAttributionScope) ? attributionOperation : null;
+  const dogAttribution = visibleAttributionSnapshot?.value ?? null;
+  const attributionState = visibleAttributionSnapshot?.state ?? 'loading';
+  const attributionBusy = Boolean(visibleAttributionOperation);
+  const attributionMessage = visibleAttributionSnapshot?.message ?? '';
+  const attributionMessageError = visibleAttributionSnapshot?.messageError ?? false;
   const currentLogLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const healthHistoryLifetime = useRef('');
   const logLifetime = useRef('');
   const previousHealthHistoryLifetime = useRef('');
   const previousLogLifetime = useRef('');
-  const currentPlannedHealthLifetime = currentHealthHistoryLifetime;
+  const currentPlannedHealthLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const plannedHealthLifetime = useRef('');
   const previousPlannedHealthLifetime = useRef('');
 
@@ -365,7 +419,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   useLayoutEffect(() => {
     plannedHealthLifetime.current = currentPlannedHealthLifetime;
   }, [currentPlannedHealthLifetime]);
-  const currentProfileLifetime = currentHealthHistoryLifetime;
+  const currentProfileLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const profileLifetime = useRef('');
   const previousProfileLifetime = useRef('');
   const contentGeneration = useRef(0);
@@ -835,19 +889,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       setProfileMessageError(false);
       setProfileConflict(null);
     }
-    // Hide the previous dog's kennel link while the next dog's attribution loads.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setAttributionState('loading');
-    setAttributionMessage('');
-    setAttributionMessageError(false);
-    void fetchOwnedDogAttribution(client, dog.id).then((value) => {
-      if (!mounted.current || currentProfileLifetime !== profileLifetime.current) return;
-      setDogAttribution(value);
-      setAttributionState('ready');
-    }).catch(() => {
-      if (!mounted.current || currentProfileLifetime !== profileLifetime.current) return;
-      setAttributionState('error');
-    });
     const currentHistoryLifetime = currentHealthHistoryLifetime;
     if (previousHealthHistoryLifetime.current !== currentHistoryLifetime) {
       previousHealthHistoryLifetime.current = currentHistoryLifetime;
@@ -913,11 +954,35 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     });
     return () => {
       mounted.current = false;
+      attributionReadTokenRef.current = null;
+      attributionOperationRef.current = null;
+      attributionIntentRef.current = null;
       controller.abort();
       trainingReadFlight.current?.controller.abort();
       dailyReadFlight.current?.controller.abort();
     };
   }, [client, currentHealthHistoryLifetime, currentPlannedHealthLifetime, currentProfileLifetime, dog.id, serializeEventRead, serializeHealthRead, serializeHealthHistoryRead, serializePlannedHealthRead]);
+
+  useEffect(() => {
+    const scope = currentAttributionScope;
+    if (!isCurrentAttributionScope(scope)) return undefined;
+    const token: AttributionReadbackToken = { ...scope, operationId: ++attributionOperationId.current };
+    attributionReadTokenRef.current = token;
+    void fetchOwnedDogAttribution(client, scope.dogId).then((value) => {
+      if (!isCurrentAttributionScope(scope) || attributionReadTokenRef.current !== token) return;
+      setAttributionSnapshot((current) => {
+        if (!isCurrentAttributionScope(scope) || attributionReadTokenRef.current !== token) return current;
+        return { scope, value: { value, state: 'ready', message: '', messageError: false } };
+      });
+    }).catch(() => {
+      if (!isCurrentAttributionScope(scope) || attributionReadTokenRef.current !== token) return;
+      setAttributionSnapshot((current) => {
+        if (!isCurrentAttributionScope(scope) || attributionReadTokenRef.current !== token) return current;
+        return { scope, value: { value: null, state: 'error', message: '', messageError: false } };
+      });
+    });
+    return () => { if (attributionReadTokenRef.current === token) attributionReadTokenRef.current = null; };
+  }, [client, currentAttributionScope, isCurrentAttributionScope]);
 
   useEffect(() => {
     const generation = ++contentGeneration.current;
@@ -1114,49 +1179,158 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     return runProfileMutation(mutation);
   }
 
-  async function retryDogAttribution() {
-    if (attributionBusy) return;
-    setAttributionState('loading');
-    setAttributionMessage('');
-    setAttributionMessageError(false);
+  function isCurrentAttributionOperation(token: AttributionOperation): boolean {
+    const active = attributionOperationRef.current;
+    return isCurrentAttributionScope(token)
+      && Boolean(active)
+      && sameAttributionScope(active, token)
+      && active!.operationId === token.operationId
+      && active!.kind === token.kind;
+  }
+
+  function setAttributionSnapshotForOperation(token: AttributionOperation, value: AttributionSnapshot): boolean {
+    if (!isCurrentAttributionOperation(token)) return false;
+    setAttributionSnapshot((current) => {
+      if (!isCurrentAttributionOperation(token)) return current;
+      return { scope: token, value };
+    });
+    return true;
+  }
+
+  function finishAttributionOperation(token: AttributionOperation): void {
+    if (!isCurrentAttributionOperation(token)) return;
+    attributionOperationRef.current = null;
+    setAttributionOperation((current) => current && sameAttributionScope(current, token)
+      && current.operationId === token.operationId && current.kind === token.kind ? null : current);
+  }
+
+  function beginAttributionOperation(scope: AttributionScope, kind: AttributionOperation['kind']): AttributionOperation | null {
+    if (!isCurrentAttributionScope(scope)) return null;
+    const active = attributionOperationRef.current;
+    if (active && sameAttributionScope(active, scope)) return null;
+    attributionReadTokenRef.current = null;
+    const token: AttributionOperation = { ...scope, operationId: ++attributionOperationId.current, kind };
+    attributionOperationRef.current = token;
+    setAttributionOperation(token);
+    return token;
+  }
+
+  function replaceAttributionIntent(expected: KennelAttributionIntent | null, next: KennelAttributionIntent | null): boolean {
+    const current = attributionIntentRef.current;
+    if (expected ? current !== expected : current !== null) return false;
+    if (next && !isCurrentAttributionScope(next)) return false;
+    attributionIntentRef.current = next;
+    setAttributionIntent(next);
+    return true;
+  }
+
+  async function retryDogAttribution(): Promise<void> {
+    const scope = currentAttributionScopeRef.current;
+    const existingIntent = attributionIntentRef.current;
+    if (existingIntent && !sameAttributionScope(existingIntent, scope)) return;
+    const operation = beginAttributionOperation(scope, 'read');
+    if (!operation) return;
+    const intent = existingIntent && sameAttributionScope(existingIntent, scope) ? existingIntent : null;
+    const readbackToken: AttributionReadbackToken = intent
+      ? { ownerId: intent.ownerId, accountGeneration: intent.accountGeneration, dogId: intent.dogId, operationId: intent.operationId }
+      : { ownerId: operation.ownerId, accountGeneration: operation.accountGeneration, dogId: operation.dogId, operationId: operation.operationId };
+    if (intent) replaceAttributionIntent(intent, { ...intent, status: 'unknown' });
+    setAttributionSnapshot((current) => isCurrentAttributionOperation(operation)
+      ? { scope: operation, value: { value: current && sameAttributionScope(current.scope, scope) ? current.value.value : null, state: 'loading', message: '', messageError: false } }
+      : current);
     try {
-      const value = await fetchOwnedDogAttribution(client, dog.id);
-      if (!mounted.current) return;
-      setDogAttribution(value);
-      setAttributionState('ready');
+      const value = await fetchOwnedDogAttribution(client, scope.dogId);
+      if (!isCurrentAttributionOperation(operation)) return;
+      if (intent) {
+        const currentIntent = attributionIntentRef.current;
+        const resolution = resolveAttributionReadback(currentIntent, readbackToken, currentAttributionScopeRef.current, value);
+        if (resolution.status === 'stale') return;
+        replaceAttributionIntent(currentIntent, resolution.intent);
+        setAttributionSnapshotForOperation(operation, {
+          value: resolution.value,
+          state: 'ready',
+          message: resolution.status === 'confirmed'
+            ? value ? 'Kennelkopplingen är sparad.' : 'Kennelkopplingen är borttagen.'
+            : '',
+          messageError: false,
+        });
+      } else {
+        setAttributionSnapshotForOperation(operation, { value, state: 'ready', message: '', messageError: false });
+      }
     } catch {
-      if (mounted.current) setAttributionState('error');
+      if (!isCurrentAttributionOperation(operation)) return;
+      const currentIntent = attributionIntentRef.current;
+      if (intent && currentIntent && currentIntent.operationId === intent.operationId && sameAttributionScope(currentIntent, scope)) {
+        replaceAttributionIntent(currentIntent, { ...currentIntent, status: 'unknown' });
+      }
+      setAttributionSnapshotForOperation(operation, {
+        value: null,
+        state: 'error',
+        message: 'Kennelkopplingen kunde inte kontrolleras. Försök igen.',
+        messageError: true,
+      });
+    } finally {
+      finishAttributionOperation(operation);
     }
   }
 
+  function acceptCurrentDogAttribution(operationId: number): void {
+    const scope = currentAttributionScopeRef.current;
+    const intent = attributionIntentRef.current;
+    if (!intent || !sameAttributionScope(intent, scope) || intent.operationId !== operationId || intent.status !== 'mismatch') return;
+    const snapshot = attributionSnapshot;
+    if (!snapshot || !sameAttributionScope(snapshot.scope, scope) || snapshot.value.state !== 'ready') return;
+    replaceAttributionIntent(intent, null);
+  }
+
   async function saveDogAttribution(code: string | null): Promise<boolean> {
-    if (attributionBusy || !mounted.current) return false;
-    setAttributionBusy(true);
-    setAttributionMessage('');
-    setAttributionMessageError(false);
-    let outcome: DogAttributionWriteOutcome;
+    const scope = currentAttributionScopeRef.current;
+    if (!scope.ownerId || attributionIntentRef.current || !mounted.current) return false;
+    const operation = beginAttributionOperation(scope, 'write');
+    if (!operation) return false;
+    const attemptedCode = code?.trim().toUpperCase() || null;
+    setAttributionSnapshot((current) => isCurrentAttributionOperation(operation) && current && sameAttributionScope(current.scope, scope)
+      ? { scope, value: { ...current.value, message: '', messageError: false } }
+      : current);
     try {
-      outcome = await updateOwnedDogAttribution(client, dog.id, code);
-      if (!mounted.current) return false;
-      if (outcome.status === 'saved') {
-        setDogAttribution(outcome.value);
-        setAttributionState('ready');
-        setAttributionMessage(outcome.value ? 'Kennelkopplingen är sparad.' : 'Kennelkopplingen är borttagen.');
+      const outcome: DogAttributionWriteOutcome = await updateOwnedDogAttribution(client, scope.dogId, attemptedCode);
+      if (!isCurrentAttributionOperation(operation)) return false;
+      if (outcome.status === 'saved' && matchesAttributionPostimage(attemptedCode, outcome.value)) {
+        setAttributionSnapshotForOperation(operation, {
+          value: outcome.value,
+          state: 'ready',
+          message: outcome.value ? 'Kennelkopplingen är sparad.' : 'Kennelkopplingen är borttagen.',
+          messageError: false,
+        });
         return true;
       }
-      setAttributionMessage(outcome.status === 'unknown'
-        ? 'Vi kunde inte bekräfta kennelkopplingen. Kontrollera den innan du försöker igen.'
-        : 'Kennelkoden kunde inte sparas. Kontrollera koden och försök igen.');
-      setAttributionMessageError(true);
+      if (outcome.status === 'unknown' || outcome.status === 'saved') {
+        replaceAttributionIntent(null, { ...scope, attemptedCode, operationId: operation.operationId, status: 'unknown' });
+        setAttributionSnapshotForOperation(operation, {
+          value: dogAttribution,
+          state: 'ready',
+          message: '',
+          messageError: false,
+        });
+        return false;
+      }
+      setAttributionSnapshotForOperation(operation, {
+        value: dogAttribution,
+        state: 'ready',
+        message: 'Kennelkoden kunde inte sparas. Kontrollera koden och försök igen.',
+        messageError: true,
+      });
       return false;
     } catch {
-      if (mounted.current) {
-        setAttributionMessage('Kennelkopplingen kunde inte sparas. Kontrollera anslutningen och försök igen.');
-        setAttributionMessageError(true);
-      }
+      setAttributionSnapshotForOperation(operation, {
+        value: dogAttribution,
+        state: 'ready',
+        message: 'Kennelkopplingen kunde inte sparas. Kontrollera anslutningen och försök igen.',
+        messageError: true,
+      });
       return false;
     } finally {
-      if (mounted.current) setAttributionBusy(false);
+      finishAttributionOperation(operation);
     }
   }
 
@@ -1613,6 +1787,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     setHealthHistory(next);
     setHealthHistoryMessage('Ändringen är sparad.');
     setHealthHistoryMessageError(false);
+    const sequence = ++healthHistoryConfirmationSequence.current;
+    setHealthHistoryConfirmation({ lifetime, sequence, kind: mutation.kind, targetId: mutationId });
     try {
       await reloadHealthHistory(lifetime);
       if (!mounted.current || healthHistoryLifetime.current !== lifetime) return;
@@ -1677,7 +1853,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
-  function saveHealthHistory(id: string | null, eventType: HealthHistoryType, occurredOn: string, occurredTime: string | null, note: string): Promise<boolean> {
+  function saveHealthHistory(
+    id: string | null,
+    eventType: HealthHistoryType,
+    occurredOn: string,
+    occurredTime: string | null,
+    note: string,
+    openingRecord: Pick<HealthHistoryRecord, 'id' | 'dog_id' | 'event_type' | 'occurred_on' | 'occurred_time' | 'description'> | null,
+  ): Promise<boolean> {
     const lifetime = healthHistoryLifetime.current;
     if (healthHistoryMutationInFlight.current || pendingHealthHistoryMutation.current || healthHistoryState !== 'ready') return Promise.resolve(false);
     if (!isValidHealthHistoryDate(occurredOn) || !isValidHealthHistoryTime(occurredTime)) return Promise.resolve(false);
@@ -1687,16 +1870,19 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       const operation: HealthHistoryOperation = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, event_type: eventType, occurred_on: occurredOn, occurred_time: occurredTime, description };
       return runHealthHistoryMutation({ kind: 'insert', operation, lifetime });
     }
-    const previous = healthHistoryRows.current.find((row) => row.id === id && row.event_type === eventType);
-    if (!previous) return Promise.resolve(false);
+    const previous = openingRecord;
+    if (!previous || previous.id !== id || previous.dog_id !== dog.id || previous.event_type !== eventType) return Promise.resolve(false);
     return runHealthHistoryMutation({ kind: 'update', id, eventType, previous, changes: { occurred_on: occurredOn, occurred_time: occurredTime, description }, lifetime });
   }
 
-  function removeHealthHistory(id: string): Promise<boolean> {
+  function removeHealthHistory(
+    id: string,
+    openingRecord: Pick<HealthHistoryRecord, 'id' | 'dog_id' | 'event_type' | 'occurred_on' | 'occurred_time' | 'description'>,
+  ): Promise<boolean> {
     const lifetime = healthHistoryLifetime.current;
     if (healthHistoryMutationInFlight.current || pendingHealthHistoryMutation.current || healthHistoryState !== 'ready') return Promise.resolve(false);
-    const previous = healthHistoryRows.current.find((row) => row.id === id);
-    if (!previous) return Promise.resolve(false);
+    const previous = openingRecord;
+    if (previous.id !== id || previous.dog_id !== dog.id) return Promise.resolve(false);
     return runHealthHistoryMutation({ kind: 'delete', id, eventType: previous.event_type, previous, lifetime });
   }
 
@@ -1731,7 +1917,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       let retrySameOperation = false;
       try {
         const id = mutation.kind === 'insert' ? mutation.operation.id : mutation.id;
-        const current = await fetchHealthHistoryById(client, dog.id, mutation.kind === 'insert' ? mutation.operation.event_type : mutation.eventType, id);
+        const current = await fetchHealthHistoryById(client, dog.id, id);
         if (!isCurrent()) return;
         if (mutation.kind === 'insert') {
           if (current && sameHealthHistory(current, mutation.operation)) await markHealthHistorySaved(mutation, current);
@@ -2516,7 +2702,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       onUpdate={updateEvent} onDelete={(id) => deleteEvent(id)} mode="cloud"
       layoutOwnerId={session?.user.id}
       loading={logState === 'loading'} loadError={logState === 'error'} onReload={() => { void retryEvents(); }}
-      busy={logBusy} mutation={quickLogMutation} loadMoreError={loadMoreError} onRetry={retryLogMutation} onCancel={cancelLogMutation}
+      busy={logBusy} mutation={quickLogMutation} loadMoreError={loadMoreError} onRetry={retryLogMutation} onCancel={cancelLogMutation} registerEditorLeaveGuard={registerEditorLeaveGuard}
       onUndo={(id) => { void undoQuickLog(id); }} hasMore={hasMore} loadingMore={loadingMore}
       onLoadMore={() => { void loadMoreEvents(); }} />;
     if (page === 'training' && trainingEntry) {
@@ -2581,7 +2767,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       onDeleteAccount={handleAccountDeletion} onSignOutLocally={signOutDeletedLocally} />;
     if (page === 'beta-info') return <BetaInfoScreen onBack={() => setPage('account-settings')} />;
     if (page === 'notification-settings') return <NotificationSettingsScreen
-      key={JSON.stringify(notificationPreferences)} onBack={() => setPage('more')} preferences={notificationPreferences}
+      key={JSON.stringify([session?.user.id ?? 'signed-out', accountGeneration, dog.id, notificationPreferences])}
+      registerEditorLeaveGuard={registerEditorLeaveGuard} onBack={() => setPage('more')} preferences={notificationPreferences}
       saved={notificationSaved && !notificationStorageError} busy={notificationBusy || !notificationPreferencesReady}
       statusMessage={notificationStorageError ? 'Påminnelsevalen kunde inte läsas säkert. Inga nya påminnelser schemaläggs.' : notificationMessage}
       statusError={notificationStorageError || notificationMessageError} permissionState={notificationPermission}
@@ -2608,6 +2795,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       }}
     />;
     if (page === 'health') return <HealthScreen
+      key={currentHealthHistoryLifetime}
+      historyLifetime={currentHealthHistoryLifetime}
+      historyScope={{ ownerId: session?.user.id ?? '', accountGeneration, dogId: dog.id }}
+      historyConfirmation={healthHistoryConfirmation}
+      registerEditorLeaveGuard={registerEditorLeaveGuard}
       plannedRecords={plannedHealth}
       plannedLoadState={plannedHealthState}
       onRetryPlannedHealth={() => { void retryPlannedHealth(); }}
@@ -2698,7 +2890,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       client={client} dog={dog} busy={profileBusy} pending={profilePending} statusMessage={profileMessage}
       statusError={profileMessageError} conflict={profileConflict ?? undefined}
       attribution={dogAttribution} attributionState={attributionState} attributionBusy={attributionBusy}
-      attributionMessage={attributionMessage} attributionMessageError={attributionMessageError}
+      attributionMessage={attributionMessage} attributionMessageError={attributionMessageError} attributionIntent={visibleAttributionIntent}
+      registerEditorLeaveGuard={registerEditorLeaveGuard} onAcceptCurrentAttribution={acceptCurrentDogAttribution}
       onBack={() => setPage('more')} onSave={saveDogProfile}
       onSaveAttribution={saveDogAttribution} onRetryAttribution={() => { void retryDogAttribution(); }}
       onRetryStatus={() => { void retryProfileStatus(); }} onAcceptCurrent={() => { void acceptCurrentProfile(); }} />;

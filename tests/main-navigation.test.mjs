@@ -6,7 +6,7 @@ const hook = registerHooks({ resolve(specifier, context, nextResolve) { return s
 const navigation = await import('../src/features/home/main-navigation.ts');
 hook.deregister();
 
-const { MAIN_TAB_DESTINATIONS, activeMainTabDestination, mainTabTransitionDirection, nextMainTabDestination } = navigation;
+const { MAIN_TAB_DESTINATIONS, activeMainTabDestination, mainTabTransitionDirection, nextMainTabDestination, requestMainTabNavigation } = navigation;
 
 test('main tabs keep the approved five-destination order', () => {
   assert.deepEqual(MAIN_TAB_DESTINATIONS, ['home', 'log', 'training', 'knowledge', 'more']);
@@ -34,4 +34,41 @@ test('main tab transitions follow destination order', () => {
   assert.equal(mainTabTransitionDirection('training', 'training'), 'forward');
   assert.equal(mainTabTransitionDirection('planned-health', 'home'), 'forward');
   assert.equal(mainTabTransitionDirection('home', 'account-settings'), 'forward');
+});
+
+
+test('requesting the current tab is a no-op before guard and context changes', () => {
+  const calls = [];
+  const result = requestMainTabNavigation('log', 'log', () => calls.push('guard'), (destination) => calls.push(`commit:${destination}`));
+  assert.equal(result, 'same');
+  assert.deepEqual(calls, []);
+});
+
+test('navigation requests the editor guard before committing destination side effects', () => {
+  const calls = [];
+  let confirmLeave;
+  const result = requestMainTabNavigation('log', 'training', (commit) => { calls.push('guard'); confirmLeave = commit; }, (destination) => { calls.push(`context:${destination}`); calls.push(`page:${destination}`); });
+  assert.equal(result, 'requested');
+  assert.deepEqual(calls, ['guard']);
+  confirmLeave();
+  assert.deepEqual(calls, ['guard', 'context:training', 'page:training']);
+});
+
+test('stay and locked guards leave parent destination/context untouched', () => {
+  for (const guardMode of ['stay', 'locked']) {
+    const calls = [];
+    requestMainTabNavigation('log', 'knowledge', () => { calls.push(`guard:${guardMode}`); }, (destination) => calls.push(`commit:${destination}`));
+    assert.deepEqual(calls, [`guard:${guardMode}`]);
+  }
+});
+
+test('the first destination stays authoritative while a discard alert is open', () => {
+  let alertOpen = false;
+  let firstCommit;
+  const commits = [];
+  const requestLeave = (commit) => { if (alertOpen) return; alertOpen = true; firstCommit = commit; };
+  requestMainTabNavigation('log', 'training', requestLeave, (destination) => commits.push(destination));
+  requestMainTabNavigation('log', 'more', requestLeave, (destination) => commits.push(destination));
+  firstCommit();
+  assert.deepEqual(commits, ['training']);
 });

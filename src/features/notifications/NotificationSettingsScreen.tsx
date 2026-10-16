@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Alert, BackHandler, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { InfoModal, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { SupportScreenHeader } from '../../components/ui';
@@ -7,11 +7,13 @@ import { Button } from '../../components/ui/Button';
 import { Toast } from '../../components/ui/Toast';
 import { tokens } from '../../theme/tokens';
 import type { NotificationPreferences } from '../../notifications/notification-model';
+import { formatReminderTime, isReminderPreferencesDraftDirty, parseReminderTime, type ReminderPreferencesDraft } from './reminder-preferences-draft';
 
 export function NotificationSettingsScreen({
-  onBack, preferences, saved, busy, statusMessage, statusError, permissionState, onSave, onRequestPermission,
+  onBack, preferences, saved, busy, statusMessage, statusError, permissionState, onSave, onRequestPermission, registerEditorLeaveGuard,
 }: {
   onBack: () => void;
+  registerEditorLeaveGuard?: (owner: symbol, requestLeave: (commit: () => void) => void) => () => void;
   preferences: NotificationPreferences;
   saved: boolean;
   busy: boolean;
@@ -23,7 +25,7 @@ export function NotificationSettingsScreen({
 }) {
   const [enabled, setEnabled] = useState(preferences.enabled);
   const [trainingEnabled, setTrainingEnabled] = useState(preferences.trainingEnabled);
-  const [trainingTime, setTrainingTime] = useState(formatTime(preferences.trainingMinutes));
+  const [trainingTime, setTrainingTime] = useState(formatReminderTime(preferences.trainingMinutes));
   const [showSavedToast, setShowSavedToast] = useState(saved);
   const [toastMessage, setToastMessage] = useState<string | null>(saved ? 'Valen är sparade för ditt konto på den här enheten.' : null);
   const [toastVisible, setToastVisible] = useState(saved);
@@ -31,9 +33,47 @@ export function NotificationSettingsScreen({
   const [permissionBusy, setPermissionBusy] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState('');
   const [infoVisible, setInfoVisible] = useState(false);
-  const isDirty = enabled !== preferences.enabled
-    || trainingEnabled !== preferences.trainingEnabled
-    || trainingTime !== formatTime(preferences.trainingMinutes);
+  const [saveInFlight, setSaveInFlight] = useState(false);
+  const saveInFlightRef = useRef(false);
+  const editorOwnerToken = useRef(Symbol('reminder-settings'));
+  const leaveAlertOpen = useRef(false);
+  const dirtyDraft: ReminderPreferencesDraft = { enabled, trainingEnabled, trainingTime };
+  const isDirty = isReminderPreferencesDraftDirty(preferences, dirtyDraft);
+  const dirtyDraftRef = useRef(isDirty);
+  const onBackRef = useRef(onBack);
+
+  useLayoutEffect(() => { dirtyDraftRef.current = isDirty; }, [isDirty]);
+  useLayoutEffect(() => { onBackRef.current = onBack; }, [onBack]);
+
+  const requestLeave = useCallback((commit: () => void) => {
+    if (saveInFlightRef.current || leaveAlertOpen.current) return;
+    if (!dirtyDraftRef.current) { commit(); return; }
+    leaveAlertOpen.current = true;
+    Alert.alert('Osparade ändringar', 'Vill du lämna utan att spara?', [
+      { text: 'Stanna kvar', style: 'cancel', onPress: () => { leaveAlertOpen.current = false; } },
+      { text: 'Lämna utan att spara', style: 'destructive', onPress: () => {
+        leaveAlertOpen.current = false;
+        commit();
+      } },
+    ], { cancelable: true, onDismiss: () => { leaveAlertOpen.current = false; } });
+  }, []);
+  const requestLeaveRef = useRef(requestLeave);
+  useLayoutEffect(() => { requestLeaveRef.current = requestLeave; }, [requestLeave]);
+  const requestBack = useCallback(() => requestLeaveRef.current(() => onBackRef.current()), []);
+
+  useEffect(() => {
+    if (!registerEditorLeaveGuard) return undefined;
+    return registerEditorLeaveGuard(editorOwnerToken.current, (commit) => requestLeaveRef.current(commit));
+  }, [registerEditorLeaveGuard]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return undefined;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      requestBack();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [requestBack]);
 
   useEffect(() => {
     // Reset the transient toast when the persisted save status changes.
@@ -46,15 +86,25 @@ export function NotificationSettingsScreen({
     setFormError('');
     setShowSavedToast(false);
     setToastVisible(false);
-    const minutes = parseTime(trainingTime);
+    const minutes = parseReminderTime(trainingTime);
     if (minutes === null) {
       setFormError('Ange en tid mellan 00:00 och 23:59.');
       return;
     }
-    if (await onSave({ version: 1, enabled, trainingEnabled, trainingMinutes: minutes })) {
-      setShowSavedToast(true);
-      setToastMessage('Valen är sparade för ditt konto på den här enheten.');
-      setToastVisible(true);
+    if (busy || saveInFlightRef.current) return;
+    saveInFlightRef.current = true;
+    setSaveInFlight(true);
+    try {
+      if (await onSave({ version: 1, enabled, trainingEnabled, trainingMinutes: minutes })) {
+        setShowSavedToast(true);
+        setToastMessage('Valen är sparade för ditt konto på den här enheten.');
+        setToastVisible(true);
+      }
+    } catch {
+      setFormError('Valen kunde inte sparas säkert. Försök igen.');
+    } finally {
+      saveInFlightRef.current = false;
+      setSaveInFlight(false);
     }
   }
 
@@ -75,7 +125,7 @@ export function NotificationSettingsScreen({
   }
 
   return <View>
-    <SupportScreenHeader title="Påminnelser" backLabel="Tillbaka till Mer" accent="reminders" disabled={busy} onBack={onBack} />
+    <SupportScreenHeader title="Påminnelser" backLabel="Tillbaka till Mer" accent="reminders" disabled={saveInFlight} onBack={requestBack} />
     <View style={styles.hero}>
       <View style={styles.icon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
         <Ionicons name="notifications-outline" size={tokens.size.iconMd} color={tokens.colors.support.reminders.fg} />
@@ -98,10 +148,10 @@ export function NotificationSettingsScreen({
 
     <View style={styles.settingsCard}>
     <Text style={styles.sectionTitle} accessibilityRole="header">Dina val</Text>
-    <Choice selected={enabled} disabled={busy} label="Tillåt Tasslas påminnelser på den här enheten"
+    <Choice selected={enabled} disabled={busy || saveInFlight} label="Tillåt Tasslas påminnelser på den här enheten"
       detail="Avbokar Tasslas egna påminnelser när du stänger av. Dina planval sparas."
       onPress={() => setEnabled((value) => !value)} />
-    <Choice selected={trainingEnabled} disabled={busy} label="Lägg till en frivillig träningspåminnelse"
+    <Choice selected={trainingEnabled} disabled={busy || saveInFlight} label="Lägg till en frivillig träningspåminnelse"
       detail={enabled
         ? 'En lokal träningspåminnelse i taget. Nästa tid uppdateras när Tassla öppnas.'
         : trainingEnabled
@@ -113,13 +163,13 @@ export function NotificationSettingsScreen({
         setTrainingEnabled((value) => !value);
       }} />
 
-    <TimePickerField label="Träningspåminnelse, lokal tid" disabled={busy}
+    <TimePickerField label="Träningspåminnelse, lokal tid" disabled={busy || saveInFlight}
       onChangeText={setTrainingTime} value={trainingTime} />
 
     {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
     {statusMessage && statusError ? <MessageCard tone="error">{statusMessage}</MessageCard> : null}
-    <Button label={busy ? 'Sparar…' : 'Spara val'} accessibilityLabel={busy ? 'Sparar val' : 'Spara val'}
-      loading={busy} disabled={busy} onPress={() => { void save(); }} />
+    <Button label={saveInFlight ? 'Sparar…' : 'Spara val'} accessibilityLabel={saveInFlight ? 'Sparar val' : 'Spara val'}
+      loading={saveInFlight} disabled={busy || saveInFlight} onPress={() => { void save(); }} />
     </View>
 
     <View style={styles.permissionCard}>
@@ -127,7 +177,7 @@ export function NotificationSettingsScreen({
     {permissionMessage ? <MessageCard tone={permissionState === 'denied' ? 'error' : 'neutral'}>{permissionMessage}</MessageCard> : null}
     <Button variant="secondary" label={permissionBusy ? 'Kontrollerar…' : 'Tillåt påminnelser på telefonen'}
       accessibilityLabel={permissionBusy ? 'Kontrollerar tillåtelse för notiser' : 'Tillåt påminnelser på telefonen'}
-      loading={permissionBusy} disabled={busy || permissionBusy} onPress={() => { void requestPermission(); }} />
+      loading={permissionBusy} disabled={busy || saveInFlight || permissionBusy} onPress={() => { void requestPermission(); }} />
     {permissionState === 'granted' && <MessageCard>Enheten tillåter notiser. Det säger inte att varje påminnelse visas eller levereras.</MessageCard>}
     {permissionState === 'denied' && <MessageCard tone="error">Enheten nekar notiser. Appen fungerar fortfarande.</MessageCard>}
     </View>
@@ -140,22 +190,13 @@ function Choice({ selected, disabled, label, detail, accessibilityHint, onPress 
   selected: boolean; disabled: boolean; label: string; detail: string; accessibilityHint?: string; onPress: () => void;
 }) {
   return <Pressable accessibilityRole="checkbox" accessibilityLabel={label} accessibilityHint={accessibilityHint}
-    accessibilityState={{ checked: selected, disabled }} disabled={disabled}
+    accessibilityState={{ checked: selected, disabled }} aria-checked={selected} disabled={disabled}
     onPress={onPress} style={({ pressed }) => [styles.choice, selected && styles.choiceSelected, pressed && !disabled && styles.pressed]}>
     <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
       {selected && <Ionicons name="checkmark" size={tokens.size.iconSm} color={tokens.colors.onPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />}
     </View>
     <View style={styles.choiceCopy}><Text style={styles.choiceTitle}>{label}</Text><Text style={styles.choiceDetail}>{detail}</Text></View>
   </Pressable>;
-}
-function formatTime(minutes: number): string {
-  return Math.floor(minutes / 60).toString().padStart(2, '0') + ':' + (minutes % 60).toString().padStart(2, '0');
-}
-function parseTime(value: string): number | null {
-  const match = /^(\d{2}):(\d{2})$/.exec(value.trim());
-  if (!match) return null;
-  const hours = Number(match[1]), minutes = Number(match[2]);
-  return hours < 24 && minutes < 60 ? hours * 60 + minutes : null;
 }
 const styles = StyleSheet.create({
   intro: { ...tokens.typography.body, color: tokens.colors.textSecondary },

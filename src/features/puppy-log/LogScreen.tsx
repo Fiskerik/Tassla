@@ -6,14 +6,15 @@ import { BottomSheet, Button, Card, CheckboxCard, Dialog, FirstUseTip, Horizonta
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
-import { canonicalAccidentKinds, decideQuickLogPress, hasRecentCategoryLog, isCanonicalAccidentKinds, localDateTimeParts, LOG_ENTRY_TYPES, LOG_EVENT_LABELS, parseLocalDateTime, summarizePottyPatterns, type AccidentKind, type AccidentLogIntent, type LogEvent, type LogEventChanges, type LogEventType } from './log-model';
+import { canonicalAccidentKinds, decideQuickLogPress, hasRecentCategoryLog, isCanonicalAccidentKinds, isLogEventDraftDirty, localDateTimeParts, LOG_ENTRY_TYPES, LOG_EVENT_LABELS, parseLocalDateTime, summarizePottyPatterns, type AccidentKind, type AccidentLogIntent, type LogEvent, type LogEventChanges, type LogEventType } from './log-model';
 import { loadQuickLogLayout, saveQuickLogLayout } from './quick-log-layout-storage';
 import { DEFAULT_QUICK_LOG_LAYOUT, moveQuickLogType, type QuickLogLayout, type QuickLogLayoutType } from './quick-log-layout';
 
 export type QuickLogMutationView = { kind: 'add' | 'update' | 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; accidentKinds?: readonly AccidentKind[] | null; status: 'pending' | 'failed' | 'unsure' | 'saved' };
-type EditorActionState = { canSave: boolean; saving: boolean };
+type EditorActionState = { canSave: boolean; saving: boolean; dirty: boolean };
+type EditorLeaveGuard = (commit: () => void) => void;
 
-export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore }: {
+export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, registerEditorLeaveGuard, onUndo, hasMore = false, loadingMore = false, onLoadMore }: {
   events: readonly LogEvent[];
   onAdd: (type: LogEventType, intent?: AccidentLogIntent) => void;
   onUpdate?: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
@@ -29,6 +30,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   loadMoreError?: boolean;
   onRetry?: () => boolean | void | Promise<boolean | void>;
   onCancel?: () => void;
+  registerEditorLeaveGuard?: (owner: symbol, requestLeave: EditorLeaveGuard) => () => void;
   onUndo?: (id: string) => void;
   hasMore?: boolean;
   loadingMore?: boolean;
@@ -42,10 +44,12 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const accidentSubmitLocked = useRef(false);
   const lastSubmitAt = useRef<number | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editorActionState, setEditorActionState] = useState<EditorActionState>({ canSave: false, saving: false });
+  const [editorActionState, setEditorActionState] = useState<EditorActionState>({ canSave: false, saving: false, dirty: false });
+  const editorOwnerToken = useRef(Symbol('log-editor'));
+  const leaveAlertOpen = useRef(false);
   const editorSubmitRef = useRef<(() => Promise<void>) | null>(null);
   const updateEditorActionState = useCallback((state: EditorActionState) => {
-    setEditorActionState((current) => current.canSave === state.canSave && current.saving === state.saving ? current : state);
+    setEditorActionState((current) => current.canSave === state.canSave && current.saving === state.saving && current.dirty === state.dirty ? current : state);
   }, []);
   const [dismissedMutationKey, setDismissedMutationKey] = useState<string | null>(null);
   const [layout, setLayout] = useState<QuickLogLayout>(DEFAULT_QUICK_LOG_LAYOUT);
@@ -83,6 +87,30 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const patterns = useMemo(() => summarizePottyPatterns(events).filter((item) => item.count >= 2), [events]);
   const editingEvent = events.find((event) => event.id === editingId) ?? null;
   const editLocked = busy || Boolean(editingEvent && mutation?.id === editingEvent.id && mutation.status !== 'saved');
+  const requestEditorLeave = useCallback((commit: () => void): boolean => {
+    if (leaveAlertOpen.current || editLocked) return false;
+    if (!editorActionState.dirty) {
+      setEditingId(null);
+      commit();
+      return true;
+    }
+    leaveAlertOpen.current = true;
+    Alert.alert('Osparade ändringar', 'Vill du lämna utan att spara?', [
+      { text: 'Stanna kvar', style: 'cancel', onPress: () => { leaveAlertOpen.current = false; } },
+      { text: 'Lämna utan att spara', style: 'destructive', onPress: () => {
+        leaveAlertOpen.current = false;
+        setEditingId(null);
+        commit();
+      } },
+    ], { cancelable: true, onDismiss: () => { leaveAlertOpen.current = false; } });
+    return false;
+  }, [editLocked, editorActionState.dirty]);
+  const requestEditorLeaveRef = useRef(requestEditorLeave);
+  useEffect(() => { requestEditorLeaveRef.current = requestEditorLeave; }, [requestEditorLeave]);
+  useEffect(() => {
+    if (!editingEvent || !registerEditorLeaveGuard) return;
+    return registerEditorLeaveGuard(editorOwnerToken.current, (commit) => requestEditorLeaveRef.current(commit));
+  }, [editingEvent, registerEditorLeaveGuard]);
   const onDeleteAnimationEnd = useCallback((token: number) => {
     setDeleteSnapshot((current) => current?.token === token ? null : current);
   }, []);
@@ -336,9 +364,10 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
           <View style={styles.accidentAction}><Button label="Spara olycka" accessibilityLabel={accidentDraft.submitting ? 'Sparar olycka' : 'Spara olycka'} disabled={accidentDraft.kinds.length === 0 || accidentDraft.submitting || disabled} loading={accidentDraft.submitting && !duplicate} onPress={submitAccidentDraft} /></View>
         </View>
       </BottomSheet> : null}
-      {editingEvent ? <BottomSheet visible title="Ändra händelse" keyboardAware footer={<Button label={editorActionState.saving ? 'Sparar…' : 'Spara ändring'} accessibilityLabel={editorActionState.saving ? 'Sparar ändring' : 'Spara ändring'} loading={editorActionState.saving} disabled={!editorActionState.canSave || editLocked} onPress={() => { firstUseTip.dismiss(); void editorSubmitRef.current?.(); }} />} onRequestClose={() => { if (!editLocked && !editorActionState.saving) setEditingId(null); }}>
-        <Toast visible={mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} onCancel={() => { firstUseTip.dismiss(); onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
-        <Toast visible={mutation?.status === 'unsure'} tone="uncertain" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} />
+      {editingEvent ? <BottomSheet visible title="Ändra händelse" keyboardAware dragToDismiss footer={<Button label={editorActionState.saving ? 'Sparar…' : 'Spara ändring'} accessibilityLabel={editorActionState.saving ? 'Sparar ändring' : 'Spara ändring'} loading={editorActionState.saving} disabled={!editorActionState.canSave || editLocked} onPress={() => { firstUseTip.dismiss(); void editorSubmitRef.current?.(); }} />} onRequestClose={() => requestEditorLeave(() => {})}>
+        {editorActionState.saving || mutation?.id === editingEvent.id && mutation.status === 'pending' ? <MessageCard tone="neutral">Ändringen sparas. Vänta tills resultatet har bekräftats innan du lämnar.</MessageCard> : null}
+        <Toast visible={mutation?.id === editingEvent.id && mutation.status === 'failed'} tone="error" message="Ändringen sparades inte. Försök igen eller fortsätt redigera." onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} onCancel={onCancel ? () => { firstUseTip.dismiss(); onCancel(); } : undefined} cancelLabel="Fortsätt redigera" />
+        <Toast visible={mutation?.id === editingEvent.id && mutation.status === 'unsure'} tone="uncertain" message="Vi kunde inte kontrollera om ändringen sparades. Kontrollera status innan du lämnar." onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} />
         <LogEventEditor key={editingEvent.id} event={editingEvent} disabled={editLocked} onSave={(changes) => { firstUseTip.dismiss(); return saveEdit(editingEvent, changes); }} onSaved={() => setEditingId(null)} onCancel={() => { firstUseTip.dismiss(); setEditingId(null); }} onDelete={() => { firstUseTip.dismiss(); askToDelete(editingEvent); }} submitRef={editorSubmitRef} onActionStateChange={updateEditorActionState} />
       </BottomSheet> : null}
 
@@ -354,7 +383,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
           const detail = [event.note, rowPending ? 'Sparar…' : null, event.origin === 'example' ? 'Exempel' : mode === 'preview' ? 'Testpost' : null].filter(Boolean).join(' · ');
           const parts = localDateTimeParts(event.occurredAt);
           if (deleting && deleteSnapshot.phase === 'exiting') return <DeleteExitRow key={event.id} token={deleteSnapshot.token} event={event} reduceMotion={reduceMotion} onFinished={onDeleteAnimationEnd} />;
-          const row = <ListRow variant="log-timeline" showDivider={index < timelineItems.length - 1} title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}${event.note ? `, ${event.note}` : ''}${deleting ? ', raderar' : rowPending ? ', sparar' : ''}${deleting ? '' : ', tryck för att ändra'}`} accessibilityState={deleting && deleteSnapshot.phase === 'pending' ? { busy: true, disabled: true } : undefined} category={event.type} accidentKinds={event.accidentKinds} time={parts.time} detail={deleting ? 'Raderar…' : detail || undefined} onPress={deleting ? undefined : () => { firstUseTip.dismiss(); editorSubmitRef.current = null; setEditorActionState({ canSave: false, saving: false }); setEditingId(event.id); }} disabled={deleting || busy || Boolean(mutation && mutation.status !== 'saved')} />;
+          const row = <ListRow variant="log-timeline" showDivider={index < timelineItems.length - 1} title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}${event.note ? `, ${event.note}` : ''}${deleting ? ', raderar' : rowPending ? ', sparar' : ''}${deleting ? '' : ', tryck för att ändra'}`} accessibilityState={deleting && deleteSnapshot.phase === 'pending' ? { busy: true, disabled: true } : undefined} category={event.type} accidentKinds={event.accidentKinds} time={parts.time} detail={deleting ? 'Raderar…' : detail || undefined} onPress={deleting ? undefined : () => { firstUseTip.dismiss(); editorSubmitRef.current = null; setEditorActionState({ canSave: false, saving: false, dirty: false }); setEditingId(event.id); }} disabled={deleting || busy || Boolean(mutation && mutation.status !== 'saved')} />;
           const entryTarget = entryAnimationTarget?.eventId === event.id ? entryAnimationTarget : null;
           if (entryTarget) return <LogEntryTransition key={event.id} transitionKey={consumedEntryAnimationKey === entryTarget.key ? undefined : entryTarget.key} reduceMotion={reduceMotion} onAnimationStart={consumeEntryAnimation}>{row}</LogEntryTransition>;
           return <View key={event.id}>{row}</View>;
@@ -485,8 +514,8 @@ function LogEventEditor({ event, disabled, onSave, onSaved, onCancel, onDelete, 
     return () => { if (submitRef.current === save) submitRef.current = null; };
   }, [save, submitRef]);
   useEffect(() => {
-    onActionStateChange({ canSave: valid && !disabled && !saving, saving });
-  }, [disabled, onActionStateChange, saving, valid]);
+    onActionStateChange({ canSave: valid && !disabled && !saving, saving, dirty: isLogEventDraftDirty(event, { type, date, time, note, accidentKinds }) });
+  }, [accidentKinds, date, disabled, event, note, onActionStateChange, saving, time, type, valid]);
 
   return <View style={styles.editor}>
 

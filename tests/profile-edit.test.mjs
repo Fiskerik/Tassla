@@ -13,6 +13,7 @@ const tsResolution = registerHooks({
 });
 const appData = await import('../src/data/app-data.ts');
 const dogModel = await import('../src/features/onboarding/dog.ts');
+const profileDraft = await import('../src/features/onboarding/profile-draft.ts');
 tsResolution.deregister();
 const productWorkspaceSource = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
 const profileEditorSource = await readFile(new URL('../src/features/onboarding/EditDogProfileScreen.tsx', import.meta.url), 'utf8');
@@ -29,9 +30,11 @@ test('profile editor keeps transient success feedback in the local action card a
   const draftDiffersSource = profileEditorSource.match(/const draftDiffers = ([^;]+);/)?.[1];
   const statusVisibleSource = profileEditorSource.match(/const showStatusMessage = ([^;]+);/)?.[1];
   assert.ok(draftDiffersSource, 'expected the editor draft comparison');
+  assert.equal(draftDiffersSource, 'discardableDraft');
   assert.ok(statusVisibleSource, 'expected the editor status visibility rule');
   const evaluate = (draft, statusMessage, statusError, pending, busy) => {
-    const draftDiffers = new Function('name', 'dog', 'breedId', 'birthDate', 'ageDisplayUnit', `return ${draftDiffersSource};`)(draft.name, profile, draft.breedId, draft.birthDate, draft.ageDisplayUnit ?? profile.age_display_unit);
+    const profileDirty = profileDraft.isDogProfileDraftDirty(profile, { name: draft.name, breedId: draft.breedId, birthDate: draft.birthDate, ageDisplayUnit: draft.ageDisplayUnit ?? profile.age_display_unit });
+    const draftDiffers = profileDraft.isProfileEditorDraftDirty({ profileDirty, kennelDirty: false, profilePending: pending, hasKennelIntent: false });
     const showStatusMessage = new Function('statusMessage', 'statusError', 'pending', 'busy', 'draftDiffers', `return ${statusVisibleSource};`)(statusMessage, statusError, pending, busy, draftDiffers);
     return { draftDiffers, showStatusMessage };
   };

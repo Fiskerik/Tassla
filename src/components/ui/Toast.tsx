@@ -13,6 +13,7 @@ type ToastBaseProps = {
   onUndo?: () => void;
   onRetry?: () => void;
   onCancel?: () => void;
+  cancelLabel?: string;
   confirmed?: boolean;
   autoDismissMs?: number;
   onAutoDismiss?: () => void;
@@ -20,7 +21,7 @@ type ToastBaseProps = {
 };
 type ToastProps = ToastBaseProps & ({ tone: 'uncertain'; onRetry: () => void } | { tone: Exclude<ToastTone, 'uncertain'>; onRetry?: () => void });
 
-export function Toast({ visible, tone, message, onUndo, onRetry, onCancel, confirmed = false, autoDismissMs, onAutoDismiss, onExitComplete }: ToastProps) {
+export function Toast({ visible, tone, message, onUndo, onRetry, onCancel, cancelLabel, confirmed = false, autoDismissMs, onAutoDismiss, onExitComplete }: ToastProps) {
   const reduced = useReducedMotion();
   const initiallyVisible = useRef(visible);
   const previousVisible = useRef(visible);
@@ -40,10 +41,10 @@ export function Toast({ visible, tone, message, onUndo, onRetry, onCancel, confi
   }
   const [motion] = useState(() => new Animated.Value(visible ? 1 : 0));
   const effectiveTone = tone === 'success' && !confirmed ? 'uncertain' : tone;
-  const effectiveMessage = effectiveTone === 'uncertain' ? 'Vi kunde inte kontrollera om det sparades' : message ?? (effectiveTone === 'error' ? 'Kunde inte spara' : 'Sparat');
-  const currentContent = { tone: effectiveTone, message: effectiveMessage, onUndo, onRetry, onCancel };
+  const effectiveMessage = effectiveTone === 'uncertain' ? message ?? 'Vi kunde inte kontrollera om det sparades' : message ?? (effectiveTone === 'error' ? 'Kunde inte spara' : 'Sparat');
+  const currentContent = { tone: effectiveTone, message: effectiveMessage, onUndo, onRetry, onCancel, cancelLabel };
   const [retainedContent, setRetainedContent] = useState(currentContent);
-  if (visible && (retainedContent.tone !== currentContent.tone || retainedContent.message !== currentContent.message || retainedContent.onUndo !== currentContent.onUndo || retainedContent.onRetry !== currentContent.onRetry || retainedContent.onCancel !== currentContent.onCancel)) {
+  if (visible && (retainedContent.tone !== currentContent.tone || retainedContent.message !== currentContent.message || retainedContent.onUndo !== currentContent.onUndo || retainedContent.onRetry !== currentContent.onRetry || retainedContent.onCancel !== currentContent.onCancel || retainedContent.cancelLabel !== currentContent.cancelLabel)) {
     setRetainedContent(currentContent);
   }
   const displayContent = visible ? currentContent : retainedContent;
@@ -130,7 +131,7 @@ export function Toast({ visible, tone, message, onUndo, onRetry, onCancel, confi
     {displayContent.tone === 'success' ? <Ionicons name="checkmark-circle" size={tokens.size.iconSm} color={tokens.colors.success} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}
     <Text style={[styles.message, displayContent.tone === 'success' && styles.successMessage]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{displayContent.message}</Text>
     {action ? <Button variant="tertiary" label={action.label} accessibilityLabel={action.label} onPress={action.onPress} disabled={action.disabled || !exposed} /> : null}
-    {displayContent.tone === 'error' && displayContent.onCancel ? <Button variant="secondary" label="Avbryt" accessibilityLabel="Avbryt" onPress={displayContent.onCancel} disabled={!exposed} /> : null}
+    {displayContent.tone === 'error' && displayContent.onCancel ? <Button variant="secondary" label={displayContent.cancelLabel ?? 'Avbryt'} accessibilityLabel={displayContent.cancelLabel ?? 'Avbryt'} onPress={displayContent.onCancel} disabled={!exposed} /> : null}
   </Animated.View>;
 }
 const styles = StyleSheet.create({ toast: { alignSelf: 'stretch', minHeight: tokens.size.touchMin, marginVertical: tokens.spacing.md, padding: tokens.spacing.md, gap: tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.selectedSurface }, withCancel: { flexDirection: 'column', alignItems: 'stretch' }, error: { backgroundColor: tokens.colors.dangerSurface, borderColor: tokens.colors.dangerBorder }, success: { paddingVertical: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm, gap: tokens.spacing.xs, backgroundColor: tokens.colors.successSurface, borderColor: tokens.colors.success }, uncertain: { backgroundColor: tokens.colors.warningSurface, borderColor: tokens.colors.warning }, message: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 }, successMessage: { ...tokens.typography.caption, color: tokens.colors.textPrimary } });

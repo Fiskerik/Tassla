@@ -1,0 +1,38 @@
+{
+  "passes": [
+    "Production LogScreen editor renders clean and dirty states at 375x844, 430x844, 375x667, and with a 140% text proxy at 375px",
+    "Same-tab is a no-op; close prompts and Stay preserves editor fields",
+    "Explicit discard commits only the requested tab after confirmation",
+    "Repeated navigation while Alert is open is ignored; the first destination alone commits",
+    "Locked pending status renders across the viewport matrix and 140% text proxy",
+    "Pending save displays one locked status and prevents sheet close without prompting",
+    "Failed save has one truthful Toast; Continue editing clears only failure intent and preserves fields",
+    "Unknown save outcome offers readback/retry only and keeps the draft locked",
+    "Existing Toast consumers keep the default Avbryt label"
+  ],
+  "pageErrors": [],
+  "scope": "Production LogScreen dirty draft protection and shared navigation gate in a synthetic public/review RN Web fixture",
+  "bundle": "review",
+  "viewports": [
+    [
+      375,
+      844,
+      "375x844"
+    ],
+    [
+      430,
+      844,
+      "430x844"
+    ],
+    [
+      375,
+      667,
+      "375x667"
+    ]
+  ],
+  "limitations": [
+    "Native Alert appearance and Android system-back are not tested",
+    "Live Supabase mutation/readback, VoiceOver, Dynamic Type, physical swipe/keyboard behavior, and app build are not tested",
+    "The 140% text proxy is a web CSS approximation"
+  ]
+}

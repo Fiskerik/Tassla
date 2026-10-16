@@ -1,6 +1,6 @@
 # Tassla — samlat besluts- och leveransregister
 
-Status: kanonisk sammanfattning för produkt-, design- och utvecklingsagenter. Vald implementationbas: `main` @ `00d4d4a3e38c08a6bb7d4c541cc509457126276f` (2026-10-16). MVP v2 är styrande från 2026-10-16. Senast sammanställd 2026-10-16.
+Status: kanonisk sammanfattning för produkt-, design- och utvecklingsagenter. Vald implementationbas: `main` @ `00d4d4a3e38c08a6bb7d4c541cc509457126276f` (2026-10-16). MVP v2 är styrande från 2026-10-16. Senast sammanställd 2026-10-17.
 
 Läs denna fil först när ett beslut eller tidigare paket efterfrågas. Läs sedan bara den länkade detaljplanen för uppgiften. Vid konflikt gäller senaste uttryckliga ägarbeslutet och den aktuella posten här. De numrerade beslutsfilerna behålls som historiska underlag; de är inte separata, uppdaterade styrkällor. Detaljerade testresultat finns i respektive task- och releaseunderlag.
 
@@ -82,11 +82,37 @@ Architect APPROVE, Security PASS, QA PASS och final Reviewer PASS. QA: 24/24 fok
 
 Syntetisk webbrendering certifierar inte live Supabase/RLS, migrationens driftparitet, produktionsdubblett-races, native Alert/tillgänglighet, fysisk enhet eller OS-tidszonsbyte; dessa är NOT TESTABLE. Erik bad uttryckligen att de färdiggranskade ändringarna ska commit/pushas till en ny branch efter granskning.
 
+### UIUX-REVAMP-R1A-BREED-01 — lokal onboardingcheckpoint klar, 2026-10-16
+
+Profilskapandet kräver nu ägarens uttryckliga rasval. Laddad katalog lämnar alla alternativ avmarkerade och visar tillgänglig instruktion; tom katalog ger tydligt besked och återförsök. Befintlig felåterhämtning och profilens spara-/readback-kontrakt är bevarade. Kennelkod är fortsatt frivillig.
+
+Verifiering: `pnpm check` passerar med app- och edge-typecheck, ESLint samt Node 502/502. Public och review `profile-create` passerar 7/7 assertions vardera med noll browser page errors, inklusive 375×844, 430×844, 375×667 och 140 % textproxy. `python -m py_compile tools/visual-check/verify.py`, `python tools/dev_flow.py validate` och `git diff --check` passerar. Oberoende QA PASS efter granskning av source, sparade verifieringsresultat och sex screenshots; QA kunde inte köra om shell-kontrollerna efter att första försöket avbröts. Oberoende Reviewer PASS och bekräftade att worktree-statusen bara innehåller taskens godkända skrivvägar samt den separat godkända Team-routingplanen.
+
+Underlag: [taskplan](../tasks/dev/UIUX-REVAMP-R1A-BREED-01.md), [UX-spec](../plans/UIUX-REVAMP-R1A-BREED-01-ux-spec.md), [rapport](../tasks/dev/rapport.md), [checkpoint](../tasks/dev/UIUX-REVAMP-R0-R1A-CHECKPOINT.md) och [renderbevis](../design/evidence/vision-rev02/onboarding/R1A-BREED-01/README.md).
+
+Lokal, ocommittad checkpoint på `codex/mvp-v2-panel4-checklists-2026-10-16` @ `61495699679e12d55e2978f9419a84585e80b213`; ingen commit eller push. Syntetisk RN Web bevisar inte live Supabase/RLS eller profilpersistens/readback, native VoiceOver/Dynamic Type, fysisk enhet, tangentbord/safe area eller distribution; detta är NOT TESTABLE. `vision_rev02.jpg` saknar dedikerad profilskärm, så ingen direkt pixelmatchning påstås.
+
+### UIUX-REVAMP-R1B-LOG-DRAFT-01 — slutcheckpoint, 2026-10-16
+
+Loggeditorns utkast skyddas nu vid sheetstängning och huvudfliksnavigation. Kanonisk dirty-jämförelse, no-op för aktiv flik, låsning av första destinationen under discard-dialogen och separata pending/failed/unsure-tillstånd är implementerade. Failed kan återgå till redigering utan att tappa formuläret; unsure erbjuder endast Retry/readback. Toasts valfria `cancelLabel` lämnar befintliga etiketter oförändrade när prop saknas. Inga data-, mutations-, schema- eller RLS-kontrakt ändrades.
+
+Plan v5: Architect APPROVE och Critic PROCEED. Oberoende QA PASS och Reviewer PASS. Kontroller: fokuserad R1b 27/27, `pnpm check` 512/512, public/review `log-draft` 9/9 vardera utan browser page errors, Python syntaxkontroll, `python tools/dev_flow.py validate` och `git diff --check` PASS. Underlag: [taskplan](../tasks/dev/UIUX-REVAMP-R1B-LOG-DRAFT-01.md), [UX-spec](../plans/UIUX-REVAMP-R1B-LOG-DRAFT-01-ux-spec.md), [evidens](../design/evidence/vision-rev02/log/R1B-LOG-DRAFT-01/README.md) och [rapport](../tasks/dev/rapport.md).
+
+Lokal checkpoint på `codex/mvp-v2-panel4-checklists-2026-10-16`, ännu ocommittad enligt användarens samlade batchbegäran. Native Alert/system-back, live Supabase, VoiceOver/Dynamic Type, fysisk gest/tangentbord och installerad appbuild är NOT TESTABLE. Den separata äldre Home-titelassertionen är noterad för uppföljning i relevant Home-checkpoint.
+
 ### TASSLA-TEAM-MODEL-ROUTING-01 — lokal modellrouting klar, 2026-10-16
 
 Tassla Team använder nu rollbaserad modell och reasoning för samtliga SDK-roller; Chief routing/synthesis och Product draft följer sina dokumenterade rutter. `run_team.py --roles` verifierar de effektiva valen och den offline fokuserade sviten passerar 7/7. QA och oberoende Reviewer PASS. `pnpm check` passerar med 502/502 Node-tester; syntax-, kö- och diffkontroller passerar. Ingen modell-API-utvärdering gjordes. Faktisk modellåtkomst, kvalitet, latency, tokenanvändning och kostnad är NOT TESTABLE. Underlag: [plan](../tasks/dev/TASSLA-TEAM-MODEL-ROUTING-01.md), [rapport](../tasks/dev/rapport.md), [rollkonfiguration](../../tassla_team/model_routing.py) och [Team-dokumentation](../ai-team.md).
 
 Köstatus `done`. Implementation och dokumentation har godkänts i oberoende QA och Reviewer.
+
+### UIUX-REVAMP-R1D-REMINDER-DRAFT-01 — slutcheckpoint, 2026-10-16
+
+Påminnelsernas lokala preferensutkast skyddas nu vid header-back, annan huvudflik och Android system-back. Initial preference-readiness och permission-check låser inte navigation; ett synkront save-flight-lås hindrar dubbel write och back/tab medan preference-sparning faktiskt pågår. Misslyckad write behåller fälten och felstatus. Befintlig SecureStore-/schedule-/permission-/parent callbackkedja är oförändrad; editor-key återanvänder owner, account generation, hund och sparad snapshot.
+
+Kontroller: fokuserad R1d-svit 18/18; `pnpm check` PASS (app-/edge-typecheck, ESLint och 531/531 tester); public/review `notification-draft` 10/10 vardera, noll browser page errors; py_compile, queue validation och `git diff --check` PASS. Architect APPROVE v3, Critic PROCEED v3, Security PASS v3, oberoende QA PASS och Reviewer PASS. Reviewer granskade root-verifierad diff-snapshot eftersom dess isolerade runner inte hade `.git`; ingen konkret kodinvändning. Underlag: [taskplan](../tasks/dev/UIUX-REVAMP-R1D-REMINDER-DRAFT-01.md), [UX-spec](../plans/UIUX-REVAMP-R1D-REMINDER-DRAFT-01-ux-spec.md), [renderbevis och §14](../design/evidence/vision-rev02/reminders/R1D-REMINDER-DRAFT-01/README.md). Direkt visual match saknar dedikerad panelreferens. Live SecureStore/schemaläggning, OS-permission, native Alert/system-back/Modal-prioritet, VoiceOver/Dynamic Type, fysisk safe area/tangentbord och installerad app är NOT TESTABLE.
+
+Köpost `done`. Lokal checkpoint, ännu ocommittad enligt Eriks samlade batchbegäran; nästa ordningspaket är R1e hälsoutkast.
 ## Beslut som inte följer automatiskt
 
 - Planerad lokal notifiering innebär inte godkännande av remote push eller valfri notifiering.
@@ -105,6 +131,14 @@ Följande behålls för spårbarhet. Läs sammanfattningen ovan först; original
 - [0005-motion-batched-mobile-qa.md](0005-motion-batched-mobile-qa.md)
 - [0000-template.md](0000-template.md) — endast mall, inte ett godkänt beslut.
 
+### UIUX-REVAMP-R1E-HEALTH-HISTORY-DRAFT-01 — lokal checkpoint klar, 2026-10-16
+
+Hälsans historikeditor behåller osparade fält vid stängning/navigering och skyddar den postbild som öppnades från samtidiga ändringar. Id-baserad omläsning hittar även samtidiga stödda typbyten; konflikt lämnas pending tills ägaren uttryckligen väljer aktuell historik. Bekräftad feedback ligger kvar efter att sheeten stängts. Den godkända, begränsade `datePickerInput.minWidth: 0`-regeln får datum-/tidskontrollerna att rymmas vid 140 % webtextproxy.
+
+Architect APPROVE v4, Critic PROCEED v4 och Security PASS v3; oberoende QA v4 PASS och Reviewer v4 PASS efter dokumentationsrättelse. Fokuserad health-history/navigation 67/67; `pnpm check` 545/545 med app/edge-typecheck och ESLint; public/review `health-history-draft` 11/11 vardera utan browserfel; py_compile, queue validation och `git diff --check` PASS. §14-checklistan finns med sex separata bildlänkade NOT TESTABLE-bedömningar för komposition, färg, typografi, former, bildspråk och täthet. Underlag: [taskplan](../tasks/dev/UIUX-REVAMP-R1E-HEALTH-HISTORY-DRAFT-01.md), [UX-spec](../plans/UIUX-REVAMP-R1E-HEALTH-HISTORY-DRAFT-01-ux-spec.md), [QA/Reviewer och bilder](../design/evidence/vision-rev02/health/history/R1E-HEALTH-HISTORY-DRAFT-01/README.md), [arbetsrapport](../tasks/dev/rapport.md).
+
+Live Supabase/RLS, native Alert/Modal/back, fysiska gester, native VoiceOver/Dynamic Type, keyboard/safe area och installerad app är NOT TESTABLE. Ingen separat editorpanel finns i `vision_rev02.jpg`; direkt pixelmatchning är NOT TESTABLE. Lokal, ocommittad checkpoint enligt ägarens begäran om samlad commit/push efter första tvärgående paketet; nästa masterplansteg är R2a.
+
 ### HOME-ROUTINE-CHECKLIST-01 — lokal UI-slice klar, 2026-10-15
 
 Rutinhallen har en gemensam kompakt yta, samlad redigering, sanningsenlig upprepning, dagsval och bekräftad helradering. Raderingsbekräftelsen anger nu att rutinen, dess dagskopior och sparade överhoppningar tas bort. Oberoende QA PASS och Reviewer PASS. App-/edge-typecheck, full ESLint och Node-testsviten passerade igen; 492/492 tester. Checkpoint: committen `fix: clarify routine deletion cascade` på `codex/ux-rethink-2026-10-15`. Underlag: [taskrapport](../tasks/dev/rapport.md) och [renderunderlag](../design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md). Live Supabase/RLS/migration, native Alert/tillgänglighet och fullskärmslistans filter är inte verifierade; denna slice stänger inte hela panel 4.
@@ -114,3 +148,15 @@ Rutinhallen har en gemensam kompakt yta, samlad redigering, sanningsenlig upprep
 Hem öppnar nu en separat Idag-checklista med hela dagens källpopulation, samma hund-/datumscope och bevarad tillbakaresa genom träningssteg och rutinhantering. Bekräftad progress delas mellan Hem och checklistan: aktiviteter med otillgänglig källa räknas inte som ogjorda, utan visas separat som obekräftade. Träningslänken använder exakt valt publicerat versions-/stegpar; vuxna blockeras utan versionsspecifikt godkännande. Befintliga rutinmutationer och Hemmets generella träningsingång är bevarade.
 
 Verifiering: `pnpm check` 494/494; fokuserade tester 15/15; public/review `home-checklist` med fem godkända steg vardera, inga browser page errors, UTF-8-JSON-resultat och skärmbevis. Delta-QA PASS och slutlig implementation Reviewer PASS. Architect godkände tillägget av den statiska Home-wiringtesten i exakt skrivomfång. Underlag: [plan](../tasks/dev/FLOW-HOME-CHECKLIST-IDAG-01.md), [körlogg](../tasks/dev/rapport.md) och [renderbevis](../design/evidence/vision-rev02/checklist/IDAG-01/README.md). Live Supabase/RLS, native VoiceOver/Dynamic Type och fysiska tillbaka-/scrollgester samt separat midnatt-/tidszon-/resume-runtimeprov är NOT TESTABLE. Lokal, ocommittad leverans på `main` @ `00d4d4a3e38c08a6bb7d4c541cc509457126276f`; ingen GitHub-write.
+
+### UIUX-REVAMP-R1C-PROFILE-DRAFT-01 — implementation till QA, 2026-10-16
+
+Hundprofilens osparade lokala fält skyddas vid header-back och huvudfliksnavigering. Parent-ägda profile/kennel unknown-intents bevaras, med read-only kennelstatuskontroll och scope-/operation-fences för owner, account generation och dog. Plan v4 har Architect APPROVE, Critic PROCEED och Security PASS. Oberoende QA PASS utan kodändringar: fokuserad svit 47/47, `pnpm check` 524/524, public/review-fixture 12/12 vardera; py_compile, queue validation och diffcheck PASS. Reviewer PASS utan fynd. §14-evidens och skärmbilder ligger i `docs/design/evidence/vision-rev02/profile/R1C-PROFILE-DRAFT-01/`. Direkt visuell jämförelse saknar editorreferens. Native system-back/Alert, live Supabase/RLS, VoiceOver/Dynamic Type och fysisk enhetsinteraktion är NOT TESTABLE. Köposten stängdes; lokal och ocommittad enligt samlad batchplan.
+
+### Samlad UI/UX-checkpoint — punkterna 1–5 och första tvärgående paketet, 2026-10-17
+
+Den av ägaren beställda batchen samlar punkterna 1–5 med de färdiggranskade utkastsskydden R1A–R1E och R2B delad sheetgest. R2B är första tvärgående paketet och är stängt efter Architect/Critic, QA v5/v6 PASS och Reviewer v5 PASS. R2a huvudnavigationens swipe är fortsatt blockerad i väntan på separat runtime-verifiering.
+
+Slutlig batchverifiering: `pnpm check` 549/549 med app-/edge-typecheck och ESLint; fokuserad R2B 21/21; public/review R2B 12/12 vardera, noll browserfel och fokus true → true; Python syntax, kövalidering och `git diff --check` PASS. Tidigare delresultat finns i respektive taskrapport och evidensmappar. Reviewergranskningen hade inte tillgång till `.git`; root verifierade den ändrade sökvägslistan och gav den relevanta R2B-implementationsdiffen som reviewunderlag. Köpost `UIUX-REVAMP-R2B-SHARED-SHEET-01` är `done`.
+
+Native gester/fokus/tangentbord, VoiceOver/Dynamic Type, system-back/Modal, fysisk app och live Supabase/RLS är NOT TESTABLE och kräver manuell ägarprovning där det är relevant. Detta är leveransbatchen som ägaren uttryckligen har bett att committa och pusha.

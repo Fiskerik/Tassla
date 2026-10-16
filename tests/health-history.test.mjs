@@ -141,28 +141,39 @@ test('history reads reject a row for another dog or a malformed row', async (t) 
   });
 });
 
-test('lookup filters by dog, exact history type and id, and validates the returned identity', async (t) => {
+test('lookup filters by dog and id, accepts a supported current type, and validates the returned identity', async (t) => {
   await t.test('matching result', async () => {
     const { client, requests } = localClient(({ method, url }) => {
       assert.equal(method, 'GET');
       assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
-      assert.equal(url.searchParams.get('event_type'), 'eq.vaccination');
+      assert.equal(url.searchParams.has('event_type'), false);
       assert.equal(url.searchParams.get('id'), `eq.${historyId}`);
       return jsonResponse(savedRecord);
     });
     try {
-      assert.deepEqual(await workspaceData.fetchHealthHistoryById(client, dogId, 'vaccination', historyId), savedRecord);
+      assert.deepEqual(await workspaceData.fetchHealthHistoryById(client, dogId, historyId), savedRecord);
       assert.equal(requests.length, 1);
     } finally { await client.auth.dispose(); }
   });
-  await t.test('absent result', async () => {
-    const { client } = localClient(() => jsonResponse(null));
-    try { assert.equal(await workspaceData.fetchHealthHistoryById(client, dogId, 'vaccination', historyId), null); }
+  await t.test('supported concurrent type change is returned to the caller for conflict handling', async () => {
+    const current = { ...savedRecord, event_type: 'vet_visit' };
+    const { client } = localClient(() => jsonResponse(current));
+    try { assert.deepEqual(await workspaceData.fetchHealthHistoryById(client, dogId, historyId), current); }
     finally { await client.auth.dispose(); }
   });
-  await t.test('response identity mismatch', async () => {
-    const { client } = localClient(() => jsonResponse({ ...savedRecord, event_type: 'vet_visit' }));
-    try { await assert.rejects(workspaceData.fetchHealthHistoryById(client, dogId, 'vaccination', historyId)); }
+  await t.test('absent result', async () => {
+    const { client } = localClient(() => jsonResponse(null));
+    try { assert.equal(await workspaceData.fetchHealthHistoryById(client, dogId, historyId), null); }
+    finally { await client.auth.dispose(); }
+  });
+  await t.test('unsupported type fails closed instead of appearing absent', async () => {
+    const { client } = localClient(() => jsonResponse({ ...savedRecord, event_type: 'walk' }));
+    try { await assert.rejects(workspaceData.fetchHealthHistoryById(client, dogId, historyId)); }
+    finally { await client.auth.dispose(); }
+  });
+  await t.test('wrong dog or id fails closed', async () => {
+    const { client } = localClient(() => jsonResponse({ ...savedRecord, dog_id: otherDogId }));
+    try { await assert.rejects(workspaceData.fetchHealthHistoryById(client, dogId, historyId)); }
     finally { await client.auth.dispose(); }
   });
 });
@@ -200,7 +211,7 @@ test('lost insert response reconciles the same stable id and exact values', asyn
       if (method === 'POST') { row = savedRecord; throw new TypeError('simulated committed write with lost response'); }
       assert.equal(method, 'GET');
       assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
-      assert.equal(url.searchParams.get('event_type'), 'eq.vaccination');
+      assert.equal(url.searchParams.has('event_type'), false);
       assert.equal(url.searchParams.get('id'), `eq.${historyId}`);
       return jsonResponse(row);
     });
@@ -311,6 +322,15 @@ test('update reconciliation distinguishes committed, rejected, and conflicting p
       assert.equal(requests.filter(({ method }) => method === 'PATCH').length, 1);
     } finally { await client.auth.dispose(); }
   });
+  await t.test('concurrent supported type swap remains unknown after id-only readback', async () => {
+    const current = { ...savedRecord, event_type: 'vet_visit', occurred_on: '2026-09-22', description: 'Current veterinary visit' };
+    const { client, requests } = localClient(({ method }) => method === 'PATCH' ? jsonResponse(null) : jsonResponse(current));
+    try {
+      assert.deepEqual(await workspaceData.updateHealthHistory(client, dogId, 'vaccination', historyId, previous, changes), { status: 'unknown' });
+      assert.deepEqual(requests.map(({ method }) => method), ['PATCH', 'GET']);
+      assert.equal(requests[1].url.searchParams.has('event_type'), false);
+    } finally { await client.auth.dispose(); }
+  });
 });
 
 test('delete is conditional on dog, type, id, date and note preimage, including null notes', async () => {
@@ -318,9 +338,9 @@ test('delete is conditional on dog, type, id, date and note preimage, including 
   const previous = { occurred_on: '2026-09-20', occurred_time: null, description: null };
   const { client, requests } = localClient(async ({ method, url }) => {
     assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
-    assert.equal(url.searchParams.get('event_type'), 'eq.vaccination');
     assert.equal(url.searchParams.get('id'), `eq.${historyId}`);
     if (method === 'DELETE') {
+      assert.equal(url.searchParams.get('event_type'), 'eq.vaccination');
       assert.equal(url.searchParams.get('occurred_on'), `eq.${previous.occurred_on}`);
       assert.equal(url.searchParams.get('occurred_time'), 'is.null');
       assert.equal(url.searchParams.get('description'), 'is.null');
@@ -328,6 +348,7 @@ test('delete is conditional on dog, type, id, date and note preimage, including 
       throw new TypeError('simulated committed delete with lost response');
     }
     assert.equal(method, 'GET');
+    assert.equal(url.searchParams.has('event_type'), false);
     return jsonResponse(exists ? { ...savedRecord, ...previous } : null);
   });
   try {
@@ -372,6 +393,15 @@ test('delete never treats a changed row as deleted after an ambiguous or rejecte
       ? jsonResponse({ code: '23503', message: 'delete rejected' }, 400) : jsonResponse({ ...savedRecord, ...previous }));
     try { assert.deepEqual(await workspaceData.deleteHealthHistory(client, dogId, 'vaccination', historyId, previous), { status: 'failed' }); }
     finally { await client.auth.dispose(); }
+  });
+  await t.test('concurrent supported type swap is not mistaken for deletion', async () => {
+    const current = { ...savedRecord, event_type: 'vet_visit', occurred_on: '2026-09-22', description: 'Current veterinary visit' };
+    const { client, requests } = localClient(({ method }) => method === 'DELETE' ? jsonResponse(null) : jsonResponse(current));
+    try {
+      assert.deepEqual(await workspaceData.deleteHealthHistory(client, dogId, 'vaccination', historyId, previous), { status: 'unknown' });
+      assert.deepEqual(requests.map(({ method }) => method), ['DELETE', 'GET']);
+      assert.equal(requests[1].url.searchParams.has('event_type'), false);
+    } finally { await client.auth.dispose(); }
   });
 });
 
@@ -418,6 +448,7 @@ test('actual workspace history handler prevents same-tick duplicate inserts and 
   assert.equal(await first, true);
   assert.deepEqual(harness.state.rows, [savedRecord]);
   assert.equal(harness.state.pendingMutation.current, null);
+  assert.deepEqual(harness.state.confirmation, { lifetime: harness.state.lifetime.current, sequence: 1, kind: 'insert', targetId: historyId });
 
   const unknownHarness = createHealthHistoryHandlerHarness({
     insertHealthHistory: async (...args) => { unknownHarness.calls.insert.push(args); return { status: 'unknown' }; },
@@ -427,6 +458,35 @@ test('actual workspace history handler prevents same-tick duplicate inserts and 
   assert.equal(unknownHarness.state.pendingMutation.current?.operation.id, historyId);
   assert.equal(await unknownHarness.handlers.saveHealthHistory(null, 'vet_visit', today(), null, 'different'), false);
   assert.equal(unknownHarness.calls.insert.length, 1);
+});
+
+test('unknown history writes emit one scoped confirmation only after exact readback', async () => {
+  const insertHarness = createHealthHistoryHandlerHarness({
+    insertHealthHistory: async () => ({ status: 'unknown' }),
+  });
+  assert.equal(await insertHarness.handlers.saveHealthHistory(null, 'vaccination', today(), null, 'Booster'), false);
+  assert.equal(insertHarness.state.confirmation, undefined);
+  insertHarness.dependencies.fetchHealthHistoryById = async () => ({ ...insertHarness.state.pendingMutation.current.operation, actor_id: actorId });
+  insertHarness.handlers = insertHarness.rebuildHandlers();
+  await insertHarness.handlers.retryHealthHistory();
+  assert.equal(insertHarness.state.confirmation.kind, 'insert');
+  assert.equal(insertHarness.state.confirmation.sequence, 1);
+
+  const original = { ...savedRecord, description: 'Opening version' };
+  const updated = { ...original, occurred_on: '2026-10-02', occurred_time: '09:00', description: 'Updated version' };
+  const updateHarness = createHealthHistoryHandlerHarness({ rows: [original], updateHealthHistory: async () => ({ status: 'unknown' }) });
+  assert.equal(await updateHarness.handlers.saveHealthHistory(historyId, 'vaccination', updated.occurred_on, updated.occurred_time, updated.description, original), false);
+  updateHarness.dependencies.fetchHealthHistoryById = async () => updated;
+  updateHarness.handlers = updateHarness.rebuildHandlers();
+  await updateHarness.handlers.retryHealthHistory();
+  assert.equal(updateHarness.state.confirmation.kind, 'update');
+
+  const deleteHarness = createHealthHistoryHandlerHarness({ rows: [original], deleteHealthHistory: async () => ({ status: 'unknown' }) });
+  assert.equal(await deleteHarness.handlers.removeHealthHistory(historyId, original), false);
+  deleteHarness.dependencies.fetchHealthHistoryById = async () => null;
+  deleteHarness.handlers = deleteHarness.rebuildHandlers();
+  await deleteHarness.handlers.retryHealthHistory();
+  assert.equal(deleteHarness.state.confirmation.kind, 'delete');
 });
 
 test('actual workspace status check does not replay an absent insert after dog/session lifetime changes', async () => {
@@ -440,8 +500,8 @@ test('actual workspace status check does not replay an absent insert after dog/s
 
   const retry = harness.handlers.retryHealthHistory();
   assert.equal(harness.calls.lookup.length, 1);
-  assert.deepEqual(harness.calls.lookup[0].slice(1), [dogId, 'vaccination', historyId]);
-  harness.state.lifetime.current = 'other-dog:other-user';
+  assert.deepEqual(harness.calls.lookup[0].slice(1), [dogId, historyId]);
+  harness.state.lifetime.current = JSON.stringify(['user-1', 2, dogId]);
   lookup.resolve(null);
   await retry;
 
@@ -461,10 +521,10 @@ test('actual workspace update conflict can be explicitly resolved before startin
   harness.dependencies.fetchHealthHistoryById = async (...args) => { harness.calls.lookup.push(args); return current; };
   harness.handlers = harness.rebuildHandlers();
 
-  assert.equal(await harness.handlers.saveHealthHistory(historyId, 'vaccination', '2026-09-25', '10:15', 'My edit'), false);
+  assert.equal(await harness.handlers.saveHealthHistory(historyId, 'vaccination', '2026-09-25', '10:15', 'My edit', original), false);
   assert.equal(harness.state.pending, true);
   await harness.handlers.retryHealthHistory();
-  assert.deepEqual(harness.state.conflict, { lifetime: `${dogId}:user-1`, mutationId: historyId, current });
+  assert.deepEqual(harness.state.conflict, { lifetime: JSON.stringify(['user-1', 1, dogId]), mutationId: historyId, current });
   assert.notEqual(harness.state.pendingMutation.current, null);
   assert.equal(harness.calls.update.length, 1, 'conflict status check must not overwrite the newer row');
 
@@ -474,9 +534,43 @@ test('actual workspace update conflict can be explicitly resolved before startin
   assert.equal(harness.state.pendingMutation.current, null);
   assert.equal(harness.state.pending, false);
   assert.deepEqual(harness.state.rows, [current]);
-  assert.equal(await harness.handlers.saveHealthHistory(historyId, 'vaccination', '2026-09-26', '11:30', 'Fresh intent'), true);
+  assert.equal(await harness.handlers.saveHealthHistory(historyId, 'vaccination', '2026-09-26', '11:30', 'Fresh intent', current), true);
   assert.equal(harness.calls.update.length, 2);
   assert.deepEqual(harness.calls.update[1].slice(1, 5), [dogId, 'vaccination', historyId, current]);
+});
+
+test('actual workspace status recovery exposes a supported type swap as an explicit conflict', async (t) => {
+  const original = { ...savedRecord, occurred_on: '2026-09-20', occurred_time: null, description: 'Original' };
+  const current = { ...original, event_type: 'vet_visit', occurred_on: '2026-09-22', description: 'Current veterinary visit' };
+  await t.test('update stays pending and does not emit confirmation', async () => {
+    const harness = createHealthHistoryHandlerHarness({ rows: [original] });
+    harness.dependencies.updateHealthHistory = async (...args) => { harness.calls.update.push(args); return { status: 'unknown' }; };
+    harness.dependencies.fetchHealthHistoryById = async () => current;
+    harness.handlers = harness.rebuildHandlers();
+    assert.equal(await harness.handlers.saveHealthHistory(historyId, 'vaccination', '2026-09-25', '10:15', 'My edit', original), false);
+    await harness.handlers.retryHealthHistory();
+    assert.deepEqual(harness.state.conflict, { lifetime: JSON.stringify(['user-1', 1, dogId]), mutationId: historyId, current });
+    assert.equal(harness.state.pending, true);
+    assert.equal(harness.state.confirmation, undefined);
+    assert.equal(harness.calls.update.length, 1);
+    harness.dependencies.healthHistoryConflict = harness.state.conflict;
+    harness.handlers = harness.rebuildHandlers();
+    harness.handlers.resolveHealthHistoryConflict();
+    assert.deepEqual(harness.state.rows, [current]);
+    assert.equal(harness.state.pending, false);
+  });
+  await t.test('delete stays pending and never confirms while the same id exists with another supported type', async () => {
+    const harness = createHealthHistoryHandlerHarness({ rows: [original] });
+    harness.dependencies.deleteHealthHistory = async (...args) => { harness.calls.delete.push(args); return { status: 'unknown' }; };
+    harness.dependencies.fetchHealthHistoryById = async () => current;
+    harness.handlers = harness.rebuildHandlers();
+    assert.equal(await harness.handlers.removeHealthHistory(historyId, original), false);
+    await harness.handlers.retryHealthHistory();
+    assert.deepEqual(harness.state.conflict, { lifetime: JSON.stringify(['user-1', 1, dogId]), mutationId: historyId, current });
+    assert.equal(harness.state.pending, true);
+    assert.equal(harness.state.confirmation, undefined);
+    assert.equal(harness.calls.delete.length, 1);
+  });
 });
 
 test('actual workspace handler suppresses a pending mutation result after its lifetime changes', async () => {
@@ -485,20 +579,34 @@ test('actual workspace handler suppresses a pending mutation result after its li
     insertHealthHistory: async (...args) => { harness.calls.insert.push(args); return write.promise; },
   });
   const save = harness.handlers.saveHealthHistory(null, 'vaccination', today(), null, 'Booster');
-  harness.state.lifetime.current = 'dog-2:user-1';
+  harness.state.lifetime.current = JSON.stringify(['user-1', 2, dogId]);
   write.resolve({ status: 'saved', value: savedRecord });
   assert.equal(await save, false);
   assert.equal(harness.state.rows.length, 0);
   assert.equal(harness.state.pendingMutation.current, null);
 });
 
-test('health history editor remounts on saved-record snapshot changes and resets on conflict resolution', async () => {
+test('health-history update and delete keep the selected row opening snapshot after a refresh', async () => {
+  const opening = { ...savedRecord, occurred_on: '2026-09-20', occurred_time: null, description: 'Opening version' };
+  const refreshed = { ...savedRecord, occurred_on: '2026-09-22', occurred_time: '09:00', description: 'Newer version' };
+  const harness = createHealthHistoryHandlerHarness({ rows: [refreshed] });
+  assert.equal(await harness.handlers.saveHealthHistory(historyId, 'vaccination', '2026-09-25', '10:15', 'My edit', opening), true);
+  assert.deepEqual(harness.calls.update[0].slice(1, 5), [dogId, 'vaccination', historyId, opening]);
+
+  const deleteHarness = createHealthHistoryHandlerHarness({ rows: [refreshed] });
+  assert.equal(await deleteHarness.handlers.removeHealthHistory(historyId, opening), true);
+  assert.deepEqual(deleteHarness.calls.delete[0].slice(1, 5), [dogId, 'vaccination', historyId, opening]);
+});
+
+test('health history editor key stays stable across record refreshes and conflict resolution closes the editor', async () => {
   const healthScreenSource = await readFile(new URL('../src/features/health/HealthScreen.tsx', import.meta.url), 'utf8');
-  assert.match(healthScreenSource, /const historyEditorKey = JSON.stringify\(\[editingId, type, props.historyRecords/);
+  assert.match(healthScreenSource, /const historyEditorKey = JSON\.stringify\(\[\s*historyScope\.ownerId,\s*historyScope\.accountGeneration,\s*historyScope\.dogId,\s*editingId \?\? 'new',\s*initialType/);
+  assert.match(healthScreenSource, /const \[editingType, setEditingType\] = useState<HealthHistoryType \| null>\(null\)/);
+  assert.match(healthScreenSource, /setEditingType\(row\.event_type\);\s*setSheet\('history'\)/);
   assert.match(healthScreenSource, /<HealthHistoryScreen key=\{historyEditorKey\}/);
-  assert.match(historyScreenSource, /function resolveConflict\(\) \{\s*resetForm\(\);\s*onResolveConflict\?\.\(\);\s*\}/);
-  assert.match(historyScreenSource, /onResolveConflict\?\.\(\)/);
+  assert.match(historyScreenSource, /onResolveConflict\?\.\(\);\s*onLeaveConfirmed\(\);/);
   assert.match(historyScreenSource, /title="Använd aktuell historik och börja om"/);
+  assert.doesNotMatch(healthScreenSource, /historyRecords\?\.map\(/);
 });
 
 function localClient(handler) {
@@ -523,7 +631,7 @@ function localClient(handler) {
 }
 
 function createHealthHistoryHandlerHarness({ rows = [], ...overrides } = {}) {
-  const lifetime = { current: `${dogId}:user-1` };
+  const lifetime = { current: JSON.stringify(['user-1', 1, dogId]) };
   const state = {
     rows: [...rows],
     pending: false,
@@ -548,6 +656,7 @@ function createHealthHistoryHandlerHarness({ rows = [], ...overrides } = {}) {
     healthHistoryRows: state.rowRef,
     pendingHealthHistoryMutation: state.pendingMutation,
     healthHistoryMutationInFlight: state.mutationInFlight,
+    healthHistoryConfirmationSequence: { current: 0 },
     healthHistoryFlightToken: { current: null },
     healthHistoryConflict: state.conflict,
     isValidHealthHistoryDate: workspaceData.isValidHealthHistoryDate,
@@ -568,6 +677,7 @@ function createHealthHistoryHandlerHarness({ rows = [], ...overrides } = {}) {
     setHealthHistoryMessage(value) { state.message = value; },
     setHealthHistoryMessageError(value) { state.messageError = value; },
     setHealthHistoryConflict(value) { state.conflict = value; },
+    setHealthHistoryConfirmation(value) { state.confirmation = value; },
     setHealthHistory(value) { state.rows = value; },
     setHealthHistoryState(value) { state.loadState = value; },
     reloadHealthHistory: async () => {},
