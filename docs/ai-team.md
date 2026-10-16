@@ -37,19 +37,42 @@ Varje körning har högst ett modellsteg. En fråga använder 1–9 API-anrop: u
 - Samtalsläge: `python run_team.py --chat`
 - I samtalsläge: `/reset` tömmer minnet, `/quit` avslutar.
 
-Minne hålls bara i processen: högst två tidigare frågor och slutliga svar, maximalt 2400 tecken skickas vidare. Det försvinner när programmet avslutas och inkluderar inte hela interna agentdiskussionen. Varje ny fråga kostar API-tokens. Frågor är begränsade till 1500 tecken. Standardmodell `gpt-4.1-nano`, ändringsbar med `TASSLA_TEST_MODEL`. Tracing är avstängd.
+Minne hålls bara i processen: högst två tidigare frågor och slutliga svar, maximalt 2400 tecken skickas vidare. Det försvinner när programmet avslutas och inkluderar inte hela interna agentdiskussionen. Varje ny fråga kostar API-tokens. Frågor är begränsade till 1500 tecken. Modeller och reasoning väljs per SDK-roll enligt tabellen nedan. TASSLA_TEST_MODEL är endast en explicit global testöverskrivning. Tracing är avstängd.
 
 `test_agent.py` finns kvar som separat fast Product/Growth-test; `--critic` där innebär avsiktligt en fast granskningskedja. Använd `run_team.py` för selektivt urval.
 
 ## Lokal utvärdering
 Testa produktprioritering, partnerersättning och QA var för sig. Kontrollera att rätt team valts och att irrelevanta specialister inte anropats. Syntax och urvalsgränser kan verifieras utan API. Faktisk modellrouting har inte körts av Codex; inga betalda API-anrop har gjorts i implementationen.
 
-## Projektunderlag och modellöversikt
-`python run_team.py --roles` visar alla SDK- och Codex-roller med modell och reasoning-inställning utan API-anrop. SDK använder fortfarande samma `TASSLA_TEST_MODEL` för alla roller. Reasoning är inte explicit konfigurerat där; gpt-4.1-nano har ingen low/medium/high-inställning. Codex-definitionerna har individuella modell- och reasoning-inställningar.
+## SDK-teamets modellrouting
 
-`python run_team.py --chat --project-context` skickar begränsade utdrag ur `docs/vision.md`, `docs/mvp.md` och `docs/revenue.md`. Läsning är endast tillåten för dessa fasta filer; `.env`, `.git` och övriga filer exponeras inte. Utdragen är högst 2000 tecken per dokument, alltså inte fullständig projektkunskap. Underlagets godkännandestatus antas inte. Först senare bör relevanta avsnitt väljas per roll; denna enkla version skickar samma begränsade basunderlag till de valda rollerna och ökar tokenkostnaden.
+python run_team.py --roles visar effektiv modell och reasoning utan API-anrop eller API-nyckel. Ordinarie routing är per roll:
 
-Större arbeten delas upp enligt `docs/tasks/template.md` och AGENTS.md, med högst två samtidiga deluppgifter och sparade checkpoints. Detta förfarande garanterar inte att en avbruten körning automatiskt återstartas.
+| SDK-roll | Modell | Reasoning |
+|---|---|---|
+| Head of Product | gpt-6-luna | medium |
+| Growth & Distribution | gpt-6-luna | low |
+| Customer/Product Critic | gpt-6-luna | medium |
+| Commercial Lead | gpt-6-luna | medium |
+| Partnerships | gpt-6-luna | low |
+| Market Intelligence | gpt-6-luna | low |
+| Commercial Analyst | gpt-6.1-sol | high |
+| AI Tech Lead | gpt-6-luna | medium |
+| Codex implementation adviser | gpt-6.1-sol | high |
+| QA | gpt-6-luna | medium |
+| Chief of Staff routing och synthesis | gpt-6-luna | low |
+
+Produktutkastet före Critic använder Head of Products inställning. test_agent.py använder samma Product-, Growth- och Critic-routing. SDK-inställningen byggs med ModelSettings(reasoning={"effort": ...}); befintliga token- och verktygsgränser ligger kvar.
+
+Om TASSLA_TEST_MODEL är satt använder alla SDK-roller i båda ingångarna den modellen och reasoning lämnas oinställt för kompatibilitet. Variabeln är inte standardmodell. De separata Codex-agenternas inställningar påverkas inte.
+
+python run_team.py --chat --project-context skickar begränsade utdrag ur docs/vision.md, docs/mvp.md och docs/revenue.md. Läsning är endast tillåten för dessa fasta filer; .env, .git och övriga filer exponeras inte. Utdragen är högst 2000 tecken per dokument, alltså inte fullständig projektkunskap. Underlagets godkännandestatus antas inte. Först senare bör relevanta avsnitt väljas per roll; denna enkla version skickar samma begränsade basunderlag till de valda rollerna och ökar tokenkostnaden.
+
+Större arbeten delas upp enligt docs/tasks/template.md och AGENTS.md, med högst två samtidiga deluppgifter och sparade checkpoints. Detta förfarande garanterar inte att en avbruten körning automatiskt återstartas.
+
+## Verifiering och begränsningar
+
+Offline-testerna kontrollerar rollkartan, byggda SDK-inställningar, testöverskrivningen och --roles utan API-anrop. pnpm check kontrollerar appens befintliga typning, lint och testsvit. Ingen live-utvärdering av modellernas kvalitet, latency, tokenförbrukning eller kostnad per fråga har körts; de måtten är NOT TESTABLE utan en separat godkänd utvärdering.
 
 ## Codex-utvecklarflöde 2026-10-04
 Dev-definitionerna är nu tillgängliga i `.codex/agents/`, inte vilande. Implementation, QA och reviewer använder GPT-6 Luna high; Tech Lead och Security behåller sina granskningsmodeller. Faktisk appimplementation kräver fortfarande godkänt segment och plan. Se `docs/dev/workflow.md` och `tools/dev_flow.py`. SDK-teamets modellinställning är oförändrad och ger bara råd. Ingen nattlig automation har skapats.

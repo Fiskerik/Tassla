@@ -7130,6 +7130,89 @@
       "evidence_status": "v1.8 JSON/queue/TOML/31-link/diff PASS; independent QA PASS; Architect APPROVE; Critic PROCEED; final Reviewer PASS"
     },
     {
+      "id": "TASSLA-TEAM-MODEL-ROUTING-01",
+      "title": "Tassla Team: modell och reasoning per SDK-roll",
+      "mvp_requirement": "docs/ai-team.md: Projektunderlag och modellöversikt; SDK-teamets modellrouting",
+      "plan": "docs/tasks/dev/TASSLA-TEAM-MODEL-ROUTING-01.md v1",
+      "write_paths": [
+        "tassla_team/model_routing.py",
+        "tassla_team/chief_of_staff.py",
+        "tassla_team/organisation.py",
+        "tassla_team/product.py",
+        "tassla_team/growth.py",
+        "tassla_team/critic.py",
+        "run_team.py",
+        "test_agent.py",
+        "tests/test_team_model_routing.py",
+        "docs/ai-team.md",
+        "docs/tasks/dev/TASSLA-TEAM-MODEL-ROUTING-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Each of the ten SDK roles uses its approved model and reasoning effort; orchestration uses Luna low and Product draft inherits Head of Product.",
+        "TASSLA_TEST_MODEL is an explicit global testing override and disables role-specific reasoning for compatibility.",
+        "The roles CLI accurately displays effective routing without requiring an API key.",
+        "Offline tests exercise routing and Agent settings without network/API calls.",
+        "No provider, permission, data purpose, tool, or product-data behavior changes; live model quality, account access and cost remain NOT TESTABLE."
+      ],
+      "checks": [
+        "python -m unittest discover -s tests -p test_team_model_routing.py",
+        "python -m py_compile run_team.py test_agent.py tassla_team/chief_of_staff.py tassla_team/model_routing.py tassla_team/product.py tassla_team/growth.py tassla_team/critic.py",
+        "python run_team.py --roles",
+        "python tools/dev_flow.py validate",
+        "pnpm check",
+        "git diff --check"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED for exact plan v1; prior UIUX-REVAMP-R1A-BREED-01 checkpoint is done."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "User requested this Tassla Team model-routing change; plan v1 is Architect-approved and Critic-proceeded; R1a is done. Implement exact role routing with offline checks and no model API calls."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation stable in exact plan paths; focused unittest 6/6; py_compile PASS; --roles default output verified; queue validate PASS; pnpm check app and edge typecheck, ESLint, Node 502/502; git diff --check PASS with line-ending warnings. No model API calls. QA next."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS; required local checks independently confirmed, focused suite 7/7 after end-to-end test_agent --critic override coverage. Defaults/override/CLI/no-key verified; no model API calls. Live model quality/availability/cost NOT TESTABLE. Reviewer next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS; final plan/report/master-log closeout recorded. Offline routing suite 7/7; --roles prints all current SDK model/effort mappings; py_compile, queue validation, pnpm check (502/502), and git diff --check PASS. No model API calls; live availability/quality/cost NOT TESTABLE. Local only; no commit or push."
+        }
+      ],
+      "next_step": "Complete: independent QA and Reviewer PASS; routing CLI and offline suite verified, pnpm check 502/502; no model API calls; live model access, quality and cost remain NOT TESTABLE.",
+      "priority": "P1",
+      "panels": [],
+      "risk_class": "M",
+      "checkpoint": "Tassla SDK roles resolve to reviewed model and effort settings; the local routing and no-API boundaries are verified.",
+      "test_evidence": [
+        "Offline tests cover the exact route map, actual Agent constructors, global override in chief and test_agent --critic, and effective --roles output.",
+        "The test and review paths do not call an LLM or require OPENAI_API_KEY.",
+        "Actual model access, live quality/latency and cost-per-question are NOT TESTABLE."
+      ],
+      "implementation_state": "Implementation complete; independent QA PASS; Reviewer PASS; no model API calls",
+      "evidence_status": "QA PASS; focused suite 7/7 including test_agent --critic global override; py_compile and --roles pass; pnpm check 502/502; queue validation and diff check pass. No API calls. Live model quality/cost NOT TESTABLE."
+    },
+    {
       "id": "FLOW-ONBOARD-01",
       "title": "Onboarding och hundprofil till personligt Hem",
       "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",

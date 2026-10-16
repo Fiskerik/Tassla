@@ -3,6 +3,7 @@ import argparse
 import os
 from dotenv import load_dotenv
 
+
 def show(result):
     if result.plan:
         for request in result.plan.requests:
@@ -18,6 +19,7 @@ def show(result):
     print("Input tokens:", sum(u.input_tokens for _, _, u in result.steps))
     print("Output tokens:", sum(u.output_tokens for _, _, u in result.steps))
 
+
 def main():
     parser = argparse.ArgumentParser(description="Tassla AI-team: endast relevanta roller, API-kostnad per fråga")
     parser.add_argument("question", nargs="?")
@@ -26,13 +28,18 @@ def main():
     parser.add_argument("--project-context", action="store_true", help="Skicka begränsade utdrag ur vision, MVP och revenue till API:t")
     args = parser.parse_args()
     load_dotenv()
-    model = os.getenv("TASSLA_TEST_MODEL", "gpt-4.1-nano")
+    test_model_override = os.getenv("TASSLA_TEST_MODEL") or None
     if args.roles:
-        from tassla_team.organisation import TEAMS
-        print(f"SDK | Chief of Staff | model={model} | reasoning: inte explicit inställt (nano har inget reasoning-level)")
-        for team in TEAMS.values():
-            for name in [team['lead'], *[role[0] for role in team['roles'].values()]]:
-                print(f"SDK | {name} | model={model} | reasoning: inte explicit inställt")
+        from tassla_team.model_routing import ROLE_DISPLAY_NAMES, resolve_route
+
+        if test_model_override:
+            print(f"TASSLA_TEST_MODEL override active: {test_model_override}; role reasoning disabled.")
+        else:
+            print("Role-specific defaults; set TASSLA_TEST_MODEL only for an explicit global test override.")
+        for role_id, name in ROLE_DISPLAY_NAMES.items():
+            route = resolve_route(role_id, test_model_override)
+            effort = route.reasoning_effort or "disabled by test override"
+            print(f"SDK | {name} | model={route.model} | reasoning={effort}")
         from pathlib import Path
         import tomllib
         root = Path(__file__).resolve().parent
@@ -51,7 +58,10 @@ def main():
         from tassla_team.project_context import load_project_context
         project_context = load_project_context()
         print("Projektutdrag aktiverade: vision, MVP och revenue. Högst 6000 innehållstecken.")
-    print("Modell:", model)
+    if test_model_override:
+        print("TASSLA_TEST_MODEL override:", test_model_override)
+    else:
+        print("Modellrouting: rollspecifik")
     history = []
     question = args.question
     while True:
@@ -72,13 +82,19 @@ def main():
                 break
             question = None
             continue
-        result = run_question(question, model, "\n".join(history)[-2400:], project_context=project_context)
+        result = run_question(
+            question,
+            test_model_override,
+            "\n".join(history)[-2400:],
+            project_context=project_context,
+        )
         show(result)
         history.append(f"User: {question}\nAssistant: {result.answer}")
         history = history[-2:]
         if not args.chat:
             break
         question = None
+
 
 if __name__ == "__main__":
     main()

@@ -795,3 +795,26 @@ Panel 4:s `Alla` visar samtliga sparade rutinmallar för aktuell hund, även de 
 Verifiering: riktade daily-activity-tester 24/24; full `pnpm check` 502/502; public/review `checklist-all` 16/16 vardera, `home-checklist` 5/5 vardera och `home` 5/6, allt utan browser page errors. Bevis täcker midnatt via deterministisk Europe/Stockholm-klocka, försenad delete-bekräftelse efter snapshotbyte, bevarat dirty/pending state, operation som slutförs efter expiry utan att låsa upp sessionen, okänt sparresultat efter lyckad refresh och scope-reset. `python -m py_compile`, queue validation, scoped ESLint och `git diff --check` PASS. Källfiler, public/review captures och UTF-8-resultat finns i [renderunderlaget](../design/evidence/vision-rev02/checklist/ALL-01/RENDER-REPORT.md).
 
 Oberoende Reviewer v8:s första varv BLOCKERADE på uppdatering av spårbarhet och att public-resultatet skulle visa de nya 16 fallen; implementationen bedömdes utan nya produktionsfel. Arkitektbeslut, QA-status och färsk public/review-evidens skrevs in, därefter gav final Reviewer PASS och köposten stängdes för denna lokala checkpoint. Erik gav uttryckligt mandat för commit och push av färdiggranskade ändringar till en ny branch efter slutgranskning. Live Supabase/RLS, migrationens driftparitet, produktionsraces, native Alert/tillgänglighet, fysisk enhet och OS-tidszonsbyte är NOT TESTABLE.
+
+### TASSLA-TEAM-MODEL-ROUTING-01 — implementation till QA, 2026-10-16
+
+Tassla Team använder nu central rollspecifik routing. De tio verksamhetsrollerna och Chief of Staff routing/synthesis har explicita modell- och reasoningnivåer. Product-utkastet följer Head of Product; den separata test_agent-ingången följer samma Product/Growth/Critic-konfiguration. TASSLA_TEST_MODEL finns kvar som explicit global testöverskrivning och tar bort reasoning-inställningen för kompatibilitet. Befintliga token-, verktygs-, selektions- och STOP-gränser är bevarade.
+
+Verifiering: fokuserade offline-tester 6/6; Python py_compile PASS; run_team.py --roles visar samtliga effektiva standardrutter utan API-nyckel; tools/dev_flow.py validate PASS; pnpm check PASS (app/edge-typecheck, ESLint och Node 502/502); git diff --check PASS med Git-varning om LF/CRLF-normalisering. Inga modell-API-anrop eller betalda utvärderingar gjordes. QA-agenten gör oberoende verifiering; Reviewer följer efter QA PASS.
+
+Ändrade Team-filer följer planens exakta skrivvägar. Ingen provider, dependency, åtkomst, verktygs-, dataändamåls- eller produktbeteendeförändring gjordes. Live-modelltillgång, kvalitet, latency, faktisk tokenförbrukning och kostnad är NOT TESTABLE utan separat liveutvärdering. Arbetet är lokalt och ocommittat.
+
+
+### TASSLA-TEAM-MODEL-ROUTING-01 — oberoende QA, 2026-10-16
+
+Oberoende QA PASS utan kodändringar. QA läste master-logg, AGENTS, workflow, taskplan och dokumentation; granskade samtliga rollkonstruktioner och testade utan modell-API. Den fokuserade sviten passerade 7/7 efter att QA:s enda föreslagna testförstärkning lades till: test_agent.py --critic bygger Product, Growth, Critic och synthesis med global testmodell och utan reasoning. CLI-defaults/override, SDK-inställningen, token-/tool-gränser och full pnpm check (502/502) verifierades. Queue validation och git diff --check passerade. Ingen API-nyckel behövdes för --roles; inga modell-API-anrop gjordes.
+
+QA bekräftar att ändringarna följer planens skrivvägar. Live-modelltillgång, kvalitet, latency, faktisk tokenförbrukning och kostnad förblir NOT TESTABLE. Tasken har flyttats till review; oberoende Reviewer återstår.
+
+### TASSLA-TEAM-MODEL-ROUTING-01 — slutcheckpoint, 2026-10-16
+
+Oberoende Reviewer PASS efter att köanteckningen synkats med QA-status. Slutlig kontroll bekräftar att `python run_team.py --roles` skriver ut samtliga effektiva rutter utan API-nyckel och att den fokuserade offline-sviten passerar 7/7. Redan registrerade kontroller: `python -m py_compile`, `python tools/dev_flow.py validate`, `pnpm check` (app-/edge-typecheck, ESLint och Node 502/502) samt `git diff --check` PASS. Inga modell-API-anrop gjordes.
+
+SDK-routingen är verifierad: Head of Product Luna medium; Growth Luna low; Customer/Product Critic Luna medium; Commercial Lead Luna medium; Partnerships Luna low; Market Intelligence Luna low; Commercial Analyst 6.1 Sol high; AI Tech Lead Luna medium; Codex implementation adviser 6.1 Sol high; QA Luna medium. Chief routing och synthesis använder Luna low. Product draft ärver Head of Product. `TASSLA_TEST_MODEL` är fortsatt explicit global override för test och kopplar bort reasoning-inställningen.
+
+Modell-ID:n skiljer sig från förslaget eftersom o4-mini och gpt-4.1-nano är utfasade enligt planens verifierade dokumentation. Faktisk modellåtkomst, kvalitet, latency, tokenförbrukning och kostnad är NOT TESTABLE utan separat liveutvärdering. Reviewer kunde inte köra Git-status i sin skrivskyddade miljö; koordinatorns eskalerade `git status --short` visade R1a-paketet och denna tasks godkända skrivvägar. Köstatus `done`. Tasken är färdig efter QA och Reviewer PASS.

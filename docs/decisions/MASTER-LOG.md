@@ -82,6 +82,11 @@ Architect APPROVE, Security PASS, QA PASS och final Reviewer PASS. QA: 24/24 fok
 
 Syntetisk webbrendering certifierar inte live Supabase/RLS, migrationens driftparitet, produktionsdubblett-races, native Alert/tillgänglighet, fysisk enhet eller OS-tidszonsbyte; dessa är NOT TESTABLE. Erik bad uttryckligen att de färdiggranskade ändringarna ska commit/pushas till en ny branch efter granskning.
 
+### TASSLA-TEAM-MODEL-ROUTING-01 — lokal modellrouting klar, 2026-10-16
+
+Tassla Team använder nu rollbaserad modell och reasoning för samtliga SDK-roller; Chief routing/synthesis och Product draft följer sina dokumenterade rutter. `run_team.py --roles` verifierar de effektiva valen och den offline fokuserade sviten passerar 7/7. QA och oberoende Reviewer PASS. `pnpm check` passerar med 502/502 Node-tester; syntax-, kö- och diffkontroller passerar. Ingen modell-API-utvärdering gjordes. Faktisk modellåtkomst, kvalitet, latency, tokenanvändning och kostnad är NOT TESTABLE. Underlag: [plan](../tasks/dev/TASSLA-TEAM-MODEL-ROUTING-01.md), [rapport](../tasks/dev/rapport.md), [rollkonfiguration](../../tassla_team/model_routing.py) och [Team-dokumentation](../ai-team.md).
+
+Köstatus `done`. Implementation och dokumentation har godkänts i oberoende QA och Reviewer.
 ## Beslut som inte följer automatiskt
 
 - Planerad lokal notifiering innebär inte godkännande av remote push eller valfri notifiering.
