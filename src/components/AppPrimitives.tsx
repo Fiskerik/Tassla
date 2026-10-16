@@ -9,14 +9,21 @@ import { theme, tokens } from '../theme/tokens';
 
 export function AppScreen({ children, footer, scrollKey }: { children: ReactNode; footer?: ReactNode; scrollKey?: string }) {
   const scroll = useRef<ScrollView>(null);
+  const scrollOffsets = useRef(new Map<string, number>());
+  const activeScrollKey = useRef(scrollKey ?? 'default');
   const insets = useSafeAreaInsets();
   const hasFooter = Boolean(footer);
-  useLayoutEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [scrollKey]);
+  useLayoutEffect(() => {
+    const key = scrollKey ?? 'default';
+    activeScrollKey.current = key;
+    scroll.current?.scrollTo({ y: scrollOffsets.current.get(key) ?? 0, animated: false });
+  }, [scrollKey]);
   return (
     <SafeAreaView style={styles.safeArea} edges={hasFooter ? ['top', 'left', 'right'] : ['top', 'right', 'bottom', 'left']}>
       <View style={styles.screenLayout}>
         <KeyboardAvoidingView style={styles.keyboardLayout} behavior="padding">
-          <ScrollView ref={scroll} showsVerticalScrollIndicator={false} style={styles.scrollArea} contentContainerStyle={styles.page} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled">
+          <ScrollView ref={scroll} onScroll={(event) => scrollOffsets.current.set(activeScrollKey.current, event.nativeEvent.contentOffset.y)} scrollEventThrottle={100}
+            showsVerticalScrollIndicator={false} style={styles.scrollArea} contentContainerStyle={styles.page} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled">
             {children}
           </ScrollView>
         </KeyboardAvoidingView>

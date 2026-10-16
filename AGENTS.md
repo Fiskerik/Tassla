@@ -1,7 +1,7 @@
 # AGENTS.md – Tassla
 
 ## Aktuellt MVP-mandat och företräde
-Eriks beslut 2026-10-15: leverera åtta funktionella `vision_rev02.jpg`-paneler genom små, kompletta användarresor med hållbara checkpoints och riskbaserad QA. Se `docs/MVP-EXPERIENCE-CONTRACT.md`, `docs/mvp.md`, `docs/design-rules.md` och `docs/dev/workflow.md`. Panelmålen är Hem, Utveckling, Dagens framsteg, daglig Checklista, Logga, Träning, Kunskap och Insikter. Skärmdump, review-fixture eller lokal kod betyder inte verifierad produktionsfunktion.
+Eriks beslut 2026-10-15 och 2026-10-16: MVP v2 är styrande och samtliga åtta funktionella `vision_rev02.jpg`-paneler ska levereras genom små, kompletta användarresor med hållbara checkpoints och riskbaserad QA. Tassla är valp-först men ska ge nytta genom hundens liv. Se `docs/mvp.md` (kanonisk MVP v2), `docs/MVP-EXPERIENCE-CONTRACT.md`, `docs/design-rules.md` och `docs/dev/workflow.md`. Panelmålen är Hem, Utveckling, Dagens framsteg, daglig Checklista, Logga, Träning, Kunskap och Insikter. Panel 4: Alla visar alla aktiva rutinmallar, även när de inte valts för en dag. Skärmdump, review-fixture eller lokal kod betyder inte verifierad produktionsfunktion.
 
 Företräde: aktuella uttryckliga ägarbeslut, säkerhet/sanningsenlighet/tillgänglighet, MVP-kontrakt, sedan äldre plantext. Äldre fas-0-förbud, rev01 som aktuell referens och krav på nytt segmentgodkännande för redan beställd MVP gäller inte. Beslutet godkänner inte nya persondataändamål, live-migration, dependencies, kostnader, extern pilot eller publicering. Bevara befintliga fungerande resor och verifiera regressioner.
 
@@ -15,8 +15,7 @@ Vid konflikt med äldre visuella råd gäller docs/design-rules.md inom godkänt
 Vid varje ändring av skärmar, komponenter, flöden, tillstånd eller UI-texter: följ docs/design-rules.md (utseende) och använd skillen $tassla-consumer-ux (beteende, tillstånd, återkoppling). Lös konflikter enligt företrädesordningen i designreglernas §0; fråga endast när ett väsentligt produktbeslut fortfarande saknas. Redan dokumenterade ägarbeslut ska inte frågas om igen.
 
 ## What Tassla is
-A free mobile app that follows a puppy's life from before it comes home until it is grown, for new dog owners. Inspired by BabyJourney, but for puppies. Goal: make the first 6–12 months simpler, safer and more enjoyable.
-Vision, revenue and open questions: `docs/vision.md`, `docs/revenue.md`. There is no requirements spec yet; it is built up step by step in `docs/` together with the human owner. Owner input in those files is unreviewed until marked otherwise.
+A free dog-owner app with a particularly strong puppy experience and useful support across the dog’s life. The current product scope and acceptance criteria are in the owner-approved MVP v2 at `docs/mvp.md`. `docs/vision.md` and `docs/revenue.md` are supporting source material; they do not override the canonical MVP or current decisions in `docs/decisions/MASTER-LOG.md`.
 
 ## Business model (constraints for every agent)
 The app is free for users. Revenue comes from partners, in five legs (see `docs/revenue.md`): insurance (Agria), equipment (ArkenZoo), sponsored dog food, vet Q&A (AniCura and similar), and one leg not yet defined.
@@ -24,16 +23,16 @@ The app is free for users. Revenue comes from partners, in five legs (see `docs/
 - Sponsors and partners never influence health, feeding or training guidance. Special diets are a vet matter, not a sales channel.
 - Partner integrations sit behind adapters and feature flags. The app must work without any signed partnership, and must not be locked to a single partner per leg.
 - Kennels (breeders) join gradually. A user joins through a kennel QR code or without one. Sharing owner data with a kennel or partner requires explicit consent.
-- Content is the product. Every login shows new content fitted to the puppy's age, needs and breed. Health content is checked by `dog_expert` before it is published.
+- Content is the product. Show published content only when its eligibility, editorial audience and allowed surface match the dog and context; do not imply a new or personal recommendation on every login. If no approved relevant content exists, show an honest empty state. Health content is checked by `dog_expert` before publication.
 
 ## Historisk fas-0-kontext (ersatt av senare genomförandemandat)
 - Stack, six-screen MVP and Architecture approved by Erik on 2026-10-04: Expo/React Native/TypeScript/Expo Router, Supabase, Codemagic. Erik separately authorized project files and SQL foundation; see docs/tasks/dev/foundation.md. APP-01 plan v2 and listed packages were also approved through “godkänner”; local app implementation is authorized. Phone auth tests, external builds and pilot remain separate manual steps. Explicitly unresolved options remain open.
 - Historical phase-0 rule, superseded by the approved MVP implementation mandate: no app code or scaffolding. Outputs are documents in `docs/`. Human-approved exception: SDK infrastructure in `test_agent.py`, `run_team.py` and `tassla_team/`; no new dependencies without approval.
-- Additional explicit owner exception 2026-10-04: foundation source/contracts/module guides and Supabase schema/test files, without dependency installation or external resources. This does not approve a pilot, real data processing or all implementation segments.
-- Configured agents: `product`, `architect`, `critic`, `dog_expert`, `compliance`, `implementer`, `qa`, `reviewer`, `security` in `.codex/agents/`. Dev definitions are available, but app work requires an approved segment and plan; Discovery restrictions still apply.
+- Additional explicit owner exception 2026-10-04: foundation source/contracts/module guides and Supabase schema/test files, without dependency installation or external resources. It does not approve a pilot, new personal-data purposes or external release. Erik's 2026-10-16 stepwise MVP v2 mandate later authorized in-scope app implementation; do not request a new segment mandate for those tasks.
+- Configured agents: `product`, `architect`, `critic`, `dog_expert`, `compliance`, `implementer`, `qa`, `reviewer`, `security` in `.codex/agents/`. MVP v2 implementation is authorized stepwise; each app task still needs an exact plan, Architect APPROVE, required Critic review, QA and independent Reviewer under `docs/dev/workflow.md`.
 - Phase 0 is done when the human has approved `docs/vision.md`, `docs/revenue.md` and `docs/mvp.md`, and accepted `docs/decisions/0001-stack.md`.
 - Then start phase 1: fill in **Commands** and **Ownership** below and activate the staged agents:
-  Dev definitions are already configured; authorize the segment and complete task contracts before app work.
+  Historical setup sequence; current stepwise MVP v2 implementation is authorized under the exact-plan, review and queue gates in `docs/dev/workflow.md`.
 
 ## AI organisation and runtime
 - AI Chief of Staff coordinates Product and Commercial; the human owns final decisions.
@@ -50,7 +49,7 @@ The app is free for users. Revenue comes from partners, in five legs (see `docs/
 ## Source of truth
 - `docs/vision.md` – idea, problem, target user, principles, non-goals, open questions
 - `docs/revenue.md` – the five revenue legs and partner status
-- `docs/mvp.md` och `docs/MVP-EXPERIENCE-CONTRACT.md` – aktuellt scope. De åtta rev02-panelerna är uttryckligen tillagda 2026-10-15; annat utanför "Måste med" kräver mänskligt beslut.
+- `docs/mvp.md` och `docs/MVP-EXPERIENCE-CONTRACT.md` – aktuellt MVP v2-scope. De sex produktområdena och åtta funktionella rev02-resorna gäller tillsammans. Se §14 för separata pilot-/publiceringsgrindar.
 - `docs/decisions/MASTER-LOG.md` – canonical current decisions and completed package ledger; read it first. Numbered `docs/decisions/000*.md` are historical source records.
 
 Read-only agents cannot write files. They return text; the main session saves it to `docs/`.
@@ -71,7 +70,7 @@ Read-only agents cannot write files. They return text; the main session saves it
 - Reviewers must verify changed imports, functions, methods, parameters and external APIs against actual repository definitions and the installed dependency version (and official documentation when needed). Reject invented APIs, fabricated implementations and placeholders presented as working features. Typechecking alone or tests mocking the same invented API do not prove correctness; verify relevant real integration behaviour or mark NOT TESTABLE and block affected acceptance.
 
 ## Orchestration
-Follow `docs/dev/workflow.md` for development. Before implementation, obtain and save architect APPROVE for the exact task plan and an Erik-approved segment mandate. Never fabricate approvals or test results. Use `tools/dev_flow.py` to validate and checkpoint queue transitions. One active task by default, maximum two with disjoint write ownership. QA and independent reviewer must pass before DONE; relevant security review is also required. A changed plan needs renewed approval. At most two correction attempts before escalation. Save questions and decisions after each task and a final report for Erik. This queue is not a scheduler and does not execute agents automatically. Do not start the next subtask until the current one has a verified working result and durable commit/checkpoint.
+Follow `docs/dev/workflow.md` for development. Erik has approved stepwise implementation within MVP v2; do not ask again for a segment mandate within this scope. Before each implementation, obtain and save Architect APPROVE for the exact task plan and required Critic verdict. Never fabricate approvals or test results. Use `tools/dev_flow.py` to validate and checkpoint queue transitions. One active task by default, maximum two with disjoint write ownership. QA and independent reviewer must pass before DONE; relevant security review is also required. A changed plan needs renewed approval. At most two correction attempts before escalation. Save questions and decisions after each task and a final report for Erik. This queue is not a scheduler and does not execute agents automatically. Do not start the next subtask until the current one has a verified working result and durable commit/checkpoint.
 The main Codex session coordinates Dev work under Erik. Use the following specialists for relevant substantive work, not for routine formatting or the SDK infrastructure smoke test. Send only relevant context; avoid repetitive debate.
 
 | Situation | Spawn (in order) |

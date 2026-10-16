@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Crypto from 'expo-crypto';
@@ -92,7 +92,7 @@ function routineDraftHasReadback(draft: RoutineDraft, routines: readonly DailyRo
 }
 
 export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, focusRoutineId, activities, routines, routineDaySkips, trainingOptions,
-  busy, mutationMessage, mutationError, onRetryMutation, onCreateRoutine, onUpdateRoutine, onDeleteRoutine,
+  busy, readOnly = false, onGuardAction, onSessionNeedsPreservationChange, mutationMessage, mutationError, onRetryMutation, onCreateRoutine, onUpdateRoutine, onDeleteRoutine,
   onAddRoutineToDay, onRemoveRoutineFromDay, onAddTrainingToDay, onRemoveTrainingFromDay, onGoTraining }: {
   visible: boolean;
   dailyScopeKey?: string;
@@ -103,6 +103,9 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   routineDaySkips: readonly DailyRoutineDaySkip[];
   trainingOptions: readonly HomeDailyTrainingOption[];
   busy: boolean;
+  readOnly?: boolean;
+  onGuardAction?: () => boolean;
+  onSessionNeedsPreservationChange?: (needsPreservation: boolean) => void;
   mutationMessage: string;
   mutationError: boolean;
   onRetryMutation?: () => void;
@@ -129,10 +132,19 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   const activeDraft = draftConfirmed ? null : draft;
   const creating = activeDraft?.mode === 'create';
   const unresolvedMutation = busy || Boolean(mutationError && onRetryMutation);
-  const selectionLocked = Boolean(activeDraft) || unresolvedMutation || showDiscardConfirmation;
+  const selectionLocked = readOnly || Boolean(activeDraft) || unresolvedMutation || showDiscardConfirmation;
+  const sessionNeedsPreservation = Boolean(savingDraft || busy || mutationError || (activeDraft && routineDraftIsDirty(activeDraft)));
+
+  useEffect(() => {
+    onSessionNeedsPreservationChange?.(sessionNeedsPreservation);
+  }, [onSessionNeedsPreservationChange, sessionNeedsPreservation]);
+
+  function allowMutation() {
+    return !readOnly && (onGuardAction?.() ?? true);
+  }
 
   function requestLeave(action: () => void) {
-    if (unresolvedMutation || savingDraft || showDiscardConfirmation) return;
+    if ((!readOnly && (unresolvedMutation || savingDraft)) || showDiscardConfirmation) return;
     if (!activeDraft || !routineDraftIsDirty(activeDraft)) {
       setDraft(null);
       action();
@@ -156,6 +168,7 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   }
 
   function startCreate() {
+    if (!allowMutation()) return;
     const firstItem = { id: Crypto.randomUUID(), label: '' };
     const anchorDate = localDateKeyToday();
     setDraft({ mode: 'create', submissionId: Crypto.randomUUID(), routineId: null, baseRevision: null,
@@ -164,7 +177,7 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   }
 
   function startEdit(routine: DailyRoutine) {
-    if (selectionLocked) return;
+    if (selectionLocked || !allowMutation()) return;
     const checklist = copyChecklist(routine.checklist);
     const repeat = { repeat_unit: routine.repeat_unit, repeat_interval: routine.repeat_interval, repeat_weekdays: routine.repeat_weekdays };
     const newAnchorDate = localDateKeyToday();
@@ -174,11 +187,12 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   }
 
   function updateDraft(patch: Partial<Pick<RoutineDraft, 'label' | 'checklist' | 'repeat'>>) {
+    if (!allowMutation()) return;
     setDraft((current) => current ? { ...current, ...patch } : current);
   }
 
   async function saveDraft() {
-    if (!draft || !routineDraftIsValid(draft) || !routineDraftIsDirty(draft) || unresolvedMutation || savingDraft) return;
+    if (!allowMutation() || !draft || !routineDraftIsValid(draft) || !routineDraftIsDirty(draft) || unresolvedMutation || savingDraft) return;
     const submissionId = draft.submissionId;
     const label = cleanRoutineLabel(draft.label);
     const checklist = cleanChecklist(draft.checklist);
@@ -200,49 +214,55 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   }
 
   function goToTraining() {
+    if (readOnly) return;
     requestLeave(() => { onClose(); onGoTraining(); });
   }
 
   return <BottomSheet visible={visible} title={focusedRoutine ? `Hantera ${focusedRoutine.label}` : 'Rutiner och aktiviteter'}
-    onRequestClose={closeSheet} onPrimaryAction={activeDraft ? undefined : closeSheet} primaryLabel="Klar">
+    onRequestClose={closeSheet} onPrimaryAction={activeDraft && !readOnly ? undefined : closeSheet} primaryLabel={readOnly ? 'Stäng' : 'Klar'}>
+    {readOnly ? <View style={[styles.message, styles.readOnlyMessage]} accessibilityRole="alert" accessibilityLiveRegion="assertive">
+      <Text style={styles.body}>Listan behöver uppdateras. Den här sessionen är skrivskyddad. Stäng eller kasta ändringarna och öppna rutinerna igen från den uppdaterade listan.</Text>
+    </View> : null}
     {mutationMessage ? <View style={[styles.message, mutationError && styles.errorMessage]}>
       <Text accessibilityRole={mutationError ? 'alert' : undefined} style={[styles.body, mutationError && styles.errorText]}>{mutationMessage}</Text>
-      {onRetryMutation ? <Button variant="tertiary" label="Kontrollera samma ändring igen" accessibilityLabel="Kontrollera samma ändring igen" disabled={busy} onPress={onRetryMutation} /> : null}
+      {onRetryMutation ? <Button variant="tertiary" label="Kontrollera samma ändring igen" accessibilityLabel="Kontrollera samma ändring igen" disabled={readOnly || busy} onPress={() => { if (allowMutation()) onRetryMutation(); }} /> : null}
     </View> : null}
     {showDiscardConfirmation ? <View style={styles.discardConfirmation} accessibilityRole="alert" accessibilityLiveRegion="assertive">
       <Text style={styles.sectionTitle} accessibilityRole="header">Kasta ändringar?</Text>
-      <Text style={styles.body}>Dina osparade ändringar försvinner.</Text>
+      <Text style={styles.body}>{readOnly
+        ? 'Dina osparade ändringar försvinner. Stängning stoppar inte en ändring som redan kan vara på väg att sparas.'
+        : 'Dina osparade ändringar försvinner.'}</Text>
       <View style={styles.formActions}>
-        <ActionButton icon="trash-outline" label="Kasta ändringar" accessibilityLabel="Kasta osparade ändringar"
+        <ActionButton icon="trash-outline" label={readOnly ? 'Stäng och kasta ändringar' : 'Kasta ändringar'} accessibilityLabel={readOnly ? 'Stäng och kasta osparade ändringar' : 'Kasta osparade ändringar'}
           danger onPress={confirmDiscard} />
-        <ActionButton icon="create-outline" label="Fortsätt redigera" accessibilityLabel="Fortsätt redigera"
-          onPress={cancelDiscard} />
+        {!readOnly ? <ActionButton icon="create-outline" label="Fortsätt redigera" accessibilityLabel="Fortsätt redigera"
+          onPress={cancelDiscard} /> : null}
       </View>
     </View> : null}
 
     <View style={styles.section}>
       <View style={styles.sectionHeading}>
         <Text style={styles.sectionTitle} accessibilityRole="header">Egna rutiner</Text>
-        <IconOnlyButton icon="information-circle-outline" accessibilityLabel="Info om rutiner" onPress={() => setHelpOpen((open) => !open)} />
+        {!readOnly ? <IconOnlyButton icon="information-circle-outline" accessibilityLabel="Info om rutiner" onPress={() => setHelpOpen((open) => !open)} /> : null}
         <ActionButton icon="add-outline" label={creating ? 'Avbryt' : 'Skapa rutin'} accessibilityLabel={creating ? 'Avbryt skapa rutin' : 'Skapa en ny rutin'}
-          disabled={unresolvedMutation || (Boolean(draft) && !creating)} onPress={() => creating ? requestLeave(() => setDraft(null)) : startCreate()} />
+          disabled={readOnly || unresolvedMutation || (Boolean(draft) && !creating)} onPress={() => creating ? requestLeave(() => setDraft(null)) : startCreate()} />
       </View>
       {helpOpen ? <Text style={styles.helpText}>Startar idag. Veckor följer valda veckodagar och månader datumet. Upprepade rutiner kan hoppas över idag. Malländringar gäller nästa gång; engångsrutiner tas bort från dagen.</Text> : null}
-      {creating && activeDraft ? <CreateRoutineForm draft={activeDraft} disabled={unresolvedMutation || savingDraft || showDiscardConfirmation}
+      {creating && activeDraft ? <CreateRoutineForm draft={activeDraft} disabled={readOnly || unresolvedMutation || savingDraft || showDiscardConfirmation}
         onChange={updateDraft} onCancel={() => requestLeave(() => setDraft(null))} onSave={() => { void saveDraft(); }} /> : null}
       {routines.length > 0 ? <View style={styles.routineList}>
         {routines.map((routine, index) => <RoutineTemplateRow key={`${dailyScopeKey ?? ''}:${visible}:${focusRoutineId ?? 'all'}:${routine.id}`}
           routine={routine} selectedDay={selectedRoutines.get(routine.id) ?? null} skippedDay={skippedRoutines.get(routine.id) ?? null}
           draft={activeDraft?.mode === 'edit' && activeDraft.routineId === routine.id ? activeDraft : null}
-          disabled={selectionLocked} fieldsDisabled={unresolvedMutation || savingDraft || showDiscardConfirmation}
+          disabled={selectionLocked} fieldsDisabled={readOnly || unresolvedMutation || savingDraft || showDiscardConfirmation}
           highlighted={routine.id === focusRoutineId} isLast={index === routines.length - 1}
           onStartEdit={() => startEdit(routine)} onChangeDraft={updateDraft}
           onCancelEdit={() => requestLeave(() => setDraft(null))} onSave={() => { void saveDraft(); }}
-          onDelete={() => onDeleteRoutine?.(routine)}
-          onAdd={() => onAddRoutineToDay?.(routine)}
+          onDelete={() => allowMutation() ? onDeleteRoutine?.(routine) : undefined}
+          onAdd={() => { if (allowMutation()) onAddRoutineToDay?.(routine); }}
           onRemove={() => {
             const row = selectedRoutines.get(routine.id);
-            if (row) onRemoveRoutineFromDay?.(row, routine);
+            if (row && allowMutation()) onRemoveRoutineFromDay?.(row, routine);
           }} />)}
       </View> : null}
     </View>
@@ -255,9 +275,9 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
           {item.programTitle ? <Text style={styles.muted}>{item.programTitle}</Text> : null}
         </View>
         <Button variant="tertiary" label="Ta bort idag" accessibilityLabel={`Ta bort ${item.label} från idag`} disabled={selectionLocked}
-          onPress={() => item.trainingSelection && onRemoveTrainingFromDay?.(item.trainingSelection)} />
+          onPress={() => { if (item.trainingSelection && allowMutation()) onRemoveTrainingFromDay?.(item.trainingSelection); }} />
       </View>)}
-      <Button variant="tertiary" label="Öppna Träning" accessibilityLabel="Öppna Träning" disabled={unresolvedMutation || showDiscardConfirmation} onPress={goToTraining} />
+      {!readOnly ? <Button variant="tertiary" label="Öppna Träning" accessibilityLabel="Öppna Träning" disabled={unresolvedMutation || showDiscardConfirmation} onPress={goToTraining} /> : null}
     </View>
 
     <View style={styles.section}>
@@ -268,7 +288,7 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
           <Text style={styles.muted}>{option.programTitle}</Text>
         </View>
         <Button variant="tertiary" label="Lägg till" accessibilityLabel={`Lägg till ${option.stepTitle} för idag`} disabled={selectionLocked}
-          onPress={() => onAddTrainingToDay?.(option)} />
+          onPress={() => { if (allowMutation()) onAddTrainingToDay?.(option); }} />
       </View>)}
     </View>
   </BottomSheet>;
@@ -436,8 +456,9 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
       <Text style={styles.repeatSummary}>{dailyRoutineRepeatSummary(routine)}</Text>
     </View>}
     <View style={styles.routineActions}>
-      <ActionButton icon={selected ? 'remove-outline' : 'add-outline'} label={selected ? 'Ta bort från Hemskärmen' : 'Lägg till på Hemskärmen'}
-        accessibilityLabel={`${selected ? 'Ta bort' : skippedDay ? 'Lägg tillbaka' : 'Lägg till'} rutinen ${routine.label} ${selected ? 'från' : 'på'} Hemskärmen`}
+      <ActionButton icon={selected ? 'remove-outline' : 'add-outline'} label={selected ? 'Ta bort idag' : skippedDay ? 'Välj igen idag' : 'Välj för idag'}
+        accessibilityLabel={selected ? `Ta bort rutinen ${routine.label} från idag`
+          : skippedDay ? `Välj rutinen ${routine.label} igen idag` : `Välj rutinen ${routine.label} för idag`}
         disabled={disabled} onPress={selected ? onRemove : onAdd} dayAction />
       <ActionButton icon="trash-outline" label="Ta bort rutin" accessibilityLabel={`Ta bort rutin ${routine.label}`}
         disabled={disabled} danger onPress={() => Alert.alert('Ta bort rutin?', `Rutinen ”${routine.label}” och alla dess dagskopior och sparade överhoppningar tas bort.`, [
@@ -487,6 +508,7 @@ const styles = StyleSheet.create({
   helpText: { ...tokens.typography.caption, color: tokens.colors.textSecondary, padding: tokens.spacing.sm, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.home.canvas },
   helper: { ...tokens.typography.caption, color: tokens.colors.textSecondary, paddingLeft: tokens.spacing.sm },
   message: { gap: tokens.spacing.xs, padding: tokens.spacing.sm, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.selectedSurface },
+  readOnlyMessage: { backgroundColor: tokens.colors.home.canvas, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   errorMessage: { backgroundColor: tokens.colors.dangerSurface },
   errorText: { color: tokens.colors.danger },
   formCard: { gap: tokens.spacing.sm, padding: tokens.spacing.sm, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.home.canvas },

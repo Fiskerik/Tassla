@@ -1,5 +1,7 @@
 # Tassla – GAP-analys: MVP v2 mot GitHub
 
+> **Ägarbeslut 2026-10-16:** MVP v2 är nu styrande; vald implementationbas är senaste Main-snapshotten `00d4d4a3e38c08a6bb7d4c541cc509457126276f`. Denna GAP-analys beskriver historiskt granskade branches/commits och är inte aktuell kodstatus för Main. Den gamla rekommendationen att först godkänna v2 är upphävd; vidare implementation följer V2-01 och den prioriterade kön. Analysen godkänner inte i sig pilotrekrytering, ny datainsamling, publicering, live-migration eller release.
+
 **Datum för granskning:** 2026-10-15  
 **Repository:** [Fiskerik/Tassla](https://github.com/Fiskerik/Tassla)  
 **Granskad gren:** [`codex/life-periods-2026-10-15`](https://github.com/Fiskerik/Tassla/tree/codex/life-periods-2026-10-15)  
@@ -137,7 +139,7 @@ Eventuell långsiktig kohortmätning kräver separat dataskydds- och lagringsbes
 
 ## 4. Föreslagen minimal leveransordning
 
-**Innan någon ny kod:** Produktägarna godkänner eller ändrar MVP v2:s fem beslut och fastställer kvalitetsribban för vuxenhundspiloten.
+**Historisk rekommendation – ersatt 2026-10-16:** Erik har antagit MVP v2 som styrande. Dokumentpaketet V2-01 ska etablera relevanskontraktet före eventuella vuxenrekommendationer; vuxenpilotens kvalitetsribba, deltagarrekrytering och datainsamling har separata readiness-/compliancegrindar.
 
 | Slice | Leverans | Beroenden | Stopp/grind |
 |---|---|---|---|
@@ -164,9 +166,9 @@ Eventuell långsiktig kohortmätning kräver separat dataskydds- och lagringsbes
 
 ## 6. Rekommenderat beslut
 
-**Godkänn målbilden i MVP v2, men godkänn inte hela denna GAP-lista som implicit utvecklingsmandat.** Starta med **V2-01: redaktionellt relevanskontrakt och två riktiga personas (11 veckor och 5 år)**. Ett bra vuxen-Hem kan kanske nås genom ett litet innehållspaket och en avgränsad prioriteringsregel – inte genom nya skärmar, omfattande ny data eller ett AI-system.
+**Uppdaterad rekommendation:** MVP v2 är antagen. Starta med **V2-01: redaktionellt relevanskontrakt och två syntetiska acceptansfall (11 veckor och 5 år)**. V2-01 ska inte anta vuxenrelevans från öppna åldersspann eller skapa nya skärmar, omfattande ny data eller AI-system.
 
-**Säkra samtidigt:** Livsperiodsgrenen är två commits framför `main` vid granskningen, så kommande implementation måste explicit välja rätt bas och undvika parallella skrivningar mot samma filer.
+**Basuppdatering:** De branchskillnader som dokumenterades ovan gäller granskningsdatumet. Kommande implementation sker på vald `main`-bas; funktioner som bara fanns i äldre branchjämförelser räknas inte som implementerade här förrän de verifierats i aktuell checkout.
 
 ## 7. Direktkällor (granskad gren)
 

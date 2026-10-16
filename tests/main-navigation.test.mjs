@@ -17,12 +17,12 @@ test('next main tab follows order and has no wraparound', () => {
   assert.deepEqual(MAIN_TAB_DESTINATIONS.map((page) => nextMainTabDestination(page, 'right')), [undefined, 'home', 'log', 'training', 'knowledge']);
 });
 
-test('auxiliary pages do not enter swipe navigation and use More as active tab', () => {
-  const auxiliaryPages = ['health', 'planned-health', 'passport', 'profile', 'notification-settings', 'account-settings', 'beta-info'];
+test('auxiliary pages do not enter swipe navigation; checklist keeps Home selected', () => {
+  const auxiliaryPages = ['health', 'planned-health', 'passport', 'profile', 'notification-settings', 'account-settings', 'beta-info', 'checklist'];
   for (const page of auxiliaryPages) {
     assert.equal(nextMainTabDestination(page, 'left'), undefined);
     assert.equal(nextMainTabDestination(page, 'right'), undefined);
-    assert.equal(activeMainTabDestination(page), 'more');
+    assert.equal(activeMainTabDestination(page), page === 'checklist' ? 'home' : 'more');
   }
   for (const page of MAIN_TAB_DESTINATIONS) assert.equal(activeMainTabDestination(page), page);
 });

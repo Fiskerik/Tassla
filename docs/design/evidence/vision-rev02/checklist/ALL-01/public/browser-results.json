@@ -1,0 +1,22 @@
+{
+  "passes": [
+    "Alla shows each saved template, repeat and day state at 375×844, 430×844 and 375×667",
+    "An unselected template can be chosen for today and becomes selected without a duplicate action",
+    "Selected All-view checklist rows use the existing confirmed completion action and day snapshot",
+    "Fresh All snapshot reaches the existing manager with explicit today-only choose/remove labels",
+    "A skipped routine can be restored for today using its existing skip snapshot",
+    "Refreshing, failed refresh and stale All lists retain content and disable routine writes",
+    "A click after the rendered snapshot expires blocks open and add callbacks, makes one shared refresh, and performs zero writes",
+    "A pristine manager closes when its snapshot expires and the automatic refresh completes",
+    "A delete confirmation opened before expiry cannot mutate after the snapshot refreshes; the old session token is rejected",
+    "Dirty manager draft stays visible and read-only after expiry and successful refresh; explicit local discard permits a fresh session",
+    "A routine update started while fresh may resolve after expiry, but the old manager session stays read-only after readback",
+    "An unknown mutation remains visible with retry disabled through a successful snapshot refresh",
+    "Changing the scope fixture unmounts a dirty session immediately and a new session has no prior draft",
+    "A pending/unknown session is cleared on scope change without carrying its draft or retry into the new scope",
+    "All distinguishes loading, read error and a genuinely empty template list",
+    "All template labels and actions fit at 140% text proxy without horizontal overflow"
+  ],
+  "pageErrors": [],
+  "scope": "Panel 4 Alla routine templates; production React Native Web components with synthetic data; not device/backend certification"
+}

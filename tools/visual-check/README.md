@@ -60,3 +60,48 @@ For `UX-TRAINING-UNMARK-01`, use `?screen=training&trainingScenario=later-comple
 ## UX-FIX 2026-10-15 — Knowledge checklist cache
 
 The Knowledge review fixture exposes `window.__know02UnmountRoute`, `__know02RemountRoute` and `__know02ChangeScope` for a manual warm-return/scope check. Set `window.__know02ReadDelayMs` before opening a previously unseen phase to inspect its honest loading state. `?state=detail-newer` returns a newer synthetic progress row from the template-detail read than from its overview read, exposing summary/detail reconciliation. The fixture counts reads in `__know02ChecklistReads`; expected behavior is three overview reads on cold entry, three more on first phase open, none when reopening that phase or remounting within the same scope, and three fresh reads after changing the synthetic account/dog scope. Captures and §14 delta notes are in `docs/design/evidence/vision-rev02/ux-fix-2026-10-15/knowledge-cache/`. The fixture uses synthetic review content and does not verify live Supabase, native accessibility, or persistent cache behavior.
+
+## FLOW-HOME-CHECKLIST-IDAG-01 — Panel 4, Idag
+
+Use `TASSLA_UI_SCOPE=home-checklist` with the public or review build produced by `build.cjs`. It exercises the always-visible Home entry at 0, 1–5, and more than 5 activities; distinct loading, empty, and read-error states; exact training-step open/return with Träning active and Hem restored on checklist return; missing training source with unconfirmed status and no action; confirmed progress that excludes unavailable sources and reports them separately on both Home and checklist; checklist-based routine management including adding/removing a routine for today, same-date/list return, and scroll restoration after closing the focused manager from a scrolled routine row; Home and checklist scroll restoration; and 375×844, 430×844, 375×667, and 140% text-proxy layouts. Review uses synthetic routine and training data. The verifier sets `prefers-reduced-motion: reduce` because its frozen browser date otherwise stalls the React Native `ScreenTransition` opacity animation at zero; Home's separate scope still checks standard and reduced-motion navigation behavior. Screenshots fast-forward CSS transitions to their resting state. Evidence and the Panel 4 comparison note are in `docs/design/evidence/vision-rev02/checklist/IDAG-01/`.
+
+On Windows, set `TASSLA_UI_CHROMIUM` to a specific Chromium executable only when Playwright cannot locate its installed browser automatically. The Windows procedure and temporary tool paths are recorded in `docs/tasks/dev/FLOW-HOME-CHECKLIST-IDAG-01.md`; fixtures remain outside the app bundle and no dependency or lockfile is added to the repository.
+
+## FLOW-HOME-CHECKLIST-ALL-01 — Panel 4, Alla
+
+Use `TASSLA_UI_SCOPE=checklist-all` with the public and review builds. The verifier checks all dog-owned templates, selected and unselected day states, choosing and restoring a skipped routine through the current-day callback, loading/error/empty states, read-only behavior during refresh/failure/stale mode, and 375×844, 430×844, 375×667 and 140% text-proxy layouts. The model tests exercise the exact 60-second boundary, live IANA-local date at action time, the shared mutation gateway and retry origin. Public/review browser cases also cover expired callbacks with zero writes, pristine-session close, a delayed delete confirmation captured before refresh, dirty draft preservation and explicit discard, an operation that resolves after expiry, unknown outcome retained through a successful read, and dirty/pending scope reset. Review and public use synthetic in-memory fixtures; they do not certify live Supabase/RLS, native Alert behavior, device accessibility or native presentation.
+
+PowerShell from the repository root, using the temporary tools and Python environment created for `FLOW-HOME-CHECKLIST-IDAG-01`:
+
+```powershell
+$toolRoot = Join-Path $env:TEMP 'tassla-ui-tools'
+$venvRoot = Join-Path $env:TEMP 'tassla-ui-venv'
+$uiPython = Join-Path $venvRoot 'Scripts/python.exe'
+$outputRoot = Join-Path $env:TEMP 'tassla-checklist-ALL-01'
+$env:TASSLA_UI_TOOLS = $toolRoot
+$env:TASSLA_UI_OUTPUT = Join-Path $outputRoot 'public'
+$env:TASSLA_UI_REVIEW = 'false'
+node tools/visual-check/build.cjs
+$env:TASSLA_UI_OUTPUT = Join-Path $outputRoot 'review'
+$env:TASSLA_UI_REVIEW = 'true'
+node tools/visual-check/build.cjs
+$env:TASSLA_UI_SCOPE = 'checklist-all'
+$publicOutput = Join-Path $outputRoot 'public'
+$publicServer = Start-Process -FilePath $uiPython -ArgumentList @('-m','http.server','4173','--bind','127.0.0.1','--directory',$publicOutput) -WindowStyle Hidden -PassThru
+try {
+  $env:TASSLA_UI_BASE_URL = 'http://127.0.0.1:4173/'
+  $env:TASSLA_UI_REVIEW = 'false'
+  $env:TASSLA_UI_EVIDENCE = (Join-Path (Get-Location) 'docs/design/evidence/vision-rev02/checklist/ALL-01/public')
+  & $uiPython tools/visual-check/verify.py
+} finally { Stop-Process -Id $publicServer.Id -Force }
+$reviewOutput = Join-Path $outputRoot 'review'
+$reviewServer = Start-Process -FilePath $uiPython -ArgumentList @('-m','http.server','4174','--bind','127.0.0.1','--directory',$reviewOutput) -WindowStyle Hidden -PassThru
+try {
+  $env:TASSLA_UI_BASE_URL = 'http://127.0.0.1:4174/'
+  $env:TASSLA_UI_REVIEW = 'true'
+  $env:TASSLA_UI_EVIDENCE = (Join-Path (Get-Location) 'docs/design/evidence/vision-rev02/checklist/ALL-01/review')
+  & $uiPython tools/visual-check/verify.py
+} finally { Stop-Process -Id $reviewServer.Id -Force }
+```
+
+Screenshots and UTF-8 `browser-results.json` are stored under `docs/design/evidence/vision-rev02/checklist/ALL-01/{public,review}/`. Compare both rendered variants with Panel 4 and complete the applicable §14 checklist; a passing synthetic interaction run does not mark the whole panel complete.

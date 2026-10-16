@@ -1,5 +1,5 @@
 import type { PublishedTrainingProgram, PublishedTrainingStep } from '../../data/workspace-data';
-import type { DailyActivitySnapshot, DailyRoutine, DailyRoutineDay, DailyTrainingSelection } from './daily-activity-data';
+import type { DailyActivitySnapshot, DailyRoutine, DailyRoutineDay, DailyRoutineDaySkip, DailyTrainingSelection } from './daily-activity-data';
 
 export type HomeDailyActivity = {
   id: string;
@@ -13,7 +13,173 @@ export type HomeDailyActivity = {
   programId?: string;
   stepId?: string;
   programTitle?: string;
+  availability?: 'available' | 'unavailable' | 'adult-restricted';
 };
+
+export type DailyActivityProgress = {
+  completedCount: number;
+  confirmedCount: number;
+  unavailableCount: number;
+};
+
+export type DailyRoutineTemplateEntry = {
+  routine: DailyRoutine;
+  state: 'selected' | 'skipped' | 'scheduled' | 'not-scheduled';
+  selectedDay: DailyRoutineDay | null;
+  skippedDay: DailyRoutineDaySkip | null;
+  activities: HomeDailyActivity[];
+};
+
+export function deriveDailyRoutineTemplateEntries(input: {
+  routines: readonly DailyRoutine[];
+  routineDays: readonly DailyRoutineDay[];
+  routineDaySkips: readonly DailyRoutineDaySkip[];
+  dogId: string;
+  dateKey: string;
+}): DailyRoutineTemplateEntry[] {
+  const { routines, routineDays, routineDaySkips, dogId, dateKey } = input;
+  if (!dogId || !isValidDateKey(dateKey)) return [];
+  const currentRoutines = routines.filter((routine) => routine.dog_id === dogId);
+  const routineIds = new Set(currentRoutines.map((routine) => routine.id));
+  const selectedByRoutine = new Map<string, DailyRoutineDay>();
+  for (const row of routineDays) {
+    if (row.dog_id === dogId && row.date_key === dateKey && routineIds.has(row.routine_id) && !selectedByRoutine.has(row.routine_id)) {
+      selectedByRoutine.set(row.routine_id, row);
+    }
+  }
+  const skippedByRoutine = new Map<string, DailyRoutineDaySkip>();
+  for (const row of routineDaySkips) {
+    if (row.dog_id === dogId && row.date_key === dateKey && routineIds.has(row.routine_id) && !skippedByRoutine.has(row.routine_id)) {
+      skippedByRoutine.set(row.routine_id, row);
+    }
+  }
+  return currentRoutines.map((routine) => {
+    const selectedDay = selectedByRoutine.get(routine.id) ?? null;
+    const skippedDay = skippedByRoutine.get(routine.id) ?? null;
+    const state = selectedDay ? 'selected' : skippedDay ? 'skipped'
+      : isRoutineDueOnDate(routine, dateKey) ? 'scheduled' : 'not-scheduled';
+    const activities = selectedDay ? selectedDay.checklist_snapshot.map((item) => ({
+      id: `routine:${selectedDay.id}:${item.id}`,
+      label: item.label,
+      routineLabel: selectedDay.routine_label_snapshot,
+      routineItemId: item.id,
+      kind: 'routine' as const,
+      completed: selectedDay.completed_item_ids.includes(item.id),
+      routineDay: selectedDay,
+    })) : [];
+    return { routine, state, selectedDay, skippedDay, activities };
+  });
+}
+
+export function isDailyActivitySnapshotWritable(input: {
+  snapshotScope: string;
+  expectedScope: string;
+  updatedAt: number | null | undefined;
+  now: number;
+  maxAgeMs: number;
+  ready: boolean;
+  refreshing: boolean;
+  refreshError: boolean;
+  sameScopeReadInFlight: boolean;
+}): boolean {
+  const { snapshotScope, expectedScope, updatedAt, now, maxAgeMs, ready, refreshing, refreshError, sameScopeReadInFlight } = input;
+  return Boolean(expectedScope && snapshotScope === expectedScope && ready && !refreshing && !refreshError && !sameScopeReadInFlight
+    && Number.isFinite(updatedAt) && Number.isFinite(now) && Number.isFinite(maxAgeMs) && maxAgeMs > 0 && now >= (updatedAt ?? Number.POSITIVE_INFINITY)
+    && now - (updatedAt ?? now) < maxAgeMs);
+}
+
+export function runDailyActivityActionIfWritable<T>(
+  input: Parameters<typeof isDailyActivitySnapshotWritable>[0],
+  action: () => T,
+  onBlocked?: () => void,
+): { allowed: true; value: T } | { allowed: false } {
+  if (!isDailyActivitySnapshotWritable(input)) {
+    onBlocked?.();
+    return { allowed: false };
+  }
+  return { allowed: true, value: action() };
+}
+
+export type DailyMutationOrigin = 'home' | 'all';
+
+export function runDailyActivityMutationGateway<T>(input: {
+  origin: DailyMutationOrigin;
+  snapshot: Parameters<typeof isDailyActivitySnapshotWritable>[0];
+  operation: () => T;
+  onBlocked?: () => void;
+  retryOrigins?: { requested: DailyMutationOrigin; pending: DailyMutationOrigin | null } | null;
+  isRetry?: boolean;
+  isCurrentDate?: boolean;
+  expectedSnapshotVersion?: number | null;
+}): { allowed: true; value: T } | { allowed: false } {
+  const retryOriginMismatch = Boolean(input.isRetry && (!input.retryOrigins?.pending
+    || input.retryOrigins.requested !== input.retryOrigins.pending));
+  const staleSession = input.expectedSnapshotVersion !== input.snapshot.updatedAt;
+  if (retryOriginMismatch || (input.origin === 'all' && (staleSession || !input.isCurrentDate || !isDailyActivitySnapshotWritable(input.snapshot)))) {
+    input.onBlocked?.();
+    return { allowed: false };
+  }
+  return { allowed: true, value: input.operation() };
+}
+
+export function isDailyActivityDateCurrent(expectedDateKey: string | null, now: number, timeZone: string): boolean {
+  return Boolean(expectedDateKey && Number.isFinite(now) && localDateKeyAt(new Date(now), timeZone) === expectedDateKey);
+}
+
+export function dailyActivitySnapshotExpiryDelay(updatedAt: number | null | undefined, now: number, maxAgeMs: number): number | null {
+  if (!Number.isFinite(updatedAt) || !Number.isFinite(now) || !Number.isFinite(maxAgeMs) || maxAgeMs <= 0) return null;
+  return Math.max(0, (updatedAt as number) + maxAgeMs - now);
+}
+
+export function scheduleDailyActivitySnapshotExpiry<Handle>(input: {
+  updatedAt: number | null | undefined;
+  maxAgeMs: number;
+  now: () => number;
+  setTimer: (callback: () => void, delayMs: number) => Handle;
+  clearTimer: (handle: Handle) => void;
+  onExpired: () => void;
+}): () => void {
+  let timer: Handle | null = null;
+  let cancelled = false;
+  const check = () => {
+    if (cancelled) return;
+    const delay = dailyActivitySnapshotExpiryDelay(input.updatedAt, input.now(), input.maxAgeMs);
+    if (delay === null || delay === 0) {
+      input.onExpired();
+      return;
+    }
+    timer = input.setTimer(check, delay);
+  };
+  const initialDelay = dailyActivitySnapshotExpiryDelay(input.updatedAt, input.now(), input.maxAgeMs);
+  if (initialDelay !== null) timer = input.setTimer(check, initialDelay);
+  return () => {
+    cancelled = true;
+    if (timer !== null) input.clearTimer(timer);
+  };
+}
+
+export function summarizeDailyActivityProgress(activities: readonly Pick<HomeDailyActivity, 'completed' | 'availability'>[]): DailyActivityProgress {
+  const unavailableCount = activities.filter((item) => item.availability === 'unavailable').length;
+  const confirmed = activities.filter((item) => item.availability !== 'unavailable');
+  return {
+    completedCount: confirmed.filter((item) => item.completed).length,
+    confirmedCount: confirmed.length,
+    unavailableCount,
+  };
+}
+
+export function dailyActivityProgressLabel(progress: DailyActivityProgress): string {
+  const unknownLabel = progress.unavailableCount === 1
+    ? '1 status kan inte bekräftas'
+    : `${progress.unavailableCount} statusar kan inte bekräftas`;
+  if (progress.unavailableCount === 0) return `${progress.completedCount} av ${progress.confirmedCount} klara`;
+  if (progress.confirmedCount === 0) return unknownLabel;
+  return `${progress.completedCount} av ${progress.confirmedCount} bekräftade klara · ${unknownLabel}`;
+}
+
+// No current MVP v2 training version has exact-version approval for adult use.
+// Add only version ids that are explicitly approved in the relevance matrix.
+export const ADULT_APPROVED_DAILY_TRAINING_VERSION_IDS: readonly string[] = [];
 
 export type TrainingProgressStamp = {
   dogId: string;
@@ -124,6 +290,8 @@ export function deriveHomeDailyActivities(
   programs: readonly PublishedTrainingProgram[],
   dogId: string,
   dateKey: string,
+  lifeStage: 'VALP' | 'UNGHUND' | 'VUXEN' | null = null,
+  adultApprovedVersionIds: readonly string[] = ADULT_APPROVED_DAILY_TRAINING_VERSION_IDS,
 ): HomeDailyActivity[] {
   if (!isValidDateKey(dateKey)) return [];
   const routinesById = new Map(snapshot.routines.filter((routine) => routine.dog_id === dogId).map((routine) => [routine.id, routine]));
@@ -141,12 +309,15 @@ export function deriveHomeDailyActivities(
     });
   }
   const programById = new Map(programs.map((program) => [program.id, program]));
+  const adultApprovedVersions = new Set(adultApprovedVersionIds);
   for (const row of snapshot.trainingSelections) {
     if (row.dog_id !== dogId || row.date_key !== dateKey) continue;
-    const program = programById.get(row.program_version_id);
-    const step = program?.steps.find((item) => item.id === row.step_id);
-    if (!program || !step) continue;
-    const stamp = trainingProgressStamp(dogId, program, row.step_id);
+    const program = programById.get(row.program_version_id) ?? { id: '', title: undefined, steps: [], completedAtByStepId: {} };
+    const step = program?.steps.find((item) => item.id === row.step_id)
+      ?? { id: '', position: 0, title: 'Valt träningssteg kunde inte hämtas', instruction: '' };
+    const available = Boolean(program.id && step.id);
+    const adultRestricted = lifeStage === 'VUXEN' && !adultApprovedVersions.has(row.program_version_id);
+    const stamp = available ? trainingProgressStamp(dogId, program, row.step_id) : null;
     activities.push({
       id: `training:${row.id}`,
       label: step.title,
@@ -157,9 +328,10 @@ export function deriveHomeDailyActivities(
         stepId: row.step_id,
       }, row.date_key, row.time_zone) : false,
       trainingSelection: row,
-      programId: program.id,
-      stepId: step.id,
+      programId: program.id || undefined,
+      stepId: available ? step.id : undefined,
       programTitle: program.title,
+      availability: !available ? 'unavailable' : adultRestricted ? 'adult-restricted' : 'available',
     });
   }
   return activities;

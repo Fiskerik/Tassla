@@ -9,16 +9,18 @@ import { tokens } from '../../theme/tokens';
 const trainingImage = require('../../../assets/images/puppy-training.png');
 const tabs = ['Rekommenderat', 'Alla övningar', 'Mina'] as const;
 
-export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, reviewMode = false }: {
+export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, reviewMode = false, initialSelection, onBackToChecklist }: {
   ageWeeks: number | null; programs: readonly PublishedTrainingProgram[]; paused: readonly PausedTrainingProgress[]; busyStepKey: string | null; error: string;
   reviewMode?: boolean;
+  initialSelection?: { programId: string; stepId: string };
+  onBackToChecklist?: () => void;
   onCompleteStep: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>;
   onUnmarkStep?: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>; onContinue: () => void;
   onResetProgram: (program: PublishedTrainingProgram) => void; onRetry: () => void;
 }) {
   const [tab, setTab] = useState<string>(tabs[0]);
-  const [programId, setProgramId] = useState<string | null>(null);
-  const [selection, setSelection] = useState<{ programId: string; stepId: string } | null>(null);
+  const [programId, setProgramId] = useState<string | null>(() => initialSelection?.programId ?? null);
+  const [selection, setSelection] = useState<{ programId: string; stepId: string } | null>(() => initialSelection ?? null);
   const [successMessage, setSuccessMessage] = useState('');
   const [reviewCompleted, setReviewCompleted] = useState<Record<string, string[]>>({});
   const [animateCompleteTarget, setAnimateCompleteTarget] = useState<{ key: string; programId: string; stepId: string } | null>(null);
@@ -111,6 +113,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   }
 
   return <View>
+    {onBackToChecklist ? <Button variant="tertiary" label="Tillbaka till dagens checklista" accessibilityLabel="Tillbaka till dagens checklista" disabled={Boolean(busyStepKey)} onPress={onBackToChecklist} /> : null}
     <Text accessibilityRole="header" style={styles.screenTitle}>Träning</Text>
     <Tabs items={tabs} active={tab} onChange={setTab} variant="rev02-segmented" />
     {reviewMode ? <Text style={styles.note}>Tillfälligt exempel – innehållet är inte sakgranskat. Markeringar i dessa övningsutkast sparas under den här visningen.</Text> : null}
@@ -169,7 +172,11 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       <Text style={styles.body}>{reviewMode ? 'Öppna ett tillfälligt exempel och markera ett steg för att se hur framsteg visas.' : 'När du markerar ett steg som genomfört hittar du programmets framsteg här.'}</Text>
     </View> : null}
 
-    <BottomSheet visible={Boolean(selectedProgram)} title={selectedStep ? 'Övning' : 'Om programmet'} onRequestClose={() => { if (!busyStepKey) setSelection(null); }}>
+    <BottomSheet visible={Boolean(selectedProgram)} title={selectedStep ? 'Övning' : 'Om programmet'} onRequestClose={() => {
+      if (busyStepKey) return;
+      if (onBackToChecklist && selection) { onBackToChecklist(); return; }
+      setSelection(null);
+    }}>
       <Text style={styles.sheetHeading}>{selectedStep?.title ?? selectedProgram?.title}</Text>
       <Text style={styles.body}>{selectedStep?.instruction ?? selectedProgram?.body}</Text>
       <Text style={styles.note}>Anpassa efter din hund och pausa när det behövs.</Text>

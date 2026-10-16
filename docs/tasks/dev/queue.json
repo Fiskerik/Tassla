@@ -6415,7 +6415,7 @@
           "evidence": "Independent Reviewer PASS 2026-10-15 for exact deletion copy and cancel/destructive handlers. App and edge TypeScript, full ESLint, and Node test suite pass in isolated copy; 492/492. No database or migration operation; live RLS/native remain separate."
         }
       ],
-      "next_step": "Next P1: FLOW-HOME-CHECKLIST-01. Define real Idag/Denna vecka/Alla scopes and actual upcoming plan sources in an exact reviewed plan before implementation. Full panel-4 screen comparison and live routine migration/RLS/native checks remain open.",
+      "next_step": "Nästa P1 är FLOW-HOME-CHECKLIST-IDAG-01. Ägarbeslutet om Alla är fast: alla aktiva rutinmallar oavsett dagsval; implementationen kommer i separat beroende checkpoint. Fullskärmsresan och paneljämförelsen är fortsatt öppna.",
       "implementation_state": "Compact routine manager and Home completion actions implemented and independently reviewed as a local UI slice; this does not complete the full-screen panel-4 checklist journey.",
       "evidence_status": "local PASS: independent QA/Reviewer; app and edge typecheck, lint, 492/492 tests. NOT TESTABLE: native Alert rendering, live Supabase/RLS/migration, native accessibility, and full panel-4 screen because the full-screen list is a later flow."
     },
@@ -7018,6 +7018,118 @@
       "next_step": "Independent Reviewer PASS 2026-10-15. RPC argument names match migration; readback/equality includes weekdays; legacy NULL and anchor are preserved; 375x844 render evidence supports checkbox state, minimum rule, and ≥44pt targets. No scope/evidence finding. QA PASS, Architect/Security static PASS, Critic PROCEED, Compliance PASS. Full panel 4, native accessibility, migration/runtime parity and live RLS remain NOT TESTABLE. Evidence: docs/design/evidence/vision-rev02/ux-fix-2026-10-15/routine-weekdays/RENDER-REPORT.md. No test suite or database operation."
     },
     {
+      "id": "MVP-V2-ADOPT-01",
+      "title": "MVP v2 som styrande scope och V2-01 relevanskontrakt",
+      "mvp_requirement": "docs/mvp.md §14; docs/content/mvp-v2-relevance-matrix.md",
+      "plan": "docs/tasks/dev/mvp-v2-adoption.md v1.8",
+      "write_paths": [
+        "docs/mvp.md",
+        "docs/MVP v2 - 2026-10-16.md",
+        "docs/history/mvp-v1-2026-10-15.md",
+        "docs/history/mvp-v2-source-proposal-2026-10-15.md",
+        "docs/content/mvp-v2-relevance-matrix.md",
+        "docs/design/vision-rev02-screen-contracts.md",
+        "AGENTS.md",
+        "docs/MVP-EXPERIENCE-CONTRACT.md",
+        "docs/dev/workflow.md",
+        ".codex/agents/product.toml",
+        ".codex/agents/critic.toml",
+        ".codex/agents/architect.toml",
+        ".codex/agents/dog_expert.toml",
+        ".codex/agents/implementer.toml",
+        ".codex/agents/qa.toml",
+        ".codex/agents/reviewer.toml",
+        ".codex/agents/security.toml",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/GAP_analys_Tassla 2026-10-16.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/mvp-v2-adoption.md",
+        "docs/tasks/dev/FLOW-HOME-CHECKLIST-IDAG-01.md"
+      ],
+      "acceptance": [
+        "docs/mvp.md is the single current, owner-approved MVP v2 definition; v1 and the original proposal are preserved as clearly historical material.",
+        "The v2 crosswalk retains six product areas and all eight functional vision_rev02 journeys; Panel 4 Alla means every active routine template, whether selected for a day or not.",
+        "V2-01 matrix separates published/age/breed eligibility from editorial audience/surface and adult applicability; automatic recommendation priority/tie-break remains unresolved and gated, while user-directed lists/search/filters include only content passing eligibility and editorial audience/surface gates, with version-specific Dog Expert review for adult advice/training and neutral Swedish-title order with slug tie-break; no runtime or content version changes.",
+        "MASTER-LOG.md is the canonical current decision and completed-package summary; historical decision files are explicitly non-governing.",
+        "Queue contains MVP-V2-ADOPT-01 and FLOW-HOME-CHECKLIST-01 explicitly records the exact Alla behavior and real-data condition for Kommande.",
+        "Agent instructions do not promise new puppy-tailored content at every login or require a new segment mandate for in-scope MVP v2 checkpoints; content gates allow an honest empty state.",
+        "Panel 4 screen contract defines Alla as all active routine templates, including templates not selected for a day; Week and Upcoming remain gated on real selection and data sources.",
+        "FLOW-HOME-CHECKLIST-IDAG-01 exact plan v3 is included in the adoption package write scope and synced with its queue entry; it establishes a reviewed always-visible entry, safe exact-version training deep link/adult gate, date-refresh lifecycle, Windows public/review rendering evidence, and return behavior before runtime code starts.",
+        "Existing safety, truthfulness, accessibility, privacy and approval boundaries remain clear; no pilot/release or data-purpose authorization is inferred.",
+        "Queue JSON/TOML parse, queue validation, relevant link/status checks and git diff --check pass."
+      ],
+      "checks": [
+        "python -m json.tool docs/tasks/dev/queue.json",
+        "python tools/dev_flow.py validate",
+        "python -c \"import pathlib,tomllib; [tomllib.loads(p.read_text(encoding='utf-8')) for p in pathlib.Path('.codex/agents').glob('*.toml')]\"",
+        "git diff --check",
+        "Manual targeted review of canonical/history links and 11w/5y applicability cases",
+        "Compare FLOW-HOME-CHECKLIST-IDAG-01 plan v3 write_paths, acceptance and checks against its exact queue entry; confirm parent package includes the child plan"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE adoption v1.8 plus included IDAG plan v3; exact main base and write scope verified; recorded in docs/tasks/dev/mvp-v2-adoption.md and docs/tasks/dev/FLOW-HOME-CHECKLIST-IDAG-01.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "User-approved local docs-only package implemented; historical MVP files archived and canonical MVP v2, agent/workflow contracts, relevance matrix, queue and plan v3 aligned; no runtime or GitHub writes"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "JSON parse, dev_flow validation, all nine TOML parses, plan/queue path and review-evidence assertions, 26 relative Markdown targets and git diff --check PASS; no app/test/tool changes"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent documentation QA PASS for adoption v1.8 and included IDAG plan v3; exact write-path parity and queue acceptance/check alignment verified"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS for adoption v1.8 and included IDAG v3 after persistent evidence correction; summary recorded in docs/decisions/MASTER-LOG.md. Local uncommitted checkpoint on main base 00d4d4a; no GitHub writes"
+        }
+      ],
+      "next_step": "Independent Reviewer PASS for adoption v1.8 and included IDAG v3 after persistent evidence correction; summary recorded in docs/decisions/MASTER-LOG.md. Local uncommitted checkpoint on main base 00d4d4a; no GitHub writes",
+      "priority": "P0",
+      "panels": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ],
+      "risk_class": "L",
+      "checkpoint": "Kanonisk MVP v2 + relevansmatris; ingen app-/databaskod och ingen publicering.",
+      "test_evidence": [
+        "PASS 2026-10-16 v1.8: python -m json.tool docs/tasks/dev/queue.json",
+        "PASS 2026-10-16 v1.8: python tools/dev_flow.py validate",
+        "PASS 2026-10-16 v1.8: parse all 9 .codex/agents/*.toml files with tomllib",
+        "PASS 2026-10-16 v1.8: independent/local relative Markdown link checks; latest Reviewer run 31/31 targets exist",
+        "PASS 2026-10-16 v1.8: git diff --check",
+        "PASS 2026-10-16: independent document QA for v1.8 and child plan v3; exact write path, queue acceptance and visual command reference aligned; no runtime files changed",
+        "APPROVE 2026-10-16: Architect for adoption v1.8 and included IDAG v3 plan; base main @ 00d4d4a3e38c08a6bb7d4c541cc509457126276f",
+        "PROCEED 2026-10-16: Critic for adoption v1.8 and IDAG v3 plan",
+        "CHANGES 2026-10-16: Reviewer requested persistent records for actual plan approvals/QA; records were added to task plans and queue",
+        "PASS 2026-10-16: Reviewer final closeout of MVP-V2-ADOPT-01 v1.8 and included FLOW-HOME-CHECKLIST-IDAG-01 v3; no remaining findings"
+      ],
+      "implementation_state": "local documentation package complete; uncommitted, no GitHub writes",
+      "evidence_status": "v1.8 JSON/queue/TOML/31-link/diff PASS; independent QA PASS; Architect APPROVE; Critic PROCEED; final Reviewer PASS"
+    },
+    {
       "id": "FLOW-ONBOARD-01",
       "title": "Onboarding och hundprofil till personligt Hem",
       "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
@@ -7062,7 +7174,7 @@
       "id": "FLOW-HOME-CHECKLIST-01",
       "title": "Hem till daglig Checklista och tillbaka",
       "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; fullskärmsmålet realiseras via namngivna checkpoints",
       "write_paths": [
         "src/features/home/HomeScreen.tsx",
         "src/features/home/DailyActivityManagerSheet.tsx",
@@ -7072,7 +7184,7 @@
         "Hem och dagslista har samma fullständiga population och bekräftade count",
         "Skapa/ändra/ta bort/ångra rutin fungerar; träningsrad öppnar källsteg",
         "Synliga filter fungerar; pending/failed/unknown döljer falsk progress",
-        "För full panelacceptans fungerar Idag/Denna vecka/Alla och Kommande med definierat urval och verkliga planposter"
+        "För full panelacceptans fungerar Idag/Denna vecka/Alla med definierat urval; Alla visar varje aktiv rutinmall oavsett om den valts för någon dag. Kommande visas endast med verkliga planposter och datakälla."
       ],
       "checks": [
         "pnpm check",
@@ -7080,22 +7192,410 @@
         "python tools/dev_flow.py validate"
       ],
       "depends_on": [
-        "HOME-ROUTINE-CHECKLIST-01"
+        "FLOW-HOME-CHECKLIST-IDAG-01",
+        "FLOW-HOME-CHECKLIST-ALL-01",
+        "FLOW-HOME-CHECKLIST-WEEK-01",
+        "FLOW-HOME-CHECKLIST-UPCOMING-01"
       ],
       "status": "planned",
       "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "next_step": "Panel 4 delas i beroende checkpoints: Idag, Alla, Denna vecka och Kommande. Alla är redan beslutat som samtliga aktiva rutinmallar, även utan dagsval. Börja med FLOW-HOME-CHECKLIST-IDAG-01; Kommande får endast verkliga framtida planposter.",
       "priority": "P1",
       "panels": [
         "1",
         "4"
       ],
       "risk_class": "M",
-      "checkpoint": "Hel Hem till Checklista till Hem lokalt QA/Reviewer; live status separat från FLOW-ROUTINE-RUNTIME-01.",
+      "checkpoint": "Panel 4 är klar först när alla fyra underordnade checkpoints är oberoende QA-granskade och passerade; full visuell paneljämförelse och live RLS/native kontroller redovisas separat.",
       "test_evidence": [
         "Riktat lyckat/fel/unknown-prov, datum/scope-regression, §14-bilder public/review"
       ],
       "implementation_state": "föreslagen; ingen kod i denna diff",
+      "evidence_status": "not_run — required evidence listed in test_evidence"
+    },
+    {
+      "id": "FLOW-HOME-CHECKLIST-IDAG-01",
+      "title": "Panel 4: fullständig dagslista och återgång till Hem",
+      "mvp_requirement": "docs/mvp.md: Rev02-panel 4; docs/MVP-EXPERIENCE-CONTRACT.md; docs/design/vision-rev02-screen-contracts.md",
+      "plan": "docs/tasks/dev/FLOW-HOME-CHECKLIST-IDAG-01.md v3",
+      "write_paths": [
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/daily-activity-model.ts",
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/main-navigation.ts",
+        "src/components/AppPrimitives.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/home/README.md",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "tests/main-navigation.test.mjs",
+        "tests/daily-activity-model.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "docs/tasks/dev/FLOW-HOME-CHECKLIST-IDAG-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/checklist/IDAG-01"
+      ],
+      "acceptance": [
+        "Hem har en synlig separat Visa dagens checklista-ingång vid 0, 1–5, fler än 5 rader samt loading/error; den visar alla källrader och samma bekräftade total.",
+        "Rutinpunkter använder befintlig bekräftad mutation och retry/readback. Träning öppnas endast från exakt valt publicerat program_version_id + step_id i aktuell publicerad snapshot; missing/stale source är icke-handlingsbar och kan inte markeras klar.",
+        "För VUXEN blockeras träningsinstruktion utan versionsspecifikt vuxengodkännande i relevansmatrisen. Testa 11 veckor exact-open och 5 år med current age-open v1 versions ...0009, ...0010, ...0011; dessa blockeras. Testa missing/stale pair. Ingen ny åldersgräns/reviewmetadata.",
+        "Stängning av träning/rutinhantering återgår till samma datum/checklista/scroll; Hem-scroll återställs. Hem är vald huvudflik och checklistan går inte in i tabbsvep.",
+        "Rutinhantering bevarar befintligt create/edit/delete/day-select/cancel/undo/pending/failed/unknown/retry-beteende utan nya data- eller RPC-kontrakt.",
+        "Loading/empty/error/pending/failed/unknown är sanningsenliga; hund/konto/dag/timezone/review-scope isoleras. Datum/snapshot refresh sker vid midnatt, timezone change och resume; inga queries/datakontrakt utökas.",
+        "Syntetisk produktionkomponent-granskning täcker 375x844, 430x844, 375x667, långa svenska texter, 140%-proxy, loading/empty/error/unknown, radtryck, rutinhantering och återgång. Dokumentera att vision_rev02-panel 4 markerar Logg medan detaljresan håller Hem markerad.",
+        "Uppdatera Home-guiden och rapportera exakta test- och renderbevis; denna checkpoint gör inte hela Panel 4 klar."
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/home/HomeScreen.tsx src/features/home/daily-activity-model.ts src/features/home/DailyChecklistScreen.tsx src/features/home/ProductWorkspace.tsx src/features/home/main-navigation.ts src/components/AppPrimitives.tsx src/features/training/PublishedTrainingScreen.tsx tools/visual-check/app.tsx tests/main-navigation.test.mjs tests/daily-activity-model.test.mjs tests/daily-activity-ui.test.mjs",
+        "node --experimental-strip-types --test tests/main-navigation.test.mjs tests/daily-activity-model.test.mjs tests/daily-activity-ui.test.mjs",
+        "PowerShell public/review build, serve and verify commands: follow the executable command block under Kontroll och bevis in docs/tasks/dev/FLOW-HOME-CHECKLIST-IDAG-01.md v3",
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "MVP-V2-ADOPT-01",
+        "HOME-ROUTINE-CHECKLIST-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v3 and Critic PROCEED recorded in the plan; Dog Expert gate principles reviewed; dependencies MVP-V2-ADOPT-01 and HOME-ROUTINE-CHECKLIST-01 are done"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start user-authorized local implementation of Panel 4 Idag only, within v3 write scope; preserve current data/query contracts and implement fail-closed exact training deep link"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "PASS: pnpm check (app and edge typecheck, ESLint, 493/493 tests); focused navigation/model tests 10/10; public/review builds and Home/checklist visual scopes pass with zero checklist page errors; py_compile, git diff --check and queue validation pass. Native accessibility/gestures and live Supabase/RLS are NOT TESTABLE. Next: independent QA against FLOW-HOME-CHECKLIST-IDAG-01 v3; no commit or GitHub write."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: public/review checklist entry, loading/empty/error, exact training return, manager add/remove with same date/list, 375x667 focused-manager scroll restoration within 3px, updated manager screenshots, no page errors; full and focused tests recorded; native/backend NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Final Reviewer PASS 2026-10-16 after delta-QA PASS; 19/19 plan/queue write paths, 494/494 full check, focused 15/15, public/review UTF-8 browser results and zero page errors. Local-only checkpoint; native/live-backend NOT TESTABLE. Next: FLOW-HOME-CHECKLIST-ALL-01 exact plan and risk review before code; no GitHub write."
+        }
+      ],
+      "next_step": "Done locally after delta-QA and final Reviewer PASS. Next P1: FLOW-HOME-CHECKLIST-ALL-01. Verify existing routine-row activity semantics, write its exact H-risk plan, and obtain Architect/Security/Critic before runtime code; no GitHub write.",
+      "priority": "P1",
+      "panels": [
+        "1",
+        "4"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Idag only: full list from current day snapshot and safe return to Home; no Week/All/Upcoming tabs are shown yet.",
+      "test_evidence": [
+        "PASS: pnpm check — app typecheck, edge typecheck, ESLint, Node 494/494",
+        "PASS: focused main-navigation, daily-activity-model, and daily-activity-ui tests 15/15; unavailable excluded from confirmed progress; adults fail closed for ...0009/...0010/...0011; missing/stale pairs retained unavailable",
+        "PASS: public/review TASSLA_UI_SCOPE=home-checklist; 0/1-5/>5 entry, loading/empty/read-error, missing training source has unconfirmed status and no open action, exact step activates Träning and return restores Hem, direct checklist manager add/remove with same date/list return, focused manager scroll restoration within 3px, checklist and 100px Home scroll restoration, 375/430/667 viewports, 140% text, no page errors",
+        "PASS: public and review Home visual regression for layout, routine manager/recovery, navigation, and 140% text",
+        "NOT TESTABLE: native VoiceOver/Dynamic Type and physical back gesture; live Supabase/RLS/real accounts; separate runtime test of midnight/timezone/resume events",
+        "PASS: independent risk-based implementation QA on 2026-10-16 before the aggregate-progress correction; checklist-manager route, exact date/list return, focused-row scroll restoration and public/review evidence inspected",
+        "PASS: pnpm check after aggregate-progress correction; app/edge typecheck, ESLint, Node 494/494",
+        "PASS: unavailable sources excluded from confirmed Home and checklist progress; public/review assert 3 av 5 bekräftade klara · 1 status kan inte bekräftas and Home progressbar has the matching accessible name; page errors empty",
+        "CHANGES: delta-QA 2026-10-16 found recorded count stale at 493/493; corrected all current plan/report/queue evidence to pnpm check 494/494 and focused tests 15/15",
+        "PASS: renewed delta-QA 2026-10-16 confirmed the corrected records, shared Home/checklist progress behavior, 494/494 full check, 15/15 focused tests, public/review evidence and queue/diff validation",
+        "APPROVED: Architect 2026-10-16 for tests/daily-activity-ui.test.mjs plus ESLint/focused-test command in exact plan/queue scope; test-only, no runtime/data/risk change",
+        "CHANGES: final Reviewer 2026-10-16 found UI test path missing from exact scope and Windows browser-results.json encoding; path added with Architect approval and verify.py now writes UTF-8",
+        "PASS: public/review home-checklist rebuilt and rerun after UTF-8 fix; both browser-results.json files parse with explicit UTF-8, zero page errors, all route/progress assertions pass",
+        "PASS: latest pnpm check 494/494; focused main-navigation/model/UI tests 15/15; queue validation, Python syntax, UTF-8 JSON parse and git diff --check pass; renewed delta-QA pending",
+        "PASS: renewed delta-QA after Reviewer corrections confirmed exact 19-path plan/queue parity, explicit test/lint scope, 494/494, 15/15, five public + five review assertions with zero page errors, UTF-8 JSON parsing, scoped UI-test ESLint, queue validation and git diff --check",
+        "PASS: final implementation Reviewer 2026-10-16; current Main base, aligned plan/queue/report, truthfulness and risk boundaries verified; local checkpoint complete; live/native boundaries remain NOT TESTABLE"
+      ],
+      "implementation_state": "Completed locally after Architect-approved test scope, renewed delta-QA PASS, and final Reviewer PASS; local 494/494 and focused 15/15; public/review regenerated, UTF-8 parse pass with zero page errors",
+      "evidence_status": "complete_local_checkpoint; local_check_passed; aggregate_progress_render_assertion_passed; public_review_render_passed; utf8_json_passed; native_backend_not_testable; test_path_architect_approved; delta_QA_passed; reviewer_passed"
+    },
+    {
+      "id": "FLOW-HOME-CHECKLIST-ALL-01",
+      "title": "Panel 4: Alla visar samtliga aktiva rutinmallar",
+      "mvp_requirement": "docs/mvp.md: Rev02-panel 4; owner decision 2026-10-16; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/tasks/dev/FLOW-HOME-CHECKLIST-ALL-01.md v8 security follow-up to v7",
+      "write_paths": [
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/daily-activity-model.ts",
+        "src/features/home/README.md",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/build.cjs",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "tests/daily-activity-model.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "docs/tasks/dev/FLOW-HOME-CHECKLIST-ALL-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/checklist/ALL-01"
+      ],
+      "acceptance": [
+        "Alla listar varje sparad mall i lyckad snapshot för aktuell hund, även om den inte valts för någon dag; ingen annan hunds mallar visas. En sparad rad är aktiv eftersom modellen saknar arkiv/statusfält; ägarens befintliga delete-flöde tar bort den.",
+        "Vald rutin visar aktuell hunds/dags beständiga dagsnapshot och bekräftade status; den ersätter aldrig en befintlig snapshot med nyare mallinnehåll.",
+        "Ovald eller överhoppad rutin kan väljas/återställas för idag via befintlig mutation med dagsspecifik copy. Pending/failed/unknown är sanningsenliga; valda rutiner visar ingen andra lägg-till-handling; dublettskydd kvarstår.",
+        "5. Loading, empty and read-error states are distinct. Failed reads show no actionable routine list. During refresh, refresh error, a same-scope read flight or snapshot age of 60 seconds or more, Alla is read-only and every action/retry callback is guarded at invocation. A pristine manager closes at expiry. A dirty, pending or unknown manager in the exact same account/user-generation, dog, date, timezone and content scope stays visible read-only with accessible refresh-needed feedback; only explicit local close/discard is allowed. A successful refresh does not unlock that old session: discard/close it, then reopen from the fresh snapshot. Any scope or ownership change immediately clears the old session, including dirty drafts. An operation started while fresh may resolve after expiry, but cannot unlock the stale session. A fresh new session restores actions.",
+        "All-origin writes also verify the live local date and the snapshot version captured by the rendered session; a delayed callback from an older session is rejected even if a replacement snapshot is fresh. Failed/unknown mutation state remains visible through successful refresh until confirmed or scope change.",
+        "Rutinens managerhandlingar beskriver dagshandlingar som Välj för idag/Välj igen idag/Ta bort idag; rutinradering behåller sin separata destruktiva bekräftelse.",
+        "Idag-regression och återgång från tidigare checkpoint kvarstår; inga dekorativa Vecka/Kommande-flikar visas.",
+        "Public/review render visar valda/ovalda mallar, skip restoration, dog/date isolation, empty/loading/error, stale/refreshing/failure read-only, 375x844/430x844/375x667, långa svenska texter och 140%-proxy enligt design-rules §14. Live RLS och native accessibility redovisas separat som NOT TESTABLE.",
+        "Panel 4 headern visar tillbaka till Hem med ikon till vänster och centrerad Checklista-titel; hund/datum förblir läsbart och Idag/Alla ligger direkt under rubriken. Public/review render jämförs igen efter ändringen."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/daily-activity-model.test.mjs tests/daily-activity-ui.test.mjs tests/daily-activity-data.test.mjs",
+        "pnpm exec eslint src/features/home/DailyChecklistScreen.tsx src/features/home/DailyActivityManagerSheet.tsx src/features/home/ProductWorkspace.tsx src/features/home/daily-activity-model.ts tools/visual-check/app.tsx tests/daily-activity-model.test.mjs tests/daily-activity-ui.test.mjs",
+        "pnpm check",
+        "Public/review TASSLA_UI_SCOPE=home-checklist, home and checklist-all; synthetic build/serve/verify per tools/visual-check/README.md and render evidence report",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "Behavioral All freshness boundary: 59,999/60,000 ms, future timestamp, timer early-fire/reschedule, midnight rollover, shared-gateway action categories including retry-origin, post-render callbacks including retry and delayed delete confirm after snapshot replacement, dirty/pending draft preservation, scope clearing, operation resolve-after-expiry, zero blocked writes and a single coalesced refresh.",
+        "Verify v8 public/review browser-results.json under docs/design/evidence/vision-rev02/checklist/ALL-01/{public-checklist-all,review-checklist-all}: 16 passes each and zero pageErrors"
+      ],
+      "depends_on": [
+        "FLOW-HOME-CHECKLIST-IDAG-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v4; Critic PROCEED v4; Security PASS v4; plan/queue exact 15 paths; current main base confirmed; no backend contract changes"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik authorized local MVP v2 implementation in small checkpoints; implement only plan v4 paths; no GitHub writes"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "V5 implementation complete: focused daily-activity tests 20/20; pnpm check typechecks/lint/tests PASS (498/498); public and review renders each pass 8/8 with no page errors; render comparison recorded; dev_flow validate and git diff --check PASS. Local synthetic evidence only; live RLS and native/device checks remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent QA FAIL: All implementation and All renders pass, but existing home-checklist verifier still expects retired manager labels at verify.py:63,66,71. Manual UI check with current labels passed; update only stale assertions and rerun Idag public/review plus All regression before renewed QA."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Replan v6 after QA v1 FAIL: correct five stale render selectors only; exact correction approved by Architect and recorded in docs/tasks/dev/FLOW-HOME-CHECKLIST-ALL-01.md; no production behavior changes."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE FLOW-HOME-CHECKLIST-ALL-01 v6 QA correction; all five selectors and public/review home-checklist, home, checklist-all reruns confirmed."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement only the Architect-approved v6 verifier-label correction in tools/visual-check/verify.py; no app behavior changes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "V6 verification correction complete: updated five stale selectors in verify.py; public/review home-checklist 5/5 each, home 5 public/6 review, checklist-all 8/8 each; empty pageErrors; focused tests 20/20; pnpm check 498/498; py_compile, scoped ESLint, dev_flow validate and diff check PASS. Live RLS/native/device remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA v2 PASS: focused 20/20; pnpm check 498/498; dev_flow validate PASS; selectors match; six public/review result JSONs have zero page errors and renders verified. QA could not reproduce git diff --check because prior environment lacked Git metadata; implementer recorded PASS. Live Supabase/RLS, production duplicate races, native accessibility and physical-device layout remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer v6 BLOCK: 30s dailyClock tick leaves All checklist completion, manager open and manager edit/delete render-time gates writable up to 30s after 60s snapshot expiry; add event-time scope/freshness/read-flight checks and exact expiry UI update, with boundary tests. QA v2 PASS otherwise; task doc records evidence."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Replan v7 after Reviewer v6 BLOCK: add exact 60s expiry, event-time authorization including retries, scoped stale-session draft preservation and behavioral timing tests. Architect APPROVE; Critic PROCEED; Security PASS with required wording recorded in task plan. No data contract or GitHub write."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE FLOW-HOME-CHECKLIST-ALL-01 plan v7; Critic PROCEED; Security PASS with required wording. Exact daily scope, expiry, retry, draft preservation and boundary tests are recorded in the plan."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin only the Architect-approved v7 expiry/read-only draft-preservation correction within task write paths; preserve Home behavior and existing data contract."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "architect",
+          "evidence": "Architect APPROVE FLOW-HOME-CHECKLIST-ALL-01 v8 security follow-up. Confirmed live IANA-local-date gate, rendered snapshot-version token, retained failed/unknown state and one-shot delayed-Alert test shim are in scope; no data-contract, dependency or persistence change. Risk remains H."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "V8 implementation complete; Architect APPROVE and Security PASS recorded; focused 24/24 and full pnpm check 502/502 PASS; canonical public/review checklist-all 16/16, home-checklist 5/5, Home 5/6, zero browser errors; py_compile, scoped ESLint and git diff --check PASS. Ready for final independent Reviewer re-review; live Supabase/RLS and native/device checks remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "qa",
+          "actor": "reviewer",
+          "evidence": "Reviewer v8 first re-review BLOCK: no production-path defect found; requested recording Architect approval, updating current task/queue summaries and refreshing canonical public evidence from 8 to 16 scenarios. The fields and public/review evidence are now aligned; final re-review pending."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA v3 PASS: focused 24/24 and pnpm check 502/502; canonical public/review All 16/16, Idag 5/5, Home 5/6; zero page errors. Final independent Reviewer v8 confirms no behavior/bookkeeping blockers; ready for reviewer closure of this local checkpoint only."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Final Reviewer v8 PASS after correcting all queue summary fields and refreshing canonical public/review evidence. Architect and Security PASS; QA PASS; local checkpoint complete. Panel 4 still has Week/Upcoming dependencies; live backend/native/device evidence remains NOT TESTABLE."
+        }
+      ],
+      "next_step": "Final Reviewer v8 PASS after correcting all queue summary fields and refreshing canonical public/review evidence. Architect and Security PASS; QA PASS; local checkpoint complete. Panel 4 still has Week/Upcoming dependencies; live backend/native/device evidence remains NOT TESTABLE.",
+      "priority": "P1",
+      "panels": [
+        "4"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Alla: komplett hundscope-lista av aktiva mallar oberoende av dagsval; ingen vecka/upcoming här.",
+      "test_evidence": [
+        "PASS: focused daily-activity tests 24/24; pnpm check including app/edge typechecks, lint and 502/502 tests; scoped ESLint; Python verifier syntax; dev_flow validate; git diff --check.",
+        "PASS: canonical public-checklist-all and review-checklist-all each record 16 passes and zero pageErrors; public/review home-checklist each 5/5; Home 5/5 public and 6/6 review.",
+        "Behavioral coverage includes the live local-date gate at action time, exact expiry and zero blocked writes, all mutation gateway categories and retry origin, stale captured callbacks after snapshot replacement, dirty/pending/unknown preservation and scope reset, and operation completion after expiry without unlocking the old session.",
+        "Architect APPROVE v8 and Security implementation PASS. No query, schema, RLS, RPC, dependency, persistence-shape or data-purpose changes; daily-activity-data.ts, package manifests and tracked Supabase files match the base.",
+        "Synthetic browser evidence only. Live Supabase/RLS, migration parity, production duplicate races, native Alert, device accessibility/layout and OS timezone-change behavior remain NOT TESTABLE.",
+        "Final Reviewer v8 PASS: no behavior or bookkeeping blockers; code, scope/version gates, canonical browser evidence and NOT TESTABLE boundaries verified. This closes the All local checkpoint only."
+      ],
+      "implementation_state": "V4 implementation, v5 header, v6 verifier correction, v7 freshness behavior and v8 security follow-up are complete locally. Architect, Security, focused/full QA and final independent Reviewer all PASS; this closes only the All checkpoint, not Panel 4.",
+      "evidence_status": "v8_architect_approved_security_pass; focused_24_full_502; public_review_checklist_all_16; home_checklist_5; home_public_5_review_6; zero_page_errors; reviewer_v8_passed; local_native_backend_not_testable"
+    },
+    {
+      "id": "FLOW-HOME-CHECKLIST-WEEK-01",
+      "title": "Panel 4: verkligt urval för Denna vecka",
+      "mvp_requirement": "docs/mvp.md: Rev02-panel 4; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1; exact task plan and data-contract review before ready",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/daily-activity-data.ts",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/README.md",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/checklist/WEEK-01"
+      ],
+      "acceptance": [
+        "Denna vecka definierar och visar en verklig kalendervecka, med dagars datum, bekräftade rutin/träningsposter och tydliga saknade/tomma dagar.",
+        "Tidszon, veckostart, datumgränser, selected-day vs week aggregation och account/dog isolation är dokumenterade och testade mot verklig datakälla.",
+        "Ingen syntetisk framtida historik, påhittad completion eller falsk sju-dagars lista; unknown/error är separata tillstånd.",
+        "Om befintliga läs-/skrivkontrakt inte kan bära vyn krävs separat arkitekturbeslut innan schema/RPC/RLS ändring."
+      ],
+      "checks": [
+        "pnpm check",
+        "Riktade vecka-/veckogräns-/timezone-/dog-scope- och error-prov",
+        "Verifierad datakälla och §14 synthetic render",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "FLOW-HOME-CHECKLIST-ALL-01"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Kartlägg befintliga dagssnapshots och träningsprogress över en veckoperiod; exakt data- och timezoneplan ska godkännas av Architect och Security före kod.",
+      "priority": "P1",
+      "panels": [
+        "4"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Vecka: verklig måndag–söndag (enligt dokumenterad produkt-/locale-regel) med bekräftade poster; ingen kommande vy.",
+      "test_evidence": [
+        "Week boundaries, timezone/day rollover, true empty vs read error, confirmed vs pending/unknown, dog isolation; screenshot matrix"
+      ],
+      "implementation_state": "planned; data contract not yet approved",
+      "evidence_status": "not_run — required evidence listed in test_evidence"
+    },
+    {
+      "id": "FLOW-HOME-CHECKLIST-UPCOMING-01",
+      "title": "Panel 4: verkliga Kommande aktiviteter",
+      "mvp_requirement": "docs/mvp.md: Rev02-panel 4; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1; exact source-and-purpose plan before ready",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/daily-activity-data.ts",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/README.md",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/checklist/UPCOMING-01"
+      ],
+      "acceptance": [
+        "Kommande visar bara verkliga framtidsplanerade aktiviteter från verifierad källa; mallar utan faktisk plan räknas inte som inplanerade aktiviteter.",
+        "Varje post har korrekt datum/tidszon, källa och handling, med sanningsenligt tomt/läsfel-läge.",
+        "Ingen ny notifiering, kalenderintegration, datamodell eller personlig rekommendationsregel ingår; eventuell ny källa/ändamål får separat godkännande.",
+        "Ändring, val eller avbokning erbjuds bara där befintligt källkontrakt stöder det; completed/past entries are not represented as upcoming."
+      ],
+      "checks": [
+        "pnpm check",
+        "Source lineage and future-date/scope/error tests",
+        "§14 synthetic public/review renders and interactions",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "FLOW-HOME-CHECKLIST-WEEK-01"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Verifiera om rutinscheman ger ett konkret framtida datum och om någon annan redan godkänd planerad aktivitet finns; ingen tab visas före bekräftad källa.",
+      "priority": "P1",
+      "panels": [
+        "4"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Kommande: framtida, verkligt schemalagda aktiviteter från befintlig och godkänd källa; annars lämnas tabben ute och panelen öppen.",
+      "test_evidence": [
+        "Source trace from record to UI, future schedule/timezone boundaries, dog isolation, truthful empty/error; screenshot matrix"
+      ],
+      "implementation_state": "planned; source semantics not yet verified",
       "evidence_status": "not_run — required evidence listed in test_evidence"
     },
     {
@@ -7146,7 +7646,8 @@
       ],
       "acceptance": [
         "Rätt publicerad version och steg öppnas och markering/avmarkering bekräftas",
-        "Mina/Rekommenderat/Alla har dokumenterat fungerande urval eller syns inte",
+        "Mina/Rekommenderat/Alla har dokumenterat fungerande urval eller syns inte; allt öppningsbart innehåll klarar publicering, eligibility, redaktionell målgrupp och tillåten yta",
+        "Vuxenprofil ser/öppnar inte ett program som lämpligt eller handlingsbart innan exakt publicerad version har versionsspecifik Dog Expert-bedömning av vuxentillämpning; öppet åldersspann räcker inte",
         "Fortsättkort och Hem visar samma sparade progress efter flikresa"
       ],
       "checks": [
@@ -7183,7 +7684,7 @@
         "src/features/knowledge/FAQScreen.tsx"
       ],
       "acceptance": [
-        "Visade sök- och filterkontroller ändrar verkligt publicerat urval",
+        "Visade sök- och filterkontroller ändrar verkligt publicerat urval som klarar eligibility, redaktionell målgrupp och tillåten yta; vuxenråd kräver versionsspecifik Dog Expert-bedömning även vid användarstyrd sökning",
         "Guide öppnas med källa; FAQ och faschecklistor nås",
         "Reviewinnehåll läcker inte till public och cache blandar inte hund/konto"
       ],

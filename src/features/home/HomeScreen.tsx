@@ -7,7 +7,7 @@ import { MotionPressable } from '../../components/ui/Motion';
 import type { HomeContent, OwnedDog } from '../../data/app-data';
 import type { HealthHistoryRecord, PlannedHealthRecord } from '../../data/workspace-data';
 import type { DailyRoutine, DailyRoutineChecklistItem, DailyRoutineCreateInput, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineRepeatValues, DailyTrainingSelection } from './daily-activity-data';
-import type { HomeDailyActivity } from './daily-activity-model';
+import { dailyActivityProgressLabel, summarizeDailyActivityProgress, type HomeDailyActivity } from './daily-activity-model';
 import { tokens } from '../../theme/tokens';
 import { automaticDogAge, localDate } from '../onboarding/dog';
 import type { LogEvent } from '../puppy-log/log-model';
@@ -15,7 +15,7 @@ import { homeAgeMarkerLabel, homeAgeStrip } from './home-today';
 import { homeGreetingAt } from './home-greeting';
 import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
 
-type Destination = 'log' | 'training' | 'knowledge' | 'health' | 'planned-health';
+type Destination = 'log' | 'training' | 'knowledge' | 'health' | 'planned-health' | 'checklist';
 type LoadState = 'loading' | 'ready' | 'error';
 export type HomeDailyTrainingOption = { programId: string; versionId: string; stepId: string; programTitle: string; stepTitle: string };
 export type HomeDailyFixtureItem = {
@@ -83,6 +83,8 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   const [reviewCompletion, setReviewCompletion] = useState<Record<string, boolean>>(() => Object.fromEntries((dailyFixture ?? []).map((item) => [item.id, item.completed])));
   const [portraitFrame, setPortraitFrame] = useState<{ left: number; right: number } | null>(null);
   const today = todayValue ?? localDate();
+  const dailyProgress = summarizeDailyActivityProgress(dailyActivities);
+  const dailyProgressLabelText = dailyActivityProgressLabel(dailyProgress);
   const age = automaticDogAge(dog.birth_date, today);
   const breedLabel = breed?.trim() || dog.breed_id;
   const relevantContent = contentState === 'ready'
@@ -153,8 +155,8 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
         <View style={styles.dailyHeading}>
           <Text style={styles.dailyTitle} accessibilityRole="header">Dagens att göra</Text>
           {dailyRefreshing && dailyState === 'ready' ? <ActivityIndicator accessibilityRole="progressbar" accessibilityLabel="Dagens uppgifter uppdateras" size="small" color={tokens.colors.home.textMuted} /> : null}
-          {dailyFixture ? <Text style={styles.dailyCount}>{dailyFixture.filter((item) => reviewCompletion[item.id] ?? item.completed).length} av {dailyFixture.length} klara</Text> : dailyState === 'ready' && dailyActivities.length > 0
-            ? <Text style={styles.dailyCount}>{dailyActivities.filter((item) => item.completed).length} av {dailyActivities.length} klara</Text>
+          {dailyFixture ? <Text style={styles.dailyCount}>{dailyFixture.filter((item) => reviewCompletion[item.id] ?? item.completed).length} av {dailyFixture.length} klara</Text> : dailyState === 'ready' && dailyActivities.length > 0 && dailyProgress.unavailableCount === 0
+            ? <Text style={styles.dailyCount}>{dailyProgressLabelText}</Text>
             : null}
           <MotionPressable accessibilityRole="button" accessibilityLabel="Hantera rutiner och dagens aktiviteter"
             onPress={() => openManager()} style={({ pressed }) => [styles.manageDaily, pressed && styles.headingPressed]}>
@@ -162,6 +164,13 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
             <Text style={styles.manageDailyLabel}>Hantera</Text>
           </MotionPressable>
         </View>
+        {!dailyFixture && dailyState === 'ready' && dailyActivities.length > 0 && dailyProgress.unavailableCount > 0
+          ? <Text style={styles.dailyCount}>{dailyProgressLabelText}</Text> : null}
+        <MotionPressable testID="home-open-daily-checklist" accessibilityRole="button" accessibilityLabel="Visa dagens checklista"
+          onPress={() => onGo('checklist')} style={({ pressed }) => [styles.showAll, pressed && styles.headingPressed]}>
+          <Text style={styles.showAllText}>Visa dagens checklista</Text>
+          <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
+        </MotionPressable>
         {dailyRefreshError && dailyState === 'ready' ? <View style={styles.dailyRefreshError} accessibilityLiveRegion="polite">
           <Text style={styles.emptyText}>Uppdateringen kunde inte hämtas. Du ser senast hämtade uppgifter.</Text>
           {onRetryDaily ? <Button variant="tertiary" label="Försök igen" accessibilityLabel="Försök uppdatera dagens uppgifter igen" onPress={onRetryDaily} /> : null}
@@ -176,15 +185,22 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
               <Button variant="tertiary" label="Hantera dagens aktiviteter" accessibilityLabel="Hantera dagens aktiviteter" onPress={() => openManager()} />
             </View>
               : dailyState === 'ready' ? <View style={styles.dailyList}>
-                <View accessibilityRole="progressbar" accessibilityLabel={`${dailyActivities.filter((item) => item.completed).length} av ${dailyActivities.length} dagsuppgifter klara`}
-                  accessibilityValue={{ min: 0, max: dailyActivities.length, now: dailyActivities.filter((item) => item.completed).length }} style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${Math.round(dailyActivities.filter((item) => item.completed).length / dailyActivities.length * 100)}%` }]} />
-                </View>
+                {dailyProgress.confirmedCount > 0 ? <View accessibilityRole="progressbar" accessibilityLabel={`${dailyProgressLabelText} i dagens uppgifter`}
+                  accessibilityValue={{ min: 0, max: dailyProgress.confirmedCount, now: dailyProgress.completedCount }} style={styles.progressTrack}>
+                  <View style={[styles.progressFill, { width: `${Math.round(dailyProgress.completedCount / dailyProgress.confirmedCount * 100)}%` }]} />
+                </View> : null}
                 {dailyActivities.slice(0, 5).map((item) => {
                   const routineDay = item.routineDay;
                   const itemMutationKey = routineDay && item.routineItemId ? `complete-routine:${routineDay.id}:${item.routineItemId}` : '';
                   const itemMutation = Boolean(itemMutationKey && dailyMutationKey === itemMutationKey);
                   const isReadbackError = itemMutation && dailyMutationMessage.startsWith('Ändringen sparades, men dagens lista');
+                  if (item.kind === 'training' && item.availability !== 'available') return <View key={item.id} accessibilityRole="text"
+                    accessibilityLabel={`Träningsuppgift: ${item.label}, ${item.availability === 'adult-restricted' ? 'inte tillgänglig för vuxna ännu' : 'status kan inte bekräftas, källan kunde inte hämtas'}`}
+                    style={styles.unavailableDailyRow}>
+                    <Text style={styles.unavailableDailyLabel}>{item.label}</Text>
+                    <Text style={styles.unavailableDailyDetail}>{item.availability === 'adult-restricted' ? 'Inte tillgängligt för vuxna ännu' : 'Källan kunde inte hämtas'}</Text>
+                    {item.availability === 'unavailable' ? <Text style={styles.unavailableDailyDetail}>Status kan inte bekräftas</Text> : null}
+                  </View>;
                   return <DailyActivityItem key={item.id} variant="home" kind={item.kind} label={item.label} routineLabel={item.routineLabel}
                     accessibilityLabel={item.kind === 'routine' ? `Rutin ${item.routineLabel ?? ''}, punkt ${item.label}` : `Träningsuppgift: ${item.label}`}
                     completed={item.completed} pending={itemMutation && dailyMutationBusy}
@@ -194,7 +210,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
                     onRetry={itemMutation ? (onRetryDailyMutation ?? (isReadbackError ? onRetryDaily : undefined)) : undefined} />;
                 })}
                 {dailyActivities.length > 5 ? <MotionPressable accessibilityRole="button" accessibilityLabel={`Visa alla ${dailyActivities.length} uppgifter`}
-                  onPress={() => openManager()} style={({ pressed }) => [styles.showAll, pressed && styles.headingPressed]}>
+                  onPress={() => onGo('checklist')} style={({ pressed }) => [styles.showAll, pressed && styles.headingPressed]}>
                   <Text style={styles.showAllText}>Visa alla</Text>
                   <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
                 </MotionPressable> : null}
@@ -328,7 +344,7 @@ function homeAgeDecorationOpacity(left: number, right: number, markerCenter: num
 }
 
 const styles = StyleSheet.create({
-  page: { gap: tokens.spacing.md, paddingBottom: tokens.spacing.lg, marginHorizontal: -tokens.layout.pageInset, paddingHorizontal: tokens.layout.pageInset, backgroundColor: tokens.colors.home.canvas },
+  page: { gap: tokens.spacing.sm, paddingBottom: tokens.spacing.lg, marginHorizontal: -tokens.layout.pageInset, paddingHorizontal: tokens.layout.pageInset, backgroundColor: tokens.colors.home.canvas },
   identity: { position: 'relative', gap: tokens.spacing.sm, minHeight: 118 },
   greeting: { minHeight: tokens.size.quickLogCompactHeight, flexDirection: 'row', alignItems: 'center' },
   greetingCopy: { flex: 1, gap: tokens.spacing.xs, paddingRight: portraitSize + tokens.spacing.sm },
@@ -357,7 +373,7 @@ const styles = StyleSheet.create({
   cardHeading: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },
   body: { ...tokens.typography.caption, color: tokens.colors.home.text, flexShrink: 1 },
   exampleLabel: { ...tokens.typography.caption, color: tokens.colors.warning },
-  dailyCardContent: { gap: tokens.spacing.xs },
+  dailyCardContent: { gap: tokens.spacing.xs / 2 },
   dailyHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   dailyTitle: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },
   dailyCount: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
@@ -365,6 +381,9 @@ const styles = StyleSheet.create({
   manageDailyLabel: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
   headingPressed: { backgroundColor: tokens.colors.selectedSurface },
   dailyList: { gap: tokens.spacing.xs },
+  unavailableDailyRow: { minHeight: tokens.size.touchMin, justifyContent: 'center', paddingVertical: tokens.spacing.xs, borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border },
+  unavailableDailyLabel: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '500' },
+  unavailableDailyDetail: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
   progressTrack: { height: tokens.size.progress, borderRadius: tokens.radius.full, overflow: 'hidden', backgroundColor: tokens.colors.home.progressTrack },
   progressFill: { height: '100%', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.greenFill },
   activityRows: { gap: 0 },
