@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { localDateKeyAt, isValidDateKey, isTrainingCompletionForDay, nextSelectableTrainingStep, trainingProgressStamp, deriveHomeDailyActivities, deriveDailyRoutineTemplateEntries, isDailyActivityDateCurrent, isDailyActivitySnapshotWritable, runDailyActivityActionIfWritable, runDailyActivityMutationGateway, dailyActivitySnapshotExpiryDelay, scheduleDailyActivitySnapshotExpiry, summarizeDailyActivityProgress, dailyActivityProgressLabel } from '../src/features/home/daily-activity-model.ts';
+import { addDaysToDateKey, dateKeysForIsoWeek, isoWeekStartForDateKey, localDateKeyAt, isValidDateKey, isTrainingCompletionForDay, nextSelectableTrainingStep, trainingProgressStamp, deriveHomeDailyActivities, deriveDailyRoutineTemplateEntries, isDailyActivityDateCurrent, isDailyActivitySnapshotWritable, isWeeklyActivityResponseCurrent, projectWeeklyActivity, runDailyActivityActionIfWritable, runDailyActivityMutationGateway, dailyActivitySnapshotExpiryDelay, scheduleDailyActivitySnapshotExpiry, summarizeDailyActivityProgress, dailyActivityProgressLabel, weeklyActivityLifetimeKey } from '../src/features/home/daily-activity-model.ts';
 
 test('confirmed daily progress excludes unavailable sources and reports unknown status separately', () => {
   const summary = summarizeDailyActivityProgress([
@@ -132,6 +132,174 @@ test('all routine templates retain dog/date scope and use the selected day snaps
     { routine: selected, state: 'scheduled', selectedDay: null, skippedDay: null, activities: [] },
   ]);
   assert.deepEqual(deriveDailyRoutineTemplateEntries({ routines: [selected], routineDays: [], routineDaySkips: [], dogId: 'dog-b', dateKey }), []);
+});
+
+test('ISO week date math uses civil dates across year, month, Sunday/Monday and DST boundaries', () => {
+  assert.equal(isoWeekStartForDateKey('2026-10-18'), '2026-10-12');
+  assert.equal(isoWeekStartForDateKey('2026-01-01'), '2025-12-29');
+  assert.equal(isoWeekStartForDateKey('2026-11-01'), '2026-10-26');
+  assert.equal(addDaysToDateKey('2026-02-28', 1), '2026-03-01');
+  assert.equal(addDaysToDateKey('2028-02-28', 1), '2028-02-29');
+  assert.deepEqual(dateKeysForIsoWeek('2026-03-29'), [
+    '2026-03-23', '2026-03-24', '2026-03-25', '2026-03-26', '2026-03-27', '2026-03-28', '2026-03-29',
+  ]);
+  assert.deepEqual(dateKeysForIsoWeek('2026-12-31'), [
+    '2026-12-28', '2026-12-29', '2026-12-30', '2026-12-31', '2027-01-01', '2027-01-02', '2027-01-03',
+  ]);
+  assert.equal(localDateKeyAt('2026-03-28T22:59:59.999Z', 'Europe/Stockholm'), '2026-03-28');
+  assert.equal(localDateKeyAt('2026-03-28T23:00:00.000Z', 'Europe/Stockholm'), '2026-03-29');
+  assert.equal(localDateKeyAt('2026-03-29T21:59:59.999Z', 'Europe/Stockholm'), '2026-03-29');
+  assert.equal(localDateKeyAt('2026-03-29T22:00:00.000Z', 'Europe/Stockholm'), '2026-03-30');
+  assert.equal(localDateKeyAt('2026-10-25T22:59:59.999Z', 'Europe/Stockholm'), '2026-10-25');
+  assert.equal(localDateKeyAt('2026-10-25T23:00:00.000Z', 'Europe/Stockholm'), '2026-10-26');
+});
+
+test('weekly response fence rejects stale date and daily-snapshot races', () => {
+  const scope = (overrides = {}) => weeklyActivityLifetimeKey({
+    ownerId: 'owner-a', accountGeneration: 7, dogId: 'dog-a', currentDateKey: '2026-10-18',
+    weekStart: '2026-10-12', timeZone: 'Europe/Stockholm', dailySnapshotUpdatedAt: 100, contentMode: 'public', ...overrides,
+  });
+  const request = { generation: 3, scopeKey: scope(), aborted: false };
+  const current = { generation: 3, scopeKey: scope(), mounted: true };
+  assert.equal(isWeeklyActivityResponseCurrent(request, current), true);
+  assert.equal(isWeeklyActivityResponseCurrent(request, { ...current, generation: 4 }), false);
+  assert.equal(isWeeklyActivityResponseCurrent(request, { ...current, scopeKey: scope({ currentDateKey: '2026-10-19', weekStart: '2026-10-19' }) }), false);
+  assert.equal(isWeeklyActivityResponseCurrent(request, { ...current, scopeKey: scope({ dailySnapshotUpdatedAt: 101 }) }), false);
+  assert.equal(isWeeklyActivityResponseCurrent(request, { ...current, scopeKey: scope({ ownerId: 'owner-b' }) }), false);
+  assert.equal(isWeeklyActivityResponseCurrent(request, { ...current, scopeKey: scope({ accountGeneration: 8 }) }), false);
+  assert.equal(isWeeklyActivityResponseCurrent(request, { ...current, scopeKey: scope({ dogId: 'dog-b' }) }), false);
+  assert.equal(isWeeklyActivityResponseCurrent(request, { ...current, scopeKey: scope({ timeZone: 'America/Los_Angeles' }) }), false);
+  assert.equal(isWeeklyActivityResponseCurrent(request, { ...current, scopeKey: scope({ contentMode: 'review' }) }), false);
+  assert.equal(isWeeklyActivityResponseCurrent({ ...request, aborted: true }, current), false);
+  assert.equal(isWeeklyActivityResponseCurrent(request, { ...current, mounted: false }), false);
+});
+
+test('weekly projection uses the confirmed today snapshot and separates saved, skipped, unknown, missing and empty', () => {
+  const week = '2026-10-12';
+  const today = '2026-10-15';
+  const dogId = 'dog-a';
+  const routineItem = { id: 'item-monday', label: 'Sparad rutinpunkt' };
+  const savedMonday = {
+    id: 'day-monday', dog_id: dogId, routine_id: 'routine-monday', date_key: '2026-10-12', time_zone: 'Europe/Stockholm',
+    routine_label_snapshot: 'Sparad rutin', checklist_snapshot: [routineItem], completed_item_ids: ['item-monday'], completed_at: '2026-10-12T08:00:00.000Z',
+    is_recurring_occurrence: true,
+  };
+  const skipTuesday = {
+    day_id: 'skip-tuesday', dog_id: dogId, routine_id: 'routine-skip', date_key: '2026-10-13', time_zone: 'Europe/Stockholm',
+    routine_label_snapshot: 'Överhoppad rutin', checklist_snapshot: [{ id: 'skip-item', label: 'Punkt' }], completed_item_ids: [],
+    completed_at: null, is_recurring_occurrence: true,
+  };
+  const timezoneMismatchWednesday = {
+    id: 'day-wednesday', dog_id: dogId, routine_id: 'routine-wed', date_key: '2026-10-14', time_zone: 'America/Los_Angeles',
+    routine_label_snapshot: 'Äldre rutin', checklist_snapshot: [{ id: 'item-wed', label: 'Status med annan tidszon' }],
+    completed_item_ids: ['item-wed'], completed_at: '2026-10-14T08:00:00.000Z', is_recurring_occurrence: true,
+  };
+  const unavailableFriday = {
+    id: 'selection-friday', dog_id: dogId, program_version_id: 'withdrawn-version', step_id: 'withdrawn-step',
+    date_key: '2026-10-16', time_zone: 'Europe/Stockholm',
+  };
+  const completedSunday = {
+    id: 'selection-sunday', dog_id: dogId, program_version_id: 'version-a', step_id: 'step-a',
+    date_key: '2026-10-18', time_zone: 'Europe/Stockholm',
+  };
+  const program = {
+    id: 'version-a', title: 'Publicerat program', steps: [{ id: 'step-a', position: 1, title: 'Sparat träningssteg', instruction: '' }],
+    completedStepIds: ['step-a'], completedAtByStepId: { 'step-a': '2026-10-17T22:30:00.000Z' },
+  };
+  const todaySnapshot = {
+    routines: [],
+    routineDays: [],
+    routineDaySkips: [],
+    trainingSelections: [],
+  };
+  const rawTodayRow = {
+    id: 'week-raw-today', dog_id: dogId, routine_id: 'routine-raw', date_key: today, time_zone: 'Europe/Stockholm',
+    routine_label_snapshot: 'Rå veckorad ska ignoreras', checklist_snapshot: [{ id: 'raw-item', label: 'Gammal veckorad' }],
+    completed_item_ids: ['raw-item'], completed_at: '2026-10-15T08:00:00.000Z', is_recurring_occurrence: true,
+  };
+  const projection = projectWeeklyActivity({
+    snapshot: {
+      routineDays: [savedMonday, timezoneMismatchWednesday, rawTodayRow],
+      routineDaySkips: [skipTuesday],
+      trainingSelections: [unavailableFriday, completedSunday],
+    },
+    weekStart: week, currentDateKey: today, dogId, timeZone: 'Europe/Stockholm',
+    dailySnapshot: todaySnapshot, dailyState: 'ready', programs: [program], trainingState: 'ready', lifeStage: 'VALP',
+  });
+  assert.equal(projection.days.length, 7);
+  assert.deepEqual(projection.days.map((day) => day.state), ['ready', 'ready', 'ready', 'empty', 'ready', 'missing', 'ready']);
+  assert.equal(projection.days[0].rows[0].label, 'Sparad rutinpunkt');
+  assert.equal(projection.days[1].rows[0].status, 'skipped');
+  assert.equal(projection.days[2].rows[0].status, 'unknown');
+  assert.match(projection.days[2].rows[0].detail, /Tidszon skiljer sig/);
+  assert.equal(projection.days[3].rows.length, 0);
+  assert.equal(projection.days[3].rows.some((row) => row.label === 'Gammal veckorad'), false);
+  assert.equal(projection.days[4].rows[0].status, 'unknown');
+  assert.equal(projection.days[4].rows[0].openTarget, undefined);
+  assert.equal(projection.days[5].state, 'missing');
+  assert.equal(projection.days[6].rows[0].status, 'completed');
+  assert.equal(projection.days[6].rows[0].openTarget, undefined);
+  assert.deepEqual(projection.summary, {
+    completedCount: 2, confirmedCount: 2, unknownCount: 2, missingDayCount: 1, emptyDayCount: 1,
+  });
+  assert.equal(projectWeeklyActivity({
+    snapshot: { routineDays: [rawTodayRow], routineDaySkips: [], trainingSelections: [] },
+    weekStart: week, currentDateKey: today, dogId, timeZone: 'Europe/Stockholm',
+    dailySnapshot: null, dailyState: 'loading', programs: [], trainingState: 'loading', lifeStage: null,
+  }).days[3].state, 'loading');
+  assert.equal(projectWeeklyActivity({
+    snapshot: { routineDays: [rawTodayRow], routineDaySkips: [], trainingSelections: [] },
+    weekStart: week, currentDateKey: today, dogId, timeZone: 'Europe/Stockholm',
+    dailySnapshot: null, dailyState: 'error', programs: [], trainingState: 'error', lifeStage: null,
+  }).days[3].state, 'error');
+});
+
+test('weekly training opens only exact current-day sources and fails closed for timezone, missing progress and adult scope', () => {
+  const today = '2026-10-15';
+  const selection = { id: 'selection-current', dog_id: 'dog-a', program_version_id: 'version-a', step_id: 'step-a', date_key: today, time_zone: 'Europe/Stockholm' };
+  const program = {
+    id: 'version-a', title: 'Publicerat program', steps: [{ id: 'step-a', position: 1, title: 'Steg', instruction: '' }],
+    completedStepIds: [], completedAtByStepId: {},
+  };
+  const currentSnapshot = { routines: [], routineDays: [], routineDaySkips: [], trainingSelections: [selection] };
+  const base = {
+    snapshot: { routineDays: [], routineDaySkips: [], trainingSelections: [] },
+    weekStart: '2026-10-12', currentDateKey: today, dogId: 'dog-a', timeZone: 'Europe/Stockholm',
+    dailySnapshot: currentSnapshot, dailyState: 'ready', programs: [program], trainingState: 'ready', lifeStage: 'VALP',
+  };
+  const current = projectWeeklyActivity(base).days[3].rows[0];
+  assert.deepEqual(current.openTarget, { programVersionId: 'version-a', stepId: 'step-a' });
+  assert.equal(current.status, 'incomplete');
+  assert.equal(current.programTitle, 'Publicerat program');
+  assert.equal(current.detail, undefined);
+
+  const historical = projectWeeklyActivity({
+    ...base,
+    snapshot: { routineDays: [], routineDaySkips: [], trainingSelections: [{ ...selection, date_key: '2026-10-14' }] },
+    dailySnapshot: { ...currentSnapshot, trainingSelections: [] },
+  }).days[2].rows[0];
+  assert.equal(historical.openTarget, undefined);
+  assert.equal(historical.programTitle, 'Publicerat program');
+
+  const timezone = projectWeeklyActivity({
+    ...base,
+    snapshot: { routineDays: [], routineDaySkips: [], trainingSelections: [{ ...selection, date_key: '2026-10-14', time_zone: 'America/Los_Angeles' }] },
+    dailySnapshot: { ...currentSnapshot, trainingSelections: [] },
+  }).days[2].rows[0];
+  assert.equal(timezone.status, 'unknown');
+  assert.equal(timezone.openTarget, undefined);
+
+  const failedRead = projectWeeklyActivity({
+    ...base,
+    snapshot: { routineDays: [], routineDaySkips: [], trainingSelections: [{ ...selection, date_key: '2026-10-14' }] },
+    dailySnapshot: { ...currentSnapshot, trainingSelections: [] }, trainingState: 'error',
+  }).days[2].rows[0];
+  assert.equal(failedRead.status, 'unknown');
+  assert.equal(failedRead.openTarget, undefined);
+
+  const adult = projectWeeklyActivity({ ...base, lifeStage: 'VUXEN' }).days[3].rows[0];
+  assert.equal(adult.status, 'unknown');
+  assert.equal(adult.openTarget, undefined);
 });
 
 test('routine-template mutations require a current ready snapshot with no refresh or same-scope read in flight', () => {

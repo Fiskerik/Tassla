@@ -1,22 +1,50 @@
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppBar, DailyActivityItem, Button, IconChip, SectionHeader, Skeleton, Tabs } from '../../components/ui';
 import { MessageCard } from '../../components/AppPrimitives';
 import type { DailyRoutine, DailyRoutineChecklistItem, DailyRoutineCreateInput, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineRepeatValues, DailyTrainingSelection } from './daily-activity-data';
-import { dailyActivityProgressLabel, deriveDailyRoutineTemplateEntries, dailyRoutineRepeatSummary, summarizeDailyActivityProgress, type DailyRoutineTemplateEntry, type HomeDailyActivity } from './daily-activity-model';
+import { dailyActivityProgressLabel, deriveDailyRoutineTemplateEntries, dailyRoutineRepeatSummary, isoWeekdayForDateKey, summarizeDailyActivityProgress, type DailyRoutineTemplateEntry, type HomeDailyActivity, type WeeklyActivityProjection } from './daily-activity-model';
 import type { HomeDailyTrainingOption } from './HomeScreen';
 import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
 import { tokens } from '../../theme/tokens';
 
 type ActionResult = { status: 'saved' | 'failed' | 'unknown' } | void;
-type ChecklistTab = 'Idag' | 'Alla';
+type ChecklistTab = 'Idag' | 'Denna vecka' | 'Alla';
+const WEEKDAY_SHORT_LABELS = ['mån', 'tis', 'ons', 'tors', 'fre', 'lör', 'sön'];
+const WEEKDAY_LONG_LABELS = ['måndag', 'tisdag', 'onsdag', 'torsdag', 'fredag', 'lördag', 'söndag'];
+const MONTH_SHORT_LABELS = ['jan', 'feb', 'mars', 'apr', 'maj', 'juni', 'juli', 'aug', 'sep', 'okt', 'nov', 'dec'];
 
-export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, state, refreshing, refreshError, activities, routines, routineDays, routineDaySkips,
+function formatWeekday(dateKey: string): string {
+  return WEEKDAY_LONG_LABELS[isoWeekdayForDateKey(dateKey) - 1] ?? '';
+}
+
+function formatWeekRange(dateKeys: readonly string[]): string {
+  if (dateKeys.length !== 7) return '';
+  const first = dateKeys[0].split('-').map(Number);
+  const last = dateKeys[6].split('-').map(Number);
+  const firstMonth = MONTH_SHORT_LABELS[first[1] - 1] ?? '';
+  const lastMonth = MONTH_SHORT_LABELS[last[1] - 1] ?? '';
+  const firstLabel = first[1] === last[1] ? String(first[2])
+    : String(first[2]) + ' ' + firstMonth;
+  return firstLabel + '–' + String(last[2]) + ' ' + lastMonth + ' ' + String(last[0]);
+}
+
+export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initialTab, onActiveTabChange, weekDateKeys, weekState, weekProjection, weekCurrentDateKey, weekSelectedDateKey, onSelectWeekDate, onRetryWeek, onOpenWeekTrainingTarget, state, refreshing, refreshError, activities, routines, routineDays, routineDaySkips,
   routineTemplatesWritable, routineTemplatesSnapshotVersion, trainingOptions, mutationBusy, mutationKey, mutationMessage, mutationError, onRetry, onRetryMutation, onSetRoutineCompletion,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onAddRoutineTemplateToDay, onRemoveRoutineFromDay,
   onAddTrainingToDay, onRemoveTrainingFromDay, onOpenTrainingTarget, onGoTraining, onBack, onGuardAllAction }: {
   dogName: string;
   dogId: string;
+  initialTab: ChecklistTab;
+  onActiveTabChange: (tab: ChecklistTab) => void;
+  weekDateKeys: readonly string[];
+  weekState: 'loading' | 'ready' | 'error';
+  weekProjection: WeeklyActivityProjection | null;
+  weekCurrentDateKey: string | null;
+  weekSelectedDateKey: string | null;
+  onSelectWeekDate: (dateKey: string) => void;
+  onRetryWeek: () => void;
+  onOpenWeekTrainingTarget: (programVersionId: string, stepId: string) => void;
   scopeKey: string;
   dateKey: string;
   state: 'loading' | 'ready' | 'error';
@@ -53,8 +81,9 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, state,
   const [managerSessionNeedsPreservation, setManagerSessionNeedsPreservation] = useState(false);
   const [managerStaleLocked, setManagerStaleLocked] = useState(false);
   const [focusRoutineId, setFocusRoutineId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<ChecklistTab>('Idag');
+  const [activeTab, setActiveTab] = useState<ChecklistTab>(initialTab);
   const progressLabel = dailyActivityProgressLabel(summarizeDailyActivityProgress(activities));
+  const selectedWeekDay = weekProjection?.days.find((day) => day.dateKey === weekSelectedDateKey) ?? null;
   const templateEntries = deriveDailyRoutineTemplateEntries({ routines, routineDays, routineDaySkips, dogId, dateKey });
   const canWriteTemplates = state === 'ready' && routineTemplatesWritable;
   const managerBlocked = activeTab === 'Alla' && !canWriteTemplates;
@@ -131,21 +160,22 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, state,
 
   return <View style={styles.screen}>
     <AppBar mode="Back" variant="compact" title="Checklista" actionLabel="Tillbaka till Hem" onAction={onBack} />
-    <Text style={styles.scopeContext} accessibilityRole="text">{dogName} · {dateKey}</Text>
-    <Tabs items={['Idag', 'Alla']} active={activeTab} onChange={(tab) => {
-      setManagerSession(null); setManagerSessionNeedsPreservation(false); setManagerStaleLocked(false); setActiveTab(tab as ChecklistTab);
+    <Text style={styles.scopeContext} accessibilityRole="text">{dogName} · {activeTab === 'Denna vecka' ? formatWeekRange(weekDateKeys) : dateKey}</Text>
+    <Tabs items={['Idag', 'Denna vecka', 'Alla']} active={activeTab} onChange={(tab) => {
+      const nextTab = tab as ChecklistTab;
+      setManagerSession(null); setManagerSessionNeedsPreservation(false); setManagerStaleLocked(false); setActiveTab(nextTab); onActiveTabChange(nextTab);
     }} variant="rev02-segmented" />
     <View style={styles.actions}>
       <Text style={styles.progress} accessibilityRole="text">
         {activeTab === 'Alla'
           ? state === 'ready' ? `${templateEntries.length} ${templateEntries.length === 1 ? 'rutinmall' : 'rutinmallar'}` : 'Rutinmallar'
-          : state === 'ready' ? progressLabel : 'Dagens checklista'}
+          : activeTab === 'Denna vecka' ? 'Veckans sparade aktiviteter' : state === 'ready' ? progressLabel : 'Dagens checklista'}
       </Text>
-      {refreshing ? <Text style={styles.status}>Uppdaterar…</Text> : null}
-      <Button variant="tertiary" label="Hantera rutiner" accessibilityLabel="Hantera rutiner och dagens aktiviteter"
-        disabled={managerBlocked} onPress={() => openManager()} />
+      {refreshing && activeTab !== 'Denna vecka' ? <Text style={styles.status}>Uppdaterar…</Text> : null}
+      {activeTab !== 'Denna vecka' ? <Button variant="tertiary" label="Hantera rutiner" accessibilityLabel="Hantera rutiner och dagens aktiviteter"
+        disabled={managerBlocked} onPress={() => openManager()} /> : null}
     </View>
-    {refreshError && state === 'ready' ? <View style={styles.stateMessage}>
+    {activeTab !== 'Denna vecka' && refreshError && state === 'ready' ? <View style={styles.stateMessage}>
       <MessageCard tone="error">{activeTab === 'Alla'
         ? 'Uppdateringen misslyckades. Visade rutinmallar är senast bekräftade och skrivskyddade.'
         : 'Uppdateringen misslyckades. Visade uppgifter är senast bekräftade.'}</MessageCard>
@@ -155,8 +185,8 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, state,
       <Text style={styles.status}>{refreshing ? 'Rutinmallarna är skrivskyddade medan listan uppdateras.' : 'Uppdatera listan innan du ändrar rutinmallarna.'}</Text>
       {!refreshing ? <Button variant="tertiary" label="Uppdatera listan" accessibilityLabel="Uppdatera rutinmallarna innan ändring" onPress={onRetry} /> : null}
     </View> : null}
-    {state === 'loading' ? <View style={styles.loading} accessibilityLabel={activeTab === 'Alla' ? 'Laddar rutinmallar' : 'Laddar dagens checklista'}><Skeleton shape="row" lines={2} /><Skeleton shape="row" lines={2} /></View> : null}
-    {state === 'error' ? <View style={styles.stateMessage}>
+    {activeTab !== 'Denna vecka' && state === 'loading' ? <View style={styles.loading} accessibilityLabel={activeTab === 'Alla' ? 'Laddar rutinmallar' : 'Laddar dagens checklista'}><Skeleton shape="row" lines={2} /><Skeleton shape="row" lines={2} /></View> : null}
+    {activeTab !== 'Denna vecka' && state === 'error' ? <View style={styles.stateMessage}>
       <MessageCard tone="error">{activeTab === 'Alla' ? 'Rutinmallarna kunde inte hämtas. Ingen lista visas.' : 'Dagens checklista kunde inte hämtas. Ingen status räknas just nu.'}</MessageCard>
       <Button variant="tertiary" label="Hämta igen" accessibilityLabel={activeTab === 'Alla' ? 'Hämta rutinmallarna igen' : 'Hämta dagens checklista igen'} onPress={onRetry} />
     </View> : null}
@@ -198,6 +228,73 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, state,
           statusMessage={itemMutation ? mutationMessage : ''} statusError={itemMutation && mutationError}
           onRetry={itemMutation ? onRetryMutation : undefined} />;
       })}
+    </View> : null}
+
+    {activeTab === 'Denna vecka' ? <View style={styles.weekView}>
+      <View style={styles.weekSelector} accessibilityLabel="Veckans dagar">
+        {weekDateKeys.map((dayDateKey) => {
+          const selected = dayDateKey === weekSelectedDateKey;
+          const today = dayDateKey === weekCurrentDateKey;
+          const dayNumber = String(Number(dayDateKey.slice(-2)));
+          const weekdayLabel = WEEKDAY_SHORT_LABELS[isoWeekdayForDateKey(dayDateKey) - 1] ?? '';
+          return <Pressable key={dayDateKey} accessibilityRole="button" accessibilityState={{ selected }}
+            accessibilityLabel={formatWeekday(dayDateKey) + ' ' + dayNumber + (today ? ', idag' : '')}
+            onPress={() => onSelectWeekDate(dayDateKey)}
+            style={({ pressed }) => [styles.weekDateButton, selected && styles.weekDateSelected, pressed && styles.weekDatePressed]}>
+            <Text style={[styles.weekDateWeekday, selected && styles.weekDateTextSelected]}>{weekdayLabel}</Text>
+            <Text style={[styles.weekDateNumber, selected && styles.weekDateTextSelected]}>{dayNumber}</Text>
+            {today ? <Text style={[styles.weekDateToday, selected && styles.weekDateTextSelected]}>Idag</Text> : null}
+          </Pressable>;
+        })}
+      </View>
+      {weekState === 'loading' ? <View style={styles.loading} accessibilityLabel="Laddar veckans sparade aktiviteter"><Skeleton shape="row" lines={2} /><Skeleton shape="row" lines={2} /></View> : null}
+      {weekState === 'error' ? <View style={styles.stateMessage}>
+        <MessageCard tone="error">Veckans sparade aktiviteter kunde inte hämtas. Ingen veckostatus räknas just nu.</MessageCard>
+        <Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta veckans sparade aktiviteter igen" onPress={onRetryWeek} />
+      </View> : null}
+      {weekState === 'ready' && weekProjection && selectedWeekDay ? <>
+        <View style={styles.weekSummary}>
+          <Text style={styles.progress}>{weekProjection.summary.completedCount} av {weekProjection.summary.confirmedCount} bekräftade klara den här veckan</Text>
+          {weekProjection.summary.unknownCount > 0 ? <Text style={styles.status}>{weekProjection.summary.unknownCount} statusar kan inte bekräftas</Text> : null}
+          {weekProjection.summary.missingDayCount > 0 || weekProjection.summary.emptyDayCount > 0
+            ? <Text style={styles.status}>{weekProjection.summary.missingDayCount} dagar utan sparad lista · {weekProjection.summary.emptyDayCount} bekräftat tomma</Text> : null}
+          <Text style={styles.status}>{selectedWeekDay.completedCount} av {selectedWeekDay.confirmedCount} bekräftade klara {weekSelectedDateKey === weekCurrentDateKey ? 'idag' : 'den här dagen'}</Text>
+        </View>
+        {selectedWeekDay.state === 'loading' ? <View style={styles.loading} accessibilityLabel="Laddar dagens bekräftade checklista"><Skeleton shape="row" lines={2} /></View> : null}
+        {selectedWeekDay.state === 'error' ? <View style={styles.stateMessage}>
+          <MessageCard tone="error">Dagens checklista kunde inte hämtas. Veckans rådata används inte för idag.</MessageCard>
+          <Button variant="tertiary" label="Hämta dagens checklista igen" accessibilityLabel="Hämta dagens checklista igen" onPress={onRetry} />
+        </View> : null}
+        {selectedWeekDay.state === 'missing' ? <View style={styles.empty}>
+          <SectionHeader title="Ingen sparad dagslista" />
+          <Text style={styles.body}>Det finns ingen sparad checklista för den här dagen.</Text>
+        </View> : null}
+        {selectedWeekDay.state === 'empty' ? <View style={styles.empty}>
+          <SectionHeader title={weekSelectedDateKey === weekCurrentDateKey ? 'Inget valt för idag' : 'Inget valt för den här dagen'} />
+          <Text style={styles.body}>Den bekräftade dagslistan innehåller inga valda aktiviteter.</Text>
+        </View> : null}
+        {selectedWeekDay.state === 'ready' ? <View style={styles.weekRows}>
+          {selectedWeekDay.rows.map((row) => {
+            const statusText = row.status === 'completed' ? 'Genomförd' : row.status === 'incomplete' ? 'Inte genomförd'
+              : row.status === 'skipped' ? 'Överhoppad' : 'Status kan inte bekräftas';
+            const detail = row.detail ?? statusText;
+            const canOpen = Boolean(row.openTarget && weekSelectedDateKey === weekCurrentDateKey);
+            return <View key={row.id} accessibilityRole={canOpen ? undefined : 'summary'} style={styles.weekRow} accessibilityLabel={(row.kind === 'training' ? 'Träning: ' : row.kind === 'skip' ? 'Överhoppad rutin: ' : 'Rutin: ')
+              + row.label + ', ' + detail}>
+              <IconChip category={row.kind === 'training' ? 'training' : 'walk'} />
+              <View style={styles.weekRowCopy}>
+                {row.routineLabel ? <Text style={styles.status}>{row.routineLabel}</Text> : null}
+                {row.programTitle ? <Text style={styles.status}>{row.programTitle}</Text> : null}
+                <Text style={styles.body}>{row.label}</Text>
+                <Text style={styles.status}>{detail}</Text>
+              </View>
+              {canOpen && row.openTarget ? <Button variant="tertiary" label="Öppna"
+                accessibilityLabel={'Öppna träningssteget ' + row.label}
+                onPress={() => onOpenWeekTrainingTarget(row.openTarget!.programVersionId, row.openTarget!.stepId)} /> : null}
+            </View>;
+          })}
+        </View> : null}
+      </> : null}
     </View> : null}
 
     {activeTab === 'Alla' && state === 'ready' && templateEntries.length === 0 ? <View style={styles.empty}>
@@ -289,6 +386,21 @@ function renderRoutineTemplate(entry: DailyRoutineTemplateEntry, actions: {
 const styles = StyleSheet.create({
   screen: { gap: tokens.spacing.md },
   scopeContext: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'center' },
+  weekView: { gap: tokens.spacing.md },
+  weekSelector: { flexDirection: 'row', justifyContent: 'space-between', gap: tokens.spacing.xs / 2 },
+  weekDateButton: { flex: 1, minWidth: 0, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', gap: 2,
+    paddingVertical: tokens.spacing.xs, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.home.card },
+  weekDateSelected: { backgroundColor: tokens.colors.primary },
+  weekDatePressed: { opacity: 0.72 },
+  weekDateWeekday: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textTransform: 'capitalize' },
+  weekDateNumber: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  weekDateToday: { ...tokens.typography.caption, color: tokens.colors.primary },
+  weekDateTextSelected: { color: tokens.colors.onPrimary },
+  weekSummary: { gap: tokens.spacing.xs },
+  weekRows: { gap: tokens.spacing.xs },
+  weekRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm,
+    borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border },
+  weekRowCopy: { flex: 1, minWidth: 0, gap: tokens.spacing.xs },
   actions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: tokens.spacing.sm },
   progress: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1 },
   status: { ...tokens.typography.caption, color: tokens.colors.textSecondary },

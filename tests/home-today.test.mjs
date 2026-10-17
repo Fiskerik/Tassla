@@ -6,7 +6,7 @@ const hook = registerHooks({ resolve(specifier, context, nextResolve) { return s
 const homeToday = await import('../src/features/home/home-today.ts');
 hook.deregister();
 
-const { homeAgeInWeeks, homeTodaySources, homeWeekStrip } = homeToday;
+const { homeAgeInWeeks, homeAgeStrip, homeTodaySources, homeWeekStrip } = homeToday;
 
 function dateAfterDays(date, days) {
   const value = new Date(`${date}T00:00:00.000Z`);
@@ -58,6 +58,31 @@ test('home week strip includes zero and marks exactly one current week', () => {
     const boundaryStrip = homeWeekStrip(birthDate, dateAfterDays(birthDate, week * 7));
     assert.equal(boundaryStrip.filter(({ current }) => current).length, 1);
     assert.equal(boundaryStrip.find(({ current }) => current)?.week, week);
+  }
+});
+
+test('active Home age strip keeps the contracted week, month and year marker ranges', () => {
+  const birthDate = '2026-06-01';
+  const cases = [
+    { today: '2026-10-19', unit: 'weeks', first: 0, last: 20, current: 20 },
+    { today: '2026-10-20', unit: 'months', first: 0, last: 12, current: 4 },
+    { today: '2027-06-01', unit: 'months', first: 0, last: 12, current: 12 },
+    { today: '2027-06-02', unit: 'years', first: 1, last: 4, current: 1 },
+  ];
+
+  for (const { today, unit, first, last, current } of cases) {
+    const strip = homeAgeStrip(birthDate, today);
+    assert.ok(strip);
+    assert.equal(strip.unit, unit);
+    assert.deepEqual(strip.markers, Array.from(
+      { length: last - first + 1 },
+      (_, index) => {
+        const value = first + index;
+        return { value, current: value === current };
+      },
+    ));
+    assert.equal(strip.markers.filter(({ current: isCurrent }) => isCurrent).length, 1);
+    assert.equal(strip.markers.find(({ current: isCurrent }) => isCurrent)?.value, current);
   }
 });
 

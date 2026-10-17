@@ -1,0 +1,767 @@
+{
+  "date": "2026-10-17",
+  "runtime": "Chromium mobile emulation with CDP touch input, has_touch=true",
+  "fixtures": "synthetic in-memory, no account/database",
+  "results": [
+    {
+      "check": "public 375x844: initial Home",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public 375x844: real Chromium touch input available",
+      "result": "PASS",
+      "details": {
+        "maxTouchPoints": 1
+      }
+    },
+    {
+      "check": "public 375x844: first tab does not wrap right",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public 375x844: left swipe advances exactly one tab",
+      "result": "PASS",
+      "details": {
+        "selected": "Logg"
+      }
+    },
+    {
+      "check": "public 375x844: right swipe returns exactly one tab",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public 375x844: sub-threshold horizontal touch does not navigate",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public 375x844: vertical scroll gesture does not navigate",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public 375x844: swipe advances to Logg",
+      "result": "PASS",
+      "details": {
+        "selected": "Logg"
+      }
+    },
+    {
+      "check": "public 375x844: swipe advances to Träning",
+      "result": "PASS",
+      "details": {
+        "selected": "Träning"
+      }
+    },
+    {
+      "check": "public 375x844: swipe advances to Kunskap",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "public 375x844: swipe advances to Mer",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "public 375x844: last tab does not wrap left",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "public 375x844: right swipe from last tab goes back one",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "public 430x844: initial Home",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public 430x844: real Chromium touch input available",
+      "result": "PASS",
+      "details": {
+        "maxTouchPoints": 1
+      }
+    },
+    {
+      "check": "public 430x844: first tab does not wrap right",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public 430x844: left swipe advances exactly one tab",
+      "result": "PASS",
+      "details": {
+        "selected": "Logg"
+      }
+    },
+    {
+      "check": "public 430x844: right swipe returns exactly one tab",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public 430x844: sub-threshold horizontal touch does not navigate",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public 430x844: vertical scroll gesture does not navigate",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public 430x844: swipe advances to Logg",
+      "result": "PASS",
+      "details": {
+        "selected": "Logg"
+      }
+    },
+    {
+      "check": "public 430x844: swipe advances to Träning",
+      "result": "PASS",
+      "details": {
+        "selected": "Träning"
+      }
+    },
+    {
+      "check": "public 430x844: swipe advances to Kunskap",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "public 430x844: swipe advances to Mer",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "public 430x844: last tab does not wrap left",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "public 430x844: right swipe from last tab goes back one",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "public 375x667: initial Home",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public 375x667: real Chromium touch input available",
+      "result": "PASS",
+      "details": {
+        "maxTouchPoints": 1
+      }
+    },
+    {
+      "check": "public 375x667: first tab does not wrap right",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public 375x667: left swipe advances exactly one tab",
+      "result": "PASS",
+      "details": {
+        "selected": "Logg"
+      }
+    },
+    {
+      "check": "public 375x667: right swipe returns exactly one tab",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public 375x667: sub-threshold horizontal touch does not navigate",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public 375x667: vertical scroll gesture does not navigate",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public 375x667: swipe advances to Logg",
+      "result": "PASS",
+      "details": {
+        "selected": "Logg"
+      }
+    },
+    {
+      "check": "public 375x667: swipe advances to Träning",
+      "result": "PASS",
+      "details": {
+        "selected": "Träning"
+      }
+    },
+    {
+      "check": "public 375x667: swipe advances to Kunskap",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "public 375x667: swipe advances to Mer",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "public 375x667: last tab does not wrap left",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "public 375x667: right swipe from last tab goes back one",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "public: horizontal age strip does not change main tab",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "public: age strip owns horizontal touch and preserves current age/daily content",
+      "result": "PASS",
+      "details": {
+        "before": {
+          "left": 395,
+          "max": 692,
+          "width": 342,
+          "scrollWidth": 1034,
+          "overflowX": "auto"
+        },
+        "after": {
+          "left": 568,
+          "max": 692,
+          "width": 342,
+          "scrollWidth": 1034,
+          "overflowX": "auto"
+        }
+      }
+    },
+    {
+      "check": "public: age strip scroll position changes under touch",
+      "result": "PASS",
+      "details": {}
+    },
+    {
+      "check": "review 375x844: initial Home",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review 375x844: real Chromium touch input available",
+      "result": "PASS",
+      "details": {
+        "maxTouchPoints": 1
+      }
+    },
+    {
+      "check": "review 375x844: first tab does not wrap right",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review 375x844: left swipe advances exactly one tab",
+      "result": "PASS",
+      "details": {
+        "selected": "Logg"
+      }
+    },
+    {
+      "check": "review 375x844: right swipe returns exactly one tab",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review 375x844: sub-threshold horizontal touch does not navigate",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review 375x844: vertical scroll gesture does not navigate",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review 375x844: swipe advances to Logg",
+      "result": "PASS",
+      "details": {
+        "selected": "Logg"
+      }
+    },
+    {
+      "check": "review 375x844: swipe advances to Träning",
+      "result": "PASS",
+      "details": {
+        "selected": "Träning"
+      }
+    },
+    {
+      "check": "review 375x844: swipe advances to Kunskap",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "review 375x844: swipe advances to Mer",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "review 375x844: last tab does not wrap left",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "review 375x844: right swipe from last tab goes back one",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "review 430x844: initial Home",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review 430x844: real Chromium touch input available",
+      "result": "PASS",
+      "details": {
+        "maxTouchPoints": 1
+      }
+    },
+    {
+      "check": "review 430x844: first tab does not wrap right",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review 430x844: left swipe advances exactly one tab",
+      "result": "PASS",
+      "details": {
+        "selected": "Logg"
+      }
+    },
+    {
+      "check": "review 430x844: right swipe returns exactly one tab",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review 430x844: sub-threshold horizontal touch does not navigate",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review 430x844: vertical scroll gesture does not navigate",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review 430x844: swipe advances to Logg",
+      "result": "PASS",
+      "details": {
+        "selected": "Logg"
+      }
+    },
+    {
+      "check": "review 430x844: swipe advances to Träning",
+      "result": "PASS",
+      "details": {
+        "selected": "Träning"
+      }
+    },
+    {
+      "check": "review 430x844: swipe advances to Kunskap",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "review 430x844: swipe advances to Mer",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "review 430x844: last tab does not wrap left",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "review 430x844: right swipe from last tab goes back one",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "review 375x667: initial Home",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review 375x667: real Chromium touch input available",
+      "result": "PASS",
+      "details": {
+        "maxTouchPoints": 1
+      }
+    },
+    {
+      "check": "review 375x667: first tab does not wrap right",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review 375x667: left swipe advances exactly one tab",
+      "result": "PASS",
+      "details": {
+        "selected": "Logg"
+      }
+    },
+    {
+      "check": "review 375x667: right swipe returns exactly one tab",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review 375x667: sub-threshold horizontal touch does not navigate",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review 375x667: vertical scroll gesture does not navigate",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review 375x667: swipe advances to Logg",
+      "result": "PASS",
+      "details": {
+        "selected": "Logg"
+      }
+    },
+    {
+      "check": "review 375x667: swipe advances to Träning",
+      "result": "PASS",
+      "details": {
+        "selected": "Träning"
+      }
+    },
+    {
+      "check": "review 375x667: swipe advances to Kunskap",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "review 375x667: swipe advances to Mer",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "review 375x667: last tab does not wrap left",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "review 375x667: right swipe from last tab goes back one",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "review: horizontal age strip does not change main tab",
+      "result": "PASS",
+      "details": {
+        "selected": "Hem"
+      }
+    },
+    {
+      "check": "review: age strip owns horizontal touch and preserves current age/daily content",
+      "result": "PASS",
+      "details": {
+        "before": {
+          "left": 395,
+          "max": 692,
+          "width": 342,
+          "scrollWidth": 1034,
+          "overflowX": "auto"
+        },
+        "after": {
+          "left": 568,
+          "max": 692,
+          "width": 342,
+          "scrollWidth": 1034,
+          "overflowX": "auto"
+        }
+      }
+    },
+    {
+      "check": "review: age strip scroll position changes under touch",
+      "result": "PASS",
+      "details": {}
+    },
+    {
+      "check": "review: selected home guide opens in Knowledge and article blocks main swipe",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "review: active Knowledge tab is a no-op while article remains open",
+      "result": "PASS",
+      "details": {}
+    },
+    {
+      "check": "review: main swipe works after article return",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "review: main swipe re-enters Knowledge overview",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "review: leaving and re-entering Knowledge clears old article focus",
+      "result": "PASS",
+      "details": {}
+    },
+    {
+      "check": "review: Knowledge segmented tabs own horizontal touch",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "review: Checklistor segment owns horizontal touch",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "review: checklist detail blocks main swipe immediately after opening",
+      "result": "PASS",
+      "details": {
+        "selected": "Kunskap"
+      }
+    },
+    {
+      "check": "review: active Knowledge tab preserves open checklist detail and swipe gate",
+      "result": "PASS",
+      "details": {}
+    },
+    {
+      "check": "review: swipe works after checklist return and re-entry",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "review: FAQ inline expansion does not gate main swipe",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "review: Training segmented tabs own horizontal touch",
+      "result": "PASS",
+      "details": {
+        "selected": "Träning"
+      }
+    },
+    {
+      "check": "review: Health segmented tabs own horizontal touch",
+      "result": "PASS",
+      "details": {
+        "selected": "Mer"
+      }
+    },
+    {
+      "check": "review: Log note field owns horizontal touch",
+      "result": "PASS",
+      "details": {
+        "selected": "Logg"
+      }
+    },
+    {
+      "check": "all browser sessions: zero uncaught page errors",
+      "result": "PASS",
+      "details": {}
+    }
+  ],
+  "observations": [
+    {
+      "mode": "public",
+      "age_strip_before": {
+        "left": 395,
+        "max": 692,
+        "width": 342,
+        "scrollWidth": 1034,
+        "overflowX": "auto"
+      },
+      "age_strip_after": {
+        "left": 568,
+        "max": 692,
+        "width": 342,
+        "scrollWidth": 1034,
+        "overflowX": "auto"
+      },
+      "age_card_label": "Just nu med Luna: En trygg start hemma, hundens ålder 11 veckor"
+    },
+    {
+      "mode": "review",
+      "age_strip_before": {
+        "left": 395,
+        "max": 692,
+        "width": 342,
+        "scrollWidth": 1034,
+        "overflowX": "auto"
+      },
+      "age_strip_after": {
+        "left": 568,
+        "max": 692,
+        "width": 342,
+        "scrollWidth": 1034,
+        "overflowX": "auto"
+      },
+      "age_card_label": "Just nu med Luna: En trygg start hemma, hundens ålder 11 veckor"
+    }
+  ],
+  "page_errors": [],
+  "screenshots": [
+    "public\\home-375x667.png",
+    "public\\home-375x844.png",
+    "public\\home-430x844.png",
+    "public\\home-age-strip.png",
+    "review\\article-detail-gate.png",
+    "review\\checklist-detail-gate.png",
+    "review\\health-tabs.png",
+    "review\\home-375x667.png",
+    "review\\home-375x844.png",
+    "review\\home-430x844.png",
+    "review\\home-age-strip.png",
+    "review\\log-note-gesture.png"
+  ]
+}

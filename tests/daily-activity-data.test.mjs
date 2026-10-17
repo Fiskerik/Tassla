@@ -87,6 +87,70 @@ test('daily activity snapshot rejects partial responses and enforces requested d
   } finally { await foreignClient.auth.dispose(); }
 });
 
+test('weekly activity reader is dog-scoped, date-bounded, minimal and read-only', async () => {
+  const weekStart = '2026-10-12';
+  const weekEnd = '2026-10-18';
+  const weeklyRoutineDay = Object.fromEntries(Object.entries(routineDay)
+    .filter(([key]) => !['routine_revision_snapshot', 'routine_day_revision', 'last_state_mutation_id'].includes(key)));
+  const weeklySkip = { ...weeklyRoutineDay, day_id: weeklyRoutineDay.id };
+  delete weeklySkip.id;
+  const { client, requests } = localClient(({ url }) => {
+    if (url.pathname.endsWith('/dog_daily_routine_days')) return jsonResponse([weeklyRoutineDay]);
+    if (url.pathname.endsWith('/dog_daily_routine_day_skips')) return jsonResponse([weeklySkip]);
+    if (url.pathname.endsWith('/dog_daily_training_selections')) return jsonResponse([trainingSelection]);
+    throw new Error('Unexpected weekly request ' + url.pathname);
+  });
+  try {
+    assert.deepEqual(await data.fetchWeeklyActivitySnapshot(client, dogId, weekStart), {
+      routineDays: [weeklyRoutineDay], routineDaySkips: [weeklySkip], trainingSelections: [trainingSelection],
+    });
+    assert.equal(requests.length, 3);
+    assert.ok(requests.every(({ method }) => method === 'GET'));
+    assert.ok(requests.every(({ url }) => url.searchParams.get('dog_id') === 'eq.' + dogId));
+    const reads = new Map(requests.map(({ url }) => [url.pathname, url]));
+    const routineQuery = reads.get('/rest/v1/dog_daily_routine_days');
+    const skipQuery = reads.get('/rest/v1/dog_daily_routine_day_skips');
+    const trainingQuery = reads.get('/rest/v1/dog_daily_training_selections');
+    assert.equal(routineQuery.searchParams.get('select'), 'id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence');
+    assert.equal(skipQuery.searchParams.get('select'), 'day_id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence');
+    assert.equal(trainingQuery.searchParams.get('select'), 'id,dog_id,program_version_id,step_id,date_key,time_zone');
+    for (const url of reads.values()) {
+      const dates = url.searchParams.getAll('date_key');
+      assert.deepEqual(dates, ['gte.' + weekStart, 'lte.' + weekEnd]);
+      assert.equal(url.pathname.includes('/rpc/'), false);
+    }
+  } finally { await client.auth.dispose(); }
+
+  const { client: invalidClient } = localClient(({ url }) => {
+    if (url.pathname.endsWith('/dog_daily_routine_days')) return jsonResponse([{ ...weeklyRoutineDay, routine_day_revision: 1 }]);
+    return jsonResponse([]);
+  });
+  try {
+    await assert.rejects(data.fetchWeeklyActivitySnapshot(invalidClient, dogId, weekStart), /Could not load weekly routine selections/);
+  } finally { await invalidClient.auth.dispose(); }
+
+  const { client: foreignClient } = localClient(({ url }) => {
+    if (url.pathname.endsWith('/dog_daily_routine_days')) return jsonResponse([{ ...weeklyRoutineDay, dog_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }]);
+    return jsonResponse([]);
+  });
+  try {
+    await assert.rejects(data.fetchWeeklyActivitySnapshot(foreignClient, dogId, weekStart), /Could not load weekly routine selections/);
+  } finally { await foreignClient.auth.dispose(); }
+
+  const { client: wrongRangeClient } = localClient(({ url }) => {
+    if (url.pathname.endsWith('/dog_daily_routine_days')) return jsonResponse([{ ...weeklyRoutineDay, date_key: '2026-10-19' }]);
+    return jsonResponse([]);
+  });
+  try {
+    await assert.rejects(data.fetchWeeklyActivitySnapshot(wrongRangeClient, dogId, weekStart), /Could not load weekly routine selections/);
+  } finally { await wrongRangeClient.auth.dispose(); }
+
+  const { client: invalidWeekClient } = localClient(() => jsonResponse([]));
+  try {
+    await assert.rejects(data.fetchWeeklyActivitySnapshot(invalidWeekClient, dogId, '2026-10-13'), /Invalid weekly activity scope/);
+  } finally { await invalidWeekClient.auth.dispose(); }
+});
+
 test('routine create recovers a lost response only after exact owner/id/label readback', async () => {
   const { client, requests } = localClient(async ({ method, url, body }) => {
     if (method === 'POST' && url.pathname === '/rest/v1/rpc/create_daily_routine_v2') {

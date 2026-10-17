@@ -1,0 +1,41 @@
+{
+  "passes": [
+    "Exact Home training target opens and returns to Home at 375x844",
+    "Exact Home training target opens and returns to Home at 430x844",
+    "Exact Home training target opens and returns to Home at 375x667",
+    "Stale exact source stays on Home and gives row-local truthful feedback",
+    "Missing exact source is rendered as non-actionable text without button semantics",
+    "Home general Training destination remains generic",
+    "Home training target fits 375x844 at 140% web text proxy"
+  ],
+  "pageErrors": [],
+  "scope": "R3a exact Home training target, origin return, stale-source race and missing-source semantics in synthetic public/review RN Web",
+  "bundle": "review",
+  "viewports": [
+    [
+      375,
+      844,
+      "375x844"
+    ],
+    [
+      430,
+      844,
+      "430x844"
+    ],
+    [
+      375,
+      667,
+      "375x667"
+    ],
+    [
+      375,
+      844,
+      "140% text proxy"
+    ]
+  ],
+  "limitations": [
+    "Fixtures use synthetic content and callbacks",
+    "Live Supabase/RLS, native iOS/Android, VoiceOver, physical gestures and installed app are NOT TESTABLE",
+    "The 140% text proxy is a web approximation"
+  ]
+}

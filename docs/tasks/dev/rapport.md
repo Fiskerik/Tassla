@@ -933,3 +933,26 @@ Oberoende Reviewer blockerade på snabb omdragning innan återstudsen var klar. 
 ### R2b callback-cleanup lifecycle — QA recheck pågår, 2026-10-17
 
 Reviewer identifierade att RN 0.86.3 kan leverera `stopAnimation`-värdet asynkront efter att komponentens effekt har städats bort. Drag-sessionens epoch kapslas nu i en helper och invalideras vid release, terminate, ny gest och effect cleanup. Reviewer fann därefter att ett fördröjt svar vid uppåtvändning kunde flytta sheeten ovanför det uppmätta startläget; gemensam clamp och deferred-callback-regression är tillagda. Oberoende QA v5/v6 PASS: fokuserad svit 21/21, full `pnpm check` 549/549, public/review 12/12 vardera via Node Playwright, noll page errors och fokus true → true, py_compile, kövalidering, diffcheck och beständiga resultat-/skärmbildshashar. QA-rapport: `docs/design/evidence/vision-rev02/shared-sheet/R2B-SHARED-SHEET-01/qa/INDEPENDENT-QA-v5-lifecycle-upward-reversal.md`. Slutlig Reviewer-recheck PASS utan kvarstående fynd; rapport: `docs/design/evidence/vision-rev02/shared-sheet/R2B-SHARED-SHEET-01/review/INDEPENDENT-REVIEW-v5.md`. Reviewerns isolerade runner saknade `.git`; root verifierade full status/diff och gav den relevanta R2b-diffhunk som underlag. Köposten går till `done`.
+
+### FLOW-HOME-TRAINING-TARGET-01 — QA/Reviewer checkpoint, 2026-10-17
+
+Hem öppnar exakt dagens sparade träningsversion/steg och returnerar till ursprungsvyn. Den generella Träna-genvägen och checklistans returkontext är bevarade. Exakt käll-/scope-/vuxengate är implementerad vid tryck. Inga datafrågor, writes, migrations, RLS eller dependencies ändrades.
+
+QA PASS för detta funktionella R3a-scope; Reviewer PASS efter dokumentationsrecheck. `pnpm check` passerade med app/edge typecheck, ESLint och 550/550 tester; `home-vision` 5/5; fokuserade dagliga wiringtester 7/7; public/review RN Web 7/7 vardera, noll page errors; `py_compile`, queue validation och diffcheck PASS. Fulla rapporter och bildresultat: `docs/design/evidence/vision-rev02/checklist/HOME-TRAINING-01/`.
+
+Punkt 16/full Home-panelmatch är fortsatt öppen: komposition saknar bland annat åldersremsan, träningsmarkören är rund i stället för referensens fyrkant och genvägskorten är täta mot bottenmenyn. Browser-fixturen äger callbacken; ProductWorkspace:s press-time gate är statiskt granskad och inte runtime-bevisad där. Live Supabase/RLS, native iOS/Android, fysisk touch, VoiceOver/Dynamic Type, native safe area, konto-/hundbyte och installerad app är NOT TESTABLE. Checkpointen lämnas lokal och ocommittad för Eriks begärda samlade commit/push med R2a och R3b.
+
+
+### VISION-R02-GESTURES — R2a lokal closeout, 2026-10-17
+
+R2a är lokalt stängd efter v9:s enda aktiva åldersremsa-assertion. Den testar `homeAgeStrip` direkt vid dag 140/141, första födelsedagen och dagen efter, inklusive exakt en aktuell markör. Plan och spec behåller nuvarande veckor-/månader-/årsintervall; fasbaserad åldersnavigation är en separat senare produktbeslutspunkt.
+
+Architect APPROVE och Critic PROCEED för exakt v9. Fokuserat `home-today.test.mjs` 4/4; `pnpm check` 551/551 med app-/edge-typecheck och ESLint; `python tools/dev_flow.py validate` och `git diff --check` PASS. Sparad Chromium touchkörning 99/99 med noll sidfel. Oberoende QA PASS och Reviewer PASS; rapporter i `docs/design/evidence/vision-rev02/gestures/{qa,review}/`. Inga produktionsfiler eller fixture ändrades i v9. Native iOS/Android, native accessibility, systeminteraktioner och native sheet/modal-prioritet är NOT TESTABLE. R2a hålls ocommittad för ägarens kombinerade R2a/R3a/R3b-commit/push.
+
+### FLOW-HOME-CHECKLIST-WEEK-01 — R3b checkpoint, 2026-10-17
+
+Denna vecka visar sparade dagar måndag–söndag. Dagens lista härleds bara från bekräftad och scope-matchad dailySnapshot; sparade historiska/framtida rader är read-only; endast exakt aktuell träningsuppgift kan öppnas och returnera till vald veckodag. Äldre och osäkra uppgifter räknas inte som ogjorda. Befintliga Idag/Alla-flöden och all skrivlogik är bevarade.
+
+Architect APPROVE, Critic PROCEED, Security implementation PASS, oberoende QA PASS och Reviewer PASS utan fynd. Den statiska Security-granskningen verifierade tre hund-/datumfiltrerade SELECT-projektioner mot befintliga owns_dog-RLS-definitioner; live RLS är fortsatt NOT TESTABLE. Fyndet med blandade snapshot-/request-scopevärden rättades och regressionstestades.
+
+Efter fix: fokuserat 31/31, riktad ESLint PASS, `pnpm check` 557/557, public/review `checklist-week` 7/7 vardera utan sidfel, py_compile, `python tools/dev_flow.py validate` och `git diff --check` PASS. Evidens med skärmbevis och §14 finns i `docs/design/evidence/vision-rev02/checklist/WEEK-01/`. Full veckovisuell match (ingen dedicated vecka-panelreferens), live Supabase/RLS, riktiga konto-/hundbyten, fysiska midnight/app-resume, native iOS/Android, VoiceOver och Dynamic Type är NOT TESTABLE. R3b är en lokal funktionell checkpoint; Panel 4 är inte därmed helt klar. R3b ingår med R2a och R3a i ägarens samlade leverans på samma branch.

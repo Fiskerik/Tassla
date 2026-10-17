@@ -1,6 +1,6 @@
 # VISION-REV02 — sammanhängande design- och byggunderlag
 
-## Aktuell status — 2026-10-14
+## Aktuell status — 2026-10-17
 
 `docs/tasks/dev/queue.json` är källan för arbetsflödets aktuella status. Plan- och QA-historik längre ned är historik och får inte styra nästa steg när kön eller en senare checkpoint säger annat.
 
@@ -10,7 +10,7 @@
 - `VISION-R02-3B` och `VISION-R02-3C` är `done` efter owner QA, Security och färsk Reviewer PASS. För 3C godkände Reviewer v6.3:s null-age-copy och public/review-render; liveartiklar saknas fortfarande i publicerat innehåll. Aktuell kö är auktoritativ.
 - `HOME-AGE-LIFECYCLE-01` är `done` som lokal UI/source-checkpoint efter Architect/Critic v4.3 approval, riktade kontroller, färsk RN Web-render, Dog Expert QA PASS och Reviewer PASS. Live Supabase och native tillgänglighet är NOT TESTABLE.
 - `VISION-R02-4A–4H` är klara lokalt efter Eriks rapporterade externa QA-PASS samt oberoende Reviewer- och Security-PASS 2026-10-14. Backend/RLS och nativeflöden är fortsatt NOT TESTABLE; se `docs/tasks/dev/vision-rev02-r02-4-closeout.md`.
-- `VISION-R02-GESTURES` är `blocked` tills browser/native-gester kan verifieras.
+- `VISION-R02-GESTURES` är `done` som lokal checkpoint efter 99/99 Chromium-touchkontroller och oberoende QA/Reviewer PASS; native iOS/Android/accessibility är fortsatt NOT TESTABLE.
 
 Nästa steg följer de öppna reviewgrindarna och de owner-godkända fortsättningsmandaten i kön. Status på dokument, lokal UI-render, databas/runtime och nativeflöden ska hållas åtskilda.
 
@@ -166,18 +166,26 @@ Eriks QA-besked före R02-4-implementationerna omfattade arbetet genom R02-3C. R
 
 Efter oberoende QA kompletterades 4C–4H:s saknade eller felaktiga renderbevis, och 4H:s retry-felvy fick ett spacingfel rättat. Separat read-only re-QA gav PASS för de konkreta korrigeringarna i 4A–H, inklusive alla fem Mer-fixturdestinationer, Hälsas retrykedja och de saknade profil-/tillståndsrendringarna. Erik rapporterade därefter extern helskärms-QA PASS; en oberoende Reviewer och Security gav PASS 2026-10-14. R02-4A–H är nu klara lokalt. Server/RLS och nativeflöden är fortsatt NOT TESTABLE; closeout: `docs/tasks/dev/vision-rev02-r02-4-closeout.md`.
 
-### VISION-R02-GESTURES — oberoende QA och pågående v8-korrigering
+### VISION-R02-GESTURES — historik för v7/v8
 
 v7:s oberoende QA gav **FAIL** för aktiv Knowledge-flik medan artikel/checklistdetalj finns kvar: parent stänger swipe-gate utan att den lokala detaljvyn avmonteras. Övrig dokumenterad route-lifecycle är statiskt korrekt; browser/native-gester är **NOT TESTABLE**. Full rapport finns i `docs/design/evidence/vision-rev02/gestures/QA-REPORT-v7.md`. Kön står `planned` medan Architect/Critic granskar exakt v8. Föreslagen lösning gör aktiv Kunskap-flik till no-op i detalj, rensar fokus på varje faktiskt Knowledge-exit via bottenmeny eller sidgest och återgår till översikten vid re-inträde; Hemmets uttryckliga guide-CTA behåller sitt valda artikel-id.
 
 Exakt v8 fick Architect **APPROVE** och Critic **PROCEED**. Implementationen är i QA: ProductWorkspace och visual-fixturen delar resetregeln för bottenmeny/sidgest, active Knowledge-tab behåller öppen detalj och Hem-CTA bevarar valt content id. Typecheck, riktad lint (0 fel; tre befintliga fixturevarningar), public/review builds, diffcheck och queue validation PASS; inga tester kördes. Browser/native-svep är fortfarande **NOT TESTABLE**. Oberoende QA och Reviewer återstår. Implementationsdetaljer: `docs/tasks/dev/vision-rev02-gestures-v8.md`.
 
-Oberoende QA v8 gav statisk **PASS utan blockerare** för route-state-kriterierna och Reviewer gav **PASS**. Runtime-timing för `useEffect` och faktiska browser/native-svep är NOT TESTABLE; därför står gesture-tasken `blocked` tills interaktionen kan verifieras i browser/enhet. QA-matris: `docs/design/evidence/vision-rev02/gestures/QA-REPORT-v8.md`.
+Oberoende QA v8 gav statisk **PASS utan blockerare** för route-state-kriterierna och Reviewer gav **PASS**. v8 saknade då verifiering av faktisk browser/native-swipe. Den historiska blockeraren ersattes av v9:s Chromium-touchbevis och bounded markerassertion; se aktuell closeout nedan.
+
+
+
+### VISION-R02-GESTURES — v9 closeout, 2026-10-17
+
+R2a är `done` som lokal checkpoint efter Architect **APPROVE**, Critic **PROCEED**, fokuserad assertion **4/4**, `pnpm check` **551/551**, queue validation och diffcheck PASS, oberoende QA **PASS** och Reviewer **PASS**. Sparad public/review Chromium-touchkörning passerade **99/99** med noll sidfel.
+
+Åldersremsan behåller de befintliga intervallen: veckor 0–20, månader 0–12 till första födelsedagen och år 1 till aktuell ålder +3. Förslaget om hundfaser är uppskjutet till en separat produktbeslutspunkt; de exempelintervall som nämnts är inte godkända råd. Native iOS/Android, native tillgänglighet, systeminteraktioner och sheet/modal-prioritet är fortsatt **NOT TESTABLE**. Plan, UX-spec och QA/Reviewer-rapporter finns i `docs/tasks/dev/vision-rev02-gestures-v9.md` och `docs/design/evidence/vision-rev02/gestures/`.
 
 ### UIUX-REVAMP-R2B-SHARED-SHEET-01 — första tvärgående paketet, QA PASS, 2026-10-17
 
-Plan v2 fick Architect APPROVE och Critic PROCEED. Opt-in drag-to-dismiss är implementerad endast för Loggs händelseredigerare. Den senaste QA/evidensrechecken före lifecycle-justeringen passerade public/review RN Web 12/12 vardera utan page errors; browserproben täcker omdragning under återstuds, fokus true → true, draftbevarande, noll writes och opt-out. Reviewer hittade därefter att en sen native `stopAnimation`-callback kunde överleva effect cleanup. Sessionen invalideras nu vid cleanup/release och ett riktat test täcker sen callback efter ersättning/teardown. Den nya lifecycle-versionens QA och sparade public/review evidens verifieras nu; Reviewer recheckar efter QA PASS. Native fokus/tangentbord och övriga native/live-flöden är NOT TESTABLE. Detaljer: docs/tasks/dev/UIUX-REVAMP-R2B-SHARED-SHEET-01.md och evidens-README. R2a huvudnavigationens swipe är fortsatt separat blockerad tills dess egen runtime-verifiering finns.
+Plan v2 fick Architect APPROVE och Critic PROCEED. Opt-in drag-to-dismiss är implementerad endast för Loggs händelseredigerare. Den senaste QA/evidensrechecken före lifecycle-justeringen passerade public/review RN Web 12/12 vardera utan page errors; browserproben täcker omdragning under återstuds, fokus true → true, draftbevarande, noll writes och opt-out. Reviewer hittade därefter att en sen native `stopAnimation`-callback kunde överleva effect cleanup. Sessionen invalideras nu vid cleanup/release och ett riktat test täcker sen callback efter ersättning/teardown. Den nya lifecycle-versionens QA och sparade public/review evidens verifieras nu; Reviewer recheckar efter QA PASS. Native fokus/tangentbord och övriga native/live-flöden är NOT TESTABLE. Detaljer: docs/tasks/dev/UIUX-REVAMP-R2B-SHARED-SHEET-01.md och evidens-README. R2a browser-svepen är verifierade i Chromium; nativebegränsningar redovisas separat som NOT TESTABLE.
 
 ### UIUX-REVAMP-R2B-SHARED-SHEET-01 — slutlig closeout, 2026-10-17
 
-Den tidigare QA-handoffen ovan är historisk. Slutlig lifecycle-implementation har QA v5/v6 PASS (fokuserad suite 21/21, `pnpm check` 549/549, public/review 12/12 vardera via Node Playwright, noll page errors, fokus true → true, py_compile, queue validation, diffcheck och beständiga evidenshashar) samt oberoende Reviewer v5 PASS utan kvarstående fynd. Köposten är `done`. Reviewerns isolerade runner saknade `.git`; root verifierade full ändringslista/diff och gav den relevanta R2b-diffhunk som reviewunderlag. Fysiska/native/live-appbeteenden är fortsatt NOT TESTABLE. R2a huvudnavigationens swipe är fortsatt separat blockerad.
+Den tidigare QA-handoffen ovan är historisk. Slutlig lifecycle-implementation har QA v5/v6 PASS (fokuserad suite 21/21, `pnpm check` 549/549, public/review 12/12 vardera via Node Playwright, noll page errors, fokus true → true, py_compile, queue validation, diffcheck och beständiga evidenshashar) samt oberoende Reviewer v5 PASS utan kvarstående fynd. Köposten är `done`. Reviewerns isolerade runner saknade `.git`; root verifierade full ändringslista/diff och gav den relevanta R2b-diffhunk som reviewunderlag. Fysiska/native/live-appbeteenden är fortsatt NOT TESTABLE. R2a browser-svepen är verifierade i Chromium; nativebegränsningar redovisas separat som NOT TESTABLE.

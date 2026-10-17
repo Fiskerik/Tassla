@@ -67,6 +67,7 @@ import {
   createDailyRoutine,
   deleteDailyRoutine,
   fetchDailyActivitySnapshot,
+  fetchWeeklyActivitySnapshot,
   removeRoutineFromDay,
   removeTrainingSelection,
   replaceDailyRoutine,
@@ -79,6 +80,7 @@ import {
   type DailyRoutineDayDraft,
   type DailyRoutineRepeatValues,
   type DailyTrainingSelection,
+  type WeeklyActivitySnapshot,
 } from './daily-activity-data';
 import {
   fetchOwnedDogAttribution,
@@ -106,7 +108,7 @@ import { checklistMemoryScope, keepChecklistMemoryForScope, updateChecklistMemor
 import { checklistReadCacheScope, clearChecklistReadCache, keepChecklistReadCacheForScope } from '../knowledge/checklist-data';
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, REVIEW_TRAINING_PROGRAMS } from '../knowledge/review-content';
 import { HomeScreen, type HomeDailyTrainingOption } from './HomeScreen';
-import { ADULT_APPROVED_DAILY_TRAINING_VERSION_IDS, deriveHomeDailyActivities, isDailyActivityDateCurrent, isDailyActivitySnapshotWritable, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep, runDailyActivityActionIfWritable, runDailyActivityMutationGateway, scheduleDailyActivitySnapshotExpiry, type DailyMutationOrigin } from './daily-activity-model';
+import { ADULT_APPROVED_DAILY_TRAINING_VERSION_IDS, dateKeysForIsoWeek, deriveHomeDailyActivities, isDailyActivityDateCurrent, isDailyActivitySnapshotWritable, isValidIanaTimeZone, isWeeklyActivityResponseCurrent, isoWeekStartForDateKey, localDateKeyAt, nextSelectableTrainingStep, projectWeeklyActivity, runDailyActivityActionIfWritable, runDailyActivityMutationGateway, scheduleDailyActivitySnapshotExpiry, weeklyActivityLifetimeKey, type DailyMutationOrigin, type WeeklyActivityProjection } from './daily-activity-model';
 import { activeMainTabDestination, isMainTabDestination, mainTabTransitionDirection, nextMainTabDestination, requestMainTabNavigation } from './main-navigation';
 import { BottomNav, MainSwipeNavigation } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
@@ -160,7 +162,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
   const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>({ page: 'home', previousPage: 'home' });
   const { page, previousPage } = navigation;
-  const [trainingEntry, setTrainingEntry] = useState<{ programVersionId: string | null; stepId: string | null; scope: string } | null>(null);
+  const [trainingEntry, setTrainingEntry] = useState<{ programVersionId: string | null; stepId: string | null; scope: string; returnPage: 'home' | 'checklist' | 'week'; returnWeekDateKey?: string } | null>(null);
+  const [homeTrainingTargetFeedback, setHomeTrainingTargetFeedback] = useState<{ activityId: string; message: string } | null>(null);
   const setPage = useCallback((nextPage: ProductPage) => {
     setNavigation((current) => current.page === nextPage
       ? current
@@ -278,6 +281,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [dailyStateLifetime, setDailyStateLifetime] = useState('');
   const [dailyRefreshing, setDailyRefreshing] = useState(false);
   const [dailyRefreshError, setDailyRefreshError] = useState(false);
+  const [weeklySnapshot, setWeeklySnapshot] = useState<WeeklyActivitySnapshot | null>(null);
+  const [weeklySnapshotLifetime, setWeeklySnapshotLifetime] = useState('');
+  const [weeklyState, setWeeklyState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [weeklyStateLifetime, setWeeklyStateLifetime] = useState('');
+  const [weeklyRetryToken, setWeeklyRetryToken] = useState(0);
+  const [weeklyDaySelection, setWeeklyDaySelection] = useState<{ scopeKey: string; dateKey: string } | null>(null);
+  const [checklistTabSelection, setChecklistTabSelection] = useState<{ scopeKey: string; tab: 'Idag' | 'Denna vecka' | 'Alla' } | null>(null);
+  const weeklyReadGeneration = useRef(0);
+  const weeklyRequestScopeRef = useRef('');
   const [dailyClock, setDailyClock] = useState(() => new Date());
   const [dailyBusyKey, setDailyBusyKey] = useState<string | null>(null);
   const [dailyMessageKey, setDailyMessageKey] = useState('');
@@ -433,6 +445,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const dailyDateKey = validDailyTimeZone ? localDateKeyAt(dailyClock, dailyTimeZone) : null;
   const currentDailyLifetime = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${currentSelectionKey}:${dailyDateKey ?? 'invalid-date'}:${dailyTimeZone}:${reviewContentEnabled ? 'review' : 'public'}`;
   const dailyLifetime = useRef('');
+  const dailyWeekStart = dailyDateKey ? isoWeekStartForDateKey(dailyDateKey) : null;
+  const dailyWeekDates = dailyWeekStart ? dateKeysForIsoWeek(dailyWeekStart) ?? [] : [];
+  const weeklyUiScopeKey = JSON.stringify([session?.user.id ?? '', accountGeneration, dog.id, dailyWeekStart, dailyTimeZone, reviewContentEnabled ? 'review' : 'public']);
+  const weeklyLifetime = weeklyActivityLifetimeKey({ ownerId: session?.user.id ?? null, accountGeneration, dogId: dog.id,
+    currentDateKey: dailyDateKey, weekStart: dailyWeekStart, timeZone: dailyTimeZone,
+    dailySnapshotUpdatedAt: dailySnapshotLifetime === currentDailyLifetime ? dailySnapshotUpdatedAt : null,
+    contentMode: reviewContentEnabled ? 'review' : 'public' });
+  const weeklyRequestScope = JSON.stringify([weeklyLifetime, page, weeklyRetryToken]);
+  const selectedWeeklyDateKey = weeklyDaySelection?.scopeKey === weeklyUiScopeKey && dailyWeekDates.includes(weeklyDaySelection.dateKey)
+    ? weeklyDaySelection.dateKey : dailyDateKey;
+  const checklistInitialTab = checklistTabSelection?.scopeKey === weeklyUiScopeKey ? checklistTabSelection.tab : 'Idag';
+  useLayoutEffect(() => { weeklyRequestScopeRef.current = weeklyRequestScope; }, [weeklyRequestScope]);
   const checklistMemory = useRef<{ scope: string; state: PendingChecklistMemory } | null>(null);
   const [checklistMemoryView, setChecklistMemoryView] = useState<{ scope: string; state: PendingChecklistMemory } | null>(null);
   const currentChecklistMemoryScope = checklistMemoryScope(session?.user.id ?? null, accountGeneration, dog.id);
@@ -478,6 +502,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       pendingDailyRetry.current = null;
       setDailyMessage('');
       setDailyMessageError(false);
+      setHomeTrainingTargetFeedback(null);
     }
     dailyLifetime.current = currentDailyLifetime;
   }, [currentDailyLifetime]);
@@ -1010,10 +1035,38 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active' && (page === 'home' || page === 'checklist' || page === 'training')) void reloadDailyActivity();
+      if (state !== 'active' || (page !== 'home' && page !== 'checklist' && page !== 'training')) return;
+      void reloadDailyActivity();
+      if (page === 'checklist') setWeeklyRetryToken((token) => token + 1);
     });
     return () => subscription.remove();
   }, [page, reloadDailyActivity]);
+
+  useEffect(() => {
+    if (page !== 'checklist' || !dailyWeekStart || !validDailyTimeZone) return undefined;
+    const scope = weeklyRequestScope;
+    const generation = ++weeklyReadGeneration.current;
+    const controller = new AbortController();
+    const responseIsCurrent = () => isWeeklyActivityResponseCurrent(
+      { generation, scopeKey: scope, aborted: controller.signal.aborted },
+      { generation: weeklyReadGeneration.current, scopeKey: weeklyRequestScopeRef.current, mounted: mounted.current },
+    );
+    void fetchWeeklyActivitySnapshot(client, dog.id, dailyWeekStart, controller.signal).then((snapshot) => {
+      if (!responseIsCurrent()) return;
+      setWeeklySnapshot(snapshot);
+      setWeeklySnapshotLifetime(weeklyLifetime);
+      setWeeklyStateLifetime(scope);
+      setWeeklyState('ready');
+    }).catch(() => {
+      if (!responseIsCurrent()) return;
+      setWeeklyStateLifetime(scope);
+      setWeeklyState('error');
+    });
+    return () => {
+      controller.abort();
+      if (generation === weeklyReadGeneration.current) weeklyReadGeneration.current += 1;
+    };
+  }, [client, dailyWeekStart, dog.id, page, validDailyTimeZone, weeklyLifetime, weeklyRequestScope]);
 
   const visibleContent = contentSelectionKey === currentSelectionKey ? content : [];
   const visibleContentState = contentSelectionKey === currentSelectionKey ? contentState : 'loading';
@@ -1021,6 +1074,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const dailyStateForView = dailyStateLifetime === currentDailyLifetime ? dailyState : 'loading';
   const dailySnapshotForView = dailySnapshotLifetime === currentDailyLifetime ? dailySnapshot : null;
   const dailyTrainingForView = dailySnapshotLifetime === currentDailyLifetime ? dailyTrainingSnapshot : null;
+  const weeklyStateForView = weeklyStateLifetime === weeklyRequestScope ? weeklyState : 'loading';
+  const weeklySnapshotForView = weeklySnapshotLifetime === weeklyLifetime ? weeklySnapshot : null;
+  const weeklyProjection: WeeklyActivityProjection | null = weeklyStateForView === 'ready' && weeklySnapshotForView && dailyWeekStart && dailyDateKey
+    ? projectWeeklyActivity({ snapshot: weeklySnapshotForView, weekStart: dailyWeekStart, currentDateKey: dailyDateKey, dogId: dog.id,
+      timeZone: dailyTimeZone, dailySnapshot: dailySnapshotForView, dailyState: dailyStateForView,
+      programs: dailyTrainingForView?.programs.filter((program) => !program.id.startsWith('review-v1:training:')) ?? [],
+      trainingState: dailyStateForView === 'ready' && !dailyRefreshError && dailyTrainingForView ? 'ready' : dailyStateForView === 'loading' ? 'loading' : 'error',
+      lifeStage: automaticDogAge(dog.birth_date, dailyDateKey)?.stage ?? null,
+      adultApprovedVersionIds: ADULT_APPROVED_DAILY_TRAINING_VERSION_IDS }) : null;
   const dailyRoutineWriteGate = {
     expectedScope: currentDailyLifetime,
     snapshotScope: dailySnapshotForView ? dailySnapshotLifetime : '',
@@ -2379,6 +2441,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       pendingDailyRetry.current = null;
       setDailyMessage('');
       setDailyMessageError(false);
+      setHomeTrainingTargetFeedback(null);
       const refreshed = await reloadDailyActivity(true, true);
       if (!refreshed && mounted.current && dailyLifetime.current === lifetime) {
         setDailyMessage('Ändringen sparades, men dagens lista kunde inte hämtas. Status räknas först efter en ny avläsning.');
@@ -2665,12 +2728,29 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       dailyMutationKey={dailyMessageKey}
       dailyMutationMessage={dailyMessage}
       dailyMutationError={dailyMessageError}
+      trainingTargetFeedback={homeTrainingTargetFeedback}
       onRetryDaily={() => { void reloadDailyActivity(true); }}
       {...dailyManagerActions}
       onRetryDailyMutation={retryDailyMutation}
       onGo={(destination) => {
         if (destination === 'checklist') setPage('checklist');
         else navigateMainTab(destination);
+      }}
+      onOpenTrainingTarget={(programVersionId, stepId, activityId) => {
+        const activity = dailyActivities.find((item) => item.id === activityId && item.kind === 'training');
+        const program = visibleTrainingState === 'ready' ? training.programs.find((item) => item.id === programVersionId) : undefined;
+        const step = program?.steps.find((item) => item.id === stepId);
+        const adultBlocked = dailyLifeStage === 'VUXEN' && !ADULT_APPROVED_DAILY_TRAINING_VERSION_IDS.includes(programVersionId);
+        const isCurrent = dailyStateForView === 'ready' && dailySnapshotLifetime === currentDailyLifetime
+          && dailyLifetime.current === currentDailyLifetime && activity?.availability === 'available'
+          && activity.programId === programVersionId && activity.stepId === stepId && Boolean(program && step) && !adultBlocked;
+        if (!isCurrent) {
+          setHomeTrainingTargetFeedback({ activityId, message: 'Uppgiften har ändrats. Öppna dagens checklista för att se det aktuella valet.' });
+          return;
+        }
+        setHomeTrainingTargetFeedback(null);
+        setTrainingEntry({ programVersionId, stepId, scope: currentDailyLifetime, returnPage: 'home' });
+        setPage('training');
       }}
       onOpenContent={(contentId) => {
         setKnowledgeDetailOpen(false);
@@ -2679,7 +2759,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       }}
       onRetryContent={() => { void retryContent(); }}
     />;
-    if (page === 'checklist') return <DailyChecklistScreen key={currentDailyLifetime} dogName={dog.name} dogId={dog.id} dateKey={dailyDateKey ?? '—'} scopeKey={currentDailyLifetime} state={dailyStateForView}
+    if (page === 'checklist') return <DailyChecklistScreen key={weeklyUiScopeKey} dogName={dog.name} dogId={dog.id} dateKey={dailyDateKey ?? '—'} scopeKey={currentDailyLifetime}
+      initialTab={checklistInitialTab} onActiveTabChange={(tab) => setChecklistTabSelection({ scopeKey: weeklyUiScopeKey, tab })} state={dailyStateForView}
+      weekDateKeys={dailyWeekDates} weekState={weeklyStateForView} weekProjection={weeklyProjection} weekCurrentDateKey={dailyDateKey}
+      weekSelectedDateKey={selectedWeeklyDateKey} onSelectWeekDate={(selectedDateKey) => setWeeklyDaySelection({ scopeKey: weeklyUiScopeKey, dateKey: selectedDateKey })}
+      onRetryWeek={() => setWeeklyRetryToken((token) => token + 1)}
       refreshing={dailyRefreshing} refreshError={dailyRefreshError} activities={dailyActivities} routines={dailySnapshotForView?.routines ?? []}
       routineDays={dailySnapshotForView?.routineDays ?? []} routineDaySkips={dailySnapshotForView?.routineDaySkips ?? []}
       routineTemplatesWritable={dailyRoutineTemplatesWritable} routineTemplatesSnapshotVersion={dailyRoutineWriteGate.updatedAt}
@@ -2690,11 +2774,23 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       onAddRoutineTemplateToDay={dailyAllManagerActions.onAddRoutineToDay}
       onGuardAllAction={(expectedVersion) => guardDailyAllAction(currentDailyLifetime, expectedVersion)}
       onOpenTrainingTarget={(programVersionId, stepId) => {
-        setTrainingEntry({ programVersionId, stepId, scope: currentDailyLifetime });
+        setTrainingEntry({ programVersionId, stepId, scope: currentDailyLifetime, returnPage: 'checklist' });
+        setPage('training');
+      }}
+      onOpenWeekTrainingTarget={(programVersionId, stepId) => {
+        const activity = dailyActivities.find((item) => item.kind === 'training' && item.programId === programVersionId && item.stepId === stepId);
+        const program = dailyTrainingForView?.programs.find((item) => item.id === programVersionId);
+        const step = program?.steps.find((item) => item.id === stepId);
+        const isCurrent = selectedWeeklyDateKey === dailyDateKey && dailyStateForView === 'ready' && !dailyRefreshError
+          && dailySnapshotLifetime === currentDailyLifetime && dailyLifetime.current === currentDailyLifetime
+          && activity?.availability === 'available' && Boolean(program && step)
+          && !(dailyLifeStage === 'VUXEN' && !ADULT_APPROVED_DAILY_TRAINING_VERSION_IDS.includes(programVersionId));
+        if (!isCurrent) { void reloadDailyActivity(true, true); return; }
+        setTrainingEntry({ programVersionId, stepId, scope: currentDailyLifetime, returnPage: 'week', returnWeekDateKey: selectedWeeklyDateKey ?? undefined });
         setPage('training');
       }}
       onGoTraining={() => {
-        setTrainingEntry({ programVersionId: null, stepId: null, scope: currentDailyLifetime });
+        setTrainingEntry({ programVersionId: null, stepId: null, scope: currentDailyLifetime, returnPage: 'checklist' });
         setPage('training');
       }}
       onBack={() => { setTrainingEntry(null); setPage('home'); }} />;
@@ -2713,30 +2809,37 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       const targetStep = targetProgram?.steps.find((step) => step.id === trainingEntry.stepId);
       const adultBlocked = targetIsExact && dailyLifeStage === 'VUXEN'
         && !ADULT_APPROVED_DAILY_TRAINING_VERSION_IDS.includes(trainingEntry.programVersionId ?? '');
-      const backToChecklist = () => { setTrainingEntry(null); setPage('checklist'); };
+      const returnPage = trainingEntry.returnPage;
+      const originPage = returnPage === 'home' ? 'home' : 'checklist';
+      const backLabel = returnPage === 'home' ? 'Tillbaka till Hem' : returnPage === 'week' ? 'Tillbaka till veckans dag' : 'Tillbaka till dagens checklista';
+      const backToOrigin = () => {
+        if (returnPage === 'week' && trainingEntry.returnWeekDateKey) setWeeklyDaySelection({ scopeKey: weeklyUiScopeKey, dateKey: trainingEntry.returnWeekDateKey });
+        setTrainingEntry(null);
+        setPage(originPage);
+      };
       if (staleScope || (visibleTrainingState === 'ready' && targetIsExact && (!targetProgram || !targetStep || adultBlocked))) return <>
         <PageHeading title="Träning" description="Dagens val" />
-        <MessageCard tone="neutral">{staleScope ? 'Dagens val har ändrats. Öppna checklistan för att välja ett aktuellt steg.'
+        <MessageCard tone="neutral">{staleScope ? (returnPage === 'home' ? 'Dagens val har ändrats. Gå tillbaka till Hem för att öppna det aktuella valet.' : 'Dagens val har ändrats. Öppna checklistan för att välja ett aktuellt steg.')
           : adultBlocked ? 'Det här träningssteget är inte godkänt för vuxna hundar.'
             : 'Det valda träningssteget finns inte längre i den publicerade versionen.'}</MessageCard>
-        <PrimaryButton title="Tillbaka till dagens checklista" onPress={backToChecklist} />
+        <PrimaryButton title={backLabel} onPress={backToOrigin} />
       </>;
       if (visibleTrainingState === 'loading') return <>
         <PageHeading title="Träning" description="Hämtar publicerade program…" />
-        <Button variant="tertiary" label="Tillbaka till dagens checklista" accessibilityLabel="Tillbaka till dagens checklista" onPress={backToChecklist} />
+        <Button variant="tertiary" label={backLabel} accessibilityLabel={backLabel} onPress={backToOrigin} />
       </>;
       if (visibleTrainingState === 'error') return <>
         <PageHeading title="Träning" description="Programmen kunde inte hämtas." />
         <MessageCard tone="error">{trainingError || 'Det valda träningssteget kunde inte kontrolleras.'}</MessageCard>
         <PrimaryButton title="Försök igen" onPress={() => { void retryTraining(); }} />
-        <Button variant="tertiary" label="Tillbaka till dagens checklista" accessibilityLabel="Tillbaka till dagens checklista" onPress={backToChecklist} />
+        <Button variant="tertiary" label={backLabel} accessibilityLabel={backLabel} onPress={backToOrigin} />
       </>;
       return <PublishedTrainingScreen ageWeeks={age} programs={training.programs} paused={training.paused}
         reviewMode={reviewContentEnabled && training.programs.some((program) => program.id.startsWith('review-v1:training:'))}
         busyStepKey={busyStepKey} error={trainingError} onCompleteStep={completeStep} onUnmarkStep={unmarkStep}
         onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
         onRetry={() => { void retryTraining(); }} initialSelection={targetIsExact ? { programId: trainingEntry.programVersionId as string, stepId: trainingEntry.stepId as string } : undefined}
-        onBackToChecklist={backToChecklist} />;
+        backLabel={backLabel} onBackToChecklist={backToOrigin} />;
     }
     if (page === 'training') return <>
       {visibleTrainingState === 'loading' && <PageHeading title="Träning" description="Hämtar publicerade program…" />}

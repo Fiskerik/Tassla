@@ -1,5 +1,5 @@
 import type { PublishedTrainingProgram, PublishedTrainingStep } from '../../data/workspace-data';
-import type { DailyActivitySnapshot, DailyRoutine, DailyRoutineDay, DailyRoutineDaySkip, DailyTrainingSelection } from './daily-activity-data';
+import type { DailyActivitySnapshot, DailyRoutine, DailyRoutineDay, DailyRoutineDaySkip, DailyTrainingSelection, WeeklyActivitySnapshot } from './daily-activity-data';
 
 export type HomeDailyActivity = {
   id: string;
@@ -212,6 +212,29 @@ export function isValidDateKey(value: string): boolean {
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
 
+export function addDaysToDateKey(dateKey: string, amount: number): string | null {
+  if (!isValidDateKey(dateKey) || !Number.isInteger(amount)) return null;
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCDate(date.getUTCDate() + amount);
+  return date.toISOString().slice(0, 10);
+}
+
+export function isoWeekStartForDateKey(dateKey: string): string | null {
+  if (!isValidDateKey(dateKey)) return null;
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  const daysSinceMonday = (date.getUTCDay() + 6) % 7;
+  date.setUTCDate(date.getUTCDate() - daysSinceMonday);
+  return date.toISOString().slice(0, 10);
+}
+
+export function dateKeysForIsoWeek(dateKey: string): string[] | null {
+  const weekStart = isoWeekStartForDateKey(dateKey);
+  if (!weekStart) return null;
+  return Array.from({ length: 7 }, (_, offset) => addDaysToDateKey(weekStart, offset) as string);
+}
+
 export function isRoutineDueOnDate(routine: Pick<DailyRoutine, 'repeat_unit' | 'repeat_interval' | 'repeat_weekdays' | 'repeat_anchor_date'>, dateKey: string): boolean {
   const { repeat_unit: unit, repeat_interval: interval, repeat_weekdays: weekdays, repeat_anchor_date: anchor } = routine;
   if (!unit || !interval || !anchor || !isValidDateKey(dateKey) || !isValidDateKey(anchor) || dateKey < anchor) return false;
@@ -335,6 +358,197 @@ export function deriveHomeDailyActivities(
     });
   }
   return activities;
+}
+
+export type WeeklyActivityRow = {
+  id: string;
+  label: string;
+  routineLabel?: string;
+  programTitle?: string;
+  kind: 'routine' | 'training' | 'skip';
+  status: 'completed' | 'incomplete' | 'unknown' | 'skipped';
+  detail?: string;
+  openTarget?: { programVersionId: string; stepId: string };
+};
+export type WeeklyDayProjection = {
+  dateKey: string;
+  state: 'loading' | 'error' | 'empty' | 'missing' | 'ready';
+  rows: WeeklyActivityRow[];
+  completedCount: number;
+  confirmedCount: number;
+  unknownCount: number;
+};
+export type WeeklyProgressSummary = {
+  completedCount: number;
+  confirmedCount: number;
+  unknownCount: number;
+  missingDayCount: number;
+  emptyDayCount: number;
+};
+export type WeeklyActivityProjection = { days: WeeklyDayProjection[]; summary: WeeklyProgressSummary };
+
+export function weeklyActivityLifetimeKey(input: {
+  ownerId: string | null;
+  accountGeneration: number;
+  dogId: string;
+  currentDateKey: string | null;
+  weekStart: string | null;
+  timeZone: string;
+  dailySnapshotUpdatedAt: number | null;
+  contentMode: 'public' | 'review';
+}): string {
+  return JSON.stringify([input.ownerId ?? '', input.accountGeneration, input.dogId, input.currentDateKey,
+    input.weekStart, input.timeZone, input.dailySnapshotUpdatedAt, input.contentMode]);
+}
+
+export function isWeeklyActivityResponseCurrent(
+  request: { generation: number; scopeKey: string; aborted: boolean },
+  current: { generation: number; scopeKey: string; mounted: boolean },
+): boolean {
+  return current.mounted && !request.aborted && request.generation === current.generation && request.scopeKey === current.scopeKey;
+}
+
+export function projectWeeklyActivity(input: {
+  snapshot: WeeklyActivitySnapshot;
+  weekStart: string;
+  currentDateKey: string;
+  dogId: string;
+  timeZone: string;
+  dailySnapshot: DailyActivitySnapshot | null;
+  dailyState: 'loading' | 'ready' | 'error';
+  programs: readonly PublishedTrainingProgram[];
+  trainingState: 'loading' | 'ready' | 'error';
+  lifeStage: 'VALP' | 'UNGHUND' | 'VUXEN' | null;
+  adultApprovedVersionIds?: readonly string[];
+}): WeeklyActivityProjection {
+  const dateKeys = dateKeysForIsoWeek(input.weekStart);
+  if (!dateKeys || dateKeys[0] !== input.weekStart || !isValidDateKey(input.currentDateKey)) {
+    return { days: [], summary: { completedCount: 0, confirmedCount: 0, unknownCount: 0, missingDayCount: 0, emptyDayCount: 0 } };
+  }
+  const days = dateKeys.map((dateKey) => projectWeeklyDay(input, dateKey));
+  const rows = days.flatMap((day) => day.rows);
+  return {
+    days,
+    summary: {
+      completedCount: rows.filter((row) => row.status === 'completed').length,
+      confirmedCount: rows.filter((row) => row.status === 'completed' || row.status === 'incomplete').length,
+      unknownCount: rows.filter((row) => row.status === 'unknown').length,
+      missingDayCount: days.filter((day) => day.state === 'missing').length,
+      emptyDayCount: days.filter((day) => day.state === 'empty').length,
+    },
+  };
+}
+
+function projectWeeklyDay(
+  input: Parameters<typeof projectWeeklyActivity>[0],
+  dateKey: string,
+): WeeklyDayProjection {
+  if (dateKey === input.currentDateKey) {
+    if (input.dailyState === 'loading') return emptyWeeklyDay(dateKey, 'loading');
+    if (input.dailyState === 'error' || !input.dailySnapshot) return emptyWeeklyDay(dateKey, 'error');
+    const rows: WeeklyActivityRow[] = [];
+    for (const day of input.dailySnapshot.routineDays) {
+      if (day.dog_id !== input.dogId || day.date_key !== dateKey) continue;
+      const timeZoneMismatch = day.time_zone !== input.timeZone;
+      for (const item of day.checklist_snapshot) rows.push({
+        id: 'routine:' + day.id + ':' + item.id, label: item.label, routineLabel: day.routine_label_snapshot, kind: 'routine',
+        status: timeZoneMismatch ? 'unknown' : day.completed_item_ids.includes(item.id) ? 'completed' : 'incomplete',
+        detail: timeZoneMismatch ? 'Tidszon skiljer sig — status kan inte bekräftas' : undefined,
+      });
+    }
+    const trainingOnlySnapshot = { ...input.dailySnapshot, routineDays: [], routineDaySkips: [] };
+    const todayTraining = deriveHomeDailyActivities(trainingOnlySnapshot, input.programs, input.dogId, dateKey, input.lifeStage,
+      input.adultApprovedVersionIds ?? ADULT_APPROVED_DAILY_TRAINING_VERSION_IDS);
+    for (const activity of todayTraining) {
+      if (activity.kind !== 'training' || !activity.trainingSelection) continue;
+      const timeZoneMismatch = activity.trainingSelection.time_zone !== input.timeZone;
+      const unavailable = activity.availability !== 'available';
+      const status = timeZoneMismatch || unavailable ? 'unknown' : activity.completed ? 'completed' : 'incomplete';
+      rows.push({
+        id: activity.id, label: activity.label, kind: 'training', status,
+        detail: timeZoneMismatch ? 'Tidszon skiljer sig — status kan inte bekräftas'
+          : activity.availability === 'adult-restricted' ? 'Inte tillgängligt för vuxna ännu'
+            : activity.availability === 'unavailable' ? 'Träningskällan kunde inte hämtas' : undefined,
+        ...(activity.programTitle ? { programTitle: activity.programTitle } : {}),
+        ...(status !== 'unknown' && activity.programId && activity.stepId
+          ? { openTarget: { programVersionId: activity.programId, stepId: activity.stepId } } : {}),
+      });
+    }
+    for (const skipped of input.dailySnapshot.routineDaySkips) {
+      if (skipped.dog_id !== input.dogId || skipped.date_key !== dateKey) continue;
+      const timeZoneMismatch = skipped.time_zone !== input.timeZone;
+      rows.push({
+        id: 'skip:' + skipped.day_id, label: skipped.routine_label_snapshot, kind: 'skip',
+        status: timeZoneMismatch ? 'unknown' : 'skipped',
+        detail: timeZoneMismatch ? 'Överhoppad — tidszon skiljer sig, status kan inte bekräftas' : undefined,
+      });
+    }
+    return summarizeWeeklyDay(dateKey, rows, 'empty');
+  }
+
+  const rows: WeeklyActivityRow[] = [];
+  const routineDays = input.snapshot.routineDays.filter((row) => row.dog_id === input.dogId && row.date_key === dateKey);
+  const selectedRoutineIds = new Set(routineDays.map((row) => row.routine_id));
+  for (const day of routineDays) {
+    const timeZoneMismatch = day.time_zone !== input.timeZone;
+    for (const item of day.checklist_snapshot) rows.push({
+      id: 'routine:' + day.id + ':' + item.id, label: item.label, routineLabel: day.routine_label_snapshot, kind: 'routine',
+      status: timeZoneMismatch ? 'unknown' : day.completed_item_ids.includes(item.id) ? 'completed' : 'incomplete',
+      detail: timeZoneMismatch ? 'Tidszon skiljer sig — status kan inte bekräftas' : undefined,
+    });
+  }
+  for (const skipped of input.snapshot.routineDaySkips) {
+    if (skipped.dog_id !== input.dogId || skipped.date_key !== dateKey || selectedRoutineIds.has(skipped.routine_id)) continue;
+    const timeZoneMismatch = skipped.time_zone !== input.timeZone;
+    rows.push({
+      id: 'skip:' + skipped.day_id, label: skipped.routine_label_snapshot, kind: 'skip',
+      status: timeZoneMismatch ? 'unknown' : 'skipped',
+      detail: timeZoneMismatch ? 'Överhoppad — tidszon skiljer sig, status kan inte bekräftas' : undefined,
+    });
+  }
+  for (const selection of input.snapshot.trainingSelections) {
+    if (selection.dog_id !== input.dogId || selection.date_key !== dateKey) continue;
+    const program = input.programs.find((item) => item.id === selection.program_version_id);
+    const step = program?.steps.find((item) => item.id === selection.step_id);
+    const timeZoneMismatch = selection.time_zone !== input.timeZone;
+    const adultRestricted = input.lifeStage === 'VUXEN'
+      && !(input.adultApprovedVersionIds ?? ADULT_APPROVED_DAILY_TRAINING_VERSION_IDS).includes(selection.program_version_id);
+    let status: WeeklyActivityRow['status'] = 'unknown';
+    const detail = timeZoneMismatch ? 'Tidszon skiljer sig — status kan inte bekräftas'
+      : input.trainingState !== 'ready' ? 'Träningsstatus kunde inte hämtas'
+        : adultRestricted ? 'Inte tillgängligt för vuxna ännu'
+          : !program || !step ? 'Träningskällan kunde inte hämtas' : undefined;
+    if (!timeZoneMismatch && input.trainingState === 'ready' && !adultRestricted && program && step) {
+      const stamp = trainingProgressStamp(input.dogId, program, selection.step_id);
+      status = stamp && isTrainingCompletionForDay(stamp, {
+        dogId: input.dogId, programVersionId: selection.program_version_id, stepId: selection.step_id,
+      }, dateKey, selection.time_zone) ? 'completed' : 'incomplete';
+    }
+    rows.push({
+      id: 'training:' + selection.id, label: step?.title ?? 'Valt träningssteg kunde inte hämtas', kind: 'training', status,
+      detail,
+      ...(program?.title ? { programTitle: program.title } : {}),
+    });
+  }
+  return summarizeWeeklyDay(dateKey, rows, 'missing');
+}
+
+function summarizeWeeklyDay(
+  dateKey: string,
+  rows: WeeklyActivityRow[],
+  emptyState: 'empty' | 'missing',
+): WeeklyDayProjection {
+  if (rows.length === 0) return emptyWeeklyDay(dateKey, emptyState);
+  return {
+    dateKey, state: 'ready', rows,
+    completedCount: rows.filter((row) => row.status === 'completed').length,
+    confirmedCount: rows.filter((row) => row.status === 'completed' || row.status === 'incomplete').length,
+    unknownCount: rows.filter((row) => row.status === 'unknown').length,
+  };
+}
+
+function emptyWeeklyDay(dateKey: string, state: WeeklyDayProjection['state']): WeeklyDayProjection {
+  return { dateKey, state, rows: [], completedCount: 0, confirmedCount: 0, unknownCount: 0 };
 }
 
 export function isValidIanaTimeZone(value: string): boolean {

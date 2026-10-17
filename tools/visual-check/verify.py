@@ -867,6 +867,191 @@ with sync_playwright() as p:
   (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'Production LogScreen dirty draft protection and shared navigation gate in a synthetic public/review RN Web fixture','bundle':'review' if review_mode else 'public','viewports':viewports,'limitations':['Native Alert appearance and Android system-back are not tested','Live Supabase mutation/readback, VoiceOver, Dynamic Type, physical swipe/keyboard behavior, and app build are not tested','The 140% text proxy is a web CSS approximation']},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
   raise SystemExit(0)
 
+ if os.environ.get('TASSLA_UI_SCOPE')=='home-training-target':
+  page.set_default_timeout(8000)
+  page.emulate_media(reduced_motion='reduce')
+  review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
+  sizes=[(375,844,'375x844'),(430,844,'430x844'),(375,667,'375x667')]
+  for width,height,label in sizes:
+   page.set_viewport_size({'width':width,'height':height})
+   open('home','&homeScenario=training-target')
+   row=page.get_by_role('button',name=re.compile(r'^Träningsuppgift: .*öppna Träning$'))
+   expect(row).to_be_visible()
+   page.screenshot(path=str(out/f'home-training-target-home-{label}.png'),animations='disabled')
+   row.scroll_into_view_if_needed()
+   row.click()
+   expect(page.get_by_text('Övning',exact=True)).to_be_visible()
+   expect(page.get_by_role('region',name='\u00d6vning').get_by_text(training_program_step_title(review_mode),exact=True)).to_be_visible()
+   expect(page.get_by_role('button',name='Tillbaka till Hem',exact=True)).to_be_visible()
+   expect(page.get_by_role('tab',name='Träning')).to_have_attribute('aria-selected','true')
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+   page.screenshot(path=str(out/f'home-training-target-detail-{label}.png'),animations='disabled')
+   page.get_by_role('region',name='\u00d6vning').get_by_role('button',name='St\u00e4ng',exact=True).click()
+   expect(page.get_by_text('Dagens att göra',exact=True)).to_be_visible()
+   expect(page.get_by_role('tab',name='Hem')).to_have_attribute('aria-selected','true')
+   expect(page.get_by_text('Luna | Golden retriever',exact=True)).to_be_visible()
+   passed(f'Exact Home training target opens and returns to Home at {label}')
+
+  open('home','&homeScenario=training-target-stale')
+  page.evaluate('window.__staleHomeTrainingTarget()')
+  page.wait_for_timeout(100)
+  row=page.get_by_role('button',name=re.compile(r'^Träningsuppgift: .*öppna Träning$'))
+  expect(row).to_be_visible()
+  row.click()
+  expect(page.get_by_text('Dagens att göra',exact=True)).to_be_visible()
+  expect(page.get_by_text('Uppgiften har ändrats. Öppna dagens checklista för att se det aktuella valet.',exact=True)).to_be_visible()
+  expect(page.get_by_role('tab',name='Hem')).to_have_attribute('aria-selected','true')
+  expect(page.get_by_role('tab',name='Träning')).to_have_attribute('aria-selected','false')
+  page.screenshot(path=str(out/'home-training-target-stale-feedback-375x844.png'),animations='disabled')
+  passed('Stale exact source stays on Home and gives row-local truthful feedback')
+
+  open('home','&homeScenario=training-target-missing')
+  home_region=page.get_by_role('region',name='Dagens att göra')
+  assert 'Valt träningssteg kunde inte hämtas' in home_region.inner_text()
+  expect(page.get_by_role('button',name=re.compile(r'^Träningsuppgift: Valt träningssteg kunde inte hämtas'))).to_have_count(0)
+  page.set_viewport_size({'width':375,'height':844})
+  page.screenshot(path=str(out/'home-training-target-missing-source-375x844.png'),animations='disabled')
+  passed('Missing exact source is rendered as non-actionable text without button semantics')
+
+  open('home','&homeScenario=training-target')
+  page.get_by_role('tab',name='Träning').click()
+  expect(page.get_by_role('tab',name='Träning')).to_have_attribute('aria-selected','true')
+  expect(page.get_by_role('button',name='Tillbaka till Hem',exact=True)).to_have_count(0)
+  expect(page.get_by_role('button',name='Tillbaka till dagens checklista',exact=True)).to_have_count(0)
+  passed('Home general Training destination remains generic')
+
+  open('home','&homeScenario=training-target')
+  page.set_viewport_size({'width':375,'height':844})
+  scaled=page.evaluate('''() => {const nodes=[...document.querySelectorAll('[dir="auto"]')];nodes.forEach(el=>{const style=getComputedStyle(el);const size=parseFloat(style.fontSize);const line=parseFloat(style.lineHeight);if(Number.isFinite(size))el.style.fontSize=(size*1.4)+'px';if(Number.isFinite(line))el.style.lineHeight=(line*1.4)+'px';});return nodes.length;}''')
+  assert scaled>0,'Home text proxy found no rendered text'
+  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'Home training target overflows at 140% text proxy'
+  page.screenshot(path=str(out/'home-training-target-large-text-140-375x844.png'),animations='disabled')
+  passed('Home training target fits 375x844 at 140% web text proxy')
+  assert not errors,errors
+  browser.close()
+  (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'R3a exact Home training target, origin return, stale-source race and missing-source semantics in synthetic public/review RN Web','bundle':'review' if review_mode else 'public','viewports':sizes+[(375,844,'140% text proxy')],'limitations':['Fixtures use synthetic content and callbacks','Live Supabase/RLS, native iOS/Android, VoiceOver, physical gestures and installed app are NOT TESTABLE','The 140% text proxy is a web approximation']},ensure_ascii=False,indent=2)+chr(10),encoding='utf-8')
+  raise SystemExit(0)
+
+ if os.environ.get('TASSLA_UI_SCOPE')=='checklist-week':
+  page.set_default_timeout(8000)
+  page.emulate_media(reduced_motion='reduce')
+  review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
+  viewports=[(375,844,'375x844'),(430,844,'430x844'),(375,667,'375x667')]
+  day_pattern=re.compile(r'^(måndag|tisdag|onsdag|torsdag|fredag|lördag|söndag) \d+(, idag)?$')
+  def open_week(extra=''):
+   open('home-checklist','&homeScenario=checklist'+extra)
+   expect(page.get_by_test_id('checklist-fixture-banner')).to_be_visible()
+   expect(page.get_by_role('tab',name='Idag',exact=True)).to_be_visible()
+   expect(page.get_by_role('tab',name='Denna vecka',exact=True)).to_be_visible()
+   page.get_by_role('tab',name='Denna vecka',exact=True).click()
+   expect(page.get_by_text('Veckans sparade aktiviteter',exact=True)).to_be_visible()
+   dates=page.get_by_role('button',name=day_pattern)
+   expect(dates).to_have_count(7)
+   return dates
+  for width,height,label in viewports:
+   page.set_viewport_size({'width':width,'height':height})
+   open_week()
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'weekly view overflows at {label}'
+   for index in range(7):
+    date_button=page.get_by_role('button',name=day_pattern).nth(index)
+    box=date_button.bounding_box()
+    assert box and box['width']>=44 and box['height']>=44,f'date target below 44pt at {label}: {box}'
+    text_colors=date_button.evaluate('''node => {const background=getComputedStyle(node).backgroundColor;return [...node.querySelectorAll('[dir="auto"]')].map(text=>({foreground:getComputedStyle(text).color,background}));}''')
+    assert text_colors and min(contrast_ratio(color_components(item['foreground']),color_components(item['background'])) for item in text_colors)>=4.5,f'date text contrast below 4.5:1 at {label}'
+   page.screenshot(path=str(out/f'checklist-week-ready-{label}.png'),animations='disabled')
+  passed('Weekly selector exposes seven accessible dates with 44pt targets at 375x844, 430x844, and 375x667')
+
+  open_week()
+  page.get_by_role('button',name=re.compile(r'^måndag \d+$')).click()
+  expect(page.get_by_text('Sparad rutin från tidigare dag',exact=True)).to_be_visible()
+  expect(page.get_by_text('Historisk rutinpunkt',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name=re.compile(r'^Öppna träningssteget '))).to_have_count(0)
+  assert page.get_by_text('Gammal veckorad',exact=True).count()==0,'a raw weekly today row is not rendered on a historical day'
+  page.screenshot(path=str(out/'checklist-week-historical-read-only-375x844.png'),animations='disabled')
+  passed('Historical saved snapshots are shown read-only; training has no button semantics or open affordance')
+
+  page.get_by_role('button',name=re.compile(r'^fredag \d+$')).click()
+  expect(page.get_by_text('Ingen sparad dagslista',exact=True)).to_be_visible()
+  open_week('&weekScenario=timezone-mismatch')
+  page.get_by_role('button',name=re.compile(r'^måndag \d+$')).click()
+  expect(page.get_by_text(re.compile(r'Tidszon skiljer sig'))).to_be_visible()
+  page.screenshot(path=str(out/'checklist-week-timezone-mismatch-375x844.png'),animations='disabled')
+  passed('Missing days and timezone-mismatched history remain distinct and unconfirmed')
+
+  open_week('&weekScenario=error')
+  expect(page.get_by_text('Veckans sparade aktiviteter kunde inte hämtas. Ingen veckostatus räknas just nu.',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Hämta veckans sparade aktiviteter igen',exact=True)).to_be_visible()
+  page.screenshot(path=str(out/'checklist-week-read-error-375x844.png'),animations='disabled')
+  open_week('&state=error')
+  expect(page.get_by_text('Dagens checklista kunde inte hämtas. Veckans rådata används inte för idag.',exact=True)).to_be_visible()
+  assert page.get_by_text('Gammal veckorad',exact=True).count()==0,'raw weekly today rows must stay ignored when the daily read fails'
+  page.screenshot(path=str(out/'checklist-week-today-error-375x844.png'),animations='disabled')
+  passed('Weekly read error and authoritative-today read error render separate retry states; raw today is never trusted')
+
+  open_week()
+  current=page.get_by_role('button',name=re.compile(r', idag$'))
+  expect(current).to_have_count(1)
+  current.click()
+  expect(page.get_by_text('Gammal veckorad',exact=True)).to_have_count(0)
+  open_training=page.get_by_role('button',name=re.compile(r'^Öppna träningssteget ')).first
+  expect(open_training).to_be_visible()
+  expect(page.get_by_text(training_program_step_title(review_mode),exact=True)).to_be_visible()
+  before_week=int(re.search(r'^(\d+) av \d+ bekräftade klara den här veckan$',page.get_by_text(re.compile(r'^\d+ av \d+ bekräftade klara den här veckan$')).inner_text()).group(1))
+  before_day=int(re.search(r'^(\d+) av \d+ bekräftade klara idag$',page.get_by_text(re.compile(r'^\d+ av \d+ bekräftade klara idag$')).inner_text()).group(1))
+  page.screenshot(path=str(out/'checklist-week-today-exact-training-375x844.png'),animations='disabled')
+  open_training.click()
+  expect(page.get_by_test_id('training-fixture-banner')).to_be_visible()
+  expect(page.get_by_role('button',name='Tillbaka till veckans dag',exact=True)).to_be_visible()
+  mark=page.get_by_role('button',name='Markera övningen som genomförd',exact=True)
+  expect(mark).to_be_visible();mark.click()
+  expect(page.get_by_text('Övningen är genomförd.',exact=True)).to_be_visible()
+  page.get_by_role('button',name='Tillbaka till veckans dag',exact=True).click()
+  expect(page.get_by_text('Veckans sparade aktiviteter',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name=re.compile(r', idag$'))).to_have_count(1)
+  after_week=int(re.search(r'^(\d+) av \d+ bekräftade klara den här veckan$',page.get_by_text(re.compile(r'^\d+ av \d+ bekräftade klara den här veckan$')).inner_text()).group(1))
+  after_day=int(re.search(r'^(\d+) av \d+ bekräftade klara idag$',page.get_by_text(re.compile(r'^\d+ av \d+ bekräftade klara idag$')).inner_text()).group(1))
+  assert after_week==before_week+1 and after_day==before_day+1,'only confirmed completion increments the selected-day and weekly totals'
+  expect(page.get_by_text('Genomförd',exact=True).last).to_be_visible()
+  passed('Exact current-day training opens and returns to today; confirmed readback increments day and week totals')
+
+  page.get_by_role('button',name=re.compile(r'^Öppna träningssteget ')).first.click()
+  expect(page.get_by_role('button',name=re.compile(r'^Avmarkera '))).to_be_visible()
+  page.get_by_role('button',name=re.compile(r'^Avmarkera ')).click()
+  expect(page.get_by_text('Övningen är avmarkerad.',exact=True)).to_be_visible()
+  page.get_by_role('region',name='Övning').get_by_role('button',name='Stäng',exact=True).click()
+  after_unmark=int(re.search(r'^(\d+) av \d+ bekräftade klara den här veckan$',page.get_by_text(re.compile(r'^\d+ av \d+ bekräftade klara den här veckan$')).inner_text()).group(1))
+  assert after_unmark==before_week,'confirmed unmark readback removes only the selected step from weekly completion'
+  page.get_by_role('button',name=re.compile(r'^Öppna träningssteget ')).first.click()
+  page.get_by_role('button',name='Markera övningen som genomförd',exact=True).click()
+  expect(page.get_by_text('Övningen är genomförd.',exact=True)).to_be_visible()
+  page.get_by_role('button',name='Tillbaka till veckans dag',exact=True).click()
+  assert int(re.search(r'^(\d+) av \d+ bekräftade klara den här veckan$',page.get_by_text(re.compile(r'^\d+ av \d+ bekräftade klara den här veckan$')).inner_text()).group(1))==before_week+1
+  page.evaluate("window.__tasslaNavigateMainTab('training')")
+  page.get_by_role('tab',name='Mina',exact=True).click()
+  page.evaluate("window.__tasslaAlertActions=['Börja om']")
+  program_title='Trygg start hemma' if review_mode else 'Trygg vardagsstart'
+  reset_button=page.get_by_role('button',name=f'Börja om med {program_title}',exact=True)
+  expect(reset_button).to_be_visible();reset_button.click()
+  expect(page.get_by_role('button',name=f'Börja om med {program_title}',exact=True)).to_have_count(0)
+  page.evaluate("window.__tasslaNavigateMainTab('home')")
+  page.get_by_role('button',name='Visa dagens checklista',exact=True).click()
+  expect(page.get_by_text('Veckans sparade aktiviteter',exact=True)).to_be_visible()
+  reset_week=int(re.search(r'^(\d+) av \d+ bekräftade klara den här veckan$',page.get_by_text(re.compile(r'^\d+ av \d+ bekräftade klara den här veckan$')).inner_text()).group(1))
+  assert reset_week==before_week,'confirmed reset readback removes selected training completion from the weekly total'
+  passed('Confirmed program reset removes its current-day training selection from weekly progress')
+
+  page.set_viewport_size({'width':375,'height':844})
+  open_week()
+  scaled=page.evaluate('''() => {const nodes=[...document.querySelectorAll('[dir="auto"]')];nodes.forEach(el=>{const style=getComputedStyle(el);const size=parseFloat(style.fontSize);const line=parseFloat(style.lineHeight);if(Number.isFinite(size))el.style.fontSize=(size*1.4)+'px';if(Number.isFinite(line))el.style.lineHeight=(line*1.4)+'px';});return nodes.length;}''')
+  assert scaled>0,'weekly text proxy found no rendered text'
+  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'weekly view overflows at 140% text proxy'
+  page.screenshot(path=str(out/'checklist-week-large-text-140-375x844.png'),animations='disabled')
+  passed('Weekly view fits 375x844 at a 140% web text proxy')
+  assert not errors,errors
+  browser.close()
+  (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'R3b current ISO-week read-only view, current-day authority, exact training route/return, and synthetic confirmed progress in public/review RN Web','bundle':'review' if review_mode else 'public','viewports':viewports+[(375,844,'140% text proxy')],'limitations':['Fixtures use synthetic local snapshots and callbacks; no live Supabase/RLS reads or writes are performed','Native iOS/Android, VoiceOver, device Dynamic Type, app resume and physical timezone/midnight transitions are NOT TESTABLE in RN Web','The 140% text proxy is a web CSS approximation']},ensure_ascii=False,indent=2)+chr(10),encoding='utf-8')
+  raise SystemExit(0)
+
  if os.environ.get('TASSLA_UI_SCOPE')=='home-checklist':
   page.set_default_timeout(8000)
   page.emulate_media(reduced_motion='reduce')

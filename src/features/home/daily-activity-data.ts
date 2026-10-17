@@ -1,11 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { withRequestDeadline, type WriteOutcome } from '../../data/workspace-data';
-import { isRoutineDueOnDate, isValidDateKey, isValidIanaTimeZone } from './daily-activity-model';
+import { dateKeysForIsoWeek, isRoutineDueOnDate, isValidDateKey, isValidIanaTimeZone } from './daily-activity-model';
 
 const REQUEST_TIMEOUT_MS = 12_000;
 const DAILY_ROUTINE_COLUMNS = 'id,dog_id,label,checklist,checklist_revision,legacy_single_item,repeat_unit,repeat_interval,repeat_weekdays,repeat_anchor_date';
 const DAILY_ROUTINE_DAY_COLUMNS = 'id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence,routine_revision_snapshot,routine_day_revision,last_state_mutation_id';
 const DAILY_ROUTINE_DAY_SKIP_COLUMNS = 'day_id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence,routine_revision_snapshot,routine_day_revision,last_state_mutation_id';
+const WEEKLY_ROUTINE_DAY_COLUMNS = 'id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence';
+const WEEKLY_ROUTINE_DAY_SKIP_COLUMNS = 'day_id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence';
+const WEEKLY_TRAINING_SELECTION_COLUMNS = 'id,dog_id,program_version_id,step_id,date_key,time_zone';
 
 export type DailyRoutineChecklistItem = { id: string; label: string };
 export type DailyRoutineRepeatUnit = 'day' | 'week' | 'month';
@@ -68,6 +71,16 @@ export type DailyActivitySnapshot = {
   routineDaySkips: DailyRoutineDaySkip[];
   trainingSelections: DailyTrainingSelection[];
 };
+export type WeeklyRoutineDay = Pick<DailyRoutineDay, 'id' | 'dog_id' | 'routine_id' | 'date_key' | 'time_zone'
+  | 'routine_label_snapshot' | 'checklist_snapshot' | 'completed_item_ids' | 'completed_at' | 'is_recurring_occurrence'>;
+export type WeeklyRoutineDaySkip = Pick<DailyRoutineDaySkip, 'day_id' | 'dog_id' | 'routine_id' | 'date_key' | 'time_zone'
+  | 'routine_label_snapshot' | 'checklist_snapshot' | 'completed_item_ids' | 'completed_at' | 'is_recurring_occurrence'>;
+export type WeeklyTrainingSelection = Pick<DailyTrainingSelection, 'id' | 'dog_id' | 'program_version_id' | 'step_id' | 'date_key' | 'time_zone'>;
+export type WeeklyActivitySnapshot = {
+  routineDays: WeeklyRoutineDay[];
+  routineDaySkips: WeeklyRoutineDaySkip[];
+  trainingSelections: WeeklyTrainingSelection[];
+};
 
 export async function fetchDailyActivitySnapshot(
   client: SupabaseClient,
@@ -116,6 +129,35 @@ export async function fetchDailyActivitySnapshot(
     routineDaySkips: routineDaySkips.data,
     trainingSelections: trainingSelections.data,
   };
+}
+
+export async function fetchWeeklyActivitySnapshot(
+  client: SupabaseClient,
+  dogId: string,
+  weekStart: string,
+  parentSignal?: AbortSignal,
+): Promise<WeeklyActivitySnapshot> {
+  const weekDates = dateKeysForIsoWeek(weekStart);
+  if (!dogId || !weekDates || weekDates[0] !== weekStart) throw new Error('Invalid weekly activity scope');
+  const weekEnd = weekDates[6];
+  const [routineDays, routineDaySkips, trainingSelections] = await Promise.all([
+    withRequestDeadline(async (signal) => await client.from('dog_daily_routine_days')
+      .select(WEEKLY_ROUTINE_DAY_COLUMNS).eq('dog_id', dogId).gte('date_key', weekStart).lte('date_key', weekEnd)
+      .order('date_key').order('id').retry(false).abortSignal(signal), REQUEST_TIMEOUT_MS, parentSignal),
+    withRequestDeadline(async (signal) => await client.from('dog_daily_routine_day_skips')
+      .select(WEEKLY_ROUTINE_DAY_SKIP_COLUMNS).eq('dog_id', dogId).gte('date_key', weekStart).lte('date_key', weekEnd)
+      .order('date_key').order('day_id').retry(false).abortSignal(signal), REQUEST_TIMEOUT_MS, parentSignal),
+    withRequestDeadline(async (signal) => await client.from('dog_daily_training_selections')
+      .select(WEEKLY_TRAINING_SELECTION_COLUMNS).eq('dog_id', dogId).gte('date_key', weekStart).lte('date_key', weekEnd)
+      .order('date_key').order('id').retry(false).abortSignal(signal), REQUEST_TIMEOUT_MS, parentSignal),
+  ]);
+  if (routineDays.error || !Array.isArray(routineDays.data) || !routineDays.data.every((row) => isWeeklyRoutineDay(row)
+    && row.dog_id === dogId && row.date_key >= weekStart && row.date_key <= weekEnd)) throw new Error('Could not load weekly routine selections');
+  if (routineDaySkips.error || !Array.isArray(routineDaySkips.data) || !routineDaySkips.data.every((row) => isWeeklyRoutineDaySkip(row)
+    && row.dog_id === dogId && row.date_key >= weekStart && row.date_key <= weekEnd)) throw new Error('Could not load weekly skipped routines');
+  if (trainingSelections.error || !Array.isArray(trainingSelections.data) || !trainingSelections.data.every((row) => isWeeklyTrainingSelection(row)
+    && row.dog_id === dogId && row.date_key >= weekStart && row.date_key <= weekEnd)) throw new Error('Could not load weekly training selections');
+  return { routineDays: routineDays.data, routineDaySkips: routineDaySkips.data, trainingSelections: trainingSelections.data };
 }
 
 export async function createDailyRoutine(
@@ -563,6 +605,45 @@ function isDailyTrainingSelection(value: unknown): value is DailyTrainingSelecti
   return typeof row.id === 'string' && typeof row.dog_id === 'string' && typeof row.program_version_id === 'string'
     && typeof row.step_id === 'string' && typeof row.date_key === 'string' && isValidDateKey(row.date_key)
     && typeof row.time_zone === 'string' && isValidIanaTimeZone(row.time_zone);
+}
+
+function isWeeklyRoutineDay(value: unknown): value is WeeklyRoutineDay {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  const keys = ['id', 'dog_id', 'routine_id', 'date_key', 'time_zone', 'routine_label_snapshot', 'checklist_snapshot', 'completed_item_ids', 'completed_at', 'is_recurring_occurrence'];
+  if (!hasExactKeys(row, keys) || !isCanonicalUuid(row.id) || !isCanonicalUuid(row.dog_id) || !isCanonicalUuid(row.routine_id)
+    || typeof row.date_key !== 'string' || !isValidDateKey(row.date_key) || typeof row.time_zone !== 'string' || !isValidIanaTimeZone(row.time_zone)
+    || typeof row.routine_label_snapshot !== 'string' || !row.routine_label_snapshot.trim()
+    || !isValidRoutineChecklist(row.checklist_snapshot) || !Array.isArray(row.completed_item_ids)
+    || !row.completed_item_ids.every(isCanonicalUuid) || typeof row.is_recurring_occurrence !== 'boolean'
+    || !(row.completed_at === null || typeof row.completed_at === 'string' && Number.isFinite(Date.parse(row.completed_at)))) return false;
+  const itemIds = (row.checklist_snapshot as DailyRoutineChecklistItem[]).map((item) => item.id);
+  const completed = row.completed_item_ids as string[];
+  const expectedCompleted = itemIds.filter((id) => completed.includes(id));
+  return completed.length === expectedCompleted.length && sameStringArray(completed, expectedCompleted)
+    && (row.completed_at !== null) === (completed.length === itemIds.length);
+}
+
+function isWeeklyRoutineDaySkip(value: unknown): value is WeeklyRoutineDaySkip {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  const keys = ['day_id', 'dog_id', 'routine_id', 'date_key', 'time_zone', 'routine_label_snapshot', 'checklist_snapshot', 'completed_item_ids', 'completed_at', 'is_recurring_occurrence'];
+  if (!hasExactKeys(row, keys) || !isCanonicalUuid(row.day_id)) return false;
+  const { day_id: dayId, ...dayFields } = row;
+  return isWeeklyRoutineDay({ ...dayFields, id: dayId });
+}
+
+function isWeeklyTrainingSelection(value: unknown): value is WeeklyTrainingSelection {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return hasExactKeys(row, ['id', 'dog_id', 'program_version_id', 'step_id', 'date_key', 'time_zone'])
+    && isCanonicalUuid(row.id) && isCanonicalUuid(row.dog_id) && isCanonicalUuid(row.program_version_id)
+    && isCanonicalUuid(row.step_id) && typeof row.date_key === 'string' && isValidDateKey(row.date_key)
+    && typeof row.time_zone === 'string' && isValidIanaTimeZone(row.time_zone);
+}
+
+function hasExactKeys(row: Record<string, unknown>, keys: string[]): boolean {
+  return Object.keys(row).sort().join(',') === [...keys].sort().join(',');
 }
 
 function sameRoutineSave(left: RoutineSaveValues & Partial<Pick<DailyRoutine, 'id' | 'dog_id'>>, right: RoutineSaveValues & Partial<Pick<DailyRoutine, 'id' | 'dog_id'>>): boolean {

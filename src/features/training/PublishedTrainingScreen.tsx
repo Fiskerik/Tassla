@@ -9,10 +9,11 @@ import { tokens } from '../../theme/tokens';
 const trainingImage = require('../../../assets/images/puppy-training.png');
 const tabs = ['Rekommenderat', 'Alla övningar', 'Mina'] as const;
 
-export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, reviewMode = false, initialSelection, onBackToChecklist }: {
+export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, reviewMode = false, initialSelection, backLabel = 'Tillbaka till dagens checklista', onBackToChecklist }: {
   ageWeeks: number | null; programs: readonly PublishedTrainingProgram[]; paused: readonly PausedTrainingProgress[]; busyStepKey: string | null; error: string;
   reviewMode?: boolean;
   initialSelection?: { programId: string; stepId: string };
+  backLabel?: string;
   onBackToChecklist?: () => void;
   onCompleteStep: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>;
   onUnmarkStep?: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>; onContinue: () => void;
@@ -113,7 +114,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   }
 
   return <View>
-    {onBackToChecklist ? <Button variant="tertiary" label="Tillbaka till dagens checklista" accessibilityLabel="Tillbaka till dagens checklista" disabled={Boolean(busyStepKey)} onPress={onBackToChecklist} /> : null}
+    {onBackToChecklist ? <Button variant="tertiary" label={backLabel} accessibilityLabel={backLabel} disabled={Boolean(busyStepKey)} onPress={onBackToChecklist} /> : null}
     <Text accessibilityRole="header" style={styles.screenTitle}>Träning</Text>
     <Tabs items={tabs} active={tab} onChange={setTab} variant="rev02-segmented" />
     {reviewMode ? <Text style={styles.note}>Tillfälligt exempel – innehållet är inte sakgranskat. Markeringar i dessa övningsutkast sparas under den här visningen.</Text> : null}

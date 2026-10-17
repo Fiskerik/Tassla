@@ -53,7 +53,7 @@ test('public and review Home share a generic portrait without attaching the dog 
   assert.match(harness, /height:tokens\.spacing\.xxl,minHeight:tokens\.spacing\.xxl/);
 });
 
-test('Home routines use a checkbox, training rows open training, and the manager preserves actions in a BottomSheet', () => {
+test('Home routines use a checkbox, training rows open exact targets, and the manager preserves actions in a BottomSheet', () => {
   assert.match(activityItem, /accessibilityRole="checkbox"/);
   assert.match(activityItem, /accessibilityRole="button" accessibilityLabel=\{rowLabel\}/);
   const homeVariant = activityItem.slice(activityItem.indexOf('function HomeDailyActivityItem'), activityItem.indexOf('const styles'));
@@ -62,7 +62,9 @@ test('Home routines use a checkbox, training rows open training, and the manager
   assert.match(homeVariant, /homeTrainingStatusCell/);
   assert.match(homeVariant, /homeTrainingStatusChecked/);
   assert.match(home, /onToggle=\{routineDay \? \(\) => item\.routineItemId && onSetRoutineCompletion/);
-  assert.match(home, /item\.kind === 'training' \? \(\) => onGo\('training'\)/);
+  assert.match(home, /onOpen=\{item\.kind === 'training' \? \(\) => \{/);
+  assert.match(home, /onOpenTrainingTarget\?\.\(item\.programId, item\.stepId, item\.id\)/);
+  assert.match(home, /<DestinationTile destination="training" compact variant="home" onPress=\{\(\) => onGo\('training'\)\} \/>/);
   for (const action of ['onCreateRoutine', 'onUpdateRoutine', 'onDeleteRoutine', 'onAddRoutineToDay', 'onRemoveRoutineFromDay', 'onAddTrainingToDay', 'onRemoveTrainingFromDay']) {
     assert.match(manager, new RegExp(action));
   }

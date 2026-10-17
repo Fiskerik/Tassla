@@ -1,0 +1,41 @@
+{
+  "passes": [
+    "Weekly selector exposes seven accessible dates with 44pt targets at 375x844, 430x844, and 375x667",
+    "Historical saved snapshots are shown read-only; training has no button semantics or open affordance",
+    "Missing days and timezone-mismatched history remain distinct and unconfirmed",
+    "Weekly read error and authoritative-today read error render separate retry states; raw today is never trusted",
+    "Exact current-day training opens and returns to today; confirmed readback increments day and week totals",
+    "Confirmed program reset removes its current-day training selection from weekly progress",
+    "Weekly view fits 375x844 at a 140% web text proxy"
+  ],
+  "pageErrors": [],
+  "scope": "R3b current ISO-week read-only view, current-day authority, exact training route/return, and synthetic confirmed progress in public/review RN Web",
+  "bundle": "review",
+  "viewports": [
+    [
+      375,
+      844,
+      "375x844"
+    ],
+    [
+      430,
+      844,
+      "430x844"
+    ],
+    [
+      375,
+      667,
+      "375x667"
+    ],
+    [
+      375,
+      844,
+      "140% text proxy"
+    ]
+  ],
+  "limitations": [
+    "Fixtures use synthetic local snapshots and callbacks; no live Supabase/RLS reads or writes are performed",
+    "Native iOS/Android, VoiceOver, device Dynamic Type, app resume and physical timezone/midnight transitions are NOT TESTABLE in RN Web",
+    "The 140% text proxy is a web CSS approximation"
+  ]
+}

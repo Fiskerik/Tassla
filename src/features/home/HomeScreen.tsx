@@ -35,7 +35,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   dailyRefreshing = false, dailyRefreshError = false,
   dailyMutationBusy = false, dailyMutationKey = '', dailyMutationMessage = '', dailyMutationError = false, onRetryDaily,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay,
-  onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, onGo, onOpenContent, onRetryContent }: {
+  onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, trainingTargetFeedback, onOpenTrainingTarget, onGo, onOpenContent, onRetryContent }: {
   dog: OwnedDog;
   breed?: string;
   today?: string;
@@ -64,6 +64,8 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   dailyMutationKey?: string;
   dailyMutationMessage?: string;
   dailyMutationError?: boolean;
+  trainingTargetFeedback?: { activityId: string; message: string } | null;
+  onOpenTrainingTarget?: (programVersionId: string, stepId: string, activityId: string) => void;
   onRetryDaily?: () => void;
   onCreateRoutine?: (routine: DailyRoutineCreateInput) => Promise<{ status: 'saved' | 'failed' | 'unknown' } | void>;
   onUpdateRoutine?: (routine: DailyRoutine, label: string, checklist: DailyRoutineChecklistItem[], repeat: DailyRoutineRepeatValues) => Promise<{ status: 'saved' | 'failed' | 'unknown' } | void>;
@@ -194,19 +196,22 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
                   const itemMutationKey = routineDay && item.routineItemId ? `complete-routine:${routineDay.id}:${item.routineItemId}` : '';
                   const itemMutation = Boolean(itemMutationKey && dailyMutationKey === itemMutationKey);
                   const isReadbackError = itemMutation && dailyMutationMessage.startsWith('Ändringen sparades, men dagens lista');
-                  if (item.kind === 'training' && item.availability !== 'available') return <View key={item.id} accessibilityRole="text"
+                  if (item.kind === 'training' && (item.availability !== 'available' || !item.programId || !item.stepId)) return <View key={item.id} accessibilityRole="text"
                     accessibilityLabel={`Träningsuppgift: ${item.label}, ${item.availability === 'adult-restricted' ? 'inte tillgänglig för vuxna ännu' : 'status kan inte bekräftas, källan kunde inte hämtas'}`}
                     style={styles.unavailableDailyRow}>
                     <Text style={styles.unavailableDailyLabel}>{item.label}</Text>
                     <Text style={styles.unavailableDailyDetail}>{item.availability === 'adult-restricted' ? 'Inte tillgängligt för vuxna ännu' : 'Källan kunde inte hämtas'}</Text>
                     {item.availability === 'unavailable' ? <Text style={styles.unavailableDailyDetail}>Status kan inte bekräftas</Text> : null}
                   </View>;
+                  const targetFeedback = item.kind === 'training' && trainingTargetFeedback?.activityId === item.id ? trainingTargetFeedback.message : '';
                   return <DailyActivityItem key={item.id} variant="home" kind={item.kind} label={item.label} routineLabel={item.routineLabel}
                     accessibilityLabel={item.kind === 'routine' ? `Rutin ${item.routineLabel ?? ''}, punkt ${item.label}` : `Träningsuppgift: ${item.label}`}
                     completed={item.completed} pending={itemMutation && dailyMutationBusy}
-                    statusMessage={itemMutation ? dailyMutationMessage : ''} statusError={itemMutation && dailyMutationError}
+                    statusMessage={targetFeedback || (itemMutation ? dailyMutationMessage : '')} statusError={Boolean(targetFeedback) || (itemMutation && dailyMutationError)}
                     onToggle={routineDay ? () => item.routineItemId && onSetRoutineCompletion?.(routineDay, item.routineItemId, !item.completed) : undefined}
-                    onOpen={item.kind === 'training' ? () => onGo('training') : () => openManager(routineDay?.routine_id ?? null)}
+                    onOpen={item.kind === 'training' ? () => {
+                      if (item.availability === 'available' && item.programId && item.stepId) onOpenTrainingTarget?.(item.programId, item.stepId, item.id);
+                    } : () => openManager(routineDay?.routine_id ?? null)}
                     onRetry={itemMutation ? (onRetryDailyMutation ?? (isReadbackError ? onRetryDaily : undefined)) : undefined} />;
                 })}
                 {dailyActivities.length > 5 ? <MotionPressable accessibilityRole="button" accessibilityLabel={`Visa alla ${dailyActivities.length} uppgifter`}

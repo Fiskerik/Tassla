@@ -28,7 +28,7 @@ test('Home derives count and progress from the full daily activity array and sho
 
 test('routine and training rows expose separate accessible actions and truthful state', () => {
   assert.match(home, /onToggle=\{routineDay \? \(\) => item\.routineItemId && onSetRoutineCompletion/);
-  assert.match(home, /item\.kind === 'training' \? \(\) => onGo\('training'\)/);
+  assert.match(home, /onOpenTrainingTarget\?\.\(item\.programId, item\.stepId, item\.id\)/);
   assert.match(item, /accessibilityRole="checkbox"/);
   assert.match(item, /accessibilityRole="button" accessibilityLabel=\{rowLabel\}/);
   assert.match(item, /Sparar…/);
@@ -52,6 +52,18 @@ test('routine and training rows expose separate accessible actions and truthful 
   assert.match(manager, /function startCreate\(/);
 });
 
+test('Home opens only the exact current training target and returns to its origin', () => {
+  assert.match(home, /item\.availability === 'available' && item\.programId && item\.stepId/);
+  assert.match(workspace, /trainingEntry\.returnPage/);
+  assert.match(workspace, /activity\?\.availability === 'available'/);
+  assert.match(workspace, /activity\.programId === programVersionId && activity\.stepId === stepId/);
+  assert.match(workspace, /returnPage: 'home'/);
+  assert.match(workspace, /returnPage: 'checklist'/);
+  assert.match(workspace, /backLabel=\{backLabel\} onBackToChecklist=\{backToOrigin\}/);
+  assert.match(home, /trainingTargetFeedback\?\.activityId === item\.id/);
+  assert.match(workspace, /Uppgiften har ändrats\. Öppna dagens checklista för att se det aktuella valet\./);
+});
+
 test('training row presents the step title and keeps full program title in detail data', () => {
   assert.match(model, /label: step\.title/);
   assert.match(model, /programTitle: program\.title/);
@@ -68,11 +80,12 @@ test('daily activity derivation excludes unrelated log, guide, health plan and c
 });
 
 test('checklist shows all dog-scoped routine templates and preserves selected day snapshots', () => {
-  assert.match(screen, /items=\{\['Idag', 'Alla'\]\}/);
+  assert.match(screen, /items=\{\['Idag', 'Denna vecka', 'Alla'\]\}/);
   assert.match(screen, /<AppBar mode="Back" variant="compact" title="Checklista" actionLabel="Tillbaka till Hem" onAction=\{onBack\} \/>/);
   assert.match(screen, /scopeContext: \{[^}]*textAlign: 'center'/);
   assert.doesNotMatch(screen, /<PageHeading title="Checklista"/);
-  assert.doesNotMatch(screen, /Kommande|Vecka/);
+  assert.doesNotMatch(screen, /Kommande/);
+  assert.match(screen, /Denna vecka/);
   assert.match(screen, /deriveDailyRoutineTemplateEntries\(\{ routines, routineDays, routineDaySkips, dogId, dateKey \}\)/);
   assert.match(model, /routineDays: readonly DailyRoutineDay\[\]/);
   assert.match(model, /routineDaySkips: readonly DailyRoutineDaySkip\[\]/);
@@ -83,6 +96,35 @@ test('checklist shows all dog-scoped routine templates and preserves selected da
   assert.match(screen, /Välj för idag/);
   assert.match(screen, /Rutinmallarna kunde inte hämtas\. Ingen lista visas\./);
   assert.match(screen, /Inga rutinmallar än/);
+});
+
+test('weekly view keeps all seven dates, current-day authority and historical rows read-only', () => {
+  const weeklyStart = screen.indexOf("{activeTab === 'Denna vecka' ? <View style={styles.weekView}>");
+  const weeklyEnd = screen.indexOf("{activeTab === 'Alla' && state === 'ready' && templateEntries.length === 0", weeklyStart);
+  const weeklyView = screen.slice(weeklyStart, weeklyEnd);
+  assert.match(screen, /weekDateKeys\.map/);
+  assert.match(screen, /accessibilityState=\{\{ selected \}\}/);
+  assert.match(screen, /weekSelectedDateKey === weekCurrentDateKey/);
+  assert.match(screen, /Ingen sparad dagslista/);
+  assert.match(screen, /Veckans rådata används inte för idag/);
+  assert.match(model, /Tidszon skiljer sig/);
+  assert.match(weeklyView, /accessibilityRole=\{canOpen \? undefined : 'summary'\}/);
+  assert.match(weeklyView, /accessibilityRole="button"/);
+  assert.match(weeklyView, /canOpen = Boolean\(row\.openTarget && weekSelectedDateKey === weekCurrentDateKey\)/);
+  assert.match(weeklyView, /row\.programTitle \? <Text style=\{styles\.status\}>\{row\.programTitle\}<\/Text>/);
+  assert.doesNotMatch(weeklyView, /onSetRoutineCompletion|onRemoveRoutineFromDay|onAddRoutineToDay/);
+  assert.match(workspace, /fetchWeeklyActivitySnapshot\(client, dog\.id, dailyWeekStart, controller\.signal\)/);
+  assert.match(workspace, /const responseIsCurrent = \(\) => isWeeklyActivityResponseCurrent/);
+  assert.match(workspace, /weeklyActivityLifetimeKey\(\{ ownerId: session\?\.user\.id/);
+  assert.match(workspace, /const weeklyRequestScope = JSON\.stringify\(\[weeklyLifetime, page, weeklyRetryToken\]\)/);
+  assert.match(workspace, /setWeeklySnapshotLifetime\(weeklyLifetime\)/);
+  assert.match(workspace, /weeklySnapshotLifetime === weeklyLifetime/);
+  assert.match(workspace, /weeklyStateLifetime === weeklyRequestScope/);
+  assert.match(workspace, /isWeeklyActivityResponseCurrent\(/);
+  assert.match(workspace, /dailySnapshotLifetime === currentDailyLifetime && dailyLifetime\.current === currentDailyLifetime/);
+  assert.match(workspace, /returnPage: 'week'/);
+  assert.match(workspace, /Tillbaka till veckans dag/);
+  assert.match(workspace, /weekDateKeys=\{dailyWeekDates\}/);
 });
 
 test('All-view routine writes require a fresh same-scope snapshot at render and handler time', () => {
@@ -103,7 +145,7 @@ test('All-view routine writes require a fresh same-scope snapshot at render and 
   assert.match(workspace, /retryDailyMutation\('all', dailyAllSnapshotVersion\)/);
   assert.match(workspace, /runDailyMutation\(pending\.key, pending\.run, true, pending\.origin, expectedSnapshotVersion\)/);
   assert.match(workspace, /const dailyAllManagerActions = \{/);
-  assert.match(workspace, /key=\{currentDailyLifetime\} dogName/);
+  assert.match(workspace, /key=\{weeklyUiScopeKey\} dogName/);
   assert.match(screen, /onGuardAllAction/);
   assert.match(screen, /managerSession\?\.tab === 'Alla' \? managerSession\.snapshotVersion : routineTemplatesSnapshotVersion/);
   assert.match(screen, /managerStaleLocked/);

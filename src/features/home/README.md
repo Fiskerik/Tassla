@@ -28,4 +28,18 @@ Panel 4 har segmenten `Idag` och `Alla`. `Alla` visar varje sparad rutinmall fö
 
 Kunskapsartiklar och en öppen checklistmall är underordnade vyer. `KnowledgeScreen` rapporterar detaljtillståndet till `ProductWorkspace`, som stänger av huvudflikssvep medan detaljen är öppen. Tryck på den aktiva Kunskap-fliken i detalj är en no-op. Vid faktiskt utträde från Kunskap rensas fokus och detaljflagga via både bottenmeny och sidgest; återinträde visar översikten utan att återöppna en gammal artikel. Hemmets direkta innehålls-CTA behåller däremot det uttryckligen valda artikel-id:t. Kunskapsöversikten och FAQ:s inline-expansion behåller huvudflikssvep.
 
+## Hemmets exakta träningsuppgift — FLOW-HOME-TRAINING-TARGET-01
+
+En tillgänglig träningsrad under Dagens att göra öppnar den publicerade programversion och det steg som dagens hundscopeade val faktiskt pekar på. ProductWorkspace kontrollerar aktuell scope, publicerad källa, steg och vuxengräns igen vid tryck; om valet hann ändras stannar ägaren på Hem med ett kort besked vid uppgiften. Träningsvyn visar Hem-retur för denna ingång och checklistretur för checklistans exakta ingång. Den generella Träna-genvägen förblir generell. Ingen ny lagring eller dataåtkomst införs.
+
+Public/review-verifieringen ligger i tools/visual-check med scope home-training-target och syntetiska källor. Live Supabase/RLS och native app-interaktion är separata och kan inte PASS-markeras av denna fixture.
+
+## Denna vecka — FLOW-HOME-CHECKLIST-WEEK-01
+
+`Denna vecka` visar ISO-måndag till söndag från aktuell local date key. Veckoläsningen är read-only och hämtar bara redan sparade rutin-dagskopior, skip-kopior och exakta träningsval för vald hund och datumintervall. Den skapar inte historiska/framtida dagsrader eller completion. Dagens rader kommer uteslutande från den aktuella scope-matchade `dailySnapshot`; eventuell rå veckorad för idag ignoreras. Historiska och framtida poster är statiska, ej öppningsbara sammanfattningar; bara en exakt, aktuell träningskälla för idag kan öppnas.
+
+Vecka och completiondatum beräknas med civil date keys och sparad IANA-tidszon. Tidszonsmismatch, saknad historik, bekräftat tom dag, okänt träningsresultat och läsfel hålls isär. Summeringen räknar bara bekräftade statusar. Konto-/hund-/datum-/vecko-/tidszons-/public-review-/dagsnapshot-versionen ingår i svarets livstid; scopebyte invaliderar äldre svar. Veckoavläsning görs om vid appens återkomst och när lokal dagsnyckel eller dagsnapshot ändras.
+
+RN Web- och modellbevis ligger i `docs/design/evidence/vision-rev02/checklist/WEEK-01/`. De är syntetiska: live Supabase/RLS-policy, verklig app-resume/midnatt, native tillgänglighet och installerad app verifieras separat.
+
 Reproducerbara React Native Web-renderingar finns i [tools/visual-check](../../../tools/visual-check/README.md). De använder syntetiska data; Supabase/RLS-runtime, native enheter och TestFlight verifieras separat.
