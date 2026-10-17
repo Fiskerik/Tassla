@@ -195,7 +195,7 @@ export function DatePickerField({ label, value, onChangeText, disabled = false }
         returnKeyType="done" style={styles.datePickerInput} value={value} />
       <Pressable accessibilityRole="button" accessibilityLabel={`Välj ${label.toLowerCase()} i kalender`} disabled={disabled}
         onPress={() => { const next = parseDateValue(value); if (next) setMonth(new Date(next.getFullYear(), next.getMonth(), 1)); setVisible(true); }} style={styles.pickerButton}>
-        <Text style={styles.pickerButtonText}>Kalender</Text>
+        <Ionicons name="calendar-outline" size={tokens.size.iconSm} color={theme.colors.accent} accessibilityElementsHidden />
       </Pressable>
     </View>
     <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
@@ -225,7 +225,7 @@ export function TimePickerField({ label, value, onChangeText, disabled = false }
     <Text style={styles.fieldLabel}>{label}</Text>
     <View style={styles.datePickerRow}><TextInput accessibilityLabel={`${label}, timmar och minuter`} editable={!disabled} keyboardType="numbers-and-punctuation" maxLength={5}
       onChangeText={onChangeText} placeholder="09:00" placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.datePickerInput} value={value} />
-      <Pressable accessibilityRole="button" accessibilityLabel={`Välj ${label.toLowerCase()} från tider`} disabled={disabled} onPress={() => { setDraft(value); setVisible(true); }} style={styles.pickerButton}><Text style={styles.pickerButtonText}>Välj tid</Text></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Välj ${label.toLowerCase()} från tider`} disabled={disabled} onPress={() => { setDraft(value); setVisible(true); }} style={styles.pickerButton}><Ionicons name="time-outline" size={tokens.size.iconSm} color={theme.colors.accent} accessibilityElementsHidden /></Pressable>
     </View>
     <Modal visible={visible} transparent animationType={reducedMotion ? 'none' : 'slide'} onRequestClose={() => setVisible(false)} accessibilityViewIsModal>
       <View style={styles.timeModalBackdrop}>
@@ -304,8 +304,7 @@ const styles = StyleSheet.create({
   datePickerField: { marginBottom: 18 },
   datePickerRow: { minHeight: 54, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.button, backgroundColor: theme.colors.surface },
   datePickerInput: { flex: 1, minWidth: 0, minHeight: 52, paddingHorizontal: 14, color: theme.colors.text, fontSize: 17 },
-  pickerButton: { minHeight: 52, paddingHorizontal: 13, justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: theme.colors.border },
-  pickerButtonText: { color: theme.colors.accent, fontSize: 13, fontWeight: '800' },
+  pickerButton: { width: 52, minHeight: 52, alignItems: 'center', justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: theme.colors.border },
   calendarHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   calendarMonth: { color: theme.colors.text, fontSize: 16, fontWeight: '800', textTransform: 'capitalize' },
   calendarGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 },

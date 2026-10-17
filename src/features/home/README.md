@@ -42,4 +42,16 @@ Vecka och completiondatum beräknas med civil date keys och sparad IANA-tidszon.
 
 RN Web- och modellbevis ligger i `docs/design/evidence/vision-rev02/checklist/WEEK-01/`. De är syntetiska: live Supabase/RLS-policy, verklig app-resume/midnatt, native tillgänglighet och installerad app verifieras separat.
 
+## Kommande — FLOW-HOME-CHECKLIST-UPCOMING-01
+
+Panel 4 kan visa `Kommande` som en villkorad flik. Den läser endast planerade hälsohändelser med `due_on > dailyDateKey` och hundscope innan 40-radersgränsen, plus rutinmallarnas explicita upprepningsfält. De två källorna har separata state, retries, abort/generation-fences och owner/account-generation-, hund-, lokal-dag- och tidszonscope. Scopebyte döljer tidigare resultat.
+
+En rutin utan upprepningsregel visas inte. För en upprepande rutin beräknas högst nästa datum med samma `isRoutineDueOnDate`-regler som befintliga dagsval. Denna läsning anropar inte dagsmaterialiserings-RPC:n och skapar ingen framtida dagsrad, completion, skip eller notifiering. Träning visas inte som framtida eftersom den saknar sparad framtida källa. Hälsoplaner läses först med listfält och hämtas sedan fullständigt igen via befintlig hundscopead `fetchPlannedHealthById`; den valda posten öppnas i edit mode. Tillbaka-texten följer ingången: `Checklista` återgår till Kommande, medan Hälsa behåller sin befintliga destination.
+
+Rutinradens Hantera öppnar befintlig manager fokuserad på mallen. Dagsspecifika val där är fortsatt uttryckligen märkta `Välj för idag`. Källvis laddning, fel, partiell lista och Retry visas separat. Vid ny inresa döljs fliken när båda källorna har lyckats och saknar framtida rader; en redan öppen Kommande-vy stannar kvar med tomtillstånd när sista raden försvinner.
+
+Den här koden är på lokal implementation/QA-checkpoint. Funktionell testkörning, live Supabase/RLS, native tillgänglighet och aktuell §14-skärmbildsgranskning är inte verifierade i checkpointen. Plan, aktiva granskningar och evidens: `docs/tasks/dev/FLOW-HOME-CHECKLIST-UPCOMING-01.md` och `docs/design/evidence/vision-rev02/checklist/UPCOMING-01/README.md`.
+
+Rutinhanteringens veckodagar visas på en rad som `Må`, `Ti`, `On`, `To`, `Fr`, `Lö`, `Sö`; varje val behåller veckodagens fullständiga skärmläsarnamn och minst 44 pt träffyta. `Redigera` hålls på en rad i den smala rutinrubriken. Öppna Träning från Hem eller Checklista väntar på att manager-sheetens Modal ska stängas innan workspace byter vy. Sheet-instansen hålls monterad över `visible=false`; opt-in `onDismiss` och plattformsfallback delar en engångsspärr. Fallbacken väntar 450 ms efter stängrendering på plattformar utan dismiss-signal och gäller bara denna handoff. iOS/Android ska verifieras i TestFlight.
+
 Reproducerbara React Native Web-renderingar finns i [tools/visual-check](../../../tools/visual-check/README.md). De använder syntetiska data; Supabase/RLS-runtime, native enheter och TestFlight verifieras separat.

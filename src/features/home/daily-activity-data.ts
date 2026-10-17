@@ -4,6 +4,7 @@ import { dateKeysForIsoWeek, isRoutineDueOnDate, isValidDateKey, isValidIanaTime
 
 const REQUEST_TIMEOUT_MS = 12_000;
 const DAILY_ROUTINE_COLUMNS = 'id,dog_id,label,checklist,checklist_revision,legacy_single_item,repeat_unit,repeat_interval,repeat_weekdays,repeat_anchor_date';
+const UPCOMING_DAILY_ROUTINE_COLUMNS = 'id,dog_id,label,repeat_unit,repeat_interval,repeat_weekdays,repeat_anchor_date';
 const DAILY_ROUTINE_DAY_COLUMNS = 'id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence,routine_revision_snapshot,routine_day_revision,last_state_mutation_id';
 const DAILY_ROUTINE_DAY_SKIP_COLUMNS = 'day_id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence,routine_revision_snapshot,routine_day_revision,last_state_mutation_id';
 const WEEKLY_ROUTINE_DAY_COLUMNS = 'id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence';
@@ -24,6 +25,8 @@ export type DailyRoutine = {
   repeat_weekdays: number[] | null;
   repeat_anchor_date: string | null;
 };
+export type DailyRoutineSchedule = Pick<DailyRoutine,
+  'id' | 'dog_id' | 'label' | 'repeat_unit' | 'repeat_interval' | 'repeat_weekdays' | 'repeat_anchor_date'>;
 export type DailyRoutineDraft = Pick<DailyRoutine, 'id' | 'dog_id' | 'label' | 'checklist' | 'repeat_unit' | 'repeat_interval' | 'repeat_weekdays'>;
 export type DailyRoutineCreateInput = Pick<DailyRoutine, 'id' | 'label' | 'checklist' | 'repeat_unit' | 'repeat_interval' | 'repeat_weekdays'>;
 export type DailyRoutineDayDraft = Pick<DailyRoutineDay, 'id' | 'dog_id' | 'routine_id' | 'date_key' | 'time_zone'> & {
@@ -81,6 +84,26 @@ export type WeeklyActivitySnapshot = {
   routineDaySkips: WeeklyRoutineDaySkip[];
   trainingSelections: WeeklyTrainingSelection[];
 };
+
+export async function fetchUpcomingDailyRoutineSchedules(
+  client: SupabaseClient,
+  dogId: string,
+  parentSignal?: AbortSignal,
+): Promise<DailyRoutineSchedule[]> {
+  if (!isCanonicalUuid(dogId)) throw new Error('Invalid upcoming routine scope');
+  const result = await withRequestDeadline(async (signal) => await client.from('dog_daily_routines')
+    .select(UPCOMING_DAILY_ROUTINE_COLUMNS)
+    .eq('dog_id', dogId)
+    .order('label', { ascending: true })
+    .order('id', { ascending: true })
+    .retry(false)
+    .abortSignal(signal), REQUEST_TIMEOUT_MS, parentSignal);
+  if (result.error || !Array.isArray(result.data)
+    || !result.data.every((row) => isDailyRoutineSchedule(row) && row.dog_id === dogId)) {
+    throw new Error('Could not load upcoming routine schedules');
+  }
+  return result.data;
+}
 
 export async function fetchDailyActivitySnapshot(
   client: SupabaseClient,
@@ -511,6 +534,16 @@ function isDailyRoutine(value: unknown): value is DailyRoutine {
     && row.label.trim() === row.label && Array.from(row.label).length > 0 && Array.from(row.label).length <= 160
     && isValidRoutineChecklist(row.checklist) && Number.isInteger(row.checklist_revision) && Number(row.checklist_revision) >= 1
     && typeof row.legacy_single_item === 'boolean'
+    && isValidStoredRepeatRule(row.repeat_unit, row.repeat_interval, row.repeat_weekdays, row.repeat_anchor_date);
+}
+
+function isDailyRoutineSchedule(value: unknown): value is DailyRoutineSchedule {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return hasExactKeys(row, ['id', 'dog_id', 'label', 'repeat_unit', 'repeat_interval', 'repeat_weekdays', 'repeat_anchor_date'])
+    && isCanonicalUuid(row.id) && isCanonicalUuid(row.dog_id)
+    && typeof row.label === 'string' && row.label.trim() === row.label
+    && Array.from(row.label).length > 0 && Array.from(row.label).length <= 160
     && isValidStoredRepeatRule(row.repeat_unit, row.repeat_interval, row.repeat_weekdays, row.repeat_anchor_date);
 }
 

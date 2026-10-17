@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Alert, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
-import { DatePickerField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { DatePickerField, MessageCard, PrimaryButton } from '../../components/AppPrimitives';
 import { isValidHealthWeightDate, isValidHealthWeightKg, type HealthHistoryRecord, type HealthHistoryType, type HealthWeightRecord } from '../../data/workspace-data';
 import { localDate } from '../onboarding/dog';
 import { tokens } from '../../theme/tokens';
@@ -198,10 +198,10 @@ export function WeightScreen({
               </View>
               {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
               <View style={styles.actions}>
-                <PrimaryButton title={isBusy ? 'Sparar…' : 'Spara rättning'} disabled={isBlocked} onPress={() => { void save(); }} />
-                <QuietButton title="Avbryt" disabled={isBlocked} onPress={cancelEditing} />
+                <View style={[styles.editAction, styles.saveEditAction]}><Button label={isBusy ? 'Sparar…' : 'Spara rättning'} accessibilityLabel={isBusy ? 'Sparar rättning' : 'Spara rättning'} disabled={isBlocked} onPress={() => { void save(); }} /></View>
+                <View style={[styles.editAction, styles.cancelEditAction]}><Button variant="tertiary" label="Avbryt" accessibilityLabel="Avbryt rättning" disabled={isBlocked} onPress={cancelEditing} /></View>
               </View>
-              <Button variant="destructive" label="Radera vikt" accessibilityLabel="Radera viktpost" disabled={isBlocked} onPress={() => confirmDelete(record)} />
+              <View style={styles.deleteAction}><Button variant="destructive" label="Radera vikt" accessibilityLabel="Radera viktpost" disabled={isBlocked} onPress={() => confirmDelete(record)} /></View>
             </> : <ListRow category="veterinary" title={`${formatWeight(record.weight_kg)} kg`} meta={record.occurred_on} accessibilityLabel={`Ändra vikt ${formatWeight(record.weight_kg)} kg, ${record.occurred_on}`} disabled={isBlocked} onPress={() => startEditing(record)} />}
             <Toast visible={toastVisible && toastRecordId === record.id} tone="success" confirmed message={toastMessage ?? undefined} autoDismissMs={2500}
               onAutoDismiss={() => setToastVisible(false)} onExitComplete={() => {
@@ -231,5 +231,9 @@ const styles = StyleSheet.create({
   recordHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   recordWeight: { color: tokens.colors.textPrimary, ...tokens.typography.heading },
   recordDate: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
-  actions: { flexDirection: 'row', justifyContent: 'flex-start', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm },
+  editAction: { flex: 1, minWidth: 136 },
+  saveEditAction: { flexGrow: 1.4 },
+  cancelEditAction: { minWidth: 96 },
+  deleteAction: { marginTop: tokens.spacing.sm },
 });

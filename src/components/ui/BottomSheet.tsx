@@ -15,6 +15,7 @@ type BottomSheetBaseProps = {
   primaryLabel?: string;
   footer?: ReactNode;
   keyboardAware?: boolean;
+  onDismiss?: () => void;
 };
 
 type BottomSheetCloseProps =
@@ -190,7 +191,7 @@ export function BottomSheet(props: BottomSheetProps) {
     {props.onPrimaryAction ? <Button label={props.primaryLabel ?? 'Klar'} accessibilityLabel={props.primaryLabel ?? 'Klar'} onPress={props.onPrimaryAction} /> : null}
   </>;
 
-  return <Modal visible={props.visible} transparent animationType={dragEnabled || reduced ? 'none' : 'slide'} onRequestClose={requestClose} accessibilityViewIsModal>
+  return <Modal visible={props.visible} transparent animationType={dragEnabled || reduced ? 'none' : 'slide'} onRequestClose={requestClose} onDismiss={props.onDismiss} accessibilityViewIsModal>
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' || props.keyboardAware ? 'padding' : undefined} style={styles.backdrop}>
       <Pressable accessibilityRole="button" accessibilityLabel="Stäng" onPress={requestClose} style={styles.dismissArea} />
       {dragEnabled ? (

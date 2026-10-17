@@ -24,16 +24,18 @@ export function MainSwipeNavigation({ enabled, onSwipe, children }: {
 
 function createGestureController(enabled: boolean, onSwipe: (direction: 'left' | 'right') => void) {
   let excluded = false;
+  const shouldClaimSwipe = (dx: number, dy: number) => enabled
+    && !excluded
+    && Math.abs(dx) > SWIPE_DISTANCE
+    && Math.abs(dx) > Math.abs(dy) * 1.2;
   return {
     setExcluded(active: boolean) {
       excluded = active;
     },
     responder: PanResponder.create({
       onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gesture) => enabled
-        && !excluded
-        && Math.abs(gesture.dx) > SWIPE_DISTANCE
-        && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2,
+      onMoveShouldSetPanResponderCapture: (_, gesture) => shouldClaimSwipe(gesture.dx, gesture.dy),
+      onMoveShouldSetPanResponder: (_, gesture) => shouldClaimSwipe(gesture.dx, gesture.dy),
       onPanResponderRelease: (_, gesture) => {
         if (excluded || Math.abs(gesture.dx) < SWIPE_DISTANCE || Math.abs(gesture.dx) <= Math.abs(gesture.dy)) return;
         onSwipe(gesture.dx < 0 ? 'left' : 'right');

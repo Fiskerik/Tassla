@@ -956,3 +956,28 @@ Denna vecka visar sparade dagar måndag–söndag. Dagens lista härleds bara fr
 Architect APPROVE, Critic PROCEED, Security implementation PASS, oberoende QA PASS och Reviewer PASS utan fynd. Den statiska Security-granskningen verifierade tre hund-/datumfiltrerade SELECT-projektioner mot befintliga owns_dog-RLS-definitioner; live RLS är fortsatt NOT TESTABLE. Fyndet med blandade snapshot-/request-scopevärden rättades och regressionstestades.
 
 Efter fix: fokuserat 31/31, riktad ESLint PASS, `pnpm check` 557/557, public/review `checklist-week` 7/7 vardera utan sidfel, py_compile, `python tools/dev_flow.py validate` och `git diff --check` PASS. Evidens med skärmbevis och §14 finns i `docs/design/evidence/vision-rev02/checklist/WEEK-01/`. Full veckovisuell match (ingen dedicated vecka-panelreferens), live Supabase/RLS, riktiga konto-/hundbyten, fysiska midnight/app-resume, native iOS/Android, VoiceOver och Dynamic Type är NOT TESTABLE. R3b är en lokal funktionell checkpoint; Panel 4 är inte därmed helt klar. R3b ingår med R2a och R3a i ägarens samlade leverans på samma branch.
+
+### UIUX-POSTFLIGHT-CORRECTIONS-01 — implementation checkpoint, 2026-10-17
+
+Architect APPROVE plan v4. Implemented the event-type icon/dropdown selector, shared calendar/clock icon triggers, routine edit/weekday layout, spaced weight correction actions, dismiss-before-navigation training handoff for Home and Checklist managers, and capture-phase horizontal main-tab swipe negotiation. No schema, persistence, permission, dependency or age-phase navigation changes. Automated tests were neither added nor run in this turn per instruction. Native/TestFlight behavior remains unverified; manual checks and limitations are recorded in `docs/design/evidence/vision-rev02/postflight-fixes/README.md`.
+
+
+### UIUX-POSTFLIGHT-CORRECTIONS-01 — final source checkpoint, 2026-10-17
+
+All six requested fixes are implemented under Architect-approved plan v4. Static QA PASS and independent Reviewer PASS on the source diff; no source-level blocker was found. `python tools/dev_flow.py validate` and `git diff --check` both PASS. The diff check reported only Git's expected LF-to-CRLF working-copy notices. No tests were added or run, and test files are unchanged. Physical iOS/Android behavior, modal dismissal timing, VoiceOver/Dynamic Type, and TestFlight interaction remain for owner verification using the checklist in `docs/design/evidence/vision-rev02/postflight-fixes/README.md`. The task remains open for functional/device QA; this task did not include commit or push.
+
+### FLOW-HOME-CHECKLIST-UPCOMING-01 — implementation checkpoint, 2026-10-17
+
+Plan v3 hade före kod Architect APPROVE, Critic PROCEED och Security PASS. Implementerat inom planens write paths: en separat `dog_health_plans`-läsning filtrerar `due_on > dailyDateKey` före 40-radersgränsen och väljer endast listfält; en separat `dog_daily_routines`-läsning väljer bara rutinmallens explicit sparade repeatregel och anropar ingen dags-RPC. `nextRoutineOccurrenceAfterDate` återanvänder `isRoutineDueOnDate` och ger högst nästa occurrence. Kommande-tabben har oberoende loading/error/retry, partial-state, scope/abort/generation-fences och visas villkorligt. Tryck på hälsoplan gör en full dog-scoped by-id readback och öppnar just den posten i edit mode; tillbaka till Checklista bevarar Kommande, och Hälsa behåller sin befintliga label/destination. Routine manager fokuseras på vald mall och använder befintlig dagswrite-gate.
+
+Ingen schema-/RPC-/RLS-/grant-/data-purpose-/dependency-ändring. Inga tester har lagts till eller körts enligt denna körningsinstruktion. Oberoende Security review gav implementation PASS med en caveat att den befintliga dagsläsningen fortfarande kan materialisera dagens rad; Kommandes separata källa/retry materialiserar inte framtida rader. Oberoende implementation review hittade tre brister: stale rutinprognos efter malländring, ABA vid planöppning över tabbyte och saknat dirty guard. Dessa och uppföljningskanten för saknad planpost är åtgärdade; slutlig Reviewer-recheck gav PASS. Funktionell, live-RLS, native eller visuell PASS hävdas inte. Evidensens §14-bedömning är NOT TESTABLE: `docs/design/evidence/vision-rev02/checklist/UPCOMING-01/README.md`. Ingen commit eller push i denna körning.
+
+
+## FLOW-HOME-CHECKLIST-UPCOMING-01 — R3c plan checkpoint 2026-10-17
+
+- Plan v1 fick Architect CHANGES, Critic PROCEED WITH CHANGES och Security CHANGES; orsaker och korrigeringar dokumenteras i taskfilen.
+- Plan v2 fick Architect APPROVE och Security PASS; Critic bad om vald plan i edit-läge och korrekt tillbaka-label.
+- Plan v3: Architect APPROVE, Critic PROCEED, Security PASS. Scope: dog/account/date/timezone-fenced read-only queries, direct selected-plan edit, origin-aware back label, no tests or schema changes.
+- Inga R3c-produktionsfiler eller tester har ändrats. Nästa steg: ready; kontrollera aktiv postflight-överlapp före implementation.
+
+- UIUX-POSTFLIGHT-CORRECTIONS-01: source implementation and static review are complete; six owner-only TestFlight checks remain. Moved to blocked so this unmet manual checkpoint is not reported done and does not overlap R3c's write paths.

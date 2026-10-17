@@ -32,6 +32,7 @@ const HEALTH_WEIGHT_COLUMNS = 'id,dog_id,actor_id,occurred_on,weight_kg';
 const HEALTH_HISTORY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,occurred_time,description';
 const HEALTH_HISTORY_LEGACY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,description';
 const PLANNED_HEALTH_COLUMNS = 'id,dog_id,event_type,due_on,due_time,description,created_at,reminder_enabled,reminder_minutes';
+const UPCOMING_PLANNED_HEALTH_COLUMNS = 'id,dog_id,event_type,due_on,due_time,description';
 
 export interface DogEventRecord {
   id: string;
@@ -123,6 +124,9 @@ export interface PlannedHealthRecord {
   reminder_enabled: boolean;
   reminder_minutes: number | null;
 }
+
+export type UpcomingPlannedHealthRecord = Pick<PlannedHealthRecord,
+  'id' | 'dog_id' | 'event_type' | 'due_on' | 'due_time' | 'description'>;
 
 export interface PlannedHealthOperation {
   id: string;
@@ -732,6 +736,32 @@ export async function fetchPlannedHealth(
   }, timeoutMs, parentSignal);
 }
 
+export async function fetchUpcomingPlannedHealth(
+  client: SupabaseClient,
+  dogId: string,
+  localToday: string,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  parentSignal?: AbortSignal,
+): Promise<UpcomingPlannedHealthRecord[]> {
+  if (!dogId || !isCalendarDate(localToday)) throw new Error('Invalid upcoming health scope');
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.from('dog_health_plans')
+      .select(UPCOMING_PLANNED_HEALTH_COLUMNS)
+      .eq('dog_id', dogId)
+      .gt('due_on', localToday)
+      .order('due_on', { ascending: true })
+      .order('id', { ascending: true })
+      .limit(WORKSPACE_PAGE_SIZE)
+      .retry(false)
+      .abortSignal(signal);
+    if (error || !Array.isArray(data) || !data.every(isUpcomingPlannedHealthRecord)
+      || data.some((row) => row.dog_id !== dogId || row.due_on <= localToday)) {
+      throw new Error('Could not load upcoming planned health');
+    }
+    return data.map((row) => ({ ...row, due_time: normalizePlannedHealthTime(row.due_time) ?? null }));
+  }, timeoutMs, parentSignal);
+}
+
 export async function fetchFuturePlannedHealthReminders(
   client: SupabaseClient, dogId: string, localToday: string,
   isFutureFireTime: (record: PlannedHealthRecord) => boolean, isCurrent: () => boolean,
@@ -1173,6 +1203,15 @@ function isPlannedHealthRecord(value: unknown): value is PlannedHealthRecord {
     && normalizePlannedHealthTime(row.due_time) !== undefined
     && typeof row.reminder_enabled === 'boolean' && isValidReminderMinutes(row.reminder_minutes)
     && (!row.reminder_enabled || row.reminder_minutes !== null);
+}
+
+function isUpcomingPlannedHealthRecord(value: unknown): value is UpcomingPlannedHealthRecord {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return typeof row.id === 'string' && typeof row.dog_id === 'string'
+    && isPlannedHealthType(row.event_type) && typeof row.due_on === 'string' && isCalendarDate(row.due_on)
+    && normalizePlannedHealthTime(row.due_time) !== undefined
+    && (row.description === null || typeof row.description === 'string' && Array.from(row.description).length <= 500);
 }
 
 function canonicalPlannedHealthRecord(value: unknown): PlannedHealthRecord {

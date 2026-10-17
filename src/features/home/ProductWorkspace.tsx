@@ -20,6 +20,7 @@ import {
   fetchHealthHistory,
   fetchHealthHistoryById,
   fetchPlannedHealth,
+  fetchUpcomingPlannedHealth,
   normalizePlannedHealthTime,
   fetchFuturePlannedHealthReminders,
   fetchPlannedHealthById,
@@ -56,6 +57,7 @@ import {
   type PlannedHealthChanges,
   type PlannedHealthOperation,
   type PlannedHealthRecord,
+  type UpcomingPlannedHealthRecord,
   type PlannedHealthType,
   type PublishedTrainingProgram,
   type PausedTrainingProgress,
@@ -67,6 +69,7 @@ import {
   createDailyRoutine,
   deleteDailyRoutine,
   fetchDailyActivitySnapshot,
+  fetchUpcomingDailyRoutineSchedules,
   fetchWeeklyActivitySnapshot,
   removeRoutineFromDay,
   removeTrainingSelection,
@@ -74,6 +77,7 @@ import {
   setRoutineDayCompletion,
   type DailyActivitySnapshot,
   type DailyRoutine,
+  type DailyRoutineSchedule,
   type DailyRoutineChecklistItem,
   type DailyRoutineCreateInput,
   type DailyRoutineDay,
@@ -156,15 +160,28 @@ const PAGE_SIZE = 40;
 const WORKSPACE_REFRESH_AFTER_MS = 60_000;
 type TrainingWorkspaceSnapshot = Awaited<ReturnType<typeof fetchTrainingWorkspace>>;
 type WorkspaceResourceFlight<T> = { scope: string; generation: number; controller: AbortController; promise: Promise<T> };
+type UpcomingLoadSnapshot<T> = { scope: string; state: 'loading' | 'ready' | 'error'; rows: T[] };
 type EditorLeaveRequest = (commit: () => void) => void;
 
 export function ProductWorkspace({ client, dog, onDogUpdated }: { client: SupabaseClient; dog: OwnedDog; onDogUpdated?: (updated: OwnedDog) => void }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
   const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>({ page: 'home', previousPage: 'home' });
   const { page, previousPage } = navigation;
+  const currentPageRef = useRef<ProductPage>(page);
+  const [openingUpcomingPlan, setOpeningUpcomingPlan] = useState<{ scope: string; planId: string; generation: number } | null>(null);
+  const [upcomingPlanOpenFailure, setUpcomingPlanOpenFailure] = useState<{ scope: string; generation: number; message: string } | null>(null);
+  const upcomingPlanReadGeneration = useRef(0);
   const [trainingEntry, setTrainingEntry] = useState<{ programVersionId: string | null; stepId: string | null; scope: string; returnPage: 'home' | 'checklist' | 'week'; returnWeekDateKey?: string } | null>(null);
   const [homeTrainingTargetFeedback, setHomeTrainingTargetFeedback] = useState<{ activityId: string; message: string } | null>(null);
   const setPage = useCallback((nextPage: ProductPage) => {
+    const currentPage = currentPageRef.current;
+    if (currentPage === nextPage) return;
+    if (currentPage === 'checklist' && nextPage !== 'checklist') {
+      upcomingPlanReadGeneration.current += 1;
+      setOpeningUpcomingPlan(null);
+      setUpcomingPlanOpenFailure(null);
+    }
+    currentPageRef.current = nextPage;
     setNavigation((current) => current.page === nextPage
       ? current
       : { page: nextPage, previousPage: current.page });
@@ -233,7 +250,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [healthHistoryConfirmation, setHealthHistoryConfirmation] = useState<HealthHistoryConfirmation | null>(null);
   const [plannedHealth, setPlannedHealth] = useState<PlannedHealthRecord[]>([]);
   const plannedHealthRows = useRef<PlannedHealthRecord[]>([]);
+  const selectedUpcomingPlan = useRef<{ record: PlannedHealthRecord; lifetime: string; accountGeneration: number } | null>(null);
   const [plannedHealthState, setPlannedHealthState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [plannedHealthEntry, setPlannedHealthEntry] = useState<{ origin: 'health' } | { origin: 'checklist'; scope: string; selectedPlanId: string } | null>(null);
   const [plannedHealthBusy, setPlannedHealthBusy] = useState(false);
   const [plannedHealthPending, setPlannedHealthPending] = useState(false);
   const [plannedHealthMessage, setPlannedHealthMessage] = useState('');
@@ -287,9 +306,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [weeklyStateLifetime, setWeeklyStateLifetime] = useState('');
   const [weeklyRetryToken, setWeeklyRetryToken] = useState(0);
   const [weeklyDaySelection, setWeeklyDaySelection] = useState<{ scopeKey: string; dateKey: string } | null>(null);
-  const [checklistTabSelection, setChecklistTabSelection] = useState<{ scopeKey: string; tab: 'Idag' | 'Denna vecka' | 'Alla' } | null>(null);
+  const [checklistTabSelection, setChecklistTabSelection] = useState<{ scopeKey: string; tab: 'Idag' | 'Denna vecka' | 'Alla' | 'Kommande' } | null>(null);
+  const [upcomingHealthSnapshot, setUpcomingHealthSnapshot] = useState<UpcomingLoadSnapshot<UpcomingPlannedHealthRecord> | null>(null);
+  const [upcomingRoutineSnapshot, setUpcomingRoutineSnapshot] = useState<UpcomingLoadSnapshot<DailyRoutineSchedule> | null>(null);
+  const [upcomingHealthRetryToken, setUpcomingHealthRetryToken] = useState(0);
+  const [upcomingRoutineRetryToken, setUpcomingRoutineRetryToken] = useState(0);
   const weeklyReadGeneration = useRef(0);
   const weeklyRequestScopeRef = useRef('');
+  const upcomingHealthGeneration = useRef(0);
+  const upcomingRoutineGeneration = useRef(0);
+  const upcomingHealthController = useRef<AbortController | null>(null);
+  const upcomingRoutineController = useRef<AbortController | null>(null);
+  const upcomingScopeRef = useRef('');
   const [dailyClock, setDailyClock] = useState(() => new Date());
   const [dailyBusyKey, setDailyBusyKey] = useState<string | null>(null);
   const [dailyMessageKey, setDailyMessageKey] = useState('');
@@ -430,7 +458,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   }, [currentLogLifetime]);
   useLayoutEffect(() => {
     plannedHealthLifetime.current = currentPlannedHealthLifetime;
-  }, [currentPlannedHealthLifetime]);
+    if (selectedUpcomingPlan.current && (selectedUpcomingPlan.current.lifetime !== currentPlannedHealthLifetime
+      || selectedUpcomingPlan.current.accountGeneration !== accountGeneration)) selectedUpcomingPlan.current = null;
+  }, [accountGeneration, currentPlannedHealthLifetime]);
   const currentProfileLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const profileLifetime = useRef('');
   const previousProfileLifetime = useRef('');
@@ -448,6 +478,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const dailyWeekStart = dailyDateKey ? isoWeekStartForDateKey(dailyDateKey) : null;
   const dailyWeekDates = dailyWeekStart ? dateKeysForIsoWeek(dailyWeekStart) ?? [] : [];
   const weeklyUiScopeKey = JSON.stringify([session?.user.id ?? '', accountGeneration, dog.id, dailyWeekStart, dailyTimeZone, reviewContentEnabled ? 'review' : 'public']);
+  const checklistUiScopeKey = JSON.stringify([weeklyUiScopeKey, dailyDateKey]);
+  const upcomingScopeKey = JSON.stringify([session?.user.id ?? '', accountGeneration, dog.id, dailyDateKey, dailyTimeZone]);
+  const upcomingScopeUnavailable = !session?.user.id || !dailyDateKey || !validDailyTimeZone;
+  const upcomingHealthState = upcomingScopeUnavailable ? 'error' : upcomingHealthSnapshot?.scope === upcomingScopeKey ? upcomingHealthSnapshot.state : 'loading';
+  const upcomingHealthPlans = !upcomingScopeUnavailable && upcomingHealthSnapshot?.scope === upcomingScopeKey ? upcomingHealthSnapshot.rows : [];
+  const upcomingRoutineState = upcomingScopeUnavailable ? 'error' : upcomingRoutineSnapshot?.scope === upcomingScopeKey ? upcomingRoutineSnapshot.state : 'loading';
+  const upcomingRoutineSchedules = !upcomingScopeUnavailable && upcomingRoutineSnapshot?.scope === upcomingScopeKey ? upcomingRoutineSnapshot.rows : [];
+  const openingUpcomingPlanId = openingUpcomingPlan?.scope === upcomingScopeKey ? openingUpcomingPlan.planId : null;
+  const upcomingPlanOpenError = upcomingPlanOpenFailure?.scope === upcomingScopeKey ? upcomingPlanOpenFailure.message : '';
   const weeklyLifetime = weeklyActivityLifetimeKey({ ownerId: session?.user.id ?? null, accountGeneration, dogId: dog.id,
     currentDateKey: dailyDateKey, weekStart: dailyWeekStart, timeZone: dailyTimeZone,
     dailySnapshotUpdatedAt: dailySnapshotLifetime === currentDailyLifetime ? dailySnapshotUpdatedAt : null,
@@ -455,8 +494,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const weeklyRequestScope = JSON.stringify([weeklyLifetime, page, weeklyRetryToken]);
   const selectedWeeklyDateKey = weeklyDaySelection?.scopeKey === weeklyUiScopeKey && dailyWeekDates.includes(weeklyDaySelection.dateKey)
     ? weeklyDaySelection.dateKey : dailyDateKey;
-  const checklistInitialTab = checklistTabSelection?.scopeKey === weeklyUiScopeKey ? checklistTabSelection.tab : 'Idag';
+  const checklistInitialTab = checklistTabSelection?.scopeKey === checklistUiScopeKey ? checklistTabSelection.tab : 'Idag';
+  const checklistTabRef = useRef(checklistInitialTab);
+  useLayoutEffect(() => {
+    currentPageRef.current = page;
+  }, [page]);
+  useLayoutEffect(() => { checklistTabRef.current = checklistInitialTab; }, [checklistInitialTab]);
   useLayoutEffect(() => { weeklyRequestScopeRef.current = weeklyRequestScope; }, [weeklyRequestScope]);
+  useLayoutEffect(() => {
+    upcomingScopeRef.current = upcomingScopeKey;
+    upcomingPlanReadGeneration.current += 1;
+  }, [upcomingScopeKey]);
   const checklistMemory = useRef<{ scope: string; state: PendingChecklistMemory } | null>(null);
   const [checklistMemoryView, setChecklistMemoryView] = useState<{ scope: string; state: PendingChecklistMemory } | null>(null);
   const currentChecklistMemoryScope = checklistMemoryScope(session?.user.id ?? null, accountGeneration, dog.id);
@@ -564,13 +612,55 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     return request;
   }, []);
 
+  const preserveSelectedUpcomingPlan = useCallback((rows: PlannedHealthRecord[]): PlannedHealthRecord[] => {
+    const selected = selectedUpcomingPlan.current;
+    if (!selected || selected.lifetime !== currentPlannedHealthLifetime || selected.accountGeneration !== accountGeneration
+      || selected.record.dog_id !== dog.id || rows.some((row) => row.id === selected.record.id)) return rows;
+    return [...rows, selected.record].sort((left, right) => left.due_on.localeCompare(right.due_on) || left.id.localeCompare(right.id));
+  }, [accountGeneration, currentPlannedHealthLifetime, dog.id]);
+
   const reloadPlannedHealth = useCallback(async (lifetime = plannedHealthLifetime.current, signal?: AbortSignal) => {
     const rows = await serializePlannedHealthRead(() => fetchPlannedHealth(client, dog.id, undefined, signal));
     if (!mounted.current || signal?.aborted || plannedHealthLifetime.current !== lifetime) return;
-    plannedHealthRows.current = rows;
-    setPlannedHealth(rows);
+    const visibleRows = preserveSelectedUpcomingPlan(rows);
+    plannedHealthRows.current = visibleRows;
+    setPlannedHealth(visibleRows);
     setPlannedHealthState('ready');
-  }, [client, dog.id, serializePlannedHealthRead]);
+  }, [client, dog.id, preserveSelectedUpcomingPlan, serializePlannedHealthRead]);
+
+  async function openUpcomingPlannedHealth(planId: string) {
+    const scope = upcomingScopeKey;
+    const localToday = dailyDateKey;
+    if (!localToday || !session?.user.id || currentPageRef.current !== 'checklist' || checklistTabRef.current !== 'Kommande') return;
+    const generation = ++upcomingPlanReadGeneration.current;
+    setOpeningUpcomingPlan({ scope, planId, generation });
+    setUpcomingPlanOpenFailure(null);
+    const isCurrent = () => mounted.current && generation === upcomingPlanReadGeneration.current
+      && upcomingScopeRef.current === scope && plannedHealthLifetime.current === currentPlannedHealthLifetime
+      && currentPageRef.current === 'checklist' && checklistTabRef.current === 'Kommande';
+    try {
+      const record = await fetchPlannedHealthById(client, dog.id, planId);
+      if (!isCurrent()) return;
+      if (!record || record.dog_id !== dog.id || record.id !== planId || record.due_on <= localToday) {
+        setUpcomingPlanOpenFailure({ scope, generation, message: 'Planen kunde inte bekräftas. Uppdatera listan och försök igen.' });
+        return;
+      }
+      selectedUpcomingPlan.current = { record, lifetime: currentPlannedHealthLifetime, accountGeneration };
+      const rows = [record, ...plannedHealthRows.current.filter((row) => row.id !== record.id)]
+        .sort((left, right) => left.due_on.localeCompare(right.due_on) || left.id.localeCompare(right.id));
+      plannedHealthRows.current = rows;
+      setPlannedHealth(rows);
+      setPlannedHealthState('ready');
+      setPlannedHealthEntry({ origin: 'checklist', scope, selectedPlanId: record.id });
+      setUpcomingPlanOpenFailure(null);
+      setPage('planned-health');
+    } catch {
+      if (isCurrent()) setUpcomingPlanOpenFailure({ scope, generation, message: 'Planen kunde inte öppnas. Försök igen.' });
+    } finally {
+      if (generation === upcomingPlanReadGeneration.current) setOpeningUpcomingPlan(null);
+    }
+  }
+
   const refreshLocalReminders = useCallback(async () => {
     const context = notificationContextRef.current;
     if (!context || !notificationPreferencesReady || !reminderService.isCurrent(context)) return;
@@ -869,7 +959,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       } else {
         const plan = await fetchPlannedHealthById(client, context.dogId, payload.planId!);
         if (!reminderService.isCurrent(context)) return;
-        if (plan && plan.id === payload.planId && plan.dog_id.toLowerCase() === context.dogId) setPage('planned-health');
+        if (plan && plan.id === payload.planId && plan.dog_id.toLowerCase() === context.dogId) {
+          selectedUpcomingPlan.current = null;
+          setPlannedHealthEntry({ origin: 'health' });
+          setPage('planned-health');
+        }
       }
       if (!reminderService.isCurrent(context)) return;
       const latest = await Notifications.getLastNotificationResponseAsync();
@@ -971,8 +1065,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     const planLifetime = plannedHealthLifetime.current;
     void serializePlannedHealthRead(() => fetchPlannedHealth(client, dog.id, undefined, controller.signal)).then((rows) => {
       if (controller.signal.aborted || !mounted.current || plannedHealthLifetime.current !== planLifetime) return;
-      plannedHealthRows.current = rows;
-      setPlannedHealth(rows);
+      const visibleRows = preserveSelectedUpcomingPlan(rows);
+      plannedHealthRows.current = visibleRows;
+      setPlannedHealth(visibleRows);
       setPlannedHealthState('ready');
     }).catch(() => {
       if (!controller.signal.aborted && mounted.current && plannedHealthLifetime.current === planLifetime) setPlannedHealthState('error');
@@ -986,7 +1081,51 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       trainingReadFlight.current?.controller.abort();
       dailyReadFlight.current?.controller.abort();
     };
-  }, [client, currentHealthHistoryLifetime, currentPlannedHealthLifetime, currentProfileLifetime, dog.id, serializeEventRead, serializeHealthRead, serializeHealthHistoryRead, serializePlannedHealthRead]);
+  }, [client, currentHealthHistoryLifetime, currentPlannedHealthLifetime, currentProfileLifetime, dog.id, preserveSelectedUpcomingPlan, serializeEventRead, serializeHealthRead, serializeHealthHistoryRead, serializePlannedHealthRead]);
+
+  useEffect(() => {
+    const scope = upcomingScopeKey;
+    const generation = ++upcomingHealthGeneration.current;
+    upcomingHealthController.current?.abort();
+    const controller = new AbortController();
+    upcomingHealthController.current = controller;
+    if (!upcomingScopeUnavailable) {
+      void fetchUpcomingPlannedHealth(client, dog.id, dailyDateKey, undefined, controller.signal).then((rows) => {
+        if (controller.signal.aborted || !mounted.current || generation !== upcomingHealthGeneration.current || upcomingScopeRef.current !== scope) return;
+        setUpcomingHealthSnapshot({ scope, state: 'ready', rows });
+      }).catch(() => {
+        if (!controller.signal.aborted && mounted.current && generation === upcomingHealthGeneration.current && upcomingScopeRef.current === scope) {
+          setUpcomingHealthSnapshot((current) => ({ scope, state: 'error', rows: current?.scope === scope ? current.rows : [] }));
+        }
+      });
+    }
+    return () => {
+      controller.abort();
+      if (upcomingHealthController.current === controller) upcomingHealthController.current = null;
+    };
+  }, [accountGeneration, client, dailyDateKey, dailyTimeZone, dog.id, upcomingHealthRetryToken, upcomingScopeKey, upcomingScopeUnavailable]);
+
+  useEffect(() => {
+    const scope = upcomingScopeKey;
+    const generation = ++upcomingRoutineGeneration.current;
+    upcomingRoutineController.current?.abort();
+    const controller = new AbortController();
+    upcomingRoutineController.current = controller;
+    if (!upcomingScopeUnavailable) {
+      void fetchUpcomingDailyRoutineSchedules(client, dog.id, controller.signal).then((rows) => {
+        if (controller.signal.aborted || !mounted.current || generation !== upcomingRoutineGeneration.current || upcomingScopeRef.current !== scope) return;
+        setUpcomingRoutineSnapshot({ scope, state: 'ready', rows });
+      }).catch(() => {
+        if (!controller.signal.aborted && mounted.current && generation === upcomingRoutineGeneration.current && upcomingScopeRef.current === scope) {
+          setUpcomingRoutineSnapshot((current) => ({ scope, state: 'error', rows: current?.scope === scope ? current.rows : [] }));
+        }
+      });
+    }
+    return () => {
+      controller.abort();
+      if (upcomingRoutineController.current === controller) upcomingRoutineController.current = null;
+    };
+  }, [accountGeneration, client, dailyDateKey, dailyTimeZone, dog.id, upcomingRoutineRetryToken, upcomingScopeKey, upcomingScopeUnavailable]);
 
   useEffect(() => {
     const scope = currentAttributionScope;
@@ -2035,6 +2174,23 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
+  function syncUpcomingHealthAfterPlanMutation(value: PlannedHealthRecord | null, mutationId: string) {
+    if (selectedUpcomingPlan.current?.record.id === mutationId) {
+      selectedUpcomingPlan.current = !value ? null : { ...selectedUpcomingPlan.current, record: value };
+    }
+    const upcomingPostimage = value && dailyDateKey && value.due_on > dailyDateKey
+      ? { id: value.id, dog_id: value.dog_id, event_type: value.event_type, due_on: value.due_on, due_time: value.due_time, description: value.description }
+      : null;
+    setUpcomingHealthSnapshot((current) => {
+      if (current?.scope !== upcomingScopeKey) return current;
+      const rows = current.rows.filter((row) => row.id !== mutationId);
+      if (upcomingPostimage) rows.push(upcomingPostimage);
+      rows.sort((left, right) => left.due_on.localeCompare(right.due_on) || left.id.localeCompare(right.id));
+      return { scope: current.scope, state: 'loading', rows: rows.slice(0, 40) };
+    });
+    setUpcomingHealthRetryToken((token) => token + 1);
+  }
+
   async function markPlannedHealthSaved(mutation: PendingPlannedHealthMutation, value: PlannedHealthRecord | null): Promise<void> {
     const lifetime = mutation.lifetime;
     if (!mounted.current || plannedHealthLifetime.current !== lifetime) return;
@@ -2062,7 +2218,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
-  async function runPlannedHealthMutation(mutation: PendingPlannedHealthMutation, retry = false): Promise<boolean> {
+  async function runPlannedHealthMutation(mutation: PendingPlannedHealthMutation, retry = false, onSaved?: (value: PlannedHealthRecord | null, id: string) => void): Promise<boolean> {
     const isCurrent = () => mounted.current && plannedHealthLifetime.current === mutation.lifetime;
     if (!isCurrent() || plannedHealthMutationInFlight.current) return false;
     if (pendingPlannedHealthMutation.current && !retry) {
@@ -2086,6 +2242,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       if (outcome.status === 'saved') {
         await markPlannedHealthSaved(mutation, outcome.value);
         if (!isCurrent()) return false;
+        onSaved?.(outcome.value, mutation.kind === 'insert' ? mutation.operation.id : mutation.id);
         return true;
       }
       if (outcome.status === 'unknown') {
@@ -2116,7 +2273,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
-  function savePlannedHealth(id: string | null, eventType: PlannedHealthType, dueOn: string, note: string, reminderEnabled?: boolean, reminderMinutes?: number | null, dueTime?: string | null): Promise<boolean> {
+  function savePlannedHealth(id: string | null, eventType: PlannedHealthType, dueOn: string, note: string, reminderEnabled?: boolean, reminderMinutes?: number | null, dueTime?: string | null, onSaved?: (value: PlannedHealthRecord | null, mutationId: string) => void): Promise<boolean> {
     const lifetime = plannedHealthLifetime.current;
     if (plannedHealthMutationInFlight.current || pendingPlannedHealthMutation.current || plannedHealthState !== 'ready') return Promise.resolve(false);
     const localToday = localDate();
@@ -2129,18 +2286,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     if (enabled && minutes === null) return Promise.resolve(false);
     if (id === null) {
       const operation: PlannedHealthOperation = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, event_type: eventType, due_on: dueOn, due_time: dueTime ?? null, description, local_today: localToday, reminder_enabled: enabled, reminder_minutes: minutes };
-      return runPlannedHealthMutation({ kind: 'insert', operation, lifetime });
+      return runPlannedHealthMutation({ kind: 'insert', operation, lifetime }, false, onSaved);
     }
     if (!previous) return Promise.resolve(false);
-    return runPlannedHealthMutation({ kind: 'update', id, previous, changes: { due_on: dueOn, due_time: dueTime === undefined ? previous.due_time : dueTime, description, reminder_enabled: enabled, reminder_minutes: minutes }, localToday, lifetime });
+    return runPlannedHealthMutation({ kind: 'update', id, previous, changes: { due_on: dueOn, due_time: dueTime === undefined ? previous.due_time : dueTime, description, reminder_enabled: enabled, reminder_minutes: minutes }, localToday, lifetime }, false, onSaved);
   }
 
-  function removePlannedHealth(id: string): Promise<boolean> {
+  function removePlannedHealth(id: string, onSaved?: (value: PlannedHealthRecord | null, mutationId: string) => void): Promise<boolean> {
     const lifetime = plannedHealthLifetime.current;
     if (plannedHealthMutationInFlight.current || pendingPlannedHealthMutation.current || plannedHealthState !== 'ready') return Promise.resolve(false);
     const previous = plannedHealthRows.current.find((row) => row.id === id);
     if (!previous) return Promise.resolve(false);
-    return runPlannedHealthMutation({ kind: 'delete', id, previous, lifetime });
+    return runPlannedHealthMutation({ kind: 'delete', id, previous, lifetime }, false, onSaved);
   }
 
   async function resolvePlannedHealthConflict() {
@@ -2185,7 +2342,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     }
   }
 
-  async function retryPlannedHealth() {
+  async function retryPlannedHealth(onSaved?: (value: PlannedHealthRecord | null, mutationId: string) => void) {
     if (plannedHealthMutationInFlight.current) return;
     const mutation = pendingPlannedHealthMutation.current;
     if (!mutation) {
@@ -2218,7 +2375,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       const current = await fetchPlannedHealthById(client, dog.id, id);
       if (!isCurrent()) return;
       if (mutation.kind === 'insert') {
-        if (current && samePlannedHealth(current, mutation.operation)) await markPlannedHealthSaved(mutation, current);
+        if (current && samePlannedHealth(current, mutation.operation)) {
+          await markPlannedHealthSaved(mutation, current);
+          if (!isCurrent()) return;
+          onSaved?.(current, id);
+        }
         else if (!current) retrySameOperation = true;
         else {
           setPlannedHealthConflict({ lifetime: mutation.lifetime, mutationId: id, current });
@@ -2227,13 +2388,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       } else if (mutation.kind === 'update') {
         if (current && samePlannedHealth(current, { id, dog_id: dog.id, event_type: mutation.previous.event_type, ...mutation.changes })) {
           await markPlannedHealthSaved(mutation, current);
+          if (!isCurrent()) return;
+          onSaved?.(current, id);
         } else if (current && samePlannedHealth(current, mutation.previous)) retrySameOperation = true;
         else {
           setPlannedHealthConflict({ lifetime: mutation.lifetime, mutationId: id, current });
           setPlannedHealthMessage(current ? 'Planen har ändrats sedan försöket. Granska den aktuella versionen.' : 'Planen finns inte längre. Bekräfta den aktuella listan innan du börjar om.');
         }
-      } else if (!current) await markPlannedHealthSaved(mutation, null);
-      else if (samePlannedHealth(current, mutation.previous)) retrySameOperation = true;
+      } else if (!current) {
+        await markPlannedHealthSaved(mutation, null);
+        if (!isCurrent()) return;
+        onSaved?.(null, id);
+      } else if (samePlannedHealth(current, mutation.previous)) retrySameOperation = true;
       else {
         setPlannedHealthConflict({ lifetime: mutation.lifetime, mutationId: id, current });
         setPlannedHealthMessage('Planen har ändrats sedan försöket. Granska den aktuella versionen.');
@@ -2253,7 +2419,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       }
     }
     if (!isCurrent()) return;
-    if (retrySameOperation) await runPlannedHealthMutation(mutation, true);
+    if (retrySameOperation) await runPlannedHealthMutation(mutation, true, onSaved);
   }
 
   async function retryContent() {
@@ -2733,7 +2899,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       {...dailyManagerActions}
       onRetryDailyMutation={retryDailyMutation}
       onGo={(destination) => {
-        if (destination === 'checklist') setPage('checklist');
+        if (destination === 'checklist') {
+          setChecklistTabSelection({ scopeKey: checklistUiScopeKey, tab: 'Idag' });
+          setPage('checklist');
+        }
         else navigateMainTab(destination);
       }}
       onOpenTrainingTarget={(programVersionId, stepId, activityId) => {
@@ -2759,12 +2928,32 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       }}
       onRetryContent={() => { void retryContent(); }}
     />;
-    if (page === 'checklist') return <DailyChecklistScreen key={weeklyUiScopeKey} dogName={dog.name} dogId={dog.id} dateKey={dailyDateKey ?? '—'} scopeKey={currentDailyLifetime}
-      initialTab={checklistInitialTab} onActiveTabChange={(tab) => setChecklistTabSelection({ scopeKey: weeklyUiScopeKey, tab })} state={dailyStateForView}
+    if (page === 'checklist') return <DailyChecklistScreen key={checklistUiScopeKey} dogName={dog.name} dogId={dog.id} dateKey={dailyDateKey ?? '—'} scopeKey={currentDailyLifetime}
+      initialTab={checklistInitialTab} onActiveTabChange={(tab) => {
+        checklistTabRef.current = tab;
+        if (tab !== 'Kommande') {
+          upcomingPlanReadGeneration.current += 1;
+          setOpeningUpcomingPlan(null);
+          setUpcomingPlanOpenFailure(null);
+        }
+        setChecklistTabSelection({ scopeKey: checklistUiScopeKey, tab });
+      }} state={dailyStateForView}
       weekDateKeys={dailyWeekDates} weekState={weeklyStateForView} weekProjection={weeklyProjection} weekCurrentDateKey={dailyDateKey}
       weekSelectedDateKey={selectedWeeklyDateKey} onSelectWeekDate={(selectedDateKey) => setWeeklyDaySelection({ scopeKey: weeklyUiScopeKey, dateKey: selectedDateKey })}
       onRetryWeek={() => setWeeklyRetryToken((token) => token + 1)}
       refreshing={dailyRefreshing} refreshError={dailyRefreshError} activities={dailyActivities} routines={dailySnapshotForView?.routines ?? []}
+      upcomingHealthPlans={upcomingHealthPlans} upcomingHealthState={upcomingHealthState}
+      upcomingRoutineSchedules={upcomingRoutineSchedules} upcomingRoutineState={upcomingRoutineState}
+      openingUpcomingPlanId={openingUpcomingPlanId} upcomingPlanOpenError={upcomingPlanOpenError}
+      onRetryUpcomingHealth={() => {
+        setUpcomingHealthSnapshot((current) => ({ scope: upcomingScopeKey, state: 'loading', rows: current?.scope === upcomingScopeKey ? current.rows : [] }));
+        setUpcomingHealthRetryToken((token) => token + 1);
+      }}
+      onRetryUpcomingRoutines={() => {
+        setUpcomingRoutineSnapshot((current) => ({ scope: upcomingScopeKey, state: 'loading', rows: current?.scope === upcomingScopeKey ? current.rows : [] }));
+        setUpcomingRoutineRetryToken((token) => token + 1);
+      }}
+      onOpenUpcomingPlan={(planId) => { void openUpcomingPlannedHealth(planId); }}
       routineDays={dailySnapshotForView?.routineDays ?? []} routineDaySkips={dailySnapshotForView?.routineDaySkips ?? []}
       routineTemplatesWritable={dailyRoutineTemplatesWritable} routineTemplatesSnapshotVersion={dailyRoutineWriteGate.updatedAt}
       trainingOptions={dailyTrainingOptions}
@@ -2793,7 +2982,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         setTrainingEntry({ programVersionId: null, stepId: null, scope: currentDailyLifetime, returnPage: 'checklist' });
         setPage('training');
       }}
-      onBack={() => { setTrainingEntry(null); setPage('home'); }} />;
+      onBack={() => { setTrainingEntry(null); setChecklistTabSelection({ scopeKey: checklistUiScopeKey, tab: 'Idag' }); setPage('home'); }} />;
     if (page === 'log') return <LogScreen events={displayEvents} onAdd={addEvent}
       onUpdate={updateEvent} onDelete={(id) => deleteEvent(id)} mode="cloud"
       layoutOwnerId={session?.user.id}
@@ -2905,7 +3094,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       registerEditorLeaveGuard={registerEditorLeaveGuard}
       plannedRecords={plannedHealth}
       plannedLoadState={plannedHealthState}
-      onRetryPlannedHealth={() => { void retryPlannedHealth(); }}
+      onRetryPlannedHealth={() => { void retryPlannedHealth(syncUpcomingHealthAfterPlanMutation); }}
       onBack={() => setPage('more')}
       records={healthWeights}
       loadState={healthState}
@@ -2929,10 +3118,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       onResolveHistoryConflict={resolveHealthHistoryConflict}
       onSaveHistory={saveHealthHistory}
       onDeleteHistory={removeHealthHistory}
-      onOpenPlannedHealth={() => setPage('planned-health')}
+      onOpenPlannedHealth={() => { selectedUpcomingPlan.current = null; setPlannedHealthEntry({ origin: 'health' }); setPage('planned-health'); }}
     />;
-    if (page === 'planned-health') return <PlannedHealthScreen
-      onBack={() => setPage('health')}
+    if (page === 'planned-health') {
+      const checklistEntry = plannedHealthEntry?.origin === 'checklist' ? plannedHealthEntry : null;
+      const selectedPlanIsCurrent = Boolean(checklistEntry && checklistEntry.scope === upcomingScopeKey);
+      return <PlannedHealthScreen
+      backLabel={checklistEntry ? 'Checklista' : 'Hälsa'}
+      initialEditId={selectedPlanIsCurrent ? checklistEntry?.selectedPlanId : undefined}
+      onBack={() => { selectedUpcomingPlan.current = null; setPlannedHealthEntry(null); setPage(checklistEntry ? 'checklist' : 'health'); }}
       records={plannedHealth}
       loadState={plannedHealthState}
       busy={plannedHealthBusy}
@@ -2941,11 +3135,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       statusError={plannedHealthMessageError}
       reminderSummary={reminderStatusSummary(reminderResult, notificationPreferences, notificationPermission)}
       conflict={plannedHealthConflict?.lifetime === currentPlannedHealthLifetime ? plannedHealthConflict : null}
-      onRetry={() => { void retryPlannedHealth(); }}
+      registerEditorLeaveGuard={registerEditorLeaveGuard}
+      onRetry={() => { void retryPlannedHealth(syncUpcomingHealthAfterPlanMutation); }}
       onResolveConflict={() => { void resolvePlannedHealthConflict(); }}
-      onSave={savePlannedHealth}
-      onDelete={removePlannedHealth}
+      onSave={(id, eventType, dueOn, note, reminderEnabled, reminderMinutes, dueTime) =>
+        savePlannedHealth(id, eventType, dueOn, note, reminderEnabled, reminderMinutes, dueTime, syncUpcomingHealthAfterPlanMutation)}
+      onDelete={(id) => removePlannedHealth(id, syncUpcomingHealthAfterPlanMutation)}
     />;
+    }
     if (page === 'knowledge') return <KnowledgeScreen
       onBack={() => setPage(knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : 'more')}
       items={visibleGuideContent}

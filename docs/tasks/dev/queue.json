@@ -7817,39 +7817,93 @@
       "id": "FLOW-HOME-CHECKLIST-UPCOMING-01",
       "title": "Panel 4: verkliga Kommande aktiviteter",
       "mvp_requirement": "docs/mvp.md: Rev02-panel 4; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1; exact source-and-purpose plan before ready",
+      "plan": "docs/tasks/dev/FLOW-HOME-CHECKLIST-UPCOMING-01.md v3; UX: docs/plans/FLOW-HOME-CHECKLIST-UPCOMING-01-ux-spec.md v3",
       "write_paths": [
+        "src/features/home/DailyChecklistScreen.tsx",
         "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/daily-activity-model.ts",
         "src/features/home/daily-activity-data.ts",
-        "src/features/home/HomeScreen.tsx",
         "src/features/home/README.md",
-        "tools/visual-check/app.tsx",
-        "tools/visual-check/verify.py",
-        "tools/visual-check/README.md",
+        "src/data/workspace-data.ts",
+        "src/features/health/PlannedHealthScreen.tsx",
+        "docs/tasks/dev/FLOW-HOME-CHECKLIST-UPCOMING-01.md",
+        "docs/plans/FLOW-HOME-CHECKLIST-UPCOMING-01-ux-spec.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
         "docs/decisions/MASTER-LOG.md",
         "docs/design/evidence/vision-rev02/checklist/UPCOMING-01"
       ],
       "acceptance": [
-        "Kommande visar bara verkliga framtidsplanerade aktiviteter från verifierad källa; mallar utan faktisk plan räknas inte som inplanerade aktiviteter.",
-        "Varje post har korrekt datum/tidszon, källa och handling, med sanningsenligt tomt/läsfel-läge.",
-        "Ingen ny notifiering, kalenderintegration, datamodell eller personlig rekommendationsregel ingår; eventuell ny källa/ändamål får separat godkännande.",
-        "Ändring, val eller avbokning erbjuds bara där befintligt källkontrakt stöder det; completed/past entries are not represented as upcoming."
+        "Kommande visar endast framtida dog_health_plans filtrerade före 40-radersgränsen och högst nästa förekomst per explicit upprepande rutin; äldre planer kan inte tränga undan framtida.",
+        "Hälso- och rutinläsningar har separata hundscopeade loading/ready/error/Retry och owner/account-generation-, dog-, dateKey- och timeZone-fences; fliken är åtkomlig vid loading/fel och döljs vid ny inresa först när båda källorna lyckats tomma.",
+        "Tryck på hälsoplan gör dog-scopead readback och öppnar exakt vald plan i edit-läge med initialEditId; Checklista-entry visar synlig/accessibility back label Checklista och returnerar till samma Kommande-tab. Hälsa-entry behåller Hälsa-label/destination.",
+        "Rutinhantering fokuserar mallen och markerar dagsspecifika val, som Välj för idag, som idag; ingen framtida dagsrad/completion/skip skapas.",
+        "Datum-only/tid och lokal dag bevaras utan UTC-förskjutning. Träning eller mallar utan explicit schema visas inte; befintliga Checklistflikar, dirty guards, return routes och account/dog/date/timezone-fences består.",
+        "UI följer befintliga komponenter och design-rules §14 utan nya produktändamål eller visuella påståenden om referensbildens data."
       ],
       "checks": [
-        "pnpm check",
-        "Source lineage and future-date/scope/error tests",
-        "§14 synthetic public/review renders and interactions",
+        "Review recurrence day/week/month rules, due_on filter before page cap, minimal selected columns, dog-scope validation, scope fences, and independent source retries",
+        "Manual UX review for direct selected-plan edit, visible/accessibility return label and destination from Checklist and Health, routine focus, and today-only action semantics",
+        "Section 14 public/review visual review at 375x844, 430x844, 375x667, and 140% text (after verification is explicitly authorized)",
+        "pnpm check (after a separate explicit test/verification request)",
         "git diff --check",
         "python tools/dev_flow.py validate"
       ],
       "depends_on": [
         "FLOW-HOME-CHECKLIST-WEEK-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Verifiera om rutinscheman ger ett konkret framtida datum och om någon annan redan godkänd planerad aktivitet finns; ingen tab visas före bekräftad källa.",
+      "status": "qa",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Wrote exact R3c plan v1 and UX spec. Source inspection confirms owner-planned health dates and repeat-rule-derived next routine date; ensure_due_daily_routine_days is current-date-only and remains unused for future."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v1 fick Architect CHANGES, Critic PROCEED WITH CHANGES och Security CHANGES. V2 separerar hundscopeade rutin-/hälsoläsningar och Retry, filtrerar hälsoplaner före 40-radersgränsen, öppnar vald plan direkt och klargör rutinmall kontra dagshandling. Ingen produktionskod/test ändrad; väntar på omgranskning."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v2 fick Architect APPROVE och Security PASS. Critic PROCEED WITH CHANGES begärde selectedPlanId/initialEditId samt synlig och tillgänglig tillbaka-label för ursprunget. V3 lägger till dessa och explicita owner/account-generation-, dog-, local-date- och timezone-fences; inga källor/dataändamål ändras. Ingen kod/test ändrad; v3 väntar på omgranskning."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE, Critic PROCEED, Security PASS för exakt plan/UX-spec v3; besluten sparade i taskfil och rapport."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Exact plan v3 has Architect APPROVE, Critic PROCEED, Security PASS; dependency FLOW-HOME-CHECKLIST-WEEK-01 is done. UIUX postflight is blocked awaiting owner TestFlight checks, so no active overlapping writer remains. Start R3c within approved paths; no tests."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R3c plan v3 implementation is in scope; only python tools/dev_flow.py validate and git diff --check passed (exit 0). Automated tests were not added or run; functional, native, live RLS, and visual QA are not claimed. Code and documentation are saved as an open QA checkpoint pending later authorized verification."
+        },
+        {
+          "from": "qa",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Independent Reviewer found stale upcoming routine forecasts after routine-template mutations, an ABA race on selected-plan open across tab/screen changes, and missing dirty-form leave protection. All three findings are addressed. Security implementation review PASS; final independent Reviewer recheck and functional/runtime/visual QA remain outstanding. No tests added or run."
+        },
+        {
+          "from": "qa",
+          "to": "qa",
+          "actor": "reviewer",
+          "evidence": "Final read-only Reviewer recheck PASS: confirmed-source routine refresh, tab/screen/scope invalidation, stable edit baseline and guarded Back/global navigation. The follow-up missing-record cleanup clears editingBaseline; guard registration timing is correct. No tests run. Functional/runtime/visual QA remains open."
+        }
+      ],
+      "next_step": "Leave R3c in QA until functional/runtime/visual verification is separately authorized and completed; implementation review passed. No tests were added or run in this implementation turn.",
       "priority": "P1",
       "panels": [
         "4"
@@ -7859,8 +7913,8 @@
       "test_evidence": [
         "Source trace from record to UI, future schedule/timezone boundaries, dog isolation, truthful empty/error; screenshot matrix"
       ],
-      "implementation_state": "planned; source semantics not yet verified",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "implementation_state": "R3c plan v3 is implemented locally. Reviewer findings for routine-source refresh, pending-open ABA invalidation, and planned-health dirty guard are addressed; independent Reviewer recheck PASS. Tests were neither added nor run; functional QA remains open.",
+      "evidence_status": "v3 Architect APPROVE, Critic PROCEED, Security plan PASS; Security implementation PASS; independent Reviewer PASS. python tools/dev_flow.py validate and git diff --check are hygiene only; functional, live RLS, native and visual evidence not run or NOT TESTABLE."
     },
     {
       "id": "FLOW-LOG-01",
@@ -8797,6 +8851,176 @@
       ],
       "implementation_state": "Plan v2 implemented; QA and Reviewer PASS for exact-target Home navigation and return. Local checkpoint is complete; full visual Home-panel match remains open.",
       "evidence_status": "QA/Reviewer PASS for functional slice; visual point-16 deviations, fixture callback boundary, and live/native NOT TESTABLE limits disclosed."
+    },
+    {
+      "id": "UIUX-POSTFLIGHT-CORRECTIONS-01",
+      "title": "Rätta loggkontroller, rutinlayout och huvudnavigation",
+      "mvp_requirement": "docs/mvp.md: Rev02-panel 1/Home, 4/Checklista, 5/Logga; UIUX-REVAMP-MASTERPLAN-2026-10-16",
+      "plan": "docs/tasks/dev/UIUX-POSTFLIGHT-CORRECTIONS-01.md v4; UX: docs/plans/UIUX-POSTFLIGHT-CORRECTIONS-01-ux-spec.md v4",
+      "write_paths": [
+        "src/components/AppPrimitives.tsx",
+        "src/components/ui/BottomSheet.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/health/WeightScreen.tsx",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/components/ui/MainSwipeNavigation.tsx",
+        "src/features/health/README.md",
+        "src/features/home/README.md",
+        "src/features/puppy-log/README.md",
+        "docs/plans/UIUX-POSTFLIGHT-CORRECTIONS-01-ux-spec.md",
+        "docs/tasks/dev/UIUX-POSTFLIGHT-CORRECTIONS-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/postflight-fixes"
+      ],
+      "acceptance": [
+        "Log edit selector shows the saved type as a round icon with chevron; opening it shows all existing types with icon and name, retaining accident subtype behavior and accessible states.",
+        "All shared date/time field consumers (Log, Weight create/edit, Health History, Planned Health, dog profile and notification settings) use calendar/clock icons with accessible names and context labels; values remain unclipped at phone widths and large text.",
+        "Routine edit action never wraps vertically; Weight correction save/cancel/delete actions have clear spacing; seven repeat weekdays are one row labeled Må, Ti, On, To, Fr, Lö, Sö with full accessible labels and at least 44pt targets.",
+        "Opening generic Training from the activity manager in Home or Checklist waits for modal dismissal, preserves the mounted sheet until handoff, navigates at most once, and returns to the origin. Other BottomSheet consumers are unchanged.",
+        "Horizontal left/right gestures move exactly one main tab in the expected order while preserving vertical scroll, nested gesture regions and dirty-form guards.",
+        "No schema, persistence, dog/account scope, content eligibility, adult policy, dependency or deferred age-phase UI changes."
+      ],
+      "checks": [
+        "Do not add or run automated tests in this implementation turn; existing regression files remain unchanged.",
+        "python tools/dev_flow.py validate",
+        "git diff --check",
+        "Manual TestFlight checks after implementation require a separate verification request; native behavior is otherwise NOT TESTABLE locally."
+      ],
+      "depends_on": [
+        "FLOW-HOME-TRAINING-TARGET-01",
+        "FLOW-HOME-CHECKLIST-WEEK-01",
+        "UIUX-REVAMP-R2B-SHARED-SHEET-01"
+      ],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact plan v2; review covers six reported issues, WeightScreen action spacing, all shared date/time consumers; no data/auth expansion. Native/TestFlight checks remain outstanding."
+        },
+        {
+          "from": "ready",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Implementation trace found that the native manager modal must report dismissal before switching the parent page to avoid unmounting a visible modal. Plan v3 adds an optional BottomSheet onDismiss callback and a one-shot platform fallback; awaiting Architect review before code."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact plan v4; both manager call sites preserve the sheet through dismissal; one-shot handoff and scoped 450 ms fallback are bounded. Native iOS/Android handoff still requires TestFlight verification."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Started exact Architect-approved plan v4: shared picker icons, log type dropdown, routine/weight layout fixes, manager dismissal handoff and swipe capture negotiation. No tests added or run."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Implementation and static review complete per existing evidence; six owner-only TestFlight checks remain under separate verification request. No functional/native PASS claimed; code frozen pending those checks."
+        }
+      ],
+      "next_step": "Implementation and static review complete per existing evidence; six owner-only TestFlight checks remain under separate verification request. No functional/native PASS claimed; code frozen pending those checks.",
+      "priority": "P1",
+      "panels": [
+        "1",
+        "4",
+        "5"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Resolve the six reported TestFlight issues without changing persisted data contracts or adding dependencies.",
+      "test_evidence": [],
+      "implementation_state": "Source implementation complete. Permitted queue validation and diff check pass; static QA and independent Reviewer pass. Functional and device verification remain outstanding.",
+      "evidence_status": "Plan v4 approved; static QA PASS; independent Reviewer PASS; python tools/dev_flow.py validate PASS; git diff --check PASS. No tests run. Manual TestFlight behavior remains NOT TESTABLE until owner checks it."
+    }
+,
+    {
+      "id": "UIUX-REVAMP-R4A-RELEVANCE-01",
+      "title": "R4a: gemensam redaktionell relevansgrind",
+      "mvp_requirement": "docs/mvp.md: innehållsrelevans, vuxenhundsnytta och ärliga tom-/felstatusar; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/tasks/dev/UIUX-REVAMP-R4A-RELEVANCE-01.md v7; UX: docs/plans/UIUX-REVAMP-R4A-RELEVANCE-01-ux-spec.md v7",
+      "write_paths": [
+        "docs/tasks/dev/UIUX-REVAMP-R4A-RELEVANCE-01.md",
+        "docs/plans/UIUX-REVAMP-R4A-RELEVANCE-01-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "src/content/select-content.ts",
+        "src/data/workspace-data.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/HomeCarousel.tsx",
+        "src/features/home/daily-activity-model.ts",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/health/HealthScreen.tsx",
+        "src/features/health/WeightScreen.tsx",
+        "src/features/home/README.md",
+        "src/features/knowledge/README.md",
+        "src/features/training/README.md",
+        "src/features/puppy-log/README.md",
+        "src/features/health/README.md",
+        "docs/design/evidence/vision-rev02/content/relevance/R4A-RELEVANCE-01",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Publicering, exakt senaste publicerade version, ålder, ras, målgrupp, behov/sammanhang och yta krävs; okända eller omappade versioner nekas. En äldre versions grant kan inte kringgå en nyare publicerad version utan grant.",
+        "Endast ...0003 Logg/rutiner, ...0007 Hälsa/Vikt och ...0008 Hälsa/Genomfört får exakt kontextuella funktionshjälpsgrants. Alla hundråds-/träningsversioner saknar nya ytmappningar; unknown age kvalificerar inte hundråd.",
+        "Hundrådsrekommendationsslotten i Home Just nu/HomeCarousel och Knowledge För dig/Artiklar använder inget indexbaserat val; endast slotten blir tom när grantad kandidat saknas. FAQ, planerade hälsohändelser, övrigt opåverkat karusellinnehåll och befintlig checklistdatakälla bevaras; fel/unknown hålls separat.",
+        "Funktionshjälpslänkar ligger utanför aktiva editors; Logg återställer valt datum och Hälsa återställer Vikt/Översikt efter tillbakagång.",
+        "Träningskandidater separeras från exakt dog/version/step-progress. Nekad progress är skrivskyddad utan instruktioner/actions/reset/continue; poster raderas/remappas inte och markeringar utges inte för färdighet.",
+        "Dagligt träningsval med nekad exakt version visas i Hem och Checklista som otillgängligt/okänt, aldrig klart eller som vanligt tomt; raden och progress bevaras utan mutationshandlingar.",
+        "Ingen schema/RLS/RPC/grant/dependency/content-publish/phase UI-ändring; vuxenresan förblir öppen tills innehåll har versionella approvals."
+      ],
+      "checks": [
+        "pnpm exec tsc --noEmit",
+        "pnpm exec eslint src/content/select-content.ts src/data/workspace-data.ts src/features/home/ProductWorkspace.tsx src/features/home/HomeScreen.tsx src/features/home/HomeCarousel.tsx src/features/home/daily-activity-model.ts src/features/training/PublishedTrainingScreen.tsx src/features/knowledge/KnowledgeScreen.tsx src/features/puppy-log/LogScreen.tsx src/features/health/HealthScreen.tsx src/features/health/WeightScreen.tsx",
+        "Manual code-path review for current grant table, latest-version rule, daily denied selection state, exact read-only history and help return context",
+        "Manual visual/functional QA only after separately authorized verification; native/live DB/RLS remain separate",
+        "pnpm check (only after a separate explicit request to run automated tests)",
+        "python tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "FLOW-HOME-CHECKLIST-UPCOMING-01"
+      ],
+      "status": "planned",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v6 exact review complete: Architect v5 APPROVE and Critic v6 PROCEED; implementation still waits on R3c because write paths overlap. No app code changed."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v7 delta: Architect APPROVE after clarifying only the dog-guidance recommendation slot becomes empty and preserving FAQ, planned health events, and unaffected carousel content; Critic v7 PROCEED. R3c QA dependency remains open. No app code changed."
+        }
+      ],
+      "next_step": "Wait for FLOW-HOME-CHECKLIST-UPCOMING-01 QA dependency to close before ready/implementation; no overlapping app files may change before then.",
+      "priority": "P1",
+      "panels": [
+        "1",
+        "2",
+        "4",
+        "5"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Implement version-, audience-, context- and surface-specific fail-closed content visibility, contextual feature-help, and read-only treatment of ungranted saved training progress.",
+      "test_evidence": [],
+      "implementation_state": "Not started. Exact plan only; no code edits.",
+      "evidence_status": "Exact plan v7 has Architect APPROVE and Critic PROCEED. R3c QA blocks implementation due overlapping write paths."
     }
   ]
 }

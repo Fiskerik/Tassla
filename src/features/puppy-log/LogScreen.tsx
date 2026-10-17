@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObjec
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ExpoCrypto from 'expo-crypto';
 import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { BottomSheet, Button, Card, CheckboxCard, Dialog, FirstUseTip, HorizontalGestureRegion, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast, useFirstUseTip } from '../../components/ui';
+import { BottomSheet, Button, Card, CheckboxCard, Dialog, FirstUseTip, HorizontalGestureRegion, IconChip, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast, useFirstUseTip } from '../../components/ui';
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
@@ -474,6 +474,7 @@ function LogEventEditor({ event, disabled, onSave, onSaved, onCancel, onDelete, 
 }) {
   const initial = localDateTimeParts(event.occurredAt);
   const [type, setType] = useState(event.type);
+  const [typePickerOpen, setTypePickerOpen] = useState(false);
   const [accidentKinds, setAccidentKinds] = useState<AccidentKind[]>(event.accidentKinds ?? []);
   const [preserveLegacyUnknownAccident, setPreserveLegacyUnknownAccident] = useState(
     event.type === 'accident' && event.accidentKinds === null,
@@ -493,6 +494,7 @@ function LogEventEditor({ event, disabled, onSave, onSaved, onCancel, onDelete, 
   function changeType(nextType: LogEventType) {
     if (nextType === type) return;
     setType(nextType);
+    setTypePickerOpen(false);
     if (nextType === 'accident' && !preserveLegacyUnknownAccident && accidentKinds.length === 0) {
       setAccidentKinds(['pee']);
     }
@@ -519,11 +521,31 @@ function LogEventEditor({ event, disabled, onSave, onSaved, onCancel, onDelete, 
 
   return <View style={styles.editor}>
 
-    <Text style={styles.fieldTitle}>Typ</Text>
-    <View style={styles.typeGrid}>{LOG_ENTRY_TYPES.map((option) => {
-      const selected = type === option;
-      return <Pressable key={option} accessibilityRole="radio" accessibilityState={{ selected, disabled }} disabled={disabled} onPress={() => changeType(option)} style={({ pressed }) => [styles.typeOption, selected && styles.selectedTypeOption, pressed && styles.pressed]}><Text style={[styles.typeOptionText, selected && styles.selectedTypeText]}>{LOG_EVENT_LABELS[option]}</Text></Pressable>;
-    })}</View>
+    <View style={styles.typeSelectorGroup}>
+      <Text style={styles.fieldTitle}>Typ</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Typ: ${LOG_EVENT_LABELS[type]}. Visa händelsetyper`}
+        accessibilityState={{ disabled, expanded: typePickerOpen }} disabled={disabled} onPress={() => setTypePickerOpen((open) => !open)}
+        style={({ pressed }) => [styles.typeSelectorButton, typePickerOpen && styles.selectedTypeOption, pressed && styles.pressed]}>
+        <View style={styles.typeSelectorIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          <IconChip category={type} variant="rev02-log" />
+        </View>
+        <Ionicons name={typePickerOpen ? 'chevron-up' : 'chevron-down'} size={tokens.size.iconSm} color={tokens.colors.textPrimary} accessibilityElementsHidden />
+      </Pressable>
+      {typePickerOpen ? <View style={styles.typeOptions} accessibilityLabel="Händelsetyper">
+        {LOG_ENTRY_TYPES.map((option) => {
+          const selected = type === option;
+          return <Pressable key={option} accessibilityRole="radio" accessibilityLabel={LOG_EVENT_LABELS[option]}
+            accessibilityState={{ selected, disabled }} disabled={disabled} onPress={() => changeType(option)}
+            style={({ pressed }) => [styles.typeOption, selected && styles.selectedTypeOption, pressed && styles.pressed]}>
+            <View style={styles.typeOptionIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              <IconChip category={option} variant="rev02-log" />
+            </View>
+            <Text style={[styles.typeOptionText, selected && styles.selectedTypeText]}>{LOG_EVENT_LABELS[option]}</Text>
+            {selected ? <Ionicons name="checkmark" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden /> : null}
+          </Pressable>;
+        })}
+      </View> : null}
+    </View>
     {type === 'accident' ? <View style={styles.accidentTypeGroup}>
       <Text accessibilityRole="header" accessibilityLabel="Vad hände?" style={styles.fieldTitle}>Vad hände?</Text>
       <Text style={styles.accidentHelp}>{legacyUnknownAccident
@@ -594,10 +616,15 @@ const styles = StyleSheet.create({
   editor: { gap: tokens.spacing.md },
   editorTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
   fieldTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.xs },
-  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
-  typeOption: { minHeight: tokens.size.touchMin, minWidth: tokens.size.chipLg * 2, flexGrow: 1, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, paddingHorizontal: tokens.spacing.sm },
+  typeSelectorGroup: { gap: tokens.spacing.xs, alignItems: 'flex-start' },
+  typeSelectorButton: { minWidth: 68, minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.xs, borderRadius: tokens.radius.full, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  typeSelectorIcon: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
+  typeOptions: { alignSelf: 'stretch', borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, overflow: 'hidden', backgroundColor: tokens.colors.surface },
+  typeOption: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, borderBottomWidth: tokens.size.stroke, borderBottomColor: tokens.colors.border, paddingHorizontal: tokens.spacing.sm },
+  typeOptionIcon: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
+  typeOptionText: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1 },
   selectedTypeOption: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
-  typeOptionText: { ...tokens.typography.label, color: tokens.colors.textPrimary }, selectedTypeText: { color: tokens.colors.primary }, pressed: { opacity: 0.85 },
+  selectedTypeText: { color: tokens.colors.primary }, pressed: { opacity: 0.85 },
   dateTimeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm }, dateField: { flex: 1, minWidth: 180 }, timeField: { flex: 1, minWidth: 112 },
   noteGroup: { gap: tokens.spacing.xs },
   noteInput: { minHeight: tokens.size.touchMin + tokens.spacing.xl + tokens.spacing.sm, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body, padding: tokens.spacing.md, textAlignVertical: 'top' },

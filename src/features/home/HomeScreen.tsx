@@ -232,7 +232,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
       </View>
     </View>
 
-    <DailyActivityManagerSheet key={`${dailyScopeKey ?? ''}:${dailyDateKey}:${focusRoutineId ?? 'all'}:${managerVisible}`}
+    <DailyActivityManagerSheet key={`${dailyScopeKey ?? ''}:${dailyDateKey}:${focusRoutineId ?? 'all'}`}
       visible={managerVisible} dailyScopeKey={dailyScopeKey} onClose={() => setManagerVisible(false)} focusRoutineId={focusRoutineId}
       activities={dailyActivities} routines={routineTemplates} routineDaySkips={routineDaySkips} trainingOptions={dailyTrainingOptions}
       busy={dailyMutationBusy} mutationMessage={dailyMutationMessage} mutationError={dailyMutationError}

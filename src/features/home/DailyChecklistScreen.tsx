@@ -1,18 +1,24 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { AppBar, DailyActivityItem, Button, IconChip, SectionHeader, Skeleton, Tabs } from '../../components/ui';
+import { AppBar, DailyActivityItem, Button, IconChip, ListRow, SectionHeader, Skeleton, Tabs } from '../../components/ui';
 import { MessageCard } from '../../components/AppPrimitives';
-import type { DailyRoutine, DailyRoutineChecklistItem, DailyRoutineCreateInput, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineRepeatValues, DailyTrainingSelection } from './daily-activity-data';
-import { dailyActivityProgressLabel, deriveDailyRoutineTemplateEntries, dailyRoutineRepeatSummary, isoWeekdayForDateKey, summarizeDailyActivityProgress, type DailyRoutineTemplateEntry, type HomeDailyActivity, type WeeklyActivityProjection } from './daily-activity-model';
+import type { DailyRoutine, DailyRoutineChecklistItem, DailyRoutineCreateInput, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineRepeatValues, DailyRoutineSchedule, DailyTrainingSelection } from './daily-activity-data';
+import { dailyActivityProgressLabel, deriveDailyRoutineTemplateEntries, dailyRoutineRepeatSummary, isoWeekdayForDateKey, nextRoutineOccurrenceAfterDate, summarizeDailyActivityProgress, type DailyRoutineTemplateEntry, type HomeDailyActivity, type WeeklyActivityProjection } from './daily-activity-model';
+import type { UpcomingPlannedHealthRecord } from '../../data/workspace-data';
 import type { HomeDailyTrainingOption } from './HomeScreen';
 import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
 import { tokens } from '../../theme/tokens';
 
 type ActionResult = { status: 'saved' | 'failed' | 'unknown' } | void;
-type ChecklistTab = 'Idag' | 'Denna vecka' | 'Alla';
+type ChecklistTab = 'Idag' | 'Denna vecka' | 'Alla' | 'Kommande';
 const WEEKDAY_SHORT_LABELS = ['mån', 'tis', 'ons', 'tors', 'fre', 'lör', 'sön'];
 const WEEKDAY_LONG_LABELS = ['måndag', 'tisdag', 'onsdag', 'torsdag', 'fredag', 'lördag', 'söndag'];
 const MONTH_SHORT_LABELS = ['jan', 'feb', 'mars', 'apr', 'maj', 'juni', 'juli', 'aug', 'sep', 'okt', 'nov', 'dec'];
+
+function formatUpcomingDate(dateKey: string): string {
+  const [year, month, day] = dateKey.split('-');
+  return `${Number(day)} ${MONTH_SHORT_LABELS[Number(month) - 1] ?? ''} ${year}`;
+}
 
 function formatWeekday(dateKey: string): string {
   return WEEKDAY_LONG_LABELS[isoWeekdayForDateKey(dateKey) - 1] ?? '';
@@ -29,7 +35,7 @@ function formatWeekRange(dateKeys: readonly string[]): string {
   return firstLabel + '–' + String(last[2]) + ' ' + lastMonth + ' ' + String(last[0]);
 }
 
-export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initialTab, onActiveTabChange, weekDateKeys, weekState, weekProjection, weekCurrentDateKey, weekSelectedDateKey, onSelectWeekDate, onRetryWeek, onOpenWeekTrainingTarget, state, refreshing, refreshError, activities, routines, routineDays, routineDaySkips,
+export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initialTab, onActiveTabChange, weekDateKeys, weekState, weekProjection, weekCurrentDateKey, weekSelectedDateKey, onSelectWeekDate, onRetryWeek, onOpenWeekTrainingTarget, upcomingHealthPlans, upcomingHealthState, upcomingRoutineSchedules, upcomingRoutineState, openingUpcomingPlanId, upcomingPlanOpenError, onRetryUpcomingHealth, onRetryUpcomingRoutines, onOpenUpcomingPlan, state, refreshing, refreshError, activities, routines, routineDays, routineDaySkips,
   routineTemplatesWritable, routineTemplatesSnapshotVersion, trainingOptions, mutationBusy, mutationKey, mutationMessage, mutationError, onRetry, onRetryMutation, onSetRoutineCompletion,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onAddRoutineTemplateToDay, onRemoveRoutineFromDay,
   onAddTrainingToDay, onRemoveTrainingFromDay, onOpenTrainingTarget, onGoTraining, onBack, onGuardAllAction }: {
@@ -45,6 +51,15 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initia
   onSelectWeekDate: (dateKey: string) => void;
   onRetryWeek: () => void;
   onOpenWeekTrainingTarget: (programVersionId: string, stepId: string) => void;
+  upcomingHealthPlans: readonly UpcomingPlannedHealthRecord[];
+  upcomingHealthState: 'loading' | 'ready' | 'error';
+  upcomingRoutineSchedules: readonly DailyRoutineSchedule[];
+  upcomingRoutineState: 'loading' | 'ready' | 'error';
+  openingUpcomingPlanId: string | null;
+  upcomingPlanOpenError: string;
+  onRetryUpcomingHealth: () => void;
+  onRetryUpcomingRoutines: () => void;
+  onOpenUpcomingPlan: (planId: string) => void;
   scopeKey: string;
   dateKey: string;
   state: 'loading' | 'ready' | 'error';
@@ -85,10 +100,31 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initia
   const progressLabel = dailyActivityProgressLabel(summarizeDailyActivityProgress(activities));
   const selectedWeekDay = weekProjection?.days.find((day) => day.dateKey === weekSelectedDateKey) ?? null;
   const templateEntries = deriveDailyRoutineTemplateEntries({ routines, routineDays, routineDaySkips, dogId, dateKey });
+  const upcomingRows = useMemo(() => {
+    const healthRows = upcomingHealthPlans.map((record) => ({
+      id: record.id,
+      kind: 'health' as const,
+      dateKey: record.due_on,
+      label: record.description || (record.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök'),
+      category: record.event_type === 'vaccination' ? 'vaccination' as const : 'veterinary' as const,
+      time: record.due_time?.slice(0, 5) ?? undefined,
+      meta: record.description ? `${formatUpcomingDate(record.due_on)} · ${record.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök'}` : formatUpcomingDate(record.due_on),
+      planId: record.id,
+    }));
+    const routineRows = upcomingRoutineSchedules.flatMap((routine) => {
+      const nextDate = nextRoutineOccurrenceAfterDate(routine, dateKey);
+      return nextDate ? [{ id: routine.id, kind: 'routine' as const, dateKey: nextDate, label: routine.label,
+        category: 'walk' as const, time: undefined, meta: `Rutin · ${formatUpcomingDate(nextDate)}`, routineId: routine.id }] : [];
+    });
+    return [...healthRows, ...routineRows].sort((left, right) => left.dateKey.localeCompare(right.dateKey)
+      || (left.kind === right.kind ? 0 : left.kind === 'health' ? -1 : 1)
+      || left.label.localeCompare(right.label, 'sv') || left.id.localeCompare(right.id));
+  }, [dateKey, upcomingHealthPlans, upcomingRoutineSchedules]);
+  const showUpcomingTab = activeTab === 'Kommande' || upcomingHealthState !== 'ready' || upcomingRoutineState !== 'ready' || upcomingRows.length > 0;
   const canWriteTemplates = state === 'ready' && routineTemplatesWritable;
-  const managerBlocked = activeTab === 'Alla' && !canWriteTemplates;
+  const managerBlocked = (activeTab === 'Alla' || activeTab === 'Kommande') && !canWriteTemplates;
   const managerVisible = Boolean(managerSession && managerSession.tab === activeTab && managerSession.dateKey === dateKey && managerSession.scopeKey === scopeKey);
-  const managerReadOnly = Boolean(managerSession?.tab === 'Alla'
+  const managerReadOnly = Boolean((managerSession?.tab === 'Alla' || managerSession?.tab === 'Kommande')
     && (managerStaleLocked || !canWriteTemplates || managerSession.snapshotVersion !== routineTemplatesSnapshotVersion));
 
   const handleManagerSessionNeedsPreservation = useCallback((needsPreservation: boolean) => {
@@ -96,7 +132,7 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initia
   }, []);
 
   useEffect(() => {
-    if (managerSession?.tab !== 'Alla' || managerStaleLocked) return;
+    if ((managerSession?.tab !== 'Alla' && managerSession?.tab !== 'Kommande') || managerStaleLocked) return;
     const freshnessLost = !canWriteTemplates || managerSession.snapshotVersion !== routineTemplatesSnapshotVersion;
     if (!freshnessLost) return;
     const transition = setTimeout(() => {
@@ -111,14 +147,17 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initia
   }, [canWriteTemplates, managerSession, managerSessionNeedsPreservation, managerStaleLocked, mutationBusy, mutationError, routineTemplatesSnapshotVersion]);
 
   function allowManagerMutation() {
-    if (activeTab !== 'Alla' && managerSession?.tab !== 'Alla') return true;
+    const needsTemplateGate = activeTab === 'Alla' || activeTab === 'Kommande'
+      || managerSession?.tab === 'Alla' || managerSession?.tab === 'Kommande';
+    if (!needsTemplateGate) return true;
     if (managerStaleLocked) return false;
     const expectedVersion = managerSession?.tab === 'Alla' ? managerSession.snapshotVersion : routineTemplatesSnapshotVersion;
     return (onGuardAllAction ?? (() => canWriteTemplates))(expectedVersion);
   }
 
   function openManager(routineId: string | null = null) {
-    if (activeTab === 'Alla' && !(onGuardAllAction ?? (() => canWriteTemplates))(routineTemplatesSnapshotVersion)) return;
+    if ((activeTab === 'Alla' || activeTab === 'Kommande')
+      && !(onGuardAllAction ?? (() => canWriteTemplates))(routineTemplatesSnapshotVersion)) return;
     setFocusRoutineId(routineId);
     setManagerSession({ tab: activeTab, dateKey, scopeKey, snapshotVersion: routineTemplatesSnapshotVersion });
     setManagerSessionNeedsPreservation(false);
@@ -127,15 +166,21 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initia
 
   const managerCreateRoutine = onCreateRoutine ? async (routine: DailyRoutineCreateInput): Promise<ActionResult> => {
     if (!allowManagerMutation()) return { status: 'failed' };
-    return await onCreateRoutine(routine);
+    const result = await onCreateRoutine(routine);
+    if (result?.status === 'saved') onRetryUpcomingRoutines();
+    return result;
   } : undefined;
   const managerUpdateRoutine = onUpdateRoutine ? async (routine: DailyRoutine, label: string, checklist: DailyRoutineChecklistItem[], repeat: DailyRoutineRepeatValues): Promise<ActionResult> => {
     if (!allowManagerMutation()) return { status: 'failed' };
-    return await onUpdateRoutine(routine, label, checklist, repeat);
+    const result = await onUpdateRoutine(routine, label, checklist, repeat);
+    if (result?.status === 'saved') onRetryUpcomingRoutines();
+    return result;
   } : undefined;
   const managerDeleteRoutine = onDeleteRoutine ? async (routine: DailyRoutine): Promise<ActionResult> => {
     if (!allowManagerMutation()) return { status: 'failed' };
-    return await onDeleteRoutine(routine);
+    const result = await onDeleteRoutine(routine);
+    if (result?.status === 'saved') onRetryUpcomingRoutines();
+    return result;
   } : undefined;
   const managerAddRoutine = (routine: DailyRoutine) => {
     if (!allowManagerMutation()) return;
@@ -161,7 +206,7 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initia
   return <View style={styles.screen}>
     <AppBar mode="Back" variant="compact" title="Checklista" actionLabel="Tillbaka till Hem" onAction={onBack} />
     <Text style={styles.scopeContext} accessibilityRole="text">{dogName} · {activeTab === 'Denna vecka' ? formatWeekRange(weekDateKeys) : dateKey}</Text>
-    <Tabs items={['Idag', 'Denna vecka', 'Alla']} active={activeTab} onChange={(tab) => {
+    <Tabs items={showUpcomingTab ? ['Idag', 'Denna vecka', 'Alla', 'Kommande'] : ['Idag', 'Denna vecka', 'Alla']} active={activeTab} onChange={(tab) => {
       const nextTab = tab as ChecklistTab;
       setManagerSession(null); setManagerSessionNeedsPreservation(false); setManagerStaleLocked(false); setActiveTab(nextTab); onActiveTabChange(nextTab);
     }} variant="rev02-segmented" />
@@ -169,10 +214,11 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initia
       <Text style={styles.progress} accessibilityRole="text">
         {activeTab === 'Alla'
           ? state === 'ready' ? `${templateEntries.length} ${templateEntries.length === 1 ? 'rutinmall' : 'rutinmallar'}` : 'Rutinmallar'
-          : activeTab === 'Denna vecka' ? 'Veckans sparade aktiviteter' : state === 'ready' ? progressLabel : 'Dagens checklista'}
+          : activeTab === 'Kommande' ? `${upcomingRows.length} kommande aktiviteter`
+            : activeTab === 'Denna vecka' ? 'Veckans sparade aktiviteter' : state === 'ready' ? progressLabel : 'Dagens checklista'}
       </Text>
-      {refreshing && activeTab !== 'Denna vecka' ? <Text style={styles.status}>Uppdaterar…</Text> : null}
-      {activeTab !== 'Denna vecka' ? <Button variant="tertiary" label="Hantera rutiner" accessibilityLabel="Hantera rutiner och dagens aktiviteter"
+      {refreshing && activeTab !== 'Denna vecka' && activeTab !== 'Kommande' ? <Text style={styles.status}>Uppdaterar…</Text> : null}
+      {activeTab !== 'Denna vecka' && activeTab !== 'Kommande' ? <Button variant="tertiary" label="Hantera rutiner" accessibilityLabel="Hantera rutiner och dagens aktiviteter"
         disabled={managerBlocked} onPress={() => openManager()} /> : null}
     </View>
     {activeTab !== 'Denna vecka' && refreshError && state === 'ready' ? <View style={styles.stateMessage}>
@@ -297,6 +343,37 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initia
       </> : null}
     </View> : null}
 
+    {activeTab === 'Kommande' ? <View style={styles.upcomingView}>
+      {upcomingHealthState !== 'ready' || upcomingRoutineState !== 'ready' ? <MessageCard>
+        Listan kan vara ofullständig medan aktiviteter hämtas eller en källa inte kan läsas.
+      </MessageCard> : null}
+      {openingUpcomingPlanId ? <Text style={styles.status} accessibilityRole="text">Hämtar den valda hälsohändelsen…</Text> : null}
+      {upcomingPlanOpenError ? <MessageCard tone="error">{upcomingPlanOpenError} Tryck på planen igen för att kontrollera den på nytt.</MessageCard> : null}
+      {upcomingHealthState === 'loading' ? <View style={styles.loading} accessibilityLabel="Laddar kommande hälsohändelser"><Skeleton shape="row" lines={2} /></View> : null}
+      {upcomingRoutineState === 'loading' ? <View style={styles.loading} accessibilityLabel="Laddar kommande rutiner"><Skeleton shape="row" lines={2} /></View> : null}
+      {upcomingHealthState === 'error' ? <View style={styles.stateMessage}>
+        <MessageCard tone="error">Kommande hälsohändelser kunde inte hämtas.</MessageCard>
+        <Button variant="tertiary" label="Hämta hälsohändelser igen" accessibilityLabel="Försök hämta kommande hälsohändelser igen" onPress={onRetryUpcomingHealth} />
+      </View> : null}
+      {upcomingRoutineState === 'error' ? <View style={styles.stateMessage}>
+        <MessageCard tone="error">Kommande rutiner kunde inte hämtas.</MessageCard>
+        <Button variant="tertiary" label="Hämta rutiner igen" accessibilityLabel="Försök hämta kommande rutiner igen" onPress={onRetryUpcomingRoutines} />
+      </View> : null}
+      {upcomingRows.length > 0 ? <View style={styles.upcomingRows}>
+        {upcomingRows.map((row) => row.kind === 'health'
+          ? <ListRow key={`health:${row.id}`} category={row.category} title={row.label} meta={row.meta} time={row.time}
+            accessibilityLabel={`Öppna ${row.label}, ${row.meta}${row.time ? `, klockan ${row.time}` : ''}`}
+            disabled={Boolean(openingUpcomingPlanId)} onPress={() => onOpenUpcomingPlan(row.planId)} />
+          : <ListRow key={`routine:${row.id}`} category={row.category} title={row.label} meta={row.meta}
+            accessibilityLabel={`Hantera rutinen ${row.label}, nästa gång ${formatUpcomingDate(row.dateKey)}`}
+            disabled={managerBlocked} onPress={() => openManager(row.routineId)} />)}
+      </View> : null}
+      {upcomingHealthState === 'ready' && upcomingRoutineState === 'ready' && upcomingRows.length === 0 ? <View style={styles.empty}>
+        <SectionHeader title="Inga kommande aktiviteter" />
+        <Text style={styles.body}>Det finns inga framtida hälsohändelser eller upprepande rutiner för den här hunden.</Text>
+      </View> : null}
+    </View> : null}
+
     {activeTab === 'Alla' && state === 'ready' && templateEntries.length === 0 ? <View style={styles.empty}>
       <SectionHeader title={canWriteTemplates ? 'Inga rutinmallar än' : 'Inga mallar i senast bekräftade listan'} />
       <Text style={styles.body}>{canWriteTemplates ? 'Skapa en rutinmall för att kunna välja den för en dag.' : 'Uppdatera listan innan du gör ändringar.'}</Text>
@@ -320,13 +397,13 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initia
     </View> : null}
 
     {mutationMessage && !activities.some((item) => item.kind === 'routine' && item.routineDay && mutationKey === `complete-routine:${item.routineDay.id}:${item.routineItemId}`)
-      ? <View style={styles.stateMessage}><MessageCard tone={mutationError ? 'error' : 'neutral'}>{mutationBusy ? 'Ändringen kontrolleras…' : mutationMessage}</MessageCard>{mutationError && onRetryMutation ? <Button variant="tertiary" label="Kontrollera ändringen igen" accessibilityLabel="Kontrollera dagens ändring igen" disabled={activeTab === 'Alla' && (!canWriteTemplates || managerStaleLocked)} onPress={activeTab === 'Alla' ? guardedRetryMutation : onRetryMutation} /> : null}</View>
+      ? <View style={styles.stateMessage}><MessageCard tone={mutationError ? 'error' : 'neutral'}>{mutationBusy ? 'Ändringen kontrolleras…' : mutationMessage}</MessageCard>{mutationError && onRetryMutation ? <Button variant="tertiary" label="Kontrollera ändringen igen" accessibilityLabel="Kontrollera dagens ändring igen" disabled={(activeTab === 'Alla' || activeTab === 'Kommande') && (!canWriteTemplates || managerStaleLocked)} onPress={activeTab === 'Alla' || activeTab === 'Kommande' ? guardedRetryMutation : onRetryMutation} /> : null}</View>
       : null}
-    <DailyActivityManagerSheet key={`${scopeKey}:${focusRoutineId ?? 'all'}:${managerVisible}`} visible={managerVisible} dailyScopeKey={scopeKey}
+    <DailyActivityManagerSheet key={`${scopeKey}:${focusRoutineId ?? 'all'}`} visible={managerVisible} dailyScopeKey={scopeKey}
       onClose={() => { setManagerSession(null); setManagerSessionNeedsPreservation(false); setManagerStaleLocked(false); }} focusRoutineId={focusRoutineId} activities={activities} routines={routines} routineDaySkips={routineDaySkips}
       trainingOptions={trainingOptions} busy={mutationBusy} readOnly={managerReadOnly} onGuardAction={allowManagerMutation}
       onSessionNeedsPreservationChange={handleManagerSessionNeedsPreservation}
-      mutationMessage={mutationMessage} mutationError={mutationError} onRetryMutation={activeTab === 'Alla' ? guardedRetryMutation : onRetryMutation}
+      mutationMessage={mutationMessage} mutationError={mutationError} onRetryMutation={activeTab === 'Alla' || activeTab === 'Kommande' ? guardedRetryMutation : onRetryMutation}
       onCreateRoutine={managerCreateRoutine} onUpdateRoutine={managerUpdateRoutine} onDeleteRoutine={managerDeleteRoutine} onAddRoutineToDay={managerAddRoutine}
       onRemoveRoutineFromDay={managerRemoveRoutine} onAddTrainingToDay={managerAddTraining} onRemoveTrainingFromDay={managerRemoveTraining}
       onGoTraining={onGoTraining} />
@@ -386,6 +463,8 @@ function renderRoutineTemplate(entry: DailyRoutineTemplateEntry, actions: {
 const styles = StyleSheet.create({
   screen: { gap: tokens.spacing.md },
   scopeContext: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'center' },
+  upcomingView: { gap: tokens.spacing.md },
+  upcomingRows: { gap: tokens.spacing.xs },
   weekView: { gap: tokens.spacing.md },
   weekSelector: { flexDirection: 'row', justifyContent: 'space-between', gap: tokens.spacing.xs / 2 },
   weekDateButton: { flex: 1, minWidth: 0, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', gap: 2,

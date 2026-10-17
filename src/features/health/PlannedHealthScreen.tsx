@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
 import { AccessibilityInfo, Alert, findNodeHandle, Image, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DatePickerField, InfoModal, MessageCard, PageHeading, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
@@ -26,6 +26,8 @@ type LoadState = 'loading' | 'ready' | 'error';
 
 export function PlannedHealthScreen({
   onBack,
+  backLabel = 'Hälsa',
+  initialEditId,
   records,
   loadState,
   busy = false,
@@ -38,8 +40,12 @@ export function PlannedHealthScreen({
   onResolveConflict,
   onSave,
   onDelete,
+  registerEditorLeaveGuard,
 }: {
   onBack: () => void;
+  backLabel?: 'Hälsa' | 'Checklista';
+  initialEditId?: string | null;
+  registerEditorLeaveGuard?: (owner: symbol, requestLeave: (commit: () => void) => void) => () => void;
   records: readonly PlannedHealthRecord[];
   loadState: LoadState;
   busy?: boolean;
@@ -53,30 +59,71 @@ export function PlannedHealthScreen({
   onSave: (id: string | null, type: PlannedHealthType, dueOn: string, note: string, reminderEnabled: boolean, reminderMinutes: number | null, dueTime: string | null) => Promise<boolean>;
   onDelete: (id: string) => Promise<boolean>;
 }) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [type, setType] = useState<PlannedHealthType>('vaccination');
-  const [dueOn, setDueOn] = useState(localDate());
-  const [dueTime, setDueTime] = useState('');
-  const [note, setNote] = useState('');
-  const [reminderEnabled, setReminderEnabled] = useState(false);
-  const [reminderTime, setReminderTime] = useState('09:00');
+  const initialEditRecord = initialEditId && loadState === 'ready'
+    ? records.find((record) => record.id === initialEditId) ?? null
+    : null;
+  const [editingId, setEditingId] = useState<string | null>(() => initialEditRecord?.id ?? null);
+  const [editingBaseline, setEditingBaseline] = useState<PlannedHealthRecord | null>(() => initialEditRecord);
+  const [type, setType] = useState<PlannedHealthType>(() => initialEditRecord?.event_type ?? 'vaccination');
+  const [dueOn, setDueOn] = useState(() => initialEditRecord?.due_on ?? localDate());
+  const [dueTime, setDueTime] = useState(() => initialEditRecord?.due_time?.slice(0, 5) ?? '');
+  const [note, setNote] = useState(() => initialEditRecord?.description ?? '');
+  const [reminderEnabled, setReminderEnabled] = useState(() => initialEditRecord?.reminder_enabled ?? false);
+  const [reminderTime, setReminderTime] = useState(() => formatTime(initialEditRecord?.reminder_minutes ?? 9 * 60));
   const [formError, setFormError] = useState('');
   const [infoVisible, setInfoVisible] = useState(false);
   const [feedbackState, dispatchFeedback] = useReducer(reducePlannedHealthFeedback, EMPTY_PLANNED_HEALTH_FEEDBACK);
   const [feedbackTimeout, setFeedbackTimeout] = useState(2500);
   const [timedFeedbackMessage, setTimedFeedbackMessage] = useState<string | null>(null);
   const infoButtonRef = useRef<View>(null);
+  const editorOwnerToken = useRef(Symbol('planned-health-editor'));
+  const mounted = useRef(true);
+  const leaveAlertOpen = useRef(false);
+  const onBackRef = useRef(onBack);
+  const requestLeaveRef = useRef<(commit: () => void) => void>(() => undefined);
   const infoWasVisible = useRef(false);
   const previousStatusMessage = useRef<string | null>(initialPlannedHealthStatus(statusMessage));
   const today = localDate();
   const blocked = busy || pending;
   const editingRecord = records.find((record) => record.id === editingId) ?? null;
+  const draftIsDirty = Boolean(editingBaseline && (type !== editingBaseline.event_type
+    || dueOn !== editingBaseline.due_on
+    || dueTime !== (editingBaseline.due_time?.slice(0, 5) ?? '')
+    || note !== (editingBaseline.description ?? '')
+    || reminderEnabled !== editingBaseline.reminder_enabled
+    || reminderTime !== formatTime(editingBaseline.reminder_minutes ?? 9 * 60)));
   const recovery = selectPlannedHealthRecovery({ conflict: Boolean(conflict), pending, statusError, loadError: loadState === 'error' });
+
+  useLayoutEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+  useLayoutEffect(() => { onBackRef.current = onBack; }, [onBack]);
+  const requestLeave = useCallback((commit: () => void) => {
+    if (!mounted.current || blocked || leaveAlertOpen.current) return;
+    if (!draftIsDirty) { commit(); return; }
+    leaveAlertOpen.current = true;
+    const owner = editorOwnerToken.current;
+    Alert.alert('Osparade ändringar', 'Vill du lämna utan att spara?', [
+      { text: 'Stanna kvar', style: 'cancel', onPress: () => { leaveAlertOpen.current = false; } },
+      { text: 'Lämna utan att spara', style: 'destructive', onPress: () => {
+        if (!mounted.current || editorOwnerToken.current !== owner) return;
+        leaveAlertOpen.current = false;
+        commit();
+      } },
+    ], { cancelable: true, onDismiss: () => { if (mounted.current && editorOwnerToken.current === owner) leaveAlertOpen.current = false; } });
+  }, [blocked, draftIsDirty]);
+  useLayoutEffect(() => { requestLeaveRef.current = requestLeave; }, [requestLeave]);
+  useLayoutEffect(() => {
+    if (!editingRecord || !registerEditorLeaveGuard) return undefined;
+    return registerEditorLeaveGuard(editorOwnerToken.current, (commit) => requestLeaveRef.current(commit));
+  }, [editingRecord, registerEditorLeaveGuard]);
 
   useEffect(() => {
     if (editingId === null || editingRecord !== null) return;
     const timer = setTimeout(() => {
       setEditingId(null);
+      setEditingBaseline(null);
       setType('vaccination');
       setDueOn(localDate());
       setDueTime('');
@@ -134,7 +181,9 @@ export function PlannedHealthScreen({
   }, [feedbackState.activeMessage, infoVisible]);
 
   function resetForm() {
+    leaveAlertOpen.current = false;
     setEditingId(null);
+    setEditingBaseline(null);
     setType('vaccination');
     setDueOn(localDate());
     setDueTime('');
@@ -146,6 +195,7 @@ export function PlannedHealthScreen({
   }
 
   function edit(record: PlannedHealthRecord) {
+    setEditingBaseline(record);
     setEditingId(record.id);
     setType(record.event_type);
     setDueOn(record.due_on);
@@ -212,10 +262,10 @@ export function PlannedHealthScreen({
   }
 
   return <View>
-    <Pressable accessibilityRole="button" accessibilityLabel="Tillbaka till Hälsa" accessibilityState={{ disabled: busy }} disabled={busy}
-      onPress={onBack} style={({ pressed }) => [styles.backAction, pressed && !busy && styles.actionPressed]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={backLabel === 'Checklista' ? 'Checklista' : 'Tillbaka till Hälsa'} accessibilityState={{ disabled: blocked }} disabled={blocked}
+      onPress={() => requestLeaveRef.current(() => onBackRef.current())} style={({ pressed }) => [styles.backAction, pressed && !blocked && styles.actionPressed]}>
       <Ionicons name="chevron-back" size={tokens.size.iconMd} color={tokens.colors.textPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-      <Text style={styles.backLabel}>Hälsa</Text>
+      <Text style={styles.backLabel}>{backLabel}</Text>
     </Pressable>
     <PageHeading title="Planerade hälsohändelser" description="Egna planer för vaccinationer och veterinärbesök." />
     <View style={styles.heroCard}>

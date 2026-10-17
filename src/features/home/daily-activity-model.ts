@@ -1,5 +1,5 @@
 import type { PublishedTrainingProgram, PublishedTrainingStep } from '../../data/workspace-data';
-import type { DailyActivitySnapshot, DailyRoutine, DailyRoutineDay, DailyRoutineDaySkip, DailyTrainingSelection, WeeklyActivitySnapshot } from './daily-activity-data';
+import type { DailyActivitySnapshot, DailyRoutine, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineSchedule, DailyTrainingSelection, WeeklyActivitySnapshot } from './daily-activity-data';
 
 export type HomeDailyActivity = {
   id: string;
@@ -259,6 +259,24 @@ export function isRoutineDueOnDate(routine: Pick<DailyRoutine, 'repeat_unit' | '
     return monthsElapsed >= 0 && monthsElapsed % interval === 0 && day === Math.min(anchorDay, lastDay);
   }
   return false;
+}
+
+export function nextRoutineOccurrenceAfterDate(
+  routine: Pick<DailyRoutineSchedule, 'repeat_unit' | 'repeat_interval' | 'repeat_weekdays' | 'repeat_anchor_date'>,
+  afterDateKey: string,
+): string | null {
+  if (!isValidDateKey(afterDateKey) || !routine.repeat_unit || !Number.isInteger(routine.repeat_interval)
+    || !routine.repeat_interval || routine.repeat_interval < 1 || routine.repeat_interval > 30
+    || !routine.repeat_anchor_date || !isValidDateKey(routine.repeat_anchor_date)) return null;
+  const searchLimit = routine.repeat_unit === 'day' ? routine.repeat_interval + 1
+    : routine.repeat_unit === 'week' ? routine.repeat_interval * 7 + 7
+      : routine.repeat_interval * 31 + 31;
+  let candidate = addDaysToDateKey(afterDateKey, 1);
+  for (let offset = 0; candidate && offset < searchLimit; offset += 1) {
+    if (isRoutineDueOnDate(routine, candidate)) return candidate;
+    candidate = addDaysToDateKey(candidate, 1);
+  }
+  return null;
 }
 
 export function dailyRoutineRepeatSummary(routine: Pick<DailyRoutine, 'repeat_unit' | 'repeat_interval' | 'repeat_weekdays' | 'repeat_anchor_date'>): string {

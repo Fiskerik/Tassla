@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Crypto from 'expo-crypto';
 import { BottomSheet, Button } from '../../components/ui';
@@ -122,6 +122,10 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   const [savingDraft, setSavingDraft] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [showDiscardConfirmation, setShowDiscardConfirmation] = useState(false);
+  const [trainingHandoffPending, setTrainingHandoffPending] = useState(false);
+  const trainingHandoffPendingRef = useRef(false);
+  const trainingHandoffFallback = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onGoTrainingRef = useRef(onGoTraining);
   const leaveAction = useRef<(() => void) | null>(null);
   const selectedRoutines = new Map(activities.filter((item) => item.routineDay)
     .map((item) => [item.routineDay?.routine_id, item.routineDay as DailyRoutineDay]));
@@ -138,6 +142,34 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   useEffect(() => {
     onSessionNeedsPreservationChange?.(sessionNeedsPreservation);
   }, [onSessionNeedsPreservationChange, sessionNeedsPreservation]);
+
+  useEffect(() => {
+    onGoTrainingRef.current = onGoTraining;
+  }, [onGoTraining]);
+
+  const completeTrainingHandoff = useCallback(() => {
+    if (!trainingHandoffPendingRef.current) return;
+    trainingHandoffPendingRef.current = false;
+    if (trainingHandoffFallback.current !== null) clearTimeout(trainingHandoffFallback.current);
+    trainingHandoffFallback.current = null;
+    setTrainingHandoffPending(false);
+    onGoTrainingRef.current();
+  }, []);
+
+  useEffect(() => {
+    if (visible || !trainingHandoffPending || Platform.OS === 'ios') return;
+    trainingHandoffFallback.current = setTimeout(completeTrainingHandoff, 450);
+    return () => {
+      if (trainingHandoffFallback.current !== null) clearTimeout(trainingHandoffFallback.current);
+      trainingHandoffFallback.current = null;
+    };
+  }, [completeTrainingHandoff, trainingHandoffPending, visible]);
+
+  useEffect(() => () => {
+    if (trainingHandoffFallback.current !== null) clearTimeout(trainingHandoffFallback.current);
+    trainingHandoffFallback.current = null;
+    trainingHandoffPendingRef.current = false;
+  }, []);
 
   function allowMutation() {
     return !readOnly && (onGuardAction?.() ?? true);
@@ -214,12 +246,21 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   }
 
   function goToTraining() {
-    if (readOnly) return;
-    requestLeave(() => { onClose(); onGoTraining(); });
+    if (readOnly || trainingHandoffPendingRef.current) return;
+    requestLeave(() => {
+      trainingHandoffPendingRef.current = true;
+      setTrainingHandoffPending(true);
+      onClose();
+    });
+  }
+
+  function onSheetDismiss() {
+    completeTrainingHandoff();
   }
 
   return <BottomSheet visible={visible} title={focusedRoutine ? `Hantera ${focusedRoutine.label}` : 'Rutiner och aktiviteter'}
-    onRequestClose={closeSheet} onPrimaryAction={activeDraft && !readOnly ? undefined : closeSheet} primaryLabel={readOnly ? 'Stäng' : 'Klar'}>
+    onRequestClose={closeSheet} onPrimaryAction={activeDraft && !readOnly ? undefined : closeSheet} primaryLabel={readOnly ? 'Stäng' : 'Klar'}
+    onDismiss={onSheetDismiss}>
     {readOnly ? <View style={[styles.message, styles.readOnlyMessage]} accessibilityRole="alert" accessibilityLiveRegion="assertive">
       <Text style={styles.body}>Listan behöver uppdateras. Den här sessionen är skrivskyddad. Stäng eller kasta ändringarna och öppna rutinerna igen från den uppdaterade listan.</Text>
     </View> : null}
@@ -277,7 +318,7 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
         <Button variant="tertiary" label="Ta bort idag" accessibilityLabel={`Ta bort ${item.label} från idag`} disabled={selectionLocked}
           onPress={() => { if (item.trainingSelection && allowMutation()) onRemoveTrainingFromDay?.(item.trainingSelection); }} />
       </View>)}
-      {!readOnly ? <Button variant="tertiary" label="Öppna Träning" accessibilityLabel="Öppna Träning" disabled={unresolvedMutation || showDiscardConfirmation} onPress={goToTraining} /> : null}
+      {!readOnly ? <Button variant="tertiary" label="Öppna Träning" accessibilityLabel="Öppna Träning" disabled={unresolvedMutation || showDiscardConfirmation || trainingHandoffPending} onPress={goToTraining} /> : null}
     </View>
 
     <View style={styles.section}>
@@ -342,7 +383,7 @@ function RepeatRuleControls({ value, anchorDate, newAnchorDate, onChange, disabl
   const newAnchorWeekday = isValidDateKey(newAnchorDate) ? isoWeekdayForDateKey(newAnchorDate) : anchorWeekday;
   const selectedWeekdays = value.repeat_weekdays ?? (unit === 'week' ? [anchorWeekday] : []);
   const weekdayNames = ['Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag', 'Söndag'];
-  const weekdayShortNames = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön'];
+  const weekdayShortNames = ['Må', 'Ti', 'On', 'To', 'Fr', 'Lö', 'Sö'];
   function selectUnit(nextUnit: 'day' | 'week' | 'month') {
     const repeat_weekdays = nextUnit === 'week'
       ? unit === 'week' ? value.repeat_weekdays : [newAnchorWeekday]
@@ -482,7 +523,7 @@ function ActionButton({ icon, label, accessibilityLabel, disabled = false, onPre
     disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.actionButton, dayAction && styles.actionButtonDay,
       danger && styles.actionButtonDanger, quiet && styles.actionButtonQuiet, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
     <Ionicons name={icon} size={tokens.size.iconSm} color={danger ? tokens.colors.danger : tokens.colors.primary} accessibilityElementsHidden />
-    <Text style={[styles.actionButtonText, dayAction && styles.actionButtonDayText, danger && styles.actionButtonDangerText]}>{label}</Text>
+    <Text numberOfLines={quiet ? 1 : undefined} style={[styles.actionButtonText, dayAction && styles.actionButtonDayText, danger && styles.actionButtonDangerText]}>{label}</Text>
   </MotionPressable>;
 }
 
@@ -521,8 +562,8 @@ const styles = StyleSheet.create({
   routineGroup: { gap: tokens.spacing.xs, padding: tokens.spacing.md },
   routineGroupSeparator: { borderBottomWidth: tokens.size.stroke, borderBottomColor: tokens.colors.border },
   highlightedRoutineGroup: { backgroundColor: tokens.colors.home.canvas },
-  routineHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: tokens.spacing.xs },
-  routineName: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 },
+  routineHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', gap: tokens.spacing.xs },
+  routineName: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1, minWidth: 0 },
   routineNameInput: { flex: 1 },
   listHeading: { ...tokens.typography.caption, color: tokens.colors.textSecondary, fontWeight: '700', paddingTop: tokens.spacing.xs },
   itemRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border },
@@ -538,8 +579,8 @@ const styles = StyleSheet.create({
   repeatControls: { gap: tokens.spacing.xs },
   repeatChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
   weekdayPicker: { gap: tokens.spacing.xs, paddingTop: tokens.spacing.xs },
-  weekdayChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
-  weekdayButton: { flexBasis: '22%', flexGrow: 1, minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },
+  weekdayChoices: { flexDirection: 'row', flexWrap: 'nowrap', gap: 0 },
+  weekdayButton: { flex: 1, minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },
   choiceButton: { minHeight: tokens.size.touchMin, justifyContent: 'center', paddingHorizontal: tokens.spacing.sm, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },
   choiceButtonSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   choiceLabel: { ...tokens.typography.caption, color: tokens.colors.textSecondary, fontWeight: '600' },
