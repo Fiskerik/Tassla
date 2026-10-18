@@ -31,6 +31,7 @@ Avslutade paketnotiser har samlats här. Varje post bevarar ursprunglig status o
 | [UI-07](#ui-07) | 2026-10-10 | implementerad och pushad; QA PASS; oberoende code review PASS | `e50da50`, `3adf73d` |
 | [HOME-ROUTINE-CHECKLIST-01](#home-routine-checklist-01) | 2026-10-15 | lokal UI-slice klar; QA/Reviewer PASS; live DB/native ej verifierat | `fix: clarify routine deletion cascade` på `codex/ux-rethink-2026-10-15` |
 | [P04-CONTENT](#p04-content) | okänt | `published` i bundlen, medan onboarding-only-versionen förblir `draft` för att inte läcka till den vanliga åldersbaserade feeden | ej angivet |
+| [UI-TRAINING-OVERVIEW-01](#ui-training-overview-01) | 2026-10-19 | implementerad, lokalt verifierad och pushad; QA/Reviewer PASS; native/live-data ej verifierat | `b59169c` |
 
 ## APP-01-PHONE
 
@@ -545,3 +546,12 @@ Paketcommit: `7b9da840d2ca2ac8f5d5ed998d73495858c98eae`. Bascommit617fb67. Pusha
 2026-10-15: rutinhallens kompakta gruppering, samlade editläge, dagsval och Home-status är implementerade. QA hittade att helraderingsbekräftelsen påstod att dagskopior behålls fast migrationen cascade-raderar kopior och sparade överhoppningar. Texten korrigerades; endast den destruktiva knappen raderar och `Avbryt` bevarar rutinen. Oberoende QA och Reviewer PASS.
 
 I den isolerade källkopian passerade app-typecheck, edge-typecheck, full ESLint och Node-testsviten (492/492). Ingen databas-/migrationsåtgärd genomfördes. Native Alert-rendering, VoiceOver/Dynamic Type, live Supabase/RLS och migration är ej verifierade. Den fullständiga panel-4-resan med fungerande filter och kommande planer återstår som `FLOW-HOME-CHECKLIST-01`. Underlag: `docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md` och `docs/tasks/dev/rapport.md`. Checkpoint: committen `fix: clarify routine deletion cascade` på `codex/ux-rethink-2026-10-15`.
+
+
+## UI-TRAINING-OVERVIEW-01 — Träningsöversikt
+
+2026-10-19: Den uttryckligen begärda träningsredesignpatchen är implementerad på `codex/tassla-ui-ux-bundle-2026-10-18`. Nästa övning visas som primär handling och publicerade program listas efter progress/status. Programdetaljen visar klara, aktuell och kommande övningar. Befintlig version-/stegbunden progress, guarded completion, bekräftad save/error/retry, unmark/reset, källor och AI-etikett är bevarade.
+
+Oberoende QA och Reviewer PASS för avgränsad lokal omfattning. Riktade tester 13/13, `CI=1 pnpm check` 542/542, offentlig iOS JS-bundle (1446 moduler), `git diff --check`, kövalidering och commit-/push-hook PASS. Implementationscheckpoint: commit `b59169c`, pushad och verifierad på `origin/codex/tassla-ui-ux-bundle-2026-10-18`. Uppföljande commit innehåller endast slutlig kö-/arbetshistorik.
+
+Syntetisk RN Web-evidens och §14-bedömning: [verifiering](../design/evidence/ui-training-overview-2026-10-18/VERIFICATION.md). Live Supabase/RLS, verkligt publicerat innehåll, native tillgänglighet/enhetsbeteende och telefonprov är NOT TESTABLE. 140% webzoom radbryter befintlig `Kunskap`-etikett. Panel 6-avvikelsen är ägarbeställd och avgränsad; full rev02-visuell panelacceptans hävdas inte. Ingen Codemagic/TestFlight-build verifierades.

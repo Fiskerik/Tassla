@@ -844,4 +844,4 @@ Bifogad träningsredesignpatch är implementerad på `codex/tassla-ui-ux-bundle-
 
 Riktade tester 13/13, `CI=1 pnpm check` 542/542, offentlig iOS JS-bundle (1446 moduler), `git diff --check` och queue validation PASS. Renderad public/review-evidens och §14-bedömning: [VERIFICATION.md](../../design/evidence/ui-training-overview-2026-10-18/VERIFICATION.md). Live Supabase/RLS, verkligt publicerat innehåll, native tillgänglighet/enhetsbeteende och telefonprov är NOT TESTABLE. 140% webzoom radbryter befintlig `Kunskap`-etikett. Den ägarbeställda kompositionsavvikelsen från rev02-panel 6 är avgränsad; full panelacceptans hävdas inte.
 
-Commit och push återstår; slutlig commitreferens läggs i arbetshistoriken vid paketavslut. Ingen Codemagic/TestFlight-build påstås.
+Implementationscheckpoint `b59169c` är pushad till `origin/`codex/tassla-ui-ux-bundle-2026-10-18; slutlig releasehistorik finns i `docs/releases/HISTORY-2026.md`. Ingen Codemagic/TestFlight-build påstås.

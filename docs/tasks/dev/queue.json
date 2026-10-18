@@ -8030,7 +8030,7 @@
         "UI-ACTIONS-COMMON",
         "CONTENT-PUBLISH-LABEL-01"
       ],
-      "status": "review",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -8055,16 +8055,22 @@
           "to": "review",
           "actor": "qa",
           "evidence": "Independent QA PASS: scoped acceptance, public screenshots and program detail reviewed; 13 focused tests and full CI=1 pnpm check passed (542/542); public iOS JS bundle exported successfully; git diff --check and queue validation passed. Documented native/live-data non-testable limits and owner-approved Panel 6 composition deviation."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent QA PASS and final Reviewer PASS. Implementation checkpoint b59169c is committed and pushed to origin/codex/tassla-ui-ux-bundle-2026-10-18; release history, final report, review evidence, and queue checkpoint are complete. Local checks and pre-commit/pre-push hooks passed; native/live-data limits remain documented as NOT TESTABLE."
         }
       ],
-      "next_step": "Create the package checkpoint commit and push it to the current branch; then record the exact commit reference and close the queue item.",
+      "next_step": "Independent QA PASS and final Reviewer PASS. Implementation checkpoint b59169c is committed and pushed to origin/codex/tassla-ui-ux-bundle-2026-10-18; release history, final report, review evidence, and queue checkpoint are complete. Local checks and pre-commit/pre-push hooks passed; native/live-data limits remain documented as NOT TESTABLE.",
       "priority": "P1",
       "panels": [
         "Träning"
       ],
       "risk_class": "M",
-      "checkpoint": "Independent QA PASS and Reviewer PASS recorded; implementation and final documentation verified; package commit and push are the remaining closeout actions.",
-      "test_evidence": "Focused tests 13/13 PASS; CI=1 pnpm check PASS 542/542; public iOS JS bundle PASS (1446 modules); git diff --check PASS; queue validation PASS; public/review screenshots and §14 evidence reviewed. Native/live-data limits and owner-approved Panel 6 deviation documented."
+      "checkpoint": "Implementation checkpoint b59169c is pushed and verified on origin/codex/tassla-ui-ux-bundle-2026-10-18; release history and closeout records are updated.",
+      "test_evidence": "Focused tests 13/13 PASS; CI=1 pnpm check PASS 542/542; public iOS JS bundle PASS (1446 modules); git diff --check PASS; queue validation PASS; public/review screenshots and §14 evidence reviewed. Native/live-data limits and owner-approved Panel 6 deviation documented. Commit b59169c pushed; pre-push hook passed."
     }
   ]
 }
