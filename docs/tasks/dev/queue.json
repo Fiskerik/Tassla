@@ -7874,6 +7874,119 @@
       "risk_class": "M",
       "checkpoint": "Gemensam toast/datum/tid med ikonknappar och bevarad semantik",
       "test_evidence": "PASS: Architect APPROVE v2, UX Critic PROCEED v2, independent QA PASS (12/12), Reviewer PASS; CI check 521/521, public iOS JS export, inventory 121 files/0 parse errors/416 sites, diff and queue validation. Native/VoiceOver/visual NOT TESTABLE."
+    },
+    {
+      "id": "UI-MAIN-SWIPE-01",
+      "title": "Fånga svep mellan huvudflikar före vertikal scroll",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md: huvudnavigation och kompletta användarresor; docs/design-rules.md §6, §14–15",
+      "plan": "docs/tasks/dev/UI-MAIN-SWIPE-01.md v5; UX: docs/plans/UI-MAIN-SWIPE-01-ux-spec.md v5",
+      "write_paths": [
+        "src/components/AppPrimitives.tsx",
+        "src/components/ui/MainSwipeNavigation.tsx",
+        "src/components/ui/main-swipe-rules.ts",
+        "tests/main-swipe-rules.test.mjs",
+        "tests/main-swipe-navigation-policy.test.mjs",
+        "src/components/README.md",
+        "docs/tasks/dev/UI-MAIN-SWIPE-01.md",
+        "docs/plans/UI-MAIN-SWIPE-01-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/ui-main-swipe-2026-10-18/VERIFICATION.md"
+      ],
+      "acceptance": [
+        "Shared vertical AppScreen ScrollView enables directionalLockEnabled.",
+        "MainSwipeNavigation captures only clear horizontal movement in responder capture and move phases; vertical/diagonal motion is left to ScrollView, including releasing an already captured responder when motion ceases to be clearly horizontal.",
+        "Long swipe (48 React Native-layoutpunkter) or same-direction fast flick (min 24 React Native-layoutpunkter, vx ≥0.5 layoutpunkt/ms) maps to left/right; no movement, opposite velocity and vertical gestures do not change tab.",
+        "Disabled page and active HorizontalGestureRegion exclusion retain existing effect; caller order and no-wrap remain unchanged.",
+        "BottomSheet and sheet gesture implementation already in this branch remain unchanged."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/main-swipe-rules.test.mjs tests/main-swipe-navigation-policy.test.mjs",
+        "CI=1 pnpm check",
+        "TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false pnpm bundle:ios",
+        "git diff --check",
+        "PYTHONUTF8=1 python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-ACTIONS-COMMON",
+        "UI-SHEET-ACTIONS-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and UX Critic PROCEED for exact plan v3; reviews saved in docs/tasks/dev/UI-MAIN-SWIPE-01.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement exact approved v3 scope; BottomSheet chunks already present and protected."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete; targeted 8/8, pnpm check 529/529, iOS bundle, diff-check and queue validate pass. Render/native gesture limitations documented in verification evidence."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "QA BLOCK: unconditional responder termination refusal can prevent vertical ScrollView takeover after initially horizontal capture; saved in report and returned for plan correction."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Return QA-blocked v3 to planned with v4 correction plan: relinquish responder when continued motion no longer meets horizontal claim rule; add direct contract test."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and UX Critic PROCEED for exact correction plan v5; saved in task planreview."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Apply v5 responder handoff and direct source-level contract test only."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "QA block corrected under approved v5; targeted 8/8, pnpm check 529/529 and iOS bundle pass again; visual/native gaps documented."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS for local v5 acceptance; handoff condition and exact source test verified; visual/native gaps remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS for scoped local implementation; QA PASS v5; full checks and bundle pass. Visual/native behavior explicitly remains NOT TESTABLE."
+        }
+      ],
+      "next_step": "Commit and push the approved checkpoint on codex/tassla-ui-ux-bundle-2026-10-18; native and visual verification remains open under VISION-R02-GESTURES.",
+      "priority": "P1",
+      "panels": [
+        "Hem",
+        "Logg",
+        "Träning",
+        "Kunskap",
+        "Mer"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Horizontal gesture policy isolated and unit tested; actual native touch arbitration remains NOT TESTABLE.",
+      "test_evidence": "Architect APPROVE v5; UX Critic PROCEED; QA PASS v5; Reviewer PASS. Targeted 8/8, pnpm check 529/529, public iOS bundle, diff-check and queue validate PASS. Visual/native runtime NOT TESTABLE."
     }
   ]
 }

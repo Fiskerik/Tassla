@@ -17,7 +17,7 @@ export function AppScreen({ children, footer, scrollKey }: { children: ReactNode
     <SafeAreaView style={styles.safeArea} edges={hasFooter ? ['top', 'left', 'right'] : ['top', 'right', 'bottom', 'left']}>
       <View style={styles.screenLayout}>
         <KeyboardAvoidingView style={styles.keyboardLayout} behavior="padding">
-          <ScrollView ref={scroll} showsVerticalScrollIndicator={false} style={styles.scrollArea} contentContainerStyle={styles.page} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled">
+          <ScrollView ref={scroll} showsVerticalScrollIndicator={false} directionalLockEnabled style={styles.scrollArea} contentContainerStyle={styles.page} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled">
             {children}
           </ScrollView>
         </KeyboardAvoidingView>

@@ -101,3 +101,11 @@ BottomSheet kan dras ned via handtag/rubrik, med befintliga stängningsspärrar 
 ### UI-ACTIONS-COMMON — lokalt verifierat, 2026-10-18
 
 Gemensamma ikonåtgärder för bekräftad logg-undo, datum och tid enligt plan v2. Toastens alertmeddelande och undo-knapp är separata tillgänglighetselement; datumdialogen ryms för sju 44pt-dagceller vid 375pt. Architect APPROVE, UX Critic PROCEED. Oberoende QA PASS (12/12) och Reviewer PASS, utan blockerare. Riktade tester 12/12, `CI=1 pnpm check` 521/521, public iOS JS-export, inventory (121 filer/0 parsefel/416 actions), whitespace och queue validation PASS. Native/VoiceOver/visuell rendering NOT TESTABLE. [Paket och verifiering](../tasks/dev/UI-ACTIONS-COMMON.md), [evidens](../design/evidence/ui-actions-common-2026-10-18/VERIFICATION.md).
+
+### UI-MAIN-SWIPE-01 — lokal swipe-regelcheckpoint, 2026-10-18
+
+`MainSwipeNavigation` fångar nu tydliga horisontella rörelser tidigt, byter flik efter långdrag eller riktad snabbgest och lämnar en redan fångad gest när rörelsen upphör att vara tydligt horisontell. `AppScreen` aktiverar riktningslåsning. Inre horisontella regioner, knowledge-detail-gate, enabled-gate och befintlig huvudflikordning/no-wrap är bevarade. BottomSheet-delarna av den bifogade patchen var redan implementerade i nyare variant och ändrades inte.
+
+Arkitekt APPROVE och UX Critic PROCEED för slutlig plan v5. Första QA-körningen blockerade ovillkorlig respondervägran som kunde hindra lodrät scroll efter axelbyte; korrigering godkändes i plan v5. Efter fix: riktade tester 8/8, `pnpm check` 529/529 och offentlig iOS JS-bundle PASS. `git diff --check` och queue validation PASS. Oberoende QA PASS och Reviewer PASS för lokal kod-/källpolicy.
+
+Visuell jämförbar skärmbild kunde inte tas eftersom installerad Chromium misslyckade att starta på grund av Windows side-by-side-konfiguration. Faktisk native touchprioritet, lodrät scroll, inre kontroller och enhetssvep är EJ TESTBARA; `VISION-R02-GESTURES` förblir blockerad för dessa runtime-/visuella verifieringar. Detta checkpoint bevisar inte nativegestbeteende. Underlag: [plan](../tasks/dev/UI-MAIN-SWIPE-01.md), [verifiering](../design/evidence/ui-main-swipe-2026-10-18/VERIFICATION.md).

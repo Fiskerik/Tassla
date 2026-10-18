@@ -9,7 +9,7 @@
 - `DailyActivityItem` visar en kategori, beskrivning och två separata kontroller: valfri completion-toggle och detaljnavigation. Hem använder den bara för sin lokala syntetiska review-fixture; den skapar eller sparar ingen produktprogress.
 - `DestinationTile` visar destinationsikoner för Logg, Träning eller Kunskap och skickar navigation via sin callback. Kategoriernas aktivitetsikoner används inte som genvägsikoner.
 - `ComponentGalleryScreen` visar svenska exempel och tillstånd, inklusive de två nya hemkomponenterna. Den nås endast från den redan flaggade `DevelopmentPreview`; ingen produktionsroute används.
-- `MainSwipeNavigation` ger ett dependencyfritt horisontellt svepresponderlager för produktens sex MVP-ytor. Den aktiveras bara av arbetsytan, använder stora touchmål som tröskel och äger ingen sidstate.
+- `MainSwipeNavigation` ger ett dependencyfritt svepresponderlager för de fem huvudflikarna. Den fångar tydligt vågräta rörelser tidigt, lämnar lodrät scroll till sidans `ScrollView` och respekterar exkluderingar från inre horisontella kontroller. En ren regelmodul hanterar fångst- och flikbyteströsklar; komponenten äger ingen sidstate. Riktade regler och källkontrakt testas med `node --experimental-strip-types --test tests/main-swipe-rules.test.mjs tests/main-swipe-navigation-policy.test.mjs`.
 - Komponentprops går direkt från den sammansättande vyn till nativekontrollerna. Biblioteket lagrar inte data.
 
 ## Setup och verifiering
