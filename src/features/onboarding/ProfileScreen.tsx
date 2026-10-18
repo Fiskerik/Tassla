@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AppScreen, FormField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
-import { createDog, fetchBreeds, fetchOwnedDogAttribution, fetchOwnedDogById, type BreedOption, type OwnedDog } from '../../data/app-data';
+import { createDog, fetchBreeds, fetchOwnedDogById, ownedDogAttributionMatches, type BreedOption, type OwnedDog } from '../../data/app-data';
 import { clearSecurePendingReferral, normalizeKennelCode, readSecurePendingReferral } from '../../onboarding-referral/referral-secure-storage';
 import { clearDogCreationRequest, getOrCreateDogCreationRequestId, readDogCreationRequestId } from './dog-creation-storage';
 import { tokens } from '../../theme/tokens';
@@ -25,10 +25,11 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   const [breedId, setBreedId] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [busy, setBusy] = useState(false);
-  const [saveState, setSaveState] = useState<'idle' | 'error' | 'unknown' | 'invalidCode' | 'existingProfile' | 'recoveryUnavailable' | 'cleanupError'>('idle');
+  const [saveState, setSaveState] = useState<'idle' | 'error' | 'unknown' | 'invalidCode' | 'existingProfile' | 'sourceUnconfirmed' | 'recoveryUnavailable' | 'cleanupError'>('idle');
   const [resolvedDog, setResolvedDog] = useState<OwnedDog | null>(null);
   const [resolvedRequestId, setResolvedRequestId] = useState<string | null>(null);
   const [resolvedShouldClearReferral, setResolvedShouldClearReferral] = useState(true);
+  const [sourceCheckProblem, setSourceCheckProblem] = useState<'mismatch' | 'unavailable' | 'recovery' | null>(null);
   const [kennelCode, setKennelCode] = useState('');
   const [sourceSelected, setSourceSelected] = useState(false);
   const operationInFlight = useRef(false);
@@ -93,8 +94,11 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
     try {
       if (!isCurrentAccount(ownerId, accountGeneration)) return;
       let requestId: string;
+      let isRecovery = false;
       try {
-        requestId = await getOrCreateDogCreationRequestId(ownerId);
+        const storedRequestId = await readDogCreationRequestId(ownerId);
+        isRecovery = storedRequestId !== null;
+        requestId = storedRequestId ?? await getOrCreateDogCreationRequestId(ownerId);
       } catch {
         if (isCurrentAccount(ownerId, accountGeneration)) setSaveState('recoveryUnavailable');
         return;
@@ -120,16 +124,28 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
         setSaveState('existingProfile');
         return;
       }
-      let savedAttribution;
-      try { savedAttribution = await fetchOwnedDogAttribution(client, dog.id); } catch { savedAttribution = undefined; }
+      let sourceProblem: typeof sourceCheckProblem = null;
+      if (referralCode !== null) {
+        try {
+          if (referralCode !== null && !await ownedDogAttributionMatches(client, dog.id, referralCode)) {
+            sourceProblem = 'mismatch';
+          }
+        } catch {
+          sourceProblem = 'unavailable';
+        }
+      } else if (isRecovery) {
+        sourceProblem = 'recovery';
+      }
       if (!isCurrentAccount(ownerId, accountGeneration)) return;
-      if (savedAttribution === undefined || (savedAttribution?.code ?? null) !== referralCode) {
+      if (sourceProblem !== null) {
         setResolvedDog(dog);
         setResolvedRequestId(requestId);
-        setResolvedShouldClearReferral(false);
-        setSaveState('existingProfile');
+        setResolvedShouldClearReferral(true);
+        setSourceCheckProblem(sourceProblem);
+        setSaveState('sourceUnconfirmed');
         return;
       }
+      setSourceCheckProblem(null);
       await finalizeCreatedDog(dog, requestId);
     } finally {
       operationInFlight.current = false;
@@ -169,7 +185,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   }
 
   function markEdited() {
-    setSaveState((current) => current === 'unknown' ? 'unknown' : 'idle');
+    setSaveState((current) => current === 'unknown' || current === 'sourceUnconfirmed' ? current : 'idle');
   }
 
   const canSubmit = name.trim().length > 0 && name.trim().length <= 80 && Boolean(breedId)
@@ -235,24 +251,32 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
           autoCapitalize="characters"
           autoComplete="off"
           label="Kennelkod"
-          onChangeText={(value) => { setKennelCode(value); setSaveState('idle'); }}
+          onChangeText={(value) => { setKennelCode(value); markEdited(); }}
           onSubmitEditing={() => Keyboard.dismiss()}
           placeholder="Skriv koden från kennelns QR"
           returnKeyType="done"
           value={kennelCode}
         />
         <Text style={styles.sourceInfo}>Koden kopplar kennelkälla till din Tassla-profil för uppföljning. Kenneln får inte se dina uppgifter.</Text>
-        <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: sourceSelected, disabled: busy || !normalizeKennelCode(kennelCode) }} disabled={busy || !normalizeKennelCode(kennelCode)} onPress={() => { setSourceSelected((value) => !value); setSaveState('idle'); }} style={styles.sourceChoice}>
+        <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: sourceSelected, disabled: busy || !normalizeKennelCode(kennelCode) }} disabled={busy || !normalizeKennelCode(kennelCode)} onPress={() => { setSourceSelected((value) => !value); markEdited(); }} style={styles.sourceChoice}>
           <View style={[styles.checkbox, sourceSelected && styles.checkboxSelected]}>{sourceSelected && <Text style={styles.checkboxMark}>✓</Text>}</View>
           <Text style={styles.sourceChoiceText}>Jag vill koppla koden till min profil</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" disabled={busy} onPress={() => { setKennelCode(''); setSourceSelected(false); setSaveState('idle'); void clearSecurePendingReferral().catch(() => undefined); }} style={styles.removeCode}>
+        <Pressable accessibilityRole="button" disabled={busy} onPress={() => { setKennelCode(''); setSourceSelected(false); markEdited(); void clearSecurePendingReferral().catch(() => undefined); }} style={styles.removeCode}>
           <Text style={styles.removeCodeText}>Ta bort kennelkälla</Text>
         </Pressable>
       </View>
       {sourceSelected && !normalizeKennelCode(kennelCode) && <MessageCard tone="error">Skriv en giltig kennelkod eller ta bort kennelkälla.</MessageCard>}
       {saveState === 'invalidCode' && <MessageCard tone="error">Koden känns inte igen eller är inte aktiv. Rätta den eller ta bort kennelkälla och fortsätt utan.</MessageCard>}
       {saveState === 'existingProfile' && <MessageCard tone="neutral">En tidigare begäran skapade redan {resolvedDog?.name ?? 'en hundprofil'}. Välj om du vill öppna den eller uttryckligen börja med en annan hund.</MessageCard>}
+      {saveState === 'sourceUnconfirmed' && <MessageCard tone="neutral">
+        {sourceCheckProblem === 'mismatch'
+          ? 'Hundprofilen är sparad, men den valda koden matchar inte en bekräftad kennelkoppling.'
+          : sourceCheckProblem === 'unavailable'
+            ? 'Hundprofilen är sparad, men vi kunde inte kontrollera om en valfri kennelkälla kopplades.'
+            : 'Vi kan inte bekräfta om en valfri kennelkälla kopplades vid det tidigare försöket.'}
+        {' '}För kontroll igen, använd samma hunduppgifter och välj koden om du vill kontrollera en viss kennelkoppling.
+      </MessageCard>}
       {saveState === 'error' && <MessageCard tone="error">Profilen kunde inte sparas. Kontrollera uppgifterna och anslutningen innan du försöker igen.</MessageCard>}
       {saveState === 'unknown' && <MessageCard tone="neutral">Vi kunde inte bekräfta sparandet. Din säkra begäran finns kvar. Fyll i samma uppgifter och försök igen så kontrollerar vi just den hunden.</MessageCard>}
       {saveState === 'recoveryUnavailable' && <MessageCard tone="error">Vi kan inte läsa eller spara den säkra återställningen just nu. Ingen ny hundregistrering skickades.</MessageCard>}
@@ -261,6 +285,10 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
         <PrimaryButton title={busy ? 'Öppnar…' : `Öppna ${resolvedDog?.name ?? 'hundprofilen'}`} disabled={busy || !resolvedDog} onPress={() => { void openResolvedDog(); }} />
         <QuietButton title={busy ? 'Vänta…' : 'Starta en ny hundprofil'} disabled={busy || !resolvedDog} onPress={() => { void startAnotherDog(); }} />
       </> : saveState === 'cleanupError' ? <PrimaryButton title={busy ? 'Kontrollerar…' : `Fortsätt till ${resolvedDog?.name ?? 'hunden'}`} disabled={busy || !resolvedDog} onPress={() => { void openResolvedDog(); }} />
+        : saveState === 'sourceUnconfirmed' ? <>
+          <PrimaryButton title={busy ? 'Kontrollerar…' : 'Kontrollera igen med samma begäran'} disabled={!canSubmit || busy || breedsState !== 'ready'} onPress={() => { void createAndConfirm(); }} />
+          <QuietButton title={busy ? 'Vänta…' : `Öppna ${resolvedDog?.name ?? 'hunden'} utan bekräftad kennelkoppling`} disabled={busy || !resolvedDog || !resolvedRequestId} onPress={() => { void openResolvedDog(); }} />
+        </>
         : saveState === 'unknown' ? <PrimaryButton title={busy ? 'Kontrollerar…' : 'Försök igen med samma begäran'} disabled={!canSubmit || busy || breedsState !== 'ready'} onPress={() => { void createAndConfirm(); }} />
           : <PrimaryButton title={busy ? 'Sparar…' : saveState === 'recoveryUnavailable' ? 'Försök igen' : mode === 'add' ? 'Lägg till hund' : 'Fortsätt'} disabled={!canSubmit || busy || breedsState !== 'ready'} onPress={() => { void createAndConfirm(); }} />}
       {mode === 'add' && onCancel ? <QuietButton title="Avbryt" disabled={busy} onPress={onCancel} /> : null}

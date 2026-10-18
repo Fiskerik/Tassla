@@ -1,6 +1,6 @@
 # MULTI-DOG-01 — Hundprofiler och hundstyrt innehåll
 
-Planversion 5 · status: ny review krävs · 2026-10-18
+Planversion 6 · Slice B godkänd; kod i review i väntan på runtime-/visuell evidens · 2026-10-18
 
 ## Mål och källor
 
@@ -77,6 +77,7 @@ Mål: samma hundbyte och säkra tillägg ska gå att göra via Inställningar �
 Beroende: MULTI-DOG-HOME-01 klar och checkpointad; återanvänd samma AppFlow state och idempotent add-flow.
 
 Filer:
+- src/features/home/AppFlow.tsx
 - src/features/home/ProductWorkspace.tsx
 - src/features/onboarding/EditDogProfileScreen.tsx
 - src/features/more/MoreScreen.tsx
@@ -93,6 +94,7 @@ Acceptans:
 4. Unknown state kan återupptas utan dubbelcreate; användaren ser nästa tydliga handling.
 5. Tillgänglighetsnamn, touchytor, loading/fel och visuell komposition följer design-reglernas §14.
 6. Avbryt från add-formen återgår till Hundprofil-listan med tidigare aktiv hund markerad.
+7. Bekräftat add från Hundprofil återvänder till Hundprofil med den nya hunden aktiv; AppFlow återställer rätt route efter skapelse eller avbryt.
 
 Icke-testkontroller: typecheck, lint, git diff --check och kövalidering. Screenshot/native/RLS-bevis rapporteras skilt och NOT TESTABLE om saknas.
 

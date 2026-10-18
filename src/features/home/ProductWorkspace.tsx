@@ -147,7 +147,7 @@ const WORKSPACE_REFRESH_AFTER_MS = 60_000;
 type TrainingWorkspaceSnapshot = Awaited<ReturnType<typeof fetchTrainingWorkspace>>;
 type WorkspaceResourceFlight<T> = { scope: string; generation: number; controller: AbortController; promise: Promise<T> };
 
-export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog], onSelectDog, onAddDog, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened }: {
+export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog], onSelectDog, onAddDog, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened, initialPage = 'home', onInitialPageOpened }: {
   client: SupabaseClient;
   dog: OwnedDog;
   onDogUpdated?: (updated: OwnedDog) => void;
@@ -156,9 +156,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   onAddDog?: (entryPoint: 'home' | 'settings') => void;
   openDogSwitcherInitially?: boolean;
   onDogSwitcherInitiallyOpened?: () => void;
+  initialPage?: 'home' | 'profile';
+  onInitialPageOpened?: () => void;
 }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
-  const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>({ page: 'home', previousPage: 'home' });
+  const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>(() => ({ page: initialPage, previousPage: 'home' }));
+  const initialPageConsumed = useRef(false);
+  useEffect(() => {
+    if (initialPage === 'profile' && !initialPageConsumed.current) {
+      initialPageConsumed.current = true;
+      onInitialPageOpened?.();
+    }
+  }, [initialPage, onInitialPageOpened]);
   const { page, previousPage } = navigation;
   const setPage = useCallback((nextPage: ProductPage) => {
     setNavigation((current) => current.page === nextPage
@@ -2504,6 +2513,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (onDogUpdated) return <EditDogProfileScreen key={`${dog.id}:${dog.name}:${dog.breed_id}:${dog.birth_date}:${dog.age_display_unit}`}
       client={client} dog={dog} busy={profileBusy} pending={profilePending} statusMessage={profileMessage}
       statusError={profileMessageError} conflict={profileConflict ?? undefined}
+      ownedDogs={ownedDogs} activeDogId={dog.id} onSelectDog={onSelectDog}
+      onAddDog={() => onAddDog?.('settings')}
       attribution={dogAttribution} attributionState={attributionState} attributionBusy={attributionBusy}
       attributionMessage={attributionMessage} attributionMessageError={attributionMessageError}
       onBack={() => setPage('more')} onSave={saveDogProfile}

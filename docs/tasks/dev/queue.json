@@ -7366,7 +7366,7 @@
         "python tools/dev_flow.py validate"
       ],
       "depends_on": [],
-      "status": "review",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -7391,9 +7391,15 @@
           "to": "review",
           "actor": "qa",
           "evidence": "Independent static QA PASS: active-dog context, stale-response guards, add/retry/readback, and owner-scoped cleanup reviewed; no source blocker. pnpm typecheck, pnpm lint, git diff --check, and queue validation PASS. End-to-end flow, published 12y/1y article variation, applied Supabase/RLS, native SecureStore, and §14 screenshots remain NOT TESTABLE; slice awaits required evidence and cannot be marked done."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Static QA, Reviewer, Architect and Security PASS; commit caa3d3a pushed on codex/age-content-multi-dog. Erik explicitly instructed to checkpoint/push and continue to the remaining plan while §14 screenshots, Supabase/RLS runtime and visible 12y/1y published-content variation remain NOT TESTABLE. This closes Slice A implementation checkpoint only; no runtime or visual PASS is claimed."
         }
       ],
-      "next_step": "Independent static QA PASS: active-dog context, stale-response guards, add/retry/readback, and owner-scoped cleanup reviewed; no source blocker. pnpm typecheck, pnpm lint, git diff --check, and queue validation PASS. End-to-end flow, published 12y/1y article variation, applied Supabase/RLS, native SecureStore, and §14 screenshots remain NOT TESTABLE; slice awaits required evidence and cannot be marked done.",
+      "next_step": "Static QA, Reviewer, Architect and Security PASS; commit caa3d3a pushed on codex/age-content-multi-dog. Erik explicitly instructed to checkpoint/push and continue to the remaining plan while §14 screenshots, Supabase/RLS runtime and visible 12y/1y published-content variation remain NOT TESTABLE. This closes Slice A implementation checkpoint only; no runtime or visual PASS is claimed.",
       "priority": "P1",
       "panels": [
         "1",
@@ -7414,8 +7420,9 @@
       "id": "MULTI-DOG-PROFILE-01",
       "title": "Hundbyte och hundläggning i Inställningar → Hundprofil",
       "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md; docs/mvp.md: rev02 profil och konto",
-      "plan": "docs/tasks/dev/MULTI-DOG-01.md v5, Slice B",
+      "plan": "docs/tasks/dev/MULTI-DOG-01.md v6, Slice B",
       "write_paths": [
+        "src/features/home/AppFlow.tsx",
         "src/features/home/ProductWorkspace.tsx",
         "src/features/onboarding/EditDogProfileScreen.tsx",
         "src/features/more/MoreScreen.tsx",
@@ -7431,7 +7438,8 @@
         "Lägg till hund återanvänder Slice A:s idempotenta RPC och readback; root-listan uppdateras efter bekräftelse",
         "Unknown state kan kontrolleras och återupptas utan ny request-id eller falsk framgång",
         "Profilvyn håller tillgänglighet, loading/error states och §14-komposition",
-        "Avbryt från add-form återgår till hundlistan med tidigare aktiva hund markerad"
+        "Avbryt från add-form återgår till hundlistan med tidigare aktiva hund markerad",
+        "Bekräftat add från Hundprofil återvänder till Hundprofil med den nya hunden aktiv"
       ],
       "checks": [
         "pnpm typecheck",
@@ -7442,9 +7450,64 @@
       "depends_on": [
         "MULTI-DOG-HOME-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Börja först efter MULTI-DOG-HOME-01 QA/review/checkpoint; använd plan v5 efter erforderliga granskningar.",
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v5 Slice B, Critic PROCEED, Security APPROVE v5 were recorded before implementation. Slice A commit caa3d3a is pushed and Erik explicitly authorized continuing after this checkpoint. Slice A screenshot/runtime gaps remain documented as NOT TESTABLE; Slice B reuses the already reviewed AppFlow and idempotent creation contract."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin Slice B only: add dog list/switch/add controls to Settings → Hundprofil using the active dog list, callbacks, and already-reviewed idempotent ProfileScreen/AppFlow flow. Do not alter schema or RPC. Preserve separate NOT TESTABLE evidence for Slice A and B."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Before code: plan v5 write_paths omitted AppFlow.tsx, required to preserve the Settings → Hundprofil return route after add/cancel. Replan this same scoped slice as v6; no Slice B product code changed."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Coordinator replans only Slice B's write paths and settings-route return behavior as plan v6; existing v5 goal and user authorization unchanged. No product code changed before renewed approval."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v6; Critic PROCEED v6; Security APPROVE v6. Reviews cover AppFlow route restoration; Slice A checkpoint caa3d3a pushed; Slice A visual/runtime evidence gaps remain NOT TESTABLE."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement Slice B v6 per approved scope. Reuse the root-owned confirmed dog list and idempotent add/readback flow; no schema or RPC changes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "pnpm typecheck PASS; pnpm lint PASS; git diff --check PASS; queue validation PASS. Static checks only; functional app, Supabase/RLS, native and §14 screenshots remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent Reviewer PASS (static diff review). Checked dog-list scope, age/active labels, AppFlow selection guard, settings add/cancel route restoration, secure existing create/readback reuse, stale-account guard and unsaved-edit protection. Functional/device/Supabase/§14 evidence remains NOT TESTABLE; keep review open."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Static QA and Reviewer PASS are recorded, but app/native/Supabase and required §14 screenshots remain NOT TESTABLE; no remaining local implementation step can supply that evidence. Park Slice B pending device/runtime evidence; its uncommitted changes remain untouched."
+        }
+      ],
+      "next_step": "Efter grönt Codemagic-bygge: testa i appen Hundprofil i Inställningar, byte mellan två hundar, tillägg, avbryt, dirty-state-skydd och hundspecifika artiklar. Fånga §14-skärmbilder och rapportera eventuella fel innan Slice B stängs.",
       "priority": "P1",
       "panels": [
         "1"
@@ -7456,8 +7519,113 @@
         "§14-skärmbilder public/review, 375×844, 430×844, 375×667 och 140% text sparas i docs/design/evidence/multi-dog-2026-10-18/; saknad native/skärmbildsevidens är NOT TESTABLE och hindrar done",
         "Ingen ny SQL eller policy; bygger på granskad Slice A"
       ],
-      "implementation_state": "planerad; ingen produktkod ändrad",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "implementation_state": "Slice B implementerad; pnpm check 492/492 och statisk Reviewer PASS; kodcheckpoint pushas enligt Eriks besked och väntar på live app-/Supabase-/RLS-/visuell evidens.",
+      "evidence_status": "partial: typecheck/lint/diff/queue validation och statisk Reviewer PASS; riktig app/Supabase/RLS, native tillgänglighet och §14-skärmbilder återstår för Eriks manuella verifiering."
+    },
+    {
+      "id": "BUILD-CHECK-03",
+      "title": "Codemagic check: villkorad verifiering av kennelkälla",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md; kennelkälla är frivillig och sparas bara efter uttryckligt val",
+      "plan": "docs/tasks/dev/BUILD-CHECK-03.md v5",
+      "write_paths": [
+        "src/features/onboarding/ProfileScreen.tsx",
+        "tests/app-data.test.mjs",
+        "tests/profile-edit.test.mjs",
+        "tests/home-vision.test.mjs",
+        "docs/tasks/dev/BUILD-CHECK-03.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Ny profil utan vald kennelkälla hoppar över attribution-RPC men verifierar exakt hund-ID och profilfält",
+        "Befintligt SecureStore request-ID behandlas alltid som recovery; utan aktivt källval kan det inte tyst slutföras",
+        "Vald kennelkälla verifieras mot samma återlästa hund; false/RPC-fel behåller request-ID tills retry eller uttryckligt öppna-utan-bekräftelse-val",
+        "Profil-ID/fält mismatch ger inte falsk framgång; uttryckligt öppna-val rensar request-ID så nästa tillägg får en ny nyckel",
+        "Gamla createDog-assertions uppdateras till den idempotenta RPC:n och request-ID:t utan minskad täckning",
+        "Home-portraitassertion kontrollerar byt-hund-knappens tillgänglighetsnamn och generiska porträttbild",
+        "Policytester för kennelkälla behålls; pnpm check passerar och Codemagics Check application använder samma pnpm check utan configändring"
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "MULTI-DOG-HOME-01"
+      ],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE, Critic PROCEED, Security APPROVE plan v3; stored request ID is recovery and explicit proceed lifecycle is defined in docs/tasks/dev/BUILD-CHECK-03.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement approved plan v3 in ProfileScreen.tsx only; preserve tests, same request-ID recovery and explicit proceed behavior."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "The supplied Codemagic log and local pnpm check reveal three additional failing assertions beyond the planned kennel policy assertion: two still expect the retired create_dog RPC signature and one expects the former portrait accessibility text contract. Plan v3 scope must expand to update these stale assertions without weakening coverage; no code changes beyond the already-approved v3 ProfileScreen change."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v5 incorporates v4 Architect APPROVE, Critic PROCEED, Security APPROVE and their copy clarification; exact scope and behavior are now reviewed."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect approval v4 reaffirmed for v5; Critic PROCEED confirmed for v5; Security approval v4 remains valid for v5. Implement exact v5 scope."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement plan v5: correct only stale createDog RPC and Home portrait assertions; keep optional kennel policy assertion unchanged."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementationen och lokala gates verifierade: CI=1 pnpm check PASS (492 tester), Expo iOS export PASS, release/content guards PASS och git diff --check PASS. Oberoende QA kontrollerade v5-scope och policytestet. Codemagic-cloud, Xcode-archive, CocoaPods/signering och native iOS är NOT TESTABLE på Windows; nästa steg efter review är verklig Codemagic-körning innan commit/push."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende QA PASS: diffen håller v5-scope, ingen policytesttäckning togs bort; lokala pnpm check 492/492, Expo iOS export och content/release guards PASS. Codemagic-cloud och native iOS-stadier kvarstår NOT TESTABLE och måste köras efter review före commit/push."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Statisk Reviewer PASS. BUILD-CHECK-03:s fyra Check application-fel är rättade; pnpm check 492/492, Expo iOS export, content/release guards och diff-check PASS. Bifogad logg innehåller ingen senare byggfas. Codemagic Mac/Xcode/CocoaPods/signering är NOT TESTABLE här, så uppgiften parkeras före extern helbyggnad. Kör Codemagic på kandidaten och fortsätt först efter grönt resultat; ingen commit/push gjord."
+        }
+      ],
+      "next_step": "Lokala icke-Mac-gates är gröna och Erik har godkänt commit/push utan att invänta Codemagic. Om den kommande Codemagic-körningen visar ett fel, åtgärda det med den bifogade steploggen före nästa push.",
+      "priority": "P1",
+      "panels": [
+        "1"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Codemagic Check application går igenom; frivillig kennelkälla kontrolleras endast vid aktivt val.",
+      "test_evidence": [
+        "Befintligt profile-screen-policy-test oförändrat och pnpm check lokalt grön",
+        "Verifiera ny request utan kod, vald kod match, false och RPC-fel",
+        "Verifiera sparat request-ID efter remount med och utan kodval, exakt profil-readback, samma-ID retry och uttryckligt öppna utan bekräftelse följt av ett nytt hundtillägg",
+        "Verifiera uppdaterade createDog RPC-assertions och Home-portraitens tillgänglighetskontrakt utan att ta bort coverage",
+        "Codemagic cloud/Xcode/native build verifieras separat; lokal check får inte hävdas som det beviset"
+      ],
+      "implementation_state": "Plan v5 implementerad; Codemagic Check application-felen rättade; oberoende QA och statisk Reviewer PASS.",
+      "evidence_status": "partial: CI=1 pnpm check PASS (492/492), Expo iOS export PASS, guards/diff-check PASS, QA PASS, Reviewer PASS; Codemagic cloud, Xcode archive, CocoaPods/signing/native NOT TESTABLE."
     }
   ]
 }

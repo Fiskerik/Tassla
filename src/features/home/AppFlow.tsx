@@ -54,6 +54,7 @@ function DogWorkspace({ client, ownerId, accountGeneration, isCurrentAccount }: 
   const [addingDog, setAddingDog] = useState(false);
   const [addEntryPoint, setAddEntryPoint] = useState<'home' | 'settings'>('home');
   const [openDogSwitcherOnReturn, setOpenDogSwitcherOnReturn] = useState(false);
+  const [openDogProfileOnReturn, setOpenDogProfileOnReturn] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -76,6 +77,7 @@ function DogWorkspace({ client, ownerId, accountGeneration, isCurrentAccount }: 
     setActiveDogId(created.id);
     setAddingDog(false);
     setOpenDogSwitcherOnReturn(false);
+    setOpenDogProfileOnReturn(addEntryPoint === 'settings');
     setState('ready');
     void fetchOwnedDogs(client).then((loadedDogs) => {
       if (isCurrentAccount(ownerId, accountGeneration)) setDogs(loadedDogs);
@@ -90,6 +92,7 @@ function DogWorkspace({ client, ownerId, accountGeneration, isCurrentAccount }: 
   async function cancelAddingDog() {
     setAddingDog(false);
     setOpenDogSwitcherOnReturn(addEntryPoint === 'home');
+    setOpenDogProfileOnReturn(addEntryPoint === 'settings');
     setState('loading');
     try {
       const loadedDogs = await fetchOwnedDogs(client);
@@ -125,6 +128,8 @@ function DogWorkspace({ client, ownerId, accountGeneration, isCurrentAccount }: 
     onSelectDog={(dogId) => { if (dogs.some((dog) => dog.id === dogId)) setActiveDogId(dogId); }}
     onAddDog={startAddingDog} openDogSwitcherInitially={openDogSwitcherOnReturn}
     onDogSwitcherInitiallyOpened={() => setOpenDogSwitcherOnReturn(false)}
+    initialPage={openDogProfileOnReturn ? 'profile' : 'home'}
+    onInitialPageOpened={() => setOpenDogProfileOnReturn(false)}
   />;
   return <AppScreen><MessageCard>Öppnar hundens plats…</MessageCard></AppScreen>;
 }

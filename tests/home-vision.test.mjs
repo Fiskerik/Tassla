@@ -29,10 +29,13 @@ test('Home follows the rev02 content order without duplicate Today groups', () =
   assert.match(gallery, /<DestinationTile destination="knowledge"/);
 });
 
-test('public and review Home share a generic portrait without attaching the dog identity', () => {
+test('public and review Home share a generic portrait and expose the dog switcher action', () => {
   assert.match(home, /source=\{require\('\.\.\/\.\.\/\.\.\/assets\/images\/home-dog-portrait-placeholder\.png'\)\}/);
   assert.doesNotMatch(home, /review-puppy-portrait|dog-mascot\.png/);
-  assert.match(home, /accessibilityRole="text" accessibilityLabel="Standardbild"/);
+  assert.match(home, /accessibilityRole="button" accessibilityLabel=\{`Byt hund\. \$\{dog\.name\} är vald`\}/);
+  assert.match(home, /accessibilityHint="Visar dina hundprofiler och möjligheten att lägga till en hund"/);
+  assert.match(home, /<Image source=\{require\('\.\.\/\.\.\/\.\.\/assets\/images\/home-dog-portrait-placeholder\.png'\)\}[\s\S]*?accessible=\{false\}/);
+  assert.match(home, /<Text accessible=\{false\} testID="home-portrait-standard-label"[^>]*>Standardbild<\/Text>/);
   assert.match(home, /homeAgeDecorationOpacity\(portraitFrame\.left, portraitFrame\.right, markerCenter\)/);
   assert.match(home, /const fadeStart = left - 16/);
   assert.match(home, /const z = \(markerCenter - fadeStart\) \/ \(right - fadeStart\)/);
