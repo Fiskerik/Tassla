@@ -16,6 +16,15 @@ Tassla should feel calm, trustworthy and effortless for a new puppy owner. This 
 
 Apply the highest relevant rule. Design rules govern appearance; this skill governs behavior, feedback, and states. Do not reopen decisions already recorded in the task or governing documents. If the rules leave a material product decision unresolved, record the conflict and ask the owner before dependent work. Follow the repository plan/review gates for scope changes, data, dependencies, and security. A visual component variant explicitly required by an approved design contract is within that contract.
 
+## Anti-AI slop (the tells that make output look generic — avoid)
+1. No gradient-blob filler, no giant hero gradients as a substitute for content.
+2. No emoji as icons — use a real icon set (lucide-react).
+3. No hand-drawn SVG illustrations/maps/charts — use real libraries (rechartsfor charts) or real generated images.
+4. No placeholder images / lorem-gray boxes in the final product — generate real images or use real content; set crossOrigin="anonymous" on canvas images.
+5. Avoid the overused-font look (default system-only, or Comic Sans-tier picks).
+6. Every element earns its place. Cut decorative noise. Establish a system, then vary with intent — not randomness.
+7. Match the existing UI when editing an app in place; don't introduce a second visual language.
+
 ## Scope limits
 - Do not add features, tabs, fields, onboarding, personalized feeds, share links, notifications, data collection, or schema changes unless the task explicitly approves them. A picture or a component list is not approval.
 - Product strategy (retention, distribution, feed design) is out of scope here. Ask the owner.
