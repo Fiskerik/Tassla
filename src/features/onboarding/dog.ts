@@ -28,6 +28,51 @@ export function ageInWeeks(birthDate: string, today: string): number {
   return Math.floor((current - birth) / (7 * 86_400_000));
 }
 
+export type DogAgePeriodId =
+  | '0-8-weeks'
+  | '8-12-weeks'
+  | '3-6-months'
+  | '6-12-months'
+  | '1-2-years'
+  | '2-4-years'
+  | '4-6-years'
+  | '6-8-years'
+  | '8-10-years'
+  | '10-plus-years';
+
+export interface DogAgePeriod {
+  id: DogAgePeriodId;
+  label: string;
+}
+
+/** Returns a provisional editorial age band, not a veterinary or developmental assessment. */
+export function resolveDogAgePeriod(
+  birthDate: string | null | undefined,
+  today: string,
+): DogAgePeriod | null {
+  if (!birthDate) return null;
+  try {
+    const birth = parseDate(birthDate);
+    const current = parseDate(today);
+    if (birth > current) return null;
+
+    const weeks = fullWeeks(birth, current);
+    const months = fullCalendarMonths(birthDate, today);
+    if (weeks < 8) return { id: '0-8-weeks', label: '0–8 veckor' };
+    if (months < 3) return { id: '8-12-weeks', label: '8–12 veckor' };
+    if (months < 6) return { id: '3-6-months', label: '3–6 månader' };
+    if (months < 12) return { id: '6-12-months', label: '6–12 månader' };
+    if (months < 24) return { id: '1-2-years', label: '1–2 år' };
+    if (months < 48) return { id: '2-4-years', label: '2–4 år' };
+    if (months < 72) return { id: '4-6-years', label: '4–6 år' };
+    if (months < 96) return { id: '6-8-years', label: '6–8 år' };
+    if (months < 120) return { id: '8-10-years', label: '8–10 år' };
+    return { id: '10-plus-years', label: '10+ år' };
+  } catch {
+    return null;
+  }
+}
+
 export function formatDogAge(birthDate: string, today: string, unit: AgeDisplayUnit = 'weeks'): string {
   const birth = parseDate(birthDate);
   const current = parseDate(today);

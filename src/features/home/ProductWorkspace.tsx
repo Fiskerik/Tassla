@@ -24,7 +24,7 @@ import {
   normalizePlannedHealthTime,
   fetchFuturePlannedHealthReminders,
   fetchPlannedHealthById,
-  fetchHomeContent,
+  fetchContentSurfaceCatalog,
   fetchTrainingWorkspace,
   isValidHealthWeightDate,
   isValidHealthWeightKg,
@@ -60,7 +60,7 @@ import {
   type UpcomingPlannedHealthRecord,
   type PlannedHealthType,
   type PublishedTrainingProgram,
-  type PausedTrainingProgress,
+  type ContentSurfaceCatalog,
   type WriteOutcome,
 } from '../../data/workspace-data';
 import {
@@ -163,6 +163,14 @@ type WorkspaceResourceFlight<T> = { scope: string; generation: number; controlle
 type UpcomingLoadSnapshot<T> = { scope: string; state: 'loading' | 'ready' | 'error'; rows: T[] };
 type EditorLeaveRequest = (commit: () => void) => void;
 
+function emptyTrainingWorkspaceSnapshot(reason?: TrainingWorkspaceSnapshot['selectionReason']): TrainingWorkspaceSnapshot {
+  return {
+    programs: [], recommendedPrograms: [], allPrograms: [], paused: [], selectionStatus: 'unknown',
+    recommendedSelectionStatus: 'unknown', allSelectionStatus: 'unknown',
+    ...(reason ? { selectionReason: reason, recommendedSelectionReason: reason, allSelectionReason: reason } : {}),
+  };
+}
+
 export function ProductWorkspace({ client, dog, onDogUpdated }: { client: SupabaseClient; dog: OwnedDog; onDogUpdated?: (updated: OwnedDog) => void }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
   const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>({ page: 'home', previousPage: 'home' });
@@ -193,10 +201,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     return () => { active = false; };
   }, [client]);
   const [content, setContent] = useState<HomeContent[]>([]);
+  const [contentCatalog, setContentCatalog] = useState<ContentSurfaceCatalog | null>(null);
   const [contentState, setContentState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [contentSelectionKey, setContentSelectionKey] = useState<string | null>(null);
-  const [knowledgeFocus, setKnowledgeFocus] = useState<{ selectionKey: string; contentId: string | null; returnPage: 'home' | 'more' } | null>(null);
+  const [knowledgeFocus, setKnowledgeFocus] = useState<{ selectionKey: string; contentId: string | null; returnPage: 'home' | 'more' | 'log' | 'health' } | null>(null);
   const [knowledgeDetailOpen, setKnowledgeDetailOpen] = useState(false);
+  const [logSelectedDate, setLogSelectedDate] = useState(localDate());
   const editorLeaveGuard = useRef<{ owner: symbol; requestLeave: EditorLeaveRequest } | null>(null);
   const registerEditorLeaveGuard = useCallback((owner: symbol, requestLeave: EditorLeaveRequest) => {
     editorLeaveGuard.current = { owner, requestLeave };
@@ -235,6 +245,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [healthWeights, setHealthWeights] = useState<HealthWeightRecord[]>([]);
   const healthWeightRows = useRef<HealthWeightRecord[]>([]);
   const [healthState, setHealthState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [healthActiveTab, setHealthActiveTab] = useState('Översikt');
   const [healthBusy, setHealthBusy] = useState(false);
   const [healthPending, setHealthPending] = useState(false);
   const [healthMessage, setHealthMessage] = useState('');
@@ -287,7 +298,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const [attributionSnapshot, setAttributionSnapshot] = useState<ScopedValue<AttributionSnapshot> | null>(null);
   const [attributionIntent, setAttributionIntent] = useState<KennelAttributionIntent | null>(null);
   const [attributionOperation, setAttributionOperation] = useState<AttributionOperation | null>(null);
-  const [training, setTraining] = useState<{ programs: PublishedTrainingProgram[]; paused: PausedTrainingProgress[] }>({ programs: [], paused: [] });
+  const [training, setTraining] = useState(() => emptyTrainingWorkspaceSnapshot());
   const [trainingState, setTrainingState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [trainingSelectionKey, setTrainingSelectionKey] = useState<string | null>(null);
   const [trainingError, setTrainingError] = useState('');
@@ -317,7 +328,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const upcomingRoutineGeneration = useRef(0);
   const upcomingHealthController = useRef<AbortController | null>(null);
   const upcomingRoutineController = useRef<AbortController | null>(null);
-  const upcomingScopeRef = useRef('');
   const [dailyClock, setDailyClock] = useState(() => new Date());
   const [dailyBusyKey, setDailyBusyKey] = useState<string | null>(null);
   const [dailyMessageKey, setDailyMessageKey] = useState('');
@@ -480,6 +490,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   const weeklyUiScopeKey = JSON.stringify([session?.user.id ?? '', accountGeneration, dog.id, dailyWeekStart, dailyTimeZone, reviewContentEnabled ? 'review' : 'public']);
   const checklistUiScopeKey = JSON.stringify([weeklyUiScopeKey, dailyDateKey]);
   const upcomingScopeKey = JSON.stringify([session?.user.id ?? '', accountGeneration, dog.id, dailyDateKey, dailyTimeZone]);
+  const upcomingScopeRef = useRef(upcomingScopeKey);
+  const upcomingScopeGeneration = useRef(0);
+  const [upcomingScopeGenerationForRender, setUpcomingScopeGenerationForRender] = useState(0);
   const upcomingScopeUnavailable = !session?.user.id || !dailyDateKey || !validDailyTimeZone;
   const upcomingHealthState = upcomingScopeUnavailable ? 'error' : upcomingHealthSnapshot?.scope === upcomingScopeKey ? upcomingHealthSnapshot.state : 'loading';
   const upcomingHealthPlans = !upcomingScopeUnavailable && upcomingHealthSnapshot?.scope === upcomingScopeKey ? upcomingHealthSnapshot.rows : [];
@@ -502,7 +515,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   useLayoutEffect(() => { checklistTabRef.current = checklistInitialTab; }, [checklistInitialTab]);
   useLayoutEffect(() => { weeklyRequestScopeRef.current = weeklyRequestScope; }, [weeklyRequestScope]);
   useLayoutEffect(() => {
+    if (upcomingScopeRef.current === upcomingScopeKey) return;
     upcomingScopeRef.current = upcomingScopeKey;
+    upcomingScopeGeneration.current += 1;
+    setUpcomingScopeGenerationForRender((generation) => generation + 1);
     upcomingPlanReadGeneration.current += 1;
   }, [upcomingScopeKey]);
   const checklistMemory = useRef<{ scope: string; state: PendingChecklistMemory } | null>(null);
@@ -525,13 +541,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       trainingReadFlight.current?.controller.abort();
       trainingReadFlight.current = null;
       trainingSnapshotRef.current = null;
-      setTraining({ programs: [], paused: [] });
+      setTraining(emptyTrainingWorkspaceSnapshot(age === null ? 'missing_age' : undefined));
       setTrainingSelectionKey(null);
       setTrainingState('loading');
       setTrainingError('');
     }
     previousTrainingLifetime.current = currentSelectionKey;
-  }, [currentSelectionKey]);
+  }, [age, currentSelectionKey]);
 
   useLayoutEffect(() => {
     if (dailyLifetime.current && dailyLifetime.current !== currentDailyLifetime) {
@@ -743,7 +759,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     let promise: Promise<TrainingWorkspaceSnapshot>;
     promise = fetchTrainingWorkspace(client, dog, age, undefined, controller.signal).then((result) => {
       const visibleResult = reviewContentEnabled && result.programs.length === 0
-        ? { programs: [...REVIEW_TRAINING_PROGRAMS], paused: [] } : result;
+        ? { ...result, programs: [...REVIEW_TRAINING_PROGRAMS], recommendedPrograms: [...REVIEW_TRAINING_PROGRAMS], allPrograms: [...REVIEW_TRAINING_PROGRAMS], paused: [] } : result;
       if (!mounted.current || controller.signal.aborted || trainingGeneration.current !== generation
         || currentSelectionKeyRef.current !== scope) return visibleResult;
       if (deferCommit) return visibleResult;
@@ -766,7 +782,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
           setTrainingState('ready');
           setTrainingError('Programmen kunde inte uppdateras. Du ser senast hämtade program.');
         } else {
-          setTraining({ programs: [], paused: [] });
+          setTraining(emptyTrainingWorkspaceSnapshot());
           setTrainingSelectionKey(scope);
           setTrainingState('error');
           setTrainingError('Publicerat träningsinnehåll kunde inte hämtas. Inga exempelprogram visas.');
@@ -1151,13 +1167,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   useEffect(() => {
     const generation = ++contentGeneration.current;
     const controller = new AbortController();
-    void fetchHomeContent(client, dog, age, undefined, controller.signal).then((items) => {
+    void fetchContentSurfaceCatalog(client, dog, age, undefined, controller.signal).then((catalog) => {
       if (!mounted.current || controller.signal.aborted || contentGeneration.current !== generation || currentSelectionKeyRef.current !== currentSelectionKey) return;
-      setContent(items);
+      setContentCatalog(catalog);
+      setContent(catalog.homeAdvice.status === 'eligible' ? [...catalog.homeAdvice.items] : []);
       setContentSelectionKey(currentSelectionKey);
       setContentState('ready');
     }).catch(() => {
       if (!mounted.current || controller.signal.aborted || contentGeneration.current !== generation || currentSelectionKeyRef.current !== currentSelectionKey) return;
+      setContentCatalog(null);
       setContent([]);
       setContentSelectionKey(currentSelectionKey);
       setContentState('error');
@@ -1207,9 +1225,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     };
   }, [client, dailyWeekStart, dog.id, page, validDailyTimeZone, weeklyLifetime, weeklyRequestScope]);
 
+  const visibleContentCatalog = contentSelectionKey === currentSelectionKey ? contentCatalog : null;
   const visibleContent = contentSelectionKey === currentSelectionKey ? content : [];
   const visibleContentState = contentSelectionKey === currentSelectionKey ? contentState : 'loading';
   const visibleTrainingState = trainingSelectionKey === currentSelectionKey ? trainingState : 'loading';
+  const visibleTrainingSelectionStatus = trainingSelectionKey === currentSelectionKey ? training.recommendedSelectionStatus : 'unknown';
+  const visibleTrainingSelectionReason = trainingSelectionKey === currentSelectionKey ? training.recommendedSelectionReason : undefined;
+  const visibleTrainingAllSelectionStatus = trainingSelectionKey === currentSelectionKey ? training.allSelectionStatus : 'unknown';
+  const visibleTrainingAllSelectionReason = trainingSelectionKey === currentSelectionKey ? training.allSelectionReason : undefined;
   const dailyStateForView = dailyStateLifetime === currentDailyLifetime ? dailyState : 'loading';
   const dailySnapshotForView = dailySnapshotLifetime === currentDailyLifetime ? dailySnapshot : null;
   const dailyTrainingForView = dailySnapshotLifetime === currentDailyLifetime ? dailyTrainingSnapshot : null;
@@ -1299,7 +1322,19 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       return [{ programId: program.content_id, versionId: program.id, stepId: step.id, programTitle: program.title, stepTitle: step.title }];
     })
     : [];
-  const publishedGuides = visibleContent.filter((item) => item.contentType !== 'training_program');
+  const visibleKnowledgeForYou = visibleContentCatalog?.knowledgeForYou.status === 'eligible'
+    ? [...visibleContentCatalog.knowledgeForYou.items] : [];
+  const visibleKnowledgeArticles = visibleContentCatalog?.knowledgeArticles.status === 'eligible'
+    ? [...visibleContentCatalog.knowledgeArticles.items] : [];
+  const visibleKnowledgeFaq = visibleContentCatalog?.knowledgeFaq.status === 'eligible'
+    ? [...visibleContentCatalog.knowledgeFaq.items] : [];
+  const visibleFeatureHelp = [visibleContentCatalog?.logHelp, visibleContentCatalog?.weightHelp, visibleContentCatalog?.healthHelp]
+    .flatMap((selection) => selection?.status === 'eligible' ? [...selection.items] : []);
+  const logHelpContent = visibleFeatureHelp.find((item) => item.id === '62000000-0000-4000-8000-000000000003');
+  const weightHelpContent = visibleFeatureHelp.find((item) => item.id === '62000000-0000-4000-8000-000000000007');
+  const healthHelpContent = visibleFeatureHelp.find((item) => item.id === '62000000-0000-4000-8000-000000000008');
+  const publishedGuides = [...new Map([...visibleKnowledgeForYou, ...visibleKnowledgeArticles, ...visibleFeatureHelp]
+    .filter((item) => item.contentType !== 'training_program').map((item) => [item.id, item])).values()];
   const hasReviewTraining = reviewContentEnabled && visibleTrainingState === 'ready'
     && training.programs.some((program) => program.id.startsWith('review-v1:training:'));
   const visibleGuideContent = hasReviewTraining && visibleContentState === 'ready'
@@ -1311,9 +1346,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     ? knowledgeFocus.contentId : null;
 
   const displayEvents = useMemo(() => events.map(toLogEvent), [events]);
-  const nextProgram = training.programs.find((program) => program.steps.some((step) => !program.completedStepIds.includes(step.id)));
-  const nextStep = nextProgram?.steps.find((step) => !nextProgram.completedStepIds.includes(step.id));
-
   async function markProfileSaved(value: OwnedDog, lifetime: string): Promise<boolean> {
     if (!mounted.current || profileLifetime.current !== lifetime || value.id !== dog.id) return false;
     pendingProfileMutation.current = null;
@@ -2426,21 +2458,36 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     const generation = ++contentGeneration.current;
     const selectionKey = currentSelectionKey;
     setContent([]);
+    setContentCatalog(null);
     setContentSelectionKey(null);
     setContentState('loading');
     try {
-      const items = await fetchHomeContent(client, dog, age);
+      const catalog = await fetchContentSurfaceCatalog(client, dog, age);
       if (!mounted.current || contentGeneration.current !== generation || currentSelectionKeyRef.current !== selectionKey) return;
-      setContent(items);
+      setContentCatalog(catalog);
+      setContent(catalog.homeAdvice.status === 'eligible' ? [...catalog.homeAdvice.items] : []);
       setContentSelectionKey(currentSelectionKey);
       setContentState('ready');
     } catch {
       if (mounted.current && contentGeneration.current === generation && currentSelectionKeyRef.current === selectionKey) {
+        setContentCatalog(null);
         setContent([]);
         setContentSelectionKey(selectionKey);
         setContentState('error');
       }
     }
+  }
+
+  function openFeatureHelp(contentId: string, returnPage: 'log' | 'health') {
+    setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId, returnPage });
+    setKnowledgeDetailOpen(false);
+    setPage('knowledge');
+  }
+
+  function openTodayChecklist() {
+    setTrainingEntry(null);
+    setChecklistTabSelection({ scopeKey: checklistUiScopeKey, tab: 'Idag' });
+    setPage('checklist');
   }
 
   async function retryEvents() {
@@ -2564,6 +2611,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
 
   async function runDailyMutation<T>(key: string, operation: () => Promise<WriteOutcome<T>>, retry = false, origin: DailyMutationOrigin = 'home', expectedSnapshotVersion?: number | null): Promise<WriteOutcome<T> | undefined> {
     const lifetime = currentDailyLifetime;
+    const upcomingRoutineScopeAtMutation = upcomingScopeKey;
+    const upcomingRoutineScopeGenerationAtMutation = upcomingScopeGenerationForRender;
+    const isRoutineTemplateMutation = /^(create|update|delete)-routine:/.test(key);
     await Promise.resolve();
     if (dailyLifetime.current !== lifetime || currentSelectionKeyRef.current !== currentSelectionKey) return undefined;
     if (!dailyDateKey || !validDailyTimeZone || dailyMutationInFlight.current) return undefined;
@@ -2609,6 +2659,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       setDailyMessageError(false);
       setHomeTrainingTargetFeedback(null);
       const refreshed = await reloadDailyActivity(true, true);
+      const parentOwnsRoutineTemplateRefresh = isRoutineTemplateMutation
+        && (origin === 'home' || (origin === 'all' && retry));
+      if (parentOwnsRoutineTemplateRefresh && mounted.current && dailyLifetime.current === lifetime
+        && currentSelectionKeyRef.current === currentSelectionKey && upcomingScopeRef.current === upcomingRoutineScopeAtMutation
+        && upcomingScopeGeneration.current === upcomingRoutineScopeGenerationAtMutation) {
+        setUpcomingRoutineSnapshot((current) => ({ scope: upcomingRoutineScopeAtMutation, state: 'loading',
+          rows: current?.scope === upcomingRoutineScopeAtMutation ? current.rows : [] }));
+        setUpcomingRoutineRetryToken((token) => token + 1);
+      }
       if (!refreshed && mounted.current && dailyLifetime.current === lifetime) {
         setDailyMessage('Ändringen sparades, men dagens lista kunde inte hämtas. Status räknas först efter en ny avläsning.');
         setDailyMessageError(true);
@@ -2876,11 +2935,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       plans={plannedHealth}
       logState={logState}
       planState={plannedHealthState}
-      nextStep={visibleTrainingState === 'ready' ? nextStep?.title : undefined}
-      trainingState={visibleTrainingState}
-      reviewTrainingStep={hasReviewTraining}
-      content={visibleGuideContent}
+      content={visibleContent}
       contentState={visibleContentState}
+      contentSelectionStatus={visibleContentCatalog?.homeAdvice.status}
+      contentUnknownReason={visibleContentCatalog?.homeAdvice.status === 'unknown' ? visibleContentCatalog.homeAdvice.reason : undefined}
       dailyState={dailyStateForView}
       dailyRefreshing={dailyRefreshing}
       dailyRefreshError={dailyRefreshError}
@@ -2927,6 +2985,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         setPage('knowledge');
       }}
       onRetryContent={() => { void retryContent(); }}
+      onOpenDogProfile={() => setPage('profile')}
     />;
     if (page === 'checklist') return <DailyChecklistScreen key={checklistUiScopeKey} dogName={dog.name} dogId={dog.id} dateKey={dailyDateKey ?? '—'} scopeKey={currentDailyLifetime}
       initialTab={checklistInitialTab} onActiveTabChange={(tab) => {
@@ -2950,6 +3009,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         setUpcomingHealthRetryToken((token) => token + 1);
       }}
       onRetryUpcomingRoutines={() => {
+        const callbackIsCurrent = mounted.current && upcomingScopeRef.current === upcomingScopeKey
+          && upcomingScopeGeneration.current === upcomingScopeGenerationForRender;
+        if (!callbackIsCurrent) return;
         setUpcomingRoutineSnapshot((current) => ({ scope: upcomingScopeKey, state: 'loading', rows: current?.scope === upcomingScopeKey ? current.rows : [] }));
         setUpcomingRoutineRetryToken((token) => token + 1);
       }}
@@ -2989,6 +3051,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       loading={logState === 'loading'} loadError={logState === 'error'} onReload={() => { void retryEvents(); }}
       busy={logBusy} mutation={quickLogMutation} loadMoreError={loadMoreError} onRetry={retryLogMutation} onCancel={cancelLogMutation} registerEditorLeaveGuard={registerEditorLeaveGuard}
       onUndo={(id) => { void undoQuickLog(id); }} hasMore={hasMore} loadingMore={loadingMore}
+      selectedDateValue={logSelectedDate} onSelectedDateChange={setLogSelectedDate}
+      onOpenHelp={logHelpContent ? () => openFeatureHelp(logHelpContent.id, 'log') : undefined}
       onLoadMore={() => { void loadMoreEvents(); }} />;
     if (page === 'training' && trainingEntry) {
       const targetIsExact = Boolean(trainingEntry.programVersionId && trainingEntry.stepId);
@@ -3023,12 +3087,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         <PrimaryButton title="Försök igen" onPress={() => { void retryTraining(); }} />
         <Button variant="tertiary" label={backLabel} accessibilityLabel={backLabel} onPress={backToOrigin} />
       </>;
-      return <PublishedTrainingScreen ageWeeks={age} programs={training.programs} paused={training.paused}
+      return <PublishedTrainingScreen ageWeeks={age} programs={training.programs} recommendedPrograms={training.recommendedPrograms} allPrograms={training.allPrograms} paused={training.paused}
+        recommendedSelectionStatus={visibleTrainingSelectionStatus} recommendedSelectionReason={visibleTrainingSelectionReason}
+        allSelectionStatus={visibleTrainingAllSelectionStatus} allSelectionReason={visibleTrainingAllSelectionReason}
         reviewMode={reviewContentEnabled && training.programs.some((program) => program.id.startsWith('review-v1:training:'))}
         busyStepKey={busyStepKey} error={trainingError} onCompleteStep={completeStep} onUnmarkStep={unmarkStep}
         onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
         onRetry={() => { void retryTraining(); }} initialSelection={targetIsExact ? { programId: trainingEntry.programVersionId as string, stepId: trainingEntry.stepId as string } : undefined}
-        backLabel={backLabel} onBackToChecklist={backToOrigin} />;
+        backLabel={backLabel} onBackToChecklist={backToOrigin} onOpenChecklist={backToOrigin} onEditDogProfile={() => setPage('profile')} />;
     }
     if (page === 'training') return <>
       {visibleTrainingState === 'loading' && <PageHeading title="Träning" description="Hämtar publicerade program…" />}
@@ -3037,11 +3103,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
         <MessageCard tone="error">{trainingError}</MessageCard>
         <PrimaryButton title="Försök igen" onPress={() => { void retryTraining(); }} />
       </>}
-      {visibleTrainingState === 'ready' && <PublishedTrainingScreen ageWeeks={age} programs={training.programs} paused={training.paused}
+      {visibleTrainingState === 'ready' && <PublishedTrainingScreen ageWeeks={age} programs={training.programs} recommendedPrograms={training.recommendedPrograms} allPrograms={training.allPrograms} paused={training.paused}
+        recommendedSelectionStatus={visibleTrainingSelectionStatus} recommendedSelectionReason={visibleTrainingSelectionReason}
+        allSelectionStatus={visibleTrainingAllSelectionStatus} allSelectionReason={visibleTrainingAllSelectionReason}
         reviewMode={reviewContentEnabled && training.programs.some((program) => program.id.startsWith('review-v1:training:'))}
         busyStepKey={busyStepKey} error={trainingError} onCompleteStep={completeStep} onUnmarkStep={unmarkStep}
         onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
-        onRetry={() => { void retryTraining(); }} />}
+        onRetry={() => { void retryTraining(); }} onOpenChecklist={openTodayChecklist} onEditDogProfile={() => setPage('profile')} />}
     </>;
     if (page === 'more') return <MoreScreen onNavigate={(destination) => {
       if (destination === 'reminders') {
@@ -3089,6 +3157,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
     if (page === 'health') return <HealthScreen
       key={currentHealthHistoryLifetime}
       historyLifetime={currentHealthHistoryLifetime}
+      initialTab={healthActiveTab as 'Översikt' | 'Vaccinationer' | 'Veterinär' | 'Vikt'}
+      onTabChange={setHealthActiveTab}
+      onOpenHistoryHelp={healthHelpContent ? () => openFeatureHelp(healthHelpContent.id, 'health') : undefined}
+      onOpenWeightHelp={weightHelpContent ? () => openFeatureHelp(weightHelpContent.id, 'health') : undefined}
       historyScope={{ ownerId: session?.user.id ?? '', accountGeneration, dogId: dog.id }}
       historyConfirmation={healthHistoryConfirmation}
       registerEditorLeaveGuard={registerEditorLeaveGuard}
@@ -3147,6 +3219,22 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       onBack={() => setPage(knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : 'more')}
       items={visibleGuideContent}
       contentState={visibleContentState}
+      forYouItems={visibleKnowledgeForYou}
+      articleItems={visibleKnowledgeArticles}
+      faqItems={visibleKnowledgeFaq}
+      faqSelectionStatus={visibleContentCatalog?.knowledgeFaq.status ?? 'unknown'}
+      faqUnknownReason={visibleContentCatalog?.knowledgeFaq.status === 'unknown' ? visibleContentCatalog.knowledgeFaq.reason : undefined}
+      forYouSelectionStatus={visibleContentCatalog?.knowledgeForYou.status ?? 'unknown'}
+      articleSelectionStatus={visibleContentCatalog?.knowledgeArticles.status ?? 'unknown'}
+      unknownSelectionReason={visibleContentCatalog?.knowledgeForYou.status === 'unknown'
+        ? visibleContentCatalog.knowledgeForYou.reason
+        : visibleContentCatalog?.knowledgeArticles.status === 'unknown' ? visibleContentCatalog.knowledgeArticles.reason : undefined}
+      contextualHelpReturn={knowledgeFocus?.selectionKey === currentSelectionKey
+        && (knowledgeFocus.returnPage === 'log' || knowledgeFocus.returnPage === 'health')}
+      contextualReturnLabel={knowledgeFocus?.returnPage === 'log' ? 'Tillbaka till Logg'
+        : knowledgeFocus?.returnPage === 'health' && healthActiveTab === 'Vikt' ? 'Tillbaka till Vikt' : 'Tillbaka till Hälsa'}
+      onOpenDogProfile={() => setPage('profile')}
+      onOpenTodayChecklist={openTodayChecklist}
       focusedContentId={focusedKnowledgeContentId}
       onDetailChange={setKnowledgeDetailOpen}
       onSelectContent={(contentId) => setKnowledgeFocus({

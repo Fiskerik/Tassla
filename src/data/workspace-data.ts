@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { selectContent } from '../content/select-content';
+import { selectContentForSurface, type ContentContext, type ContentSelection, type ContentSurface, type PublishedContent } from '../content/select-content';
 import { isCanonicalAccidentKinds, LOG_EVENT_TYPES, type AccidentKind, type LogEventType } from '../features/puppy-log/log-model';
 import type { HomeContent, OwnedDog } from './app-data';
 
@@ -930,31 +930,80 @@ export async function fetchPublishedContentVersions(
   }, timeoutMs, parentSignal);
 }
 
+export interface ContentSurfaceCatalog {
+  homeAdvice: ContentSelection<HomeContent>;
+  knowledgeForYou: ContentSelection<HomeContent>;
+  knowledgeArticles: ContentSelection<HomeContent>;
+  knowledgeFaq: ContentSelection<HomeContent>;
+  trainingRecommended: ContentSelection<HomeContent>;
+  trainingAll: ContentSelection<HomeContent>;
+  logHelp: ContentSelection<HomeContent>;
+  weightHelp: ContentSelection<HomeContent>;
+  healthHelp: ContentSelection<HomeContent>;
+}
+
+export async function fetchContentSurfaceCatalog(
+  client: SupabaseClient,
+  dog: OwnedDog,
+  ageWeeks: number | null,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  parentSignal?: AbortSignal,
+): Promise<ContentSurfaceCatalog> {
+  const rows = (await fetchPublishedContentVersions(client, timeoutMs, parentSignal))
+    .filter((item) => item.content_items.slug !== 'before-homecoming');
+  const versions = rows.flatMap((row): (PublishedContent & HomeContent)[] => {
+    const contentType = row.content_items.content_type;
+    if (!isDisplayableContentType(contentType)) return [];
+    return [{
+      id: row.id,
+      contentId: row.content_id,
+      version: row.version,
+      status: 'published',
+      minAgeWeeks: row.min_age_weeks,
+      maxAgeWeeks: row.max_age_weeks,
+      breedIds: row.content_breed_targets.map((target) => target.breed_id),
+      title: row.title,
+      body: row.body,
+      contentType,
+      sources: row.sources,
+    }];
+  });
+  const requests: Record<keyof ContentSurfaceCatalog, { surface: ContentSurface; context: ContentContext; matches: (row: PublishedVersionRow) => boolean }> = {
+    homeAdvice: { surface: 'home_advice', context: 'dog_advice', matches: (row) => ['article', 'guide'].includes(row.content_items.content_type) && !['daily-log-routines', 'weight-history-guide', 'health-records-guide'].includes(row.content_items.slug) },
+    knowledgeForYou: { surface: 'knowledge_for_you', context: 'dog_advice', matches: (row) => ['article', 'guide'].includes(row.content_items.content_type) && !['daily-log-routines', 'weight-history-guide', 'health-records-guide'].includes(row.content_items.slug) },
+    knowledgeArticles: { surface: 'knowledge_articles', context: 'dog_advice', matches: (row) => ['article', 'guide'].includes(row.content_items.content_type) && !['daily-log-routines', 'weight-history-guide', 'health-records-guide'].includes(row.content_items.slug) },
+    knowledgeFaq: { surface: 'knowledge_faq', context: 'dog_advice', matches: (row) => ['handling-guide', 'being-alone-guide'].includes(row.content_items.slug) && ['article', 'guide'].includes(row.content_items.content_type) },
+    trainingRecommended: { surface: 'training_recommended', context: 'training_recommendation', matches: (row) => row.content_items.content_type === 'training_program' },
+    trainingAll: { surface: 'training_all', context: 'training_recommendation', matches: (row) => row.content_items.content_type === 'training_program' },
+    logHelp: { surface: 'log_help', context: 'log_routines', matches: (row) => row.content_items.slug === 'daily-log-routines' },
+    weightHelp: { surface: 'weight_help', context: 'weight_recording', matches: (row) => row.content_items.slug === 'weight-history-guide' },
+    healthHelp: { surface: 'health_help', context: 'health_recording', matches: (row) => row.content_items.slug === 'health-records-guide' },
+  };
+  const rowsById = new Map(rows.map((row) => [row.id, row]));
+  const selections = Object.fromEntries(Object.entries(requests).map(([key, value]) => [key,
+    selectContentForSurface(versions.filter((version) => {
+      const row = rowsById.get(version.id);
+      return Boolean(row && value.matches(row));
+    }), {
+      ...value,
+      audience: 'dog_owner',
+      dogId: dog.id,
+      breedId: dog.breed_id,
+      ageWeeks,
+      need: null,
+    }),
+  ])) as unknown as ContentSurfaceCatalog;
+  return selections;
+}
+
 export async function fetchHomeContent(
   client: SupabaseClient,
   dog: OwnedDog,
   ageWeeks: number | null,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   parentSignal?: AbortSignal,
-): Promise<HomeContent[]> {
-  const rows = await fetchPublishedContentVersions(client, timeoutMs, parentSignal);
-  const selectableRows = rows.filter((item) => item.content_items.slug !== 'before-homecoming');
-  const selected = selectContent(selectableRows.map((item) => ({
-    id: item.id,
-    contentId: item.content_id,
-    version: item.version,
-    status: 'published' as const,
-    minAgeWeeks: item.min_age_weeks,
-    maxAgeWeeks: item.max_age_weeks,
-    breedIds: item.content_breed_targets.map((target) => target.breed_id),
-  })), ageWeeks, dog.breed_id);
-  const byId = new Map(selectableRows.map((item) => [item.id, item]));
-  return selected.flatMap(({ id }) => {
-    const row = byId.get(id);
-    const contentType = row?.content_items.content_type;
-    if (!row || !isDisplayableContentType(contentType)) return [];
-    return [{ id: row.id, contentId: row.content_id, version: row.version, title: row.title, body: row.body, contentType, sources: row.sources }];
-  });
+): Promise<ContentSelection<HomeContent>> {
+  return (await fetchContentSurfaceCatalog(client, dog, ageWeeks, timeoutMs, parentSignal)).homeAdvice;
 }
 
 export async function fetchTrainingWorkspace(
@@ -963,16 +1012,24 @@ export async function fetchTrainingWorkspace(
   ageWeeks: number | null,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   parentSignal?: AbortSignal,
-): Promise<{ programs: PublishedTrainingProgram[]; paused: PausedTrainingProgress[] }> {
+): Promise<{
+  programs: PublishedTrainingProgram[];
+  recommendedPrograms: PublishedTrainingProgram[];
+  allPrograms: PublishedTrainingProgram[];
+  paused: PausedTrainingProgress[];
+  selectionStatus: ContentSelection<PublishedContent>['status'];
+  selectionReason?: 'missing_age' | 'invalid_request' | 'unmapped_version';
+  recommendedSelectionStatus: ContentSelection<PublishedContent>['status'];
+  recommendedSelectionReason?: 'missing_age' | 'invalid_request' | 'unmapped_version';
+  allSelectionStatus: ContentSelection<PublishedContent>['status'];
+  allSelectionReason?: 'missing_age' | 'invalid_request' | 'unmapped_version';
+}> {
   const [versions, progress] = await Promise.all([
     fetchPublishedContentVersions(client, timeoutMs, parentSignal),
     fetchTrainingProgress(client, dog.id, timeoutMs, parentSignal),
   ]);
   const publishedPrograms = versions.filter((row) => row.content_items.content_type === 'training_program');
-  const inProgressVersionIds = new Set(progress.map((item) => item.program_version_id));
-  const resumable = publishedPrograms.filter((row) => inProgressVersionIds.has(row.id)
-    && (row.content_breed_targets.length === 0 || row.content_breed_targets.some((target) => target.breed_id === dog.breed_id)));
-  const current = ageWeeks === null ? [] : selectContent(publishedPrograms.map((row) => ({
+  const candidates = publishedPrograms.map((row) => ({
     id: row.id,
     contentId: row.content_id,
     version: row.version,
@@ -980,19 +1037,27 @@ export async function fetchTrainingWorkspace(
     minAgeWeeks: row.min_age_weeks,
     maxAgeWeeks: row.max_age_weeks,
     breedIds: row.content_breed_targets.map((target) => target.breed_id),
-  })), ageWeeks, dog.breed_id);
-  const selectedByContent = new Map<string, PublishedVersionRow>();
-  for (const version of current) {
-    const row = publishedPrograms.find((item) => item.id === version.id);
-    if (row) selectedByContent.set(row.content_id, row);
-  }
-  const progressedByContent = new Map<string, PublishedVersionRow>();
-  for (const row of resumable) {
-    const progressed = progressedByContent.get(row.content_id);
-    if (!progressed || row.version > progressed.version) progressedByContent.set(row.content_id, row);
-  }
-  for (const [contentId, row] of progressedByContent) selectedByContent.set(contentId, row);
-  const selectedRows = [...selectedByContent.values()];
+  }));
+  const selectionFor = (surface: 'training_recommended' | 'training_all') => selectContentForSurface(candidates, {
+    surface,
+    context: 'training_recommendation',
+    audience: 'dog_owner',
+    dogId: dog.id,
+    breedId: dog.breed_id,
+    ageWeeks,
+    need: null,
+  });
+  const recommendedSelection = selectionFor('training_recommended');
+  const allSelection = selectionFor('training_all');
+  const rowsFor = (selection: ContentSelection<PublishedContent>) => selection.status === 'eligible'
+    ? selection.items.flatMap((item) => {
+      const row = publishedPrograms.find((candidate) => candidate.id === item.id);
+      return row ? [row] : [];
+    })
+    : [];
+  const recommendedRows = rowsFor(recommendedSelection);
+  const allRows = rowsFor(allSelection);
+  const selectedRows = [...recommendedRows, ...allRows.filter((row) => !recommendedRows.some((item) => item.id === row.id))];
   const activeVersionIds = selectedRows.map((item) => item.id);
   const steps = activeVersionIds.length ? await fetchTrainingSteps(client, activeVersionIds, timeoutMs, parentSignal) : [];
   const programs = selectedRows.map((row) => ({
@@ -1008,6 +1073,11 @@ export async function fetchTrainingWorkspace(
       .filter((item) => item.program_version_id === row.id)
       .map((item) => [item.step_id, item.completed_at])),
   }));
+  const programsById = new Map(programs.map((program) => [program.id, program]));
+  const programsFor = (rows: readonly PublishedVersionRow[]) => rows.flatMap((row) => {
+    const program = programsById.get(row.id);
+    return program ? [program] : [];
+  });
   const activeIds = new Set(activeVersionIds);
   const pausedByVersion = new Map<string, Set<string>>();
   for (const item of progress) {
@@ -1018,7 +1088,17 @@ export async function fetchTrainingWorkspace(
   }
   return {
     programs,
+    recommendedPrograms: programsFor(recommendedRows),
+    allPrograms: programsFor(allRows),
     paused: [...pausedByVersion].map(([versionId, completed]) => ({ versionId, completedCount: completed.size })),
+    selectionStatus: recommendedSelection.status,
+    recommendedSelectionStatus: recommendedSelection.status,
+    allSelectionStatus: allSelection.status,
+    ...(recommendedSelection.status === 'unknown' ? {
+      selectionReason: recommendedSelection.reason,
+      recommendedSelectionReason: recommendedSelection.reason,
+    } : {}),
+    ...(allSelection.status === 'unknown' ? { allSelectionReason: allSelection.reason } : {}),
   };
 }
 

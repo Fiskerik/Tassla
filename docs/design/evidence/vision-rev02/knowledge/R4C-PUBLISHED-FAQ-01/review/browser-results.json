@@ -1,0 +1,116 @@
+{
+  "passes": [
+    "Review FAQ remains synthetic-only and visibly marked across contexts; the active tab fits at the 140% text proxy",
+    "Checklistor remains reachable from FAQ and returns to the FAQ state (review-checklists-visible)",
+    "HomeCarousel FAQ destination opens the selected FAQ branch and wired Home navigation returns (review-synthetic)"
+  ],
+  "pageErrors": [],
+  "scope": "R4c public FAQ from exact approved local bundle records and review-only synthetic FAQ in production KnowledgeScreen/FAQScreen; no live data, external navigation or backend write",
+  "bundle": "review",
+  "viewports": [
+    "375x844",
+    "430x844",
+    "375x667",
+    "375x844 at 140% web text proxy"
+  ],
+  "captures": [
+    "review-faq-by-age-375x844.png",
+    "review-faq-by-age-430x844.png",
+    "review-faq-by-age-375x667.png",
+    "review-faq-first-days-375x844.png",
+    "review-faq-context-selection-375x844.png",
+    "review-faq-before-homecoming-375x667.png",
+    "review-faq-140-text-375x844.png",
+    "checklist-tab-from-faq-375x844.png",
+    "home-carousel-faq-destination-375x844.png",
+    "home-carousel-faq-return-375x844.png"
+  ],
+  "activeTabBoundsAt140Percent": {
+    "left": 297.234375,
+    "right": 351.015625,
+    "viewportLeft": 24,
+    "viewportRight": 351
+  },
+  "reviewContextControlBounds": {
+    "375x844": [
+      {
+        "label": "Frågor: Före hemkomst",
+        "left": 24,
+        "right": 171.140625,
+        "width": 147.140625,
+        "controlHeight": 56,
+        "labelFits": true
+      },
+      {
+        "label": "Frågor: Första dagarna hemma",
+        "left": 175.140625,
+        "right": 322.28125,
+        "width": 147.140625,
+        "controlHeight": 56,
+        "labelFits": true
+      },
+      {
+        "label": "Frågor: Efter ålder",
+        "left": 24,
+        "right": 171.140625,
+        "width": 147.140625,
+        "controlHeight": 56,
+        "labelFits": true
+      }
+    ],
+    "375x844@140%": [
+      {
+        "label": "Frågor: Före hemkomst",
+        "left": 24,
+        "right": 171.140625,
+        "width": 147.140625,
+        "controlHeight": 69.1875,
+        "labelFits": true
+      },
+      {
+        "label": "Frågor: Första dagarna hemma",
+        "left": 175.140625,
+        "right": 322.28125,
+        "width": 147.140625,
+        "controlHeight": 102.78125,
+        "labelFits": true
+      },
+      {
+        "label": "Frågor: Efter ålder",
+        "left": 24,
+        "right": 171.140625,
+        "width": 147.140625,
+        "controlHeight": 56,
+        "labelFits": true
+      }
+    ]
+  },
+  "checklistReachability": {
+    "status": "pass",
+    "contentState": "review-checklists-visible",
+    "returnedToFaq": true
+  },
+  "homeCarouselFaqRoundTrip": {
+    "status": "pass",
+    "destinationId": "review-v1:destination:faq",
+    "knowledgeTabSelected": true,
+    "contentBranch": "review-synthetic",
+    "returnedHome": true
+  },
+  "interceptedSourceOpens": [],
+  "section14VisualAssessment": {
+    "composition": "Knowledge panel 7 FAQ tab and rendered source rows are documented in captures; direct comparison against the §14 reference is recorded separately in INDEPENDENT-QA.md",
+    "color": "Production token colors are visible in captures; reference similarity is assessed separately in INDEPENDENT-QA.md",
+    "typography": "Production typography and 140% web text proxy are visible in captures; device Dynamic Type is NOT TESTABLE",
+    "componentShapes": "Production Knowledge/FAQ components are visible in captures; reference similarity is assessed separately in INDEPENDENT-QA.md",
+    "imagery": "FAQ answer has no inline image; dedicated FAQ reference imagery is NOT TESTABLE if absent from vision_rev02",
+    "contentDensity": "Published answer fixtures and source rows are captured; reference comparison is recorded separately in INDEPENDENT-QA.md"
+  },
+  "limitations": [
+    "Approved local content bundle drives synthetic visual fixtures; no live published rows or Supabase/RLS are verified",
+    "Source click is intercepted by the visual fixture; no external navigation occurs",
+    "Native iOS/Android, VoiceOver, device Dynamic Type and actual installed app are NOT TESTABLE",
+    "The 140% text proxy is a web CSS approximation"
+  ],
+  "independentQaReport": "../INDEPENDENT-QA.md"
+}

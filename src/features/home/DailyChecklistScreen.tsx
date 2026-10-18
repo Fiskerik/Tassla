@@ -8,6 +8,7 @@ import type { UpcomingPlannedHealthRecord } from '../../data/workspace-data';
 import type { HomeDailyTrainingOption } from './HomeScreen';
 import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
 import { tokens } from '../../theme/tokens';
+import { routineIconCategory, selectUpcomingWeekPreview } from './checklist-presentation';
 
 type ActionResult = { status: 'saved' | 'failed' | 'unknown' } | void;
 type ChecklistTab = 'Idag' | 'Denna vecka' | 'Alla' | 'Kommande';
@@ -120,6 +121,7 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initia
       || (left.kind === right.kind ? 0 : left.kind === 'health' ? -1 : 1)
       || left.label.localeCompare(right.label, 'sv') || left.id.localeCompare(right.id));
   }, [dateKey, upcomingHealthPlans, upcomingRoutineSchedules]);
+  const upcomingPreview = useMemo(() => selectUpcomingWeekPreview(upcomingRows, dateKey, weekDateKeys[6] ?? dateKey), [upcomingRows, dateKey, weekDateKeys]);
   const showUpcomingTab = activeTab === 'Kommande' || upcomingHealthState !== 'ready' || upcomingRoutineState !== 'ready' || upcomingRows.length > 0;
   const canWriteTemplates = state === 'ready' && routineTemplatesWritable;
   const managerBlocked = (activeTab === 'Alla' || activeTab === 'Kommande') && !canWriteTemplates;
@@ -202,14 +204,15 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initia
   const guardedRetryMutation = () => {
     if (allowManagerMutation()) onRetryMutation?.();
   };
+  const changeTab = (tab: ChecklistTab) => {
+    setManagerSession(null); setManagerSessionNeedsPreservation(false); setManagerStaleLocked(false); setActiveTab(tab); onActiveTabChange(tab);
+  };
 
   return <View style={styles.screen}>
     <AppBar mode="Back" variant="compact" title="Checklista" actionLabel="Tillbaka till Hem" onAction={onBack} />
     <Text style={styles.scopeContext} accessibilityRole="text">{dogName} · {activeTab === 'Denna vecka' ? formatWeekRange(weekDateKeys) : dateKey}</Text>
-    <Tabs items={showUpcomingTab ? ['Idag', 'Denna vecka', 'Alla', 'Kommande'] : ['Idag', 'Denna vecka', 'Alla']} active={activeTab} onChange={(tab) => {
-      const nextTab = tab as ChecklistTab;
-      setManagerSession(null); setManagerSessionNeedsPreservation(false); setManagerStaleLocked(false); setActiveTab(nextTab); onActiveTabChange(nextTab);
-    }} variant="rev02-segmented" />
+    <Tabs items={showUpcomingTab ? ['Idag', 'Denna vecka', 'Alla', 'Kommande'] : ['Idag', 'Denna vecka', 'Alla']} active={activeTab}
+      onChange={(tab) => changeTab(tab as ChecklistTab)} variant="rev02-segmented-wrap" />
     <View style={styles.actions}>
       <Text style={styles.progress} accessibilityRole="text">
         {activeTab === 'Alla'
@@ -242,9 +245,10 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initia
       <Text style={styles.body}>Välj en rutin eller ett träningssteg för att lägga till det i dagens checklista.</Text>
       <Button label="Välj dagens aktiviteter" accessibilityLabel="Välj dagens aktiviteter" onPress={() => openManager()} />
     </View> : null}
-    {activeTab === 'Idag' && state === 'ready' && activities.length > 0 ? <View style={styles.list}>
-      {activities.map((item) => {
+    {activeTab === 'Idag' && state === 'ready' && activities.length > 0 ? <View style={styles.activityList}>
+      {activities.map((item, index) => {
         const row = item.routineDay;
+        const activityRowStyle = [styles.activityRow, index < activities.length - 1 && styles.activityDivider];
         const itemMutationKey = row && item.routineItemId ? `complete-routine:${row.id}:${item.routineItemId}` : '';
         const itemMutation = Boolean(itemMutationKey && mutationKey === itemMutationKey);
         const detail = item.availability === 'adult-restricted' ? 'Inte tillgängligt för vuxna ännu'
@@ -252,7 +256,7 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initia
         if (item.kind === 'training') {
           const completionStatus = item.availability === 'unavailable' ? 'status kan inte bekräftas'
             : item.completed ? 'genomförd' : 'inte genomförd';
-          return <View key={item.id} style={styles.trainingRow}
+          return <View key={item.id} style={activityRowStyle}><View style={styles.trainingRow}
             accessibilityLabel={`Träningsuppgift: ${item.label}, ${completionStatus}${detail ? `, ${detail}` : ''}`}>
             <IconChip category="training" />
             <View style={styles.trainingCopy}>
@@ -264,16 +268,29 @@ export function DailyChecklistScreen({ dogName, dateKey, dogId, scopeKey, initia
             {item.availability === 'available' && item.programId && item.stepId
               ? <Button variant="tertiary" label="Öppna" accessibilityLabel={`Öppna träningssteget ${item.label}`} onPress={() => onOpenTrainingTarget(item.programId as string, item.stepId as string)} />
               : null}
-          </View>;
+          </View></View>;
         }
-        return <DailyActivityItem key={item.id} kind={item.kind} category="walk" label={item.label}
+        return <View key={item.id} style={activityRowStyle}><DailyActivityItem kind={item.kind} category={routineIconCategory(item.label)} label={item.label}
           detail={detail} routineLabel={item.routineLabel} completed={item.completed}
           accessibilityLabel={`Rutinpunkt: ${item.routineLabel ?? ''}, ${item.label}`}
           onToggle={row && item.routineItemId ? () => onSetRoutineCompletion(row, item.routineItemId as string, !item.completed) : undefined}
           onOpen={() => openManager(row?.routine_id ?? null)} pending={itemMutation && mutationBusy}
           statusMessage={itemMutation ? mutationMessage : ''} statusError={itemMutation && mutationError}
-          onRetry={itemMutation ? onRetryMutation : undefined} />;
+          onRetry={itemMutation ? onRetryMutation : undefined} /></View>;
       })}
+    </View> : null}
+    {activeTab === 'Idag' && upcomingHealthState === 'ready' && upcomingRoutineState === 'ready' && upcomingPreview.total > 0 ? <View style={styles.weekPreview} testID="checklist-week-preview">
+      <SectionHeader title="Kommande i veckan" />
+      <View style={styles.upcomingRows}>
+        {upcomingPreview.rows.map((row) => row.kind === 'health'
+          ? <ListRow key={`health:${row.id}`} category={row.category} title={row.label} meta={row.meta} time={row.time}
+            accessibilityLabel={`Öppna ${row.label}, ${row.meta}${row.time ? `, klockan ${row.time}` : ''}`}
+            disabled={Boolean(openingUpcomingPlanId)} onPress={() => onOpenUpcomingPlan(row.planId)} />
+          : <ListRow key={`routine:${row.id}`} category={row.category} title={row.label} meta={row.meta}
+            accessibilityLabel={`Hantera rutinen ${row.label}, nästa gång ${formatUpcomingDate(row.dateKey)}`}
+            disabled={managerBlocked} onPress={() => openManager(row.routineId)} />)}
+      </View>
+      {upcomingPreview.hasMore ? <Button variant="tertiary" label="Visa alla kommande" accessibilityLabel="Visa alla kommande aktiviteter" onPress={() => changeTab('Kommande')} /> : null}
     </View> : null}
 
     {activeTab === 'Denna vecka' ? <View style={styles.weekView}>
@@ -439,7 +456,7 @@ function renderRoutineTemplate(entry: DailyRoutineTemplateEntry, actions: {
           const row = item.routineDay as DailyRoutineDay;
           const itemMutationKey = `complete-routine:${row.id}:${item.routineItemId}`;
           const itemMutation = actions.mutationKey === itemMutationKey;
-          return <DailyActivityItem key={item.id} kind="routine" category="walk" label={item.label}
+          return <DailyActivityItem key={item.id} kind="routine" category={routineIconCategory(item.label)} label={item.label}
             routineLabel={row.routine_label_snapshot} completed={item.completed}
             accessibilityLabel={`Rutinpunkt: ${row.routine_label_snapshot}, ${item.label}`}
             onToggle={actions.canWrite && !actions.busy && item.routineItemId
@@ -465,6 +482,10 @@ const styles = StyleSheet.create({
   scopeContext: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'center' },
   upcomingView: { gap: tokens.spacing.md },
   upcomingRows: { gap: tokens.spacing.xs },
+  weekPreview: { gap: tokens.spacing.sm, padding: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.home.card },
+  activityList: { gap: 0, overflow: 'hidden', paddingHorizontal: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.home.card },
+  activityRow: { minHeight: tokens.size.touchMin, justifyContent: 'center', paddingVertical: tokens.spacing.xs },
+  activityDivider: { borderBottomWidth: tokens.size.stroke, borderBottomColor: tokens.colors.border },
   weekView: { gap: tokens.spacing.md },
   weekSelector: { flexDirection: 'row', justifyContent: 'space-between', gap: tokens.spacing.xs / 2 },
   weekDateButton: { flex: 1, minWidth: 0, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', gap: 2,
@@ -494,7 +515,7 @@ const styles = StyleSheet.create({
   templateChecklist: { gap: tokens.spacing.xs },
   templateItemRow: { minHeight: tokens.size.touchMin / 1.5, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   templateBullet: { width: tokens.spacing.sm, height: tokens.spacing.sm, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.primary },
-  trainingRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border },
+  trainingRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   trainingCopy: { flex: 1, minWidth: 0, gap: tokens.spacing.xs },
   loading: { gap: tokens.spacing.sm },
   stateMessage: { gap: tokens.spacing.xs },

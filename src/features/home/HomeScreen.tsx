@@ -30,12 +30,12 @@ export type HomeDailyFixtureItem = {
   routineLabel?: string;
 };
 
-export function HomeScreen({ dog, breed, content, contentState, trainingState = 'loading', nextStep, reviewTrainingStep = false, today: todayValue,
+export function HomeScreen({ dog, breed, content, contentState, contentSelectionStatus, contentUnknownReason, today: todayValue,
   dailyFixture, dailyState = 'hidden', dailyDateKey = '', dailyScopeKey, dailyActivities = [], routineTemplates = [], routineDaySkips = [], dailyTrainingOptions = [],
   dailyRefreshing = false, dailyRefreshError = false,
   dailyMutationBusy = false, dailyMutationKey = '', dailyMutationMessage = '', dailyMutationError = false, onRetryDaily,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay,
-  onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, trainingTargetFeedback, onOpenTrainingTarget, onGo, onOpenContent, onRetryContent }: {
+  onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, trainingTargetFeedback, onOpenTrainingTarget, onGo, onOpenContent, onRetryContent, onOpenDogProfile }: {
   dog: OwnedDog;
   breed?: string;
   today?: string;
@@ -45,11 +45,10 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   plans?: readonly PlannedHealthRecord[];
   content: readonly HomeContent[];
   contentState: LoadState;
+  contentSelectionStatus?: 'eligible' | 'empty' | 'unknown';
+  contentUnknownReason?: 'missing_age' | 'invalid_request' | 'unmapped_version';
   logState?: LoadState;
   planState?: LoadState;
-  trainingState?: LoadState;
-  nextStep?: string;
-  reviewTrainingStep?: boolean;
   dailyFixture?: readonly HomeDailyFixtureItem[];
   dailyState?: 'hidden' | 'loading' | 'ready' | 'error';
   dailyRefreshing?: boolean;
@@ -79,6 +78,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   onGo: (page: Destination) => void;
   onOpenContent: (id: string) => void;
   onRetryContent: () => void;
+  onOpenDogProfile?: () => void;
 }) {
   const [managerVisible, setManagerVisible] = useState(false);
   const [focusRoutineId, setFocusRoutineId] = useState<string | null>(null);
@@ -89,9 +89,11 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   const dailyProgressLabelText = dailyActivityProgressLabel(dailyProgress);
   const age = automaticDogAge(dog.birth_date, today);
   const breedLabel = breed?.trim() || dog.breed_id;
-  const relevantContent = contentState === 'ready'
+  const adviceSelectionStatus = contentSelectionStatus ?? 'unknown';
+  const relevantContent = contentState === 'ready' && adviceSelectionStatus === 'eligible'
     ? content.find((item) => item.contentType !== 'training_program')
     : undefined;
+  const confirmedEmptyAdvice = contentState === 'ready' && adviceSelectionStatus === 'empty';
   const preview = relevantContent ? previewText(relevantContent.body) : '';
   const pageLabel = dailyFixture ? 'Hem. Syntetiskt granskningsläge.' : 'Hem';
 
@@ -129,25 +131,27 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
       {age ? <HomeAgeStrip key={`${dog.id}:${age.unit}`} birthDate={dog.birth_date} today={today} unit={age.unit} portraitFrame={portraitFrame} /> : null}
     </View>
 
-    <Card variant="home" onPress={relevantContent ? () => onOpenContent(relevantContent.id) : nextStep && trainingState === 'ready' ? () => onGo('training') : undefined}
-      accessibilityLabel={`Just nu med ${dog.name}${relevantContent ? `: ${relevantContent.title}` : nextStep && trainingState === 'ready' ? `: ${nextStep}` : ''}${age ? `, hundens ålder ${age.label}` : ''}`}>
-      <View style={styles.currentCard}>
+    <Card variant="home" onPress={relevantContent ? () => onOpenContent(relevantContent.id) : confirmedEmptyAdvice ? () => onGo('checklist') : undefined}
+      accessibilityLabel={`Just nu med ${dog.name}${relevantContent ? `: ${relevantContent.title}` : confirmedEmptyAdvice ? ': inget publicerat råd. Öppna dagens checklista' : ''}${age ? `, hundens ålder ${age.label}` : ''}`}>
+      <View style={[styles.currentCard, confirmedEmptyAdvice && styles.emptyCurrentCard]}>
         <View style={styles.cardHeadingRow}>
           <Ionicons name="bulb" size={tokens.size.iconSm} color={tokens.colors.home.bulb} accessibilityElementsHidden />
-          <Text style={styles.cardHeading}>Just nu med {dog.name}</Text>
-          {relevantContent || (nextStep && trainingState === 'ready') ? <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden /> : null}
+          <Text style={confirmedEmptyAdvice ? styles.emptyCardHeading : styles.cardHeading}>Just nu med {dog.name}</Text>
+          {relevantContent || confirmedEmptyAdvice ? <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden /> : null}
         </View>
-        {age ? <Text style={styles.dogAge}>Hundens ålder: {age.label}</Text> : null}
+        {age ? <Text style={confirmedEmptyAdvice ? styles.emptyCardDogAge : styles.dogAge}>Hundens ålder: {age.label}</Text> : null}
         {contentState === 'loading' ? <Skeleton shape="line" lines={2} /> : null}
         {contentState === 'error' ? <Text style={styles.body}>Kunskapen kunde inte hämtas just nu. Öppna Kunskap för att försöka igen.</Text> : null}
         {relevantContent ? <Text numberOfLines={3} style={styles.body}>{preview}</Text> : null}
-        {!relevantContent && contentState === 'ready' && trainingState === 'loading' ? <Skeleton shape="line" lines={2} /> : null}
-        {!relevantContent && contentState === 'ready' && trainingState === 'error' ? <Text style={styles.body}>Träningen kunde inte hämtas just nu.</Text> : null}
-        {!relevantContent && contentState === 'ready' && trainingState === 'ready' && nextStep ? <>
-          <Text numberOfLines={2} style={styles.body}>{nextStep}</Text>
-          {reviewTrainingStep ? <Text style={styles.exampleLabel}>Tillfälligt exempel – innehållet är inte sakgranskat</Text> : null}
+        {confirmedEmptyAdvice ? <Text style={styles.emptyCardBody} numberOfLines={2}>
+          Det finns inget publicerat råd för den här vyn just nu. <Text style={styles.emptyCardAction}>Öppna dagens checklista</Text>
+        </Text> : null}
+        {!relevantContent && contentState === 'ready' && adviceSelectionStatus === 'unknown' ? <>
+          <Text style={styles.body}>{contentUnknownReason === 'missing_age' ? 'Lägg till födelsedatum för åldersbaserade råd.' : 'Vi kan inte välja innehåll för den här vyn just nu.'}</Text>
+          <Button variant="tertiary" label={contentUnknownReason === 'missing_age' ? 'Redigera hundprofil' : 'Öppna dagens checklista'}
+            accessibilityLabel={contentUnknownReason === 'missing_age' ? 'Redigera hundprofil' : 'Öppna dagens checklista'}
+            onPress={contentUnknownReason === 'missing_age' ? onOpenDogProfile ?? (() => onGo('knowledge')) : () => onGo('checklist')} />
         </> : null}
-        {!relevantContent && contentState === 'ready' && trainingState === 'ready' && !nextStep ? <Text style={styles.body}>Inget nytt innehåll att visa just nu.</Text> : null}
         {contentState === 'error' ? <Button variant="tertiary" label="Hämta guider igen" accessibilityLabel="Hämta guider igen" onPress={onRetryContent} /> : null}
       </View>
     </Card>
@@ -168,11 +172,11 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
         </View>
         {!dailyFixture && dailyState === 'ready' && dailyActivities.length > 0 && dailyProgress.unavailableCount > 0
           ? <Text style={styles.dailyCount}>{dailyProgressLabelText}</Text> : null}
-        <MotionPressable testID="home-open-daily-checklist" accessibilityRole="button" accessibilityLabel="Visa dagens checklista"
+        {!confirmedEmptyAdvice ? <MotionPressable testID="home-open-daily-checklist" accessibilityRole="button" accessibilityLabel="Visa dagens checklista"
           onPress={() => onGo('checklist')} style={({ pressed }) => [styles.showAll, pressed && styles.headingPressed]}>
           <Text style={styles.showAllText}>Visa dagens checklista</Text>
           <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
-        </MotionPressable>
+        </MotionPressable> : null}
         {dailyRefreshError && dailyState === 'ready' ? <View style={styles.dailyRefreshError} accessibilityLiveRegion="polite">
           <Text style={styles.emptyText}>Uppdateringen kunde inte hämtas. Du ser senast hämtade uppgifter.</Text>
           {onRetryDaily ? <Button variant="tertiary" label="Försök igen" accessibilityLabel="Försök uppdatera dagens uppgifter igen" onPress={onRetryDaily} /> : null}
@@ -374,10 +378,14 @@ const styles = StyleSheet.create({
   weekDot: { width: tokens.spacing.xs + 1, height: tokens.spacing.xs + 1, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.border },
   currentWeekDot: { backgroundColor: tokens.colors.home.greenStrong },
   currentCard: { gap: tokens.spacing.sm },
+  emptyCurrentCard: { gap: 3 },
   cardHeadingRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   cardHeading: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },
+  emptyCardHeading: { ...tokens.typography.label, lineHeight: 22, color: tokens.colors.home.text, flex: 1 },
+  emptyCardDogAge: { ...tokens.typography.caption, lineHeight: 18, color: tokens.colors.home.textMuted },
+  emptyCardBody: { ...tokens.typography.caption, lineHeight: 20, color: tokens.colors.home.text, flexShrink: 1 },
+  emptyCardAction: { color: tokens.colors.primary, fontWeight: '700' },
   body: { ...tokens.typography.caption, color: tokens.colors.home.text, flexShrink: 1 },
-  exampleLabel: { ...tokens.typography.caption, color: tokens.colors.warning },
   dailyCardContent: { gap: tokens.spacing.xs / 2 },
   dailyHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   dailyTitle: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },

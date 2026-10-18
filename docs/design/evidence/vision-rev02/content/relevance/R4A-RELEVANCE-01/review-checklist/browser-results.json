@@ -1,0 +1,11 @@
+{
+  "passes": [
+    "Home checklist entry is visible for 0, 1–5 and >5 activities and returns to Home",
+    "Checklist routine manager opens, adds/removes a routine for today and returns to the same date/list",
+    "Checklist loading, empty and read-error states remain distinct",
+    "Missing training source remains non-actionable and does not claim unconfirmed completion",
+    "Exact training-step open/return, checklist and Home scroll restoration, focused routine manager scroll restoration, 3 viewports and 140% text"
+  ],
+  "pageErrors": [],
+  "scope": "Panel 4 Idag flow; production React Native Web components with synthetic data; not device/backend certification"
+}

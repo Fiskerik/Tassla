@@ -185,6 +185,57 @@ Architect approved exact plan v4. The implementation changes shared date/time tr
 
 Plan/UX-spec v3 has Architect APPROVE, Critic PROCEED and Security PASS. The implementation adds a conditional Kommande tab backed by separate dog-scoped reads for future health plans and explicitly repeating routine templates. Date filtering precedes the 40-plan cap; routine recurrence derives only the next occurrence, with no future day materialization, completion, skip, training, or notification. Each source has its own state, retry and owner/account-generation/dog/date/timezone fence. A selected health plan is re-fetched by id and opens directly in edit mode; back navigation follows its Health or Checklist origin. No schema, RPC, RLS, grant, purpose, dependency or backend change.
 
+### R3c verifieringskorrigering — 2026-10-17
+
+En senare källkontroll hittade att den bekräftade create/update/delete-rutinmallvägen inte triggar den separata Kommande-rutinläsningen, trots äldre Reviewer-closeout. V6 QA-only-slicen stoppades före test-/fixtureändring. Korrigerings-/QA-plan v7 inväntar Architect, Critic och Security; ingen produktionsfix har ännu skrivits. Därför ska den äldre implementationstextens rutinrefresh inte tolkas som verifierad tills v7 QA och Reviewer passerat.
+
 After the independent implementation review identified stale routine projections, an ABA race during selected-plan opening, and missing dirty-form navigation protection, all three findings were addressed: confirmed routine template mutations retry only the upcoming-routine source; leaving Kommande or the Checklist screen invalidates any pending by-id open; PlannedHealthScreen now preserves an edit baseline and confirms before leaving unsaved edits. Security implementation review returned PASS, with the documented caveat that the existing daily snapshot path may still materialize today's row while the Checklist is active; the new Kommande reads/retries do not materialize future rows.
 
 The final independent Reviewer recheck returned PASS, including the missing-record baseline cleanup and leave-guard registration timing. This remains a local implementation checkpoint only. Tests were neither added nor run; functional, live RLS, native and current visual QA remain open/NOT TESTABLE. The Rev02 §14 checklist and next verification list are in `docs/design/evidence/vision-rev02/checklist/UPCOMING-01/README.md`. No commit or push is recorded.
+
+### UIUX-REVAMP-R4A-RELEVANCE-01 — local closeout, 2026-10-17
+
+Architect APPROVE and Critic PROCEED for exact plan v16 / UX v13. Independent QA v3 and final delta-QA PASS; independent Reviewer recheck PASS. Corrected distinct Training surface selections/statuses, Knowledge unknown/confirmed-empty routing, malformed selector identifier validation, and dirty Weight draft protection. `pnpm check` passed 563/563 with app and edge typechecks and lint; focused content/workspace tests passed 25/25 and final selector test 16/16. Public/review surface and help browser checks passed at 375/430 with no page errors; design-rules §14 items and point-16 subassessments are saved in `docs/design/evidence/vision-rev02/content/relevance/R4A-RELEVANCE-01/SECTION14.md`.
+
+The stale legacy broad smoke failure on the removed `lördag` Home tab is documented and not counted as PASS. Full rev02 similarity, native iOS/Android, live Supabase/RLS, and TestFlight remain unverified. This is an uncommitted local checkpoint on `codex/mvp-v2-panel4-checklists-2026-10-16`; the requested combined commit/push waits until R3c and the requested later packages are complete.
+
+### FLOW-HOME-CHECKLIST-UPCOMING-01 — R3c v10 local closeout, 2026-10-17
+
+Exact v10 plan: Architect APPROVE, Critic APPROVE, Security PASS (no data-inventory delta). Security implementation review PASS; independent QA v10 PASS; independent Reviewer evidence recheck PASS after documentation/queue-history synchronization. `pnpm check` passed with app/edge typecheck, lint and 569/569 tests; focused R3c suite 31/31; public/review browser 12/12 each with zero page errors or blocked requests; Kommande tab and label fit at 140%; Python syntax, queue validation and `git diff --check` pass.
+
+The checkpoint covers local code and synthetic browser evidence only. Live Supabase/RLS, native iOS/Android, VoiceOver/device Dynamic Type, real midnight/timezone behavior, and direct visual comparison to a missing Kommande reference remain NOT TESTABLE. No commit/push has been made; continue with R4b on the same branch after this local closeout.
+
+
+### 2026-10-17 — UIUX-REVAMP-R4B-PERIOD-01 local checkpoint
+
+R4b plan v2 closes locally. Architect APPROVE, Critic PROCEED and Dog Expert PASS preceded implementation; independent QA PASS criteria 1–5 and independent Reviewer final PASS. `node --experimental-strip-types --test tests/domain.test.mjs tests/profile-edit.test.mjs` passes 36/36; `pnpm check` passes app/edge typecheck, lint and 574/574 tests; `python tools/dev_flow.py validate` and `git diff --check` pass. The resolver exposes ten provisional editorial age periods using local date-only semantics; 8/12-week seam, clamped calendar months, month-end, leap day, years through 10+, invalid/future input and existing 6/24-month stage regressions are covered. No UI, period-driven content selection, persistence, schema, RLS or backend changes. Reviewer-requested wording was corrected to say the existing profile suite is regression only and does not prove identity persistence between period changes. Full MVP Scenario C integration, native app and live Supabase/RLS remain open and NOT TESTABLE. This local checkpoint remains uncommitted for the owner's requested combined R4–R7 commit/push.
+
+### UIUX-REVAMP-R4C-PUBLISHED-FAQ-01 — lokal checkpoint, 2026-10-18
+
+R4c v7 använder två redan publicerade, källmärkta versioner för public FAQ. Innehållskroppar och publiceringsstatus ändrades inte; reviewinnehåll är fortsatt syntetiskt och avskilt. Equal-width kontextval, HomeCarousel → FAQ → Hem samt FAQ → Checklistor → FAQ verifieras i public/review-fixtures. Architect APPROVE, Critic PROCEED, Dog Expert PASS, final independent Critic QA PASS och Reviewer PASS. Fokuserade tester 33/33; `pnpm check` 577/577; public/review visual matrices utan browserfel; py_compile, queue validation och `git diff --check` PASS. §14-bedömning och screenshots/manifests finns i [oberoende QA](../design/evidence/vision-rev02/knowledge/R4C-PUBLISHED-FAQ-01/INDEPENDENT-QA.md).
+
+Live Supabase/RLS, native iOS/Android, skärmläsare/enhetens Dynamic Type, faktisk extern källöppning och exakt FAQ-matchning mot saknad dedikerad referens är NOT TESTABLE. R4c stängs som lokal checkpoint, ocommittad enligt den begärda samlade R4–R7-batchen på `codex/mvp-v2-panel4-checklists-2026-10-16`.
+
+### 2026-10-18 — FLOW-KNOWLEDGE-01 (R4d) local checkpoint
+
+Plan v5 received Architect APPROVE, Critic PROCEED and Dog Expert PASS. Implementation grants the two approved published guide versions to the two Knowledge surfaces, adds a local title/body filter over the already eligible result set, and maps decorative imagery by exact content-version ID. The first-week guide remains excluded without a recent-homecoming signal. No new dependency, query, content, schema, RLS, RPC, auth or publication change.
+
+Independent QA passed the focused suite (33/33), `pnpm check` passed with 581/581 tests plus typechecks/lint, and the QA agent inspected final public/review screenshots and browser manifests. Independent Reviewer ran each browser matrix successfully (4 checks, zero browser errors). Visual fixtures include a clearly marked layout-only two-card case that does not bypass production selection. The report and persistent captures are in `docs/design/evidence/vision-rev02/knowledge/FLOW-KNOWLEDGE-01/`.
+
+At the 140% web text proxy, the shared BottomNav “Kunskap” label wraps to two lines while Knowledge content remains visible. React Native Web does not emit `aria-selected` for the tabs; the browser harness verifies destination content instead, and native screen-reader behavior is NOT TESTABLE. Direct pixel comparison is NOT TESTABLE because `vision_rev02.jpg` is absent from this checkout. Live Supabase/RLS, external handoff, native rendering, VoiceOver and device Dynamic Type also remain NOT TESTABLE. Local uncommitted checkpoint for the requested combined R4–R7 batch.
+
+### 2026-10-18 — FLOW-HOME-CHECKLIST-ALL-VERIFY-01 v2 local closeout
+
+Exact test-only plan v2 received Architect APPROVE, Critic PROCEED, independent QA PASS and independent Reviewer PASS. The delayed-delete check now expects natural manager closure after expiry/refresh, retained Morgonrutin in the visible Alla list, and one refresh with zero writes. No product or fixture behavior changed. Implementation and independent QA public/review runs each passed 16/16 with zero browser errors and 22 screenshots each; py_compile, queue validation and diff-check passed. Durable run manifests, key QA screenshots, and limitations are saved under docs/design/evidence/vision-rev02/checklist/ALL-VERIFY-02/. Live Supabase/RLS and native modal/accessibility remain NOT TESTABLE. Local checkpoint on codex/mvp-v2-panel4-checklists-2026-10-16; no commit/push yet. Resume FLOW-HOME-CHECKLIST-01 with a reviewed integration plan updated for this corrected test outcome.
+
+### FLOW-HOME-CHECKLIST-WEEK-VERIFY-01 — v2 local closeout, 2026-10-18
+
+Exact test-only plan v2 received Architect APPROVE, Critic PROCEED, independent QA PASS, and independent Reviewer PASS. The static test normalizes CRLF only in its local verifier-source string and keeps all existing R3c assertions. The weekly confirmed-reset verifier uses the single visible accessible Home checklist card. Focused tests passed 56/56; `pnpm check` passed typechecks, lint, and 581/581 tests; public/review checklist-week passed 7/7 each and `r3c-upcoming` 12/12 each. All manifests have empty page errors; R3c has no blocked requests. `py_compile`, queue validation, and diff-check passed. Reviewer inspected canonical manifests/screenshots and found no code issues; QA's temporary separate rerun artifacts were unavailable as documented. No production or fixture behavior changed. Live Supabase/RLS and native/device accessibility remain NOT TESTABLE. This closes the test-only dependency and resumes the approved Panel 4 v7 integration. The change remains local and uncommitted for the requested combined package delivery.
+
+
+## FLOW-HOME-CHECKLIST-01 v7 — reviewer closeout, 2026-10-18
+
+- Independent Reviewer: PASS efter dokumentationsrättning. Korrekt 140 %-fynd: Idag klipps vid sista “g”; Denna vecka är fullt synlig. QA-originalet är bevarat och uttryckligen korrigerat i addendum.
+- Funktion/evidens: PASS enligt oberoende QA; visuellt kvarstår §14-nej för den direkta Panel 4-matchningen.
+- Beslut: read-only integrationsparenten blockeras för separat UI-korrigering; inga produktändringar utfördes i v7. Nästa paket har egen UX-spec, Architect/Critic-grind, UI-implementation, QA och Reviewer.
+- Review evidence: `docs/design/evidence/vision-rev02/checklist/PANEL4-INTEGRATION-01/v7/review/REVIEW-REPORT.md`.

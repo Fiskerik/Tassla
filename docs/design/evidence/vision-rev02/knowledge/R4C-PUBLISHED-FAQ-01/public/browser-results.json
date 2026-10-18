@@ -1,0 +1,75 @@
+{
+  "passes": [
+    "Keyboard Tab/Enter reaches and expands the FAQ question, then reaches the source action",
+    "Public FAQ exact-version body/source action, honest empty/unknown states, retry/loading, keyboard controls, responsive rendering, and active-tab bounds at 140% pass",
+    "Checklistor remains reachable from FAQ and returns to the FAQ state (public-empty-state)",
+    "HomeCarousel FAQ destination opens the selected FAQ branch and wired Home navigation returns (public-exact-version)"
+  ],
+  "pageErrors": [],
+  "scope": "R4c public FAQ from exact approved local bundle records and review-only synthetic FAQ in production KnowledgeScreen/FAQScreen; no live data, external navigation or backend write",
+  "bundle": "public",
+  "viewports": [
+    "375x844",
+    "430x844",
+    "375x667",
+    "375x844 at 140% web text proxy"
+  ],
+  "captures": [
+    "public-faq-handling-375x844.png",
+    "public-faq-handling-430x844.png",
+    "public-faq-expanded-sources-375x844.png",
+    "public-faq-alone-40-weeks-375x844.png",
+    "public-faq-age-filtered-empty-375x844.png",
+    "public-faq-missing-age-profile-route-375x844.png",
+    "public-faq-invalid_request-no-profile-cta-375x844.png",
+    "public-faq-unmapped_version-no-profile-cta-375x844.png",
+    "public-faq-short-375x667.png",
+    "public-faq-loading-375x844.png",
+    "public-faq-error-retry-375x844.png",
+    "public-faq-source-keyboard-focus-375x844.png",
+    "public-faq-expanded-140-text-375x844.png",
+    "checklist-tab-from-faq-375x844.png",
+    "home-carousel-faq-destination-375x844.png",
+    "home-carousel-faq-return-375x844.png"
+  ],
+  "activeTabBoundsAt140Percent": {
+    "left": 297.234375,
+    "right": 351.015625,
+    "viewportLeft": 24,
+    "viewportRight": 351
+  },
+  "reviewContextControlBounds": {
+    "status": "not_applicable",
+    "reason": "Review-only context controls are intentionally absent from public FAQ."
+  },
+  "checklistReachability": {
+    "status": "pass",
+    "contentState": "public-empty-state",
+    "returnedToFaq": true
+  },
+  "homeCarouselFaqRoundTrip": {
+    "status": "pass",
+    "destinationId": "review-v1:destination:faq",
+    "knowledgeTabSelected": true,
+    "contentBranch": "public-exact-version",
+    "returnedHome": true
+  },
+  "interceptedSourceOpens": [
+    "https://avsab.org/wp-content/uploads/2021/08/AVSAB-Humane-Dog-Training-Position-Statement-2021.pdf"
+  ],
+  "section14VisualAssessment": {
+    "composition": "Knowledge panel 7 FAQ tab and rendered source rows are documented in captures; direct comparison against the §14 reference is recorded separately in INDEPENDENT-QA.md",
+    "color": "Production token colors are visible in captures; reference similarity is assessed separately in INDEPENDENT-QA.md",
+    "typography": "Production typography and 140% web text proxy are visible in captures; device Dynamic Type is NOT TESTABLE",
+    "componentShapes": "Production Knowledge/FAQ components are visible in captures; reference similarity is assessed separately in INDEPENDENT-QA.md",
+    "imagery": "FAQ answer has no inline image; dedicated FAQ reference imagery is NOT TESTABLE if absent from vision_rev02",
+    "contentDensity": "Published answer fixtures and source rows are captured; reference comparison is recorded separately in INDEPENDENT-QA.md"
+  },
+  "limitations": [
+    "Approved local content bundle drives synthetic visual fixtures; no live published rows or Supabase/RLS are verified",
+    "Source click is intercepted by the visual fixture; no external navigation occurs",
+    "Native iOS/Android, VoiceOver, device Dynamic Type and actual installed app are NOT TESTABLE",
+    "The 140% text proxy is a web CSS approximation"
+  ],
+  "independentQaReport": "../INDEPENDENT-QA.md"
+}

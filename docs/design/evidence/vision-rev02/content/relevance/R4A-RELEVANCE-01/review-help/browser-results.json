@@ -1,0 +1,21 @@
+{
+  "passes": [
+    "Logg help returns to the selected date at 375px",
+    "Weight help is unavailable while the add form is dirty; source tab returns when safe at 375px",
+    "Health history and weight help retain the source tab at 375px",
+    "Logg help returns to the selected date at 430px",
+    "Weight help is unavailable while the add form is dirty; source tab returns when safe at 430px",
+    "Health history and weight help retain the source tab at 430px"
+  ],
+  "pageErrors": [],
+  "scope": "R4a contextual Logg/Health functional-help routes and source-context restoration in synthetic public/review RN Web",
+  "bundle": "review",
+  "viewports": [
+    375,
+    430
+  ],
+  "limitations": [
+    "Help copy is synthetic and does not validate production content selection or publishing",
+    "Native iOS/Android, VoiceOver, Dynamic Type, and live Supabase/RLS are not tested"
+  ]
+}

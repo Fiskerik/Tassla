@@ -1,0 +1,20 @@
+{
+  "passes": [
+    "Knowledge hero and compact cards render and open their exact fixture content versions",
+    "Knowledge search trims and matches an eligible published guide by title at 375px",
+    "Knowledge article opens exact selected version, source action is safe, and return preserves the current tab/search",
+    "Knowledge keeps FAQ and Checklistor reachable from the published-guide experience"
+  ],
+  "pageErrors": [],
+  "scope": "R4d published Knowledge selector, search, article/source/return, public/review RN Web fixtures",
+  "bundle": "review",
+  "viewports": [
+    375,
+    430,
+    375
+  ],
+  "limitations": [
+    "Uses local published bundle fixtures and synthetic callbacks; does not certify live Supabase/RLS or publication",
+    "Native iOS/Android, VoiceOver, and device Dynamic Type are not tested"
+  ]
+}

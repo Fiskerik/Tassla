@@ -17,6 +17,55 @@ tsResolution.deregister();
 const baseUrl = 'https://local-test.supabase.invalid';
 const dogId = '11111111-1111-4111-8111-111111111111';
 
+test('upcoming health plans are dog-scoped, date-filtered before the 40-row cap, minimal and read-only', async () => {
+  const rows = [
+    { id: '22222222-2222-4222-8222-222222222221', dog_id: dogId, event_type: 'vaccination', due_on: '2026-10-15', due_time: '09:30', description: 'Påfyllnad' },
+    { id: '22222222-2222-4222-8222-222222222222', dog_id: dogId, event_type: 'vet_visit', due_on: '2026-10-20', due_time: null, description: null },
+  ];
+  const { client, requests } = localClient(({ method, url }) => {
+    assert.equal(method, 'GET');
+    assert.equal(url.pathname, '/rest/v1/dog_health_plans');
+    assert.equal(url.searchParams.get('select'), 'id,dog_id,event_type,due_on,due_time,description');
+    assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
+    assert.equal(url.searchParams.get('due_on'), 'gt.2026-10-13');
+    assert.equal(url.searchParams.get('limit'), '40');
+    const order = url.searchParams.get('order')?.split(',') ?? [];
+    assert.deepEqual(order, ['due_on.asc', 'id.asc']);
+    return jsonResponse(rows);
+  });
+  try {
+    assert.deepEqual(await workspaceData.fetchUpcomingPlannedHealth(client, dogId, '2026-10-13'), [
+      { ...rows[0], due_time: '09:30' }, rows[1],
+    ]);
+    assert.deepEqual(requests.map(({ method, url }) => [method, url.pathname]), [
+      ['GET', '/rest/v1/dog_health_plans'],
+    ]);
+  } finally { await client.auth.dispose(); }
+});
+
+test('upcoming health reader rejects invalid local dates and foreign or non-future rows without extra requests', async () => {
+  const { client, requests } = localClient(({ method, url }) => {
+    assert.equal(method, 'GET');
+    assert.equal(url.pathname, '/rest/v1/dog_health_plans');
+    return jsonResponse([{ id: '22222222-2222-4222-8222-222222222222', dog_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      event_type: 'vaccination', due_on: '2026-10-15', due_time: null, description: null }]);
+  });
+  try {
+    await assert.rejects(workspaceData.fetchUpcomingPlannedHealth(client, dogId, '2026-10-13'), /Could not load upcoming planned health/);
+    await assert.rejects(workspaceData.fetchUpcomingPlannedHealth(client, dogId, '2026-02-30'), /Invalid upcoming health scope/);
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].url.pathname, '/rest/v1/dog_health_plans');
+  } finally { await client.auth.dispose(); }
+
+  const { client: sameDayClient, requests: sameDayRequests } = localClient(() => jsonResponse([
+    { id: '22222222-2222-4222-8222-222222222223', dog_id: dogId, event_type: 'vet_visit', due_on: '2026-10-13', due_time: null, description: null },
+  ]));
+  try {
+    await assert.rejects(workspaceData.fetchUpcomingPlannedHealth(sameDayClient, dogId, '2026-10-13'), /Could not load upcoming planned health/);
+    assert.equal(sameDayRequests.length, 1);
+  } finally { await sameDayClient.auth.dispose(); }
+});
+
 test('dog-event history filters the supported everyday types and has deterministic owner-scoped pagination order', async () => {
   const event = {
     id: '22222222-2222-4222-8222-222222222222',
@@ -201,18 +250,18 @@ test('marks a timed out event insert unknown and forwards the real SDK abort sig
   }
 });
 
-test('training uses published version and server step UUIDs, preserving in-progress versions', async () => {
+test('training hides ungranted current versions and keeps only a safe count for older progress', async () => {
   const oldVersion = versionRow({
-    id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
+    id: '62000000-0000-4000-8000-000000000009',
     contentId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
     version: 1,
-    title: 'Påbörjat program',
+    title: 'SENTINEL: ska inte visas',
   });
   const newVersion = versionRow({
-    id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2',
+    id: '62000000-0000-4000-8000-000000000001',
     contentId: oldVersion.content_id,
     version: 2,
-    title: 'Ny programversion',
+    title: 'SENTINEL: ny nekad version',
   });
   const finishedStep = {
     dog_id: dogId,
@@ -231,19 +280,6 @@ test('training uses published version and server step UUIDs, preserving in-progr
       assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
       return jsonResponse([finishedStep]);
     }
-    if (url.pathname === '/rest/v1/training_steps') {
-      assert.equal(method, 'GET');
-      const requestedVersions = url.searchParams.get('program_version_id');
-      assert.ok(requestedVersions?.startsWith('in.(') && requestedVersions.endsWith(')'));
-      const requestedVersion = requestedVersions.slice(4, -1);
-      const steps = requestedVersion === oldVersion.id
-        ? [
-          { id: 'cccccccc-cccc-4ccc-8ccc-ccccccccccc2', program_version_id: oldVersion.id, position: 2, title: 'Steg två', instruction: 'Instruktion två' },
-          { id: finishedStep.step_id, program_version_id: oldVersion.id, position: 1, title: 'Steg ett', instruction: 'Instruktion ett' },
-        ]
-        : [{ id: 'dddddddd-dddd-4ddd-8ddd-ddddddddddd2', program_version_id: newVersion.id, position: 1, title: 'Nytt steg', instruction: 'Ny instruktion' }];
-      return jsonResponse(steps);
-    }
     throw new Error(`Unexpected request ${method} ${url.pathname}`);
   });
 
@@ -255,15 +291,15 @@ test('training uses published version and server step UUIDs, preserving in-progr
       birth_date: '2026-08-01',
     }, 10);
 
-    assert.equal(result.programs.length, 1);
-    assert.equal(result.programs[0].id, oldVersion.id);
-    assert.deepEqual(result.programs[0].steps.map(({ id }) => id), [
-      finishedStep.step_id,
-      'cccccccc-cccc-4ccc-8ccc-ccccccccccc2',
-    ]);
-    assert.deepEqual(result.programs[0].completedStepIds, [finishedStep.step_id]);
-    assert.deepEqual(result.programs[0].completedAtByStepId, { [finishedStep.step_id]: finishedStep.completed_at });
-    assert.deepEqual(result.paused, []);
+    assert.deepEqual(result.programs, []);
+    assert.deepEqual(result.recommendedPrograms, []);
+    assert.deepEqual(result.allPrograms, []);
+    assert.equal(result.selectionStatus, 'empty');
+    assert.equal(result.recommendedSelectionStatus, 'empty');
+    assert.equal(result.allSelectionStatus, 'empty');
+    assert.deepEqual(result.paused, [{ versionId: oldVersion.id, completedCount: 1 }]);
+    assert.equal(JSON.stringify(result).includes('SENTINEL'), false);
+    assert.equal(requests.some(({ url }) => url.pathname === '/rest/v1/training_steps'), false);
     assert.ok(requests.every(({ method }) => method === 'GET'));
   } finally {
     await client.auth.dispose();
@@ -291,7 +327,10 @@ test('training workspace stays empty when there are no published programs', asyn
       breed_id: 'mixed',
       birth_date: '2026-08-01',
     }, 10);
-    assert.deepEqual(result, { programs: [], paused: [] });
+    assert.deepEqual(result, {
+      programs: [], recommendedPrograms: [], allPrograms: [], paused: [],
+      selectionStatus: 'empty', recommendedSelectionStatus: 'empty', allSelectionStatus: 'empty',
+    });
     assert.equal(requests.some(({ url }) => url.pathname === '/rest/v1/training_steps'), false);
   } finally {
     await client.auth.dispose();
@@ -323,6 +362,10 @@ test('keeps progress for a withdrawn or unavailable published version as paused 
     }, 10);
 
     assert.deepEqual(result.programs, []);
+    assert.deepEqual(result.recommendedPrograms, []);
+    assert.deepEqual(result.allPrograms, []);
+    assert.equal(result.recommendedSelectionStatus, 'empty');
+    assert.equal(result.allSelectionStatus, 'empty');
     assert.deepEqual(result.paused, [{ versionId: unavailableVersionId, completedCount: 2 }]);
     assert.equal(requests.some(({ url }) => url.pathname === '/rest/v1/training_steps'), false);
     assert.equal(requests.some(({ method }) => method === 'DELETE' || method === 'PATCH'), false);

@@ -523,6 +523,8 @@ test('actual notification response handler routes only current owner/dog payload
     await harness.handle(response);
     await harness.handle(response);
     assert.deepEqual(harness.pages, ['planned-health']);
+    assert.deepEqual(harness.plannedHealthEntries, [{ origin: 'health' }]);
+    assert.equal(harness.selectedUpcomingPlan.current, null);
     assert.deepEqual(harness.lookups, [[{}, dogId, planId]]);
     assert.equal(harness.clears, 1, 'the same identifier/date delivery is handled once');
   });
@@ -694,11 +696,13 @@ function buildTapHandlerHarness({ context, current, response, lastResponse, plan
   }).outputText;
   const pages = [];
   const lookups = [];
+  const plannedHealthEntries = [];
+  const selectedUpcomingPlan = { current: { record: { id: 'previous-plan' } } };
   let clears = 0;
   let isCurrent = current;
   const identifiers = [
     'Notifications', 'notificationContextRef', 'reminderService', 'parseReminderPayload', 'handledNotificationResponses',
-    'setPage', 'fetchPlannedHealthById', 'client',
+    'setPage', 'fetchPlannedHealthById', 'client', 'selectedUpcomingPlan', 'setPlannedHealthEntry',
   ];
   let currentLastResponse = lastResponse;
   const dependencies = [
@@ -710,9 +714,12 @@ function buildTapHandlerHarness({ context, current, response, lastResponse, plan
     (page) => pages.push(page),
     async (...args) => { lookups.push(args); return fetchPlan ? await fetchPlan(...args) : plan ?? null; },
     {},
+    selectedUpcomingPlan,
+    (entry) => plannedHealthEntries.push(entry),
   ];
   const load = new Function(...identifiers, `${code}\nreturn { handleNotificationResponse };`);
-  return { handle: load(...dependencies).handleNotificationResponse, pages, lookups, get clears() { return clears; },
+  return { handle: load(...dependencies).handleNotificationResponse, pages, lookups, plannedHealthEntries, selectedUpcomingPlan,
+    get clears() { return clears; },
     setCurrent(value) { isCurrent = value; }, setLastResponse(value) { currentLastResponse = value; } };
 }
 

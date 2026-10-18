@@ -6,6 +6,7 @@ import { registerHooks } from 'node:module';
 const hook = registerHooks({ resolve(specifier, context, nextResolve) { return specifier.startsWith('.') && !/\.[a-z0-9]+$/i.test(specifier) ? nextResolve(`${specifier}.ts`, context) : nextResolve(specifier); } });
 const review = await import('../src/features/knowledge/review-content.ts');
 const { reviewFaqFor } = review;
+const faqSource = await readFile(new URL('../src/features/knowledge/FAQScreen.tsx', import.meta.url), 'utf8');
 hook.deregister();
 
 test('FAQ examples are static, phase-scoped, and versioned', () => {
@@ -26,20 +27,30 @@ test('each synthetic training program has a matching guide content ID', () => {
   }
 });
 
-test('Home review shortcuts open the same stable Knowledge destinations', async () => {
-  const carousel = await readFile(new URL('../src/features/home/HomeCarousel.tsx', import.meta.url), 'utf8');
+test('Home uses its granted advice selection and a single checklist action for confirmed empty state', async () => {
+  const home = await readFile(new URL('../src/features/home/HomeScreen.tsx', import.meta.url), 'utf8');
   const workspace = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
-  assert.match(workspace, /nextStep=\{visibleTrainingState === 'ready' \? nextStep\?\.title : undefined\}/);
-  assert.match(carousel, /if \(nextStep\) cards\.push\(\{ key: 'training', title: nextStep,/);
-  assert.doesNotMatch(carousel, /key: 'training', title: 'Fortsätt träna'/);
-
-  assert.match(carousel, /if \(process\.env\.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true'\) cards\.push\(\{ key: 'checklists'/);
-  assert.match(carousel, /onOpenContent\(CHECKLIST_DESTINATION_ID\)/);
-
-  const faqCard = carousel.match(/cards\.push\(\{ key: 'faq',[^\n]+/);
-  assert.ok(faqCard, 'FAQ card remains unconditionally available');
-  assert.match(faqCard[0], /title: 'Vanliga frågor'/);
-  assert.match(faqCard[0], /onOpenContent\(FAQ_DESTINATION_ID\)/);
+  assert.doesNotMatch(home, /\bnextStep\b|reviewTrainingStep/);
+  assert.doesNotMatch(workspace, /nextStep=\{/);
+  assert.match(home, /contentState === 'ready' && adviceSelectionStatus === 'eligible'/);
+  assert.match(home, /confirmedEmptyAdvice \? \(\) => onGo\('checklist'\)/);
+  assert.match(home, /emptyCardAction/);
+  assert.match(home, /!confirmedEmptyAdvice \? <MotionPressable testID="home-open-daily-checklist"/);
+  assert.match(workspace, /contentSelectionStatus=\{visibleContentCatalog\?\.homeAdvice\.status\}/);
   assert.match(workspace, /knowledgeFocus\.contentId === CHECKLIST_DESTINATION_ID/);
   assert.match(workspace, /knowledgeFocus\.contentId === FAQ_DESTINATION_ID/);
+});
+
+
+test('public FAQ maps only approved versions and keeps review drafts isolated', () => {
+  assert.match(faqSource, /'62000000-0000-4000-8000-000000000004': 'Hur kan jag göra vardaglig hantering trygg och frivillig för valpen\?'/);
+  assert.match(faqSource, /'62000000-0000-4000-8000-000000000006': 'Hur kan jag hjälpa valpen att vara själv en liten stund\?'/);
+  assert.match(faqSource, /const reviewQuestions = REVIEW_FAQ\.filter/);
+  assert.match(faqSource, /reviewEnabled\s*\?\s*<>/);
+  assert.match(faqSource, /onOpenDogProfile/);
+  assert.match(faqSource, /unknownReason === 'missing_age'/);
+  assert.match(faqSource, /Just nu finns inga publicerade frågor för den här vyn/);
+  assert.match(faqSource, /getSafeContentSourceUrl\(source\)/);
+  assert.match(faqSource, /safeUrl \? <QuietButton title="Öppna extern källa"/);
+  assert.match(faqSource, /Tillfälligt exempel – innehållet är inte sakgranskat/);
 });

@@ -10,6 +10,7 @@ const resolution = registerHooks({
   },
 });
 const data = await import('../src/features/home/daily-activity-data.ts');
+const model = await import('../src/features/home/daily-activity-model.ts');
 resolution.deregister();
 
 const baseUrl = 'https://local-test.supabase.invalid';
@@ -53,6 +54,51 @@ const routineDay = {
   last_state_mutation_id: null,
 };
 const trainingSelection = { id: '44444444-4444-4444-8444-444444444444', dog_id: dogId, program_version_id: '55555555-5555-4555-8555-555555555555', step_id: '66666666-6666-4666-8666-666666666666', date_key: dateKey, time_zone: 'Europe/Stockholm' };
+
+test('upcoming routine schedules use one minimal dog-scoped read and never materialize daily rows', async () => {
+  const schedule = { id: routine.id, dog_id: dogId, label: 'Morgonrunda', repeat_unit: 'week', repeat_interval: 2,
+    repeat_weekdays: [1, 3], repeat_anchor_date: '2026-10-12' };
+  const { client, requests } = localClient(({ method, url }) => {
+    assert.equal(method, 'GET');
+    assert.equal(url.pathname, '/rest/v1/dog_daily_routines');
+    assert.equal(url.searchParams.get('select'), 'id,dog_id,label,repeat_unit,repeat_interval,repeat_weekdays,repeat_anchor_date');
+    assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
+    assert.deepEqual(url.searchParams.get('order')?.split(','), ['label.asc', 'id.asc']);
+    assert.equal(url.pathname.includes('/rpc/ensure_due_daily_routine_days'), false);
+    return jsonResponse([schedule]);
+  });
+  try {
+    assert.deepEqual(await data.fetchUpcomingDailyRoutineSchedules(client, dogId), [schedule]);
+    assert.deepEqual(requests.map(({ method, url }) => [method, url.pathname]), [['GET', '/rest/v1/dog_daily_routines']]);
+  } finally { await client.auth.dispose(); }
+
+  const { client: foreignClient, requests: foreignRequests } = localClient(({ method, url }) => {
+    assert.equal(method, 'GET');
+    assert.equal(url.pathname, '/rest/v1/dog_daily_routines');
+    return jsonResponse([{ ...schedule, dog_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }]);
+  });
+  try {
+    await assert.rejects(data.fetchUpcomingDailyRoutineSchedules(foreignClient, dogId), /Could not load upcoming routine schedules/);
+    assert.equal(foreignRequests.length, 1);
+  } finally { await foreignClient.auth.dispose(); }
+});
+
+test('upcoming routine recurrence returns only the next date using calendar date keys', () => {
+  assert.equal(model.nextRoutineOccurrenceAfterDate({ repeat_unit: 'day', repeat_interval: 2, repeat_weekdays: null,
+    repeat_anchor_date: '2026-10-10' }, '2026-10-12'), '2026-10-14');
+  assert.equal(model.nextRoutineOccurrenceAfterDate({ repeat_unit: 'week', repeat_interval: 2, repeat_weekdays: [1, 3],
+    repeat_anchor_date: '2026-10-12' }, '2026-10-13'), '2026-10-14');
+  assert.equal(model.nextRoutineOccurrenceAfterDate({ repeat_unit: 'week', repeat_interval: 2, repeat_weekdays: [1, 3],
+    repeat_anchor_date: '2026-10-12' }, '2026-10-14'), '2026-10-26');
+  assert.equal(model.nextRoutineOccurrenceAfterDate({ repeat_unit: 'month', repeat_interval: 1, repeat_weekdays: null,
+    repeat_anchor_date: '2026-01-31' }, '2026-02-01'), '2026-02-28');
+  assert.equal(model.nextRoutineOccurrenceAfterDate({ repeat_unit: 'month', repeat_interval: 2, repeat_weekdays: null,
+    repeat_anchor_date: '2026-01-31' }, '2026-02-28'), '2026-03-31');
+  assert.equal(model.nextRoutineOccurrenceAfterDate({ repeat_unit: null, repeat_interval: null, repeat_weekdays: null,
+    repeat_anchor_date: null }, '2026-10-13'), null);
+  assert.equal(model.nextRoutineOccurrenceAfterDate({ repeat_unit: 'day', repeat_interval: 1, repeat_weekdays: null,
+    repeat_anchor_date: '2026-10-10' }, '2026-02-30'), null);
+});
 
 test('daily activity snapshot rejects partial responses and enforces requested dog/date scope', async () => {
   const { client, requests } = localClient(({ url }) => {
@@ -196,6 +242,24 @@ test('daily training retry reconciles the existing logical key when its stable U
   try {
     assert.deepEqual(await data.addTrainingSelection(client, trainingSelection), { status: 'saved', value: existing });
     assert.deepEqual(requests.map(({ method }) => method), ['POST', 'GET', 'GET']);
+  } finally { await client.auth.dispose(); }
+});
+
+test('removing a denied daily training choice deletes only the daily selection row', async () => {
+  const { client, requests } = localClient(({ method, url }) => {
+    assert.equal(method, 'DELETE');
+    assert.equal(url.pathname, '/rest/v1/dog_daily_training_selections');
+    assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
+    assert.equal(url.searchParams.get('id'), `eq.${trainingSelection.id}`);
+    assert.equal(url.searchParams.get('program_version_id'), `eq.${trainingSelection.program_version_id}`);
+    assert.equal(url.searchParams.get('step_id'), `eq.${trainingSelection.step_id}`);
+    assert.equal(url.searchParams.get('date_key'), `eq.${trainingSelection.date_key}`);
+    return jsonResponse({ id: trainingSelection.id });
+  });
+  try {
+    assert.deepEqual(await data.removeTrainingSelection(client, trainingSelection), { status: 'saved', value: null });
+    assert.equal(requests.length, 1);
+    assert.equal(requests.some(({ url }) => url.pathname.endsWith('/training_progress')), false);
   } finally { await client.auth.dispose(); }
 });
 

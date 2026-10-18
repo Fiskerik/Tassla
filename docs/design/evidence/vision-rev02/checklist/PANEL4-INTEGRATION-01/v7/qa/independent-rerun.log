@@ -1,0 +1,1105 @@
+Independent QA started 2026-10-18T10:07:56.5098503+02:00
+=== Focused 56-test command ===
+(node:38252) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/home/daily-activity-data.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ upcoming routine schedules use one minimal dog-scoped read and never materialize daily rows (20.798ms)
+✔ upcoming routine recurrence returns only the next date using calendar date keys (0.7116ms)
+✔ daily activity snapshot rejects partial responses and enforces requested dog/date scope (15.0437ms)
+✔ weekly activity reader is dog-scoped, date-bounded, minimal and read-only (3.7913ms)
+✔ routine create recovers a lost response only after exact owner/id/label readback (2.2259ms)
+✔ daily training retry reconciles the existing logical key when its stable UUID is unknown (1.189ms)
+✔ removing a denied daily training choice deletes only the daily selection row (0.5814ms)
+✔ routine completion becomes checked only from a server-confirmed timestamp (0.8467ms)
+✔ routine completion does not claim success when the write and readback are unknown (0.7242ms)
+(node:2620) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/home/daily-activity-model.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ confirmed daily progress excludes unavailable sources and reports unknown status separately (1.233ms)
+✔ projects saved training timestamps into the selected IANA local day across UTC boundaries (11.7515ms)
+✔ training activity completion is exact to dog, version, step and stored local date (0.734ms)
+✔ only the first incomplete ordered training step is selectable (0.1465ms)
+✔ training stamp preserves the original saved completion time and exact version scope (0.1124ms)
+✔ daily activities count owner marks and exact saved training source while excluding withdrawn sources (0.7902ms)
+✔ all routine templates retain dog/date scope and use the selected day snapshot before schedule state (0.4598ms)
+✔ ISO week date math uses civil dates across year, month, Sunday/Monday and DST boundaries (0.7817ms)
+✔ weekly response fence rejects stale date and daily-snapshot races (0.2091ms)
+✔ weekly projection uses the confirmed today snapshot and separates saved, skipped, unknown, missing and empty (0.8987ms)
+✔ weekly training opens only exact current-day sources and fails closed for timezone, missing progress and adult scope (0.3255ms)
+✔ routine-template mutations require a current ready snapshot with no refresh or same-scope read in flight (0.1371ms)
+✔ the event-time freshness guard rejects expired callbacks and schedules exact expiry safely (0.1198ms)
+✔ the mutation gateway blocks every All-origin write category before the operation and retains origin on retry (0.2375ms)
+✔ the All-origin date gate rejects the prior day immediately across local midnight (0.432ms)
+✔ snapshot expiry timer reschedules early delivery and cleans up on scope change (0.2063ms)
+✔ daily training selection preserves exact source failures and fails closed for adults (0.3565ms)
+✔ Home derives count and progress from the full daily activity array and shows at most five rows (0.6476ms)
+✔ routine and training rows expose separate accessible actions and truthful state (0.289ms)
+✔ Home opens only the exact current training target and returns to its origin (0.2265ms)
+✔ training row presents the step title and keeps full program title in detail data (0.0682ms)
+✔ an unavailable daily training choice stays unknown and can be removed without revealing denied program content (0.1325ms)
+✔ daily activity derivation excludes unrelated log, guide, health plan and checklist data (0.1211ms)
+✔ checklist shows all dog-scoped routine templates and preserves selected day snapshots (0.1499ms)
+✔ weekly view keeps all seven dates, current-day authority and historical rows read-only (0.3395ms)
+✔ All-view routine writes require a fresh same-scope snapshot at render and handler time (0.3955ms)
+✔ R3c routine-template refresh has one owner per route, covers confirmed retries, and fences scope lifetime (0.6123ms)
+✔ R3c visual verifier validates a local origin before launch and blocks every other origin (0.3663ms)
+(node:39508) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/home/main-navigation.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ main tabs keep the approved five-destination order (0.8669ms)
+✔ next main tab follows order and has no wraparound (0.1288ms)
+✔ auxiliary pages do not enter swipe navigation; checklist keeps Home selected (0.1195ms)
+✔ main tab transitions follow destination order (0.0815ms)
+✔ requesting the current tab is a no-op before guard and context changes (0.0839ms)
+✔ navigation requests the editor guard before committing destination side effects (0.0884ms)
+✔ stay and locked guards leave parent destination/context untouched (0.0774ms)
+✔ the first destination stays authoritative while a discard alert is open (0.0708ms)
+(node:38028) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/data/workspace-data.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ upcoming health plans are dog-scoped, date-filtered before the 40-row cap, minimal and read-only (19.5574ms)
+✔ upcoming health reader rejects invalid local dates and foreign or non-future rows without extra requests (1.6634ms)
+✔ dog-event history filters the supported everyday types and has deterministic owner-scoped pagination order (0.9103ms)
+✔ recovers an uncertain event update when the server returns an equivalent timestamp format (1.3147ms)
+✔ recovers an event insert after response loss by reading the same stable UUID (0.9012ms)
+✔ does not report an event as saved after a definite database rejection (0.826ms)
+✔ marks a timed out event insert unknown and forwards the real SDK abort signal (23.1971ms)
+✔ training hides ungranted current versions and keeps only a safe count for older progress (2.9184ms)
+✔ training workspace stays empty when there are no published programs (0.8524ms)
+✔ keeps progress for a withdrawn or unavailable published version as paused history (0.656ms)
+✔ training progress insert and delete reconcile uncertain outcomes by the full versioned key (1.1251ms)
+ℹ tests 56
+ℹ suites 0
+ℹ pass 56
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2700.2182
+FOCUSED_EXIT=0
+=== pnpm check ===
+$ pnpm typecheck && pnpm typecheck:edge-account && pnpm lint && pnpm test
+$ tsc --noEmit
+$ tsc --project supabase/functions/delete-account/tsconfig.json --noEmit
+$ eslint app src tests
+$ node --experimental-strip-types --test tests/*.test.mjs
+(node:39360) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/supabase/functions/delete-account/handler.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ daily activity tables cascade with dog deletion and the synthetic account probe checks owner isolation (0.7794ms)
+✔ server handler rejects method, query, body and malformed bearer before any auth or admin call (12.3136ms)
+✔ only the ID returned by online bearer verification reaches one hard admin deletion (1.0393ms)
+▶ invalid or ambiguous verification prevents deletion; thrown verification is unknown
+  ✔ {"kind":"unauthorized"} (0.2436ms)
+  ✔ {"kind":"unknown"} (0.1693ms)
+  ✔ {"kind":"verified","userId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaanot-a-uuid"} (0.1795ms)
+✔ invalid or ambiguous verification prevents deletion; thrown verification is unknown (1.0308ms)
+▶ admin confirmed, definite failed and ambiguous outcomes remain distinct and are never retried
+  ✔ confirmed (0.2717ms)
+  ✔ failed (0.1702ms)
+  ✔ unknown (0.2328ms)
+✔ admin confirmed, definite failed and ambiguous outcomes remain distinct and are never retried (1.1352ms)
+✔ installed Supabase 2.117.2 admin client accepts actual empty-user delete success without ID echo (2.5669ms)
+✔ actual edge entry verifies the captured bearer and uses installed SDK hard-delete response shape (60.4414ms)
+▶ actual edge entry turns auth rejection and malformed/ambiguous admin replies into safe non-success results
+  ✔ invalid bearer is rejected before the admin endpoint (7.4757ms)
+  ✔ ambiguous admin server error stays unknown (5.4255ms)
+  ✔ non-empty admin user object is not accepted as deletion proof (4.8875ms)
+✔ actual edge entry turns auth rejection and malformed/ambiguous admin replies into safe non-success results (18.278ms)
+✔ edge entry pins server SDK, uses server environment only, and returns no account identifiers (0.7748ms)
+✔ client invokes real Supabase Functions API bodyless with captured bearer and clears only captured owner marker after valid receipt (23.4392ms)
+✔ unresolved or ambiguous deletion remains blocked from automatic repeat (18.3375ms)
+▶ pending-marker read/write failures stay unavailable; confirmed server result survives local marker cleanup failure
+  ✔ SecureStore read failure prevents any server request (6.5106ms)
+  ✔ marker write failure prevents any server request (8.1376ms)
+  ✔ server confirmation remains confirmed even if local marker deletion fails (6.4035ms)
+✔ pending-marker read/write failures stay unavailable; confirmed server result survives local marker cleanup failure (21.7208ms)
+▶ definite HTTP rejection clears only captured pending marker; transport and server ambiguity retain it
+  ✔ 409 (5.3216ms)
+  ✔ 503 (5.8122ms)
+✔ definite HTTP rejection clears only captured pending marker; transport and server ambiguity retain it (11.6961ms)
+▶ same-owner token refresh keeps the captured request token, while owner-generation change after await preserves marker
+  ✔ same owner refresh (7.5763ms)
+  ✔ account changes while request is pending (6.1234ms)
+✔ same-owner token refresh keeps the captured request token, while owner-generation change after await preserves marker (14.198ms)
+✔ owner change during the pending-marker write stops before invoking the destructive endpoint (5.4961ms)
+✔ AuthProvider generation changes only for an owner or new same-owner sign-in, not refresh/refocus (0.9477ms)
+▶ extracted AuthProvider queue serializes stubbed auth methods in both orders
+  ✔ stubbed exchange first invalidates the captured old-owner local sign-out (1.0425ms)
+  ✔ stubbed local sign-out first completes before queued exchange adopts its new owner (0.6719ms)
+✔ extracted AuthProvider queue serializes stubbed auth methods in both orders (2.0539ms)
+✔ installed Auth SDK callback exchange enters the provider queue, advances same-owner new-login epoch, and preserves captured old session (4.5515ms)
+✔ installed Auth SDK local sign-out clears a queued stale verifier; a later fresh callback can adopt its owner (1.3563ms)
+✔ failed Auth SDK callback exchange releases provider queue for a later verified callback (0.7697ms)
+✔ synthetic cascade probe checks both owners, current dog-owned tables, failure rollback and final rollback (0.6425ms)
+✔ callback screen delegates exchange to AuthProvider and confirmed server deletion stays distinct from local cleanup errors (4.7068ms)
+(node:39776) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/analytics/analytics-model.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ synthetic metrics are off by default and require explicit opt-in gates (1.0588ms)
+✔ synthetic adapter stores only allowlisted event types and timestamps in memory (1.4519ms)
+✔ synthetic events can be cleared and returned values cannot mutate the store (0.1602ms)
+✔ production adapter requires server consent and sends only an allowlisted event type (0.2302ms)
+✔ production adapter fails open when RPC rejects or returns an error (0.1862ms)
+(node:38776) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/data/app-data.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the installed PostgREST client forwards an abort signal to the create_dog RPC fetch (20.1994ms)
+✔ loads breeds through the installed Supabase client and requests a stable name order (5.3334ms)
+✔ fails the breed request at its 12-second deadline and aborts the real SDK fetch (2.9421ms)
+✔ createDog forwards the optional normalized kennel code and returns the created id (1.0262ms)
+✔ attribution readback calls only the owner-scoped boolean RPC (0.9727ms)
+✔ profile attribution can be read, saved, and removed independently of dog profile fields (1.719ms)
+✔ cancel path performs zero auth calls and concurrent confirmations perform one (19.0322ms)
+✔ installed Auth signOut separates server confirmation from local session clearing (1.5186ms)
+✔ local storage removal failure leaves the session and permits a retry (0.7313ms)
+✔ signed-out warning is owned by AuthProvider and survives workspace unmount (2.3176ms)
+(node:31684) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/data/auth-callback.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ trusts only the configured HTTPS Supabase Google authorization URL (1.2328ms)
+✔ callback exchange policy blocks in-flight, failed and exchanged codes but allows a new retry code (0.108ms)
+✔ PKCE WebCrypto adapter delegates secure randomness and SHA-256 and preflight rejects unavailable crypto (1.0425ms)
+✔ installed Supabase SDK makes an S256 PKCE URL using the installed adapter without Node WebCrypto or network (12.6164ms)
+(node:28920) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/data/auth-callback.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ accepts only the configured callback with one non-empty code (0.7187ms)
+✔ chunks values by UTF-8 byte size and reconstructs Unicode exactly (1.1931ms)
+✔ keeps the previous value and removes the incomplete slot after a failed write (0.7186ms)
+✔ keeps the previous value when committing the new marker fails (0.379ms)
+✔ clears both chunk slots on removal and rejects a malformed marker (0.6612ms)
+✔ can finish removal after an earlier partial deletion left a hole (0.5503ms)
+(node:1932) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/components/ui/bottom-sheet-gesture.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ claims only deliberate downward dominant movement after the intent distance (0.4594ms)
+✔ dismissal requires the full downward distance; velocity does not participate (0.0793ms)
+✔ a delayed animation read uses the latest drag delta without moving above its sampled offset (0.4914ms)
+✔ late animation callbacks are invalidated by replacement, release, and effect teardown (0.1082ms)
+(node:16756) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/knowledge/checklist-data.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ standard checkbox is idempotent and confirms exact dog/template/item after upsert (19.0315ms)
+✔ lost custom insert response keeps UUID and exact readback can confirm it (1.6915ms)
+✔ unreadable postimage is unknown and does not trigger another insert (0.9627ms)
+✔ custom delete replay confirms absence after the first delete response is lost (1.0408ms)
+✔ custom edits use old-value CAS and preserve an explicit conflict (0.814ms)
+✔ rejected custom edit with an unchanged exact preimage is retryable, not a conflict (0.781ms)
+✔ rejected custom edit with unreadable preimage remains unknown (0.8871ms)
+✔ rejected custom edit whose target disappeared is a conflict (0.6145ms)
+✔ rejected custom edit with exact postimage is confirmed saved (0.7171ms)
+✔ rejected custom edit with a divergent readback is a conflict (0.8096ms)
+✔ invalid server rows and pre-aborted sessions never enter checklist state (1.2413ms)
+✔ an in-flight session abort makes the mutation unknown without replaying it (3.7019ms)
+✔ overview transfers only custom completion metadata and rejects a foreign dog row (1.0116ms)
+✔ dog context preference updates only context after insert and reads the committed value (0.8186ms)
+(node:9572) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/knowledge/checklist-model.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ checklist catalogue has stable review-v1 IDs and item keys across all phases (0.5004ms)
+✔ explicit owner context wins; age selection has clear phase boundaries (0.0835ms)
+✔ custom titles use trimmed Unicode code points and progress counts only current items (0.0995ms)
+(node:27924) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/knowledge/checklist-intent.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ checklist review content is gated before any account read or write (0.5619ms)
+✔ navigation invalidates and aborts the current read/write before changing checklist view (0.1419ms)
+✔ screen feedback reflects only confirmed state and review drafts identify themselves (0.1062ms)
+✔ pending status reconciliation classifies exact postimages before replay (0.2253ms)
+✔ unmount persists the frozen intent and normalized form draft for scoped remount recovery (0.2182ms)
+(node:31848) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/content/select-content.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ approved content bundle validates with the standard-library Python CLI (101.9528ms)
+✔ publication check accepts only the approved runtime versions and leaves onboarding content draft (75.6282ms)
+✔ fixed eleven content identities retain exact slug, reserved id, type and onboarding context (0.6689ms)
+✔ canonical bundle carries the exact reviewed v4 editorial age windows (0.1855ms)
+✔ actual selector applies inclusive bundle windows with app guides and programs as fallbacks (0.9784ms)
+✔ onboarding-only before-homecoming is a separate record, filtered before ordinary selection (0.109ms)
+▶ validator rejects open-schema fields, a missing item, and duplicate slugs
+  ✔ unknown root field (84.2495ms)
+  ✔ missing required item (80.5722ms)
+  ✔ body_claim_refs is a required version field (78.2732ms)
+  ✔ duplicate item slug (88.0284ms)
+✔ validator rejects open-schema fields, a missing item, and duplicate slugs (331.9241ms)
+▶ validator rejects reserved identity/type/context collisions and wrong onboarding context
+  ✔ wrong reserved UUID (77.9682ms)
+  ✔ wrong immutable item type (81.7185ms)
+  ✔ pre-homecoming context mismatch (79.8781ms)
+  ✔ other item cannot claim onboarding context (75.6367ms)
+✔ validator rejects reserved identity/type/context collisions and wrong onboarding context (315.873ms)
+▶ validator rejects duplicate UUIDs, versions, and training step identities
+  ✔ duplicate UUID across content items (72.3334ms)
+  ✔ duplicate version UUID across item versions (74.1538ms)
+  ✔ duplicate training step UUID (81.1627ms)
+  ✔ duplicate step key (86.4001ms)
+✔ validator rejects duplicate UUIDs, versions, and training step identities (314.8174ms)
+▶ validator rejects unsupported claim/source references and duplicate claim identifiers
+  ✔ unknown source reference (73.4374ms)
+  ✔ duplicate source ID (71.8157ms)
+  ✔ invalid source URL scheme (72.7092ms)
+  ✔ unsafe repository source path (75.2114ms)
+  ✔ duplicate claim ID within a version (84.6504ms)
+✔ validator rejects unsupported claim/source references and duplicate claim identifiers (378.7322ms)
+▶ validator requires explicit unique local claim mappings for every body and step
+  ✔ canonical body and step mappings are non-empty, unique, and local (0.1874ms)
+  ✔ empty body mapping (87.318ms)
+  ✔ dangling body mapping (79.06ms)
+  ✔ duplicate body mapping (82.9123ms)
+  ✔ empty training step mapping (78.7342ms)
+✔ validator requires explicit unique local claim mappings for every body and step (328.981ms)
+▶ validator enforces age bounds, closed review fields and claim shapes
+  ✔ impossible age window (88.768ms)
+  ✔ negative minimum age (79.0521ms)
+  ✔ valid-shaped but non-approved editorial window is rejected (86.7732ms)
+  ✔ missing review gate (78.5715ms)
+  ✔ pending gate cannot carry evidence (74.2159ms)
+  ✔ malformed claim shape (74.7063ms)
+✔ validator enforces age bounds, closed review fields and claim shapes (483.1414ms)
+▶ validator resolves step claims and verifies explicit unverified traces
+  ✔ dangling training step claim reference (76.7453ms)
+  ✔ draft accepts explicit unverified app behavior with repository evidence (80.7809ms)
+  ✔ publication check rejects an unverified claim even with complete draft shape (82.9061ms)
+✔ validator resolves step claims and verifies explicit unverified traces (241.0322ms)
+▶ publication check rejects missing, malformed, or unsupported review evidence
+  ✔ published version with pending evidence is rejected (72.7522ms)
+  ✔ approved gate without evidence is invalid in draft and publication modes (72.7749ms)
+  ✔ approved evidence must point to an existing repository file (109.6469ms)
+  ✔ approved evidence requires a real calendar date (75.2356ms)
+✔ publication check rejects missing, malformed, or unsupported review evidence (331.0692ms)
+✔ draft SQL import is transactional, exact-idempotent, and cannot manufacture publication evidence (1.6188ms)
+✔ draft SQL literals preserve every canonical item, version body/source set and training step (0.7335ms)
+✔ approved publish SQL promotes exactly the ten runtime versions and keeps onboarding-only content hidden (0.5815ms)
+(node:35660) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/data/workspace-data.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ actual published loader sends a published-only metadata query and returns the same selected version identity and sources (16.7498ms)
+✔ content catalog returns separate fail-closed selections for each surface (1.0463ms)
+✔ FAQ catalog selects the exact published version for the matching age window (1.1924ms)
+✔ Knowledge and FAQ grants, priorities, age windows, and fail-closed outcomes match the approved contract (0.426ms)
+✔ surface selector requires exact known version grants and never falls back from a newer denied version (0.2601ms)
+✔ Home and Knowledge render selector-specific empty/unknown states without first-item recommendations (0.3534ms)
+✔ contextual function help opens only grant-selected versions and returns to the source context (0.1745ms)
+✔ age zero excludes onboarding-only and future age advice from actual selection (0.6609ms)
+▶ actual workspace loader fails closed for missing or malformed slug metadata
+  ✔ missing (0.8612ms)
+  ✔ malformed (1.3343ms)
+✔ actual workspace loader fails closed for missing or malformed slug metadata (2.5512ms)
+✔ actual workspace and legacy loaders fail closed if the SDK returns a draft despite the published filter (1.4287ms)
+✔ legacy app-data loader carries version/source metadata and never returns onboarding-only rows (0.7521ms)
+✔ source link helper allows only normalized public HTTPS URLs (0.1317ms)
+✔ actual Knowledge source handler opens only user-requested HTTPS and reports rejected opens (21.0962ms)
+✔ actual screen states separate loading, error with retry, and ready-empty (0.1232ms)
+✔ Knowledge search stays on the loaded eligible set and has distinct exact empty-state copy (3.0712ms)
+✔ guide-body helper renders supported headings and lists as plain text and produces a compact plain preview (0.609ms)
+✔ Home opens the exact fetched version and Knowledge resolves that exact row without a reload (0.3229ms)
+✔ review channel enables examples (568.7368ms)
+✔ public channel disables examples (581.5311ms)
+✔ public channel rejects examples (550.4482ms)
+✔ public channel rejects a missing flag (535.8905ms)
+✔ unknown channel is rejected (533.585ms)
+(node:39428) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/home/daily-activity-data.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ upcoming routine schedules use one minimal dog-scoped read and never materialize daily rows (20.9916ms)
+✔ upcoming routine recurrence returns only the next date using calendar date keys (0.7959ms)
+✔ daily activity snapshot rejects partial responses and enforces requested dog/date scope (15.2709ms)
+✔ weekly activity reader is dog-scoped, date-bounded, minimal and read-only (4.102ms)
+✔ routine create recovers a lost response only after exact owner/id/label readback (2.1892ms)
+✔ daily training retry reconciles the existing logical key when its stable UUID is unknown (1.2169ms)
+✔ removing a denied daily training choice deletes only the daily selection row (0.6343ms)
+✔ routine completion becomes checked only from a server-confirmed timestamp (0.8736ms)
+✔ routine completion does not claim success when the write and readback are unknown (0.8212ms)
+(node:17540) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/home/daily-activity-model.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ confirmed daily progress excludes unavailable sources and reports unknown status separately (1.542ms)
+✔ projects saved training timestamps into the selected IANA local day across UTC boundaries (12.3931ms)
+✔ training activity completion is exact to dog, version, step and stored local date (0.6939ms)
+✔ only the first incomplete ordered training step is selectable (0.179ms)
+✔ training stamp preserves the original saved completion time and exact version scope (0.1138ms)
+✔ daily activities count owner marks and exact saved training source while excluding withdrawn sources (0.5374ms)
+✔ all routine templates retain dog/date scope and use the selected day snapshot before schedule state (0.4597ms)
+✔ ISO week date math uses civil dates across year, month, Sunday/Monday and DST boundaries (0.7999ms)
+✔ weekly response fence rejects stale date and daily-snapshot races (0.2243ms)
+✔ weekly projection uses the confirmed today snapshot and separates saved, skipped, unknown, missing and empty (0.95ms)
+✔ weekly training opens only exact current-day sources and fails closed for timezone, missing progress and adult scope (0.3508ms)
+✔ routine-template mutations require a current ready snapshot with no refresh or same-scope read in flight (0.1393ms)
+✔ the event-time freshness guard rejects expired callbacks and schedules exact expiry safely (0.1434ms)
+✔ the mutation gateway blocks every All-origin write category before the operation and retains origin on retry (0.2111ms)
+✔ the All-origin date gate rejects the prior day immediately across local midnight (0.5834ms)
+✔ snapshot expiry timer reschedules early delivery and cleans up on scope change (0.2197ms)
+✔ daily training selection preserves exact source failures and fails closed for adults (0.38ms)
+✔ Home derives count and progress from the full daily activity array and shows at most five rows (0.6921ms)
+✔ routine and training rows expose separate accessible actions and truthful state (0.2956ms)
+✔ Home opens only the exact current training target and returns to its origin (0.2299ms)
+✔ training row presents the step title and keeps full program title in detail data (0.0706ms)
+✔ an unavailable daily training choice stays unknown and can be removed without revealing denied program content (0.1329ms)
+✔ daily activity derivation excludes unrelated log, guide, health plan and checklist data (0.1242ms)
+✔ checklist shows all dog-scoped routine templates and preserves selected day snapshots (0.1519ms)
+✔ weekly view keeps all seven dates, current-day authority and historical rows read-only (0.3461ms)
+✔ All-view routine writes require a fresh same-scope snapshot at render and handler time (0.4008ms)
+✔ R3c routine-template refresh has one owner per route, covers confirmed retries, and fences scope lifetime (0.6375ms)
+✔ R3c visual verifier validates a local origin before launch and blocks every other origin (0.375ms)
+✔ mascot is decorative, one-shot per reaction key and static with reduced motion (0.5761ms)
+✔ owner decision keeps the mascot out of Logg and Träning while confirmed feedback remains (0.1966ms)
+✔ mascot asset is a transparent square PNG within the approved byte budget (1.5097ms)
+(node:38412) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/onboarding/dog.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ age uses calendar weeks across leap days and daylight saving boundaries (1.8501ms)
+✔ rejects future births, malformed dates and impossible calendar days (0.303ms)
+✔ editorial age periods have continuous boundaries, including the approximate 12-week to 3-month seam (0.8533ms)
+✔ editorial age periods switch on inclusive clamped calendar-month and year boundaries (0.3065ms)
+✔ editorial age periods clamp leap-day birthdays to the last valid February day (0.1028ms)
+✔ period resolver treats missing, invalid and future birth dates as unknown (0.0717ms)
+✔ period changes with age while existing three broad stages keep their 6/24-month boundaries (0.2023ms)
+✔ formats dog age in the selected display unit using calendar months and years (0.1654ms)
+✔ content matches age and breed, deduplicates versions without changing progression (0.5515ms)
+✔ draft content preview requires explicit flag and development build (0.5245ms)
+✔ draft preview is reachable only from the local development preview, never ProductWorkspace (0.2059ms)
+✔ first-use tip storage isolates owner keys and accepts only the seen marker (38.1071ms)
+✔ read and write failures suppress storage access for the same owner until deletion cleanup succeeds (8.8842ms)
+✔ a failed queued write blocks later reads even after an earlier read succeeds (8.4343ms)
+✔ a remount read waits for an in-flight dismiss write and stays suppressed if that write fails (6.3828ms)
+✔ hook ignores owner and unmount stale reads, while a late dismiss write cannot hide the next owner tip (12.5545ms)
+✔ confirmed deletion serializes after an in-flight dismiss write and cannot resurrect its key (4.953ms)
+✔ LogScreen ties tip visibility to a ready cloud log and dismisses only on explicit control activation (0.3958ms)
+(node:38560) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/health/health-history-draft.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ health-history draft starts clean and reverting every field restores clean state (0.4705ms)
+✔ invalid changed input remains dirty because comparison is independent of validation (0.0789ms)
+✔ screen wiring keeps the opening record immutable and shares one scoped leave guard (9.8983ms)
+✔ only a current scoped confirmation event closes the sheet and starts success feedback (2.7815ms)
+✔ sheet close paths share the editor guard and retained feedback sits outside the sheet (1.1852ms)
+(node:25004) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/data/workspace-data.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ health-history date and note validators enforce calendar, future, trim and Unicode boundaries (2.5919ms)
+✔ invalid dates, types and overlong Unicode notes fail before a Supabase request (12.9771ms)
+✔ history read filters the dog and allowed event types, sorts stably, and parses rows (3.3384ms)
+▶ legacy history read retries without occurred_time only for its specific missing-column error
+  ✔ legacy schema returns rows with a null time (1.4972ms)
+  ✔ other missing-column errors are not retried (1.7265ms)
+  ✔ PGRST204 is retried only when it names occurred_time (0.8195ms)
+  ▶ authorization and network failures are surfaced without retrying
+    ✔ authorization failure (0.5184ms)
+    ✔ network failure (7019.4315ms)
+  ✔ authorization and network failures are surfaced without retrying (7020.3954ms)
+✔ legacy history read retries without occurred_time only for its specific missing-column error (7025.0008ms)
+▶ history reads reject a row for another dog or a malformed row
+  ✔ cross-dog collection result (1.2897ms)
+  ✔ invalid event type in collection result (1.1037ms)
+✔ history reads reject a row for another dog or a malformed row (2.7587ms)
+▶ lookup filters by dog and id, accepts a supported current type, and validates the returned identity
+  ✔ matching result (1.0995ms)
+  ✔ supported concurrent type change is returned to the caller for conflict handling (0.5639ms)
+  ✔ absent result (0.7491ms)
+  ✔ unsupported type fails closed instead of appearing absent (0.8227ms)
+  ✔ wrong dog or id fails closed (0.5218ms)
+✔ lookup filters by dog and id, accepts a supported current type, and validates the returned identity (4.5061ms)
+✔ insert sends only the allowed payload, normalizes the note, and trusts the validated postimage (0.8684ms)
+✔ empty insert notes are persisted as null (0.6619ms)
+▶ lost insert response reconciles the same stable id and exact values
+  ✔ matching row is saved without a second insert (0.938ms)
+  ✔ absent after ambiguous failure remains unknown (0.7877ms)
+  ✔ definite database rejection with absent row is failed (0.7306ms)
+  ✔ same id with different persisted values stays unknown (0.6647ms)
+✔ lost insert response reconciles the same stable id and exact values (3.5371ms)
+✔ update scopes identity and captured preimage, uses IS NULL for a null note, and sends only changes (0.8473ms)
+✔ update uses exact equality when the captured time and note are non-null (0.8246ms)
+▶ update reconciliation distinguishes committed, rejected, and conflicting preimages
+  ✔ lost response with requested postimage is saved (0.7441ms)
+  ✔ definite rejection with unchanged preimage is failed (0.7845ms)
+  ✔ another edit after lost response is unknown and never replayed (0.9393ms)
+  ✔ concurrent preimage mismatch returns no updated row without overwriting it (0.8664ms)
+  ✔ concurrent supported type swap remains unknown after id-only readback (0.8516ms)
+✔ update reconciliation distinguishes committed, rejected, and conflicting preimages (4.686ms)
+✔ delete is conditional on dog, type, id, date and note preimage, including null notes (0.9514ms)
+▶ delete only trusts the returned id after it matches or a follow-up proves absence
+  ✔ mismatched delete id requires absence readback before saved (0.7999ms)
+  ✔ mismatched delete id with target still present remains unknown (0.8448ms)
+✔ delete only trusts the returned id after it matches or a follow-up proves absence (1.9379ms)
+▶ delete never treats a changed row as deleted after an ambiguous or rejected write
+  ✔ ambiguous outcome remains unknown (0.7575ms)
+  ✔ definite rejection with row present is failed (0.6694ms)
+  ✔ concurrent supported type swap is not mistaken for deletion (0.742ms)
+✔ delete never treats a changed row as deleted after an ambiguous or rejected write (2.4925ms)
+✔ health-history queries pass an abort signal through the installed Supabase client (0.5999ms)
+✔ health-history data contract leaves the existing weight read and write contract intact (1.2175ms)
+✔ actual workspace history handler prevents same-tick duplicate inserts and retains unknown status (98.7633ms)
+✔ unknown history writes emit one scoped confirmation only after exact readback (36.757ms)
+✔ actual workspace status check does not replay an absent insert after dog/session lifetime changes (12.8847ms)
+✔ actual workspace update conflict can be explicitly resolved before starting a fresh edit (15.5973ms)
+▶ actual workspace status recovery exposes a supported type swap as an explicit conflict
+  ✔ update stays pending and does not emit confirmation (7.7237ms)
+  ✔ delete stays pending and never confirms while the same id exists with another supported type (9.9918ms)
+✔ actual workspace status recovery exposes a supported type swap as an explicit conflict (18.2099ms)
+✔ actual workspace handler suppresses a pending mutation result after its lifetime changes (9.7914ms)
+✔ health-history update and delete keep the selected row opening snapshot after a refresh (17.8777ms)
+✔ health history editor key stays stable across record refreshes and conflict resolution closes the editor (14.0451ms)
+(node:5804) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/data/workspace-data.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ weight date and kg validators enforce calendar, future and database boundaries (1.2703ms)
+✔ invalid insert and update values fail before the Supabase client sends a request (13.2625ms)
+✔ weight history filters the selected dog and weight type, with a stable date and id order (3.3815ms)
+✔ weight insert sends only its contract fields and returns a saved row (0.9318ms)
+✔ a lost weight insert response reconciles by the same stable UUID and exact values (1.283ms)
+▶ an insert rejection is failed, while an ambiguous absent row stays unknown
+  ✔ database rejection with no reconciled row (0.799ms)
+  ✔ response loss and no row found (0.7237ms)
+  ✔ the same UUID with different persisted values is not reported as saved (0.7097ms)
+✔ an insert rejection is failed, while an ambiguous absent row stays unknown (2.5657ms)
+✔ weight update scopes dog, event type and id, and reconciles matching values after response loss (1.8994ms)
+▶ weight update distinguishes rejected and unknown outcomes
+  ✔ definite database rejection with unchanged row is failed (0.8954ms)
+  ✔ ambiguous response with values not yet visible is unknown (0.7149ms)
+✔ weight update distinguishes rejected and unknown outcomes (1.8929ms)
+✔ weight delete scopes dog, event type and id and confirms absence after a lost response (0.7319ms)
+▶ weight delete distinguishes a rejected write from an unresolved write
+  ✔ definite rejection while the row remains is failed (0.5709ms)
+  ✔ lost response while the row remains is unknown (0.4819ms)
+✔ weight delete distinguishes a rejected write from an unresolved write (1.2546ms)
+✔ the actual workspace save handler starts once, suppresses a same-tick duplicate and publishes a saved row (35.2171ms)
+✔ the actual workspace save handler blocks a new write after an unknown outcome (9.806ms)
+✔ the actual status-check handler reconciles a saved insert with a read and issues no second write (5.7775ms)
+(node:38004) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/home/home-greeting.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Home greeting follows local time with neutral fallback (1.2487ms)
+(node:28136) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/home/home-today.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ home age handles absent or invalid dates and exact week boundaries (2.0552ms)
+✔ home week strip includes zero and marks exactly one current week (0.6928ms)
+✔ active Home age strip keeps the contracted week, month and year marker ranges (1.0764ms)
+✔ Home today sources use local-day events and performed health while keeping today plans separate (5.3043ms)
+✔ Home follows the rev02 content order without duplicate Today groups (0.7227ms)
+✔ public and review Home share a generic portrait without attaching the dog identity (0.3175ms)
+✔ Home routines use a checkbox, training rows open exact targets, and the manager preserves actions in a BottomSheet (0.1801ms)
+✔ rev02 uses tokenized warm and blue green purple Home surfaces with opt-in component variants (0.1145ms)
+✔ destination tiles route to existing Home destinations and gallery keeps defaults available (0.0842ms)
+(node:26748) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/knowledge/review-content.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ FAQ examples are static, phase-scoped, and versioned (0.4951ms)
+✔ each synthetic training program has a matching guide content ID (0.1034ms)
+✔ Home uses its granted advice selection and a single checklist action for confirmed empty state (2.4403ms)
+✔ public FAQ maps only approved versions and keeps review drafts isolated (0.1718ms)
+(node:31716) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/knowledge/knowledge-search.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ search trims and matches case-insensitively in title and body (0.8294ms)
+✔ search returns only supplied eligible items and never expands its source set (0.0919ms)
+✔ an empty or whitespace-only query restores the full supplied list (0.0619ms)
+✔ Expo local notification plugin uses the runtime reminder channel and has no remote background capability (0.4588ms)
+✔ local reminder permission is requested only from the explicit settings action and does not register push tokens (0.2528ms)
+✔ iOS bundle identifier matches Codemagic signing configuration (1.7753ms)
+(node:15992) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/puppy-log/log-model.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ dirty comparison uses the displayed local date and minute and treats null note as empty (1.7409ms)
+✔ dirty comparison detects type and note changes, then returns clean when values are restored (0.1142ms)
+✔ accident kinds compare in canonical order and detect a real selection change (0.1169ms)
+✔ legacy accidentKinds null is equivalent to the empty accident selection (0.0855ms)
+✔ changing away from accident ignores accident-only fields (0.087ms)
+(node:32200) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/puppy-log/log-model.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ log events accept legacy and current domain types and preserve a canonical event (1.3229ms)
+✔ quick-log layout keeps four compact defaults and moves types between groups (0.2337ms)
+✔ potty summaries are retrospective, separate by type, and use median adjacent intervals (0.2055ms)
+✔ quick-log duplicate protection uses an inclusive two-minute window and ignores future or other categories (0.1203ms)
+✔ quick-log press policy blocks rapid taps and pending writes but permits one explicit duplicate override (0.1229ms)
+✔ mutation policy preserves insert identity across readback retry and maps truthful states (0.1121ms)
+✔ single-flight and lifetime policies block unresolved writes and stale responses (0.1009ms)
+✔ notes are trimmed, empty notes become null, and the 500 Unicode code-point limit is exact (0.1452ms)
+✔ sample events have stable IDs and dog identity and are returned newest first (0.6753ms)
+✔ add, update, and delete are immutable, preserve ownership, and reject duplicate IDs (0.2852ms)
+✔ local date-time parsing validates calendar dates, clock bounds, and future timestamps (0.2711ms)
+✔ local date-time parsing rejects the nonexistent Stockholm spring-forward time (0.1066ms)
+✔ local parts and history groups use the device local calendar date and newest-first order (0.3085ms)
+✔ quick log uses the approved page heading, date navigator, two column grid and more tile (0.7469ms)
+✔ quick log has truthful loading, empty, failure, mutation and confirmed undo states (0.2438ms)
+✔ delete snapshot replaces its source row and exits only after a token-matched saved result (0.1414ms)
+✔ quick log hides sparse patterns and keeps edit/delete inside the row editor (0.1373ms)
+✔ legacy row editing and deletion remain reachable from workspace and preview (0.6917ms)
+✔ pending mutations show once on their row, success toast expires, and partial paging offers retry (0.1656ms)
+✔ duplicate dialog uses the approved full copy (0.0498ms)
+✔ quick add labels, rapid-tap guard, retry propagation and Swedish decimal format stay explicit (0.2819ms)
+✔ log editor protects dirty drafts and keeps pending, failed, and unsure outcomes distinct (0.1937ms)
+(node:7712) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/home/main-navigation.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ main tabs keep the approved five-destination order (0.8232ms)
+✔ next main tab follows order and has no wraparound (0.1285ms)
+✔ auxiliary pages do not enter swipe navigation; checklist keeps Home selected (0.1273ms)
+✔ main tab transitions follow destination order (0.0733ms)
+✔ requesting the current tab is a no-op before guard and context changes (0.0731ms)
+✔ navigation requests the editor guard before committing destination side effects (0.0881ms)
+✔ stay and locked guards leave parent destination/context untouched (0.0699ms)
+✔ the first destination stays authoritative while a discard alert is open (0.0698ms)
+✔ motion durations live in tokens and stay within the approved range (0.8505ms)
+✔ animated feedback uses the shared reduced-motion hook and native driver except progress width (6.0614ms)
+✔ Toast keeps a hidden mount gap-free, exits before completion callback and hides exiting content from accessibility (0.2333ms)
+✔ ChecklistItem only runs confirmed check animation and Progress initializes from its current value (0.2104ms)
+✔ TrainingScreen and ProductWorkspace were not given new animation state (1.2032ms)
+✔ published training only animates the exact identity returned after refreshed readback (1.003ms)
+✔ log entry does not replay when reduced motion turns on mid-entry and then off (0.3489ms)
+✔ Toast callsites use explicit visibility and keep dismissal under the view owner (2.5188ms)
+✔ reminder editor registers an owner-token guard and Android-only local back handler (0.4664ms)
+✔ readiness busy is independent from the header leave guard and synchronous save flight (0.2221ms)
+✔ workspace remount scope includes owner, account generation, dog and saved snapshot (0.1241ms)
+✔ child InfoModal and time picker retain their own Android close callbacks (0.1002ms)
+(node:38376) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/data/workspace-data.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ future reminder selection filters past times today before counting its 40-row cap and paginates to a valid 41st (23.251ms)
+✔ future reminder selection returns null when its captured account lifetime changes after a page request (2.4839ms)
+✔ future reminder selection checks an already-stale lifetime before any server query (0.4031ms)
+▶ future reminder reads reject cross-dog rows and invalid reminder metadata
+  ✔ cross-dog row (0.748ms)
+  ✔ enabled row without a time (0.6048ms)
+✔ future reminder reads reject cross-dog rows and invalid reminder metadata (1.6317ms)
+✔ local fire time rejects the Stockholm spring gap and chooses the earlier fall-fold instant (1.2094ms)
+✔ notification preference validation is closed, bounded, and keyed per owner (0.2419ms)
+✔ preference storage reads and writes each owner key independently and defaults malformed data off (30.4929ms)
+✔ master notifications off retains the separately selected training reminder preference and leaves plan fields alone (31.1829ms)
+✔ master-off cleanup does not depend on permission reads and cancels only this owner’s app requests (14.1471ms)
+✔ native reminder reconciliation preserves foreign requests, deduplicates owned reminders and uses generic content (12.707ms)
+✔ installed iOS UTC calendar trigger shape remains idempotent as the clock advances (9.7308ms)
+✔ installed Android date trigger shape retains the exact intended epoch time (10.1589ms)
+▶ native trigger with an altered time zone, tuple, repetition or unknown shape is replaced
+  ✔ wrong time zone (7.3853ms)
+  ✔ changed component (7.7979ms)
+  ✔ extra weekday component (9.0076ms)
+  ✔ leap-month marker (10.2069ms)
+  ✔ repeated-day marker (7.1535ms)
+  ✔ repeats (7.2309ms)
+  ✔ missing time zone (9.4055ms)
+  ✔ unknown trigger shape (7.4434ms)
+✔ native trigger with an altered time zone, tuple, repetition or unknown shape is replaced (67.0045ms)
+✔ returned notification with non-generic copy is replaced even when id, payload, and fire time match (7.0997ms)
+✔ failed cancellation of a stale owned reminder blocks replacement for that logical item (5.8285ms)
+✔ new native requests contain generic copy and only the whitelisted reminder identity (9.3348ms)
+✔ owner cleanup cancels only valid app-owned requests for that owner (6.1982ms)
+✔ actual logout cleanup tracks failure and clears it after a successful owner cleanup retry (6.1156ms)
+✔ actual AuthProvider cleanup warning ignores an older owner after an account switch (1.2125ms)
+✔ reminder generation is checked after awaited cancellation before scheduling a replacement (9.728ms)
+✔ reminder generation is checked after awaited schedule and cancels only the returned request (13.4862ms)
+✔ permission flow stops before prompting when the active context changes after permission lookup (6.5839ms)
+✔ permission flow ignores a prompt result after the owner context changes (5.9937ms)
+✔ reminder generation is checked after the awaited native list before effects (5.9534ms)
+▶ actual notification response handler routes only current owner/dog payloads to their allowed screens
+  ✔ health tap verifies exact planned row and clears only its matching last response (2.3313ms)
+  ✔ training tap routes directly after owner/dog/action validation (1.2616ms)
+  ✔ same identifier with a new delivery date routes again and only the matching delivery is cleared (1.2251ms)
+  ✔ foreign, malformed and non-default taps do not look up or navigate (5.1606ms)
+  ✔ stale lookup does not navigate or clear, and repeated taps do not duplicate the read (1.3565ms)
+✔ actual notification response handler routes only current owner/dog payloads to their allowed screens (11.896ms)
+✔ actual response-listener effect handles the cold-start response and removes its live listener (2.0917ms)
+✔ reminder migration and synthetic SQL probe guard the reminder columns without claiming a live RLS run (2.3934ms)
+(node:33612) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/passport/passport-model.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ snapshot contains only saved profile, newest recorded weight, and performed health history (7.1989ms)
+✔ newest weight and performed history use date descending then id descending for ties (0.1619ms)
+✔ health history is capped at the latest 50 loaded performed rows and the cap is explicit (0.2322ms)
+✔ selection toggles remove sections, and empty selected sections disclose their absence (0.2473ms)
+✔ PDF HTML uses a local labelled illustration only when profile is selected (0.1683ms)
+✔ PassportScreen section toggles update the selected preview and are ignored while export is busy (21.0841ms)
+✔ snapshot is immutable and rendered PDF source is derived from the same captured values (17.2344ms)
+✔ all owner-controlled profile, weight, history, and created-on strings are HTML escaped (0.3805ms)
+✔ escaped HTML contains no remote assets, dynamic scripts, or external resource URLs (0.174ms)
+✔ export shares the exact captured preview HTML and dialog close is not delivery confirmation (9.8992ms)
+✔ duplicate PDF export is blocked while the first print is awaiting completion (5.5194ms)
+▶ availability false and native failure clean every generated temp path and never report delivery
+  ✔ sharing unavailable (4.8658ms)
+  ✔ print rejection (3.806ms)
+  ✔ owned-file move rejection cleans the generated nested Print file (4.0748ms)
+  ✔ share rejection (2.8671ms)
+✔ availability false and native failure clean every generated temp path and never report delivery (16.2193ms)
+▶ account or dog lifetime change after each asynchronous boundary suppresses share and cleans owned temp files
+  ✔ stale after PDF creation (2.5416ms)
+  ✔ stale after availability await (2.5274ms)
+  ✔ immediately-before-share guard (2.5051ms)
+✔ account or dog lifetime change after each asynchronous boundary suppresses share and cleans owned temp files (7.8977ms)
+✔ startup cleanup deletes only stale direct-cache files with the owned prefix and preserves active files (2.2479ms)
+✔ actual Expo adapter moves realistic cache/Print output into its owned cache-root path (2.4746ms)
+▶ unexpected print URIs fail closed without move, share, or deleting unowned paths
+  ✔ file:///cache/ordinary.pdf (2.9608ms)
+  ✔ file:///cache/Other/print.pdf (3.619ms)
+  ✔ https://example.org/remote.pdf (2.4049ms)
+✔ unexpected print URIs fail closed without move, share, or deleting unowned paths (9.4374ms)
+✔ unexpected move destinations fail closed and are never shared or deleted as owned files (2.6408ms)
+✔ export startup actually runs stale owned-file cleanup before printing (2.6405ms)
+✔ PassportScreen export handler captures the current preview on user action and blocks duplicates (8.5419ms)
+✔ PassportScreen suppresses late state updates after its captured account/dog lifetime changes (1.9625ms)
+✔ PDF snapshot uses the exact currently previewed created-on date across midnight (1.3324ms)
+(node:33412) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/health/planned-health-feedback.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ retained status is observed on mount while a later empty-to-same transition is new (0.5683ms)
+✔ new status becomes active and an empty status clears it (0.4122ms)
+✔ new text replaces the active status and restarts its owning state (0.0631ms)
+✔ status queues while information is visible and is released after close (0.0645ms)
+✔ opening information moves visible feedback into the queue and dismiss keeps recovery separate (0.0697ms)
+✔ recommended timeout uses positive finite values and a five-second fallback (0.058ms)
+✔ saved-plan action menu labels and dispatch callbacks match the confirmation flow (34.8808ms)
+✔ reminder display omits an unset off reminder and labels any stored time explicitly (10.6828ms)
+✔ recovery priority and source render matrix expose exactly one action per state (0.4652ms)
+(node:1408) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/health/planned-health-time.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ planned health reminder time converts valid HH:MM to minutes after midnight (0.5395ms)
+✔ planned health reminder time rejects malformed and out-of-range values (0.0929ms)
+✔ shared time modal commits only a valid temporary choice and leaves cancel paths untouched (2.7635ms)
+(node:39672) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/data/workspace-data.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ planned health dates use the captured local calendar day; notes trim and count Unicode code points (1.1272ms)
+✔ invalid planned-health input fails before a request; performed history remains separate (12.2901ms)
+▶ overdue plans remain editable without changing date, but cannot be moved to another past date
+  ✔ note-only correction preserves overdue date and filters its captured preimage (3.2538ms)
+  ✔ changing an overdue date to another past date is rejected before fetch (0.3851ms)
+✔ overdue plans remain editable without changing date, but cannot be moved to another past date (3.9809ms)
+✔ planned list is dog-scoped, ascending due date then id, and never reads completed events (0.8823ms)
+✔ Postgres time values normalize to HH:mm for subsequent conditional writes (1.3356ms)
+▶ planned reminder mutations validate and condition on the captured reminder choice
+  ✔ insert sends enabled choice and rejects an enabled null time (0.6707ms)
+  ✔ update filters old choice and writes new choice (0.5767ms)
+✔ planned reminder mutations validate and condition on the captured reminder choice (1.5195ms)
+✔ future reminder selection paginates, filters before its 40-item cap, and reports a 41st valid candidate (6.4591ms)
+✔ future reminder selection stops after a session becomes stale during an awaited page (2.7925ms)
+▶ planned reads reject cross-dog rows and exact lookup validates id/type
+  ✔ collection cross-dog response (0.9079ms)
+  ✔ exact lookup identity response (0.4425ms)
+  ✔ wrong identity rejected (0.3711ms)
+✔ planned reads reject cross-dog rows and exact lookup validates id/type (1.9799ms)
+✔ insert sends only stable plan fields and excludes localToday and actor identity (0.4726ms)
+▶ insert reconciles uncertain outcome by stable UUID and exact postimage
+  ✔ committed write with lost response is saved after exact readback (0.8119ms)
+  ✔ mismatched persisted plan remains unknown (0.5839ms)
+  ✔ definite constraint rejection reconciles absent row to failed (0.498ms)
+✔ insert reconciles uncertain outcome by stable UUID and exact postimage (2.1481ms)
+✔ update is type-immutable, conditionally filters the exact date/note preimage and sends no identity fields (0.4919ms)
+▶ update conflict is not overwritten and outcome is reconciled with the exact current record
+  ✔ ambiguous conflict remains unknown (0.5236ms)
+  ✔ definite rejection with unchanged row is failed (0.495ms)
+✔ update conflict is not overwritten and outcome is reconciled with the exact current record (1.2047ms)
+▶ delete scopes dog, id, type and full preimage; ambiguity requires independent absence readback
+  ✔ exact id confirms deletion (0.3582ms)
+  ✔ lost response and still-present row is unknown (0.5237ms)
+  ✔ mismatched delete id is not trusted while target remains (0.4611ms)
+✔ delete scopes dog, id, type and full preimage; ambiguity requires independent absence readback (1.5852ms)
+✔ planned-health migration declares isolated completed-history semantics and narrow RLS/grants (25.8283ms)
+✔ event-time migration keeps due time optional and grants only the new time column (0.7408ms)
+✔ synthetic planned-health SQL probe contains two-owner RLS checks and always rolls back (0.8262ms)
+✔ actual workspace blocks duplicate plan writes and preserves pending intent for status recovery (42.515ms)
+✔ actual workspace status retry replays only the exact pending plan after absent lookup (13.095ms)
+✔ actual workspace does not reconcile a plan with a different due_time as saved (9.2908ms)
+✔ actual workspace uses exact captured preimage on update/delete and never auto-overwrites concurrent edits (19.2783ms)
+✔ actual workspace status retry retains localToday captured with the plan intent (7.3779ms)
+✔ actual workspace lifetime change suppresses delayed status replay and keeps pending intent (5.4591ms)
+✔ Home excludes planned events from daily tasks; Health keeps the separate planned-event flow (0.1363ms)
+✔ planned health is linked from the health workspace and remains a separate screen/contract (0.1531ms)
+(node:30096) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/account/preview-policy.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ preview requires the exact flag and a development build (0.5508ms)
+✔ component gallery is reachable only from the dev-gated preview menu (0.4877ms)
+✔ preview script resolves the installed Expo CLI and forwards arguments without launching it (3.3749ms)
+✔ preview environment changes only the child environment object (0.165ms)
+(node:39512) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/onboarding/profile-draft.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ profile draft comparison trims canonical fields and returns clean after revert (0.9725ms)
+✔ kennel-code comparison normalizes valid values but keeps invalid edits dirty (0.2762ms)
+✔ parent-owned unknown states are recovery intents, not local dirty drafts (0.1082ms)
+✔ scoped attribution data is hidden on owner, account-generation, or dog change (0.2693ms)
+✔ unknown link is confirmed only by exact scoped readback match (0.3408ms)
+✔ unknown link mismatch keeps the intent and exposes actual server state (0.0783ms)
+✔ unknown removal is a present intent and null readback confirms it exactly (0.0625ms)
+✔ unknown removal mismatch preserves intent when a kennel link still exists (0.0698ms)
+✔ stale owner, account-generation, and dog readbacks cannot resolve current intent (0.0878ms)
+✔ a superseded readback cannot clear a newer intent in the same scope (0.1191ms)
+✔ kennel status retry is read-only and use-current cannot write (0.257ms)
+✔ unknown link and removal copy expose the actual mismatch state and recovery actions (0.1172ms)
+(node:34044) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/data/app-data.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ profile editor keeps transient success feedback in the local action card and pending/error status visible (1.3861ms)
+✔ profile validators trim names, count Unicode code points, and validate local calendar dates (1.2028ms)
+✔ invalid name, date, or unknown breed fails before the SDK request (12.9756ms)
+✔ update filters the exact dog and all three captured preimage fields and sends only allowed values (3.0768ms)
+▶ returned update row must match exact dog id and requested profile before saved is reported
+  ✔ mismatched id is reconciled by exact id lookup and not accepted from the update response (1.2462ms)
+  ✔ exact desired row found after lost response is saved (1.0069ms)
+  ✔ requested profile with different dog id never counts as saved (0.714ms)
+✔ returned update row must match exact dog id and requested profile before saved is reported (3.3412ms)
+▶ lost and rejected updates reconcile safely against the desired row and captured preimage
+  ✔ definite rejection with unchanged profile is failed (0.7482ms)
+  ✔ conflicting concurrent profile is unknown and not overwritten (0.8129ms)
+  ✔ a zero-row conditional update cannot claim saved without exact desired readback (0.761ms)
+  ✔ absent profile after ambiguous response remains unknown (0.6077ms)
+✔ lost and rejected updates reconcile safely against the desired row and captured preimage (3.3203ms)
+✔ profile update deadline aborts the installed SDK request and reports unresolved write as unknown (4.3471ms)
+▶ fetchOwnedDogById is exact-id scoped and validates the returned id
+  ✔ matching dog row (0.5086ms)
+  ✔ wrong id response is rejected (0.5065ms)
+  ✔ not found (0.2951ms)
+✔ fetchOwnedDogById is exact-id scoped and validates the returned id (1.5659ms)
+✔ profile editing leaves the existing createDog RPC contract unchanged (0.5143ms)
+✔ actual workspace profile handler blocks duplicates and keeps unknown intent across navigation (40.4669ms)
+✔ actual workspace profile status check safely replays only the same intent after exact preimage readback (6.211ms)
+✔ actual workspace conflict retains pending intent until explicit acceptance of current profile (4.1291ms)
+▶ actual workspace suppresses profile replay and owner callback after a lifetime change during lookup or update
+  ✔ late status lookup cannot replay against an obsolete user/dog (5.9185ms)
+  ✔ late write result cannot update the dog owned by AppFlow (4.5799ms)
+✔ actual workspace suppresses profile replay and owner callback after a lifetime change during lookup or update (10.8304ms)
+✔ derived content resets on age/breed changes and ignores old generations (7.5413ms)
+✔ failed derived content reads clear stale data and expose an error state for the current profile (2.3193ms)
+✔ kennel referral is optional during onboarding and attribution is checked only when selected (0.5362ms)
+✔ profile editing exposes a later optional kennel connection (0.6165ms)
+(node:38708) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/onboarding-referral/referral-model.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ kennel code normalizes and enforces the closed code format (0.5501ms)
+✔ join parser accepts only the exact custom-scheme route and one code (0.2194ms)
+✔ pending referral accepts only code and captured time within seven days (0.5332ms)
+✔ storage keeps only a pending code, clears invalid/expired state and supports opt-out (0.1913ms)
+✔ deep-link capture persists only a valid kennel join URL (0.1435ms)
+(node:31672) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/notifications/reminder-preferences-draft.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ saved reminder fields are clean and can be reverted independently (0.4668ms)
+✔ invalid edited time remains dirty while the canonical saved time stays clean (0.0834ms)
+✔ reminder time parser accepts only valid local HH:mm values (0.1679ms)
+(node:30816) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/training/review-training-state.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ review completion and reset remain local, unique, and scoped by synthetic ID (0.7867ms)
+✔ review completion does not invoke the cloud progression callback (0.145ms)
+✔ review-mode handler returns before cloud progression callback and labels temporary state (3.767ms)
+✔ only confirmed success receives the decorative green check and compact success styles (0.5454ms)
+✔ success keeps undo and errors keep retry and cancel semantics (0.1135ms)
+✔ all visible and exiting toasts use the shared tokenized vertical margin and hidden toast returns no layout node (0.0638ms)
+✔ LogScreen puts every confirmed mutation result after the normal grid and before Fler (0.192ms)
+✔ selecting a quick log while Fler is expanded collapses Fler before the saved feedback appears (0.0715ms)
+(node:7488) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/data/workspace-data.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ ungranted training progress stays neutral while date helpers project its confirmed timestamp (29.4507ms)
+(node:35104) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/features/training/training-model.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ preview programs have stable identities and match the reviewed local training copy (0.7143ms)
+✔ completed steps are isolated by dog, program, and exact version (0.5214ms)
+✔ only the next ordered step completes and duplicate or out-of-order actions are idempotent (0.1748ms)
+✔ invalid identity, version, and duplicate step order do not change progress (0.1239ms)
+✔ reset removes only one dog-program-version and leaves other progress intact (0.1024ms)
+✔ shared tokens retain the legacy theme while exposing the design foundations (1.0877ms)
+✔ shared component source uses tokens and contains no local hex or font-size literals (7.2496ms)
+✔ category identity and accessible example copy are centrally defined (1.529ms)
+✔ index exports the requested shared component families (0.3928ms)
+✔ Home activity and destination components keep independent accessible actions (0.3756ms)
+✔ vision variants are opt-in and leave shared component defaults on their original styles (0.3341ms)
+✔ Button stretches every non-icon variant and keeps icon controls square at touch minimum (0.213ms)
+(node:9692) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/erika/Documents/GitHub/Tassla-uiux-revamp/src/data/workspace-data.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\erika\Documents\GitHub\Tassla-uiux-revamp\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ upcoming health plans are dog-scoped, date-filtered before the 40-row cap, minimal and read-only (18.9339ms)
+✔ upcoming health reader rejects invalid local dates and foreign or non-future rows without extra requests (1.6058ms)
+✔ dog-event history filters the supported everyday types and has deterministic owner-scoped pagination order (0.9079ms)
+✔ recovers an uncertain event update when the server returns an equivalent timestamp format (1.3609ms)
+✔ recovers an event insert after response loss by reading the same stable UUID (0.9018ms)
+✔ does not report an event as saved after a definite database rejection (0.8876ms)
+✔ marks a timed out event insert unknown and forwards the real SDK abort signal (29.2305ms)
+✔ training hides ungranted current versions and keeps only a safe count for older progress (2.6923ms)
+✔ training workspace stays empty when there are no published programs (0.9231ms)
+✔ keeps progress for a withdrawn or unavailable published version as paused history (0.674ms)
+✔ training progress insert and delete reconcile uncertain outcomes by the full versioned key (1.1319ms)
+ℹ tests 581
+ℹ suites 0
+ℹ pass 581
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 27501.7824
+PNPM_CHECK_EXIT=0
+=== py_compile ===
+PY_COMPILE_EXIT=0
+=== queue validate ===
+Segment: Full MVP beta delivery: Erik authorized implementation 2026-10-06, Luna medium; phone tests chosen by Erik, real beta activation separate Erik approval: True
+FOUNDATION-PREP done F�rbered schema, k�llgrund och installationsguide
+FOUNDATION-DB-VERIFY planned Verifiera migration och RLS i verklig Supabase-utvecklingsmilj�
+APP-01-LOCAL done F�rsta lokala appfl�det; checkpoints A�D
+APP-01-PHONE done Signerad iPhone och verklig auth/dataintegration
+DEV-PREVIEW-01 done Local development preview without app login
+APP-02-LOCAL done Six MVP screen foundations, local daily log and training
+APP-03-LOCAL done Google, real owner workspace, Codemagic and vision UI
+CI-01 done Fix Codemagic pnpm executable collision
+CI-02 done Align Expo 57 native animation packages for iOS build
+APP-04A-UX done Make sign-out discoverable and keep form actions reachable above the keyboard
+APP-04A-PHONE planned Verify APP-04A keyboard and sign-out UX on a small signed iPhone build
+APP-05-B1-WEIGHT done Health B1: owner-registered weight history
+APP-05-PHONE-DB planned Verify health weight form on phone and real Supabase/RLS
+MVP-CONTENT-INVENTORY done Editorial MVP content inventory, metadata only
+APP-04B2-HISTORY done Health B2: performed vaccination and veterinary history
+APP-04C-PROFILE done Edit dog profile and refresh derived content
+MVP-P03-PLANNED-HEALTH done Owner-entered planned health dates separate from performed history
+MVP-P04-CONTENT done Sourced content drafts and versioned draft import
+MVP-P05-CONTENT-UI done Relevant Home and Knowledge with shared published versions
+MVP-P06-PASSPORT done Saved passport snapshot PDF and owner-initiated local sharing
+MVP-P07-REMINDERS done Owner opt-in local health and training reminders
+MVP-P10-ACCOUNT done Local undeployed beta account and deletion candidate
+UX-01 done Planned health information and action feedback
+BUILD-01 done Fix Codemagic release-age dependency failure and validate build stages
+BUILD-02 done Expose raw Xcode archive logs as Codemagic artifacts
+UX-02 done �terst�ende UX-korrigeringar, varum�rkesikon och granskningsl�ge
+DS-CODE-01 blocked Kodtokens, delat komponentbibliotek och utvecklingsgalleri
+LOGGA-QUICK blocked Logga snabbfl�de, sanningsenlig status och sk�rmtillst�nd
+LOGGA-EDIT done Logga redigering, radering och �garaccepterad closeout
+BUILD-35 done R�tta Codemagic Check application f�r remove-ai-slop
+UI-06 done F�rb�ttra Hem och Logg med lugn hierarki och foto-carousel
+UI-07 done Centrerat Tassla-varum�rke och t�ckande bottenmeny
+FIX-36 done R�tta p�minnelsetid och verifiera Olycka/Vatten
+UI-08 blocked Toastkanter och finjustering av Hem, Kunskap, Mer och Tr�ning
+MOTION-01 done R�relsegrund och bekr�ftelse
+MOTION-02 done Dynamisk logg och bekr�ftade tr�ningssteg
+MOTION-03 done Tips vid f�rsta anv�ndning
+MOTION-04 done Valpfigur
+HOME-TIME-01 blocked Valbar tid f�r logg/h�lsoh�ndelser och visning p� Hem
+UI-09 blocked Kompakt loggbekr�ftelse med gr�n bock
+FIX-38 done R�tta Toast lintfel och k�r preflight inf�r commit/push
+QA-11 done Mobilkorrigeringar fr�n Eriks fem bilder
+KNOW-02 done Faschecklistor och FAQ med konto-/hundprogress och reviewinneh�ll
+HOME-NEXT-01 done Hem kopplar ihop dagens upplevelse
+VISION-R02-1 done Hem rev02-referens och delade aktivitetskomponenter
+VISION-R02-2 done �garvalda dagsrutiner och k�llh�rledd tr�ningsprogress
+VISION-R02-3 done Logga � visuell migration enligt panel 5
+VISION-R02-3B done Tr�ning � visuell migration enligt panel 6
+VISION-R02-3C done Kunskap � visuell migration enligt panel 7
+VISION-R02-4A done Mer � visuell migration enligt rev02 st�dsk�rmsregler
+VISION-R02-4B done H�lsa, vikt och utf�rd historik � visuell migration enligt rev02 st�dsk�rmsregler
+VISION-R02-4C done Planerad h�lsa � visuell migration enligt rev02 st�dsk�rmsregler
+VISION-R02-4D done Tassla-pass � visuell migration enligt rev02 st�dsk�rmsregler
+VISION-R02-4E done Hundprofil och redigering � visuell migration enligt rev02 st�dsk�rmsregler
+VISION-R02-4F done P�minnelser � visuell migration enligt rev02 st�dsk�rmsregler
+VISION-R02-4G done Konto och betainformation � visuell migration enligt rev02 st�dsk�rmsregler
+VISION-R02-4H done Inloggning och onboarding � visuell migration enligt rev02 st�dsk�rmsregler
+VISION-R02-GESTURES done Bl�ddringsbar �ldersremsa och svep mellan huvudflikar
+DOG-PROFILE-BREED-MIX blocked S�kbar raslista, Mix och Home-identitet
+DOG-PROFILE-AGE-DISPLAY blocked Valbar och konsekvent visning av hundens �lder
+CHECKLIST-UI-LUNA-DETAIL done Grupperad och kompakt detaljvy f�r faschecklistor
+CHECKLIST-UI-LUNA-OVERVIEW done Fas�versikt och kontextval f�r checklistor
+CHECKLIST-UI-LUNA-CUSTOM done Sheetfl�de f�r egna checklistpunkter
+LOG-ACCIDENT-DETAILS-01 done Olycka: Kiss/Bajs-val och m�nsterr�kning
+LOG-ACCIDENT-RUNTIME-VERIFY-01 planned Olyckstyper: verifiera Supabase-persistens och RLS
+HOME-AGE-LIFECYCLE-01 done Hem: automatisk �ldersremsa och ungef�rlig livsfas
+HOME-ROUTINE-CHECKLIST-01 done Hem: named routines with independent checklists and repeat schedules
+HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01 planned Hem: verifyera rutinchecklistors migration, RLS och legacy-klient
+UX-FIX-BASELINE-WINDOWS-01 done Korrigera Windows-portabilitet i tv� baslinjetester
+UX-FIX-BASELINE-MOTION-01 blocked R�tta MotionPressables Pressable-statekontrakt
+UX-CONTINUE-CARD-01 done Tr�ning: bygg om Forts�tt d�r ni var mot panel 6
+UX-LOG-EDITOR-01 done Logga: revidera tidslinje och redigerare mot panel 5
+UX-WORKSPACE-RETENTION-01 done Hem/Tr�ning: beh�ll bekr�ftad data mellan flikar
+UX-KNOWLEDGE-CACHE-01 done Kunskap: �teranv�nd l�sta checklistor utan att blanda scope
+UX-TRAINING-UNMARK-01 done Tr�ning: avmarkera ett enskilt genomf�rt steg
+HOME-ROUTINE-WEEKDAYS-01 done Hem: l�gg till valbara veckodagar f�r egen upprepning
+MVP-V2-ADOPT-01 done MVP v2 som styrande scope och V2-01 relevanskontrakt
+UIUX-REVAMP-R1A-BREED-01 done Onboarding: kr�ver aktivt rasval
+TASSLA-TEAM-MODEL-ROUTING-01 done Tassla Team: modell och reasoning per SDK-roll
+FLOW-ONBOARD-01 planned Onboarding och hundprofil till personligt Hem
+FLOW-HOME-CHECKLIST-01 qa Hem till daglig Checklista och tillbaka
+FLOW-HOME-CHECKLIST-IDAG-01 done Panel 4: fullst�ndig dagslista och �terg�ng till Hem
+FLOW-HOME-CHECKLIST-ALL-01 done Panel 4: Alla visar samtliga aktiva rutinmallar
+FLOW-HOME-CHECKLIST-WEEK-01 done Panel 4: verkligt urval f�r Denna vecka
+FLOW-HOME-CHECKLIST-UPCOMING-01 done Panel 4: verkliga Kommande aktiviteter
+FLOW-LOG-01 planned Logga med bevarad snabbresa och historik
+FLOW-TRAINING-01 planned Tr�ning fr�n rekommendation till �terupptagen progress
+FLOW-KNOWLEDGE-01 done Kunskap fr�n s�k till k�llm�rkt l�sning
+FLOW-DEVELOPMENT-01 planned Utveckling fr�n Hem till publicerad milstolpe
+FLOW-PROGRESS-01 planned Dagens framsteg med k�llh�rledd progress
+FLOW-INSIGHTS-01 planned Insikter med korrekt period och t�ckning
+UIUX-REVAMP-R1B-LOG-DRAFT-01 done Skydda Loggeditorns osparade utkast
+UIUX-REVAMP-R1C-PROFILE-DRAFT-01 done Skydda Hundprofilens osparade utkast
+UIUX-REVAMP-R1D-REMINDER-DRAFT-01 done Skydda P�minnelsernas osparade utkast
+UIUX-REVAMP-R1E-HEALTH-HISTORY-DRAFT-01 done Protect health history drafts and preserve confirmed feedback
+UIUX-REVAMP-R2B-SHARED-SHEET-01 done Gemensam BottomSheet: styrd dragst�ngning i Loggs redigerare
+FLOW-HOME-TRAINING-TARGET-01 done Hem �ppnar exakt dagens tr�ningsuppgift och �terv�nder
+UIUX-POSTFLIGHT-CORRECTIONS-01 blocked R�tta loggkontroller, rutinlayout och huvudnavigation
+UIUX-REVAMP-R4A-RELEVANCE-01 done R4a: gemensam redaktionell relevansgrind
+UIUX-REVAMP-R4B-PERIOD-01 done R4b: redaktionell �ldersperiodresolver
+UIUX-REVAMP-R4C-PUBLISHED-FAQ-01 done R4c: public FAQ med publicerat k�llunderlag
+FLOW-HOME-CHECKLIST-ALL-VERIFY-01 done R�tta tvetydig rubrikassertion i Alla-verifieraren
+FLOW-HOME-CHECKLIST-WEEK-VERIFY-01 done Panel 4: korrigera tv� inaktuella verifierarf�rv�ntningar
+QUEUE_VALIDATE_EXIT=0
+=== git diff --check ===
+warning: in the working copy of 'docs/design/evidence/vision-rev02/checklist/UPCOMING-01/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/plans/FLOW-HOME-CHECKLIST-UPCOMING-01-ux-spec.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/plans/UIUX-REVAMP-R4A-RELEVANCE-01-ux-spec.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/tasks/dev/FLOW-HOME-CHECKLIST-UPCOMING-01.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/tasks/dev/UIUX-REVAMP-R4A-RELEVANCE-01.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/content/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/content/select-content.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/data/workspace-data.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/features/health/HealthScreen.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/features/home/HomeScreen.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/features/home/ProductWorkspace.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/features/knowledge/FAQScreen.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/features/knowledge/KnowledgeScreen.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/features/knowledge/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/features/onboarding/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/features/onboarding/dog.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/features/puppy-log/LogScreen.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/features/training/PublishedTrainingScreen.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/content-delivery.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/domain.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/profile-edit.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/visual-check/app.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/visual-check/know02-app.tsx', LF will be replaced by CRLF the next time Git touches it
+DIFF_CHECK_EXIT=0
+=== Visual public home-checklist ===
+PASS Home checklist entry is visible for 0, 1�5 and >5 activities and returns to Home
+PASS Checklist routine manager opens, adds/removes a routine for today and returns to the same date/list
+PASS Checklist loading, empty and read-error states remain distinct
+PASS Missing training source remains non-actionable and does not claim unconfirmed completion
+PASS Exact training-step open/return, checklist and Home scroll restoration, focused routine manager scroll restoration, 3 viewports and 140% text
+VISUAL_public_home-checklist_EXIT=0
+=== Visual public checklist-all ===
+PASS Alla shows each saved template, repeat and day state at 375�844, 430�844 and 375�667
+PASS An unselected template can be chosen for today and becomes selected without a duplicate action
+PASS Selected All-view checklist rows use the existing confirmed completion action and day snapshot
+PASS Fresh All snapshot reaches the existing manager with explicit today-only choose/remove labels
+PASS A skipped routine can be restored for today using its existing skip snapshot
+PASS Refreshing, failed refresh and stale All lists retain content and disable routine writes
+PASS A click after the rendered snapshot expires blocks open and add callbacks, makes one shared refresh, and performs zero writes
+PASS A pristine manager closes when its snapshot expires and the automatic refresh completes
+PASS A delete confirmation opened before expiry cannot mutate after the snapshot refreshes; the old session token is rejected
+PASS Dirty manager draft stays visible and read-only after expiry and successful refresh; explicit local discard permits a fresh session
+PASS A routine update started while fresh may resolve after expiry, but the old manager session stays read-only after readback
+PASS An unknown mutation remains visible with retry disabled through a successful snapshot refresh
+PASS Changing the scope fixture unmounts a dirty session immediately and a new session has no prior draft
+PASS A pending/unknown session is cleared on scope change without carrying its draft or retry into the new scope
+PASS All distinguishes loading, read error and a genuinely empty template list
+PASS All template labels and actions fit at 140% text proxy without horizontal overflow
+VISUAL_public_checklist-all_EXIT=0
+=== Visual public checklist-week ===
+PASS Weekly selector exposes seven accessible dates with 44pt targets at 375x844, 430x844, and 375x667
+PASS Historical saved snapshots are shown read-only; training has no button semantics or open affordance
+PASS Missing days and timezone-mismatched history remain distinct and unconfirmed
+PASS Weekly read error and authoritative-today read error render separate retry states; raw today is never trusted
+PASS Exact current-day training opens and returns to today; confirmed readback increments day and week totals
+PASS Confirmed program reset removes its current-day training selection from weekly progress
+PASS Weekly view fits 375x844 at a 140% web text proxy
+VISUAL_public_checklist-week_EXIT=0
+=== Visual public r3c-upcoming ===
+PASS Upcoming ready rows, date/time and stable ordering at 375x844 (public)
+PASS Upcoming ready rows, date/time and stable ordering at 430x844 (public)
+PASS Upcoming ready rows, date/time and stable ordering at 375x667 (public)
+PASS A non-first future health plan opens its exact edit record and returns to the same Kommande tab
+PASS Future routine opens its focused template manager; the available day action selects it for today only
+PASS Checklist template saves and confirmed failed/unknown retries invoke exactly one synthetic routine refresh
+PASS Loading and confirmed partial rows remain visible per source
+PASS Health Retry refreshes only health and preserves the independent routine source
+PASS Routine Retry refreshes only routines and preserves the independent health source
+PASS Routine loading does not hide the independently confirmed health plans
+PASS An already-open Kommande view remains visible when both confirmed sources are empty
+PASS 140% text proxy scrolls active Kommande fully into the Avsnitt viewport and verifies tab/label bounds
+VISUAL_public_r3c-upcoming_EXIT=0
+=== Visual review home-checklist ===
+PASS Home checklist entry is visible for 0, 1�5 and >5 activities and returns to Home
+PASS Checklist routine manager opens, adds/removes a routine for today and returns to the same date/list
+PASS Checklist loading, empty and read-error states remain distinct
+PASS Missing training source remains non-actionable and does not claim unconfirmed completion
+PASS Exact training-step open/return, checklist and Home scroll restoration, focused routine manager scroll restoration, 3 viewports and 140% text
+VISUAL_review_home-checklist_EXIT=0
+=== Visual review checklist-all ===
+PASS Alla shows each saved template, repeat and day state at 375�844, 430�844 and 375�667
+PASS An unselected template can be chosen for today and becomes selected without a duplicate action
+PASS Selected All-view checklist rows use the existing confirmed completion action and day snapshot
+PASS Fresh All snapshot reaches the existing manager with explicit today-only choose/remove labels
+PASS A skipped routine can be restored for today using its existing skip snapshot
+PASS Refreshing, failed refresh and stale All lists retain content and disable routine writes
+PASS A click after the rendered snapshot expires blocks open and add callbacks, makes one shared refresh, and performs zero writes
+PASS A pristine manager closes when its snapshot expires and the automatic refresh completes
+PASS A delete confirmation opened before expiry cannot mutate after the snapshot refreshes; the old session token is rejected
+PASS Dirty manager draft stays visible and read-only after expiry and successful refresh; explicit local discard permits a fresh session
+PASS A routine update started while fresh may resolve after expiry, but the old manager session stays read-only after readback
+PASS An unknown mutation remains visible with retry disabled through a successful snapshot refresh
+PASS Changing the scope fixture unmounts a dirty session immediately and a new session has no prior draft
+PASS A pending/unknown session is cleared on scope change without carrying its draft or retry into the new scope
+PASS All distinguishes loading, read error and a genuinely empty template list
+PASS All template labels and actions fit at 140% text proxy without horizontal overflow
+VISUAL_review_checklist-all_EXIT=0
+=== Visual review checklist-week ===
+PASS Weekly selector exposes seven accessible dates with 44pt targets at 375x844, 430x844, and 375x667
+PASS Historical saved snapshots are shown read-only; training has no button semantics or open affordance
+PASS Missing days and timezone-mismatched history remain distinct and unconfirmed
+PASS Weekly read error and authoritative-today read error render separate retry states; raw today is never trusted
+PASS Exact current-day training opens and returns to today; confirmed readback increments day and week totals
+PASS Confirmed program reset removes its current-day training selection from weekly progress
+PASS Weekly view fits 375x844 at a 140% web text proxy
+VISUAL_review_checklist-week_EXIT=0
+=== Visual review r3c-upcoming ===
+PASS Upcoming ready rows, date/time and stable ordering at 375x844 (review)
+PASS Upcoming ready rows, date/time and stable ordering at 430x844 (review)
+PASS Upcoming ready rows, date/time and stable ordering at 375x667 (review)
+PASS A non-first future health plan opens its exact edit record and returns to the same Kommande tab
+PASS Future routine opens its focused template manager; the available day action selects it for today only
+PASS Checklist template saves and confirmed failed/unknown retries invoke exactly one synthetic routine refresh
+PASS Loading and confirmed partial rows remain visible per source
+PASS Health Retry refreshes only health and preserves the independent routine source
+PASS Routine Retry refreshes only routines and preserves the independent health source
+PASS Routine loading does not hide the independently confirmed health plans
+PASS An already-open Kommande view remains visible when both confirmed sources are empty
+PASS 140% text proxy scrolls active Kommande fully into the Avsnitt viewport and verifies tab/label bounds
+VISUAL_review_r3c-upcoming_EXIT=0
+VISUAL_FAILURES=

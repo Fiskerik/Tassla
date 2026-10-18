@@ -1,0 +1,20 @@
+{
+  "passes": [
+    "Knowledge empty-state actions open the existing Checklistor tab",
+    "Knowledge unknown selection opens today’s checklist and returns Home; confirmed empty still opens Checklistor",
+    "Training empty-state action opens today checklist and returns Home",
+    "Knowledge and Training selector empty states at 375px (review)",
+    "Knowledge and Training selector empty states at 430px (review)"
+  ],
+  "pageErrors": [],
+  "scope": "R4a Knowledge and Training selector empty states; production React Native Web with synthetic content, not device/backend certification",
+  "bundle": "review",
+  "viewports": [
+    375,
+    430
+  ],
+  "limitations": [
+    "Content and callbacks are synthetic; no live Supabase/RLS or publication is tested",
+    "Native iOS/Android, VoiceOver and device Dynamic Type are not tested"
+  ]
+}

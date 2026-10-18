@@ -345,7 +345,7 @@ test('derived content resets on age/breed changes and ignores old generations', 
   const firstContent = deferredResult();
   const secondContent = deferredResult();
   const first = buildDerivedEffect({ state, generations, dog: firstDog, age: firstAge, selectionKey: firstKey,
-    homeResult: firstContent.promise, requests });
+    catalogResult: firstContent.promise, requests });
   const cleanupFirst = first();
   assert.equal(state.contentKey, firstKey);
 
@@ -360,7 +360,7 @@ test('derived content resets on age/breed changes and ignores old generations', 
   });
   assert.deepEqual(visibleForUpdatedProfile(), { content: [], contentState: 'loading' });
   const second = buildDerivedEffect({ state, generations, dog: updatedDog, age: updatedAge, selectionKey: updatedKey,
-    homeResult: secondContent.promise, requests });
+    catalogResult: secondContent.promise, requests });
   const cleanupSecond = second();
   assert.equal(requests.content.length, 2);
   assert.deepEqual(requests.content.map(({ dog, age }) => [dog.breed_id, dog.birth_date, age]), [
@@ -368,13 +368,13 @@ test('derived content resets on age/breed changes and ignores old generations', 
   ]);
   assert.equal(visibleForUpdatedProfile().contentState, 'loading');
 
-  firstContent.resolve([{ id: 'old', title: 'Old', body: 'Old body', contentType: 'guide' }]);
+  firstContent.resolve({ homeAdvice: { status: 'eligible', items: [{ id: 'old', title: 'Old', body: 'Old body', contentType: 'guide' }] } });
   await flushMicrotasks();
   assert.deepEqual(state.content, ['old content'], 'late first-generation content cannot replace the previous generation');
   assert.deepEqual(visibleForUpdatedProfile().content, [], 'old profile content remains hidden');
   assert.equal(visibleForUpdatedProfile().contentState, 'loading');
 
-  secondContent.resolve([{ id: 'new', title: 'New', body: 'New body', contentType: 'guide' }]);
+  secondContent.resolve({ homeAdvice: { status: 'eligible', items: [{ id: 'new', title: 'New', body: 'New body', contentType: 'guide' }] } });
   await flushMicrotasks();
   assert.deepEqual(visibleForUpdatedProfile().content.map(({ id }) => id), ['new']);
   assert.equal(state.contentKey, updatedKey);
@@ -392,7 +392,7 @@ test('failed derived content reads clear stale data and expose an error state fo
   const age = dogModel.ageInWeeks(dog.birth_date, dogModel.localDate());
   const selectionKey = `${dog.id}:${dog.breed_id}:${age}`;
   const run = buildDerivedEffect({ state, generations: { content: { current: 0 }, training: { current: 0 } }, dog, age,
-    selectionKey, homeResult: Promise.reject(new Error('content fetch failed')), requests: { content: [] } });
+    selectionKey, catalogResult: Promise.reject(new Error('content fetch failed')), requests: { content: [] } });
   const cleanup = run();
   await flushMicrotasks();
   assert.deepEqual(state.content, []);
@@ -483,7 +483,7 @@ function createProfileHandlerHarness(overrides = {}) {
   return { handlers: makeHandlers(), rebuildHandlers: makeHandlers, calls, state, dependencies };
 }
 
-function buildDerivedEffect({ state, generations, dog, age, selectionKey, homeResult, trainingResult, requests }) {
+function buildDerivedEffect({ state, generations, dog, age, selectionKey, catalogResult, requests }) {
   state.selectionKeyRef ??= { current: selectionKey };
   const marker = productWorkspaceSource.indexOf('const generation = ++contentGeneration.current;');
   assert.notEqual(marker, -1, 'expected the current derived-content generation effect');
@@ -539,8 +539,9 @@ function buildDerivedEffect({ state, generations, dog, age, selectionKey, homeRe
     reviewContentEnabled: false,
     REVIEW_TRAINING_PROGRAMS: [],
     mounted: { current: true },
-    fetchHomeContent: async (...args) => { requests.content.push({ dog: args[1], age: args[2], signal: args[4] }); return homeResult; },
+    fetchContentSurfaceCatalog: async (...args) => { requests.content.push({ dog: args[1], age: args[2], signal: args[4] }); return catalogResult; },
     setContent(value) { state.content = value; },
+    setContentCatalog(value) { state.contentCatalog = value; },
     setContentSelectionKey(value) { state.contentKey = value; },
     setContentState(value) { state.contentState = value; },
   };

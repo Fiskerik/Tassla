@@ -1,0 +1,55 @@
+{
+  "passes": [
+    "Upcoming ready rows, date/time and stable ordering at 375x844 (review)",
+    "Upcoming ready rows, date/time and stable ordering at 430x844 (review)",
+    "Upcoming ready rows, date/time and stable ordering at 375x667 (review)",
+    "A non-first future health plan opens its exact edit record and returns to the same Kommande tab",
+    "Future routine opens its focused template manager; the available day action selects it for today only",
+    "Checklist template saves and confirmed failed/unknown retries invoke exactly one synthetic routine refresh",
+    "Loading and confirmed partial rows remain visible per source",
+    "Health Retry refreshes only health and preserves the independent routine source",
+    "Routine Retry refreshes only routines and preserves the independent health source",
+    "Routine loading does not hide the independently confirmed health plans",
+    "An already-open Kommande view remains visible when both confirmed sources are empty",
+    "140% text proxy scrolls active Kommande fully into the Avsnitt viewport and verifies tab/label bounds"
+  ],
+  "pageErrors": [],
+  "blockedNetworkRequests": [],
+  "scope": "R3c synthetic Kommande source states, ordering, selected-plan edit/return, focused routine management and responsive rendering",
+  "bundle": "review",
+  "viewports": [
+    "375x844",
+    "430x844",
+    "375x667",
+    "375x844 at 140% web text proxy"
+  ],
+  "activeTabBoundsAt140Percent": {
+    "scrollLeft": 41,
+    "port": {
+      "left": 24,
+      "right": 351
+    },
+    "tab": {
+      "left": 227.328125,
+      "right": 348.890625
+    },
+    "label": {
+      "left": 235.328125,
+      "right": 340.890625
+    }
+  },
+  "section14VisualAssessment": {
+    "composition": "NOT TESTABLE — no dedicated Kommande target in vision_rev02.jpg",
+    "color": "NOT TESTABLE — no dedicated Kommande target in vision_rev02.jpg",
+    "typography": "NOT TESTABLE — no dedicated Kommande target in vision_rev02.jpg",
+    "componentShapes": "NOT TESTABLE — no dedicated Kommande target in vision_rev02.jpg",
+    "imagery": "NOT TESTABLE — no dedicated Kommande target in vision_rev02.jpg",
+    "contentDensity": "NOT TESTABLE — no dedicated Kommande target in vision_rev02.jpg"
+  },
+  "limitations": [
+    "Synthetic records and callbacks; not production content, live Supabase/RLS, or database mutation proof",
+    "Native iOS/Android, VoiceOver, device Dynamic Type, and actual local timezone/midnight transitions are NOT TESTABLE",
+    "The 140% text proxy is a web CSS approximation",
+    "No dedicated Kommande screenshot exists in vision_rev02.jpg, so section 14.16 visual similarity is NOT TESTABLE"
+  ]
+}

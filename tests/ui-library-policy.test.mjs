@@ -54,7 +54,7 @@ test('Home activity and destination components keep independent accessible actio
   const destination = source('DestinationTile.tsx');
   const gallery = source('ComponentGalleryScreen.tsx');
   assert.match(daily, /accessibilityRole="checkbox"[\s\S]*?accessibilityState=\{\{ checked: completed/);
-  assert.match(daily, /accessibilityRole="button" accessibilityLabel=\{`Visa detaljer:/);
+  assert.ok(daily.includes('accessibilityRole="button" accessibilityLabel={routineLabel ? `Hantera rutin ${routineLabel}, punkt ${label}` : `Visa detaljer: ${label}`}'), 'routine rows use a truthful routine name while non-routine rows keep their detail label');
   assert.match(daily, /minHeight: tokens\.size\.touchMin/);
   for (const icon of ["'paw-outline'", "'school-outline'", "'book-outline'"]) {
     assert.ok(destination.includes(icon), `missing destination icon ${icon}`);

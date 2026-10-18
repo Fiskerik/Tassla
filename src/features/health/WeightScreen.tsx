@@ -21,6 +21,7 @@ export function WeightScreen({
   onRetryPending,
   onSave,
   onDelete,
+  onOpenHelp,
 }: {
   onBack: () => void;
   records?: readonly HealthWeightRecord[];
@@ -34,6 +35,7 @@ export function WeightScreen({
   onRetryPending?: () => void;
   onSave?: (id: string | null, occurredOn: string, weightKg: number) => Promise<boolean>;
   onDelete?: (id: string) => Promise<boolean>;
+  onOpenHelp?: () => void;
   historyRecords?: readonly HealthHistoryRecord[];
   historyLoadState?: LoadState;
   historyBusy?: boolean;
@@ -62,6 +64,7 @@ export function WeightScreen({
   const [formError, setFormError] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
+  const addDraftDirty = date !== localDate() || weight.trim() !== '';
   const confirmedMessage = statusMessage?.startsWith('Ändringen är sparad') && !statusError && !pendingStatus && !isBusy
     ? statusMessage : null;
   useEffect(() => {
@@ -136,6 +139,7 @@ export function WeightScreen({
   return (
     <View>
       <AppBar mode="Back" title="Vikt" onAction={onBack} />
+      {!editingId && !addDraftDirty && onOpenHelp ? <Button variant="tertiary" label="Hjälp om viktregistrering" accessibilityLabel="Hjälp om viktregistrering" onPress={onOpenHelp} /> : null}
       {cloudLoadState === 'loading' && <MessageCard>Hämtar hundens vikthistorik…</MessageCard>}
       {cloudLoadState === 'error' && <>
         <MessageCard tone="error">Vikthistoriken kunde inte hämtas.</MessageCard>

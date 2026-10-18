@@ -7384,44 +7384,150 @@
       "id": "FLOW-HOME-CHECKLIST-01",
       "title": "Hem till daglig Checklista och tillbaka",
       "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; fullskärmsmålet realiseras via namngivna checkpoints",
+      "plan": "docs/tasks/dev/FLOW-HOME-CHECKLIST-01.md v7",
       "write_paths": [
-        "src/features/home/HomeScreen.tsx",
-        "src/features/home/DailyActivityManagerSheet.tsx",
-        "src/features/home/ProductWorkspace.tsx"
+        "docs/tasks/dev/FLOW-HOME-CHECKLIST-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/checklist/PANEL4-INTEGRATION-01"
       ],
       "acceptance": [
-        "Hem och dagslista har samma fullständiga population och bekräftade count",
-        "Skapa/ändra/ta bort/ångra rutin fungerar; träningsrad öppnar källsteg",
-        "Synliga filter fungerar; pending/failed/unknown döljer falsk progress",
-        "För full panelacceptans fungerar Idag/Denna vecka/Alla med definierat urval; Alla visar varje aktiv rutinmall oavsett om den valts för någon dag. Kommande visas endast med verkliga planposter och datakälla."
+        "The four named child checkpoints are done with independent QA/Reviewer results and linked public/review evidence; Upcoming queue test_evidence, evidence_status and implementation_state are synchronized to final Reviewer v10 PASS while preserving historical notes and task status.",
+        "Home has a persistent entry to the full daily checklist in empty/loading/error/large states; totals and unknown sources are truthful.",
+        "Checklist and Home retain account/dog/day/time-zone scope and correct return/scroll; training opens only the exact current published source and step.",
+        "Today, This week, All and Upcoming show contract-defined selections and understandable dates/week boundaries; no fictitious day rows or progress are created.",
+        "Pending, failed and unconfirmed mutations stay distinct with appropriate recovery; duplicate changes remain blocked until outcome is known; unsafe outcomes are not counted as confirmed.",
+        "All locally verifiable checks pass. Live Supabase/RLS, native iOS/Android and VoiceOver/device Dynamic Type are reported NOT TESTABLE.",
+        "A fresh design-rules §14 checklist and side-by-side reference comparison are saved under PANEL4-INTEGRATION-01/v7. Panel 4 Today is compared with the matching crop from repo-root vision_rev02.jpg at comparable scale; §14 point 16 separately rates composition, color distribution, typography, component shapes, imagery and content density. Only filter/week modes without a direct reference may be marked NOT TESTABLE."
       ],
       "checks": [
+        "node --experimental-strip-types --test tests/main-navigation.test.mjs tests/daily-activity-model.test.mjs tests/daily-activity-data.test.mjs tests/daily-activity-ui.test.mjs tests/workspace-data.test.mjs",
         "pnpm check",
-        "git diff --check",
-        "python tools/dev_flow.py validate"
+        "Sync only FLOW-HOME-CHECKLIST-UPCOMING-01 queue test_evidence, evidence_status and implementation_state to final Reviewer v10 PASS; preserve older pending notes as history and do not change task status, plan or product files.",
+        "Existing synthetic RN Web scopes home-checklist, checklist-all, checklist-week and r3c-upcoming in separate public/review runs; save outputs under PANEL4-INTEGRATION-01/v7/{public,review}/.",
+        "Fresh side-by-side Panel 4 Today visual comparison with vision_rev02.jpg and complete docs/design-rules.md §14 checklist; assess point 16's six criteria separately.",
+        "python -m py_compile tools/visual-check/verify.py",
+        "python tools/dev_flow.py validate",
+        "git diff --check"
       ],
       "depends_on": [
         "FLOW-HOME-CHECKLIST-IDAG-01",
         "FLOW-HOME-CHECKLIST-ALL-01",
         "FLOW-HOME-CHECKLIST-WEEK-01",
-        "FLOW-HOME-CHECKLIST-UPCOMING-01"
+        "FLOW-HOME-CHECKLIST-UPCOMING-01",
+        "FLOW-HOME-CHECKLIST-ALL-VERIFY-01",
+        "FLOW-HOME-CHECKLIST-WEEK-VERIFY-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Idag and Alla are complete. Next P1: FLOW-HOME-CHECKLIST-WEEK-01, which must map real daily snapshots/training progress across a week and obtain Architect/Security approval before code. FLOW-HOME-CHECKLIST-UPCOMING-01 depends on Week and must use only confirmed future plan sources. Complete both, then integrate and close this parent flow.",
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v1 Architect APPROVE, Critic PROCEED; exact scope synchronized in docs/tasks/dev/FLOW-HOME-CHECKLIST-01.md. All four child dependencies are done."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin the exact approved read-only Panel 4 integration verification; no production, test or fixture source edits are authorized by plan v1."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Integration v1 blocked: focused tests 56/56 and pnpm check 581/581 PASS; public home-checklist passed 5 checks. Public checklist-all stopped at verify.py:1750 because the unscoped heading locator 'Morgonrutin' resolves to both the screen and manager headings. No production defect established and no source files changed. Create a reviewed test-only selector correction before resuming."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v5 incorporates v3 review findings: Upcoming stale summary fields and visual-reference requirements. Fresh exact review complete: Architect APPROVE after evidence path recheck, Critic PROCEED; all five dependencies are done."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact plan v5 Architect APPROVE, Critic PROCEED; review saved in docs/tasks/dev/FLOW-HOME-CHECKLIST-01.md. Scope is read-only integration plus bounded queue summary sync and new §14 evidence."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin exact approved v5: first synchronize only three Upcoming queue summary fields, then run full public/review matrix, tests and §14 evidence; no product/test/fixture code changes."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Panel 4 v5 stopped at browser and static-test harness failures: focused tests 55/56 and pnpm check 580/581 because the R3c static test still searches an old passed-label string; public/review checklist-week each stop when verify.py expects the hidden standard Home checklist button although checklist fixture renders the accessible empty-advice card. Public home-checklist passes on isolated rerun, checklist-all passes in both modes, and actual r3c-upcoming passes 12/12 in public/review. No production defect established; no test/product files changed. Next: separate reviewed test-only correction for both stale verifier expectations, then plan v6 and fresh full Panel 4 matrix."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "The approved v7 plan's final test-only dependency FLOW-HOME-CHECKLIST-WEEK-VERIFY-01 is done after independent QA PASS and Reviewer PASS; resume the parent plan through normal ready and implementing checkpoints."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact Panel 4 integration plan v7 has recorded Architect APPROVE and Critic PROCEED. Required verifier dependency is now done with independent QA PASS and Reviewer PASS; scope remains read-only apart from approved evidence and the three-field Upcoming queue summary sync."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume exact approved v7 read-only Panel 4 integration. The complete public/review matrix, focused checks, fresh §14 comparison, and new evidence are still pending; no production/test/fixture source changes are in scope."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Fresh v7 public/review matrix and all local tests complete; all functional results pass. Fresh §14 comparison records visible visual mismatches; exact evidence is saved under PANEL4-INTEGRATION-01/v7. Independent QA is required before Reviewer; no production source changed."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA reran all focused/full checks and all eight visual scopes; functional PASS, visual §14 CHANGES. Corrected blocked-request evidence scope and recorded the 140% Idag-label clipping; Denna vecka remains fully visible. Complete report and rerun evidence saved under PANEL4-INTEGRATION-01/v7/. Reviewer is next."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "v7 read-only integration: independent QA CHANGES for visual mismatches; Reviewer PASS after evidence correction. Functional 56/56, full 581/581 and public/review matrix 5/16/7/12 pass. Accurate §14 findings remain including actual Idag-label clipping at 140%; no product source changed. Create a separately reviewed Panel 4 visual correction before closeout."
+        }
+      ],
+      "next_step": "v7 read-only integration: independent QA CHANGES for visual mismatches; Reviewer PASS after evidence correction. Functional 56/56, full 581/581 and public/review matrix 5/16/7/12 pass. Accurate §14 findings remain including actual Idag-label clipping at 140%; no product source changed. Create a separately reviewed Panel 4 visual correction before closeout.",
       "priority": "P1",
       "panels": [
         "1",
         "4"
       ],
       "risk_class": "M",
-      "checkpoint": "Panel 4 är klar först när alla fyra underordnade checkpoints är oberoende QA-granskade och passerade; full visuell paneljämförelse och live RLS/native kontroller redovisas separat.",
+      "checkpoint": "Samlad Panel 4 stängs först när alla fyra delpaket är done och ny integrationskontroll/oberoende QA/Reviewer passerar. Live backend/native och saknad referens redovisas separat.",
       "test_evidence": [
-        "Riktat lyckat/fel/unknown-prov, datum/scope-regression, §14-bilder public/review"
+        "PASS: focused integration tests 56/56 across navigation, daily activity model/data/UI, and workspace data.",
+        "PASS: pnpm check; app/edge typecheck, ESLint and full test suite 581/581.",
+        "PASS: public home-checklist verifier completed 5 assertions with no failure before next scope.",
+        "BLOCKED: public checklist-all verifier stopped at verify.py:1750 because the unscoped Morgonrutin heading locator resolved to both checklist and manager headings. This is a test-selector ambiguity; no product defect is established. Remaining scopes and review run are pending after the separately reviewed correction.",
+        "NOT TESTABLE: live Supabase/RLS, native iOS/Android, VoiceOver/device Dynamic Type and direct Week/Upcoming reference comparison.",
+        "BLOCKED v5: focused test suite 55/56 and pnpm check 580/581; a static R3c verifier assertion still depends on an old passed-label string.",
+        "BLOCKED v5: public and review checklist-week both stop at the Home return because the verifier targets the hidden standard checklist button; the rendered empty-advice card is the intended accessible entry.",
+        "PASS v5: public home-checklist passed on isolated rerun; public and review checklist-all passed; actual r3c-upcoming scope passed 12/12 in both modes with empty pageErrors.",
+        "NOT TESTABLE: live Supabase/RLS, native iOS/Android, VoiceOver/device Dynamic Type, direct week/upcoming visual target.",
+        "PASS dependency: FLOW-HOME-CHECKLIST-WEEK-VERIFY-01 v2 is done with independent QA and Reviewer PASS; the reviewer report is saved under WEEK-VERIFY-01/review. Parent v7 matrix remains pending.",
+        "PASS v7 public: home-checklist 5/5, checklist-all 16/16, checklist-week 7/7, r3c-upcoming 12/12; all manifests have empty pageErrors. Only R3c records blockedNetworkRequests, empty in both modes; other scopes do not instrument it.",
+        "PASS v7 review: home-checklist 5/5, checklist-all 16/16, checklist-week 7/7, r3c-upcoming 12/12; all manifests have empty pageErrors. Only R3c records blockedNetworkRequests, empty in both modes; other scopes do not instrument it.",
+        "PASS: focused integration tests 56/56; pnpm check with app/edge typecheck, lint and full suite 581/581; py_compile, queue validation and diff-check.",
+        "VISUAL FINDING: fresh comparison records §14 Nej for points 5, 7, 8, 9, 13, 15, 16 and 17; point 16 subcriteria all separately Nej. Native point-15 behavior is also NOT TESTABLE. The 140% R3c screenshot clips the leftmost Idag label at its final “g”; Denna vecka remains fully visible. Full assessment and comparisons are under PANEL4-INTEGRATION-01/v7/.",
+        "PASS independent QA: fresh public/review matrix rerun 5/16/7/12 per mode; focused 56/56; pnpm check 581/581; py_compile, queue validation and diff-check pass. QA inspected all eight manifests, 110 canonical screenshots, reference crop/composites and SECTION14. Report: PANEL4-INTEGRATION-01/v7/QA-REPORT.md. QA confirms visual closeout CHANGES.",
+        "PASS independent Reviewer after evidence correction: active §14/parent/queue wording consistently identifies the clipped final “g” in Idag and confirms Denna vecka fully visible; QA misidentification remains labeled as historical with coordinator correction. No tests run by Reviewer. Report under PANEL4-INTEGRATION-01/v7/review/REVIEW-REPORT.md."
       ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "implementation_state": "Read-only v7 integration and independent QA/Reviewer evidence pass. Visual closeout remains open with §14 No findings; no product source changed in parent. Await a separately reviewed Panel 4 visual correction.",
+      "evidence_status": "v7_function_pass; v7_visual_no; independent_qa_changes; independent_reviewer_pass; visual_correction_required"
     },
     {
       "id": "FLOW-HOME-CHECKLIST-IDAG-01",
@@ -7817,15 +7923,14 @@
       "id": "FLOW-HOME-CHECKLIST-UPCOMING-01",
       "title": "Panel 4: verkliga Kommande aktiviteter",
       "mvp_requirement": "docs/mvp.md: Rev02-panel 4; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/tasks/dev/FLOW-HOME-CHECKLIST-UPCOMING-01.md v3; UX: docs/plans/FLOW-HOME-CHECKLIST-UPCOMING-01-ux-spec.md v3",
+      "plan": "docs/tasks/dev/FLOW-HOME-CHECKLIST-UPCOMING-01.md v10; UX: docs/plans/FLOW-HOME-CHECKLIST-UPCOMING-01-ux-spec.md v10",
       "write_paths": [
-        "src/features/home/DailyChecklistScreen.tsx",
         "src/features/home/ProductWorkspace.tsx",
-        "src/features/home/daily-activity-model.ts",
-        "src/features/home/daily-activity-data.ts",
-        "src/features/home/README.md",
-        "src/data/workspace-data.ts",
-        "src/features/health/PlannedHealthScreen.tsx",
+        "tests/daily-activity-data.test.mjs",
+        "tests/workspace-data.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
         "docs/tasks/dev/FLOW-HOME-CHECKLIST-UPCOMING-01.md",
         "docs/plans/FLOW-HOME-CHECKLIST-UPCOMING-01-ux-spec.md",
         "docs/tasks/dev/queue.json",
@@ -7838,21 +7943,25 @@
         "Hälso- och rutinläsningar har separata hundscopeade loading/ready/error/Retry och owner/account-generation-, dog-, dateKey- och timeZone-fences; fliken är åtkomlig vid loading/fel och döljs vid ny inresa först när båda källorna lyckats tomma.",
         "Tryck på hälsoplan gör dog-scopead readback och öppnar exakt vald plan i edit-läge med initialEditId; Checklista-entry visar synlig/accessibility back label Checklista och returnerar till samma Kommande-tab. Hälsa-entry behåller Hälsa-label/destination.",
         "Rutinhantering fokuserar mallen och markerar dagsspecifika val, som Välj för idag, som idag; ingen framtida dagsrad/completion/skip skapas.",
+        "Endast bekräftad sparning av create/update/delete-rutinmall uppdaterar Kommandes rutinläsning inom aktuell scope; andra mutationer och failed/unknown writes triggar inte denna refresh.",
+        "Scope-byte under awaited dags-reload förhindrar refresh i ny scope; bekräftad rutinmalländring refresha ändå Kommande om dagens reload misslyckas och scope är oförändrad.",
         "Datum-only/tid och lokal dag bevaras utan UTC-förskjutning. Träning eller mallar utan explicit schema visas inte; befintliga Checklistflikar, dirty guards, return routes och account/dog/date/timezone-fences består.",
-        "UI följer befintliga komponenter och design-rules §14 utan nya produktändamål eller visuella påståenden om referensbildens data."
+        "UI följer befintliga komponenter och design-rules §14 utan nya produktändamål eller visuella påståenden om referensbildens data.",
+        "Fokuserade tester styrker verkliga Supabase query-upprop, datum-/hundscope och recurrence-gränser. Syntetiska public/review UI-kontroller visar rätt tillstånd, retry, vald post-redigering och återgång utan att ändra produktionskod."
       ],
       "checks": [
-        "Review recurrence day/week/month rules, due_on filter before page cap, minimal selected columns, dog-scope validation, scope fences, and independent source retries",
-        "Manual UX review for direct selected-plan edit, visible/accessibility return label and destination from Checklist and Health, routine focus, and today-only action semantics",
-        "Section 14 public/review visual review at 375x844, 430x844, 375x667, and 140% text (after verification is explicitly authorized)",
-        "pnpm check (after a separate explicit test/verification request)",
+        "node --experimental-strip-types --test tests/daily-activity-data.test.mjs tests/workspace-data.test.mjs tests/daily-activity-ui.test.mjs",
+        "Run tools/visual-check/verify.py with TASSLA_UI_SCOPE=r3c-upcoming against public and review builds; save screenshots/results under docs/design/evidence/vision-rev02/checklist/UPCOMING-01/",
+        "Verify date-only sort/filter, independent loading/error/partial/retry, exact selected-plan edit and origin-aware return, routine handling without future completion, at 375x844, 430x844, 375x667 and 140% text",
+        "pnpm check",
+        "python -m py_compile tools/visual-check/verify.py",
         "git diff --check",
         "python tools/dev_flow.py validate"
       ],
       "depends_on": [
         "FLOW-HOME-CHECKLIST-WEEK-01"
       ],
-      "status": "qa",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -7901,9 +8010,165 @@
           "to": "qa",
           "actor": "reviewer",
           "evidence": "Final read-only Reviewer recheck PASS: confirmed-source routine refresh, tab/screen/scope invalidation, stable edit baseline and guarded Back/global navigation. The follow-up missing-record cleanup clears editingBaseline; guard registration timing is correct. No tests run. Functional/runtime/visual QA remains open."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Erik godkände R3c-läget för fortsatt arbete och beställde R4a–R7. R3c implementation och oberoende Reviewer PASS kvarstår, men funktionell/visuell QA är fortfarande öppen. Pausa QA medan R4a integrerar överlappande workspace-/checklistfiler; återuppta R3c-verifiering efter R4a checkpoint. Ingen PASS tills dess."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "R4a v16 lokal checkpoint stängd efter QA v3/delta-QA PASS och Reviewer recheck PASS. Återuppta R3c för QA; implementationen är oförändrad. Ägarens senare beställning omfattar verifiering av hela R3 och samlad leverans; R3c QA-test/harness-scope dokumenteras och granskas innan eventuella nya fixture- eller testvägar ändras."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v4 / UX v4 drafted as a QA-only delta after the newer owner request to complete R3. Adds exact test and visual-fixture paths; production scope, sources, and data purpose are unchanged. Architect/Critic/Security review pending; no test or fixture edits started."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Architect APPROVE for exact plan v4 / UX v4: bounded QA-only delta using synthetic fixtures and installed Supabase/public-review harness tooling; production behavior, backend contract and dependencies unchanged. Review found no test execution; live Supabase/RLS and native accessibility remain NOT TESTABLE. Critic PROCEED and Security PASS pending; no QA files changed."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v4 received Architect APPROVE, Critic PROCEED WITH CHANGES, Security PASS. Drafted exact plan v5 / UX v5 QA-only delta: regress the three prior Reviewer findings, statically check ProductWorkspace wiring separately from fixture callbacks, and assess §14.16's six visual dimensions with missing Kommande reference as NOT TESTABLE. Architect APPROVE and Critic PROCEED for v5; Security review pending; no tests or visual fixture files changed."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Security returned CHANGES on exact v5: require pre-launch loopback-only TASSLA_UI_BASE_URL validation and abort/log all non-allowed browser requests; preserve synthetic `.invalid` Supabase test clients and fail-closed unexpected method/path/RPC/auth handling. Drafted exact v6/UX v6 with those controls; all three plan reviews pending and no test/fixture files changed."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Initial v6 review: Architect CHANGES identified three stale V4–V5 scope ranges; corrected them to V4–V6. On exact corrected v6, Architect APPROVE and Critic PROCEED; Security re-review pending. No test/fixture edit."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact corrected plan v6 / UX v6: Architect APPROVE, Critic PROCEED, Security PASS. QA-only scope, synthetic-only network isolation and previous regression/evidence limits recorded in task and report."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "R3c v6 exact plan reviews passed; start only approved QA test/visual-harness paths. Production source remains excluded. Stop and create a separately reviewed correction plan if a behavior regression is confirmed."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "QA-plan v6 halt: static inspection confirms runDailyMutation refreshes only today's activity after a saved create/update/delete-routine mutation; upcomingRoutineRetryToken is changed only by manual Retry. The routine forecast therefore remains stale. No QA test/harness edits or production edits made. Prepare a separately reviewed production correction plan before implementation."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Drafted R3c correction/QA plan v7 after confirming stale upcoming routine data following saved template changes; exact Architect/Critic/Security review pending. No production, test or visual-fixture code edits."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Exact v7 review delta: Architect CHANGES requires production write scope only ProductWorkspace and a full captured owner/account-generation/dog/local-date/timezone recheck after awaited daily reload; add regressions for unrelated mutations and failed daily reload. Critic initially CHANGES because UX spec lacked self-contained v7 semantics, then PROCEED after that section was added. Updated plan/UX/queue; fresh exact Architect/Critic/Security review pending. No code changed."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact corrected plan/UX v7 reviewed: Architect APPROVE, Critic PROCEED, Security PASS. Production path is limited to ProductWorkspace.tsx; full captured upcoming scope guard, routine-only refresh, negative mutation cases, scope-race protection and daily-reload-failure coverage are explicit. No code changed during review."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin exact v7 after Architect APPROVE, Critic PROCEED and Security PASS. Production edit limited to ProductWorkspace.tsx; first add the saved template mutation refresh with full captured-scope guard after awaited daily reload, then implement specified wiring/data/UI QA within listed paths."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Independent QA BLOCK: Kommande tab clipped under 140% web text proxy; Reviewer BLOCK: duplicate routine-template refresh for checklist manager and stale-scope callback can refresh new scope. Preparing correction plan v8 before any further code changes."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Corrective plan v8 and UX v8 prepared; refresh ownership, stale-scope callback fence, and large-text active-tab visibility are explicit. Fresh exact Architect/Critic/Security review pending; no v8 code changes."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Architect v8 CHANGES: origin=all retry-to-saved lacked refresh owner. Critic v8 PROCEED WITH CHANGES: key-only fence missed A-to-B-to-A. V9 adds origin-aware retry ownership, monotonic scope generation and explicit regression/evidence; fresh exact Architect/Critic/Security review pending; no code changed."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact R3c plan/UX v9 reviewed: Architect APPROVE, Critic PROCEED, Security PASS (no inventory delta). Saved retry ownership and monotonic full-scope generation fences are explicit; no code changed during plan review."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin approved v9 within ProductWorkspace.tsx production path and existing QA/test/visual fixture paths. Verify initial/retry single-owner counts, A→B/A→B→A fences, and active Kommande visibility at 140% text."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Oberoende QA v1 BLOCK: pnpm check fallerar på ESLint react-hooks/refs vid render-time .current-läsning i ProductWorkspace.tsx; fokuserad trio och public/review browser 12/12 passerar. Förbereder plan v10 state-captured generation före kod."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan/UX v10 drafted: replace render-time generation ref reads with React state advanced functionally in the existing scope layout effect, preserving post-await ref fence and A→B→A. Architect/Critic exact review pending; no code changed for v10."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact v10 approved by Architect and Critic; Security PASS confirms no data-boundary or inventory delta. Render-captured generation uses React state; monotonic ref remains for effect/event fences."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin exact v10: replace render-time .current generation reads with state and functional scope-effect increments; update existing scope regression only. No product/data/UX changes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Independent R3c v10 QA PASS: pnpm check (typecheck, edge typecheck, lint, 569 tests), focused trio 31/31, public/review browser 12/12 each with 0 errors/blocked requests and 140% tab+label bounds PASS, py_compile, queue validate and diff-check PASS. Live/native/RLS NOT TESTABLE; Reviewer and Security implementation recheck remain."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende QA v10 PASS: pnpm check 569/569, fokuserade tester 31/31, public/review-browser 12/12 vardera, 140 %-bounds godkända, py_compile, queue validate och diff-check PASS. QA→review-övergången registrerad; oberoende Reviewer recheck återstår."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer v10 final evidence recheck PASS after queue-history correction; Security implementation review PASS; independent QA v10 PASS (pnpm check 569/569, focused 31/31, public/review 12/12 each, 140% bounds, py_compile, validate, diff-check). MASTER-LOG local closeout saved; live/RLS/native/direct-reference comparison remain NOT TESTABLE."
         }
       ],
-      "next_step": "Leave R3c in QA until functional/runtime/visual verification is separately authorized and completed; implementation review passed. No tests were added or run in this implementation turn.",
+      "next_step": "No further R3c implementation is authorized by this parent metadata sync; continue the approved read-only Panel 4 v7 integration.",
       "priority": "P1",
       "panels": [
         "4"
@@ -7911,10 +8176,13 @@
       "risk_class": "H",
       "checkpoint": "Kommande: framtida, verkligt schemalagda aktiviteter från befintlig och godkänd källa; annars lämnas tabben ute och panelen öppen.",
       "test_evidence": [
-        "Source trace from record to UI, future schedule/timezone boundaries, dog isolation, truthful empty/error; screenshot matrix"
+        "HISTORICAL: V6 exact plan reviews passed; V6 QA stopped before QA edits. V7 review requested corrections and exact re-review; this is superseded by completed v10.",
+        "HISTORICAL: R3c v10 QA PASS (pnpm check 569/569; focused trio 31/31; public/review browser 12/12 each; 140% bounds; py_compile, validate and diff-check PASS). v10 Reviewer requested documentation/evidence synchronization; the then-pending note is superseded by the final independent Reviewer recheck PASS recorded in docs/tasks/dev/rapport.md and docs/decisions/MASTER-LOG.md.",
+        "FINAL v10: Independent Reviewer documentation/evidence recheck PASS after queue-history correction. Task remains done; the final decision and local closeout are recorded in rapport.md and MASTER-LOG.md.",
+        "FINAL SYNC for Panel 4 integration: Reviewer v10 final evidence recheck PASS; Security implementation review PASS; QA v10 PASS. Older pending records in this array are historical only. Task status remains done."
       ],
-      "implementation_state": "R3c plan v3 is implemented locally. Reviewer findings for routine-source refresh, pending-open ABA invalidation, and planned-health dirty guard are addressed; independent Reviewer recheck PASS. Tests were neither added nor run; functional QA remains open.",
-      "evidence_status": "v3 Architect APPROVE, Critic PROCEED, Security plan PASS; Security implementation PASS; independent Reviewer PASS. python tools/dev_flow.py validate and git diff --check are hygiene only; functional, live RLS, native and visual evidence not run or NOT TESTABLE."
+      "implementation_state": "Final R3c v10 implementation checkpoint: Security implementation review PASS, independent QA PASS and final independent Reviewer evidence recheck PASS after queue-history synchronization. No new parent-integration production changes.",
+      "evidence_status": "Final v10 PASS: QA 569/569 full and 31/31 focused tests, public/review 12/12 each, 140% bounds, Security implementation review PASS, final Reviewer recheck PASS; py_compile, queue validation, diff-check PASS. Historical pending notes are retained in test_evidence. NOT TESTABLE: live backend/RLS, native accessibility and direct reference comparison."
     },
     {
       "id": "FLOW-LOG-01",
@@ -7996,39 +8264,142 @@
       "id": "FLOW-KNOWLEDGE-01",
       "title": "Kunskap från sök till källmärkt läsning",
       "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "plan": "docs/tasks/dev/FLOW-KNOWLEDGE-01.md v5 (Architect APPROVE, Critic PROCEED, Dog Expert PASS; exact-plan reviews complete)",
       "write_paths": [
+        "src/content/select-content.ts",
+        "src/features/knowledge/knowledge-search.ts",
         "src/features/knowledge/KnowledgeScreen.tsx",
-        "src/features/knowledge/PuppyChecklistScreen.tsx",
-        "src/features/knowledge/FAQScreen.tsx"
+        "src/features/knowledge/knowledge-content-media.ts",
+        "src/features/knowledge/README.md",
+        "tests/content-delivery.test.mjs",
+        "tests/knowledge-search.test.mjs",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify.py",
+        "docs/tasks/dev/FLOW-KNOWLEDGE-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/knowledge/FLOW-KNOWLEDGE-01/"
       ],
       "acceptance": [
-        "Visade sök- och filterkontroller ändrar verkligt publicerat urval som klarar eligibility, redaktionell målgrupp och tillåten yta; vuxenråd kräver versionsspecifik Dog Expert-bedömning även vid användarstyrd sökning",
-        "Guide öppnas med källa; FAQ och faschecklistor nås",
-        "Reviewinnehåll läcker inte till public och cache blandar inte hund/konto"
+        "Only versions ...0004 and ...0006 get the four exact additive knowledge_for_you/knowledge_articles grants from plan v5, including priority 1/2, ageAgnostic:false and exact dog_advice/dog_owner/need:null request tuples; preserve existing knowledge_faq grants. Version ...0002 stays excluded absent recent-homecoming context.",
+        "Current age/breed selector boundaries remain; test exact 13/16- and 27/52-week endpoints, empty ages 8–12/17–26/after 52, missing age and no fallback.",
+        "The pure production helper src/features/knowledge/knowledge-search.ts is called directly by tests and UI; tests verify trim/case/title/body matching over eligible items and empty-query restoration. UI applies no second DB read.",
+        "Use the exact helper, selector-empty, query-empty and clear strings in plan v5; preserve existing loading skeleton, retry/error and unknown behavior/wording.",
+        "Exact version-keyed local image manifest uses existing assets only; unknown versions have no image fallback; image decorative, card opens exact selected version.",
+        "Article full body/source, safe source action, FAQ/Checklistor access, and return navigation remain.",
+        "For-you hero/compact cards do not duplicate items to fill layout; article list stays readable at large text; no topic chips without approved taxonomy.",
+        "Knowledge README, screenshots, browser manifests, and independent §14 points 1–18 including point 16 six dimensions are saved; NOT TESTABLE states remain explicit.",
+        "No new database query, schema/RLS/RPC/auth/dependency/content-body/status or implicit publication changes."
       ],
       "checks": [
+        "node --experimental-strip-types --test tests/content-delivery.test.mjs tests/knowledge-search.test.mjs tests/workspace-data.test.mjs",
         "pnpm check",
-        "git diff --check",
-        "python tools/dev_flow.py validate"
+        "Public/review Knowledge visual matrix at 375x844, 430x844, 375x667 and 140% web text proxy where supported; inspect screenshots and browser errors.",
+        "python -m py_compile tools/visual-check/verify.py",
+        "python tools/dev_flow.py validate",
+        "git diff --check"
       ],
       "depends_on": [
-        "UX-KNOWLEDGE-CACHE-01"
+        "UX-KNOWLEDGE-CACHE-01",
+        "UIUX-REVAMP-R4C-PUBLISHED-FAQ-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v1 Dog Expert review returned CHANGES: version ...0002 “Första veckan hemma” requires recent-homecoming context absent at runtime; age 8–12 is insufficient. Plan v2 removes its Knowledge grants and image mapping, preserves ...0004/...0006 within existing puppy age windows, and requires fresh Architect/Critic/Dog Expert verdicts; no code changed."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Critic v2 CHANGES: key Swedish search/helper/selector-empty/query-empty/clear strings were unspecified. Plan v3 adds exact copy and per-tab distinction; no content/grant/image change and no code changed. Fresh exact plan reviews requested; v2 verdicts do not authorize code."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Architect v3 CHANGES: add explicit priority/ageAgnostic and request tuples; add pure production knowledge-search.ts for direct Node testing; align queue copy assertion to exact newly fixed strings and existing retained error/unknown behavior. Plan v4 records these without changing content boundaries; fresh exact reviews requested; no code changed."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Critic v4 CHANGES: an earlier search-scope summary said “guides selected by age”, inconsistent with the exact helper copy (current tab + published + dog profile). Plan v5 aligns the summary to exact copy; grant matrix/helper/test and dog-content scope unchanged. Fresh exact reviews requested; no code changed."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Fresh Architect and Critic reviews of exact plan v5 requested queue synchronization only: acceptance items 1 and 4 pointed to superseded plan v4. Updated both references to v5 without changing scope. Dog Expert passed v5 unchanged. Fresh exact v5 rechecks requested; no code changed."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact FLOW-KNOWLEDGE-01 plan v5 after queue v5-reference sync; scope, acceptance, write paths and dependencies approved. Review recorded in task plan."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "critic",
+          "evidence": "Critic PROCEED exact plan v5: copy/search scope/query-empty/selector-empty and no-second-read boundary are clear and verifiable."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "dog_expert",
+          "evidence": "Dog Expert PASS exact plan v5: ...0004/...0006 windows and version-locked decorative imagery accepted; ...0002 excluded without recent-homecoming runtime signal."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v5; Critic PROCEED; Dog Expert PASS; exact reviews saved in FLOW-KNOWLEDGE-01.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "R4d plan v5 and required Architect/Critic/Dog Expert reviews passed; begin approved implementation scope"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R4d v5 implementation is complete; independent QA reports local behavior PASS (focused 33/33, full pnpm check 581/581, queue/diff checks PASS) and has inspected the final public/review screenshot manifests. Reviewer browser matrices pass 4/4 each with zero page errors. Persisted evidence and closeout records prepared; moving to QA checkpoint."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS for locally testable behavior; public/review browser matrices are Reviewer-run evidence, and QA inspected saved screenshots/manifests. §14 limits and 140% BottomNav wrap are documented. Request independent Reviewer recheck of synchronized task, queue, report and repository evidence before done."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Final independent Reviewer closeout recheck PASS with no findings. Exact plan reviews, QA verdict, implementation state, screenshots/manifests, task/report/master log and queue metadata are synchronized. R4d is a local uncommitted checkpoint; continue with the next R5/R6/R7 dependency after inspecting the approved dependency graph."
+        }
+      ],
+      "next_step": "Final independent Reviewer closeout recheck PASS with no findings. Exact plan reviews, QA verdict, implementation state, screenshots/manifests, task/report/master log and queue metadata are synchronized. R4d is a local uncommitted checkpoint; continue with the next R5/R6/R7 dependency after inspecting the approved dependency graph.",
       "priority": "P2",
       "panels": [
         "7"
       ],
       "risk_class": "M",
-      "checkpoint": "Panel 7 full resa med bevarad FAQ och faschecklista.",
+      "checkpoint": "Panel 7 public Knowledge search over the exact eligible loaded set, explicit version images, article/source/return; FAQ and Checklistor remain reachable.",
       "test_evidence": [
-        "Sök/filter/tomt/läsfel, public/review-spärr, 375/430/140 %"
+        "Focused selector/search/workspace suite 33/33; pnpm check 581/581",
+        "Public/review r4d-knowledge matrices 4 checks each, zero browser errors",
+        "Screenshots and browser-results.json in evidence public/review; includes eligible 375x844/430x844/375x667, hero+compact, search/empty/clear, states, FAQ/Checklistor and 140% proxy",
+        "py_compile, queue validation, git diff --check PASS; live/native/external/reference limitations documented"
       ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "implementation_state": "R4d plan v5 implemented; independent QA PASS; independent Reviewer implementation and final closeout PASS; local checkpoint complete, uncommitted for combined R4–R7 delivery.",
+      "evidence_status": "Architect APPROVE v5; Critic PROCEED v5; Dog Expert PASS v5; independent QA PASS and final Reviewer PASS. Focused 33/33; pnpm check 581/581 with app/edge typecheck and lint; public/review visual 4/4 each, zero pageErrors (QA inspected saved outputs; browser executed by Reviewer); py_compile, queue validate and git diff --check PASS. NOT TESTABLE: direct reference pixel comparison, live Supabase/RLS, external handoff, native iOS/Android, VoiceOver and device Dynamic Type. Evidence: docs/design/evidence/vision-rev02/knowledge/FLOW-KNOWLEDGE-01/."
     },
     {
       "id": "FLOW-DEVELOPMENT-01",
@@ -8941,13 +9312,12 @@
       "test_evidence": [],
       "implementation_state": "Source implementation complete. Permitted queue validation and diff check pass; static QA and independent Reviewer pass. Functional and device verification remain outstanding.",
       "evidence_status": "Plan v4 approved; static QA PASS; independent Reviewer PASS; python tools/dev_flow.py validate PASS; git diff --check PASS. No tests run. Manual TestFlight behavior remains NOT TESTABLE until owner checks it."
-    }
-,
+    },
     {
       "id": "UIUX-REVAMP-R4A-RELEVANCE-01",
       "title": "R4a: gemensam redaktionell relevansgrind",
       "mvp_requirement": "docs/mvp.md: innehållsrelevans, vuxenhundsnytta och ärliga tom-/felstatusar; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/tasks/dev/UIUX-REVAMP-R4A-RELEVANCE-01.md v7; UX: docs/plans/UIUX-REVAMP-R4A-RELEVANCE-01-ux-spec.md v7",
+      "plan": "docs/tasks/dev/UIUX-REVAMP-R4A-RELEVANCE-01.md v16; UX: docs/plans/UIUX-REVAMP-R4A-RELEVANCE-01-ux-spec.md v13",
       "write_paths": [
         "docs/tasks/dev/UIUX-REVAMP-R4A-RELEVANCE-01.md",
         "docs/plans/UIUX-REVAMP-R4A-RELEVANCE-01-ux-spec.md",
@@ -8959,6 +9329,8 @@
         "src/features/home/HomeScreen.tsx",
         "src/features/home/HomeCarousel.tsx",
         "src/features/home/daily-activity-model.ts",
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/DailyActivityManagerSheet.tsx",
         "src/features/training/PublishedTrainingScreen.tsx",
         "src/features/knowledge/KnowledgeScreen.tsx",
         "src/features/puppy-log/LogScreen.tsx",
@@ -8970,30 +9342,46 @@
         "src/features/puppy-log/README.md",
         "src/features/health/README.md",
         "docs/design/evidence/vision-rev02/content/relevance/R4A-RELEVANCE-01",
-        "docs/decisions/MASTER-LOG.md"
+        "docs/decisions/MASTER-LOG.md",
+        "tests/content-delivery.test.mjs",
+        "tests/content-release-guard.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "src/content/README.md",
+        "tests/daily-activity-data.test.mjs",
+        "tests/workspace-data.test.mjs",
+        "tests/profile-edit.test.mjs",
+        "tests/training-activity-date.test.mjs",
+        "tests/notifications.test.mjs",
+        "tests/knowledge-review-content.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py"
       ],
       "acceptance": [
-        "Publicering, exakt senaste publicerade version, ålder, ras, målgrupp, behov/sammanhang och yta krävs; okända eller omappade versioner nekas. En äldre versions grant kan inte kringgå en nyare publicerad version utan grant.",
-        "Endast ...0003 Logg/rutiner, ...0007 Hälsa/Vikt och ...0008 Hälsa/Genomfört får exakt kontextuella funktionshjälpsgrants. Alla hundråds-/träningsversioner saknar nya ytmappningar; unknown age kvalificerar inte hundråd.",
-        "Hundrådsrekommendationsslotten i Home Just nu/HomeCarousel och Knowledge För dig/Artiklar använder inget indexbaserat val; endast slotten blir tom när grantad kandidat saknas. FAQ, planerade hälsohändelser, övrigt opåverkat karusellinnehåll och befintlig checklistdatakälla bevaras; fel/unknown hålls separat.",
-        "Funktionshjälpslänkar ligger utanför aktiva editors; Logg återställer valt datum och Hälsa återställer Vikt/Översikt efter tillbakagång.",
-        "Träningskandidater separeras från exakt dog/version/step-progress. Nekad progress är skrivskyddad utan instruktioner/actions/reset/continue; poster raderas/remappas inte och markeringar utges inte för färdighet.",
-        "Dagligt träningsval med nekad exakt version visas i Hem och Checklista som otillgängligt/okänt, aldrig klart eller som vanligt tomt; raden och progress bevaras utan mutationshandlingar.",
-        "Ingen schema/RLS/RPC/grant/dependency/content-publish/phase UI-ändring; vuxenresan förblir öppen tills innehåll har versionella approvals."
+        "Latest published version per content_id is resolved before exact-version policy/grant checks; current known v1 IDs have explicit policy, unknown future IDs return unknown/unmapped_version, and no older grant falls back.",
+        "Closed ContentSurface, ContentContext, ContentAudience, ContentNeed, ContentGrant, ContentPolicy, ContentRequest, ContentSelection and ContentRead contracts match plan v16 (UX v13); grants match exact need; candidates sort by ascending numeric priority then lexical contentVersionId; Home/Knowledge/Training receive separate selector/read results.",
+        "Only exact v1 versions ...0003 Logg/rutiner, ...0007 Hälsa/Vikt and ...0008 Hälsa/Genomfört have positive, age-agnostic feature-help grants. No dog-advice, knowledge-feed or training grants are added; unknown age denies dog advice/training.",
+        "Selector results eligible/empty/unknown(reason) and loader states loading/error remain distinct; unreadable/invalid/stale results are never presented as confirmed empty. Unknown reasons use exact copy/action and never expose version IDs.",
+        "HomeCarousel.tsx is included only to revert its existing one-line dormant-card diff; no new behavior is added there, and the resulting file has no R4a diff.",
+        "Home recommendation, Knowledge För dig/Artiklar and Training surfaces show no index-based first item. Home follows active HOME-REV02 (identity/age, one Just nu advice card, daily list, three shortcuts); identity and active Just nu card show the same full automatic age when available; only a Home grant fills the advice card, and separate training nextStep is never fallback advice. The confirmed-empty card is one accessible pressable surface with a 44 pt minimum target and no nested button; its title, canonical age, empty copy and emphasized checklist action fit in the 112 pt Just nu budget at 375/430 without clipping (standard fixture body/action at most two lines). Home card tap opens today’s checklist and the existing return action returns Home. No active HomeCarousel is claimed. FAQ/planned health remain on their existing destinations. The daily-list “Visa dagens checklista” control is hidden only when Home advice is confirmed empty and the replacement checklist CTA is actually rendered and enabled; Hantera, all daily rows, progress and Visa alla above five remain. The standard five-row review fixture shows all three shortcut cards fully at least 16 pt above fixed navigation at 375×844 and 430×844.",
+        "Feature-help entries open only the exact approved version; Logg restores date and Health restores its original subtab/editor draft on return.",
+        "Denied training history internally carries only exact versionId + verified completedCount, renders neutral “Tidigare program” copy, and exposes no UUID/title/body/source/step text/actions/mutations; old progress cannot reactivate a denied version.",
+        "Denied daily training choice remains unknown/unavailable, never complete/empty; Hantera rutiner → Ta bort idag deletes only the daily selection through existing readback/error states and leaves training_progress unchanged.",
+        "No schema/RLS/RPC/dependency/content publication/phase UI changes; R3c (FLOW-HOME-CHECKLIST-UPCOMING-01) is blocked with functional/visual QA paused until the R4a checkpoint, and R4a adds targeted shared-boundary regression coverage without claiming an R3c PASS.",
+        "src/content/README.md documents the purpose, policy/grant selector, latest-version data flow, boundary between editorial eligibility and database access control, checks, and known limits.",
+        "Affected test harnesses are fixture/expectation-only: profile-edit.test.mjs uses fetchContentSurfaceCatalog; training-activity-date.test.mjs tests its date helper independently from denied ungranted content; notifications.test.mjs only supplies R3c’s already implemented selected-plan state/callback fixture. These fixture-only changes add no R3c PASS. The existing visual-check harness uses no Home training fallback in the standard R4a empty-advice fixture and verifies the dense five-row layout and checklist route. The visual fixture verifies actual Home and Training empty-state CTA callbacks, the today-checklist destination, and the existing return route; Home has no training-step fallback in its standard empty-advice scenario."
       ],
       "checks": [
         "pnpm exec tsc --noEmit",
-        "pnpm exec eslint src/content/select-content.ts src/data/workspace-data.ts src/features/home/ProductWorkspace.tsx src/features/home/HomeScreen.tsx src/features/home/HomeCarousel.tsx src/features/home/daily-activity-model.ts src/features/training/PublishedTrainingScreen.tsx src/features/knowledge/KnowledgeScreen.tsx src/features/puppy-log/LogScreen.tsx src/features/health/HealthScreen.tsx src/features/health/WeightScreen.tsx",
-        "Manual code-path review for current grant table, latest-version rule, daily denied selection state, exact read-only history and help return context",
-        "Manual visual/functional QA only after separately authorized verification; native/live DB/RLS remain separate",
-        "pnpm check (only after a separate explicit request to run automated tests)",
+        "pnpm exec eslint src/content/select-content.ts src/data/workspace-data.ts src/features/home/ProductWorkspace.tsx src/features/home/HomeScreen.tsx src/features/home/HomeCarousel.tsx src/features/home/daily-activity-model.ts src/features/home/DailyChecklistScreen.tsx src/features/home/DailyActivityManagerSheet.tsx src/features/training/PublishedTrainingScreen.tsx src/features/knowledge/KnowledgeScreen.tsx src/features/puppy-log/LogScreen.tsx src/features/health/HealthScreen.tsx src/features/health/WeightScreen.tsx",
+        "Focused selector and integration regressions: tests/content-delivery.test.mjs, tests/content-release-guard.test.mjs, tests/daily-activity-data.test.mjs, tests/daily-activity-ui.test.mjs, tests/workspace-data.test.mjs, tests/profile-edit.test.mjs, tests/training-activity-date.test.mjs, tests/knowledge-review-content.test.mjs, tests/notifications.test.mjs; cover full UUID × surface/context, known no-grant, unknown UUID, old-granted/new-ungranted, unknown reasons, denied-field sentinel, daily removal preserving progress, catalog loader generation, safe training progress, exact notification plan routing, no Home training fallback, and Home/Training empty-state checklist CTA destination/return.",
+        "Manual code-path review for the typed policy registry, latest-version order, per-surface state, privacy-safe history, daily selection removal/readback, and contextual return.",
+        "Visual/functional evidence per R4a UX v13 and design-rules §14 at 375/430×844, 667 px and 140% text. Verify 16 pt Home shortcut clearance with five daily rows at standard height; short viewport and large text may scroll. Complete §14 items 1–18 and six separate point-16 subchecks with image references. Native/live DB/RLS remain separate. Verify Home and Training empty-state CTA taps through the actual fixture callbacks, including destination and the existing return action.",
+        "pnpm check (required before the user-requested combined commit/push)",
         "python tools/dev_flow.py validate",
         "git diff --check"
       ],
-      "depends_on": [
-        "FLOW-HOME-CHECKLIST-UPCOMING-01"
-      ],
-      "status": "planned",
+      "depends_on": [],
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -9006,21 +9394,698 @@
           "to": "planned",
           "actor": "coordinator",
           "evidence": "Plan v7 delta: Architect APPROVE after clarifying only the dog-guidance recommendation slot becomes empty and preserving FAQ, planned health events, and unaffected carousel content; Critic v7 PROCEED. R3c QA dependency remains open. No app code changed."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v8 records the owner’s explicit approval to continue while R3c remains in QA, without changing R3c evidence status. Adds required combined pnpm check and focused regression paths; fresh Architect/Critic review pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan/UX/queue v10 synchronized after Architect and Critic findings: full exact-version IDs and closed typed selector/read contract; reason-specific unknown copy; neutral denied-history rendering; R4a write paths/acceptance/checkpoint synchronized. Fresh Architect/Critic review pending; no app code changed."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan/UX/queue v11 incorporates Architect v10 CHANGES: ContentGrant exact need field/match, stable ascending-priority and lexical-version tie-break, and panels 1/4/5/6/7. Fresh Architect/Critic review pending; no app code changed."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan/UX/queue v11 confirmed by Architect; Critic PROCEED."
+        },
+        {
+          "from": "ready",
+          "to": "ready",
+          "actor": "coordinator",
+          "evidence": "Plan v12 corrects the truthful in-progress status and adds src/content/README.md plus the two changed data/workspace regression tests to exact write paths. UX v11 and runtime behavior are unchanged. Fresh Architect/Critic review pending; README not yet edited."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "R4a implementation began under Architect APPROVE/Critic PROCEED for exact v11. R3c functional/visual QA is transparently paused, not passed, until overlapping shared-file integration stabilizes. V12 documentation scope and v13 regression-fixture additions remain gated on fresh exact Architect/Critic approval before those new paths are edited."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "Plan v13 adds only the three test files required by pnpm check: profile-edit.test.mjs, training-activity-date.test.mjs, and the R3c notification fixture in notifications.test.mjs. Full check exposed stale test contracts; no product behavior changed. Fresh exact Architect/Critic review pending; these new test paths remain unedited."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "Plan/queue v14 syncs R3c status as blocked/QA paused and mirrors the fixture-only test boundary in queue acceptance. Full-check accounting is 5 reported failed cases = 4 unique assertions across the three listed test paths. Fresh exact v14 Architect/Critic review pending; no newly added test path changed."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "Independent R4a QA v1: focused tests and pnpm check PASS (563/563, three lint warnings); visual QA BLOCK because Home shortcuts are hidden at 375 px, plan v11 claims a carousel absent from active Home, and §14 evidence is missing. Plan/UX/queue v15/v12 correct the active Home contract, deny the ungranted nextStep fallback, hide the duplicate checklist link only when the empty advice card already routes there, require five-row shortcut clearance, and remove dormant HomeCarousel from scope. Fresh exact Architect/Critic review required before implementation or new harness/test changes."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "Architect plan v15 / UX v12 CHANGES: preserve canonical automatic age in identity and Just nu, fit Home empty content within 112 pt, suppress duplicate link only for confirmed empty + enabled rendered CTA, add cleanup-only HomeCarousel scope, synchronize stale queue refs, focus release-guard/Knowledge tests, and exercise Home/Training empty CTAs plus return. Critic v15 CHANGES: stale v14/v11 reference and HomeCarousel scope mismatch. Plan/UX/queue v16/v13 records all corrections; fresh exact reviews pending; no app code changed for this delta."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "architect / critic",
+          "evidence": "Architect APPROVE and Critic PROCEED for exact plan v16 / UX v13 / synchronized queue entry. All findings corrected; implementation proceeds within approved write paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Oberoende QA v2 PASS på exakt plan v16/UX v13: home-ready 375 och Home/Training CTA-destination/återgång public+review PASS; R4a browser-scopes utan pageErrors; SECTION14 1–18 och sex punkt-16-bedömningar sparade. pnpm check 563/563 PASS, typecheck PASS, lint 0 fel/3 varningar, dev_flow validate PASS och git diff --check PASS. Nästa: separat Reviewer; därefter checkpoint och återuppta R3c-QA. Native och live Supabase/RLS NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent R4a QA v3 and final delta-QA PASS; pnpm check 563/563, focused 25/25 and 16/16, public/review surfaces/help and §14 evidence pass. Reviewer recheck starts after checkpoint wording sync."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer recheck PASS after checkpoint wording sync. Verified QA v3 and delta-QA PASS, 563/563 full checks, 25/25 focused, 16/16 selector, public/review evidence, scope and documented limits; R4a local checkpoint closed."
         }
       ],
-      "next_step": "Wait for FLOW-HOME-CHECKLIST-UPCOMING-01 QA dependency to close before ready/implementation; no overlapping app files may change before then.",
+      "next_step": "Implement exact R3c plan/UX v10 after Architect APPROVE, Critic APPROVE, Security PASS; rerun checks and obtain independent QA/Reviewer/Security implementation recheck before closing.",
       "priority": "P1",
       "panels": [
         "1",
-        "2",
         "4",
-        "5"
+        "5",
+        "6",
+        "7"
       ],
       "risk_class": "M",
       "checkpoint": "Implement version-, audience-, context- and surface-specific fail-closed content visibility, contextual feature-help, and read-only treatment of ungranted saved training progress.",
       "test_evidence": [],
-      "implementation_state": "Not started. Exact plan only; no code edits.",
-      "evidence_status": "Exact plan v7 has Architect APPROVE and Critic PROCEED. R3c QA blocks implementation due overlapping write paths."
+      "implementation_state": "R4a plan v16/UX v13 implemented and locally closed. Reviewer v2 findings for separate Training surface results, Knowledge unknown CTA, malformed selector IDs, dirty Weight draft protection, and checkpoint accuracy are corrected within approved paths. Independent QA v3, final delta-QA, and Reviewer recheck PASS.",
+      "evidence_status": "pnpm check PASS 563/563 with app/edge typecheck and lint; focused tests 25/25 and final selector run 16/16 PASS. Public/review r4a-surfaces and r4a-help pass at 375/430 with no page errors, including unknown Knowledge routing, confirmed-empty route, and dirty Weight draft protection. SECTION14 1-18 and six point-16 assessments saved. Older broad verifier fails on stale Home tab=lördag outside approved R4a scope, not counted as PASS. Native/live Supabase/RLS/TestFlight NOT TESTABLE. QA v3, delta-QA, and Reviewer recheck PASS; local checkpoint complete, combined commit/push still pending R3–R7."
+    },
+    {
+      "id": "UIUX-REVAMP-R4B-PERIOD-01",
+      "title": "R4b: redaktionell åldersperiodresolver",
+      "mvp_requirement": "docs/mvp.md §6 och scenario C: härledd period ändras med ålder utan att hund-ID, rutiner, historik eller träningsprogression ändras",
+      "plan": "docs/tasks/dev/UIUX-REVAMP-R4B-PERIOD-01.md v2",
+      "write_paths": [
+        "src/features/onboarding/dog.ts",
+        "src/features/onboarding/README.md",
+        "tests/domain.test.mjs",
+        "tests/profile-edit.test.mjs",
+        "docs/tasks/dev/UIUX-REVAMP-R4B-PERIOD-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/life-periods/R4B-PERIOD-01/"
+      ],
+      "acceptance": [
+        "Resolver returns one of ten inclusive-start/exclusive-end editorial age periods for each valid birth date and captured local date",
+        "Boundary tests cover the day before/on/after 8 weeks, literal 12 weeks, birth date + 3/6/12 clamped calendar months, 2/4/6/8/10 years, leap dates, and open-ended 10+; no missing or overlapping days",
+        "Same birth date resolves to different periods as captured today crosses boundaries; this verifies only the model contribution and does not close MVP Scenario C, whose period-driven selection and identity/history/routine/training-progress retention require a later end-to-end integration checkpoint",
+        "Existing ageInWeeks, age formatting and three approximate display stages remain unchanged; tests cover stage boundaries before/on/after 6 and 24 completed calendar months; R4a grants and eligibility are unchanged",
+        "README describes date semantics, call sites, tests and non-medical scope"
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/domain.test.mjs tests/profile-edit.test.mjs",
+        "pnpm check",
+        "python tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "UIUX-REVAMP-R4A-RELEVANCE-01",
+        "FLOW-HOME-CHECKLIST-UPCOMING-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v1 received Architect CHANGES and Critic PROCEED WITH CHANGES. v2 adds 6/24-month stage-boundary regressions, explicitly marks the contribution as model-only with full scenario C still open, and defines the clamped three-calendar-month seam. Dog Expert boundary PASS retained; fresh exact v2 reviews pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Exact plan v2 received Architect CHANGES and Critic CHANGES only for a stale v1 reference in the Architect approval gate. Corrected the gate to exact plan v2; all other v2 findings were accepted as resolved. Fresh exact-current-plan verdicts pending; no app code changed."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact v2: Architect APPROVE, Critic PROCEED, Dog Expert boundary PASS with approximate 8–12-week caveat; scope is model-only and full scenario C remains open."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin exact plan v2 implementation after Architect APPROVE, Critic PROCEED and Dog Expert boundary PASS. Write only listed resolver, README and test paths; no UI, content selection, dog persistence or database changes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Plan v2 implementation complete; focused 36/36, pnpm check 574/574 plus typecheck/edge/lint PASS; month-end/leap-day covered; independent QA pending; local/native/live and full scenario C limits documented."
+        },
+        {
+          "from": "qa",
+          "to": "qa",
+          "actor": "coordinator",
+          "evidence": "QA v1 identified missing day-after assertions for 8/12 weeks; exact approved acceptance criterion added (day 57/day 85), focused 36/36 and pnpm check 574/574 rerun; independent QA recheck PASS criteria 1–5."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA recheck PASS criteria 1-5; focused 36/36, pnpm check 574/574, queue validate/diff check PASS; see R4B-PERIOD-01/INDEPENDENT-QA.md. Scenario C/native/live remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "review",
+          "actor": "coordinator",
+          "evidence": "Reviewer PASS; tightened evidence wording to clarify profile-edit suite is regression-only and does not verify period-change identity retention or persistence; removed trivial fixture-copy ID assertion. Focused and full checks rerun; Reviewer recheck requested."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer final PASS; QA criteria 1-5 PASS; focused 36/36 and pnpm check 574/574 PASS; MASTER-LOG and evidence saved. Full Scenario C/native/live remain open."
+        }
+      ],
+      "next_step": "Independent Reviewer final PASS; QA criteria 1-5 PASS; focused 36/36 and pnpm check 574/574 PASS; MASTER-LOG and evidence saved. Full Scenario C/native/live remain open.",
+      "priority": "P1",
+      "panels": [
+        "1",
+        "2",
+        "6"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Pure local period resolver; no visible UI, persistency or content-selection policy changes.",
+      "test_evidence": [
+        "Architect APPROVE, Critic PROCEED och Dog Expert boundary PASS för exakt plan v2; se planens reviewhistorik och rapporten.",
+        "node --experimental-strip-types --test tests/domain.test.mjs tests/profile-edit.test.mjs — 36/36 PASS; inkluderar åttaveckorsgräns, bokstavlig 12-veckorsdag, 3/6/12 kalendermånader, månadsslut, 29 februari, 2/4/6/8/10 år, ogiltigt/framtida datum, befintliga 6/24-månadersfaser och stabilt hund-ID.",
+        "pnpm check — app typecheck, edge-account typecheck, ESLint och 574/574 Node-tester PASS.",
+        "Native app, live Supabase/RLS och full Scenario C med periodstyrt urval och beständig historik/rutiner/progress är NOT TESTABLE i lokal modellcheckpoint.",
+        "Independent QA v1 found missing day-after assertions at 8 and 12 weeks; test-only correction added day 57 and day 85, then independent QA recheck passed criteria 1–5. Details in life-periods/R4B-PERIOD-01/INDEPENDENT-QA.md.",
+        "Independent Reviewer PASS exact plan v2 and final wording recheck; no blocking findings. See life-periods/R4B-PERIOD-01/INDEPENDENT-REVIEW.md."
+      ],
+      "implementation_state": "Local checkpoint complete after independent QA and Reviewer PASS. Changes remain uncommitted for combined R4–R7 batch; full Scenario C is explicitly still open.",
+      "evidence_status": "Architect APPROVE, Critic PROCEED, Dog Expert PASS, independent QA criteria 1–5 PASS and Reviewer PASS. Focused 36/36, pnpm check 574/574, queue validation and diff check PASS. Native/live/full Scenario C NOT TESTABLE/open."
+    },
+    {
+      "id": "UIUX-REVAMP-R4C-PUBLISHED-FAQ-01",
+      "title": "R4c: public FAQ med publicerat källunderlag",
+      "mvp_requirement": "docs/mvp.md §4.6; docs/MVP-EXPERIENCE-CONTRACT.md §7; docs/design/vision-rev02-screen-contracts.md Panel 7",
+      "plan": "docs/tasks/dev/UIUX-REVAMP-R4C-PUBLISHED-FAQ-01.md v7 (Architect APPROVE; Critic PROCEED)",
+      "write_paths": [
+        "src/content/select-content.ts",
+        "src/data/workspace-data.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/components/ui/Tabs.tsx",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/FAQScreen.tsx",
+        "src/features/knowledge/README.md",
+        "tests/content-delivery.test.mjs",
+        "tests/knowledge-review-content.test.mjs",
+        "tests/workspace-data.test.mjs",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify.py",
+        "docs/tasks/dev/UIUX-REVAMP-R4C-PUBLISHED-FAQ-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/knowledge/R4C-PUBLISHED-FAQ-01/"
+      ],
+      "acceptance": [
+        "Exact `knowledge_faq` request `{surface:'knowledge_faq', context:'dog_advice', audience:'dog_owner', need:null, dogId:dog.id, breedId:dog.breed_id, ageWeeks}`; only version 62000000-0000-4000-8000-000000000004 has this grant with priority 1/ageAgnostic false, only version 62000000-0000-4000-8000-000000000006 has it with priority 2/ageAgnostic false, and no other version receives a knowledge_faq grant.",
+        "Exact outcomes: missing age=unknown/missing_age; malformed request=unknown/invalid_request; wholly unmapped published ID=unknown/unmapped_version; known but ungranted, other valid surface, wrong age or breed=empty; a newer known published but ungranted version of the same content suppresses fallback and returns empty; published-only loader excludes draft/withdrawn before selector.",
+        "Public FAQ questions map to the exact selected version; answer and sources come from that same published version.",
+        "Dog Expert PASS and Critic PROCEED before code for “Hur kan jag göra vardaglig hantering trygg och frivillig för valpen?” → version 62000000-0000-4000-8000-000000000004 and “Hur kan jag hjälpa valpen att vara själv en liten stund?” → version 62000000-0000-4000-8000-000000000006; age windows are editorial relevance filters, not milestones or achievement advice; bodies and publication status unchanged.",
+        "Sources render from selected version and only safe HTTPS opens after user action with truthful failure feedback.",
+        "Public loading/error/unknown/missing-age/empty/eligible states are distinct; only unknown/missing_age shows a profile CTA, while other unknown reasons do not imply incomplete profile data; empty copy is “Just nu finns inga publicerade frågor för den här vyn” even when published content exists for other ages; synthetic examples remain review-only and visibly marked. ProductWorkspace retains its one existing shared published-catalog read for other public surfaces; review FAQ does not issue an FAQ-specific request, mutation or publication and ignores public FAQ selection.",
+        "FAQ destination, expansion, return, FAQ and checklist navigation remain reachable.",
+        "Knowledge README documents exact data flow, publication/review separation, sources, states and limitations.",
+        "Public/review rendered states at planned mobile sizes and design-rules §14 are documented with screenshots; expanded source capture shows the source/action in viewport, a safe source tap is intercepted without external navigation, keyboard Tab/Enter reaches FAQ and source controls, and the active FAQ tab is fully visible at 140% text proxy. Independent QA records §14 points 1–18 and all six point-16 subchecks.",
+        "No schema/SQL/RLS/RPC/content mutation/dependency changes and no implicit content publication.",
+        "At 375px and 140% text, the three review-only context controls have equal measured widths within 1px, readable labels, working selection, and no horizontal overflow.",
+        "In both public and review visual harness builds, clicking the real HomeCarousel “Vanliga frågor” card passes FAQ_DESTINATION_ID, opens Knowledge with FAQ selected, and the wired Home navigation returns to HomeCarousel; retain the direct FAQ state/source/keyboard matrix."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/content-delivery.test.mjs tests/knowledge-review-content.test.mjs tests/workspace-data.test.mjs — assert exact grants/order and missing-age, malformed-request, unmapped-ID, wrong-surface/age/breed, newer-version no-fallback and published-only loader outcomes",
+        "Public and review visual-check r4c-faq at 375x844, 430x844, 375x667 and 140% text proxy where supported.",
+        "pnpm check",
+        "python tools/visual-check/verify.py focused on r4c-faq",
+        "python tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "FLOW-HOME-CHECKLIST-UPCOMING-01",
+        "UIUX-REVAMP-R4A-RELEVANCE-01",
+        "UIUX-REVAMP-R4B-PERIOD-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v1 review identified missing exact FAQ wording/version mappings, an unspecified age-filtered empty message, and need to label age windows as editorial relevance filters. Plan/queue v2 now records both exact question mappings, honest empty copy even when published content exists for other ages, and non-milestone wording. Fresh Architect/Critic/Dog Expert reviews pending; no R4c app code changed."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Exact plan v2 received Dog Expert PASS and Critic CHANGES: the second question was unnatural Swedish. Plan/queue v3 changes only that wording to “Hur kan jag hjälpa valpen att vara själv en liten stund?”; exact version mapping and all scope/data-boundary terms are unchanged. Fresh Architect/Critic/Dog Expert verdicts requested for exact v3; no R4c app code changed."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Architect returned CHANGES on exact v3: selector/grant fields, priority, ageAgnostic and denial result statuses needed explicit values and focused assertions. Plan/queue v4 now fixes request/grant tuples, deterministic order, fail-closed result mapping, newer-version no-fallback behavior and published-only draft/withdrawn exclusion. Fresh exact Architect/Critic/Dog Expert reviews pending; no R4c app code changed."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Exact plan v4 received Architect APPROVE, Critic PROCEED and Dog Expert PASS. Critic clarified that only unknown/missing_age may offer a profile route; other unknown reasons must not imply incomplete profile data. Plan/queue v5 records this UI-state boundary only; content copy, mappings, selector contract and scope are unchanged. Fresh Architect/Critic recheck pending; no R4c app code changed."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact plan v5: Architect APPROVE, Critic PROCEED, Dog Expert PASS for unchanged exact question mappings/body/age framing (v4 content verdict remains applicable). Missing-age-only profile route clarification reviewed; queue validate passes."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin exact R4c plan v5 under the user’s ongoing R4–R7 implementation request. Limit edits to listed write paths; no migrations, schema/RLS, content-body/status, dependency, or implicit publication changes."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "Independent Reviewer CHANGES verification only and independent QA BLOCK identified missing §14 report, missing keyboard/source-visible evidence, large-text active FAQ-tab visibility, and wording that overstated review-mode DB isolation because ProductWorkspace retains one shared published-catalog read. Harness now scroll-captures sources and tests Tab/Enter; public visual rerun passes. Plan v6 adds narrowly scoped active-tab visibility behavior and clarifies existing catalog boundary. Fresh Architect/Critic approval is pending before the Tabs code correction; no confirmed selector/version/content defect."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "architect",
+          "evidence": "Fresh exact plan v6 review: Architect APPROVE and Critic PROCEED. The queue next_step is synchronized. Implement only when tab and viewport are measured, scroll only if active bounds lie outside the viewport, and preserve manual scroll without repeated snaps. Dog Expert PASS remains applicable; all FAQ copy, mappings, bodies, age framing and grants unchanged."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "architect",
+          "evidence": "Exact saved R4c plan v7 amendment: Architect APPROVE. Fix review-only context controls to equal fixed widths without flex growth; test equal widths at 375px and 140% text; exercise real HomeCarousel FAQ destination callback, selected FAQ tab, and wired Home return in public/review. Preserve direct FAQ matrix; no content, selector, source, age, catalog, or data-boundary changes. Critic PROCEED pending; no v7 code changed."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "critic",
+          "evidence": "Exact saved R4c v7 amendment: Critic PROCEED. Verified equal-width review context measurement at 375px/140% and the HomeCarousel FAQ destination → selected Knowledge FAQ → wired Home return in both modes, with the direct state matrix retained. Critic QA closeout still requires v7 evidence/§14 report and an independent Reviewer recheck."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R4c v7 code complete within FAQScreen.tsx and visual harness. Focused selector/workspace tests 33/33; pnpm check 577/577; public and review r4c-faq matrices pass with no page errors, FAQ destination round-trip and measured review widths 147.14px/147.14px/147.14px at 375 and 140%; py_compile, queue validate and diff check pass. Independent Critic QA and §14 report pending; Reviewer not started."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Final independent Critic QA recheck PASS: prior closeout CHANGES resolved; public/review manifests both pageErrors=[] and verify FAQ→Checklistor→FAQ with expected mode-specific state; §14 #17 Ja; queue/report/manifests synchronized. Outstanding NOT TESTABLE limits documented in INDEPENDENT-QA.md."
+        },
+        {
+          "from": "review",
+          "to": "review",
+          "actor": "reviewer",
+          "evidence": "Reviewer CHANGES: closeout-only stale Critic-pending status/next-step in report/queue and public FAQ screenshot link pointed to collapsed state. Corrected task plan, independent QA report, queue status fields and link to expanded-source screenshot. No product or harness defects; final Reviewer recheck pending."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer final PASS after documentation-only closeout correction; Critic QA PASS, Architect/Critic/Dog Expert verdicts recorded, MASTER-LOG and rapport synchronized. Local checkpoint complete; uncommitted by request for combined R4–R7 commit/push. Native/live/accessibility/reference limits remain NOT TESTABLE."
+        }
+      ],
+      "next_step": "Independent Reviewer final PASS after documentation-only closeout correction; Critic QA PASS, Architect/Critic/Dog Expert verdicts recorded, MASTER-LOG and rapport synchronized. Local checkpoint complete; uncommitted by request for combined R4–R7 commit/push. Native/live/accessibility/reference limits remain NOT TESTABLE.",
+      "priority": "P1",
+      "panels": [
+        "7"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Public FAQ reads exact approved published version rows with sources; review drafts remain isolated and visibly marked.",
+      "test_evidence": [
+        "PASS: exact R4c v7 plan Architect APPROVE and Critic PROCEED; review boundary unchanged.",
+        "PASS: node --experimental-strip-types --test tests/content-delivery.test.mjs tests/knowledge-review-content.test.mjs tests/workspace-data.test.mjs — 33/33.",
+        "PASS: pnpm check — app and edge typecheck, ESLint, 577/577 tests.",
+        "PASS: public and review r4c-faq visual matrices; FAQ source/keyboard/direct states, HomeCarousel FAQ_DESTINATION_ID → selected FAQ branch → Hem return, and FAQ → Checklistor → FAQ navigation; zero page errors.",
+        "PASS: review context wrappers each 147.14px at 375px and 140% web text proxy; labels fit, three contexts selected, no horizontal overflow.",
+        "PASS: python -m py_compile tools/visual-check/verify.py; python tools/dev_flow.py validate; git diff --check.",
+        "NOT TESTABLE: live Supabase/RLS, native app, screen readers/device Dynamic Type and external source navigation. §14 results, including six item-16 dimensions, are in docs/design/evidence/vision-rev02/knowledge/R4C-PUBLISHED-FAQ-01/INDEPENDENT-QA.md.",
+        "PASS: final independent Critic QA recheck; public/review Checklistor-to-FAQ journeys, pageErrors=[], §14 #17 and synchronized report/queue/manifests. See knowledge/R4C-PUBLISHED-FAQ-01/INDEPENDENT-QA.md.",
+        "PASS: independent Reviewer final recheck after closeout-only corrections; no remaining code, harness, evidence-link or status inconsistency.",
+        "PASS: local closeout recorded in docs/decisions/MASTER-LOG.md and docs/tasks/dev/rapport.md. Commit/push intentionally waits for combined R4–R7 batch."
+      ],
+      "implementation_state": "R4c v7 local implementation, independent Critic QA and independent Reviewer are complete. Reviewer’s closeout-only CHANGES were corrected and rechecked PASS; no product or harness defect. Uncommitted for combined R4–R7 delivery.",
+      "evidence_status": "Architect APPROVE, Critic PROCEED, Dog Expert PASS, final Critic QA PASS and Reviewer PASS. Focused tests 33/33; pnpm check 577/577; public/review visual matrices pass with empty pageErrors and verified HomeCarousel plus Checklistor returns; py_compile, queue validation, diffcheck pass. NOT TESTABLE: live Supabase/RLS, native/accessibility/device Dynamic Type, external source opening and exact FAQ-specific reference comparison."
+    },
+    {
+      "id": "FLOW-HOME-CHECKLIST-ALL-VERIFY-01",
+      "title": "Rätta tvetydig rubrikassertion i Alla-verifieraren",
+      "mvp_requirement": "docs/mvp.md: Rev02-panel 4; docs/MVP-EXPERIENCE-CONTRACT.md; docs/design/vision-rev02-screen-contracts.md",
+      "plan": "docs/tasks/dev/FLOW-HOME-CHECKLIST-ALL-VERIFY-01.md v2",
+      "write_paths": [
+        "tools/visual-check/verify.py",
+        "docs/tasks/dev/FLOW-HOME-CHECKLIST-ALL-VERIFY-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/checklist/ALL-VERIFY-02"
+      ],
+      "acceptance": [
+        "After delayed delete confirmation expires, the manager sheet closes, the callback is rejected, and guard output remains exactly one refresh and zero writes.",
+        "The active Alla list remains visible with Alla rutinmallar and exactly one visible Morgonrutin heading; explicitly assert manager closure before checking the routine.",
+        "Only the delayed-delete scenario assertion is corrected; no global strictness is weakened and no other assertion is removed or relaxed.",
+        "The full existing checklist-all verifier passes in separate public and review runs with zero page errors; outputs use ALL-VERIFY-02 and preserve ALL-VERIFY-01 and canonical ALL-01 evidence.",
+        "No production behavior, fixture state, network policy, data source or dependency changes."
+      ],
+      "checks": [
+        "python -m py_compile tools/visual-check/verify.py",
+        "TASSLA_UI_SCOPE=checklist-all public and review runs per tools/visual-check/README.md; all existing assertions pass and browser-results.json pageErrors is empty.",
+        "python tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "FLOW-HOME-CHECKLIST-ALL-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact plan v1 Architect APPROVE after Critic PROCEED; risk L; dependency FLOW-HOME-CHECKLIST-ALL-01 is done; queue validates."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin exact approved one-line selector scope correction in tools/visual-check/verify.py only."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "One-line manager-scoped locator fix complete. py_compile PASS; public and review checklist-all 16/16 each, pageErrors empty, 22 screenshots each, delayed-delete zero-write assertion passed; queue validate and diff-check PASS. No app code changed."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent QA CHANGES for v1: screenshot and independent diagnostic show manager sheet is closed after expiry; manager-scoped Morgonrutin locator is absent/flaky. Intended outcome is manager closed, routine remains in Alla list, refreshes 1, writes 0. Replan exact assertion before further edit."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "QA marked v1 blocked because its manager-visible acceptance was wrong. Exact v2 plan rechecked: Architect APPROVE and Critic PROCEED; manager closes naturally on expiry, test asserts closed state, visible Alla collection and exactly one retained Morgonrutin heading, plus one refresh and zero writes."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact FLOW-HOME-CHECKLIST-ALL-VERIFY-01 plan v2 Architect APPROVE after Critic PROCEED; both rechecked after wording clarification; evidence saved in plan."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin only the approved plan v2 assertion change in tools/visual-check/verify.py; no app or fixture changes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Approved v2 test assertion implemented. py_compile PASS; public and review checklist-all 16/16 each, pageErrors empty, 22 screenshots each under ALL-VERIFY-02; screenshot shows manager naturally closed and Morgonrutin retained in Alla; git diff-check PASS. Independent QA next."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS for exact plan v2 and fresh public/review reruns: 16/16 each, pageErrors empty, 22 screenshots each. Captures confirm natural manager closure, visible Alla list and retained Morgonrutin; one refresh/zero writes guard remains. Durable QA manifests and key screenshots copied under ALL-VERIFY-02/independent-qa; py_compile, queue validation and diff-check PASS."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS on approved plan v2, stable verifier diff, queue, four manifests and four delayed-delete screenshots. QA and implementation public/review runs each 16/16, pageErrors empty, 22 screenshots per run; py_compile, queue validation and diff-check PASS. NOT TESTABLE: live Supabase/RLS and native modal/accessibility."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS on approved plan v2, stable verifier diff, queue, four manifests and four delayed-delete screenshots. QA and implementation public/review runs each 16/16, pageErrors empty, 22 screenshots per run; py_compile, queue validation and diff-check PASS. NOT TESTABLE: live Supabase/RLS and native modal/accessibility.",
+      "priority": "P1",
+      "panels": [
+        "4"
+      ],
+      "risk_class": "L",
+      "checkpoint": "Test-only correction to a strict Playwright selector; Panel 4 behavior remains unchanged.",
+      "test_evidence": [
+        "PASS: python -m py_compile tools/visual-check/verify.py.",
+        "PASS: public checklist-all 16/16, pageErrors [], 22 screenshots in ALL-VERIFY-02/public/.",
+        "PASS: review checklist-all 16/16, pageErrors [], 22 screenshots in ALL-VERIFY-02/review/.",
+        "PASS: delayed-delete-after-expiry asserts manager absent, Alla list visible, exactly one visible Morgonrutin heading and retained refreshes 1 · writes 0 guard.",
+        "PASS: delayed-delete public screenshot shows Alla selected, Alla rutinmallar and retained Morgonrutin after manager closure.",
+        "PASS: git diff --check.",
+        "NOT TESTABLE: live Supabase/RLS and native modal/accessibility behavior.",
+        "PASS: independent QA reran public and review checklist-all 16/16 each with pageErrors empty; 22 screenshots per run.",
+        "PASS: independent QA inspected both delayed-delete captures; manager closed, Alla list active, Morgonrutin retained.",
+        "PASS: durable QA manifests and key screenshots saved under ALL-VERIFY-02/independent-qa/.",
+        "PASS: independent QA py_compile, queue validation and diff-check.",
+        "PASS: independent Reviewer verified stable diff, exact v2 plan, queue, public/review/QA manifests and four delayed-delete screenshots; no assertion loosened."
+      ],
+      "implementation_state": "Approved v2 test-only assertion implemented. Natural manager closure, visible Alla collection, exactly one retained Morgonrutin heading and the unchanged one-refresh/zero-write guard all pass in both synthetic bundles. Production and fixture code unchanged.",
+      "evidence_status": "plan_v2_architect_approve_critic_proceed; implementation_pass; public_16_pass_zero_errors; review_16_pass_zero_errors; independent_qa_pass; independent_reviewer_pass; queue_validate_pass; diffcheck_pass; live_rls_native_not_testable"
+    },
+    {
+      "id": "FLOW-HOME-CHECKLIST-WEEK-VERIFY-01",
+      "title": "Panel 4: korrigera två inaktuella verifierarförväntningar",
+      "mvp_requirement": "docs/mvp.md: Rev02-panel 4; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/tasks/dev/FLOW-HOME-CHECKLIST-WEEK-VERIFY-01.md v2",
+      "write_paths": [
+        "tests/daily-activity-ui.test.mjs",
+        "tools/visual-check/verify.py",
+        "docs/tasks/dev/FLOW-HOME-CHECKLIST-WEEK-VERIFY-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/checklist/WEEK-VERIFY-01"
+      ],
+      "acceptance": [
+        "Static R3c origin/large-text test uses a stable structural boundary while retaining every origin guard and active-tab bounds assertion.",
+        "The checklist-week confirmed-reset journey returns through the visible accessible empty-advice Home card; it does not expect the hidden standard checklist button.",
+        "Focused tests, pnpm check, checklist-week and r3c-upcoming public/review verifier runs, py_compile, queue validation and diff-check pass.",
+        "No production, fixture, data, API, network, or dependency behavior changes; live Supabase/RLS and native/device accessibility are NOT TESTABLE."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/main-navigation.test.mjs tests/daily-activity-model.test.mjs tests/daily-activity-data.test.mjs tests/daily-activity-ui.test.mjs tests/workspace-data.test.mjs",
+        "pnpm check",
+        "Public/review TASSLA_UI_SCOPE=checklist-week and TASSLA_UI_SCOPE=r3c-upcoming against local bundles.",
+        "python -m py_compile tools/visual-check/verify.py",
+        "python tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "FLOW-HOME-CHECKLIST-WEEK-01",
+        "FLOW-HOME-CHECKLIST-UPCOMING-01",
+        "FLOW-HOME-CHECKLIST-ALL-VERIFY-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact plan v2 reviewed: Architect APPROVE and Critic PROCEED; CRLF-safe local source matching preserves both existing markers and all assertions. Home return checks the single visible empty-advice card. Reviews saved in task plan; no code changed before approval."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin exact approved plan v2. Edit only tests/daily-activity-ui.test.mjs and tools/visual-check/verify.py; retain all existing assertions and change no production behavior."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Approved plan v2 implementation complete. Focused suite 56/56; pnpm check 581/581 with typecheck/edge/lint; checklist-week public/review 7/7, r3c-upcoming public/review 12/12, all pageErrors empty; py_compile, queue validate and diff-check pass. Evidence under WEEK-VERIFY-01/{public,review}; no product source changed. Ready for independent QA."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: focused 56/56, pnpm check 581/581, checklist-week 7/7 and r3c-upcoming 12/12 in public/review, all manifests pageErrors empty and R3c blocked requests empty; py_compile, queue validation and diff-check pass. Canonical report: docs/design/evidence/vision-rev02/checklist/WEEK-VERIFY-01/QA-REPORT.md. QA temp screenshots were not recoverable after sandbox switch; canonical implementation artifacts remain."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS for exact plan v2; canonical manifests/screenshots inspected, no code findings, report saved under WEEK-VERIFY-01/review. QA temporary evidence limitation recorded. All required local checks and independent QA passed."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS for exact plan v2; canonical manifests/screenshots inspected, no code findings, report saved under WEEK-VERIFY-01/review. QA temporary evidence limitation recorded. All required local checks and independent QA passed.",
+      "priority": "P1",
+      "panels": [
+        "4"
+      ],
+      "risk_class": "L",
+      "checkpoint": "Two stale harness expectations corrected with all assertions preserved; synthetic weekly and upcoming scopes pass in public and review.",
+      "test_evidence": [
+        "PASS: focused navigation/daily-activity/workspace tests 56/56.",
+        "PASS: pnpm check; app/edge typecheck, ESLint and full suite 581/581.",
+        "PASS: checklist-week public/review 7/7 each; confirmed reset Home return works.",
+        "PASS: r3c-upcoming public/review 12/12 each, including 140% active-tab/label bounds.",
+        "PASS: all four browser manifests report pageErrors: []; screenshots and manifests saved under docs/design/evidence/vision-rev02/checklist/WEEK-VERIFY-01/{public,review}/.",
+        "PASS: py_compile, dev_flow validate and git diff --check.",
+        "NOT TESTABLE: live Supabase/RLS and native iOS/Android, VoiceOver/device Dynamic Type.",
+        "PASS: independent QA reran the focused tests, pnpm check and four browser scopes; detailed report at docs/design/evidence/vision-rev02/checklist/WEEK-VERIFY-01/QA-REPORT.md. QA rerun screenshots/manifests were temporary and not recoverable after sandbox switch; canonical implementation evidence remains.",
+        "PASS: independent Reviewer inspected the exact v2 plan, stable child hunks, QA report, canonical manifests and public/review screenshots; confirmed unchanged R3c assertions and accessible weekly reset return. No findings. Separate QA temporary artifacts remain unavailable as documented."
+      ],
+      "implementation_state": "Approved test-harness-only correction implemented; all planned checks, independent QA, and independent Reviewer passed. Ready to close.",
+      "evidence_status": "implementation_pass; independent_qa_pass; independent_reviewer_pass"
+    },
+    {
+      "id": "FLOW-HOME-CHECKLIST-VISUAL-01",
+      "title": "Panel 4: visuell korrigering av dagschecklistan",
+      "mvp_requirement": "docs/mvp.md: Rev02-panel 4; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/tasks/dev/FLOW-HOME-CHECKLIST-VISUAL-01.md v3; UX: docs/plans/FLOW-HOME-CHECKLIST-VISUAL-01-ux-spec.md v3",
+      "write_paths": [
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/checklist-presentation.ts",
+        "src/features/home/README.md",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/components/ui/Tabs.tsx",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/ui-library-policy.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "docs/tasks/dev/FLOW-HOME-CHECKLIST-VISUAL-01.md",
+        "docs/plans/FLOW-HOME-CHECKLIST-VISUAL-01-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/checklist/PANEL4-VISUAL-01",
+        "tests/checklist-presentation.test.mjs"
+      ],
+      "acceptance": [
+        "Pure presentation helper uses exact Unicode NFC + trim + Swedish lowercase + inner whitespace collapse; an explicit alias whitelist maps existing routine categories and near matches stay neutral; no stored tag/schema.",
+        "Preview reuse is filtered strictly dateKey < date <= weekDateKeys[6]; Sunday is included, next Monday excluded; existing order is stable, max three render, link only when more than three.",
+        "New public/review panel4-visual scenario verifies appearance only on Idag, both sources empty, each loading/error state and existing full Kommande partial/error/retry behavior.",
+        "Daily rows use one warm grouped surface with subtle dividers; week preview is a separate surface, all from existing tokens; no repeated individual borders or global token changes.",
+        "Routine icon is hidden from assistive technology when the row supplies the meaning; opening action is truthfully named Hantera rutin <name>, punkt <item>; checkbox remains separate and targets meet 44pt.",
+        "Opt-in Panel 4 tabs show all four full labels at 375px/140%, selected state and keyboard Enter/Space work, controls are at least 44x44pt; other Tabs consumers and normal one-row layout are unchanged.",
+        "Public/review screenshots cover 375x844, 430x844, 375x667, and 375x844/140%; full applicable design-rules §14 points 1–18 each have a rationale, with point 16 six criteria separate.",
+        "Routed tests, pnpm check, browser verifier, py_compile, queue validation, diff-check, independent QA and Reviewer pass; live backend/RLS and native VoiceOver/Dynamic Type remain NOT TESTABLE."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/checklist-presentation.test.mjs tests/daily-activity-ui.test.mjs tests/ui-library-policy.test.mjs",
+        "pnpm check",
+        "Public/review TASSLA_UI_SCOPE=panel4-visual across 375x844, 430x844, 375x667 and 140%; plus r3c-upcoming 140% run",
+        "python -m py_compile tools/visual-check/verify.py",
+        "python tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "FLOW-HOME-CHECKLIST-IDAG-01",
+        "FLOW-HOME-CHECKLIST-ALL-01",
+        "FLOW-HOME-CHECKLIST-WEEK-01",
+        "FLOW-HOME-CHECKLIST-UPCOMING-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "v2 reviewed: Architect APPROVE and Critic PROCEED; exact write paths, implementation/test scenarios, accessibility, opt-in Tabs behavior, and §14 requirements accepted. Queue mismatch and mixed-language invariant corrected."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementation started after recorded Architect APPROVE and Critic PROCEED; executing approved v2 scope only."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Implementation checkpoint paused for narrow plan amendment: pnpm check exposed an outdated accessible-label source assertion in tests/ui-library-policy.test.mjs; the test file is outside approved v2 write_paths. Add the regression expectation update to an explicitly reviewed v3 scope before editing that test."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "v3-planändringen godkänd av Architect och Critic; återuppta samma avgränsade implementation."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Verifierad v3: Architect APPROVE, Critic PROCEED; samtliga skrivvägar, acceptans och kontroller synkade."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Återuppta implementationen enligt granskad v3. Uppdaterar endast den godkända policytest-assertionen innan full verifiering."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation and evidence complete: focused 24/24, pnpm check 587/587, public/review browser matrix 9/9 each with zero page errors, §14 recorded, Python syntax, queue validation, and diffcheck pass. Request independent QA."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS after docs/evidence corrections: 24/24 focused, pnpm check 587/587, 9/9 Panel 4 public/review, fresh R3c 12/12 public/review at 140%, queue validation PASS, diff-check PASS. Independent Reviewer is next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS: approved v3 scope confirmed; opt-in Tabs only, no unauthorized production/data path; §14 and residual visual limits accurate; public/review 9/9 and fresh R3c 140% 12/12 each; no page or blocked-network errors."
+        }
+      ],
+      "next_step": "Commit and push this QA/Reviewer-approved checkpoint after branch-wide verification. Signed iOS/CocoaPods/Xcode build verification runs on the Codemagic Mac runner.",
+      "priority": "P1",
+      "panels": [
+        "4"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Panel 4 presentation only: truthful week preview, specific/neutral icons, compact action affordance and complete segment labels at large text; no data, persistence, API or navigation contract change.",
+      "test_evidence": [
+        "Parent FLOW-HOME-CHECKLIST-01 v7 independent QA: function PASS, visual CHANGES; canonical evidence under PANEL4-INTEGRATION-01/v7/.",
+        "Parent v7 independent Reviewer PASS after correction of the clipped-tab identity: Idag loses the final “g” at 140%; Denna vecka is fully visible. Parent remains blocked pending this visual package.",
+        "Plan v1 review outcome: Architect CHANGES and Critic final CHANGES; v1 retired. Findings recorded in v2 review history; no code changed."
+      ],
+      "implementation_state": "Panel 4 implementation and evidence complete; independent QA and Reviewer PASS. Focused 24/24, full pnpm check 587/587, Panel 4 public/review 9/9 each, fresh R3c 140% 12/12 each, queue validation and diff-check pass. Full visual similarity is not claimed; residuals are in SECTION14.md.",
+      "evidence_status": "v3 Architect APPROVE and Critic PROCEED; independent QA PASS and Reviewer PASS; focused 24/24; pnpm check 587/587; public/review 9/9 each; fresh r3c-upcoming 140% 12/12 each; §14 and reports saved."
     }
   ]
 }

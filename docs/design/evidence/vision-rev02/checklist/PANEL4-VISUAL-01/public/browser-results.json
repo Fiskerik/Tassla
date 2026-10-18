@@ -1,0 +1,46 @@
+{
+  "passes": [
+    "Panel 4 preview at 375x844: only Idag, stable first three, Sunday included, next Monday excluded, overflow routes to full Kommande",
+    "Panel 4 preview at 430x844: only Idag, stable first three, Sunday included, next Monday excluded, overflow routes to full Kommande",
+    "Panel 4 preview at 375x667: only Idag, stable first three, Sunday included, next Monday excluded, overflow routes to full Kommande",
+    "Panel 4 wraps all four complete labels at the 140% web text proxy; selected state, keyboard Enter/Space, target size, and viewport bounds pass",
+    "Panel 4 source state loading-health: no preview while unconfirmed; full Kommande state and retry remain available",
+    "Panel 4 source state loading-routines: no preview while unconfirmed; full Kommande state and retry remain available",
+    "Panel 4 source state health-error: no preview while unconfirmed; full Kommande state and retry remain available",
+    "Panel 4 source state routine-error: no preview while unconfirmed; full Kommande state and retry remain available",
+    "Panel 4 shows no preview when both ready sources are empty"
+  ],
+  "pageErrors": [],
+  "scope": "Panel 4 daily checklist visual corrections, upcoming week preview, strict week boundaries, large text, and synthetic source states",
+  "bundle": "public",
+  "viewports": [
+    [
+      375,
+      844
+    ],
+    [
+      430,
+      844
+    ],
+    [
+      375,
+      667
+    ],
+    [
+      375,
+      844,
+      "140% text proxy"
+    ]
+  ],
+  "screenshots": [
+    "panel4-visual-preview-375x844.png",
+    "panel4-visual-preview-430x844.png",
+    "panel4-visual-preview-375x667.png",
+    "panel4-visual-140-text-375x844.png"
+  ],
+  "limitations": [
+    "Fixtures are synthetic local data and callbacks; no live Supabase/RLS reads or writes are performed",
+    "Native iOS/Android, VoiceOver, device Dynamic Type, and physical-device focus behavior are NOT TESTABLE",
+    "The 140% text proxy is a web CSS approximation"
+  ]
+}

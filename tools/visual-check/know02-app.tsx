@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Linking } from 'react-native';
 import type { HomeContent, OwnedDog } from '../../src/data/app-data';
 import type { PublishedTrainingProgram } from '../../src/data/workspace-data';
+import contentBundle from '../../docs/content/mvp-content-bundle-v1.json';
 import { AppScreen } from '../../src/components/AppPrimitives';
 import { BottomNav } from '../../src/components/ui';
 import { HomeCarousel } from '../../src/features/home/HomeCarousel';
@@ -16,8 +18,9 @@ const CUSTOM_ID = '00000000-0000-4000-8000-000000000002';
 const query = new URLSearchParams(location.search);
 const initialState = query.get('state') ?? 'ready';
 const ageWeeksQuery = query.get('ageWeeks');
-const ageWeeks = ageWeeksQuery === 'missing' ? null : ageWeeksQuery === null ? 10 : Number.isFinite(Number(ageWeeksQuery)) ? Number(ageWeeksQuery) : null;
-const reviewContentEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
+const faqState = query.get('faqState') ?? 'eligible';
+const knowledgeScenario = query.get('knowledgeScenario') ?? 'eligible';
+const ageWeeks = faqState === 'missing_age' || ageWeeksQuery === 'missing' ? null : ageWeeksQuery === null ? 14 : Number.isFinite(Number(ageWeeksQuery)) ? Number(ageWeeksQuery) : null;
 
 declare global {
   interface Window {
@@ -32,11 +35,22 @@ declare global {
     __know02WriteDelayMs?: number;
     __know02Mutations?: { table: string; mode: string; filters: Record<string, unknown>; payload: Record<string, unknown> }[];
     __know02OpenedContent?: string;
+    __know02ProfileOpens?: number;
+    __know02FaqRetries?: number;
+    __know02SourceOpens?: string[];
     __know02UnmountRoute?: () => void;
     __know02RemountRoute?: () => void;
     __know02ChangeScope?: () => void;
   }
 }
+
+Object.defineProperty(Linking, 'openURL', {
+  configurable: true,
+  writable: true,
+  value: async (url: string) => {
+    window.__know02SourceOpens = [...(window.__know02SourceOpens ?? []), url];
+  },
+});
 
 function makeClient() {
   const completedPresetRows = ['quiet-start', 'routine', 'rest'].map((item_key) => ({ dog_id: DOG_ID, template_id: FIRST_DAYS, item_key }));
@@ -135,14 +149,57 @@ function makeClient() {
 }
 
 const client = makeClient();
-const items: readonly HomeContent[] = reviewContentEnabled ? REVIEW_TRAINING_GUIDES.slice(0, 3) : [];
+const faqSourceUrls = new Map((contentBundle.sources as { id: string; url: string }[]).map(({ id, url }) => [id, url]));
+const faqFixtureVersions: (HomeContent & { minAgeWeeks: number; maxAgeWeeks: number | null })[] = contentBundle.items
+  .filter((item) => ['handling-guide', 'being-alone-guide'].includes(item.slug))
+  .flatMap((item) => item.versions.filter((version) => version.status === 'published').map((version) => ({
+    id: version.id,
+    contentId: item.id,
+    version: version.version,
+    title: version.title,
+    body: version.body,
+    contentType: item.content_type as HomeContent['contentType'],
+    sources: [...new Set(version.claim_trace.flatMap((claim) => claim.source_refs)
+      .map((sourceId) => faqSourceUrls.get(sourceId)).filter((url): url is string => Boolean(url)))],
+    minAgeWeeks: version.min_age_weeks,
+    maxAgeWeeks: version.max_age_weeks,
+  })));
+const faqSelection = (() => {
+  if (faqState === 'missing_age' || ageWeeks === null) return { status: 'unknown' as const, reason: 'missing_age' as const, items: [] as HomeContent[] };
+  if (faqState === 'invalid_request') return { status: 'unknown' as const, reason: 'invalid_request' as const, items: [] as HomeContent[] };
+  if (faqState === 'unmapped_version') return { status: 'unknown' as const, reason: 'unmapped_version' as const, items: [] as HomeContent[] };
+  if (faqState === 'empty') return { status: 'empty' as const, items: [] as HomeContent[] };
+  const matched = faqFixtureVersions.filter((item) => ageWeeks >= item.minAgeWeeks
+    && (item.maxAgeWeeks === null || ageWeeks <= item.maxAgeWeeks));
+  return matched.length ? { status: 'eligible' as const, items: matched } : { status: 'empty' as const, items: [] as HomeContent[] };
+})();
 
-function KnowledgeRoute({ pending, onPendingChange, sessionKey, dogId }: { pending: PendingChecklistMemory | null; onPendingChange: (state: PendingChecklistMemory | null) => void; sessionKey: string; dogId: string }) {
-  const focusedContentId = query.get('screen') === 'faq' ? FAQ_DESTINATION_ID : query.get('screen') === 'checklist-detail' || query.get('screen') === 'checklist-overview' ? CHECKLIST_DESTINATION_ID : null;
+const knowledgeSelection = (() => {
+  if (initialState === 'empty' || knowledgeScenario === 'empty') return { status: 'empty' as const, items: [] as HomeContent[] };
+  // This layout-only visual scenario intentionally places both exact published
+  // versions together so the hero/compact-card path can be inspected. It does
+  // not represent an age-eligible selector response or change production data.
+  if (knowledgeScenario === 'multi-layout') return { status: 'eligible' as const, items: faqFixtureVersions };
+  if (knowledgeScenario === 'unknown' || ageWeeks === null) return { status: 'unknown' as const, reason: 'missing_age' as const, items: [] as HomeContent[] };
+  if (knowledgeScenario === 'invalid_request') return { status: 'unknown' as const, reason: 'invalid_request' as const, items: [] as HomeContent[] };
+  if (knowledgeScenario === 'unmapped_version') return { status: 'unknown' as const, reason: 'unmapped_version' as const, items: [] as HomeContent[] };
+  const matched = faqFixtureVersions.filter((item) => ageWeeks >= item.minAgeWeeks
+    && (item.maxAgeWeeks === null || ageWeeks <= item.maxAgeWeeks));
+  return matched.length ? { status: 'eligible' as const, items: matched } : { status: 'empty' as const, items: [] as HomeContent[] };
+})();
+
+function KnowledgeRoute({ pending, onPendingChange, sessionKey, dogId, routedContentId, onHome }: { pending: PendingChecklistMemory | null; onPendingChange: (state: PendingChecklistMemory | null) => void; sessionKey: string; dogId: string; routedContentId: string | null; onHome: () => void }) {
+  const focusedContentId = routedContentId ?? (query.get('screen') === 'faq' ? FAQ_DESTINATION_ID : query.get('screen') === 'checklist-detail' || query.get('screen') === 'checklist-overview' ? CHECKLIST_DESTINATION_ID : null);
   const contentState = initialState === 'empty' ? 'ready' : initialState === 'error' ? 'error' : initialState === 'loading' ? 'loading' : 'ready';
-  return <AppScreen scrollKey="know02-knowledge" footer={<BottomNav active="knowledge" onChange={() => undefined} />}>
-    <KnowledgeScreen onBack={() => undefined} items={items} contentState={contentState} focusedContentId={focusedContentId}
+  return <AppScreen scrollKey="know02-knowledge" footer={<BottomNav active="knowledge" onChange={(destination) => { if (destination === 'home') onHome(); }} />}>
+    <KnowledgeScreen onBack={() => undefined} items={knowledgeSelection.items} forYouItems={knowledgeSelection.items} articleItems={knowledgeSelection.items} contentState={contentState} focusedContentId={focusedContentId}
+      forYouSelectionStatus={knowledgeSelection.status} articleSelectionStatus={knowledgeSelection.status}
+      unknownSelectionReason={knowledgeSelection.status === 'unknown' ? knowledgeSelection.reason : undefined}
       client={client as never} dogId={dogId} ageWeeks={ageWeeks} sessionKey={sessionKey}
+      faqItems={faqSelection.items} faqSelectionStatus={faqSelection.status}
+      faqUnknownReason={faqSelection.status === 'unknown' ? faqSelection.reason : undefined}
+      onOpenDogProfile={() => { window.__know02ProfileOpens = (window.__know02ProfileOpens ?? 0) + 1; }}
+      onRetry={() => { window.__know02FaqRetries = (window.__know02FaqRetries ?? 0) + 1; }}
       checklistPending={pending} onChecklistPendingChange={onPendingChange} />
   </AppScreen>;
 }
@@ -161,16 +218,17 @@ function TrainingRoute() {
   </AppScreen>;
 }
 
-function HomeRoute() {
+function HomeRoute({ onOpenFAQ }: { onOpenFAQ: (id: string) => void }) {
   const dog: OwnedDog = { id: DOG_ID, name: 'Luna', breed_id: 'synthetic-mix', birth_date: '2026-08-01' };
   return <AppScreen scrollKey="know02-home-carousel" footer={<BottomNav active="home" onChange={() => undefined} />}>
     <HomeCarousel dog={dog} plans={[]} selectedDatePlans={[]} content={REVIEW_TRAINING_GUIDES} contentState="ready"
-      onGo={() => undefined} onOpenContent={(id) => { window.__know02OpenedContent = id; }} />
+      onGo={() => undefined} onOpenContent={(id) => { window.__know02OpenedContent = id; if (id === FAQ_DESTINATION_ID) onOpenFAQ(id); }} />
   </AppScreen>;
 }
 
 function App() {
-  const screen = query.get('screen') ?? 'checklist-overview';
+  const [screen, setScreen] = useState(query.get('screen') ?? 'checklist-overview');
+  const [routedContentId, setRoutedContentId] = useState<string | null>(null);
   const [routeMounted, setRouteMounted] = useState(true);
   const [pending, setPending] = useState<PendingChecklistMemory | null>(null);
   const [scope, setScope] = useState(0);
@@ -184,10 +242,10 @@ function App() {
       delete window.__know02ChangeScope;
     };
   }, []);
-  if (screen === 'home-carousel') return <HomeRoute />;
+  if (screen === 'home-carousel') return <HomeRoute onOpenFAQ={(id) => { setRoutedContentId(id); setScreen('knowledge'); }} />;
   if (!routeMounted) return null;
   if (screen === 'review-training-list' || screen === 'review-training-detail') return <TrainingRoute />;
-  return <KnowledgeRoute key={`scope-${scope}`} pending={pending} onPendingChange={setPending} sessionKey={`synthetic-session-${scope}`} dogId={scope ? `${DOG_ID}-scope-${scope}` : DOG_ID} />;
+  return <KnowledgeRoute key={`scope-${scope}-${routedContentId ?? 'default'}`} pending={pending} onPendingChange={setPending} sessionKey={`synthetic-session-${scope}`} dogId={scope ? `${DOG_ID}-scope-${scope}` : DOG_ID} routedContentId={routedContentId} onHome={() => { setRoutedContentId(null); setScreen('home-carousel'); }} />;
 }
 
 createRoot(document.getElementById('root')!).render(<App />);

@@ -42,6 +42,14 @@ Vecka och completiondatum beräknas med civil date keys och sparad IANA-tidszon.
 
 RN Web- och modellbevis ligger i `docs/design/evidence/vision-rev02/checklist/WEEK-01/`. De är syntetiska: live Supabase/RLS-policy, verklig app-resume/midnatt, native tillgänglighet och installerad app verifieras separat.
 
+## Panel 4 — visuell korrigering, FLOW-HOME-CHECKLIST-VISUAL-01
+
+Dagens checklistrader grupperas på en gemensam varm yta med diskreta avdelare. Rutinikoner använder en exakt svensk aliaslista efter Unicode-normalisering; okända eller närliggande etiketter får en neutral checklistesymbol. Ikonen är dekorativ för hjälpmedel, medan öppningskontrollen namnger rutin och punkt och har en separat 44 pt-träffyta.
+
+När både hälso- och rutinkällan är bekräftat inlästa kan Idag visa högst tre befintliga Kommande-rader efter idag till och med veckans söndag. `Visa alla kommande` visas bara när fler verkliga rader finns och leder till den fullständiga Kommande-fliken. Inga nya poster skapas eller läsningar görs för förhandsvisningen. Endast Panel 4:s segment får radbrytas vid större text; andra Tabs-konsumenter behåller sin layout.
+
+Syntetisk public/review-evidens för denna presentation sparas i `docs/design/evidence/vision-rev02/checklist/PANEL4-VISUAL-01/`. Den verifierar inte live Supabase/RLS, native VoiceOver eller enhetens Dynamic Type.
+
 ## Kommande — FLOW-HOME-CHECKLIST-UPCOMING-01
 
 Panel 4 kan visa `Kommande` som en villkorad flik. Den läser endast planerade hälsohändelser med `due_on > dailyDateKey` och hundscope innan 40-radersgränsen, plus rutinmallarnas explicita upprepningsfält. De två källorna har separata state, retries, abort/generation-fences och owner/account-generation-, hund-, lokal-dag- och tidszonscope. Scopebyte döljer tidigare resultat.

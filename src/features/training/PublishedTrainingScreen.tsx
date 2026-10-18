@@ -9,8 +9,18 @@ import { tokens } from '../../theme/tokens';
 const trainingImage = require('../../../assets/images/puppy-training.png');
 const tabs = ['Rekommenderat', 'Alla övningar', 'Mina'] as const;
 
-export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, reviewMode = false, initialSelection, backLabel = 'Tillbaka till dagens checklista', onBackToChecklist }: {
+export function PublishedTrainingScreen({ ageWeeks, programs, recommendedPrograms = programs, allPrograms = programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, reviewMode = false, initialSelection, backLabel = 'Tillbaka till dagens checklista', onBackToChecklist, selectionStatus = 'empty', selectionReason, recommendedSelectionStatus = selectionStatus, recommendedSelectionReason = selectionReason, allSelectionStatus = selectionStatus, allSelectionReason = selectionReason, onOpenChecklist, onEditDogProfile }: {
   ageWeeks: number | null; programs: readonly PublishedTrainingProgram[]; paused: readonly PausedTrainingProgress[]; busyStepKey: string | null; error: string;
+  recommendedPrograms?: readonly PublishedTrainingProgram[];
+  allPrograms?: readonly PublishedTrainingProgram[];
+  selectionStatus?: 'eligible' | 'empty' | 'unknown';
+  selectionReason?: 'missing_age' | 'invalid_request' | 'unmapped_version';
+  recommendedSelectionStatus?: 'eligible' | 'empty' | 'unknown';
+  recommendedSelectionReason?: 'missing_age' | 'invalid_request' | 'unmapped_version';
+  allSelectionStatus?: 'eligible' | 'empty' | 'unknown';
+  allSelectionReason?: 'missing_age' | 'invalid_request' | 'unmapped_version';
+  onOpenChecklist?: () => void;
+  onEditDogProfile?: () => void;
   reviewMode?: boolean;
   initialSelection?: { programId: string; stepId: string };
   backLabel?: string;
@@ -28,13 +38,20 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   const animationSequence = useRef(0);
   const pending = useRef(false);
   const mounted = useRef(true);
-  const visiblePrograms = reviewMode ? programs.map((program) => ({ ...program, completedStepIds: reviewCompleted[program.id] ?? program.completedStepIds })) : programs;
-  const active = visiblePrograms.find((program) => program.id === programId) ?? visiblePrograms[0];
+  const withReviewProgress = (items: readonly PublishedTrainingProgram[]) => reviewMode
+    ? items.map((program) => ({ ...program, completedStepIds: reviewCompleted[program.id] ?? program.completedStepIds }))
+    : items;
+  const visiblePrograms = withReviewProgress(programs);
+  const visibleRecommendedPrograms = withReviewProgress(recommendedPrograms);
+  const visibleAllPrograms = withReviewProgress(allPrograms);
+  const active = visibleRecommendedPrograms.find((program) => program.id === programId) ?? visibleRecommendedPrograms[0];
+  const currentSelectionStatus = tab === 'Alla övningar' ? allSelectionStatus : recommendedSelectionStatus;
+  const currentSelectionReason = tab === 'Alla övningar' ? allSelectionReason : recommendedSelectionReason;
   const selectedProgram = visiblePrograms.find((program) => program.id === selection?.programId);
   const selectedStep = selectedProgram?.steps.find((step) => step.id === selection?.stepId);
   const nextStep = selectedProgram?.steps.find((step) => !selectedProgram.completedStepIds.includes(step.id));
   const mine = visiblePrograms.filter((program) => program.completedStepIds.length > 0);
-  const continueProgram = visiblePrograms.find((program) => program.completedStepIds.length > 0 && program.steps.some((step) => !program.completedStepIds.includes(step.id)));
+  const continueProgram = visibleRecommendedPrograms.find((program) => program.completedStepIds.length > 0 && program.steps.some((step) => !program.completedStepIds.includes(step.id)));
   const continueStep = continueProgram?.steps.find((step) => !continueProgram.completedStepIds.includes(step.id));
   const consumeCompletionAnimation = useCallback((key: string) => {
     setAnimateCompleteTarget((current) => current?.key === key ? null : current);
@@ -120,14 +137,20 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     {reviewMode ? <Text style={styles.note}>Tillfälligt exempel – innehållet är inte sakgranskat. Markeringar i dessa övningsutkast sparas under den här visningen.</Text> : null}
     <Toast visible={Boolean(error) && !selectedProgram} tone="error" message={error || undefined} onRetry={onRetry} />
     <Toast visible={Boolean(successMessage) && !selectedProgram} tone="success" confirmed message={successMessage} autoDismissMs={2500} onAutoDismiss={() => setSuccessMessage('')} />
-    {paused.map((item) => <View key={item.versionId} style={styles.pausedCard}><Text style={styles.note}>Ett tidigare program är pausat. Dina {item.completedCount} genomförda steg finns kvar.</Text></View>)}
+    {paused.map((item) => <View key={item.versionId} style={styles.pausedCard}><Text style={styles.note}>Tidigare program · {item.completedCount} steg finns sparade.</Text></View>)}
 
-    {visiblePrograms.length === 0 && tab !== 'Mina' ? <View style={styles.emptyCard}>
-      <Text style={styles.emptyTitle}>{ageWeeks === null ? 'Åldersbaserade program' : 'Träning i er takt'}</Text>
-      <Text style={styles.body}>{ageWeeks === null ? 'Lägg till hundens födelsedatum för att se åldersbaserade program. Sparade framsteg finns under Mina.' : 'Fler program kommer när de är färdiga att använda.'}</Text>
+    {(tab === 'Alla övningar' ? visibleAllPrograms : visibleRecommendedPrograms).length === 0 && tab !== 'Mina' && !error ? <View style={styles.emptyCard}>
+      <Text style={styles.emptyTitle}>{currentSelectionStatus === 'unknown' && currentSelectionReason === 'missing_age' ? 'Åldersbaserade program' : 'Inga träningsprogram'}</Text>
+      <Text style={styles.body}>{currentSelectionStatus === 'unknown' ? currentSelectionReason === 'missing_age'
+        ? 'Lägg till födelsedatum för åldersbaserade råd.'
+        : 'Vi kan inte välja innehåll för den här vyn just nu.'
+        : 'Det finns inga publicerade träningsprogram att visa här just nu.'}</Text>
+      {(onOpenChecklist || onEditDogProfile) ? <Button variant="tertiary" label={currentSelectionStatus === 'unknown' && currentSelectionReason === 'missing_age' ? 'Redigera hundprofil' : 'Öppna dagens checklista'}
+        accessibilityLabel={currentSelectionStatus === 'unknown' && currentSelectionReason === 'missing_age' ? 'Redigera hundprofil' : 'Öppna dagens checklista'}
+        onPress={currentSelectionStatus === 'unknown' && currentSelectionReason === 'missing_age' ? onEditDogProfile ?? (() => undefined) : onOpenChecklist ?? (() => undefined)} /> : null}
     </View> : null}
 
-    {tab === 'Rekommenderat' && visiblePrograms.length > 0 ? <>
+    {tab === 'Rekommenderat' && visibleRecommendedPrograms.length > 0 ? <>
       {ageWeeks === null ? <View style={styles.unknownAgeNotice}>
         <Text style={styles.body}>Åldersbaserade program visas när hundens födelsedatum finns. Dina sparade framsteg finns kvar under Mina.</Text>
         <Button variant="tertiary" label="Visa mina program" accessibilityLabel="Visa mina sparade träningsprogram" onPress={() => setTab('Mina')} />
@@ -138,7 +161,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
             <Text style={styles.seeAll}>Visa alla</Text>
           </MotionPressable>
         </View>
-        {programCards(visiblePrograms)}
+        {programCards(visibleRecommendedPrograms)}
       </>}
       {continueProgram && continueStep ? <>
         <SectionHeader title="Fortsätt där ni var" />
@@ -158,7 +181,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       </> : null}
     </> : null}
 
-    {tab === 'Alla övningar' ? visiblePrograms.map((program) => <View key={program.id}>
+    {tab === 'Alla övningar' ? visibleAllPrograms.map((program) => <View key={program.id}>
       <SectionHeader title={program.title} />{rows(program)}
       <Button variant="tertiary" label="Om programmet" accessibilityLabel={`Läs om ${program.title} och dess källor`} onPress={() => setSelection({ programId: program.id, stepId: '' })} />
     </View>) : null}

@@ -2,11 +2,25 @@ from playwright.sync_api import sync_playwright,expect
 from pathlib import Path
 import json
 from datetime import datetime, timezone
+from urllib.parse import urlsplit
 import os
 import re
+ui_base=os.environ.get('TASSLA_UI_BASE_URL','http://127.0.0.1:4173/')
+scope=os.environ.get('TASSLA_UI_SCOPE','')
+r3c_allowed_origin=None
+if scope=='r3c-upcoming':
+ try:
+  parsed=urlsplit(ui_base)
+  host=(parsed.hostname or '').lower()
+  port=parsed.port
+ except ValueError as exc:
+  raise SystemExit(f'Invalid local fixture URL; refusing to launch browser: {exc}')
+ if parsed.scheme!='http' or host not in {'127.0.0.1','localhost','::1'} or port is None or not 1<=port<=65535 or parsed.username is not None or parsed.password is not None or parsed.query or parsed.fragment:
+  raise SystemExit('Invalid local fixture URL; r3c-upcoming requires HTTP loopback, an explicit valid port, and no credentials, query, or fragment.')
+ origin_host=f'[{host}]' if ':' in host else host
+ r3c_allowed_origin=f'http://{origin_host}:{port}'
 out=Path(os.environ.get('TASSLA_UI_EVIDENCE', str(Path(__file__).resolve().parents[2] / 'docs/design/QA-11/evidence')));out.mkdir(parents=True,exist_ok=True)
 os.environ.setdefault('XDG_CONFIG_HOME','/tmp/tassla-chrome-config')
-ui_base=os.environ.get('TASSLA_UI_BASE_URL','http://127.0.0.1:4173/')
 results=[];errors=[]
 def color_components(value):
  parts=[float(part) for part in re.findall(r"\d+(?:\.\d+)?",value)]
@@ -29,11 +43,464 @@ with sync_playwright() as p:
  if chromium_path: launch_options['executable_path']=chromium_path
  browser=p.chromium.launch(**launch_options)
  page=browser.new_page(viewport={'width':390,'height':844},device_scale_factor=1)
+ if r3c_allowed_origin:
+  def r3c_origin_for_request(url):
+   try:
+    parts=urlsplit(url);host=(parts.hostname or '').lower();port=parts.port
+   except ValueError:
+    return None
+   if parts.scheme!='http' or host not in {'127.0.0.1','localhost','::1'} or port is None or parts.username is not None or parts.password is not None:
+    return None
+   host_part=f'[{host}]' if ':' in host else host
+   return f'http://{host_part}:{port}'
+  def guard_r3c_request(route):
+   request_url=route.request.url
+   if r3c_origin_for_request(request_url)==r3c_allowed_origin:
+    route.continue_()
+   else:
+    parts=urlsplit(request_url)
+    errors.append(f'Blocked request outside exact local fixture origin: {parts.scheme}://{parts.netloc}{parts.path}')
+    route.abort()
+  page.route('**/*',guard_r3c_request)
  page.clock.install(time=datetime(2026,10,11,15,0,tzinfo=timezone.utc))
  page.on('pageerror',lambda e:errors.append(str(e)))
  def open(screen,extra=''):
   page.goto(f'{ui_base}?screen={screen}{extra}');page.wait_for_timeout(350)
  def passed(label): results.append(label);print('PASS',label)
+ if scope=='r4c-faq':
+  page.set_default_timeout(8000)
+  page.emulate_media(reduced_motion='reduce')
+  review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
+  captures=[]
+  def no_horizontal_overflow():
+   return page.evaluate('''() => {
+    if (document.documentElement.scrollWidth > innerWidth) return false;
+    return [...document.querySelectorAll('*')].every(el => {
+      const style=getComputedStyle(el);
+      return style.display==='none' || el.scrollWidth<=el.clientWidth+1 || style.overflowX==='auto' || style.overflowX==='scroll';
+    });
+   }''')
+  def open_faq(state='eligible',age=14,width=375,height=844,app_state='ready'):
+   page.set_viewport_size({'width':width,'height':height+(32 if review_mode else 0)})
+   open('faq',f'&faqState={state}&ageWeeks={age}&state={app_state}')
+   expect(page.get_by_role('tab',name='FAQ',exact=True)).to_be_visible()
+   assert no_horizontal_overflow(),f'FAQ has horizontal overflow at {width}x{height}, state={state}'
+  def capture(name, reset_scroll=True):
+   if reset_scroll:
+    page.evaluate("() => [...document.querySelectorAll('*')].filter(el => el.scrollHeight > el.clientHeight + 20).forEach(el => el.scrollTop = 0)")
+   page.screenshot(path=str(out/name),animations='disabled',full_page=True)
+   captures.append(name)
+  def tab_until(locator, limit=32):
+   for _ in range(limit):
+    if locator.evaluate('(el) => el === document.activeElement'):
+     return True
+    page.keyboard.press('Tab')
+   return locator.evaluate('(el) => el === document.activeElement')
+  def assert_tab_visible_inside_viewport(label):
+   metrics=page.get_by_role('tab',name='FAQ',exact=True).evaluate('''tab=>{
+    const viewport=tab.closest('[role="tablist"]');
+    const item=tab.getBoundingClientRect(), box=viewport.getBoundingClientRect();
+    return {left:item.left,right:item.right,viewportLeft:box.left,viewportRight:box.right};
+   }''')
+   assert metrics['left']>=metrics['viewportLeft']-1 and metrics['right']<=metrics['viewportRight']+1, f'{label} FAQ tab is clipped by its viewport: {metrics}'
+   return metrics
+  def measure_review_contexts():
+   return page.evaluate('''() => [...document.querySelectorAll('[aria-label^="Frågor: "]')].map(button=>{
+    const box=button.parentElement.getBoundingClientRect(), control=button.getBoundingClientRect();
+    return {label:button.getAttribute('aria-label'),left:box.left,right:box.right,width:box.width,controlHeight:control.height,labelFits:button.scrollHeight<=button.clientHeight+1};
+   })''')
+  def assert_equal_review_contexts(label):
+   metrics=measure_review_contexts()
+   assert len(metrics)==3,f'{label}: expected all three review contexts, got {metrics}'
+   assert len({item['label'] for item in metrics})==3,f'{label}: review context labels are not unique: {metrics}'
+   assert max(item['width'] for item in metrics)-min(item['width'] for item in metrics)<=1,f'{label}: review context widths differ by more than 1px: {metrics}'
+   assert all(item['labelFits'] and item['controlHeight']>=40 for item in metrics),f'{label}: review context label is clipped or target too short: {metrics}'
+   assert no_horizontal_overflow(),f'{label}: review context controls overflow horizontally'
+   return metrics
+  active_tab_bounds=None
+  intercepted_source_urls=[]
+  review_context_bounds={'status':'not_applicable','reason':'Review-only context controls are intentionally absent from public FAQ.'} if not review_mode else {}
+  home_carousel_faq_round_trip={'status':'not_run'}
+  checklist_reachability={'status':'not_run'}
+  if review_mode:
+   for width,height in [(375,844),(430,844),(375,667)]:
+    open_faq('eligible',14,width,height)
+    expect(page.get_by_text('Tillfälligt exempel – innehållet är inte sakgranskat').first).to_be_visible()
+    expect(page.get_by_role('button',name='När passar en valpkurs?, visa svar')).to_be_visible()
+    assert page.get_by_role('button',name=re.compile('Hur kan jag göra vardaglig hantering trygg')).count()==0
+    if width==375:
+     review_context_bounds['375x844']=assert_equal_review_contexts('Review FAQ at 375x844')
+    capture(f'review-faq-by-age-{width}x{height}.png')
+   page.get_by_role('button',name='Frågor: Före hemkomst',exact=True).click()
+   expect(page.get_by_role('button',name='Hur möter barn valpen på ett tryggt sätt?, visa svar')).to_be_visible()
+   page.get_by_role('button',name='Frågor: Första dagarna hemma',exact=True).click()
+   expect(page.get_by_role('button',name='Hur kan första natten bli lugnare?, visa svar')).to_be_visible()
+   capture('review-faq-first-days-375x844.png')
+   page.get_by_role('button',name='Frågor: Efter ålder',exact=True).click()
+   expect(page.get_by_role('button',name='När passar en valpkurs?, visa svar')).to_be_visible()
+   capture('review-faq-context-selection-375x844.png')
+   page.get_by_role('button',name='Frågor: Före hemkomst',exact=True).click()
+   expect(page.get_by_role('button',name='Hur möter barn valpen på ett tryggt sätt?, visa svar')).to_be_visible()
+   assert page.get_by_role('button',name=re.compile('Hur kan jag hjälpa valpen att vara själv')).count()==0
+   capture('review-faq-before-homecoming-375x667.png')
+   open_faq('eligible',14,375,844)
+   scaled=page.evaluate('''() => {const nodes=[...document.querySelectorAll('[dir="auto"]')];nodes.forEach(el=>{const style=getComputedStyle(el),size=parseFloat(style.fontSize),line=parseFloat(style.lineHeight);if(Number.isFinite(size))el.style.fontSize=(size*1.4)+'px';if(Number.isFinite(line))el.style.lineHeight=(line*1.4)+'px';});return nodes.length;}''')
+   assert scaled>0 and no_horizontal_overflow(),'Review FAQ text proxy is empty or overflows'
+   active_tab_bounds=assert_tab_visible_inside_viewport('Review 140% text proxy')
+   review_context_bounds['375x844@140%']=assert_equal_review_contexts('Review FAQ at 375x844 and 140% text proxy')
+   capture('review-faq-140-text-375x844.png')
+   passed('Review FAQ remains synthetic-only and visibly marked across contexts; the active tab fits at the 140% text proxy')
+  else:
+   for width in [375,430]:
+    open_faq('eligible',14,width,844)
+    expect(page.get_by_role('button',name='Hur kan jag göra vardaglig hantering trygg och frivillig för valpen?, visa svar')).to_be_visible()
+    assert page.get_by_role('button',name=re.compile('Hur kan jag hjälpa valpen att vara själv')).count()==0
+    capture(f'public-faq-handling-{width}x844.png')
+   open_faq('eligible',14,375,844)
+   page.get_by_role('button',name='Hur kan jag göra vardaglig hantering trygg och frivillig för valpen?, visa svar').click()
+   expect(page.get_by_role('heading',name='Kort, lugnt och frivilligt')).to_be_visible()
+   expect(page.get_by_role('heading',name='Källor')).to_be_visible()
+   expect(page.get_by_text(re.compile('avsab.org|rspca.org.uk')).first).to_be_visible()
+   source_button=page.get_by_role('button',name='Öppna extern källa').first
+   expect(source_button).to_be_visible()
+   source_row_text=source_button.locator('xpath=../..').inner_text()
+   source_button.click()
+   expect(page.get_by_text('Källan öppnades.',exact=True)).to_be_visible()
+   opened_urls=page.evaluate('window.__know02SourceOpens')
+   assert isinstance(opened_urls,list) and len(opened_urls)==1 and opened_urls[0].startswith('https://') and opened_urls[0] in source_row_text, f'Fixture source action did not open its visible safe URL through the interceptor: {opened_urls}; {source_row_text}'
+   intercepted_source_urls=list(opened_urls)
+   assert no_horizontal_overflow(),'Public FAQ source feedback overflows at 375x844'
+   assert '##' not in page.locator('body').inner_text(),'FAQ answer must render parsed body, not raw Markdown'
+   assert no_horizontal_overflow(),'Expanded public FAQ answer/source overflows at 375x844'
+   source_button.scroll_into_view_if_needed()
+   capture('public-faq-expanded-sources-375x844.png',reset_scroll=False)
+   open_faq('eligible',40,375,844)
+   expect(page.get_by_role('button',name='Hur kan jag hjälpa valpen att vara själv en liten stund?, visa svar')).to_be_visible()
+   assert page.get_by_role('button',name=re.compile('Hur kan jag göra vardaglig hantering trygg')).count()==0
+   capture('public-faq-alone-40-weeks-375x844.png')
+   open_faq('empty',20,375,844)
+   expect(page.get_by_text('Just nu finns inga publicerade frågor för den här vyn',exact=True)).to_be_visible()
+   assert 'Inga frågor publicerade ännu.' not in page.locator('body').inner_text()
+   capture('public-faq-age-filtered-empty-375x844.png')
+   open_faq('missing_age',None,375,844)
+   expect(page.get_by_role('button',name='Redigera hundprofil',exact=True)).to_be_visible()
+   page.get_by_role('button',name='Redigera hundprofil',exact=True).click()
+   assert page.evaluate('window.__know02ProfileOpens')==1
+   capture('public-faq-missing-age-profile-route-375x844.png')
+   for state in ['invalid_request','unmapped_version']:
+    open_faq(state,14,375,844)
+    expect(page.get_by_text('Vi kan inte välja frågor för den här vyn just nu.',exact=True)).to_be_visible()
+    assert page.get_by_role('button',name='Redigera hundprofil',exact=True).count()==0
+    capture(f'public-faq-{state}-no-profile-cta-375x844.png')
+   open_faq('eligible',14,375,667)
+   expect(page.get_by_role('button',name='Hur kan jag göra vardaglig hantering trygg och frivillig för valpen?, visa svar')).to_be_visible()
+   capture('public-faq-short-375x667.png')
+   open_faq('eligible',14,375,844,app_state='loading')
+   expect(page.get_by_role('progressbar',name='Laddar innehåll')).to_be_visible()
+   capture('public-faq-loading-375x844.png')
+   open_faq('eligible',14,375,844,app_state='error')
+   expect(page.get_by_text('Frågorna kunde inte hämtas just nu. Försök igen.',exact=True)).to_be_visible()
+   page.get_by_role('button',name='Försök igen',exact=True).click()
+   assert page.evaluate('window.__know02FaqRetries')==1
+   capture('public-faq-error-retry-375x844.png')
+   open_faq('eligible',14,375,844)
+   keyboard_question=page.get_by_role('button',name=re.compile('Hur kan jag göra vardaglig hantering trygg och frivillig för valpen'))
+   assert tab_until(keyboard_question),'Keyboard Tab traversal did not reach the FAQ question'
+   page.keyboard.press('Enter')
+   keyboard_source=page.get_by_role('button',name='Öppna extern källa').first
+   expect(page.get_by_role('heading',name='Källor')).to_be_visible()
+   assert tab_until(keyboard_source),'Keyboard Tab traversal did not reach the external source control'
+   expect(keyboard_source).to_be_visible()
+   assert no_horizontal_overflow(),'Keyboard-focused source control overflows at 375x844'
+   capture('public-faq-source-keyboard-focus-375x844.png',reset_scroll=False)
+   passed('Keyboard Tab/Enter reaches and expands the FAQ question, then reaches the source action')
+   open_faq('eligible',14,375,844)
+   page.get_by_role('button',name='Hur kan jag göra vardaglig hantering trygg och frivillig för valpen?, visa svar').click()
+   scaled=page.evaluate('''() => {const nodes=[...document.querySelectorAll('[dir="auto"]')];nodes.forEach(el=>{const style=getComputedStyle(el),size=parseFloat(style.fontSize),line=parseFloat(style.lineHeight);if(Number.isFinite(size))el.style.fontSize=(size*1.4)+'px';if(Number.isFinite(line))el.style.lineHeight=(line*1.4)+'px';});return nodes.length;}''')
+   assert scaled>0 and no_horizontal_overflow(),'Public FAQ text proxy is empty or overflows'
+   active_tab_bounds=assert_tab_visible_inside_viewport('Public 140% text proxy')
+   capture('public-faq-expanded-140-text-375x844.png')
+   passed('Public FAQ exact-version body/source action, honest empty/unknown states, retry/loading, keyboard controls, responsive rendering, and active-tab bounds at 140% pass')
+  open_faq('eligible',14,375,844)
+  expect(page.get_by_role('tab',name='Checklistor',exact=True)).to_be_visible()
+  page.get_by_role('tab',name='Checklistor',exact=True).click()
+  if review_mode:
+   expect(page.get_by_role('heading',name='För er just nu',exact=True)).to_be_visible()
+   checklist_state='review-checklists-visible'
+  else:
+   expect(page.get_by_text('Inga checklistor publicerade ännu.',exact=True)).to_be_visible()
+   checklist_state='public-empty-state'
+  capture('checklist-tab-from-faq-375x844.png')
+  page.get_by_role('tab',name='FAQ',exact=True).click()
+  if review_mode:
+   expect(page.get_by_role('button',name='När passar en valpkurs?, visa svar')).to_be_visible()
+  else:
+   expect(page.get_by_role('button',name='Hur kan jag göra vardaglig hantering trygg och frivillig för valpen?, visa svar')).to_be_visible()
+  checklist_reachability={'status':'pass','contentState':checklist_state,'returnedToFaq':True}
+  passed(f'Checklistor remains reachable from FAQ and returns to the FAQ state ({checklist_state})')
+  open('home-carousel')
+  expect(page.get_by_role('heading',name='För dig idag',exact=True)).to_be_visible()
+  faq_card=page.get_by_role('button',name=re.compile(r'^Vanliga frågor\. Svar sorterade efter fas'))
+  expect(faq_card).to_be_visible()
+  faq_card.click()
+  expect(page.get_by_role('tab',name='FAQ',exact=True)).to_be_visible()
+  assert page.evaluate('window.__know02OpenedContent')=='review-v1:destination:faq','HomeCarousel did not pass FAQ_DESTINATION_ID through its production callback'
+  faq_tab=page.get_by_role('tab',name='FAQ',exact=True)
+  faq_selected=faq_tab.evaluate('(el) => getComputedStyle(el).backgroundColor')
+  other_tab_background=page.get_by_role('tab',name='Artiklar',exact=True).evaluate('(el) => getComputedStyle(el).backgroundColor')
+  assert faq_selected!=other_tab_background,f'HomeCarousel FAQ destination did not select the FAQ tab visually: FAQ={faq_selected}, Artiklar={other_tab_background}'
+  if review_mode:
+   expect(page.get_by_text('Tillfälligt exempel – innehållet är inte sakgranskat').first).to_be_visible()
+   expect(page.get_by_role('button',name='När passar en valpkurs?, visa svar')).to_be_visible()
+   branch='review-synthetic'
+  else:
+   expect(page.get_by_role('button',name='Hur kan jag göra vardaglig hantering trygg och frivillig för valpen?, visa svar')).to_be_visible()
+   branch='public-exact-version'
+  capture('home-carousel-faq-destination-375x844.png')
+  page.get_by_role('tab',name='Hem',exact=True).click()
+  expect(page.get_by_role('heading',name='För dig idag',exact=True)).to_be_visible()
+  assert page.get_by_role('tab',name='Hem',exact=True).get_attribute('aria-selected')=='true','Home navigation did not restore HomeCarousel'
+  capture('home-carousel-faq-return-375x844.png')
+  home_carousel_faq_round_trip={'status':'pass','destinationId':'review-v1:destination:faq','knowledgeTabSelected':True,'contentBranch':branch,'returnedHome':True}
+  passed(f'HomeCarousel FAQ destination opens the selected FAQ branch and wired Home navigation returns ({branch})')
+  assert not errors,errors
+  browser.close()
+  (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'R4c public FAQ from exact approved local bundle records and review-only synthetic FAQ in production KnowledgeScreen/FAQScreen; no live data, external navigation or backend write','bundle':'review' if review_mode else 'public','viewports':['375x844','430x844','375x667','375x844 at 140% web text proxy'],'captures':captures,'activeTabBoundsAt140Percent':active_tab_bounds,'reviewContextControlBounds':review_context_bounds,'checklistReachability':checklist_reachability,'homeCarouselFaqRoundTrip':home_carousel_faq_round_trip,'independentQaReport':'../INDEPENDENT-QA.md','interceptedSourceOpens':intercepted_source_urls,'section14VisualAssessment':{'composition':'Knowledge panel 7 FAQ tab and rendered source rows are documented in captures; direct comparison against the §14 reference is recorded separately in INDEPENDENT-QA.md','color':'Production token colors are visible in captures; reference similarity is assessed separately in INDEPENDENT-QA.md','typography':'Production typography and 140% web text proxy are visible in captures; device Dynamic Type is NOT TESTABLE','componentShapes':'Production Knowledge/FAQ components are visible in captures; reference similarity is assessed separately in INDEPENDENT-QA.md','imagery':'FAQ answer has no inline image; dedicated FAQ reference imagery is NOT TESTABLE if absent from vision_rev02','contentDensity':'Published answer fixtures and source rows are captured; reference comparison is recorded separately in INDEPENDENT-QA.md'},'limitations':['Approved local content bundle drives synthetic visual fixtures; no live published rows or Supabase/RLS are verified','Source click is intercepted by the visual fixture; no external navigation occurs','Native iOS/Android, VoiceOver, device Dynamic Type and actual installed app are NOT TESTABLE','The 140% text proxy is a web CSS approximation']},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+  raise SystemExit(0)
+ if scope=='r4d-knowledge':
+  page.set_default_timeout(8000)
+  page.emulate_media(reduced_motion='reduce')
+  review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
+  def no_horizontal_overflow():
+   return page.evaluate("document.documentElement.scrollWidth <= innerWidth && [...document.querySelectorAll('*')].every(el => {const s=getComputedStyle(el);return s.display==='none'||el.scrollWidth<=el.clientWidth+1||s.overflowX==='auto'||s.overflowX==='scroll';})")
+  def open_knowledge(age=14,state='ready',scenario='eligible',width=375,height=844):
+   page.set_viewport_size({'width':width,'height':height+(32 if review_mode else 0)})
+   open('knowledge',f'&state={state}&knowledgeScenario={scenario}&ageWeeks={age}')
+   expect(page.get_by_role('heading',name='Kunskap',exact=True)).to_be_visible()
+   assert no_horizontal_overflow(),f'Knowledge overflow at {width}x{height}, age={age}, state={state}, scenario={scenario}'
+  def capture(name):
+   page.evaluate("() => [...document.querySelectorAll('*')].filter(el=>el.scrollHeight>el.clientHeight+20).forEach(el=>el.scrollTop=0)")
+   page.screenshot(path=str(out/name),animations='disabled',full_page=True)
+  for width,height in [(375,844),(430,844),(375,667)]:
+   open_knowledge(14,width=width,height=height)
+   expect(page.get_by_label('Sök bland guider')).to_be_visible()
+   expect(page.get_by_text('Sökningen gäller bara publicerat innehåll som redan valts för den här fliken och hundens profil.',exact=True)).to_be_visible()
+   guide=page.get_by_role('button',name='Läs Trygg hantering bygger på frivillighet',exact=True)
+   expect(guide).to_be_visible()
+   assert page.get_by_role('button',name='Läs Trygg hantering bygger på frivillighet',exact=True).count()==1,'For-you card duplicates the selected guide'
+   expect(guide.locator('img')).to_have_count(1)
+   expect(page.get_by_text(re.compile(r'^ca [0-9]+ min$')).first).to_be_visible()
+   capture(f'{"review" if review_mode else "public"}-knowledge-for-you-{width}x{height}.png')
+  open_knowledge(14,scenario='multi-layout')
+  expect(page.get_by_role('button',name='Läs Trygg hantering bygger på frivillighet',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Läs Hjälp valpen att vara själv en liten stund',exact=True)).to_be_visible()
+  capture(f'{"review" if review_mode else "public"}-knowledge-hero-compact-layout-375x844.png')
+  page.get_by_role('button',name='Läs Hjälp valpen att vara själv en liten stund',exact=True).click()
+  expect(page.get_by_role('heading',name='Hjälp valpen att vara själv en liten stund',exact=True)).to_be_visible()
+  page.get_by_role('button',name='Tillbaka till guider',exact=True).click()
+  expect(page.get_by_role('button',name='Läs Trygg hantering bygger på frivillighet',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Läs Hjälp valpen att vara själv en liten stund',exact=True)).to_be_visible()
+  passed('Knowledge hero and compact cards render and open their exact fixture content versions')
+  open_knowledge(14)
+  search=page.get_by_label('Sök bland guider')
+  search.fill('  TRYGG  ')
+  expect(page.get_by_role('button',name='Läs Trygg hantering bygger på frivillighet',exact=True)).to_be_visible()
+  passed('Knowledge search trims and matches an eligible published guide by title at 375px')
+  search.fill('no-guide-matches-this-query')
+  expect(page.get_by_text('Inga guider på den här fliken matchar sökningen.',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Rensa sökning',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Redigera hundprofil',exact=True)).to_have_count(0)
+  capture(f'{"review" if review_mode else "public"}-knowledge-query-empty-375x844.png')
+  page.get_by_role('button',name='Rensa sökning',exact=True).click()
+  expect(page.get_by_role('button',name='Läs Trygg hantering bygger på frivillighet',exact=True)).to_be_visible()
+  page.get_by_role('tab',name='Artiklar',exact=True).click()
+  article_search=page.get_by_label('Sök bland guider')
+  article_search.fill('frivillig')
+  expect(page.get_by_role('button',name='Läs Trygg hantering bygger på frivillighet',exact=True)).to_be_visible()
+  capture(f'{"review" if review_mode else "public"}-knowledge-articles-search-375x844.png')
+  page.get_by_role('button',name='Läs Trygg hantering bygger på frivillighet',exact=True).click()
+  expect(page.get_by_role('heading',name='Trygg hantering bygger på frivillighet',exact=True)).to_be_visible()
+  expect(page.get_by_role('heading',name='Källor',exact=True)).to_be_visible()
+  source_buttons=page.get_by_role('button',name='Öppna extern källa',exact=True)
+  expect(source_buttons.first).to_be_visible()
+  source_buttons.first.click()
+  expect(page.get_by_text('Källan öppnades.',exact=True)).to_be_visible()
+  page.get_by_role('button',name='Tillbaka till guider',exact=True).click()
+  expect(page.get_by_label('Sök bland guider')).to_have_value('frivillig')
+  expect(page.get_by_role('button',name='Läs Trygg hantering bygger på frivillighet',exact=True)).to_be_visible()
+  passed('Knowledge article opens exact selected version, source action is safe, and return preserves the current tab/search')
+  open_knowledge(40)
+  expect(page.get_by_role('button',name='Läs Hjälp valpen att vara själv en liten stund',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Läs Trygg hantering bygger på frivillighet',exact=True)).to_have_count(0)
+  capture(f'{"review" if review_mode else "public"}-knowledge-alone-guide-40-weeks-375x844.png')
+  open_knowledge(20,scenario='eligible')
+  expect(page.get_by_text('Det finns inga publicerade guider som passar hundens profil i den här vyn just nu.',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Öppna checklistor',exact=True)).to_be_visible()
+  assert page.get_by_label('Sök bland guider').count()==0,'Search must not appear when selector has no eligible item'
+  capture(f'{"review" if review_mode else "public"}-knowledge-selector-empty-20-weeks-375x844.png')
+  open_knowledge('missing',scenario='unknown')
+  expect(page.get_by_text('Lägg till födelsedatum för åldersbaserade råd.',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Redigera hundprofil',exact=True)).to_be_visible()
+  assert page.get_by_label('Sök bland guider').count()==0
+  capture(f'{"review" if review_mode else "public"}-knowledge-unknown-age-375x844.png')
+  open_knowledge(14,state='error')
+  expect(page.get_by_text('Guiderna kunde inte hämtas. Försök igen.',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Försök igen',exact=True)).to_be_visible()
+  capture(f'{"review" if review_mode else "public"}-knowledge-error-375x844.png')
+  open_knowledge(14,state='loading')
+  expect(page.get_by_role('progressbar',name='Laddar innehåll')).to_be_visible()
+  capture(f'{"review" if review_mode else "public"}-knowledge-loading-375x844.png')
+  open_knowledge(14)
+  if review_mode:
+   expect(page.get_by_text('Tillfälligt exempel – innehållet är inte sakgranskat.').first).to_be_visible()
+  page.get_by_role('tab',name='Checklistor',exact=True).click()
+  if review_mode:
+   expect(page.get_by_role('heading',name='För er just nu',exact=True)).to_be_visible()
+  else:
+   expect(page.get_by_text('Inga checklistor publicerade ännu.',exact=True)).to_be_visible()
+  page.get_by_role('tab',name='FAQ',exact=True).click()
+  if review_mode:
+   expect(page.get_by_role('button',name='När passar en valpkurs?, visa svar')).to_be_visible()
+  else:
+   expect(page.get_by_role('button',name=re.compile('Hur kan jag göra vardaglig hantering trygg')).first).to_be_visible()
+  passed('Knowledge keeps FAQ and Checklistor reachable from the published-guide experience')
+  open_knowledge(14,width=375,height=844)
+  page.evaluate("() => [...document.querySelectorAll('[dir=auto]')].forEach(el=>{const s=getComputedStyle(el);el.style.fontSize=(parseFloat(s.fontSize)*1.4)+'px';el.style.lineHeight=(parseFloat(s.lineHeight)*1.4)+'px';})")
+  assert no_horizontal_overflow(),'Knowledge overflows at 140% web text proxy'
+  expect(page.get_by_label('Sök bland guider')).to_be_visible()
+  expect(page.get_by_role('button',name='Läs Trygg hantering bygger på frivillighet',exact=True)).to_be_visible()
+  capture(f'{"review" if review_mode else "public"}-knowledge-140-text-375x844.png')
+  assert not errors,errors
+  browser.close()
+  (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'R4d published Knowledge selector, search, article/source/return, public/review RN Web fixtures','bundle':'review' if review_mode else 'public','viewports':[375,430,375], 'limitations':['Uses local published bundle fixtures and synthetic callbacks; does not certify live Supabase/RLS or publication','Native iOS/Android, VoiceOver, and device Dynamic Type are not tested']},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+  raise SystemExit(0)
+ if scope=='r3c-upcoming':
+  page.set_default_timeout(8000)
+  page.emulate_media(reduced_motion='reduce')
+  review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
+  today='2026-10-17'
+  def open_upcoming(scenario='ready',width=375,height=844,extra='',tab=''):
+   page.set_viewport_size({'width':width,'height':height+(32 if review_mode else 0)})
+   query=f'&today={today}&upcomingScenario={scenario}{"&tab=Kommande" if tab else ""}{extra}'
+   open('home-checklist',query)
+   expect(page.get_by_test_id('checklist-fixture-banner')).to_be_visible()
+   expect(page.get_by_role('tab',name='Kommande',exact=True)).to_be_visible()
+   if not tab:
+    page.get_by_role('tab',name='Kommande',exact=True).click()
+   expect(page.get_by_role('tab',name='Kommande',exact=True)).to_be_visible()
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'horizontal overflow at {width}x{height}'
+  def row_labels():
+   return page.locator('[aria-label]').evaluate_all("nodes=>nodes.map(node=>node.getAttribute('aria-label')||'').filter(label=>label.startsWith('Öppna Vaccination')||label.startsWith('Hantera rutinen'))")
+  for width,height in [(375,844),(430,844),(375,667)]:
+   open_upcoming('ready',width,height)
+   expect(page.get_by_role('button',name=re.compile('Öppna Vaccination snart'))).to_be_visible()
+   expect(page.get_by_role('button',name=re.compile('Hantera rutinen Kvällsrutin'))).to_be_visible()
+   expect(page.get_by_role('button',name=re.compile('Öppna Vaccination senare'))).to_be_visible()
+   labels=row_labels()
+   assert len(labels)==3 and 'Vaccination snart' in labels[0] and 'Kvällsrutin' in labels[1] and 'Vaccination senare' in labels[2],f'upcoming rows use date order and health-before-routine tie break: {labels}'
+   assert page.locator('[role="checkbox"]').count()==0,'future routine rows do not expose completion controls'
+   page.screenshot(path=str(out/f'upcoming-ready-{width}x{height}.png'),animations='disabled')
+   passed(f'Upcoming ready rows, date/time and stable ordering at {width}x{height} ({"review" if review_mode else "public"})')
+  open_upcoming('ready')
+  page.get_by_role('button',name=re.compile('Öppna Vaccination senare')).click()
+  expect(page.get_by_role('heading',name='Planerade hälsohändelser',exact=True)).to_be_visible()
+  expect(page.get_by_text('Rätta plan',exact=True)).to_be_visible()
+  expect(page.get_by_role('textbox',name=re.compile('^Planerat datum'))).to_have_value('2026-10-21')
+  expect(page.get_by_role('button',name='Checklista',exact=True)).to_be_visible()
+  page.screenshot(path=str(out/'upcoming-selected-plan-edit-375x844.png'),animations='disabled')
+  page.get_by_role('button',name='Checklista',exact=True).click()
+  expect(page.get_by_role('tab',name='Kommande',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name=re.compile('Öppna Vaccination senare'))).to_be_visible()
+  passed('A non-first future health plan opens its exact edit record and returns to the same Kommande tab')
+
+  open_upcoming('ready')
+  page.get_by_role('button',name=re.compile('Hantera rutinen Kvällsrutin')).click()
+  expect(page.get_by_role('heading',name='Hantera Kvällsrutin',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name='Välj rutinen Kvällsrutin för idag',exact=True)).to_be_visible()
+  page.screenshot(path=str(out/'upcoming-focused-routine-manager-375x844.png'),animations='disabled')
+  page.get_by_role('button',name='Välj rutinen Kvällsrutin för idag',exact=True).click()
+  page.get_by_role('button',name='Klar',exact=True).click()
+  expect(page.get_by_role('tab',name='Kommande',exact=True)).to_be_visible()
+  expect(page.get_by_text(re.compile(r'Luna.*2026-10-17'))).to_be_visible()
+  passed('Future routine opens its focused template manager; the available day action selects it for today only')
+
+  for mutation_outcome in ['saved','failed','unknown']:
+   extra='' if mutation_outcome=='saved' else f'&routineMutation={mutation_outcome}'
+   open_upcoming('ready',extra=extra)
+   page.get_by_role('button',name=re.compile('Hantera rutinen Kvällsrutin')).click()
+   page.get_by_role('button',name='Redigera rutin Kvällsrutin',exact=True).click()
+   page.get_by_role('textbox',name='Namn på rutin Kvällsrutin',exact=True).fill(f'Kvällsrutin {mutation_outcome}')
+   page.get_by_role('button',name='Spara rutin Kvällsrutin',exact=True).click()
+   retry_counts=page.evaluate('window.__r3cUpcomingRetryCounts()')
+   if mutation_outcome=='saved':
+    assert retry_counts=={'health':0,'routines':1},f'initial saved Checklist wrapper should invoke one routine refresh: {retry_counts}'
+   else:
+    assert retry_counts=={'health':0,'routines':0},f'{mutation_outcome} write must not refresh upcoming routines: {retry_counts}'
+    page.get_by_role('button',name='Kontrollera samma ändring igen',exact=True).click()
+    assert page.evaluate('window.__r3cUpcomingRetryCounts()')=={'health':0,'routines':1},f'confirmed retry should have exactly one parent-owned refresh after {mutation_outcome}: {page.evaluate("window.__r3cUpcomingRetryCounts()")}'
+  passed('Checklist template saves and confirmed failed/unknown retries invoke exactly one synthetic routine refresh')
+
+  open_upcoming('loading-health')
+  expect(page.get_by_label('Laddar kommande hälsohändelser')).to_be_visible()
+  expect(page.get_by_role('button',name=re.compile('Hantera rutinen Kvällsrutin'))).to_be_visible()
+  expect(page.get_by_text('Listan kan vara ofullständig medan aktiviteter hämtas eller en källa inte kan läsas.',exact=True)).to_be_visible()
+  page.screenshot(path=str(out/'upcoming-loading-health-partial-375x844.png'),animations='disabled')
+  passed('Loading and confirmed partial rows remain visible per source')
+
+  open_upcoming('health-error')
+  expect(page.get_by_text('Kommande hälsohändelser kunde inte hämtas.',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name=re.compile('Hantera rutinen Kvällsrutin'))).to_be_visible()
+  page.screenshot(path=str(out/'upcoming-health-error-partial-375x844.png'),animations='disabled')
+  page.get_by_role('button',name='Försök hämta kommande hälsohändelser igen',exact=True).click()
+  expect(page.get_by_role('button',name=re.compile('Öppna Vaccination snart'))).to_be_visible()
+  assert page.evaluate('window.__r3cUpcomingRetryCounts()')=={'health':1,'routines':0},'health Retry does not invoke the routine source'
+  passed('Health Retry refreshes only health and preserves the independent routine source')
+
+  open_upcoming('routine-error')
+  expect(page.get_by_text('Kommande rutiner kunde inte hämtas.',exact=True)).to_be_visible()
+  expect(page.get_by_role('button',name=re.compile('Öppna Vaccination snart'))).to_be_visible()
+  page.screenshot(path=str(out/'upcoming-routine-error-partial-375x844.png'),animations='disabled')
+  page.get_by_role('button',name='Försök hämta kommande rutiner igen',exact=True).click()
+  expect(page.get_by_role('button',name=re.compile('Hantera rutinen Kvällsrutin'))).to_be_visible()
+  assert page.evaluate('window.__r3cUpcomingRetryCounts()')=={'health':0,'routines':1},'routine Retry does not invoke the health source'
+  passed('Routine Retry refreshes only routines and preserves the independent health source')
+
+  open_upcoming('loading-routines')
+  expect(page.get_by_label('Laddar kommande rutiner')).to_be_visible()
+  expect(page.get_by_role('button',name=re.compile('Öppna Vaccination snart'))).to_be_visible()
+  page.screenshot(path=str(out/'upcoming-loading-routines-partial-375x844.png'),animations='disabled')
+  passed('Routine loading does not hide the independently confirmed health plans')
+
+  open_upcoming('empty',tab='Kommande')
+  expect(page.get_by_text('Inga kommande aktiviteter',exact=True)).to_be_visible()
+  expect(page.get_by_text('Det finns inga framtida hälsohändelser eller upprepande rutiner för den här hunden.',exact=True)).to_be_visible()
+  page.screenshot(path=str(out/'upcoming-empty-375x844.png'),animations='disabled')
+  passed('An already-open Kommande view remains visible when both confirmed sources are empty')
+
+  open_upcoming('ready')
+  scaled=page.evaluate('''() => {const nodes=[...document.querySelectorAll('[dir="auto"]')];nodes.forEach(el=>{const style=getComputedStyle(el);const size=parseFloat(style.fontSize);const line=parseFloat(style.lineHeight);if(Number.isFinite(size))el.style.fontSize=(size*1.4)+'px';if(Number.isFinite(line))el.style.lineHeight=(line*1.4)+'px';});return nodes.length;}''')
+  assert scaled>0,'upcoming text proxy found no rendered text'
+  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'upcoming view overflows at 140% text proxy'
+  tablist=page.get_by_role('tablist',name='Avsnitt',exact=True)
+  large_text_metrics=tablist.evaluate("""list => {
+    const active=[...list.querySelectorAll('[role=\"tab\"]')].find(tab=>tab.getAttribute('aria-label')==='Kommande');
+    if(!active) throw new Error('active Kommande tab missing');
+    const label=active.querySelector('[dir=\"auto\"]');
+    if(!label) throw new Error('active Kommande label missing');
+    const reveal=()=>{const port=list.getBoundingClientRect();const target=active.getBoundingClientRect();if(target.right>port.right)list.scrollLeft+=target.right-port.right+2;if(target.left<port.left)list.scrollLeft-=port.left-target.left+2;list.scrollLeft=Math.max(0,Math.min(list.scrollLeft,list.scrollWidth-list.clientWidth));};
+    reveal();
+    const port=list.getBoundingClientRect();const tab=active.getBoundingClientRect();const textRange=document.createRange();textRange.selectNodeContents(label);const text=textRange.getBoundingClientRect();
+    return {scrollLeft:list.scrollLeft,port:{left:port.left,right:port.right},tab:{left:tab.left,right:tab.right},label:{left:text.left,right:text.right}};
+  }""")
+  assert large_text_metrics['tab']['left']>=large_text_metrics['port']['left']-1 and large_text_metrics['tab']['right']<=large_text_metrics['port']['right']+1,f'active Kommande tab must be fully visible after horizontal scroll: {large_text_metrics}'
+  assert large_text_metrics['label']['left']>=large_text_metrics['tab']['left']-1 and large_text_metrics['label']['right']<=large_text_metrics['tab']['right']+1,f'active Kommande label must fit its tab after scroll: {large_text_metrics}'
+  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'upcoming view overflows after active-tab scroll at 140% text proxy'
+  page.screenshot(path=str(out/'upcoming-large-text-140-375x844.png'),animations='disabled',full_page=True)
+  passed('140% text proxy scrolls active Kommande fully into the Avsnitt viewport and verifies tab/label bounds')
+  assert not errors,errors
+  browser.close()
+  (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'blockedNetworkRequests':[],'scope':'R3c synthetic Kommande source states, ordering, selected-plan edit/return, focused routine management and responsive rendering','bundle':'review' if review_mode else 'public','viewports':['375x844','430x844','375x667','375x844 at 140% web text proxy'],'activeTabBoundsAt140Percent':large_text_metrics,'section14VisualAssessment':{'composition':'NOT TESTABLE — no dedicated Kommande target in vision_rev02.jpg','color':'NOT TESTABLE — no dedicated Kommande target in vision_rev02.jpg','typography':'NOT TESTABLE — no dedicated Kommande target in vision_rev02.jpg','componentShapes':'NOT TESTABLE — no dedicated Kommande target in vision_rev02.jpg','imagery':'NOT TESTABLE — no dedicated Kommande target in vision_rev02.jpg','contentDensity':'NOT TESTABLE — no dedicated Kommande target in vision_rev02.jpg'},'limitations':['Synthetic records and callbacks; not production content, live Supabase/RLS, or database mutation proof','Native iOS/Android, VoiceOver, device Dynamic Type, and actual local timezone/midnight transitions are NOT TESTABLE','The 140% text proxy is a web CSS approximation','No dedicated Kommande screenshot exists in vision_rev02.jpg, so section 14.16 visual similarity is NOT TESTABLE']},ensure_ascii=False,indent=2)+chr(10),encoding='utf-8')
+  raise SystemExit(0)
  if os.environ.get('TASSLA_UI_SCOPE')=='log-sheet-gesture':
   page.set_default_timeout(8000)
   page.emulate_media(reduced_motion='no-preference')
@@ -1034,7 +1501,10 @@ with sync_playwright() as p:
   expect(reset_button).to_be_visible();reset_button.click()
   expect(page.get_by_role('button',name=f'Börja om med {program_title}',exact=True)).to_have_count(0)
   page.evaluate("window.__tasslaNavigateMainTab('home')")
-  page.get_by_role('button',name='Visa dagens checklista',exact=True).click()
+  home_checklist_entry=page.get_by_role('button',name=re.compile(r'^Just nu med .+: inget publicerat råd\. Öppna dagens checklista'))
+  expect(home_checklist_entry).to_have_count(1)
+  expect(home_checklist_entry).to_be_visible()
+  home_checklist_entry.click()
   expect(page.get_by_text('Veckans sparade aktiviteter',exact=True)).to_be_visible()
   reset_week=int(re.search(r'^(\d+) av \d+ bekräftade klara den här veckan$',page.get_by_text(re.compile(r'^\d+ av \d+ bekräftade klara den här veckan$')).inner_text()).group(1))
   assert reset_week==before_week,'confirmed reset readback removes selected training completion from the weekly total'
@@ -1058,7 +1528,7 @@ with sync_playwright() as p:
   review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
   for scenario,expected_count in [('checklist-empty',0),('checklist-short',3),('checklist',6)]:
    open('home','&homeScenario='+scenario)
-   entry=page.get_by_role('button',name='Visa dagens checklista',exact=True)
+   entry=page.get_by_role('button',name=re.compile(r'Just nu med Luna: inget publicerat råd\. Öppna dagens checklista'))
    expect(entry).to_be_visible();entry.click()
    expect(page.get_by_text('Idag',exact=True)).to_be_visible()
    if expected_count==0: expect(page.get_by_text('Inget valt för idag',exact=True)).to_be_visible()
@@ -1122,7 +1592,7 @@ with sync_playwright() as p:
   for width,height in [(375,844),(430,844),(375,667)]:
    page.set_viewport_size({'width':width,'height':height})
    open('home','&homeScenario=checklist')
-   page.get_by_role('button',name='Visa dagens checklista',exact=True).click()
+   page.get_by_role('button',name=re.compile(r'Just nu med Luna: inget publicerat råd\. Öppna dagens checklista')).click()
    expect(page.get_by_text('6 av 6 klara',exact=False)).to_have_count(0)
    expect(page.get_by_text('Idag',exact=True)).to_be_visible()
    expect(page.get_by_text('Kissa',exact=True)).to_be_visible()
@@ -1146,13 +1616,13 @@ with sync_playwright() as p:
     page.mouse.move(180,420);page.mouse.wheel(0,100);page.wait_for_timeout(100)
     home_offset=page.evaluate("""() => {const el=[...document.querySelectorAll('*')].filter(node=>node.scrollHeight>node.clientHeight+4&&getComputedStyle(node).overflowY==='auto').sort((a,b)=>(b.scrollHeight-b.clientHeight)-(a.scrollHeight-a.clientHeight))[0];return el?.scrollTop??0;}""")
     assert home_offset>0,f'Home fixture did not reach a nonzero scroll position: {home_offset}'
-    expect(page.get_by_role('button',name='Visa dagens checklista',exact=True)).to_be_visible()
-    page.get_by_role('button',name='Visa dagens checklista',exact=True).click();expect(page.get_by_text('Idag',exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name=re.compile(r'Just nu med Luna: inget publicerat råd\. Öppna dagens checklista'))).to_be_visible()
+    page.get_by_role('button',name=re.compile(r'Just nu med Luna: inget publicerat råd\. Öppna dagens checklista')).click();expect(page.get_by_text('Idag',exact=True)).to_be_visible()
     page.get_by_role('button',name='Tillbaka till Hem',exact=True).click();expect(page.get_by_text('Dagens att göra',exact=True)).to_be_visible()
     page.wait_for_timeout(100)
     restored_home_offset=page.evaluate("""() => {const el=[...document.querySelectorAll('*')].filter(node=>node.scrollHeight>node.clientHeight+4&&getComputedStyle(node).overflowY==='auto').sort((a,b)=>(b.scrollHeight-b.clientHeight)-(a.scrollHeight-a.clientHeight))[0];return el?.scrollTop??0;}""")
     assert abs(restored_home_offset-home_offset)<=3,f'Home scroll did not restore after checklist return: {home_offset} -> {restored_home_offset}'
-    page.get_by_role('button',name='Visa dagens checklista',exact=True).click();expect(page.get_by_text('Idag',exact=True)).to_be_visible()
+    page.get_by_role('button',name=re.compile(r'Just nu med Luna: inget publicerat råd\. Öppna dagens checklista')).click();expect(page.get_by_text('Idag',exact=True)).to_be_visible()
     routine_detail=page.get_by_role('button',name='Visa detaljer: Torka tassar',exact=True)
     routine_detail.scroll_into_view_if_needed();page.wait_for_timeout(100)
     manager_list_offset=page.evaluate("""() => {const el=[...document.querySelectorAll('*')].filter(node=>node.scrollHeight>node.clientHeight+4&&getComputedStyle(node).overflowY==='auto').sort((a,b)=>(b.scrollHeight-b.clientHeight)-(a.scrollHeight-a.clientHeight))[0];return el?.scrollTop??0;}""")
@@ -1173,6 +1643,102 @@ with sync_playwright() as p:
   browser.close()
   (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'Panel 4 Idag flow; production React Native Web components with synthetic data; not device/backend certification'},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
   raise SystemExit(0)
+ if os.environ.get('TASSLA_UI_SCOPE')=='panel4-visual':
+  page.set_default_timeout(8000)
+  page.emulate_media(reduced_motion='reduce')
+  review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
+  captures=[]
+  base='&homeScenario=checklist&panel4Visual=true&today=2026-10-19&tab=Idag'
+  def open_panel4(width=375,height=844,scenario='ready'):
+   page.set_viewport_size({'width':width,'height':height+(32 if review_mode else 0)})
+   open('home-checklist',base+'&upcomingScenario='+scenario)
+  def no_overflow():
+   return page.evaluate('''() => document.documentElement.scrollWidth<=innerWidth && [...document.querySelectorAll('body *')].every(el=>{
+    const style=getComputedStyle(el);
+    return style.display==='none'||el.scrollWidth<=el.clientWidth+1||style.overflowX==='auto'||style.overflowX==='scroll';
+   })''')
+  def capture(name):
+   page.evaluate("() => [...document.querySelectorAll('*')].filter(el => el.scrollHeight > el.clientHeight + 20).forEach(el => el.scrollTop = 0)")
+   page.screenshot(path=str(out/name),animations='disabled',full_page=True)
+   captures.append(name)
+  for width,height in [(375,844),(430,844),(375,667)]:
+   open_panel4(width,height)
+   assert no_overflow(),f'Panel 4 horizontal overflow at {width}x{height}'
+   tabs=page.locator('[role="tablist"][aria-label="Avsnitt"]')
+   tab_metrics=tabs.locator('[role="tab"]').evaluate_all('''els=>els.map(el=>{const r=el.getBoundingClientRect();return {name:el.getAttribute('aria-label'),selected:el.getAttribute('aria-selected'),left:r.left,right:r.right,top:r.top,bottom:r.bottom,height:r.height};})''')
+   assert [tab['name'] for tab in tab_metrics]==['Idag','Denna vecka','Alla','Kommande'],f'Panel 4 tab labels are incomplete: {tab_metrics}'
+   assert len({round(tab['top']) for tab in tab_metrics})==1,f'Normal-size tabs should remain on one row: {tab_metrics}'
+   assert all(tab['height']>=44 for tab in tab_metrics),f'Tabs are below the 44px target: {tab_metrics}'
+   preview=page.get_by_test_id('checklist-week-preview')
+   expect(preview).to_be_visible()
+   expect(preview.get_by_role('button',name=re.compile('Vaccination på tisdag'))).to_be_visible()
+   expect(preview.get_by_role('button',name=re.compile('Veterinärbesök på fredag'))).to_be_visible()
+   expect(preview.get_by_role('button',name=re.compile('Vaccination på söndag'))).to_be_visible()
+   assert preview.get_by_role('button').count()==4,'Preview must show three ordered rows and one overflow action'
+   assert preview.get_by_text('Vaccination nästa måndag',exact=True).count()==0,'next Monday must stay outside the Sunday preview'
+   assert preview.get_by_text('Söndagsrutin',exact=True).count()==0,'the fourth real row must stay behind the overflow action'
+   page.get_by_role('tab',name='Denna vecka',exact=True).click()
+   expect(page.get_by_test_id('checklist-week-preview')).to_have_count(0)
+   page.get_by_role('tab',name='Alla',exact=True).click()
+   expect(page.get_by_test_id('checklist-week-preview')).to_have_count(0)
+   page.get_by_role('tab',name='Kommande',exact=True).click()
+   expect(page.get_by_test_id('checklist-week-preview')).to_have_count(0)
+   expect(page.get_by_role('button',name=re.compile('Vaccination nästa måndag'))).to_be_visible()
+   expect(page.get_by_role('button',name=re.compile('Hantera rutinen Söndagsrutin'))).to_be_visible()
+   page.get_by_role('tab',name='Idag',exact=True).click()
+   preview=page.get_by_test_id('checklist-week-preview')
+   page.screenshot(path=str(out/f'panel4-visual-preview-{width}x{height}.png'),animations='disabled',full_page=True)
+   captures.append(f'panel4-visual-preview-{width}x{height}.png')
+   preview.get_by_role('button',name='Visa alla kommande aktiviteter',exact=True).click()
+   expect(page.get_by_role('tab',name='Kommande',exact=True)).to_have_attribute('aria-selected','true')
+   expect(page.get_by_role('button',name=re.compile('Vaccination nästa måndag'))).to_be_visible()
+   expect(page.get_by_role('button',name=re.compile('Hantera rutinen Söndagsrutin'))).to_be_visible()
+   passed(f'Panel 4 preview at {width}x{height}: only Idag, stable first three, Sunday included, next Monday excluded, overflow routes to full Kommande')
+  open_panel4(375,844)
+  scaled=page.evaluate('''() => {
+   const list=document.querySelector('[role="tablist"][aria-label="Avsnitt"]');
+   if(!list)return 0;
+   const labels=[...list.querySelectorAll('*')].filter(el=>el.children.length===0&&el.textContent.trim());
+   for(const el of labels){const style=getComputedStyle(el),size=parseFloat(style.fontSize),line=parseFloat(style.lineHeight);if(Number.isFinite(size))el.style.fontSize=(size*1.4)+'px';if(Number.isFinite(line))el.style.lineHeight=(line*1.4)+'px';}
+   return labels.length;
+  }''')
+  assert scaled>=4,'Panel 4 large-text proxy did not find all tab labels'
+  page.wait_for_timeout(100)
+  assert no_overflow(),'Panel 4 has horizontal overflow at the 140% web text proxy'
+  large_metrics=page.locator('[role="tablist"][aria-label="Avsnitt"] [role="tab"]').evaluate_all('''els=>els.map(el=>{const r=el.getBoundingClientRect();return {name:el.getAttribute('aria-label'),selected:el.getAttribute('aria-selected'),left:r.left,right:r.right,top:r.top,bottom:r.bottom,height:r.height,scrollWidth:el.scrollWidth,clientWidth:el.clientWidth};})''')
+  assert [tab['name'] for tab in large_metrics]==['Idag','Denna vecka','Alla','Kommande'],f'Full tab labels missing at 140%: {large_metrics}'
+  assert len({round(tab['top']) for tab in large_metrics})>1,f'Panel 4 tabs did not wrap at 140%: {large_metrics}'
+  assert all(tab['height']>=44 and tab['scrollWidth']<=tab['clientWidth']+1 for tab in large_metrics),f'140% tab target or label is clipped: {large_metrics}'
+  assert all(tab['left']>=1 and tab['right']<=374 for tab in large_metrics),f'140% tab lies outside the viewport: {large_metrics}'
+  page.get_by_role('tab',name='Denna vecka',exact=True).focus();page.keyboard.press('Enter')
+  expect(page.get_by_role('tab',name='Denna vecka',exact=True)).to_have_attribute('aria-selected','true')
+  page.get_by_role('tab',name='Alla',exact=True).focus();page.keyboard.press('Space')
+  expect(page.get_by_role('tab',name='Alla',exact=True)).to_have_attribute('aria-selected','true')
+  page.screenshot(path=str(out/'panel4-visual-140-text-375x844.png'),animations='disabled',full_page=True)
+  captures.append('panel4-visual-140-text-375x844.png')
+  passed('Panel 4 wraps all four complete labels at the 140% web text proxy; selected state, keyboard Enter/Space, target size, and viewport bounds pass')
+  for scenario,label in [
+   ('loading-health','Laddar kommande hälsohändelser'),('loading-routines','Laddar kommande rutiner'),
+   ('health-error','Försök hämta kommande hälsohändelser igen'),('routine-error','Försök hämta kommande rutiner igen')]:
+   open_panel4(375,844,scenario)
+   expect(page.get_by_test_id('checklist-week-preview')).to_have_count(0)
+   page.get_by_role('tab',name='Kommande',exact=True).click()
+   if scenario.startswith('loading'):
+    expect(page.get_by_label(label)).to_be_visible()
+   else:
+    retry=page.get_by_role('button',name=label,exact=True)
+    expect(retry).to_be_visible();retry.click()
+    page.get_by_role('tab',name='Idag',exact=True).click()
+    expect(page.get_by_test_id('checklist-week-preview')).to_be_visible()
+   passed(f'Panel 4 source state {scenario}: no preview while unconfirmed; full Kommande state and retry remain available')
+  open_panel4(375,844,'empty')
+  expect(page.get_by_test_id('checklist-week-preview')).to_have_count(0)
+  passed('Panel 4 shows no preview when both ready sources are empty')
+  assert not errors,errors
+  browser.close()
+  (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'Panel 4 daily checklist visual corrections, upcoming week preview, strict week boundaries, large text, and synthetic source states','bundle':'review' if review_mode else 'public','viewports':[(375,844),(430,844),(375,667),(375,844,'140% text proxy')],'screenshots':captures,'limitations':['Fixtures are synthetic local data and callbacks; no live Supabase/RLS reads or writes are performed','Native iOS/Android, VoiceOver, device Dynamic Type, and physical-device focus behavior are NOT TESTABLE','The 140% text proxy is a web CSS approximation']},ensure_ascii=False,indent=2)+chr(10),encoding='utf-8')
+  raise SystemExit(0)
+
  if os.environ.get('TASSLA_UI_SCOPE')=='checklist-all':
   page.set_default_timeout(8000)
   page.emulate_media(reduced_motion='reduce')
@@ -1280,7 +1846,11 @@ with sync_playwright() as p:
   page.clock.run_for(3400)
   page.evaluate('window.__tasslaDelayedAlertConfirm()')
   expect(page.get_by_test_id('checklist-all-guard-results')).to_contain_text('refreshes 1 · writes 0')
-  expect(page.get_by_role('heading',name='Morgonrutin',exact=True)).to_be_visible()
+  expect(page.get_by_role('heading',name='Rutiner och aktiviteter',exact=True)).to_have_count(0)
+  expect(page.get_by_role('heading',name='Alla rutinmallar',exact=True)).to_be_visible()
+  morning_heading=page.get_by_role('heading',name='Morgonrutin',exact=True)
+  expect(morning_heading).to_have_count(1)
+  expect(morning_heading).to_be_visible()
   page.screenshot(path=str(out/'all-delayed-delete-confirmation-blocked-after-refresh-375x844.png'),animations='disabled')
   passed('A delete confirmation opened before expiry cannot mutate after the snapshot refreshes; the old session token is rejected')
 
@@ -1399,6 +1969,7 @@ with sync_playwright() as p:
   raise SystemExit(0)
  if os.environ.get('TASSLA_UI_SCOPE')=='home':
   review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
+  page.emulate_media(reduced_motion='reduce')
   def home_viewport(height): return height+(32 if review_mode else 0)
   for width in [375,430]:
    page.set_viewport_size({'width':width,'height':home_viewport(844)})
@@ -1490,6 +2061,14 @@ with sync_playwright() as p:
    expect(selected_tab).to_have_attribute('aria-selected','true')
    nav_box=page.get_by_role('tablist',name='Huvudmeny').bounding_box()
    assert nav_box is not None
+   empty_advice_card=page.get_by_role('button',name=re.compile(r'Just nu med Luna: inget publicerat råd\. Öppna dagens checklista'))
+   expect(empty_advice_card).to_be_visible()
+   empty_card_metrics=empty_advice_card.evaluate('''el=>{const body=[...el.querySelectorAll('[dir="auto"]')].find(node=>node.textContent.includes('Det finns inget publicerat råd'));return {height:el.getBoundingClientRect().height,bodyHeight:body?.getBoundingClientRect().height,bodyScrollHeight:body?.scrollHeight,bodyClientHeight:body?.clientHeight}}''')
+   assert empty_card_metrics['height'] <= 112.5,f'Confirmed-empty Home advice card exceeds 112pt: {empty_card_metrics}'
+   assert empty_card_metrics['bodyHeight'] is not None and empty_card_metrics['bodyHeight'] <= 40.5,f'Empty advice copy/action exceeds two lines: {empty_card_metrics}'
+   assert empty_card_metrics['bodyScrollHeight'] <= empty_card_metrics['bodyClientHeight']+1,f'Empty advice copy/action is clipped: {empty_card_metrics}'
+   expect(page.get_by_text('Öppna dagens checklista',exact=True)).to_be_visible()
+   expect(page.get_by_test_id('home-open-daily-checklist')).to_have_count(0)
    if review_mode:
     page.screenshot(path=str(out/f'home-ready-{width}.png'))
     for label in ['Öppna Logga','Öppna Träna','Öppna Kunskap']:
@@ -1498,6 +2077,11 @@ with sync_playwright() as p:
      assert box is not None and box['y']+box['height'] <= nav_box['y']-16,f'{label} lacks 16pt clearance above fixed navigation: {box} / {nav_box}'
     expect(review_banner).to_be_visible()
     page.screenshot(path=str(out/f'home-review-destinations-{width}.png'))
+    empty_advice_card.click()
+    expect(page.get_by_text('Checklista',exact=True)).to_be_visible()
+    page.get_by_role('button',name='Tillbaka till Hem',exact=True).click()
+    expect(page.get_by_role('tab',name='Hem')).to_have_attribute('aria-selected','true')
+    passed(f'Home confirmed-empty advice card opens today checklist and returns Home at {width}px')
     page.get_by_role('button',name='Öppna Rutin Morgonrutin, punkt Kissa',exact=True).click()
     expect(page.get_by_role('heading',name='Hantera Morgonrutin',exact=True)).to_be_visible()
     page.get_by_role('button',name='Redigera rutin Morgonrutin',exact=True).click()
@@ -1524,6 +2108,11 @@ with sync_playwright() as p:
     for item in above_nav:
      box=item.bounding_box()
      assert box is not None and box['y']+box['height'] <= nav_box['y']-16,f'{item} lacks 16pt clearance above fixed navigation: {box} / {nav_box}'
+    empty_advice_card.click()
+    expect(page.get_by_text('Checklista',exact=True)).to_be_visible()
+    page.get_by_role('button',name='Tillbaka till Hem',exact=True).click()
+    expect(page.get_by_role('tab',name='Hem')).to_have_attribute('aria-selected','true')
+    passed(f'Home confirmed-empty advice card opens today checklist and returns Home at {width}px')
    if not review_mode:
     expect(page.get_by_text('2 av 5 klara',exact=False)).to_have_count(0)
     expect(page.get_by_text('AI-GENERERAD STANDARDBILD',exact=True)).to_have_count(0)
@@ -1539,6 +2128,31 @@ with sync_playwright() as p:
    open('home','&state=empty&homeScenario=all-complete')
    expect(page.get_by_role('button',name='Hantera dagens aktiviteter',exact=True)).to_be_visible()
    page.screenshot(path=str(out/f'home-empty-{width}.png'))
+   if width==375:
+    open('home','&homeScenario=missing-age')
+    expect(page.get_by_text('Lägg till födelsedatum för åldersbaserade råd.',exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name='Redigera hundprofil',exact=True)).to_be_visible()
+    expect(page.get_by_test_id('home-open-daily-checklist')).to_be_visible()
+    page.screenshot(path=str(out/'home-unknown-missing-age-375.png'))
+    page.get_by_role('button',name='Redigera hundprofil',exact=True).click()
+    expect(page.get_by_text('Hundens uppgifter',exact=True)).to_be_visible()
+    open('home','&homeScenario=unknown-content')
+    expect(page.get_by_text('Vi kan inte välja innehåll för den här vyn just nu.',exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name='Öppna dagens checklista',exact=True)).to_be_visible()
+    expect(page.get_by_test_id('home-open-daily-checklist')).to_be_visible()
+    page.screenshot(path=str(out/'home-unknown-content-375.png'))
+    page.get_by_role('button',name='Öppna dagens checklista',exact=True).click()
+    expect(page.get_by_text('Checklista',exact=True)).to_be_visible()
+    page.get_by_role('button',name='Tillbaka till Hem',exact=True).click()
+    expect(page.get_by_role('tab',name='Hem')).to_have_attribute('aria-selected','true')
+    passed('Home unknown states keep the daily link and route to profile or checklist explicitly')
+    open('training','&state=empty')
+    expect(page.get_by_role('button',name='Öppna dagens checklista',exact=True)).to_be_visible()
+    page.get_by_role('button',name='Öppna dagens checklista',exact=True).click()
+    expect(page.get_by_text('Checklista',exact=True)).to_be_visible()
+    page.get_by_role('button',name='Tillbaka till Hem',exact=True).click()
+    expect(page.get_by_role('tab',name='Hem')).to_have_attribute('aria-selected','true')
+    passed('Training empty-state CTA opens today checklist and returns Home')
    passed(f'Home source states and layout at {width}px')
   page.set_viewport_size({'width':375,'height':home_viewport(667)});open('home')
   page.screenshot(path=str(out/'home-short-viewport-375.png'))
@@ -1633,14 +2247,125 @@ with sync_playwright() as p:
   open('home','&homeScenario=review-training')
   review_step=page.get_by_text('Hantering av tassar',exact=True)
   review_marker=page.get_by_text(re.compile(r'Tillfälligt exempel – innehållet är inte sakgranskat'))
-  if review_mode:
-   expect(review_step).to_be_visible();expect(review_marker).to_be_visible();page.screenshot(path=str(out/'home-review-training-375.png'))
-  else:
-   expect(review_step).to_have_count(0);expect(review_marker).to_have_count(0);page.screenshot(path=str(out/'home-review-training-absent-375.png'))
+  expect(review_step).to_have_count(0);expect(review_marker).to_have_count(0)
+  page.screenshot(path=str(out/'home-review-training-absent-375.png'))
   assert not errors,errors
   passed('Home navigation, review gate, reduced motion and 140% text')
   browser.close()
   (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'Home and shared navigation; synthetic data and React Native Web, not device/backend certification'},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+  raise SystemExit(0)
+ if os.environ.get('TASSLA_UI_SCOPE')=='r4a-help':
+  page.set_default_timeout(8000)
+  page.emulate_media(reduced_motion='reduce')
+  review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
+  for width in [375,430]:
+   page.set_viewport_size({'width':width,'height':844+(32 if review_mode else 0)})
+   open('log')
+   page.get_by_role('button',name='Visa föregående dag',exact=True).click()
+   selected_date=page.locator('[aria-live="polite"]').inner_text()
+   page.get_by_role('button',name='Hjälp om Logg och rutiner',exact=True).click()
+   expect(page.get_by_role('heading',name='Logga och rutiner',exact=True)).to_be_visible()
+   expect(page.get_by_role('button',name='Tillbaka till Logg',exact=True)).to_be_visible()
+   page.screenshot(path=str(out/f'log-help-{width}.png'),animations='disabled')
+   page.get_by_role('button',name='Tillbaka till Logg',exact=True).click()
+   expect(page.get_by_role('heading',name='Logga',exact=True)).to_be_visible()
+   expect(page.locator('[aria-live="polite"]')).to_have_text(selected_date)
+   passed(f'Logg help returns to the selected date at {width}px')
+
+   open('health')
+   page.get_by_role('button',name='Hjälp om registrering',exact=True).click()
+   expect(page.get_by_role('heading',name='Hälsohändelser',exact=True)).to_be_visible()
+   expect(page.get_by_role('button',name='Tillbaka till Hälsa',exact=True)).to_be_visible()
+   page.screenshot(path=str(out/f'health-history-help-{width}.png'),animations='disabled')
+   page.get_by_role('button',name='Tillbaka till Hälsa',exact=True).click()
+   expect(page.get_by_role('heading',name='Hälsa',exact=True)).to_be_visible()
+   expect(page.get_by_role('button',name='Hjälp om registrering',exact=True)).to_be_visible()
+
+   page.get_by_role('tab',name='Vikt',exact=True).click()
+   expect(page.get_by_role('button',name='Hjälp om viktregistrering',exact=True)).to_be_visible()
+   page.get_by_role('button',name='Hjälp om viktregistrering',exact=True).click()
+   expect(page.get_by_role('heading',name='Viktregistrering',exact=True)).to_be_visible()
+   page.screenshot(path=str(out/f'health-weight-help-{width}.png'),animations='disabled')
+   page.get_by_role('button',name='Tillbaka till Hälsa',exact=True).click()
+   expect(page.get_by_text('Vikt',exact=True).first).to_be_visible()
+   expect(page.get_by_role('button',name='Hjälp om viktregistrering',exact=True)).to_be_visible()
+   weight_input=page.get_by_label('Vikt i kilogram')
+   weight_input.fill('48')
+   expect(weight_input).to_have_value('48')
+   expect(page.get_by_role('button',name='Hjälp om viktregistrering',exact=True)).to_have_count(0)
+   expect(page.get_by_role('heading',name='Vikt',exact=True)).to_be_visible()
+   page.screenshot(path=str(out/f'weight-help-hidden-for-dirty-draft-{width}.png'),animations='disabled')
+   weight_input.fill('')
+   expect(page.get_by_role('button',name='Hjälp om viktregistrering',exact=True)).to_be_visible()
+   page.get_by_role('button',name='Hjälp om viktregistrering',exact=True).click()
+   expect(page.get_by_role('heading',name='Viktregistrering',exact=True)).to_be_visible()
+   page.get_by_role('button',name='Tillbaka till Hälsa',exact=True).click()
+   expect(page.get_by_text('Vikt',exact=True).first).to_be_visible()
+   expect(page.get_by_role('button',name='Hjälp om viktregistrering',exact=True)).to_be_visible()
+   passed(f'Weight help is unavailable while the add form is dirty; source tab returns when safe at {width}px')
+   passed(f'Health history and weight help retain the source tab at {width}px')
+  assert not errors,errors
+  browser.close()
+  (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'R4a contextual Logg/Health functional-help routes and source-context restoration in synthetic public/review RN Web','bundle':'review' if review_mode else 'public','viewports':[375,430],'limitations':['Help copy is synthetic and does not validate production content selection or publishing','Native iOS/Android, VoiceOver, Dynamic Type, and live Supabase/RLS are not tested']},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+  raise SystemExit(0)
+ if os.environ.get('TASSLA_UI_SCOPE')=='r4a-surfaces':
+  page.set_default_timeout(8000)
+  page.emulate_media(reduced_motion='reduce')
+  review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
+  for width in [375,430]:
+   page.set_viewport_size({'width':width,'height':844+(32 if review_mode else 0)})
+   open('knowledge','&state=empty')
+   expect(page.get_by_role('heading',name='Kunskap',exact=True)).to_be_visible()
+   expect(page.get_by_role('tab',name='För dig',exact=True)).to_be_visible()
+   expect(page.get_by_text('Det finns inga publicerade råd för den här vyn just nu.',exact=True)).to_be_visible()
+   expect(page.get_by_role('button',name='Öppna checklistor',exact=True)).to_be_visible()
+   page.screenshot(path=str(out/f'knowledge-for-you-empty-{width}.png'),animations='disabled')
+   page.get_by_role('tab',name='Artiklar',exact=True).click()
+   expect(page.get_by_role('tab',name='Artiklar',exact=True)).to_be_visible()
+   expect(page.get_by_text('Det finns inga publicerade artiklar i den här vyn just nu.',exact=True)).to_be_visible()
+   expect(page.get_by_role('button',name='Öppna checklistor',exact=True)).to_be_visible()
+   page.screenshot(path=str(out/f'knowledge-articles-empty-{width}.png'),animations='disabled')
+   if width==375:
+    page.get_by_role('button',name='Öppna checklistor',exact=True).click()
+    if review_mode:
+     expect(page.get_by_role('heading',name='För er just nu',exact=True)).to_be_visible()
+    else:
+     expect(page.get_by_text('Inga checklistor publicerade ännu.',exact=True)).to_be_visible()
+    passed('Knowledge empty-state actions open the existing Checklistor tab')
+    open('knowledge','&state=empty&knowledgeScenario=unknown')
+    expect(page.get_by_text('Vi kan inte välja innehåll för den här vyn just nu.',exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name='Öppna dagens checklista',exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name='Öppna checklistor',exact=True)).to_have_count(0)
+    page.screenshot(path=str(out/'knowledge-unknown-today-checklist-375.png'),animations='disabled')
+    page.get_by_role('button',name='Öppna dagens checklista',exact=True).click()
+    expect(page.get_by_text('Idag',exact=True)).to_be_visible()
+    page.get_by_role('button',name='Tillbaka till Hem',exact=True).click()
+    expect(page.get_by_text('Dagens att göra',exact=True)).to_be_visible()
+    passed('Knowledge unknown selection opens today’s checklist and returns Home; confirmed empty still opens Checklistor')
+
+   open('training','&state=empty')
+   expect(page.get_by_role('heading',name='Träning',exact=True)).to_be_visible()
+   expect(page.get_by_text('Det finns inga publicerade träningsprogram att visa här just nu.',exact=True)).to_be_visible()
+   expect(page.get_by_role('button',name='Öppna dagens checklista',exact=True)).to_be_visible()
+   page.screenshot(path=str(out/f'training-recommended-empty-{width}.png'),animations='disabled')
+   page.get_by_role('tab',name='Alla övningar',exact=True).click()
+   expect(page.get_by_text('Det finns inga publicerade träningsprogram att visa här just nu.',exact=True)).to_be_visible()
+   page.screenshot(path=str(out/f'training-all-empty-{width}.png'),animations='disabled')
+   page.get_by_role('tab',name='Mina',exact=True).click()
+   expect(page.get_by_text('Dina markeringar visas här' if review_mode else 'Inga påbörjade program ännu',exact=True)).to_be_visible()
+   page.screenshot(path=str(out/f'training-mine-empty-{width}.png'),animations='disabled')
+   if width==375:
+    page.get_by_role('tab',name='Rekommenderat',exact=True).click()
+    page.get_by_role('button',name='Öppna dagens checklista',exact=True).click()
+    expect(page.get_by_text('Checklista',exact=True)).to_be_visible()
+    page.get_by_role('button',name='Tillbaka till Hem',exact=True).click()
+    expect(page.get_by_role('tab',name='Hem')).to_have_attribute('aria-selected','true')
+    passed('Training empty-state action opens today checklist and returns Home')
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+   passed(f'Knowledge and Training selector empty states at {width}px ({"review" if review_mode else "public"})')
+  assert not errors,errors
+  browser.close()
+  (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'R4a Knowledge and Training selector empty states; production React Native Web with synthetic content, not device/backend certification','bundle':'review' if review_mode else 'public','viewports':[375,430],'limitations':['Content and callbacks are synthetic; no live Supabase/RLS or publication is tested','Native iOS/Android, VoiceOver and device Dynamic Type are not tested']},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
   raise SystemExit(0)
  for width in [375,430]:
   page.set_viewport_size({'width':width,'height':844})
@@ -1656,16 +2381,13 @@ with sync_playwright() as p:
   for scenario in ['ready','loading','error','no-program','all-complete','stale-selection']:
    page.goto(f'{ui_base}?screen=home&homeScenario={scenario}');page.wait_for_timeout(350)
    title=page.get_by_text('Hantering av tassar',exact=True)
-   if scenario=='ready': expect(title).to_be_visible()
-   else: expect(title).to_have_count(0)
+   expect(title).to_have_count(0)
    page.screenshot(path=str(out/f'home-{scenario}-{width}.png'))
-   passed(f'Home training {scenario} at {width}px')
-  page.goto(f'{ui_base}?screen=home&homeScenario=ready');page.wait_for_timeout(350)
-  checklist=page.get_by_text('Checklistor för valptiden',exact=True)
-  if review_mode: expect(checklist).to_be_visible()
-  else: expect(checklist).to_have_count(0)
-  page.screenshot(path=str(out/f'home-checklist-{"on" if review_mode else "off"}-{width}.png'))
-  passed(f'Home checklist flag {"on" if review_mode else "off"} at {width}px')
+   passed(f'Home has no training fallback in {scenario} at {width}px')
+  page.goto(f'{ui_base}?screen=home&homeScenario=home-advice');page.wait_for_timeout(350)
+  expect(page.get_by_role('button',name=re.compile(r'Just nu med Luna: En trygg start hemma'))).to_be_visible()
+  page.screenshot(path=str(out/f'home-granted-advice-{width}.png'))
+  passed(f'Home shows only the explicitly granted advice fixture at {width}px')
  page.set_viewport_size({'width':375,'height':844})
  for scenario in ['ready','loading','error','no-program','all-complete','stale-selection']:
   page.goto(f'{ui_base}?screen=home&homeScenario={scenario}');page.wait_for_timeout(350)
@@ -1675,20 +2397,12 @@ with sync_playwright() as p:
  page.goto(f'{ui_base}?screen=home&homeScenario=review-training');page.wait_for_timeout(350)
  review_step=page.get_by_text('Hantering av tassar',exact=True)
  training_example=page.get_by_text(re.compile(r'(?:.* · )?Tillfälligt exempel – innehållet är inte sakgranskat$'))
- if review_mode:
-  expect(review_step).to_be_visible();expect(training_example).to_be_visible()
-  page.screenshot(path=str(out/'home-review-training-375.png'))
-  page.get_by_role('button',name=re.compile('Hantering av tassar.*Tillfälligt exempel')).click()
-  expect(page.get_by_text('Syntetiskt granskningsprogram',exact=True)).to_be_visible()
- else:
-  expect(review_step).to_have_count(0);expect(training_example).to_have_count(0)
-  page.screenshot(path=str(out/'home-review-training-absent-375.png'))
+ expect(review_step).to_have_count(0);expect(training_example).to_have_count(0)
+ page.screenshot(path=str(out/'home-review-training-absent-375.png'))
  page.goto(f'{ui_base}?screen=home&homeScenario=ready');page.wait_for_timeout(350)
  page.evaluate('''() => {document.querySelectorAll('[dir="auto"]').forEach(el => { const s=getComputedStyle(el);el.style.fontSize=(parseFloat(s.fontSize)*1.4)+'px';el.style.lineHeight=(parseFloat(s.lineHeight)*1.4)+'px'; });}''')
- checklist=page.get_by_text('Checklistor för valptiden',exact=True)
- if review_mode: expect(checklist).to_be_visible()
- else: expect(checklist).to_have_count(0)
- page.screenshot(path=str(out/f'home-checklist-{"on" if review_mode else "off"}-375-text-140.png'))
+ expect(page.get_by_role('button',name=re.compile(r'Just nu med Luna: inget publicerat råd'))).to_be_visible()
+ page.screenshot(path=str(out/'home-empty-advice-375-text-140.png'))
  passed('Home states at 375px and 140% text')
  page.set_viewport_size({'width':390,'height':844})
  open('home');page.get_by_role('tab',name='lördag',exact=False).click();expect(page.get_by_role('button',name='Veterinärbesök, Uppföljning')).to_be_visible();passed('Date strip changes day and content')

@@ -12,6 +12,10 @@ type OpeningRecord = Pick<HealthHistoryRecord, 'id' | 'dog_id' | 'event_type' | 
 type LeaveRequest = (commit: () => void) => void;
 export type HealthHistoryConfirmation = { lifetime: string; sequence: number; kind: 'insert' | 'update' | 'delete'; targetId: string };
 type Props = Omit<ComponentProps<typeof WeightScreen>, 'onSaveHistory' | 'onDeleteHistory'> & {
+  initialTab?: 'Översikt' | 'Vaccinationer' | 'Veterinär' | 'Vikt';
+  onTabChange?: (tab: 'Översikt' | 'Vaccinationer' | 'Veterinär' | 'Vikt') => void;
+  onOpenHistoryHelp?: () => void;
+  onOpenWeightHelp?: () => void;
   plannedRecords?: readonly PlannedHealthRecord[];
   plannedLoadState?: 'loading' | 'ready' | 'error';
   onRetryPlannedHealth?: () => void;
@@ -25,7 +29,11 @@ type Props = Omit<ComponentProps<typeof WeightScreen>, 'onSaveHistory' | 'onDele
 
 export function HealthScreen(props: Props) {
   const { onSaveHistory, onDeleteHistory, ...weightProps } = props;
-  const [tab, setTab] = useState('Översikt');
+  const [tab, setTabState] = useState(props.initialTab ?? 'Översikt');
+  const setTab = (nextTab: 'Översikt' | 'Vaccinationer' | 'Veterinär' | 'Vikt') => { setTabState(nextTab); props.onTabChange?.(nextTab); };
+  const changeTab = (nextTab: string) => {
+    if (nextTab === 'Översikt' || nextTab === 'Vaccinationer' || nextTab === 'Veterinär' || nextTab === 'Vikt') setTab(nextTab);
+  };
   const [sheet, setSheet] = useState<'choose' | 'history' | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingType, setEditingType] = useState<HealthHistoryType | null>(null);
@@ -81,12 +89,14 @@ export function HealthScreen(props: Props) {
     leaveHistoryEditor();
   }
 
-  if (tab === 'Vikt') return <View>{historyReloadWarning}<WeightScreen {...weightProps} onBack={() => setTab('Översikt')} />{confirmationToast}</View>;
+  if (tab === 'Vikt') return <View>{historyReloadWarning}<WeightScreen {...weightProps} onOpenHelp={props.onOpenWeightHelp} onBack={() => setTab('Översikt')} />{confirmationToast}</View>;
   return <View>
     <PageHeading title="Hälsa" description="Vikt, planerade och genomförda hälsohändelser." />
     {historyReloadWarning}
     {confirmationToast}
-    <Tabs items={['Översikt', 'Vaccinationer', 'Veterinär', 'Vikt']} active={tab} onChange={setTab} variant="rev02-segmented" />
+    <Tabs items={['Översikt', 'Vaccinationer', 'Veterinär', 'Vikt']} active={tab} onChange={changeTab} variant="rev02-segmented" />
+    {tab === 'Översikt' && !sheet && props.onOpenHistoryHelp
+      ? <Button variant="tertiary" label="Hjälp om registrering" accessibilityLabel="Hjälp om registrering" onPress={props.onOpenHistoryHelp} /> : null}
     {props.plannedLoadState === 'ready' && overdue.length ? <><SectionHeader title="Datum har passerat" /><View style={styles.rows}>{overdue.map((row) => <ListRow key={row.id} category={row.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} title={row.description || (row.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök')} time={row.due_time?.slice(0, 5)} meta={planMeta(row, `Planerad ${shortDate(row.due_on)}`)} onPress={props.onOpenPlannedHealth} />)}</View></> : null}
     <SectionHeader title="Kommande" />
     {props.plannedLoadState === 'loading' ? <Skeleton shape="row" lines={2} /> : props.plannedLoadState === 'error' ? <Button variant="secondary" label="Hämta planer igen" accessibilityLabel="Hämta planer igen" disabled={!props.onRetryPlannedHealth} onPress={() => props.onRetryPlannedHealth?.()} /> : <View style={styles.rows}>
