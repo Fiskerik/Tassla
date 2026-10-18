@@ -1,0 +1,29 @@
+{
+  "passes": [
+    "Closed picker shows Blandras as the selected default",
+    "Closed and open modal fit 375x844, 430x844 and 375x667 without horizontal overflow",
+    "Case-insensitive search selects a catalog id, not typed text",
+    "No-match state explains FCI limits and offers saved fallback ids",
+    "Clear-search action restores the browseable alphabetic list",
+    "140% text proxy fits the picker viewport",
+    "Production ProfileScreen defaults to Blandras and lets the user select a catalog breed",
+    "Production ProfileScreen keeps submit disabled for empty catalog and recovers after retry",
+    "Production ProfileScreen distinguishes catalog error and retry recovery",
+    "Production ProfileScreen shows loading and recovers to the default selected breed",
+    "Production EditDogProfileScreen opens with saved breed and can select another catalog id"
+  ],
+  "pageErrors": [],
+  "scope": "SearchableBreedPicker visual fixture; synthetic in-memory breed ids; no profile persistence",
+  "bundle": "true",
+  "viewports": [
+    "375x844",
+    "430x844",
+    "375x667",
+    "375x844@140%"
+  ],
+  "limitations": [
+    "Live Supabase/RLS and profile write/readback are not tested",
+    "Native VoiceOver/Dynamic Type are not tested",
+    "140% is a synthetic web text proxy"
+  ]
+}

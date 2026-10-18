@@ -7,6 +7,7 @@ const workspace = readFileSync('src/features/home/ProductWorkspace.tsx', 'utf8')
 const quickTile = readFileSync('src/components/ui/QuickLogTile.tsx', 'utf8');
 const listRow = readFileSync('src/components/ui/ListRow.tsx', 'utf8');
 const toast = readFileSync('src/components/ui/Toast.tsx', 'utf8');
+const insights = readFileSync('src/features/puppy-log/InsightsScreen.tsx', 'utf8');
 
 test('quick log uses the approved page heading, date navigator, two column grid and more tile', () => {
   assert.match(screen, /<Text accessibilityRole="header" style=\{styles\.pageTitle\}>Logga<\/Text>/);
@@ -87,6 +88,14 @@ test('pending mutations show once on their row, success toast expires, and parti
   assert.match(toast, /tone: 'uncertain'; onRetry: \(\) => void/);
 });
 
+test('insights omit zero-count bars and disclose an empty selected period', () => {
+  assert.match(insights, /bucket\.pee > 0 \? <View testID=\{`insights-pee-bar-\$\{bucket\.key\}`\}/);
+  assert.match(insights, /bucket\.poop > 0 \? <View testID=\{`insights-poop-bar-\$\{bucket\.key\}`\}/);
+  assert.ok(insights.includes('Ingen räknad logg i perioden'));
+  assert.ok(insights.includes('insights-empty-period'));
+  assert.match(insights, /periodHasCountableEvents = buckets\.some\(\(bucket\) => bucket\.hasCountableLog\)/);
+});
+
 test('duplicate dialog uses the approved full copy', () => {
   assert.match(screen, /title="Du har redan loggat det här\. Lägga till ändå\?"/);
 });
@@ -122,4 +131,18 @@ test('log editor protects dirty drafts and keeps pending, failed, and unsure out
   const editSheet = screen.slice(screen.indexOf('{editingEvent ? <BottomSheet'), screen.indexOf('</BottomSheet>', screen.indexOf('{editingEvent ? <BottomSheet')));
   assert.match(editSheet, /dragToDismiss/);
   assert.match(editSheet, /onCancel=\{onCancel \? \(\) => \{ firstUseTip\.dismiss\(\); onCancel\(\); \} : undefined\}/);
+});
+
+test('Logg exposes the approved insights entry and preserves the editor leave guard', () => {
+  assert.match(screen, /label="Översikt" accessibilityLabel="Öppna insikter för Kiss och Bajs"/);
+  assert.match(workspace, /onOpenInsights=\{\(\) => \{ const guard = editorLeaveGuard\.current; if \(guard\) guard\.requestLeave\(\(\) => setPage\('insights'\)\); else setPage\('insights'\); \}\}/);
+});
+
+test('R7 keeps period, coverage, empty and retry states visible with a readable count alternative', () => {
+  for (const copy of ['Vecka', 'Månad', 'Sedan start', 'Ej loggat', 'Tidszon:', 'Ingen historik ännu', 'Ingen delvis graf visas.', 'Siffror']) assert.ok(insights.includes(copy), 'missing insights UI contract: ' + copy);
+  assert.match(insights, /accessibilityLabel="Föregående period"/);
+  assert.match(insights, /accessibilityLabel="Nästa period"/);
+  assert.match(insights, /accessibilityRole="tab"/);
+  assert.match(insights, /state === 'ready' && validTimeZone && events\.length > 0 && range/);
+  assert.match(insights, /state === 'error' \|\| !validTimeZone/);
 });

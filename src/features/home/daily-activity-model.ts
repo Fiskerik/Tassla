@@ -8,6 +8,7 @@ export type HomeDailyActivity = {
   routineItemId?: string;
   kind: 'routine' | 'training';
   completed: boolean;
+  completedAt?: string;
   routineDay?: DailyRoutineDay;
   trainingSelection?: DailyTrainingSelection;
   programId?: string;
@@ -359,15 +360,13 @@ export function deriveHomeDailyActivities(
     const available = Boolean(program.id && step.id);
     const adultRestricted = lifeStage === 'VUXEN' && !adultApprovedVersions.has(row.program_version_id);
     const stamp = available ? trainingProgressStamp(dogId, program, row.step_id) : null;
+    const completed = Boolean(stamp && isTrainingCompletionForDay(stamp, { dogId, programVersionId: row.program_version_id, stepId: row.step_id }, row.date_key, row.time_zone));
     activities.push({
       id: `training:${row.id}`,
       label: step.title,
       kind: 'training',
-      completed: stamp ? isTrainingCompletionForDay(stamp, {
-        dogId,
-        programVersionId: row.program_version_id,
-        stepId: row.step_id,
-      }, row.date_key, row.time_zone) : false,
+      completed,
+      completedAt: completed ? stamp?.completedAt : undefined,
       trainingSelection: row,
       programId: program.id || undefined,
       stepId: available ? step.id : undefined,

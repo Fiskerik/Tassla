@@ -7,6 +7,10 @@ export function isMainTabDestination(page: string): page is MainTabDestination {
   return MAIN_TAB_DESTINATIONS.some((destination) => destination === page);
 }
 
+export function usesDailyActivitySnapshotForPage(page: string): boolean {
+  return page === 'home' || page === 'checklist' || page === 'training' || page === 'daily-progress';
+}
+
 export function nextMainTabDestination(page: string, direction: 'left' | 'right'): MainTabDestination | undefined {
   const index = MAIN_TAB_DESTINATIONS.findIndex((destination) => destination === page);
   if (index < 0) return undefined;
@@ -14,7 +18,8 @@ export function nextMainTabDestination(page: string, direction: 'left' | 'right'
 }
 
 export function activeMainTabDestination(page: string): BottomNavDestination {
-  if (page === 'checklist') return 'home';
+  if (page === 'checklist' || page === 'daily-progress') return 'home';
+  if (page === 'insights') return 'log';
   return isMainTabDestination(page) ? page : 'more';
 }
 

@@ -14,7 +14,7 @@ export type QuickLogMutationView = { kind: 'add' | 'update' | 'delete' | 'undo';
 type EditorActionState = { canSave: boolean; saving: boolean; dirty: boolean };
 type EditorLeaveGuard = (commit: () => void) => void;
 
-export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, registerEditorLeaveGuard, onUndo, hasMore = false, loadingMore = false, onLoadMore, selectedDateValue, onSelectedDateChange, onOpenHelp }: {
+export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, registerEditorLeaveGuard, onUndo, hasMore = false, loadingMore = false, onLoadMore, selectedDateValue, onSelectedDateChange, onOpenHelp, onOpenInsights }: {
   events: readonly LogEvent[];
   onAdd: (type: LogEventType, intent?: AccidentLogIntent) => void;
   onUpdate?: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
@@ -38,6 +38,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   selectedDateValue?: string;
   onSelectedDateChange?: (date: string) => void;
   onOpenHelp?: () => void;
+  onOpenInsights?: () => void;
 }) {
   const [moreVisible, setMoreVisible] = useState(false);
   const [addEventVisible, setAddEventVisible] = useState(false);
@@ -330,6 +331,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     onAutoDismiss={() => setDismissedMutationKey(successMutationKey)} />;
   return <View style={styles.screen}>
     <Text accessibilityRole="header" style={styles.pageTitle}>Logga</Text>
+    {onOpenInsights ? <Button variant="secondary" label="Översikt" accessibilityLabel="Öppna insikter för Kiss och Bajs" iconName="bar-chart-outline" onPress={onOpenInsights} /> : null}
     {onOpenHelp && !editingEvent && !addEventVisible && !accidentDraft && !duplicate
       ? <Button variant="tertiary" label="Hjälp om Logg och rutiner" accessibilityLabel="Hjälp om Logg och rutiner" onPress={onOpenHelp} /> : null}
     {firstUseTip.visible ? <FirstUseTip text="Tryck på Fler för fler loggtyper." onDismiss={firstUseTip.dismiss} /> : null}

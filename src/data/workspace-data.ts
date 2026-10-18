@@ -28,6 +28,9 @@ export function workspaceSnapshotReadDecision(input: {
 }
 
 const EVENT_COLUMNS = 'id,dog_id,event_type,occurred_at,occurred_on,weight_kg,duration_minutes,description,accident_kinds';
+const DOG_INSIGHT_EVENT_COLUMNS = 'id,dog_id,event_type,occurred_at,accident_kinds';
+const DOG_INSIGHT_EVENT_TYPES = ['pee', 'poop', 'accident'] as const;
+export const DOG_INSIGHT_PAGE_SIZE = 200;
 const HEALTH_WEIGHT_COLUMNS = 'id,dog_id,actor_id,occurred_on,weight_kg';
 const HEALTH_HISTORY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,occurred_time,description';
 const HEALTH_HISTORY_LEGACY_COLUMNS = 'id,dog_id,actor_id,event_type,occurred_on,description';
@@ -44,6 +47,20 @@ export interface DogEventRecord {
   duration_minutes: number | null;
   description: string | null;
   accident_kinds: AccidentKind[] | null;
+}
+
+export interface DogInsightEventRecord {
+  id: string;
+  dog_id: string;
+  event_type: 'pee' | 'poop' | 'accident';
+  occurred_at: string;
+  accident_kinds: AccidentKind[] | null;
+}
+
+export interface DogInsightEventsPage {
+  rows: DogInsightEventRecord[];
+  count: number;
+  offset: number;
 }
 
 export interface DogEventOperation {
@@ -244,6 +261,70 @@ export async function fetchDogEvents(
     if (error || !Array.isArray(data) || !data.every(isDogEventRecord)) throw new Error('Could not load dog events');
     return data;
   }, timeoutMs, parentSignal);
+}
+
+/**
+ * Minimal, dog-scoped source read for the owner-requested Kiss/Bajs insights view.
+ * Count and deterministic order allow the caller to detect some, but not all,
+ * concurrent changes while it pages; this is not a database snapshot.
+ */
+export async function fetchDogInsightEventsPage(
+  client: SupabaseClient,
+  dogId: string,
+  offset = 0,
+  limit = DOG_INSIGHT_PAGE_SIZE,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  parentSignal?: AbortSignal,
+): Promise<DogInsightEventsPage> {
+  if (!dogId.trim() || !Number.isSafeInteger(offset) || offset < 0
+    || !Number.isSafeInteger(limit) || limit < 1 || limit > DOG_INSIGHT_PAGE_SIZE) {
+    throw new Error('Invalid dog insight page');
+  }
+  return withRequestDeadline(async (signal) => {
+    const { data, error, count } = await client.from('dog_events')
+      .select(DOG_INSIGHT_EVENT_COLUMNS, { count: 'exact' })
+      .eq('dog_id', dogId)
+      .in('event_type', [...DOG_INSIGHT_EVENT_TYPES])
+      .order('occurred_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(offset, offset + limit - 1)
+      .abortSignal(signal);
+    if (error || !Array.isArray(data) || !Number.isSafeInteger(count) || count === null
+      || !data.every((row) => isDogInsightEventRecord(row, dogId))) {
+      throw new Error('Could not load dog insight events');
+    }
+    return { rows: data, count, offset };
+  }, timeoutMs, parentSignal);
+}
+
+export async function fetchAllDogInsightEvents(
+  client: SupabaseClient,
+  dogId: string,
+  parentSignal?: AbortSignal,
+  pageSize = DOG_INSIGHT_PAGE_SIZE,
+): Promise<DogInsightEventRecord[]> {
+  if (!Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > DOG_INSIGHT_PAGE_SIZE) {
+    throw new Error('Invalid dog insight page size');
+  }
+  const rows: DogInsightEventRecord[] = [];
+  const ids = new Set<string>();
+  let offset = 0;
+  let expectedCount: number | null = null;
+  do {
+    const page = await fetchDogInsightEventsPage(client, dogId, offset, pageSize, undefined, parentSignal);
+    if (expectedCount !== null && page.count !== expectedCount) throw new Error('Dog insight history changed while paging');
+    expectedCount = page.count;
+    if (page.rows.length === 0 && offset < expectedCount) throw new Error('Dog insight history is incomplete');
+    for (const row of page.rows) {
+      if (ids.has(row.id)) throw new Error('Dog insight history returned a duplicate row');
+      ids.add(row.id);
+      rows.push(row);
+    }
+    offset += page.rows.length;
+    if (offset > expectedCount) throw new Error('Dog insight history exceeded its reported count');
+  } while (expectedCount !== null && offset < expectedCount);
+  if (expectedCount === null || rows.length !== expectedCount) throw new Error('Dog insight history is incomplete');
+  return rows;
 }
 
 export async function fetchDogEventById(
@@ -1205,6 +1286,16 @@ async function fetchTrainingSteps(client: SupabaseClient, versionIds: string[], 
     if (error || !Array.isArray(data) || !data.every(isTrainingStepRow)) throw new Error('Could not load published training steps');
     return data;
   }, timeoutMs, parentSignal);
+}
+
+function isDogInsightEventRecord(value: unknown, dogId: string): value is DogInsightEventRecord {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Partial<DogInsightEventRecord>;
+  if (typeof row.id !== 'string' || !row.id.trim() || row.dog_id !== dogId
+    || !DOG_INSIGHT_EVENT_TYPES.includes(row.event_type as typeof DOG_INSIGHT_EVENT_TYPES[number])
+    || typeof row.occurred_at !== 'string' || !Number.isFinite(Date.parse(row.occurred_at))) return false;
+  if (row.event_type === 'accident') return row.accident_kinds === null || isCanonicalAccidentKinds(row.accident_kinds);
+  return row.accident_kinds === null;
 }
 
 function isDogEventRecord(value: unknown): value is DogEventRecord {

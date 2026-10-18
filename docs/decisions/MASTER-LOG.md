@@ -245,3 +245,51 @@ Exact test-only plan v2 received Architect APPROVE, Critic PROCEED, independent 
 - Funktion/evidens: PASS enligt oberoende QA; visuellt kvarstår §14-nej för den direkta Panel 4-matchningen.
 - Beslut: read-only integrationsparenten blockeras för separat UI-korrigering; inga produktändringar utfördes i v7. Nästa paket har egen UX-spec, Architect/Critic-grind, UI-implementation, QA och Reviewer.
 - Review evidence: `docs/design/evidence/vision-rev02/checklist/PANEL4-INTEGRATION-01/v7/review/REVIEW-REPORT.md`.
+
+### DOG-PROFILE-BREED-CATALOG-01 checkpoint 1 — 2026-10-18
+
+FCI breed catalog and searchable picker implemented for registration and profile editing. Independent QA PASS (6/6 focused, pnpm check 593/593, 11/11 visual checks in public and review, exact 360-row CSV/SQL parity); Reviewer PASS; Security PASS. iOS review bundle and local queue/diff checks pass. Four inaccurate open-modal captures were replaced and independently rechecked. Remote migration/RLS and Supabase profile readback, native VoiceOver/Dynamic Type/safe area, and direct reference similarity remain NOT TESTABLE. Upstream repo is MIT-licensed; separate FCI rights were not independently established. This is a local uncommitted checkpoint for the combined delivery; R6 is next and R7 follows after its own QA/review.
+
+### FLOW-PROGRESS-01 — R6 Dagens framsteg — QA CHANGES, 2026-10-18
+
+R6 är implementerad lokalt. `pnpm check` passerade 598/598, iOS review-bundle exporterades med 1450 moduler, och kövalidering/diff-check passerade. Syntetisk RN Web-fixture verifierar dagsnapshot, rutinmarkering, exakt träningsmål och retur/scroll. QA bekräftade kärnflödet men gav **CHANGES**: §14 punkt 16 är fortsatt **Nej** (komposition/form/täthet avviker från panel 3). En blek screenshot-körning har ersatts med at-rest-evidens med reducerad rörelse.
+
+R6 är registrerad som blockerad. Repository AGENTS kräver `tassla-consumer-ux` vid UI-ändring, men skillen saknas i checkouten, Codex skillslistan och installerade pluginpaket. R7 har inte startats; combined commit/push görs inte före R6 QA/Reviewer closeout och R7 completion. Ingen live Supabase/RLS eller native-enhet har provats.
+
+### 2026-10-18 — korrigering av R6-skillnotering och v1.2-ringen
+
+Den tidigare uppgiften om att `tassla-consumer-ux` saknades var felaktig. Skillen finns lokalt i `.agents/skills/tassla-consumer-ux/SKILL.md`; användaren påpekade även GitHub-kopian. Lokal fil och GitHub `main`/feature-branch verifierades med samma SHA-256, och skillen har följts i den visuella korrigeringen.
+
+FLOW-PROGRESS-01 v1.2 har Architect APPROVE. Den vågiga ringen ersattes med 360 överlappande steg utan scalloperad kontur; ny fångst visuellt kontrollerad vid 375/430 px. Samma korrigering tog bort datumrad, separat ringkort och upprepad count. `pnpm check` passerar 598/598, review iOS-export 1450 moduler, browsermatris 19 fall + 5 interaktioner utan fel, och det unknown-tillståndet verifierar 360 segment plus amber färg. Oberoende QA/Reviewer för denna senaste snapshot återstår; §14 punkt 16 är fortsatt Nej tills resterande visuell matchning godkänts. Historisk QA CHANGES och blockerad-status ovan bevaras som tidigare beslut.
+
+
+### 2026-10-18 — rättelse om Tassla Consumer UX-skillen
+
+Den tidigare R6-noteringen om att `$tassla-consumer-ux` saknades var felaktig. Skillen finns lokalt i `.agents/skills/tassla-consumer-ux/SKILL.md` och har följts för UI-arbetet; den synkade GitHub-versionen har också verifierats. R6 v1.2 har Architect APPROVE inklusive geometry recheck och oberoende QA v1.3 PASS. Aktuell Reviewer-granskning återstår. Historiska blockeringsanteckningar bevaras som historik.
+
+
+### FLOW-PROGRESS-01 — R6 v1.2 closeout, 2026-10-18
+
+Architect recheck APPROVE; independent QA v1.3 PASS and Reviewer v1.3 PASS. The sharp 360-segment ring is continuous in full, half, partial and unknown states at 375/430 px. Focused 22/22, full `pnpm check` 598/598, iOS review export (1450 modules), 24 cases + 5 interactions, queue validation and diff-check pass. Reviewer confirmed completed/confirmed consistency and retracted the prior count concern. §14.16 remains No; live Supabase/RLS, persisted readback and native device/accessibility are NOT TESTABLE. Evidence: `docs/design/evidence/vision-rev02/daily-progress/`. Local uncommitted checkpoint for the combined breed catalog + R6 + R7 delivery; proceed to R7.
+
+
+### 2026-10-18 — FLOW-INSIGHTS-01 R7 implementation checkpoint
+
+Combined v7 implementation completed after Architect APPROVE for v7.1's narrow AppScreen route-offset amendment. The fix assigns a keyed ScrollView per route, restores each saved offset and rejects stale events from other route keys. R7 covers dog-scoped paginated saved Kiss/Bajs insights, Week/Month/Since start, local timezone grouping, explicit unlogged gaps and a numeric equivalent; sleep inference remains out of scope.
+
+Focused R7/AppScreen checks 40/40; full pnpm check 615/615 plus app/edge typecheck and lint; iOS review export 1452 modules; fresh public/review browser 14 cases + 6 interactions, zero failures/page errors/blocked requests; queue validation and diff check pass. Live Supabase/RLS and persisted readback, native device/accessibility, timezone boundary behavior on device and full §14 visual match remain NOT TESTABLE. Evidence: docs/design/evidence/vision-rev02/insights/. Independent QA, Security and Reviewer are next. The combined package remains local and uncommitted.
+
+### 2026-10-18 — FLOW-INSIGHTS-01 R7 final closeout
+
+R7 local checkpoint closed after Architect APPROVE v7.1, Security PASS, independent QA PASS and independent Reviewer PASS. Latest evidence: focused tests 43/43; `pnpm check` 618/618 with app/edge typecheck and lint; public/review browser 16 viewport/state cases + 6 interactions, zero failures/page errors/blocked requests; queue validation and diff-check PASS. The browser invokes the captured React Native Web route callback after navigation and verifies both route offsets; model tests cover Europe/Stockholm spring-forward and fall-back dates. Evidence and explicit limits are in `docs/design/evidence/vision-rev02/insights/`. Live Supabase/RLS, persisted readback, native accessibility/device behavior, runtime timezone changes and full reference fidelity remain NOT TESTABLE. Offset pagination remains best-effort, not snapshot isolation. The combined catalog + R6/R7 batch remains local and uncommitted; a separate R6 SVG dependency decision is still pending.
+
+
+### 2026-10-18 — FLOW-PROGRESS-RING-SVG-01, owner-approved dependency
+
+Erik approved `react-native-svg@15.15.4` for the sharp R6 ring. The active feature/evidence docs now describe SVG strokes; v1.2 remains as its historical approval with a pointer to amendment v1.3. Independent QA v1.4 PASS after fresh 26-case public/review evidence + 5 interactions, including stale at 430 px; R6 focused 5/5. Full `pnpm check` 618/618 and iOS review export 1564 modules passed before the capture-only harness update. Architect re-review of the synchronized exact amendment and independent Reviewer PASS remain before task closeout and the already requested combined package push. Live Supabase/RLS and native rendering/accessibility remain NOT TESTABLE.
+
+### 2026-10-18 - FLOW-PROGRESS-RING-SVG-01 R6 final closeout
+
+Erik approved react-native-svg@15.15.4; Architect approved amendment v1.3; independent QA v1.4 and Reviewer v1.4 both PASS. Reviewer confirmed the sharp SVG geometry, API/dependency compatibility and accurate unknown/stale progress semantics. Fresh public/review evidence: 26 viewport/state cases + 5 interactions, zero browser failures/errors/blocked requests; focused R6 UI contract 5/5. Final pnpm check: 618/618 with app/edge typecheck and lint. Review-channel iOS export: 1,564 modules. Queue validation and git diff --check PASS. The dated QA report is preserved; RESOLUTION-v1.3.md explains why its earlier dependency/docs warnings are no longer current.
+
+Live Supabase/RLS, persisted readback, native iOS/Android rendering, VoiceOver, device Dynamic Type, physical safe area, TestFlight rendering and full rev02 fidelity remain NOT TESTABLE (the latter remains No in §14 point 16). R6 local checkpoint closed; included in the combined R5/R6/R7 commit/push requested by Erik.

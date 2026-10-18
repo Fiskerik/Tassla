@@ -1,0 +1,25 @@
+{
+  "capturedAt": "2026-10-18",
+  "method": "Fresh local browser screenshot recapture with installed Chrome via workspace Playwright; existing public/review bundles, no app/source changes.",
+  "checks": [
+    {
+      "viewport": "375x667",
+      "pageErrors": [],
+      "horizontalOverflow": false,
+      "modalHeadingAndSearchVisible": true
+    },
+    {
+      "viewport": "430x844",
+      "pageErrors": [],
+      "horizontalOverflow": false,
+      "modalHeadingAndSearchVisible": true
+    }
+  ],
+  "openScreenshots": [
+    "picker-open-375x667.png",
+    "picker-open-430x844.png"
+  ],
+  "limitations": [
+    "Local RN Web rendering only; does not verify native safe area, VoiceOver, Dynamic Type, or persisted profile writes."
+  ]
+}

@@ -74,7 +74,7 @@ test('daily activities count owner marks and exact saved training source while e
     routine_label_snapshot: 'Kvällsrutin',
     checklist_snapshot: routine.checklist,
     completed_item_ids: ['routine-item-1'],
-    completed_at: null,
+    completed_at: '2026-10-12T23:00:00.000Z',
     is_recurring_occurrence: false,
     routine_revision_snapshot: 1,
     routine_day_revision: 1,
@@ -83,7 +83,10 @@ test('daily activities count owner marks and exact saved training source while e
   const selection = { id: 'selection-1', dog_id: 'dog-a', program_version_id: 'version-2', step_id: 'step-1', date_key: '2026-10-12', time_zone: 'America/Los_Angeles' };
   const snapshot = { routines: [routine], routineDays: [selectedRoutine], routineDaySkips: [], trainingSelections: [selection] };
   const activeProgram = { id: 'version-2', title: 'Trygg vardag', steps: [{ id: 'step-1', position: 1, title: 'Sitt lugnt', instruction: '' }], completedStepIds: ['step-1'], completedAtByStepId: { 'step-1': '2026-10-13T00:30:00.000Z' } };
-  assert.deepEqual(deriveHomeDailyActivities(snapshot, [activeProgram], 'dog-a', '2026-10-12').map(({ label, routineLabel, kind, completed, programTitle }) => ({ label, routineLabel, kind, completed, programTitle })), [
+  const derived = deriveHomeDailyActivities(snapshot, [activeProgram], 'dog-a', '2026-10-12');
+  assert.equal(derived[0].completedAt, undefined, 'routine item must not inherit the routine row completion time');
+  assert.equal(derived[2].completedAt, '2026-10-13T00:30:00.000Z', 'training row may expose only its exact step stamp');
+  assert.deepEqual(derived.map(({ label, routineLabel, kind, completed, programTitle }) => ({ label, routineLabel, kind, completed, programTitle })), [
     { label: 'Kissa', routineLabel: 'Kvällsrutin', kind: 'routine', completed: true, programTitle: undefined },
     { label: 'Fyll på vatten', routineLabel: 'Kvällsrutin', kind: 'routine', completed: false, programTitle: undefined },
     { label: 'Sitt lugnt', routineLabel: undefined, kind: 'training', completed: true, programTitle: 'Trygg vardag' },

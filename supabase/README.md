@@ -16,3 +16,7 @@ Veckodagsval läggs till framåt i `migrations/202610150001_routine_repeat_weekd
 ## Innehållsutkast
 
 `content/mvp-content-v1.sql` är en handkörd, versionsspecifik draft-import som ska köras först och kontrollerar exakt innehållsparitet. Efter den kan `content/publish-mvp-content-v1.sql` publicera tio godkända runtimeversioner med dokumenterad reviewreferens. Den lämnar `before-homecoming` som draft tills runtime upprätthåller onboarding-only-kontext. Ingendera filen har körts mot en databas här. Verifiera RLS och publicerad readback i målmiljön. Se `../docs/content/README.md`.
+
+## FCI-raslista
+
+migrations/202610180001_fci_breed_catalog.sql lägger in 360 raser från den daterade FCI-snapshotten i data/fci-breeds-2026-10.csv. Snapshot och MIT-licens ligger intill varandra; källrevision, upstream- och transformerad checksumma finns i docs/tasks/dev/DOG-PROFILE-BREED-CATALOG-01.md. Migrationen är additiv och använder namnrymden fci-{id}; den skriver inte över mixed eller unknown och ändrar inte schema, grants, policies eller RLS. Kör den bara i en isolerad lokal utvecklingsdatabas enligt docs/dev/supabase-setup.md; den har inte körts mot remote Supabase.

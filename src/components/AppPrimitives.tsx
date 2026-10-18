@@ -10,19 +10,22 @@ import { theme, tokens } from '../theme/tokens';
 export function AppScreen({ children, footer, scrollKey }: { children: ReactNode; footer?: ReactNode; scrollKey?: string }) {
   const scroll = useRef<ScrollView>(null);
   const scrollOffsets = useRef(new Map<string, number>());
-  const activeScrollKey = useRef(scrollKey ?? 'default');
+  const routeKey = scrollKey ?? 'default';
+  const activeScrollKey = useRef(routeKey);
   const insets = useSafeAreaInsets();
   const hasFooter = Boolean(footer);
   useLayoutEffect(() => {
-    const key = scrollKey ?? 'default';
-    activeScrollKey.current = key;
-    scroll.current?.scrollTo({ y: scrollOffsets.current.get(key) ?? 0, animated: false });
-  }, [scrollKey]);
+    activeScrollKey.current = routeKey;
+    scroll.current?.scrollTo({ y: scrollOffsets.current.get(routeKey) ?? 0, animated: false });
+  }, [routeKey]);
   return (
     <SafeAreaView style={styles.safeArea} edges={hasFooter ? ['top', 'left', 'right'] : ['top', 'right', 'bottom', 'left']}>
       <View style={styles.screenLayout}>
         <KeyboardAvoidingView style={styles.keyboardLayout} behavior="padding">
-          <ScrollView ref={scroll} onScroll={(event) => scrollOffsets.current.set(activeScrollKey.current, event.nativeEvent.contentOffset.y)} scrollEventThrottle={100}
+          <ScrollView key={routeKey} ref={scroll} onScroll={(event) => {
+            if (activeScrollKey.current !== routeKey) return;
+            scrollOffsets.current.set(routeKey, event.nativeEvent.contentOffset.y);
+          }} scrollEventThrottle={100}
             showsVerticalScrollIndicator={false} style={styles.scrollArea} contentContainerStyle={styles.page} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled">
             {children}
           </ScrollView>

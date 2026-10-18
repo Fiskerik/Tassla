@@ -1,0 +1,505 @@
+{
+  "scope": "R6 daily progress; synthetic React Native Web fixtures only",
+  "capture": {
+    "reducedMotion": "prefers-reduced-motion: reduce",
+    "animations": "disabled for screenshots",
+    "date": "2026-10-18T15:48:26.825Z"
+  },
+  "viewports": [
+    {
+      "mode": "public",
+      "viewport": "375x844",
+      "documentWidth": 375,
+      "passes": [
+        "heading visible",
+        "ring visible",
+        "activity section rendered",
+        "no horizontal page overflow"
+      ],
+      "screenshot": "public-daily-progress-375x844.png"
+    },
+    {
+      "mode": "public",
+      "viewport": "430x844",
+      "documentWidth": 430,
+      "passes": [
+        "heading visible",
+        "ring visible",
+        "activity section rendered",
+        "no horizontal page overflow"
+      ],
+      "screenshot": "public-daily-progress-430x844.png"
+    },
+    {
+      "mode": "public",
+      "viewport": "375x667",
+      "documentWidth": 375,
+      "passes": [
+        "heading visible",
+        "ring visible",
+        "activity section rendered",
+        "no horizontal page overflow"
+      ],
+      "screenshot": "public-daily-progress-375x667.png"
+    },
+    {
+      "mode": "public",
+      "viewport": "375x844@140% web text proxy",
+      "documentWidth": 375,
+      "passes": [
+        "heading visible",
+        "ring visible",
+        "activity section rendered",
+        "no horizontal page overflow"
+      ],
+      "screenshot": "public-daily-progress-375x844-text-140.png"
+    },
+    {
+      "mode": "public",
+      "viewport": "state:loading 375x844",
+      "passes": [
+        "expected",
+        "noFalseProgress",
+        "noHorizontalOverflow"
+      ],
+      "screenshot": "public-daily-progress-loading-375x844.png"
+    },
+    {
+      "mode": "public",
+      "viewport": "state:error 375x844",
+      "passes": [
+        "expected",
+        "noFalseProgress",
+        "noHorizontalOverflow"
+      ],
+      "screenshot": "public-daily-progress-error-375x844.png"
+    },
+    {
+      "mode": "public",
+      "viewport": "state:empty 375x844",
+      "passes": [
+        "expected",
+        "noFalseProgress",
+        "noHorizontalOverflow"
+      ],
+      "screenshot": "public-daily-progress-empty-375x844.png"
+    },
+    {
+      "mode": "public",
+      "viewport": "state:stale 375x844",
+      "passes": [
+        "expected",
+        "noFalseProgress",
+        "noHorizontalOverflow"
+      ],
+      "screenshot": "public-daily-progress-stale-375x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "375x844",
+      "documentWidth": 375,
+      "passes": [
+        "heading visible",
+        "ring visible",
+        "activity section rendered",
+        "no horizontal page overflow"
+      ],
+      "screenshot": "review-daily-progress-375x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "430x844",
+      "documentWidth": 430,
+      "passes": [
+        "heading visible",
+        "ring visible",
+        "activity section rendered",
+        "no horizontal page overflow"
+      ],
+      "screenshot": "review-daily-progress-430x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "375x667",
+      "documentWidth": 375,
+      "passes": [
+        "heading visible",
+        "ring visible",
+        "activity section rendered",
+        "no horizontal page overflow"
+      ],
+      "screenshot": "review-daily-progress-375x667.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "375x844@140% web text proxy",
+      "documentWidth": 375,
+      "passes": [
+        "heading visible",
+        "ring visible",
+        "activity section rendered",
+        "no horizontal page overflow"
+      ],
+      "screenshot": "review-daily-progress-375x844-text-140.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "state:loading 375x844",
+      "passes": [
+        "expected",
+        "noFalseProgress",
+        "noHorizontalOverflow"
+      ],
+      "screenshot": "review-daily-progress-loading-375x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "state:error 375x844",
+      "passes": [
+        "expected",
+        "noFalseProgress",
+        "noHorizontalOverflow"
+      ],
+      "screenshot": "review-daily-progress-error-375x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "state:empty 375x844",
+      "passes": [
+        "expected",
+        "noFalseProgress",
+        "noHorizontalOverflow"
+      ],
+      "screenshot": "review-daily-progress-empty-375x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "state:stale 375x844",
+      "passes": [
+        "expected",
+        "noFalseProgress",
+        "noHorizontalOverflow"
+      ],
+      "screenshot": "review-daily-progress-stale-375x844.png"
+    },
+    {
+      "mode": "public",
+      "viewport": "state:stale 430x844",
+      "details": {
+        "role": null,
+        "circleCount": 1,
+        "strokes": [
+          "rgb(233, 229, 222)"
+        ]
+      },
+      "passes": [
+        "staleDisclosure",
+        "neutralStaleCount",
+        "noProgressbar",
+        "noOverflow",
+        "smoothSvgRing"
+      ],
+      "screenshot": "public-daily-progress-stale-430x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "state:stale 430x844",
+      "details": {
+        "role": null,
+        "circleCount": 1,
+        "strokes": [
+          "rgb(233, 229, 222)"
+        ]
+      },
+      "passes": [
+        "staleDisclosure",
+        "neutralStaleCount",
+        "noProgressbar",
+        "noOverflow",
+        "smoothSvgRing"
+      ],
+      "screenshot": "review-daily-progress-stale-430x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "state:half-known 375x844",
+      "details": {
+        "role": "progressbar",
+        "circleCount": 2,
+        "strokes": [
+          "rgb(233, 229, 222)",
+          "rgb(53, 135, 90)"
+        ],
+        "greenDasharray": [
+          314.1592653589793,
+          314.1592653589793
+        ],
+        "trainingMarkerColor": "rgba(0, 0, 0, 0)"
+      },
+      "passes": [
+        "smoothSvgRing",
+        "halfCount",
+        "halfArcExact",
+        "semanticProgressbar",
+        "numericAccessibleLabel"
+      ],
+      "screenshot": "review-daily-progress-half-known-375x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "state:partial-unknown 375x844",
+      "details": {
+        "role": null,
+        "circleCount": 3,
+        "strokes": [
+          "rgb(233, 229, 222)",
+          "rgb(53, 135, 90)",
+          "rgb(245, 182, 63)"
+        ],
+        "greenDasharray": [
+          367.56634047000574,
+          260.7521902479529
+        ],
+        "unknownDasharray": [
+          13.962634015954636,
+          614.355896702004
+        ],
+        "unknownDashoffset": -614.355896702004,
+        "trainingMarkerColor": "rgba(0, 0, 0, 0)"
+      },
+      "passes": [
+        "smoothSvgRing",
+        "partialShown",
+        "unknownDisclosed",
+        "unknownNotProgressbar",
+        "unknownArcExact"
+      ],
+      "screenshot": "review-daily-progress-partial-unknown-375x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "state:full-known 375x844",
+      "details": {
+        "role": "progressbar",
+        "circleCount": 2,
+        "strokes": [
+          "rgb(233, 229, 222)",
+          "rgb(53, 135, 90)"
+        ],
+        "greenDasharray": [],
+        "trainingMarkerColor": "rgb(33, 116, 72)"
+      },
+      "passes": [
+        "smoothSvgRing",
+        "fullCount",
+        "fullArc",
+        "semanticProgressbar",
+        "numericAccessibleLabel",
+        "checkboxHitTargets44",
+        "completedTrainingMarker"
+      ],
+      "screenshot": "review-daily-progress-full-known-375x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "state:full-known-plus-unknown 375x844",
+      "details": {
+        "role": null,
+        "circleCount": 3,
+        "strokes": [
+          "rgb(233, 229, 222)",
+          "rgb(53, 135, 90)",
+          "rgb(245, 182, 63)"
+        ],
+        "greenDasharray": [
+          612.6105674500097,
+          15.707963267948912
+        ],
+        "unknownDasharray": [
+          13.962634015954636,
+          614.355896702004
+        ],
+        "unknownDashoffset": -614.355896702004,
+        "trainingMarkerColor": "rgba(0, 0, 0, 0)"
+      },
+      "passes": [
+        "smoothSvgRing",
+        "confirmedCount",
+        "unknownDisclosed",
+        "notFullProgressbar",
+        "accessibleTextHasUnknown",
+        "unknownArcExact"
+      ],
+      "screenshot": "review-daily-progress-full-known-plus-unknown-375x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "state:half-known 430x844",
+      "details": {
+        "role": "progressbar",
+        "circleCount": 2,
+        "strokes": [
+          "rgb(233, 229, 222)",
+          "rgb(53, 135, 90)"
+        ],
+        "greenDasharray": [
+          314.1592653589793,
+          314.1592653589793
+        ],
+        "trainingMarkerColor": "rgba(0, 0, 0, 0)"
+      },
+      "passes": [
+        "smoothSvgRing",
+        "halfCount",
+        "halfArcExact",
+        "semanticProgressbar",
+        "numericAccessibleLabel"
+      ],
+      "screenshot": "review-daily-progress-half-known-430x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "state:partial-unknown 430x844",
+      "details": {
+        "role": null,
+        "circleCount": 3,
+        "strokes": [
+          "rgb(233, 229, 222)",
+          "rgb(53, 135, 90)",
+          "rgb(245, 182, 63)"
+        ],
+        "greenDasharray": [
+          367.56634047000574,
+          260.7521902479529
+        ],
+        "unknownDasharray": [
+          13.962634015954636,
+          614.355896702004
+        ],
+        "unknownDashoffset": -614.355896702004,
+        "trainingMarkerColor": "rgba(0, 0, 0, 0)"
+      },
+      "passes": [
+        "smoothSvgRing",
+        "partialShown",
+        "unknownDisclosed",
+        "unknownNotProgressbar",
+        "unknownArcExact"
+      ],
+      "screenshot": "review-daily-progress-partial-unknown-430x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "state:full-known 430x844",
+      "details": {
+        "role": "progressbar",
+        "circleCount": 2,
+        "strokes": [
+          "rgb(233, 229, 222)",
+          "rgb(53, 135, 90)"
+        ],
+        "greenDasharray": [],
+        "trainingMarkerColor": "rgb(33, 116, 72)"
+      },
+      "passes": [
+        "smoothSvgRing",
+        "fullCount",
+        "fullArc",
+        "semanticProgressbar",
+        "numericAccessibleLabel",
+        "checkboxHitTargets44",
+        "completedTrainingMarker"
+      ],
+      "screenshot": "review-daily-progress-full-known-430x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "state:full-known-plus-unknown 430x844",
+      "details": {
+        "role": null,
+        "circleCount": 3,
+        "strokes": [
+          "rgb(233, 229, 222)",
+          "rgb(53, 135, 90)",
+          "rgb(245, 182, 63)"
+        ],
+        "greenDasharray": [
+          612.6105674500097,
+          15.707963267948912
+        ],
+        "unknownDasharray": [
+          13.962634015954636,
+          614.355896702004
+        ],
+        "unknownDashoffset": -614.355896702004,
+        "trainingMarkerColor": "rgba(0, 0, 0, 0)"
+      },
+      "passes": [
+        "smoothSvgRing",
+        "confirmedCount",
+        "unknownDisclosed",
+        "notFullProgressbar",
+        "accessibleTextHasUnknown",
+        "unknownArcExact"
+      ],
+      "screenshot": "review-daily-progress-full-known-plus-unknown-430x844.png"
+    }
+  ],
+  "interactions": [
+    {
+      "name": "synthetic routine toggle through rendered callback",
+      "passes": [
+        "routineToggleConfirmed",
+        "countChanged",
+        "checkboxAtLeast44"
+      ],
+      "after": null,
+      "screenshot": "review-daily-progress-routine-toggle-375x844.png",
+      "limitation": "callback fixture only; no live persistence/readback"
+    },
+    {
+      "name": "synthetic uncertain routine mutation recovery affordance",
+      "passes": [
+        "unknownStateVisibleBefore",
+        "retryClearsSyntheticUnknown"
+      ],
+      "limitation": "fixture clears the simulated status; does not exercise Supabase mutation/readback"
+    },
+    {
+      "name": "exact training target open/return and daily progress scroll restoration",
+      "passes": [
+        "opensExactTraining",
+        "returnsToDailyProgress",
+        "scrollRestored"
+      ],
+      "scrollTopBefore": 122,
+      "scrollTopAfter": 122
+    },
+    {
+      "name": "Home shortcut return retains Home scroll",
+      "passes": [
+        "routeBackToHome",
+        "homeScrollRestored"
+      ],
+      "scrollTopBefore": 48,
+      "scrollTopAfter": 48
+    },
+    {
+      "name": "stale refresh failure shows neutral last-confirmed state",
+      "passes": [
+        "staleDisclosure",
+        "neutralStaleCount",
+        "noProgressbar",
+        "noOverflow"
+      ],
+      "screenshot": "public-daily-progress-refresh-error-375x844.png"
+    }
+  ],
+  "pageErrors": [],
+  "blockedRequests": [],
+  "limitations": [
+    "No live Supabase writes/readback or RLS.",
+    "No native iOS/Android VoiceOver, Dynamic Type or physical safe-area testing.",
+    "140% text is a browser proxy."
+  ]
+}

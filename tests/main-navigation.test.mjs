@@ -6,7 +6,7 @@ const hook = registerHooks({ resolve(specifier, context, nextResolve) { return s
 const navigation = await import('../src/features/home/main-navigation.ts');
 hook.deregister();
 
-const { MAIN_TAB_DESTINATIONS, activeMainTabDestination, mainTabTransitionDirection, nextMainTabDestination, requestMainTabNavigation } = navigation;
+const { MAIN_TAB_DESTINATIONS, isMainTabDestination, activeMainTabDestination, mainTabTransitionDirection, nextMainTabDestination, requestMainTabNavigation } = navigation;
 
 test('main tabs keep the approved five-destination order', () => {
   assert.deepEqual(MAIN_TAB_DESTINATIONS, ['home', 'log', 'training', 'knowledge', 'more']);
@@ -71,4 +71,13 @@ test('the first destination stays authoritative while a discard alert is open', 
   requestMainTabNavigation('log', 'more', requestLeave, (destination) => commits.push(destination));
   firstCommit();
   assert.deepEqual(commits, ['training']);
+});
+
+test('insights detail stays under the Logg tab without becoming a swipe destination', () => {
+  assert.equal(activeMainTabDestination('insights'), 'log');
+  assert.equal(isMainTabDestination('insights'), false);
+  assert.equal(nextMainTabDestination('insights', 'left'), undefined);
+  const calls = [];
+  requestMainTabNavigation('insights', 'log', () => calls.push('guard'), destination => calls.push(destination));
+  assert.deepEqual(calls, ['guard']);
 });

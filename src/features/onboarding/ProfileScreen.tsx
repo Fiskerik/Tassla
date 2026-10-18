@@ -5,6 +5,7 @@ import { AppScreen, FormField, MessageCard, PrimaryButton } from '../../componen
 import { createDog, fetchBreeds, fetchOwnedDog, ownedDogAttributionMatches, type BreedOption, type OwnedDog } from '../../data/app-data';
 import { clearSecurePendingReferral, normalizeKennelCode, readSecurePendingReferral } from '../../onboarding-referral/referral-secure-storage';
 import { tokens } from '../../theme/tokens';
+import { SearchableBreedPicker } from './SearchableBreedPicker';
 import { ageInWeeks, localDate } from './dog';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -19,7 +20,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   const [breedsState, setBreedsState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [breedAttempt, setBreedAttempt] = useState(0);
   const [name, setName] = useState('');
-  const [breedId, setBreedId] = useState('');
+  const [breedId, setBreedId] = useState('mixed');
   const [birthDate, setBirthDate] = useState('');
   const [busy, setBusy] = useState(false);
   const [saveState, setSaveState] = useState<'idle' | 'error' | 'unknown' | 'invalidCode' | 'existingProfile'>('idle');
@@ -133,7 +134,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
     setBreedAttempt((count) => count + 1);
   }
 
-  const canSubmit = name.trim().length > 0 && name.trim().length <= 80 && Boolean(breedId)
+  const canSubmit = name.trim().length > 0 && name.trim().length <= 80 && breeds.some((breed) => breed.id === breedId)
     && isValidBirthDate(birthDate) && (!sourceSelected || Boolean(normalizeKennelCode(kennelCode)));
 
   return (
@@ -164,28 +165,11 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
           <PrimaryButton title="Försök igen" onPress={retryBreedCatalog} />
         </View>
       </>}
-      {breedsState === 'ready' && breeds.length > 0 && <>
-        {!breedId && <Text accessibilityLiveRegion="polite" style={styles.breedGuidance}>Välj en ras för att fortsätta.</Text>}
-        <View accessibilityRole="radiogroup" accessibilityLabel="Välj hundras" style={styles.breedList}>
-          {breeds.map((breed) => {
-            const selected = breedId === breed.id;
-            return (
-              <Pressable
-                key={breed.id}
-                accessibilityRole="radio"
-                accessibilityLabel={breed.name}
-                accessibilityState={{ selected }}
-                aria-checked={selected}
-                onPress={() => { setBreedId(breed.id); markEdited(); }}
-                style={({ pressed }) => [styles.breedOption, selected && styles.breedSelected, pressed && styles.breedPressed]}
-              >
-                <Text style={[styles.breedText, selected && styles.breedTextSelected]}>{breed.name}</Text>
-                {selected && <Text style={styles.checkmark}>✓</Text>}
-              </Pressable>
-            );
-          })}
-        </View>
-      </>}
+      {breedsState === 'ready' && breeds.length > 0 && <SearchableBreedPicker
+        breeds={breeds}
+        value={breedId}
+        onChange={(id) => { setBreedId(id); markEdited(); }}
+      />}
       <FormField
         autoCapitalize="none"
         autoComplete="off"
@@ -250,15 +234,7 @@ const styles = StyleSheet.create({
   profileCard: { marginBottom: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   sectionTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
   label: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.sm, marginTop: tokens.spacing.xs },
-  breedGuidance: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginBottom: tokens.spacing.sm },
-  breedList: { gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg },
   breedRetrySpacing: { marginBottom: tokens.spacing.md },
-  breedOption: { minHeight: tokens.size.touchMin, borderRadius: tokens.radius.md, paddingHorizontal: tokens.spacing.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  breedSelected: { borderColor: tokens.colors.support.profile.fg, backgroundColor: tokens.colors.support.profile.bg },
-  breedPressed: { opacity: 0.72 },
-  breedText: { ...tokens.typography.body, color: tokens.colors.textPrimary },
-  breedTextSelected: { color: tokens.colors.support.profile.fg, fontWeight: '700' },
-  checkmark: { ...tokens.typography.label, color: tokens.colors.support.profile.fg },
   sourceCard: { borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, padding: tokens.spacing.md, marginTop: tokens.spacing.md, marginBottom: tokens.spacing.lg },
   sourceInfo: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginBottom: tokens.spacing.md },
   sourceChoice: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },

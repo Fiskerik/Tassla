@@ -1,0 +1,289 @@
+{
+  "generatedAt": "2026-10-18T15:22:44.387Z",
+  "scope": "FLOW-INSIGHTS-01 / R7 — synthetic saved-log fixtures only",
+  "configurations": [
+    "public",
+    "review"
+  ],
+  "viewCases": 16,
+  "interactionCases": 6,
+  "failures": [],
+  "pageErrors": [],
+  "blockedRequests": [],
+  "cases": [
+    {
+      "mode": "public",
+      "viewport": "375x844",
+      "documentWidth": 375,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected gap disclosure",
+        "zero-count bar omitted: insights-poop-bar-2026-10-16",
+        "positive-count bar rendered: insights-pee-bar-2026-10-16",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "public-insights-375x844.png"
+    },
+    {
+      "mode": "public",
+      "viewport": "430x844",
+      "documentWidth": 430,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected gap disclosure",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "public-insights-430x844.png"
+    },
+    {
+      "mode": "public",
+      "viewport": "375x667",
+      "documentWidth": 375,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected gap disclosure",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "public-insights-375x667.png"
+    },
+    {
+      "mode": "public",
+      "viewport": "375x844-text-140",
+      "documentWidth": 375,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected gap disclosure",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "public-insights-375x844-text-140.png"
+    },
+    {
+      "mode": "public",
+      "viewport": "loading-375x844",
+      "documentWidth": 375,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected state copy",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "public-insights-loading-375x844.png"
+    },
+    {
+      "mode": "public",
+      "viewport": "empty-375x844",
+      "documentWidth": 375,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected state copy",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "public-insights-empty-375x844.png"
+    },
+    {
+      "mode": "public",
+      "viewport": "period-empty-375x844",
+      "documentWidth": 375,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected gap disclosure",
+        "expected state copy",
+        "expected test id insights-empty-period",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "public-insights-period-empty-375x844.png"
+    },
+    {
+      "mode": "public",
+      "viewport": "error-375x844",
+      "documentWidth": 375,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected state copy",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "public-insights-error-375x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "375x844",
+      "documentWidth": 375,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected gap disclosure",
+        "zero-count bar omitted: insights-poop-bar-2026-10-16",
+        "positive-count bar rendered: insights-pee-bar-2026-10-16",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "review-insights-375x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "430x844",
+      "documentWidth": 430,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected gap disclosure",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "review-insights-430x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "375x667",
+      "documentWidth": 375,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected gap disclosure",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "review-insights-375x667.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "375x844-text-140",
+      "documentWidth": 375,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected gap disclosure",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "review-insights-375x844-text-140.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "loading-375x844",
+      "documentWidth": 375,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected state copy",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "review-insights-loading-375x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "empty-375x844",
+      "documentWidth": 375,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected state copy",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "review-insights-empty-375x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "period-empty-375x844",
+      "documentWidth": 375,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected gap disclosure",
+        "expected state copy",
+        "expected test id insights-empty-period",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "review-insights-period-empty-375x844.png"
+    },
+    {
+      "mode": "review",
+      "viewport": "error-375x844",
+      "documentWidth": 375,
+      "passes": [
+        "three period choices",
+        "expected chart visibility",
+        "expected state copy",
+        "no horizontal page overflow"
+      ],
+      "failures": [],
+      "screenshot": "review-insights-error-375x844.png"
+    }
+  ],
+  "interactions": [
+    {
+      "label": "open overview from Logg",
+      "passes": [
+        "title",
+        "logTabSelected",
+        "label",
+        "Logg scroll position captured",
+        "selected Logg date changed before opening",
+        "first Insights visit starts at zero",
+        "user scroll on Insights captured",
+        "captured Log onScroll callback invoked after route change"
+      ],
+      "failures": []
+    },
+    {
+      "label": "same-key Insights rerender",
+      "passes": [
+        "route offset retained"
+      ],
+      "failures": []
+    },
+    {
+      "label": "period and no-future navigation",
+      "passes": [
+        "month period visible",
+        "future month disabled at current period",
+        "disabled future navigation leaves current month unchanged",
+        "previous month selectable"
+      ],
+      "failures": []
+    },
+    {
+      "label": "since-start uses local month buckets",
+      "passes": [
+        "first month in history visible",
+        "current month visible"
+      ],
+      "failures": []
+    },
+    {
+      "label": "return to same Logg view",
+      "passes": [
+        "Logg restored",
+        "previously selected Logg date restored",
+        "Logg scroll position restored",
+        "captured Insights onScroll callback invoked after route change"
+      ],
+      "failures": []
+    },
+    {
+      "label": "return to same Insights view",
+      "passes": [
+        "Insights offset restored"
+      ],
+      "failures": []
+    }
+  ]
+}

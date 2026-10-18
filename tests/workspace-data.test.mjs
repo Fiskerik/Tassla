@@ -432,6 +432,7 @@ function localClient(handler) {
           method: init.method ?? 'GET',
           url,
           signal: init.signal,
+          headersPrefer: new Headers(init.headers).get('prefer'),
           body: typeof init.body === 'string' ? JSON.parse(init.body) : undefined,
         };
         requests.push(request);
@@ -460,4 +461,97 @@ function versionRow({ id, contentId, version, title }) {
     content_items: { slug: 'handling-program', content_type: 'training_program' },
     content_breed_targets: [],
   };
+}
+test('dog insight page selects only supported fields, exact count, dog scope and stable event order', async () => {
+  const row = { id: 'insight-1', dog_id: dogId, event_type: 'pee', occurred_at: '2026-10-18T08:00:00.000Z', accident_kinds: null };
+  const { client, requests } = localClient(({ method, url }) => {
+    assert.equal(method, 'GET');
+    assert.equal(url.pathname, '/rest/v1/dog_events');
+    assert.equal(url.searchParams.get('select'), 'id,dog_id,event_type,occurred_at,accident_kinds');
+    assert.equal(url.searchParams.get('dog_id'), 'eq.' + dogId);
+    assert.equal(url.searchParams.get('event_type'), 'in.(pee,poop,accident)');
+    assert.deepEqual(url.searchParams.get('order')?.split(','), ['occurred_at.desc', 'id.desc']);
+    assert.equal(url.searchParams.get('offset'), '0');
+    assert.equal(url.searchParams.get('limit'), '200');
+    assert.ok(requests[0].headersPrefer?.includes('count=exact'));
+    return jsonCountResponse([row], 1);
+  });
+  try {
+    const page = await workspaceData.fetchDogInsightEventsPage(client, dogId);
+    assert.deepEqual(page, { rows: [row], count: 1, offset: 0 });
+    assert.equal(requests.length, 1);
+  } finally { await client.auth.dispose(); }
+});
+
+test('dog insight reader exhausts pages and validates the stable total count', async () => {
+  const rows = [
+    { id: 'insight-1', dog_id: dogId, event_type: 'pee', occurred_at: '2026-10-18T08:00:00.000Z', accident_kinds: null },
+    { id: 'insight-2', dog_id: dogId, event_type: 'poop', occurred_at: '2026-10-17T08:00:00.000Z', accident_kinds: null },
+    { id: 'insight-3', dog_id: dogId, event_type: 'accident', occurred_at: '2026-10-16T08:00:00.000Z', accident_kinds: ['poop'] },
+  ];
+  const { client, requests } = localClient(({ url }) => {
+    const offset = Number(url.searchParams.get('offset'));
+    return jsonCountResponse(rows.slice(offset, offset + 2), 3);
+  });
+  try {
+    assert.deepEqual(await workspaceData.fetchAllDogInsightEvents(client, dogId, undefined, 2), rows);
+    assert.deepEqual(requests.map(({ url }) => url.searchParams.get('offset')), ['0', '2']);
+  } finally { await client.auth.dispose(); }
+});
+
+test('dog insight reader rejects count drift, duplicate IDs and incomplete pages', async () => {
+  const row = { id: 'insight-1', dog_id: dogId, event_type: 'pee', occurred_at: '2026-10-18T08:00:00.000Z', accident_kinds: null };
+  const changed = localClient(({ url }) => Number(url.searchParams.get('offset')) === 0
+    ? jsonCountResponse([row, { ...row, id: 'insight-2' }], 3)
+    : jsonCountResponse([{ ...row, id: 'insight-3' }], 4));
+  try {
+    await assert.rejects(workspaceData.fetchAllDogInsightEvents(changed.client, dogId, undefined, 2), /changed while paging/);
+  } finally { await changed.client.auth.dispose(); }
+
+  const duplicate = localClient(({ url }) => Number(url.searchParams.get('offset')) === 0
+    ? jsonCountResponse([row], 2)
+    : jsonCountResponse([row], 2));
+  try {
+    await assert.rejects(workspaceData.fetchAllDogInsightEvents(duplicate.client, dogId, undefined, 1), /duplicate row/);
+  } finally { await duplicate.client.auth.dispose(); }
+
+  const incomplete = localClient(() => jsonCountResponse([], 1));
+  try {
+    await assert.rejects(workspaceData.fetchAllDogInsightEvents(incomplete.client, dogId, undefined, 1), /incomplete/);
+  } finally { await incomplete.client.auth.dispose(); }
+});
+
+test('dog insight reader rejects foreign dogs and malformed accident categories', async () => {
+  for (const row of [
+    { id: 'insight-1', dog_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', event_type: 'pee', occurred_at: '2026-10-18T08:00:00.000Z', accident_kinds: null },
+    { id: 'insight-2', dog_id: dogId, event_type: 'accident', occurred_at: '2026-10-18T08:00:00.000Z', accident_kinds: ['food'] },
+  ]) {
+    const { client } = localClient(() => jsonCountResponse([row], 1));
+    try { await assert.rejects(workspaceData.fetchDogInsightEventsPage(client, dogId), /Could not load dog insight events/); }
+    finally { await client.auth.dispose(); }
+  }
+});
+
+test('dog insight page forwards route cancellation to the Supabase request', async () => {
+  const controller = new AbortController();
+  let observedSignal;
+  let started;
+  const startedPromise = new Promise((resolve) => { started = resolve; });
+  const { client } = localClient(({ signal }) => {
+    observedSignal = signal;
+    started();
+    return new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')), { once: true }));
+  });
+  try {
+    const pending = workspaceData.fetchDogInsightEventsPage(client, dogId, 0, 200, 5000, controller.signal);
+    await startedPromise;
+    controller.abort();
+    await assert.rejects(pending);
+    assert.ok(observedSignal?.aborted);
+  } finally { await client.auth.dispose(); }
+});
+
+function jsonCountResponse(data, count, status = 200) {
+  const contentRange = data.length ? '0-' + (data.length - 1) + '/' + count : '*/' + count;
+  return new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json', 'content-range': contentRange } });
 }

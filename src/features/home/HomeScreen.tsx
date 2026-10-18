@@ -15,7 +15,7 @@ import { homeAgeMarkerLabel, homeAgeStrip } from './home-today';
 import { homeGreetingAt } from './home-greeting';
 import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
 
-type Destination = 'log' | 'training' | 'knowledge' | 'health' | 'planned-health' | 'checklist';
+type Destination = 'log' | 'training' | 'knowledge' | 'health' | 'planned-health' | 'checklist' | 'daily-progress';
 type LoadState = 'loading' | 'ready' | 'error';
 export type HomeDailyTrainingOption = { programId: string; versionId: string; stepId: string; programTitle: string; stepTitle: string };
 export type HomeDailyFixtureItem = {
@@ -172,6 +172,12 @@ export function HomeScreen({ dog, breed, content, contentState, contentSelection
         </View>
         {!dailyFixture && dailyState === 'ready' && dailyActivities.length > 0 && dailyProgress.unavailableCount > 0
           ? <Text style={styles.dailyCount}>{dailyProgressLabelText}</Text> : null}
+        <MotionPressable testID="home-open-daily-progress" accessibilityRole="button" accessibilityLabel="Visa dagens framsteg"
+          onPress={() => onGo('daily-progress')} style={({ pressed }) => [styles.showAll, pressed && styles.headingPressed]}>
+          <Ionicons name="analytics-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
+          <Text style={styles.showAllText}>Visa dagens framsteg</Text>
+          <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
+        </MotionPressable>
         {!confirmedEmptyAdvice ? <MotionPressable testID="home-open-daily-checklist" accessibilityRole="button" accessibilityLabel="Visa dagens checklista"
           onPress={() => onGo('checklist')} style={({ pressed }) => [styles.showAll, pressed && styles.headingPressed]}>
           <Text style={styles.showAllText}>Visa dagens checklista</Text>

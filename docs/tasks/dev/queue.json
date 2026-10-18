@@ -5714,7 +5714,7 @@
           "evidence": "At the time of the initial block, the source choice was unresolved. Erik has since selected Wikidata structured data under CC0 (2026-10-13). The exact SPARQL snapshot remains unavailable: WDQS GET and POST both returned HTTP 403 and the web tool cannot access API endpoints. No catalogue snapshot or app code may begin until the dated export is locally verified."
         }
       ],
-      "next_step": "Source choice is resolved: Wikidata CC0. Snapshot acquisition remains blocked because the exact WDQS query returned HTTP 403 on both GET and POST; the web tool also cannot access API endpoints. Keep Slice B blocked and do not create a partial/fabricated breed list. Once a dated export is available, verify exact query, count, unique QIDs, Swedish/English label mapping and breeds.name 1–100 character limit; add the snapshot file to write_paths and re-review the updated plan before catalogue code."
+      "next_step": "Raskatalog och sökbar picker hanteras separat av DOG-PROFILE-BREED-CATALOG-01. Denna blockerade uppgift återstår endast för de separata Mix-delraserna och Home-identiteten; ta fram ny avgränsad plan och verifierad datakälla innan de ändringarna."
     },
     {
       "id": "DOG-PROFILE-AGE-DISPLAY",
@@ -8442,82 +8442,217 @@
     },
     {
       "id": "FLOW-PROGRESS-01",
-      "title": "Dagens framsteg med källhärledd progress",
+      "title": "R6 Dagens framsteg med källhärledd progress",
       "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "plan": "docs/tasks/dev/DOG-PROFILE-BREED-CATALOG-01.md v7, checkpoint 2 baseline; docs/plans/DOG-PROFILE-BREED-CATALOG-01-ux-spec.md v7; docs/plans/FLOW-PROGRESS-01-ux-spec.md v1.2 Architect APPROVE",
       "write_paths": [
-        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/DailyProgressScreen.tsx",
         "src/features/home/HomeScreen.tsx",
-        "src/features/home/main-navigation.ts"
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/main-navigation.ts",
+        "src/features/home/daily-activity-model.ts",
+        "tests/daily-progress-ui.test.mjs",
+        "tools/visual-check/app.tsx",
+        "docs/features/daily-progress.md",
+        "docs/tasks/dev/DOG-PROFILE-BREED-CATALOG-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/plans/FLOW-PROGRESS-01-ux-spec.md",
+        "docs/design/evidence/vision-rev02/daily-progress/"
       ],
       "acceptance": [
-        "Ring och lista bygger på exakt samma fullständiga dagsmängd som Hem",
-        "Manuell och träningskällans markering/ångra uppdaterar båda vyer",
-        "Unknown/partial ger ingen komplett ring; inget påhittat veckomål",
-        "Veckomål har godkänd målpopulation, period och verifierad källa före full panelacceptans"
+        "Hem öppnar Panel 3; ring, count och full lista använder samma dailyActivities-snapshot, dag, scope och state som Hem.",
+        "Loading, error, tom dag och unknown/partial skiljs åt; okänt ger aldrig falskt noll eller komplett ring. Tider visas endast från riktiga källor. Trainingstid kommer endast från exakt completedAtByStepId; rutinrads completed_at återanvänds inte per punkt.",
+        "Rutinmarkering återanvänder befintlig mutation/readback/retry; träning öppnar exakt current version/steg och återgår till Panel 3; tillbaka återför till samma Hem-scroll.",
+        "Loggevent räknas inte som rutin/träning; inget veckomål eller separat persistad progress läggs till.",
+        "Panel 3-ringen har skarp jämn kant utan synliga scalloperade segment; scope-/datumrad, separat ringkort och upprepat antal är borttagna, och sammanfattningen använder befintlig varm yta.",
+        "Riktade kontroller, pnpm check, pnpm bundle:ios, kövalidering, diff check och syntetisk visuell kontroll passerar; native/remote evidens redovisas separat."
       ],
       "checks": [
+        "node --experimental-strip-types --test tests/daily-progress-ui.test.mjs tests/daily-activity-model.test.mjs",
         "pnpm check",
+        "pnpm bundle:ios",
+        "python tools/dev_flow.py validate",
         "git diff --check",
-        "python tools/dev_flow.py validate"
+        "Riktad public/review-fixture vid 375/430 px och 140% textproxy med design §14-checklista"
       ],
       "depends_on": [
-        "FLOW-HOME-CHECKLIST-01"
+        "DOG-PROFILE-BREED-CATALOG-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Approved combined v7 plan explicitly sequences catalog → R6 → R7; Architect follow-up confirmed FLOW-HOME-CHECKLIST-01 is a stale blocker unrelated to R6’s reuse of the existing dailyActivities/Home snapshot. Removed only that queue dependency; retained DOG-PROFILE-BREED-CATALOG-01, now done. No scope or code change."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin checkpoint 2 of the Architect-approved v7 combined plan. Scope: Panel 3 Dagens framsteg using existing Home dailyActivities, the exact date/scope/state and existing mutation/navigation gateways; only the R6 write_paths. Catalog is QA/Reviewer/Security PASS and done; R7 remains untouched until R6 is verified."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R6 implementation complete for scoped checkpoint: pnpm check 598/598, pnpm bundle:ios review export succeeded with 1450 modules, python tools/dev_flow.py validate and git diff --check passed. Fresh reduced-motion public/review evidence saved; point 16 remains No."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent QA CHANGES (2026-10-18): core route/data actions pass, but §14 point 16 remains No, so visual acceptance fails. Reduced-motion recapture fixes faded evidence, but no visual correction has been made. QA and Reviewer closeout remain incomplete."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "QA CHANGES correction plan is now saved as docs/plans/FLOW-PROGRESS-01-ux-spec.md v1.2. Local tassla-consumer-ux skill was found and verified against GitHub. Architect APPROVE for exact v1.2 recorded; correction scope frozen to the approved component/test/evidence/docs paths. No code change yet."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE for FLOW-PROGRESS-01 correction plan v1.2 on 2026-10-18; approved scope freezes historical v7 Home/data/navigation/activity-model paths and preserves iOS bundle, queue validation, diff-check and focused checks. See docs/plans/FLOW-PROGRESS-01-ux-spec.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin Architect-approved FLOW-PROGRESS-01 visual correction plan v1.2. Scope: smooth ring, remove date row/ring card/duplicate count, warmer summary and reference-comparable fixture/evidence. Preserve R6 data, interactions and frozen v7 Home/navigation/model files; no new dependencies. R7 waits for R6 QA/Reviewer closeout."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v1.2 ring fix: 360 overlapping tangent segments; sharp contour visually rechecked at 375/430 px in full, partial and unknown states. Removed date row, ring frame and duplicate count; three-row comparison capture plus separate six-row full-list capture. Focused UI 5/5; pnpm check 598/598; iOS review export 1450 modules; browser 19 cases and 5 interactions with no page errors, blocked requests or horizontal overflow; queue validate and git diff check pass. Independent QA and Reviewer must inspect this snapshot; §14 point 16 remains No for full reference fidelity."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA v1.3 PASS on current snapshot: 24 cases + 5 interactions; all four states at 375/430, 0 browser errors/blocked requests; exact 180 half/360 full/8 amber unknown. Architect rechecked and approved exact geometry. pnpm check 598/598; iOS review export 1450 modules; queue validation and diff-check pass. Reviewer re-review pending; §14 point16 remains No; live/native checks NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer v1.3 PASS after QA v1.3 PASS. Verified consistent completed/confirmed ring/count, separate unknown amber disclosure, 24+5 current evidence, §14.16 No and NOT TESTABLE limits. Review report saved at docs/design/evidence/vision-rev02/daily-progress/REVIEW-REPORT-v1.3.md. R7 is next; combined batch remains uncommitted."
+        }
+      ],
+      "next_step": "Independent Reviewer v1.3 PASS after QA v1.3 PASS. Verified consistent completed/confirmed ring/count, separate unknown amber disclosure, 24+5 current evidence, §14.16 No and NOT TESTABLE limits. Review report saved at docs/design/evidence/vision-rev02/daily-progress/REVIEW-REPORT-v1.3.md. R7 is next; combined batch remains uncommitted.",
       "priority": "P3",
       "panels": [
         "3"
       ],
       "risk_class": "H",
-      "checkpoint": "Panel 3 full resa med tillbaka till samma Hem-kontext.",
+      "checkpoint": "Checkpoint 2 av samlat paket; Panel 3 pushad detalj, samma snapshotkälla som Hem, tillbaka till bibehållen Hem-kontext.",
       "test_evidence": [
-        "Dagsgräns, partial/error, källa/undo, 375/430/140 % visuell jämförelse",
-        "Architect/Security om ny målpersistens, datum-/periodprov"
+        "Independent QA v1.3: all 24 cases and 5 interactions pass; all eight state/viewport captures at 375 and 430 px; 0 page errors or blocked requests.",
+        "360 straight tangential segments at 2.5x per-step arc width; full, half, partial and unknown rings appear continuous and sharp. Exact half=180 green, full=360 green, unknown=8 amber segments.",
+        "Focused UI/model tests: 22/22. pnpm check: typecheck, edge typecheck, lint and 598/598 tests pass.",
+        "iOS review export: 1450 modules. python tools/dev_flow.py validate and git diff --check pass.",
+        "Architect approved the v1.2 plan and rechecked the exact geometry. Independent Reviewer re-review is pending.",
+        "Live Supabase/RLS, persisted mutation/readback, native VoiceOver, real Dynamic Type, device safe-area behavior and physical iOS/Android rendering remain NOT TESTABLE. §14 point 16 remains No for full rev02 fidelity."
       ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "implementation_state": "R6 v1.2 complete: Architect APPROVE/recheck APPROVE, independent QA v1.3 PASS and independent Reviewer v1.3 PASS. Ring geometry is sharp and continuous across four states at 375/430 px. Local checks and evidence are recorded. This checkpoint remains uncommitted for combined delivery.",
+      "evidence_status": "Closed after QA and Reviewer PASS on 2026-10-18. Reports: docs/design/evidence/vision-rev02/daily-progress/QA-REPORT-v1.3.md and REVIEW-REPORT-v1.3.md. 24+5 browser matrix, exact segment assertions, pnpm check 598/598, iOS review export, queue validation and diff check passed. §14.16 No; live/native behavior NOT TESTABLE."
     },
     {
       "id": "FLOW-INSIGHTS-01",
-      "title": "Insikter med korrekt period och täckning",
+      "title": "R7 Insikter med fullständig periodläsning",
       "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "plan": "docs/tasks/dev/DOG-PROFILE-BREED-CATALOG-01.md v7.1, checkpoint 3; docs/plans/DOG-PROFILE-BREED-CATALOG-01-ux-spec.md v7.1",
       "write_paths": [
+        "src/components/AppPrimitives.tsx",
+        "tests/app-screen-ux.test.mjs",
+        "src/features/puppy-log/InsightsScreen.tsx",
+        "src/features/puppy-log/insights-model.ts",
         "src/features/puppy-log/LogScreen.tsx",
-        "src/features/puppy-log/log-model.ts",
-        "src/features/home/ProductWorkspace.tsx"
+        "src/features/puppy-log/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/main-navigation.ts",
+        "src/data/workspace-data.ts",
+        "tests/insights-model.test.mjs",
+        "tests/workspace-data.test.mjs",
+        "tests/log-screen-policy.test.mjs",
+        "tools/visual-check/app.tsx",
+        "docs/features/insights.md",
+        "docs/tasks/dev/DOG-PROFILE-BREED-CATALOG-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/insights/"
       ],
       "acceptance": [
-        "Vecka/Månad/Sedan start läser hela relevanta perioden och visar täckning",
-        "Kiss/bajs-graf har korrekta tal, legend och tillgänglig numerisk text",
-        "Sömngrafen bygger på godkänt intervallkontrakt; överlapp, luckor och saknat slut visas som okänt"
+        "Logg → Översikt öppnar Panel 8; Vecka/Månad/Sedan start läser alla relevanta (pee/poop/accident) sidor med minimal projektion för exakt aktiv dog_id, visar tidszon och återgår till samma Loggdatum/scroll. AppScreen behåller vald Logg-scrollposition över routebyte.",
+        "Kiss/Bajs-graf och numerisk text bygger på full lyckad läsning; olycka räknas endast in efter kanonisk accident_kinds; null legacy-typ förblir okänd.",
+        "Dagar/månader utan sparade händelser blir synliga luckor och “Ej loggat” i numerisk vy, aldrig nollstaplar eller sammanhängande linje; läsfel/count-drift ger retry utan partiell graf; tom historik och tom period skiljs åt.",
+        "Periodgränser följer måndag–söndag och lokal kalendermånad i validerad enhetstidszon; ingen framtida period eller fabricerad nolla.",
+        "Sidningen scoper konto/hund/request generation, validerar count och unika IDs, och redovisar best-effort snarare än transaction snapshot; sömntidslinje/varaktighet avvaktar godkänt intervallkontrakt och Panel 8 förblir öppen tills dess. Varje offset-sida har stabil ordning occurred_at DESC, id DESC.",
+        "Riktade modell/querykontroller, pnpm check, pnpm bundle:ios, kövalidering, diff check och syntetisk visuell kontroll passerar; remote/native evidens redovisas separat.",
+        "Riktat AppScreen-regressionstest täcker icke-noll Logg/Insights-offset, första besök, transient nollhändelse, samma-key-rendering, sena event och användarscroll efter navigation."
       ],
       "checks": [
+        "node --experimental-strip-types --test tests/insights-model.test.mjs tests/workspace-data.test.mjs tests/log-screen-policy.test.mjs",
         "pnpm check",
+        "pnpm bundle:ios",
+        "python tools/dev_flow.py validate",
         "git diff --check",
-        "python tools/dev_flow.py validate"
+        "Riktad public/review-fixture vid 375/430 px och 140% textproxy med design §14-checklista",
+        "node --test tests/app-screen-ux.test.mjs"
       ],
       "depends_on": [
-        "FLOW-LOG-01"
+        "FLOW-PROGRESS-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Combined plan v7 Architect APPROVE, Critic PROCEED, Security PASS plan-only. R6 FLOW-PROGRESS-01 closed after QA/Reviewer PASS; R7 starts sequentially under the approved Panel 8 scope. Security implementation review remains required."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin R7 implementation from approved combined v7 plan. Scope limited to minimal dog-scoped paginated Kiss/Bajs insights, period model/UI, Logg entry/return, tests and evidence; no schema/RLS/RPC/dependency changes or sleep inference."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "R7 v7.1 complete. AppScreen route-key fix approved by Architect and focused 3/3; R7/AppScreen focused 40/40; pnpm check 615/615 plus typecheck/lint; review iOS export 1452 modules; public/review browser 14 cases + 6 interactions with zero failures/page errors/blocked requests; queue validation and diff check pass. Independent Security, QA and Reviewer are still required."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA re-review PASS; zero-count bars omitted; empty selected period has explicit copy and gaps; 42/42 focused tests; pnpm check 617/617; iOS review export 1452 modules; public/review browser 16 cases + 6 interactions, 0 failures/errors/blocked requests; queue and diff checks pass. QA report: docs/design/evidence/vision-rev02/insights/QA-REPORT.md"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Final independent Reviewer PASS saved in docs/design/evidence/vision-rev02/insights/REVIEW-REPORT.md after QA PASS, Security PASS and Architect APPROVE v7.1; latest focused 43/43, pnpm check 618/618, browser 16 viewport/state cases + 6 interactions without errors/failures/blocked requests; queue validation and diff-check PASS. Synthetic and native/live-RLS limitations remain explicit. Combined batch stays local and uncommitted; R6 SVG dependency decision is separate and pending."
+        }
+      ],
+      "next_step": "Local R7 checkpoint is closed and included in the combined R5/R6/R7 commit/push.",
       "priority": "P3",
       "panels": [
         "8"
       ],
       "risk_class": "H",
-      "checkpoint": "Panel 8 beskrivande loggresa; sömnens verifierade intervallmodell är del av samma slutacceptans.",
+      "checkpoint": "Checkpoint 3 av samlat paket; Panel 8 beskrivande, fullständigt sidläst loggöversikt; sömnintervall är separat olöst gap.",
       "test_evidence": [
-        "Periodgräns, paginering, tomt/partiellt/okänt, skärmläsartext, 375/430 render",
-        "Dog Expert granskar eventuell tolkningscopy; Architect granskar sömnintervall"
+        "Full sidning och dog_id; week/month/since-start; DST/periodgräns; empty/error/partial; accidents; a11y/textvärden; 375/430/140%; sömn ej infererad."
       ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "implementation_state": "R7 v7.1 implementation complete. AppScreen preserves per-route scroll offsets and rejects stale route events; all local checks and fresh browser evidence pass. Independent Security, QA and Reviewer closeout pending.",
+      "evidence_status": "Closed after final R7 QA PASS, Security PASS and Reviewer PASS. Reports: docs/design/evidence/vision-rev02/insights/."
     },
     {
       "id": "UIUX-REVAMP-R1B-LOG-DRAFT-01",
@@ -10086,6 +10221,218 @@
       ],
       "implementation_state": "Panel 4 implementation and evidence complete; independent QA and Reviewer PASS. Focused 24/24, full pnpm check 587/587, Panel 4 public/review 9/9 each, fresh R3c 140% 12/12 each, queue validation and diff-check pass. Full visual similarity is not claimed; residuals are in SECTION14.md.",
       "evidence_status": "v3 Architect APPROVE and Critic PROCEED; independent QA PASS and Reviewer PASS; focused 24/24; pnpm check 587/587; public/review 9/9 each; fresh r3c-upcoming 140% 12/12 each; §14 and reports saved."
+    },
+    {
+      "id": "DOG-PROFILE-BREED-CATALOG-01",
+      "title": "FCI-raslista med sökbar picker",
+      "mvp_requirement": "docs/mvp.md §4.1; docs/MVP-EXPERIENCE-CONTRACT.md: skapa hundprofil",
+      "plan": "docs/tasks/dev/DOG-PROFILE-BREED-CATALOG-01.md v7, checkpoint 1; docs/plans/DOG-PROFILE-BREED-CATALOG-01-ux-spec.md v7",
+      "write_paths": [
+        "supabase/data/fci-breeds-2026-10.csv",
+        "supabase/data/fci-breeds-MIT-LICENSE.txt",
+        "supabase/migrations/202610180001_fci_breed_catalog.sql",
+        "src/features/onboarding/breed-picker-model.ts",
+        "src/features/onboarding/SearchableBreedPicker.tsx",
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/onboarding/README.md",
+        "supabase/README.md",
+        "tests/breed-picker.test.mjs",
+        "tools/visual-check/app.tsx",
+        "docs/plans/DOG-PROFILE-BREED-CATALOG-01-ux-spec.md",
+        "docs/tasks/dev/DOG-PROFILE-BREED-CATALOG-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/vision-rev02/onboarding/BREED-CATALOG-01/"
+      ],
+      "acceptance": [
+        "Snapshoten har exakt 360 poster med unika stabila FCI-ID:n; upstreamrevision/-checksumma, snapshotchecksumma, datum och licens är dokumenterade.",
+        "Additiv migration lägger till alla katalogposter med befintliga mixed och unknown exakt intakta; ID-krock skrivs inte över. Inga schema-, RLS-, RPC- eller profilkontraktsändringar.",
+        "Nyregistrering visar Blandras först och förvalt. Alla övriga raser kan bläddras alfabetiskt efter svensk lokalisering och fritextsökas. Vald ras visas tydligt och sparas via befintligt breed_id-kontrakt.",
+        "Sökningen är skiftläges-/diakritikokänslig; fri text kan inte sparas. Inget sökresultat, tom katalog, loading, error och retry har skilda begripliga tillstånd; a11y och fokus följer UX-spec.",
+        "Profilredigering hittar alla katalogposter utan att ersätta nuvarande ras; befintlig profil-write/readback och kennel-/authflöde bevaras.",
+        "Med vald ras fungerar befintlig registrering; vald breed_id skickas via befintligt kontrakt och saving, success, failure samt unsure-save recovery bevaras.",
+        "Fokuserad kod utan nya dependencies; lokala kontroller, visual QA, kövalidering och git diff --check passerar före commit. Remote/native bevis redovisas separat."
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "node --experimental-strip-types --test tests/breed-picker.test.mjs",
+        "python tools/dev_flow.py validate",
+        "git diff --check",
+        "Riktad public/review-fixture och §14-visuell kontroll vid angivna storlekar och 140% textproxy",
+        "Isolerad lokal Supabase-migrationstest endast om lokal Supabase/Docker finns; aldrig remote"
+      ],
+      "depends_on": [
+        "UIUX-REVAMP-R1A-BREED-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v2: Architect APPROVE; Critic PROCEED; Security PASS plan-only. Reviews saved in docs/tasks/dev/DOG-PROFILE-BREED-CATALOG-01.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin R5 implementation under the approved v2 plan; R6/R7 and Mix/Home fields remain out of scope."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Erik expanded scope to include masterplan R6/R7. Existing plan v2 explicitly excludes those flows; pause code changes and replace it with a combined plan for the user's selected interpretation before implementation resumes."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v7 replaced stale v6 pagination claim; Architect APPROVE, Critic PROCEED, Security PASS plan-only. Reviews recorded in docs/tasks/dev/DOG-PROFILE-BREED-CATALOG-01.md. Queue now reflects the reviewed combined catalog → R6 → R7 scope."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact v7 plan/spec APPROVED by Architect and PROCEEDED by Critic; Security PASS plan-only. No remote migration. See plan review history and constraints in docs/tasks/dev/DOG-PROFILE-BREED-CATALOG-01.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin checkpoint 1 (breed catalog/picker) under approved v7; only its listed write paths. R6 and R7 remain sequential and untouched until this checkpoint is verified."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Checkpoint 1 complete: v7 catalog code and docs implemented; focused breed-picker tests 6/6 and pnpm check 593/593 pass; iOS review bundle exports; public/review browser 11/11 each, corrected open-modal 375x667 and 430x844 captures reviewed; exact CSV/SQL parity and 360 unique IDs; queue validation and diff-check pass. Remote Supabase/RLS, saved profile readback and native accessibility remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS after evidence correction: focused 6/6, pnpm check 593/593, exact 360 CSV/SQL row parity, public/review visual matrix 11/11 each; refreshed 375x667 and 430x844 open captures verified distinct from closed; validate and diff-check pass. Live migration/RLS, Supabase profile readback and native accessibility remain NOT TESTABLE. QA report delivered in review thread 2026-10-18."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS after QA PASS and Security PASS; checkpoint evidence and limitations are saved in docs/tasks/dev/rapport.md, docs/decisions/MASTER-LOG.md, and plan v7. Focused 6/6, full 593/593, iOS review bundle, visual public/review 11/11, corrected modal screenshots, CSV/SQL parity, queue and diff checks pass. Remote migration/RLS, Supabase write/readback, native accessibility and dedicated-reference pixel similarity remain NOT TESTABLE. Local uncommitted checkpoint retained for combined catalog+R6+R7 delivery."
+        }
+      ],
+      "next_step": "Local R5 checkpoint is closed and included in the combined R5/R6/R7 commit/push.",
+      "priority": "P1",
+      "panels": [
+        "1"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Checkpoint 1 av samlat katalog + R6/R7-paket; R5 masterplanens Utvecklingsresa är uppskjuten.",
+      "test_evidence": [
+        "360 FCI-ID:n, upstream-/snapshot-checksumma, MIT-licens och mixed/unknown bevarade.",
+        "Create/edit, svensk sortering, accentkänslig fritextsökning, load/no-match/empty/error/retry, fokus/a11y och sparningsåterhämtning.",
+        "Syntetisk visuell kontroll 375/430 px och 140%; remote Supabase/RLS och native VoiceOver är NOT TESTABLE utan verklig körning.",
+        "No-match copy säger att rasen saknas i FCI-listan och erbjuder Okänd ras/Blandras; användaren kan välja befintlig fallback."
+      ],
+      "implementation_state": "FCI searchable breed picker is integrated into dog creation and profile editing; Blandras is the default and the catalog is alphabetically browsable/searchable. The local checkpoint is complete.",
+      "evidence_status": "Independent QA, Reviewer and Security PASS. Focused picker 6/6; full check at checkpoint 593/593; exact 360-row CSV/SQL parity; public/review visual captures and queue/diff checks PASS. Live migration/RLS, saved profile readback and native accessibility remain NOT TESTABLE."
+    },
+    {
+      "id": "FLOW-PROGRESS-RING-SVG-01",
+      "title": "R6: slät SVG-ring för dagens framsteg",
+      "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/plans/FLOW-PROGRESS-01-ring-svg-amendment-v1.3.md v1.3; Erik dependency approval and Architect APPROVE 2026-10-18",
+      "write_paths": [
+        "package.json",
+        "pnpm-lock.yaml",
+        "src/features/home/DailyProgressScreen.tsx",
+        "tests/daily-progress-ui.test.mjs",
+        "tools/visual-check/build.cjs",
+        "docs/design/evidence/vision-rev02/daily-progress/",
+        "docs/features/daily-progress.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/plans/FLOW-PROGRESS-01-ux-spec.md"
+      ],
+      "acceptance": [
+        "SVG ring has a continuous sharp contour for half, full, partial/unknown and stale states at 375 and 430 px.",
+        "Confirmed/unknown dash lengths and accessible semantics remain exact; unknown or stale data is not announced as complete.",
+        "Active R6 docs and evidence agree with the SVG implementation; independent QA and Reviewer PASS; dependency decision and Architect approval recorded.",
+        "pnpm check, pnpm bundle:ios, fresh browser evidence, queue validation and git diff --check pass."
+      ],
+      "checks": [
+        "pnpm check",
+        "pnpm bundle:ios",
+        "node docs/design/evidence/vision-rev02/daily-progress/capture-evidence.mjs",
+        "python tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "FLOW-PROGRESS-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "User requested a sharper R6 ring. SVG implementation and fresh 26-case/5-interaction evidence are local; Architect BLOCK pending explicit owner decision for new runtime dependency react-native-svg, and active R6 docs plus final Reviewer closeout remain outstanding."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Erik explicitly approved react-native-svg@15.15.4 on 2026-10-18. v1.3 plan and active R6 docs/evidence are synchronized; independent QA v1.4 PASS on 26 viewport/state cases + 5 interactions, including stale 430 in public/review. Fresh Architect re-review is required before ready."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE for synchronized amendment v1.3 on 2026-10-18; dependency approved by Erik; QA v1.4 PASS and evidence synced."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implemented SVG circle rendering and refreshed stale-state capture harness per approved v1.3; code and docs complete."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation and documentation sync complete; QA v1.4 records 26 viewport/state cases plus 5 interactions, focused UI contract 5/5, zero failures/errors/blocked requests."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS on v1.3 SVG implementation; 430x844 stale state verified in public/review; reports and captures synced."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS v1.4 saved at docs/design/evidence/vision-rev02/daily-progress/REVIEW-REPORT-v1.4.md after Architect APPROVE and QA v1.4 PASS; local SVG checkpoint closed for the combined R5/R6/R7 delivery."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS v1.4 saved at docs/design/evidence/vision-rev02/daily-progress/REVIEW-REPORT-v1.4.md after Architect APPROVE and QA v1.4 PASS; local SVG checkpoint closed for the combined R5/R6/R7 delivery.",
+      "priority": "P1",
+      "panels": [
+        "3"
+      ],
+      "risk_class": "M",
+      "checkpoint": "R6 rendering follow-up to the historical FLOW-PROGRESS-01 v1.2 checkpoint.",
+      "test_evidence": [
+        "26 fresh public/review viewport-state cases + 5 interactions; zero failures, page errors or blocked requests.",
+        "Half/full/partial-unknown geometry and stale-state behavior directly inspected at 375/430; stale 430 captures show neutral 12px track and no progressbar role.",
+        "Focused R6 UI contract tests 5/5; current full suite 618/618 and iOS export 1564 modules were run before the last capture-only harness update."
+      ],
+      "implementation_state": "SVG circle implementation and refreshed evidence are complete. Erik dependency approval, Architect APPROVE, independent QA v1.4 PASS and Reviewer v1.4 PASS are recorded; this local checkpoint is closed.",
+      "evidence_status": "Independent Reviewer PASS: docs/design/evidence/vision-rev02/daily-progress/REVIEW-REPORT-v1.4.md. QA v1.4 PASS on 26 viewport/state cases + 5 interactions; focused 5/5; pnpm check 618/618; review-channel iOS export 1,564 modules; queue validation and diff-check PASS. Live/native limits remain NOT TESTABLE."
     }
   ]
 }

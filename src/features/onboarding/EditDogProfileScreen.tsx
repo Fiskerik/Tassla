@@ -18,6 +18,7 @@ import {
 import { normalizeKennelCode } from '../../onboarding-referral/referral-secure-storage';
 import { tokens } from '../../theme/tokens';
 import { ProfileScreenHeader } from './ProfileScreenHeader';
+import { SearchableBreedPicker } from './SearchableBreedPicker';
 import { isDogProfileDraftDirty, isKennelCodeDraftDirty, isProfileEditorDraftDirty, type KennelAttributionIntent } from './profile-draft';
 
 export function EditDogProfileScreen({
@@ -239,18 +240,16 @@ export function EditDogProfileScreen({
         <MessageCard tone="error">Raslistan kunde inte hämtas. Profilen är kvar och inget har sparats.</MessageCard>
         <PrimaryButton title="Hämta raslistan igen" disabled={busy} onPress={() => { setBreedState('loading'); setBreedAttempt((attempt) => attempt + 1); }} />
       </>}
-      {breedState === 'ready' && <View accessibilityRole="radiogroup" accessibilityLabel="Välj hundras" style={styles.breedList}>
-        {breeds.map((breed) => {
-          const selected = breed.id === breedId;
-          return <Pressable key={breed.id} accessibilityRole="radio" accessibilityLabel={breed.name}
-            accessibilityState={{ selected, disabled: blocked }} disabled={blocked} onPress={() => setBreedId(breed.id)}
-            style={({ pressed }) => [styles.breedOption, selected && styles.breedSelected, pressed && !blocked && styles.breedPressed]}>
-            <Text style={[styles.breedText, selected && styles.breedTextSelected]}>{breed.name}</Text>
-            {selected && <Ionicons name="checkmark-circle" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />}
-          </Pressable>;
-        })}
+      {breedState === 'ready' && <>
+        <SearchableBreedPicker
+          breeds={breeds}
+          value={breedId}
+          valueLabelFallback={currentBreed}
+          disabled={blocked}
+          onChange={setBreedId}
+        />
         {!breeds.some((breed) => breed.id === dog.breed_id) && <MessageCard>Nuvarande ras ({currentBreed}) finns inte i listan. Välj en ras om du vill ändra profilen.</MessageCard>}
-      </View>}
+      </>}
       <DatePickerField label="Födelsedatum" disabled={blocked} onChangeText={setBirthDate} value={birthDate} />
       <View style={styles.ageUnitField}>
         <Text style={styles.label}>Visa ålder som</Text>
@@ -344,12 +343,7 @@ const styles = StyleSheet.create({
   field: { marginBottom: tokens.spacing.md },
   label: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.sm },
   input: { minHeight: tokens.size.buttonHeight, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body },
-  breedList: { gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg },
-  breedOption: { minHeight: tokens.size.touchMin, borderRadius: tokens.radius.md, paddingHorizontal: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  breedSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   breedPressed: { opacity: 0.75 },
-  breedText: { ...tokens.typography.body, color: tokens.colors.textPrimary },
-  breedTextSelected: { color: tokens.colors.primary, fontWeight: '700' },
   ageUnitField: { marginTop: tokens.spacing.md, marginBottom: tokens.spacing.md },
   ageUnitOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm },
   ageUnitOption: { minHeight: tokens.size.touchMin, minWidth: tokens.size.touchMin * 2, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.full, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
