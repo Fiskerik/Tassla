@@ -31,6 +31,7 @@ Avslutade paketnotiser har samlats här. Varje post bevarar ursprunglig status o
 | [UI-07](#ui-07) | 2026-10-10 | implementerad och pushad; QA PASS; oberoende code review PASS | `e50da50`, `3adf73d` |
 | [HOME-ROUTINE-CHECKLIST-01](#home-routine-checklist-01) | 2026-10-15 | lokal UI-slice klar; QA/Reviewer PASS; live DB/native ej verifierat | `fix: clarify routine deletion cascade` på `codex/ux-rethink-2026-10-15` |
 | [P04-CONTENT](#p04-content) | okänt | `published` i bundlen, medan onboarding-only-versionen förblir `draft` för att inte läcka till den vanliga åldersbaserade feeden | ej angivet |
+| [UIUX-REVAMP-R3C-R4D-PANEL4](#uiux-revamp-r3c-r4d-panel4) | 2026-10-18 | Implementerat och lokalt verifierat; pushat till `codex/mvp-v2-panel4-checklists-2026-10-16`. Codemagic #53 testfel rättade; signerad iOS-build ej verifierad | `b4075e8997411ea822316d0b8a8140a89826aa84` |
 
 ## APP-01-PHONE
 
@@ -545,3 +546,13 @@ Paketcommit: `7b9da840d2ca2ac8f5d5ed998d73495858c98eae`. Bascommit617fb67. Pusha
 2026-10-15: rutinhallens kompakta gruppering, samlade editläge, dagsval och Home-status är implementerade. QA hittade att helraderingsbekräftelsen påstod att dagskopior behålls fast migrationen cascade-raderar kopior och sparade överhoppningar. Texten korrigerades; endast den destruktiva knappen raderar och `Avbryt` bevarar rutinen. Oberoende QA och Reviewer PASS.
 
 I den isolerade källkopian passerade app-typecheck, edge-typecheck, full ESLint och Node-testsviten (492/492). Ingen databas-/migrationsåtgärd genomfördes. Native Alert-rendering, VoiceOver/Dynamic Type, live Supabase/RLS och migration är ej verifierade. Den fullständiga panel-4-resan med fungerande filter och kommande planer återstår som `FLOW-HOME-CHECKLIST-01`. Underlag: `docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md` och `docs/tasks/dev/rapport.md`. Checkpoint: committen `fix: clarify routine deletion cascade` på `codex/ux-rethink-2026-10-15`.
+
+## UIUX-REVAMP-R3C-R4D-PANEL4
+
+2026-10-18. Commit `b4075e8997411ea822316d0b8a8140a89826aa84` är pushad till `origin/codex/mvp-v2-panel4-checklists-2026-10-16`.
+
+Leveransen samlar R3a–R3c, R4a–R4d och korrigerande Panel 4-verifieringar på samma branch. `Tassla_53_artifacts.zip` visade att Codemagic stoppade vid `pnpm check`: tre gamla testförväntningar för kommande-fliken och planerad hälsonotifikation. Aktuell kod/harness rättar dessa. Frozen install passerade, `pnpm check` passerade 587/587 tester med typecheck och lint, content guards passerade för public/review och båda iOS Expo-exporterna passerade. Pre-commit och pre-push körde samma fulla check och passerade.
+
+Codemagic #53 nådde inte iOS prebuild, CocoaPods, signering eller Xcode/IPA. Native iOS-projekt och signerad build kunde inte verifieras lokalt på Windows; ny Codemagic-körning krävs. Appbundlen är inte rapporterad som TestFlight-verifierad. R2a:s åldersbaserade navigering ligger kvar som senare beslutspunkt; R5, R6 och R7 är planerade och ingår inte i denna commit.
+
+Underlag för QA, Reviewer, §14 och skärmbilder ligger i `docs/design/evidence/vision-rev02/`; tekniska checkpoints finns i `docs/tasks/dev/rapport.md`.

@@ -1,6 +1,6 @@
 # Tassla — samlat besluts- och leveransregister
 
-Status: kanonisk sammanfattning för produkt-, design- och utvecklingsagenter. Vald implementationbas: `main` @ `00d4d4a3e38c08a6bb7d4c541cc509457126276f` (2026-10-16). MVP v2 är styrande från 2026-10-16. Senast sammanställd 2026-10-17.
+Status: kanonisk sammanfattning för produkt-, design- och utvecklingsagenter. Vald implementationbas: `main` @ `00d4d4a3e38c08a6bb7d4c541cc509457126276f` (2026-10-16). MVP v2 är styrande från 2026-10-16. Senast sammanställd 2026-10-18.
 
 Läs denna fil först när ett beslut eller tidigare paket efterfrågas. Läs sedan bara den länkade detaljplanen för uppgiften. Vid konflikt gäller senaste uttryckliga ägarbeslutet och den aktuella posten här. De numrerade beslutsfilerna behålls som historiska underlag; de är inte separata, uppdaterade styrkällor. Detaljerade testresultat finns i respektive task- och releaseunderlag.
 
@@ -63,6 +63,12 @@ Följande package-statusar finns dokumenterade i den valda Main-snapshotten. De 
 | UX-TRAINING-UNMARK-01 | done | Källstyrd avmarkering med readback och scope fence; Supabase/RLS och native separat. |
 | HOME-ROUTINE-WEEKDAYS-01 | done | Veckodagsval och legacy NULL-regel; migrationen är inte applicerad och runtime-paritet ej verifierad. |
 | HOME-ROUTINE-CHECKLIST-01 | done | Kompakt rutinhall och Hem-åtgärder passerade oberoende QA/Reviewer efter att helraderingsbekräftelsen korrigerats; fullskärmsresan för panel 4 är fortfarande separat. |
+
+### UIUX-REVAMP-R3C-R4D-PANEL4 — levererat 2026-10-18
+
+R3a–R3c, R4a–R4d samt korrigerande verifiering av Panel 4 är committade och pushade till `origin/codex/mvp-v2-panel4-checklists-2026-10-16` i `b4075e8997411ea822316d0b8a8140a89826aa84`. Byggartefakt #53 stoppade på tre föråldrade tester före iOS-steget; aktuella test/harness-fel är rättade. Frozen install, `pnpm check` (587/587), public/review content guards och båda Expo iOS-exporterna passerade. Oberoende QA/Reviewer och evidens redovisas i länkade paketposter och `docs/design/evidence/vision-rev02/`.
+
+Codemagic #53 nådde inte CocoaPods, signering eller Xcode/IPA. Lokal Windows-miljö kunde inte göra native iOS-prebuild; signerad iOS-build/TestFlight är därför inte verifierad. R2a:s åldersbaserade navigering är fortsatt en senare beslutspunkt. R5, R6 och R7 är fortfarande planerade och ingår inte i denna leverans. Live Supabase/RLS och native-/enhetstillgänglighet kvarstår enligt paketens NOT TESTABLE-redovisning.
 
 ### MVP-V2-ADOPT-01 — dokumentcheckpoint klar lokalt, 2026-10-16
 
