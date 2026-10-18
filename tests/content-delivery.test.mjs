@@ -18,6 +18,7 @@ const guideBody = await import('../src/features/knowledge/guide-body.ts');
 tsResolution.deregister();
 const workspaceSource = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
 const knowledgeSource = await readFile(new URL('../src/features/knowledge/KnowledgeScreen.tsx', import.meta.url), 'utf8');
+const trainingSource = await readFile(new URL('../src/features/training/PublishedTrainingScreen.tsx', import.meta.url), 'utf8');
 
 const baseUrl = 'https://local-test.supabase.invalid';
 const dog = { id: '11111111-1111-4111-8111-111111111111', name: 'Nala', breed_id: 'beagle', birth_date: '2026-10-01' };
@@ -38,6 +39,7 @@ test('actual published loader sends a published-only metadata query and returns 
     assert.equal(request.url.searchParams.get('status'), 'eq.published');
     const columns = request.url.searchParams.get('select');
     assert.match(columns, /(^|,)status(,|$)/);
+    assert.match(columns, /(^|,)is_ai_generated(,|$)/);
     assert.match(columns, /content_items!inner\(slug,content_type\)/);
     assert.match(columns, /sources/);
     assert.deepEqual(home.map(({ id }) => id), ['62000000-0000-4000-8000-000000000003', '62000000-0000-4000-8000-000000000009']);
@@ -49,6 +51,7 @@ test('actual published loader sends a published-only metadata query and returns 
       body: 'Record what you choose; this is not clinical advice.',
       contentType: 'article',
       sources: ['https://example.org/guide', 'repo://src/app.ts'],
+      isAiGenerated: true,
     });
     const guideItems = evaluateActualGuideFilter(home);
     assert.deepEqual(guideItems.map(({ id }) => id), ['62000000-0000-4000-8000-000000000003']);
@@ -97,6 +100,7 @@ test('legacy app-data loader carries version/source metadata and never returns o
     assert.deepEqual(home[0].sources, ['https://example.org/guide', 'repo://src/app.ts']);
     assert.equal(home[0].contentId, '61000000-0000-4000-8000-000000000003');
     assert.equal(home[0].version, 1);
+    assert.equal(home[0].isAiGenerated, true);
   } finally { await client.auth.dispose(); }
 });
 
@@ -147,6 +151,8 @@ test('guide-body helper renders supported headings and lists as plain text and p
   assert.doesNotMatch(preview, /[#*-]/);
   assert.ok(Array.from(guideBody.getGuidePreviewText('😀'.repeat(40), 12)).length <= 12);
   assert.match(knowledgeSource, /parseGuideBody\(selectedItem\.body\)\.map/);
+  assert.match(knowledgeSource, /selectedItem\.isAiGenerated\s*\?\s*<Text[^>]*>AI-genererat innehåll<\/Text>/);
+  assert.match(trainingSource, /selectedProgram\?\.is_ai_generated\s*\?\s*<Text[^>]*>AI-genererat innehåll<\/Text>/);
   assert.match(knowledgeSource, /getGuidePreviewText\(visibleItems\[0\]\.body\)/);
 });
 
@@ -157,6 +163,7 @@ test('Home opens the exact fetched version and Knowledge resolves that exact row
   const selectedVersion = {
     id: '62000000-0000-4000-8000-000000000003', contentId: '61000000-0000-4000-8000-000000000003',
     version: 1, title: 'Guide', body: 'Content', contentType: 'article', sources: ['https://example.org/guide'],
+    isAiGenerated: true,
   };
   let focus;
   let page;
@@ -180,6 +187,7 @@ function contentRow({ slug, contentType, minAge, versionId, sourceUrls = [], con
     id: versionId, content_id: contentId, version: 1, title: slug === 'daily-log-routines' ? 'Daily log guide' : slug,
     body: slug === 'daily-log-routines' ? 'Record what you choose; this is not clinical advice.' : 'Content body.',
     min_age_weeks: minAge, max_age_weeks: null, status: 'published', sources: sourceUrls,
+    is_ai_generated: true,
     content_items: { slug, content_type: contentType }, content_breed_targets: [],
   };
 }

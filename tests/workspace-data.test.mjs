@@ -414,6 +414,7 @@ function versionRow({ id, contentId, version, title }) {
     min_age_weeks: 0,
     max_age_weeks: null,
     sources: ['https://example.test/source'],
+    is_ai_generated: true,
     content_items: { slug: 'handling-program', content_type: 'training_program' },
     content_breed_targets: [],
   };

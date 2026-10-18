@@ -23,7 +23,7 @@ test('workspace saved progress projects into the selected local activity day wit
   const { client, requests } = localClient(({ url }) => {
     if (url.pathname === '/rest/v1/content_versions') return jsonResponse([{
       id: versionId, content_id: '44444444-4444-4444-8444-444444444444', version: 1, status: 'published',
-      title: 'Lugn vardag', body: 'Synthetic only.', min_age_weeks: 0, max_age_weeks: null, sources: ['synthetic test'],
+      title: 'Lugn vardag', body: 'Synthetic only.', min_age_weeks: 0, max_age_weeks: null, sources: ['synthetic test'], is_ai_generated: true,
       content_items: { slug: 'lugn-vardag', content_type: 'training_program' }, content_breed_targets: [],
     }]);
     if (url.pathname === '/rest/v1/training_progress') return jsonResponse([{

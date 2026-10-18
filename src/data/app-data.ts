@@ -43,6 +43,7 @@ export interface HomeContent {
   body: string;
   contentType: 'article' | 'guide' | 'checklist' | 'training_program';
   sources: readonly string[];
+  isAiGenerated: boolean;
 }
 
 const DOG_REQUEST_DEADLINE_MS = 12_000;
@@ -57,6 +58,7 @@ interface ContentVersionRow {
   min_age_weeks: number;
   max_age_weeks: number | null;
   sources: string[];
+  is_ai_generated: boolean;
   content_items: { slug: string; content_type: string };
   content_breed_targets: { breed_id: string }[];
 }
@@ -297,7 +299,7 @@ function isDefiniteClientRejection(error: unknown): boolean {
 export async function fetchHomeContent(client: SupabaseClient, dog: OwnedDog, ageWeeks: number): Promise<HomeContent[]> {
   const { data, error } = await client
     .from('content_versions')
-    .select('id,content_id,version,status,title,body,min_age_weeks,max_age_weeks,sources,content_items!inner(slug,content_type),content_breed_targets(breed_id)')
+    .select('id,content_id,version,status,title,body,min_age_weeks,max_age_weeks,sources,is_ai_generated,content_items!inner(slug,content_type),content_breed_targets(breed_id)')
     .eq('status', 'published')
     .lte('min_age_weeks', ageWeeks)
     .or(`max_age_weeks.is.null,max_age_weeks.gte.${ageWeeks}`);
@@ -325,7 +327,7 @@ export async function fetchHomeContent(client: SupabaseClient, dog: OwnedDog, ag
     const item = byId.get(version.id);
     const contentType = item?.content_items.content_type;
     if (!item || !contentType || !isContentType(contentType)) return [];
-    return [{ id: item.id, contentId: item.content_id, version: item.version, title: item.title, body: item.body, contentType, sources: item.sources }];
+    return [{ id: item.id, contentId: item.content_id, version: item.version, title: item.title, body: item.body, contentType, sources: item.sources, isAiGenerated: item.is_ai_generated }];
   });
 }
 
@@ -342,6 +344,7 @@ function isContentVersionRow(value: unknown): value is ContentVersionRow {
     && typeof row.body === 'string'
     && typeof row.min_age_weeks === 'number'
     && (typeof row.max_age_weeks === 'number' || row.max_age_weeks === null)
+    && typeof row.is_ai_generated === 'boolean'
     && Array.isArray(row.sources) && row.sources.every((source) => typeof source === 'string')
     && !!parent && typeof parent === 'object' && !Array.isArray(parent)
     && typeof (parent as Record<string, unknown>).slug === 'string'

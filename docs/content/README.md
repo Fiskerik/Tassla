@@ -15,3 +15,7 @@ Varje version har `body_claim_refs` och varje träningssteg har `claim_refs`, b�
 Kör `python tools/validate_content_bundle.py` för strukturkontroll. `--publication-check` kräver godkända grindar och befintliga evidensreferenser för publicerade versioner; onboardingversionen får förbli draft. Kontrollen är strukturell, inte en autenticitetskontroll.
 
 `supabase/content/mvp-content-v1.sql` är en manuell draft-import med exakt parity-verifiering. Efter den importen kan `supabase/content/publish-mvp-content-v1.sql` köras för att publicera de tio godkända runtimeversionerna. Det är en separat, transaktionell SQL-åtgärd och har inte körts mot en databas här. Appens loaders hämtar endast `status=published`; draftversioner förblir dolda.
+
+## AI-ursprungsmärkning och publicering
+
+Före import och apprelease appliceras `supabase/migrations/202610180002_content_ai_origin.sql`. Draft-importen markerar alla elva v1-versioner `is_ai_generated=true` och verifierar ursprunget tillsammans med exakt body/source-paritet. Kör importen före `supabase/content/publish-mvp-content-v1.sql`, som publicerar de tio godkända runtimeversionerna och verifierar deras ursprung; `before-homecoming` förblir AI-markerad draft. Appen visar `AI-genererat innehåll` när en guide eller ett träningsprogram öppnas. Skripten är inte applicerade i fjärrdatabasen från denna miljö.

@@ -47,7 +47,11 @@ export function Toast({ visible, tone, message, onUndo, onRetry, onCancel, confi
     setRetainedContent(currentContent);
   }
   const displayContent = visible ? currentContent : retainedContent;
-  const action = displayContent.tone === 'success' && displayContent.onUndo ? { label: 'Ångra', onPress: displayContent.onUndo, disabled: false } : (displayContent.tone === 'error' || displayContent.tone === 'uncertain') ? { label: 'Försök igen', onPress: displayContent.onRetry ?? (() => undefined), disabled: !displayContent.onRetry } : undefined;
+  const action = displayContent.tone === 'success' && displayContent.onUndo
+    ? { label: 'Ångra', accessibilityLabel: `Ångra: ${displayContent.message}`, iconName: 'return-up-back-outline' as const, onPress: displayContent.onUndo, disabled: false }
+    : (displayContent.tone === 'error' || displayContent.tone === 'uncertain')
+      ? { label: 'Försök igen', accessibilityLabel: 'Försök igen', iconName: undefined, onPress: displayContent.onRetry ?? (() => undefined), disabled: !displayContent.onRetry }
+      : undefined;
 
   const scheduleAutoDismiss = useCallback((currentGeneration: number) => {
     if (autoDismissTimer.current) clearTimeout(autoDismissTimer.current);
@@ -124,12 +128,11 @@ export function Toast({ visible, tone, message, onUndo, onRetry, onCancel, confi
   const exposed = visible && phase === 'visible';
   const opacity = motion;
   const translateY = motion.interpolate({ inputRange: [0, 1], outputRange: [tokens.motion.distance, 0] });
-  return <Animated.View accessibilityRole={exposed ? 'alert' : undefined} accessibilityLabel={exposed ? displayContent.message : undefined}
-    accessibilityElementsHidden={!exposed} importantForAccessibility={exposed ? 'auto' : 'no-hide-descendants'}
+  return <Animated.View accessibilityElementsHidden={!exposed} importantForAccessibility={exposed ? 'auto' : 'no-hide-descendants'}
     pointerEvents={exposed ? 'auto' : 'none'} style={[styles.toast, (displayContent.tone === 'error' && displayContent.onCancel) && styles.withCancel, displayContent.tone === 'error' && styles.error, displayContent.tone === 'success' && styles.success, displayContent.tone === 'uncertain' && styles.uncertain, { opacity, transform: [{ translateY }] }]}>
     {displayContent.tone === 'success' ? <Ionicons name="checkmark-circle" size={tokens.size.iconSm} color={tokens.colors.success} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}
-    <Text style={[styles.message, displayContent.tone === 'success' && styles.successMessage]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{displayContent.message}</Text>
-    {action ? <Button variant="tertiary" label={action.label} accessibilityLabel={action.label} onPress={action.onPress} disabled={action.disabled || !exposed} /> : null}
+    <Text accessible accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.message, displayContent.tone === 'success' && styles.successMessage]}>{displayContent.message}</Text>
+    {action ? <Button variant={action.iconName ? 'icon' : 'tertiary'} label={action.label} accessibilityLabel={action.accessibilityLabel} iconName={action.iconName} onPress={action.onPress} disabled={action.disabled || !exposed} /> : null}
     {displayContent.tone === 'error' && displayContent.onCancel ? <Button variant="secondary" label="Avbryt" accessibilityLabel="Avbryt" onPress={displayContent.onCancel} disabled={!exposed} /> : null}
   </Animated.View>;
 }

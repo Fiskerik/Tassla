@@ -171,6 +171,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
 
     <BottomSheet visible={Boolean(selectedProgram)} title={selectedStep ? 'Övning' : 'Om programmet'} onRequestClose={() => { if (!busyStepKey) setSelection(null); }}>
       <Text style={styles.sheetHeading}>{selectedStep?.title ?? selectedProgram?.title}</Text>
+      {selectedProgram?.is_ai_generated ? <Text style={styles.note}>AI-genererat innehåll</Text> : null}
       <Text style={styles.body}>{selectedStep?.instruction ?? selectedProgram?.body}</Text>
       <Text style={styles.note}>Anpassa efter din hund och pausa när det behövs.</Text>
       {!selectedStep ? <><SectionHeader title="Källor" />{selectedProgram?.sources.map((source) => <Text key={source} style={styles.note}>{source}</Text>)}</> : null}

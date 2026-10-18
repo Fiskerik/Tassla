@@ -802,3 +802,25 @@ Codemagic-loggen i `Tassla_55_artifacts.zip` stannar i `Check application`. Den 
 Kontroller: `CI=1 pnpm check` PASS (TypeScript, edge typecheck, ESLint och 492/492 tester); Expo iOS bundle-export PASS; content/release guards PASS; `git diff --check` PASS. Oberoende QA PASS och statisk Reviewer PASS. Ingen annan Codemagic-fas finns i det bifogade utdraget, så det bevisar varken fel eller PASS för prebuild, CocoaPods, signering eller Xcode-arkivering. Expo iOS prebuild/native archive är NOT TESTABLE på denna Windows-miljö; verklig Mac/Codemagic-körning saknas.
 
 Erik har nu uttryckligen bett att committa och pusha efter de lokala gates. Erik har förtydligat att commit/push inte ska vänta på Codemagic. Samtliga lokala icke-Mac-gates är gröna; den fjärrkörningen är inte verifierad här. Om Codemagic visar ett nytt fel efter pushen ska felet rättas från steploggen före nästa push.
+
+### CONTENT-PUBLISH-LABEL-01 — lokal implementation klar, databasesteg väntar, 2026-10-18
+
+De publicerade kunskaps- och träningsdetaljerna visar nu etiketten ”AI-genererat innehåll” när ursprungsfältet är sant. Båda publicerade content-loaders validerar och mappar fältet. Importen markerar de elva versionsraderna som AI-genererade; transaktionell publicerings-SQL kontrollerar och låser de elva kända raderna, publicerar tio runtime-versioner och håller `before-homecoming` som draft.
+
+Kontroller: content-bundle publication check PASS; `pnpm check` PASS (493/493); `pnpm bundle:ios` PASS; `git diff --check` PASS. Arkitekt, Security, QA och Reviewer har PASS för plan/källkod och statisk SQL-granskning. Fjärtdatabas migration/import/publicering/readback är NOT TESTABLE: ingen Supabase CLI, länkad projektref, credential eller databasverktyg finns i körmiljön. Inga DB-rader ändrades. Kör migrationsfilen, innehållsimporten och guarded publish-filen i den avsedda Supabase-miljön i dokumenterad ordning och verifiera readback före rollout. Underlag: [paketplan](CONTENT-PUBLISH-LABEL-01.md) och [UX-spec](../../plans/CONTENT-PUBLISH-LABEL-01-ux-spec.md).
+
+
+### UI-SHEET-ACTIONS-01 — nedåtsvep och knapp-/UX-plan, 2026-10-18
+
+Användarens BottomSheet-patch är applicerad och anpassad: handtag/rubrik är dragyta, samma parent-onRequestClose hanterar alla stängvägar, useLayoutEffect håller callbacken aktuell, och timers/animationer städas på ny dragning, hide/reopen, reduced motion och unmount. Ingen lokal visibility-state eller ändrad datalagring. Guardpredikaten i Health/Training/Log/Daily manager/checklistor är källgranskade; controller-testet modellerar nekad stängning, inte hela formuläret.
+
+Reproducerbar knappinventering omfattar 120 källfiler, 0 parserfel och 416 kontroll-/actionplatser (303 app, 48 delade, 65 preview/galleri; 25 Alert-objekt och 8 system-API-platser ingår). Kodplatser är inte unika runtimeknappar. Samtliga bifogade UX-tips har nuläge, prioritet, avgränsning och testbara paket; framtida ikonbyten följer Eriks Ångra-pil och kontextuella penna men bevarar primär-/fel-/samtyckes-/destruktiv text. Inga breda knappbyten eller nya UX-funktioner byggdes utöver svepet.
+
+Architect APPROVE, Critic PROCEED, oberoende QA PASS och Reviewer PASS för den lokala checkpointen. Riktade tester 24/24, full pnpm check 517/517, public iOS JS-export, verktygsregenerering, whitespace (inklusive nya filer) och kövalidering PASS. Native gest/tangentbord/VoiceOver, visuella jämförelsebilder och verkliga appflöden är NOT TESTABLE; ingen Mac/Codemagic/DB-körning påstås. Befintlig content-publish-diff bevaras. Ingen commit/push gjord. Nästa föreslagna paket: UI-ACTIONS-COMMON. Underlag: [plan](UI-SHEET-ACTIONS-01.md), [nästa paket](../../plans/UI-UX-NEXT-PACKAGES-2026-10-18.md), [inventering](../../design/UI-ACTION-INVENTORY-2026-10-18.md) och [verifiering](../../design/evidence/sheet-actions-2026-10-18/VERIFICATION.md).
+
+
+### UI-ACTIONS-COMMON — lokal implementering, 2026-10-18
+
+Gemensamma Ångra-/datum-/tidskontroller har uppdaterats enligt plan v2. Architect APPROVE och UX Critic PROCEED. Bekräftad logg-add får en separat fokuserbar `return-up-back-outline`-knapp med objektbundet a11y-namn; toastmeddelandet är ett message-only alert. Retry/Avbryt och callbacks är bevarade. Kalender-/tidsfält visar ikoner och fältbundna etiketter; månadsnavigering använder ikonknappar och ren helper. Kalendergrid vid 375pt har 343pt enligt tokeninsets, med 44×44pt dagrutor.
+
+Riktade tester 12/12, `CI=1 pnpm check` 521/521, public `pnpm bundle:ios`, 121-filers/416-controls inventory-regenerering, `git diff --check` och `PYTHONUTF8=1 python tools/dev_flow.py validate` PASS. Se [verifieringsunderlag](../../design/evidence/ui-actions-common-2026-10-18/VERIFICATION.md). Native/VoiceOver/visuell pixeljämförelse NOT TESTABLE. Oberoende QA PASS (12/12) och Reviewer PASS; logik, tillgänglighetssemantik och 343pt/44pt gridberäkning granskade. Inga commits/pushar gjorda.

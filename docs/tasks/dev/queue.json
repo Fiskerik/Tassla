@@ -7626,6 +7626,254 @@
       ],
       "implementation_state": "Plan v5 implementerad; Codemagic Check application-felen rättade; oberoende QA och statisk Reviewer PASS.",
       "evidence_status": "partial: CI=1 pnpm check PASS (492/492), Expo iOS export PASS, guards/diff-check PASS, QA PASS, Reviewer PASS; Codemagic cloud, Xcode archive, CocoaPods/signing/native NOT TESTABLE."
+    },
+    {
+      "id": "CONTENT-PUBLISH-LABEL-01",
+      "title": "Publicera v1-innehåll med synlig AI-ursprungsmarkering",
+      "mvp_requirement": "docs/mvp.md: Kunskap och tre träningsprogram",
+      "plan": "docs/tasks/dev/CONTENT-PUBLISH-LABEL-01.md v1",
+      "write_paths": [
+        "docs/tasks/dev/CONTENT-PUBLISH-LABEL-01.md",
+        "docs/plans/CONTENT-PUBLISH-LABEL-01-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/content/README.md",
+        "src/data/app-data.ts",
+        "src/data/workspace-data.ts",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/review-content.ts",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "tests/content-delivery.test.mjs",
+        "tests/workspace-data.test.mjs",
+        "tests/training-activity-date.test.mjs",
+        "tests/content-bundle.test.mjs",
+        "supabase/migrations/202610180002_content_ai_origin.sql",
+        "supabase/content/mvp-content-v1.sql",
+        "supabase/content/publish-mvp-content-v1.sql",
+        "supabase/README.md"
+      ],
+      "acceptance": [
+        "De tio uttryckligen godkända runtimeversionerna sätts PUBLISHED och AI-markerade av transaktionellt SQL med exakt readback-guard",
+        "before-homecoming finns exakt en gång, är AI-markerad och fortsatt draft",
+        "Öppnad artikel/programdetalj visar AI-genererat innehåll; källor hålls separata",
+        "Båda publicerade content loaders validerar och mappar AI-origin-fältet",
+        "Migration/import/publish-ordning dokumenterad; fjärrdatabas redovisas endast verifierad efter riktig readback"
+      ],
+      "checks": [
+        "python tools/validate_content_bundle.py --publication-check",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "Statisk SQL-/schema-/UI-granskning; remote SQL readback separat och NOT TESTABLE tills projektet är verifierat"
+      ],
+      "depends_on": [
+        "MVP-P05-CONTENT-UI"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v1 after migration ordering/exact-row guard updates; Critic PROCEED; Security APPROVE; user explicitly requested publication and AI-origin label. Reviews in this task thread."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementing bounded local schema/app/SQL slice under approved plan v1; do not execute remote SQL without confirmed dev target and live readback."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation checkpoint complete; local bundle publication validation, pnpm check (493/493), iOS JS bundle export and diff check pass. Remote Supabase readback NOT TESTABLE due absent verified connection."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS on local acceptance, SQL guard coverage and canonical hashes. No remote DB run; still NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS; Architect and Security PASS. Local code checkpoint is complete. Remote migration/import/publish/readback remains NOT TESTABLE and must run before content is live."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS; Architect and Security PASS. Local code checkpoint is complete. Remote migration/import/publish/readback remains NOT TESTABLE and must run before content is live.",
+      "priority": "P1",
+      "panels": [
+        "Kunskap",
+        "Träning"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Slice A — local provenance field, detail label and guarded content SQL",
+      "test_evidence": "PASS: python tools/validate_content_bundle.py --publication-check; pnpm check (493/493); pnpm bundle:ios; git diff --check. Architect/Security/QA/Reviewer PASS on local SQL/schema/UI; remote Supabase migration/import/publish/readback NOT TESTABLE (no verified project link, CLI, credentials or DB tool)."
+    },
+    {
+      "id": "UI-SHEET-ACTIONS-01",
+      "title": "Svep ned i BottomSheet och inventera appens knappar",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md: kompletta användarresor; docs/design-rules.md §6, §14–15",
+      "plan": "docs/tasks/dev/UI-SHEET-ACTIONS-01.md v1",
+      "write_paths": [
+        "src/components/ui/BottomSheet.tsx",
+        "src/components/ui/sheet-dismiss.ts",
+        "src/components/ui/sheet-drag.ts",
+        "tests/sheet-dismiss.test.mjs",
+        "tools/inventory-ui-actions.cjs",
+        "docs/tasks/dev/UI-SHEET-ACTIONS-01.md",
+        "docs/plans/UI-SHEET-ACTIONS-01-ux-spec.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "docs/design/UI-ACTION-INVENTORY-2026-10-18.md",
+        "docs/design/UI-ACTION-INVENTORY-2026-10-18.csv",
+        "docs/design/evidence/sheet-actions-2026-10-18",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Nedåtgest använder senaste guardade stängvägen; scrollning och utkast bevaras",
+        "Reopen/reduced-motion/timer/animation/avbruten gest är verifierade",
+        "Alla knappkodplatser och dynamiska grupper är inventerade med text-/ikonrekommendation",
+        "Bifogade UX-tips har verifierat nuläge och testbara prioriterade paket"
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/sheet-dismiss.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "node tools/inventory-ui-actions.cjs",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v1. Adapt patch: cancel timers/animation on new drag, hide/reopen/unmount, use layout effect for current callbacks; test lifecycle races. Inventory includes wrappers/native alerts/dynamic groups and parsed coverage."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Applying reviewed patch within declared four code/test files, then exhaustive button inventory and future UX plan. Existing content publication diff protected."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Local implementation complete; pnpm check 517/517, targeted sheet tests 24/24, public iOS JS export PASS. Inventory and all future UX tips documented. Native/visual NOT TESTABLE explicitly; independent QA now verifies."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: reran 24/24 tests, byte-identical inventory regeneration, all guarded sheet callers retain protections; 120 files/416 sites. Native, keyboard, VoiceOver and visual NOT TESTABLE; local checkpoint ready for Reviewer."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS, no blockers; QA PASS; local code/docs checkpoint complete. 517 tests and iOS JS export PASS. Native, keyboard, VoiceOver, caller runtime and visual NOT TESTABLE remain open; next proposed package UI-ACTIONS-COMMON, no commit/push."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS, no blockers; QA PASS; local code/docs checkpoint complete. 517 tests and iOS JS export PASS. Native, keyboard, VoiceOver, caller runtime and visual NOT TESTABLE remain open; next proposed package UI-ACTIONS-COMMON, no commit/push.",
+      "priority": "P1",
+      "panels": [
+        "Alla BottomSheet-användare",
+        "Appövergripande inventering"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Nedåtgest lokalt, knappinventering och dokumenterad framtidsplan",
+      "test_evidence": "PASS: Architect APPROVE, Critic PROCEED, independent QA/Reviewer PASS; 24/24 sheet tests; pnpm check 517/517; public iOS JS export; inventory byte-identical 120 files/0 parse errors/416 sites; whitespace and queue. Native gesture/VoiceOver/keyboard/visual and caller-level runtime NOT TESTABLE; see evidence report."
+    },
+    {
+      "id": "UI-ACTIONS-COMMON",
+      "title": "Ikoner för bekräftad ångra, kalender och klocka",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md: sanningsenlig återkoppling och primära användarresor; docs/design-rules.md §6–7, §14–15",
+      "plan": "docs/tasks/dev/UI-ACTIONS-COMMON.md v2",
+      "write_paths": [
+        "src/components/ui/Toast.tsx",
+        "src/components/AppPrimitives.tsx",
+        "tests/toast-compact-policy.test.mjs",
+        "tests/planned-health-time.test.mjs",
+        "docs/tasks/dev/UI-ACTIONS-COMMON.md",
+        "docs/plans/UI-ACTIONS-COMMON-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/ui-actions-common-2026-10-18/VERIFICATION.md",
+        "src/components/calendar-month.ts",
+        "tests/calendar-month.test.mjs",
+        "docs/design/UI-ACTION-INVENTORY-2026-10-18.md",
+        "docs/design/UI-ACTION-INVENTORY-2026-10-18.csv"
+      ],
+      "acceptance": [
+        "Endast bekräftad, undoable logg-add visar return-up-back-outline; message-only Text annonseras som alert och Ångra-knappen är ett separat fokuserbart syskon med namn Ångra: {händelse}",
+        "Retry, uncertain, Avbryt och destructive actions behåller synlig text och oförändrad state/callback",
+        "DatePickerField visar kalenderikon och värde/etikett; TimePickerField visar time-outline och värde/etikett; båda har fältbundna svenska a11y-namn och minst 44pt",
+        "Kalendern visar månad, prev/next är ikonknappar med riktnings-/månadsnamn och navigerar rätt över årsskifte; vid 375pt viewport är dialogens grid minst 308pt brett och dagrutor minst 44×44 pt",
+        "Manuellt datum/tid, valid/invalid draft, bekräfta/Avbryt, input- och disabled-flöden bevaras"
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/toast-compact-policy.test.mjs tests/planned-health-time.test.mjs tests/calendar-month.test.mjs (message/action separation, dialog grid width and 44×44 day targets, calendar month/year boundaries)",
+        "CI=1 pnpm check",
+        "TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false pnpm bundle:ios",
+        "node tools/inventory-ui-actions.cjs",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-SHEET-ACTIONS-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v2; exact acceptance/scope reviewed in task thread; Critic PROCEED v2. Reviews saved in docs/tasks/dev/UI-ACTIONS-COMMON.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Architect APPROVE and Critic PROCEED for plan v2; beginning implementation within declared source/test/docs and generated inventory paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete; focused tests 12/12, CI=1 pnpm check (521/521), public iOS bundle export, regenerated action inventory (121 files/0 parse errors/416 sites), diff check and queue validation PASS. Native visual/VoiceOver NOT TESTABLE; evidence in docs/design/evidence/ui-actions-common-2026-10-18/VERIFICATION.md."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS; 12/12 focused tests rerun. Confirmed undo gating/accessibility, icon controls, date/time state preservation, 343pt calendar grid and 44x44 targets. Native visual/VoiceOver/Dynamic Type NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS with no blockers; QA PASS. All local acceptance and package gates pass. Native visual rendering, VoiceOver, Dynamic Type and physical device layout remain NOT TESTABLE; durable checkpoint saved in report/evidence, no commit or push."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS with no blockers; QA PASS. All local acceptance and package gates pass. Native visual rendering, VoiceOver, Dynamic Type and physical device layout remain NOT TESTABLE; durable checkpoint saved in report/evidence, no commit or push.",
+      "priority": "P1",
+      "panels": [
+        "Logga",
+        "Mer: datum och tid",
+        "Hälsa",
+        "Påminnelser"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Gemensam toast/datum/tid med ikonknappar och bevarad semantik",
+      "test_evidence": "PASS: Architect APPROVE v2, UX Critic PROCEED v2, independent QA PASS (12/12), Reviewer PASS; CI check 521/521, public iOS JS export, inventory 121 files/0 parse errors/416 sites, diff and queue validation. Native/VoiceOver/visual NOT TESTABLE."
     }
   ]
 }

@@ -87,3 +87,17 @@ Följande behålls för spårbarhet. Läs sammanfattningen ovan först; original
 ### HOME-ROUTINE-CHECKLIST-01 — lokal UI-slice klar, 2026-10-15
 
 Rutinhallen har en gemensam kompakt yta, samlad redigering, sanningsenlig upprepning, dagsval och bekräftad helradering. Raderingsbekräftelsen anger nu att rutinen, dess dagskopior och sparade överhoppningar tas bort. Oberoende QA PASS och Reviewer PASS. App-/edge-typecheck, full ESLint och Node-testsviten passerade igen; 492/492 tester. Checkpoint: committen `fix: clarify routine deletion cascade` på `codex/ux-rethink-2026-10-15`. Underlag: [taskrapport](../tasks/dev/rapport.md) och [renderunderlag](../design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md). Live Supabase/RLS/migration, native Alert/tillgänglighet och fullskärmslistans filter är inte verifierade; denna slice stänger inte hela panel 4.
+
+### CONTENT-PUBLISH-LABEL-01 — lokal kodcheckpoint, 2026-10-18
+
+AI-ursprungsflaggan och svenska etiketten är implementerade för öppnade kunskapsartiklar, träningsprogram och träningssteg. SQL-artifakterna täcker 10 godkända runtimeversioner; `before-homecoming` behålls som draft. Content-bundle-validering, `pnpm check` (493/493), iOS JS-bundle-export och `git diff --check` passerade. Architect, Security, oberoende QA och Reviewer PASS för lokal/static granskning. Fjärtdatabas är NOT TESTABLE i denna miljö: saknas verifierad Supabase-anslutning/CLI/credentials, och ingen databas har ändrats. Fulla bevis och migrationsordning: [paketrapport](../tasks/dev/rapport.md) och [plan](../tasks/dev/CONTENT-PUBLISH-LABEL-01.md).
+
+
+### UI-SHEET-ACTIONS-01 — lokal gestimplementation och UX-plan, 2026-10-18
+
+BottomSheet kan dras ned via handtag/rubrik, med befintliga stängningsspärrar och rätt lifecycle-/reduced-motion-städning. Komplett statisk actioninventering (120 källfiler/416 platser) och framtida text-/ikon-/UX-paket finns i [paketplanen](../plans/UI-UX-NEXT-PACKAGES-2026-10-18.md). Architect APPROVE, Critic PROCEED, oberoende QA PASS och Reviewer PASS. 24 riktade tester, full pnpm check 517/517, public iOS JS-bundle, inventeringsregenerering, whitespace och kövalidering PASS. Kodcheckpoint i arbetsdiff, ingen commit/push. Native gest/tangentbord/VoiceOver och rev02-visuellt är NOT TESTABLE; caller-guards är källgranskade, inte testade som hela appflöden. Fullt underlag: [task](../tasks/dev/UI-SHEET-ACTIONS-01.md) och [evidens](../design/evidence/sheet-actions-2026-10-18/VERIFICATION.md). Nästa föreslagna paket är 1a, gemensamma Ångra-/datum-/tidskontroller.
+
+
+### UI-ACTIONS-COMMON — lokalt verifierat, 2026-10-18
+
+Gemensamma ikonåtgärder för bekräftad logg-undo, datum och tid enligt plan v2. Toastens alertmeddelande och undo-knapp är separata tillgänglighetselement; datumdialogen ryms för sju 44pt-dagceller vid 375pt. Architect APPROVE, UX Critic PROCEED. Oberoende QA PASS (12/12) och Reviewer PASS, utan blockerare. Riktade tester 12/12, `CI=1 pnpm check` 521/521, public iOS JS-export, inventory (121 filer/0 parsefel/416 actions), whitespace och queue validation PASS. Native/VoiceOver/visuell rendering NOT TESTABLE. [Paket och verifiering](../tasks/dev/UI-ACTIONS-COMMON.md), [evidens](../design/evidence/ui-actions-common-2026-10-18/VERIFICATION.md).

@@ -350,10 +350,12 @@ test('draft SQL import is transactional, exact-idempotent, and cannot manufactur
   assert.equal(stepInserts.length, 9);
   for (const [, columns] of versionInserts) {
     assert.match(columns, /\bstatus\b/i);
+    assert.match(columns, /\bis_ai_generated\b/i);
     assert.doesNotMatch(columns, /reviewed_at|review_reference|published_at/i);
   }
   assert.doesNotMatch(sql, /\bupdate\s+public\.(?:content_items|content_versions|training_steps)\b/i);
   assert.doesNotMatch(sql, /status\s*=\s*'published'|status\s*,[^)]*published_at/i);
+  assert.equal((sql.match(/, 'draft', true, ARRAY\[/g) ?? []).length, 11);
   assert.match(sql, /content version mismatch:/i);
   assert.match(sql, /reviewed_at is null and review_reference is null and published_at is null/i);
   assert.match(sql, /breed target count mismatch:/i);
@@ -366,6 +368,16 @@ test('draft SQL import is transactional, exact-idempotent, and cannot manufactur
   assert.match(sql, /content item mismatch:/i);
   assert.equal((sql.match(/on conflict \(id\) do nothing/ig) ?? []).length, 31);
   // Static inspection only: no SQL is executed and deployed idempotence remains unverified.
+});
+
+test('publication SQL marks exactly ten approved versions as AI-generated and preserves the onboarding draft', () => {
+  const sql = normalizeNewlines(readFileSync(join(root, 'supabase', 'content', 'publish-mvp-content-v1.sql'), 'utf8'));
+  assert.equal((sql.match(/set is_ai_generated=true, status='published'/g) ?? []).length, 10);
+  assert.match(sql, /status='published' and reviewed_at='2026-10-08T00:00:00Z'[\s\S]*?is_ai_generated=true/);
+  assert.match(sql, /i\.content_type=e\.content_type and v\.title=e\.title/);
+  assert.match(sql, /md5\(v\.body\)=e\.body_hash[\s\S]*?md5\(array_to_string\(array\(select unnest\(v\.sources\) order by 1\)/);
+  assert.match(sql, /select count\(\*\)[\s\S]*?content_id='61000000-0000-4000-8000-000000000001'::uuid[\s\S]*?status='draft' and is_ai_generated=true\) <> 1/);
+  assert.match(sql, /202610180002_content_ai_origin/);
 });
 
 test('draft SQL literals preserve every canonical item, version body/source set and training step', async () => {
@@ -407,7 +419,7 @@ test('approved publish SQL promotes exactly the ten runtime versions and keeps o
   assert.deepEqual(updates.sort(), approvedIds.sort());
   assert.match(sql, /review_reference='docs\/content\/mvp-content-approval-v1\.md'/);
   assert.match(sql, /approved content publication mismatch/);
-  assert.match(sql, /onboarding-only content must remain draft/);
+  assert.match(sql, /onboarding-only content must exist exactly once as an AI-origin draft/);
   assert.doesNotMatch(sql, /62000000-0000-4000-8000-000000000001'::uuid and status='draft'/);
 });
 

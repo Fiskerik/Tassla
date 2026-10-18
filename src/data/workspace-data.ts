@@ -163,6 +163,7 @@ export interface PublishedTrainingProgram {
   title: string;
   body: string;
   sources: string[];
+  is_ai_generated: boolean;
   steps: PublishedTrainingStep[];
   completedStepIds: string[];
   completedAtByStepId: Record<string, string>;
@@ -183,6 +184,7 @@ interface PublishedVersionRow {
   min_age_weeks: number;
   max_age_weeks: number | null;
   sources: string[];
+  is_ai_generated: boolean;
   content_items: { slug: string; content_type: string };
   content_breed_targets: { breed_id: string }[];
 }
@@ -893,7 +895,7 @@ export async function fetchPublishedContentVersions(
 ): Promise<PublishedVersionRow[]> {
   return withRequestDeadline(async (signal) => {
     const { data, error } = await client.from('content_versions')
-      .select('id,content_id,version,status,title,body,min_age_weeks,max_age_weeks,sources,content_items!inner(slug,content_type),content_breed_targets(breed_id)')
+      .select('id,content_id,version,status,title,body,min_age_weeks,max_age_weeks,sources,is_ai_generated,content_items!inner(slug,content_type),content_breed_targets(breed_id)')
       .eq('status', 'published')
       .abortSignal(signal);
     const rows: unknown = data;
@@ -925,7 +927,7 @@ export async function fetchHomeContent(
     const row = byId.get(id);
     const contentType = row?.content_items.content_type;
     if (!row || !isDisplayableContentType(contentType)) return [];
-    return [{ id: row.id, contentId: row.content_id, version: row.version, title: row.title, body: row.body, contentType, sources: row.sources }];
+    return [{ id: row.id, contentId: row.content_id, version: row.version, title: row.title, body: row.body, contentType, sources: row.sources, isAiGenerated: row.is_ai_generated }];
   });
 }
 
@@ -974,6 +976,7 @@ export async function fetchTrainingWorkspace(
     title: row.title,
     body: row.body,
     sources: row.sources,
+    is_ai_generated: row.is_ai_generated,
     steps: steps.filter((step) => step.program_version_id === row.id).sort((left, right) => left.position - right.position),
     completedStepIds: progress.filter((item) => item.program_version_id === row.id).map((item) => item.step_id),
     completedAtByStepId: Object.fromEntries(progress
@@ -1191,6 +1194,7 @@ function isPublishedVersionRow(value: unknown): value is PublishedVersionRow {
     && typeof row.version === 'number' && row.status === 'published' && typeof row.title === 'string' && typeof row.body === 'string'
     && typeof row.min_age_weeks === 'number'
     && (typeof row.max_age_weeks === 'number' || row.max_age_weeks === null)
+    && typeof row.is_ai_generated === 'boolean'
     && Array.isArray(row.sources) && row.sources.every((source) => typeof source === 'string')
     && Boolean(parent) && typeof parent === 'object' && !Array.isArray(parent)
     && typeof (parent as Record<string, unknown>).slug === 'string'

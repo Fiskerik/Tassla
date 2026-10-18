@@ -108,6 +108,7 @@ export function KnowledgeScreen({
         </View>}
         {selectedItem && <View style={styles.articleCard}>
           <Text style={styles.articleTitle} accessibilityRole="header">{selectedItem.title}</Text>
+          {selectedItem.isAiGenerated ? <Text style={styles.aiOriginLabel}>AI-genererat innehåll</Text> : null}
           <View style={styles.articleBody}>
             {parseGuideBody(selectedItem.body).map((block, index) => {
               if (block.type === 'heading') return <Text
@@ -178,6 +179,7 @@ const styles = StyleSheet.create({
   smallGuideTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
   articleCard: { alignSelf: 'stretch', borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding },
   articleTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
+  aiOriginLabel: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
   articleBody: { marginTop: tokens.spacing.md },
   bodyHeading: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginTop: tokens.spacing.xl },
   bodySubheading: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginTop: tokens.spacing.lg },
