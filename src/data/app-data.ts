@@ -75,6 +75,19 @@ export async function fetchOwnedDog(client: SupabaseClient): Promise<OwnedDog | 
   });
 }
 
+export async function fetchOwnedDogs(client: SupabaseClient): Promise<OwnedDog[]> {
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.from('dogs')
+      .select('id,name,breed_id,birth_date,age_display_unit')
+      .order('created_at', { ascending: true })
+      .order('id', { ascending: true })
+      .abortSignal(signal);
+    if (error || !data) throw new Error('Could not load dog profiles');
+    if (!data.every(isOwnedDog)) throw new Error('Dog profile list did not match the database contract');
+    return data;
+  });
+}
+
 export async function fetchOwnedDogById(client: SupabaseClient, dogId: string): Promise<OwnedDog | null> {
   return withRequestDeadline(async (signal) => {
     const { data, error } = await client.from('dogs')
@@ -162,13 +175,16 @@ export async function fetchBreeds(client: SupabaseClient): Promise<BreedOption[]
 export async function createDog(
   client: SupabaseClient,
   input: { name: string; breedId: string; birthDate: string; kennelCode?: string | null },
+  requestId: string,
 ): Promise<string> {
+  if (!isUuid(requestId)) throw new Error('Dog profile request could not be confirmed');
   return withRequestDeadline(async (signal) => {
-    const { data, error } = await client.rpc('create_dog', {
+    const { data, error } = await client.rpc('create_dog_idempotent', {
       dog_name: input.name.trim(),
       dog_breed_id: input.breedId,
       dog_birth_date: input.birthDate,
       kennel_code: input.kennelCode?.trim().toUpperCase() || null,
+      request_id: requestId,
     }).abortSignal(signal);
     if (error) {
       if (/invalid kennel code/i.test(error.message)) throw new Error('Invalid kennel code');
@@ -177,6 +193,10 @@ export async function createDog(
     if (typeof data !== 'string' || !data) throw new Error('Dog profile creation could not be confirmed');
     return data;
   });
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 export async function ownedDogAttributionMatches(

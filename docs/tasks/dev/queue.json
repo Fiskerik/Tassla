@@ -7327,6 +7327,137 @@
       ],
       "implementation_state": "föreslagen; ingen kod i denna diff",
       "evidence_status": "not_run — required evidence listed in test_evidence"
+    },
+    {
+      "id": "MULTI-DOG-HOME-01",
+      "title": "Hundbyte och säker hundläggning från Hem",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md; docs/mvp.md: rev02 Hem och Kunskap",
+      "plan": "docs/tasks/dev/MULTI-DOG-01.md v5, Slice A",
+      "write_paths": [
+        "supabase/migrations/202610180001_multi_dog_profiles.sql",
+        "src/data/app-data.ts",
+        "src/features/onboarding/dog-creation-storage.ts",
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/account/account-delete.ts",
+        "src/features/home/AppFlow.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/DogProfileSwitcherSheet.tsx",
+        "src/data/README.md",
+        "src/features/onboarding/README.md",
+        "src/features/home/README.md",
+        "docs/design/evidence/multi-dog-2026-10-18/",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Ett konto kan äga 0..N hundar med befintlig per-hund RLS/ägare och stabil dogs.created_at,id sortering",
+        "Hemmaporträttet öppnar en tillgänglig väljare med namn, beräknad ålder, aktiv markering och Lägg till hund",
+        "Vald hund byter hela workspace; gammalt hundinnehåll döljs under laddning och sena svar ignoreras",
+        "Hundskapande har idempotent request-id som återanvänds säkert vid unknown och exakt dog-ID readback",
+        "Hem/Kunskap väljer publicerat innehåll med endast den aktiva hundens ålder/ras; synlig åldersskillnad rapporteras NOT TESTABLE om inget publicerat content skiljer intervallen",
+        "Ingen artikel eller content draft publiceras och ingen hemkomstdag härleds från ålder",
+        "Avbryt från add-form återgår till Hem och öppnar hundväljaren med tidigare vald hund"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm lint",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "status": "review",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v5 (Slice A), Critic PROCEED, Security APPROVE v5. Queue validation PASS. Includes active-dog content scope, idempotent multi-dog migration, SecureStore lifecycle, Home selector, and explicit NOT TESTABLE evidence gates."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Slice A plan v5 is approved; begin implementation of RLS-preserving dog list/create, confirmed active-dog switching and Home add flow. No test suite is authorized; planned checks are static only."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Slice A implementation complete; pnpm typecheck, pnpm lint, git diff --check and UTF-8 queue validation PASS. No test suites, database, app/device flow or screenshot captures were run. Independent architecture and security review pass statically; handing to QA for the same explicit limits."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent static QA PASS: active-dog context, stale-response guards, add/retry/readback, and owner-scoped cleanup reviewed; no source blocker. pnpm typecheck, pnpm lint, git diff --check, and queue validation PASS. End-to-end flow, published 12y/1y article variation, applied Supabase/RLS, native SecureStore, and §14 screenshots remain NOT TESTABLE; slice awaits required evidence and cannot be marked done."
+        }
+      ],
+      "next_step": "Independent static QA PASS: active-dog context, stale-response guards, add/retry/readback, and owner-scoped cleanup reviewed; no source blocker. pnpm typecheck, pnpm lint, git diff --check, and queue validation PASS. End-to-end flow, published 12y/1y article variation, applied Supabase/RLS, native SecureStore, and §14 screenshots remain NOT TESTABLE; slice awaits required evidence and cannot be marked done.",
+      "priority": "P1",
+      "panels": [
+        "1",
+        "7"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Fungerande resa från Hem: byt hund eller lägg till hund och se rätt hundkontext.",
+      "test_evidence": [
+        "Två profiler 12 år och 1 år; väljare och separata urval utan dataläckage",
+        "Create retry med samma request-id, exact readback, mismatch och unknown recovery",
+        "Migrationens membership/RLS/auth lock/account delete-granskning; riktig DB-provning markeras separat",
+        "§14-skärmbilder public/review, 375×844, 430×844, 375×667 och 140% text sparas i docs/design/evidence/multi-dog-2026-10-18/; saknad native/skärmbildsevidens är NOT TESTABLE och hindrar done"
+      ],
+      "implementation_state": "Slice A implementerad; statiska kontroller och källgranskningar PASS; funktions-/UI-runtime-evidens saknas",
+      "evidence_status": "not_testable — publicerad åldersvariation, Supabase/RLS-runtime och §14-skärmbilder saknas; Slice A väntar i review"
+    },
+    {
+      "id": "MULTI-DOG-PROFILE-01",
+      "title": "Hundbyte och hundläggning i Inställningar → Hundprofil",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md; docs/mvp.md: rev02 profil och konto",
+      "plan": "docs/tasks/dev/MULTI-DOG-01.md v5, Slice B",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/more/MoreScreen.tsx",
+        "src/features/onboarding/README.md",
+        "src/features/home/README.md",
+        "docs/design/evidence/multi-dog-2026-10-18/",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Hundprofil visar alla hundar med namn, beräknad ålder och aktiv markering",
+        "Byte från Hundprofil uppdaterar samma AppFlow-val och öppnar Hem med vald hund",
+        "Lägg till hund återanvänder Slice A:s idempotenta RPC och readback; root-listan uppdateras efter bekräftelse",
+        "Unknown state kan kontrolleras och återupptas utan ny request-id eller falsk framgång",
+        "Profilvyn håller tillgänglighet, loading/error states och §14-komposition",
+        "Avbryt från add-form återgår till hundlistan med tidigare aktiva hund markerad"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm lint",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "MULTI-DOG-HOME-01"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Börja först efter MULTI-DOG-HOME-01 QA/review/checkpoint; använd plan v5 efter erforderliga granskningar.",
+      "priority": "P1",
+      "panels": [
+        "1"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Hundprofiler kan bytas och läggas till från Inställningar → Hundprofil.",
+      "test_evidence": [
+        "Hundbyte och säker add från profilrouten, inklusive pending/unknown recovery",
+        "§14-skärmbilder public/review, 375×844, 430×844, 375×667 och 140% text sparas i docs/design/evidence/multi-dog-2026-10-18/; saknad native/skärmbildsevidens är NOT TESTABLE och hindrar done",
+        "Ingen ny SQL eller policy; bygger på granskad Slice A"
+      ],
+      "implementation_state": "planerad; ingen produktkod ändrad",
+      "evidence_status": "not_run — required evidence listed in test_evidence"
     }
   ]
 }

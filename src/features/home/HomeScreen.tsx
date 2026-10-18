@@ -1,5 +1,5 @@
 import { ActivityIndicator, FlatList, Image, StyleSheet, Text, View } from 'react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button, Card, DailyActivityItem, DestinationTile, Skeleton } from '../../components/ui';
 import { HorizontalGestureRegion } from '../../components/ui/MainSwipeNavigation';
@@ -14,6 +14,7 @@ import type { LogEvent } from '../puppy-log/log-model';
 import { homeAgeMarkerLabel, homeAgeStrip } from './home-today';
 import { homeGreetingAt } from './home-greeting';
 import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
+import { DogProfileSwitcherSheet } from './DogProfileSwitcherSheet';
 
 type Destination = 'log' | 'training' | 'knowledge' | 'health' | 'planned-health';
 type LoadState = 'loading' | 'ready' | 'error';
@@ -31,12 +32,18 @@ export type HomeDailyFixtureItem = {
 };
 
 export function HomeScreen({ dog, breed, content, contentState, trainingState = 'loading', nextStep, reviewTrainingStep = false, today: todayValue,
+  ownedDogs = [dog], onSelectDog, onAddDog, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened,
   dailyFixture, dailyState = 'hidden', dailyDateKey = '', dailyScopeKey, dailyActivities = [], routineTemplates = [], routineDaySkips = [], dailyTrainingOptions = [],
   dailyRefreshing = false, dailyRefreshError = false,
   dailyMutationBusy = false, dailyMutationKey = '', dailyMutationMessage = '', dailyMutationError = false, onRetryDaily,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay,
   onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, onGo, onOpenContent, onRetryContent }: {
   dog: OwnedDog;
+  ownedDogs?: readonly OwnedDog[];
+  onSelectDog?: (dogId: string) => void;
+  onAddDog?: () => void;
+  openDogSwitcherInitially?: boolean;
+  onDogSwitcherInitiallyOpened?: () => void;
   breed?: string;
   today?: string;
   events: readonly LogEvent[];
@@ -82,6 +89,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   const [focusRoutineId, setFocusRoutineId] = useState<string | null>(null);
   const [reviewCompletion, setReviewCompletion] = useState<Record<string, boolean>>(() => Object.fromEntries((dailyFixture ?? []).map((item) => [item.id, item.completed])));
   const [portraitFrame, setPortraitFrame] = useState<{ left: number; right: number } | null>(null);
+  const [dogSwitcherVisible, setDogSwitcherVisible] = useState(openDogSwitcherInitially);
   const today = todayValue ?? localDate();
   const age = automaticDogAge(dog.birth_date, today);
   const breedLabel = breed?.trim() || dog.breed_id;
@@ -90,6 +98,10 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
     : undefined;
   const preview = relevantContent ? previewText(relevantContent.body) : '';
   const pageLabel = dailyFixture ? 'Hem. Syntetiskt granskningsläge.' : 'Hem';
+
+  useEffect(() => {
+    if (openDogSwitcherInitially) onDogSwitcherInitiallyOpened?.();
+  }, [onDogSwitcherInitiallyOpened, openDogSwitcherInitially]);
 
   function openManager(routineId: string | null = null) {
     setFocusRoutineId(routineId);
@@ -111,7 +123,10 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
           </> : null}
         </View>
       </View>
-      <View style={styles.dogPortrait} pointerEvents="none" testID="home-dog-portrait"
+      <MotionPressable style={({ pressed }) => [styles.dogPortrait, pressed && styles.portraitPressed]}
+        accessibilityRole="button" accessibilityLabel={`Byt hund. ${dog.name} är vald`}
+        accessibilityHint="Visar dina hundprofiler och möjligheten att lägga till en hund"
+        onPress={() => setDogSwitcherVisible(true)} testID="home-dog-portrait"
         onLayout={(event) => {
           const { x, width } = event.nativeEvent.layout;
           setPortraitFrame((current) => current?.left === x && current.right === x + width ? current : { left: x, right: x + width });
@@ -120,8 +135,8 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
           <Image source={require('../../../assets/images/home-dog-portrait-placeholder.png')}
             style={styles.dogImage} resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
         </View>
-        <Text accessible accessibilityRole="text" accessibilityLabel="Standardbild" testID="home-portrait-standard-label" style={styles.portraitLabel}>Standardbild</Text>
-      </View>
+        <Text accessible={false} testID="home-portrait-standard-label" style={styles.portraitLabel}>Standardbild</Text>
+      </MotionPressable>
       {age ? <HomeAgeStrip key={`${dog.id}:${age.unit}`} birthDate={dog.birth_date} today={today} unit={age.unit} portraitFrame={portraitFrame} /> : null}
     </View>
 
@@ -218,6 +233,10 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
       onRetryMutation={onRetryDailyMutation} onCreateRoutine={onCreateRoutine} onUpdateRoutine={onUpdateRoutine}
       onDeleteRoutine={onDeleteRoutine} onAddRoutineToDay={onAddRoutineToDay} onRemoveRoutineFromDay={onRemoveRoutineFromDay}
       onAddTrainingToDay={onAddTrainingToDay} onRemoveTrainingFromDay={onRemoveTrainingFromDay} onGoTraining={() => onGo('training')} />
+    <DogProfileSwitcherSheet visible={dogSwitcherVisible} dogs={ownedDogs} activeDogId={dog.id}
+      onRequestClose={() => setDogSwitcherVisible(false)}
+      onSelectDog={(dogId) => { setDogSwitcherVisible(false); onSelectDog?.(dogId); }}
+      onAddDog={() => { setDogSwitcherVisible(false); onAddDog?.(); }} />
   </View>;
 }
 
@@ -337,7 +356,8 @@ const styles = StyleSheet.create({
   dogMeta: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700' },
   dogAge: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
   dogPhase: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
-  dogPortrait: { position: 'absolute', top: 0, right: 0, zIndex: 1, width: portraitSize, height: portraitSize },
+  dogPortrait: { position: 'absolute', top: 0, right: 0, zIndex: 1, width: portraitSize, height: portraitSize, borderRadius: tokens.radius.full },
+  portraitPressed: { opacity: 0.84, transform: [{ scale: 0.98 }] },
   portraitPhotoClip: { width: portraitSize, height: portraitSize, overflow: 'hidden', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.canvas },
   dogImage: { width: portraitSize, height: portraitSize, transform: [{ scale: 1.08 }] },
   portraitLabel: { position: 'absolute', top: tokens.spacing.sm, right: tokens.spacing.xs, borderRadius: tokens.radius.sm, paddingHorizontal: tokens.spacing.xs, paddingVertical: 2, backgroundColor: tokens.colors.home.card, color: tokens.colors.home.text, fontSize: tokens.typography.caption.fontSize - tokens.spacing.xs, lineHeight: tokens.typography.caption.fontSize, fontWeight: '700' },

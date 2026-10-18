@@ -117,6 +117,7 @@ import { requestAccountDeletion, type AccountDeleteResult } from '../account/acc
 import { createAnalyticsService } from '../../analytics/analytics-service';
 import { deleteFirstUseTipStatus, deleteNotificationPreferences } from '../../notifications/notification-storage';
 import { cleanupStalePassportFiles } from '../passport/passport-export';
+import { clearDogCreationRequest } from '../onboarding/dog-creation-storage';
 import { futureFireTimeForPlan, parseReminderPayload, type NotificationPreferences } from '../../notifications/notification-model';
 import { reminderService, type ReminderContext, type ReminderReconcileResult } from '../../notifications/notification-service';
 
@@ -146,7 +147,16 @@ const WORKSPACE_REFRESH_AFTER_MS = 60_000;
 type TrainingWorkspaceSnapshot = Awaited<ReturnType<typeof fetchTrainingWorkspace>>;
 type WorkspaceResourceFlight<T> = { scope: string; generation: number; controller: AbortController; promise: Promise<T> };
 
-export function ProductWorkspace({ client, dog, onDogUpdated }: { client: SupabaseClient; dog: OwnedDog; onDogUpdated?: (updated: OwnedDog) => void }) {
+export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog], onSelectDog, onAddDog, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened }: {
+  client: SupabaseClient;
+  dog: OwnedDog;
+  onDogUpdated?: (updated: OwnedDog) => void;
+  ownedDogs?: readonly OwnedDog[];
+  onSelectDog?: (dogId: string) => void;
+  onAddDog?: (entryPoint: 'home' | 'settings') => void;
+  openDogSwitcherInitially?: boolean;
+  onDogSwitcherInitiallyOpened?: () => void;
+}) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
   const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>({ page: 'home', previousPage: 'home' });
   const { page, previousPage } = navigation;
@@ -2131,6 +2141,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       reminderService.setActiveContext(null, null);
       setAccountDeleteStatus('confirmed');
       let cleanupFailed = false;
+      let cleanupFailureReported = false;
+      // The request key is scoped to the deleted owner and is independent of
+      // whichever account is active now, so always clear it after server
+      // confirmation before any account-generation early return.
+      try {
+        await clearDogCreationRequest(ownerId);
+      } catch {
+        cleanupFailed = true;
+        reportDeletedAccountCleanupFailure(ownerId);
+        cleanupFailureReported = true;
+      }
       try {
         if (!isCurrent()) return { status: 'confirmed' };
         await deleteNotificationPreferences(ownerId);
@@ -2154,7 +2175,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
       if (!isCurrent()) return { status: 'confirmed' };
 
       try { cleanupStalePassportFiles(); } catch { cleanupFailed = true; }
-      if (cleanupFailed) reportDeletedAccountCleanupFailure(ownerId);
+      if (cleanupFailed && !cleanupFailureReported) reportDeletedAccountCleanupFailure(ownerId);
       setAccountDeleteCleanupFailed(cleanupFailed);
 
       const signedOut = await signOutCurrentAccountLocally(ownerId, generation);
@@ -2261,6 +2282,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated }: { client: Supaba
   function renderPage() {
     if (page === 'home') return <HomeScreen
       dog={dog}
+      ownedDogs={ownedDogs}
+      onSelectDog={onSelectDog}
+      onAddDog={() => onAddDog?.('home')}
+      openDogSwitcherInitially={openDogSwitcherInitially}
+      onDogSwitcherInitiallyOpened={onDogSwitcherInitiallyOpened}
       today={homeToday}
       breed={breeds.find((breed) => breed.id === dog.breed_id)?.name ?? ''}
       events={displayEvents}

@@ -777,3 +777,13 @@ QA hittade sedan att helraderingsbekräftelsen påstod att dagskopior behålls t
 ### MotionPressable-typkontroll, 2026-10-15
 
 `Motion.tsx:61` använder nu ett explicit typat hover-tillstånd för React Native Web utan att förlora den konkreta Animated-stilen eller `pressed`-callbacken. `pnpm typecheck` och full `pnpm check` passerar. Fixen finns i commit `617680b`; den separata UX-FIX-baseline Motion-posten har ytterligare runtime-kriterier och hålls åtskild från detta typfel.
+
+### MULTI-DOG-HOME-01 — implementation till review, 2026-10-18
+
+AppFlow hämtar nu samtliga ägda hundar med stabil ordning och håller valt hund-ID i rotflödet. Hundporträttet på Hem öppnar en väljare med namn, ålder och aktiv markering; byte monterar en ny hundnycklad ProductWorkspace. Home/Kunskap fortsätter använda den valda hundens födelsedatum, ras och ID för artikelurval och stale-response-skydd. Lägg till hund använder ägar-namespacad SecureStore-idempotensnyckel, RPC-kvitto och readback av exakt hundprofil innan aktivering. Avbryt hämtar nu om ägarlistan innan väljaren öppnas igen; bekräftad kontoradering städar även den lokala nyckeln före konto-generationens tidiga retur.
+
+Migrationen möjliggör flera hundar per konto utan att ändra en-ägare-per-hund, återanvänder befintlig RLS och introducerar en privat idempotensfunktion med auth-radlås. Artiklar/drafts importerades eller publicerades inte. Ålders- och rasurvalet är kopplat till aktiv hund; om nuvarande publicerade rader ger synlig skillnad mellan exempelvis 12 och 1 år kräver databasens aktuella publicerade innehåll separat kontroll.
+
+Kontroller: `pnpm typecheck`, `pnpm lint`, `git diff --check` och `python tools/dev_flow.py validate` passerar. Arkitekt, Security, oberoende QA och Reviewer har PASS för statisk granskning. Inga testsviter, SQL, live Supabase/RLS eller app-/enhetsflöden kördes. Publicerad åldersvariation och §14-skärmbilder vid 375×844, 430×844, 375×667 och 140 % text är NOT TESTABLE här; enligt godkänd plan ligger Slice A kvar i `review`, inte `done`.
+
+Nästa steg enligt v5 är Slice B: byte/tillägg från Inställningar → Hundprofil. Den har inte startats eftersom den godkända kön kräver att Slice A först blir klar och checkpointad. Slice A:s UI/runtime-evidens behöver kompletteras innan beroendet kan släppas. Denna branch är checkpointen; queue status är `review`, inte `done`, eftersom evidensen saknas.

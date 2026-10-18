@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import * as Linking from 'expo-linking';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { AppScreen, MessageCard, PageHeading, PrimaryButton } from '../../components/AppPrimitives';
-import { fetchOwnedDog, type OwnedDog } from '../../data/app-data';
+import { fetchOwnedDogs, type OwnedDog } from '../../data/app-data';
 import { DEV_PREVIEW_ENABLED } from '../account/preview-policy';
 import { SignInScreen } from '../account/SignInScreen';
 import { ProfileScreen } from '../onboarding/ProfileScreen';
@@ -47,21 +47,62 @@ function DogWorkspace({ client, ownerId, accountGeneration, isCurrentAccount }: 
   accountGeneration: number;
   isCurrentAccount(ownerId: string, generation: number): boolean;
 }) {
-  const [dog, setDog] = useState<OwnedDog | null>(null);
-  const [state, setState] = useState<'loading' | 'missing' | 'ready' | 'error'>('loading');
+  const [dogs, setDogs] = useState<OwnedDog[]>([]);
+  const [activeDogId, setActiveDogId] = useState<string | null>(null);
+  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [attempt, setAttempt] = useState(0);
+  const [addingDog, setAddingDog] = useState(false);
+  const [addEntryPoint, setAddEntryPoint] = useState<'home' | 'settings'>('home');
+  const [openDogSwitcherOnReturn, setOpenDogSwitcherOnReturn] = useState(false);
 
   useEffect(() => {
     let active = true;
-    void fetchOwnedDog(client).then((loadedDog) => {
+    void fetchOwnedDogs(client).then((loadedDogs) => {
       if (!active) return;
-      setDog(loadedDog);
-      setState(loadedDog ? 'ready' : 'missing');
+      setDogs(loadedDogs);
+      setActiveDogId((current) => current && loadedDogs.some((dog) => dog.id === current) ? current : loadedDogs[0]?.id ?? null);
+      setState('ready');
     }).catch(() => {
       if (active) setState('error');
     });
     return () => { active = false; };
   }, [attempt, client]);
+
+  function acceptCreatedDog(created: OwnedDog) {
+    if (!isCurrentAccount(ownerId, accountGeneration)) return;
+    setDogs((current) => current.some((dog) => dog.id === created.id)
+      ? current.map((dog) => dog.id === created.id ? created : dog)
+      : [...current, created]);
+    setActiveDogId(created.id);
+    setAddingDog(false);
+    setOpenDogSwitcherOnReturn(false);
+    setState('ready');
+    void fetchOwnedDogs(client).then((loadedDogs) => {
+      if (isCurrentAccount(ownerId, accountGeneration)) setDogs(loadedDogs);
+    }).catch(() => undefined);
+  }
+
+  function startAddingDog(entryPoint: 'home' | 'settings' = 'home') {
+    setAddEntryPoint(entryPoint);
+    setAddingDog(true);
+  }
+
+  async function cancelAddingDog() {
+    setAddingDog(false);
+    setOpenDogSwitcherOnReturn(addEntryPoint === 'home');
+    setState('loading');
+    try {
+      const loadedDogs = await fetchOwnedDogs(client);
+      if (!isCurrentAccount(ownerId, accountGeneration)) return;
+      setDogs(loadedDogs);
+      setActiveDogId((current) => current && loadedDogs.some((dog) => dog.id === current)
+        ? current
+        : loadedDogs[0]?.id ?? null);
+      setState('ready');
+    } catch {
+      if (isCurrentAccount(ownerId, accountGeneration)) setState('error');
+    }
+  }
 
   if (state === 'loading') return <AppScreen>
     <PageHeading title="Hundprofil" description="Hämtar hundens sparade uppgifter." />
@@ -71,6 +112,19 @@ function DogWorkspace({ client, ownerId, accountGeneration, isCurrentAccount }: 
     <PageHeading title="Vi kunde inte öppna profilen" description="Kontrollera anslutningen och försök hämta profilen igen." />
     <PrimaryButton title="Försök igen" onPress={() => { setState('loading'); setAttempt((count) => count + 1); }} />
   </AppScreen>;
-  if (state === 'missing') return <ProfileScreen client={client} ownerId={ownerId} accountGeneration={accountGeneration} isCurrentAccount={isCurrentAccount} onCreated={(created) => { setDog(created); setState('ready'); }} />;
-  return dog ? <ProductWorkspace key={dog.id} client={client} dog={dog} onDogUpdated={setDog} /> : <AppScreen><MessageCard>Öppnar hundens plats…</MessageCard></AppScreen>;
+  if (state === 'ready' && (dogs.length === 0 || addingDog)) return <ProfileScreen
+    key={`${ownerId}:${addingDog ? 'add' : 'initial'}`}
+    client={client} ownerId={ownerId} accountGeneration={accountGeneration} isCurrentAccount={isCurrentAccount}
+    mode={dogs.length > 0 ? 'add' : 'initial'} onCreated={acceptCreatedDog}
+    onCancel={dogs.length > 0 ? cancelAddingDog : undefined}
+  />;
+  const activeDog = dogs.find((dog) => dog.id === activeDogId) ?? dogs[0];
+  if (state === 'ready' && activeDog) return <ProductWorkspace
+    key={activeDog.id} client={client} dog={activeDog} ownedDogs={dogs}
+    onDogUpdated={(updated) => setDogs((current) => current.map((dog) => dog.id === updated.id ? updated : dog))}
+    onSelectDog={(dogId) => { if (dogs.some((dog) => dog.id === dogId)) setActiveDogId(dogId); }}
+    onAddDog={startAddingDog} openDogSwitcherInitially={openDogSwitcherOnReturn}
+    onDogSwitcherInitiallyOpened={() => setOpenDogSwitcherOnReturn(false)}
+  />;
+  return <AppScreen><MessageCard>Öppnar hundens plats…</MessageCard></AppScreen>;
 }
