@@ -777,3 +777,28 @@ QA hittade sedan att helraderingsbekräftelsen påstod att dagskopior behålls t
 ### MotionPressable-typkontroll, 2026-10-15
 
 `Motion.tsx:61` använder nu ett explicit typat hover-tillstånd för React Native Web utan att förlora den konkreta Animated-stilen eller `pressed`-callbacken. `pnpm typecheck` och full `pnpm check` passerar. Fixen finns i commit `617680b`; den separata UX-FIX-baseline Motion-posten har ytterligare runtime-kriterier och hålls åtskild från detta typfel.
+
+### MULTI-DOG-HOME-01 — implementation till review, 2026-10-18
+
+AppFlow hämtar nu samtliga ägda hundar med stabil ordning och håller valt hund-ID i rotflödet. Hundporträttet på Hem öppnar en väljare med namn, ålder och aktiv markering; byte monterar en ny hundnycklad ProductWorkspace. Home/Kunskap fortsätter använda den valda hundens födelsedatum, ras och ID för artikelurval och stale-response-skydd. Lägg till hund använder ägar-namespacad SecureStore-idempotensnyckel, RPC-kvitto och readback av exakt hundprofil innan aktivering. Avbryt hämtar nu om ägarlistan innan väljaren öppnas igen; bekräftad kontoradering städar även den lokala nyckeln före konto-generationens tidiga retur.
+
+Migrationen möjliggör flera hundar per konto utan att ändra en-ägare-per-hund, återanvänder befintlig RLS och introducerar en privat idempotensfunktion med auth-radlås. Artiklar/drafts importerades eller publicerades inte. Ålders- och rasurvalet är kopplat till aktiv hund; om nuvarande publicerade rader ger synlig skillnad mellan exempelvis 12 och 1 år kräver databasens aktuella publicerade innehåll separat kontroll.
+
+Kontroller: `pnpm typecheck`, `pnpm lint`, `git diff --check` och `python tools/dev_flow.py validate` passerar. Arkitekt, Security, oberoende QA och Reviewer har PASS för statisk granskning. Inga testsviter, SQL, live Supabase/RLS eller app-/enhetsflöden kördes. Publicerad åldersvariation och §14-skärmbilder vid 375×844, 430×844, 375×667 och 140 % text är NOT TESTABLE här. Erik bad uttryckligen att checkpoin­ta och pusha samt fortsätta planen; Slice A är därför `done` som kodcheckpoint men detta är inte ett runtime- eller visuellt PASS.
+
+Slice A är pushad i commit `caa3d3a` på `codex/age-content-multi-dog`. Slice B plan v6 har godkänts av Architect, Critic och Security; v6 lade till `AppFlow.tsx` för att återställa Hundprofil efter add/avbryt från Inställningar. Slice A:s UI/runtime-evidens förblir separat NOT TESTABLE och räknas inte som PASS.
+
+
+### MULTI-DOG-PROFILE-01 — implementation till review, 2026-10-18
+
+Hundprofil i Inställningar visar nu alla RLS-listade hundar med namn, beräknad ålder och aktiv markering. Val av annan hund går via AppFlow-valideringen och öppnar Hem i den hundnycklade arbetsytan. `Lägg till hund` återanvänder samma ProfileScreen-, idempotency-key- och readback-flöde som Hem. Bekräftat tillägg aktiverar den bekräftade hunden och återgår till Hundprofil; avbryt återgår dit med föregående hund aktiv. Hundbyte/tillägg stängs av medan profil- eller kenneluppgifter har osparade ändringar. Ingen SQL, RPC eller datainsamling ändrades.
+
+Kontroller: `pnpm typecheck`, `pnpm lint`, `git diff --check` och `python tools/dev_flow.py validate` passerar. Oberoende statisk Reviewer PASS omfattar routning, aktiv hund, idempotent återanvändning, konto-generation-skydd, dirty-state och tillgänglighet. Ingen testsvit kördes. Äkta appflöde, Supabase/RLS, native tillgänglighet och krävda §14-skärmbilder (375×844, 430×844, 375×667 och 140 % text) är NOT TESTABLE i denna checkpoint. Erik har därefter uttryckligen bett att committa och pusha kodcheckpointen så att den kan provas live. Slice B förblir öppen för app-/Supabase-/RLS- och visuell evidens; en push är inte ett runtime-PASS.
+
+### BUILD-CHECK-03 — Codemagic-check korrigerad, 2026-10-18
+
+Codemagic-loggen i `Tassla_55_artifacts.zip` stannar i `Check application`. Den visar fyra testfel: två förväntade den pensionerade `create_dog`-signaturen, ett använde det gamla Home-porträttets tillgänglighetskontrakt och ett policytest fångade en onödig kennelkällkontroll. `ProfileScreen` verifierar nu kennelkälla endast efter aktivt val och hanterar sparad request-ID som återhämtning. De tre inaktuella assertionerna är uppdaterade utan att ta bort tester eller försvaga no-identity-kontrollen.
+
+Kontroller: `CI=1 pnpm check` PASS (TypeScript, edge typecheck, ESLint och 492/492 tester); Expo iOS bundle-export PASS; content/release guards PASS; `git diff --check` PASS. Oberoende QA PASS och statisk Reviewer PASS. Ingen annan Codemagic-fas finns i det bifogade utdraget, så det bevisar varken fel eller PASS för prebuild, CocoaPods, signering eller Xcode-arkivering. Expo iOS prebuild/native archive är NOT TESTABLE på denna Windows-miljö; verklig Mac/Codemagic-körning saknas.
+
+Erik har nu uttryckligen bett att committa och pusha efter de lokala gates. Erik har förtydligat att commit/push inte ska vänta på Codemagic. Samtliga lokala icke-Mac-gates är gröna; den fjärrkörningen är inte verifierad här. Om Codemagic visar ett nytt fel efter pushen ska felet rättas från steploggen före nästa push.

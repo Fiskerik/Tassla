@@ -12,7 +12,7 @@ type Accent = (typeof tokens.colors.support)[Destination];
 const destinationRows: readonly { id: Destination; icon: IconName; title: string; detail: string; color: Accent }[] = [
   { id: 'health', icon: 'heart-outline', title: 'Hälsa', detail: 'Vikt, hälsohistorik och planer', color: tokens.colors.support.health },
   { id: 'passport', icon: 'id-card-outline', title: 'Tassla-pass', detail: 'Hundens uppgifter som PDF', color: tokens.colors.support.passport },
-  { id: 'profile', icon: 'paw-outline', title: 'Hundprofil', detail: 'Din hunds uppgifter', color: tokens.colors.support.profile },
+  { id: 'profile', icon: 'paw-outline', title: 'Hundprofil', detail: 'Byt hund eller redigera uppgifter', color: tokens.colors.support.profile },
   { id: 'reminders', icon: 'notifications-outline', title: 'Påminnelser', detail: 'Dina valda påminnelser', color: tokens.colors.support.reminders },
   { id: 'account', icon: 'person-circle-outline', title: 'Konto och support', detail: 'Information och kontohantering', color: tokens.colors.support.account },
 ];

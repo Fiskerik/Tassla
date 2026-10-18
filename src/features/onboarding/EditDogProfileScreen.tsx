@@ -16,6 +16,7 @@ import {
   type OwnedDogProfileChanges,
 } from '../../data/app-data';
 import { normalizeKennelCode } from '../../onboarding-referral/referral-secure-storage';
+import { automaticDogAge, localDate } from './dog';
 import { tokens } from '../../theme/tokens';
 import { ProfileScreenHeader } from './ProfileScreenHeader';
 
@@ -38,9 +39,17 @@ export function EditDogProfileScreen({
   onRetryAttribution,
   onRetryStatus,
   onAcceptCurrent,
+  ownedDogs = [dog],
+  activeDogId = dog.id,
+  onSelectDog,
+  onAddDog,
 }: {
   client: SupabaseClient;
   dog: OwnedDog;
+  ownedDogs?: readonly OwnedDog[];
+  activeDogId?: string;
+  onSelectDog?: (dogId: string) => void;
+  onAddDog?: () => void;
   busy?: boolean;
   pending?: boolean;
   statusMessage?: string;
@@ -137,10 +146,12 @@ export function EditDogProfileScreen({
     await onSaveAttribution(normalized);
   }
 
+  const today = localDate();
   const currentBreed = breeds.find((breed) => breed.id === dog.breed_id)?.name ?? dog.breed_id;
   const conflictBreed = conflict ? breeds.find((breed) => breed.id === conflict.breed_id)?.name ?? conflict.breed_id : '';
   const draftDiffers = name.trim() !== dog.name || breedId !== dog.breed_id || birthDate.trim() !== dog.birth_date
     || ageDisplayUnit !== dog.age_display_unit;
+  const dogManagementBlocked = blocked || draftDiffers || kennelCode.trim() !== (attribution?.code ?? '');
   const showStatusMessage = Boolean(statusMessage) && (statusError || pending || busy);
 
   return <View>
@@ -155,6 +166,34 @@ export function EditDogProfileScreen({
     <View style={styles.profileNote}>
       <Ionicons name="paw-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
       <Text style={styles.profileNoteText}>Hundens historik och träningssteg följer med när du rättar profilen.</Text>
+    </View>
+    <View style={styles.dogProfilesCard}>
+      <Text style={styles.formTitle} accessibilityRole="header">Hundprofiler</Text>
+      <Text style={styles.attributionBody}>Välj vilken hund Tassla ska visa information och innehåll för.</Text>
+      <View accessibilityRole="radiogroup" accessibilityLabel="Hundprofiler" style={styles.dogProfilesList}>
+        {ownedDogs.map((ownedDog) => {
+          const selected = ownedDog.id === activeDogId;
+          const age = automaticDogAge(ownedDog.birth_date, today);
+          return <Pressable key={ownedDog.id} accessibilityRole="radio"
+            accessibilityLabel={`${ownedDog.name}, ${age?.label ?? 'ålder saknas'}${selected ? ', aktiv hund' : ''}`}
+            accessibilityState={{ selected, disabled: dogManagementBlocked || !onSelectDog }} disabled={dogManagementBlocked || !onSelectDog}
+            onPress={() => onSelectDog?.(ownedDog.id)}
+            style={({ pressed }) => [styles.dogProfileRow, selected && styles.dogProfileSelected, pressed && !dogManagementBlocked && styles.dogProfilePressed]}>
+            <View style={styles.dogProfileAvatar} accessible={false} importantForAccessibility="no-hide-descendants">
+              <Ionicons name="paw" size={tokens.size.iconSm} color={tokens.colors.primary} />
+            </View>
+            <View style={styles.dogProfileCopy}>
+              <Text style={styles.dogProfileName}>{ownedDog.name}</Text>
+              <Text style={styles.dogProfileAge}>{age?.label ?? 'Ålder saknas'}</Text>
+            </View>
+            {selected ? <Text style={styles.dogProfileActive}>Aktiv</Text> : null}
+          </Pressable>;
+        })}
+      </View>
+      {draftDiffers || kennelCode.trim() !== (attribution?.code ?? '')
+        ? <Text style={styles.dogProfileHint}>Spara eller återställ profiländringarna innan du byter hund eller lägger till en ny.</Text> : null}
+      {onAddDog ? <Button variant="secondary" label="Lägg till hund" accessibilityLabel="Lägg till hundprofil"
+        disabled={dogManagementBlocked} onPress={onAddDog} /> : null}
     </View>
     {showStatusMessage ? <MessageCard tone={statusError ? 'error' : 'neutral'}>{statusMessage}</MessageCard> : null}
     {draftDiffers && !pending && !busy ? <MessageCard tone="neutral">Ändringarna är inte sparade.</MessageCard> : null}
@@ -249,6 +288,17 @@ const styles = StyleSheet.create({
   heroImage: { width: tokens.size.chipLg + tokens.spacing.md, height: tokens.size.chipLg + tokens.spacing.md, borderRadius: tokens.radius.full },
   profileNote: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, padding: tokens.spacing.md, marginTop: tokens.spacing.md, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.support.profile.bg },
   profileNoteText: { ...tokens.typography.caption, flex: 1, color: tokens.colors.textPrimary },
+  dogProfilesCard: { marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, gap: tokens.spacing.sm },
+  dogProfilesList: { borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.md, overflow: 'hidden', backgroundColor: tokens.colors.surface },
+  dogProfileRow: { minHeight: tokens.size.touchMin + tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.sm },
+  dogProfileSelected: { backgroundColor: tokens.colors.selectedSurface },
+  dogProfilePressed: { opacity: 0.78 },
+  dogProfileAvatar: { width: tokens.size.chipMd, height: tokens.size.chipMd, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.support.profile.bg },
+  dogProfileCopy: { flex: 1, minWidth: 0 },
+  dogProfileName: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  dogProfileAge: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
+  dogProfileActive: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
+  dogProfileHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   conflictCard: { marginTop: tokens.spacing.md, padding: tokens.spacing.md, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.warning, backgroundColor: tokens.colors.warningSurface },
   conflictTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
   conflictText: { ...tokens.typography.body, color: tokens.colors.textPrimary, fontWeight: '700', marginTop: tokens.spacing.sm },

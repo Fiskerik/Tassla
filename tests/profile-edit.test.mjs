@@ -221,18 +221,19 @@ test('fetchOwnedDogById is exact-id scoped and validates the returned id', async
   });
 });
 
-test('profile editing leaves the existing createDog RPC contract unchanged', async () => {
+test('profile editing keeps the idempotent createDog RPC contract', async () => {
+  const requestId = '44000000-0000-4000-8000-000000000002';
   const { client, requests } = localClient(({ method, url, body }) => {
     assert.equal(method, 'POST');
-    assert.equal(url.pathname, '/rest/v1/rpc/create_dog');
-    assert.deepEqual(body, { dog_name: 'Nala', dog_breed_id: 'beagle', dog_birth_date: '2026-02-01', kennel_code: null });
+    assert.equal(url.pathname, '/rest/v1/rpc/create_dog_idempotent');
+    assert.deepEqual(body, { dog_name: 'Nala', dog_breed_id: 'beagle', dog_birth_date: '2026-02-01', kennel_code: null, request_id: requestId });
     return jsonResponse(dogId);
   });
   try {
-    await appData.createDog(client, { name: ' Nala ', breedId: 'beagle', birthDate: profile.birth_date });
+    await appData.createDog(client, { name: ' Nala ', breedId: 'beagle', birthDate: profile.birth_date }, requestId);
     assert.equal(requests.length, 1);
     assert.equal(requests[0].method, 'POST');
-    assert.equal(requests[0].url.pathname, '/rest/v1/rpc/create_dog');
+    assert.equal(requests[0].url.pathname, '/rest/v1/rpc/create_dog_idempotent');
   } finally { await client.auth.dispose(); }
 });
 
