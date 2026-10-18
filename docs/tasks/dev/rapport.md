@@ -836,3 +836,12 @@ QA hittade att ovillkorlig respondervägran kunde hindra lodrät scroll efter in
 Oberoende QA v5: **PASS** för avgränsad lokal acceptance. Bekräftade att termination handler lämnar över när senaste `dx`/`dy` inte längre uppfyller svepregeln och att det statiska testet kontrollerar just villkoret. Visuell render och native gesture/scroll är fortsatt EJ TESTBARA och anges inte som PASS. Nästa steg: oberoende Reviewer av slutdiffen.
 
 Oberoende Reviewer v5: **PASS** för lokal implementation och källkontrakt. Verifierade installerade React Native 0.86.3-API:er, fångst-/överlämningsvillkoret, exkludering, enabled-gate, riktning och bevarad no-wrap. Ingen visuell eller nativegest-PASS hävdas. Därefter checkpointas och pushas paketet till samma branch.
+
+
+### UI-TRAINING-OVERVIEW-01 — träningsöversikt, lokal granskning klar, 2026-10-19
+
+Bifogad träningsredesignpatch är implementerad på `codex/tassla-ui-ux-bundle-2026-10-18`. Översikten visar nästa övning och statusordnade publicerade program; programdetaljen visar klara, aktuell och kommande övningar. Versionsbunden progress, guarded completion, bekräftad save/error/retry, unmark/reset, källor och AI-etikett är bevarade. Oberoende QA och Reviewer PASS för begränsad lokal omfattning.
+
+Riktade tester 13/13, `CI=1 pnpm check` 542/542, offentlig iOS JS-bundle (1446 moduler), `git diff --check` och queue validation PASS. Renderad public/review-evidens och §14-bedömning: [VERIFICATION.md](../../design/evidence/ui-training-overview-2026-10-18/VERIFICATION.md). Live Supabase/RLS, verkligt publicerat innehåll, native tillgänglighet/enhetsbeteende och telefonprov är NOT TESTABLE. 140% webzoom radbryter befintlig `Kunskap`-etikett. Den ägarbeställda kompositionsavvikelsen från rev02-panel 6 är avgränsad; full panelacceptans hävdas inte.
+
+Commit och push återstår; slutlig commitreferens läggs i arbetshistoriken vid paketavslut. Ingen Codemagic/TestFlight-build påstås.

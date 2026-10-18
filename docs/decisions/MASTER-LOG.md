@@ -109,3 +109,8 @@ Gemensamma ikonåtgärder för bekräftad logg-undo, datum och tid enligt plan v
 Arkitekt APPROVE och UX Critic PROCEED för slutlig plan v5. Första QA-körningen blockerade ovillkorlig respondervägran som kunde hindra lodrät scroll efter axelbyte; korrigering godkändes i plan v5. Efter fix: riktade tester 8/8, `pnpm check` 529/529 och offentlig iOS JS-bundle PASS. `git diff --check` och queue validation PASS. Oberoende QA PASS och Reviewer PASS för lokal kod-/källpolicy.
 
 Visuell jämförbar skärmbild kunde inte tas eftersom installerad Chromium misslyckade att starta på grund av Windows side-by-side-konfiguration. Faktisk native touchprioritet, lodrät scroll, inre kontroller och enhetssvep är EJ TESTBARA; `VISION-R02-GESTURES` förblir blockerad för dessa runtime-/visuella verifieringar. Detta checkpoint bevisar inte nativegestbeteende. Underlag: [plan](../tasks/dev/UI-MAIN-SWIPE-01.md), [verifiering](../design/evidence/ui-main-swipe-2026-10-18/VERIFICATION.md).
+
+
+### UI-TRAINING-OVERVIEW-01 — ägarbeställd lokal träningsöversikt, 2026-10-19
+
+Eriks uttryckliga begäran att implementera träningsredesignpatchen godkänner en avgränsad kompositionsavvikelse från rev02 Panel 6. Nästa övning och statusordnad programlista ersätter segmenterade flikar/bildkort i träningsöversikten. Detta beslut gäller bara den här skärmen och innebär inte att rev02-panelens fulla visuella acceptans är uppfylld. Oberoende QA och Reviewer PASS för lokal/static omfattning; live Supabase/RLS och native/enhetsbeteende är NOT TESTABLE. Se [paketrapport](../tasks/dev/rapport.md) och [verifiering](../design/evidence/ui-training-overview-2026-10-18/VERIFICATION.md).

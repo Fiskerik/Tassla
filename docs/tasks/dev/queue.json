@@ -7987,6 +7987,84 @@
       "risk_class": "M",
       "checkpoint": "Horizontal gesture policy isolated and unit tested; actual native touch arbitration remains NOT TESTABLE.",
       "test_evidence": "Architect APPROVE v5; UX Critic PROCEED; QA PASS v5; Reviewer PASS. Targeted 8/8, pnpm check 529/529, public iOS bundle, diff-check and queue validate PASS. Visual/native runtime NOT TESTABLE."
+    },
+    {
+      "id": "UI-TRAINING-OVERVIEW-01",
+      "title": "Träningsöversikt med nästa övning och programstatus",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md: Träning — publicerat program → rätt version/steg → markera/ångra → återuppta samma hunds progress efter flikresa",
+      "plan": "docs/tasks/dev/UI-TRAINING-OVERVIEW-01.md v3.1; UX: docs/plans/UI-TRAINING-OVERVIEW-01-ux-spec.md v3",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/training-overview.ts",
+        "src/features/training/README.md",
+        "tests/training-overview.test.mjs",
+        "docs/tasks/dev/UI-TRAINING-OVERVIEW-01.md",
+        "docs/plans/UI-TRAINING-OVERVIEW-01-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/design/evidence/ui-training-overview-2026-10-18/VERIFICATION.md"
+      ],
+      "acceptance": [
+        "Empty fetched list, all-complete and zero-step states are distinct and truthful; the all-complete message requires nonempty steps in every listed program and every step complete",
+        "Nästa övning opens the same first incomplete step allowed by the existing completion guard",
+        "Samtliga redan laddade publicerade program nås från statusordnad lista; stabil ordning bevaras inom lika status",
+        "Status, antal, procent och återställningsknapp räknar bara giltiga steg-ID:n från aktuell version; gamla/stale-only ID:n ger 0 progress och ingen återställningsknapp",
+        "Aktuell övning märks textuellt som Nästa övning; klara och kommande steg går att skilja utan färg ensam",
+        "Programvy visar aktuell/klara/kommande steg; endast befintlig tillåtna nästa-stegslagring kan slutföra",
+        "Public/review-gating, bekräftad save/error/retry, unmark/reset och källor/AI-etikett bevaras",
+        "README beskriver flöde och ren helper testas för status/sortering/progress/edge cases",
+        "Renderad jämförelse följer ägarens patchriktning och §14 redovisar avvikelsen från panel 6; render krävs för PASS; om otillgänglig blockeras QA"
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/training-overview.test.mjs",
+        "CI=1 pnpm check",
+        "TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false pnpm bundle:ios",
+        "git diff --check",
+        "PYTHONUTF8=1 python tools/dev_flow.py validate",
+        "Required public/review RN Web render and screenshots at 375×844, 430×844, 375×667 and 140% zoom; missing renderer/capture/comparison blocks QA/done and completion commit/push"
+      ],
+      "depends_on": [
+        "UI-MAIN-SWIPE-01",
+        "UI-ACTIONS-COMMON",
+        "CONTENT-PUBLISH-LABEL-01"
+      ],
+      "status": "review",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v3; UX Critic PROCEED v3; exact reviews saved in task plan."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementing exact approved plan v3; source/test/README files only."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation and cleanup complete. Targeted tests 13/13; CI=1 pnpm check 542/542; public iOS JS bundle; public/review screenshots and §14 report saved. Initial QA evidence gap was corrected; independent QA PASS. See task and VERIFICATION.md."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: scoped acceptance, public screenshots and program detail reviewed; 13 focused tests and full CI=1 pnpm check passed (542/542); public iOS JS bundle exported successfully; git diff --check and queue validation passed. Documented native/live-data non-testable limits and owner-approved Panel 6 composition deviation."
+        }
+      ],
+      "next_step": "Create the package checkpoint commit and push it to the current branch; then record the exact commit reference and close the queue item.",
+      "priority": "P1",
+      "panels": [
+        "Träning"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Independent QA PASS and Reviewer PASS recorded; implementation and final documentation verified; package commit and push are the remaining closeout actions.",
+      "test_evidence": "Focused tests 13/13 PASS; CI=1 pnpm check PASS 542/542; public iOS JS bundle PASS (1446 modules); git diff --check PASS; queue validation PASS; public/review screenshots and §14 evidence reviewed. Native/live-data limits and owner-approved Panel 6 deviation documented."
     }
   ]
 }
