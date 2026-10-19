@@ -17,6 +17,15 @@ const workspaceData = await import('../src/data/workspace-data.ts');
 tsResolution.deregister();
 const workspaceSource = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
 const historyScreenSource = await readFile(new URL('../src/features/health/HealthHistoryScreen.tsx', import.meta.url), 'utf8');
+const healthScreenSource = await readFile(new URL('../src/features/health/HealthScreen.tsx', import.meta.url), 'utf8');
+
+test('health history info row stacks for narrow or enlarged layouts and its editor sheet is keyboard aware', () => {
+  assert.match(historyScreenSource, /const stackInfoRow = width < 360 \|\| fontScale >= 1\.25/);
+  assert.match(historyScreenSource, /styles\.infoRowStacked/);
+  assert.match(historyScreenSource, /accessibilityLabel="Visa information om hälsans historik"/);
+  assert.match(healthScreenSource, /keyboardAware=\{sheet === 'history'\}/);
+  assert.match(healthScreenSource, /if \(!blocked\) setSheet\(null\)/);
+});
 
 const baseUrl = 'https://local-test.supabase.invalid';
 const dogId = '11111111-1111-4111-8111-111111111111';

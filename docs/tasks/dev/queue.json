@@ -8408,6 +8408,7 @@
         "src/features/health/WeightScreen.tsx",
         "src/features/health/HealthHistoryScreen.tsx",
         "src/features/health/PlannedHealthScreen.tsx",
+        "src/components/AppPrimitives.tsx",
         "tests/health-weight.test.mjs",
         "tests/health-history.test.mjs",
         "tests/planned-health.test.mjs",
@@ -8416,12 +8417,15 @@
         "docs/design/evidence/ui-accessibility-health-2026-10-19",
         "docs/tasks/dev/rapport.md",
         "docs/releases/HISTORY-2026.md",
-        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md"
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "docs/plans/UI-ACCESSIBILITY-HEALTH-ux-spec.md",
+        "docs/decisions/MASTER-LOG.md"
       ],
       "acceptance": [
         "Health and weight view/add/edit/cancel/history actions are reachable with keyboard and large text; long actions stack without shrinking targets.",
         "Owner-entered data, save/unknown recovery and cancel semantics remain unchanged; no advice, data purpose, scope or persistence behavior changes.",
-        "Independent Security review approves before implementation and reviews the frozen diff."
+        "Independent Security review approves before implementation and reviews the frozen diff.",
+        "At 320×667 and 375×667/140% proxy, the shared health date picker calendar target stays fully inside its field without overlap or clipping."
       ],
       "checks": [
         "node --experimental-strip-types --test tests/health-weight.test.mjs tests/health-history.test.mjs tests/planned-health.test.mjs tests/planned-health-feedback.test.mjs",
@@ -8430,7 +8434,8 @@
         "git diff --check",
         "PYTHONUTF8=1 python tools/dev_flow.py validate",
         "Render health forms/history at 375x667/140%; document §14 and native limits",
-        "Security review before implementation and against the final diff"
+        "Security review before implementation and against the final diff",
+        "Capture date picker input and calendar target bounds at 320×667 and 375×667/140% proxy; native Dynamic Type remains NOT TESTABLE."
       ],
       "depends_on": [
         "UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS"
@@ -8441,10 +8446,41 @@
       ],
       "risk_class": "H",
       "checkpoint": "Health view/add/edit/cancel/history journey; no medical content or data-model changes.",
-      "test_evidence": "Pending Security, implementation and independent QA/Reviewer.",
-      "status": "planned",
-      "history": [],
-      "next_step": "Wait for UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS done; then Security pre-implementation review.",
+      "test_evidence": "Architect approved original UX spec and the AppPrimitives date-field amendment; Security pre-implementation approved both original presentation scope and the amendment. Focused tests PASS 117/117; CI=1 pnpm check PASS 552/552; public iOS JS bundle PASS with 1,446 modules. Synthetic RN Web captures at 375x667 and 320x667 with fontScale 1.4 proxy show the 44x52pt calendar target contained in the date row, stacked 56pt edit actions and wrapped history info action; zero browser errors. Evidence: docs/design/evidence/ui-accessibility-health-2026-10-19/VERIFICATION.md. Security final APPROVE; independent QA PASS and Reviewer PASS for the frozen diff. Native accessibility, OS keyboard, live Supabase/RLS, signed build and full panel visual acceptance remain NOT TESTABLE.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect approved docs/plans/UI-ACCESSIBILITY-HEALTH-ux-spec.md after adding docs/decisions/MASTER-LOG.md to queue write_paths; Security pre-review APPROVE recorded in UX spec."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Architect and Security pre-implementation review approvals recorded in docs/plans/UI-ACCESSIBILITY-HEALTH-ux-spec.md; implementation limited to approved paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation, focused and full automated checks, public iOS JS export, RN Web bounding-box captures, docs and diff/queue validation are complete. Focused 117/117; pnpm check 552/552; bundle 1,446 modules. Architect and Security pre-reviews approved the scoped date-field amendment. Evidence: docs/design/evidence/ui-accessibility-health-2026-10-19/VERIFICATION.md. Independent QA/Reviewer and final frozen-diff Security review are next."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: 117/117 focused and 552/552 full check confirmed; screenshots and documented bounds match. Security final APPROVE recorded; native/backend/build limits remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS for frozen diff. Security pre/final APPROVE; QA PASS; evidence and closeout docs recorded. Next checkpoint: UI-ACCESSIBILITY-PROFILES (2b.3)."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS for frozen diff. Security pre/final APPROVE; QA PASS; evidence and closeout docs recorded. Next checkpoint: UI-ACCESSIBILITY-PROFILES (2b.3).",
       "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
     },
     {

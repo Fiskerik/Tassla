@@ -23,6 +23,27 @@ const actorId = '33333333-3333-4333-8333-333333333333';
 const operation = { id: weightId, dog_id: dogId, occurred_on: today(), weight_kg: 12.345 };
 const savedWeight = { ...operation, actor_id: actorId };
 const workspaceSource = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
+const weightScreenSource = await readFile(new URL('../src/features/health/WeightScreen.tsx', import.meta.url), 'utf8');
+const primitivesSource = await readFile(new URL('../src/components/AppPrimitives.tsx', import.meta.url), 'utf8');
+
+test('date input shrinks while the calendar target and time field keep their existing geometry', () => {
+  const datePickerSource = primitivesSource.slice(primitivesSource.indexOf('export function DatePickerField'), primitivesSource.indexOf('export function TimePickerField'));
+  const timePickerSource = primitivesSource.slice(primitivesSource.indexOf('export function TimePickerField'), primitivesSource.indexOf('\nfunction parseDateValue'));
+  assert.match(datePickerSource, /style=\{\[styles\.datePickerInput, \{ minWidth: 0 \}\]\}/);
+  assert.doesNotMatch(timePickerSource, /minWidth: 0/);
+  assert.match(primitivesSource, /pickerButton: \{[^}]*width: tokens\.size\.touchMin, minWidth: tokens\.size\.touchMin, minHeight: 52/s);
+});
+
+test('weight edit actions stack at narrow width or large text without changing action labels', () => {
+  assert.match(weightScreenSource, /const stackEditActions = width < 360 \|\| fontScale >= 1\.25/);
+  assert.match(weightScreenSource, /styles\.actionsStacked/);
+  assert.match(weightScreenSource, /actionsStacked: \{ flexDirection: 'column', alignItems: 'stretch'/);
+  assert.match(weightScreenSource, /actionItemStacked: \{ flexGrow: 0, flexShrink: 0, flexBasis: 'auto', width: '100%' \}/);
+  assert.match(weightScreenSource, /title=\{isBusy \? 'Sparar…' : 'Spara rättning'\}/);
+  assert.match(weightScreenSource, /<QuietButton title="Avbryt"/);
+  assert.match(weightScreenSource, /label="Radera vikt"/);
+  assert.match(weightScreenSource, /deleteAction: \{ marginTop: tokens\.spacing\.xs \}/);
+});
 
 test('weight date and kg validators enforce calendar, future and database boundaries', () => {
   const { isValidHealthWeightDate, isValidHealthWeightKg } = workspaceData;

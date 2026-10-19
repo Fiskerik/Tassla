@@ -579,3 +579,7 @@ Huvudfliksbyte visar nu en riktad 28pt sidförflyttning; stödskärmar behåller
 Rutinhanteringens långa dagsval-/raderingsåtgärder och påminnelsesidans informationsrad blir responsiva vid smal skärm och 140% webtext. Spara, behörighet, rutinutkast, återhämtning och hundscope är oförändrade. Oberoende QA PASS (47/47), Reviewer PASS och Security pre-/final APPROVE. `pnpm check` 549/549; offentlig iOS-JS-bundle 1 446 moduler; syntetisk RN Web 375×667/140%-proxy och 320px PASS. Native tillgänglighet, OS-prompt/leverans, live backend/RLS och signerad build är NOT TESTABLE; full rev02-panelmatchning hävdas inte. [Verifiering](../design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md).
 
 Implementation checkpoint: `5ee2065be80d28221eff8914203b38419eb2f119` (`fix: improve routine and reminder layouts`).
+
+## UI-ACCESSIBILITY-HEALTH (2b.2) — lokal checkpoint, 2026-10-19
+
+Hälsa/vikt-layouten fungerar vid smal bredd och stor text; kalenderknappen stannar inom datumfältet och historikens infoknapp kan läsas och nås under rubriken. Oberoende QA **PASS** (117/117 fokuserade tester; 552/552 full check), Reviewer **PASS** och Security pre-/final **APPROVE**. Offentlig iOS-JS-export och syntetisk RN Web-evidens PASS. Native tillgänglighet/tangentbord, live Supabase/RLS, signerad build och full paneljämförelse är NOT TESTABLE. [Verifiering](../design/evidence/ui-accessibility-health-2026-10-19/VERIFICATION.md).

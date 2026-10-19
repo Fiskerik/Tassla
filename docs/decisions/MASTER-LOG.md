@@ -131,3 +131,7 @@ Huvudflikarnas riktningsstyrda övergång använder 28pt; stödvyerna behåller 
 ### UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS (2b.1) — verifierat lokalt
 
 Responsiv layout för rutinens peer actions och notisernas informationsrad. Independent QA PASS (47/47 targeted), Reviewer PASS, Security pre-review plus frozen-diff re-review APPROVE. `pnpm check` 549/549, public iOS JS bundle 1,446 modules, synthetic RN Web screenshot/interaction evidence PASS. No persistence, scope, permission timing or callback contract changed. Native/device/backend checks and full rev02 visual acceptance remain NOT TESTABLE. See `docs/design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md`. Implementation checkpoint: `5ee2065be80d28221eff8914203b38419eb2f119` (`fix: improve routine and reminder layouts`).
+
+### UI-ACCESSIBILITY-HEALTH (2b.2) — avgränsad lokal UX-förbättring, 2026-10-19
+
+Godkänd behandling av befintlig UI vid smal vy/stor text: stapla hälsans viktåtgärder, lägga historikens informationshandling under rubriken och låta datumfältets TextInput krympa så kalenderknappen stannar inom ramen. Säkerhetsgränserna är oförändrade: ingen medicinsk rådgivning, data-/scope-/lagringsändring, ny behörighet eller ny persistence. Oberoende QA PASS, Reviewer PASS samt Security pre-/final APPROVE. Native/backend/build och full panelacceptans är NOT TESTABLE. Se [paketrapport](../tasks/dev/rapport.md) och [verifiering](../design/evidence/ui-accessibility-health-2026-10-19/VERIFICATION.md).

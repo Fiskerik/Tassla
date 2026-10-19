@@ -871,3 +871,9 @@ Riktad svit 12/12, `pnpm check` 547/547, offentlig iOS JS-export 1 446 moduler, 
 ## UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS (2b.1) — lokalt verifierad checkpoint, 2026-10-19
 
 Rutinens dagsval/radering och notisernas informationsrad staplas vid smal vy eller 140% webtext. Riktad svit 47/47; `pnpm check` 549/549; offentlig iOS-JS-export 1 446 moduler. Syntetisk RN Web vid 375×667/140%-proxy samt 320px, rutin redigera/avbryt/spara-readback och explicit permission-denied-callback verifierade. Oberoende QA PASS, Reviewer PASS och Security pre-/final review APPROVE. Native Dynamic Type/VoiceOver, tangentbord, OS-prompt/notisleverans, live Supabase/RLS och signerad build är NOT TESTABLE. Full rev02-panelacceptans hävdas inte. [Verifiering](../../design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md). Implementation checkpoint: `5ee2065be80d28221eff8914203b38419eb2f119`. Nästa paket: 2b.2 `UI-ACCESSIBILITY-HEALTH`; starta med Security pre-review.
+
+### UI-ACCESSIBILITY-HEALTH (2b.2) — QA/Reviewer/Security PASS, 2026-10-19
+
+Hälsa och vikt staplar långa åtgärder vid smal vy/stor text; historikens informationsåtgärd flyttas under rubriken och dess befintliga sheet använder keyboard-aware-läge. Datumfältets kalenderknapp ryms inom fältet utan att tidsfält eller kalenderflöde ändras. Vikt-/hälsodata, validering, spara/radera, scope och persistence är oförändrade.
+
+Oberoende QA PASS (117/117 riktade tester; full `pnpm check` 552/552). Reviewer PASS och Security pre-/final APPROVE. Offentlig iOS-JS-export 1 446 moduler; syntetisk RN Web vid 320×667 och 375×667/140%-proxy, diffkontroll och kövalidering PASS. Native Dynamic Type/VoiceOver, OS-tangentbord, live Supabase/RLS, signerad build och full rev02-panelacceptans är NOT TESTABLE. [Verifiering](../../design/evidence/ui-accessibility-health-2026-10-19/VERIFICATION.md). Nästa paket: 2b.3 Hundprofiler.

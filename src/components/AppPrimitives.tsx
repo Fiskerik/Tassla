@@ -187,7 +187,7 @@ export function DatePickerField({ label, value, onChangeText, disabled = false }
     <View style={styles.datePickerRow}>
       <TextInput accessibilityLabel={`${label}, år-månad-dag`} editable={!disabled} keyboardType="numbers-and-punctuation"
         onChangeText={onChangeText} placeholder="ÅÅÅÅ-MM-DD" placeholderTextColor={theme.colors.mutedText}
-        returnKeyType="done" style={styles.datePickerInput} value={value} />
+        returnKeyType="done" style={[styles.datePickerInput, { minWidth: 0 }]} value={value} />
       <Pressable accessibilityRole="button" accessibilityLabel={`Öppna kalender för ${label}`} disabled={disabled}
         onPress={() => { const next = parseDateValue(value); if (next) setMonth(new Date(next.getFullYear(), next.getMonth(), 1)); setVisible(true); }} style={styles.pickerButton}>
         <Ionicons name="calendar-outline" size={tokens.size.iconMd} color={theme.colors.accent} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Keyboard, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { DatePickerField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { isValidHealthWeightDate, isValidHealthWeightKg, type HealthHistoryRecord, type HealthHistoryType, type HealthWeightRecord } from '../../data/workspace-data';
 import { localDate } from '../onboarding/dog';
@@ -47,6 +47,8 @@ export function WeightScreen({
   onDeleteHistory?: (id: string) => Promise<boolean>;
   onOpenPlannedHealth?: () => void;
 }) {
+  const { width, fontScale } = useWindowDimensions();
+  const stackEditActions = width < 360 || fontScale >= 1.25;
   const cloudRecords = records ?? [];
   const cloudLoadState = loadState ?? 'ready';
   const isCloud = records !== undefined;
@@ -197,11 +199,11 @@ export function WeightScreen({
                 />
               </View>
               {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
-              <View style={styles.actions}>
-                <PrimaryButton title={isBusy ? 'Sparar…' : 'Spara rättning'} disabled={isBlocked} onPress={() => { void save(); }} />
-                <QuietButton title="Avbryt" disabled={isBlocked} onPress={cancelEditing} />
+              <View style={[styles.actions, stackEditActions && styles.actionsStacked]}>
+                <View style={[styles.actionItem, stackEditActions && styles.actionItemStacked]}><PrimaryButton title={isBusy ? 'Sparar…' : 'Spara rättning'} disabled={isBlocked} onPress={() => { void save(); }} /></View>
+                <View style={[styles.actionItem, stackEditActions && styles.actionItemStacked]}><QuietButton title="Avbryt" disabled={isBlocked} onPress={cancelEditing} /></View>
               </View>
-              <Button variant="destructive" label="Radera vikt" accessibilityLabel="Radera viktpost" disabled={isBlocked} onPress={() => confirmDelete(record)} />
+              <View style={styles.deleteAction}><Button variant="destructive" label="Radera vikt" accessibilityLabel="Radera viktpost" disabled={isBlocked} onPress={() => confirmDelete(record)} /></View>
             </> : <ListRow category="veterinary" title={`${formatWeight(record.weight_kg)} kg`} meta={record.occurred_on} accessibilityLabel={`Ändra vikt ${formatWeight(record.weight_kg)} kg, ${record.occurred_on}`} disabled={isBlocked} onPress={() => startEditing(record)} />}
             <Toast visible={toastVisible && toastRecordId === record.id} tone="success" confirmed message={toastMessage ?? undefined} autoDismissMs={2500}
               onAutoDismiss={() => setToastVisible(false)} onExitComplete={() => {
@@ -231,5 +233,9 @@ const styles = StyleSheet.create({
   recordHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   recordWeight: { color: tokens.colors.textPrimary, ...tokens.typography.heading },
   recordDate: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
-  actions: { flexDirection: 'row', justifyContent: 'flex-start', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm },
+  actions: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-start', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm },
+  actionsStacked: { flexDirection: 'column', alignItems: 'stretch', gap: tokens.spacing.xs },
+  actionItem: { flex: 1, minWidth: 0 },
+  actionItemStacked: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto', width: '100%' },
+  deleteAction: { marginTop: tokens.spacing.xs },
 });
