@@ -2,6 +2,8 @@
 
 2026-10-18. Underlag: Eriks patch och inklistrade UX-förslag, aktuell branch samt [komplett knappinventering](../design/UI-ACTION-INVENTORY-2026-10-18.md) ([CSV](../design/UI-ACTION-INVENTORY-2026-10-18.csv)). Uppdragsplan: [UI-SHEET-ACTIONS-01](../tasks/dev/UI-SHEET-ACTIONS-01.md). Inventeringen ger kodplatser, inte antal unika knappar på telefonen. Dynamiska listor, renderers, preview/galleri och systemytor framgår separat.
 
+**Status 2026-10-19:** paket 0 `UI-SHEET-ACTIONS-01`, 1a `UI-ACTIONS-COMMON` och 1b `UI-ACTIONS-ROWS` är markerade done i releasekön efter oberoende QA/Reviewer PASS. Nästa UI/UX-paket är 2a `UI-ACCESSIBILITY-HOME-LOG`.
+
 **Levererat i denna slice:** draghandtag/nedåtsvep för den delade BottomSheet, riktade tester, knappinventering och denna plan. Nedanstående paket är planerade; inga breda knappbyten, sökningar, haptik- eller datamodelländringar är implementerade här.
 
 ## Regler för text och ikon
@@ -31,16 +33,16 @@ Varje rad är en separat checkpoint med planreview, begränsad diff, lämpliga t
 
 | Ordning / paket | Avgränsad leverans och huvudsakliga filer | Acceptans / vad som ska provas |
 |---|---|---|
-| 0. UI-SHEET-ACTIONS-01 (nu) | BottomSheet + sheet-drag/sheet-dismiss, 24 riktade tester | Långt/snabbt drag stänger genom föräldern; kort/avbrutet drag återgår. Nekad/busy/dirty stängning, callbackbyte, reopen och cleanup. Native känsla/tangentbord/VoiceOver provas separat. |
-| 1a. UI-ACTIONS-COMMON (M) | Toast, AppPrimitives DatePickerField/TimePickerField och vid behov opt-in Button-variant | Ångra-pil, kalender/klocka och periodpilar. Inga tätt packade felknappar vid 375 pt/140% text. Samma callback, bekräftad-undo-regel, input, fel och tillgänglighetsnamn. Alla datum-/tidsanvändare omfattas via delad komponent. |
-| 1b. UI-ACTIONS-ROWS (M) | DailyActivityManagerSheet, PuppyChecklistScreen och LogEventEditor | Kontextuell penna utan textrester, eventsymbol med dropdown på förvalt värde, alla val med ikon+namn i listan; veckodagar på en rad vid normal text, tillgänglig wrap/scroll vid stor text utan mindre tryckytor. Primär/radera/avbryt behåller text. |
+| 0. UI-SHEET-ACTIONS-01 (done) | BottomSheet + sheet-drag/sheet-dismiss, 24 riktade tester | Långt/snabbt drag stänger genom föräldern; kort/avbrutet drag återgår. Nekad/busy/dirty stängning, callbackbyte, reopen och cleanup. Native känsla/tangentbord/VoiceOver provas separat. |
+| 1a. UI-ACTIONS-COMMON (done) | Toast, AppPrimitives DatePickerField/TimePickerField och vid behov opt-in Button-variant | Ångra-pil, kalender/klocka och periodpilar. Inga tätt packade felknappar vid 375 pt/140% text. Samma callback, bekräftad-undo-regel, input, fel och tillgänglighetsnamn. Alla datum-/tidsanvändare omfattas via delad komponent. |
+| 1b. UI-ACTIONS-ROWS (done 2026-10-19) | DailyActivityManagerSheet, PuppyChecklistScreen och LogEventEditor | Kontextuell penna utan textrester, eventsymbol med dropdown på förvalt värde, alla val med ikon+namn i listan; veckodagar på en rad vid normal text, tillgänglig scroll vid stor text utan mindre tryckytor. Primär/radera/avbryt behåller text. Oberoende QA och Reviewer PASS; begränsad lokal evidens och ej testbara native-/DB-gränser är dokumenterade. |
 | 2a. UI-ACCESSIBILITY-HOME-LOG (M) | HomeScreen, DailyActivityItem, LogScreen och Toast-felvarianter | 375×844, 430×844, 375×667, 140% och native största Dynamic Type. Namn/CTA nås, osäker status kan återhämtas, ingen avklippt ”R”. Ångra/back får olika namn. VoiceOver och reduced motion provas separat. |
 | 2b. UI-ACCESSIBILITY-SUPPORT (M) | Rutinåtgärder, NotificationSettingsScreen, hälsa/vikt, onboarding/profil och pass | Långa sida-vid-sida-åtgärder staplas vid behov; tangentbord/footer och fullt läsbara knappar. Testa disabled/saving/fel/unknown och destruktiv Avbryt. |
 | 3. UI-KNOWLEDGE-SEARCH (M) | KnowledgeScreen, guide-body och innehållsprojektion | Fritextsök i titel/ingress/fulltext bland den aktiva hundens publicerade redan hämtade artiklar. Visa tydligt att sökningen gäller hundens urval. Normalisera skiftläge/åäö och blanksteg; träff, 0 träffar, rensa, loading/error, öppna/tillbaka och hundbyte. Ålders-/rasregler kringgås inte. Ämnesfilter kräver riktig metadata; rasfilter väntar enligt beslut. |
 | 4. UI-REFRESH-HOME-LOG (M) | ProductWorkspace och berörda ScrollView-ägare/AppPrimitives; RefreshControl från befintlig RN | Neddrag uppdaterar rätt aktiv hund och rätt datum; förfrågningar samordnas med befintlig automatisk refresh. Ingen försvunnen gammal data vid fel, ingen stale response från annan hund/konto, inget dubbelsparande. Visa skillnad mellan uppdateringsfel och tom lista. |
 | 5. UI-EMPTY-FEEDBACK (M) | Ett användarflöde per checkpoint: först Hem/Logg, sedan Kunskap/Träning | Matchande skeleton för verklig laddning, relevant konkret första handling vid riktig tomlista, retry vid fel. Behåll osäkert sparläge och input; inga permanenta ”Sparat”-badges. Testa förstainloggning, tomt konto, nätfel och delvis hämtad data. |
 
-**Första rekommenderade nästa paket:** 1a, därefter 1b. De löser Eriks konkreta knapp-/utrymmesproblem. Stor-text-/tillgänglighetskontroll ingår redan i båda; paket 2 breddar samma kontroll till resten av appen. Sökning följer när publicerat innehåll kan visas i den aktiva hundens urval. Pull-to-refresh återanvänder befintlig automatisk refresh och inför inget familje-/delningskonto.
+**Nästa paketordning:** 1b är stängt; därefter 2a, 2b, 3, 4 och 5. Paket 2 breddar stor-text-/tillgänglighetskontrollen till övriga ytor; kunskapssökning använder den aktiva hundens redan filtrerade publicerade innehåll. Pull-to-refresh återanvänder befintlig automatisk refresh och inför inget familje-/delningskonto.
 
 ## Manuellt granskade vyer och dynamiska grupper
 

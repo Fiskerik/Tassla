@@ -8071,6 +8071,92 @@
       "risk_class": "M",
       "checkpoint": "Implementation checkpoint b59169c is pushed and verified on origin/codex/tassla-ui-ux-bundle-2026-10-18; release history and closeout records are updated.",
       "test_evidence": "Focused tests 13/13 PASS; CI=1 pnpm check PASS 542/542; public iOS JS bundle PASS (1446 modules); git diff --check PASS; queue validation PASS; public/review screenshots and §14 evidence reviewed. Native/live-data limits and owner-approved Panel 6 deviation documented. Commit b59169c pushed; pre-push hook passed."
+    },
+    {
+      "id": "UI-ACTIONS-ROWS",
+      "title": "Kontekstuell penn, händelseval och veckodagsrad",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md: Panel 4 Daglig Checklista and Panel 5 Logga; docs/design/vision-rev02-screen-contracts.md: Panels 1, 4, 5",
+      "plan": "docs/tasks/dev/UI-ACTIONS-ROWS.md v2; docs/plans/UI-ACTIONS-ROWS-ux-spec.md v2",
+      "write_paths": [
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/home/README.md",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/README.md",
+        "tests/ui-actions-rows.test.mjs",
+        "tests/log-screen-policy.test.mjs",
+        "docs/tasks/dev/UI-ACTIONS-ROWS.md",
+        "docs/plans/UI-ACTIONS-ROWS-ux-spec.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/design/evidence/ui-actions-rows-2026-10-19/VERIFICATION.md"
+      ],
+      "acceptance": [
+        "Routine edit is a 44x44-or-larger icon-only pen with the routine-specific accessible label; no wrapped Redigera residue remains.",
+        "Checklist own-item edit stays icon-only and exposes its full Ändra {title} accessible name.",
+        "Log editor shows the selected circular category icon plus down chevron; activation opens a list of every LOG_ENTRY_TYPES option with icon and Swedish name and accurate selected state.",
+        "Choosing a category closes the list and preserves existing event, accident, date/time, note, save/delete/cancel, validation and recovery semantics.",
+        "Weekday row shows Må, Ti, On, To, Fr, Lö, Sö without wrap at normal text, keeps >=44x44 targets and full accessible names, and remains horizontally reachable at narrow/larger text.",
+        "At 375x667 and 140% with the event picker expanded, scroll access reaches date/time, note, delete/cancel and footer save; collapsing via the trigger retains the event/date/time/note draft.",
+        "Primary, destructive and cancel actions retain visible words.",
+        "Scoped 18-point visual evidence, independent QA and Reviewer are recorded; full panel acceptance is not claimed."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/ui-actions-rows.test.mjs tests/log-screen-policy.test.mjs tests/daily-activity-ui.test.mjs tests/checklist-ui.test.mjs",
+        "CI=1 pnpm check",
+        "TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false pnpm bundle:ios",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "RN Web public/review captures at 375x844, 430x844, 375x667 and 140% text where supported; native VoiceOver/Dynamic Type is reported separately"
+      ],
+      "depends_on": [
+        "UI-ACTIONS-COMMON"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v2 and UX Critic PROCEED v2; exact verdicts saved in docs/tasks/dev/UI-ACTIONS-ROWS.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Owner-requested package 1b; exact plan v2 was approved by Architect and proceeded by UX Critic."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation and visual/interaction evidence complete. Full CI=1 pnpm check 545/545, public iOS export 1446 modules, 10 synthetic RN Web captures at 375/430/short viewport 140%, explicit aria-checked and draft-preservation regressions, diff check, and queue validation PASS. Independent QA and Reviewer PASS; native Dynamic Type/VoiceOver/live Supabase remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS 2026-10-19: exact source/draft preservation reviewed; focused 20/20, full pnpm check 545/545, public iOS JS bundle and 10 synthetic RN Web captures PASS. Native VoiceOver/TalkBack, Dynamic Type, production RLS and signed build remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS 2026-10-19: inspected exact source diff, IconOnlyButton/IconChip, type-change side effects, tests and scoped evidence; no blocking findings. QA PASS recorded. Ten synthetic captures; focused 20/20, full check 545/545 and public iOS JS bundle PASS. Native a11y/Dynamic Type, production RLS and signed build remain NOT TESTABLE."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS 2026-10-19: inspected exact source diff, IconOnlyButton/IconChip, type-change side effects, tests and scoped evidence; no blocking findings. QA PASS recorded. Ten synthetic captures; focused 20/20, full check 545/545 and public iOS JS bundle PASS. Native a11y/Dynamic Type, production RLS and signed build remain NOT TESTABLE.",
+      "priority": "P1",
+      "panels": [
+        "Hem",
+        "Daglig Checklista",
+        "Logga"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Package 1b complete; independent QA and Reviewer PASS. Scoped synthetic evidence covers changed controls only; full rev02 panel acceptance is not claimed.",
+      "test_evidence": "Focused 1b tests 20/20 PASS; CI=1 pnpm check 545/545 PASS; public iOS JS export 1446 modules PASS; RN Web synthetic interaction and 10 captures at 375x844/430x844/375x667/140% CSS zoom PASS; date/time/note draft preservation and delete-cancel PASS; git diff --check and queue validation PASS. Native Dynamic Type/VoiceOver, live Supabase/RLS and signed Codemagic/Xcode build NOT TESTABLE. Independent QA and Reviewer PASS."
     }
   ]
 }

@@ -845,3 +845,10 @@ Bifogad träningsredesignpatch är implementerad på `codex/tassla-ui-ux-bundle-
 Riktade tester 13/13, `CI=1 pnpm check` 542/542, offentlig iOS JS-bundle (1446 moduler), `git diff --check` och queue validation PASS. Renderad public/review-evidens och §14-bedömning: [VERIFICATION.md](../../design/evidence/ui-training-overview-2026-10-18/VERIFICATION.md). Live Supabase/RLS, verkligt publicerat innehåll, native tillgänglighet/enhetsbeteende och telefonprov är NOT TESTABLE. 140% webzoom radbryter befintlig `Kunskap`-etikett. Den ägarbeställda kompositionsavvikelsen från rev02-panel 6 är avgränsad; full panelacceptans hävdas inte.
 
 Implementationscheckpoint `b59169c` är pushad till `origin/`codex/tassla-ui-ux-bundle-2026-10-18; slutlig releasehistorik finns i `docs/releases/HISTORY-2026.md`. Ingen Codemagic/TestFlight-build påstås.
+### UI-ACTIONS-ROWS — 1b avslutad, 2026-10-19
+
+Rutinhallens redigering använder en ikonknapp med fullt tillgänglighetsnamn; veckodagarna visas som `Må, Ti, On, To, Fr, Lö, Sö` i en horisontellt åtkomlig rad. Loggens typväljare visar vald kategori som ikon, och öppnar en lista med ikon och namn för alla sju typer. Typbyte stänger listan och lämnar datum, tid och anteckningsutkast intakta. Radera/Avbryt/spara behåller text och befintliga flöden.
+
+Oberoende QA **PASS** och Reviewer **PASS** för avgränsad kodändring. Riktade tester 20/20; `CI=1 pnpm check` 545/545; offentlig iOS JS-bundle (1446 moduler); `git diff --check`; kövalidering; 10 syntetiska RN Web-skärmbilder och interaktionskontroller PASS. Se [verifieringsunderlag](../../design/evidence/ui-actions-rows-2026-10-19/VERIFICATION.md). Native VoiceOver/TalkBack, Dynamic Type, Supabase/RLS och signerad iOS-build är NOT TESTABLE. Full acceptans av rev02-panelerna 1/4/5 hävdas inte.
+
+Nästa UI/UX-paket: `2a UI-ACCESSIBILITY-HOME-LOG`; sedan 2b, 3 Kunskapssök, 4 Pull-to-refresh och 5 Tom-/laddnings-/felåterkoppling. Hela kvarvarande releaseinventeringen lämnades tillsammans med 1b-closeout.

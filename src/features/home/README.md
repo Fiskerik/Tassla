@@ -25,3 +25,7 @@ Rutinens checkbox och dess detaljöppning är separata handlingar. Träningsrade
 Kunskapsartiklar och en öppen checklistmall är underordnade vyer. `KnowledgeScreen` rapporterar detaljtillståndet till `ProductWorkspace`, som stänger av huvudflikssvep medan detaljen är öppen. Tryck på den aktiva Kunskap-fliken i detalj är en no-op. Vid faktiskt utträde från Kunskap rensas fokus och detaljflagga via både bottenmeny och sidgest; återinträde visar översikten utan att återöppna en gammal artikel. Hemmets direkta innehålls-CTA behåller däremot det uttryckligen valda artikel-id:t. Kunskapsöversikten och FAQ:s inline-expansion behåller huvudflikssvep.
 
 Reproducerbara React Native Web-renderingar finns i [tools/visual-check](../../../tools/visual-check/README.md). De använder syntetiska data; Supabase/RLS-runtime, native enheter och TestFlight verifieras separat.
+
+## Små kontroller i rutinhantering
+
+I veckoupprepning visas `Må, Ti, On, To, Fr, Lö, Sö` i en horisontell rad. Fullständiga veckodagsnamn exponeras för hjälpmedelsteknik och raden kan bläddras vid smal skärm eller större text; varje knapp behåller minst 44 pt träffyta. Rutinens pennknapp är ikon-only visuellt men behåller namnbundet tillgänglighetsnamn.
