@@ -1214,3 +1214,6 @@ Independent Reviewer PASS on the current v15 snapshot. Equal card heights are co
 
 
 Pre-commit closeout: the first mandatory `pnpm check` found one existing source-policy assertion mismatch for success Toast guards inside selected-program branches. Added explicit guards, independently rechecked as behavior-equivalent by QA and Reviewer. The corrected `pnpm check` passed typecheck, edge typecheck, lint and 618/618 tests. Both independent gates remain PASS on the committed candidate.
+
+
+Commit closeout: implementation and reviewed A/B evidence committed as `f12aa27a77b8dc6519e2602a661179b31f72ec9b`; `pnpm check` passed 618/618 and the queue is done. Release history records the commit and authorized push target.

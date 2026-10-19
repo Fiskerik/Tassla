@@ -161,7 +161,7 @@
     "Native VoiceOver/TalkBack, keyboard, and actual device Dynamic Type not testable",
     "140% font rendering is a CSS proxy"
   ],
-  "testSuite": "not added or run",
+  "testSuite": "No UI-specific suite added; required pnpm check passed 618/618 tests",
   "qaVerdict": "PASS",
   "qaReport": "QA-REPORT.md",
   "reviewerVerdict": "PASS",

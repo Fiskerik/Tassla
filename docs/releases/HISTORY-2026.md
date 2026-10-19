@@ -556,3 +556,10 @@ Leveransen samlar R3a–R3c, R4a–R4d och korrigerande Panel 4-verifieringar p�
 Codemagic #53 nådde inte iOS prebuild, CocoaPods, signering eller Xcode/IPA. Native iOS-projekt och signerad build kunde inte verifieras lokalt på Windows; ny Codemagic-körning krävs. Appbundlen är inte rapporterad som TestFlight-verifierad. R2a:s åldersbaserade navigering ligger kvar som senare beslutspunkt; R5, R6 och R7 är planerade och ingår inte i denna commit.
 
 Underlag för QA, Reviewer, §14 och skärmbilder ligger i `docs/design/evidence/vision-rev02/`; tekniska checkpoints finns i `docs/tasks/dev/rapport.md`.
+
+
+## UX-OWNER-FEEDBACK-2026-10-19 - Rasväljare och Träning A/B
+
+2026-10-19. Rasfältets sökbara dropdown och träningsdetalj/rekommendationskortens lika höjd är implementerade och lokalt verifierade. QA och oberoende Reviewer PASS. Obligatorisk `pnpm check`: app- och edge-typecheck, lint och 618/618 tester PASS. Träningskorten är 260 px vid 375/430 px och lång rubrik; 364 px vid 140 % CSS-proxy. Underlag: `docs/design/evidence/vision-rev02/breed-picker-2026-10-19/` och `docs/design/evidence/vision-rev02/training-detail-2026-10-19/`.
+
+A/B-implementationens commit: `f12aa27a77b8dc6519e2602a661179b31f72ec9b`. Målbranch: `codex/mvp-v2-panel4-checklists-2026-10-16` på `origin`; push ingår i denna ägarauktoriserade leverans. TestFlight-build/native verifiering: inte genomförd.
