@@ -4,6 +4,7 @@ Datum: 2026-10-19
 Branch: codex/tassla-ui-ux-bundle-2026-10-18
 Plan: docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md, amendment v9
 Utgångspunkt före 5b: 04c398069af5ede91ef10d05d7e925597376058a
+Lokalt checkpoint-commit: d58d234 (inte pushad)
 Verifieringsomfång: lokal kod, tester, headless-renderade produktkomponenter och offentligt JavaScript-exportpaket. Detta är inte en native-/TestFlight- eller full rev02-visuell sign-off.
 
 ## Resultat och avgränsning

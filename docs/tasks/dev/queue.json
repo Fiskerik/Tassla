@@ -8951,7 +8951,7 @@
       "risk_class": "M",
       "checkpoint": "Dog-scoped Knowledge/Training empty and retry journey with Training return routes.",
       "test_evidence": "Architect v9 APPROVE. 23 production-component headless captures at 375×844 use separate synthetic fixture-dog-no-dob and fixture-dog-12w records; every image is indexed by state, route, viewport and fixture (older supplemental captures are marked) in docs/design/evidence/ui-empty-feedback-knowledge-training-2026-10-19/VERIFICATION.md. The evidence includes zero-search clear returning the dog-scoped article and Checklistor public empty-content explanation. Focused suite 29/29, pnpm check 583/583 and public iOS JS export 1,447 modules PASS; diff/queue checks PASS. QA recheck PASS for the bounded local checkpoint and supplemental captures; independent frozen-diff Reviewer PASS with no actionable findings. Completed-program overview is captured; opening/resuming detail is NOT TESTABLE. §14 observations are itemized; native/device, full app-host, live backend and rev02 comparison remain NOT TESTABLE.",
-      "status": "review",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -8976,9 +8976,15 @@
           "to": "review",
           "actor": "qa",
           "evidence": "Independent QA PASS for bounded local checkpoint after rechecking supplemental search-clear and Checklistor captures; 23/23 indexed images. Completed-program overview is captured; detail open/resume remains NOT TESTABLE. Focused suite 29/29; diff and queue validation PASS. Full/native/device/live-backend/rev02 boundaries remain explicit."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent frozen-diff Reviewer PASS with no actionable findings; independent QA PASS; Architect v9 APPROVE. Focused tests 29/29, full pnpm check 583/583, public iOS JS export 1,447 modules, diff/queue validation and 23 indexed captures PASS. Local checkpoint commit d58d234. Native/device, app-host, live backend, completed-program detail tap-through and rev02 visual comparison remain explicitly NOT TESTABLE; no push performed."
         }
       ],
-      "next_step": "Independent QA PASS for bounded local checkpoint after rechecking supplemental search-clear and Checklistor captures; 23/23 indexed images. Completed-program overview is captured; detail open/resume remains NOT TESTABLE. Focused suite 29/29; diff and queue validation PASS. Full/native/device/live-backend/rev02 boundaries remain explicit.",
+      "next_step": "5b checkpoint closed locally in commit d58d234. Next planned verification is UI-NATIVE-ACCESSIBILITY-VERIFY on an owner-selected physical device; native/device and full rev02 visual checks remain open until then.",
       "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v9"
     },
     {

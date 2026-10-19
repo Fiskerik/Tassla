@@ -180,3 +180,7 @@ Architect v7 conditions satisfied. Local search implementation passed focused te
 - Save exact captures and `VERIFICATION.md` in `docs/design/evidence/ui-empty-feedback-knowledge-training-2026-10-19/`. Record all §14 items 1–18 individually as Yes/No/Ej tillämpligt/NOT TESTABLE with reasons and image references; do not report blanket visual approval.
 - Fixture variants are separate and indexed per capture: `fixture-dog-no-dob` (Luna, birth date missing) for the no-age/profile Back and save route; `fixture-dog-12w` (Luna, DOB 2026-07-27; 12 weeks on 2026-10-19) for age-filtered no-match and Knowledge return. The saved-profile fixture becomes 11 weeks after DOB 2026-08-01. Native/device, screen-reader and gesture checks, real active-dog switching, live Supabase/RLS, signed build and rev02 side-by-side panel comparison remain NOT TESTABLE.
 - This amendment adds evidence and test-file ownership only. It does not expand product behavior, data, navigation, dependencies or APIs.
+
+### UI-EMPTY-FEEDBACK-KNOWLEDGE-TRAINING — local checkpoint closeout, 2026-10-19
+
+Architect v9 APPROVE, independent QA PASS and frozen-diff Reviewer PASS are recorded above. The checkpoint is locally committed as `d58d234` on `codex/tassla-ui-ux-bundle-2026-10-18`; it has not been pushed. Native/device accessibility, real app-host navigation, live Supabase/RLS, completed-program detail tap-through and full rev02 visual comparison remain OPEN / NOT TESTABLE. Next planned verification is `UI-NATIVE-ACCESSIBILITY-VERIFY` on an owner-selected physical device.
