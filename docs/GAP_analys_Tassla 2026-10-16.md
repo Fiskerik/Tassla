@@ -1,10 +1,10 @@
 # Tassla – GAP-analys: MVP v2 mot GitHub
 
-**Datum för granskning:** 2026-10-15  
-**Repository:** [Fiskerik/Tassla](https://github.com/Fiskerik/Tassla)  
-**Granskad gren:** [`codex/life-periods-2026-10-15`](https://github.com/Fiskerik/Tassla/tree/codex/life-periods-2026-10-15)  
-**Granskad commit:** [`c71f5544eb9b8bd86a1aae78def6d86386f13f9a`](https://github.com/Fiskerik/Tassla/commit/c71f5544eb9b8bd86a1aae78def6d86386f13f9a) (15 oktober 2026 kl. 20:35 svensk tid)  
-**Jämförelse mot `main`:** Grenen låg två commits före `main` och hade inga commits bakom vid granskning.  
+**Datum för granskning:** 2026-10-15\
+**Repository:** [Fiskerik/Tassla](https://github.com/Fiskerik/Tassla)\
+**Granskad gren:** [`codex/life-periods-2026-10-15`](https://github.com/Fiskerik/Tassla/tree/codex/life-periods-2026-10-15)\
+**Granskad commit:** [`c71f5544eb9b8bd86a1aae78def6d86386f13f9a`](https://github.com/Fiskerik/Tassla/commit/c71f5544eb9b8bd86a1aae78def6d86386f13f9a) (15 oktober 2026 kl. 20:35 svensk tid)\
+**Jämförelse mot `main`:** Grenen låg två commits före `main` och hade inga commits bakom vid granskning.\
 **Mot dokument:** `Tassla-MVP-v2-forslag.md`, som ännu inte godkänts.
 
 > **Viktig avgränsning:** Detta är en källkods- och dokumentgranskning av *angiven commit*, inte ett kört test i enhet, en ansluten Supabase-instans eller en slutlig UX-bedömning. Att funktionalitet finns i kod betyder inte automatiskt att den är driftsatt eller verifierad. Jag har inte ändrat GitHub-repot.
