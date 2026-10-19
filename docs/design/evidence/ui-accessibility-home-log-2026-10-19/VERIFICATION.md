@@ -35,3 +35,5 @@ Key captures: [`home-375x667-140-after.png`](home-375x667-140-after.png), [`home
 The initial unconfigured `pnpm bundle:ios` invocation stopped at the existing content build-channel guard. It was rerun successfully with the explicit public channel and review content disabled, as shown above. Codemagic was not run.
 
 Independent QA and Reviewer: **PENDING** at time of this report draft.
+
+- Implementation checkpoint: `c58f3fd` (`fix: improve home daily activity accessibility`); release closeout and branch push are being completed separately.

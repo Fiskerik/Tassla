@@ -8204,7 +8204,7 @@
       "risk_class": "M",
       "checkpoint": "2a local accessibility/UI checkpoint; native acceptance remains open under UI-NATIVE-ACCESSIBILITY-VERIFY.",
       "test_evidence": "Pending implementation and independent verification.",
-      "status": "review",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -8229,9 +8229,15 @@
           "to": "review",
           "actor": "qa",
           "evidence": "Independent QA PASS; exact focused suite 22/22 and extended Home Today suite 25/25; diff and queue validation PASS. See docs/design/evidence/ui-accessibility-home-log-2026-10-19/VERIFICATION.md."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent QA PASS and Reviewer PASS; exact focus 22/22, QA-expanded focus 25/25, pnpm check 545/545, public iOS bundle PASS; implementation checkpoint c58f3fd. Evidence: docs/design/evidence/ui-accessibility-home-log-2026-10-19/VERIFICATION.md."
         }
       ],
-      "next_step": "Independent QA PASS; exact focused suite 22/22 and extended Home Today suite 25/25; diff and queue validation PASS. See docs/design/evidence/ui-accessibility-home-log-2026-10-19/VERIFICATION.md.",
+      "next_step": "Independent QA PASS and Reviewer PASS; exact focus 22/22, QA-expanded focus 25/25, pnpm check 545/545, public iOS bundle PASS; implementation checkpoint c58f3fd. Evidence: docs/design/evidence/ui-accessibility-home-log-2026-10-19/VERIFICATION.md.",
       "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
     },
     {
