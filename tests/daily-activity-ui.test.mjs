@@ -10,7 +10,9 @@ const workspace = await readFile(new URL('../src/features/home/ProductWorkspace.
 
 test('Home derives count and progress from the full daily activity array and shows at most five rows', () => {
   assert.match(home, /dailyActivities\.filter\(\(item\) => item\.completed\)\.length/);
-  assert.match(home, /dailyActivities\.length > 0/);
+  assert.match(home, /dailyState === 'ready' && dailyActivities\.length === 0/);
+  assert.match(home, /dailySummary/);
+  assert.match(home, /dailyActivities\.filter\(\(item\) => item\.completed\)\.length\} av \{dailyActivities\.length\} klara/);
   assert.match(home, /dailyActivities\.slice\(0, 5\)/);
   assert.match(home, /dailyActivities\.length > 5/);
   assert.match(home, /Visa alla/);
@@ -26,6 +28,7 @@ test('routine and training rows expose separate accessible actions and truthful 
   assert.match(home, /onToggle=\{routineDay \? \(\) => item\.routineItemId && onSetRoutineCompletion/);
   assert.match(home, /item\.kind === 'training' \? \(\) => onGo\('training'\)/);
   assert.match(item, /accessibilityRole="checkbox"/);
+  assert.equal((item.match(/accessibilityRole="checkbox" aria-checked=\{completed\}/g) ?? []).length, 2, 'both routine checkbox variants expose the checked state to the web accessibility tree');
   assert.match(item, /accessibilityRole="button" accessibilityLabel=\{rowLabel\}/);
   assert.match(item, /Sparar…/);
   assert.match(item, /onRetry/);

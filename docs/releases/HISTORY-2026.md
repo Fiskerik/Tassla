@@ -562,3 +562,8 @@ Ikonbaserad redigering i rutinhallen, horisontellt åtkomliga veckodagar och kom
 Oberoende QA PASS och Reviewer PASS. Riktade tester 20/20, `CI=1 pnpm check` 545/545, offentlig iOS JS-export 1446 moduler, diff/queue validation och 10 syntetiska RN Web-vyer/interaktionskontroller PASS. Fullskärmsacceptans hävdas inte. Native VoiceOver/TalkBack, Dynamic Type, fysisk enhet, Supabase/RLS och signerad Codemagic/Xcode-build är NOT TESTABLE. Evidens: [verifieringsrapport](../design/evidence/ui-actions-rows-2026-10-19/VERIFICATION.md), [paketplan](../tasks/dev/UI-ACTIONS-ROWS.md). Nästa UI/UX-paket: 2a.
 
 Implementationscommit: `9bfd972`. Committen och closeout-posten pushas tillsammans till `origin/codex/tassla-ui-ux-bundle-2026-10-18`.
+
+
+## UI-ACCESSIBILITY-HOME-LOG (2a) — lokal kodcheckpoint
+
+Datum: 2026-10-19. Home- och dagsaktivitetsraderna har tydligare läsordning, radbrytning och hjälpmedelsstatus; retry namnger den berörda aktiviteten. QA och Reviewer PASS. 22/22 exakta fokuserade tester; QA-utökning 25/25; `pnpm check` 545/545; offentlig iOS JS-export PASS (1 446 moduler); syntetisk RN Web och kö-/diffkontroller PASS. VoiceOver/TalkBack, native Dynamic Type/gest, live backend, signerad build och rev02-fullskärmsacceptans är NOT TESTABLE. Implementation: commit SHA dokumenteras efter commit. [Evidens](../design/evidence/ui-accessibility-home-log-2026-10-19/VERIFICATION.md). Nästa checkpoint: riktad huvudfliksanimation.

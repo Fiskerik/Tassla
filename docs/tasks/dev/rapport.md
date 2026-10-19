@@ -852,3 +852,10 @@ Rutinhallens redigering använder en ikonknapp med fullt tillgänglighetsnamn; v
 Oberoende QA **PASS** och Reviewer **PASS** för avgränsad kodändring. Riktade tester 20/20; `CI=1 pnpm check` 545/545; offentlig iOS JS-bundle (1446 moduler); `git diff --check`; kövalidering; 10 syntetiska RN Web-skärmbilder och interaktionskontroller PASS. Se [verifieringsunderlag](../../design/evidence/ui-actions-rows-2026-10-19/VERIFICATION.md). Native VoiceOver/TalkBack, Dynamic Type, Supabase/RLS och signerad iOS-build är NOT TESTABLE. Full acceptans av rev02-panelerna 1/4/5 hävdas inte.
 
 Nästa UI/UX-paket: `2a UI-ACCESSIBILITY-HOME-LOG`; sedan 2b, 3 Kunskapssök, 4 Pull-to-refresh och 5 Tom-/laddnings-/felåterkoppling. Hela kvarvarande releaseinventeringen lämnades tillsammans med 1b-closeout.
+
+
+### UI-ACCESSIBILITY-HOME-LOG (2a) — QA/Reviewer PASS, 2026-10-19
+
+Home keeps the daily count and refresh state on their own summary line, allows activity titles to wrap, exposes checked state on both routine checkbox variants, announces mutation state politely, and names the training retry by activity. No Log/Toast mutation semantics or data behavior changed.
+
+Independent QA PASS and Reviewer PASS. Exact focused command (Home vision, daily activity UI, Log screen policy and compact Toast policy) passed 22/22; QA's broader rerun with `tests/home-today.test.mjs` passed 25/25. `pnpm check` passed 545/545; app/edge typechecks and ESLint passed. Public `pnpm bundle:ios` exported 1,446 modules after explicitly setting the public channel and disabling review content; the initial unconfigured call correctly stopped at the existing build-channel guard. Synthetic RN Web layout/interaction, `git diff --check`, and queue validation passed. Native VoiceOver/TalkBack, Dynamic Type, physical targets, live Supabase/RLS, signed build and full rev02-panel comparison remain NOT TESTABLE. Evidence: [verification report](../../design/evidence/ui-accessibility-home-log-2026-10-19/VERIFICATION.md).

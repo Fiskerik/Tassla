@@ -117,3 +117,8 @@ Eriks uttryckliga begäran att implementera träningsredesignpatchen godkänner 
 ## UI-ACTIONS-ROWS — checkpoint 2026-10-19
 
 Paket 1b är avslutat med oberoende QA PASS och Reviewer PASS. Ändringarna gäller rutinhallens ikonpennor/veckodagar och loggens kompakta händelsetypväljare. Lokal check och offentlig JS-bundle passerar; syntetisk visuellt/interaction-underlag är avgränsat och native-/produktionsgränser är uttryckligen NOT TESTABLE. Full panelacceptans hävdas inte. Nästa UI/UX-paket är 2a; den fullständiga öppna releaseinventeringen finns i den aktuella [UI/UX-planen](../plans/UI-UX-NEXT-PACKAGES-2026-10-18.md) och MVP-leveransplanen.
+
+
+### UI-ACCESSIBILITY-HOME-LOG (2a) — lokal verifierat, 2026-10-19
+
+Home-/dagsradsförbättringarna är implementerade enligt plan v4. Oberoende QA PASS och Reviewer PASS. Exakt fokuserad svit 22/22; QA:s utökade svit med `home-today` 25/25; full `pnpm check` 545/545; public iOS JS-export 1 446 moduler; syntetisk RN Web-interaktion/render, diffcheck och kövalidering PASS. Native/VoiceOver, Dynamic Type på enhet, live Supabase/RLS, signerad build och fullskärmsvisuell acceptans är NOT TESTABLE. Implementationens commit följs av dokumentationscheckpointen; nästa paket är `UI-MAIN-TAB-TRANSITION`. Underlag: [rapport](../tasks/dev/rapport.md) och [evidens](../design/evidence/ui-accessibility-home-log-2026-10-19/VERIFICATION.md).

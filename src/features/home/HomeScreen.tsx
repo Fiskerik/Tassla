@@ -167,10 +167,6 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
       <View style={styles.dailyCardContent}>
         <View style={styles.dailyHeading}>
           <Text style={styles.dailyTitle} accessibilityRole="header">Dagens att göra</Text>
-          {dailyRefreshing && dailyState === 'ready' ? <ActivityIndicator accessibilityRole="progressbar" accessibilityLabel="Dagens uppgifter uppdateras" size="small" color={tokens.colors.home.textMuted} /> : null}
-          {dailyFixture ? <Text style={styles.dailyCount}>{dailyFixture.filter((item) => reviewCompletion[item.id] ?? item.completed).length} av {dailyFixture.length} klara</Text> : dailyState === 'ready' && dailyActivities.length > 0
-            ? <Text style={styles.dailyCount}>{dailyActivities.filter((item) => item.completed).length} av {dailyActivities.length} klara</Text>
-            : null}
           <MotionPressable accessibilityRole="button" accessibilityLabel="Hantera rutiner och dagens aktiviteter"
             onPress={() => openManager()} style={({ pressed }) => [styles.manageDaily, pressed && styles.headingPressed]}>
             <Ionicons name="create-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
@@ -181,16 +177,21 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
           <Text style={styles.emptyText}>Uppdateringen kunde inte hämtas. Du ser senast hämtade uppgifter.</Text>
           {onRetryDaily ? <Button variant="tertiary" label="Försök igen" accessibilityLabel="Försök uppdatera dagens uppgifter igen" onPress={onRetryDaily} /> : null}
         </View> : null}
-        {dailyFixture ? <ReviewDailyFixture items={dailyFixture} completion={reviewCompletion} onCompletionChange={setReviewCompletion} onGo={onGo} onOpenRoutine={(routineId) => openManager(routineId)} /> : dailyState === 'loading' ? <Skeleton shape="row" lines={2} />
+        {dailyFixture ? <ReviewDailyFixture items={dailyFixture} completion={reviewCompletion} refreshing={dailyRefreshing} onCompletionChange={setReviewCompletion} onGo={onGo} onOpenRoutine={(routineId) => openManager(routineId)} /> : dailyState === 'loading' ? <Skeleton shape="row" lines={2} />
           : dailyState === 'error' ? <View style={styles.dailyState}>
             <Text style={styles.emptyText}>Dagens uppgifter kunde inte hämtas. Ingen status räknas just nu.</Text>
             {onRetryDaily ? <Button variant="tertiary" label="Hämta dagens uppgifter igen" accessibilityLabel="Hämta dagens uppgifter igen" onPress={onRetryDaily} /> : null}
           </View>
             : dailyState === 'ready' && dailyActivities.length === 0 ? <View style={styles.dailyState}>
+              {dailyRefreshing ? <ActivityIndicator accessibilityRole="progressbar" accessibilityLabel="Dagens uppgifter uppdateras" size="small" color={tokens.colors.home.textMuted} /> : null}
               <Text style={styles.emptyText}>Skapa en rutin eller välj ett träningssteg att ha med idag.</Text>
               <Button variant="tertiary" label="Hantera dagens aktiviteter" accessibilityLabel="Hantera dagens aktiviteter" onPress={() => openManager()} />
             </View>
               : dailyState === 'ready' ? <View style={styles.dailyList}>
+                <View style={styles.dailySummary}>
+                  <Text style={styles.dailyCount}>{dailyActivities.filter((item) => item.completed).length} av {dailyActivities.length} klara</Text>
+                  {dailyRefreshing ? <ActivityIndicator accessibilityRole="progressbar" accessibilityLabel="Dagens uppgifter uppdateras" size="small" color={tokens.colors.home.textMuted} /> : null}
+                </View>
                 <View accessibilityRole="progressbar" accessibilityLabel={`${dailyActivities.filter((item) => item.completed).length} av ${dailyActivities.length} dagsuppgifter klara`}
                   accessibilityValue={{ min: 0, max: dailyActivities.length, now: dailyActivities.filter((item) => item.completed).length }} style={styles.progressTrack}>
                   <View style={[styles.progressFill, { width: `${Math.round(dailyActivities.filter((item) => item.completed).length / dailyActivities.length * 100)}%` }]} />
@@ -240,9 +241,13 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   </View>;
 }
 
-function ReviewDailyFixture({ items, completion, onCompletionChange, onGo, onOpenRoutine }: { items: readonly HomeDailyFixtureItem[]; completion: Readonly<Record<string, boolean>>; onCompletionChange: (update: (current: Record<string, boolean>) => Record<string, boolean>) => void; onGo: (page: Destination) => void; onOpenRoutine: (routineId?: string | null) => void }) {
+function ReviewDailyFixture({ items, completion, refreshing, onCompletionChange, onGo, onOpenRoutine }: { items: readonly HomeDailyFixtureItem[]; completion: Readonly<Record<string, boolean>>; refreshing: boolean; onCompletionChange: (update: (current: Record<string, boolean>) => Record<string, boolean>) => void; onGo: (page: Destination) => void; onOpenRoutine: (routineId?: string | null) => void }) {
   const completed = items.filter((item) => completion[item.id] ?? item.completed).length;
   return <View style={styles.dailyList}>
+    <View style={styles.dailySummary}>
+      <Text style={styles.dailyCount}>{completed} av {items.length} klara</Text>
+      {refreshing ? <ActivityIndicator accessibilityRole="progressbar" accessibilityLabel="Dagens uppgifter uppdateras" size="small" color={tokens.colors.home.textMuted} /> : null}
+    </View>
     <View accessibilityRole="progressbar" accessibilityLabel={`${completed} av ${items.length} dagsuppgifter klara`}
       accessibilityValue={{ min: 0, max: items.length, now: completed }} style={styles.progressTrack}>
       <View style={[styles.progressFill, { width: `${Math.round(completed / items.length * 100)}%` }]} />
@@ -385,6 +390,7 @@ const styles = StyleSheet.create({
   manageDailyLabel: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
   headingPressed: { backgroundColor: tokens.colors.selectedSurface },
   dailyList: { gap: tokens.spacing.xs },
+  dailySummary: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   progressTrack: { height: tokens.size.progress, borderRadius: tokens.radius.full, overflow: 'hidden', backgroundColor: tokens.colors.home.progressTrack },
   progressFill: { height: '100%', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.greenFill },
   activityRows: { gap: 0 },
