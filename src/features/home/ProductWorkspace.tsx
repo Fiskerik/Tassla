@@ -2484,6 +2484,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onRetry={() => { void retryContent(); }}
       client={client}
       dogId={dog.id}
+      dogName={dog.name}
       ageWeeks={age}
       sessionKey={`${session?.user.id ?? 'signed-out'}:${accountGeneration}`}
       checklistPending={checklistMemoryView?.scope === currentChecklistMemoryScope ? checklistMemoryView.state : null}

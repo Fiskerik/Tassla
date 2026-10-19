@@ -8651,7 +8651,11 @@
         "docs/design/evidence/ui-knowledge-search-2026-10-19",
         "docs/tasks/dev/rapport.md",
         "docs/releases/HISTORY-2026.md",
-        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md"
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md",
+        "docs/decisions/MASTER-LOG.md",
+        "tests/content-delivery.test.mjs"
       ],
       "acceptance": [
         "Search filters only supplied published age/breed-filtered active-dog items.",
@@ -8659,12 +8663,12 @@
         "Search supports match, clear, zero results, loading/error/retry, article open/back, and dog switch."
       ],
       "checks": [
-        "node --experimental-strip-types --test tests/guide-search.test.mjs tests/knowledge-search-screen.test.mjs",
+        "node --experimental-strip-types --test tests/guide-search.test.mjs tests/knowledge-search-screen.test.mjs tests/content-delivery.test.mjs",
         "pnpm check",
         "pnpm bundle:ios",
         "git diff --check",
         "PYTHONUTF8=1 python tools/dev_flow.py validate",
-        "Capture result/zero/loading/error and dog-switch flow at 375/430; document §14"
+        "Capture result/zero/loading/error and dog-switch flow at 375/430 when render tooling is available; otherwise record NOT TESTABLE in local evidence and leave visual acceptance open for UI-NATIVE-ACCESSIBILITY-VERIFY"
       ],
       "depends_on": [
         "UI-ACCESSIBILITY-PASSPORT"
@@ -8675,11 +8679,74 @@
       ],
       "risk_class": "M",
       "checkpoint": "Active dog published articles -> search -> article/source -> back; no new filter taxonomy or schema.",
-      "test_evidence": "Pending implementation and independent verification.",
-      "status": "planned",
-      "history": [],
-      "next_step": "Wait for UI-ACCESSIBILITY-PASSPORT done.",
-      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
+      "test_evidence": "Local implementation checkpoint PASS: focused search/content-delivery 21/21; pnpm check 564/564; public iOS bundle 1,447 modules; diff check and queue validation PASS. Independent QA PASS and Reviewer PASS. Rendered/native checks remain OPEN / NOT TESTABLE; see docs/design/evidence/ui-knowledge-search-2026-10-19/VERIFICATION.md.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v4/v6 review record: Architect APPROVE and UX Critic PROCEED for UI-KNOWLEDGE-SEARCH. Bounded to supplied published, age/breed-filtered active-dog items; scope query to sessionKey+dogId; no new schema, taxonomy, fetch path or dependency."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin package 3 under the approved Knowledge search contract. Preserve selectContent and ProductWorkspace dog/session filtering; implement only local search, scope-safe query state, article open/back and evidence."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Paused before code: task v4 requires 375/430 visual captures, but react-native-web/react-dom are unavailable locally. Review a bounded plan amendment for source/test-only local checkpoint with visual acceptance OPEN / NOT TESTABLE and search scenarios transferred to UI-NATIVE-ACCESSIBILITY-VERIFY."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan amendment v7 recorded in docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md and docs/decisions/MASTER-LOG.md; Architect APPROVE WITH CONDITIONS, UX Critic PROCEED WITH CHANGES. Local-only checkpoint and OPEN / NOT TESTABLE visual criteria are explicit."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect v7 conditions satisfied: active-dog name in scope/field copy, separate no-published/no-match states, query preserved during loading/retry/open-back and cleared on dog switch; only supplied eligible items are searched. Renderer gap transferred to UI-NATIVE-ACCESSIBILITY-VERIFY."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin Knowledge search implementation under v7; code ownership includes ProductWorkspace dogName prop only for explicit active-dog search scope. No fetch, schema, persistence, taxonomy or dependency change."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Focused tests 21/21; pnpm check 564/564; public iOS bundle 1,447 modules; diff check and queue validation pass. Evidence recorded. Rendered/native search checks remain OPEN / NOT TESTABLE and are transferred to UI-NATIVE-ACCESSIBILITY-VERIFY."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: focused 21/21, pnpm check 564/564, queue validation PASS. v7 active-dog search contract and explicit NOT TESTABLE visual/native limits verified; no blocker."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS for frozen code/data scope and final documentation check. Close local implementation checkpoint only; rendered/native/§14 acceptance remains OPEN / NOT TESTABLE under UI-NATIVE-ACCESSIBILITY-VERIFY."
+        }
+      ],
+      "next_step": "Reviewer PASS for frozen code/data scope and final documentation check. Close local implementation checkpoint only; rendered/native/§14 acceptance remains OPEN / NOT TESTABLE under UI-NATIVE-ACCESSIBILITY-VERIFY.",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v7",
+      "review_notes": [
+        {
+          "date": "2026-10-19",
+          "actor": "architect",
+          "decision": "APPROVE",
+          "evidence": "Architect follow-up approved adding tests/content-delivery.test.mjs to explicit write_paths; the existing featured-preview assertion must follow displayedItems[0] so search previews use only matched results. Run this test with both focused search tests. No phase-plan version bump or behavior scope change."
+        }
+      ]
     },
     {
       "id": "UI-REFRESH-HOME-LOG",
@@ -8824,7 +8891,7 @@
       "id": "UI-NATIVE-ACCESSIBILITY-VERIFY",
       "title": "Batched native accessibility and gesture verification",
       "mvp_requirement": "docs/design-rules.md: §10, §14–15; docs/dev/workflow.md: native evidence policy",
-      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v6",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v7",
       "write_paths": [
         "docs/design/evidence/ui-native-accessibility-verify-2026-10-19",
         "docs/tasks/dev/rapport.md"
@@ -8835,7 +8902,8 @@
         "For Hundprofil: list/selection, edit save/cancel, add-dog confirmed and unknown/recovery, error/retry and return paths; keyboard-visible reachability checked.",
         "For Tassla-pass: open/toggle/close selection sheet, checkbox names/states/focus and target sizes; selected sections persist after sheet/share return; preview/PDF contains exactly selected sections.",
         "Explicit PDF export opens native share sheet; dismiss without selecting recipient; record truthful busy/error/unavailable/dialog-closed state, Passport return and app-scoped temporary file cleanup.",
-        "Record exact device/OS/settings; mark any unrun platform, state or setting NOT TESTABLE. Native evidence is not replaced by synthetic web/static checks."
+        "Record exact device/OS/settings; mark any unrun platform, state or setting NOT TESTABLE. Native evidence is not replaced by synthetic web/static checks.",
+        "For Knowledge search: verify dog-named scope copy, search result and zero-result states, loading/error/retry, article open/back, and dog switch without stale prior-dog query/results; capture 375/430 and §14 where possible, otherwise record each as OPEN / NOT TESTABLE."
       ],
       "checks": [
         "Owner-selected physical iOS/Android device run; attach exact device/OS/settings, scenarios and observed results to evidence directory"
@@ -8859,7 +8927,7 @@
       "test_evidence": "NOT TESTABLE until an owner-selected physical-device run is available; static and synthetic web checks cannot close this task.",
       "status": "planned",
       "history": [],
-      "next_step": "Run after all local code checkpoints; capture real device/OS/text settings and all profile/passport scenarios."
+      "next_step": "After all local code checkpoints, run owner-selected device batch including Passport, profile, and Knowledge search; record device/OS/text settings and mark any unrun evidence OPEN / NOT TESTABLE."
     }
   ]
 }

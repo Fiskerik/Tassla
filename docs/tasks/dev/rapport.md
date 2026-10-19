@@ -892,3 +892,9 @@ Passport har nu en responsiv layout för smal vy/stor text och uttryckliga tillg
 Architect APPROVE WITH CONDITIONS (plan v6), UX Critic PROCEED, Security pre-/final APPROVE, oberoende QA PASS och Reviewer PASS. Riktad svit 32/32; pnpm check 555/555; offentlig pnpm bundle:ios 1 446 moduler; diff- och kövalidering PASS. Commit-hook och push-hook passerade båda typecheck, edge-typecheck, ESLint och samtliga 555 tester. Checkpoint 4ffa107 (fix: improve passport accessibility layout) är pushad till origin/codex/tassla-ui-ux-bundle-2026-10-18.
 
 RN Web/DOM saknas, därför är renderad 375×667/140%-layout, §14, faktisk native share sheet, Dynamic Type, VoiceOver/TalkBack, fokus och uppmätta mål NOT TESTABLE och kvarstår i UI-NATIVE-ACCESSIBILITY-VERIFY. Ingen Codemagic, fysisk enhet, live Supabase/RLS eller signerad build kördes. Full rev02-panel-/nativeacceptans hävdas inte. [Verifiering](../../design/evidence/ui-accessibility-passport-2026-10-19/VERIFICATION.md), [plan v6](UI-ACCESSIBILITY-PHASE-2-5.md). Nästa paket: UI-KNOWLEDGE-SEARCH (3).
+
+### UI-KNOWLEDGE-SEARCH — lokal kodcheckpoint, 2026-10-19
+
+Kunskapsfliken Artiklar har nu lokal sökning i den redan valda, publicerade listan för aktiv hund. Sökningen täcker titel och parsad body-text, normaliserar svensk text och tömmer query vid konto-/hundbyte. Ingen extra fetch, schema eller filtertaxonomi tillkom.
+
+Riktade sök-/content-delivery-tester 21/21, full pnpm check 564/564, public iOS JS-export 1 447 moduler, git diff --check och kövalidering PASS. Oberoende QA och Reviewer PASS. Skärmrendring vid 375/430, §14, VoiceOver, Dynamic Type, native fokus/targets och faktisk hundswitch är OPEN / NOT TESTABLE och ligger kvar i UI-NATIVE-ACCESSIBILITY-VERIFY. Ingen live Supabase/RLS-, Codemagic- eller signerad native-build-kontroll gjordes.

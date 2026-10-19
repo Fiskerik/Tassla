@@ -2,7 +2,7 @@
 
 2026-10-18. Underlag: Eriks patch och inklistrade UX-förslag, aktuell branch samt [komplett knappinventering](../design/UI-ACTION-INVENTORY-2026-10-18.md) ([CSV](../design/UI-ACTION-INVENTORY-2026-10-18.csv)). Uppdragsplan: [UI-SHEET-ACTIONS-01](../tasks/dev/UI-SHEET-ACTIONS-01.md). Inventeringen ger kodplatser, inte antal unika knappar på telefonen. Dynamiska listor, renderers, preview/galleri och systemytor framgår separat.
 
-**Status 2026-10-19:** paket 0 UI-SHEET-ACTIONS-01, 1a UI-ACTIONS-COMMON, 1b UI-ACTIONS-ROWS, 2a UI-ACCESSIBILITY-HOME-LOG + UI-MAIN-TAB-TRANSITION, och 2b.1–2b.4 (routines/notifications, health, profiles, Passport) är stängda som lokala implementation checkpoints efter QA/Reviewer PASS; Security pre-/final krävs och är godkänd för de relevanta H-paketen. Senaste checkpoint 4ffa107 är pushad. Renderad/native acceptans för Passport och profil ligger fortsatt öppen i UI-NATIVE-ACCESSIBILITY-VERIFY. Nästa i ordning: 3 hundfiltrerad Kunskapssök, 4 pull-to-refresh, 5a Hem/Logg och 5b Kunskap/Träning tom-/laddnings-/felstater.
+**Status 2026-10-19:** paket 0 UI-SHEET-ACTIONS-01, 1a UI-ACTIONS-COMMON, 1b UI-ACTIONS-ROWS, 2a UI-ACCESSIBILITY-HOME-LOG + UI-MAIN-TAB-TRANSITION, 2b.1–2b.4 och 3 UI-KNOWLEDGE-SEARCH är stängda som lokala implementation checkpoints efter QA/Reviewer PASS. Renderad/native acceptans för sök, profil och Passport ligger fortsatt öppen i UI-NATIVE-ACCESSIBILITY-VERIFY. Nästa i ordning: 4 pull-to-refresh, 5a Hem/Logg och 5b Kunskap/Träning tom-/laddnings-/felstater.
 
 **Levererat i denna slice:** draghandtag/nedåtsvep för den delade BottomSheet, riktade tester, knappinventering och denna plan. Nedanstående paket är planerade; inga breda knappbyten, sökningar, haptik- eller datamodelländringar är implementerade här.
 
@@ -87,3 +87,7 @@ Dynamiska grupper: fliklistor, kalenderdagar/tider, snabbloggtyper, hund-/raspro
 Kör relevanta riktade tester, `pnpm check`, public iOS JS-bundle-export när appkod ändrats, whitespace och kövalidering. Före/efterbilder och §14 vid 375×844/430×844, 375×667, lång svensk text och 140% text; dokumentera native/DB/release separat. Lokal källkodskontroll ersätter inte telefonens gesture responder, tangentbord eller VoiceOver.
 
 För den införda sheetändringen: prova kort/långt/snabbt nedåtdrag från handtag/rubrik; scrolla lång text; tryck kryss; öppna igen; dra med tangentbordet uppe; redigera en osparad rutin och kontrollera discard; försök stänga under sparning; prova reducerad rörelse och VoiceOver. De senare ikon-/refresh-/sökpaketen är ännu inte med i builden.
+
+### UI-KNOWLEDGE-SEARCH — amendment v7, 2026-10-19
+
+Local implementation acceptance is separated from rendered/device acceptance because the repository has no installed react-native-web/react-dom renderer. Search must visibly name the active dog, distinguish no articles from no matches, and never carry prior-dog results across a scope switch. The local checkpoint uses helper/source tests and standard checks; 375/430 captures and §14 remain OPEN / NOT TESTABLE and are assigned to UI-NATIVE-ACCESSIBILITY-VERIFY. See phase plan v7.

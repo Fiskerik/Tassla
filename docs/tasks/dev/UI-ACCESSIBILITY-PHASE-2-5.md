@@ -153,3 +153,14 @@ No Codemagic run is planned. `pnpm bundle:ios` verifies the public JavaScript iO
 - Architect: **APPROVE WITH CONDITIONS** — close `UI-ACCESSIBILITY-PASSPORT` only as a local implementation checkpoint after static QA, Reviewer, frozen-diff Security, checks and commit; keep rendered/§14/native share and accessibility acceptance OPEN / NOT TESTABLE until device evidence.
 - UX Critic: **PROCEED** — the split preserves owner-initiated export and makes the native share risks explicit. The device batch must confirm selected sections persist and that preview/PDF contains only selected data; dismissing the share sheet is not delivery confirmation.
 - Security pre-review: **APPROVE** for responsive layout only; all consent, data-selection, dog/account lifetime, export, native share, cleanup and recovery contracts stay unchanged.
+
+### Plan amendment v7 — UI-KNOWLEDGE-SEARCH, 2026-10-19
+
+- Architect: **APPROVE WITH CONDITIONS** — local source/test checkpoint only; rendered 375/430 search result, zero, loading, error and dog-switch views plus §14 remain OPEN / NOT TESTABLE. Do not claim a visual/native pass. Preserve the approved search/data contract: filter only supplied KnowledgeScreen items, keep the published and age/breed/active-dog selection in ProductWorkspace, search title/opening/full parsed body with NFC, Swedish lowercase and collapsed whitespace, scope query synchronously to sessionKey+dogId, and add no fetch/schema/taxonomy/dependency. Transfer exact capture and dog-switch checks to UI-NATIVE-ACCESSIBILITY-VERIFY.
+- UX Critic: **PROCEED WITH CHANGES** — show the active dog's name in visible search scope copy and the accessible field label; distinguish no eligible published articles from no matches; preserve query during loading/error/retry and article open/back; on dog switch clear it or apply it only after the new dog's eligible list has synchronously replaced the old list. Keep å/ä/ö distinct from a/o; whitespace-only is an empty query; do not add fuzzy matching.
+- Security review is not required for this M-class local search because this amendment adds no persistence, network request, data scope, or purpose.
+- Local renderer limitation: react-native-web and react-dom are not installed. The checkpoint may close only after helper/screen tests, full pnpm check, public iOS JS export, diff/queue validation, independent QA and Reviewer. Device evidence is not substituted by these checks.
+
+### UI-KNOWLEDGE-SEARCH — local checkpoint closeout, 2026-10-19
+
+Architect v7 conditions satisfied. Local search implementation passed focused tests, full local check, public iOS JS export, diff/queue validation, independent QA and Reviewer. Rendered 375/430 states, §14 and device accessibility remain OPEN / NOT TESTABLE; they are transferred to UI-NATIVE-ACCESSIBILITY-VERIFY. Continue to UI-REFRESH-HOME-LOG.

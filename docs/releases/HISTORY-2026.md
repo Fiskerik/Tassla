@@ -596,3 +596,7 @@ QA och Reviewer PASS; Security pre-/final APPROVE. Fokuserade tester 31/31, full
 Responsiv Passport-layout och namngivna sektionsval är implementerade; urval, samtycke, PDF-snapshot, konto-/hundscope, delningsmål och filrensning är oförändrade. Architect villkorligt godkände lokal checkpoint enligt plan v6; UX Critic PROCEED; Security pre-/final APPROVE; oberoende QA och Reviewer PASS. Riktad svit 32/32, full pnpm check 555/555, offentlig iOS-JS-export 1 446 moduler, diff-/kövalidering samt commit-/push-hook PASS. Commit 4ffa107 (fix: improve passport accessibility layout) är pushad till origin/codex/tassla-ui-ux-bundle-2026-10-18.
 
 Renderad 375×667/140%, §14, native share sheet/PDF, VoiceOver/TalkBack, Dynamic Type, fokusordning och target bounds är NOT TESTABLE och ligger kvar i UI-NATIVE-ACCESSIBILITY-VERIFY; full visuell/native acceptans hävdas inte. [Verifiering](../design/evidence/ui-accessibility-passport-2026-10-19/VERIFICATION.md).
+
+### UI-KNOWLEDGE-SEARCH — lokal implementation checkpoint, 2026-10-19
+
+Artikelsökning filtrerar endast redan publicerade guider som valts för aktiv hund och dess ålder/ras. Riktade tester 21/21, pnpm check 564/564, public iOS-bundle 1 447 moduler, queue/diff checks PASS; QA och Reviewer PASS. Renderad/native- och §14-acceptans kvarstår OPEN / NOT TESTABLE i UI-NATIVE-ACCESSIBILITY-VERIFY. Nästa paket: UI-REFRESH-HOME-LOG.
