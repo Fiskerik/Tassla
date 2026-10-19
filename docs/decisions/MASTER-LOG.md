@@ -142,3 +142,11 @@ Godkänd behandling av befintlig UI vid smal vy/stor text: stapla hälsans vikt�
 Architect **APPROVE WITH CONDITIONS**: split local Passport source/test acceptance from deferred rendering and native share/accessibility acceptance. Close only the local implementation checkpoint after static QA, Reviewer, frozen-diff Security, checks and commit; keep 375×667/140%, §14, native share, Dynamic Type, VoiceOver/TalkBack, focus and target bounds OPEN / NOT TESTABLE until device evidence.
 
 UX Critic **PROCEED**: preserve owner-initiated export and selection consent; native verification must confirm selection persists and the preview/PDF contains only selected sections. Dismissing share is not delivery. Security pre-review **APPROVE** for responsive layout only; preserve selected snapshot, owner/dog lifetime, export/share destination/options, file cleanup and all recovery semantics. No code changed during this plan amendment. See [phase plan v6](../tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md) and queue `UI-ACCESSIBILITY-PASSPORT`.
+
+#### Slutlig checkpoint — UI-ACCESSIBILITY-PASSPORT (2b.4), 2026-10-19
+
+Passport-vyn anpassar rubrik, valrader, förhandsvärden och informationsyta vid smal bredd eller stor text; varje valruta har ett tydligt tillgänglighetsnamn som innehåller sektion och detalj. Urval, samtycke, fryst PDF-snapshot, hund-/kontoscope, delningsmål, filrensning och återkopplingssemantik är oförändrade.
+
+Architect APPROVE WITH CONDITIONS för lokal implementation checkpoint enligt plan v6; UX Critic PROCEED; Security pre-review och fryst-diff final APPROVE. Oberoende QA PASS (riktad svit 32/32; full pnpm check 555/555); Reviewer PASS. pnpm bundle:ios exporterade 1 446 moduler; git diff --check och python -X utf8 tools/dev_flow.py validate PASS. Commit- och push-hook passerade typecheck, edge-typecheck, lint och 555/555 tester. Commit 4ffa107 (fix: improve passport accessibility layout) är pushad till origin/codex/tassla-ui-ux-bundle-2026-10-18.
+
+RN Web/DOM saknas, så renderad kontroll 375×667/140%, §14-visuell acceptans, native PDF-/share-sheet, VoiceOver/TalkBack, Dynamic Type, fokusordning och uppmätta mål är OPEN / NOT TESTABLE och överförda till UI-NATIVE-ACCESSIBILITY-VERIFY. Detta stänger endast lokal kodcheckpoint; ingen native eller fullskärmsacceptans hävdas. Nästa paket: UI-KNOWLEDGE-SEARCH (3).

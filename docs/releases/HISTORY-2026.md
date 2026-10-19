@@ -590,3 +590,9 @@ Hälsa/vikt-layouten fungerar vid smal bredd och stor text; kalenderknappen stan
 Hundprofilens introduktionskort och hundväljare anpassar sig för smal bredd/stor text. Hund-/kontoscope, befintliga 44pt+-targets, selection callbacks, idempotent hundskapande, readback/recovery och profilens spar-/konfliktsemantik är oförändrade.
 
 QA och Reviewer PASS; Security pre-/final APPROVE. Fokuserade tester 31/31, full `pnpm check` 554/554 och offentlig iOS-JS-export 1 446 moduler PASS. Commit `3094b6a` är pushad till `origin/codex/tassla-ui-ux-bundle-2026-10-18`; båda hooks passerade full check. Renderad layout vid 375×667/140%, native tangentbord, Dynamic Type, VoiceOver/TalkBack, fokusordning och uppmätta mål är **NOT TESTABLE** och ligger kvar i `UI-NATIVE-ACCESSIBILITY-VERIFY`. Detta stänger endast lokal implementation checkpoint; full native/visuell acceptans hävdas inte. [Verifiering](../design/evidence/ui-accessibility-profiles-2026-10-19/VERIFICATION.md).
+
+## UI-ACCESSIBILITY-PASSPORT (2b.4) — lokal implementation checkpoint, 2026-10-19
+
+Responsiv Passport-layout och namngivna sektionsval är implementerade; urval, samtycke, PDF-snapshot, konto-/hundscope, delningsmål och filrensning är oförändrade. Architect villkorligt godkände lokal checkpoint enligt plan v6; UX Critic PROCEED; Security pre-/final APPROVE; oberoende QA och Reviewer PASS. Riktad svit 32/32, full pnpm check 555/555, offentlig iOS-JS-export 1 446 moduler, diff-/kövalidering samt commit-/push-hook PASS. Commit 4ffa107 (fix: improve passport accessibility layout) är pushad till origin/codex/tassla-ui-ux-bundle-2026-10-18.
+
+Renderad 375×667/140%, §14, native share sheet/PDF, VoiceOver/TalkBack, Dynamic Type, fokusordning och target bounds är NOT TESTABLE och ligger kvar i UI-NATIVE-ACCESSIBILITY-VERIFY; full visuell/native acceptans hävdas inte. [Verifiering](../design/evidence/ui-accessibility-passport-2026-10-19/VERIFICATION.md).

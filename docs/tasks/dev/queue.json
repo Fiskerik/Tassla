@@ -8601,7 +8601,7 @@
       "risk_class": "H",
       "checkpoint": "Explicit section choice -> exact selected snapshot -> owner-initiated PDF/share or cancel -> Passport; close this as a local implementation checkpoint only, with rendered/native acceptance still open.",
       "test_evidence": "Focused suite 32/32; pnpm check 555/555; public iOS JS export 1,446 modules; diff/queue validation PASS. Independent QA PASS; frozen-diff Reviewer PASS; Security final APPROVE. Rendered/native acceptance OPEN / NOT TESTABLE.",
-      "status": "review",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -8626,9 +8626,15 @@
           "to": "review",
           "actor": "qa",
           "evidence": "Independent QA PASS: focused Passport suite 32/32 and full pnpm check 555/555. Reviewer PASS on frozen diff after evidence correction. Security final APPROVE. Native and rendered verification remains OPEN / NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS and Security final APPROVE; local checkpoint commit 4ffa107 pushed. Full local checks 555/555; native/rendered evidence remains OPEN / NOT TESTABLE and is assigned to UI-NATIVE-ACCESSIBILITY-VERIFY."
         }
       ],
-      "next_step": "Commit reviewed local checkpoint; then proceed to UI-KNOWLEDGE-SEARCH (3).",
+      "next_step": "Reviewer PASS and Security final APPROVE; local checkpoint commit 4ffa107 pushed. Full local checks 555/555; native/rendered evidence remains OPEN / NOT TESTABLE and is assigned to UI-NATIVE-ACCESSIBILITY-VERIFY.",
       "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v6"
     },
     {
