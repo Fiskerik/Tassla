@@ -33,7 +33,8 @@ test('quick log has truthful loading, empty, failure, mutation and confirmed und
   }
   assert.match(screen, /mutation\?\.status === 'unsure'/);
   assert.match(screen, /mutation\?\.status === 'saved'/);
-  assert.match(screen, /onUndo=\{mutation\?\.status === 'saved' && mutation\.kind === 'add'[\s\S]*?onUndo\?\.\(mutation\.id\)/);
+  assert.match(screen, /const undoableQuickLogId = mutation\?\.status === 'saved' && mutation\.kind === 'add' && onUndo !== undefined \? mutation\.id : undefined;/);
+  assert.match(screen, /onUndo=\{undoableQuickLogId !== undefined \? \(\) => \{ firstUseTip\.dismiss\(\); onUndo\?\.\(undoableQuickLogId\); \} : undefined\}/);
   assert.match(workspace, /setQuickLogMutation\(toQuickLogMutationView\(mutation, 'saved'\)\)/);
   assert.match(workspace, /pendingLogMutation\.current = mutation/);
   assert.match(workspace, /const retryCheck = await checkInsertRetryOperation\(mutation\.operation, async \(id\) =>/);

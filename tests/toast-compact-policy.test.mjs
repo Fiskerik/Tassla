@@ -34,7 +34,9 @@ test('LogScreen puts every confirmed mutation result after the normal grid and b
   assert.match(logScreen.slice(logScreen.indexOf('const successToast ='), logScreen.indexOf('\n  return <View', logScreen.indexOf('const successToast ='))), /visible=\{mutation\?\.status === 'saved'/);
   assert.match(logScreen, /mutation\.kind === 'add' \? `\$\{LOG_EVENT_LABELS\[mutation\.type\]\} loggat` : mutation\.kind === 'update' \? 'Ändring sparad' : 'Händelsen är raderad'/);
   assert.doesNotMatch(logScreen, /DogMascot|dogReaction/);
-  assert.match(logScreen, /onUndo=\{mutation\?\.status === 'saved' && mutation\.kind === 'add'/);
+  assert.match(logScreen, /const undoableQuickLogId = mutation\?\.status === 'saved' && mutation\.kind === 'add' && onUndo !== undefined \? mutation\.id : undefined;/);
+  assert.match(logScreen, /onUndo=\{undoableQuickLogId !== undefined \? \(\) => \{ firstUseTip\.dismiss\(\); onUndo\?\.\(undoableQuickLogId\); \} : undefined\}/);
+  assert.match(logScreen, /autoDismissMs=\{undoableQuickLogId !== undefined && screenReaderEnabled !== false \? undefined : 2500\}/);
   assert.match(logScreen, /onAutoDismiss=\{\(\) => setDismissedMutationKey\(successMutationKey\)\}/);
 });
 
