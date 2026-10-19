@@ -1,4 +1,4 @@
-# UX-spec — ägarfeedback 2026-10-19 v6
+# UX-spec — ägarfeedback 2026-10-19 v7
 
 ## A — Rasfält
 
@@ -21,3 +21,15 @@ Ingen hundväljarskärm finns i aktuell produktkod. Kontot kan ha en hund och pr
 ## Visuell verifiering och status
 
 UI-bedömning följer docs/design-rules.md §14. Syntetiska RN Web-skärmbilder styrker endast sina vyer. Den saknade vision_rev02.jpg gör exakt sida-vid-sida-panelbedömning NOT TESTABLE; webbproxy styrker inte native Dynamic Type eller VoiceOver. Ingen visuell helhetsacceptans påstås utifrån fungerande interaktion ensam.
+
+## Ägarens efterföljande roadmap — statusbild 2026-10-19
+
+Det här avsnittet lägger in arbetsordningen från ägarens bifogade statusbild.
+
+- **Paket 3 — Sök i Kunskap:** visa publicerade artiklar som redan filtrerats för den aktiva hunden. Träffar, tomt resultat, laddning och fel ska ha tydliga lägen. Behåll befintlig åldersfiltrering och publiceringsregler.
+- **Paket 4 — Dra för att uppdatera:** inför på Hem och Logg, samordnat med automatisk uppdatering. Skydda vyn mot gamla svar efter byte av hund eller konto.
+- **Paket 5 — Tom-, laddnings- och felåterkoppling:** börja med Hem och Logg och fortsätt sedan med Kunskap och Träning. Fel ska ha ett eget synligt läge och okänd data ska inte visas som noll.
+- Statusbilden anger att Paket 2a och 2b är implementerade, committade och pushade. VoiceOver, större systemtext, reducerad rörelse och tangentbord där relevant återstår som manuella iPhone-kontroller; de blockerar inte start av Paket 3.
+- Övergångsanimationen mellan huvudflikarna är ett separat, blockerat arbete i lokal ocommittad ändring. Den väntar på visuell kontroll och kontroll av reducerad rörelse.
+
+Arbetsföljd enligt statusbilden: Paket 2a/2b → Paket 3 → Paket 4 → Paket 5. Paketens exakta task- och köposter fastställs när respektive paket tas upp.

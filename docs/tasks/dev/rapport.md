@@ -1170,3 +1170,15 @@ Nästa steg: invänta de två ägarbesluten, revidera planen/specen och låt rol
 Ägarens formulering om att Leveransdatum ska ”behållas som profilhistorik” 30 dagar efter hemkomst tolkas preliminärt som att datumet behålls genom 30 kalenderdagar och raderas därefter. Tolkningen behöver bekräftas. Tidszon, gräns och verifierbar maximal serverfördröjning är inte fastställda. Därför stannar uppgiften i planned och får inte implementeras ännu.
 
 Taskplan och UX-spec är nu v3. Samtyckeslagring/återkallelse och automatiserad gallring kräver ny Architect-, Critic-, Security- och Compliance-granskning. Tidigare Critic/Security-åtgärder samt MVP-, integritets- och livscykeluppdateringar kvarstår. UX-TRAINING-DETAIL måste checkpointas innan denna beroendeuppgift kan implementeras. Ingen appkod, migration eller databas ändrades och ingen testsvit kördes. `python tools/dev_flow.py validate` passerade efter uppdateringen.
+
+### UX-PREARRIVAL-DATE-2026-10-19 — ägarförtydligande och plan v4, 2026-10-19
+
+Ägaren förtydligade att Leveransdatum ska behållas som profilhistorik även efter dag 30. Detta ersätter v3:s preliminära tolkning om automatisk gallring efter 30 dagar. V4 föreslår att datumet behålls tills användaren rensar fältet/återkallar samtycket, hund-/kontoprofilen raderas eller Tasslas befintliga betagallring gäller. Ingen särskild radering vid dag 30 planeras.
+
+Profilhistorik efter hemkomst utökar ändamålet och måste granskas av Compliance tillsammans med samtyckestext, återkallelse, konto-/hundradering, information och gallringsregeln. Queue-status är fortsatt planned; ingen implementation, migration eller databasoperation får starta före ny Architect/Critic/Security/Compliance-review och UX-TRAINING-DETAIL-checkpoint. Ingen appkod eller testsvit kördes. python tools/dev_flow.py validate passerar efter v4-uppdateringen.
+
+### UX-OWNER-FEEDBACK-2026-10-19 — roadmap-tillägg v7, 2026-10-19
+
+Arbetspaketet och UX-specen är v7. Ägarens bifogade statusbild är införd med ordningen Paket 3 (Kunskapssökning med hundfiltrerade publicerade artiklar och skilda träff/tomt/laddning/fel-lägen), Paket 4 (pull-to-refresh på Hem/Logg med automatisk uppdatering och skydd mot gamla svar vid hund-/kontobyte) och Paket 5 (separat tom-, laddnings- och felåterkoppling, först Hem/Logg, därefter Kunskap/Träning). Befintlig åldersfiltrering och publiceringsregler ska bestå; okänd data visas inte som noll.
+
+Statusbilden anger att Paket 2a/2b är committade och pushade; manuella iPhone-kontroller för VoiceOver, större systemtext, reducerad rörelse och relevant tangentbord återstår utan att blockera Paket 3. Huvudflikarnas övergångsanimation hålls separat och blockerad i väntan på visuell kontroll och reducerad-rörelse-kontroll; statusbilden anger att dess ändring är lokal och ocommittad. A/B/C:s befintliga scope och reviewgrindar kvarstår. python tools/dev_flow.py validate och git diff --check körs före checkpointpush.

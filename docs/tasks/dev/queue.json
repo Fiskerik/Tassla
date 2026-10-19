@@ -10438,7 +10438,7 @@
       "id": "UX-BREED-PICKER-2026-10-19",
       "title": "Onboarding och profil: raslista som sökbar dropdown",
       "mvp_requirement": "docs/mvp.md: stödskärm hundprofil/onboarding",
-      "plan": "docs/tasks/dev/ux-owner-feedback-2026-10-19.md v6; docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md v6",
+      "plan": "docs/tasks/dev/ux-owner-feedback-2026-10-19.md v7; docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md v7",
       "write_paths": [
         "src/features/onboarding/SearchableBreedPicker.tsx",
         "src/features/onboarding/ProfileScreen.tsx",
@@ -10487,7 +10487,7 @@
       "id": "UX-TRAINING-DETAIL-2026-10-19",
       "title": "Träning: bild och luftig övningsdetalj",
       "mvp_requirement": "docs/mvp.md: sex huvudytor, panel 6 Träning",
-      "plan": "docs/tasks/dev/ux-owner-feedback-2026-10-19.md v6; docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md v6",
+      "plan": "docs/tasks/dev/ux-owner-feedback-2026-10-19.md v7; docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md v7",
       "write_paths": [
         "src/features/training/PublishedTrainingScreen.tsx",
         "src/features/training/README.md",
@@ -10523,7 +10523,7 @@
       "id": "UX-PASSPORT-PDF-PREVIEW-2026-10-19",
       "title": "Tassla-pass: öppna PDF-förhandsvisning före delning",
       "mvp_requirement": "docs/mvp.md: stödskärm Tassla-pass, förhandsgranskning och ägarinitierad delning",
-      "plan": "docs/tasks/dev/ux-owner-feedback-2026-10-19.md v6; docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md v6",
+      "plan": "docs/tasks/dev/ux-owner-feedback-2026-10-19.md v7; docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md v7",
       "write_paths": [
         "src/features/passport/PassportScreen.tsx",
         "src/features/passport/passport-export.ts",
@@ -10568,7 +10568,7 @@
       "id": "UX-PREARRIVAL-DATE-2026-10-19",
       "title": "Hundprofil och Hem: valfritt leveransdatum och förberedelser",
       "mvp_requirement": "docs/mvp.md: Stöd: hundprofil och onboarding; Skärm 1. Personligt Home/Today",
-      "plan": "docs/tasks/dev/ux-prearrival-date-2026-10-19.md v3; docs/plans/UX-PREARRIVAL-DATE-2026-10-19-ux-spec.md v3",
+      "plan": "docs/tasks/dev/ux-prearrival-date-2026-10-19.md v4; docs/plans/UX-PREARRIVAL-DATE-2026-10-19-ux-spec.md v4",
       "write_paths": [
         "src/data/app-data.ts",
         "src/data/README.md",
@@ -10602,7 +10602,7 @@
         "Legacy create clients and kennel attribution remain compatible under Architect-approved RPC contract",
         "Forward-only nullable migration preserves RLS/ownership and is not applied to a database",
         "Home shows future/today suggestions and hides the card when date is absent or past by local calendar date; suggestions are not saved activities",
-        "Purpose-specific consent can be evidenced and withdrawn as easily as granted; date remains as profile history for at most 30 days after home arrival and is automatically cleared under a verified timezone and maximum delay; account/dog deletion and privacy/retention documents cover the field and purpose",
+        "Purpose-specific consent can be evidenced and withdrawn as easily as granted; date remains profile history after day 30 until user clearing/consent withdrawal, dog/account deletion or existing beta deletion; Compliance approves the continuing historical purpose and retention; privacy/retention documents cover the field and purpose",
         "Synthetic UI evidence and §14 assessment cover date states and screen sizes; SQL runtime, live RLS and native accessibility are NOT TESTABLE unless verified",
         "No test suite is added or run"
       ],
@@ -10619,7 +10619,7 @@
       ],
       "status": "planned",
       "history": [],
-      "next_step": "Owner selected consent as intended lawful basis; design separate active opt-in, proof, non-conditioning and equally easy withdrawal/deletion. Owner retention wording is provisionally read as profile history through 30 calendar days after home arrival, then automatic clearing; confirm exact interpretation, timezone and maximum server delay. Rerun Architect/Critic/Security/Compliance on v3; address existing Critic/Security findings and MVP/privacy documentation. Keep planned until reviews pass and UX-TRAINING-DETAIL is checkpointed."
+      "next_step": "Owner selected consent as intended lawful basis and clarified that Leveransdatum remains profile history after day 30. Design separate active opt-in, proof, non-conditioning and equally easy withdrawal/deletion; define the historical profile purpose and retain until user clearing/consent withdrawal, dog/account deletion or existing beta deletion, subject to Compliance review. Rerun Architect/Critic/Security/Compliance on v4; address existing Critic/Security findings and MVP/privacy documentation. Keep planned until reviews pass and UX-TRAINING-DETAIL is checkpointed."
     }
   ]
 }

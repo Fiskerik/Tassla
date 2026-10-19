@@ -1,6 +1,6 @@
-# UX-feedback 2026-10-19 — genomförandeplan v6
+# UX-feedback 2026-10-19 — genomförandeplan v7
 
-Datum: 2026-10-19 · Status: v6 väntar på Architect/Critic-review av träningskortets kantlinjering. v5:s C är fortsatt BLOCKED. Ägaren har beställt lokala UI-ändringar A/B, ändrat passknappen till Visa PDF och bett att träningskortets bild ska linjera med kortets vänsterkant.
+Datum: 2026-10-19 · Status: v7 behåller granskningsgrindarna för A/B/C och lägger till ägarens efterföljande roadmap. B väntar på Architect/Critic-review av träningskortets kantlinjering; C är fortsatt BLOCKED.
 
 ## Samlad scope
 
@@ -58,3 +58,15 @@ B startar först när A har en QA-/Reviewer-checkpoint.
 Architect godkände A/B i v5. v6 ändrar B efter ägarens önskemål om miniatyrens kantlinjering, vilket kräver ny Architect/Critic-review innan B-kod ändras. A-kontraktet är oförändrat men följer planversion v6. Critic har inget nytt blockerande fynd för A/B i v5; dess PROCEED WITH CHANGES gäller C och kräver plattformsspecifik copy, canPreview/ärligt fel, iOS-städning efter Quick Look, separat Android-filretention samt dokumenterade cleanup-gränser. Architect blockerar C tills användaren väljer plattformskontrakt, dependency och integritets-/disclosurevillkor. C:s tidigare v5-godkännande gäller inte efter ändrat direktiv.
 
 Arbetsordning: A → QA/Reviewer/checkpoint → B → QA/Reviewer/checkpoint → C när blockerarna är lösta. Använd en aktiv del åt gången. Spara lokala ändringar och exakta kontroller; skapa inte commit/push utan fungerande Git-repo och separat mandat.
+
+## Ägarens efterföljande roadmap — statusbild 2026-10-19
+
+Det här avsnittet lägger in arbetsordningen från ägarens bifogade statusbild.
+
+- **Paket 3 — Sök i Kunskap:** visa publicerade artiklar som redan filtrerats för den aktiva hunden. Träffar, tomt resultat, laddning och fel ska ha tydliga lägen. Behåll befintlig åldersfiltrering och publiceringsregler.
+- **Paket 4 — Dra för att uppdatera:** inför på Hem och Logg, samordnat med automatisk uppdatering. Skydda vyn mot gamla svar efter byte av hund eller konto.
+- **Paket 5 — Tom-, laddnings- och felåterkoppling:** börja med Hem och Logg och fortsätt sedan med Kunskap och Träning. Fel ska ha ett eget synligt läge och okänd data ska inte visas som noll.
+- Statusbilden anger att Paket 2a och 2b är implementerade, committade och pushade. VoiceOver, större systemtext, reducerad rörelse och tangentbord där relevant återstår som manuella iPhone-kontroller; de blockerar inte start av Paket 3.
+- Övergångsanimationen mellan huvudflikarna är ett separat, blockerat arbete i lokal ocommittad ändring. Den väntar på visuell kontroll och kontroll av reducerad rörelse.
+
+Arbetsföljd enligt statusbilden: Paket 2a/2b → Paket 3 → Paket 4 → Paket 5. Paketens exakta task- och köposter fastställs när respektive paket tas upp.
