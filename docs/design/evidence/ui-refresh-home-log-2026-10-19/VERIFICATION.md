@@ -3,6 +3,7 @@
 **Checkpoint:** local implementation; independent QA PASS, Reviewer PASS, frozen-diff Security APPROVE.
 **Plan:** UI-ACCESSIBILITY-PHASE-2-5.md v4.
 **Risk:** M, reconciled in queue to match the approved phase plan.
+**Checkpoint commit:** `0c1c345`, pushed to `origin/codex/tassla-ui-ux-bundle-2026-10-18`.
 **Data boundary:** read-only refresh; no schema, write, dependency or data-purpose change.
 
 ## Implemented
