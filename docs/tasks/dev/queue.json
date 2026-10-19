@@ -8283,7 +8283,7 @@
       "risk_class": "M",
       "checkpoint": "Small navigation-feedback checkpoint separate from 2a; no interactive pager or navigation-stack change.",
       "test_evidence": "Pending implementation and independent verification.",
-      "status": "review",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -8308,9 +8308,15 @@
           "to": "review",
           "actor": "qa",
           "evidence": "Independent QA PASS: focused 12/12, source/route/reduced-motion contract and synthetic captures verified; Reviewer PASS: 28pt restricted to main-tab pairs, support 8pt, direction/interruption/mount/reduced-motion correct. Reports in docs/design/evidence/ui-main-tab-transition-2026-10-19/VERIFICATION.md."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent QA PASS and Reviewer PASS; focused 12/12, pnpm check 547/547, public iOS bundle 1,446 modules, synthetic forward/backward/reduced-motion/swipe captures, diff and queue validation PASS. Implementation commit 0d4ecad; closeout/master-log evidence recorded."
         }
       ],
-      "next_step": "Independent QA PASS: focused 12/12, source/route/reduced-motion contract and synthetic captures verified; Reviewer PASS: 28pt restricted to main-tab pairs, support 8pt, direction/interruption/mount/reduced-motion correct. Reports in docs/design/evidence/ui-main-tab-transition-2026-10-19/VERIFICATION.md.",
+      "next_step": "Independent QA PASS and Reviewer PASS; focused 12/12, pnpm check 547/547, public iOS bundle 1,446 modules, synthetic forward/backward/reduced-motion/swipe captures, diff and queue validation PASS. Implementation commit 0d4ecad; closeout/master-log evidence recorded.",
       "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
     },
     {
