@@ -8525,7 +8525,7 @@
       "risk_class": "H",
       "checkpoint": "Dog selection/edit/add/recovery preserves existing profile routes and data/idempotency; this closes the local implementation checkpoint only, while rendered/native acceptance remains open.",
       "test_evidence": "Static QA PASS (31/31 focused; pnpm check 554/554; public iOS export 1,446 modules; diff/queue checks PASS). Reviewer final diff PASS. Security pre/final APPROVE. Rendered 375x667/140% and physical/native profile accessibility remain OPEN / NOT TESTABLE in UI-NATIVE-ACCESSIBILITY-VERIFY.",
-      "status": "review",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -8550,9 +8550,15 @@
           "to": "review",
           "actor": "qa",
           "evidence": "Oberoende statisk QA PASS enligt v5 lokal checkpoint: 31/31 fokuserade, 554/554 full check, 1 446-modulers offentlig export, diff/queue checks. Inga render-/native-påståenden; profilens visuella, tangentbords- och hjälpmedelsacceptans förblir öppen."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Local implementation checkpoint committed and pushed as 3094b6a (fix: improve dog profile responsive layout); commit and push hooks passed full check 554/554. Reviewer PASS, Security final APPROVE, static QA PASS. Rendered/native profile acceptance remains OPEN / NOT TESTABLE and is tracked by UI-NATIVE-ACCESSIBILITY-VERIFY."
         }
       ],
-      "next_step": "Commit and push the local implementation checkpoint. Then record the commit, close only the local checkpoint and proceed to 2b.4; full profile visual/native acceptance remains open.",
+      "next_step": "Local implementation checkpoint committed and pushed as 3094b6a (fix: improve dog profile responsive layout); commit and push hooks passed full check 554/554. Reviewer PASS, Security final APPROVE, static QA PASS. Rendered/native profile acceptance remains OPEN / NOT TESTABLE and is tracked by UI-NATIVE-ACCESSIBILITY-VERIFY.",
       "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v5"
     },
     {

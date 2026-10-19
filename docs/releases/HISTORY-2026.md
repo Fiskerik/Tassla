@@ -583,3 +583,10 @@ Implementation checkpoint: `5ee2065be80d28221eff8914203b38419eb2f119` (`fix: imp
 ## UI-ACCESSIBILITY-HEALTH (2b.2) — lokal checkpoint, 2026-10-19
 
 Hälsa/vikt-layouten fungerar vid smal bredd och stor text; kalenderknappen stannar inom datumfältet och historikens infoknapp kan läsas och nås under rubriken. Oberoende QA **PASS** (117/117 fokuserade tester; 552/552 full check), Reviewer **PASS** och Security pre-/final **APPROVE**. Offentlig iOS-JS-export och syntetisk RN Web-evidens PASS. Native tillgänglighet/tangentbord, live Supabase/RLS, signerad build och full paneljämförelse är NOT TESTABLE. [Verifiering](../design/evidence/ui-accessibility-health-2026-10-19/VERIFICATION.md).
+
+
+## UI-ACCESSIBILITY-PROFILES (2b.3) — lokal checkpoint, 2026-10-19
+
+Hundprofilens introduktionskort och hundväljare anpassar sig för smal bredd/stor text. Hund-/kontoscope, befintliga 44pt+-targets, selection callbacks, idempotent hundskapande, readback/recovery och profilens spar-/konfliktsemantik är oförändrade.
+
+QA och Reviewer PASS; Security pre-/final APPROVE. Fokuserade tester 31/31, full `pnpm check` 554/554 och offentlig iOS-JS-export 1 446 moduler PASS. Commit `3094b6a` är pushad till `origin/codex/tassla-ui-ux-bundle-2026-10-18`; båda hooks passerade full check. Renderad layout vid 375×667/140%, native tangentbord, Dynamic Type, VoiceOver/TalkBack, fokusordning och uppmätta mål är **NOT TESTABLE** och ligger kvar i `UI-NATIVE-ACCESSIBILITY-VERIFY`. Detta stänger endast lokal implementation checkpoint; full native/visuell acceptans hävdas inte. [Verifiering](../design/evidence/ui-accessibility-profiles-2026-10-19/VERIFICATION.md).

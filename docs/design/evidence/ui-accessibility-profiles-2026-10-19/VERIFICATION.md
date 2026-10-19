@@ -2,7 +2,7 @@
 
 Datum: 2026-10-19
 Branch: `codex/tassla-ui-ux-bundle-2026-10-18`
-Status: lokal implementation checkpoint; visuellt/native acceptansarbete är fortsatt öppet.
+Status: lokal implementation checkpoint committed och pushad; visuellt/native acceptansarbete är fortsatt öppet.
 
 ## Ändringar
 
@@ -25,10 +25,10 @@ Status: lokal implementation checkpoint; visuellt/native acceptansarbete är for
 | Oberoende kodgranskning av implementation | PASS; ingen profil-/säkerhetslogik ändrad |
 | Security pre-review / fryst källdiff | APPROVE / APPROVE |
 | UX Critic av v5-avgränsningen | PROCEED WITH AMENDMENT |
-| Reviewer av slutlig dokumentationsdiff | PASS; checkpointen inväntar commit/push |
+| Reviewer av slutlig dokumentationsdiff | PASS; checkpoint commit/push PASS |
 
 ## Öppet visuellt och native arbete
 
 `RN Web render 375×667/140% = NOT TESTABLE`. Checkouten saknar `react-native-web` och `react-dom`; native iOS-rendering kräver Mac. Därför påstås ingen renderad layout-, skärmbilds-, §14-, VoiceOver/TalkBack-, fysisk Dynamic Type-, tangentbords-/safe-area- eller target-bounds-PASS. De här scenarierna är tillagda i `UI-NATIVE-ACCESSIBILITY-VERIFY`: hundlista/val, redigering och spara/avbryt, lägga till hund med bekräftad respektive unknown/recovery-status, fel/återförsök och återväg; kör med tangentbordet synligt och dokumentera verklig enhet, OS, textstorlek, fokus/etiketter och målgränser. Allt som inte körs ska stå NOT TESTABLE.
 
-Ingen Supabase/RLS-, Codemagic- eller signerad native build-kontroll har gjorts. Security återbekräftade APPROVE efter v5-dokumentändringen; källdiffen var oförändrad. Oberoende Reviewer PASS för den fullständiga v5-diffen. Commit/push återstår innan lokala checkpointen kan stängas.
+Ingen Supabase/RLS-, Codemagic- eller signerad native build-kontroll har gjorts. Security återbekräftade APPROVE efter v5-dokumentändringen; källdiffen var oförändrad. Oberoende Reviewer PASS för den fullständiga v5-diffen. Lokal checkpoint: commit `3094b6a` (`fix: improve dog profile responsive layout`), pushad till `origin/codex/tassla-ui-ux-bundle-2026-10-18`; commit- och push-hook körde fulla kontroller med 554/554 PASS. Köstatusen avser endast lokal implementation, inte full native/visuell acceptans.
