@@ -567,3 +567,8 @@ Implementationscommit: `9bfd972`. Committen och closeout-posten pushas tillsamma
 ## UI-ACCESSIBILITY-HOME-LOG (2a) — lokal kodcheckpoint
 
 Datum: 2026-10-19. Home- och dagsaktivitetsraderna har tydligare läsordning, radbrytning och hjälpmedelsstatus; retry namnger den berörda aktiviteten. QA och Reviewer PASS. 22/22 exakta fokuserade tester; QA-utökning 25/25; `pnpm check` 545/545; offentlig iOS JS-export PASS (1 446 moduler); syntetisk RN Web och kö-/diffkontroller PASS. VoiceOver/TalkBack, native Dynamic Type/gest, live backend, signerad build och rev02-fullskärmsacceptans är NOT TESTABLE. Implementation: commit `c58f3fd` (`fix: improve home daily activity accessibility`); dokumentations-/releasepost följs upp separat. [Evidens](../design/evidence/ui-accessibility-home-log-2026-10-19/VERIFICATION.md). Nästa checkpoint: riktad huvudfliksanimation.
+
+
+## UI-MAIN-TAB-TRANSITION — lokal checkpoint QA/Reviewer PASS, 2026-10-19
+
+Huvudfliksbyte visar nu en riktad 28pt sidförflyttning; stödskärmar behåller 8pt. 240ms-easing/toning, ingen första mount-rörelse, avbrott och reducerad rörelse är bevarade. Riktad svit 12/12, `pnpm check` 547/547 och offentlig iOS JS-export PASS. Syntetisk RN Web-fixtur fångade positiv och negativ translation vid 375×844/375×667, forward vid 430×844, 0px med reduced motion och Home→Logg via swipe; ingen JS page error. Oberoende QA och Reviewer PASS; commit/push följer som separat checkpointstängning. Native timing/gest/VoiceOver är NOT TESTABLE. [Evidens](../design/evidence/ui-main-tab-transition-2026-10-19/VERIFICATION.md).

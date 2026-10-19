@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, Animated, Easing, Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 import { tokens } from '../../theme/tokens';
 
@@ -73,20 +73,23 @@ export function MotionPressable({ style, onPressIn, onPressOut, onHoverIn, onHov
     style={[resolvedStyle, { transform: [{ scale }] }]} />;
 }
 
-export function ScreenTransition({ children, transitionKey, direction = 'forward', axis = 'y' }: {
-  children: ReactNode; transitionKey: string; direction?: 'forward' | 'backward'; axis?: 'x' | 'y';
+export function ScreenTransition({ children, transitionKey, direction = 'forward', axis = 'y', distance = tokens.motion.distance }: {
+  children: ReactNode; transitionKey: string; direction?: 'forward' | 'backward'; axis?: 'x' | 'y'; distance?: number;
 }) {
   const reduced = useReducedMotion();
   const [progress] = useState(() => new Animated.Value(1));
-  useEffect(() => {
+  const previousTransitionKey = useRef(transitionKey);
+  useLayoutEffect(() => {
     progress.stopAnimation();
-    if (reduced) { progress.setValue(1); return; }
+    const keyChanged = previousTransitionKey.current !== transitionKey;
+    previousTransitionKey.current = transitionKey;
+    if (!keyChanged || reduced) { progress.setValue(1); return; }
     progress.setValue(0);
     const animation = Animated.timing(progress, { toValue: 1, duration: tokens.motion.enter, easing: Easing.out(Easing.cubic), useNativeDriver: true });
     animation.start();
     return () => animation.stop();
   }, [progress, reduced, transitionKey]);
-  const shift = direction === 'forward' ? tokens.motion.distance : -tokens.motion.distance;
+  const shift = direction === 'forward' ? distance : -distance;
   const translation = reduced ? 0 : progress.interpolate({ inputRange: [0, 1], outputRange: [shift, 0] });
   return <Animated.View key={transitionKey} style={{ opacity: progress, transform: [axis === 'x' ? { translateX: translation } : { translateY: translation }] }}>{children}</Animated.View>;
 }

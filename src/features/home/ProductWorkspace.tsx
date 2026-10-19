@@ -104,6 +104,7 @@ import { deriveHomeDailyActivities, isValidIanaTimeZone, localDateKeyAt, nextSel
 import { activeMainTabDestination, isMainTabDestination, mainTabTransitionDirection, nextMainTabDestination } from './main-navigation';
 import { BottomNav, MainSwipeNavigation } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
+import { tokens } from '../../theme/tokens';
 import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
 import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isCanonicalAccidentKinds, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type AccidentKind, type AccidentLogIntent, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
 import { PassportScreen } from '../passport/PassportScreen';
@@ -2282,9 +2283,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   const pageContent = renderPage();
   const transitionDirection = navigationDirection(previousPage, page);
+  const mainTabToMainTab = isMainTabDestination(previousPage) && isMainTabDestination(page);
+  const transitionDistance = mainTabToMainTab ? tokens.motion.pageDistance : tokens.motion.distance;
   return <AppScreen scrollKey={page} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={activeMainTabDestination(page)} onChange={navigateMainTab} />}>
     <MainSwipeNavigation enabled={isMainTabDestination(page) && !(page === 'knowledge' && knowledgeDetailOpen)} onSwipe={handleMainSwipe}>
-      <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x">{pageContent}</ScreenTransition>
+      <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x" distance={transitionDistance}>{pageContent}</ScreenTransition>
     </MainSwipeNavigation>
   </AppScreen>;
 
