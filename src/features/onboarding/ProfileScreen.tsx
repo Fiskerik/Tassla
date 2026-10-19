@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AppScreen, FormField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { createDog, fetchBreeds, fetchOwnedDogById, ownedDogAttributionMatches, type BreedOption, type OwnedDog } from '../../data/app-data';
@@ -18,6 +18,8 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   mode?: 'initial' | 'add';
   onCancel?: () => void;
 }) {
+  const { width, fontScale } = useWindowDimensions();
+  const stackIntro = width < 360 || fontScale >= 1.25;
   const [breeds, setBreeds] = useState<BreedOption[]>([]);
   const [breedsState, setBreedsState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [breedAttempt, setBreedAttempt] = useState(0);
@@ -193,7 +195,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
 
   return (
     <AppScreen>
-      <View style={styles.introCard}>
+      <View style={[styles.introCard, stackIntro && styles.introCardStacked]}>
         <View style={styles.introIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
           <Ionicons name="paw-outline" size={tokens.size.iconMd} color={tokens.colors.support.profile.fg} />
         </View>
@@ -309,7 +311,8 @@ function isValidBirthDate(value: string): boolean {
 const styles = StyleSheet.create({
   introCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.spacing.lg, marginBottom: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.support.profile.bg },
   introIcon: { width: tokens.size.chipLg, minHeight: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.surface },
-  introCopy: { flex: 1 },
+  introCopy: { flex: 1, minWidth: 0 },
+  introCardStacked: { flexDirection: 'column', alignItems: 'flex-start' },
   introTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
   introDescription: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
   profileCard: { marginBottom: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
@@ -320,7 +323,7 @@ const styles = StyleSheet.create({
   breedOption: { minHeight: tokens.size.touchMin, borderRadius: tokens.radius.md, paddingHorizontal: tokens.spacing.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   breedSelected: { borderColor: tokens.colors.support.profile.fg, backgroundColor: tokens.colors.support.profile.bg },
   breedPressed: { opacity: 0.72 },
-  breedText: { ...tokens.typography.body, color: tokens.colors.textPrimary },
+  breedText: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1, minWidth: 0 },
   breedTextSelected: { color: tokens.colors.support.profile.fg, fontWeight: '700' },
   checkmark: { ...tokens.typography.label, color: tokens.colors.support.profile.fg },
   sourceCard: { borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, padding: tokens.spacing.md, marginTop: tokens.spacing.md, marginBottom: tokens.spacing.lg },
@@ -329,7 +332,7 @@ const styles = StyleSheet.create({
   checkbox: { width: tokens.size.touchMin / 2, height: tokens.size.touchMin / 2, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, alignItems: 'center', justifyContent: 'center' },
   checkboxSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.primary },
   checkboxMark: { ...tokens.typography.label, color: tokens.colors.onPrimary },
-  sourceChoiceText: { ...tokens.typography.body, color: tokens.colors.textPrimary, flexShrink: 1 },
+  sourceChoiceText: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1, minWidth: 0, flexShrink: 1 },
   removeCode: { minHeight: tokens.size.touchMin, justifyContent: 'center', alignSelf: 'flex-start' },
   removeCodeText: { ...tokens.typography.label, color: tokens.colors.danger },
 });

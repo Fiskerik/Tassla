@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Image, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Keyboard, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DatePickerField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
@@ -67,6 +67,8 @@ export function EditDogProfileScreen({
   onRetryStatus: () => void;
   onAcceptCurrent: () => void;
 }) {
+  const { width, fontScale } = useWindowDimensions();
+  const stackProfileLayout = width < 360 || fontScale >= 1.25;
   const [breeds, setBreeds] = useState<BreedOption[]>([]);
   const [breedState, setBreedState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [breedAttempt, setBreedAttempt] = useState(0);
@@ -156,7 +158,7 @@ export function EditDogProfileScreen({
 
   return <View>
     <ProfileScreenHeader onBack={onBack} disabled={busy} />
-    <View style={styles.heroCard}>
+    <View style={[styles.heroCard, stackProfileLayout && styles.heroCardStacked]}>
       <View style={styles.heroCopy}>
         <Text style={styles.intro}>Håll namn, ras och födelsedatum uppdaterade för innehåll som passar er.</Text>
       </View>
@@ -185,8 +187,9 @@ export function EditDogProfileScreen({
             <View style={styles.dogProfileCopy}>
               <Text style={styles.dogProfileName}>{ownedDog.name}</Text>
               <Text style={styles.dogProfileAge}>{age?.label ?? 'Ålder saknas'}</Text>
+              {selected && stackProfileLayout ? <Text style={styles.dogProfileActive}>Aktiv</Text> : null}
             </View>
-            {selected ? <Text style={styles.dogProfileActive}>Aktiv</Text> : null}
+            {selected && !stackProfileLayout ? <Text style={styles.dogProfileActive}>Aktiv</Text> : null}
           </Pressable>;
         })}
       </View>
@@ -284,7 +287,8 @@ const AGE_DISPLAY_OPTIONS: readonly { value: AgeDisplayUnit; label: string }[] =
 const styles = StyleSheet.create({
   intro: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   heroCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.selectedSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
-  heroCopy: { flex: 1 },
+  heroCopy: { flex: 1, minWidth: 0 },
+  heroCardStacked: { flexDirection: 'column', alignItems: 'flex-start' },
   heroImage: { width: tokens.size.chipLg + tokens.spacing.md, height: tokens.size.chipLg + tokens.spacing.md, borderRadius: tokens.radius.full },
   profileNote: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, padding: tokens.spacing.md, marginTop: tokens.spacing.md, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.support.profile.bg },
   profileNoteText: { ...tokens.typography.caption, flex: 1, color: tokens.colors.textPrimary },
@@ -295,7 +299,7 @@ const styles = StyleSheet.create({
   dogProfilePressed: { opacity: 0.78 },
   dogProfileAvatar: { width: tokens.size.chipMd, height: tokens.size.chipMd, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.support.profile.bg },
   dogProfileCopy: { flex: 1, minWidth: 0 },
-  dogProfileName: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  dogProfileName: { ...tokens.typography.label, color: tokens.colors.textPrimary, flexShrink: 1 },
   dogProfileAge: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
   dogProfileActive: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
   dogProfileHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
@@ -315,7 +319,7 @@ const styles = StyleSheet.create({
   breedOption: { minHeight: tokens.size.touchMin, borderRadius: tokens.radius.md, paddingHorizontal: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   breedSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   breedPressed: { opacity: 0.75 },
-  breedText: { ...tokens.typography.body, color: tokens.colors.textPrimary },
+  breedText: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1, minWidth: 0 },
   breedTextSelected: { color: tokens.colors.primary, fontWeight: '700' },
   ageUnitField: { marginTop: tokens.spacing.md, marginBottom: tokens.spacing.md },
   ageUnitOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm },

@@ -877,3 +877,10 @@ Rutinens dagsval/radering och notisernas informationsrad staplas vid smal vy ell
 Hälsa och vikt staplar långa åtgärder vid smal vy/stor text; historikens informationsåtgärd flyttas under rubriken och dess befintliga sheet använder keyboard-aware-läge. Datumfältets kalenderknapp ryms inom fältet utan att tidsfält eller kalenderflöde ändras. Vikt-/hälsodata, validering, spara/radera, scope och persistence är oförändrade.
 
 Oberoende QA PASS (117/117 riktade tester; full `pnpm check` 552/552). Reviewer PASS och Security pre-/final APPROVE. Offentlig iOS-JS-export 1 446 moduler; syntetisk RN Web vid 320×667 och 375×667/140%-proxy, diffkontroll och kövalidering PASS. Native Dynamic Type/VoiceOver, OS-tangentbord, live Supabase/RLS, signerad build och full rev02-panelacceptans är NOT TESTABLE. [Verifiering](../../design/evidence/ui-accessibility-health-2026-10-19/VERIFICATION.md). Nästa paket: 2b.3 Hundprofiler.
+
+
+### UI-ACCESSIBILITY-PROFILES (2b.3) — lokal implementation checkpoint, 2026-10-19
+
+Hundprofilens introduktionskort staplas vid smal bredd eller textskala ≥125%; namn-, ras- och kenneltext kan radbrytas och aktiv hund markeras under åldern när raden är trång. Hund-/kontoscope, selection callbacks, createDog, idempotency/request-ID, readback/recovery och spar-/konfliktsemantik är oförändrade.
+
+Oberoende statisk QA PASS: profiltester 31/31, `CI=1 pnpm check` 554/554, offentlig iOS-JS-export 1 446 moduler, `git diff --check` och queue validation PASS. Reviewer PASS för implementation och slutlig v5-dokumentdiff; Security pre-/final APPROVE. Arkitekt och UX Critic godkände att endast den lokala implementation checkpointen stängs. RN Web-rendering 375×667/140%, fysisk tangentbordsräckvidd, Dynamic Type, VoiceOver/TalkBack, fokusordning, §14-visuell acceptans och target bounds är **NOT TESTABLE** och kvarstår öppna för `UI-NATIVE-ACCESSIBILITY-VERIFY`; ingen visuell/native PASS hävdas. Ingen Codemagic, Supabase/RLS eller signerad native build kördes. Commit/push återstår innan köstatus stängs. [Verifiering](../../design/evidence/ui-accessibility-profiles-2026-10-19/VERIFICATION.md).

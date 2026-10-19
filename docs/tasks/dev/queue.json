@@ -8496,12 +8496,14 @@
         "docs/design/evidence/ui-accessibility-profiles-2026-10-19",
         "docs/tasks/dev/rapport.md",
         "docs/releases/HISTORY-2026.md",
-        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md"
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md"
       ],
       "acceptance": [
-        "Dog select/edit/add/recovery actions wrap at narrow width and large text without shrinking touch targets or conflating dog/profile scope.",
-        "Keyboard and save/error/unknown states preserve existing create/retry semantics.",
-        "Independent Security review approves dog/account isolation and reviews the frozen diff before code changes."
+        "Local implementation checkpoint: source and interaction tests verify responsive layout rules, selection/busy semantics, existing 44pt+ target contracts, and preservation of keyboard/save/error/unknown/create/recovery callbacks; dog/account/content scope and create/retry semantics remain unchanged.",
+        "Close this local checkpoint only after static QA, independent Reviewer, frozen-diff Security approval, all local checks, and checkpoint commit are recorded.",
+        "Rendered profile list/edit/add/recovery at 375x667/140%, physical keyboard/footer reachability, largest Dynamic Type, VoiceOver/TalkBack, focus order and measured target bounds remain OPEN / NOT TESTABLE here; no visual/native PASS is claimed. Transfer these scenarios to UI-NATIVE-ACCESSIBILITY-VERIFY.",
+        "Security pre-review approves the bounded scope and final review approves the frozen diff."
       ],
       "checks": [
         "node --experimental-strip-types --test tests/profile-screen-policy.test.mjs tests/profile-edit.test.mjs",
@@ -8509,7 +8511,7 @@
         "pnpm bundle:ios",
         "git diff --check",
         "PYTHONUTF8=1 python tools/dev_flow.py validate",
-        "Render profile list/edit/add/recovery at 375x667/140%; document §14 and native limits",
+        "Static source-contract review; RN Web render at 375x667/140% = NOT TESTABLE in this environment",
         "Security review before implementation and against the final diff"
       ],
       "depends_on": [
@@ -8521,12 +8523,37 @@
         "Onboarding"
       ],
       "risk_class": "H",
-      "checkpoint": "Dog selection/edit/add/recovery returns to the existing profile route; data and idempotency unchanged.",
-      "test_evidence": "Pending Security, implementation and independent QA/Reviewer.",
-      "status": "planned",
-      "history": [],
-      "next_step": "Wait for UI-ACCESSIBILITY-HEALTH done; then Security pre-implementation review.",
-      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
+      "checkpoint": "Dog selection/edit/add/recovery preserves existing profile routes and data/idempotency; this closes the local implementation checkpoint only, while rendered/native acceptance remains open.",
+      "test_evidence": "Static QA PASS (31/31 focused; pnpm check 554/554; public iOS export 1,446 modules; diff/queue checks PASS). Reviewer final diff PASS. Security pre/final APPROVE. Rendered 375x667/140% and physical/native profile accessibility remain OPEN / NOT TESTABLE in UI-NATIVE-ACCESSIBILITY-VERIFY.",
+      "status": "review",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Phase-plan v4 approved. Independent Security pre-implementation review APPROVE for narrow responsive layout; preserve owner/account generation fencing and all create/recovery/profile callbacks."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Security pre-review APPROVE recorded. Begin approved profile layout-only changes; no owner/dog scope or persistence behavior edits."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Källkod och riktade tester klara. 31/31 profiltester, pnpm check 554/554, offentlig iOS JS-export 1 446 moduler. RN Web 375x667/140% och native profilkontroller uttryckligen NOT TESTABLE; dessa har flyttats till UI-NATIVE-ACCESSIBILITY-VERIFY enligt fasplan v5."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende statisk QA PASS enligt v5 lokal checkpoint: 31/31 fokuserade, 554/554 full check, 1 446-modulers offentlig export, diff/queue checks. Inga render-/native-påståenden; profilens visuella, tangentbords- och hjälpmedelsacceptans förblir öppen."
+        }
+      ],
+      "next_step": "Commit and push the local implementation checkpoint. Then record the commit, close only the local checkpoint and proceed to 2b.4; full profile visual/native acceptance remains open.",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v5"
     },
     {
       "id": "UI-ACCESSIBILITY-PASSPORT",
@@ -8757,16 +8784,17 @@
       "id": "UI-NATIVE-ACCESSIBILITY-VERIFY",
       "title": "Batched native accessibility and gesture verification",
       "mvp_requirement": "docs/design-rules.md: §10, §14–15; docs/dev/workflow.md: native evidence policy",
-      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v5",
       "write_paths": [
         "docs/design/evidence/ui-native-accessibility-verify-2026-10-19",
         "docs/tasks/dev/rapport.md"
       ],
       "acceptance": [
-        "Physical-device VoiceOver/TalkBack names and focus order recorded.",
-        "Largest Dynamic Type and keyboard/footer reachability recorded on the selected device.",
-        "Reduced-motion main-tab transition and main swipes/pull-to-refresh gestures recorded.",
-        "NOT TESTABLE is recorded for any platform or setting not actually exercised; no automated/web result substitutes."
+        "Physical-device VoiceOver/TalkBack names and focus order recorded for the listed journeys.",
+        "Largest Dynamic Type, keyboard/footer reachability and measured target bounds recorded on the selected device.",
+        "For Hundprofil exercise list/selection -> edit -> save or cancel -> profile; add dog -> confirmed result and unknown/recovery -> profile; error/retry and return destinations. Keep keyboard visible while editing/adding and verify fields and save/cancel reachability.",
+        "Record exact device, OS and actual text-size settings; reduced-motion main-tab transition, main swipes and pull-to-refresh gestures are also recorded.",
+        "NOT TESTABLE is recorded for each platform, OS or setting not actually exercised; no automated/web result substitutes."
       ],
       "checks": [
         "Owner-selected physical iOS/Android device run; attach exact device/OS/settings, scenarios and observed results to evidence directory"
@@ -8786,11 +8814,11 @@
         "Tassla-pass"
       ],
       "risk_class": "M",
-      "checkpoint": "Separate planned owner-selected device verification; it remains open until actual device evidence exists.",
-      "test_evidence": "NOT TESTABLE until an owner-selected physical-device run is available.",
+      "checkpoint": "Owner-selected physical-device verification for accessibility, gestures and full profile list/edit/add/recovery paths; remains open until real device evidence exists.",
+      "test_evidence": "NOT TESTABLE until an owner-selected physical-device run is available; synthetic web/static checks do not close this task.",
       "status": "planned",
       "history": [],
-      "next_step": "Run only after all local code checkpoints; owner selects device/platform and records actual results."
+      "next_step": "After all local code checkpoints, owner selects device/platform and records real results, including profile flows and settings."
     }
   ]
 }

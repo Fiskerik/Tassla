@@ -1,6 +1,6 @@
 # UI/UX accessibility phase 2–5 — implementation plan
 
-**Plan version:** 4
+**Plan version:** 5
 **Date:** 2026-10-19
 **Branch:** `codex/tassla-ui-ux-bundle-2026-10-18`
 **Mandate:** Erik requested implementation of packages 2a, 2b, 3, 4 and 5, and asked for a clearer directional transition when navigating between main pages.
@@ -58,11 +58,13 @@ The current main-page transition is already horizontal and direction-aware, but 
 
 **Goal:** keep dog selection and profile editing readable and recoverable without merging user profile scope with dog-scoped content.
 
-**Write ownership:** `src/features/onboarding/ProfileScreen.tsx`, `src/features/onboarding/EditDogProfileScreen.tsx`, focused files under `tests/`, `src/features/onboarding/README.md`, and task evidence/queue/report/history entries.
+**Write ownership:** `src/features/onboarding/ProfileScreen.tsx`, `src/features/onboarding/EditDogProfileScreen.tsx`, focused files under `tests/`, `src/features/onboarding/README.md`, this phase plan, and task evidence/queue/report/history entries.
 
-**Acceptance:** `Mer → Hundprofil → välj/redigera hund → spara/avbryt → Hundprofil` and `lägg till hund → bekräftelse/unknown recovery → Hundprofil` remain usable at 375×667 and 140%; radio/selection and busy states remain exposed; keyboard does not cover active fields/actions; labels wrap without shrinking targets. No dog/account model, profile/content scope, or create/retry semantics change.
+**Local implementation checkpoint acceptance:** source and interaction tests verify the responsive layout rules, selection/busy semantics, existing 44pt+ target contracts, and preservation of keyboard/save/error/unknown/create/recovery callbacks. No dog/account model, profile/content scope, or create/retry semantics change. This checkpoint may close only after static QA, independent Reviewer, frozen-diff Security approval, all listed local checks, and its checkpoint commit are recorded.
 
-**Evidence:** focused tests and captures of profile list/edit/add/recovery states at 375×667/140%; §14 review. Native keyboard, largest Dynamic Type and VoiceOver remain NOT TESTABLE until the separate device check.
+**Deferred rendered/native acceptance:** actual profile list/edit/add/recovery rendering at 375×667/140%, physical keyboard/footer reachability, largest Dynamic Type, VoiceOver/TalkBack, focus order and measured target bounds remain OPEN / NOT TESTABLE in this environment. No screenshot, visual, §14, or native PASS is claimed. These scenarios transfer to `UI-NATIVE-ACCESSIBILITY-VERIFY`; the full profile accessibility acceptance remains open until device evidence is recorded.
+
+**Evidence:** focused tests and source-contract review; explicitly record `RN Web render 375×667/140% = NOT TESTABLE`. The device batch must capture profile list/selection, edit save/cancel, add-dog confirmed and unknown/recovery paths, errors/retry and returns, with actual device/OS/text settings and keyboard/screen-reader/target-bound evidence.
 
 ### 2b.4 — `UI-ACCESSIBILITY-PASSPORT` (risk H)
 
@@ -122,7 +124,7 @@ The current main-page transition is already horizontal and direction-aware, but 
 
 Required plan review: Architect and UX Critic review this plan version before any app-code change. The order is 2a → `UI-MAIN-TAB-TRANSITION` → 2b.1 → 2b.2 → 2b.3 → 2b.4 → 3 → 4 → 5a → 5b. Re-review if files, behavior, dependency or data scope materially changes. Local code checkpoints may close after local QA/Reviewer, but the named native verification below remains open and the larger MVP panel is not thereby complete.
 
-**Batched device verification remains planned:** `UI-NATIVE-ACCESSIBILITY-VERIFY` runs after the code checkpoints. On a physical device it must check VoiceOver/TalkBack names and focus order, largest Dynamic Type, keyboard/footer reachability, reduced-motion transitions, main-tab swipes and pull-to-refresh gestures. No device result is implied by this plan or by a web fixture. The checkpoint stays open until an owner-selected device run records its real results.
+**Batched device verification remains planned:** `UI-NATIVE-ACCESSIBILITY-VERIFY` runs after the code checkpoints. On an owner-selected physical device, record VoiceOver/TalkBack names and focus order, largest Dynamic Type, keyboard/footer reachability, reduced-motion transitions, main-tab swipes and pull-to-refresh gestures. For Hundprofil also exercise list/selection → edit → save or cancel → profile; add dog → confirmed result and unknown/recovery → profile; error/retry and return destinations. Keep the keyboard visible while editing/adding and record whether fields and save/cancel actions remain reachable; record actual device/OS/text-size settings and measured target bounds. Mark every unrun OS/platform/setting NOT TESTABLE. No device result is implied by this plan or by a web fixture. The checkpoint stays open until an owner-selected device run records its real results.
 
 ### Plan review record
 
@@ -136,3 +138,9 @@ Required plan review: Architect and UX Critic review this plan version before an
 After each checkpoint: implement and clean up only its files; run focused tests, full `pnpm check`, `pnpm bundle:ios`, diff and queue validation; create evidence; independent QA verifies acceptance; independent Reviewer reads the frozen diff; on both PASS, commit and push to the existing branch, then continue.
 
 No Codemagic run is planned. `pnpm bundle:ios` verifies the public JavaScript iOS export; it is not a signed native build or TestFlight check.
+
+
+### Plan amendment v5 — 2026-10-19
+
+- Architect: **APPROVE WITH CONDITIONS** — close `UI-ACCESSIBILITY-PROFILES` only as a local implementation checkpoint after static QA, Reviewer, frozen-diff Security, checks and checkpoint commit; keep rendered/native profile acceptance OPEN / NOT TESTABLE and add the profile journeys to the existing device batch.
+- UX Critic: **PROCEED WITH AMENDMENT** — the split preserves the user journeys and makes the remaining visual/device gap actionable; static QA can PASS only for the bounded local acceptance, never as a visual result.
