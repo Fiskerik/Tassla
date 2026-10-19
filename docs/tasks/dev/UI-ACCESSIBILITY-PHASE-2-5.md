@@ -1,6 +1,6 @@
 # UI/UX accessibility phase 2–5 — implementation plan
 
-**Plan version:** 5
+**Plan version:** 6
 **Date:** 2026-10-19
 **Branch:** `codex/tassla-ui-ux-bundle-2026-10-18`
 **Mandate:** Erik requested implementation of packages 2a, 2b, 3, 4 and 5, and asked for a clearer directional transition when navigating between main pages.
@@ -70,11 +70,13 @@ The current main-page transition is already horizontal and direction-aware, but 
 
 **Goal:** keep share selection and PDF actions readable and distinguishable without changing consent or export behavior.
 
-**Write ownership:** `src/features/passport/PassportScreen.tsx`, focused files under `tests/`, `src/features/passport/README.md`, and task evidence/queue/report/history entries.
+**Write ownership:** `src/features/passport/PassportScreen.tsx`, focused files under `tests/`, `src/features/passport/README.md`, this phase plan, `docs/decisions/MASTER-LOG.md`, and task evidence/queue/report/history entries.
 
-**Acceptance:** `Mer → Tassla-pass → choose sections → export/share or cancel → Tassla-pass` remains operable at 375×667 and 140%; section selection, busy/disabled/error/success states are explicit; OS/share consequences retain visible text; long buttons wrap or stack and remain at least 44 pt. No consent purpose, generated PDF contents, data fields or sharing destination changes.
+**Local implementation checkpoint acceptance:** source and interaction tests verify responsive layout rules, selection/checkbox names and state, busy/disabled/error/success semantics, existing 44pt+ target contracts, explicit owner-initiated export and unchanged consent/data scope. The PDF continues to reflect only the chosen sections; no selection, snapshot, file, share destination or recovery behavior changes. Close this local checkpoint only after static QA, independent Reviewer, frozen-diff Security approval, listed local checks and checkpoint commit are recorded.
 
-**Evidence:** focused tests and captures of selection/export/error states at 375×667/140%; §14 review. Native share sheet, largest Dynamic Type and VoiceOver remain NOT TESTABLE until the separate device check.
+**Deferred rendered/native acceptance:** actual rendering at 375×667/140%, §14 visual review, native share sheet, largest Dynamic Type, VoiceOver/TalkBack, focus order and measured target bounds remain OPEN / NOT TESTABLE here. No screenshot, visual, §14 or native PASS is claimed. Transfer these scenarios to `UI-NATIVE-ACCESSIBILITY-VERIFY`; full Passport UI acceptance remains open until device evidence exists.
+
+**Evidence:** focused tests and source-contract review; explicitly record `RN Web render 375×667/140% = NOT TESTABLE`. The device batch verifies selection-sheet open/toggle/checkbox name-state-focus and retained selection; actual chosen versus unchosen sections in preview/PDF; explicit PDF creation and OS share-sheet open followed by cancel without selecting a recipient; busy/error/unavailable/dialog-closed feedback and return to Passport; and app-scoped file cleanup. Record actual device/OS/text-size settings and measured target bounds; mark each unrun platform/state NOT TESTABLE.
 
 ### 3 — `UI-KNOWLEDGE-SEARCH` (risk M)
 
@@ -124,7 +126,7 @@ The current main-page transition is already horizontal and direction-aware, but 
 
 Required plan review: Architect and UX Critic review this plan version before any app-code change. The order is 2a → `UI-MAIN-TAB-TRANSITION` → 2b.1 → 2b.2 → 2b.3 → 2b.4 → 3 → 4 → 5a → 5b. Re-review if files, behavior, dependency or data scope materially changes. Local code checkpoints may close after local QA/Reviewer, but the named native verification below remains open and the larger MVP panel is not thereby complete.
 
-**Batched device verification remains planned:** `UI-NATIVE-ACCESSIBILITY-VERIFY` runs after the code checkpoints. On an owner-selected physical device, record VoiceOver/TalkBack names and focus order, largest Dynamic Type, keyboard/footer reachability, reduced-motion transitions, main-tab swipes and pull-to-refresh gestures. For Hundprofil also exercise list/selection → edit → save or cancel → profile; add dog → confirmed result and unknown/recovery → profile; error/retry and return destinations. Keep the keyboard visible while editing/adding and record whether fields and save/cancel actions remain reachable; record actual device/OS/text-size settings and measured target bounds. Mark every unrun OS/platform/setting NOT TESTABLE. No device result is implied by this plan or by a web fixture. The checkpoint stays open until an owner-selected device run records its real results.
+**Batched device verification remains planned:** `UI-NATIVE-ACCESSIBILITY-VERIFY` runs after the code checkpoints. On an owner-selected physical device, record VoiceOver/TalkBack names and focus order, largest Dynamic Type, keyboard/footer reachability, reduced-motion transitions, main-tab swipes and pull-to-refresh gestures. For Hundprofil exercise list/selection → edit → save or cancel → profile; add dog → confirmed result and unknown/recovery → profile; error/retry and return destinations. Keep the keyboard visible while editing/adding and record whether fields and save/cancel actions remain reachable. For Tassla-pass open the selection sheet, toggle each section, verify checkbox name/state/focus and 44pt+ targets, then close and confirm selected sections remain selected. Create a PDF explicitly, verify preview/PDF contains exactly selected sections, observe the native share sheet and cancel without choosing a recipient; verify truthful busy/error/unavailable/dialog-closed feedback, return to Passport, and app-scoped temp-file cleanup. Record actual device/OS/text-size settings and measured target bounds. Mark every unrun OS/platform/state NOT TESTABLE. No device result is implied by this plan or by a web fixture. The checkpoint stays open until an owner-selected device run records its real results.
 
 ### Plan review record
 
@@ -144,3 +146,10 @@ No Codemagic run is planned. `pnpm bundle:ios` verifies the public JavaScript iO
 
 - Architect: **APPROVE WITH CONDITIONS** — close `UI-ACCESSIBILITY-PROFILES` only as a local implementation checkpoint after static QA, Reviewer, frozen-diff Security, checks and checkpoint commit; keep rendered/native profile acceptance OPEN / NOT TESTABLE and add the profile journeys to the existing device batch.
 - UX Critic: **PROCEED WITH AMENDMENT** — the split preserves the user journeys and makes the remaining visual/device gap actionable; static QA can PASS only for the bounded local acceptance, never as a visual result.
+
+
+### Plan amendment v6 — 2026-10-19
+
+- Architect: **APPROVE WITH CONDITIONS** — close `UI-ACCESSIBILITY-PASSPORT` only as a local implementation checkpoint after static QA, Reviewer, frozen-diff Security, checks and commit; keep rendered/§14/native share and accessibility acceptance OPEN / NOT TESTABLE until device evidence.
+- UX Critic: **PROCEED** — the split preserves owner-initiated export and makes the native share risks explicit. The device batch must confirm selected sections persist and that preview/PDF contains only selected data; dismissing the share sheet is not delivery confirmation.
+- Security pre-review: **APPROVE** for responsive layout only; all consent, data-selection, dog/account lifetime, export, native share, cleanup and recovery contracts stay unchanged.

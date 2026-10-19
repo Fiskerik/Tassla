@@ -135,3 +135,10 @@ Responsiv layout för rutinens peer actions och notisernas informationsrad. Inde
 ### UI-ACCESSIBILITY-HEALTH (2b.2) — avgränsad lokal UX-förbättring, 2026-10-19
 
 Godkänd behandling av befintlig UI vid smal vy/stor text: stapla hälsans viktåtgärder, lägga historikens informationshandling under rubriken och låta datumfältets TextInput krympa så kalenderknappen stannar inom ramen. Säkerhetsgränserna är oförändrade: ingen medicinsk rådgivning, data-/scope-/lagringsändring, ny behörighet eller ny persistence. Oberoende QA PASS, Reviewer PASS samt Security pre-/final APPROVE. Native/backend/build och full panelacceptans är NOT TESTABLE. Se [paketrapport](../tasks/dev/rapport.md) och [verifiering](../design/evidence/ui-accessibility-health-2026-10-19/VERIFICATION.md).
+
+
+### UI-ACCESSIBILITY-PASSPORT (2b.4) — plan amendment v6, 2026-10-19
+
+Architect **APPROVE WITH CONDITIONS**: split local Passport source/test acceptance from deferred rendering and native share/accessibility acceptance. Close only the local implementation checkpoint after static QA, Reviewer, frozen-diff Security, checks and commit; keep 375×667/140%, §14, native share, Dynamic Type, VoiceOver/TalkBack, focus and target bounds OPEN / NOT TESTABLE until device evidence.
+
+UX Critic **PROCEED**: preserve owner-initiated export and selection consent; native verification must confirm selection persists and the preview/PDF contains only selected sections. Dismissing share is not delivery. Security pre-review **APPROVE** for responsive layout only; preserve selected snapshot, owner/dog lifetime, export/share destination/options, file cleanup and all recovery semantics. No code changed during this plan amendment. See [phase plan v6](../tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md) and queue `UI-ACCESSIBILITY-PASSPORT`.

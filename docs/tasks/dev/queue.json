@@ -8572,12 +8572,15 @@
         "docs/design/evidence/ui-accessibility-passport-2026-10-19",
         "docs/tasks/dev/rapport.md",
         "docs/releases/HISTORY-2026.md",
-        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md"
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md",
+        "docs/decisions/MASTER-LOG.md"
       ],
       "acceptance": [
-        "Section selection, PDF and share actions remain readable, reachable and >=44pt at narrow width and large text.",
-        "Consent, PDF content, data fields and sharing destination stay unchanged.",
-        "Independent Security review verifies scope and reviews the frozen diff."
+        "Local implementation checkpoint: source/interaction tests verify responsive layout rules, selection and checkbox accessibility names/state, busy/disabled/error/success semantics, existing 44pt+ targets and explicit owner-initiated export; selected-data and owner/dog scope remain unchanged.",
+        "Consent gate, immutable selected snapshot, PDF contents, app-scoped file ownership/cleanup, share destination/options and dialog-closed-not-delivery behavior remain unchanged.",
+        "Rendered 375x667/140%, §14 visual review, native share sheet, largest Dynamic Type, VoiceOver/TalkBack, focus order and measured target bounds remain OPEN / NOT TESTABLE here; no visual/native PASS is claimed. Transfer to UI-NATIVE-ACCESSIBILITY-VERIFY.",
+        "Close only the local checkpoint after static QA, independent Reviewer, frozen-diff Security approval, local checks and checkpoint commit."
       ],
       "checks": [
         "node --experimental-strip-types --test tests/passport.test.mjs",
@@ -8585,7 +8588,7 @@
         "pnpm bundle:ios",
         "git diff --check",
         "PYTHONUTF8=1 python tools/dev_flow.py validate",
-        "Render selection/export/error at 375x667/140%; document §14 and native share limits",
+        "Source-contract review; RN Web selection/export/error render at 375x667/140% = NOT TESTABLE in this environment",
         "Security review before implementation and against the final diff"
       ],
       "depends_on": [
@@ -8596,12 +8599,37 @@
         "Tassla-pass"
       ],
       "risk_class": "H",
-      "checkpoint": "Tassla-pass: select sections -> export/share or cancel -> return to Tassla-pass.",
-      "test_evidence": "Pending Security, implementation and independent QA/Reviewer.",
-      "status": "planned",
-      "history": [],
-      "next_step": "Wait for UI-ACCESSIBILITY-PROFILES done; then Security pre-implementation review.",
-      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
+      "checkpoint": "Explicit section choice -> exact selected snapshot -> owner-initiated PDF/share or cancel -> Passport; close this as a local implementation checkpoint only, with rendered/native acceptance still open.",
+      "test_evidence": "Focused suite 32/32; pnpm check 555/555; public iOS JS export 1,446 modules; diff/queue validation PASS. Independent QA PASS; frozen-diff Reviewer PASS; Security final APPROVE. Rendered/native acceptance OPEN / NOT TESTABLE.",
+      "status": "review",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v6 amendment APPROVE WITH CONDITIONS: local implementation-only checkpoint after QA/Reviewer/Security/checks/commit; rendered/native Passport acceptance remains OPEN / NOT TESTABLE. UX Critic PROCEED; Security pre-implementation APPROVE for responsive layout only. Evidence in docs/decisions/MASTER-LOG.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin 2b.4 responsive presentation only under v6. Preserve owner-initiated section consent, selected snapshot, owner/dog lifetime, export/share destination/options, cleanup, errors and truthful dialog-closed status."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "2b.4 source stable. Focused tests 32/32, pnpm check 555/555 (typecheck, edge typecheck, ESLint and tests), public iOS JS export 1,446 modules; diff/queue validation PASS. RN Web 375x667/140%, §14 render, native share/accessibility explicitly NOT TESTABLE and remain OPEN."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: focused Passport suite 32/32 and full pnpm check 555/555. Reviewer PASS on frozen diff after evidence correction. Security final APPROVE. Native and rendered verification remains OPEN / NOT TESTABLE."
+        }
+      ],
+      "next_step": "Commit reviewed local checkpoint; then proceed to UI-KNOWLEDGE-SEARCH (3).",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v6"
     },
     {
       "id": "UI-KNOWLEDGE-SEARCH",
@@ -8790,17 +8818,18 @@
       "id": "UI-NATIVE-ACCESSIBILITY-VERIFY",
       "title": "Batched native accessibility and gesture verification",
       "mvp_requirement": "docs/design-rules.md: §10, §14–15; docs/dev/workflow.md: native evidence policy",
-      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v5",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v6",
       "write_paths": [
         "docs/design/evidence/ui-native-accessibility-verify-2026-10-19",
         "docs/tasks/dev/rapport.md"
       ],
       "acceptance": [
-        "Physical-device VoiceOver/TalkBack names and focus order recorded for the listed journeys.",
-        "Largest Dynamic Type, keyboard/footer reachability and measured target bounds recorded on the selected device.",
-        "For Hundprofil exercise list/selection -> edit -> save or cancel -> profile; add dog -> confirmed result and unknown/recovery -> profile; error/retry and return destinations. Keep keyboard visible while editing/adding and verify fields and save/cancel reachability.",
-        "Record exact device, OS and actual text-size settings; reduced-motion main-tab transition, main swipes and pull-to-refresh gestures are also recorded.",
-        "NOT TESTABLE is recorded for each platform, OS or setting not actually exercised; no automated/web result substitutes."
+        "Physical-device VoiceOver/TalkBack names, checkbox states and focus order recorded for the listed journeys.",
+        "Largest Dynamic Type, keyboard/footer reachability, actual text-size settings and measured target bounds recorded on the selected device.",
+        "For Hundprofil: list/selection, edit save/cancel, add-dog confirmed and unknown/recovery, error/retry and return paths; keyboard-visible reachability checked.",
+        "For Tassla-pass: open/toggle/close selection sheet, checkbox names/states/focus and target sizes; selected sections persist after sheet/share return; preview/PDF contains exactly selected sections.",
+        "Explicit PDF export opens native share sheet; dismiss without selecting recipient; record truthful busy/error/unavailable/dialog-closed state, Passport return and app-scoped temporary file cleanup.",
+        "Record exact device/OS/settings; mark any unrun platform, state or setting NOT TESTABLE. Native evidence is not replaced by synthetic web/static checks."
       ],
       "checks": [
         "Owner-selected physical iOS/Android device run; attach exact device/OS/settings, scenarios and observed results to evidence directory"
@@ -8820,11 +8849,11 @@
         "Tassla-pass"
       ],
       "risk_class": "M",
-      "checkpoint": "Owner-selected physical-device verification for accessibility, gestures and full profile list/edit/add/recovery paths; remains open until real device evidence exists.",
-      "test_evidence": "NOT TESTABLE until an owner-selected physical-device run is available; synthetic web/static checks do not close this task.",
+      "checkpoint": "Owner-selected physical-device verification for accessibility, gesture, Hundprofil and Tassla-pass export/consent journeys; remains open until real evidence exists.",
+      "test_evidence": "NOT TESTABLE until an owner-selected physical-device run is available; static and synthetic web checks cannot close this task.",
       "status": "planned",
       "history": [],
-      "next_step": "After all local code checkpoints, owner selects device/platform and records real results, including profile flows and settings."
+      "next_step": "Run after all local code checkpoints; capture real device/OS/text settings and all profile/passport scenarios."
     }
   ]
 }
