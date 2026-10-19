@@ -560,3 +560,5 @@ Syntetisk RN Web-evidens och §14-bedömning: [verifiering](../design/evidence/u
 Ikonbaserad redigering i rutinhallen, horisontellt åtkomliga veckodagar och kompakt händelsetypväljare i Logg är implementerade. Händelselistan visar ikon och svenskt namn; typbyte bevarar datum, tid och anteckning. Spara, radera och avbryt behåller synliga etiketter och befintliga dataflöden.
 
 Oberoende QA PASS och Reviewer PASS. Riktade tester 20/20, `CI=1 pnpm check` 545/545, offentlig iOS JS-export 1446 moduler, diff/queue validation och 10 syntetiska RN Web-vyer/interaktionskontroller PASS. Fullskärmsacceptans hävdas inte. Native VoiceOver/TalkBack, Dynamic Type, fysisk enhet, Supabase/RLS och signerad Codemagic/Xcode-build är NOT TESTABLE. Evidens: [verifieringsrapport](../design/evidence/ui-actions-rows-2026-10-19/VERIFICATION.md), [paketplan](../tasks/dev/UI-ACTIONS-ROWS.md). Nästa UI/UX-paket: 2a.
+
+Implementationscommit: `9bfd972`. Committen och closeout-posten pushas tillsammans till `origin/codex/tassla-ui-ux-bundle-2026-10-18`.
