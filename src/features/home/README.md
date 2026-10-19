@@ -33,3 +33,9 @@ Reproducerbara React Native Web-renderingar finns i [tools/visual-check](../../.
 I veckoupprepning visas `Må, Ti, On, To, Fr, Lö, Sö` i en horisontell rad. Fullständiga veckodagsnamn exponeras för hjälpmedelsteknik och raden kan bläddras vid smal skärm eller större text; varje knapp behåller minst 44 pt träffyta. Rutinens pennknapp är ikon-only visuellt men behåller namnbundet tillgänglighetsnamn.
 
 I `DailyActivityManagerSheet` staplas rutinens dagsval och radering när fönstret är smalare än 360 pt eller `fontScale` minst 1.25; vid större utrymme kan de ligga sida vid sida och radbrytas. Ändringen påverkar bara presentationen, inte rutinutkastets sparning, avbryt, readback eller hundscope.
+
+## Pull-to-refresh för Hem och Logg
+
+Hem använder den befintliga dagsladdaren med aktiv hund, konto, lokal dag och tidszon. En samtidig läsning för samma scope delas i stället för att avbrytas.
+
+Logg har ett scope per konto, kontogeneration och hund. Samtidiga första-sidans läsningar delar en flight; scopebyte döljer gamla rader direkt och avbryter föregående anrop. En uppdatering bevarar lokalt bekräftade ändringar som gjorts medan nätläsningen pågår. Uppdateringsfel visas separat från initial laddning och tom lista, med raderna kvar och ett nytt försök. RefreshControl kopplas bara in på Hem och Logg; native svep behöver verifieras på enheten.

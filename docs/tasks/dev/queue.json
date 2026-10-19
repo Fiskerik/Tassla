@@ -8177,6 +8177,7 @@
         "docs/design/evidence/ui-accessibility-home-log-2026-10-19",
         "docs/tasks/dev/rapport.md",
         "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md",
         "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md"
       ],
       "acceptance": [
@@ -8763,6 +8764,7 @@
         "docs/design/evidence/ui-refresh-home-log-2026-10-19",
         "docs/tasks/dev/rapport.md",
         "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md",
         "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md"
       ],
       "acceptance": [
@@ -8786,12 +8788,43 @@
         "Hem",
         "Logga"
       ],
-      "risk_class": "H",
+      "risk_class": "M",
       "checkpoint": "Read-only refresh; reuse existing owner/dog/date scope and serialized reads, no write operation.",
-      "test_evidence": "Pending implementation and independent verification.",
-      "status": "planned",
-      "history": [],
-      "next_step": "Wait for UI-KNOWLEDGE-SEARCH done.",
+      "test_evidence": "Focused 11/11, including pending daily-write feedback preservation and scoped/abortable Log pagination; pnpm check PASS (typecheck, edge-typecheck, ESLint, 571/571 tests); public iOS JavaScript export PASS (1,447 modules); git diff --check and python -X utf8 tools/dev_flow.py validate PASS. Security final APPROVE; independent QA PASS; Reviewer PASS. Rendered refresh/error captures and native gesture NOT TESTABLE; see docs/design/evidence/ui-refresh-home-log-2026-10-19/VERIFICATION.md.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect v4 APPROVE and UX Critic v4 PROCEED recorded in docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md; queue risk reconciled from H to approved plan risk M. Security pre-review APPROVE WITH CONDITIONS; implementation will satisfy dog/account-generation scope, single-flight joining, retained confirmed rows, and abort/unmount fencing."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik-approved phase plan v4; UI-KNOWLEDGE-SEARCH is done. Implement only UI-REFRESH-HOME-LOG under its listed write paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete. Focused tests 9/9; pnpm check passed typecheck, edge-typecheck, ESLint and 569/569 tests; public iOS JavaScript export passed with 1,447 modules; diff and queue checks pass. Rendered capture and native pull remain NOT TESTABLE as documented."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS after scoped pagination and feedback-preservation fixes; focused 11/11; pnpm check 571/571; public iOS JS export 1,447 modules; diff and queue validation PASS. Visual/native checks remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS after final evidence refresh; QA PASS; Security final APPROVE; MASTER-LOG and HISTORY-2026 summary recorded. Focused 11/11; pnpm check 571/571; public iOS JS export 1,447 modules; visual/native checks remain NOT TESTABLE."
+        }
+      ],
+      "next_step": "Closed at local implementation checkpoint. Next package: UI-EMPTY-FEEDBACK-HOME-LOG (5a). Rendered refresh/error captures and native gesture remain NOT TESTABLE in UI-NATIVE-ACCESSIBILITY-VERIFY.",
       "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
     },
     {

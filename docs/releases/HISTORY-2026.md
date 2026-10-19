@@ -600,3 +600,7 @@ Renderad 375×667/140%, §14, native share sheet/PDF, VoiceOver/TalkBack, Dynami
 ### UI-KNOWLEDGE-SEARCH — lokal implementation checkpoint, 2026-10-19
 
 Artikelsökning filtrerar endast redan publicerade guider som valts för aktiv hund och dess ålder/ras. Riktade tester 21/21, pnpm check 564/564, public iOS-bundle 1 447 moduler, queue/diff checks PASS; QA och Reviewer PASS. Renderad/native- och §14-acceptans kvarstår OPEN / NOT TESTABLE i UI-NATIVE-ACCESSIBILITY-VERIFY. Nästa paket: UI-REFRESH-HOME-LOG.
+
+### UI-REFRESH-HOME-LOG — lokal implementation checkpoint, 2026-10-19
+
+RefreshControl finns endast på Hem och Logg. Hund- och kontobyte avbryter refresh och äldre sidladdningar; confirmed data behålls vid refreshfel och oklara dagsändringar behåller sin återställningsstatus. Architect/UX Critic approved, QA PASS, Reviewer PASS och Security final APPROVE. Riktade tester 11/11, full `pnpm check` 571/571, offentlig iOS-JS-export 1 447 moduler samt diff-/kövalidering PASS. Renderad/native- och §14-verifiering är NOT TESTABLE och ligger kvar i UI-NATIVE-ACCESSIBILITY-VERIFY. Se [verifiering](../design/evidence/ui-refresh-home-log-2026-10-19/VERIFICATION.md). Nästa paket: UI-EMPTY-FEEDBACK-HOME-LOG (5a).

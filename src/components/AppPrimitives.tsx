@@ -1,5 +1,5 @@
 import type { ReactNode, RefObject } from 'react';
-import { AccessibilityInfo, findNodeHandle, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AccessibilityInfo, findNodeHandle, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -8,7 +8,7 @@ import { shiftCalendarMonth } from './calendar-month';
 import { useReducedMotion } from './ui/Motion';
 import { theme, tokens } from '../theme/tokens';
 
-export function AppScreen({ children, footer, scrollKey }: { children: ReactNode; footer?: ReactNode; scrollKey?: string }) {
+export function AppScreen({ children, footer, scrollKey, refreshing = false, onRefresh, refreshAccessibilityLabel = 'Uppdatera sidan' }: { children: ReactNode; footer?: ReactNode; scrollKey?: string; refreshing?: boolean; onRefresh?: () => void; refreshAccessibilityLabel?: string }) {
   const scroll = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
   const hasFooter = Boolean(footer);
@@ -17,7 +17,7 @@ export function AppScreen({ children, footer, scrollKey }: { children: ReactNode
     <SafeAreaView style={styles.safeArea} edges={hasFooter ? ['top', 'left', 'right'] : ['top', 'right', 'bottom', 'left']}>
       <View style={styles.screenLayout}>
         <KeyboardAvoidingView style={styles.keyboardLayout} behavior="padding">
-          <ScrollView ref={scroll} showsVerticalScrollIndicator={false} directionalLockEnabled style={styles.scrollArea} contentContainerStyle={styles.page} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled">
+          <ScrollView ref={scroll} showsVerticalScrollIndicator={false} directionalLockEnabled style={styles.scrollArea} contentContainerStyle={styles.page} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled" refreshControl={onRefresh ? <RefreshControl accessibilityLabel={refreshAccessibilityLabel} refreshing={refreshing} onRefresh={onRefresh} tintColor={tokens.colors.primary} colors={[tokens.colors.primary]} /> : undefined}>
             {children}
           </ScrollView>
         </KeyboardAvoidingView>

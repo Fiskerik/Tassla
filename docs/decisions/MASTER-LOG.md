@@ -157,3 +157,7 @@ Architect **APPROVE WITH CONDITIONS** for a local source/test implementation che
 ### UI-KNOWLEDGE-SEARCH — lokal checkpoint, 2026-10-19
 
 Architect v7 och UX Critic godkände local-only checkpoint med sökning begränsad till KnowledgeScreen items för aktiv hund. Oberoende QA PASS och frozen-diff Reviewer PASS. Full lokal check 564/564 och public iOS JS-export 1 447 moduler passerade. Viewport-, native-, §14- och deviceacceptans är fortsatt OPEN / NOT TESTABLE och överförd till UI-NATIVE-ACCESSIBILITY-VERIFY. Ingen data-/schema-/fetchändring. Nästa paket i ordning är UI-REFRESH-HOME-LOG.
+
+### UI-REFRESH-HOME-LOG — lokal checkpoint, 2026-10-19
+
+Architect v4 APPROVE, UX Critic PROCEED; Security pre-review APPROVE WITH CONDITIONS och fryst-diff final APPROVE. Oberoende QA PASS och Reviewer PASS. Hem och Logg har opt-in RefreshControl, samma-scope läsning, behållna bekräftade rader och återförsök utan att dölja olösta skrivningar. Både första sida och äldre Logg-sidor avbryts/fencas vid konto-/hundbyte. Riktad svit 11/11; `pnpm check` 571/571; publik `pnpm bundle:ios` 1 447 moduler; `git diff --check` och `python -X utf8 tools/dev_flow.py validate` PASS. Renderad refresh-/felvy vid 375/430, §14 och native pull-gesture är NOT TESTABLE i denna miljö; ingen live Supabase/RLS eller signerad build verifierades. Se [verifiering](../design/evidence/ui-refresh-home-log-2026-10-19/VERIFICATION.md). Nästa paket är UI-EMPTY-FEEDBACK-HOME-LOG (5a).

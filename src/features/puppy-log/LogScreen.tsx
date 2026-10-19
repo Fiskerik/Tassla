@@ -13,7 +13,7 @@ import { DEFAULT_QUICK_LOG_LAYOUT, moveQuickLogType, type QuickLogLayout, type Q
 export type QuickLogMutationView = { kind: 'add' | 'update' | 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; accidentKinds?: readonly AccidentKind[] | null; status: 'pending' | 'failed' | 'unsure' | 'saved' };
 type EditorActionState = { canSave: boolean; saving: boolean };
 
-export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore }: {
+export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, refreshError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore }: {
   events: readonly LogEvent[];
   onAdd: (type: LogEventType, intent?: AccidentLogIntent) => void;
   onUpdate?: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
@@ -24,6 +24,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   busy?: boolean;
   loading?: boolean;
   loadError?: boolean;
+  refreshError?: boolean;
   onReload?: () => void;
   mutation?: QuickLogMutationView | null;
   loadMoreError?: boolean;
@@ -315,6 +316,10 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       <Text style={styles.errorText}>Loggen kunde inte hämtas.</Text>
       <Button label="Försök igen" accessibilityLabel="Försök igen" onPress={() => { firstUseTip.dismiss(); onReload?.(); }} />
     </View> : <>
+      {refreshError ? <View style={styles.refreshErrorState} accessibilityLiveRegion="polite">
+        <MessageCard tone="error">Loggen kunde inte uppdateras. Dina visade händelser är kvar.</MessageCard>
+        <Button variant="tertiary" label="Försök igen" accessibilityLabel="Försök uppdatera loggen igen" onPress={() => { firstUseTip.dismiss(); onReload?.(); }} />
+      </View> : null}
       <SectionHeader title="Snabb logg" />
       <View style={styles.grid}>
         {layoutEditing ? <LayoutEditor layout={layout} onMove={moveLayoutType} onDone={() => setLayoutEditing(false)} error={layoutError} /> : renderRows(layout.primary)}
@@ -585,6 +590,7 @@ const styles = StyleSheet.create({
   patternText: { ...tokens.typography.body, color: tokens.colors.textPrimary, paddingVertical: tokens.spacing.xs },
   empty: { padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, gap: tokens.spacing.xs },
   emptyTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary }, emptyBody: { ...tokens.typography.body, color: tokens.colors.textSecondary },
+  refreshErrorState: { gap: tokens.spacing.xs },
   errorState: { minHeight: tokens.size.buttonHeight, justifyContent: 'center', gap: tokens.spacing.md }, errorText: { ...tokens.typography.body, color: tokens.colors.danger },
   editor: { gap: tokens.spacing.md },
   editorTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },

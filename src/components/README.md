@@ -39,3 +39,7 @@ Aktuella webbskärmbilder finns i `docs/design/UI-RESET`; native begränsningar 
 `ListRow` visar `complete` med en tillgänglig etikett som slutar med “Genomförd”. `animateCompleteKey` är opt-in för en specifik bekräftad träningsrad; generella färdiga rader får ingen ny rörelse.
 
 `FirstUseTip` är den lilla visuella presentationen och har en separat tillgänglig stängknapp. `useFirstUseTip` läser status för en explicit kontoägare/skärm, ignorerar sena svar efter ägarbyte/avmontering och avfärdar omedelbart. LogScreen markerar kontrollaktivering explicit; scroll/fokus och tom yta räknas inte. SecureStore fel döljer tipset resten av appprocessen för ägaren/skärmen, utan att påstå att status sparats. Status raderas tillsammans med kontoägarens lokala data efter bekräftad serverradering.
+
+## Uppdatering i AppScreen
+
+AppScreen kan ta emot en uppdateringscallback och ett refreshing-värde. Då skapas React Natives RefreshControl för dess ScrollView; utan callback visas ingen uppdateringsgest. ProductWorkspace kopplar in kontrollen bara på Hem och Logg och äger respektive laddningsstatus.

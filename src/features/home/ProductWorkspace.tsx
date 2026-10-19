@@ -145,6 +145,26 @@ type PendingProfileMutation = { previous: OwnedDog; changes: OwnedDogProfileChan
 
 const PAGE_SIZE = 40;
 const WORKSPACE_REFRESH_AFTER_MS = 60_000;
+
+function mergeConfirmedLogRows(fetched: readonly DogEventRecord[], baseline: readonly DogEventRecord[], current: readonly DogEventRecord[]): DogEventRecord[] {
+  const baselineById = new Map(baseline.map((row) => [row.id, row]));
+  const currentById = new Map(current.map((row) => [row.id, row]));
+  const deletedLocally = new Set(baseline.filter((row) => !currentById.has(row.id)).map((row) => row.id));
+  const changedLocally = new Map(current.filter((row) => baselineById.get(row.id) !== row).map((row) => [row.id, row]));
+  const merged = new Map<string, DogEventRecord>();
+  for (const row of fetched) {
+    if (!deletedLocally.has(row.id)) merged.set(row.id, changedLocally.get(row.id) ?? row);
+  }
+  for (const row of changedLocally.values()) merged.set(row.id, row);
+  return [...merged.values()].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
+}
+
+function shouldClearDailyMutationFeedback(pendingRetryLifetime: string | undefined, activeLifetime: string): boolean {
+  return pendingRetryLifetime !== activeLifetime;
+}
+
+type LogReadFlight = { scope: string; generation: number; controller: AbortController; promise: Promise<boolean>; baseline: DogEventRecord[]; refreshRequested: boolean };
+type LogPaginationFlight = { scope: string; generation: number; controller: AbortController };
 type TrainingWorkspaceSnapshot = Awaited<ReturnType<typeof fetchTrainingWorkspace>>;
 type WorkspaceResourceFlight<T> = { scope: string; generation: number; controller: AbortController; promise: Promise<T> };
 
@@ -202,6 +222,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [events, setEvents] = useState<DogEventRecord[]>([]);
   const eventRows = useRef<DogEventRecord[]>([]);
   const [logState, setLogState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [logStateLifetime, setLogStateLifetime] = useState('');
+  const [logDataLifetime, setLogDataLifetime] = useState('');
+  const [logRefreshing, setLogRefreshing] = useState(false);
+  const [logRefreshError, setLogRefreshError] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState(false);
   const [hasMore, setHasMore] = useState(false);
@@ -303,10 +327,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const pendingDailyRetry = useRef<{ lifetime: string; key: string; run: () => Promise<WriteOutcome<unknown>> } | null>(null);
   const mounted = useRef(false);
   const eventReadQueue = useRef<Promise<void>>(Promise.resolve());
+  const logDataLifetimeRef = useRef('');
+  const logReadGeneration = useRef(0);
+  const logReadFlight = useRef<LogReadFlight | null>(null);
+  const logPaginationGeneration = useRef(0);
+  const logPaginationFlight = useRef<LogPaginationFlight | null>(null);
   const healthReadQueue = useRef<Promise<void>>(Promise.resolve());
   const healthHistoryReadQueue = useRef<Promise<void>>(Promise.resolve());
   const plannedHealthReadQueue = useRef<Promise<void>>(Promise.resolve());
-  const loadMoreInFlight = useRef(false);
   const { signOut, session, accountGeneration, isCurrentAccount, signOutCurrentAccountLocally,
     reportNotificationCleanupFailure, reportDeletedAccountCleanupFailure } = useAuth();
   const analyticsService = useMemo(() => createAnalyticsService(async (name, args) => {
@@ -340,7 +368,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     return () => { clearInterval(interval); subscription.remove(); };
   }, [page]);
   const currentHealthHistoryLifetime = `${dog.id}:${session?.user.id ?? ''}`;
-  const currentLogLifetime = `${dog.id}:${session?.user.id ?? ''}`;
+  const currentLogLifetime = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${dog.id}`;
   const healthHistoryLifetime = useRef('');
   const logLifetime = useRef('');
   const previousHealthHistoryLifetime = useRef('');
@@ -353,15 +381,37 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     healthHistoryLifetime.current = currentHealthHistoryLifetime;
   }, [currentHealthHistoryLifetime]);
   useLayoutEffect(() => {
+    const previous = previousLogLifetime.current;
     logLifetime.current = currentLogLifetime;
-  }, [currentLogLifetime]);
-  useLayoutEffect(() => {
-    if (previousLogLifetime.current && previousLogLifetime.current !== currentLogLifetime) {
-      pendingLogMutation.current = null;
-      logMutationFlight.current = retainLogMutationFlightForLifetime(logMutationFlight.current, currentLogLifetime);
-      setLogBusy(false);
-      setQuickLogMutation(null);
-      setLoadMoreError(false);
+    if (previous !== currentLogLifetime) {
+      const paginationFlight = logPaginationFlight.current;
+      if (paginationFlight) {
+        logPaginationGeneration.current += 1;
+        paginationFlight.controller.abort();
+        logPaginationFlight.current = null;
+      }
+      const flight = logReadFlight.current;
+      if (flight) {
+        logReadGeneration.current += 1;
+        flight.controller.abort();
+        logReadFlight.current = null;
+      }
+      if (previous) {
+        pendingLogMutation.current = null;
+        logMutationFlight.current = retainLogMutationFlightForLifetime(logMutationFlight.current, currentLogLifetime);
+        setLogBusy(false);
+        setQuickLogMutation(null);
+        setLoadingMore(false);
+        setLoadMoreError(false);
+        eventRows.current = [];
+        setEvents([]);
+        logDataLifetimeRef.current = '';
+        setLogDataLifetime('');
+        setLogRefreshing(false);
+        setLogRefreshError(false);
+        setLogState('loading');
+      }
+      setLogStateLifetime(currentLogLifetime);
     }
     previousLogLifetime.current = currentLogLifetime;
   }, [currentLogLifetime]);
@@ -443,15 +493,68 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     return request;
   }, []);
 
-  const reloadEvents = useCallback(async (signal?: AbortSignal) => {
-    const lifetime = logLifetime.current;
-    const rows = await serializeEventRead(() => fetchDogEvents(client, dog.id, 0, PAGE_SIZE, undefined, signal));
-    if (!mounted.current || signal?.aborted || logLifetime.current !== lifetime) return;
-    eventRows.current = rows;
-    setEvents(rows);
-    setHasMore(rows.length === PAGE_SIZE);
-    setLogState('ready');
-  }, [client, dog.id, serializeEventRead]);
+  const reloadEvents = useCallback((intent: 'initial' | 'refresh' = 'initial'): Promise<boolean> => {
+    const scope = currentLogLifetime;
+    const existing = logReadFlight.current;
+    if (existing?.scope === scope) {
+      if (intent === 'refresh') {
+        existing.refreshRequested = true;
+        setLogRefreshing(true);
+        setLogRefreshError(false);
+      }
+      return existing.promise;
+    }
+    if (existing) {
+      existing.controller.abort();
+      if (logReadFlight.current === existing) logReadFlight.current = null;
+    }
+
+    const generation = ++logReadGeneration.current;
+    const controller = new AbortController();
+    const baseline = eventRows.current.slice();
+    const hasSnapshot = logDataLifetimeRef.current === scope;
+    const flight: LogReadFlight = { scope, generation, controller, promise: Promise.resolve(false), baseline, refreshRequested: intent === 'refresh' };
+    if (intent === 'refresh') {
+      setLogRefreshing(true);
+      setLogRefreshError(false);
+    } else if (!hasSnapshot) {
+      setLogStateLifetime(scope);
+      setLogState('loading');
+    }
+    const isCurrent = () => mounted.current && !controller.signal.aborted
+      && logReadGeneration.current === generation && logLifetime.current === scope && logReadFlight.current === flight;
+    const promise = serializeEventRead(() => fetchDogEvents(client, dog.id, 0, PAGE_SIZE, undefined, controller.signal)).then((rows) => {
+      if (!isCurrent()) return false;
+      const merged = mergeConfirmedLogRows(rows, flight.baseline, eventRows.current);
+      eventRows.current = merged;
+      setEvents(merged);
+      logDataLifetimeRef.current = scope;
+      setLogDataLifetime(scope);
+      setLogStateLifetime(scope);
+      setHasMore(rows.length === PAGE_SIZE);
+      setLogState('ready');
+      setLogRefreshError(false);
+      return true;
+    }).catch(() => {
+      if (!mounted.current || controller.signal.aborted || logReadGeneration.current !== generation
+        || logLifetime.current !== scope || logReadFlight.current !== flight) return false;
+      if (flight.refreshRequested && hasSnapshot) {
+        setLogRefreshError(true);
+      } else if (!hasSnapshot) {
+        setLogStateLifetime(scope);
+        setLogState('error');
+      }
+      return false;
+    }).finally(() => {
+      if (logReadFlight.current === flight) logReadFlight.current = null;
+      if (mounted.current && !controller.signal.aborted && logReadGeneration.current === generation && logLifetime.current === scope) {
+        setLogRefreshing(false);
+      }
+    });
+    flight.promise = promise;
+    logReadFlight.current = flight;
+    return promise;
+  }, [client, currentLogLifetime, dog.id, serializeEventRead]);
 
   const serializeHealthRead = useCallback(<T,>(read: () => Promise<T>): Promise<T> => {
     const request = healthReadQueue.current.catch(() => undefined).then(read);
@@ -682,8 +785,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         setDailyState('ready');
         setDailyStateLifetime(scope);
         setDailyRefreshError(false);
-        setDailyMessage('');
-        setDailyMessageError(false);
+        if (shouldClearDailyMutationFeedback(pendingDailyRetry.current?.lifetime, scope)) {
+          setDailyMessage('');
+          setDailyMessageError(false);
+        }
         return true;
       }
       if (hasSnapshot) {
@@ -852,15 +957,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setPlannedHealthMessageError(false);
     }
     const controller = new AbortController();
-    void serializeEventRead(() => fetchDogEvents(client, dog.id, 0, PAGE_SIZE, undefined, controller.signal)).then((rows) => {
-      if (controller.signal.aborted || !mounted.current) return;
-      eventRows.current = rows;
-      setEvents(rows);
-      setHasMore(rows.length === PAGE_SIZE);
-      setLogState('ready');
-    }).catch(() => {
-      if (!controller.signal.aborted && mounted.current) setLogState('error');
-    });
+    void reloadEvents();
     void serializeHealthRead(() => fetchHealthWeights(client, dog.id, undefined, controller.signal)).then((rows) => {
       if (controller.signal.aborted || !mounted.current) return;
       healthWeightRows.current = rows;
@@ -890,10 +987,22 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     return () => {
       mounted.current = false;
       controller.abort();
+      const logFlight = logReadFlight.current;
+      if (logFlight?.scope === currentLogLifetime) {
+        logReadGeneration.current += 1;
+        logFlight.controller.abort();
+        logReadFlight.current = null;
+      }
+      const paginationFlight = logPaginationFlight.current;
+      if (paginationFlight?.scope === currentLogLifetime) {
+        logPaginationGeneration.current += 1;
+        paginationFlight.controller.abort();
+        logPaginationFlight.current = null;
+      }
       trainingReadFlight.current?.controller.abort();
       dailyReadFlight.current?.controller.abort();
     };
-  }, [client, currentHealthHistoryLifetime, currentPlannedHealthLifetime, currentProfileLifetime, dog.id, serializeEventRead, serializeHealthRead, serializeHealthHistoryRead, serializePlannedHealthRead]);
+  }, [client, currentHealthHistoryLifetime, currentLogLifetime, currentPlannedHealthLifetime, currentProfileLifetime, dog.id, reloadEvents, serializeHealthRead, serializeHealthHistoryRead, serializePlannedHealthRead]);
 
   useEffect(() => {
     const generation = ++contentGeneration.current;
@@ -954,7 +1063,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       || knowledgeFocus.contentId === CHECKLIST_DESTINATION_ID || knowledgeFocus.contentId === FAQ_DESTINATION_ID)
     ? knowledgeFocus.contentId : null;
 
-  const displayEvents = useMemo(() => events.map(toLogEvent), [events]);
+  const displayEvents = useMemo(() => logDataLifetime === currentLogLifetime ? events.map(toLogEvent) : [], [currentLogLifetime, events, logDataLifetime]);
+  const visibleLogState = logStateLifetime === currentLogLifetime ? logState : 'loading';
   const nextProgram = training.programs.find((program) => program.steps.some((step) => !program.completedStepIds.includes(step.id)));
   const nextStep = nextProgram?.steps.find((step) => !nextProgram.completedStepIds.includes(step.id));
 
@@ -1141,25 +1251,40 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }
 
   async function loadMoreEvents() {
-    if (loadMoreInFlight.current || loadingMore || !hasMore) return;
     const lifetime = logLifetime.current;
-    loadMoreInFlight.current = true;
+    const existing = logPaginationFlight.current;
+    if (existing?.scope === lifetime || loadingMore || !hasMore) return;
+    if (existing) {
+      logPaginationGeneration.current += 1;
+      existing.controller.abort();
+      logPaginationFlight.current = null;
+    }
+    const generation = ++logPaginationGeneration.current;
+    const controller = new AbortController();
+    const flight: LogPaginationFlight = { scope: lifetime, generation, controller };
+    logPaginationFlight.current = flight;
+    const isCurrent = () => mounted.current && !controller.signal.aborted
+      && logPaginationGeneration.current === generation && logLifetime.current === lifetime
+      && logPaginationFlight.current === flight;
     setLoadingMore(true);
     setLoadMoreError(false);
     try {
-      const next = await serializeEventRead(() => fetchDogEvents(client, dog.id, eventRows.current.length, PAGE_SIZE));
-      if (!mounted.current || logLifetime.current !== lifetime) return;
+      const next = await serializeEventRead(() => fetchDogEvents(client, dog.id, eventRows.current.length, PAGE_SIZE, undefined, controller.signal));
+      if (!isCurrent()) return;
       setLoadMoreError(false);
       const merged = [...eventRows.current, ...next.filter((row) => !eventRows.current.some((existing) => existing.id === row.id))];
       eventRows.current = merged;
       setEvents(merged);
       setHasMore(next.length === PAGE_SIZE);
     } catch {
-      if (!mounted.current || logLifetime.current !== lifetime) return;
+      if (!isCurrent()) return;
       setLoadMoreError(true);
     } finally {
-      loadMoreInFlight.current = false;
-      if (mounted.current) setLoadingMore(false);
+      if (logPaginationFlight.current === flight) {
+        logPaginationFlight.current = null;
+        if (mounted.current && !controller.signal.aborted && logPaginationGeneration.current === generation
+          && logLifetime.current === lifetime) setLoadingMore(false);
+      }
     }
   }
 
@@ -1940,12 +2065,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }
 
   async function retryEvents() {
-    setLogState('loading');
-    try {
-      await reloadEvents();
-    } catch {
-      if (mounted.current) setLogState('error');
-    }
+    await reloadEvents(logDataLifetimeRef.current === currentLogLifetime ? 'refresh' : 'initial');
   }
 
   async function retryTraining() {
@@ -2069,8 +2189,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     dailyMutationInFlight.current = true;
     setDailyBusyKey(key);
     setDailyMessageKey(key);
-    setDailyMessage('');
-    setDailyMessageError(false);
+    if (!retry || shouldClearDailyMutationFeedback(pendingDailyRetry.current?.lifetime, lifetime)) {
+      setDailyMessage('');
+      setDailyMessageError(false);
+    }
     let outcome: WriteOutcome<T>;
     try {
       outcome = await operation();
@@ -2285,7 +2407,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const transitionDirection = navigationDirection(previousPage, page);
   const mainTabToMainTab = isMainTabDestination(previousPage) && isMainTabDestination(page);
   const transitionDistance = mainTabToMainTab ? tokens.motion.pageDistance : tokens.motion.distance;
-  return <AppScreen scrollKey={page} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={activeMainTabDestination(page)} onChange={navigateMainTab} />}>
+  return <AppScreen scrollKey={page} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={activeMainTabDestination(page)} onChange={navigateMainTab} />}
+    refreshing={page === 'home' ? dailyRefreshing : page === 'log' ? logRefreshing : false}
+    onRefresh={page === 'home' ? () => { void reloadDailyActivity(true, false); } : page === 'log' ? () => { void reloadEvents('refresh'); } : undefined}
+    refreshAccessibilityLabel={page === 'log' ? 'Uppdatera loggen' : 'Uppdatera Hem'}>
     <MainSwipeNavigation enabled={isMainTabDestination(page) && !(page === 'knowledge' && knowledgeDetailOpen)} onSwipe={handleMainSwipe}>
       <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x" distance={transitionDistance}>{pageContent}</ScreenTransition>
     </MainSwipeNavigation>
@@ -2305,7 +2430,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       healthHistory={healthHistory}
       healthHistoryState={healthHistoryState}
       plans={plannedHealth}
-      logState={logState}
+      logState={visibleLogState}
       planState={plannedHealthState}
       nextStep={visibleTrainingState === 'ready' ? nextStep?.title : undefined}
       trainingState={visibleTrainingState}
@@ -2367,7 +2492,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (page === 'log') return <LogScreen events={displayEvents} onAdd={addEvent}
       onUpdate={updateEvent} onDelete={(id) => deleteEvent(id)} mode="cloud"
       layoutOwnerId={session?.user.id}
-      loading={logState === 'loading'} loadError={logState === 'error'} onReload={() => { void retryEvents(); }}
+      loading={visibleLogState === 'loading'} loadError={visibleLogState === 'error'} refreshError={logRefreshError} onReload={() => { void retryEvents(); }}
       busy={logBusy} mutation={quickLogMutation} loadMoreError={loadMoreError} onRetry={retryLogMutation} onCancel={cancelLogMutation}
       onUndo={(id) => { void undoQuickLog(id); }} hasMore={hasMore} loadingMore={loadingMore}
       onLoadMore={() => { void loadMoreEvents(); }} />;

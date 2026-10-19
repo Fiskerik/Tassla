@@ -898,3 +898,9 @@ RN Web/DOM saknas, därför är renderad 375×667/140%-layout, §14, faktisk nat
 Kunskapsfliken Artiklar har nu lokal sökning i den redan valda, publicerade listan för aktiv hund. Sökningen täcker titel och parsad body-text, normaliserar svensk text och tömmer query vid konto-/hundbyte. Ingen extra fetch, schema eller filtertaxonomi tillkom.
 
 Riktade sök-/content-delivery-tester 21/21, full pnpm check 564/564, public iOS JS-export 1 447 moduler, git diff --check och kövalidering PASS. Oberoende QA och Reviewer PASS. Skärmrendring vid 375/430, §14, VoiceOver, Dynamic Type, native fokus/targets och faktisk hundswitch är OPEN / NOT TESTABLE och ligger kvar i UI-NATIVE-ACCESSIBILITY-VERIFY. Ingen live Supabase/RLS-, Codemagic- eller signerad native-build-kontroll gjordes.
+
+## UI-REFRESH-HOME-LOG (paket 4) — lokal verifierad checkpoint, 2026-10-19
+
+AppScreen har opt-in native RefreshControl; ProductWorkspace aktiverar det bara för Hem och Logg. Hem använder den befintliga dags-/träningsladdaren inom konto-, hund-, dags- och tidszonsscope. Logg samordnar första sida och paginering per konto-/hundscope, avbryter båda läsningarna vid scopebyte och behåller lokalt bekräftade insert/update/delete-resultat när en parallell läsning blir äldre. Hem refresh och retry döljer inte längre status för en olöst dagsändring.
+
+Riktad svit 11/11; `pnpm check` passerade typecheck, edge-typecheck, ESLint och 571/571 tester. Offentlig `pnpm bundle:ios` passerade med 1 447 moduler. Oberoende QA PASS, Reviewer PASS och Security final APPROVE. `git diff --check` och `python -X utf8 tools/dev_flow.py validate` passerade; de körs igen efter slutlig queue-closeout. Visuell capture vid 375/430 är NOT TESTABLE eftersom React Native Web, React DOM och Playwright saknas i checkouten; native RefreshControl-gest är NOT TESTABLE utan enhet. Se docs/design/evidence/ui-refresh-home-log-2026-10-19/VERIFICATION.md. Nästa beroende paket är UI-EMPTY-FEEDBACK-HOME-LOG (5a).
