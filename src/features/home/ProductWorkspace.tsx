@@ -14,6 +14,7 @@ import {
   deleteTrainingProgress,
   fetchDogEventById,
   fetchDogEvents,
+  fetchDogLogMonthMarkers,
   fetchHealthWeightById,
   fetchHealthWeights,
   fetchHealthHistory,
@@ -90,6 +91,7 @@ import {
   type OwnedDogProfileChanges,
 } from '../../data/app-data';
 import { localDate } from '../onboarding/dog';
+import { calendarMarkerScopeKey } from '../puppy-log/log-calendar-model';
 import { homeAgeInWeeks } from './home-today';
 import { HealthScreen } from '../health/HealthScreen';
 import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
@@ -182,6 +184,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
   const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>(() => ({ page: initialPage, previousPage: 'home' }));
+  const [deviceTimeZone, setDeviceTimeZone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
   const initialPageConsumed = useRef(false);
   useEffect(() => {
     if (initialPage === 'profile' && !initialPageConsumed.current) {
@@ -232,6 +235,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [logDataLifetime, setLogDataLifetime] = useState('');
   const [logRefreshing, setLogRefreshing] = useState(false);
   const [logRefreshError, setLogRefreshError] = useState(false);
+  const [logCalendarData, setLogCalendarData] = useState<{ key: string; markers: string[]; status: 'loading' | 'ready' | 'error' }>({ key: '', markers: [], status: 'loading' });
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState(false);
   const [hasMore, setHasMore] = useState(false);
@@ -338,6 +342,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const logReadFlight = useRef<LogReadFlight | null>(null);
   const logPaginationGeneration = useRef(0);
   const logPaginationFlight = useRef<LogPaginationFlight | null>(null);
+  const logCalendarGeneration = useRef(0);
+  const logCalendarFlight = useRef<{ key: string; controller: AbortController } | null>(null);
   const healthReadQueue = useRef<Promise<void>>(Promise.resolve());
   const healthHistoryReadQueue = useRef<Promise<void>>(Promise.resolve());
   const plannedHealthReadQueue = useRef<Promise<void>>(Promise.resolve());
@@ -390,6 +396,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     const previous = previousLogLifetime.current;
     logLifetime.current = currentLogLifetime;
     if (previous !== currentLogLifetime) {
+      logCalendarGeneration.current += 1;
+      logCalendarFlight.current?.controller.abort();
+      logCalendarFlight.current = null;
+      setLogCalendarData({ key: '', markers: [], status: 'loading' });
       const paginationFlight = logPaginationFlight.current;
       if (paginationFlight) {
         logPaginationGeneration.current += 1;
@@ -498,6 +508,53 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     eventReadQueue.current = request.then(() => undefined, () => undefined);
     return request;
   }, []);
+
+  const loadLogCalendarMarkers = useCallback(async (month: string, force = true) => {
+    const scope = currentLogLifetime;
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const key = calendarMarkerScopeKey(scope, timeZone, month);
+    const active = logCalendarFlight.current;
+    if (active?.key === key && !force) return;
+    logCalendarGeneration.current += 1;
+    const generation = logCalendarGeneration.current;
+    active?.controller.abort();
+    const controller = new AbortController();
+    const flight = { key, controller };
+    logCalendarFlight.current = flight;
+    setLogCalendarData({ key, markers: [], status: 'loading' });
+    try {
+      const markers = await serializeEventRead(() => fetchDogLogMonthMarkers(client, dog.id, month, controller.signal));
+      if (controller.signal.aborted || !mounted.current || logLifetime.current !== scope
+        || logCalendarGeneration.current !== generation || logCalendarFlight.current !== flight) return;
+      setLogCalendarData({ key, markers, status: 'ready' });
+    } catch {
+      if (controller.signal.aborted || !mounted.current || logLifetime.current !== scope
+        || logCalendarGeneration.current !== generation || logCalendarFlight.current !== flight) return;
+      setLogCalendarData({ key, markers: [], status: 'error' });
+    } finally {
+      if (logCalendarFlight.current === flight) logCalendarFlight.current = null;
+    }
+  }, [client, currentLogLifetime, dog.id, serializeEventRead]);
+
+  const cancelLogCalendarRead = useCallback(() => {
+    logCalendarGeneration.current += 1;
+    logCalendarFlight.current?.controller.abort();
+    logCalendarFlight.current = null;
+  }, []);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') return;
+      const nextTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (nextTimeZone === deviceTimeZone) return;
+      setDeviceTimeZone(nextTimeZone);
+      const month = logCalendarData.key.startsWith(`${currentLogLifetime}:`)
+        ? logCalendarData.key.slice(logCalendarData.key.lastIndexOf(':') + 1) : '';
+      if (page === 'log' && /^\d{4}-\d{2}$/.test(month)) void loadLogCalendarMarkers(month);
+      else cancelLogCalendarRead();
+    });
+    return () => subscription.remove();
+  }, [cancelLogCalendarRead, currentLogLifetime, deviceTimeZone, loadLogCalendarMarkers, logCalendarData.key, page]);
 
   const reloadEvents = useCallback((intent: 'initial' | 'refresh' = 'initial'): Promise<boolean> => {
     const scope = currentLogLifetime;
@@ -1071,6 +1128,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   const displayEvents = useMemo(() => logDataLifetime === currentLogLifetime ? events.map(toLogEvent) : [], [currentLogLifetime, events, logDataLifetime]);
   const visibleLogState = logStateLifetime === currentLogLifetime ? logState : 'loading';
+  const calendarTimeZone = deviceTimeZone;
+  const calendarKeyPrefix = `${currentLogLifetime}:${calendarTimeZone}:`;
+  const calendarDataIsCurrent = logCalendarData.key.startsWith(calendarKeyPrefix);
+  const calendarDataMonth = calendarDataIsCurrent ? logCalendarData.key.slice(calendarKeyPrefix.length) : '';
   const nextProgram = training.programs.find((program) => program.steps.some((step) => !program.completedStepIds.includes(step.id)));
   const nextStep = nextProgram?.steps.find((step) => !nextProgram.completedStepIds.includes(step.id));
 
@@ -2497,6 +2558,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     />;
     if (page === 'log') return <LogScreen events={displayEvents} onAdd={addEvent}
       onUpdate={updateEvent} onDelete={(id) => deleteEvent(id)} mode="cloud"
+      calendarMarkerMonth={calendarDataMonth} calendarMarkers={calendarDataIsCurrent ? logCalendarData.markers : []}
+      calendarStatus={calendarDataIsCurrent ? logCalendarData.status : 'loading'}
+      onLoadCalendarMonth={(month) => { void loadLogCalendarMarkers(month); }} onCancelCalendarRead={cancelLogCalendarRead}
       layoutOwnerId={session?.user.id}
       loading={visibleLogState === 'loading'} loadError={visibleLogState === 'error'} refreshError={logRefreshError} onReload={() => { void retryEvents(); }}
       busy={logBusy} mutation={quickLogMutation} loadMoreError={loadMoreError} onRetry={retryLogMutation} onCancel={cancelLogMutation}

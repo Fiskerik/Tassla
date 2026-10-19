@@ -30,3 +30,11 @@ Den lokala visuella harnessen har manuella scenarier via `?screen=log&logScenari
 ## Val av händelsetyp i redigeraren
 
 Redigeraren visar vald händelse som central `IconChip` i en rund öppningsknapp. Den expanderade listan använder samma kategorisymboler och `LOG_EVENT_LABELS`; den aktuella typen är markerad och vald typ stänger listan. Detta ändrar inte loggmodell, olycksdetaljer, datum/tid, anteckning eller mutationskontrakt. Valen ligger i BottomSheets befintliga scrollområde så formulärets övriga fält och fasta Spara-knapp fortsatt kan nås på kort skärm.
+
+## Månadskalender för Logga
+
+Datumknappen öppnar `LogDateCalendar` i befintlig `BottomSheet`. `log-calendar-model.ts` bygger lokal månadskalender med måndag först och hanterar lokala datumgränser. Kalendern visar bara dagar fram till idag och ger skärmläsaren datum, vald dag, idag och om dagen har loggar. Markörläsning har separata laddnings-, tom- och fel-/återförsökstillstånd; dag går fortfarande att välja om markörläsningen fallerar.
+
+I molnläge äger `ProductWorkspace` request-lifetime och konto/hund/månad/tidszons-scope. `fetchDogLogMonthMarkers` i `workspace-data.ts` använder befintlig autentiserad Supabase-klient och RLS, filtrerar aktiv hund och `LOG_EVENT_TYPES` och hämtar endast `occurred_at`. Månadens lokala start/slut är halvöppna ISO-gränser. Sidor sorteras fallande med id som stabil tie-breaker och fortsätter med strikt `occurred_at < cursor` på oförändrad rå tidsstämpel. Dagar dedupliceras först efter full traversal; fel eller abort ger ingen partiell resultatlista. Bekräftad lokal mutation och kalenderns öppning läser om markörerna. Snapshoten är eventual, inte en transaktionell databassnapshot.
+
+Riktad lokal verifiering: `node --experimental-strip-types --test tests/log-calendar-model.test.mjs tests/workspace-log-calendar.test.mjs tests/log-calendar-policy.test.mjs`, `pnpm check` och publik iOS JS-bundle. Live RLS, native VoiceOver/TalkBack, fysisk tryckyta, Dynamic Type och skärmbildsmatris kräver separata miljö-/QA-prov och får inte härledas från lokala tester.

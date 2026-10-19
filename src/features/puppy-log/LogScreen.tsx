@@ -9,11 +9,13 @@ import { localDate } from '../onboarding/dog';
 import { canonicalAccidentKinds, decideQuickLogPress, hasRecentCategoryLog, isCanonicalAccidentKinds, localDateTimeParts, LOG_ENTRY_TYPES, LOG_EVENT_LABELS, parseLocalDateTime, summarizePottyPatterns, type AccidentKind, type AccidentLogIntent, type LogEvent, type LogEventChanges, type LogEventType } from './log-model';
 import { loadQuickLogLayout, saveQuickLogLayout } from './quick-log-layout-storage';
 import { DEFAULT_QUICK_LOG_LAYOUT, moveQuickLogType, type QuickLogLayout, type QuickLogLayoutType } from './quick-log-layout';
+import { LogDateCalendar } from './LogDateCalendar';
+import { localMonthKey } from './log-calendar-model';
 
 export type QuickLogMutationView = { kind: 'add' | 'update' | 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; accidentKinds?: readonly AccidentKind[] | null; status: 'pending' | 'failed' | 'unsure' | 'saved' };
 type EditorActionState = { canSave: boolean; saving: boolean };
 
-export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, refreshError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore }: {
+export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, refreshError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore, calendarMarkerMonth = '', calendarMarkers = [], calendarStatus = 'ready', onLoadCalendarMonth, onCancelCalendarRead }: {
   events: readonly LogEvent[];
   onAdd: (type: LogEventType, intent?: AccidentLogIntent) => void;
   onUpdate?: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
@@ -34,6 +36,11 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   hasMore?: boolean;
   loadingMore?: boolean;
   onLoadMore?: () => void;
+  calendarMarkerMonth?: string;
+  calendarMarkers?: readonly string[];
+  calendarStatus?: 'loading' | 'ready' | 'error';
+  onLoadCalendarMonth?: (month: string) => void;
+  onCancelCalendarRead?: () => void;
 }) {
   const [moreVisible, setMoreVisible] = useState(false);
   const [addEventVisible, setAddEventVisible] = useState(false);
@@ -53,6 +60,9 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const [layoutEditing, setLayoutEditing] = useState(false);
   const [layoutError, setLayoutError] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => localDate());
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(() => localDate().slice(0, 7));
+  const refreshedCalendarMutation = useRef('');
   const [deleteSnapshot, setDeleteSnapshot] = useState<{ token: number; event: LogEvent; phase: 'pending' | 'exiting' } | null>(null);
   const deleteToken = useRef(0);
   const [entryAnimationTarget, setEntryAnimationTarget] = useState<{ eventId: string; key: string } | null>(null);
@@ -90,6 +100,20 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const consumeEntryAnimation = useCallback((key: string) => {
     setConsumedEntryAnimationKey(key);
   }, []);
+
+  const closeCalendar = useCallback(() => {
+    setCalendarOpen(false);
+    onCancelCalendarRead?.();
+  }, [onCancelCalendarRead]);
+
+  useEffect(() => {
+    const mutationKey = mutation?.status === 'saved' ? `${mutation.kind}:${mutation.mutationId}` : '';
+    if (!calendarOpen || !mutationKey || refreshedCalendarMutation.current === mutationKey) return;
+    refreshedCalendarMutation.current = mutationKey;
+    onLoadCalendarMonth?.(calendarMonth);
+  }, [calendarMonth, calendarOpen, mutation?.kind, mutation?.mutationId, mutation?.status, onLoadCalendarMonth]);
+
+  useEffect(() => () => onCancelCalendarRead?.(), [onCancelCalendarRead]);
 
   useEffect(() => {
     const isConfirmedAdd = mutation?.kind === 'add' && mutation.status === 'saved' && events.some((event) => event.id === mutation.id);
@@ -303,11 +327,27 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       <Pressable accessibilityRole="button" accessibilityLabel="Visa föregående dag" onPress={() => setSelectedDate((date) => shiftLocalDate(date, -1))} style={({ pressed }) => [styles.dateButton, pressed && styles.datePressed]}>
         <Ionicons name="chevron-back" size={tokens.size.iconMd} color={tokens.colors.textPrimary} />
       </Pressable>
-      <Text accessibilityLiveRegion="polite" style={styles.selectedDate}>{formatSelectedDate(selectedDate, todayDate)}</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Valt datum ${formatSelectedDate(selectedDate, todayDate)}. Öppna kalender`} accessibilityHint="Välj en dag och se vilka dagar som har loggar" onPress={() => {
+        const month = localMonthKey(new Date(`${selectedDate}T12:00:00`));
+        setCalendarMonth(month);
+        setCalendarOpen(true);
+        onLoadCalendarMonth?.(month);
+      }} style={styles.dateLabelButton}>
+        <Text accessibilityLiveRegion="polite" style={styles.selectedDate}>{formatSelectedDate(selectedDate, todayDate)}</Text>
+        <Ionicons name="calendar-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />
+      </Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel="Visa nästa dag" accessibilityState={{ disabled: selectedDate >= todayDate }} disabled={selectedDate >= todayDate} onPress={() => setSelectedDate((date) => shiftLocalDate(date, 1))} style={({ pressed }) => [styles.dateButton, pressed && styles.datePressed]}>
         <Ionicons name="chevron-forward" size={tokens.size.iconMd} color={selectedDate >= todayDate ? tokens.colors.textSecondary : tokens.colors.textPrimary} />
       </Pressable>
     </View>
+    <BottomSheet visible={calendarOpen} title="Välj datum" onRequestClose={closeCalendar}>
+      <LogDateCalendar month={calendarMonth} selectedDate={selectedDate} today={todayDate}
+      markers={mode === 'preview' ? displayedEvents.map((event) => localDateTimeParts(event.occurredAt).date).filter((date) => date.startsWith(`${calendarMonth}-`)) : calendarMarkerMonth === calendarMonth ? calendarMarkers : []}
+      status={mode === 'preview' ? 'ready' : calendarMarkerMonth === calendarMonth ? calendarStatus : 'loading'}
+      onMonthChange={(month) => { setCalendarMonth(month); onLoadCalendarMonth?.(month); }}
+      onSelectDate={(date) => { setSelectedDate(date); closeCalendar(); }}
+      onRetry={() => onLoadCalendarMonth?.(calendarMonth)} />
+    </BottomSheet>
     {loading ? <>
       <SectionHeader title="Snabb logg" />
       <Skeleton shape="card" lines={3} />
@@ -583,7 +623,8 @@ const styles = StyleSheet.create({
   dateNavigator: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.xs, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface },
   dateButton: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full },
   datePressed: { backgroundColor: tokens.colors.selectedSurface },
-  selectedDate: { ...tokens.typography.label, flex: 1, flexShrink: 1, color: tokens.colors.textPrimary, textAlign: 'center' },
+  dateLabelButton: { flex: 1, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs },
+  selectedDate: { ...tokens.typography.label, flexShrink: 1, color: tokens.colors.textPrimary, textAlign: 'center' },
   grid: { gap: tokens.spacing.sm }, gridRow: { flexDirection: 'row', gap: tokens.spacing.sm }, moreRow: { marginTop: tokens.spacing.sm }, moreIcon: { width: tokens.size.chipLg, minHeight: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.selectedSurface },
   addEventButton: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.primary, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.primary }, addEventPressed: { backgroundColor: tokens.colors.primaryPressed, borderColor: tokens.colors.primaryPressed }, addEventDisabled: { opacity: 0.55 }, addEventLabel: { ...tokens.typography.label, color: tokens.colors.onPrimary }, addEventHelp: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   loadingOlder: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.sm }, loadingOlderText: { ...tokens.typography.caption, color: tokens.colors.textSecondary },

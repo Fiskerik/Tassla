@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { selectContent } from '../content/select-content';
 import { isCanonicalAccidentKinds, LOG_EVENT_TYPES, type AccidentKind, type LogEventType } from '../features/puppy-log/log-model';
+import { dedupeLocalDateMarkers, localMonthRange } from '../features/puppy-log/log-calendar-model';
 import type { HomeContent, OwnedDog } from './app-data';
 
 export const WORKSPACE_PAGE_SIZE = 40;
@@ -242,6 +243,44 @@ export async function fetchDogEvents(
     if (error || !Array.isArray(data) || !data.every(isDogEventRecord)) throw new Error('Could not load dog events');
     return data;
   }, timeoutMs, parentSignal);
+}
+
+export async function fetchDogLogMonthMarkers(
+  client: SupabaseClient,
+  dogId: string,
+  monthKey: string,
+  parentSignal?: AbortSignal,
+  pageSize = WORKSPACE_PAGE_SIZE,
+): Promise<string[]> {
+  const { startIso, endIso } = localMonthRange(monthKey);
+  const timestamps: string[] = [];
+  let cursor: string | null = null;
+  while (true) {
+    const rows = await withRequestDeadline(async (signal) => {
+      let query = client.from('dog_events')
+        .select('occurred_at')
+        .eq('dog_id', dogId)
+        .in('event_type', [...LOG_EVENT_TYPES])
+        .gte('occurred_at', startIso)
+        .lt('occurred_at', endIso);
+      if (cursor !== null) query = query.lt('occurred_at', cursor);
+      const { data, error } = await query
+        .order('occurred_at', { ascending: false })
+        .order('id', { ascending: false })
+        .limit(pageSize)
+        .abortSignal(signal);
+      if (error || !Array.isArray(data) || !data.every((row) => typeof row?.occurred_at === 'string')) {
+        throw new Error('Could not load log calendar markers');
+      }
+      return data as { occurred_at: string }[];
+    }, DEFAULT_REQUEST_TIMEOUT_MS, parentSignal);
+    timestamps.push(...rows.map((row) => row.occurred_at));
+    if (rows.length < pageSize) break;
+    const lastTimestamp = rows[rows.length - 1]?.occurred_at;
+    if (!lastTimestamp || lastTimestamp === cursor) break;
+    cursor = lastTimestamp;
+  }
+  return dedupeLocalDateMarkers(timestamps);
 }
 
 export async function fetchDogEventById(

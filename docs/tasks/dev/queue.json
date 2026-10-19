@@ -7206,16 +7206,19 @@
       "id": "FLOW-LOG-01",
       "title": "Logga med bevarad snabbresa och historik",
       "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/plans/FLOW-LOG-01-calendar-ux-plan.md v1",
+      "plan": "docs/plans/FLOW-LOG-01-calendar-ux-plan.md v5",
       "write_paths": [
         "src/features/puppy-log/LogScreen.tsx",
         "src/features/puppy-log/LogDateCalendar.tsx",
         "src/features/puppy-log/log-calendar-model.ts",
+        "src/features/puppy-log/README.md",
         "src/data/workspace-data.ts",
         "src/features/home/ProductWorkspace.tsx",
         "src/theme/tokens.ts",
+        "src/components/ui/IconChip.tsx",
+        "src/components/ui/QuickLogTile.tsx",
+        "src/components/ui/ListRow.tsx (log-timeline pressed-state only)",
         "src/components/AppPrimitives.tsx (only if shared AppScreen measurement requires a correction)",
-        "src/features/puppy-log/README.md",
         "tests/log-calendar-model.test.mjs",
         "tests/workspace-log-calendar.test.mjs",
         "tests/log-calendar-policy.test.mjs",
@@ -7223,17 +7226,20 @@
         "docs/design/evidence/flow-log-01/",
         "docs/releases/FLOW-LOG-01.md",
         "docs/tasks/dev/queue.json",
-        "docs/tasks/dev/rapport.md"
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/dev/FLOW-LOG-01.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/releases/HISTORY-2026.md"
       ],
       "acceptance": [
-        "Tapping the selected Log date opens a Swedish month calendar with Monday-first weekdays, selected day, previous/next month, today and no future date selection; choosing a day updates history and closes the calendar.",
-        "Every day with at least one event for the active dog is marked, including events outside the current UI page; bounded month query is paginated to completeness and queries timestamps only.",
-        "Loading, empty and query-error states are distinct; query failure never implies an empty month. Preview markers use fixture events.",
-        "Account/dog scope change, month change and stale responses cannot show another scope; opening the calendar re-fetches current month so confirmed add/edit/delete/undo is reflected.",
-        "Pee is warm yellow/amber and Water remains blue in quick actions, timeline and icon chips; Accident remains red and visual contrast is checked; short labels and one-tap logging remain.",
-        "At least 8 CSS px free gap remains between the final Log action and bottom tablist at scroll bottom in actual AppScreen for 360x844 at 140% stress with Fler open; sanity-check 375/430 and Fler open/closed without duplicate safe-area inset.",
-        "Rendered evidence covers 360/375/430, normal and 140% web proxy, calendar markers/loading/error/empty, selected date, quick log, accident, water and bottom spacing; full-screen rev02 comparison is reported separately.",
-        "Native Dynamic Type, physical 44x44 pt targets, VoiceOver/TalkBack, native safe area, reduced motion and signed build are marked NOT TESTABLE unless actually verified on device."
+        "Date control opens Swedish Monday-first calendar; previous month works, next month disabled in current month, future days disabled, selection updates Log history and closes calendar.",
+        "Days with one or more active-dog LOG_EVENT_TYPES are marked via authenticated active-dog query with existing RLS; local half-open month bounds, occurred_at-only keyset cursor, deduped equal timestamps and complete traversal.",
+        "Calendar day accessibility name/state conveys localized date plus has-logs/selected/today/disabled as relevant; loading, complete-empty and error+retry are distinct; day selection works if marker query fails.",
+        "Account/session, dog, month, timezone, close and stale response changes cannot leak markers; confirmed local mutations invalidate/requery; other-device changes refresh at next open. Snapshot is eventual, not transactional, and partial pages never appear complete.",
+        "Log-only pee token is warm amber; global Home pee stays blue; water blue and accident red. Pee/water are distinguishable by distinct icon forms and text without color; QA checks icon-label fit at actual quick-tile and chip sizes in grayscale at normal/140% text; confusing shapes or clipped labels fail. Text contrast >=4.5:1 and non-text control/icon contrast >=3:1 in normal/pressed/selected; Log timeline pressed uses selectedSurface without opacity, other ListRow variants unchanged.",
+        "Actual AppScreen bottom gap is >=8 CSS px at 360x844/140%/Fler-open scroll bottom; sanity-check 375/430 and Fler open/closed without duplicate inset.",
+        "RN Web evidence covers calendar, loading/empty/error, markers, selected date, quick actions and responsive spacing; full rev02 comparison reported separately.",
+        "Native checks and real RLS probe are PASS only if actually run; RLS probe uses two synthetic owner/dog scopes and verifies anon denial; otherwise explicitly NOT TESTABLE. Security review, QA, Reviewer, focused tests, pnpm check and public iOS JS bundle required."
       ],
       "checks": [
         "Focused log calendar model/data/policy tests and pnpm check",
@@ -7245,22 +7251,79 @@
       "depends_on": [
         "UX-LOG-EDITOR-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Architect and UX Critic review plan v1. Include UI-09 measured 0.42 CSS-px gap as the existing FLOW-LOG/UI follow-up, verify actual AppScreen safe-area/scroll behavior, then refine acceptance before implementation.",
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v4, UX Critic PROCEED v4, Security pre-implementation APPROVE v4; reviews saved in docs/tasks/dev/FLOW-LOG-01.md; live RLS remains NOT TESTABLE until synthetic dev probe."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementering startad på godkänd plan v4; segmentmandat från Eriks 2026-10-06-besked; Architect APPROVE, Critic PROCEED och Security pre-implementation APPROVE sparade i docs/tasks/dev/FLOW-LOG-01.md."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementer handoff v5: 9/9 focused tests, pnpm check 592/592, public pnpm bundle:ios 1,449 modules, queue validation PASS; diff --check EOF whitespace corrected by coordinator. Render matrix, spacing, RLS and native remain NOT TESTABLE pending independent QA."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "QA FAIL: calendar day targets were below 44 pt and query/lifecycle cases were missing; bounded correction scoped to the already approved plan v5."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction attempt 1: reduce calendar inner horizontal inset, enforce 44 pt day-cell width, add timestamp precision/equal-boundary, in-flight abort, between-page mutation, refresh, and lifecycle guard tests; keep rendering/RLS/native NOT TESTABLE."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Existing Architect APPROVE v5 remains valid: correction adds no scope or data/auth changes and implements the existing 44 pt/cursor acceptance."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction attempt 1 implemented; targeted FLOW-LOG tests pass 16/16 and 360 pt touch-target arithmetic now yields 44.57 pt. Independent QA rerun pending."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction attempt 1 complete: focused 16/16, pnpm check 599/599, public bundle 1,449 modules, diff --check and queue validation PASS; independent QA confirms code/test PASS but package acceptance still awaits rendered UI evidence."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "QA package verdict: code/test PASS, but explicit responsive render matrix, grayscale proof and AppScreen bottom-gap evidence are NOT TESTABLE because no renderer/browser is installed; design-rules §14 prevents visual PASS. Security APPROVE static; live RLS/native separately NOT TESTABLE. Preserve checkpoint and continue next independent package; revisit when approved render capability is available."
+        }
+      ],
+      "next_step": "Blocked only on required rendered UI matrix/grayscale/AppScreen gap and §14 evidence because no approved renderer is installed. Push the local code/test checkpoint, continue the next independent approved package, and resume visual acceptance when rendering is available.",
       "priority": "P2",
       "panels": [
         "5"
       ],
-      "risk_class": "M",
+      "risk_class": "H",
       "checkpoint": "Panel 5 funktionellt regressionsprov; hänvisa till tidigare design- och editor-checkpoints.",
       "test_evidence": [
-        "Query tests prove active dog + local month bounds + pagination completeness and stale/abort protection.",
-        "Pure calendar tests cover Monday-first weeks, leap year/month boundaries, local timezone and DST date keys.",
-        "Rendered public/review evidence covers dots, date selection, error/loading/empty, quick categories and measured AppScreen bottom gap."
+        "Synthetic PostgREST tests verify dog-scoped occurred_at-only query, local half-open bounds, exact microsecond cursor, equal timestamp boundary, error/abort, mutation during traversal and fresh traversal after a change before cursor.",
+        "Calendar model and source policy tests verify Monday-first dates, DST/month bounds, accessibility/state source, 44 pt target arithmetic, request guards and mutation refresh wiring; component-level scope race remains not rendered.",
+        "Contrast calculations from current tokens pass for Pee, Water, Accident and timeline text. Grayscale actual-size comparison, 140% rendered text and AppScreen bottom-gap matrix remain NOT TESTABLE.",
+        "Live two-owner RLS/anon-denial probe and native Dynamic Type/VoiceOver/physical target/safe-area/reduced-motion are NOT TESTABLE in the current environment.",
+        "Focused tests 16/16, pnpm check 599/599, public pnpm bundle:ios 1,449 modules, git diff --check and python -X utf8 tools/dev_flow.py validate pass."
       ],
-      "implementation_state": "proposed; plan only, no product code changed",
-      "evidence_status": "not_run; Architect and UX Critic review required before ready"
+      "implementation_state": "v5 implemented; correction 1 verified by local tests; package visual acceptance remains blocked on render evidence",
+      "evidence_status": "QA code/test PASS (16/16, pnpm check 599/599, bundle 1,449); QA overall NOT PASS pending render/§14. Security final APPROVE static; live RLS/native NOT TESTABLE."
     },
     {
       "id": "FLOW-TRAINING-01",

@@ -922,3 +922,11 @@ Oberoende QA blockerade först v4 eftersom Kunskap radbröts vid 360×844/140 %.
 Den kompakta, bekräftade spar-toasten med bock/Ångra och den sanningsenliga feltoasten är verifierade i headless RN Web vid 375×667 och 360/430×844, med normal text och 140 %-webbstresstest, `Fler` öppet/stängt och error/retry/cancel. Responsmatrisen visar 12/12 körningar utan horisontell overflow eller toast/snabbval-överlapp; fokuserat policytest 5/5. Oberoende QA PASS och Reviewer PASS för endast den fokuserade toastresan. Full Logga-komposition mot aktuell rev02 är fortsatt No/öppen, efter-val-bild från `Fler` saknas, och native Dynamic Type, fysisk target, safe area, skärmläsare och reducerad rörelse är NOT TESTABLE.
 
 Vid 360×844/140 %-webbstresstest var åtgärdsknappen fullt åtkomlig utan överlapp men fri yta mot tablisten var 0,42 CSS px. Det är separat planerat i `FLOW-LOG-01`, som ska mäta faktiska `AppScreen`-insets innan padding justeras. Full `pnpm check` PASS; fokustest 5/5; publik iOS JS-bundle PASS med 1 447 moduler; `git diff --check` och queue validation PASS. Ingen produktkod ändrades i denna v4-evidensuppföljning.
+
+## 2026-10-20 — FLOW-LOG-01 checkpoint
+
+- Implementerat Logga-kalendern/markörer, visuella Kiss/Vatten-skillnaden och timeline feedback enligt plan v5. QA hittade i första varvet dagceller under minsta bredd samt saknade sidgräns-/lifecycle-regressioner.
+- Korrigering 1 genomförd. 44 pt-källgeometri vid 360 pt är 312/7≈44,57 pt. Nya tester verifierar rå mikrosekundcursor, lika timestamp vid sidgräns, avbrott efter requeststart, ändring under traversal och ny traversal efter ändring före cursor.
+- Omtest: 16/16 riktade, pnpm check 599/599, publik iOS-bundle 1 449 moduler, diff --check PASS, dev_flow validate PASS.
+- QA: kod/test PASS; samlad acceptans blockerad på renderad UI-matris, gråskala och faktisk AppScreen-marginal (NOT TESTABLE; renderer saknas). Security final APPROVE för statisk implementation; live RLS/native är NOT TESTABLE. Ingen Reviewer/DONE eftersom QA helhet inte passerar.
+- Queue: FLOW-LOG-01 blocked med nästa steg att återuppta render-/§14-bevis när godkänd renderer finns. Branch-checkpoint pushas innan nästa oberoende paket enligt Eriks mandat.
