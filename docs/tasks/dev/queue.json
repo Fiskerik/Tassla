@@ -8901,7 +8901,7 @@
           "evidence": "Independent QA PASS (23/23 focused tests, queue validation, stateful synthetic Log empty→chooser→confirmed event render); Reviewer PASS on final frozen diff and docs, reran focused tests 23/23 and queue validation. pnpm check 577/577, public iOS JS bundle 1,447 modules, diff and queue checks PASS. Native/live Supabase/RLS/release/full rev02 remain NOT TESTABLE."
         }
       ],
-      "next_step": "Independent QA PASS (23/23 focused tests, queue validation, stateful synthetic Log empty→chooser→confirmed event render); Reviewer PASS on final frozen diff and docs, reran focused tests 23/23 and queue validation. pnpm check 577/577, public iOS JS bundle 1,447 modules, diff and queue checks PASS. Native/live Supabase/RLS/release/full rev02 remain NOT TESTABLE.",
+      "next_step": "Checkpoint done and pushed as 67424a4. Proceed to 5b UI-EMPTY-FEEDBACK-KNOWLEDGE-TRAINING on this branch.",
       "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
     },
     {

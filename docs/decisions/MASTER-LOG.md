@@ -169,5 +169,5 @@ Architect v4 APPROVE, UX Critic PROCEED; Security pre-review APPROVE WITH CONDIT
 - Renderad evidens: syntetisk stateful RN Web-fixture visar Logg tomläge → väljare → bekräftad Vatten-rad/toast. Den separata tempadapter som behövdes ligger utanför repot och verifierar inte live Supabase/RLS.
 - Verdicts: oberoende QA PASS för lokal acceptance. Första Reviewer-granskning BLOCK endast på dokumentationskonsistens, utan kodfynd; efter rättning gav slutlig Reviewer **PASS**.
 - Öppna gränser: native VoiceOver/TalkBack, Dynamic Type, riktiga enhetsytor, live Supabase/RLS, signerad build och full rev02-jämförelse är NOT TESTABLE.
-- Checkpoint/commit: QA/Reviewer PASS; redo för commit/push på branch codex/tassla-ui-ux-bundle-2026-10-18.
+- Checkpoint: commit 67424a4 (feat: improve empty-state feedback for home and log) pushad till origin/codex/tassla-ui-ux-bundle-2026-10-18 efter hook-PASS. Nästa: 5b UI-EMPTY-FEEDBACK-KNOWLEDGE-TRAINING.
 - Nästa: 5b UI-EMPTY-FEEDBACK-KNOWLEDGE-TRAINING efter denna checkpoint.
