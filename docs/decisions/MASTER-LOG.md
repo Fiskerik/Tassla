@@ -126,3 +126,8 @@ Home-/dagsradsförbättringarna är implementerade enligt plan v4. Oberoende QA 
 ### UI-MAIN-TAB-TRANSITION — lokal checkpoint QA/Reviewer PASS, 2026-10-19
 
 Huvudflikarnas riktningsstyrda övergång använder 28pt; stödvyerna behåller 8pt. QA och Reviewer PASS, full lokal check 547/547 och syntetisk riktnings-/reduced-motion-evidens finns i [rapporten](../tasks/dev/rapport.md) och [verifieringen](../design/evidence/ui-main-tab-transition-2026-10-19/VERIFICATION.md). Native touch, OS-reducerad rörelse och bildfrekvens är NOT TESTABLE. Implementationens checkpointcommit är `0d4ecad` (`feat: add directional main tab transition`).
+
+
+### UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS (2b.1) — verifierat lokalt
+
+Responsiv layout för rutinens peer actions och notisernas informationsrad. Independent QA PASS (47/47 targeted), Reviewer PASS, Security pre-review plus frozen-diff re-review APPROVE. `pnpm check` 549/549, public iOS JS bundle 1,446 modules, synthetic RN Web screenshot/interaction evidence PASS. No persistence, scope, permission timing or callback contract changed. Native/device/backend checks and full rev02 visual acceptance remain NOT TESTABLE. See `docs/design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md`. Implementation checkpoint SHA to be recorded after commit.

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Crypto from 'expo-crypto';
 import { BottomSheet, Button } from '../../components/ui';
@@ -395,6 +395,8 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
   onAdd: () => void;
   onRemove: () => void;
 }) {
+  const { width, fontScale } = useWindowDimensions();
+  const stackRoutineActions = width < 360 || fontScale >= 1.25;
   const editing = draft?.mode === 'edit' && draft.routineId === routine.id;
   const value = editing ? draft : null;
   const selected = selectedDay !== null;
@@ -435,19 +437,19 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
     </> : <View style={styles.scheduleSummaryRow}>
       <Text style={styles.repeatSummary}>{dailyRoutineRepeatSummary(routine)}</Text>
     </View>}
-    <View style={styles.routineActions}>
+    <View style={[styles.routineActions, stackRoutineActions && styles.routineActionsStacked]}>
       <ActionButton icon={selected ? 'remove-outline' : 'add-outline'} label={selected ? 'Ta bort från Hemskärmen' : 'Lägg till på Hemskärmen'}
         accessibilityLabel={`${selected ? 'Ta bort' : skippedDay ? 'Lägg tillbaka' : 'Lägg till'} rutinen ${routine.label} ${selected ? 'från' : 'på'} Hemskärmen`}
-        disabled={disabled} onPress={selected ? onRemove : onAdd} dayAction />
+        disabled={disabled} onPress={selected ? onRemove : onAdd} dayAction responsiveRow stacked={stackRoutineActions} />
       <ActionButton icon="trash-outline" label="Ta bort rutin" accessibilityLabel={`Ta bort rutin ${routine.label}`}
-        disabled={disabled} danger onPress={() => Alert.alert('Ta bort rutin?', `Rutinen ”${routine.label}” och alla dess dagskopior och sparade överhoppningar tas bort.`, [
+        disabled={disabled} danger responsiveRow stacked={stackRoutineActions} onPress={() => Alert.alert('Ta bort rutin?', `Rutinen ”${routine.label}” och alla dess dagskopior och sparade överhoppningar tas bort.`, [
           { text: 'Avbryt', style: 'cancel' }, { text: 'Ta bort rutin', style: 'destructive', onPress: () => { void onDelete(); } },
         ])} />
     </View>
   </View>;
 }
 
-function ActionButton({ icon, label, accessibilityLabel, disabled = false, onPress, dayAction = false, danger = false, quiet = false }: {
+function ActionButton({ icon, label, accessibilityLabel, disabled = false, onPress, dayAction = false, danger = false, quiet = false, responsiveRow = false, stacked = false }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   accessibilityLabel: string;
@@ -456,9 +458,12 @@ function ActionButton({ icon, label, accessibilityLabel, disabled = false, onPre
   dayAction?: boolean;
   danger?: boolean;
   quiet?: boolean;
+  responsiveRow?: boolean;
+  stacked?: boolean;
 }) {
   return <MotionPressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} accessibilityState={{ disabled }}
     disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.actionButton, dayAction && styles.actionButtonDay,
+      responsiveRow && styles.routineActionButton, stacked && styles.routineActionButtonStacked,
       danger && styles.actionButtonDanger, quiet && styles.actionButtonQuiet, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
     <Ionicons name={icon} size={tokens.size.iconSm} color={danger ? tokens.colors.danger : tokens.colors.primary} accessibilityElementsHidden />
     <Text style={[styles.actionButtonText, dayAction && styles.actionButtonDayText, danger && styles.actionButtonDangerText]}>{label}</Text>
@@ -509,7 +514,10 @@ const styles = StyleSheet.create({
   itemLabel: { ...tokens.typography.caption, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 },
   itemActions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
   inlineEditor: { gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs },
-  routineActions: { flexDirection: 'row', alignItems: 'stretch', gap: tokens.spacing.xs, paddingTop: tokens.spacing.xs },
+  routineActions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch', gap: tokens.spacing.xs, paddingTop: tokens.spacing.xs },
+  routineActionsStacked: { flexDirection: 'column' },
+  routineActionButton: { flex: 1, flexBasis: '45%', minWidth: tokens.size.touchMin },
+  routineActionButtonStacked: { flex: 0, flexBasis: 'auto', alignSelf: 'stretch' },
   scheduleSummaryRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, paddingTop: tokens.spacing.xs },
   repeatSummary: { ...tokens.typography.caption, color: tokens.colors.textSecondary, flex: 1 },
   scheduleEdit: { gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs },

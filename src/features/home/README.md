@@ -31,3 +31,5 @@ Reproducerbara React Native Web-renderingar finns i [tools/visual-check](../../.
 ## Små kontroller i rutinhantering
 
 I veckoupprepning visas `Må, Ti, On, To, Fr, Lö, Sö` i en horisontell rad. Fullständiga veckodagsnamn exponeras för hjälpmedelsteknik och raden kan bläddras vid smal skärm eller större text; varje knapp behåller minst 44 pt träffyta. Rutinens pennknapp är ikon-only visuellt men behåller namnbundet tillgänglighetsnamn.
+
+I `DailyActivityManagerSheet` staplas rutinens dagsval och radering när fönstret är smalare än 360 pt eller `fontScale` minst 1.25; vid större utrymme kan de ligga sida vid sida och radbrytas. Ändringen påverkar bara presentationen, inte rutinutkastets sparning, avbryt, readback eller hundscope.

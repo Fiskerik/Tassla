@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { InfoModal, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { SupportScreenHeader } from '../../components/ui';
@@ -21,6 +21,8 @@ export function NotificationSettingsScreen({
   onSave: (preferences: NotificationPreferences) => Promise<boolean>;
   onRequestPermission: () => Promise<'granted' | 'denied' | 'unknown'>;
 }) {
+  const { width, fontScale } = useWindowDimensions();
+  const stackInfoRow = width < 360 || fontScale >= 1.25;
   const [enabled, setEnabled] = useState(preferences.enabled);
   const [trainingEnabled, setTrainingEnabled] = useState(preferences.trainingEnabled);
   const [trainingTime, setTrainingTime] = useState(formatTime(preferences.trainingMinutes));
@@ -84,7 +86,7 @@ export function NotificationSettingsScreen({
         <Text style={styles.intro}>Välj om Tassla ska schemalägga lokala påminnelser på den här enheten.</Text>
       </View>
     </View>
-    <View style={styles.infoRow}>
+    <View style={[styles.infoRow, stackInfoRow && styles.infoRowStacked]}>
       <Text style={styles.infoHint}>Om lokala påminnelser</Text>
       <Pressable accessibilityRole="button" accessibilityLabel="Visa information om lokala påminnelser" onPress={() => setInfoVisible(true)} style={styles.infoButton}>
         <Ionicons name="information-circle-outline" size={tokens.size.iconMd} color={tokens.colors.support.reminders.fg} />
@@ -159,10 +161,11 @@ function parseTime(value: string): number | null {
 }
 const styles = StyleSheet.create({
   intro: { ...tokens.typography.body, color: tokens.colors.textSecondary },
-  infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: tokens.spacing.md, marginBottom: tokens.spacing.xs },
-  infoHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  infoRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginTop: tokens.spacing.md, marginBottom: tokens.spacing.xs },
+  infoRowStacked: { flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start' },
+  infoHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary, flexShrink: 1 },
   infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },
-  infoButtonText: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
+  infoButtonText: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700', flexShrink: 1 },
   infoBody: { ...tokens.typography.body, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
   hero: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.spacing.sm, padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.support.reminders.bg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   icon: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.surface, alignItems: 'center', justifyContent: 'center' },

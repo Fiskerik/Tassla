@@ -8333,7 +8333,9 @@
         "docs/design/evidence/ui-accessibility-routines-notifications-2026-10-19",
         "docs/tasks/dev/rapport.md",
         "docs/releases/HISTORY-2026.md",
-        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md"
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "docs/plans/UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS-ux-spec.md",
+        "docs/decisions/MASTER-LOG.md"
       ],
       "acceptance": [
         "Routine edit/save/cancel and notification save/permission journeys wrap or stack long actions without shrinking touch targets.",
@@ -8360,10 +8362,35 @@
       ],
       "risk_class": "H",
       "checkpoint": "Support journey: Mer -> Notiser -> save/permission result -> back; Hem -> routine manager -> edit/save/cancel -> return.",
-      "test_evidence": "Pending Security, implementation and independent QA/Reviewer.",
-      "status": "planned",
-      "history": [],
-      "next_step": "Wait for UI-MAIN-TAB-TRANSITION done; then Security pre-implementation review.",
+      "test_evidence": "Independent QA PASS 47/47 focused; Reviewer PASS; Security pre-review and frozen-diff re-review APPROVE. `pnpm check` 549/549, public iOS JS bundle 1446 modules, synthetic RN Web responsive screenshots/interactions PASS. Native/device/backend checks remain NOT TESTABLE; details in docs/design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md.",
+      "status": "review",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Approved by UI-ACCESSIBILITY-PHASE-2-5.md v4 Architect and UX Critic; dependency UI-MAIN-TAB-TRANSITION is QA/Reviewer PASS and pushed at 13fa0f5. Next gate: independent Security pre-implementation review; code scope remains routine/notification presentation only."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Security pre-implementation review APPROVE: presentation/layout only; preserve explicit permission and save actions, owner-keyed preferences, routine draft IDs/validation/dirty-cancel/retry/readback, dog scope and callbacks unchanged. Review recorded in the task UX spec."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Responsive routine and reminder layouts implemented within the security-approved scope; focused 47/47, pnpm check 549/549, public iOS bundle 1446 modules; synthetic RN Web at 375x667/140% plus routine save/cancel and explicit denied-permission callback recorded in docs/design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md. Native checks remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: focused tests 47/47; synthetic 375x667/140% and 320px routine/notices captures and flows readable; no page errors. Reviewer PASS and final Security APPROVE against frozen diff. Native/device/backend checks explicitly remain NOT TESTABLE; report: docs/design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md."
+        }
+      ],
+      "next_step": "Save the verified 2b.1 closeout and implementation checkpoint; then begin 2b.2 with its required Security pre-review.",
       "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
     },
     {

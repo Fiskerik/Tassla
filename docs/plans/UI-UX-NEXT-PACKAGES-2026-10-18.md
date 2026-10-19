@@ -2,7 +2,7 @@
 
 2026-10-18. Underlag: Eriks patch och inklistrade UX-förslag, aktuell branch samt [komplett knappinventering](../design/UI-ACTION-INVENTORY-2026-10-18.md) ([CSV](../design/UI-ACTION-INVENTORY-2026-10-18.csv)). Uppdragsplan: [UI-SHEET-ACTIONS-01](../tasks/dev/UI-SHEET-ACTIONS-01.md). Inventeringen ger kodplatser, inte antal unika knappar på telefonen. Dynamiska listor, renderers, preview/galleri och systemytor framgår separat.
 
-**Status 2026-10-19:** paket 0 `UI-SHEET-ACTIONS-01`, 1a `UI-ACTIONS-COMMON`, 1b `UI-ACTIONS-ROWS` och 2a `UI-ACCESSIBILITY-HOME-LOG` är done; 2a implementation checkpoint `c58f3fd`. `UI-MAIN-TAB-TRANSITION` har oberoende QA/Reviewer PASS och stängs före nästa paket. Därefter följer de fyra 2b-underpaketen, 3, 4, 5a och 5b enligt plan v4.
+**Status 2026-10-19:** paket 0 `UI-SHEET-ACTIONS-01`, 1a `UI-ACTIONS-COMMON`, 1b `UI-ACTIONS-ROWS`, 2a `UI-ACCESSIBILITY-HOME-LOG` och `UI-MAIN-TAB-TRANSITION` är stängda. 2b.1 `UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS` har QA PASS, Reviewer PASS och Security pre-/final APPROVE; se evidensen. Nästa checkpoint är 2b.2 `UI-ACCESSIBILITY-HEALTH`, därefter 2b.3, 2b.4, 3, 4, 5a och 5b enligt plan v4.
 
 **Levererat i denna slice:** draghandtag/nedåtsvep för den delade BottomSheet, riktade tester, knappinventering och denna plan. Nedanstående paket är planerade; inga breda knappbyten, sökningar, haptik- eller datamodelländringar är implementerade här.
 
@@ -42,7 +42,7 @@ Varje rad är en separat checkpoint med planreview, begränsad diff, lämpliga t
 | 4. UI-REFRESH-HOME-LOG (M) | ProductWorkspace och berörda ScrollView-ägare/AppPrimitives; RefreshControl från befintlig RN | Neddrag uppdaterar rätt aktiv hund och rätt datum; förfrågningar samordnas med befintlig automatisk refresh. Ingen försvunnen gammal data vid fel, ingen stale response från annan hund/konto, inget dubbelsparande. Visa skillnad mellan uppdateringsfel och tom lista. |
 | 5. UI-EMPTY-FEEDBACK (M) | Ett användarflöde per checkpoint: först Hem/Logg, sedan Kunskap/Träning | Matchande skeleton för verklig laddning, relevant konkret första handling vid riktig tomlista, retry vid fel. Behåll osäkert sparläge och input; inga permanenta ”Sparat”-badges. Testa förstainloggning, tomt konto, nätfel och delvis hämtad data. |
 
-**Nästa paketordning:** 1b, 2a och huvudfliksanimationen är stängda efter QA/Reviewer PASS; därefter följer 2b, 3, 4 och 5. Paket 2 breddar stor-text-/tillgänglighetskontrollen till övriga ytor; kunskapssökning använder den aktiva hundens redan filtrerade publicerade innehåll. Pull-to-refresh återanvänder befintlig automatisk refresh och inför inget familje-/delningskonto.
+**Nästa paketordning:** 2b.1 och tidigare checkpoints är stängda; fortsätt 2b.2 Hälsohistorik/Vikt, 2b.3 Hundprofiler och 2b.4 Tassla-pass i ordning. Därefter följer 3 hundfiltrerad Kunskapssök, 4 pull-to-refresh och 5a/5b tom-/laddnings-/felåterkoppling. Paket 2 breddar tillgänglighet och stor text; sökningen använder aktiv hunds redan filtrerade publicerade innehåll. Pull-to-refresh återanvänder befintlig automatisk uppdatering och inför inget familje-/delningskonto.
 
 ## Manuellt granskade vyer och dynamiska grupper
 
