@@ -69,6 +69,14 @@ export function Toast({ visible, tone, message, onUndo, onRetry, onCancel, confi
     onExitCompleteRef.current = onExitComplete;
   }, [autoDismissMs, onAutoDismiss, onExitComplete]);
 
+  const previousAutoDismissMs = useRef(autoDismissMs);
+  useEffect(() => {
+    if (previousAutoDismissMs.current === autoDismissMs) return;
+    previousAutoDismissMs.current = autoDismissMs;
+    if (autoDismissTimer.current) clearTimeout(autoDismissTimer.current);
+    if (visible && autoDismissMs !== undefined) scheduleAutoDismiss(generation.current);
+  }, [autoDismissMs, scheduleAutoDismiss, visible]);
+
   useEffect(() => {
     if (initiallyVisible.current) {
       initiallyVisible.current = false;

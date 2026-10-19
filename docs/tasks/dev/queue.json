@@ -7626,6 +7626,412 @@
       ],
       "implementation_state": "Plan v5 implementerad; Codemagic Check application-felen rättade; oberoende QA och statisk Reviewer PASS.",
       "evidence_status": "partial: CI=1 pnpm check PASS (492/492), Expo iOS export PASS, guards/diff-check PASS, QA PASS, Reviewer PASS; Codemagic cloud, Xcode archive, CocoaPods/signing/native NOT TESTABLE."
+    },
+    {
+      "id": "UX-MAIN-TAB-TRANSITION-01",
+      "title": "Tydligare sidövergång mellan huvudflikar",
+      "mvp_requirement": "Eriks uttryckliga UI/UX-önskemål 2026-10-19; docs/MVP-EXPERIENCE-CONTRACT.md, bevara befintliga huvudnavigationsresor",
+      "plan": "docs/tasks/dev/ux-main-tab-transition-2026-10-19.md v3; docs/plans/UX-MAIN-TAB-TRANSITION-2026-10-19-ux-spec.md v3",
+      "write_paths": [
+        "src/components/ui/Motion.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/theme/tokens.ts",
+        "src/components/README.md",
+        "docs/tasks/dev/ux-main-tab-transition-2026-10-19.md",
+        "docs/plans/UX-MAIN-TAB-TRANSITION-2026-10-19-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Första renderingen sker utan animation.",
+        "Endast byte mellan två huvudflikar använder 28 pt riktningsstyrd rörelse; detaljrutter behåller 8 pt.",
+        "Framåt/bakåt, snabbväxling och reduced-motion-livscykel följer godkänd plan.",
+        "Befintliga rörelsetokens och komponenter för toast/logg är oförändrade; navigationens rutter, riktning och semantik ändras inte.",
+        "Rapportera renderad/native interaktion endast om den faktiskt går att köra; annars NOT TESTABLE."
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/components/ui/Motion.tsx src/features/home/ProductWorkspace.tsx src/theme/tokens.ts",
+        "git diff --check"
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v3; Critic PROCEED plan v3. Review recorded in docs/tasks/dev/ux-main-tab-transition-2026-10-19.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik explicitly requested a clearer lateral main-tab transition; exact plan v3 has Architect APPROVE and Critic PROCEED."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete in src/components/ui/Motion.tsx, src/features/home/ProductWorkspace.tsx, src/theme/tokens.ts and src/components/README.md. pnpm typecheck PASS; targeted ESLint PASS; git diff --check PASS. No tests run. Native/browser interaction NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent static QA PASS against approved plan v3. First mount/reduced-motion/direction/rapid changes/main-tab-only 28 pt/detail 8 pt checked; native/browser interaction NOT TESTABLE. QA report received in task review."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Static QA PASS and Reviewer PASS; code and API review complete. Browser/native animation and reduced-motion interaction remain NOT TESTABLE and UI visual acceptance is required by design rules. Leave task blocked for manual/rendered UI evidence; no commit or push."
+        }
+      ],
+      "next_step": "Static QA PASS and Reviewer PASS; code and API review complete. Browser/native animation and reduced-motion interaction remain NOT TESTABLE and UI visual acceptance is required by design rules. Leave task blocked for manual/rendered UI evidence; no commit or push.",
+      "priority": "P1",
+      "panels": [
+        "main-navigation"
+      ],
+      "risk_class": "L",
+      "checkpoint": "28 pt riktningsrörelse gäller endast övergångar mellan huvudflikar; alla andra rutter behåller 8 pt och initial mount är stilla.",
+      "test_evidence": [
+        "Kodgranskning bekräftar initialt progressvärde 1; browserrender saknas",
+        "Riktningssigner och huvudflikvillkor granskade statiskt; runtime-riktning NOT TESTABLE",
+        "Snabbväxling/reduced-motion-flöde granskat statiskt; runtime NOT TESTABLE",
+        "Detaljrutt får statiskt verifierad 8 pt; toast/logg motion.distance är oförändrad"
+      ],
+      "implementation_state": "Plan v3 Architect APPROVE, Critic PROCEED, implementation complete, static QA PASS, static Reviewer PASS; visual acceptance remains open.",
+      "evidence_status": "partial: typecheck, targeted ESLint, git diff --check and existing RN Web preview bundle PASS; static QA/Reviewer PASS; no test suites run; bundle is not visual proof, browser/native interaction NOT TESTABLE; blocked pending visual evidence."
+    },
+    {
+      "id": "UIUX-2A-HOME-LOG-ACCESS-01",
+      "title": "Tillgänglighet på Hem och Logg",
+      "mvp_requirement": "Eriks uttryckliga UI/UX-arbetslista 2026-10-19; docs/MVP-EXPERIENCE-CONTRACT.md och docs/design-rules.md §14",
+      "plan": "docs/tasks/dev/uiux-2a-to-5-2026-10-19.md v1.6; docs/plans/UIUX-2A-HOME-LOG-ACCESS-2026-10-19-ux-spec.md v1.4",
+      "write_paths": [
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/README.md",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/README.md",
+        "src/components/ui/BottomNav.tsx",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/components/ui/Toast.tsx",
+        "docs/tasks/dev/uiux-2a-to-5-2026-10-19.md",
+        "docs/plans/UIUX-2A-HOME-LOG-ACCESS-2026-10-19-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/uiux-2a-home-log-access-2026-10-19/public",
+        "docs/design/evidence/uiux-2a-home-log-access-2026-10-19/review",
+        "docs/design/evidence/uiux-2a-home-log-access-2026-10-19/RENDER-REPORT.md"
+      ],
+      "acceptance": [
+        "Hem och Logg behåller sina befintliga handlingar med begripliga namn och tillgänglig status.",
+        "Stor text, 375/430 bredd och 375x667 höjd klipper inte handlingar eller formulärens primära knapp; Home behåller två rader för aktivitetsnamn vid standardskrift och släpper klämningen vid större systemtext när naturlig tillväxt annars blockeras.",
+        "Bottenmenyn visar alla fem svenska tabnamn fullt vid 375/430 px och 140% text; ordning, destinationer, fullständiga tillgänglighetsnamn och selected-state bevaras.",
+        "Pending, failed och unsure-resultat visar sanningsenlig status; Home pending exponeras som busy/aktuell status i accessibility tree. Unsure ger nåbar kontroll/retry utan falsk bock eller framgång.",
+        "Logg-editor vid 375x667 och 140% har scrollbart innehåll med synlig/nåbar Spara ändring; failed/unsure har renderad retry och bevarat utkast.",
+        "VoiceOver når Ångra efter lyckad snabbregistrering; endast den toasten auto-försvinner inte i skärmläsarläge. Andra Toast-instanser behåller sina konfigurerade livstider.",
+        "Reducerad rörelse tar bort dekorativ rörelse utan att påverka input/status; native VoiceOver/Dynamic Type redovisas separat.",
+        "Renderad evidens, §14-bedömning, begränsat manuellt testunderlag, QA och Reviewer sparas."
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/home/HomeScreen.tsx src/features/puppy-log/LogScreen.tsx src/components/ui/DailyActivityItem.tsx src/components/ui/Toast.tsx src/components/ui/BottomNav.tsx",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "RN Web public/review rendering vid 375x844, 430x844, 375x667 och 140% textproxy"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Initial Architect APPROVE task v1.3/spec v1.2; later delta v1.5/spec v1.3 APPROVE after BottomNav was added to targeted ESLint. Critic PROCEED for BottomNav scope v1.4/spec v1.3."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Approved 2a UI-only changes, including the bounded BottomNav large-text layout delta; ProductWorkspace write paths and data model remain protected."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete: Home large text, Logg VoiceOver-safe quick-log Undo, Toast timer reschedule and responsive BottomNav. Typecheck, targeted ESLint incl BottomNav, diff-check and queue validation PASS; public/review renders at 375/430 and 375x667, standard/140%, all five nav labels visible; Home unknown-retry and Logg Undo after 3.2s PASS. Native VoiceOver/Dynamic Type/reduced-motion device checks NOT TESTABLE; manual checklist saved."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent QA FAIL: Home pending state lacks explicit busy/readable status in accessibility tree; Logg lacks 140%/375x667 editor Save reachability evidence and failed/unsure retry render evidence. No test suites run; evidence saved in QA review."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "QA correction 1 is documented in task v1.6/spec v1.4: explicit busy/status on existing Home controls plus Logg large-text editor and failed/unsure render evidence. No correction code before Architect/Critic review."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE task v1.6/spec v1.4; Critic PROCEED correction 1. QA findings and bounded scope saved in task plan."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction 1 implementation begins in approved scope: DailyActivityItem accessible busy/status only; Logg editor/retry RN Web evidence only."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Approved 2a correction 1 implemented in DailyActivityItem: accessible status names, native accessibilityState.busy and aria-busy. Rebuilt public/review RN Web fixtures; 375x667/140% Logg editor keeps Save reachable; failed/unsure retries are visible and preserve draft. Review Home pending exposes status and aria-busy=true. Typecheck, targeted ESLint, diff-check PASS; native iOS checks remain NOT TESTABLE. Requesting independent QA."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS on task v1.6/spec v1.4 correction 1. Home pending status/busy (native + aria-busy) verified; public/review Logg 375x667/140% Save stays reachable; failed/unsure retry visible and draft retained. No test suites run. Native VoiceOver, physical Dynamic Type and OS Reduce Motion remain manual NOT TESTABLE here."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent QA PASS and Reviewer PASS 2026-10-19. Typecheck, targeted ESLint, git diff --check, queue validation, public/review RN Web render evidence PASS; no test suites run. Native VoiceOver, physical Dynamic Type and OS Reduce Motion remain NOT TESTABLE and listed for manual iPhone checks. Local checkpoint only; no commit/push because the branch contains separate active changes."
+        }
+      ],
+      "next_step": "Full pnpm check 492/492 och iOS Expo-export PASS efter separat testassertion-commit dd9e30c. Package commit/push closeout is recorded in release history.",
+      "priority": "P1",
+      "panels": [
+        "1",
+        "5"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Befintlig save/retry/write-logik och hund-/kontoscope är skyddade; endast verifierade UI/tillgänglighetsluckor korrigeras.",
+      "test_evidence": [
+        "Auditera 140% textproxy, semantik, retry/undo och layout i befintliga produktkomponenter.",
+        "Kontrollera Home dagspostens pending/failed/unsure/retry och Logg snabbregistrering/redigeringens failed/unsure/retry/undo.",
+        "Separat VoiceOver, native Dynamic Type och OS reduced-motion checklista; verifiera att VoiceOver når Ångra efter snabbregistrering och att just dess toast inte auto-försvinner; lokala webbevis rapporteras inte som native PASS."
+      ],
+      "implementation_state": "Accessibility implementation complete; independent QA/Reviewer PASS. Full pnpm check passed (492/492), iOS Expo export passed, and stale undo assertions were separately corrected in dd9e30c.",
+      "evidence_status": "PASS: typecheck, edge typecheck, targeted ESLint, pnpm check 492/492, iOS Expo export, git diff checks, queue validation, visual QA and independent QA/Reviewer. Manual native VoiceOver/Dynamic Type/reduced motion remain NOT TESTABLE."
+    },
+    {
+      "id": "UIUX-2B-SUPPORT-ACCESS-01",
+      "title": "Tillgänglighet och kompakt knapptext i stödvyer",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md — stödskärmar; docs/design/vision-rev02-screen-contracts.md — Stödskärmar utan egen referenspanel",
+      "plan": "docs/tasks/dev/uiux-2b-support-access-2026-10-19.md v1.6; docs/plans/UIUX-2B-SUPPORT-ACCESS-2026-10-19-ux-spec.md v1.6",
+      "write_paths": [
+        "src/components/ui/BottomSheet.tsx",
+        "src/components/AppPrimitives.tsx",
+        "src/components/README.md",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/home/README.md",
+        "src/features/health/HealthScreen.tsx",
+        "src/features/health/HealthHistoryScreen.tsx",
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/features/health/WeightScreen.tsx",
+        "src/features/health/README.md",
+        "src/features/notifications/NotificationSettingsScreen.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/passport/PassportScreen.tsx",
+        "docs/tasks/dev/uiux-2a-to-5-2026-10-19.md",
+        "docs/tasks/dev/uiux-2b-support-access-2026-10-19.md",
+        "docs/plans/UIUX-2B-SUPPORT-ACCESS-2026-10-19-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/uiux-2b-support-access-2026-10-19/public",
+        "docs/design/evidence/uiux-2b-support-access-2026-10-19/review",
+        "docs/design/evidence/uiux-2b-support-access-2026-10-19/RENDER-REPORT.md"
+      ],
+      "acceptance": [
+        "DatePickerField visar kalenderikon och TimePickerField klockikon i stället för synliga orden Kalender/Välj tid på alla skärmar som använder delade komponenter; fulla tillgängliga namn och minst 44x44 pt tryckyta bevaras.",
+        "Standardskala behåller datum-/tidsfältens kompakta struktur. Vid 375/430 px och 140 %-proxy syns hela värden och ikoner utan horisontell overflow; Loggs redigeringsark staplar Datum/Tid när fontScale > 1.2 så hela datumet ryms; verifiera 1.0 på en rad och 1.4 staplat.",
+        "Viktredigering vid 375 px/140 % håller Spara, Avbryt och Radera nåbara och staplar Spara/Avbryt där det behövs; standardlayouten bevaras.",
+        "Rutinkortets radering visas som soptunneikon utan synlig text, med minst 44x44 pt träffyta och tillgängligt namn som identifierar den namngivna rutinen; befintlig bekräftelse/radering är oförändrad.",
+        "Systematisk knappinventering täcker alla fem stödresor vid standard och 140 % och redovisas per skärm: etikett före/efter, beslut/motiv och fullständigt tillgängligt namn. Vid 140 % kortas redundans eller används tydlig ikon där sammanhanget räcker. Ingen fontförminskning, trunkering eller tvetydig förkortning; befintliga etiketter behålls i standardläge om inget tydligt förbättringsskäl visas.",
+        "Rutinens create/edit sheet och hälsohistorikens formulär är scrollbara i 375x667/140 %-rendering; Done stänger rutinens tangentbord utan att spara automatiskt; felstatus och utkast bevaras.",
+        "Notiser, planerad Hälsa, Profil och Tassla-pass får public/review regression renders i standard och 140 %; eventuella ändringar är begränsade till verifierat layout-/labelproblem.",
+        "Granskningsbannern förekommer endast i harnessen. Public/review-fixtures och native NOT TESTABLE-gränser dokumenteras.",
+        "Typecheck, riktad ESLint, git diff --check, queue validation, befintliga RN Web-renderflöden, oberoende QA och Reviewer PASS; inga testsviter körs.",
+        "Passport- och rutinsheetens opt-in pinPrimaryAction håller Klar helt synlig vid 375x667, 375x844 och 430x844 standard/140%-proxy medan sheet-innehåll scrollar separat; övriga sheets påverkas inte."
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/components/ui/BottomSheet.tsx src/components/AppPrimitives.tsx src/features/home/DailyActivityManagerSheet.tsx src/features/puppy-log/LogScreen.tsx src/features/health/HealthScreen.tsx src/features/health/HealthHistoryScreen.tsx src/features/health/PlannedHealthScreen.tsx src/features/health/WeightScreen.tsx src/features/notifications/NotificationSettingsScreen.tsx src/features/onboarding/EditDogProfileScreen.tsx src/features/passport/PassportScreen.tsx",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "RN Web public/review rendering at 375x667, 375x844, 430x844, standard and 140% text proxy, including Logg shared picker consumers",
+        "RN Web current captures of Passport/routine manager primary footer at 375x667, 375x844 and 430x844, public/review, standard/140% CSS proxy"
+      ],
+      "depends_on": [
+        "UIUX-2A-HOME-LOG-ACCESS-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE task v1.4/UX spec v1.4; Critic PROCEED. Owner-requested systematic button-label inventory at 140% included. Begin implementation within approved paths."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Starting approved 2b implementation after independent Architect/Critic review; includes all-screen calendar/clock icons, large-text button label audit, routine trash icon, keyboard-aware forms, responsive weight actions."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "UIUX-2B v1.5 implementation complete. Typecheck, targeted ESLint, git diff --check and UTF-8 queue validation PASS. Updated public/review RN Web captures cover 375x667, 375x844 and 430x844, standard/140% proxy; routine compact labels/icons and visible Passport/routine footer visibility was not yet reliably demonstrated; Reviewer later found saved screenshots clip the footer. 140% CSS proxy does not alter RN fontScale, so Logg/Weight fontScale >1.2 stacking and native VoiceOver/keyboard remain manual NOT TESTABLE. No test suites run; independent QA requested."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS — compact labels preserve full accessibility names; icon controls/44pt targets, routine delete confirmation, keyboard-aware sheets and Done dismissal, >1.2 Weight/Logg stack thresholds, unchanged persistence, and CSS/native limitations reviewed. Static checks and current renders match evidence; no test suites run. Native keyboard, VoiceOver and Dynamic Type remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer BLOCK: saved Passport 375x844/430x844 and routine-manager 375x844 captures show only a thin strip of fixed Klar footer; current report claim contradicted by evidence. Other source checks pass. Replan bounded BottomSheet footer/layout behavior and replace captures before retrying QA/Reviewer."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Reviewer BLOCK: saved Passport 375x844/430x844 and routine-manager 375x844 captures show only a thin strip of fixed Klar footer; prior report claim and DOM probe did not match evidence. Other source checks pass. Replan bounded BottomSheet footer behavior and replace captures before retrying QA/Reviewer."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE UIUX-2B v1.6 footer delta: opt-in pinPrimaryAction in BottomSheet for Passport and routine manager only; fixed primary action remains visible while content scrolls; exact checks include BottomSheet ESLint; keyboardAware and other sheets remain protected. Critic PROCEED v1.6."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin only approved v1.6 footer fix in BottomSheet and explicit Passport/routine-manager opt-ins, then replace public/review evidence."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v1.6 bounded BottomSheet footer implemented with opt-in only for Passport and routine manager. Typecheck, targeted ESLint including BottomSheet, diff check and queue validation PASS. Fresh public/review RN Web captures cover both sheets at 375x667, 375x844 and 430x844, standard/140% proxy; Klar stays within viewport; review routine content scrolls independently; routine editor Save is reachable at 375x667. No test suites run. Request independent QA of v1.6."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS for v1.6. All 24 public/review Passport and routine manager captures cover 375x667, 375x844, 430x844 at standard/140% and show Klar fully inside viewport; review routine lists scroll separately with fixed footer; routine editor Save is reachable at 375x667. Typecheck, targeted ESLint including BottomSheet, diff check and UTF-8 queue validation PASS. No test suites; native iOS checks remain NOT TESTABLE. Independent Reviewer requested next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS v1.6 after prior footer BLOCK. Current report/captures verify full Klar visibility for all 24 public/review variants, routine content scrolls independently while footer remains fixed, routine-editor Save/Cancel are reachable, and callbacks, keyboardAware behavior and persistence are preserved. QA PASS; typecheck, targeted ESLint, diff check and queue validation PASS. Native Dynamic Type/VoiceOver/iOS keyboard remain manual NOT TESTABLE. Local checkpoint closed; no commit/push."
+        }
+      ],
+      "next_step": "Full pnpm check 492/492 and iOS Expo-export PASS; package commit/push closeout is recorded in release history.",
+      "priority": "P1",
+      "panels": [],
+      "risk_class": "M",
+      "checkpoint": "Systematic compact-label/icon audit at standard and 140% for all scoped support screens; keep full accessible names, text scaling, keyboard/focus semantics, confirmations and data/write behavior. Logg date/time fields stack only when fontScale > 1.2 (standard 1.0 stays one row; 1.4 stacks).",
+      "test_evidence": [
+        "Compare standard and 140% public/review renders of Rutiner, Notiser, Hälsa/Vikt, Profil and Tassla-pass; record every button decision per screen with before/after visual label, rationale and full accessible name; verify shared calendar/clock icons in every consumer, including Logg, and its full date after stacking.",
+        "Check date/time picker controls, weight edit actions, routine icon-only delete accessibility and keyboard-aware form reachability at small viewport.",
+        "Record native iOS keyboard and Dynamic Type as NOT TESTABLE unless exercised on device."
+      ],
+      "implementation_state": "Support accessibility implementation complete; independent QA/Reviewer PASS. Full pnpm check passed (492/492) and iOS Expo export passed.",
+      "evidence_status": "PASS: typecheck, edge typecheck, targeted ESLint, pnpm check 492/492, iOS Expo export, git diff checks, queue validation, 24 captures, and independent QA/Reviewer. Native Dynamic Type/VoiceOver/iOS keyboard remain manual NOT TESTABLE."
+    },
+    {
+      "id": "UIUX-2A-TEST-ALIGN-01",
+      "title": "Align stale Logg policy assertions with the confirmed undo contract",
+      "mvp_requirement": "UIUX-2A-HOME-LOG-ACCESS-01 — Logg: bekräftad snabbregistrering och tillgänglig Ångra",
+      "plan": "docs/tasks/dev/uiux-2a-test-assertion-alignment-2026-10-19.md v1",
+      "write_paths": [
+        "tests/log-screen-policy.test.mjs",
+        "tests/toast-compact-policy.test.mjs",
+        "docs/tasks/dev/uiux-2a-test-assertion-alignment-2026-10-19.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Update only the two stale source-shape assertions to match the existing confirmed undo ID/callback behavior.",
+        "Do not change production code, remove/skip tests, or weaken expected behavior.",
+        "Both focused Logg policy tests and full pnpm check pass.",
+        "git diff --check, queue validation and independent Reviewer PASS."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/log-screen-policy.test.mjs tests/toast-compact-policy.test.mjs",
+        "pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UIUX-2A-HOME-LOG-ACCESS-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE för plan v1; verdict sparad i docs/tasks/dev/uiux-2a-test-assertion-alignment-2026-10-19.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementerar endast de två tillåtna testfilerna; produktkod förblir oförändrad"
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Riktade tester 13/13; pnpm check PASS (492 tester); iOS Expo-export PASS; queue validate och diff checks PASS; inga produktfiler ändrade"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA PASS enligt taskens verifieringslista; begär oberoende Reviewer"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS; test-only commit dd9e30c; targeted 13/13 and pnpm check 492/492 PASS"
+        }
+      ],
+      "next_step": "Independent Reviewer PASS; test-only commit dd9e30c; targeted 13/13 and pnpm check 492/492 PASS",
+      "priority": "P1",
+      "panels": [
+        "5"
+      ],
+      "risk_class": "L",
+      "checkpoint": "Test-only correction; exact undo and screen-reader timeout behavior remains unchanged.",
+      "test_evidence": [
+        "Two current failing regexes are in tests/log-screen-policy.test.mjs and tests/toast-compact-policy.test.mjs.",
+        "LogScreen currently gates undoableQuickLogId on saved add and a provided onUndo callback, passes that exact id, and keeps the toast when screenReaderEnabled is not false."
+      ],
+      "implementation_state": "Endast två inaktuella Logg-assertioner ändrade. PASS: riktade tester 13/13, pnpm check 492/492, iOS Expo-export, queue validation och diff checks. Architect APPROVE, Reviewer PASS. Separat testcommit dd9e30c.",
+      "evidence_status": "DONE; oberoende Reviewer PASS; separat testcommit dd9e30c."
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Keyboard, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { DatePickerField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { isValidHealthWeightDate, isValidHealthWeightKg, type HealthHistoryRecord, type HealthHistoryType, type HealthWeightRecord } from '../../data/workspace-data';
 import { localDate } from '../onboarding/dog';
@@ -47,6 +47,8 @@ export function WeightScreen({
   onDeleteHistory?: (id: string) => Promise<boolean>;
   onOpenPlannedHealth?: () => void;
 }) {
+  const { fontScale } = useWindowDimensions();
+  const stackEditActions = fontScale > 1.2;
   const cloudRecords = records ?? [];
   const cloudLoadState = loadState ?? 'ready';
   const isCloud = records !== undefined;
@@ -166,7 +168,7 @@ export function WeightScreen({
             />
           </View>
           {!editingId && formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
-          <PrimaryButton title={isBusy ? 'Sparar…' : 'Spara vikt'} disabled={isBlocked || Boolean(editingId)} onPress={() => { void save(); }} />
+          <PrimaryButton title={isBusy ? 'Sparar…' : 'Spara'} accessibilityLabel={isBusy ? 'Sparar vikt' : 'Spara vikt'} disabled={isBlocked || Boolean(editingId)} onPress={() => { void save(); }} />
           <Toast visible={toastVisible && !toastRecordId} tone="success" confirmed message={toastMessage ?? undefined} autoDismissMs={2500}
             onAutoDismiss={() => setToastVisible(false)} onExitComplete={() => {
               if (toastVisible || toastRecordId !== null) return;
@@ -197,11 +199,11 @@ export function WeightScreen({
                 />
               </View>
               {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
-              <View style={styles.actions}>
-                <PrimaryButton title={isBusy ? 'Sparar…' : 'Spara rättning'} disabled={isBlocked} onPress={() => { void save(); }} />
-                <QuietButton title="Avbryt" disabled={isBlocked} onPress={cancelEditing} />
+              <View style={[styles.actions, stackEditActions && styles.actionsStacked]}>
+                <PrimaryButton title={isBusy ? 'Sparar…' : 'Spara'} accessibilityLabel={isBusy ? 'Sparar vikt' : 'Spara rättning'} disabled={isBlocked} onPress={() => { void save(); }} />
+                <QuietButton title="Avbryt" accessibilityLabel="Avbryt rättning" disabled={isBlocked} onPress={cancelEditing} />
               </View>
-              <Button variant="destructive" label="Radera vikt" accessibilityLabel="Radera viktpost" disabled={isBlocked} onPress={() => confirmDelete(record)} />
+              <Button variant="destructive" label="Radera" accessibilityLabel="Radera viktpost" disabled={isBlocked} onPress={() => confirmDelete(record)} />
             </> : <ListRow category="veterinary" title={`${formatWeight(record.weight_kg)} kg`} meta={record.occurred_on} accessibilityLabel={`Ändra vikt ${formatWeight(record.weight_kg)} kg, ${record.occurred_on}`} disabled={isBlocked} onPress={() => startEditing(record)} />}
             <Toast visible={toastVisible && toastRecordId === record.id} tone="success" confirmed message={toastMessage ?? undefined} autoDismissMs={2500}
               onAutoDismiss={() => setToastVisible(false)} onExitComplete={() => {
@@ -232,4 +234,5 @@ const styles = StyleSheet.create({
   recordWeight: { color: tokens.colors.textPrimary, ...tokens.typography.heading },
   recordDate: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
   actions: { flexDirection: 'row', justifyContent: 'flex-start', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm },
+  actionsStacked: { flexDirection: 'column', alignItems: 'stretch' },
 });

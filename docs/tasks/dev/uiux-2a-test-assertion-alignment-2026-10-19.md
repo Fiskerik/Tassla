@@ -1,6 +1,6 @@
 # UIUX-2A-TEST-ALIGN-01 — uppdatera inaktuella Logg-assertioner
 
-Datum: 2026-10-19 · Plan v1 · Status: implementing.
+Datum: 2026-10-19 · Plan v1 · Status: done — separat testcommit dd9e30c.
 
 ## Bakgrund
 

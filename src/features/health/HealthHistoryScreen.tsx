@@ -121,8 +121,7 @@ export function HealthHistoryScreen({
       <View style={styles.infoRow}>
         <Text style={styles.infoHint}>Om hälsans historik</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Visa information om hälsans historik" onPress={() => setInfoVisible(true)} style={styles.infoButton}>
-          <Ionicons name="information-circle-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />
-          <Text style={styles.infoButtonText}>Läs information</Text>
+          <Ionicons name="information-circle-outline" size={tokens.size.iconMd} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
         </Pressable>
       </View>
       <InfoModal visible={infoVisible} title="Om hälsans historik" onClose={() => setInfoVisible(false)}>
@@ -169,12 +168,12 @@ export function HealthHistoryScreen({
             <Text style={styles.characterHint}>{Array.from(note).length}/500 tecken</Text>
           </View>
           {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
-          <PrimaryButton title={busy ? 'Sparar…' : editingRecord ? 'Spara rättning' : 'Spara händelse'} disabled={blocked} onPress={() => { void save(); }} />
+          <PrimaryButton title={busy ? 'Sparar…' : 'Spara'} accessibilityLabel={busy ? 'Sparar hälsohändelse' : editingRecord ? 'Spara rättning' : 'Spara händelse'} disabled={blocked} onPress={() => { void save(); }} />
           <Toast visible={toastVisible} tone="success" confirmed message={toastMessage ?? undefined} autoDismissMs={2500} onAutoDismiss={() => setToastVisible(false)} onExitComplete={() => setToastMessage(null)} />
-          {editingRecord && <QuietButton title="Avbryt rättning" disabled={blocked} onPress={resetForm} />}
+          {editingRecord && <QuietButton title="Avbryt" accessibilityLabel="Avbryt rättning" disabled={blocked} onPress={resetForm} />}
         </View>
 
-        {editingRecord && <Button variant="destructive" label="Radera händelse" accessibilityLabel="Radera händelse" disabled={blocked} onPress={() => confirmDelete(editingRecord)} />}
+        {editingRecord && <Button variant="destructive" label="Radera" accessibilityLabel="Radera händelse" disabled={blocked} onPress={() => confirmDelete(editingRecord)} />}
       </>}
     </View>
   );
@@ -198,8 +197,7 @@ const styles = StyleSheet.create({
   section: { marginTop: tokens.layout.sectionGap },
   infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: tokens.spacing.md, marginBottom: tokens.spacing.xs },
   infoHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption },
-  infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },
-  infoButtonText: { color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '700' },
+  infoButton: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.sm },
   infoBody: { color: tokens.colors.textPrimary, ...tokens.typography.body, marginBottom: tokens.spacing.md },
   formCard: { marginTop: tokens.layout.sectionGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   formTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label, marginBottom: tokens.spacing.md },

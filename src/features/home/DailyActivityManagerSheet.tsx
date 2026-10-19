@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Crypto from 'expo-crypto';
 import { BottomSheet, Button } from '../../components/ui';
@@ -203,7 +203,7 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
     requestLeave(() => { onClose(); onGoTraining(); });
   }
 
-  return <BottomSheet visible={visible} title={focusedRoutine ? `Hantera ${focusedRoutine.label}` : 'Rutiner och aktiviteter'}
+  return <BottomSheet visible={visible} title={focusedRoutine ? `Hantera ${focusedRoutine.label}` : 'Rutiner och aktiviteter'} pinPrimaryAction keyboardAware={Boolean(activeDraft)}
     onRequestClose={closeSheet} onPrimaryAction={activeDraft ? undefined : closeSheet} primaryLabel="Klar">
     {mutationMessage ? <View style={[styles.message, mutationError && styles.errorMessage]}>
       <Text accessibilityRole={mutationError ? 'alert' : undefined} style={[styles.body, mutationError && styles.errorText]}>{mutationMessage}</Text>
@@ -224,7 +224,7 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
       <View style={styles.sectionHeading}>
         <Text style={styles.sectionTitle} accessibilityRole="header">Egna rutiner</Text>
         <IconOnlyButton icon="information-circle-outline" accessibilityLabel="Info om rutiner" onPress={() => setHelpOpen((open) => !open)} />
-        <ActionButton icon="add-outline" label={creating ? 'Avbryt' : 'Skapa rutin'} accessibilityLabel={creating ? 'Avbryt skapa rutin' : 'Skapa en ny rutin'}
+        <ActionButton icon="add-outline" label={creating ? 'Avbryt' : 'Skapa'} accessibilityLabel={creating ? 'Avbryt skapa rutin' : 'Skapa en ny rutin'}
           disabled={unresolvedMutation || (Boolean(draft) && !creating)} onPress={() => creating ? requestLeave(() => setDraft(null)) : startCreate()} />
       </View>
       {helpOpen ? <Text style={styles.helpText}>Startar idag. Veckor följer valda veckodagar och månader datumet. Upprepade rutiner kan hoppas över idag. Malländringar gäller nästa gång; engångsrutiner tas bort från dagen.</Text> : null}
@@ -286,11 +286,12 @@ function CreateRoutineForm({ draft, disabled, onChange, onCancel, onSave }: {
   return <View style={styles.formCard}>
     <Text style={styles.formHeading} accessibilityRole="header">Ny rutin</Text>
     <TextInput accessibilityLabel="Namn på rutin" placeholder="Namn på rutin" value={draft.label} onChangeText={(label) => onChange({ label })}
-      editable={editable} maxLength={160} returnKeyType="done" style={styles.input} />
+      onSubmitEditing={() => Keyboard.dismiss()} editable={editable} maxLength={160} returnKeyType="done" style={styles.input} />
     <Text style={styles.sectionTitle} accessibilityRole="header">Checklista</Text>
     {draft.checklist.map((item, index) => <View key={item.id} style={styles.createItemRow}>
       <TextInput accessibilityLabel={`Checklistepunkt ${index + 1}`} placeholder={`Punkt ${index + 1}`} value={item.label}
         onChangeText={(value) => onChange({ checklist: draft.checklist.map((entry) => entry.id === item.id ? { ...entry, label: value } : entry) })}
+        onSubmitEditing={() => Keyboard.dismiss()}
         editable={editable} maxLength={160} returnKeyType="done" style={[styles.input, styles.itemInput]} />
       <IconOnlyButton icon="remove-outline" accessibilityLabel={`Ta bort checklistepunkt ${index + 1}`}
         disabled={disabled || draft.checklist.length <= 1} onPress={() => onChange({ checklist: draft.checklist.filter((entry) => entry.id !== item.id) })} />
@@ -300,7 +301,7 @@ function CreateRoutineForm({ draft, disabled, onChange, onCancel, onSave }: {
     <RepeatRuleControls value={draft.repeat} anchorDate={draft.anchorDate} newAnchorDate={draft.newAnchorDate}
       onChange={(repeat) => onChange({ repeat })} disabled={disabled} />
     <View style={styles.formActions}>
-      <Button variant="primary" label="Spara rutin" accessibilityLabel="Spara rutin" disabled={!valid || !routineDraftIsDirty(draft) || disabled} onPress={onSave} />
+      <Button variant="primary" label="Spara" accessibilityLabel="Spara rutin" disabled={!valid || !routineDraftIsDirty(draft) || disabled} onPress={onSave} />
       <Button variant="tertiary" label="Avbryt" accessibilityLabel="Avbryt skapa rutin" disabled={disabled} onPress={onCancel} />
     </View>
   </View>;
@@ -402,15 +403,16 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
   return <View style={[styles.routineGroup, !isLast && styles.routineGroupSeparator, highlighted && styles.highlightedRoutineGroup]}>
     <View style={styles.routineHeading}>
       {editing && value ? <TextInput accessibilityLabel={`Namn på rutin ${routine.label}`} placeholder="Namn på rutin" value={value.label}
-        onChangeText={(label) => onChangeDraft({ label })} editable={!fieldsDisabled} maxLength={160} style={[styles.input, styles.routineNameInput]} />
+        onChangeText={(label) => onChangeDraft({ label })} onSubmitEditing={() => Keyboard.dismiss()} editable={!fieldsDisabled} maxLength={160} returnKeyType="done" style={[styles.input, styles.routineNameInput]} />
         : <Text style={styles.routineName} accessibilityRole="header">{routine.label}</Text>}
       {!editing ? <ActionButton icon="create-outline" label="Redigera" accessibilityLabel={`Redigera rutin ${routine.label}`}
-        disabled={disabled} onPress={onStartEdit} quiet /> : null}
+        disabled={disabled} onPress={onStartEdit} quiet iconOnly /> : null}
     </View>
     <Text style={styles.listHeading} accessibilityRole="header">Checklista</Text>
     {(value?.checklist ?? routine.checklist).map((item, index) => <View key={item.id} style={styles.editItemRow}>
       {editing && value ? <TextInput accessibilityLabel={`Checklistepunkt ${index + 1}`} value={item.label}
         onChangeText={(label) => onChangeDraft({ checklist: value.checklist.map((entry) => entry.id === item.id ? { ...entry, label } : entry) })}
+        onSubmitEditing={() => Keyboard.dismiss()}
         editable={!fieldsDisabled} maxLength={160} returnKeyType="done" style={[styles.input, styles.itemInput]} />
         : <View style={styles.itemRow}>
           <View style={styles.bullet} accessibilityElementsHidden><Ionicons name="ellipse" size={tokens.spacing.xs} color={tokens.colors.primary} /></View>
@@ -427,7 +429,7 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
       <RepeatRuleControls value={value.repeat} anchorDate={value.anchorDate} newAnchorDate={value.newAnchorDate}
         onChange={(repeat) => onChangeDraft({ repeat })} disabled={fieldsDisabled} />
       <View style={styles.formActions}>
-        <Button variant="primary" label="Spara rutin" accessibilityLabel={`Spara rutin ${routine.label}`}
+        <Button variant="primary" label="Spara" accessibilityLabel={`Spara rutin ${routine.label}`}
           disabled={!routineDraftIsValid(value) || !routineDraftIsDirty(value) || fieldsDisabled} onPress={onSave} />
         <Button variant="tertiary" label="Avbryt" accessibilityLabel={`Avbryt ändring av ${routine.label}`}
           disabled={fieldsDisabled} onPress={onCancelEdit} />
@@ -436,18 +438,18 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
       <Text style={styles.repeatSummary}>{dailyRoutineRepeatSummary(routine)}</Text>
     </View>}
     <View style={styles.routineActions}>
-      <ActionButton icon={selected ? 'remove-outline' : 'add-outline'} label={selected ? 'Ta bort från Hemskärmen' : 'Lägg till på Hemskärmen'}
+      <ActionButton icon={selected ? 'remove-outline' : 'add-outline'} label={selected ? 'Ta bort idag' : skippedDay ? 'Lägg tillbaka idag' : 'Lägg till idag'}
         accessibilityLabel={`${selected ? 'Ta bort' : skippedDay ? 'Lägg tillbaka' : 'Lägg till'} rutinen ${routine.label} ${selected ? 'från' : 'på'} Hemskärmen`}
         disabled={disabled} onPress={selected ? onRemove : onAdd} dayAction />
       <ActionButton icon="trash-outline" label="Ta bort rutin" accessibilityLabel={`Ta bort rutin ${routine.label}`}
-        disabled={disabled} danger onPress={() => Alert.alert('Ta bort rutin?', `Rutinen ”${routine.label}” och alla dess dagskopior och sparade överhoppningar tas bort.`, [
+        disabled={disabled} danger iconOnly onPress={() => Alert.alert('Ta bort rutin?', `Rutinen ”${routine.label}” och alla dess dagskopior och sparade överhoppningar tas bort.`, [
           { text: 'Avbryt', style: 'cancel' }, { text: 'Ta bort rutin', style: 'destructive', onPress: () => { void onDelete(); } },
         ])} />
     </View>
   </View>;
 }
 
-function ActionButton({ icon, label, accessibilityLabel, disabled = false, onPress, dayAction = false, danger = false, quiet = false }: {
+function ActionButton({ icon, label, accessibilityLabel, disabled = false, onPress, dayAction = false, danger = false, quiet = false, iconOnly = false }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   accessibilityLabel: string;
@@ -456,12 +458,13 @@ function ActionButton({ icon, label, accessibilityLabel, disabled = false, onPre
   dayAction?: boolean;
   danger?: boolean;
   quiet?: boolean;
+  iconOnly?: boolean;
 }) {
   return <MotionPressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} accessibilityState={{ disabled }}
     disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.actionButton, dayAction && styles.actionButtonDay,
-      danger && styles.actionButtonDanger, quiet && styles.actionButtonQuiet, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
+      danger && styles.actionButtonDanger, quiet && styles.actionButtonQuiet, iconOnly && styles.actionButtonIconOnly, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
     <Ionicons name={icon} size={tokens.size.iconSm} color={danger ? tokens.colors.danger : tokens.colors.primary} accessibilityElementsHidden />
-    <Text style={[styles.actionButtonText, dayAction && styles.actionButtonDayText, danger && styles.actionButtonDangerText]}>{label}</Text>
+    {iconOnly ? null : <Text style={[styles.actionButtonText, dayAction && styles.actionButtonDayText, danger && styles.actionButtonDangerText]}>{label}</Text>}
   </MotionPressable>;
 }
 
@@ -529,6 +532,7 @@ const styles = StyleSheet.create({
   actionButtonDay: { flex: 2, borderColor: tokens.colors.selectedSurface, backgroundColor: tokens.colors.selectedSurface },
   actionButtonDanger: { borderColor: tokens.colors.danger, backgroundColor: tokens.colors.surface },
   actionButtonQuiet: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto', borderColor: 'transparent', backgroundColor: 'transparent', paddingHorizontal: tokens.spacing.xs },
+  actionButtonIconOnly: { flex: 0, width: tokens.size.touchMin, minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, paddingHorizontal: 0 },
   actionButtonText: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700', flexShrink: 1, textAlign: 'center' },
   actionButtonDayText: { color: tokens.colors.primary },
   actionButtonDangerText: { color: tokens.colors.danger },

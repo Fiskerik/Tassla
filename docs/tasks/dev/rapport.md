@@ -1,5 +1,19 @@
 # FOUNDATION — leveransrapport 2026-10-04
 
+## UIUX-2B-SUPPORT-ACCESS-01 — lokal checkpoint, 2026-10-19
+
+Stödvyerna har kompakta knappetiketter, ikonhandlingar med fullständiga tillgängliga namn, skalbar datum-/tidslayout och scrollbara formulär. v1.6 håller `Klar` synlig i Passport- och rutinsheeten; 24 public/review-renderingar täcker 375×667, 375×844, 430×844 och standard/140 %-proxy. Review-rutinlistan scrollar separat; redigerarens Spara nås vid 375×667. Typecheck, riktad ESLint, diff-check och queue validation PASS. Oberoende QA PASS och Reviewer PASS. Inga testsviter kördes. Native Dynamic Type, VoiceOver och iOS-tangentbord behöver manuell iPhone-kontroll. Ingen commit/push; branchen har övriga aktiva paket. [Task](uiux-2b-support-access-2026-10-19.md), [UX-spec](../../plans/UIUX-2B-SUPPORT-ACCESS-2026-10-19-ux-spec.md), [renderbevis](../../design/evidence/uiux-2b-support-access-2026-10-19/RENDER-REPORT.md).
+
+## UIUX-2A-HOME-LOG-ACCESS-01 — lokal kodcheckpoint, 2026-10-19
+
+Hem och Logg har förbättrad tillgänglighet för stor text/skärmläsare; Home pending exponerar status/busy och Logg-editorn har renderad evidens för nåbar Spara, failed/unsure retry och bevarat utkast vid 375×667/140 %. Oberoende QA PASS och Reviewer PASS. `pnpm typecheck`, riktad ESLint, `git diff --check`, queue validation och public/review RN Web-renderingar PASS. Inga testsviter kördes. Native VoiceOver, fysisk Dynamic Type och OS reducerad rörelse återstår som manuella iPhone-prov. Ingen commit/push eftersom arbetsbranchen innehåller andra aktiva paket. Plan/spec/evidens: [taskplan](uiux-2a-to-5-2026-10-19.md), [UX-spec](../../plans/UIUX-2A-HOME-LOG-ACCESS-2026-10-19-ux-spec.md), [renderbevis](../../design/evidence/uiux-2a-home-log-access-2026-10-19/RENDER-REPORT.md).
+
+## UX-MAIN-TAB-TRANSITION-01 — checkpoint, 2026-10-19
+
+Plan v3 har Architect **APPROVE** och Critic **PROCEED**. Implementationen gör sidledsrörelsen tydligare mellan huvudflikar: 28 pt för huvudflik→huvudflik, 8 pt när en detaljrutt ingår. Första renderingen är stilla; reducerad rörelse och snabba sidbyten stoppar/återställer animationen. Route-/riktningslogik, data och befintliga 8 pt-konsumenter ändras inte.
+
+`pnpm typecheck`, riktad ESLint, `git diff --check` och befintlig RN Web-fixture-bundling (`node tools/visual-check/build.cjs`): **PASS**. Oberoende statisk QA och Reviewer: **PASS**; Reviewer bekräftade de använda React Native 0.86.3 API:erna. Inga testsviter kördes. Bundlekompilering ger ingen visuell evidens; browser-/native-rendering och fysisk interaktion: **NOT TESTABLE**, därför är visuella acceptansen öppen och tasken blockerad för ägarens kontroll i en körbar miljö. Ingen commit/push gjord. Underlag: [taskplan](ux-main-tab-transition-2026-10-19.md) och [UX-spec](../../plans/UX-MAIN-TAB-TRANSITION-2026-10-19-ux-spec.md).
+
 ## DOG-PROFILE — Wikidata-källval och plan v4, 2026-10-13
 
 Erik har beställt sökbar raskatalog, Mix-delraser, Hem-identitet `Namn | Ras` och valbar åldersvisning i veckor, månader och år. Han valde Wikidatas strukturerade data under CC0. Plan v4 låser katalogurvalet till Wikidata `dog breed (Q39367)` och dess underklasser, med svensk etikett och engelsk fallback. Exakt SPARQL-fråga och licenskällor finns i `docs/plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md`.
@@ -802,3 +816,8 @@ Codemagic-loggen i `Tassla_55_artifacts.zip` stannar i `Check application`. Den 
 Kontroller: `CI=1 pnpm check` PASS (TypeScript, edge typecheck, ESLint och 492/492 tester); Expo iOS bundle-export PASS; content/release guards PASS; `git diff --check` PASS. Oberoende QA PASS och statisk Reviewer PASS. Ingen annan Codemagic-fas finns i det bifogade utdraget, så det bevisar varken fel eller PASS för prebuild, CocoaPods, signering eller Xcode-arkivering. Expo iOS prebuild/native archive är NOT TESTABLE på denna Windows-miljö; verklig Mac/Codemagic-körning saknas.
 
 Erik har nu uttryckligen bett att committa och pusha efter de lokala gates. Erik har förtydligat att commit/push inte ska vänta på Codemagic. Samtliga lokala icke-Mac-gates är gröna; den fjärrkörningen är inte verifierad här. Om Codemagic visar ett nytt fel efter pushen ska felet rättas från steploggen före nästa push.
+
+
+### UIUX-2A-TEST-ALIGN-01 — avslutad, 2026-10-19
+
+Två befintliga Logg-assertioner för Ångra uppdaterades mot den verifierade implementationen; inget produktbeteende ändrades. Architect APPROVE och oberoende Reviewer PASS. Riktade tester 13/13; full `pnpm check` PASS med 492/492 tester efter typechecks och lint. iOS Expo-export, kövalidering och diff checks PASS. Separat testcommit: `dd9e30c`.

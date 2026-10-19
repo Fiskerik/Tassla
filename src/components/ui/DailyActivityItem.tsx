@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { MotionPressable } from './Motion';
 import { IconChip, type IconCategory } from './IconChip';
@@ -52,15 +52,17 @@ export function DailyActivityItem(props: DailyActivityItemProps) {
 
 function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, completed, onToggle, onOpen, accessibilityLabel = label,
   pending = false, statusMessage = '', statusError = false, onRetry }: DailyActivityItemProps) {
+  const { fontScale } = useWindowDimensions();
+  const activityNameLineLimit = fontScale > 1 ? undefined : 2;
   const status = pending ? 'Sparar…' : statusMessage;
-  const rowLabel = accessibilityLabel + (kind === 'training' ? `, ${completed ? 'klar' : 'inte klar'}, öppna Träning` : '');
+  const rowLabel = accessibilityLabel + (kind === 'training' ? `, ${completed ? 'klar' : 'inte klar'}, öppna Träning` : '') + (status ? `, ${status}` : '');
   const routineItemLabel = routineLabel ? `Rutin ${routineLabel}, punkt ${label}` : `Egen rutin: ${label}`;
   const routineCheckbox = <View accessibilityElementsHidden style={[styles.homeCheckbox, completed && styles.homeCheckboxChecked]}>
     {completed ? <Ionicons name="checkmark" size={tokens.size.iconSm} color={tokens.colors.onPrimary} /> : null}
   </View>;
 
   if (kind === 'training') return <View style={styles.homeRowWrap}>
-    <MotionPressable accessibilityRole="button" accessibilityLabel={rowLabel} onPress={onOpen}
+    <MotionPressable accessibilityRole="button" accessibilityLabel={rowLabel} accessibilityState={{ busy: pending }} aria-busy={pending} onPress={onOpen}
       style={({ pressed }) => [styles.homeTrainingRow, pressed && styles.pressed]}>
       <View accessibilityElementsHidden style={styles.homeTrainingStatusCell}>
         <View style={[styles.homeTrainingStatus, completed && styles.homeTrainingStatusChecked]}>
@@ -68,7 +70,7 @@ function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, complete
         </View>
       </View>
       <View style={styles.homeCopy}>
-        <Text numberOfLines={2} style={[styles.homeLabel, completed && styles.completedTrainingLabel]}>{label}</Text>
+        <Text numberOfLines={activityNameLineLimit} style={[styles.homeLabel, completed && styles.completedTrainingLabel]}>{label}</Text>
         {status ? <Text accessibilityRole={statusError ? 'alert' : undefined} style={[styles.homeStatus, statusError && styles.homeError]}>{status}</Text> : null}
       </View>
       <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
@@ -78,15 +80,16 @@ function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, complete
 
   return <View style={styles.homeRowWrap}>
     <View style={styles.homeRoutineRow}>
-      <MotionPressable accessibilityRole="checkbox" accessibilityLabel={`${routineItemLabel}, ${completed ? 'klar' : 'inte klar'}`}
-        accessibilityState={{ checked: completed, disabled: !onToggle || pending }} disabled={!onToggle || pending}
+      <MotionPressable accessibilityRole="checkbox" accessibilityLabel={`${routineItemLabel}, ${completed ? 'klar' : 'inte klar'}${status ? `, ${status}` : ''}`}
+        accessibilityState={{ checked: completed, disabled: !onToggle || pending, busy: pending }} aria-busy={pending} disabled={!onToggle || pending}
         onPress={onToggle} style={({ pressed }) => [styles.homeToggleTarget, pressed && styles.pressed]}>
         {routineCheckbox}
       </MotionPressable>
-      <MotionPressable accessibilityRole="button" accessibilityLabel={`Öppna ${routineItemLabel}`} onPress={onOpen}
+      <MotionPressable accessibilityRole="button" accessibilityLabel={`Öppna ${routineItemLabel}${status ? `, ${status}` : ''}`}
+        accessibilityState={{ busy: pending }} aria-busy={pending} onPress={onOpen}
         style={({ pressed }) => [styles.homeDetailTarget, pressed && styles.pressed]}>
         <View style={styles.homeCopy}>
-          <Text numberOfLines={2} style={styles.homeLabel}>{label}</Text>
+          <Text numberOfLines={activityNameLineLimit} style={styles.homeLabel}>{label}</Text>
           {status ? <Text accessibilityRole={statusError ? 'alert' : undefined} style={[styles.homeStatus, statusError && styles.homeError]}>{status}</Text> : null}
         </View>
         <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />

@@ -17,6 +17,8 @@ MOTION-03 visar ett enda första-användningstips i den inloggade LogScreen när
 
 Bekräftad loggåterkoppling visas nu utan valpfigur. Valfri tid i redigeraren använder en tillfällig väljardraft som förs till formuläret först med `Bekräfta tid`; detta bekräftar fältvalet, inte själva loggningen.
 
+Efter en bekräftad snabbregistrering ligger `Ångra` kvar så länge skärmläsare är aktiv eller dess status ännu inte är känd. Endast snabbregistreringens toast som faktiskt har en Ångra-handling får den här livstiden; bekräftelser för redigering och radering behåller 2,5 sekunders auto-stängning. Om VoiceOver slås av medan toasten visas startar dess vanliga tidsgräns då.
+
 ## Rev02 Loggvy
 
 Loggskärmen börjar på dagens lokala datum. Datumraden bläddrar en dag åt gången; nästa dag är avstängd. Händelser filtreras med `localDateTimeParts` och visas i stigande tid. När den äldsta inlästa posten ännu ligger på eller efter vald dag hämtar skärmen nästa befintliga sida. Dagen får först visas som komplett eller tom när en post från en tidigare lokal dag har lästs in eller `hasMore` är falskt. Läsfel behåller redan laddade poster och använder befintligt återförsök. Ett snabbval från historiken återgår till idag innan samma ett-trycksregistrering startar.
@@ -26,3 +28,6 @@ Loggskärmen börjar på dagens lokala datum. Datumraden bläddrar en dag åt g�
 Loggpanelen har en fast tidskolumn före symbol och flexibel händelsetext. Den gröna `Lägg till händelse`-knappen efter tidslinjen öppnar samma kompletterande loggtyper som `Fler`; primärsnabbval och långt tryck för att redigera deras layout finns kvar. Editorns `Spara ändring` ligger i sheetens förankrade footer. En äldre olycka med `accident_kinds = NULL` förblir okänd även om typen ändras bort och tillbaka; en olyckstyp sätts bara när ägaren uttryckligen väljer Kiss eller Bajs.
 
 Den lokala visuella harnessen har manuella scenarier via `?screen=log&logScenario=split-day` och `?screen=log&logScenario=split-day-error`. De demonstrerar laddning över en sidgräns inom samma dag samt fel/återförsök. `?state=loading|empty|error` visar lästillstånd och `?mutation=pending|failed|unsure` visar sparstatus. Händelser, mutationer och sidstatus hålls i React-minne; `persistLayout={false}` stänger av både SecureStore-läsning och skrivning i den här fixturen. Båda byggena märker fixturedata: public visar `Syntetisk visningsfixture · logg` och review visar `Syntetiskt granskningsläge · loggfixture`. Harnessen använder samma LogScreen och komponenter som produktvyn, men fixturemarkeringarna och pagineringssimulatorn är inte produktfunktioner.
+
+
+Loggredigeraren staplar datum- och tidsfält när `fontScale > 1.2`; standardfontScale behåller den kompakta raden. Delade picker-kontroller visar kalender-/klockikoner med fullständiga tillgängliga namn. RN Webs 140 %-CSS-proxy ändrar inte `useWindowDimensions().fontScale`, så iOS Dynamic Type-grenen måste även kontrolleras på en fysisk enhet.

@@ -232,8 +232,7 @@ export function PlannedHealthScreen({
         dispatchFeedback({ type: 'info-opened' });
         setInfoVisible(true);
       }} style={styles.infoButton}>
-        <Ionicons name="information-circle-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-        <Text style={styles.infoButtonText}>Läs information</Text>
+        <Ionicons name="information-circle-outline" size={tokens.size.iconMd} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
       </Pressable>
     </View>
     <InfoModal visible={infoVisible} title="Om planerade hälsohändelser" onClose={closeInfo} onDismiss={finishInfoDismissal}>
@@ -287,11 +286,11 @@ export function PlannedHealthScreen({
           <Text style={styles.characterHint}>{Array.from(note).length}/500 tecken</Text>
         </View>
         {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
-        <PrimaryButton title={busy ? 'Sparar…' : editingRecord ? 'Spara rättning' : 'Spara plan'} disabled={blocked} onPress={() => { void save(); }} />
+        <PrimaryButton title={busy ? 'Sparar…' : 'Spara'} accessibilityLabel={busy ? 'Sparar plan' : editingRecord ? 'Spara rättning' : 'Spara plan'} disabled={blocked} onPress={() => { void save(); }} />
         <Toast visible={Boolean(feedbackState.activeMessage?.startsWith('Ändringen är sparad') && timedFeedbackMessage === feedbackState.activeMessage && !statusError && !pending && !busy && !infoVisible)}
           tone="success" confirmed message={feedbackState.activeMessage ?? undefined} autoDismissMs={feedbackTimeout}
           onAutoDismiss={() => { if (feedbackState.activeMessage) dispatchFeedback({ type: 'dismiss', message: feedbackState.activeMessage }); }} />
-        {editingRecord && <QuietButton title="Avbryt rättning" disabled={blocked} onPress={resetForm} />}
+        {editingRecord && <QuietButton title="Avbryt" accessibilityLabel="Avbryt rättning" disabled={blocked} onPress={resetForm} />}
       </View>
 
       <Text style={styles.listTitle} accessibilityRole="header">Sparade planer</Text>
@@ -360,8 +359,7 @@ const styles = StyleSheet.create({
   description: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   infoRow: { marginTop: tokens.spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: tokens.spacing.sm },
   infoHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption },
-  infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },
-  infoButtonText: { color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '700' },
+  infoButton: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.sm },
   infoBody: { color: tokens.colors.textPrimary, ...tokens.typography.body, marginBottom: tokens.spacing.md },
   formCard: { marginTop: tokens.spacing.lg, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   formTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading, marginBottom: tokens.spacing.md },

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ExpoCrypto from 'expo-crypto';
-import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { BottomSheet, Button, Card, CheckboxCard, Dialog, FirstUseTip, HorizontalGestureRegion, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast, useFirstUseTip } from '../../components/ui';
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
@@ -35,6 +35,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   onLoadMore?: () => void;
 }) {
   const [moreVisible, setMoreVisible] = useState(false);
+  const [screenReaderEnabled, setScreenReaderEnabled] = useState<boolean | null>(null);
   const [addEventVisible, setAddEventVisible] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(true);
   const [duplicate, setDuplicate] = useState<{ type: LogEventType; timestamp: number; accidentIntent?: AccidentLogIntent } | null>(null);
@@ -104,6 +105,18 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     void AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => undefined);
     const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
     return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
+      if (active) setScreenReaderEnabled(enabled);
+    }).catch(() => undefined);
+    const subscription = AccessibilityInfo.addEventListener('screenReaderChanged', setScreenReaderEnabled);
+    return () => {
+      active = false;
+      subscription.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -289,8 +302,9 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   }
 
   const successMutationKey = mutation?.status === 'saved' ? `${mutation.kind}:${mutation.mutationId}` : '';
+  const undoableQuickLogId = mutation?.status === 'saved' && mutation.kind === 'add' && onUndo !== undefined ? mutation.id : undefined;
   const successToast = <Toast visible={mutation?.status === 'saved' && dismissedMutationKey !== successMutationKey} tone="success" confirmed message={mutation?.status === 'saved' ? mutation.kind === 'add' ? `${LOG_EVENT_LABELS[mutation.type]} loggat` : mutation.kind === 'update' ? 'Ändring sparad' : 'Händelsen är raderad' : ''}
-    onUndo={mutation?.status === 'saved' && mutation.kind === 'add' ? () => { firstUseTip.dismiss(); onUndo?.(mutation.id); } : undefined} autoDismissMs={2500}
+    onUndo={undoableQuickLogId !== undefined ? () => { firstUseTip.dismiss(); onUndo?.(undoableQuickLogId); } : undefined} autoDismissMs={undoableQuickLogId !== undefined && screenReaderEnabled !== false ? undefined : 2500}
     onAutoDismiss={() => setDismissedMutationKey(successMutationKey)} />;
   return <View style={styles.screen}>
     <Text accessibilityRole="header" style={styles.pageTitle}>Logga</Text>
@@ -443,6 +457,8 @@ function LogEventEditor({ event, disabled, onSave, onSaved, onCancel, onDelete, 
   submitRef: MutableRefObject<(() => Promise<void>) | null>;
   onActionStateChange: (state: EditorActionState) => void;
 }) {
+  const { fontScale } = useWindowDimensions();
+  const stackDateTimeFields = fontScale > 1.2;
   const initial = localDateTimeParts(event.occurredAt);
   const [type, setType] = useState(event.type);
   const [accidentKinds, setAccidentKinds] = useState<AccidentKind[]>(event.accidentKinds ?? []);
@@ -504,9 +520,9 @@ function LogEventEditor({ event, disabled, onSave, onSaved, onCancel, onDelete, 
       <CheckboxCard label="Bajs" checked={accidentKinds.includes('poop')} disabled={disabled} onChange={(checked) => { setPreserveLegacyUnknownAccident(false); setAccidentKinds((current) => canonicalAccidentKinds(checked ? [...current, 'poop'] : current.filter((kind) => kind !== 'poop'))); }} />
       {accidentKinds.length === 0 && !legacyUnknownAccident ? <Text accessibilityLiveRegion="polite" style={styles.accidentValidation}>Välj minst Kiss eller Bajs för att spara olyckan.</Text> : null}
     </View> : null}
-    <View style={styles.dateTimeRow}>
-      <View style={styles.dateField}><DatePickerField label="Datum" disabled={disabled} onChangeText={setDate} value={date} /></View>
-      <View style={styles.timeField}><TimePickerField label="Tid" disabled={disabled} onChangeText={setTime} value={time} /></View>
+    <View style={[styles.dateTimeRow, stackDateTimeFields && styles.dateTimeStacked]}>
+      <View style={[styles.dateField, stackDateTimeFields && styles.stackedDateTimeField]}><DatePickerField label="Datum" disabled={disabled} onChangeText={setDate} value={date} /></View>
+      <View style={[styles.timeField, stackDateTimeFields && styles.stackedDateTimeField]}><TimePickerField label="Tid" disabled={disabled} onChangeText={setTime} value={time} /></View>
     </View>
     <View style={styles.noteGroup}>
       <Text style={styles.fieldTitle}>Anteckning (valfri)</Text>
@@ -569,7 +585,7 @@ const styles = StyleSheet.create({
   typeOption: { minHeight: tokens.size.touchMin, minWidth: tokens.size.chipLg * 2, flexGrow: 1, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, paddingHorizontal: tokens.spacing.sm },
   selectedTypeOption: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   typeOptionText: { ...tokens.typography.label, color: tokens.colors.textPrimary }, selectedTypeText: { color: tokens.colors.primary }, pressed: { opacity: 0.85 },
-  dateTimeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm }, dateField: { flex: 1, minWidth: 180 }, timeField: { flex: 1, minWidth: 112 },
+  dateTimeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm }, dateTimeStacked: { flexDirection: 'column', alignItems: 'stretch' }, dateField: { flex: 1, minWidth: 180 }, timeField: { flex: 1, minWidth: 112 }, stackedDateTimeField: { flex: 0, width: '100%', minWidth: 0 },
   noteGroup: { gap: tokens.spacing.xs },
   noteInput: { minHeight: tokens.size.touchMin + tokens.spacing.xl + tokens.spacing.sm, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body, padding: tokens.spacing.md, textAlignVertical: 'top' },
   characterCount: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'right' }, tooManyCharacters: { color: tokens.colors.danger },

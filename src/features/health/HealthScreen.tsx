@@ -40,8 +40,8 @@ export function HealthScreen(props: Props) {
       {history.length ? history.map((row) => <ListRow key={row.id} category={row.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} title={row.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök'} time={row.occurred_time ?? undefined} meta={[shortDate(row.occurred_on), row.description].filter(Boolean).join(' · ')} complete onPress={() => { setEditingId(row.id); setSheet('history'); }} />) : <Text style={styles.empty}>Inga händelser ännu. Lägg till när något har hänt.</Text>}
     </View>}
     {tab === 'Översikt' && props.records?.length ? <><SectionHeader title="Senaste vikten" /><ListRow category="veterinary" title={`${props.records[0].weight_kg.toLocaleString('sv-SE')} kg`} meta={shortDate(props.records[0].occurred_on)} onPress={() => setTab('Vikt')} /></> : null}
-    <View style={styles.action}><Button label="Lägg till händelse" accessibilityLabel="Lägg till hälsohändelse" disabled={!onSaveHistory || Boolean(blocked)} onPress={() => { setEditingId(null); setSheet('choose'); }} /></View>
-    <BottomSheet visible={sheet !== null} title={sheet === 'choose' ? 'Lägg till händelse' : editingId ? 'Ändra händelse' : 'Genomförd händelse'} onRequestClose={() => { if (!blocked) setSheet(null); }}>
+    <View style={styles.action}><Button label="Lägg till" accessibilityLabel="Lägg till hälsohändelse" disabled={!onSaveHistory || Boolean(blocked)} onPress={() => { setEditingId(null); setSheet('choose'); }} /></View>
+    <BottomSheet visible={sheet !== null} title={sheet === 'choose' ? 'Lägg till händelse' : editingId ? 'Ändra händelse' : 'Genomförd händelse'} keyboardAware={sheet === 'history'} onRequestClose={() => { if (!blocked) setSheet(null); }}>
       {sheet === 'choose' ? <>
         <ListRow category="vaccination" title="Något som har hänt" meta="Vaccination eller veterinärbesök" onPress={() => setSheet('history')} />
         {props.onOpenPlannedHealth ? <ListRow category="veterinary" title="Planera en händelse" meta="Datum och påminnelse" onPress={() => { setSheet(null); props.onOpenPlannedHealth?.(); }} /> : null}

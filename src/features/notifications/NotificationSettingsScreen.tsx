@@ -87,8 +87,7 @@ export function NotificationSettingsScreen({
     <View style={styles.infoRow}>
       <Text style={styles.infoHint}>Om lokala påminnelser</Text>
       <Pressable accessibilityRole="button" accessibilityLabel="Visa information om lokala påminnelser" onPress={() => setInfoVisible(true)} style={styles.infoButton}>
-        <Ionicons name="information-circle-outline" size={tokens.size.iconMd} color={tokens.colors.support.reminders.fg} />
-        <Text style={styles.infoButtonText}>Läs information</Text>
+        <Ionicons name="information-circle-outline" size={tokens.size.iconMd} color={tokens.colors.support.reminders.fg} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
       </Pressable>
     </View>
     <InfoModal visible={infoVisible} title="Om lokala påminnelser" onClose={() => setInfoVisible(false)}>
@@ -98,10 +97,10 @@ export function NotificationSettingsScreen({
 
     <View style={styles.settingsCard}>
     <Text style={styles.sectionTitle} accessibilityRole="header">Dina val</Text>
-    <Choice selected={enabled} disabled={busy} label="Tillåt Tasslas påminnelser på den här enheten"
+    <Choice selected={enabled} disabled={busy} label="Tillåt påminnelser" accessibilityLabel="Tillåt Tasslas påminnelser på den här enheten"
       detail="Avbokar Tasslas egna påminnelser när du stänger av. Dina planval sparas."
       onPress={() => setEnabled((value) => !value)} />
-    <Choice selected={trainingEnabled} disabled={busy} label="Lägg till en frivillig träningspåminnelse"
+    <Choice selected={trainingEnabled} disabled={busy} label="Träningspåminnelse" accessibilityLabel="Lägg till en frivillig träningspåminnelse"
       detail={enabled
         ? 'En lokal träningspåminnelse i taget. Nästa tid uppdateras när Tassla öppnas.'
         : trainingEnabled
@@ -118,14 +117,14 @@ export function NotificationSettingsScreen({
 
     {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
     {statusMessage && statusError ? <MessageCard tone="error">{statusMessage}</MessageCard> : null}
-    <Button label={busy ? 'Sparar…' : 'Spara val'} accessibilityLabel={busy ? 'Sparar val' : 'Spara val'}
+    <Button label={busy ? 'Sparar…' : 'Spara'} accessibilityLabel={busy ? 'Sparar påminnelseinställningar' : 'Spara påminnelseinställningar'}
       loading={busy} disabled={busy} onPress={() => { void save(); }} />
     </View>
 
     <View style={styles.permissionCard}>
     <Text style={styles.sectionTitle} accessibilityRole="header">Enhetens behörighet</Text>
     {permissionMessage ? <MessageCard tone={permissionState === 'denied' ? 'error' : 'neutral'}>{permissionMessage}</MessageCard> : null}
-    <Button variant="secondary" label={permissionBusy ? 'Kontrollerar…' : 'Tillåt påminnelser på telefonen'}
+    <Button variant="secondary" label={permissionBusy ? 'Kontrollerar…' : 'Tillåt påminnelser'}
       accessibilityLabel={permissionBusy ? 'Kontrollerar tillåtelse för notiser' : 'Tillåt påminnelser på telefonen'}
       loading={permissionBusy} disabled={busy || permissionBusy} onPress={() => { void requestPermission(); }} />
     {permissionState === 'granted' && <MessageCard>Enheten tillåter notiser. Det säger inte att varje påminnelse visas eller levereras.</MessageCard>}
@@ -136,10 +135,10 @@ export function NotificationSettingsScreen({
   </View>;
 }
 
-function Choice({ selected, disabled, label, detail, accessibilityHint, onPress }: {
-  selected: boolean; disabled: boolean; label: string; detail: string; accessibilityHint?: string; onPress: () => void;
+function Choice({ selected, disabled, label, detail, accessibilityLabel, accessibilityHint, onPress }: {
+  selected: boolean; disabled: boolean; label: string; detail: string; accessibilityLabel?: string; accessibilityHint?: string; onPress: () => void;
 }) {
-  return <Pressable accessibilityRole="checkbox" accessibilityLabel={label} accessibilityHint={accessibilityHint}
+  return <Pressable accessibilityRole="checkbox" accessibilityLabel={accessibilityLabel ?? label} accessibilityHint={accessibilityHint}
     accessibilityState={{ checked: selected, disabled }} disabled={disabled}
     onPress={onPress} style={({ pressed }) => [styles.choice, selected && styles.choiceSelected, pressed && !disabled && styles.pressed]}>
     <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
@@ -161,8 +160,7 @@ const styles = StyleSheet.create({
   intro: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: tokens.spacing.md, marginBottom: tokens.spacing.xs },
   infoHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
-  infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },
-  infoButtonText: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
+  infoButton: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.sm },
   infoBody: { ...tokens.typography.body, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
   hero: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.spacing.sm, padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.support.reminders.bg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   icon: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.surface, alignItems: 'center', justifyContent: 'center' },

@@ -248,7 +248,7 @@ export function EditDogProfileScreen({
         </View>
       </View>
       {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
-      <PrimaryButton title={busy ? 'Sparar…' : statusError && !pending ? 'Försök igen' : 'Spara profil'}
+      <PrimaryButton title={busy ? 'Sparar…' : statusError && !pending ? 'Försök igen' : 'Spara'} accessibilityLabel={busy ? 'Sparar hundprofil' : statusError && !pending ? 'Försök igen' : 'Spara profil'}
         disabled={blocked || breedState !== 'ready'} onPress={() => { void save(); }} />
       <Toast visible={toastVisible} tone="success" confirmed message={toastMessage ?? undefined} autoDismissMs={2500} onAutoDismiss={() => setToastVisible(false)} onExitComplete={() => setToastMessage(null)} />
     </View>
@@ -267,7 +267,7 @@ export function EditDogProfileScreen({
           placeholderTextColor={tokens.colors.textSecondary} style={styles.input} value={kennelCode} />
         {attributionFormError ? <MessageCard tone="error">{attributionFormError}</MessageCard> : null}
         {attributionMessage ? <MessageCard tone={attributionMessageError ? 'error' : 'neutral'}>{attributionMessage}</MessageCard> : null}
-        <Button variant="secondary" label={attributionBusy ? 'Sparar…' : attribution ? (kennelCode.trim() ? 'Spara kennelkoppling' : 'Ta bort kennelkoppling') : 'Spara kennelkoppling'} accessibilityLabel="Spara kennelkoppling" loading={attributionBusy}
+        <Button variant="secondary" label={attributionBusy ? 'Sparar…' : attribution ? (kennelCode.trim() ? 'Spara' : 'Ta bort') : 'Spara'} accessibilityLabel={attributionBusy ? 'Sparar kennelkoppling' : attribution ? (kennelCode.trim() ? 'Spara kennelkoppling' : 'Ta bort kennelkoppling') : 'Spara kennelkoppling'} loading={attributionBusy}
           disabled={attributionBusy || !onSaveAttribution || kennelCode.trim() === (attribution?.code ?? '')} onPress={() => { void saveAttribution(); }} />
       </>}
     </View>

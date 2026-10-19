@@ -39,3 +39,6 @@ Aktuella webbskärmbilder finns i `docs/design/UI-RESET`; native begränsningar 
 `ListRow` visar `complete` med en tillgänglig etikett som slutar med “Genomförd”. `animateCompleteKey` är opt-in för en specifik bekräftad träningsrad; generella färdiga rader får ingen ny rörelse.
 
 `FirstUseTip` är den lilla visuella presentationen och har en separat tillgänglig stängknapp. `useFirstUseTip` läser status för en explicit kontoägare/skärm, ignorerar sena svar efter ägarbyte/avmontering och avfärdar omedelbart. LogScreen markerar kontrollaktivering explicit; scroll/fokus och tom yta räknas inte. SecureStore fel döljer tipset resten av appprocessen för ägaren/skärmen, utan att påstå att status sparats. Status raderas tillsammans med kontoägarens lokala data efter bekräftad serverradering.
+
+
+Delade `DatePickerField` och `TimePickerField` visar kalender- respektive klockikon i stället för knapptext. Tillgängliga namn behåller hela handlingen och ikonknapparna behåller minst 44 pt tryckyta. `PrimaryButton` och `QuietButton` kan ange en fullständigare tillgänglig etikett när den synliga texten kortas till exempelvis `Spara` eller `Avbryt`.

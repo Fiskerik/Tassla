@@ -186,8 +186,8 @@ export function PassportScreen(props: PassportScreenProps) {
           <Text style={styles.disclaimer}>Uppgifterna är registrerade av hundägaren. Tassla-pass är ingen officiell journal, legitimation eller vaccinationshandling.</Text>
           {visibleSnapshot && <Text style={styles.createdOn}>Skapad {visibleSnapshot.createdOn}</Text>}
         </View>
-        <Button variant="tertiary" label="Välj vad som delas" accessibilityLabel="Välj avsnitt att dela" disabled={busy} onPress={() => setOptionsVisible(true)} />
-        <BottomSheet visible={optionsVisible} title="Välj avsnitt" onRequestClose={() => setOptionsVisible(false)} onPrimaryAction={() => setOptionsVisible(false)} primaryLabel="Klar">
+        <Button variant="tertiary" label="Välj avsnitt" accessibilityLabel="Välj avsnitt att dela" disabled={busy} onPress={() => setOptionsVisible(true)} />
+        <BottomSheet visible={optionsVisible} title="Välj avsnitt" pinPrimaryAction onRequestClose={() => setOptionsVisible(false)} onPrimaryAction={() => setOptionsVisible(false)} primaryLabel="Klar">
         <SelectionRow iconsLoaded={iconsLoaded} icon="person-outline" title="Hundprofil" detail="Namn, ras och födelsedatum" checked={selection.profile} disabled={busy} onPress={() => toggleSelection('profile')} />
         <SelectionRow iconsLoaded={iconsLoaded} icon="scale-outline" title="Senaste vikten" detail="Vikt och datum" checked={selection.latestWeight} disabled={busy} onPress={() => toggleSelection('latestWeight')} />
         <SelectionRow iconsLoaded={iconsLoaded} icon="medkit-outline" title="Hälsohändelser" detail="Vaccinationer och veterinärbesök" checked={selection.healthHistory} disabled={busy} onPress={() => toggleSelection('healthHistory')} />
