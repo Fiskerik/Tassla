@@ -35,8 +35,10 @@ export function KnowledgeScreen({
   checklistPending = null,
   onChecklistPendingChange = () => undefined,
   onDetailChange,
+  returnToTraining = false,
 }: {
   onBack: () => void;
+  returnToTraining?: boolean;
   items?: readonly HomeContent[];
   contentState?: ContentState;
   focusedContentId?: string | null;
@@ -56,6 +58,7 @@ export function KnowledgeScreen({
   const [openedId, setOpenedId] = useState<string | null>(focusedContentId);
   const [tab, setTab] = useState(() => focusedContentId === CHECKLIST_DESTINATION_ID ? 'Checklistor' : focusedContentId === FAQ_DESTINATION_ID ? 'FAQ' : 'För dig');
   const [checklistDetailOpen, setChecklistDetailOpen] = useState(false);
+  const [emptyReturnToForYou, setEmptyReturnToForYou] = useState(false);
   const searchScopeKey = guideSearchScopeKey(sessionKey, dogId);
   const [searchState, setSearchState] = useState<ScopedGuideSearchState>(() => ({ scopeKey: searchScopeKey, value: '' }));
   const searchQuery = guideSearchValueForScope(searchState, searchScopeKey);
@@ -76,7 +79,12 @@ export function KnowledgeScreen({
   function clearSearch() { setSearchState({ scopeKey: searchScopeKey, value: '' }); }
   function changeTab(nextTab: string) {
     if (tab === 'Checklistor' && nextTab !== 'Checklistor') { checklistInvalidate.current?.(); checklistInvalidate.current = null; }
+    if (nextTab === 'För dig') setEmptyReturnToForYou(false);
     setTab(nextTab);
+  }
+  function openEmptyDestination(nextTab: 'Checklistor' | 'FAQ') {
+    setEmptyReturnToForYou(true);
+    changeTab(nextTab);
   }
 
   async function openSource(source: string) {
@@ -96,7 +104,9 @@ export function KnowledgeScreen({
     <View style={styles.screen}>
       {selectedItem ? <AppBar mode="Back" title="Kunskap" actionLabel="Tillbaka till guider" onAction={() => { setOpenedId(null); onSelectContent(null); }} /> : null}
       {!selectedItem && !(tab === 'Checklistor' && checklistDetailOpen) ? <>
-        <Text accessibilityRole="header" style={styles.pageTitle}>Kunskap</Text>
+        {returnToTraining
+          ? <AppBar mode="Back" title="Kunskap" actionLabel="Tillbaka till Träning" onAction={onBack} />
+          : <Text accessibilityRole="header" style={styles.pageTitle}>Kunskap</Text>}
         <Tabs items={["För dig", "Artiklar", "Checklistor", "FAQ"]} active={tab} onChange={changeTab} variant="rev02-segmented" />
       </> : null}
       {tab === 'Artiklar' && !selectedItem ? <View style={styles.searchSection}>
@@ -120,9 +130,11 @@ export function KnowledgeScreen({
       {tab === 'För dig' && contentState === 'ready' && visibleItems.length === 0 && <MessageCard>
         Här kommer guider för din hund. Titta gärna in igen.
       </MessageCard>}
-      {tab === 'Artiklar' && !selectedItem && contentState === 'ready' && visibleItems.length === 0 && <MessageCard>
-        {'Det finns inga publicerade artiklar för ' + dogLabel + ' ännu.'}
-      </MessageCard>}
+      {tab === 'Artiklar' && !selectedItem && contentState === 'ready' && visibleItems.length === 0 && <View style={styles.searchEmpty}>
+        <MessageCard>{'Det finns inga publicerade artiklar för ' + dogLabel + ' ännu.'}</MessageCard>
+        <QuietButton title="Öppna Checklistor" onPress={() => openEmptyDestination('Checklistor')} />
+        <QuietButton title="Öppna Vanliga frågor" onPress={() => openEmptyDestination('FAQ')} />
+      </View>}
       {tab === 'Artiklar' && !selectedItem && contentState === 'ready' && visibleItems.length > 0 && hasSearchQuery && displayedItems.length === 0
         ? <View style={styles.searchEmpty}>
           <MessageCard>{'Inga artiklar matchar "' + searchQuery.trim() + '" för ' + dogLabel + '.'}</MessageCard>
@@ -132,6 +144,8 @@ export function KnowledgeScreen({
       {tab === 'Artiklar' && !selectedItem && contentState === 'ready' && hasSearchQuery && displayedItems.length > 0
         ? <Text style={styles.searchCount}>{displayedItems.length === 1 ? '1 träff' : displayedItems.length + ' träffar'}</Text>
         : null}
+      {emptyReturnToForYou && tab === 'FAQ' && !selectedItem ? <QuietButton title="Tillbaka till För dig" onPress={() => changeTab('För dig')} /> : null}
+      {emptyReturnToForYou && tab === 'Checklistor' && !checklistDetailOpen ? <QuietButton title="Tillbaka till För dig" onPress={() => changeTab('För dig')} /> : null}
       {tab === 'FAQ' && !selectedItem ? <FAQScreen context="by_age" reviewEnabled={process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true'} /> : null}
       {(tab === 'För dig' || tab === 'Artiklar' || selectedItem) && contentState === 'ready' && items.length > 0 && <>
         {!selectedItem && displayedItems.length > 0 && <View style={styles.guideList}>

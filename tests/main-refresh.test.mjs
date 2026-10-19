@@ -44,7 +44,7 @@ test('Log pagination aborts on scope change and fences stale completion and spin
 });
 
 test('refresh reconciliation preserves confirmed local inserts, updates and deletes during the read', () => {
-  const match = workspace.match(/function mergeConfirmedLogRows[\s\S]*?(?=\n\ntype LogReadFlight)/);
+  const match = workspace.match(/function mergeConfirmedLogRows[\s\S]*?(?=\n\s*function shouldClearDailyMutationFeedback)/);
   assert.ok(match, 'production merge helper is present');
   const compiled = ts.transpileModule(match[0], {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },

@@ -8915,25 +8915,29 @@
         "tests/knowledge-review-content.test.mjs",
         "tests/training-overview.test.mjs",
         "tests/knowledge-training-empty-feedback.test.mjs",
+        "tests/main-refresh.test.mjs",
         "src/features/knowledge/README.md",
         "src/features/training/README.md",
         "docs/design/evidence/ui-empty-feedback-knowledge-training-2026-10-19",
         "docs/tasks/dev/rapport.md",
         "docs/releases/HISTORY-2026.md",
-        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md"
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/onboarding/ProfileScreenHeader.tsx"
       ],
       "acceptance": [
         "Knowledge zero-search -> clear; zero-published -> Checklistor/FAQ; Training missing age -> Hundprofil -> back/save returns to Training.",
         "Training with age-filtered empty content -> Knowledge -> back returns to Training; failures retry and never show review examples.",
-        "Dog/account query and results never show prior scope; skeleton/error/empty/completed states remain distinct."
+        "Dog/account query and results never show prior scope; skeleton/error/empty/completed states remain distinct.",
+        "Profile Back accessibility name matches the scoped return destination; other profile entry points retain “Tillbaka till Mer”."
       ],
       "checks": [
-        "node --experimental-strip-types --test tests/knowledge-training-empty-feedback.test.mjs tests/knowledge-review-content.test.mjs tests/training-overview.test.mjs",
+        "node --experimental-strip-types --test tests/knowledge-training-empty-feedback.test.mjs tests/knowledge-review-content.test.mjs tests/training-overview.test.mjs tests/main-refresh.test.mjs",
         "pnpm check",
         "pnpm bundle:ios",
         "git diff --check",
         "PYTHONUTF8=1 python tools/dev_flow.py validate",
-        "Capture Knowledge/Training empty, no-age, retry, zero-search and return routes; document §14"
+        "Capture Knowledge loading/zero-search/zero-published/Checklistor return; Training no-age → profile → Back and confirmed save → age-filtered Training; age-filtered no-match → Kunskap → Back; empty/completed/confirmed-success/read-error → retry. Index full route, 375×844 viewport and matching synthetic dog fixture; record §14 points 1–18 individually in evidence VERIFICATION.md"
       ],
       "depends_on": [
         "UI-EMPTY-FEEDBACK-HOME-LOG"
@@ -8946,11 +8950,36 @@
       ],
       "risk_class": "M",
       "checkpoint": "Dog-scoped Knowledge/Training empty and retry journey with Training return routes.",
-      "test_evidence": "Pending implementation and independent verification.",
-      "status": "planned",
-      "history": [],
-      "next_step": "Wait for UI-EMPTY-FEEDBACK-HOME-LOG done.",
-      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
+      "test_evidence": "Architect v9 APPROVE. 23 production-component headless captures at 375×844 use separate synthetic fixture-dog-no-dob and fixture-dog-12w records; every image is indexed by state, route, viewport and fixture (older supplemental captures are marked) in docs/design/evidence/ui-empty-feedback-knowledge-training-2026-10-19/VERIFICATION.md. The evidence includes zero-search clear returning the dog-scoped article and Checklistor public empty-content explanation. Focused suite 29/29, pnpm check 583/583 and public iOS JS export 1,447 modules PASS; diff/queue checks PASS. QA recheck PASS for the bounded local checkpoint and supplemental captures; independent frozen-diff Reviewer PASS with no actionable findings. Completed-program overview is captured; opening/resuming detail is NOT TESTABLE. §14 observations are itemized; native/device, full app-host, live backend and rev02 comparison remain NOT TESTABLE.",
+      "status": "review",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect v4 APPROVE and UX Critic v4 PROCEED cover this bounded M-class Knowledge/Training state-to-action checkpoint. Implementation begins only after 5a QA/Reviewer PASS and push as 67424a4; no new data or dependency behavior."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "5a implementation/review/documentation is done and pushed (67424a4 plus closeout 04c3980). Work only within the approved 5b Knowledge/Training state-to-action scope."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete on the approved v9 scope. Focused suite 29/29, pnpm check 583/583, public iOS JS export 1,447 modules, 23 indexed 375x844 headless captures, git diff --check and queue validation PASS; native/app-host/live-backend/rev02 limits remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS for bounded local checkpoint after rechecking supplemental search-clear and Checklistor captures; 23/23 indexed images. Completed-program overview is captured; detail open/resume remains NOT TESTABLE. Focused suite 29/29; diff and queue validation PASS. Full/native/device/live-backend/rev02 boundaries remain explicit."
+        }
+      ],
+      "next_step": "Independent QA PASS for bounded local checkpoint after rechecking supplemental search-clear and Checklistor captures; 23/23 indexed images. Completed-program overview is captured; detail open/resume remains NOT TESTABLE. Focused suite 29/29; diff and queue validation PASS. Full/native/device/live-backend/rev02 boundaries remain explicit.",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v9"
     },
     {
       "id": "UI-NATIVE-ACCESSIBILITY-VERIFY",

@@ -13,3 +13,7 @@ UI-RESET (historik): `PublishedTrainingScreen` följde rev02:s varma canvas, vä
 Bekräftad träningsåterkoppling visas utan valpfigur. Spara- och radstatusen är fortsatt knuten till den bekräftade serverposten.
 
 Explicit review builds may use three versioned `review-v1:training:*` layout examples when the real published program query succeeds with an empty list. These rows use `PublishedTrainingScreen` with `reviewMode`; completion and reset live only in component memory and never call `training_progress` handlers. A real fetch error remains an error with retry and does not reveal examples. Copy is marked as an unreviewed temporary example in the view.
+
+## Tomt och saknat åldersunderlag (5b)
+
+När hundens ålder saknas visar Träning Lägg till födelsedatum och öppnar den befintliga Hundprofilredigeringen. Tillbaka och bekräftad sparning går till Träning. När en lyckad åldersfiltrering inte hittar publicerade program visas Öppna Kunskap; Kunskaps tillbakaåtgärd går tillbaka till Träning. Profilens åldersändring ingår i befintlig urvalsscope, så Training hämtar om innehållet för den nya åldern. Läsladdning och fel med Försök igen förblir separata; tillfälliga exempel visas endast efter lyckad tomläsning i uttryckligt granskningsläge, aldrig som svar på ett fel.

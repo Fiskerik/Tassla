@@ -33,6 +33,7 @@ export function EditDogProfileScreen({
   attributionBusy = false,
   attributionMessage = '',
   attributionMessageError = false,
+  backLabel = 'Tillbaka till Mer',
   onBack,
   onSave,
   onSaveAttribution,
@@ -60,6 +61,7 @@ export function EditDogProfileScreen({
   attributionBusy?: boolean;
   attributionMessage?: string;
   attributionMessageError?: boolean;
+  backLabel?: string;
   onBack: () => void;
   onSave: (changes: OwnedDogProfileChanges, knownBreeds: readonly BreedOption[]) => Promise<boolean>;
   onSaveAttribution?: (code: string | null) => Promise<boolean>;
@@ -157,7 +159,7 @@ export function EditDogProfileScreen({
   const showStatusMessage = Boolean(statusMessage) && (statusError || pending || busy);
 
   return <View>
-    <ProfileScreenHeader onBack={onBack} disabled={busy} />
+    <ProfileScreenHeader onBack={onBack} backLabel={backLabel} disabled={busy} />
     <View style={[styles.heroCard, stackProfileLayout && styles.heroCardStacked]}>
       <View style={styles.heroCopy}>
         <Text style={styles.intro}>Håll namn, ras och födelsedatum uppdaterade för innehåll som passar er.</Text>

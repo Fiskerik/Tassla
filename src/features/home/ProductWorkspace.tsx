@@ -195,6 +195,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       ? current
       : { page: nextPage, previousPage: current.page });
   }, []);
+  const [profileReturnPage, setProfileReturnPage] = useState<'more' | 'training'>('more');
+  function returnFromProfile() {
+    const destination = profileReturnPage;
+    setProfileReturnPage('more');
+    setPage(destination);
+  }
   const [breeds, setBreeds] = useState<BreedOption[]>([]);
   useEffect(() => {
     let active = true;
@@ -204,7 +210,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [content, setContent] = useState<HomeContent[]>([]);
   const [contentState, setContentState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [contentSelectionKey, setContentSelectionKey] = useState<string | null>(null);
-  const [knowledgeFocus, setKnowledgeFocus] = useState<{ selectionKey: string; contentId: string | null; returnPage: 'home' | 'more' } | null>(null);
+  const [knowledgeFocus, setKnowledgeFocus] = useState<{ selectionKey: string; contentId: string | null; returnPage: 'home' | 'more' | 'training' } | null>(null);
   const [knowledgeDetailOpen, setKnowledgeDetailOpen] = useState(false);
   const navigateMainTab = useCallback((destination: ProductPage) => {
     const enteringKnowledge = page !== 'knowledge' && destination === 'knowledge';
@@ -2507,14 +2513,23 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         reviewMode={reviewContentEnabled && training.programs.some((program) => program.id.startsWith('review-v1:training:'))}
         busyStepKey={busyStepKey} error={trainingError} onCompleteStep={completeStep} onUnmarkStep={unmarkStep}
         onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
-        onRetry={() => { void retryTraining(); }} />}
+        onRetry={() => { void retryTraining(); }}
+        onAddBirthDate={() => { setProfileReturnPage('training'); setPage('profile'); }}
+        onOpenKnowledge={() => {
+          setKnowledgeDetailOpen(false);
+          setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId: null, returnPage: 'training' });
+          setPage('knowledge');
+        }} />}
     </>;
     if (page === 'more') return <MoreScreen onNavigate={(destination) => {
       if (destination === 'reminders') {
         setNotificationSaved(false);
         setPage('notification-settings');
       } else if (destination === 'account') setPage('account-settings');
-      else setPage(destination);
+      else {
+        if (destination === 'profile') setProfileReturnPage('more');
+        setPage(destination);
+      }
     }} signOutError={signOutError} signingOut={signingOut} onSignOut={confirmSignOut} />;
     if (page === 'account-settings') return <AccountSettingsScreen ownerId={session?.user.id ?? ''} onBack={() => setPage('more')}
       onOpenInformation={() => setPage('beta-info')} busy={accountDeleteBusy} status={accountDeleteStatus}
@@ -2597,6 +2612,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     />;
     if (page === 'knowledge') return <KnowledgeScreen
       onBack={() => setPage(knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : 'more')}
+      returnToTraining={knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'training'}
       items={visibleGuideContent}
       contentState={visibleContentState}
       focusedContentId={focusedKnowledgeContentId}
@@ -2642,14 +2658,19 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (onDogUpdated) return <EditDogProfileScreen key={`${dog.id}:${dog.name}:${dog.breed_id}:${dog.birth_date}:${dog.age_display_unit}`}
       client={client} dog={dog} busy={profileBusy} pending={profilePending} statusMessage={profileMessage}
       statusError={profileMessageError} conflict={profileConflict ?? undefined}
+      backLabel={profileReturnPage === 'training' ? 'Tillbaka till Träning' : 'Tillbaka till Mer'}
       ownedDogs={ownedDogs} activeDogId={dog.id} onSelectDog={onSelectDog}
       onAddDog={() => onAddDog?.('settings')}
       attribution={dogAttribution} attributionState={attributionState} attributionBusy={attributionBusy}
       attributionMessage={attributionMessage} attributionMessageError={attributionMessageError}
-      onBack={() => setPage('more')} onSave={saveDogProfile}
+      onBack={returnFromProfile} onSave={async (changes, knownBreeds) => {
+        const saved = await saveDogProfile(changes, knownBreeds);
+        if (saved && profileReturnPage === 'training') returnFromProfile();
+        return saved;
+      }}
       onSaveAttribution={saveDogAttribution} onRetryAttribution={() => { void retryDogAttribution(); }}
       onRetryStatus={() => { void retryProfileStatus(); }} onAcceptCurrent={() => { void acceptCurrentProfile(); }} />;
-    return <DogProfileScreen dog={dog} breed={breeds.find((breed) => breed.id === dog.breed_id)?.name} onBack={() => setPage('more')} />;
+    return <DogProfileScreen dog={dog} breed={breeds.find((breed) => breed.id === dog.breed_id)?.name} onBack={returnFromProfile} />;
   }
 
 }

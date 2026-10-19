@@ -28,3 +28,7 @@ Ingen optimistisk grön sparstatus används. UUID, exakta återläsningar och vi
 ## Verifiering
 
 Kör `pnpm check` för typkontroll, lint och API-/intent-/innehållstester. `tools/visual-check/know02-app.tsx` och `verify-know02.py` provar de aktuella skärmarna med syntetisk adapter, CRUD, okända resultat, remount/scope och stor text; evidens och begränsningar finns i `docs/design/KNOW-02/checklista.md`. Native presentation, VoiceOver/riktig Dynamic Type samt verklig SQL/RLS är separata verifieringar.
+
+## Tomt läge och återvägar (5b)
+
+När Artiklar inte har några publicerade guider visas två befintliga vägar: Checklistor och Vanliga frågor. Därifrån går det att återvända direkt till För dig; checklistdetaljens egen tillbakaåtgärd återställer också För dig. Om Kunskap öppnas från Träning visas Tillbaka till Träning i Kunskaps sidhuvud, även efter växling mellan kunskapsflikarna. Söktomläge fortsätter ha sin separata Rensa sökning-åtgärd. Inga review-exempel visas som publicerade artiklar.

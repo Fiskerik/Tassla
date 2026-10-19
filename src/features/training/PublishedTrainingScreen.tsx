@@ -6,12 +6,13 @@ import { completeReviewTrainingStep, completeTrainingStepForMode, isReviewTraini
 import { tokens } from '../../theme/tokens';
 import { allProgramsComplete, completedCount, exerciseCountLabel, exerciseProgressLabel, pickNextExercise, programStatus, programStatusWord, sortPrograms, stepStates } from './training-overview';
 
-export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, reviewMode = false }: {
+export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, onAddBirthDate, onOpenKnowledge, reviewMode = false }: {
   ageWeeks: number | null; programs: readonly PublishedTrainingProgram[]; paused: readonly PausedTrainingProgress[]; busyStepKey: string | null; error: string;
   reviewMode?: boolean;
   onCompleteStep: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>;
   onUnmarkStep?: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>; onContinue: () => void;
   onResetProgram: (program: PublishedTrainingProgram) => void; onRetry: () => void;
+  onAddBirthDate?: () => void; onOpenKnowledge?: () => void;
 }) {
   const [openProgramId, setOpenProgramId] = useState<string | null>(null);
   const [selection, setSelection] = useState<{ programId: string; stepId: string } | null>(null);
@@ -130,11 +131,21 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
         : stepRows(openProgram)}
       <Button variant="tertiary" label="Om programmet och källor" accessibilityLabel={`Läs om ${openProgram.title} och dess källor`} onPress={() => setSelection({ programId: openProgram.id, stepId: '' })} />
       {completedCount(openProgram) > 0 ? <Button variant="destructive" label="Börja om" accessibilityLabel={`Börja om med ${openProgram.title}`} disabled={Boolean(busyStepKey)} onPress={() => reset(openProgram)} /> : null}
-    </> : visiblePrograms.length === 0 ? <View style={styles.emptyCard}>
-      <Text style={styles.emptyTitle}>{ageWeeks === null ? 'Åldersbaserade program' : 'Träning i er takt'}</Text>
-      <Text style={styles.body}>{ageWeeks === null ? 'Lägg till hundens födelsedatum för att se åldersbaserade program. Sparade framsteg finns kvar här.' : 'Fler program kommer när de är färdiga att använda.'}</Text>
-    </View> : <>
-      {ageWeeks === null ? <Text style={styles.note}>Åldersbaserade program visas när hundens födelsedatum finns. Era sparade framsteg finns kvar här.</Text> : null}
+    </> : visiblePrograms.length === 0 ? error
+      ? ageWeeks === null ? <View style={styles.ageHint}>
+        <Text style={styles.note}>Lägg till hundens födelsedatum för att se åldersbaserade program. Sparade framsteg finns kvar här.</Text>
+        {onAddBirthDate ? <Button label="Lägg till födelsedatum" accessibilityLabel="Lägg till födelsedatum" onPress={onAddBirthDate} /> : null}
+      </View> : null
+      : <View style={styles.emptyCard}>
+        <Text style={styles.emptyTitle}>{ageWeeks === null ? 'Åldersbaserade program' : 'Träning i er takt'}</Text>
+        <Text style={styles.body}>{ageWeeks === null ? 'Lägg till hundens födelsedatum för att se åldersbaserade program. Sparade framsteg finns kvar här.' : 'Fler program kommer när de är färdiga att använda.'}</Text>
+        {ageWeeks === null && onAddBirthDate ? <Button label="Lägg till födelsedatum" accessibilityLabel="Lägg till födelsedatum" onPress={onAddBirthDate} /> : null}
+        {ageWeeks !== null && onOpenKnowledge ? <Button variant="tertiary" label="Öppna Kunskap" accessibilityLabel="Öppna Kunskap" onPress={onOpenKnowledge} /> : null}
+      </View> : <>
+      {ageWeeks === null ? <View style={styles.ageHint}>
+        <Text style={styles.note}>Åldersbaserade program visas när hundens födelsedatum finns. Era sparade framsteg finns kvar här.</Text>
+        {onAddBirthDate ? <Button variant="secondary" label="Lägg till födelsedatum" accessibilityLabel="Lägg till födelsedatum" onPress={onAddBirthDate} /> : null}
+      </View> : null}
       {nextExercise && heroProgram && heroStep ? <View style={styles.nextCard}>
         <Text style={styles.stepMeta}>Nästa övning</Text>
         <Text style={styles.sheetHeading}>{heroStep.title}</Text>
@@ -187,6 +198,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
 function percentage(program: PublishedTrainingProgram) { return program.steps.length ? completedCount(program) / program.steps.length * 100 : 0; }
 const styles = StyleSheet.create({
   screenTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
+  ageHint: { gap: tokens.spacing.xs },
   path: { gap: tokens.spacing.xs },
   currentStep: { padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface, borderWidth: tokens.size.stroke * 2, borderColor: tokens.colors.primary },
   nextCard: { marginTop: tokens.spacing.sm, padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.training.continueSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
