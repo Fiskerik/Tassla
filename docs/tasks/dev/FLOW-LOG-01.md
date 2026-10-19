@@ -44,4 +44,8 @@ Nästa steg efter första handoff: QA identifierade 44 pt- och testluckor. Korri
 - Security final: APPROVE för den statiskt granskade implementationen. Granskaren kunde inte läsa git diff i egen miljö, men granskade v5-källor och query-/scopefiler. Live tvåägar-RLS, anon-denial och native kontroller är separat NOT TESTABLE.
 - Reviewer körs inte före QA-PASS enligt workflow. Taskstatus i kön: blocked; inget visuellt accepterande eller full panelstängning hävdas.
 
-Nästa steg: skapa en uttrycklig branch-checkpoint efter installerade hookar och push enligt Eriks mandat; därefter fortsätt nästa oberoende godkända köpaket. Återuppta FLOW-LOG-01:s render-/§14-del när godkänd renderingsförmåga finns tillgänglig.
+## Pushad checkpoint — 2026-10-20
+
+- Commit `b03eaeb` (`feat(log): add month calendar and date markers`) pushad till `origin/codex/tassla-ui-ux-bundle-2026-10-18` efter godkända commit- och pre-push-hookar.
+- Hookarnas typecheck, edge typecheck, ESLint och testsvit passerade (599/599). Checkpointen bevarar kod/test-verifierat arbete; full QA-acceptans är fortsatt blockerad av visuell §14-evidens och live/native-prov.
+- Fortsätt nästa oberoende paket. Återuppta FLOW-LOG-01:s render-/§14-del när godkänd renderingsförmåga finns tillgänglig.

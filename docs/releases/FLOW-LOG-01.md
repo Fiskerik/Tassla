@@ -1,7 +1,7 @@
 # FLOW-LOG-01 — Logga kalender, snabbval och luft
 
 Datum: 2026-10-20
-Status: lokalt implementerad och kod/test-verifierad; branch-checkpoint kommer att pushas. Paketets visuella acceptans är blockerad eftersom renderad matris, gråskala, AppScreen-bottenmarginal och §14 inte kan verifieras i denna miljö. Inte mergead eller tillgänglig i TestFlight.
+Status: kod/test-verifierad branch-checkpoint pushad 2026-10-20 (`b03eaeb`). Paketets visuella acceptans är blockerad eftersom renderad matris, gråskala, AppScreen-bottenmarginal och §14 inte kan verifieras i denna miljö. Inte mergead eller tillgänglig i TestFlight.
 
 ## Levererat i kodcheckpointen
 
@@ -23,4 +23,4 @@ Svensk månadskalender i befintlig BottomSheet, tillgängliga dagmarkörer för 
 
 ## Nästa steg
 
-Pushad branch-checkpoint för att bevara lokalt verifierat arbete. Fortsätt nästa oberoende paket; återuppta denna blockerade visuella acceptansdel när godkänd renderingsförmåga finns.
+Branch-checkpoint `b03eaeb` är pushad till `codex/tassla-ui-ux-bundle-2026-10-18`. Fortsätt nästa oberoende paket; återuppta denna blockerade visuella acceptansdel när godkänd renderingsförmåga finns.
