@@ -1,6 +1,6 @@
 # UI-09 — Kompakt loggbekräftelse
 
-Status: lokal implementation verifierad; visuell acceptans blockerad / NOT TESTABLE
+Status: RN Web-rendering verifierad för avgränsad toast-resa; full rev02/nativeacceptans och oberoende slutgranskning är öppna
 Datum: 2026-10-10
 Mandat: Erik bad om en mindre grön bekräftelse med bock och placering längre ned från skärmens topp.
 
@@ -51,3 +51,22 @@ Förstå snabbt att en logghändelse verkligen sparats, utan att den gröna åte
 - Oberoende Reviewer: **BLOCK för saknad renderad evidens**. Statisk kod/API-granskning PASS: befintlig Ionicons-export/glyph finns i installerad 15.0.2, endast `confirmed` får success och grön bock, error/unsure retry/cancel, undo, timeout och alert-label kvarstår. Native semantics, smal enhetslayout och stor text är ej verifierade.
 - Renderad liten/stor layout, stor text och success/error-undo jämförelse är **NOT TESTABLE**. `react-native-web`/`esbuild` saknas i workspace och `/tmp/tassla-ui-tools`; inga screenshots kunde skapas. Ingen visuell PASS görs från statisk kodkontroll.
 - Cleanup: inga appberoenden eller out-of-scope-filer lades till. Nästa steg: återuppta renderad visuell kontroll och fyll i avsnitt 14 i `docs/design-rules.md` för success/error/undo, smal/stor bredd, `Fler` öppet/stängt/val därifrån och stor text. Paketet får inte markeras visuellt klart innan dess.
+
+## Renderad QA-uppföljning 2026-10-19
+
+RN Web-evidens vid 375×667 finns nu i `docs/design/evidence/ui-09/VERIFICATION.md`: bekräftad sparning med Fler stängt/öppet, success/error samt 140 %-webbstresstest. Bock och Ångra är synliga på rätt plats även när Fler är öppet; fel visar Retry/Avbryt utan grön bekräftelse. Harnessens saknade `global`-alias gav tidigare ett falskt pressanimationsfel; aliaset lades till endast i den temporära harnessen och ny fångst avslutades utan page errors.
+
+Detta verifierar inte native Dynamic Type, screen reader, fysisk target size eller rörelse. Den sparade Logga-jämförelsen mot aktuell rev02-panel visar att helskärmskompositionen fortsatt avviker; UI-09-rapporten avser därför den fokuserade toastresan, inte full rev02-acceptans. Oberoende QA/Reviewer ska granska evidens och fryst diff innan checkpoint.
+
+
+## Plan amendment v4 — current visual authority and evidence boundary (2026-10-20)
+
+**Architect review:** APPROVE WITH CONDITIONS. The conditions are incorporated here: use the canonical `vision_rev02.jpg` reference; assess the focused toast journey separately from full-screen Logga composition; preserve explicit evidence limits and the historical v3 reviewer block.
+
+**Current comparison target:** `docs/design-rules.md` §1 makes `vision_rev02.jpg` the current visual authority and treats `vision_rev01.jpg`/older package specs as history. This amendment supersedes v3's active comparison target without rewriting its historical review notes. Compare only the focused toast journey (confirmed/error state, placement, readability, `Ångra`, and `Fler` visibility) with the Logga panel in `vision_rev02.jpg` and the applicable §14 rules.
+
+**Focused acceptance boundary:** v4 does not approve the whole Logga screen or MVP panel. The saved full-screen comparison currently records **No** against the rev02 Logga panel; that composition mismatch remains open for its own rev02 work. UI-09 may close only its bounded toast behavior/layout gate after independent QA and Reviewer pass. The selection action after expanding `Fler` is covered by policy test but has no dedicated after-selection screenshot; retain that limitation.
+
+**Current rendered evidence:** normal and 140%-web-stress captures cover success with `Fler` closed/open and error/retry/cancel at 375×667 plus 360/430×844. A scroll check covers 360×844/140% with `Fler` open. The measurement record and image index are in `docs/design/evidence/ui-09/VERIFICATION.md` and `responsive-matrix-2026-10-20.json`. The 140% treatment is post-layout DOM scaling, not native Dynamic Type. Physical targets, safe area, VoiceOver/TalkBack, reduced motion and native behavior remain NOT TESTABLE.
+
+**Reopen decision (historical sequence; status 2026-10-20):** the v3 Reviewer BLOCK was solely for absent rendered evidence. RN Web evidence now exists; independent QA and Reviewer have returned PASS for this bounded scope. This v4 closeout contains no toast implementation code changes.

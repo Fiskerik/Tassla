@@ -3309,7 +3309,7 @@
       "id": "UI-09",
       "title": "Kompakt loggbekräftelse med grön bock",
       "mvp_requirement": "Eriks uttryckliga UI-begäran 2026-10-10 om mindre grön sparbekräftelse, bockikon och placering närmare loggen",
-      "plan": "docs/plans/UI-09-toast-feedback-ux-spec.md v3",
+      "plan": "docs/plans/UI-09-toast-feedback-ux-spec.md v4",
       "write_paths": [
         "src/components/ui/Toast.tsx",
         "src/features/puppy-log/LogScreen.tsx",
@@ -3327,16 +3327,17 @@
         "The confirmation stays visible at a narrow mobile height with Fler expanded and collapsed, without covering controls or the undo action",
         "The icon is hidden from screen readers and the confirmation remains understandable without color; undo touch target, small widths and large text remain usable",
         "Other existing success-toast callers receive the compact check treatment without a placement change",
-        "No time/date/data-schema changes are included; those are planned separately for Home and health history"
+        "No time/date/data-schema changes are included; those are planned separately for Home and health history",
+        "UI-09 approval covers only the focused toast journey; full-screen Logga composition against vision_rev02.jpg is separately graded and may remain open."
       ],
       "checks": [
         "Focused toast policy tests and pnpm check",
         "iOS export, git diff --check and python tools/dev_flow.py validate",
         "Independent QA and Reviewer",
-        "Rendered success and error/undo states compared with vision_rev01.jpg, small/large layout and large text; otherwise itemize NOT TESTABLE"
+        "Rendered success/error/undo and Fler open/closed compared with the focused Logga journey in vision_rev02.jpg at 375x667 and 360/430x844, normal and 140%-RN-Web stress; record full-screen rev02 composition separately, and itemize missing interactions/native checks as NOT TESTABLE. Fler-selection is policy-tested but has no after-selection screenshot."
       ],
       "depends_on": [],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -3367,9 +3368,45 @@
           "to": "blocked",
           "actor": "reviewer",
           "evidence": "Independent Reviewer BLOCK: static code/API checks pass, but required rendered comparison/checklist is absent; visual acceptance is NOT TESTABLE in current RN Web tool environment. No commit/push."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Historical reviewer block was for missing screenshots. RN Web evidence is now available at 375x667 and in the 360/430x844 responsive matrix; Architect reviewed amendment v4 with conditions to use canonical vision_rev02 and keep full-screen mismatch separate. Next: incorporate review conditions and run independent QA, then Reviewer."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE WITH CONDITIONS for plan v4; all five conditions are incorporated in v4 plan, queue acceptance, release status, and evidence boundaries. UX Critic PROCEED. Focused toast journey only; whole-screen rev02 remains separately No/open."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume bounded UI-09 closeout on codex/tassla-ui-ux-bundle-2026-10-18. Toast implementation already exists at historical checkpoint 617fb67; this continuation updates evidence and docs only, with no product-code change. Independent QA is reviewing the frozen evidence."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation/evidence checkpoint frozen: no product-source change; plan v4 and full §14 matrix updated. Full pnpm check passed (typecheck, edge typecheck, ESLint, all tests); focused toast policy test passed 5/5; git diff --check and queue validation passed. Independent QA PASS for focused toast journey with stated limits."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: inspected v4 plan/queue/release/§14 evidence, current Toast/LogScreen code, all captures and responsive matrix. Confirms focused toast only; full-screen rev02 remains No/open, missing after-Fler screenshot and native NOT TESTABLE remain explicit; 0.42 CSS-px gap tracked separately."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS on v4 bounded toast journey and synchronized queue/release/plan evidence. Full-screen rev02 remains separately No/open; after-Fler selection screenshot missing; native accessibility, Dynamic Type, physical targets, safe area and reduced motion NOT TESTABLE. Checkpoint documentation/evidence only, no product-code change."
         }
       ],
-      "next_step": "Commit/push 617fb67 verified; visual acceptance remains open. QA-11 owns authorized follow-up corrections; prior write ownership released."
+      "next_step": "Independent Reviewer PASS on v4 bounded toast journey and synchronized queue/release/plan evidence. Full-screen rev02 remains separately No/open; after-Fler selection screenshot missing; native accessibility, Dynamic Type, physical targets, safe area and reduced motion NOT TESTABLE. Checkpoint documentation/evidence only, no product-code change."
     },
     {
       "id": "FIX-38",
@@ -7169,27 +7206,48 @@
       "id": "FLOW-LOG-01",
       "title": "Logga med bevarad snabbresa och historik",
       "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "plan": "docs/plans/FLOW-LOG-01-calendar-ux-plan.md v1",
       "write_paths": [
         "src/features/puppy-log/LogScreen.tsx",
-        "src/features/home/ProductWorkspace.tsx"
+        "src/features/puppy-log/LogDateCalendar.tsx",
+        "src/features/puppy-log/log-calendar-model.ts",
+        "src/data/workspace-data.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/theme/tokens.ts",
+        "src/components/AppPrimitives.tsx (only if shared AppScreen measurement requires a correction)",
+        "src/features/puppy-log/README.md",
+        "tests/log-calendar-model.test.mjs",
+        "tests/workspace-log-calendar.test.mjs",
+        "tests/log-calendar-policy.test.mjs",
+        "docs/plans/FLOW-LOG-01-calendar-ux-plan.md",
+        "docs/design/evidence/flow-log-01/",
+        "docs/releases/FLOW-LOG-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
       ],
       "acceptance": [
-        "Ett tryck på primärt snabbval registrerar eller begär befintlig dublettbekräftelse",
-        "Datumbyte, redigering, radering och ångra använder bekräftade händelser",
-        "Översikt öppnar Insikter när panel 8 finns; ingen död flik"
+        "Tapping the selected Log date opens a Swedish month calendar with Monday-first weekdays, selected day, previous/next month, today and no future date selection; choosing a day updates history and closes the calendar.",
+        "Every day with at least one event for the active dog is marked, including events outside the current UI page; bounded month query is paginated to completeness and queries timestamps only.",
+        "Loading, empty and query-error states are distinct; query failure never implies an empty month. Preview markers use fixture events.",
+        "Account/dog scope change, month change and stale responses cannot show another scope; opening the calendar re-fetches current month so confirmed add/edit/delete/undo is reflected.",
+        "Pee is warm yellow/amber and Water remains blue in quick actions, timeline and icon chips; Accident remains red and visual contrast is checked; short labels and one-tap logging remain.",
+        "At least 8 CSS px free gap remains between the final Log action and bottom tablist at scroll bottom in actual AppScreen for 360x844 at 140% stress with Fler open; sanity-check 375/430 and Fler open/closed without duplicate safe-area inset.",
+        "Rendered evidence covers 360/375/430, normal and 140% web proxy, calendar markers/loading/error/empty, selected date, quick log, accident, water and bottom spacing; full-screen rev02 comparison is reported separately.",
+        "Native Dynamic Type, physical 44x44 pt targets, VoiceOver/TalkBack, native safe area, reduced motion and signed build are marked NOT TESTABLE unless actually verified on device."
       ],
       "checks": [
-        "pnpm check",
-        "git diff --check",
-        "python tools/dev_flow.py validate"
+        "Focused log calendar model/data/policy tests and pnpm check",
+        "Public pnpm bundle:ios",
+        "Rendered RN Web interaction/matrix evidence plus §14 rows 1-18",
+        "git diff --check and python -X utf8 tools/dev_flow.py validate",
+        "Independent QA and Reviewer"
       ],
       "depends_on": [
         "UX-LOG-EDITOR-01"
       ],
       "status": "planned",
       "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "next_step": "Architect and UX Critic review plan v1. Include UI-09 measured 0.42 CSS-px gap as the existing FLOW-LOG/UI follow-up, verify actual AppScreen safe-area/scroll behavior, then refine acceptance before implementation.",
       "priority": "P2",
       "panels": [
         "5"
@@ -7197,10 +7255,12 @@
       "risk_class": "M",
       "checkpoint": "Panel 5 funktionellt regressionsprov; hänvisa till tidigare design- och editor-checkpoints.",
       "test_evidence": [
-        "Riktade logg-/datumprov, fel/unknown/undo, public/review §14 och 140 %"
+        "Query tests prove active dog + local month bounds + pagination completeness and stale/abort protection.",
+        "Pure calendar tests cover Monday-first weeks, leap year/month boundaries, local timezone and DST date keys.",
+        "Rendered public/review evidence covers dots, date selection, error/loading/empty, quick categories and measured AppScreen bottom gap."
       ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "implementation_state": "proposed; plan only, no product code changed",
+      "evidence_status": "not_run; Architect and UX Critic review required before ready"
     },
     {
       "id": "FLOW-TRAINING-01",
