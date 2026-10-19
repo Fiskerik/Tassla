@@ -7808,7 +7808,7 @@
           "evidence": "Independent QA PASS and Reviewer PASS 2026-10-19. Typecheck, targeted ESLint, git diff --check, queue validation, public/review RN Web render evidence PASS; no test suites run. Native VoiceOver, physical Dynamic Type and OS Reduce Motion remain NOT TESTABLE and listed for manual iPhone checks. Local checkpoint only; no commit/push because the branch contains separate active changes."
         }
       ],
-      "next_step": "Full pnpm check 492/492 och iOS Expo-export PASS efter separat testassertion-commit dd9e30c. Package commit/push closeout is recorded in release history.",
+      "next_step": "Pushad till origin/codex/ux-main-tab-transition; package commit 4c96455, remote head vid push 31f6d10. Manuella iPhone-kontroller kvar.",
       "priority": "P1",
       "panels": [
         "1",
@@ -7822,7 +7822,7 @@
         "Separat VoiceOver, native Dynamic Type och OS reduced-motion checklista; verifiera att VoiceOver når Ångra efter snabbregistrering och att just dess toast inte auto-försvinner; lokala webbevis rapporteras inte som native PASS."
       ],
       "implementation_state": "Accessibility implementation complete; independent QA/Reviewer PASS. Full pnpm check passed (492/492), iOS Expo export passed, and stale undo assertions were separately corrected in dd9e30c.",
-      "evidence_status": "PASS: typecheck, edge typecheck, targeted ESLint, pnpm check 492/492, iOS Expo export, git diff checks, queue validation, visual QA and independent QA/Reviewer. Manual native VoiceOver/Dynamic Type/reduced motion remain NOT TESTABLE."
+      "evidence_status": "PASS: typecheck, edge typecheck, targeted ESLint, pnpm check 492/492, iOS Expo export, git diff checks, queue validation, visual QA and independent QA/Reviewer. Manual native VoiceOver/Dynamic Type/reduced motion remain NOT TESTABLE. Push verified: origin branch at 31f6d10."
     },
     {
       "id": "UIUX-2B-SUPPORT-ACCESS-01",
@@ -7946,7 +7946,7 @@
           "evidence": "Independent Reviewer PASS v1.6 after prior footer BLOCK. Current report/captures verify full Klar visibility for all 24 public/review variants, routine content scrolls independently while footer remains fixed, routine-editor Save/Cancel are reachable, and callbacks, keyboardAware behavior and persistence are preserved. QA PASS; typecheck, targeted ESLint, diff check and queue validation PASS. Native Dynamic Type/VoiceOver/iOS keyboard remain manual NOT TESTABLE. Local checkpoint closed; no commit/push."
         }
       ],
-      "next_step": "Full pnpm check 492/492 and iOS Expo-export PASS; package commit/push closeout is recorded in release history.",
+      "next_step": "Pushad till origin/codex/ux-main-tab-transition; package commit 4c96455, remote head vid push 31f6d10. Manuella iPhone-kontroller kvar.",
       "priority": "P1",
       "panels": [],
       "risk_class": "M",
@@ -7957,7 +7957,7 @@
         "Record native iOS keyboard and Dynamic Type as NOT TESTABLE unless exercised on device."
       ],
       "implementation_state": "Support accessibility implementation complete; independent QA/Reviewer PASS. Full pnpm check passed (492/492) and iOS Expo export passed.",
-      "evidence_status": "PASS: typecheck, edge typecheck, targeted ESLint, pnpm check 492/492, iOS Expo export, git diff checks, queue validation, 24 captures, and independent QA/Reviewer. Native Dynamic Type/VoiceOver/iOS keyboard remain manual NOT TESTABLE."
+      "evidence_status": "PASS: typecheck, edge typecheck, targeted ESLint, pnpm check 492/492, iOS Expo export, git diff checks, queue validation, 24 captures, and independent QA/Reviewer. Native Dynamic Type/VoiceOver/iOS keyboard remain manual NOT TESTABLE. Push verified: origin branch at 31f6d10."
     },
     {
       "id": "UIUX-2A-TEST-ALIGN-01",
@@ -8019,7 +8019,7 @@
           "evidence": "Independent Reviewer PASS; test-only commit dd9e30c; targeted 13/13 and pnpm check 492/492 PASS"
         }
       ],
-      "next_step": "Independent Reviewer PASS; test-only commit dd9e30c; targeted 13/13 and pnpm check 492/492 PASS",
+      "next_step": "Avslutad; testcommit dd9e30c pushades tillsammans med UIUX 2a/2b till origin/codex/ux-main-tab-transition.",
       "priority": "P1",
       "panels": [
         "5"
@@ -8031,7 +8031,7 @@
         "LogScreen currently gates undoableQuickLogId on saved add and a provided onUndo callback, passes that exact id, and keeps the toast when screenReaderEnabled is not false."
       ],
       "implementation_state": "Endast två inaktuella Logg-assertioner ändrade. PASS: riktade tester 13/13, pnpm check 492/492, iOS Expo-export, queue validation och diff checks. Architect APPROVE, Reviewer PASS. Separat testcommit dd9e30c.",
-      "evidence_status": "DONE; oberoende Reviewer PASS; separat testcommit dd9e30c."
+      "evidence_status": "DONE; Reviewer PASS; testcommit dd9e30c is on pushed origin branch."
     }
   ]
 }

@@ -545,3 +545,14 @@ Paketcommit: `7b9da840d2ca2ac8f5d5ed998d73495858c98eae`. Bascommit617fb67. Pusha
 2026-10-15: rutinhallens kompakta gruppering, samlade editläge, dagsval och Home-status är implementerade. QA hittade att helraderingsbekräftelsen påstod att dagskopior behålls fast migrationen cascade-raderar kopior och sparade överhoppningar. Texten korrigerades; endast den destruktiva knappen raderar och `Avbryt` bevarar rutinen. Oberoende QA och Reviewer PASS.
 
 I den isolerade källkopian passerade app-typecheck, edge-typecheck, full ESLint och Node-testsviten (492/492). Ingen databas-/migrationsåtgärd genomfördes. Native Alert-rendering, VoiceOver/Dynamic Type, live Supabase/RLS och migration är ej verifierade. Den fullständiga panel-4-resan med fungerande filter och kommande planer återstår som `FLOW-HOME-CHECKLIST-01`. Underlag: `docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md` och `docs/tasks/dev/rapport.md`. Checkpoint: committen `fix: clarify routine deletion cascade` på `codex/ux-rethink-2026-10-15`.
+
+
+## 2026-10-19 — UIUX-2A / UIUX-2B tillgänglighet
+
+Tillgänglighetspaketen för Hem/Logg och stödvyerna är committade på `codex/ux-main-tab-transition` och pushade till `origin`; efter push verifierades att `origin/codex/ux-main-tab-transition` pekade på `31f6d10`.
+
+Commits: `dd9e30c` uppdaterar två föråldrade Logg-assertioner utan produktkodändring; `4c96455` innehåller UIUX 2a/2b och evidens; `31f6d10` ersätter nio befintliga Markdown-hardbreaks med explicit backslash-syntax så den nya branchens whitespace-gate passerar utan att ändra radbrytningarna.
+
+Verifiering: `pnpm check` PASS (492/492 tester, typecheck, edge typecheck och lint), iOS Expo-export PASS, kövalidering och diff checks PASS. Pre-commit och slutlig pre-push körde hela kontrollsviten; slutlig push lyckades. Den första pre-push stoppades endast av de äldre trailing-space-markörerna och inget hook-bypass användes.
+
+Kvar för manuell iPhone-kontroll: VoiceOver, fysisk Dynamic Type, OS reducerad rörelse och iOS-tangentbord. Codemagic/Xcode-arkivering kördes inte; Expo iOS bundle-export är inte en native arkivbuild.

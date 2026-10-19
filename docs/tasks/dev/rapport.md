@@ -821,3 +821,8 @@ Erik har nu uttryckligen bett att committa och pusha efter de lokala gates. Erik
 ### UIUX-2A-TEST-ALIGN-01 — avslutad, 2026-10-19
 
 Två befintliga Logg-assertioner för Ångra uppdaterades mot den verifierade implementationen; inget produktbeteende ändrades. Architect APPROVE och oberoende Reviewer PASS. Riktade tester 13/13; full `pnpm check` PASS med 492/492 tester efter typechecks och lint. iOS Expo-export, kövalidering och diff checks PASS. Separat testcommit: `dd9e30c`.
+
+
+### UIUX-2A/2B — commit och push, 2026-10-19
+
+Testfix `dd9e30c`, UIUX-paket `4c96455` och whitespace-gate-fix `31f6d10` ligger nu på `origin/codex/ux-main-tab-transition`; remote-head verifierades efter push. Slutlig pre-push passerade full `pnpm check` (492/492) och diff-check. iOS Expo-export passerar. Codemagic/Xcode archive kördes inte. Flikövergångens implementation, plan och task är fortsatt ostage:ade/okommiterade enligt dess blockerade visuella kontrollpunkt.
