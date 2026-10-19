@@ -34,22 +34,27 @@ test('search ignores case, accents, leading and trailing whitespace', () => {
   assert.deepEqual(filterBreedOptions(breeds, 'aIreS').map(({ id }) => id), ['fci-4']);
 });
 
-test('picker presents one selected value and a virtualized searchable catalog with recovery actions', () => {
-  assert.match(pickerSource, /<FlatList/);
-  assert.doesNotMatch(pickerSource, /<ScrollView/);
+test('picker uses the same inline text field for value and breed search', () => {
+  assert.match(pickerSource, /<TextInput/);
+  assert.match(pickerSource, /value=\{expanded \? query : selectedLabel\}/);
+  assert.match(pickerSource, /onFocus=\{openPicker\}/);
+  assert.match(pickerSource, /accessibilityLabel=\{expanded \? 'Stäng raslista' : 'Visa raslista'\}/);
+  assert.match(pickerSource, /onPress=\{togglePicker\}/);
+  assert.match(pickerSource, /setQuery\(''\)/);
+  assert.match(pickerSource, /<ScrollView/);
+  assert.match(pickerSource, /maxHeight: tokens\.size\.touchMin \* 6/);
+  assert.doesNotMatch(pickerSource, /<Modal/);
   assert.match(pickerSource, /Rensa sökning/);
   assert.match(pickerSource, /Ingen träff i FCI-listan/);
   assert.match(pickerSource, /FCI-listan innehåller inte alla raser/);
   assert.match(pickerSource, /fallbackOptions\.map/);
-  assert.match(pickerSource, /Okänd ras|unknown/);
-  assert.match(pickerSource, /Blandras|mixed/);
-  assert.match(pickerSource, /onShow={focusSearch}/);
-  assert.match(pickerSource, /setAccessibilityFocus\(node\)/);
+  assert.match(pickerSource, /onAccessibilityEscape|event\.nativeEvent\.key !== 'Escape'/);
+  assert.match(pickerSource, /BackHandler\.addEventListener/);
   assert.match(pickerSource, /accessibilityState=\{\{ selected \}\}/);
 });
 
-test('new registration defaults to an existing breed id and requires it to be present in the loaded catalog', () => {
-  assert.match(profileSource, /useState\('mixed'\)/);
+test('new registration starts without a breed and requires a catalog id before submit', () => {
+  assert.match(profileSource, /useState\(''\)/);
   assert.match(profileSource, /breeds\.some\(\(breed\) => breed\.id === breedId\)/);
   assert.match(profileSource, /<SearchableBreedPicker/);
   assert.match(profileSource, /onChange=\{\(id\) => \{ setBreedId\(id\); markEdited\(\); \}\}/);

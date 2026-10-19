@@ -1,0 +1,171 @@
+{
+  "task": "UX-TRAINING-DETAIL-2026-10-19",
+  "date": "2026-10-19",
+  "status": "qa_and_reviewer_pass",
+  "ownerAddendum": {
+    "requirement": "Equal program-card dimensions across viewport widths and title lengths",
+    "baseHeightLogicalPoints": 260,
+    "systemFontScaleApplied": true,
+    "visibleTitleMaxLines": 3,
+    "fullAccessibleTitlePreserved": true
+  },
+  "measurements": {
+    "public375x844": [
+      {
+        "height": 260,
+        "width": 153.6875
+      },
+      {
+        "height": 260,
+        "width": 153.6875
+      }
+    ],
+    "public430x844": [
+      {
+        "height": 260,
+        "width": 179.53125
+      },
+      {
+        "height": 260,
+        "width": 179.53125
+      }
+    ],
+    "publicLongTitle375x844": [
+      {
+        "height": 260,
+        "width": 153.6875
+      },
+      {
+        "height": 260,
+        "width": 153.6875
+      }
+    ],
+    "review140Proxy375x844": [
+      {
+        "height": 364,
+        "width": 153.6875
+      },
+      {
+        "height": 364,
+        "width": 153.6875
+      },
+      {
+        "height": 364,
+        "width": 153.6875
+      }
+    ],
+    "continueCard": {
+      "normal": {
+        "card": [
+          327,
+          110
+        ],
+        "image": [
+          84,
+          108
+        ],
+        "borderInsetPerEdge": 1
+      },
+      "longTitle": {
+        "card": [
+          327,
+          178
+        ],
+        "image": [
+          84,
+          176
+        ],
+        "borderInsetPerEdge": 1
+      },
+      "text140Proxy": {
+        "card": [
+          327,
+          202.84375
+        ],
+        "image": [
+          84,
+          200.84375
+        ],
+        "borderInsetPerEdge": 1
+      }
+    }
+  },
+  "detailReachability": {
+    "375x667": {
+      "actionable": {
+        "visible": true,
+        "scrollTopBeforeAfter": [
+          0,
+          0
+        ],
+        "scrollHeight": 398,
+        "clientHeight": 398
+      },
+      "completedUnmark": {
+        "visible": true,
+        "scrollTopBeforeAfter": [
+          0,
+          0
+        ],
+        "scrollHeight": 434,
+        "clientHeight": 434
+      }
+    },
+    "375x667_140Proxy": {
+      "actionable": {
+        "visible": true,
+        "scrollTopBeforeAfter": [
+          0,
+          0
+        ],
+        "scrollHeight": 495,
+        "clientHeight": 495
+      },
+      "completedUnmark": {
+        "visible": true,
+        "scrollTopBeforeAfter": [
+          0,
+          49
+        ],
+        "scrollHeight": 573,
+        "clientHeight": 512,
+        "reason": "Avmarkera is visible after natural BottomSheet scrolling"
+      }
+    }
+  },
+  "browserErrors": {
+    "public": 0,
+    "review": 0
+  },
+  "checks": {
+    "typecheck": "PASS",
+    "focusedEslint": "PASS",
+    "publicBuildCapture": "PASS",
+    "reviewBuildCapture": "PASS",
+    "gitDiffCheck": "PASS",
+    "devFlowValidate": "PASS",
+    "pnpmCheck": "PASS: typecheck, edge typecheck, lint, 618/618 tests"
+  },
+  "visualAcceptance": {
+    "panel6Overall": "NO",
+    "composition": "NO",
+    "colorDistribution": "YES",
+    "typography": "YES",
+    "componentShapes": "YES",
+    "imagery": "NO",
+    "contentDensity": "NO"
+  },
+  "limitations": [
+    "Synthetic local fixture only",
+    "No live Supabase/RLS or production persistence verified",
+    "Native VoiceOver/TalkBack, keyboard, and actual device Dynamic Type not testable",
+    "140% font rendering is a CSS proxy"
+  ],
+  "testSuite": "not added or run",
+  "qaVerdict": "PASS",
+  "qaReport": "QA-REPORT.md",
+  "reviewerVerdict": "PASS",
+  "reviewerReport": "REVIEW-REPORT.md",
+  "qaCorrectionRecheck": "PASS: explicit selectedProgram toast guards are behavior-equivalent; prior visual evidence applies",
+  "reviewerCorrectionRecheck": "PASS: explicit selectedProgram toast guards match the existing assertion; no behavior change"
+}

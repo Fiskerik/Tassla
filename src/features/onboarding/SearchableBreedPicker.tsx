@@ -1,23 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AccessibilityInfo,
-  FlatList,
-  findNodeHandle,
+  BackHandler,
   Keyboard,
-  KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
-  type ListRenderItemInfo,
+  type NativeSyntheticEvent,
+  type TextInputKeyPressEventData,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '../../theme/tokens';
-import { useReducedMotion } from '../../components/ui/Motion';
 import type { BreedOption } from '../../data/app-data';
 import { filterBreedOptions } from './breed-picker-model';
 
@@ -34,67 +30,100 @@ export function SearchableBreedPicker({
   disabled?: boolean;
   valueLabelFallback?: string;
 }) {
-  const insets = useSafeAreaInsets();
-  const reduceMotion = useReducedMotion();
-  const [visible, setVisible] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState('');
-  const searchRef = useRef<TextInput>(null);
-  const openerRef = useRef<View>(null);
-  const opened = useRef(false);
+  const inputRef = useRef<TextInput>(null);
+  const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const filteredBreeds = useMemo(() => filterBreedOptions(breeds, query), [breeds, query]);
   const normalizedQuery = query.trim();
   const selectedBreed = breeds.find((breed) => breed.id === value);
   const selectedLabel = selectedBreed?.name ?? valueLabelFallback ?? '';
 
+  const cancelPendingBlur = useCallback(() => {
+    if (blurTimeout.current === null) return;
+    clearTimeout(blurTimeout.current);
+    blurTimeout.current = null;
+  }, []);
+
+  const closePicker = useCallback((dismissKeyboard = true) => {
+    cancelPendingBlur();
+    setExpanded(false);
+    setQuery('');
+    if (dismissKeyboard) Keyboard.dismiss();
+  }, [cancelPendingBlur]);
+
+  useEffect(() => () => cancelPendingBlur(), [cancelPendingBlur]);
+
   useEffect(() => {
-    if (visible) {
-      opened.current = true;
-      return;
-    }
-    if (!opened.current) return;
-    const frame = requestAnimationFrame(() => {
-      const trigger = openerRef.current as unknown as { focus?: (options?: FocusOptions) => void } | null;
-      if (Platform.OS === 'web') trigger?.focus?.({ preventScroll: true });
-      if (Platform.OS !== 'web') {
-        const node = findNodeHandle(openerRef.current);
-        if (node !== null) AccessibilityInfo.setAccessibilityFocus(node);
-      }
-      opened.current = false;
+    if (!expanded || Platform.OS !== 'android') return undefined;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      closePicker();
+      inputRef.current?.blur();
+      return true;
     });
-    return () => cancelAnimationFrame(frame);
-  }, [visible]);
+    return () => subscription.remove();
+  }, [closePicker, expanded]);
 
   function openPicker() {
     if (disabled) return;
+    cancelPendingBlur();
     setQuery('');
-    setVisible(true);
+    setExpanded(true);
   }
 
-  function closePicker() {
-    Keyboard.dismiss();
-    setVisible(false);
+  function handleBlur() {
+    cancelPendingBlur();
+    blurTimeout.current = setTimeout(() => {
+      blurTimeout.current = null;
+      closePicker(false);
+    }, 180);
+  }
+
+  function handleChangeText(text: string) {
+    cancelPendingBlur();
+    setQuery(text);
+    setExpanded(true);
   }
 
   function chooseBreed(breed: BreedOption) {
+    cancelPendingBlur();
     onChange(breed.id);
     closePicker();
+    inputRef.current?.blur();
   }
 
-  function focusSearch() {
-    searchRef.current?.focus();
-    if (Platform.OS !== 'web') {
-      const node = findNodeHandle(searchRef.current);
-      if (node !== null) AccessibilityInfo.setAccessibilityFocus(node);
+  function clearSearch() {
+    cancelPendingBlur();
+    setQuery('');
+    inputRef.current?.focus();
+  }
+
+  function togglePicker() {
+    if (disabled) return;
+    if (expanded) {
+      closePicker();
+      inputRef.current?.blur();
+      return;
     }
+    openPicker();
+    inputRef.current?.focus();
   }
 
-  function renderBreed({ item }: ListRenderItemInfo<BreedOption>) {
+  function handleKeyPress(event: NativeSyntheticEvent<TextInputKeyPressEventData>) {
+    if (event.nativeEvent.key !== 'Escape' || !expanded) return;
+    closePicker();
+    inputRef.current?.blur();
+  }
+
+  function renderBreed(item: BreedOption) {
     const selected = item.id === value;
     return (
       <Pressable
-        accessibilityRole="button"
+        key={item.id}
+        accessibilityRole="radio"
         accessibilityLabel={item.name}
         accessibilityState={{ selected }}
+        onPressIn={cancelPendingBlur}
         onPress={() => chooseBreed(item)}
         style={({ pressed }) => [styles.option, selected && styles.optionSelected, pressed && styles.pressed]}
       >
@@ -109,128 +138,107 @@ export function SearchableBreedPicker({
     .filter((breed): breed is BreedOption => Boolean(breed));
 
   return (
-    <>
-      <Pressable
-        ref={openerRef}
-        accessibilityRole="button"
-        accessibilityLabel={selectedLabel ? 'Ras: ' + selectedLabel + '. Välj ras.' : 'Välj hundras'}
-        accessibilityHint="Öppnar en lista där du kan bläddra eller söka."
-        accessibilityState={{ disabled, expanded: visible }}
-        disabled={disabled}
-        onPress={openPicker}
-        style={({ pressed }) => [styles.trigger, disabled && styles.disabled, pressed && styles.pressed]}
-      >
-        <Text numberOfLines={2} style={[styles.triggerText, !selectedLabel && styles.placeholder]}>
-          {selectedLabel || 'Välj ras'}
-        </Text>
-        <Ionicons name="chevron-down" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-      </Pressable>
-
-      <Modal
-        visible={visible}
-        transparent
-        animationType={reduceMotion ? 'none' : 'slide'}
-        onRequestClose={closePicker}
-        onShow={focusSearch}
-        accessibilityViewIsModal
-      >
-        <View style={styles.backdrop}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={styles.keyboardAvoiding}
+    <View style={styles.container}>
+      <View style={[styles.field, expanded && styles.fieldExpanded, disabled && styles.disabled]}>
+        <TextInput
+          ref={inputRef}
+          accessibilityLabel="Ras"
+          accessibilityHint={expanded ? 'Skriv för att söka eller välj ett rasförslag nedanför.' : 'Tryck för att visa och söka bland hundraser.'}
+          accessibilityState={{ disabled, expanded }}
+          autoCapitalize="none"
+          autoCorrect={false}
+          editable={!disabled}
+          onBlur={handleBlur}
+          onChangeText={handleChangeText}
+          onFocus={openPicker}
+          onKeyPress={handleKeyPress}
+          onSubmitEditing={() => Keyboard.dismiss()}
+          placeholder={selectedLabel || 'Välj eller sök ras'}
+          placeholderTextColor={tokens.colors.textSecondary}
+          returnKeyType="search"
+          spellCheck={false}
+          underlineColorAndroid="transparent"
+          style={styles.input}
+          value={expanded ? query : selectedLabel}
+        />
+        {expanded && query.length > 0 ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Rensa sökning"
+            onPressIn={cancelPendingBlur}
+            onPress={clearSearch}
+            style={({ pressed }) => [styles.clearButton, pressed && styles.pressed]}
           >
-            <Pressable accessibilityRole="button" accessibilityLabel="Stäng raslistan" onPress={closePicker} style={styles.dismissArea} />
-            <View accessibilityRole="summary" accessibilityLabel="Välj ras" style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, tokens.spacing.lg) }]}>
-              <View style={styles.header}>
-                <Text accessibilityRole="header" style={styles.title}>Välj ras</Text>
-                <Pressable accessibilityRole="button" accessibilityLabel="Stäng raslistan" onPress={closePicker} style={styles.closeButton}>
-                  <Ionicons name="close" size={tokens.size.iconMd} color={tokens.colors.textPrimary} />
-                </Pressable>
-              </View>
-              <View style={styles.searchRow}>
-                <TextInput
-                  ref={searchRef}
-                  accessibilityLabel="Sök hundras"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  onChangeText={setQuery}
-                  onSubmitEditing={() => Keyboard.dismiss()}
-                  placeholder="Sök bland hundraser"
-                  placeholderTextColor={tokens.colors.textSecondary}
-                  returnKeyType="search"
-                  style={styles.search}
-                  value={query}
-                />
-                {query.length > 0 ? (
-                  <Pressable accessibilityRole="button" accessibilityLabel="Rensa sökning" onPress={() => setQuery('')} style={styles.clearButton}>
-                    <Ionicons name="close-circle" size={tokens.size.iconSm} color={tokens.colors.textSecondary} />
-                  </Pressable>
+            <Ionicons name="close-circle" size={tokens.size.iconSm} color={tokens.colors.textSecondary} />
+          </Pressable>
+        ) : null}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={expanded ? 'Stäng raslista' : 'Visa raslista'}
+          accessibilityHint="Öppnar eller stänger raslistan."
+          accessibilityState={{ disabled, expanded }}
+          disabled={disabled}
+          onPressIn={cancelPendingBlur}
+          onPress={togglePicker}
+          style={({ pressed }) => [styles.chevron, pressed && styles.pressed]}
+        >
+          <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={tokens.size.iconSm} color={tokens.colors.primary} />
+        </Pressable>
+      </View>
+
+      {expanded ? (
+        <View style={styles.dropdown}>
+          <ScrollView
+            accessibilityRole="radiogroup"
+            accessibilityLabel="Raser"
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled
+            showsVerticalScrollIndicator
+            style={styles.list}
+            contentContainerStyle={styles.listContent}
+          >
+            {filteredBreeds.length > 0 ? filteredBreeds.map(renderBreed) : (
+              <View style={styles.empty}>
+                <Text accessibilityLiveRegion="polite" style={styles.emptyTitle}>
+                  {normalizedQuery ? 'Ingen träff i FCI-listan.' : 'Raslistan är tom just nu.'}
+                </Text>
+                {normalizedQuery ? (
+                  <>
+                    <Text style={styles.emptyCopy}>FCI-listan innehåller inte alla raser. Du kan ändå välja ett av alternativen nedan.</Text>
+                    {fallbackOptions.map((breed) => (
+                      <Pressable key={breed.id} accessibilityRole="radio" accessibilityLabel={breed.name} accessibilityState={{ selected: breed.id === value }} onPressIn={cancelPendingBlur} onPress={() => chooseBreed(breed)} style={({ pressed }) => [styles.option, styles.fallbackOption, pressed && styles.pressed]}>
+                        <Text style={styles.optionText}>{breed.name}</Text>
+                      </Pressable>
+                    ))}
+                  </>
                 ) : null}
               </View>
-              <Text style={styles.hint}>Blandras visas först. Du kan söka på hela eller delar av rasnamnet.</Text>
-              <FlatList
-                accessibilityRole="radiogroup"
-                accessibilityLabel="Raser"
-                data={filteredBreeds}
-                keyExtractor={(breed) => breed.id}
-                keyboardShouldPersistTaps="handled"
-                initialNumToRender={18}
-                maxToRenderPerBatch={24}
-                windowSize={7}
-                renderItem={renderBreed}
-                style={styles.list}
-                contentContainerStyle={styles.listContent}
-                ListEmptyComponent={
-                  <View style={styles.empty}>
-                    <Text accessibilityLiveRegion="polite" style={styles.emptyTitle}>
-                      {normalizedQuery ? 'Ingen träff i FCI-listan.' : 'Raslistan är tom just nu.'}
-                    </Text>
-                    {normalizedQuery ? (
-                      <>
-                        <Text style={styles.emptyCopy}>FCI-listan innehåller inte alla raser. Du kan ändå välja ett av alternativen nedan.</Text>
-                        {fallbackOptions.map((breed) => (
-                          <Pressable key={breed.id} accessibilityRole="button" accessibilityLabel={'Välj ' + breed.name} onPress={() => chooseBreed(breed)} style={({ pressed }) => [styles.option, styles.fallbackOption, pressed && styles.pressed]}>
-                            <Text style={styles.optionText}>{breed.name}</Text>
-                          </Pressable>
-                        ))}
-                      </>
-                    ) : null}
-                  </View>
-                }
-              />
-            </View>
-          </KeyboardAvoidingView>
+            )}
+          </ScrollView>
         </View>
-      </Modal>
-    </>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  trigger: { minHeight: tokens.size.touchMin, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
-  triggerText: { flex: 1, ...tokens.typography.body, color: tokens.colors.textPrimary },
-  placeholder: { color: tokens.colors.textSecondary },
+  container: { position: 'relative', zIndex: 10 },
+  field: { minHeight: tokens.size.buttonHeight, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, flexDirection: 'row', alignItems: 'center', overflow: 'hidden' },
+  fieldExpanded: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
+  input: { flex: 1, minHeight: tokens.size.touchMin - tokens.size.stroke * 2, paddingHorizontal: tokens.spacing.md, paddingVertical: 0, margin: 0, borderWidth: 0, borderColor: 'transparent', backgroundColor: 'transparent', color: tokens.colors.textPrimary, ...tokens.typography.body, textAlignVertical: 'center', outlineWidth: 0, outlineColor: 'transparent' },
+  chevron: { width: tokens.size.touchMin, height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
   disabled: { opacity: 0.6 },
-  pressed: { opacity: 0.72 },
-  backdrop: { flex: 1, backgroundColor: tokens.colors.overlay },
-  keyboardAvoiding: { flex: 1, justifyContent: 'flex-end' },
-  dismissArea: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
-  sheet: { width: '100%', height: '84%', maxHeight: '90%', minHeight: 260, paddingTop: tokens.spacing.lg, paddingHorizontal: tokens.spacing.lg, gap: tokens.spacing.md, borderTopLeftRadius: tokens.radius.lg, borderTopRightRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
-  header: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
-  title: { flex: 1, ...tokens.typography.heading, color: tokens.colors.textPrimary },
-  closeButton: { width: tokens.size.touchMin, height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
-  searchRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs },
-  search: { flex: 1, minHeight: tokens.size.touchMin + tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body },
-  clearButton: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
-  hint: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
-  list: { flex: 1, minHeight: 0 },
-  listContent: { gap: tokens.spacing.xs, paddingBottom: tokens.spacing.md },
+  dropdown: { maxHeight: tokens.size.touchMin * 6, borderWidth: tokens.size.stroke, borderTopWidth: 0, borderColor: tokens.colors.primary, borderBottomLeftRadius: tokens.radius.md, borderBottomRightRadius: tokens.radius.md, backgroundColor: tokens.colors.surface, overflow: 'hidden' },
+  list: { maxHeight: tokens.size.touchMin * 6 },
+  listContent: { gap: tokens.spacing.xs, padding: tokens.spacing.xs },
+  clearButton: { width: tokens.size.touchMin, height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
   option: { minHeight: tokens.size.touchMin, paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.sm, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm },
   optionSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   optionText: { flex: 1, flexShrink: 1, ...tokens.typography.body, color: tokens.colors.textPrimary },
   optionTextSelected: { color: tokens.colors.primary, fontWeight: '700' },
   fallbackOption: { marginTop: tokens.spacing.sm },
-  empty: { gap: tokens.spacing.sm, paddingVertical: tokens.spacing.md },
+  empty: { gap: tokens.spacing.sm, paddingVertical: tokens.spacing.md, paddingHorizontal: tokens.spacing.sm },
   emptyTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
   emptyCopy: { ...tokens.typography.body, color: tokens.colors.textSecondary },
+  pressed: { opacity: 0.72 },
 });

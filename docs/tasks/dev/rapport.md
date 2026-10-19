@@ -1182,3 +1182,35 @@ Profilhistorik efter hemkomst utökar ändamålet och måste granskas av Complia
 Arbetspaketet och UX-specen är v7. Ägarens bifogade statusbild är införd med ordningen Paket 3 (Kunskapssökning med hundfiltrerade publicerade artiklar och skilda träff/tomt/laddning/fel-lägen), Paket 4 (pull-to-refresh på Hem/Logg med automatisk uppdatering och skydd mot gamla svar vid hund-/kontobyte) och Paket 5 (separat tom-, laddnings- och felåterkoppling, först Hem/Logg, därefter Kunskap/Träning). Befintlig åldersfiltrering och publiceringsregler ska bestå; okänd data visas inte som noll.
 
 Statusbilden anger att Paket 2a/2b är committade och pushade; manuella iPhone-kontroller för VoiceOver, större systemtext, reducerad rörelse och relevant tangentbord återstår utan att blockera Paket 3. Huvudflikarnas övergångsanimation hålls separat och blockerad i väntan på visuell kontroll och reducerad-rörelse-kontroll; statusbilden anger att dess ändring är lokal och ocommittad. A/B/C:s befintliga scope och reviewgrindar kvarstår. python tools/dev_flow.py validate och git diff --check körs före checkpointpush.
+
+### UX-OWNER-FEEDBACK-2026-10-19 — visuellt rasfält och B-plan v14, 2026-10-19
+
+Original A för sökbar rasväljare är avslutad under v12 med Architect APPROVE, Critic PROCEED, fokuserad QA PASS och Reviewer PASS. Efter ägarens avslag på den vita innerkanten justerades TextInput till enradigt transparent fält utan egen ram; den yttre containern äger den gröna ytan och dropdownkanten ansluter direkt. Den efterföljande ändringen har en separat queue-task så att A:s historiska done-checkpoint är oförändrad. Fokuserad QA PASS och oberoende Reviewer PASS är sparade i `docs/design/evidence/vision-rev02/breed-picker-2026-10-19/`.
+
+Reviewer bekräftade också datakällan: riktiga skapa-/redigeringsvyer hämtar `id,name` via `fetchBreeds` från Supabase-tabellen `breeds`; RN Web-skärmbilderna använder lokala syntetiska fixturevärden. Native iOS/Android-rendering och enhetstangentbord är NOT TESTABLE i dessa bilder.
+
+Exakt shared plan/spec v14 fick Architect APPROVE och Critic PROCEED. Kökorrigeringen har en dokumenterad coordinator-checkpointmigrering för den separata uppföljningen; dess Reviewer PASS och proveniens är synkade. Den visuella uppföljningen kan nu stängas och B kan flyttas till ready/implementing. B:s tester/sviter läggs inte till eller körs; dess v14 verifieringsplan använder typecheck, riktad ESLint och visuell RN Web-evidens.
+
+
+### UX-TRAINING-DETAIL-2026-10-19 — v15 implementation checkpoint, 2026-10-19
+
+Ägaren bad att träningskorten alltid ska ha samma storlek oavsett upplösning. Programkorten har 260 pt grundhöjd vid standardskrift, skalar med fontScale, och titeln klipps visuellt efter tre rader medan hela titeln finns kvar i skärmläsarens knappnamn. HeroCard-fyllningen är nu opt-in och används bara av PublishedTrainingScreen; komponentgalleriet får fortsatt naturlig kortstorlek.
+
+Arkitekturfyndet om delad HeroCard och planens lintomfattning är åtgärdade. Architect gav APPROVE och Critic PROCEED för v15. Rapporten korrigerades efter att den faktiska browsermätningen visade att Avmarkera i genomfört 140 %-läge behöver 49 px naturlig scroll (573 px innehåll / 512 px klient). Fräscha public/review-builds och skärmbilder visar 260 px vid 375/430 och lång titel, samt 364 px vid 140 %-proxyn. Continue-bilden ligger kant-i-kant enligt kortets inre gräns.
+
+Verifierat efter korrigeringen: pnpm typecheck PASS; ESLint för HeroCard.tsx, PublishedTrainingScreen.tsx och tokens.ts PASS; public/review-byggen och captures PASS utan browserfel; python tools/dev_flow.py validate PASS; git diff --check PASS. Ingen testsvit har lagts till eller körts. RN Web använder syntetiska data. 140 % är CSS-proxy; native Dynamic Type/VoiceOver/TalkBack är NOT TESTABLE. Proxybilden visar även wrap/clipping i den delade segmentraden och bottennavigeringen vid 375 px; bred textnavigation godkänns inte i denna avgränsade kortändring. Full Panel 6-match är fortsatt Nej i §14.
+
+Nästa steg: oberoende QA av v15-kod, rapport och färska public/review-renderingar; efter QA PASS följer separat Reviewer-granskning. Ingen commit eller push görs innan B:s reviewgrind är klar.
+
+
+## UX-TRAINING-DETAIL-2026-10-19 - independent QA
+
+Independent QA PASS: equal heights verified at 375/430 px and long-title cases (260 px), and at the 140% CSS proxy (364 px). Full accessible title preserved; public/review evidence and report agree; typecheck, focused ESLint, diff check and queue validation pass. QA scope note: three-line clamp also applies to non-fill training-image-top cards; current gallery titles are short, so intrinsic layouts are unchanged. See `docs/design/evidence/vision-rev02/training-detail-2026-10-19/QA-REPORT.md`. Independent Reviewer is next; no commit/push before the gate.
+
+
+## UX-TRAINING-DETAIL-2026-10-19 - independent Reviewer
+
+Independent Reviewer PASS on the current v15 snapshot. Equal card heights are confirmed at 375/430 px, long title and 140% CSS proxy; QA, render report/JSON, manifests and images agree. The fill=false title-clamp note is non-blocking for current short gallery titles. Full Panel 6 composition/image/density and native accessibility remain open. See `docs/design/evidence/vision-rev02/training-detail-2026-10-19/REVIEW-REPORT.md`.
+
+
+Pre-commit closeout: the first mandatory `pnpm check` found one existing source-policy assertion mismatch for success Toast guards inside selected-program branches. Added explicit guards, independently rechecked as behavior-equivalent by QA and Reviewer. The corrected `pnpm check` passed typecheck, edge typecheck, lint and 618/618 tests. Both independent gates remain PASS on the committed candidate.

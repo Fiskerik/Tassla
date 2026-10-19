@@ -1,0 +1,653 @@
+{
+  "result": "PASS",
+  "browser": "Chromium via Playwright",
+  "pageErrors": [],
+  "captures": [
+    {
+      "mode": "public",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "closed",
+      "metrics": {
+        "viewport": [
+          375,
+          844
+        ],
+        "documentWidth": 375,
+        "bodyWidth": 375
+      }
+    },
+    {
+      "mode": "public",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "open",
+      "metrics": {
+        "viewport": [
+          375,
+          844
+        ],
+        "documentWidth": 375,
+        "input": {
+          "x": 17,
+          "y": 312,
+          "width": 297,
+          "height": 48,
+          "background": "rgba(0, 0, 0, 0)",
+          "borderWidth": "0px"
+        },
+        "field": {
+          "x": 16,
+          "y": 308,
+          "width": 343,
+          "height": 56,
+          "background": "rgb(232, 239, 232)",
+          "borderWidth": "1px",
+          "borderColor": "rgb(24, 106, 77)"
+        },
+        "dropdown": {
+          "x": 17,
+          "y": 364,
+          "width": 341,
+          "height": 263
+        },
+        "visibleRows": 7
+      }
+    },
+    {
+      "mode": "public",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "typing-accent-insensitive",
+      "metrics": {
+        "query": "Cao",
+        "matchingRows": 1
+      }
+    },
+    {
+      "mode": "public",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "selected",
+      "metrics": {
+        "label": "Golden Retriever",
+        "committedId": "fci-1"
+      }
+    },
+    {
+      "mode": "public",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "prefilled-search-and-escape",
+      "metrics": {
+        "committedId": "mixed",
+        "closedLabel": "Blandras",
+        "queryDiscarded": true
+      }
+    },
+    {
+      "mode": "public",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "outside-dismissal-preserves-selection",
+      "metrics": {
+        "committedId": "mixed",
+        "closedLabel": "Blandras",
+        "queryDiscarded": true
+      }
+    },
+    {
+      "mode": "public",
+      "screen": [
+        430,
+        844
+      ],
+      "state": "closed",
+      "metrics": {
+        "viewport": [
+          430,
+          844
+        ],
+        "documentWidth": 430,
+        "bodyWidth": 430
+      }
+    },
+    {
+      "mode": "public",
+      "screen": [
+        430,
+        844
+      ],
+      "state": "open",
+      "metrics": {
+        "viewport": [
+          430,
+          844
+        ],
+        "documentWidth": 430,
+        "input": {
+          "x": 17,
+          "y": 300,
+          "width": 352,
+          "height": 48,
+          "background": "rgba(0, 0, 0, 0)",
+          "borderWidth": "0px"
+        },
+        "field": {
+          "x": 16,
+          "y": 296,
+          "width": 398,
+          "height": 56,
+          "background": "rgb(232, 239, 232)",
+          "borderWidth": "1px",
+          "borderColor": "rgb(24, 106, 77)"
+        },
+        "dropdown": {
+          "x": 17,
+          "y": 352,
+          "width": 396,
+          "height": 263
+        },
+        "visibleRows": 7
+      }
+    },
+    {
+      "mode": "public",
+      "screen": [
+        375,
+        667
+      ],
+      "state": "closed",
+      "metrics": {
+        "viewport": [
+          375,
+          667
+        ],
+        "documentWidth": 375,
+        "bodyWidth": 375
+      }
+    },
+    {
+      "mode": "public",
+      "screen": [
+        375,
+        667
+      ],
+      "state": "open",
+      "metrics": {
+        "viewport": [
+          375,
+          667
+        ],
+        "documentWidth": 375,
+        "input": {
+          "x": 17,
+          "y": 223.5,
+          "width": 297,
+          "height": 48,
+          "background": "rgba(0, 0, 0, 0)",
+          "borderWidth": "0px"
+        },
+        "field": {
+          "x": 16,
+          "y": 219.5,
+          "width": 343,
+          "height": 56,
+          "background": "rgb(232, 239, 232)",
+          "borderWidth": "1px",
+          "borderColor": "rgb(24, 106, 77)"
+        },
+        "dropdown": {
+          "x": 17,
+          "y": 275.5,
+          "width": 341,
+          "height": 263
+        },
+        "visibleRows": 7
+      }
+    },
+    {
+      "mode": "review",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "closed",
+      "metrics": {
+        "viewport": [
+          375,
+          876
+        ],
+        "documentWidth": 375,
+        "bodyWidth": 375
+      }
+    },
+    {
+      "mode": "review",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "open",
+      "metrics": {
+        "viewport": [
+          375,
+          844
+        ],
+        "documentWidth": 375,
+        "input": {
+          "x": 17,
+          "y": 312,
+          "width": 297,
+          "height": 48,
+          "background": "rgba(0, 0, 0, 0)",
+          "borderWidth": "0px"
+        },
+        "field": {
+          "x": 16,
+          "y": 308,
+          "width": 343,
+          "height": 56,
+          "background": "rgb(232, 239, 232)",
+          "borderWidth": "1px",
+          "borderColor": "rgb(24, 106, 77)"
+        },
+        "dropdown": {
+          "x": 17,
+          "y": 364,
+          "width": 341,
+          "height": 263
+        },
+        "visibleRows": 7
+      }
+    },
+    {
+      "mode": "review",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "typing-accent-insensitive",
+      "metrics": {
+        "query": "Cao",
+        "matchingRows": 1
+      }
+    },
+    {
+      "mode": "review",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "selected",
+      "metrics": {
+        "label": "Golden Retriever",
+        "committedId": "fci-1"
+      }
+    },
+    {
+      "mode": "review",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "prefilled-search-and-escape",
+      "metrics": {
+        "committedId": "mixed",
+        "closedLabel": "Blandras",
+        "queryDiscarded": true
+      }
+    },
+    {
+      "mode": "review",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "outside-dismissal-preserves-selection",
+      "metrics": {
+        "committedId": "mixed",
+        "closedLabel": "Blandras",
+        "queryDiscarded": true
+      }
+    },
+    {
+      "mode": "review",
+      "screen": [
+        430,
+        844
+      ],
+      "state": "closed",
+      "metrics": {
+        "viewport": [
+          430,
+          876
+        ],
+        "documentWidth": 430,
+        "bodyWidth": 430
+      }
+    },
+    {
+      "mode": "review",
+      "screen": [
+        430,
+        844
+      ],
+      "state": "open",
+      "metrics": {
+        "viewport": [
+          430,
+          844
+        ],
+        "documentWidth": 430,
+        "input": {
+          "x": 17,
+          "y": 300,
+          "width": 352,
+          "height": 48,
+          "background": "rgba(0, 0, 0, 0)",
+          "borderWidth": "0px"
+        },
+        "field": {
+          "x": 16,
+          "y": 296,
+          "width": 398,
+          "height": 56,
+          "background": "rgb(232, 239, 232)",
+          "borderWidth": "1px",
+          "borderColor": "rgb(24, 106, 77)"
+        },
+        "dropdown": {
+          "x": 17,
+          "y": 352,
+          "width": 396,
+          "height": 263
+        },
+        "visibleRows": 7
+      }
+    },
+    {
+      "mode": "review",
+      "screen": [
+        375,
+        667
+      ],
+      "state": "closed",
+      "metrics": {
+        "viewport": [
+          375,
+          699
+        ],
+        "documentWidth": 375,
+        "bodyWidth": 375
+      }
+    },
+    {
+      "mode": "review",
+      "screen": [
+        375,
+        667
+      ],
+      "state": "open",
+      "metrics": {
+        "viewport": [
+          375,
+          667
+        ],
+        "documentWidth": 375,
+        "input": {
+          "x": 17,
+          "y": 223.5,
+          "width": 297,
+          "height": 48,
+          "background": "rgba(0, 0, 0, 0)",
+          "borderWidth": "0px"
+        },
+        "field": {
+          "x": 16,
+          "y": 219.5,
+          "width": 343,
+          "height": 56,
+          "background": "rgb(232, 239, 232)",
+          "borderWidth": "1px",
+          "borderColor": "rgb(24, 106, 77)"
+        },
+        "dropdown": {
+          "x": 17,
+          "y": 275.5,
+          "width": 341,
+          "height": 263
+        },
+        "visibleRows": 7
+      }
+    },
+    {
+      "mode": "public",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "profile-create-open",
+      "metrics": {
+        "fieldValue": "",
+        "optionTarget": [
+          283,
+          44
+        ],
+        "fieldHeight": 56,
+        "textInputHeight": 48,
+        "dropdownHeight": 148,
+        "dropdownStartsAtFieldBottom": true,
+        "chevronTarget": [
+          44,
+          44
+        ],
+        "openedByChevron": true,
+        "sameTextInputFocused": true,
+        "dropdownVisible": true,
+        "inputTransparentWithinOuterField": true
+      }
+    },
+    {
+      "mode": "public",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "profile-create-select-or-search-dismiss",
+      "metrics": {
+        "before": "",
+        "after": "Blandras",
+        "preserved": true
+      }
+    },
+    {
+      "mode": "public",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "profile-edit-open",
+      "metrics": {
+        "fieldValue": "Golden Retriever",
+        "optionTarget": [
+          283,
+          44
+        ],
+        "fieldHeight": 56,
+        "textInputHeight": 48,
+        "dropdownHeight": 148,
+        "dropdownStartsAtFieldBottom": true,
+        "chevronTarget": [
+          44,
+          44
+        ],
+        "openedByChevron": true,
+        "sameTextInputFocused": true,
+        "dropdownVisible": true,
+        "inputTransparentWithinOuterField": true
+      }
+    },
+    {
+      "mode": "public",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "profile-edit-select-or-search-dismiss",
+      "metrics": {
+        "before": "Golden Retriever",
+        "after": "Golden Retriever",
+        "preserved": true
+      }
+    },
+    {
+      "mode": "review",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "profile-create-open",
+      "metrics": {
+        "fieldValue": "",
+        "optionTarget": [
+          283,
+          44
+        ],
+        "fieldHeight": 56,
+        "textInputHeight": 48,
+        "dropdownHeight": 148,
+        "dropdownStartsAtFieldBottom": true,
+        "chevronTarget": [
+          44,
+          44
+        ],
+        "openedByChevron": true,
+        "sameTextInputFocused": true,
+        "dropdownVisible": true,
+        "inputTransparentWithinOuterField": true
+      }
+    },
+    {
+      "mode": "review",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "profile-create-select-or-search-dismiss",
+      "metrics": {
+        "before": "",
+        "after": "Blandras",
+        "preserved": true
+      }
+    },
+    {
+      "mode": "review",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "profile-edit-open",
+      "metrics": {
+        "fieldValue": "Golden Retriever",
+        "optionTarget": [
+          283,
+          44
+        ],
+        "fieldHeight": 56,
+        "textInputHeight": 48,
+        "dropdownHeight": 148,
+        "dropdownStartsAtFieldBottom": true,
+        "chevronTarget": [
+          44,
+          44
+        ],
+        "openedByChevron": true,
+        "sameTextInputFocused": true,
+        "dropdownVisible": true,
+        "inputTransparentWithinOuterField": true
+      }
+    },
+    {
+      "mode": "review",
+      "screen": [
+        375,
+        844
+      ],
+      "state": "profile-edit-select-or-search-dismiss",
+      "metrics": {
+        "before": "Golden Retriever",
+        "after": "Golden Retriever",
+        "preserved": true
+      }
+    }
+  ],
+  "reviewCaptureHeight": "Public and review fixtures were captured at their requested app viewport; short-height proxy is 375x420.",
+  "nativeAndroidBack": "NOT TESTABLE in RN Web",
+  "nativeVoiceOverDynamicType": "NOT TESTABLE in RN Web",
+  "nativeKeyboard": "NOT TESTABLE in RN Web; keyboard dismissal/short-screen native behavior requires device review",
+  "sharedProductionComponent": {
+    "profileCreate": "PASS",
+    "profileEdit": "PASS",
+    "touchTargets": "PASS (Blandras row 283x44 px at 375 px viewport)"
+  },
+  "visualRefinement": {
+    "feedback": "The expanded input looked like a large white box and visually interrupted the green field edge.",
+    "change": "Replaced the multiline TextInput with a single-line input, made its background transparent, let the outer field own the fill/border/clipping, and disabled the Android underline.",
+    "surface": "rgb(232, 239, 232) (selectedSurface)",
+    "screenCapture": "Public/review open-field captures refreshed at 375x844, 430x844, 375x667, and 375x844 with the 140% web text proxy. Create/edit open-state captures refreshed at 375x844; the 375x420 create-form proxy was scrolled to show the open field and all three fixture options.",
+    "measurements375x844": {
+      "fieldHeight": 56,
+      "inputHeight": 48,
+      "fieldBorderWidth": "1px",
+      "inputBorderWidth": "0px",
+      "dropdownTouchesFieldBottom": true,
+      "dropdownHeight": 263,
+      "documentWidth": 375,
+      "inputTransparentWithinOuterField": true,
+      "outerFieldOwnsFillAndBorder": true
+    },
+    "shortViewportProxy375x420": {
+      "fieldVisible": true,
+      "dropdownVisible": true,
+      "dropdownHeight": 148,
+      "documentWidth": 375,
+      "nativeKeyboard": "NOT TESTABLE in RN Web"
+    },
+    "chevron": "Accessible 44×44 Pressable opens and focuses the same TextInput, with expanded/collapsed labels and state; verified opening/closing on the dedicated picker and both profile forms in public/review."
+  },
+  "chevronInteractionEvidence": {
+    "target": [
+      44,
+      44
+    ],
+    "accessibilityLabels": [
+      "Visa raslista",
+      "Stäng raslista"
+    ],
+    "opensSameInput": true,
+    "togglesClosed": true,
+    "verifiedOn": [
+      "dedicated picker fixture",
+      "profile-create",
+      "profile-edit"
+    ],
+    "bundles": [
+      "public",
+      "review"
+    ],
+    "pageErrors": []
+  }
+}

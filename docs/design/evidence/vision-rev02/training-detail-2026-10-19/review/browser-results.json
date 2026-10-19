@@ -1,0 +1,171 @@
+{
+  "bundle": "review",
+  "viewports": [
+    "375x844",
+    "430x844",
+    "375x667",
+    "375x667 at 140% text proxy",
+    "375x844 at 140% text proxy"
+  ],
+  "programCards": {
+    "375x844": [
+      {
+        "label": "Trygg start hemma. 2 övningar",
+        "height": 260,
+        "width": 153.6875
+      },
+      {
+        "label": "Kontakt och namn. 2 övningar",
+        "height": 260,
+        "width": 153.6875
+      },
+      {
+        "label": "Vardagsro och hantering. 2 övningar",
+        "height": 260,
+        "width": 153.6875
+      }
+    ],
+    "430x844": [
+      {
+        "label": "Trygg start hemma. 2 övningar",
+        "height": 260,
+        "width": 179.53125
+      },
+      {
+        "label": "Kontakt och namn. 2 övningar",
+        "height": 260,
+        "width": 179.53125
+      },
+      {
+        "label": "Vardagsro och hantering. 2 övningar",
+        "height": 260,
+        "width": 179.53125
+      }
+    ],
+    "375x844 long title": [
+      {
+        "label": "Trygg vardagsstart med lugna steg för nya situationer. 2 övningar",
+        "height": 260,
+        "width": 153.6875
+      },
+      {
+        "label": "Kontakt och namn. 2 övningar",
+        "height": 260,
+        "width": 153.6875
+      },
+      {
+        "label": "Vardagsro och hantering. 2 övningar",
+        "height": 260,
+        "width": 153.6875
+      }
+    ],
+    "375x844 140% proxy": [
+      {
+        "label": "Trygg vardagsstart med lugna steg för nya situationer. 2 övningar",
+        "height": 364,
+        "width": 153.6875
+      },
+      {
+        "label": "Kontakt och namn. 2 övningar",
+        "height": 364,
+        "width": 153.6875
+      },
+      {
+        "label": "Vardagsro och hantering. 2 övningar",
+        "height": 364,
+        "width": 153.6875
+      }
+    ]
+  },
+  "continueCard": {
+    "long title 375x844": {
+      "card": {
+        "x": 24,
+        "y": 315,
+        "width": 327,
+        "height": 178
+      },
+      "image": {
+        "x": 25,
+        "y": 316,
+        "width": 84,
+        "height": 176
+      }
+    },
+    "430x844": {
+      "card": {
+        "x": 24,
+        "y": 339,
+        "width": 382,
+        "height": 154
+      },
+      "image": {
+        "x": 25,
+        "y": 340,
+        "width": 84,
+        "height": 152
+      }
+    },
+    "140% proxy 375x844": {
+      "card": {
+        "x": 24,
+        "y": 442.640625,
+        "width": 327,
+        "height": 202.84375
+      },
+      "image": {
+        "x": 25,
+        "y": 443.640625,
+        "width": 84,
+        "height": 200.84375
+      }
+    }
+  },
+  "naturalScroll": {
+    "375x667": {
+      "before": {
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "scrollHeight": 422,
+        "clientHeight": 422
+      },
+      "after": {
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "scrollHeight": 422,
+        "clientHeight": 422
+      },
+      "scrollTopChanged": false,
+      "actionVisible": true
+    },
+    "375x667 140% proxy": {
+      "before": {
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "scrollHeight": 495,
+        "clientHeight": 495
+      },
+      "after": {
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "scrollHeight": 495,
+        "clientHeight": 495
+      },
+      "scrollTopChanged": false,
+      "actionVisible": true
+    }
+  },
+  "assertions": [
+    "review program cards keep a shared fixed height at 375px, 430px, and with a long title",
+    "review continue image fills normal, long-title, and 140% proxy card",
+    "review detail image and ordinal",
+    "later review step stays locked with prerequisite copy",
+    "program information omits ordinal and detail image",
+    "action remains reachable at 375x667 and 140% proxy without clipping"
+  ],
+  "limitations": [
+    "Synthetic local review copy and in-memory callbacks; not published advice or production data",
+    "Native iOS/Android, VoiceOver, keyboard behavior, and device Dynamic Type are NOT TESTABLE",
+    "140% layout screenshot uses a CSS text proxy and applies the production 1.4x card-height calculation"
+  ]
+}

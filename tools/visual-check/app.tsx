@@ -451,12 +451,13 @@ function BreedPickerFixture(){
   {id:'fci-4',name:'Shiba Inu'},
   {id:'fci-5',name:'Svensk Lapphund'},
  ];
- const [value,setValue]=useState('mixed');
+ const initialSelected = new URLSearchParams(window.location.search).get('selected') ?? '';
+ const [value,setValue]=useState(options.some(option=>option.id===initialSelected)?initialSelected:'');
  return <View style={{flex:1,justifyContent:'center',padding:tokens.spacing.lg,gap:tokens.spacing.md,backgroundColor:tokens.colors.home.background}}>
   <Text accessibilityRole="header" style={{...tokens.typography.heading,color:tokens.colors.textPrimary}}>Syntetisk kontroll · rasväljare</Text>
-  <Text style={{...tokens.typography.body,color:tokens.colors.textSecondary}}>Testa alfabetisk bläddring, accenter, sökning och reservval när ingen FCI-träff finns.</Text>
+  <Text style={{...tokens.typography.body,color:tokens.colors.textSecondary}}>Välj i listan eller sök direkt i rasfältet. Testa även långa rasnamn, accenter och reservval utan FCI-träff.</Text>
   <SearchableBreedPicker breeds={options} value={value} onChange={setValue}/>
-  <Text accessibilityLiveRegion="polite" style={{...tokens.typography.caption,color:tokens.colors.textSecondary}}>Valt ras-ID: {value}</Text>
+  <Text accessibilityLiveRegion="polite" style={{...tokens.typography.caption,color:tokens.colors.textSecondary}}>Valt ras-ID: {value || 'inget valt'}</Text>
  </View>;
 }
 const styles=StyleSheet.create({shell:{flex:1},appViewport:{flex:1,minHeight:0},reviewBanner:{alignSelf:'stretch',height:tokens.spacing.xxl,minHeight:tokens.spacing.xxl,justifyContent:'center',paddingHorizontal:tokens.spacing.md,backgroundColor:tokens.colors.warningSurface},reviewLogBanner:{height:'auto',minHeight:tokens.size.touchMin,paddingVertical:tokens.spacing.xs},reviewBannerText:{...tokens.typography.caption,color:tokens.colors.warning,fontWeight:'700',textAlign:'center'}});

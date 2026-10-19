@@ -1,0 +1,196 @@
+{
+  "bundle": "public",
+  "viewports": [
+    "375x844",
+    "430x844",
+    "375x667",
+    "375x844 at 140% text proxy",
+    "375x667 at 140% text proxy"
+  ],
+  "programCards": {
+    "375x844": [
+      {
+        "label": "Trygg vardagsstart. 3 övningar",
+        "height": 260,
+        "width": 153.6875
+      },
+      {
+        "label": "Kontakt i vardagen. 2 övningar",
+        "height": 260,
+        "width": 153.6875
+      }
+    ],
+    "430x844": [
+      {
+        "label": "Trygg vardagsstart. 3 övningar",
+        "height": 260,
+        "width": 179.53125
+      },
+      {
+        "label": "Kontakt i vardagen. 2 övningar",
+        "height": 260,
+        "width": 179.53125
+      }
+    ],
+    "375x844 long title": [
+      {
+        "label": "Trygg vardagsstart med lugna steg för nya situationer. 3 övningar",
+        "height": 260,
+        "width": 153.6875
+      },
+      {
+        "label": "Kontakt i vardagen. 2 övningar",
+        "height": 260,
+        "width": 153.6875
+      }
+    ]
+  },
+  "naturalScroll": {
+    "actionable375": {
+      "before": {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-flexShrink-1wbh5a2",
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "scrollHeight": 398,
+        "clientHeight": 398
+      },
+      "after": {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-flexShrink-1wbh5a2",
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "scrollHeight": 398,
+        "clientHeight": 398
+      },
+      "scrollTopChanged": false,
+      "actionVisible": true
+    },
+    "completed375": {
+      "before": {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-flexShrink-1wbh5a2",
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "scrollHeight": 434,
+        "clientHeight": 434
+      },
+      "after": {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-flexShrink-1wbh5a2",
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "scrollHeight": 434,
+        "clientHeight": 434
+      },
+      "scrollTopChanged": false,
+      "actionVisible": true
+    },
+    "actionable140": {
+      "before": {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-flexShrink-1wbh5a2",
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "scrollHeight": 495,
+        "clientHeight": 495
+      },
+      "after": {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-flexShrink-1wbh5a2",
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "scrollHeight": 495,
+        "clientHeight": 495
+      },
+      "scrollTopChanged": false,
+      "actionVisible": true
+    },
+    "completed140": {
+      "before": {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-flexShrink-1wbh5a2",
+        "overflowY": "auto",
+        "scrollTop": 0,
+        "scrollHeight": 573,
+        "clientHeight": 512
+      },
+      "after": {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-flexShrink-1wbh5a2",
+        "overflowY": "auto",
+        "scrollTop": 49,
+        "scrollHeight": 573,
+        "clientHeight": 512
+      },
+      "scrollTopChanged": true,
+      "actionVisible": true
+    }
+  },
+  "assertions": [
+    "program cards keep a shared fixed height at 375px, 430px, and with a long title",
+    "actionable and completed states record natural scroll metrics at 375x667 and 140% proxy",
+    "actionable incomplete step and ordinal",
+    "locked later step prerequisite and disabled action",
+    "completed step exposes Avmarkera",
+    "program information has no detail image/ordinal",
+    "pending unmark disables action",
+    "error feedback remains visible",
+    "continue image fills normal and long-title card",
+    "continue image fills card with 140% proxy and no horizontal overflow",
+    "detail action reachable with 140% proxy through natural sheet scrolling",
+    "completed Avmarkera action reachable at 375x667 and 140% proxy"
+  ],
+  "continueCard": {
+    "card": {
+      "x": 24,
+      "y": 540,
+      "width": 327,
+      "height": 110
+    },
+    "image": {
+      "x": 25,
+      "y": 541,
+      "width": 84,
+      "height": 108
+    }
+  },
+  "continueCardLongTitle": {
+    "card": {
+      "x": 24,
+      "y": 540,
+      "width": 327,
+      "height": 178
+    },
+    "image": {
+      "x": 25,
+      "y": 541,
+      "width": 84,
+      "height": 176
+    }
+  },
+  "continueCardAt140Percent": {
+    "card": {
+      "x": 24,
+      "y": 535.203125,
+      "width": 327,
+      "height": 202.84375
+    },
+    "image": {
+      "x": 25,
+      "y": 536.203125,
+      "width": 84,
+      "height": 200.84375
+    },
+    "scrollWidth": 375,
+    "innerWidth": 375
+  },
+  "textProxyScaledNodeCount": 39,
+  "detailTextProxyScaledNodeCount": 39,
+  "completedTextProxyNodeCount": 39,
+  "limitations": [
+    "Synthetic local fixture data; no live Supabase/RLS or backend persistence",
+    "Native iOS/Android, VoiceOver, keyboard, and actual Dynamic Type are NOT TESTABLE",
+    "140% text is a CSS proxy"
+  ]
+}

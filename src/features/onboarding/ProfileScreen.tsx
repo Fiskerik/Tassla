@@ -20,7 +20,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   const [breedsState, setBreedsState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [breedAttempt, setBreedAttempt] = useState(0);
   const [name, setName] = useState('');
-  const [breedId, setBreedId] = useState('mixed');
+  const [breedId, setBreedId] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [busy, setBusy] = useState(false);
   const [saveState, setSaveState] = useState<'idle' | 'error' | 'unknown' | 'invalidCode' | 'existingProfile'>('idle');

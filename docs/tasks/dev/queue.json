@@ -10437,26 +10437,29 @@
     {
       "id": "UX-BREED-PICKER-2026-10-19",
       "title": "Onboarding och profil: raslista som sökbar dropdown",
-      "mvp_requirement": "docs/mvp.md: stödskärm hundprofil/onboarding",
-      "plan": "docs/tasks/dev/ux-owner-feedback-2026-10-19.md v7; docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md v7",
+      "mvp_requirement": "docs/mvp.md §4.1; docs/MVP-EXPERIENCE-CONTRACT.md: skapa hundprofil",
+      "plan": "docs/tasks/dev/ux-owner-feedback-2026-10-19.md v12; docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md v12",
       "write_paths": [
         "src/features/onboarding/SearchableBreedPicker.tsx",
         "src/features/onboarding/ProfileScreen.tsx",
         "src/features/onboarding/EditDogProfileScreen.tsx",
         "src/features/onboarding/README.md",
+        "tests/breed-picker.test.mjs",
         "tools/visual-check/app.tsx",
-        "docs/design/evidence/vision-rev02/breed-picker-2026-10-19/RENDER-REPORT.md",
+        "docs/design/evidence/vision-rev02/breed-picker-2026-10-19",
         "docs/tasks/dev/ux-owner-feedback-2026-10-19.md",
         "docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md"
       ],
       "acceptance": [
-        "Onboarding and profile edit use the same compact accessible picker; the complete breed list is hidden until the user opens it",
-        "Only existing breed IDs can be selected; search is local to the fetched catalog and cannot persist typed text",
-        "Create has no hidden preselected first breed; edit preserves the saved value and current missing-catalog warning behavior",
+        "Onboarding and profile edit use the same accessible TextInput breed field; focusing it opens a bounded dropdown directly below that same field, with no separate search box or modal",
+        "The same field accepts local search; empty query shows catalog options, typed text filters fetched BreedOption values, and only existing breed IDs can be selected or persisted",
+        "Closing, outside press, Escape or Android back without selecting discards query text and preserves the previous selected breed; no-match state is clear and can be reset",
+        "Create starts without a selected breed per owner-approved plan, replacing the earlier Blandras default; update existing default-value test and existing picker-source contract assertion for the new behavior, with no added tests or suites. Edit preserves the saved value and current missing-catalog warning behavior.",
+        "Dropdown height is bounded, rows retain at least 44 pt targets, long breed names wrap, and keyboard/focus/accessibility behavior remains usable on short viewports without rendering the full list as a long form",
         "Current loading/error/retry, profile save/readback, kennel, age and account-lifetime behavior is preserved",
-        "Fresh synthetic render/evidence covers closed/open/selected/no-match, required mobile widths and §14 limitations"
+        "Fresh synthetic render/evidence covers closed/open/selected/no-match, required mobile widths and §14 limitations; previous v10 modal captures are explicitly superseded"
       ],
       "checks": [
         "pnpm typecheck",
@@ -10466,8 +10469,44 @@
         "python tools/dev_flow.py validate"
       ],
       "depends_on": [],
-      "status": "implementing",
+      "status": "done",
       "history": [
+        {
+          "from": "implementing",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "A remains planned. The v9 evidence-directory correction triggered fresh reviews; Architect also found the required queue metadata and exact MVP section reference missing. v10 synchronizes the plan/spec/queue and test-title scope. Prior in-scope code edits remain uncommitted; no screenshots/evidence created."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Exact plan v9 received Architect APPROVE and Critic PROCEED. A implementation begins in its declared write_paths only; update the existing default test name/assertion, create-form state, onboarding documentation and synthetic fixture."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "coordinator",
+          "evidence": "Fresh exact v9 plan review complete: Architect APPROVE and Critic PROCEED for A. HOME-ROUTINE-CHECKLIST-01 dependency is done. Approved work changes the initial breed ID to empty, updates the existing test title/assertion, and verifies the existing picker states; no new suite or data/API change."
+        },
+        {
+          "from": "implementing",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "No A code has changed. v8 review found that the queue status must remain planned until fresh exact-plan approvals are recorded; v9 also corrects the visual-reference QA contract. Waiting on fresh Architect/Critic review of v9."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "v9 corrects the visual QA plan: vision_rev02.jpg is present; B must compare against Panel 6 and the owner-provided exercise detail image. A scope is unchanged from v8. Fresh exact Architect/Critic review is required."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "Owner said to implement everything according to the plan, adopting v7 A's no-selected-breed behavior over the earlier Blandras default. v8 makes precedence explicit, adds the existing default assertion to write_paths, and requires fresh exact Architect/Critic review before code."
+        },
         {
           "from": "planned",
           "to": "ready",
@@ -10479,45 +10518,253 @@
           "to": "implementing",
           "actor": "implementer",
           "evidence": "Begin approved A only after HOME-ROUTINE-CHECKLIST-01 QA/Reviewer/Security checkpoint; no dependency or catalog/data change."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact v10; Critic PROCEED exact v10; queue metadata and canonical MVP §4.1 reference synchronized."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin A within v10 write_paths only: complete compact breed picker behavior, update the existing default-value test title/assertion, fixture and visual evidence; no new suite, data model, API, commit or push."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Owner clarified A: one searchable breed field with its dropdown list directly below; a separate modal search field is not requested. The v10 interaction contract and captures are superseded; replan to v11 and obtain fresh exact reviews before implementation."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Replanned A to v11 per owner clarification: use one editable searchable breed field with its option dropdown directly below. Fresh Architect/Critic reviews are required before returning to ready. Existing v10 screenshots describe superseded modal UX and will be replaced after v11 implementation."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact A v11 review complete: Architect APPROVE and Critic PROCEED. Same TextInput opens the bounded inline dropdown and accepts search; committed ID is separate from query, dismissal preserves selection, and native/viewport limits are explicit."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin Erik-authorized A under exact v11: implement the same-field searchable dropdown in the shared picker, update the existing create-default assertion and docs/fixture, replace superseded modal evidence, preserve existing profile/data behavior; no new suite, dependency, commit or push."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Implementation exposed one required scope clarification: tests/breed-picker.test.mjs contains an existing static picker-contract assertion that still requires the superseded modal/FlatList. Amend v11 to update that existing assertion alongside the default-value assertion; no new test or suite."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Replan v11 review gate: include updating the existing picker-source contract assertion to the same-field dropdown; keep the existing default assertion update and no new test/suite. Re-review exact synchronized plan/spec/queue before resuming implementation."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact A v12 review complete: Architect APPROVE and Critic PROCEED. The owner’s inline same-field dropdown contract and updates to the two existing assertions are synchronized; no new tests/suites."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume A under exact v12: implement shared searchable inline dropdown, update only the existing picker/default assertions and docs/fixture, replace superseded modal evidence; preserve saved profile contracts and do not add/run a test suite."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "A implemented under exact approved v12. Searchable inline breed dropdown and same-field search are shared by create/edit. Updated existing screenshots for public/review, 375x844, 430x844, 375x667, and 375x420 proxy; input 48px within 56px green field and dropdown edge aligned. Typecheck and production ESLint pass; diff check and queue validation pass. Scoped ESLint reports 6 existing fixture errors and 5 warnings in tools/visual-check/app.tsx; production files pass. No tests/suites run per plan. Next: independent QA and Reviewer."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS on exact v12. Verified compact 56px field/48px input, matched selectedSurface, dropdown edge alignment, accessible 44x44 chevron opens/focuses same input and closes, shared create/edit component, screenshots and report. Typecheck and production ESLint pass; no test suite run per plan. Next: independent Reviewer checkpoint."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS after QA. Confirmed the 44x44 accessible chevron, toggle semantics, same TextInput focus, refreshed public/review evidence and accurate report; no blocking findings. Known scoped visual-fixture ESLint baseline remains 6 errors/5 warnings; production lint and typecheck pass. Native VoiceOver, Dynamic Type, Android back, and keyboard remain NOT TESTABLE in RN Web. Next: begin fresh Architect/Critic review for dependent UX-TRAINING-DETAIL-2026-10-19."
         }
       ],
-      "next_step": "Begin approved A only after HOME-ROUTINE-CHECKLIST-01 QA/Reviewer/Security checkpoint; no dependency or catalog/data change."
+      "next_step": "Original A completed and reviewed under plan v12. The later owner-requested transparent-input correction has its own queue task UX-BREED-PICKER-VISUAL-CORRECTION-2026-10-19; see shared plan/spec v14.",
+      "priority": "P0",
+      "panels": [
+        "onboarding",
+        "dog-profile"
+      ],
+      "risk_class": "M",
+      "checkpoint": "New registration requires a deliberate existing breed ID; create/edit use the same picker and preserve save/readback behavior.",
+      "test_evidence": [
+        "Update only existing assertions: require an explicit catalog breed ID for create and assert the same-field dropdown contract for the picker; add no tests or test suite.",
+        "Manual public/review RN Web interaction checks cover search from a preselected value (query starts empty, committed ID remains), clear/no-match, selection, and dismissal by outside press/Escape preserving the previous ID.",
+        "Check dropdown near the viewport bottom with keyboard visible and parent form scroll available; label native Android-back, VoiceOver/Dynamic Type and live Supabase/RLS NOT TESTABLE in RN Web.",
+        "Public/review fixture renders closed/open/typing-filter/selected/no-match states at 375x844, 430x844 and 375x667; inspect 140% text proxy.",
+        "Record §14 visual evidence and verify both onboarding and profile edit use the shared same-field picker."
+      ]
     },
     {
-      "id": "UX-TRAINING-DETAIL-2026-10-19",
-      "title": "Träning: bild och luftig övningsdetalj",
-      "mvp_requirement": "docs/mvp.md: sex huvudytor, panel 6 Träning",
-      "plan": "docs/tasks/dev/ux-owner-feedback-2026-10-19.md v7; docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md v7",
+      "id": "UX-BREED-PICKER-VISUAL-CORRECTION-2026-10-19",
+      "title": "Rasfält: rätta vit innerkant efter ägarfeedback",
+      "mvp_requirement": "docs/mvp.md §4.1; UX-owner visual correction for breed picker",
+      "plan": "docs/tasks/dev/ux-owner-feedback-2026-10-19.md v14; docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md v14",
       "write_paths": [
-        "src/features/training/PublishedTrainingScreen.tsx",
-        "src/features/training/README.md",
-        "tools/visual-check/app.tsx",
-        "docs/design/evidence/vision-rev02/training-detail-2026-10-19/RENDER-REPORT.md",
+        "src/features/onboarding/SearchableBreedPicker.tsx",
+        "docs/design/evidence/vision-rev02/breed-picker-2026-10-19",
         "docs/tasks/dev/ux-owner-feedback-2026-10-19.md",
         "docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md"
       ],
       "acceptance": [
-        "The existing training illustration appears in the selected exercise detail with appropriate crop, rounded form and decorative accessibility semantics",
-        "The continue-card thumbnail fills the card's left, top and bottom edges; outer card clipping preserves its rounded corners and right-side text keeps token padding",
-        "Spacing between image, ordinal, title, full instruction, note and action uses existing tokens and supports short viewports/text wrapping",
-        "Ordinal is derived from the step array index; progress/content/save/navigation behavior is unchanged",
-        "Fresh synthetic render/evidence covers required mobile widths and §14 limitations"
+        "The searchable input is a single transparent line with no independent white fill or border; the shared outer field owns its surface, edge and clipping.",
+        "The dropdown edge meets the field cleanly; search/selection behavior, Supabase data path and create/edit profile contracts remain unchanged.",
+        "Refreshed public/review evidence and report distinguish production Supabase values from local synthetic fixture values.",
+        "Focused QA and independent Reviewer approve the correction; native rendering and device keyboard remain NOT TESTABLE in RN Web."
       ],
       "checks": [
         "pnpm typecheck",
-        "pnpm exec eslint src/features/training/PublishedTrainingScreen.tsx tools/visual-check/app.tsx",
-        "Existing RN Web public/review fixture build and manual browser render; no test suite",
-        "git diff --check (only if this workspace has Git metadata; otherwise NOT TESTABLE)",
+        "pnpm exec eslint src/features/onboarding/SearchableBreedPicker.tsx src/features/onboarding/ProfileScreen.tsx src/features/onboarding/EditDogProfileScreen.tsx",
+        "Existing public/review RN Web render evidence: create/edit open field, 375x844, 430x844, 375x667 and 140% proxy; no test suite.",
+        "git diff --check",
         "python tools/dev_flow.py validate"
       ],
       "depends_on": [
         "UX-BREED-PICKER-2026-10-19"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Wait until UX-BREED-PICKER-2026-10-19 is verified and checkpointed."
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "review",
+          "actor": "coordinator",
+          "evidence": "Coordinator checkpoint migration: after original A v12 was done, the owner rejected the picker edge and requested a visual correction. The one-line transparent input and refreshed public/review evidence were implemented; typecheck, production-scoped ESLint, existing RN Web render, git diff --check and queue validation are recorded in RENDER-REPORT.md. Focused independent QA PASS and independent Reviewer PASS are saved. This entry records the split and already-completed checkpoint without claiming a new plan approval or a rerun."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS is saved in docs/design/evidence/vision-rev02/breed-picker-2026-10-19/REVIEW-REPORT.md; focused QA PASS, v14 Architect APPROVE and Critic PROCEED are recorded. Native rendering remains NOT TESTABLE."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS is saved in docs/design/evidence/vision-rev02/breed-picker-2026-10-19/REVIEW-REPORT.md; focused QA PASS, v14 Architect APPROVE and Critic PROCEED are recorded. Native rendering remains NOT TESTABLE.",
+      "priority": "P0",
+      "panels": [
+        "onboarding",
+        "dog-profile"
+      ],
+      "risk_class": "L",
+      "checkpoint": "One continuous green field and dropdown edge with no white inset, while the same-field search and database-backed production options remain unchanged.",
+      "test_evidence": [
+        "Public/review create and edit screenshots are in docs/design/evidence/vision-rev02/breed-picker-2026-10-19/.",
+        "RENDER-REPORT.md and RENDER-REPORT.json document matching captures, focused QA PASS and remaining native limitations.",
+        "The synthetic fixture uses local options; production fetchBreeds reads id,name from Supabase breeds."
+      ]
+    },
+    {
+      "id": "UX-TRAINING-DETAIL-2026-10-19",
+      "title": "Träning: bild och luftig övningsdetalj",
+      "mvp_requirement": "docs/mvp.md §4.4; docs/design/vision-rev02-screen-contracts.md: panel 6 Träning",
+      "plan": "docs/tasks/dev/ux-owner-feedback-2026-10-19.md v15; docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md v15",
+      "write_paths": [
+        "src/theme/tokens.ts",
+        "src/components/ui/HeroCard.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/design/evidence/vision-rev02/training-detail-2026-10-19",
+        "docs/tasks/dev/ux-owner-feedback-2026-10-19.md",
+        "docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "The existing training illustration appears in the selected exercise detail with appropriate crop, rounded form and decorative accessibility semantics.",
+        "Use the actual selected-step index in the visible program steps array plus one for its ordinal.",
+        "The continue-card thumbnail keeps the existing compact width token and fills the card left/top/bottom edges with cover; outer clipping preserves rounded corners and right text keeps token padding.",
+        "Spacing between image, ordinal, title, full instruction, note and action uses existing tokens and supports short viewports and text wrapping.",
+        "Preserve program/step selection, content, completion/unmark sequencing, confirmed progress, pending/error state, source information and checklist navigation.",
+        "Capture actionable incomplete, locked later, completed/unmark, program-info, pending/disabled and error states; actionable and completed actions remain reachable by natural sheet scroll at 375x667 and 140% text proxy.",
+        "Fresh public/review evidence at 375x844, 430x844, 375x667 and 140% includes normal and long-title continuation cards; compare continuation with Panel 6 and detail with the saved owner reference.",
+        "Recommended program cards have a fixed 260 pt height across viewport widths and title lengths; the height scales with system fontScale, the visible title is capped at three lines, and the full title remains accessible."
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/training/PublishedTrainingScreen.tsx",
+        "Existing public/review RN Web fixture build and manual browser rendering; inspect each declared detail state and continuation-card density. tools/visual-check/app.tsx has a known pre-existing baseline of 6 Hooks errors and 5 warnings; do not report its lint as passing. No test suite.",
+        "git diff --check (only if this workspace has Git metadata; otherwise NOT TESTABLE)",
+        "python tools/dev_flow.py validate",
+        "pnpm exec eslint src/components/ui/HeroCard.tsx src/features/training/PublishedTrainingScreen.tsx src/theme/tokens.ts"
+      ],
+      "depends_on": [
+        "UX-BREED-PICKER-2026-10-19",
+        "UX-BREED-PICKER-VISUAL-CORRECTION-2026-10-19"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact plan/spec v14: Architect APPROVE and Critic PROCEED; original A and UX-BREED-PICKER-VISUAL-CORRECTION are done with QA/Reviewer PASS. B v14 contract and all write paths reviewed."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin B under exact approved v14. Restrict edits to PublishedTrainingScreen.tsx, its README, the existing visual fixture and declared evidence/task files; preserve selection, progress, status and navigation; no new dependency or test suite."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Owner-directed addendum (2026-10-19): program cards must remain the same size across resolutions. Added shared 260 pt base height scaled by system fontScale, three-line visual title clamp with full accessible label, and fresh public/review viewport evidence. No test suite added or run."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v15 implementation complete; Architect APPROVE and Critic PROCEED; opt-in HeroCard fill confined to PublishedTrainingScreen; fresh public/review captures, typecheck, scoped ESLint, queue validation, and diff check pass; no test suite run; independent QA next"
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: equal card heights at 375/430 px and long title (260 px), 140% CSS proxy (364 px); accessible full title and source/report/captures agree; typecheck, focused ESLint, diff check and queue validation pass; QA-REPORT.md saved; independent Reviewer next"
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS: equal card sizing confirmed at 375/430 px, long title and 140% CSS proxy; QA/render report/JSON/manifests/captures agree; non-blocking fill=false clamp note documented; broader Panel 6 and native limitations retained; REVIEW-REPORT.md saved"
+        }
+      ],
+      "next_step": "Independent Reviewer PASS: equal card sizing confirmed at 375/430 px, long title and 140% CSS proxy; QA/render report/JSON/manifests/captures agree; non-blocking fill=false clamp note documented; broader Panel 6 and native limitations retained; REVIEW-REPORT.md saved",
+      "priority": "P1",
+      "panels": [
+        "6"
+      ],
+      "risk_class": "L",
+      "checkpoint": "Training detail uses the existing image and spacious layout; the continue thumbnail reaches the card's left/top/bottom edges while progress, content and navigation stay unchanged.",
+      "test_evidence": [
+        "Public/review captures at 375x844, 430x844, and 375x667, plus the 140% web text proxy; capture normal, long-title and 140% continuation-card cases and assess its taller full-height image crop separately.",
+        "Detail-sheet states: next actionable incomplete step; later locked step with prerequisite copy and disabled action; completed step with Avmarkera; program-info sheet with no exercise image/ordinal; pending/disabled action and error feedback.",
+        "At 375x667 and 140% text proxy, inspect full instruction and action reachability by natural sheet scroll for actionable and completed states.",
+        "Compare the continuation card side-by-side with Panel 6 in vision_rev02.jpg; compare the detail sheet with docs/design/evidence/vision-rev02/training-detail-2026-10-19/reference/owner-training-detail.jpg. Record §14 composition/color/typography/component shape/imagery/density and native limitations.",
+        "Native VoiceOver and device Dynamic Type remain NOT TESTABLE in RN Web.",
+        "Public/review card measurements prove 260 pt height at 375px and 430px widths and with a long title; review CSS text proxy uses the production 1.4x height calculation. Native system Dynamic Type remains NOT TESTABLE."
+      ]
     },
     {
       "id": "UX-PASSPORT-PDF-PREVIEW-2026-10-19",
