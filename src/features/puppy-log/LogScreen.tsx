@@ -365,7 +365,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
           return <View key={event.id}>{row}</View>;
       })}
       {!dayReadComplete && !loadMoreError ? <View style={styles.loadingOlder} accessibilityLiveRegion="polite"><ActivityIndicator color={tokens.colors.primary} size="small" /><Text style={styles.loadingOlderText}>{loadingMore ? 'Hämtar fler händelser…' : 'Söker efter fler händelser…'}</Text></View> : null}
-      {dayReadComplete && timelineItems.length === 0 ? <View style={styles.empty}><Text style={styles.emptyTitle}>Inga händelser den här dagen</Text><Text style={styles.emptyBody}>Välj en annan dag eller tryck på en ruta ovan för att logga en händelse idag.</Text></View> : null}
+      {dayReadComplete && timelineItems.length === 0 ? <View style={styles.empty}><Text style={styles.emptyTitle}>Inga händelser den här dagen</Text><Text style={styles.emptyBody}>Tryck på Lägg till händelse nedan för fler val, eller välj en ruta ovan för att logga idag.</Text></View> : null}
       <Pressable accessibilityRole="button" accessibilityLabel="Lägg till händelse" accessibilityHint="Öppnar fler loggtyper" accessibilityState={{ disabled }} disabled={disabled} onPress={() => { firstUseTip.dismiss(); setAddEventVisible(true); }} style={({ pressed }) => [styles.addEventButton, pressed && !disabled && styles.addEventPressed, disabled && styles.addEventDisabled]}>
         <Ionicons name="add" size={tokens.size.iconMd} color={tokens.colors.onPrimary} />
         <Text style={styles.addEventLabel}>Lägg till händelse</Text>

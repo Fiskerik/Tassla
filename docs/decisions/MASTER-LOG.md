@@ -161,3 +161,13 @@ Architect v7 och UX Critic godkände local-only checkpoint med sökning begräns
 ### UI-REFRESH-HOME-LOG — lokal checkpoint, 2026-10-19
 
 Architect v4 APPROVE, UX Critic PROCEED; Security pre-review APPROVE WITH CONDITIONS och fryst-diff final APPROVE. Oberoende QA PASS och Reviewer PASS. Hem och Logg har opt-in RefreshControl, samma-scope läsning, behållna bekräftade rader och återförsök utan att dölja olösta skrivningar. Både första sida och äldre Logg-sidor avbryts/fencas vid konto-/hundbyte. Riktad svit 11/11; `pnpm check` 571/571; publik `pnpm bundle:ios` 1 447 moduler; `git diff --check` och `python -X utf8 tools/dev_flow.py validate` PASS. Commit `0c1c345` (`feat: add Home and Log pull-to-refresh`) är pushad till `origin/codex/tassla-ui-ux-bundle-2026-10-18`. Renderad refresh-/felvy vid 375/430, §14 och native pull-gesture är NOT TESTABLE i denna miljö; ingen live Supabase/RLS eller signerad build verifierades. Se [verifiering](../design/evidence/ui-refresh-home-log-2026-10-19/VERIFICATION.md). Nästa paket är UI-EMPTY-FEEDBACK-HOME-LOG (5a).
+
+### UI-EMPTY-FEEDBACK-HOME-LOG — 5a, 2026-10-19
+
+- Scope: sanningsenliga tom-, laddnings-, fel-, osäkra skriv- och partiella pagineringslägen för Hem och Logg; endast befintliga vägar.
+- Verifierat: fokuserat Node-test 23/23; pnpm check (typecheck, edge typecheck, ESLint, 577/577) PASS; offentlig pnpm bundle:ios (1 447 moduler) PASS; git diff --check och python -X utf8 tools/dev_flow.py validate PASS.
+- Renderad evidens: syntetisk stateful RN Web-fixture visar Logg tomläge → väljare → bekräftad Vatten-rad/toast. Den separata tempadapter som behövdes ligger utanför repot och verifierar inte live Supabase/RLS.
+- Verdicts: oberoende QA PASS för lokal acceptance. Första Reviewer-granskning BLOCK endast på dokumentationskonsistens, utan kodfynd; efter rättning gav slutlig Reviewer **PASS**.
+- Öppna gränser: native VoiceOver/TalkBack, Dynamic Type, riktiga enhetsytor, live Supabase/RLS, signerad build och full rev02-jämförelse är NOT TESTABLE.
+- Checkpoint/commit: QA/Reviewer PASS; redo för commit/push på branch codex/tassla-ui-ux-bundle-2026-10-18.
+- Nästa: 5b UI-EMPTY-FEEDBACK-KNOWLEDGE-TRAINING efter denna checkpoint.

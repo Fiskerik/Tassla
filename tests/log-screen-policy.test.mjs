@@ -28,7 +28,7 @@ test('quick log uses the approved page heading, date navigator, two column grid 
 });
 
 test('quick log has truthful loading, empty, failure, mutation and confirmed undo states', () => {
-  for (const copy of ['Loggen kunde inte hämtas.', 'Försök igen', 'Inga händelser den här dagen', 'Välj en annan dag eller tryck på en ruta ovan för att logga en händelse idag.', 'Sparar…', 'Kunde inte spara']) {
+  for (const copy of ['Loggen kunde inte hämtas.', 'Försök igen', 'Inga händelser den här dagen', 'Tryck på Lägg till händelse nedan för fler val, eller välj en ruta ovan för att logga idag.', 'Sparar…', 'Kunde inte spara']) {
     assert.ok(screen.includes(copy), `missing state copy: ${copy}`);
   }
   assert.match(screen, /mutation\?\.status === 'unsure'/);

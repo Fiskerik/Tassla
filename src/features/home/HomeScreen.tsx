@@ -150,10 +150,10 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
         </View>
         {age ? <Text style={styles.dogAge}>Hundens ålder: {age.label}</Text> : null}
         {contentState === 'loading' ? <Skeleton shape="line" lines={2} /> : null}
-        {contentState === 'error' ? <Text style={styles.body}>Kunskapen kunde inte hämtas just nu. Öppna Kunskap för att försöka igen.</Text> : null}
+        {contentState === 'error' ? <Text style={styles.body}>Artiklarna kunde inte hämtas just nu.</Text> : null}
         {relevantContent ? <Text numberOfLines={3} style={styles.body}>{preview}</Text> : null}
         {!relevantContent && contentState === 'ready' && trainingState === 'loading' ? <Skeleton shape="line" lines={2} /> : null}
-        {!relevantContent && contentState === 'ready' && trainingState === 'error' ? <Text style={styles.body}>Träningen kunde inte hämtas just nu.</Text> : null}
+        {!relevantContent && contentState === 'ready' && trainingState === 'error' ? <Text style={styles.body}>Träningen kunde inte hämtas just nu. Öppna Träna för att försöka igen.</Text> : null}
         {!relevantContent && contentState === 'ready' && trainingState === 'ready' && nextStep ? <>
           <Text numberOfLines={2} style={styles.body}>{nextStep}</Text>
           {reviewTrainingStep ? <Text style={styles.exampleLabel}>Tillfälligt exempel – innehållet är inte sakgranskat</Text> : null}
