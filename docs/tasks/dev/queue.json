@@ -8363,7 +8363,7 @@
       "risk_class": "H",
       "checkpoint": "Support journey: Mer -> Notiser -> save/permission result -> back; Hem -> routine manager -> edit/save/cancel -> return.",
       "test_evidence": "Independent QA PASS 47/47 focused; Reviewer PASS; Security pre-review and frozen-diff re-review APPROVE. `pnpm check` 549/549, public iOS JS bundle 1446 modules, synthetic RN Web responsive screenshots/interactions PASS. Native/device/backend checks remain NOT TESTABLE; details in docs/design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md.",
-      "status": "review",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -8388,9 +8388,15 @@
           "to": "review",
           "actor": "qa",
           "evidence": "Independent QA PASS: focused tests 47/47; synthetic 375x667/140% and 320px routine/notices captures and flows readable; no page errors. Reviewer PASS and final Security APPROVE against frozen diff. Native/device/backend checks explicitly remain NOT TESTABLE; report: docs/design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS; Security pre-review and final frozen-diff re-review APPROVE; QA PASS 47/47; full check 549/549; public iOS bundle 1446 modules; diff/queue validation PASS; synthetic responsive capture/interaction evidence documented. Implementation commit 5ee2065be80d28221eff8914203b38419eb2f119. Native/backend/release limits remain NOT TESTABLE. Closeout: docs/design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md."
         }
       ],
-      "next_step": "Save the verified 2b.1 closeout and implementation checkpoint; then begin 2b.2 with its required Security pre-review.",
+      "next_step": "Begin 2b.2 UI-ACCESSIBILITY-HEALTH after its required Security pre-review.",
       "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
     },
     {

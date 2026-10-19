@@ -577,3 +577,5 @@ Huvudfliksbyte visar nu en riktad 28pt sidförflyttning; stödskärmar behåller
 ## UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS (2b.1) — QA/Reviewer/Security PASS, 2026-10-19
 
 Rutinhanteringens långa dagsval-/raderingsåtgärder och påminnelsesidans informationsrad blir responsiva vid smal skärm och 140% webtext. Spara, behörighet, rutinutkast, återhämtning och hundscope är oförändrade. Oberoende QA PASS (47/47), Reviewer PASS och Security pre-/final APPROVE. `pnpm check` 549/549; offentlig iOS-JS-bundle 1 446 moduler; syntetisk RN Web 375×667/140%-proxy och 320px PASS. Native tillgänglighet, OS-prompt/leverans, live backend/RLS och signerad build är NOT TESTABLE; full rev02-panelmatchning hävdas inte. [Verifiering](../design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md).
+
+Implementation checkpoint: `5ee2065be80d28221eff8914203b38419eb2f119` (`fix: improve routine and reminder layouts`).

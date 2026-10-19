@@ -2,7 +2,7 @@
 
 Datum: 2026-10-19
 Plan: `docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md` v4 · UX-specifikation: `docs/plans/UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS-ux-spec.md`
-Kö-ID: `UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS` · Branch: `codex/tassla-ui-ux-bundle-2026-10-18`
+Kö-ID: `UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS` · Branch: `codex/tassla-ui-ux-bundle-2026-10-18` · Implementation commit: `5ee2065be80d28221eff8914203b38419eb2f119`
 
 ## Implementerat
 
