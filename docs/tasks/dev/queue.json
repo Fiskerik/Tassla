@@ -10433,6 +10433,193 @@
       ],
       "implementation_state": "SVG circle implementation and refreshed evidence are complete. Erik dependency approval, Architect APPROVE, independent QA v1.4 PASS and Reviewer v1.4 PASS are recorded; this local checkpoint is closed.",
       "evidence_status": "Independent Reviewer PASS: docs/design/evidence/vision-rev02/daily-progress/REVIEW-REPORT-v1.4.md. QA v1.4 PASS on 26 viewport/state cases + 5 interactions; focused 5/5; pnpm check 618/618; review-channel iOS export 1,564 modules; queue validation and diff-check PASS. Live/native limits remain NOT TESTABLE."
+    },
+    {
+      "id": "UX-BREED-PICKER-2026-10-19",
+      "title": "Onboarding och profil: raslista som sökbar dropdown",
+      "mvp_requirement": "docs/mvp.md: stödskärm hundprofil/onboarding",
+      "plan": "docs/tasks/dev/ux-owner-feedback-2026-10-19.md v6; docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md v6",
+      "write_paths": [
+        "src/features/onboarding/SearchableBreedPicker.tsx",
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/onboarding/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/design/evidence/vision-rev02/breed-picker-2026-10-19/RENDER-REPORT.md",
+        "docs/tasks/dev/ux-owner-feedback-2026-10-19.md",
+        "docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Onboarding and profile edit use the same compact accessible picker; the complete breed list is hidden until the user opens it",
+        "Only existing breed IDs can be selected; search is local to the fetched catalog and cannot persist typed text",
+        "Create has no hidden preselected first breed; edit preserves the saved value and current missing-catalog warning behavior",
+        "Current loading/error/retry, profile save/readback, kennel, age and account-lifetime behavior is preserved",
+        "Fresh synthetic render/evidence covers closed/open/selected/no-match, required mobile widths and §14 limitations"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/onboarding/SearchableBreedPicker.tsx src/features/onboarding/ProfileScreen.tsx src/features/onboarding/EditDogProfileScreen.tsx tools/visual-check/app.tsx",
+        "Existing RN Web public/review fixture build and manual browser render; no test suite",
+        "git diff --check (only if this workspace has Git metadata; otherwise NOT TESTABLE)",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "status": "implementing",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v5 for A/B; Critic review leaves A/B unchanged; Erik's direct request authorizes these local UI fixes."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin approved A only after HOME-ROUTINE-CHECKLIST-01 QA/Reviewer/Security checkpoint; no dependency or catalog/data change."
+        }
+      ],
+      "next_step": "Begin approved A only after HOME-ROUTINE-CHECKLIST-01 QA/Reviewer/Security checkpoint; no dependency or catalog/data change."
+    },
+    {
+      "id": "UX-TRAINING-DETAIL-2026-10-19",
+      "title": "Träning: bild och luftig övningsdetalj",
+      "mvp_requirement": "docs/mvp.md: sex huvudytor, panel 6 Träning",
+      "plan": "docs/tasks/dev/ux-owner-feedback-2026-10-19.md v6; docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md v6",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "tools/visual-check/app.tsx",
+        "docs/design/evidence/vision-rev02/training-detail-2026-10-19/RENDER-REPORT.md",
+        "docs/tasks/dev/ux-owner-feedback-2026-10-19.md",
+        "docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "The existing training illustration appears in the selected exercise detail with appropriate crop, rounded form and decorative accessibility semantics",
+        "The continue-card thumbnail fills the card's left, top and bottom edges; outer card clipping preserves its rounded corners and right-side text keeps token padding",
+        "Spacing between image, ordinal, title, full instruction, note and action uses existing tokens and supports short viewports/text wrapping",
+        "Ordinal is derived from the step array index; progress/content/save/navigation behavior is unchanged",
+        "Fresh synthetic render/evidence covers required mobile widths and §14 limitations"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/features/training/PublishedTrainingScreen.tsx tools/visual-check/app.tsx",
+        "Existing RN Web public/review fixture build and manual browser render; no test suite",
+        "git diff --check (only if this workspace has Git metadata; otherwise NOT TESTABLE)",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UX-BREED-PICKER-2026-10-19"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Wait until UX-BREED-PICKER-2026-10-19 is verified and checkpointed."
+    },
+    {
+      "id": "UX-PASSPORT-PDF-PREVIEW-2026-10-19",
+      "title": "Tassla-pass: öppna PDF-förhandsvisning före delning",
+      "mvp_requirement": "docs/mvp.md: stödskärm Tassla-pass, förhandsgranskning och ägarinitierad delning",
+      "plan": "docs/tasks/dev/ux-owner-feedback-2026-10-19.md v6; docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md v6",
+      "write_paths": [
+        "src/features/passport/PassportScreen.tsx",
+        "src/features/passport/passport-export.ts",
+        "src/features/passport/README.md",
+        "package.json",
+        "pnpm-lock.yaml",
+        "docs/Architecture.md",
+        "docs/dev/beta-data-lifecycle.md",
+        "docs/privacy/beta-information.md",
+        "tools/visual-check/app.tsx",
+        "docs/design/evidence/vision-rev02/passport-pdf-preview-2026-10-19/RENDER-REPORT.md",
+        "docs/tasks/dev/ux-owner-feedback-2026-10-19.md",
+        "docs/plans/UX-OWNER-FEEDBACK-2026-10-19-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Owner-approved platform contract opens the actual generated PDF after explicit Visa PDF activation, then exposes honest share and close choices",
+        "No auto-share, false delivery status, altered snapshot fields/readiness/data selection, or unreviewed external disclosure",
+        "Exact native dependency, license/source, cache lifetime and cleanup contract have Architect, Security, Compliance and owner approval before implementation",
+        "Fresh iOS and Android builds/device evidence verify the supported platform behavior; unsupported cases are truthful"
+      ],
+      "checks": [
+        "Only after a new reviewed plan: typecheck, scoped lint, native builds and device checklist",
+        "No test suite unless the owner asks; no real account data or production database"
+      ],
+      "depends_on": [
+        "UX-TRAINING-DETAIL-2026-10-19"
+      ],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "blocked",
+          "actor": "architect",
+          "evidence": "Architect BLOCK for exact PDF preview plan v5; Android viewer/share contract, dependency artifact/owner approval and Security/Compliance/lifecycle review unresolved."
+        }
+      ],
+      "next_step": "Architect BLOCK for exact PDF preview plan v5; Android viewer/share contract, dependency artifact/owner approval and Security/Compliance/lifecycle review unresolved."
+    },
+    {
+      "id": "UX-PREARRIVAL-DATE-2026-10-19",
+      "title": "Hundprofil och Hem: valfritt leveransdatum och förberedelser",
+      "mvp_requirement": "docs/mvp.md: Stöd: hundprofil och onboarding; Skärm 1. Personligt Home/Today",
+      "plan": "docs/tasks/dev/ux-prearrival-date-2026-10-19.md v3; docs/plans/UX-PREARRIVAL-DATE-2026-10-19-ux-spec.md v3",
+      "write_paths": [
+        "src/data/app-data.ts",
+        "src/data/README.md",
+        "src/features/onboarding/dog.ts",
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/onboarding/DogProfileScreen.tsx",
+        "src/features/onboarding/README.md",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/AppFlow.tsx",
+        "src/features/home/PreviewHomeScreen.tsx",
+        "src/features/home/PreviewProfileScreen.tsx",
+        "src/features/home/DevelopmentPreview.tsx",
+        "src/features/home/README.md",
+        "supabase/migrations/202610190001_dog_home_arrival_date.sql",
+        "docs/mvp.md",
+        "docs/Architecture.md",
+        "docs/dev/beta-data-lifecycle.md",
+        "docs/privacy/beta-information.md",
+        "tools/visual-check/app.tsx",
+        "docs/design/evidence/vision-rev02/prearrival-date-2026-10-19/RENDER-REPORT.md",
+        "docs/tasks/dev/ux-prearrival-date-2026-10-19.md",
+        "docs/plans/UX-PREARRIVAL-DATE-2026-10-19-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Create and edit expose the same optional Leveransdatum field behind a separate, active and withdrawable consent; no date is stored without consent, null can be saved/cleared and existing profiles read as empty",
+        "Calendar validation preserves birth-date, secure profile create/update/readback/CAS and account-lifetime behavior",
+        "Legacy create clients and kennel attribution remain compatible under Architect-approved RPC contract",
+        "Forward-only nullable migration preserves RLS/ownership and is not applied to a database",
+        "Home shows future/today suggestions and hides the card when date is absent or past by local calendar date; suggestions are not saved activities",
+        "Purpose-specific consent can be evidenced and withdrawn as easily as granted; date remains as profile history for at most 30 days after home arrival and is automatically cleared under a verified timezone and maximum delay; account/dog deletion and privacy/retention documents cover the field and purpose",
+        "Synthetic UI evidence and §14 assessment cover date states and screen sizes; SQL runtime, live RLS and native accessibility are NOT TESTABLE unless verified",
+        "No test suite is added or run"
+      ],
+      "checks": [
+        "pnpm typecheck",
+        "pnpm exec eslint src/data/app-data.ts src/features/onboarding/dog.ts src/features/onboarding/ProfileScreen.tsx src/features/onboarding/EditDogProfileScreen.tsx src/features/onboarding/DogProfileScreen.tsx src/features/home/HomeScreen.tsx src/features/home/ProductWorkspace.tsx src/features/home/AppFlow.tsx src/features/home/PreviewHomeScreen.tsx src/features/home/PreviewProfileScreen.tsx src/features/home/DevelopmentPreview.tsx tools/visual-check/app.tsx",
+        "Existing RN Web fixture build and manual render/interaction review; no test suite",
+        "git diff --check if Git metadata exists; otherwise NOT TESTABLE",
+        "python tools/dev_flow.py validate",
+        "Architect, Critic, static Security and Compliance reviews; static SQL only, no database changes"
+      ],
+      "depends_on": [
+        "UX-TRAINING-DETAIL-2026-10-19"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Owner selected consent as intended lawful basis; design separate active opt-in, proof, non-conditioning and equally easy withdrawal/deletion. Owner retention wording is provisionally read as profile history through 30 calendar days after home arrival, then automatic clearing; confirm exact interpretation, timezone and maximum server delay. Rerun Architect/Critic/Security/Compliance on v3; address existing Critic/Security findings and MVP/privacy documentation. Keep planned until reviews pass and UX-TRAINING-DETAIL is checkpointed."
     }
   ]
 }
