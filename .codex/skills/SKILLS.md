@@ -16,12 +16,15 @@ Tassla should feel calm, trustworthy and effortless for a new puppy owner. This 
 
 Apply the highest relevant rule. Design rules govern appearance; this skill governs behavior, feedback, and states. Do not reopen decisions already recorded in the task or governing documents. If the rules leave a material product decision unresolved, record the conflict and ask the owner before dependent work. Follow the repository plan/review gates for scope changes, data, dependencies, and security. A visual component variant explicitly required by an approved design contract is within that contract.
 
+## iOS design skill
+Use the repository's `mobile-ios-design` skill when designing iOS-facing UI. Apply its Apple Human Interface Guidelines principles through the Expo adaptation documented in that skill. This skill continues to govern interaction, feedback, and states. Follow Tassla's `docs/design-rules.md`, approved screen contracts, and recorded owner decisions wherever they are more specific. Use existing React Native components, Expo Router, Ionicons, and theme tokens; treat SwiftUI examples as references, not implementation instructions. Do not add dependencies or ask the owner to reconfirm decisions already recorded in the repository.
+
 ## Anti-AI slop (the tells that make output look generic — avoid)
 1. No gradient-blob filler, no giant hero gradients as a substitute for content.
-2. No emoji as icons — use a real icon set (lucide-react).
-3. No hand-drawn SVG illustrations/maps/charts — use real libraries (rechartsfor charts) or real generated images.
-4. No placeholder images / lorem-gray boxes in the final product — generate real images or use real content; set crossOrigin="anonymous" on canvas images.
-5. Avoid the overused-font look (default system-only, or Comic Sans-tier picks).
+2. No emoji as icons. Use Tassla's existing Ionicons and icon components.
+3. Avoid hand-drawn placeholder illustrations, maps, or charts. Reuse approved app assets and components; use a library only if it is already part of the approved stack.
+4. Do not ship placeholder images or filler copy. Use approved assets and content that fits the screen's purpose.
+5. Choose typography deliberately within the approved design system; platform system typography is appropriate when it supports clarity and accessibility.
 6. Every element earns its place. Cut decorative noise. Establish a system, then vary with intent — not randomness.
 7. Match the existing UI when editing an app in place; don't introduce a second visual language.
 
