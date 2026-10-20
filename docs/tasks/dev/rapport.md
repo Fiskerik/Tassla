@@ -957,3 +957,78 @@ Plan v2 godkänd för implementation. Product APPROVE (befintliga ägarregistrer
 Ägaren bad avsluta den fortsatta implementationen eftersom riktningen inte kändes rätt. Endast data-/modellskivan sparas på `codex/tassla-mvp-remainder-2026-10-20`; inga skärmar eller routes är inkopplade och tasken är ofärdig. Den exakta restlistan och begränsningarna finns i `FLOW-HOME-CHECKLIST-FILTERS-01.md`.
 
 Fokuserat data-/modelltest: 13/13 PASS. Full `pnpm check` (typecheck, edge typecheck, lint, 619 tester), `git diff --check` och `python -X utf8 tools/dev_flow.py validate` PASS. Commit-hook körde samma fulla check och passerade 619/619. Data-/modellcheckpoint: `41adec0` (`wip: checkpoint checklist filter data model`). Dokumentationscommit och push återstår när denna rapportpost skrivs. Live Supabase/RLS, UI acceptance, navigation/lifecycle, visuell §14, native VoiceOver/Dynamic Type och TestFlight är NOT TESTABLE eller inte körda i denna partiella skiva. Inget `MASTER-LOG`/DONE-utslag eftersom acceptansen inte är uppfylld.
+
+
+## DOCS-MVP-REV02-ALIGN-01 — plan v1, 2026-10-20
+
+**Mandat:** Eriks aktuella besked i chatten Tassla – Product Consistency & Delivery Reset: ”Ja, gör MVP rev 02 som den godkända planen och fixa de filer som säger emot varandra först”. Dokumentharmonisering före appimplementation. Bas: `origin/main` @ `2967a3f34cfe4b33d4777626c911695552cce728`; arbetsgren `codex/mvp-rev02-approved-plan`.
+
+**Ägare:** koordinatorn skriver dokument; Architect/Critic granskar planen, oberoende QA/Reviewer granskar resultatet. Risk L: endast produkt-/arbetsinstruktioner, ingen ändring av app, data, behörigheter, migrationskörning, dependencies, kostnader eller release. Security/Compliance/Dog Expert behöver inte nya granskningar eftersom deras befintliga grindar och sakgranskade innehåll bevaras.
+
+1. Gör `docs/mvp.md` till enda styrande produktdefinition för MVP rev02: sex produktområden, åtta funktionella paneler och redan godkända v2-krav. Bevara Main-specifika krav, flerhundsstöd och uttryckliga säkerhets-/publiceringsgränser. Skilj godkänd plan från levererad funktion. Den daterade v2-filen blir hänvisning; GAP-analysen behålls som historisk analys av sin commit.
+2. Synka mandat, företräde, planreview och Definition of Done i befintliga agent-/workflow-/designfiler. Ett oförändrat godkännande återanvänds; risk, data, scope och produktbeslut utlöser relevant ny granskning. Oberoende QA/Reviewer och alla säkerhetskrav kvarstår. Gör skills-indexet till hänvisningar till kanoniska skills. Inga nya styrdokument eller app-/verktygsändringar.
+3. Kontrollera kravbevarande, relativa länkar, TOML, kö, motstridiga aktuella statusar och whitespace; kör `pnpm check`. Spara faktisk QA/Reviewer-evidens här och slututfall i befintlig historik. Saknad native/live-acceptans förblir öppen. Därefter är rasväljarpiloten nästa avgränsade appuppgift; återuppta inte det ägarstoppade filterpaketet automatiskt.
+
+**Acceptans:** samma aktuella mandat i alla ändrade instruktioner; v2:s A–F, vuxenrelevans, bestående hund-ID/historik, åtta rev02-paneler och Main-specifika godkända krav bevaras; inga nya produktkrav eller falska acceptanser; historiska källor märks utan att historiken skrivs om. Nya/återupptagna uppgifter ska dokumentera krav → kod/anrop → regression → aktuell screenshot/avvikelse samt separat kod/lokal QA/live/native/visuell/release-status med branch/commit/build. Köverktygets nuvarande begränsningar beskrivs ärligt; ingen ny validator implementeras här.
+
+**Skrivvägar:**
+- `AGENTS.md`
+- `docs/mvp.md`
+- `docs/MVP v2 - 2026-10-16.md`
+- `docs/GAP_analys_Tassla 2026-10-16.md`
+- `docs/MVP-EXPERIENCE-CONTRACT.md`
+- `docs/decisions/MASTER-LOG.md`
+- `docs/dev/workflow.md`
+- `docs/design-rules.md`
+- `docs/design/vision-rev02-screen-contracts.md`
+- `docs/ai-team.md`
+- `.codex/skills/SKILLS.md`
+- `docs/tasks/dev/queue.json`
+- `docs/tasks/dev/rapport.md`
+- `docs/releases/HISTORY-2026.md`
+- `.codex/agents/architect.toml`
+- `.codex/agents/compliance.toml`
+- `.codex/agents/critic.toml`
+- `.codex/agents/dog_expert.toml`
+- `.codex/agents/implementer.toml`
+- `.codex/agents/product.toml`
+- `.codex/agents/qa.toml`
+- `.codex/agents/reviewer.toml`
+- `.codex/agents/security.toml`
+
+**Kontroller:** `pnpm check`; `python tools/dev_flow.py validate`; JSON/TOML-parse; relativa dokumentlänkar; riktad motsägelsesökning; `git diff --check`. Ingen visuell/runtime-PASS genom dokumentändring.
+
+**Nästa steg:** Architect och Critic granskar plan v1 före innehållsändring.
+
+### Planreview v1
+
+- Architect (oberoende `docs_plan_review`): **APPROVE**. Kontrollera begreppsskillnaden produkt-MVP/visuell rev02, Main-krav/flerhundsstöd, A–F och preliminära detaljförslags status. Ingen ny ägarbekräftelse behövs.
+- Critic (oberoende `docs_critic`): **PROCEED**. Samma kravbevarande; beskriv köverktygets faktiska regler eftersom ingen validator ändras. Inga blockerande invändningar.
+- `FLOW-HOME-CHECKLIST-FILTERS-01` har flyttats till `blocked` för att återspegla det redan dokumenterade ägarstoppet; uppgiften återupptas inte av detta dokumentmandat.
+
+**Nästa steg:** genomför plan v1 inom angivna skrivvägar.
+
+### Lokal verifiering — DOCS-MVP-REV02-ALIGN-01
+
+- `pnpm check`: PASS (app- och edge-typecheck, ESLint; 619 tester totalt, 618 PASS, 1 SKIP, 0 FAIL). Första försöket avbröts efter sandboxens nätfel vid bootstrap av redan låsta dependencies; omkörning med tillåten nätåtkomst installerade befintlig lockfil och passerade. Inga manifest-/lockändringar.
+- JSON och alla 9 aktiva agent-TOML: PASS. `python tools/dev_flow.py validate` och `git diff --check`: PASS.
+- 126 relativa Markdown-länkar kontrollerade: inga nya saknade mål. En redan trasig historisk länk i rapportens UI-06-post (`../design/UI-06/`) lämnas som historiskt fynd.
+- Native-skillens kompatibilitetsspegel är identisk med kanoniska `.agents/skills/mobile-ios-design/SKILL.md`.
+- Diffen berör endast avtalade dokument, rollinstruktioner och kön; inga app-, test-, verktygs-, SQL- eller dependencyfiler. Ingen ny runtime-, live-, native-, visuell eller releaseacceptans.
+- Cleanup: fas-0-instruktioner och utdaterade modellnotiser har ersatts med historikhänvisningar; skills-indexet länkar till kanoniska skills i stället för att kopiera regler. Fullt produktunderlag finns i `docs/mvp.md`; daterade v2/GAP-källor är märkta historiska.
+
+**Nästa steg:** oberoende QA, därefter Reviewer av stabil dokumentdiff.
+
+### Oberoende QA — PASS
+
+`docs_qa` verifierade plan v1 mot diffen och ursprungliga Main-/v2-krav: vuxenhundsresa, A–F, alla åtta paneler, flerhundsstöd, ålderspreferens, rutinernas gallring och Mix bevarade; preliminära antal inte upphöjda till beslut; samtliga säkerhets-/publiceringsgrindar kvar. JSON, 9 TOML, kö och whitespace PASS; 126 relativa länkar utan nya saknade mål; `pnpm check` 619 totalt/618 PASS/1 SKIP/0 FAIL. Ett kvarvarande dubbelloggningskrav i MASTER-LOG rättades och QA omkontrollerade det. Inga blockerande fynd kvar.
+
+**Nästa steg:** oberoende Reviewer av stabil dokumentdiff.
+
+### Oberoende slutreview — PASS och hållbar dokumentcheckpoint
+
+`docs_reviewer`: PASS för plan v1 utan blockerande fynd. Kravbevarande, historiska källor, oförändrade köövergångar, specialist-/säkerhetsgrindar och skrivvägar verifierade. JSON/TOML/kö/whitespace och den faktiska testloggen kontrollerade. Ingen app-, data-, test-, verktygs-, dependency-, live-, native-, visuell eller releaseacceptans tillagd.
+
+Dokumentcheckpoint: branch `codex/mvp-rev02-approved-plan`, bas `2967a3f34cfe4b33d4777626c911695552cce728`; SHA-256 för innehållsdiffen (exklusive kö/rapport/historik): `1ea4c63367844978d9b08aa029f730054720a9fcae14deb4884e35514e4d01dc`. Signerad/native build: ej skapad, inte relevant för detta dokumentpaket. Commit/push sker efter ordinarie Git-hookar; faktisk leveranscommit identifieras av grenens Git-historik.
+
+**Nästa steg:** spara och lämna dokumentpaketet i separat PR. Därefter skriv exakt plan för rasväljarpiloten på aktuell Main; ingen appimplementation har startats.

@@ -1,6 +1,6 @@
 # Vision rev02 — byggkontrakt för samtliga skärmar
 
-Version 1.0, 2026-10-13. Beställt av Erik som underlag för kommande Codex-implementation. Status: designmål, inte färdig UI eller godkänd produktionsfunktion. Läs [designreglerna](../design-rules.md), [objektkontraktet](vision-rev02-objects.md) och faktisk kod före implementation. Panelerna i `vision_rev02.jpg` numreras vänster–höger, övre raden 1–4, undre 5–8.
+Version 1.1, synkad 2026-10-20. Godkänd produktomfattning styrs av [MVP rev02](../mvp.md), inklusive vuxenhundsresan; `vision_rev02.jpg` styr den visuella referensen. Ursprungligt detaljunderlag: 2026-10-13. Beställt av Erik som underlag för kommande Codex-implementation. Status: designmål, inte färdig UI eller godkänd produktionsfunktion. Läs [designreglerna](../design-rules.md), [objektkontraktet](vision-rev02-objects.md) och faktisk kod före implementation. Panelerna i `vision_rev02.jpg` numreras vänster–höger, övre raden 1–4, undre 5–8.
 
 ## Gemensam grund
 

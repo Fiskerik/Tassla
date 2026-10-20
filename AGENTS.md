@@ -1,6 +1,8 @@
 # AGENTS.md – Tassla
 
 ## Aktuellt MVP-mandat och företräde
+Eriks besked 2026-10-20 gör **MVP rev02** till godkänd plan: `docs/mvp.md` är enda aktuella produktdefinition och innehåller MVP v2:s produktkrav samt godkända Main-krav. `vision_rev02.jpg` är den visuella referensen, inte en separat produktversion eller bevis på levererad funktion. Dokumentharmonisering utförs först; därefter är gemensam sökbar rasväljare i samtliga hundprofilflöden första apppilot. Det ägarstoppade checklistfilterpaketet återupptas inte automatiskt. Daterade v2-/GAP-underlag och äldre taskhistorik kan inte åsidosätta detta mandat.
+
 Eriks beslut 2026-10-15: leverera åtta funktionella `vision_rev02.jpg`-paneler genom små, kompletta användarresor med hållbara checkpoints och riskbaserad QA. Se `docs/MVP-EXPERIENCE-CONTRACT.md`, `docs/mvp.md`, `docs/design-rules.md` och `docs/dev/workflow.md`. Panelmålen är Hem, Utveckling, Dagens framsteg, daglig Checklista, Logga, Träning, Kunskap och Insikter. Skärmdump, review-fixture eller lokal kod betyder inte verifierad produktionsfunktion.
 
 Företräde: aktuella uttryckliga ägarbeslut, säkerhet/sanningsenlighet/tillgänglighet, MVP-kontrakt, sedan äldre plantext. Äldre fas-0-förbud, rev01 som aktuell referens och krav på nytt segmentgodkännande för redan beställd MVP gäller inte. Beslutet godkänner inte nya persondataändamål, live-migration, dependencies, kostnader, extern pilot eller publicering. Bevara befintliga fungerande resor och verifiera regressioner.
@@ -15,8 +17,8 @@ Vid konflikt med äldre visuella råd gäller docs/design-rules.md inom godkänt
 Inför varje uppgift ska agenten identifiera och läsa alla tillgängliga skills som är relevanta för arbetsmomentet — begränsa dig inte till $tassla-consumer-ux. Kontrollera projektets repo-skills under .agents/skills/ och .codex/skills/ samt skill-index/katalogen i körmiljön; läs hela SKILL.md för varje tillämplig skill. För UI ska docs/design-rules.md alltid följas; tassla-consumer-ux kompletterar beteende, tillstånd och återkoppling, och mobile-ios-design används när iOS/Expo-gränssnitt berörs. Relevanta skills kompletterar varandra men kan inte utöka godkänt scope eller åsidosätta ägarbeslut, MVP-kontrakt, säkerhet, tillgänglighet, planens skrivvägar eller repoets arbetsflöde. Dokumentera valda skills i plan/verifikation för substantiella uppgifter; irrelevanta skills ska inte dras in. Lös konflikter enligt företrädesordningen i designreglernas §0; fråga endast när ett väsentligt produktbeslut fortfarande saknas. Redan dokumenterade ägarbeslut ska inte frågas om igen.
 
 ## What Tassla is
-A free mobile app that follows a puppy's life from before it comes home until it is grown, for new dog owners. Inspired by BabyJourney, but for puppies. Goal: make the first 6–12 months simpler, safer and more enjoyable.
-Vision, revenue and open questions: `docs/vision.md`, `docs/revenue.md`. There is no requirements spec yet; it is built up step by step in `docs/` together with the human owner. Owner input in those files is unreviewed until marked otherwise.
+Tassla är hundens digitala hem genom livet, med särskilt stark valpupplevelse och en begränsad vuxenhundsresa inom godkänd MVP rev02. Varje hund behåller sin identitet och historik; ett konto kan ha flera egna hundar.
+Vision, revenue and open questions: `docs/vision.md`, `docs/revenue.md`. `docs/mvp.md` är godkänd produktdefinition. Råa idéer och roadmap i vision/revenue blir inte krav utan beslut; redan registrerade godkännanden får inte behandlas som obesvarade.
 
 ## Business model (constraints for every agent)
 The app is free for users. Revenue comes from partners, in five legs (see `docs/revenue.md`): insurance (Agria), equipment (ArkenZoo), sponsored dog food, vet Q&A (AniCura and similar), and one leg not yet defined.
@@ -26,14 +28,8 @@ The app is free for users. Revenue comes from partners, in five legs (see `docs/
 - Kennels (breeders) join gradually. A user joins through a kennel QR code or without one. Sharing owner data with a kennel or partner requires explicit consent.
 - Content is the product. Every login shows new content fitted to the puppy's age, needs and breed. Health content is checked by `dog_expert` before it is published.
 
-## Historisk fas-0-kontext (ersatt av senare genomförandemandat)
-- Stack, six-screen MVP and Architecture approved by Erik on 2026-10-04: Expo/React Native/TypeScript/Expo Router, Supabase, Codemagic. Erik separately authorized project files and SQL foundation; see docs/tasks/dev/foundation.md. APP-01 plan v2 and listed packages were also approved through “godkänner”; local app implementation is authorized. Phone auth tests, external builds and pilot remain separate manual steps. Explicitly unresolved options remain open.
-- Historical phase-0 rule, superseded by the approved MVP implementation mandate: no app code or scaffolding. Outputs are documents in `docs/`. Human-approved exception: SDK infrastructure in `test_agent.py`, `run_team.py` and `tassla_team/`; no new dependencies without approval.
-- Additional explicit owner exception 2026-10-04: foundation source/contracts/module guides and Supabase schema/test files, without dependency installation or external resources. This does not approve a pilot, real data processing or all implementation segments.
-- Configured agents: `product`, `architect`, `critic`, `dog_expert`, `compliance`, `implementer`, `qa`, `reviewer`, `security` in `.codex/agents/`. Dev definitions are available, but app work requires an approved segment and plan; Discovery restrictions still apply.
-- Phase 0 is done when the human has approved `docs/vision.md`, `docs/revenue.md` and `docs/mvp.md`, and accepted `docs/decisions/0001-stack.md`.
-- Then start phase 1: fill in **Commands** and **Ownership** below and activate the staged agents:
-  Dev definitions are already configured; authorize the segment and complete task contracts before app work.
+## Historisk fas-0-kontext
+Fas-0-förbud mot appkod och äldre krav på nytt segmentmandat ersattes av senare ägarbeslut. Ursprungliga instruktioner finns i Git-historiken före 2026-10-20. Följ aktuellt MVP-mandat och `docs/dev/workflow.md`; behåll separata grindar för dependencies, kostnader, persondata, live-migration och publicering.
 
 ## AI organisation and runtime
 - AI Chief of Staff coordinates Product and Commercial; the human owns final decisions.
@@ -41,7 +37,7 @@ The app is free for users. Revenue comes from partners, in five legs (see `docs/
 - Commercial: Commercial Lead, Partnerships, Market Intelligence, Commercial Analyst.
 - Dev: Erik leads AI Tech Lead, Codex implementation and QA. Chief of Staff does not own technical decisions.
 - `.codex/agents/` contains Codex roles: `product` (Head of Product), `critic` (Customer/Product Critic), `architect` (AI Tech Lead), plus on-demand `dog_expert` and `compliance`.
-- Dev roles are configured in `.codex/agents/`: APP-04 was executed with GPT-5.6 Luna medium by Erik's 2026-10-05 decision; the current APP-05 segment uses GPT-6 Luna high by Erik's 2026-10-06 implementation instruction. Architect and security retain their review models. No unsupported ultra setting. App implementation is gated by `docs/dev/workflow.md` and `docs/tasks/dev/queue.json`.
+- Aktiva Codex-roller finns i `.codex/agents/`; respektive rollfil anger modell och ansvar. Äldre APP-04/05-modellnotiser är historik, inte aktuell routing. Arbetsflödet styrs av `docs/dev/workflow.md` och `docs/tasks/dev/queue.json`.
 - `.codex/archive/original-agents/` preserves original definitions, including the retired orchestrator and separate frontend role. Do not activate archive files.
 - TOML definitions are not SDK agents. `run_team.py` uses Chief of Staff routing and the complete SDK hierarchy in `tassla_team/organisation.py`. Select only materially relevant teams and specialists; maximum two teams and two specialists per team. Dev SDK roles advise Erik, without code execution. `--chat` retains bounded in-memory history. `test_agent.py` remains a separate fixed Product/Growth smoke test with optional Critic. See `docs/ai-team.md`.
 - Initial SDK tests use short context, bounded output, at most one Growth run and no research. Log usage across Product and Growth. Never run paid API tests unless the human asks.
@@ -50,8 +46,8 @@ The app is free for users. Revenue comes from partners, in five legs (see `docs/
 ## Source of truth
 - `docs/vision.md` – idea, problem, target user, principles, non-goals, open questions
 - `docs/revenue.md` – the five revenue legs and partner status
-- `docs/mvp.md` och `docs/MVP-EXPERIENCE-CONTRACT.md` – aktuellt scope. De åtta rev02-panelerna är uttryckligen tillagda 2026-10-15; annat utanför "Måste med" kräver mänskligt beslut.
-- `docs/decisions/MASTER-LOG.md` – canonical current decisions and completed package ledger; read it first. Numbered `docs/decisions/000*.md` are historical source records.
+- `docs/mvp.md` och `docs/MVP-EXPERIENCE-CONTRACT.md` – aktuellt scope. De åtta rev02-panelerna är uttryckligen tillagda 2026-10-15; nya krav utanför godkänt scope kräver mänskligt beslut.
+- `docs/decisions/MASTER-LOG.md` – kanoniskt ägarbeslutsregister; läs aktuell beslutsdel först. Slututfall finns i `docs/releases/HISTORY-2026.md`, aktuell uppgiftsstatus i kön. Numbered `docs/decisions/000*.md` are historical source records.
 
 Read-only agents cannot write files. They return text; the main session saves it to `docs/`.
 
@@ -71,7 +67,9 @@ Read-only agents cannot write files. They return text; the main session saves it
 - Reviewers must verify changed imports, functions, methods, parameters and external APIs against actual repository definitions and the installed dependency version (and official documentation when needed). Reject invented APIs, fabricated implementations and placeholders presented as working features. Typechecking alone or tests mocking the same invented API do not prove correctness; verify relevant real integration behaviour or mark NOT TESTABLE and block affected acceptance.
 
 ## Orchestration
-Follow `docs/dev/workflow.md` for development. Before implementation, obtain and save architect APPROVE for the exact task plan and an Erik-approved segment mandate. Never fabricate approvals or test results. Use `tools/dev_flow.py` to validate and checkpoint queue transitions. One active task by default, maximum two with disjoint write ownership. QA and independent reviewer must pass before DONE; relevant security review is also required. A changed plan needs renewed approval. At most two correction attempts before escalation. Save questions and decisions after each task and a final report for Erik. This queue is not a scheduler and does not execute agents automatically. Do not start the next subtask until the current one has a verified working result and durable commit/checkpoint.
+Följ `docs/dev/workflow.md`. Registrera redan givet ägarmandat; begär inte samma produktgodkännande igen. Architect granskar den sammanhängande resans plan; oförändrade underdelar återanvänder godkännandet med hänvisning till godkänd parentplan. Ny granskning krävs vid väsentlig ändring av produktbeslut, scope, risk, data/säkerhet, dependency eller acceptans. Redaktionell dokumenträttning och verifieringsförtydligande inom oförändrat kontrakt kräver inte en ny full agentkedja. Köverktygets befintliga rollövergångar kvarstår och återanvänt APPROVE dokumenteras ärligt.
+
+QA och oberoende Reviewer krävs före `done`, med relevant Security och övriga specialister för faktisk risk. Använd `tools/dev_flow.py` för köövergångar; det kör inte tester och bevisar inte i sig oberoende granskning eller aktuell planversion. Högst två aktiva uppgifter utan överlappande skrivytor. Högst två korrigeringsförsök för samma problem före eskalering; BLOCK/STOP kan inte överprövas av agenter. Spara verkliga kontroller och nästa steg i befintligt taskunderlag. En avgränsad kodcheckpoint ersätter inte resans separata kod-, lokal QA-, live-, native-, visuella och releaseacceptans.
 The main Codex session coordinates Dev work under Erik. Use the following specialists for relevant substantive work, not for routine formatting or the SDK infrastructure smoke test. Send only relevant context; avoid repetitive debate.
 
 | Situation | Spawn (in order) |
@@ -82,7 +80,7 @@ The main Codex session coordinates Dev work under Erik. Use the following specia
 | Feeding, special-diet or sponsored food content | `dog_expert`, then `compliance` |
 | Partner, affiliate, sponsored or insurance feature; vet Q&A; data shared between owners, kennels and partners | `compliance`, then `critic` |
 | New/changed personal-data purpose, auth/data architecture, analytics/tracking, AI vendor/data use, applicable legal duty or EU pilot/release readiness | `compliance` before affected implementation; `security` for technical controls; unresolved material findings go to Erik |
-| A plan or spec is about to be accepted | `critic` (always) |
+| Ny eller väsentligt ändrad produkt-/UX-/arkitekturplan ska accepteras | `critic`; återanvänd tidigare verdict för oförändrat kontrakt |
 | Phase 1: an implementation task is specified | `implementer` (including UI), then `qa`, then `reviewer` |
 | Phase 1: change touches auth, personal data, permissions, storage, networking or a third-party SDK | `security`, before merge |
 
@@ -95,20 +93,16 @@ Rules:
 6. Never say tests pass or work is done unless the `check` command below has actually been run and passed.
 7. `compliance` is not a lawyer. Anything it marks "needs a lawyer" goes to the human as an open decision; do not build around an assumed answer.
 
-## Historiska första uppgifter (fas 0)
-1. The main session asks the human the open questions in `docs/vision.md` one at a time, starting with the fifth revenue leg, and writes the answers into `docs/`.
-2. `product` reviews the owner input for gaps and contradictions, compares with BabyJourney (what works, how it earns) and with Swedish competitors, and proposes an MVP cut in `docs/mvp.md`. Then `critic`.
-3. `compliance` reviews `docs/revenue.md`: ad labelling, insurance distribution, GDPR for kennel and owner data, vet Q&A liability. The human decides what goes to a lawyer.
-4. `dog_expert` proposes content rules for feeding, special diets and breed-specific content.
-5. `architect` proposes `docs/decisions/0001-stack.md` (React Native/Expo vs Flutter vs native; backend; auth; hosting) and `docs/decisions/0002-content-and-kennel-model.md` (content engine, kennel/breed/litter data model, partner adapters). Then `critic`.
+## Historiska första uppgifter
+Discovery- och fas-0-uppgifterna finns i Git-historiken. De ska inte återstartas eller blockera redan godkänd MVP rev02.
 
-## Commands (fill in when phase 1 starts)
+## Commands
 - install: `pnpm install --frozen-lockfile` (pnpm 11.19.0; Node 24 recommended)
 - dev: `pnpm start`
 - check: `pnpm check` (typecheck, lint, Node tests) and `git diff --check`. SQL integration requires `supabase/tests/foundation.sql` in a development database.
 - build: `pnpm bundle:ios`; signed build separately through Codemagic/TestFlight
 
-## Ownership (fill in with real paths when phase 1 starts)
+## Ownership
 | Area | Owner |
 |---|---|
 | `docs/`, `AGENTS.md`, `.codex/` | main session (human approves) |
@@ -135,13 +129,13 @@ När paketet avslutas dokumenteras utfallet och commit-ID i `HISTORY-2026.md`, d
 Erik har beställt planering och därefter färdigställande av hela godkända MVP:n till betaredo app. Första steg är samlad paketplan, checkpunkter och öppna detaljbeslut före genomförandet.
 TestFlight/fysiskt telefonprov är inte en obligatorisk grind efter varje paket och ska inte blockera nästa lokala paket. Erik avgör när sådana prov behövs för kritiska delar. Koordinatorn får rekommendera prov och redovisa kvarstående verifieringsluckor, men inte införa nya automatiska telefonstopp. Lokal check, relevant QA, oberoende review och checkpoint/release-log kvarstår. Verklig databas/RLS, signerad build och distribution är separata kontroller; avsaknad av telefonprov får inte rapporteras som PASS.
 Erik rapporterar nu att viktdelen fungerar bra och tangentbordet beter sig bra. Registrera det som användarrapporterat PASS; build/version är okänd och beskedet bevisar inte oberoende RLS-prov.
-Denna uttryckliga policy ersätter äldre krav på PHONE-grind mellan varje paket i AGENTS.md, workflow, APP-04/05, app-04b2.md och MVP-population. Öppna detaljbeslut om notifieringar, PDF, innehåll och faktisk betadatabehandling behöver lösas; de stoppar endast berört arbete. Ingen automatisk publicering eller insamling av verkliga uppgifter genom planeringsmandatet.
+Denna uttryckliga policy ersätter äldre krav på PHONE-grind mellan varje paket i AGENTS.md, workflow, APP-04/05, app-04b2.md och MVP-population. Fastställda beslut om lokala notiser, PDF-urval, betakontakt och gallring ska återanvändas. Kvarstående detalj- och runtimefrågor stoppar endast berört arbete. Ingen automatisk publicering eller insamling av verkliga uppgifter genom planeringsmandatet.
 
 ## Eriks detaljbeslut — 2026-10-06, efter plan v1
 - Godkänt: lokala telefonnotiser för ägarvalda datum och träningspåminnelser; PDF med namn, ras, födelsedatum, vikt, vaccinationer och veterinärhändelser, förhandsgranskning och ägarinitierad delning; behövliga Expo-paket för notiser/PDF/delning. Kompatibla exakta versioner väljs i implementationplan, inga orelaterade dependencies.
-- Betan använder egna konton och sparade uppgifter. Erik kommer ange ansvarig/support/gallring; detta är ännu obesvarat och hindrar endast berörd aktivering, inte oberoende lokal utveckling med syntetiska data.
+- Betan använder egna konton och sparade uppgifter. Ansvarig/support/gallring fastställdes senare 2026-10-06 enligt avsnittet nedan. Faktisk verkställighet verifieras separat.
 - Godkänt: förbered källbelagda utkast till 3 träningsflöden och 8 guider/checklistor. Erik ordnar sakgranskare. Utkast är inte publicerat/granskat innehåll.
-- Föreslagen gallring 30 dagar efter avslutad beta har skickats som fråga, är inte ett fattat beslut.
+- Gallring 30 dagar efter avslutad beta är fastställd enligt det senare beskedet nedan; det tidigare frågeförslaget är ersatt.
 
 ## Genomförandemandat 2026-10-06 — Luna medel
 Erik: ”Ok, starta implementeringen uppifrån och ner. Använd Luna medel”. Hela samlade MVP-planens paket är beställda i ordning, med exakta interna kontrakt/review före varje paket. Implementer, QA och Reviewer använder gpt-6-luna medium från detta besked; det ersätter tidigare high för APP-05 och äldre modellbeslut för aktuellt genomförande. Architect/Compliance/Security behåller sina reviewroller. Ingen ny fråga om segmentmandat behövs för funktioner inom denna godkända MVP-plan. Lokal utveckling med syntetiska data fortsätter utan rutinmässig TestFlight-grind; Erik beslutar kritiska telefonprov och faktisk distribution.
@@ -155,7 +149,7 @@ Ansvarig: EriMali AB. Postadress: Stenvallavägen 1, 18634 Vallentuna. Support: 
 ## Historisk notering — designbeslut 2026-10-07
 Den äldre bindande policyn utgick från rev01 och dess 18-punktschecklista. För aktuella UI-uppgifter gäller i stället rev02-hänvisningarna i början av filen och den kanoniska checklistan i `docs/design-rules.md` §14. Historiken innebär inte att befintliga skärmar redan uppfyller den nya målbilden. Product/Critic-ansvar, MVP-scope, sanningsenlighet, säkerhet och Eriks TestFlight-policy gäller fortsatt.
 
-Kanoniskt besluts- och paketregister: `docs/decisions/MASTER-LOG.md`. Läs äldre nummerfiler endast vid behov av ursprungligt underlag.
+Kanoniskt ägarbeslutsregister: `docs/decisions/MASTER-LOG.md`. Läs äldre nummerfiler endast vid behov av ursprungligt underlag.
 
 
 ## INNAN COMMIT OCH PUSH TILL GITHUB

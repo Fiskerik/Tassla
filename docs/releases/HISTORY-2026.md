@@ -612,3 +612,12 @@ Status: implementation, avgränsad lokal QA och slutlig Reviewer-granskning klar
 ### FLOW-HOME-CHECKLIST-01 — lokal implementation checkpoint, 2026-10-20
 
 Hem → full Idag-checklista → rätt rutin/träningssteg → tillbaka är implementerat och oberoende granskat. Architect plan v9 APPROVE, UX Critic PASS, Security static PASS; public/review RN Web verifiering PASS och pnpm check 611/611. Offentlig iOS-JS-export 1 450 moduler. Implementationens checkpointcommit 2659cb82f8ba6913436591cb25f5a627bd2f2471 (feat: add full daily checklist flow) är pushad till origin/codex/tassla-ui-ux-bundle-2026-10-18. Native VoiceOver/Dynamic Type/fysiska gester och live Supabase/RLS är NOT TESTABLE; full panel 4 fortsätter i FLOW-HOME-CHECKLIST-FILTERS-01. [Verifiering](../design/evidence/flow-home-checklist-2026-10-20/VERIFICATION.md).
+
+
+## DOCS-MVP-REV02-ALIGN-01 — godkänd produktplan och samstämmiga instruktioner, 2026-10-20
+
+Eriks aktuella besked gör MVP rev02 till styrande plan i `docs/mvp.md`. V2:s vuxenhundsresa/A–F, alla åtta funktionella rev02-paneler och Main-specifika krav inklusive flerhundsstöd bevaras. Daterade v2/GAP-filer är historiska källor. Agent-/workflowinstruktioner återanvänder verkliga oförändrade plangodkännanden och behåller oberoende QA/Reviewer samt riskstyrda säkerhetsgrindar. Skills-indexet länkar till kanoniska skills. Det tidigare ägarstoppade filterpaketet står nu `blocked`.
+
+Architect APPROVE, Critic PROCEED, oberoende QA PASS och Reviewer PASS. `pnpm check`: typkontroller/lint PASS; 619 tester totalt, 618 PASS, 1 SKIP, 0 FAIL. JSON, nio TOML, kö och whitespace PASS; 126 relativa länkar utan nya saknade mål. En redan saknad historisk rapportlänk redovisas i [taskunderlaget](../tasks/dev/rapport.md#docs-mvp-rev02-align-01--plan-v1-2026-10-20).
+
+Checkpoint: `codex/mvp-rev02-approved-plan`, bas `2967a3f34cfe4b33d4777626c911695552cce728`; innehållsdiff SHA-256 `1ea4c63367844978d9b08aa029f730054720a9fcae14deb4884e35514e4d01dc` (exklusive kö/rapport/historik). Leveranscommit finns i grenens Git-historik efter ordinarie hookar. Detta är endast dokumentation; appkod, databas, tester, verktyg och dependencies är oförändrade. Ingen signerad build skapad eller native/live/visuell/releaseacceptans utförd. Rasväljarpiloten är nästa separata appuppgift.

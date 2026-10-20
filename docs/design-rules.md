@@ -3,6 +3,8 @@
 Version 2.3, 2026-10-13. Kanonisk instruktion för nya och reviderade UI-uppgifter, på Eriks beställning av ett sammanhängande regelverk och byggunderlag mot [vision_rev02.jpg](../vision_rev02.jpg).
 
 ## 0. Auktoritet och leveransstatus
+Godkänd produktplan är [MVP rev02](mvp.md), bekräftad av Erik 2026-10-20. MVP v2:s produktkrav och bildens revision är olika begrepp. Den daterade v2-texten/GAP-analysen är historiskt källunderlag. Godkänt krav är inte implementerad eller accepterad funktion; följ [upplevelsekontraktet](MVP-EXPERIENCE-CONTRACT.md) för separat acceptans.
+
 
 `vision_rev02.jpg` är aktuell visuell målbild. Dess åtta paneler är enligt Eriks beslut 2026-10-15 obligatoriska funktionella MVP-mål, men är inte åtta redan verifierade funktioner. `vision_rev01.jpg` och äldre paketspecifikationer är historik. Detta regelverk ersätter motstridiga äldre visuella anvisningar för kommande arbete; tidigare leveranser skrivs inte om retroaktivt.
 
@@ -26,7 +28,7 @@ Statusord: **befintligt** = kod finns; **föreslaget** = kontrakt att implemente
 
 Varje berörd skärm ska aktivt närma sig sin panel i `vision_rev02.jpg` i **komposition, färgfördelning, typografi, komponentform, bildspråk och innehållstäthet**. Att rätt funktioner finns på sidan uppfyller inte designmålet. Befintliga komponenter, en tidigare skärmdump eller ett historiskt QA-PASS får inte ersätta visionen som visuell auktoritet.
 
-Återanvändning betyder att utveckla gemensamma komponenter så att de klarar referensen. Behåll inte fel radform, stora rubriker, monokroma ytor eller saknade bilder bara för att de redan finns i kod. Inför avgränsade namngivna varianter; migrera inom godkänt scope. Ingen generell ombyggnad av andra skärmar krävs för att rätta den aktuella.
+Återanvändning betyder att utveckla gemensamma komponenter så att de klarar referensen. Behåll inte fel radform, stora rubriker, monokroma ytor eller saknade bilder bara för att de redan finns i kod. Inför avgränsade namngivna varianter; migrera inom godkänt scope. Ingen generell ombyggnad av andra skärmar krävs för att rätta den aktuella. En ändring av en delad komponent ska däremot inventera och regressionsverifiera samtliga berörda anrop inom ändringens faktiska påverkan; välj opt-in-variant om en global migrering annars hamnar utanför scope.
 
 Funktion, tillgänglighet och sanningsenlighet ska fungera tillsammans med designen. En nödvändig avvikelse ska avgränsas till det berörda elementet och redovisas enligt §12. Den får inte bli skäl att förenkla bort resten av bildens formspråk eller ett nytt rutinmässigt tillståndskrav för redan beställt arbete.
 

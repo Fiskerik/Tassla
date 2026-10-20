@@ -1,204 +1,217 @@
-# Tassla – MVP
+# Tassla – godkänd MVP rev02
 
-Status: godkänt av Erik 2026-10-04 i chatten: ”Jag godkänner MVP och stack (Erik)”. Godkännandet gäller den dokumenterade sexskärmsleveransen. Uttryckligt öppna detaljbeslut nedan kvarstår; godkännandet väljer inte en ospecificerad notifieringskanal eller PDF-fält och aktiverar inte datainsamling/distribution.
+**Status:** Godkänd, styrande produktplan. Erik bekräftade 2026-10-20 i chatten ”Tassla – Product Consistency & Delivery Reset”: ”Ja, gör MVP rev 02 som den godkända planen och fixa de filer som säger emot varandra först”.
 
-> **”Jag har precis fått en valp. Hjälp mig.”**
->
-> MVP:n ska validera detta produktlöfte och lägga grunden för Tasslas långsiktiga princip: **En hund. En profil. En tidslinje.**
->
-> All funktionalitet som inte direkt krävs för att validera **Distribution → Activation → Engagement → Retention** är utanför MVP-scope, om den inte uttryckligen godkänns. De åtta rev02-panelerna är ett sådant uttryckligt senare godkänt funktionellt MVP-mål.
+Detta är den enda aktuella produktdefinitionen: MVP v2:s hundlivsperspektiv och befintliga godkända Main-krav, med samtliga åtta funktionella paneler i `vision_rev02.jpg`. **MVP v2** är produktrevisionen; **vision_rev02** är den visuella referensen. De är inte bevis på implementerad eller slutaccepterad funktion. Sex produktområden betyder inte sex eller åtta huvudflikar.
 
-## Syfte
+Läs [upplevelsekontraktet](MVP-EXPERIENCE-CONTRACT.md) för resor/acceptans, [designreglerna](design-rules.md) för utseende och [utvecklarflödet](dev/workflow.md) för genomförande. [MASTER-LOG](decisions/MASTER-LOG.md) registrerar ägarbeslut. Den [daterade v2-texten](MVP%20v2%20-%202026-10-16.md) och [GAP-analysen](GAP_analys_Tassla%202026-10-16.md) är historiska källor, inte konkurrerande styrdokument. Föregående MVP bevaras i Git på `2967a3f34cfe4b33d4777626c911695552cce728`.
 
-Tassla ska bevisa att produkten kan nå nya valpägare genom uppfödare, ge omedelbar hjälp i valpvardagen och skapa återkommande användning över tid.
+Mandatet omfattar stegvis färdigställande av godkänd scope med riskbaserad QA. Den aktuella beställningen utför dokumentharmonisering först. Befintliga beslut om stack, persondata, innehållsgranskning, notifieringar och PDF kvarstår. Nya dataändamål, dependencies/kostnader, live-migration, extern pilot och publicering kräver sina befintliga separata beslut. Väsentliga detaljförslag som uttryckligen är preliminära nedan förblir preliminära.
 
-MVP-leveransen utgår från **sex användarområden: Hem, Valplogg, Träning, Hälsa, Kunskap och ett enkelt Tassla-pass**, med hundprofil/onboarding, retention, distribution och mätning som stöd. Den ska vara liten nog att pilottesta utan färdiga kommersiella partners.
+> **En hund. En profil. En tidslinje.** Valpen är distributionsögonblicket. Hundens hela liv är produkten.
 
-Den ursprungliga sexområdes-MVP:n är fortsatt grund för användarnytta och datamodell. Eriks senare beslut 2026-10-15 gör **alla åtta paneler i `vision_rev02.jpg` till obligatoriska funktionella MVP-mål**: Hem, Utveckling, Dagens framsteg, daglig Checklista, Logga, Träning, Kunskap och Insikter. Referensens exempelvärden, råd, dekor och påhittade framsteg är inte datakällor. `docs/MVP-EXPERIENCE-CONTRACT.md` anger resor, leveransgräns och verifiering; `docs/design/vision-rev02-screen-contracts.md` anger panelernas detaljkrav. Hälsa, Tassla-pass, onboarding/profil, notifieringar, distribution och mätning kvarstår enligt detta dokument. Rev01 är historisk referens.
+## 1. Produktlöfte och målgrupp
 
-Varje panel måste vara nåbar i verklig app, ha fungerande huvudhandling och tillbakaresa, använda korrekt hund- och innehållskälla samt visa sanningsenliga loading/empty/error/pending/unknown-lägen. Enbart visuell mock, död flik eller review-fixture uppfyller inte MVP. Leverera i små resor: ingång → handling/läsning → bekräftat resultat → återgång, med egen checkpoint och testbevis. Bevara redan fungerande snabbvägar och stödresor.
+Tassla är **en hundägarapp med särskilt stark valpupplevelse**, inte en valpapp som senare behöver bli en annan produkt.
 
-| Hypotes | Vad MVP:n ska validera |
+- **Primär målgrupp för distribution och lansering:** Den som precis fått en valp. Produktlöfte: *”Jag har precis fått en valp. Hjälp mig.”*
+- **Sekundär, testbar målgrupp redan i MVP:** Ägare till unghundar och vuxna hundar, även utan tidigare Tassla-historik. Produktlöfte: *”Hjälp mig att förstå, ta hand om och följa min hund genom livet.”*
+- **Långsiktigt mål:** Hundens digitala hem genom hela livet; inte ett självändamål att skapa maximal aktivitet varje dag.
+
+**En och samma app, profil, hundidentitet och datamodell** används av alla målgrupper. Livsfasen förändrar innehåll, prioritering och återkommande behov – inte hundens identitet.
+
+## 2. De fem hypoteser MVP v2 ska validera
+
+| Hypotes | Vad ska bevisas? |
 |---|---|
-| Distribution | Kan Tassla effektivt nå nya valpägare via uppfödare? |
-| Activation – aktivering | Förstår och upplever användaren snabbt Tasslas värde? |
-| Engagement – engagemang | Finns återkommande beteenden som gör Tassla relevant i valpvardagen? |
-| Retention | Fortsätter användaren att komma tillbaka över tid? |
+| Distribution | Kan nya valpägare nås kostnadseffektivt via uppfödare och unika QR-/inbjudningsflöden? |
+| Activation | Förstår användaren värdet, skapar sin hund och gör en första värdeskapande handling? |
+| Engagement | Ger den sammanhängande appupplevelsen faktisk användning genom relevanta handlingar? |
+| Retention | Återkommer användaren över tid därför att Tassla fyller nya behov? |
+| **Lifecycle relevance (ny)** | Ger Tassla en användbar grundupplevelse även för en vuxen hund utan valphistorik? |
 
-Hög aktivitet första dagen är inte samma sak som retention. Båda behöver mätas.
+Vuxenhundsupplevelsen behöver kunna *pilottestas*, inte bevisa flerårig retention under den första piloten.
 
-## Måste med: produkt-MVP
+## 3. Produktprinciper och omfattning
 
-### Stöd: hundprofil och onboarding
+1. **Valp först, hund genom livet.** Valpupplevelsen är djupast vid lansering. Kärnupplevelsen får inte vara meningslös för äldre hundar.
+2. **Sammanhängande användarvärde före fler funktioner.** Befintliga flöden och data ska kopplas ihop innan ny funktionsbredd övervägs.
+3. **Progression bygger på faktisk data.** Spara och visa verklig aktivitet, träningssteg och historik. Inga påhittade procenttal, automatiskt påstådda färdigheter eller falska slutföranden.
+4. **Relevans utan övertolkning.** Hundens ålder, ras och deklarerade livsfas får styra där det finns ett granskat innehållskontrakt. Ålder innebär inte individuell tränings- eller hälsobedömning.
+5. **En hund, en profil, en tidslinje.** Historiken följer hunden genom perioderna. Kortlivad dagsdata följer beslutad gallring.
+6. **Återanvänd innan nybyggnad.** Bibehåll befintliga API:er, komponenter, designregler, navigation och godkända tekniska kontrakt när de räcker.
+7. **Rätt användningsfrekvens för rätt behov.** En vuxen hundägare kan vara lojal utan att öppna appen dagligen.
 
-Skapa hunden en gång. Grundinformationen driver resten av upplevelsen och följer hunden när den växer upp.
+De sex befintliga produktområdena består: **Hem, Logg, Träning, Hälsa, Kunskap, Tassla-pass**. Onboarding, distribution, retention, mätning och säkerhet är gemensamma stödlager. Sex produktområden betyder inte sex navigationstabbar.
 
-**Acceptanskriterier:**
+## 4. Produktkrav per område
 
-- Användaren kan skapa en hund med namn, ras och födelsedatum.
-- Ras väljs i sökbar katalog. Mix kan sparas utan kända delraser eller med två olika valbara raser; sökfritext blir aldrig en egen ras.
-- Hundens ålder beräknas automatiskt.
-- Ägaren kan välja om profilåldern visas i veckor, månader eller år; valet används i hundprofil, Tassla-pass preview och exporterad PDF. Hem räknar sin ålder automatiskt enligt den separata Hem-specifikationen.
-- Hunden får ett permanent hund-ID som används av övriga funktioner.
-- Onboarding leder vidare till relevant hjälp i Home/Today.
+### 4.1 Hundprofil och onboarding
 
-### Skärm 1. Personligt Home/Today
+**Bevarade beslut från Main:** ras väljs genom en gemensam sökbar katalogkontroll i första profil, lägg till hund och profilredigering. Ny profil kräver aktivt katalogval; redigering börjar med sparat ras-ID. Sökfritext blir aldrig en ras. Mix kan sparas utan delraser eller med två olika valbara raser enligt separat datakontrakt; Mix-utökning blockerar inte sökning i befintlig katalog. Ålderspreferensen veckor/månader/år används i profil, passförhandsvisning och PDF. Hem har egen automatisk åldersvisning.
 
-Home är produktens hjärta och svarar på:
+Ett konto får behålla flera egna hundprofiler enligt det integrerade flerhundsstödet. **En hund. En profil. En tidslinje.** betyder bestående identitet per hund, inte högst en hund per konto. Hundbyte, lägg till hund och redigering hålls isär; ingen data får följa med till fel hund.
 
-> **Vad behöver jag veta, göra eller tänka på med min valp idag?**
+**Mål:** Användare med en ny valp eller en vuxen hund ska snabbt komma till en relevant första upplevelse.
 
-Loggning, träning och innehåll ska nås i denna kontext. Användaren ska inte behöva veta vad hen ska söka efter.
+**Krav:**
+- Behåll permanent hund-ID, godkänd raskatalog, födelsedatum, profilredigering och befintlig valfri kennelkoppling.
+- Härled ålder och kronologisk period automatiskt; använd individuellt valda statusfält som separat kontext, utan kliniska slutsatser.
+- Tillåt onboarding av vuxen hund utan kennelkod, valphistorik eller pågående träningsprogram.
+- Profiländringar ska inte skapa nytt hund-ID eller skriva över historik.
+- Starta i ett Hem med begriplig nytta, även när hunden saknar tidigare data.
 
-**Acceptanskriterier:**
+**Acceptans – två separata testfall:** En 11-veckors valp och en 5-årig hund kan registreras och komma till varsitt relevant Hem utan parallella onboardingprocesser.
 
-- Startsidan visar ett dynamiskt flöde baserat på hundens ålder och, där det är relevant, ras.
-- Hem visar `Hundnamn | Ras`, automatisk ålder och separat ungefärlig livsfas. Remsan visar veckor till och med 20 veckor, månader till och med första födelsedagen och år därefter; den går att bläddra visuellt men väljer inte innehåll eller ändrar data.
-- Hem använder samma automatiska hela ålder i identitetsraden och `Just nu`. Ålder saknas visuellt när födelsedatum saknas, är ogiltigt eller ligger i framtiden. På huvudflikarna kan vänstersvep gå till nästa flik och högersvep till föregående, med bottenmenyn kvar som fullvärdigt alternativ.
-- Flödet förändras över tid med hundens utveckling och visar relevanta råd, aktiviteter, träningssteg och uppmaningar.
-- Användaren kan gå från relevant hjälp till konkret handling.
-- Innehåll distribueras främst genom Home och relevanta flöden. Ett stort fristående artikelbibliotek krävs inte.
-- Ägaren kan välja egna dagsrutiner och nästa tillåtna publicerade träningssteg för en lokal dag. En rutin kan vara manuell eller upprepas enligt ägarens dag-, vecka- eller månadsintervall; veckorutiner kan välja en eller flera veckodagar.
-- Egna rutinbockar är ägarens markeringar. Träningsuppgifter blir klara endast genom sparad `training_progress` för exakt hund, innehållsversion, steg och vald lokal dag.
-- Guideöppning, planerad vård, olänkad logg och checklistfas räknas inte som utförda dagsuppgifter.
-- Hem och utökad dagslista visar samma fullständigt hämtade uppgifter och bekräftade count. Unknown save/read visas inte som klart.
-- Daterade val/completions visas bara för vald dag och gallras 30 dagar efter respektive lagrade lokala datum; routine templates finns kvar tills ägaren tar bort dem eller konto/hund raderas.
+### 4.2 Hem – den sammanhängande upplevelsen
 
-### Skärm 2. Snabb vardagsloggning
+**Bevarade beslut från Main:** Hem visar `Hundnamn | Ras`, automatisk ålder och tydligt åtskild livsfaskontext. Åldersremsan visar veckor till och med 20 veckor, månader till första födelsedagen och år därefter; bläddring ändrar inte hundens datum eller innehållsurval. Identitetsrad och Just nu använder samma automatiska hela ålder; saknat, ogiltigt eller framtida födelsedatum ger ingen fabricerad ålder. Tio kronologiska perioder enligt §6 är ett separat begrepp från remsans visningsenhet.
 
-Hjälp ägaren att hålla koll på valpens rutiner och börja bygga hundens historik med mycket låg friktion: **Tryck → klart.**
+Ägaren väljer dagsrutiner och tillåtna publicerade träningssteg för lokal dag. Rutiner behåller manuella/dagliga/veckovisa/månatliga intervall och valbara veckodagar. Rutinbockar är ägarens markeringar; träning blir klar genom bekräftad `training_progress` för exakt hund, version, steg och dag. Guideöppning, planerad vård, olänkad logg och faschecklista räknas inte som utförda dagsuppgifter. Hem och dagslistan använder samma fullständiga population och bekräftade count. Daterade dagsval/markeringar gallras efter 30 dagar från lagrat lokalt datum; rutinmallar finns kvar tills de raderas eller konto/hund tas bort.
 
-**Acceptanskriterier:**
+Huvudflikarnas befintliga svepnavigation bevaras, med bottenmenyn som fullvärdigt alternativ och rätt aktiv förälder vid detaljbesök.
 
-- Kiss, bajs, mat, sömn/vaken och promenader kan registreras med så få steg som möjligt.
-- Händelser sparas med tidpunkt och koppling till hundens permanenta ID.
-- Användaren kan se och förstå relevant logghistorik.
-- Ägaren kan rätta och ta bort egna loggposter.
-- En avancerad separat tidslinjeskärm krävs inte.
+**Målfråga:** *Vad är relevant för min hund just nu – och vad kan jag göra härnäst?*
 
-### Skärm 3. Guidande valpflöden
+**Krav:**
+- Visa hundidentitet, korrekt ålder och begriplig period.
+- Visa publicerat innehåll som är relevant enligt ett uttryckligt urvalskontrakt.
+- Lyfta tillgängliga träningssteg, ägarvalda rutiner och planerade händelser när de tillför värde.
+- Led från information till konkret destination/handling och tillbaka, med bibehållen kontext.
+- Visa sanningsenlig status för dagens valda uppgifter; aldrig ”klart” efter okänd/utebliven skrivning.
+- Ge ett hjälpsamt tomtillstånd när innehåll eller historik saknas.
+- Framhäv inte valpspecifika vardagshandlingar som standard för vuxna hundar; respektera ägarens egna förval.
+- Bygg ovanpå befintlig Hem-komposition och dagsaktivitetsmotor. Skapa inte nytt parallellt progressionssystem.
 
-Ett litet antal högkvalitativa tränings- och utvecklingsflöden ska bevisa mekaniken **steg → utför → progression → nästa steg**.
+**Acceptans:** Ägaren kan förstå *varför* en sak visas, genomföra en verklig handling, se dess bekräftade resultat och hitta nästa relevanta steg, även för vuxen hund.
 
-**Acceptanskriterier:**
+### 4.3 Logg – snabb registrering vid behov
 
-- Två till tre avgränsade flöden finns, exempelvis ensamhetsträning, hantering och miljöträning.
-- Varje flöde ger konkreta instruktioner och ett tydligt nästa steg.
-- Användaren kan registrera genomförda steg och återuppta sin progression.
-- Relevanta steg kan lyftas i Home.
+**Mål:** Enkel och frivillig dokumentation av vardagsaktiviteter genom hundlivet.
 
-MVP:n ska bevisa guidningen, inte bygga en komplett hundskola.
+**Krav:**
+- Behåll redan implementerade loggtyper, snabbregistrering, rättning, radering och historik.
+- Ägarens val och anpassade genvägar ska överleva byte av period.
+- Förval och synlig prioritering kan anpassas till livsfas där det finns ett tydligt behov; lås aldrig bort valploggning för äldre hundar.
+- Visa logghändelser på hundens historik och i Hem när det är relevant – utan att kopiera data mellan separata källor.
 
-Video är ett möjligt innehållsformat, inte ett krav för varje övning. Bildens övriga träningsflikar innebär inte ett större programutbud.
+**Acceptans:** Samma modul fungerar för en valpägare som följer kiss/sömn och en vuxenhundsägare som registrerar exempelvis promenad eller vatten. Ingen ny avancerad prediktiv loggmodell krävs.
 
-### Skärm 4. Hälsa – enkel ägarregistrerad översikt
+### 4.4 Träning – vägledning och progression
 
-Som valpägare vill jag hålla ordning på vaccinationer, veterinärhändelser och vikt utan att Tassla ställer diagnoser eller föreskriver behandling.
+**Mål:** Användaren kan börja, genomföra, registrera och senare återuppta ett konkret träningsflöde.
 
-**Acceptanskriterier:**
-- Ägaren kan lägga till, rätta och ta bort vaccinationer, veterinärhändelser och vikt med datum och koppling till hund-ID.
-- Översikten visar registrerad historik och skiljer den från kommande händelser/påminnelser.
-- Ägaren kan ange datum för kommande händelser och välja påminnelse; datum märks som ägarangivet, inte rekommenderat vårdschema. Appen härleder inte kliniska intervall. Leveranskanal avgörs enligt notifieringsbeslutet nedan.
-- Informationen framgår som ägarregistrerad, inte verifierad journal eller officiellt vaccinationskort.
+**Krav:**
+- Behåll 2–3 avgränsade, granskade program med progression per hund, programversion och steg.
+- Visa nästa tillgängliga steg och kunna repetera eller backa enligt träningsprogrammets kontrakt.
+- Ett första sakgranskat program ska vara relevant även för vuxen hund, genom dokumenterad återanvändning eller begränsad ny version.
+- Ägarens markering betyder genomfört försök/steg, **inte** verifierad färdighet hos hunden.
+- Relevanta steg ska kunna nås från Hem och eventuell befintlig dagsplanering.
 
-Generella avmaskningsscheman, automatiska behandlingsråd, diagnoser, läkemedelshantering och veterinärintegrationer ingår inte. Kliniska råd och eventuella föreslagna hälsoscheman kräver separat hundexpert-/veterinärgranskning innan publicering.
+**Acceptans:** Träningsprogression kvarstår över återbesök, skärmbyten och åldersperioder utan falsk bock eller automatisk nivåhöjning.
 
-### Skärm 5. Kunskap – avgränsad egen vy
+### 4.5 Hälsa – ägarregistrerad översikt
 
-Som valpägare vill jag hitta relevanta artiklar, guider och checklistor för hundens ålder.
+**Mål:** Viktig historik och kommande ägarvalda händelser finns samlade, oavsett hundens ålder.
 
-**Acceptanskriterier:**
-- Ett avgränsat, granskat innehållsurval omfattar artiklar, guider och checklistor.
-- Definierade åldersfaser ger olika relevanta urval.
-- Samma innehåll kan nås från Hem och Kunskap utan dubblerade innehållsversioner.
-- Innehåll med hälso-, tränings- eller utfodringspåståenden granskas enligt AGENTS.md före publicering.
+**Krav:**
+- Behåll vikt, vaccinationer, veterinärhändelser, planerade datum och användarstyrda påminnelser.
+- Separera tydligt registrerad historik från planerade händelser.
+- Visa relevanta kommande händelser i Hem via befintliga kopplingar när lämpligt.
+- Härled aldrig automatiskt diagnoser, behandling eller kliniska vaccinationsscheman.
 
-Ett stort bibliotek, omfattande sök-/FAQ-system och partnerstyrda råd ingår inte. Exakt piloturval fastställs innan innehållsuppgifterna startar.
+**Acceptans:** En ny vuxenhundsprofil kan börja registrera hälsa och planera en aktivitet utan valphistorik.
 
-### Skärm 6. Tassla-pass – enkel sammanfattning
+### 4.6 Kunskap – rätt innehåll när det behövs
 
-Som ägare vill jag skapa en sammanfattning av uppgifter jag själv har registrerat och själv kunna lämna den vidare.
+**Mål:** Kvalitetsgranskat, användbart innehåll som följer hundens liv.
 
-**Acceptanskriterier:**
-- Ägaren initierar och förhandsgranskar sammanfattningen för sin hund.
-- En PDF kan skapas från ett uttryckligen fastställt urval av egna uppgifter; det exakta urvalet beslutas före implementation.
-- PDF visar skapandedatum och att uppgifterna är ägarregistrerade. Den är inget officiellt pass, intyg eller vaccinationskort.
-- Export initieras av ägaren. Ingen automatisk överföring, publik delningslänk, mottagaråtkomst eller partnerkoppling ingår.
+**Krav:**
+- Behåll nuvarande publiceringsstatus, innehållsversionering, ras-/åldersurval och gemensam konsumtion i Hem/Kunskap.
+- Använd de tio kronologiska perioderna som redaktionell struktur, inte som krav på tio separata innehållsbibliotek.
+- Innehåll kan vara relevant över flera perioder med tydligt dokumenterad målgrupp och anpassning.
+- Komplettera ett **litet** vuxenrelevant pilotutbud: föreslaget minimum tre användbara granskade innehållsobjekt (nya eller reviderade, efter innehållsgranskning). Prioritera faktisk ämnesnytta framför antal.
+- Granska befintliga innehållsversioners `min_age_weeks`/`max_age_weeks` före förändrat urval. Ändra aldrig publicerade versioner tyst.
+- Visa inte innehåll utanför godkända målgruppsvillkor eller opublicerade utkast som publicerat material.
 
-Rekommenderat första urval är grundprofil och registrerade vaccinationer, veterinärhändelser och vikt; detta urval är ännu inte beslutat. Bildens foder-, allergi- och medicinrader är inte automatiskt krav på nya registreringsfunktioner. Compliance och Security granskar dataändamål, export och kontroller före berörd implementation. Detta dokumentbeslut godkänner inte faktisk persondatainsamling eller distribution.
+**Acceptans:** Både 11-veckors valp och 5-årig hund har ett begripligt, relevant innehållsförslag och direkt väg till motsvarande kunskapsvy. Saknas relevant innehåll ska appen visa ett ärligt tomläge – inte återanvända ett irrelevant valpråd.
 
-## Måste med: retentionlager
+### 4.7 Tassla-pass – portabel sammanfattning
 
-En enkel notifieringsmotor med push/påminnelser ingår i MVP:n som stöd för produktloopen.
+**Fastställt urval 2026-10-06:** namn, ras, födelsedatum, vikt, vaccinationer och veterinärhändelser. Förhandsgranskning och delning initieras av ägaren. Detta är ett beslutat produktkrav, inte ett påstående om verifierad native PDF-förhandsvisning, delning eller filstädning. Inga publiklänkar, automatiska utskick eller partneråtkomst ingår. Ändrade native-beroenden och exportkontrakt följer sina separata grindar.
 
-**Öppet beslut:** tidigare önskemål om senare push står i konflikt med detta krav. Bilden avgör inte leveranskanalen; Erik behöver fastställa vad som gäller före implementation. Datumstyrd visning i appen är inte samma sak som en levererad pushnotis.
+**Mål:** Ägaren kan förhandsgranska och själv exportera ett begränsat urval av hundens egna uppgifter.
 
-**Acceptanskriterier:**
+**Krav:**
+- Behåll fastställt urval och befintlig lokal PDF-export, förhandsgranskning och ägarinitierad delning.
+- Fungerar lika för valp och vuxen hund, även med bara delar av historiken ifyllda.
+- Datum och märkning som ägarregistrerade uppgifter ska finnas med.
+- Presentera inte passet som officiell journal, intyg eller vaccinationsbevis.
 
-- Påminnelser kan kopplas till relevant innehåll, träning, rutiner eller hundens utvecklingsfas.
-- En notifiering leder användaren till den relevanta hjälpen eller handlingen.
-- Användaren kan välja om hen vill få notifieringar.
-- Påminnelser ger konkret nytta; generella utskick för att enbart öka antalet öppningar ingår inte.
+**Acceptans:** Vuxen hund med en hälsopost kan skapa ett ägarinitierat Tassla-pass. Ingen extern integration införs.
 
-Återkomsten ska drivas av nytt värde och nya behov, med påminnelser som stöd.
+## 5. Progression – gemensamt produktkontrakt
 
-## Måste med: distributions-MVP
+Progression är **ingen ny flik och ingen ny universell poängmodell**. Håll tre saker separata:
 
-Uppfödarflödet är en distributionspilot, separat från de sex huvudsakliga användarytorna.
+| Dimension | Källa till sanning | Vad får visas? |
+|---|---|---|
+| Dagens aktiviteter/rutiner | Befintlig dagsaktivitet och bekräftade rutinbockar | Exakt bekräftade handlingar för vald dag |
+| Träningsprogression | Sparad `training_progress` per hund/version/steg | Genomförda markerade steg och nästa tillgängliga steg |
+| Hundens historik | Händelser, vikt, hälsa och andra bestående poster | Verkliga sparade uppgifter över tid – ingen totalpoäng |
 
-**Kennel → unik QR/länk → Tassla → onboarding → hundprofil**
+**Tvärgående acceptanskriterier:**
+1. Bekräftad handling får samma status i alla berörda vyer.
+2. Okänt sparutfall, pågående skrivning eller fel får aldrig bli en falsk bock.
+3. Öppnad artikel är inte genomförd träning; planerad vård är inte utförd vård.
+4. Ingen godtycklig totalprocentsats får blanda olika progressionsdimensioner.
+5. Nästa steg ska komma från verkligt tillgängligt innehåll/uppgift och leda till en fungerande destination.
+6. Ålders-/periodbyte får inte nollställa historik eller pågående träningsarbete.
+7. Befintlig beslutad gallring av dagliga markeringar gäller fortsatt, utan att historik med annat ändamål behandlas som dagsdata.
 
-**Acceptanskriterier:**
+**Målflöde:** Relevant hjälp → handling → bekräftat resultat → begriplig återkoppling → nästa relevanta steg.
 
-- Varje pilotuppfödare får en unik länk och QR-kod att ge till valpköpare.
-- Länken leder till onboarding.
-- Kennel/distributionskälla sparas och kan kopplas till den skapade hundprofilen.
-- Utfallet kan följas per kennel från inbjudan till återkommande användning.
+## 6. Livsperioder och individuell livsfas
 
-Piloten behöver uppfödare, men ingen omfattande uppfödarportal eller integration. Distributionslösningen kan ändras utan att produkt-MVP:n omdefinieras.
+MVP v2 tar avstamp i befintlig plan för tio kronologiska perioder och fem breda faser. **Kronologisk period** är ett redaktionellt åldersbegrepp. **Individuellt bedömd senior-/slutskedesstatus** är separat ägarkontext och ska inte automatiskt förutsätta medicinsk kunskap.
 
-## Måste med: mätning
+Vid en periodövergång:
+- hund-ID, historik, träningsprogression och ägarvalda rutiner bevaras;
+- personligt urval *kan* ändras när relevanta, publicerade regler och innehåll finns;
+- tidigare valpaktivitet behöver inte dominera Hem för en vuxen hund;
+- individuellt vald livsfas får inte motsäga kronologiska etiketter på ett otydligt sätt;
+- legacy-checklist-ID:n och befintliga innehållsversioner ska inte skrivas om destruktivt.
 
-Grundläggande instrumentering ska finnas från start. Ett avancerat analyssystem krävs inte.
+## 7. Minsta användbara upplevelse för vuxen hund
 
-Minsta händelsekedja att följa:
+En användare med en ny femårig hundprofil och helt tom historik ska kunna:
+1. Se sin hunds korrekta identitet, ålder och period.
+2. Få minst ett sakligt relevant, godkänt kunskapsinnehåll på Hem.
+3. Göra en värdeskapande handling via existerande logg, rutin eller träningsprogram.
+4. Registrera hälsohistorik eller en kommande ägarangiven händelse.
+5. Få sin bekräftade data synlig på rätt plats och använda Tassla-pass.
 
-**QR/invite → onboarding start → dog created → Home viewed → first log / training started → return D1/D7/D30**
+**Detta är en avgränsad MVP-gate, inte ett löfte om fullständigt vuxenhundsinnehåll.**
 
-Loggning och valpflöden är alternativa vägar till värde, inte obligatoriska steg i en enda sekvens.
+## 8. Distribution och pilottest
 
-| Steg | Minsta uppföljning |
-|---|---|
-| Distribution | Antal utdelade inbjudningar i piloten, öppnade QR/länkar och startade onboardingar per kennel. Utdelade inbjudningar kan rapporteras manuellt. |
-| Activation | Skapad hund, visat Home och första värdeskapande handling, exempelvis första logg eller påbörjat valpflöde. |
-| Engagement | Aktiva dagar, återkommande loggning, användning av relevant innehåll och genomförda steg i valpflöden. |
-| Retention | Återkomst D1, D7 och D30, följd per startkohort och distributionskälla. |
+**Notifieringsbeslut 2026-10-06:** lokala telefonnotiser för ägarvalda datum och frivilliga träningspåminnelser ingår. Remote push eller en allmän utskicksmotor följer inte av detta. Verklig behörighet, schemaläggning och destination verifieras på native enligt ägarens valda testtillfälle.
 
-Inför piloten ska definitionen av aktivering, meningsfull återkomst, mätfönster och önskade målnivåer fastställas. Numeriska framgångströsklar är ännu inte beslutade.
+**Fastställd betakontakt och gallring:** EriMali AB, Stenvallavägen 1, 18634 Vallentuna; support erimali.ab@gmail.com. Betakonton och hunddata gallras 30 dagar efter avslutad beta. Verkställd radering, backuphantering och tillämpliga publicerings-/pilotgrindar behöver egen evidens.
 
-Mätningen ska skilja på att öppna appen och att använda den. Antal installationer eller tekniskt fungerande funktioner räcker inte för att validera MVP:n.
+**Primärt spår:** Uppfödare → QR/kod → onboarding → hundprofil → Hem → första användning → meningsfull återkomst. Tidigare beslut om frivillig kennelkälla, ingen kennelportal och separat distributionsmandat gäller.
 
-## Tekniska krav och datamodell
+**Kompletterande test:** Cirka 8–12 vuxenhundsägare utan tidigare Tassla-historik, som ett kvalitativt användbarhetstest. Syftet är att upptäcka om vuxenhundsupplevelsen är begriplig och ger självständigt värde; detta är inte ett statistiskt test av retention.
 
-**En hund. En profil. En tidslinje.**
+## 9. Mätning och dataskydd
 
-- All hundrelaterad produktdata kopplas till hundens permanenta ID och kan återanvändas mellan funktioner.
-- Loggar och utvecklingshändelser sparas kronologiskt med tidpunkt och händelsetyp, exempelvis `event_type`.
-- Datamodellen omfattar MVP-händelser för loggning, vikt, vaccination och veterinärhändelser utan separata datasilos; fler händelsetyper kan tillkomma genom senare godkända krav.
-- Hundprofilen ska leva vidare när valpen blir vuxen, utan att en ny profil behöver skapas.
-- Fler signaler ska kunna användas för personalisering efter hand.
+Behåll D1/D7/D30 som definierade uppföljningar av aktivering/återkomst samt den begränsade samtyckesstyrda mätningen. Komplettera produktanalysen med **frågor** om livsfasrelevans och meningsfulla handlingar. Besluta separat om hur/om livsfasfördelning får mätas: nuvarande mätkontrakt tillåter inte att ålder, hund-ID, kennel-ID eller hälsodata skickas i produkt-events.
 
-Tidslinjen är en dataprincip. Den kräver inte en avancerad tidslinjeprodukt i MVP:n. Den enkla hälsoöversikten ovan ingår, men en fullständig veterinärjournal gör det inte.
-
-## Central produktloop
-
-**Uppfödare/QR → onboarding → hundprofil → Home visar relevant hjälp → ägaren loggar, tränar eller läser råd → data och progression sparas på hunden → Tassla kan bli mer relevant → push, nytt innehåll eller nytt behov → tillbaka till Home.**
-
-MVP:n ska validera att denna loop ger verkligt värde och upprepas över tid. Initial relevans kommer framför allt från ålder och ras; mer avancerad personalisering kan utvecklas senare.
-
-## App-design
-**Appen ska kännas levande. Animationer som infriar detta måste premieras**
-
+- Frivillig mätning får inte bli ett krav för att använda kärnprodukten.
+- Mät inte bara appöppningar; granska bekräftad handling och kvalitativ upplevd nytta.
+- Eventuell livsfasuppdelning ska föreslås av Product och granskas av Compliance/Security, med dataminimering, k-anonymitet/aggregat där relevant och utan att kringgå nuvarande eventkontrakt.
+- **D90 är ett framtida uppföljningsmål, inte ett åtagande i nuvarande 30-dagars händelseretention.** Längre mätning kräver uttryckligt separat beslut om lagring och analys.
+- Sätt numeriska pilottestmål först efter att mätdefinitioner och verklig insamlingsväg är verifierade.
 
 ## Rev02-panelernas minsta funktionella innebörd
 
@@ -215,37 +228,57 @@ MVP:n ska validera att denna loop ger verkligt värde och upprepas över tid. In
 
 En panel får levereras i flera checkpoints men kallas inte klar förrän hela raden fungerar och har relevant QA, oberoende review och visuell evidens. Säkerhet, innehållsgranskning, dataskydd och existerande användargodkännanden gäller vid varje steg. Påhittade råd, djurtillstånd, tider eller progress ingår inte.
 
-## Utanför MVP
 
-Följande passar den långsiktiga visionen men ingår inte i första versionen:
+## 10. Utanför MVP v2
 
-- Avancerad tidslinjeskärm, fullständig livshistorik och stort artikelbibliotek.
-- Komplett hundskola eller brett utbud av träningsprogram.
-- Läkemedels-/symptomhantering, diagnoser och fullständig hälso-/veterinärjournal.
-- Officiella vaccinationskort/pass/intyg och export utöver det avgränsade ägarinitierade Tassla-passet.
-- Avancerad AI-assistent, mönsterigenkänning och AI baserad på hundens samlade historik.
-- Veterinärfrågor, försäkringsförmedling, foderrekommendationer med partnerkoppling och partnerintegrationer.
-- Rabattkoder, affiliatelänkar, partnererbjudanden, generell e-handel och avancerade betalflöden.
-- Hundvaktsmarknadsplats, hunddagis, pensionat, lokala tjänster och bokningssystem.
-- Socialt nätverk, omfattande partnerportal och uppfödarens eget FAQ-system.
-- Delad digital åtkomst för externa aktörer, temporära behörigheter och importer från veterinär eller andra tjänster. Ägarinitierad PDF-export enligt Tassla-pass är det avgränsade undantaget.
+Ingen avancerad AI-assistent, prediktiv kiss-/bajsmodell, kliniskt beslutssystem, komplett hundskola, fullständig journal, ny avancerad interaktiv livstidslinje, veterinär-/försäkringsintegration, marknadsplats, dagis/pensionat/bokning, socialt nätverk, e-handel, generell partnerportal, avancerad betalning eller stor expansionsinfrastruktur.
 
-Kommersiella partners ska inte vara beroenden för lansering. Framtida funktioner prioriteras först när de stärker användarnyttan och den validerade produktloopen.
+Undvik ny gamification utan dokumenterat värde. Befintliga animations- och designregler ska följas, inte definieras om.
 
-## Scope och lärande
+## 11. Obligatoriska end-to-end-scenarier
 
-Prioritera låg friktion, relevant hjälp och återkommande värde framför funktionsbredd. Nya behov från användartester kan motivera en scopeändring, men ska uttryckligen godkännas och skrivas in här innan de blir krav.
+| ID | Scenario | Godkänt när |
+|---|---|---|
+| A | Ny valp via kennel, 11 veckor | QR/kod/vanlig onboarding leder till relevant Hem, första värdehandling och återkomst; status och data är riktiga |
+| B | Vuxen hund utan historik, 5 år | Onboarding, relevant Hem, minst en handling, hälsa och pass fungerar utan valpantaganden |
+| C | Periodskifte, valp → unghund → vuxen | Period/urval anpassas; hund-ID, rutiner, historik och träningsprogression består |
+| D | Tomt läge/alla dagens aktiviteter klara | Tydligt korrekt tillstånd; inget generiskt krav att göra mer, ingen 0/0 eller falsk slutförandegrad |
+| E | Misslyckad eller okänd skrivning | Inga falska sparbekräftelser eller förlorade användaravsikter |
+| F | Individuell seniorstatus | Tydlig livsfaskontext utan motsägande märkning, automatisk medicinsk slutsats eller historikförlust |
 
-Exempelvis är delning av vardagsloggen med en partner inte beslutad MVP-funktionalitet. Den kan omprövas om piloten visar att den är avgörande för användning i hushållet.
+## 12. Definition of Done för MVP rev02
 
-### Eriks tillägg 2026-10-10, utanför ursprunglig MVP
+MVP rev02 är *leveransklar för kontrollerad pilot*, inte automatiskt validerad, när:
+- sex produktområden och alla åtta rev02-paneler är sammankopplade utan att bryta befintliga flöden;
+- scenario A–F är verifierade mot faktiskt data-/UI-beteende;
+- vuxenhunds-Hem har relevant publicerat innehåll, inte bara en periodetikett;
+- progression visar endast bekräftade handlingar;
+- hundens historik och ID består vid livsfasbyte;
+- nytt innehåll har genomgått erforderlig sakgranskning och kontrollerad publicering;
+- åtkomst, dataskydd, radering, notifieringar, native PDF, verklig backend och fysisk enhet är verifierade där de krävs;
+- pilotens mätdefinitioner och insamlingsväg är granskade;
+- produktägaren har godkänt användarresorna och beslut om pilotdistribution.
 
-För MOTION-paketet godkände Erik mikrorörelse, tips vid första användning och en valpfigur utanför den ursprungliga MVP:n. Omfattning och begränsningar finns i [beslut 0004](decisions/0004-motion-package.md). Detta tillägg gäller endast MOTION-paketets fyra avgränsade slices; det ändrar inte övrig MVP-scope.
+Varje acceptans binder kravsektion/beslut till kod, relevanta komponentanrop, regressionstester, aktuell skärmbild och dokumenterade avvikelser. Ange exakt branch/commit, miljö och build; okänd eller ej skapad build anges uttryckligen. Status för kod/integration, lokal QA, live-datakoppling/RLS, native, visuell likhet och release hålls separat enligt [upplevelsekontraktet](MVP-EXPERIENCE-CONTRACT.md). `done` för en deluppgift stänger inte användarresan eller panelen.
 
-## Definition av framgång
+**Gräns:** Kodreview, mockdata och gröna tester är inte samma sak som verifierad verklig Supabase, TestFlight/native och användarupplevelse.
 
-MVP:n är validerad när pilotdata visar att:
+## 13. Ändringskontroll och genomförande
 
-**Distribution fungerar → användaren skapar hunden → får omedelbart värde → använder Tassla återkommande i vardagen → återkommer över tid → hundens profil och historik växer.**
+Koordinatorn klassificerar berört krav före implementation, med relevanta granskare enligt [utvecklarflödet](dev/workflow.md):
 
-Detta lägger grunden för nästa steg: **MVP: Valpen → MID: Hunden → långsiktigt: Hundens digitala ekosystem.**
+- **Redan implementerat och verifierat:** Ändra inte.
+- **Delvis uppfyllt:** Minsta möjliga komplettering, med specificerat gap och test.
+- **Ofärdigt krav inom godkänd MVP rev02:** minsta kompletta användarresa, versionsstyrd plan, relevanta granskningar och verifiering. Fråga inte om produktmandatet igen.
+- **Nytt krav utanför godkänt scope:** separat produktbeslut före berörd implementation.
+- **Utanför scope eller blockerad:** Dokumentera; implementera inte implicit.
+
+Arbeta i vertikala flöden, ett åt gången, med plan → relevant granskning → implementation → QA → oberoende Reviewer → hållbar checkpoint. Produktägaren slutaccepterar hela resor och beslutar pilot/release; rutinmässig lokal utveckling kräver inte nytt segmentmandat. Bevara designstandarder, komponenter, dataskydd och pågående arbete. Uppdatera denna specifikation och beslutslogg när produktägarna uttryckligen ändrar scope.
+
+## 14. Beslut och genomförandestatus
+
+Den godkända produktplanen omfattar en begränsad vuxenhundsresa, vuxenrelevant sakgranskat innehåll, återanvända rutin-/logg-/träningsmotorer, sex produktområden och åtta funktionella rev02-paneler. V1 och det daterade v2-förslaget är historiska underlag.
+
+Antalet cirka 8–12 vuxentestare och förslaget om tre innehållsobjekt är fortsatt planeringsförslag, inte automatisk rekrytering eller publicering. Innehållsgranskning och pilotbeslut krävs. Tio perioder, individuell livsfas, katalogutökning, veckomål och sömnintervall ska inte beskrivas som färdiga genom detta dokumentbeslut; kontrollera faktisk integration och evidens i kön.
+
+Första apppilot efter dokumentharmoniseringen är gemensam sökbar rasväljare i första profil, lägg till hund och profilredigering med regression och separat live/native/visuell acceptans. Använd befintlig katalog; nya katalogdata och Mix-delraser får inte blockera själva sökinteraktionen. Det redan ägarstoppade checklistfilterpaketet återupptas inte automatiskt.

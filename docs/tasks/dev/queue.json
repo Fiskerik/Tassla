@@ -7301,7 +7301,7 @@
       "depends_on": [
         "FLOW-HOME-CHECKLIST-01"
       ],
-      "status": "implementing",
+      "status": "blocked",
       "history": [
         {
           "from": "planned",
@@ -7314,9 +7314,15 @@
           "to": "implementing",
           "actor": "implementer",
           "evidence": "Starting approved plan v2 implementation on codex/tassla-mvp-remainder-2026-10-20 from checkpoint 7f37d8e; Product/Architect/Critic/Security reviews recorded in docs/tasks/dev/FLOW-HOME-CHECKLIST-FILTERS-01.md."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Ägarens stopp finns i 2026-10-20-checkpointen; endast data/modell är sparad. Dokumentharmonisering utförs först enligt nytt ägarbesked. Återuppta inte filterimplementation utan ny riktningsavstämning."
         }
       ],
-      "next_step": "Owner requested stopping the implementation because the direction did not feel right. Save and push only the verified data/model checkpoint; leave this task incomplete. If resumed, first realign direction with the owner, then connect the readers to ProductWorkspace and complete the filter UI, source navigation/return, lifecycle tests and visual evidence. No UI/route is currently connected.",
+      "next_step": "Ägarens stopp finns i 2026-10-20-checkpointen; endast data/modell är sparad. Dokumentharmonisering utförs först enligt nytt ägarbesked. Återuppta inte filterimplementation utan ny riktningsavstämning.",
       "priority": "P1",
       "panels": [
         "4"
@@ -9345,6 +9351,102 @@
       "status": "planned",
       "history": [],
       "next_step": "After all local code checkpoints, run owner-selected device batch including Passport, profile, and Knowledge search; record device/OS/text settings and mark any unrun evidence OPEN / NOT TESTABLE."
+    },
+    {
+      "id": "DOCS-MVP-REV02-ALIGN-01",
+      "title": "Gör godkänd MVP rev02 styrande och harmonisera instruktioner",
+      "mvp_requirement": "docs/mvp.md; docs/MVP-EXPERIENCE-CONTRACT.md; Eriks besked 2026-10-20 i Product Consistency & Delivery Reset",
+      "plan": "docs/tasks/dev/rapport.md — DOCS-MVP-REV02-ALIGN-01 plan v1",
+      "write_paths": [
+        "AGENTS.md",
+        "docs/mvp.md",
+        "docs/MVP v2 - 2026-10-16.md",
+        "docs/GAP_analys_Tassla 2026-10-16.md",
+        "docs/MVP-EXPERIENCE-CONTRACT.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/dev/workflow.md",
+        "docs/design-rules.md",
+        "docs/design/vision-rev02-screen-contracts.md",
+        "docs/ai-team.md",
+        ".codex/skills/SKILLS.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        ".codex/agents/architect.toml",
+        ".codex/agents/compliance.toml",
+        ".codex/agents/critic.toml",
+        ".codex/agents/dog_expert.toml",
+        ".codex/agents/implementer.toml",
+        ".codex/agents/product.toml",
+        ".codex/agents/qa.toml",
+        ".codex/agents/reviewer.toml",
+        ".codex/agents/security.toml"
+      ],
+      "acceptance": [
+        "En kanonisk godkänd MVP rev02 med bevarade v2- och Main-krav.",
+        "Agent-, workflow-, design- och skillhänvisningar använder samma mandat och riskbaserade granskningsregler.",
+        "Kod, lokal QA, live, native, visuell och releaseacceptans hålls separata; inga app- eller dataändringar.",
+        "Dokumentverifiering samt oberoende QA/Reviewer registreras sanningsenligt."
+      ],
+      "checks": [
+        "pnpm check",
+        "python tools/dev_flow.py validate",
+        "git diff --check",
+        "JSON/TOML-parse och riktad länk-/motsägelsekontroll"
+      ],
+      "depends_on": [],
+      "risk_class": "L",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE och Critic PROCEED för plan v1 i denna session; dokumentera kravbevarande, skilj v2 från bildrev02 och bevara köverktygets faktiska grindar. Nästa: dokumentimplementation."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik har uttryckligen godkänt MVP rev02 och beställt motstridiga filer rättade först. Plan v1 Architect APPROVE/Critic PROCEED; koordinatorn skriver endast angivna dokument."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Dokumentimplementation v1 klar; inga src/app/supabase/tests/tools- eller dependencyändringar. JSON/TOML, kö och diffcheck PASS; 126 relativa länkar kontrollerade, en befintlig historisk trasig rapportlänk. Full pnpm check pågår. Nästa: oberoende dokument-QA och kravbevarande."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende docs_qa PASS för plan v1, kravbevarande och säkerhetsgrindar; JSON/TOML/kö/länkar/diff PASS; pnpm check 619 totalt, 618 PASS, 1 SKIP, 0 FAIL. Ett dubbelloggningskrav rättat och omkontrollerat. Nästa: oberoende Reviewer."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Oberoende docs_reviewer PASS för plan v1 efter docs_qa PASS. Kravbevarande och oförändrade säkerhets-/kögrindar verifierade. Full check 619 totalt/618 PASS/1 SKIP/0 FAIL; dokumentkontroller PASS. Innehållsdiffidentifierad checkpoint och slututfall sparade i rapport/HISTORY. Nästa: dokument-PR; därefter exakt rasväljarplan, ingen appkod startad."
+        }
+      ],
+      "next_step": "Oberoende docs_reviewer PASS för plan v1 efter docs_qa PASS. Kravbevarande och oförändrade säkerhets-/kögrindar verifierade. Full check 619 totalt/618 PASS/1 SKIP/0 FAIL; dokumentkontroller PASS. Innehållsdiffidentifierad checkpoint och slututfall sparade i rapport/HISTORY. Nästa: dokument-PR; därefter exakt rasväljarplan, ingen appkod startad.",
+      "checkpoint": {
+        "branch": "codex/mvp-rev02-approved-plan",
+        "base_commit": "2967a3f34cfe4b33d4777626c911695552cce728",
+        "content_diff_sha256": "1ea4c63367844978d9b08aa029f730054720a9fcae14deb4884e35514e4d01dc",
+        "excluded_metadata_paths": [
+          "docs/tasks/dev/queue.json",
+          "docs/tasks/dev/rapport.md",
+          "docs/releases/HISTORY-2026.md"
+        ],
+        "build": "ej skapad; dokumentpaket"
+      },
+      "test_evidence": [
+        "pnpm check PASS: typecheck, edge-typecheck, ESLint, 619 totalt/618 PASS/1 SKIP/0 FAIL",
+        "JSON, 9 TOML, kö och whitespace PASS; 126 relativa länkar, inga nya saknade mål",
+        "Architect APPROVE; Critic PROCEED; oberoende docs_qa PASS och docs_reviewer PASS för plan v1; verkliga resultat sparade i rapporten",
+        "Endast dokument/roller/kö; inga app/data/test/verktyg/dependencyändringar eller runtime-/releasepåståenden"
+      ]
     }
   ]
 }
