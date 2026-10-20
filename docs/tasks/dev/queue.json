@@ -7256,13 +7256,16 @@
       "id": "FLOW-HOME-CHECKLIST-FILTERS-01",
       "title": "Hem: Denna vecka, Alla och Kommande i Checklistan",
       "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 4; docs/design/vision-rev02-screen-contracts.md panel 4",
-      "plan": "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md v1; detaljerad plan och review före ready",
+      "plan": "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md v1; Product/Architect/Critic/Security review krävs före implementation",
       "write_paths": [
         "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/DailyActivityManagerSheet.tsx",
         "src/features/home/ProductWorkspace.tsx",
         "src/features/home/daily-activity-data.ts",
         "src/features/home/daily-activity-model.ts",
         "src/features/home/README.md",
+        "src/data/workspace-data.ts",
+        "src/features/health/PlannedHealthScreen.tsx",
         "tests/daily-activity-range.test.mjs",
         "tests/daily-checklist-filters.test.mjs",
         "tests/daily-activity-model.test.mjs",
@@ -7299,7 +7302,7 @@
       ],
       "status": "planned",
       "history": [],
-      "next_step": "Skriv exakt data-/UX-plan v1; Product/Architect/Critic/Security granskar innan implementation. Verifiera återanvändbara range API och actual health plan destination; ingen kod före APPROVE.",
+      "next_step": "Product, Architect, Critic och Security granskar plan v1; ingen implementation eller statusövergång före dokumenterade godkännanden.",
       "priority": "P1",
       "panels": [
         "4"
@@ -7309,8 +7312,8 @@
       "test_evidence": [
         "Monday/Sunday/year/DST/repeat boundaries, pagination completeness, 30-day retention, empty/partial/error, routine/training scope, Planerad health link, §14 image matrix, runtime RLS boundary"
       ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "implementation_state": "Plan v1 dokumenterad för rollgranskning; ingen appkod ändrad.",
+      "evidence_status": "plan review pending; implementation evidence not run"
     },
     {
       "id": "FLOW-LOG-01",

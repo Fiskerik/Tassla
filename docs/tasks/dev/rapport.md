@@ -940,3 +940,8 @@ Vid 360×844/140 %-webbstresstest var åtgärdsknappen fullt åtkomlig utan öve
 - Main hämtad och mergad: origin/main `00de202` (`mobile-ios-design`) plus två föregående upstream-commits. SwiftUI-exempel översattes till befintlig Expo/React Native-stack, tokens och tillgänglighetskontrakt; inga dependencies.
 - NOT TESTABLE: live Supabase/RLS, native VoiceOver/Dynamic Type/gestures, signerad build/TestFlight. Se `../design/evidence/flow-home-checklist-2026-10-20/VERIFICATION.md`.
 - Nästa: `FLOW-HOME-CHECKLIST-FILTERS-01` — skriv plan v1 och få Product/Architect/Critic/Security-review före implementation.
+
+
+### FLOW-HOME-CHECKLIST-FILTERS-01 — plan v1 checkpoint, 2026-10-20
+
+Plan v1 och källfynd är dokumenterade i `docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md` och `docs/tasks/dev/FLOW-HOME-CHECKLIST-FILTERS-01.md`. V1 definierar sparad ISO-vecka, 30 lokala kalenderdagar för Alla, sju framtida datum, Planerad-status, fullständiga/partiella lästillstånd, källnavigation och skydd mot historisk backfill. Riskklass H kvarstår. Product, Architect, Critic och Security review är öppna; queue står kvar som `planned`. Ingen appkod eller runtime-evidens ingår i denna checkpoint. Nästa steg: slutför de fyra rollgranskningarna innan implementation.
