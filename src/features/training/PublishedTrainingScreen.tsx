@@ -6,9 +6,11 @@ import { completeReviewTrainingStep, completeTrainingStepForMode, isReviewTraini
 import { tokens } from '../../theme/tokens';
 import { allProgramsComplete, completedCount, exerciseCountLabel, exerciseProgressLabel, pickNextExercise, programStatus, programStatusWord, sortPrograms, stepStates } from './training-overview';
 
-export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, onAddBirthDate, onOpenKnowledge, reviewMode = false }: {
+export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, onAddBirthDate, onOpenKnowledge, reviewMode = false, focusStep, onCloseStep }: {
   ageWeeks: number | null; programs: readonly PublishedTrainingProgram[]; paused: readonly PausedTrainingProgress[]; busyStepKey: string | null; error: string;
   reviewMode?: boolean;
+  focusStep?: { programId: string; stepId: string; returnPage: 'home' | 'checklist' };
+  onCloseStep?: () => void;
   onCompleteStep: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>;
   onUnmarkStep?: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>; onContinue: () => void;
   onResetProgram: (program: PublishedTrainingProgram) => void; onRetry: () => void;
@@ -24,8 +26,8 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   const mounted = useRef(true);
   const visiblePrograms = reviewMode ? programs.map((program) => ({ ...program, completedStepIds: reviewCompleted[program.id] ?? program.completedStepIds })) : programs;
   const openProgram = visiblePrograms.find((program) => program.id === openProgramId) ?? null;
-  const selectedProgram = visiblePrograms.find((program) => program.id === selection?.programId);
-  const selectedStep = selectedProgram?.steps.find((step) => step.id === selection?.stepId);
+  const selectedProgram = visiblePrograms.find((program) => program.id === (focusStep?.programId ?? selection?.programId));
+  const selectedStep = selectedProgram?.steps.find((step) => step.id === (focusStep?.stepId ?? selection?.stepId));
   const nextStep = selectedProgram?.steps.find((step) => !selectedProgram.completedStepIds.includes(step.id));
   const sortedPrograms = sortPrograms(visiblePrograms);
   const nextExercise = pickNextExercise(sortedPrograms);
@@ -115,6 +117,32 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     ]);
   }
 
+  if (focusStep) return <View testID="home-training-step-detail" style={styles.focusedPage}>
+    <AppBar mode="Back" title="Träningssteg"
+      actionLabel={focusStep.returnPage === 'checklist' ? 'Tillbaka till Checklistan' : 'Tillbaka till Hem'}
+      onAction={onCloseStep ?? onContinue} variant="compact" />
+    {!selectedProgram || !selectedStep ? <View style={styles.emptyCard}>
+      <Text style={styles.emptyTitle}>Steget är inte tillgängligt</Text>
+      <Text style={styles.body}>Det valda träningssteget kunde inte hämtas från dagens publicerade program.</Text>
+      <Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta träningssteget igen" onPress={onRetry} />
+    </View> : <View style={styles.focusedCard}>
+      <Text style={styles.stepMeta}>{selectedProgram.title}</Text>
+      <Text accessibilityRole="header" style={styles.sheetHeading}>{selectedStep.title}</Text>
+      {selectedProgram.is_ai_generated ? <Text style={styles.note}>AI-genererat innehåll</Text> : null}
+      <Text style={styles.body}>{selectedStep.instruction}</Text>
+      <Text style={styles.note}>Anpassa efter din hund och pausa när det behövs.</Text>
+      {selectedProgram.completedStepIds.includes(selectedStep.id) ? <>
+        <Text style={styles.note}>Genomförd. Ni kan gärna öva igen.</Text>
+        {onUnmarkStep || (reviewMode && isReviewTrainingProgram(selectedProgram.id)) ? <Button variant="tertiary" label="Avmarkera" accessibilityLabel={`Avmarkera ${selectedStep.title}`} loading={busyStepKey === `${selectedProgram.id}:${selectedStep.id}:unmark`} disabled={Boolean(busyStepKey)} onPress={() => { void unmark(); }} /> : null}
+      </> : <>
+        {nextStep?.id !== selectedStep.id ? <Text style={styles.note}>Börja med {nextStep?.title} innan du markerar den här övningen.</Text> : null}
+        <Button label="Markera som genomförd" accessibilityLabel="Markera övningen som genomförd" loading={busyStepKey === `${selectedProgram.id}:${selectedStep.id}`} disabled={Boolean(busyStepKey) || nextStep?.id !== selectedStep.id} onPress={() => { void complete(); }} />
+      </>}
+      <Toast visible={Boolean(successMessage)} tone="success" confirmed message={successMessage || undefined} autoDismissMs={2500} onAutoDismiss={() => setSuccessMessage('')} />
+      <Toast visible={Boolean(error)} tone="error" message={error || undefined} onRetry={onRetry} />
+    </View>}
+  </View>;
+
   return <View>
     {openProgram
       ? <AppBar mode="Back" title={openProgram.title} onAction={() => setOpenProgramId(null)} variant="compact" />
@@ -197,6 +225,8 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
 
 function percentage(program: PublishedTrainingProgram) { return program.steps.length ? completedCount(program) / program.steps.length * 100 : 0; }
 const styles = StyleSheet.create({
+  focusedPage: { gap: tokens.spacing.md, paddingBottom: tokens.spacing.xl },
+  focusedCard: { padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.training.continueSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   screenTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
   ageHint: { gap: tokens.spacing.xs },
   path: { gap: tokens.spacing.xs },

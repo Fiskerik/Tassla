@@ -7159,45 +7159,155 @@
       "test_evidence": [
         "Profil- och scopeprov, kataloglicensbevis, RLS där dataskrivning ändras, 375/430-render"
       ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
+      "implementation_state": "implemented; local QA PASS, frozen-diff UX Reviewer pending",
       "evidence_status": "not_run — required evidence listed in test_evidence"
     },
     {
       "id": "FLOW-HOME-CHECKLIST-01",
       "title": "Hem till daglig Checklista och tillbaka",
       "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "plan": "docs/plans/FLOW-HOME-CHECKLIST-01-ux-spec.md v9",
       "write_paths": [
+        "src/features/home/DailyChecklistScreen.tsx",
         "src/features/home/HomeScreen.tsx",
-        "src/features/home/DailyActivityManagerSheet.tsx",
-        "src/features/home/ProductWorkspace.tsx"
+        "src/features/home/ProductWorkspace.tsx",
+        "src/components/AppPrimitives.tsx",
+        "src/features/home/main-navigation.ts",
+        "src/features/home/home-today.ts",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/home/README.md",
+        "tests/daily-checklist-screen.test.mjs",
+        "tests/daily-checklist-route.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/training-step-mutation-scope.test.mjs",
+        "tests/home-vision.test.mjs",
+        "tests/main-navigation.test.mjs",
+        "tests/home-today.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "docs/design/evidence/flow-home-checklist-2026-10-20",
+        "docs/tasks/dev/FLOW-HOME-CHECKLIST-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/plans/FLOW-HOME-CHECKLIST-01-ux-spec.md"
       ],
       "acceptance": [
-        "Hem och dagslista har samma fullständiga population och bekräftade count",
-        "Skapa/ändra/ta bort/ångra rutin fungerar; träningsrad öppnar källsteg",
-        "Synliga filter fungerar; pending/failed/unknown döljer falsk progress",
-        "För full panelacceptans fungerar Idag/Denna vecka/Alla och Kommande med definierat urval och verkliga planposter"
+        "Hem visar exakt en alltid synlig Checklista-länk med etiketten Checklista och tillgängligt namn Öppna dagens checklista vid loading/error/0/1/5/7; den ersätter villkorade Visa alla och dubleras inte med separat Hantera.",
+        "Fullskärmslistan har exakt samma aktiva konto/hund/dag/tidszon, population och bekräftade count som Hem, inklusive alla rader över fem; 0 uppgifter visar neutralt tomläge utan 0 av 0 eller progress.",
+        "Rutinbock använder befintlig pending/confirmed/readback/retry; failed/unknown ändrar inte bekräftad progress.",
+        "Träningsrad öppnar exakt publicerad programversion och step-id i en Home-underordnad route; detaljen börjar överst med synlig AppBar/bakåtknapp. Close eller bekräftad completion/undo återgår med sparad scrollposition och uppdaterad källrad synlig. Ett 7-radersprov verifierar synlig detaljnavigation och samma rad/count vid retur; failed/unknown stannar vid källsteget.",
+        "Befintlig rutin-CRUD, dagsval, borttagning, ångra, Home/Training, hund-/kontoscope och dagsgräns regressionskontrolleras. Konto-/hund-/dags-/tidszonsscopebyte ändrar faktisk route till Home; A→B→A återupplivar inte child route, och en gammal finally/lock påverkar inte ny scope.",
+        "Loading, tomt, error/retry, refresh error, pending, failed och unknown är skilda; läsfel ger inte falsk 0/0-progress.",
+        "Berörda handlingar har tillgängliga namn/status och minst 44×44 pt tryckyta; reducerad rörelse och stor text förblir fungerande.",
+        "RN Web-evidens för Idag vid 375/430/667, 140%, public/review och 0/1/5/7 samt relevanta spar-/felläge; browser verifierar detaljens synliga AppBar/bakåtknapp, start vid toppen, återställd lägre källa, lämna→öppna på toppen samt hundscopebyte→öppna på toppen. §14 redovisar Idag-slicen och markerar punkt 16/full panel 4 som öppen.",
+        "Inga filter för Denna vecka/Alla/Kommande visas eller rapporteras klara i denna slice; efterföljande FLOW-HOME-CHECKLIST-FILTERS-01 bär den kvarvarande panelacceptansen."
       ],
       "checks": [
+        "node --experimental-strip-types --test tests/daily-checklist-screen.test.mjs tests/daily-checklist-route.test.mjs tests/daily-activity-ui.test.mjs tests/home-vision.test.mjs tests/training-step-mutation-scope.test.mjs tests/main-navigation.test.mjs tests/home-today.test.mjs",
         "pnpm check",
+        "pnpm bundle:ios",
         "git diff --check",
-        "python tools/dev_flow.py validate"
+        "python -X utf8 tools/dev_flow.py validate",
+        "Rendera public/review via tools/visual-check/build.cjs och verifiera via tools/visual-check/verify.py; arkivera bilder, browserresultat och §14"
       ],
       "depends_on": [
         "HOME-ROUTINE-CHECKLIST-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v6; UX Critic PROCEED v6; Security PROCEED v5 with stale scope/account-deletion guardrails. Decisions recorded in docs/tasks/dev/FLOW-HOME-CHECKLIST-01.md; plan and queue v6 synchronized."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Plan v6 approved; before app-code changes Architect re-approved exact-path/test-only amendment v7. UX Critic PROCEED v6 and Security PROCEED v5 remain applicable. Durable decisions in docs/tasks/dev/FLOW-HOME-CHECKLIST-01.md."
+        },
+        {
+          "from": "implementing",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Architect APPROVE plan v9; UX Critic final PASS; Security static PASS; public/review RN Web PASS; pnpm check 611/611; public iOS export 1,450 modules; diff check and dev_flow validation PASS. Native and live RLS remain NOT TESTABLE."
+        }
+      ],
+      "next_step": "Next P1: FLOW-HOME-CHECKLIST-FILTERS-01. Write exact range/data/UX plan v1; Product, Architect, Critic and Security review before implementation. Keep routine phone/TestFlight checks separate.",
       "priority": "P1",
       "panels": [
         "1",
         "4"
       ],
       "risk_class": "M",
-      "checkpoint": "Hel Hem till Checklista till Hem lokalt QA/Reviewer; live status separat från FLOW-ROUTINE-RUNTIME-01.",
+      "checkpoint": "Avgränsad Hem → full Idag-checklista → källhandling → Checklistan/Hem lokalt QA/Reviewer; panel 4 förblir öppen tills FILTERS-paketet är accepterat. Live RLS/native hålls separat.",
       "test_evidence": [
-        "Riktat lyckat/fel/unknown-prov, datum/scope-regression, §14-bilder public/review"
+        "Riktade lyckat/fel/unknown- och scope/dagsbytesprov; public/review §14-renderbevis för Idag, inte full panelacceptans"
+      ],
+      "implementation_state": "Implemented and independently reviewed local Idag checklist slice; full panel 4 continues in FLOW-HOME-CHECKLIST-FILTERS-01.",
+      "evidence_status": "PASS local: 611 tests, public iOS export 1,450 modules, public/review browser evidence and final UX Reviewer. NOT TESTABLE: native VoiceOver/Dynamic Type/physical gestures and live Supabase/RLS."
+    },
+    {
+      "id": "FLOW-HOME-CHECKLIST-FILTERS-01",
+      "title": "Hem: Denna vecka, Alla och Kommande i Checklistan",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 4; docs/design/vision-rev02-screen-contracts.md panel 4",
+      "plan": "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md v1; detaljerad plan och review före ready",
+      "write_paths": [
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/daily-activity-data.ts",
+        "src/features/home/daily-activity-model.ts",
+        "src/features/home/README.md",
+        "tests/daily-activity-range.test.mjs",
+        "tests/daily-checklist-filters.test.mjs",
+        "tests/daily-activity-model.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "docs/design/evidence/flow-home-checklist-filters-2026-10-20",
+        "docs/tasks/dev/FLOW-HOME-CHECKLIST-FILTERS-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md"
+      ],
+      "acceptance": [
+        "Denna vecka är aktiv ISO-måndag–söndag i samma lokala datum-/hund-/kontoscope; visa endast sparade dagsförekomster med frysta snapshots, aldrig härledda missade dagar",
+        "Alla visar samtliga sparade dagsaktiviteter som finns kvar inom dokumenterad 30-dagars gallring och aldrig rutinmallar eller obegränsad historik",
+        "Kommande använder ett begränsat fönster om sju lokala kalenderdagar och endast verkliga framtida ägarplaner: återkommande rutininstanser och read-only dog_health_plans märkta Planerad; plan öppnar rätt destination och räknas aldrig som utförd eller i completed-progress",
+        "Framtida träningsval hittas inte på; visas bara om en befintlig godkänd källa faktiskt lagrar ett framtida urval",
+        "Filtersegment visas först när kompletta urval, paginering, local-date/DST/repeat-regler och distinct empty/loading/partial/error states fungerar; delvis läst data markeras aldrig som komplett",
+        "Panel 4 fungerar från Hem → Idag/Denna vecka/Alla/Kommande → korrekt hantering/källa → tillbaka; ring/count/rows och RLS-scope är sanningsenliga",
+        "Renderad public/review-evidens jämför hela panel 4 mot rev02 med §14 punkterna 1–18, stora textlägen och tydligt statusbesked för live backend/native"
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/daily-activity-range.test.mjs tests/daily-checklist-filters.test.mjs tests/daily-activity-model.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "Rendera och verifiera kompletta public/review filter- och planned-lägen; live Supabase/RLS där urvalet kräver ny range-fråga"
+      ],
+      "depends_on": [
+        "FLOW-HOME-CHECKLIST-01"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Skriv exakt data-/UX-plan v1; Product/Architect/Critic/Security granskar innan implementation. Verifiera återanvändbara range API och actual health plan destination; ingen kod före APPROVE.",
+      "priority": "P1",
+      "panels": [
+        "4"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Full panel 4 filter- och Kommande-resa efter accepterad Idag-slice; framtida planer är skrivskyddade och ingår aldrig som utförd progress.",
+      "test_evidence": [
+        "Monday/Sunday/year/DST/repeat boundaries, pagination completeness, 30-day retention, empty/partial/error, routine/training scope, Planerad health link, §14 image matrix, runtime RLS boundary"
       ],
       "implementation_state": "föreslagen; ingen kod i denna diff",
       "evidence_status": "not_run — required evidence listed in test_evidence"

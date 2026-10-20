@@ -70,7 +70,7 @@ test('Home routines use a checkbox, training rows open training, and the manager
   assert.equal((homeVariant.match(/accessibilityLiveRegion="polite"/g) ?? []).length, 2, 'routine and training mutation feedback is announced when it changes');
   assert.match(homeVariant, /label=\{`Kontrollera ändringen för \$\{label\} igen`\} accessibilityLabel=\{`Kontrollera ändringen för \$\{label\} igen`\}/, 'training retry identifies the activity being checked');
   assert.match(home, /onToggle=\{routineDay \? \(\) => item\.routineItemId && onSetRoutineCompletion/);
-  assert.match(home, /item\.kind === 'training' \? \(\) => onGo\('training'\)/);
+  assert.match(home, /item\.kind === 'training'[\s\S]*?onOpenTrainingStep\(item\.programId, item\.stepId, 'home'\)/);
   for (const action of ['onCreateRoutine', 'onUpdateRoutine', 'onDeleteRoutine', 'onAddRoutineToDay', 'onRemoveRoutineFromDay', 'onAddTrainingToDay', 'onRemoveTrainingFromDay']) {
     assert.match(manager, new RegExp(action));
   }

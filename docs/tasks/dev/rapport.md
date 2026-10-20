@@ -930,3 +930,13 @@ Vid 360×844/140 %-webbstresstest var åtgärdsknappen fullt åtkomlig utan öve
 - Omtest: 16/16 riktade, pnpm check 599/599, publik iOS-bundle 1 449 moduler, diff --check PASS, dev_flow validate PASS.
 - QA: kod/test PASS; samlad acceptans blockerad på renderad UI-matris, gråskala och faktisk AppScreen-marginal (NOT TESTABLE; renderer saknas). Security final APPROVE för statisk implementation; live RLS/native är NOT TESTABLE. Ingen Reviewer/DONE eftersom QA helhet inte passerar.
 - Queue: FLOW-LOG-01 blocked med nästa steg att återuppta render-/§14-bevis när godkänd renderer finns. Branch-checkpoint pushas innan nästa oberoende paket enligt Eriks mandat.
+
+### FLOW-HOME-CHECKLIST-01 — Idag-checklista, lokal checkpoint 2026-10-20
+
+- Levererar Hem → full dagslista → rutin eller exakt träningssteg → tillbaka. Endast Idag ingår; filterpaketet är nästa checkpoint och full panel 4 är fortsatt öppen tills dess.
+- Architect godkände plan v9; Security statisk PASS; slutlig UX/acceptance Reviewer PASS.
+- `AppScreen` bevarar scroll endast inom checklistflödet och tömmer offset vid exit. Scope-/dygnsbyte återför den faktiska child-routen till Hem.
+- QA: fokuserat 14/14, full `pnpm check` 611/611, public iOS-export 1 450 moduler, public/review RN Web PASS (12/13 respektive 13/13 assertions, 0 browser errors), `git diff --check` och `dev_flow validate` PASS.
+- Main hämtad och mergad: origin/main `00de202` (`mobile-ios-design`) plus två föregående upstream-commits. SwiftUI-exempel översattes till befintlig Expo/React Native-stack, tokens och tillgänglighetskontrakt; inga dependencies.
+- NOT TESTABLE: live Supabase/RLS, native VoiceOver/Dynamic Type/gestures, signerad build/TestFlight. Se `../design/evidence/flow-home-checklist-2026-10-20/VERIFICATION.md`.
+- Nästa: `FLOW-HOME-CHECKLIST-FILTERS-01` — skriv plan v1 och få Product/Architect/Critic/Security-review före implementation.

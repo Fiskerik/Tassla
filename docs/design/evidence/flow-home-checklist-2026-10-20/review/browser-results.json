@@ -1,0 +1,19 @@
+{
+  "passes": [
+    "Portrait label 14.91:1 and measured week-strip fade at 375px",
+    "Home source states and layout at 375px",
+    "Portrait label 14.91:1 and measured week-strip fade at 430px",
+    "Home source states and layout at 430px",
+    "Routine detail sheet and same-row pending/error/unknown recovery",
+    "Permanent checklist entry opens a Home child route from ready/loading/error/empty states",
+    "Checklist zero/one/five/seven states show truthful progress without zero-of-zero",
+    "Checklist loading and read-error states do not claim an empty or complete list",
+    "Checklist fits 430px, short 375×667 viewport and 140% text without horizontal overflow",
+    "Training detail opens at top with a visible back action; lower checklist row returns at its saved scroll position",
+    "Leaving Checklistan for Hem clears the saved offset; reopening starts at the top",
+    "Scope invalidation returns to Home and reopening Checklistan starts at the top in the changed dog scope",
+    "Home and Checklist navigation, review gate, reduced motion and 140% text"
+  ],
+  "pageErrors": [],
+  "scope": "Home and shared navigation; synthetic data and React Native Web, not device/backend certification"
+}

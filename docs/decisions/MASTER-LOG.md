@@ -171,3 +171,8 @@ Architect v4 APPROVE, UX Critic PROCEED; Security pre-review APPROVE WITH CONDIT
 - Öppna gränser: native VoiceOver/TalkBack, Dynamic Type, riktiga enhetsytor, live Supabase/RLS, signerad build och full rev02-jämförelse är NOT TESTABLE.
 - Checkpoint: commit 67424a4 (feat: improve empty-state feedback for home and log) pushad till origin/codex/tassla-ui-ux-bundle-2026-10-18 efter hook-PASS. Nästa: 5b UI-EMPTY-FEEDBACK-KNOWLEDGE-TRAINING.
 - Nästa: 5b UI-EMPTY-FEEDBACK-KNOWLEDGE-TRAINING efter denna checkpoint.
+
+
+## FLOW-HOME-CHECKLIST-01 — lokal Idag-slice, 2026-10-20
+
+Implementera checklistans fulla Idag-resa som en underordnad Hem-vy med samma konto-/hund-/dag-/tidszonscope och bekräftade datakällor. Visa inga Denna vecka/Alla/Kommande-filter innan verkliga urval och fullständig paginering finns; de tillhör `FLOW-HOME-CHECKLIST-FILTERS-01`. Träningsdetaljen börjar överst; scrollposition bevaras endast inom checklistflödet och rensas vid exit eller scope-/dygnsinvalidering. Inga parallella completion writes, ny cache, schema eller dataändamål tillkommer. Mobile iOS Design skill från `origin/main` används enligt Tasslas React Native-anpassning; SwiftUI-exempel är inte implementeringskrav. Native, TestFlight och live RLS redovisas separat.

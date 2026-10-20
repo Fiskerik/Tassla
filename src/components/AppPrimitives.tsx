@@ -8,16 +8,24 @@ import { shiftCalendarMonth } from './calendar-month';
 import { useReducedMotion } from './ui/Motion';
 import { theme, tokens } from '../theme/tokens';
 
-export function AppScreen({ children, footer, scrollKey, refreshing = false, onRefresh, refreshAccessibilityLabel = 'Uppdatera sidan' }: { children: ReactNode; footer?: ReactNode; scrollKey?: string; refreshing?: boolean; onRefresh?: () => void; refreshAccessibilityLabel?: string }) {
+export function AppScreen({ children, footer, scrollKey, preserveScrollKey, refreshing = false, onRefresh, refreshAccessibilityLabel = 'Uppdatera sidan' }: { children: ReactNode; footer?: ReactNode; scrollKey?: string; preserveScrollKey?: string; refreshing?: boolean; onRefresh?: () => void; refreshAccessibilityLabel?: string }) {
   const scroll = useRef<ScrollView>(null);
+  const preservedOffset = useRef(0);
+  const preserveFlowActive = useRef(false);
   const insets = useSafeAreaInsets();
   const hasFooter = Boolean(footer);
-  useLayoutEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [scrollKey]);
+  useLayoutEffect(() => {
+    const flowActive = Boolean(preserveScrollKey);
+    preserveFlowActive.current = flowActive;
+    const y = flowActive && scrollKey === preserveScrollKey ? preservedOffset.current : 0;
+    if (!flowActive) preservedOffset.current = 0;
+    scroll.current?.scrollTo({ y, animated: false });
+  }, [preserveScrollKey, scrollKey]);
   return (
     <SafeAreaView style={styles.safeArea} edges={hasFooter ? ['top', 'left', 'right'] : ['top', 'right', 'bottom', 'left']}>
       <View style={styles.screenLayout}>
         <KeyboardAvoidingView style={styles.keyboardLayout} behavior="padding">
-          <ScrollView ref={scroll} showsVerticalScrollIndicator={false} directionalLockEnabled style={styles.scrollArea} contentContainerStyle={styles.page} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled" refreshControl={onRefresh ? <RefreshControl accessibilityLabel={refreshAccessibilityLabel} refreshing={refreshing} onRefresh={onRefresh} tintColor={tokens.colors.primary} colors={[tokens.colors.primary]} /> : undefined}>
+          <ScrollView ref={scroll} directionalLockEnabled onScroll={preserveScrollKey && scrollKey === preserveScrollKey ? (event) => { if (preserveFlowActive.current) preservedOffset.current = Math.max(0, event.nativeEvent.contentOffset.y); } : undefined} scrollEventThrottle={preserveScrollKey && scrollKey === preserveScrollKey ? 16 : undefined} showsVerticalScrollIndicator={false} style={styles.scrollArea} contentContainerStyle={styles.page} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled" refreshControl={onRefresh ? <RefreshControl accessibilityLabel={refreshAccessibilityLabel} refreshing={refreshing} onRefresh={onRefresh} tintColor={tokens.colors.primary} colors={[tokens.colors.primary]} /> : undefined}>
             {children}
           </ScrollView>
         </KeyboardAvoidingView>

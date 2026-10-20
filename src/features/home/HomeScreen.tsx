@@ -36,6 +36,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   dailyFixture, dailyState = 'hidden', dailyDateKey = '', dailyScopeKey, dailyActivities = [], routineTemplates = [], routineDaySkips = [], dailyTrainingOptions = [],
   dailyRefreshing = false, dailyRefreshError = false,
   dailyMutationBusy = false, dailyMutationKey = '', dailyMutationMessage = '', dailyMutationError = false, onRetryDaily,
+  onOpenChecklist, onOpenTrainingStep,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay,
   onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, onGo, onOpenContent, onRetryContent }: {
   dog: OwnedDog;
@@ -71,6 +72,8 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   dailyMutationKey?: string;
   dailyMutationMessage?: string;
   dailyMutationError?: boolean;
+  onOpenChecklist?: () => void;
+  onOpenTrainingStep?: (programId: string, stepId: string, returnPage: 'home' | 'checklist') => void;
   onRetryDaily?: () => void;
   onCreateRoutine?: (routine: DailyRoutineCreateInput) => Promise<{ status: 'saved' | 'failed' | 'unknown' } | void>;
   onUpdateRoutine?: (routine: DailyRoutine, label: string, checklist: DailyRoutineChecklistItem[], repeat: DailyRoutineRepeatValues) => Promise<{ status: 'saved' | 'failed' | 'unknown' } | void>;
@@ -173,6 +176,12 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
             <Text style={styles.manageDailyLabel}>Hantera</Text>
           </MotionPressable>
         </View>
+        <MotionPressable testID="home-open-checklist" accessibilityRole="button" accessibilityLabel="Öppna dagens checklista"
+          onPress={onOpenChecklist} style={({ pressed }) => [styles.checklistLink, pressed && styles.headingPressed]}>
+          <Ionicons name="list-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
+          <Text style={styles.checklistLinkLabel}>Checklista</Text>
+          <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
+        </MotionPressable>
         {dailyRefreshError && dailyState === 'ready' ? <View style={styles.dailyRefreshError} accessibilityLiveRegion="polite">
           <Text style={styles.emptyText}>Uppdateringen kunde inte hämtas. Du ser senast hämtade uppgifter.</Text>
           {onRetryDaily ? <Button variant="tertiary" label="Försök igen" accessibilityLabel="Försök uppdatera dagens uppgifter igen" onPress={onRetryDaily} /> : null}
@@ -206,14 +215,13 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
                     completed={item.completed} pending={itemMutation && dailyMutationBusy}
                     statusMessage={itemMutation ? dailyMutationMessage : ''} statusError={itemMutation && dailyMutationError}
                     onToggle={routineDay ? () => item.routineItemId && onSetRoutineCompletion?.(routineDay, item.routineItemId, !item.completed) : undefined}
-                    onOpen={item.kind === 'training' ? () => onGo('training') : () => openManager(routineDay?.routine_id ?? null)}
+                    onOpen={item.kind === 'training'
+                      ? () => item.programId && item.stepId && onOpenTrainingStep
+                        ? onOpenTrainingStep(item.programId, item.stepId, 'home')
+                        : onGo('training')
+                      : () => openManager(routineDay?.routine_id ?? null)}
                     onRetry={itemMutation ? (onRetryDailyMutation ?? (isReadbackError ? onRetryDaily : undefined)) : undefined} />;
                 })}
-                {dailyActivities.length > 5 ? <MotionPressable accessibilityRole="button" accessibilityLabel={`Visa alla ${dailyActivities.length} uppgifter`}
-                  onPress={() => openManager()} style={({ pressed }) => [styles.showAll, pressed && styles.headingPressed]}>
-                  <Text style={styles.showAllText}>Visa alla</Text>
-                  <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
-                </MotionPressable> : null}
               </View> : null}
       </View>
     </Card>
@@ -387,6 +395,8 @@ const styles = StyleSheet.create({
   dailyTitle: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },
   dailyCount: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
   manageDaily: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.xs, borderRadius: tokens.radius.sm },
+  checklistLink: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.home.canvas },
+  checklistLinkLabel: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700', flex: 1 },
   manageDailyLabel: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
   headingPressed: { backgroundColor: tokens.colors.selectedSurface },
   dailyList: { gap: tokens.spacing.xs },
@@ -397,8 +407,6 @@ const styles = StyleSheet.create({
   dailyState: { gap: tokens.spacing.xs },
   dailyRefreshError: { gap: tokens.spacing.xs },
   emptyText: { ...tokens.typography.caption, color: tokens.colors.home.textMuted, paddingVertical: tokens.spacing.xs },
-  showAll: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs },
-  showAllText: { ...tokens.typography.caption, color: tokens.colors.primary, textDecorationLine: 'underline' },
   actionsSection: { gap: tokens.spacing.xs },
   actionsHeading: { ...tokens.typography.caption, fontWeight: '700', color: tokens.colors.home.text },
   actions: { flexDirection: 'row', gap: tokens.spacing.sm },

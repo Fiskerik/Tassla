@@ -92,7 +92,7 @@ import {
 } from '../../data/app-data';
 import { localDate } from '../onboarding/dog';
 import { calendarMarkerScopeKey } from '../puppy-log/log-calendar-model';
-import { homeAgeInWeeks } from './home-today';
+import { acquireTrainingMutationLease, homeAgeInWeeks, ownsTrainingMutationLease, releaseTrainingMutationLease, type TrainingMutationLease } from './home-today';
 import { HealthScreen } from '../health/HealthScreen';
 import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
 import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
@@ -102,9 +102,10 @@ import { checklistMemoryScope, keepChecklistMemoryForScope, updateChecklistMemor
 import { checklistReadCacheScope, clearChecklistReadCache, keepChecklistReadCacheForScope } from '../knowledge/checklist-data';
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, REVIEW_TRAINING_PROGRAMS } from '../knowledge/review-content';
 import { HomeScreen, type HomeDailyTrainingOption } from './HomeScreen';
+import { DailyChecklistScreen } from './DailyChecklistScreen';
 import { deriveHomeDailyActivities, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep } from './daily-activity-model';
 import { activeMainTabDestination, isMainTabDestination, mainTabTransitionDirection, nextMainTabDestination } from './main-navigation';
-import { BottomNav, MainSwipeNavigation } from '../../components/ui';
+import { AppBar, BottomNav, MainSwipeNavigation } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
 import { tokens } from '../../theme/tokens';
 import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
@@ -126,7 +127,8 @@ import { reminderService, type ReminderContext, type ReminderReconcileResult } f
 
 const reviewContentEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
 
-type ProductPage = 'home' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings' | 'account-settings' | 'beta-info';
+type ProductPage = 'home' | 'checklist' | 'home-training-detail' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings' | 'account-settings' | 'beta-info';
+type HomeTrainingFocus = { selectionKey: string; dailyLifetime: string; programId: string; stepId: string; returnPage: 'home' | 'checklist' };
 type PendingLogMutation =
   | { kind: 'insert'; operation: DogEventOperation; lifetime: string }
   | { kind: 'update'; mutationId: string; id: string; type: LogEventType; occurredAt: string; changes: DogEventChanges; lifetime: string }
@@ -184,6 +186,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
   const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>(() => ({ page: initialPage, previousPage: 'home' }));
+  const [homeTrainingFocus, setHomeTrainingFocus] = useState<HomeTrainingFocus | null>(null);
+  const [homeChecklistScope, setHomeChecklistScope] = useState<{ selectionKey: string; dailyLifetime: string } | null>(null);
   const [deviceTimeZone, setDeviceTimeZone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
   const initialPageConsumed = useRef(false);
   useEffect(() => {
@@ -327,7 +331,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const plannedHealthFlightToken = useRef<object | null>(null);
   const pendingProfileMutation = useRef<PendingProfileMutation | null>(null);
   const profileMutationInFlight = useRef(false);
-  const trainingMutationInFlight = useRef(false);
+  const trainingMutationLease = useRef<TrainingMutationLease | null>(null);
   const dailyGeneration = useRef(0);
   const dailyMutationInFlight = useRef(false);
   const trainingSnapshotRef = useRef<{ scope: string; value: TrainingWorkspaceSnapshot; updatedAt: number } | null>(null);
@@ -467,14 +471,22 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       trainingGeneration.current += 1;
       trainingReadFlight.current?.controller.abort();
       trainingReadFlight.current = null;
+      trainingMutationLease.current = null;
+      setBusyStepKey(null);
       trainingSnapshotRef.current = null;
       setTraining({ programs: [], paused: [] });
       setTrainingSelectionKey(null);
       setTrainingState('loading');
       setTrainingError('');
+      setHomeChecklistScope(null);
+      setHomeTrainingFocus(null);
+      if (page === 'checklist' || page === 'home-training-detail') {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- scope ownership invalidates the child route before it can render for a different dog/account.
+        setPage('home');
+      }
     }
     previousTrainingLifetime.current = currentSelectionKey;
-  }, [currentSelectionKey]);
+  }, [currentSelectionKey, page, setPage]);
 
   useLayoutEffect(() => {
     if (dailyLifetime.current && dailyLifetime.current !== currentDailyLifetime) {
@@ -482,6 +494,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       dailyReadFlight.current?.controller.abort();
       dailyReadFlight.current = null;
       dailySnapshotRef.current = null;
+      trainingMutationLease.current = null;
+      setBusyStepKey(null);
+      setHomeTrainingFocus(null);
       setDailySnapshot(null);
       setDailyTrainingSnapshot(null);
       setDailySnapshotLifetime('');
@@ -492,9 +507,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       pendingDailyRetry.current = null;
       setDailyMessage('');
       setDailyMessageError(false);
+      setHomeChecklistScope(null);
+      if (page === 'checklist' || page === 'home-training-detail') {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- a day/timezone boundary invalidates the child route before it can render stale data.
+        setPage('home');
+      }
     }
     dailyLifetime.current = currentDailyLifetime;
-  }, [currentDailyLifetime]);
+  }, [currentDailyLifetime, page, setPage]);
 
   useLayoutEffect(() => {
     profileLifetime.current = currentProfileLifetime;
@@ -1086,14 +1106,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [age, client, currentSelectionKey, dog]);
 
   useEffect(() => {
-    if (page !== 'home' && page !== 'training') return;
+    if (page !== 'home' && page !== 'checklist' && page !== 'home-training-detail' && page !== 'training') return;
     const refresh = setTimeout(() => { void reloadDailyActivity(); }, 0);
     return () => clearTimeout(refresh);
   }, [currentDailyLifetime, page, reloadDailyActivity]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active' && (page === 'home' || page === 'training')) void reloadDailyActivity();
+      if (state === 'active' && (page === 'home' || page === 'checklist' || page === 'home-training-detail' || page === 'training')) void reloadDailyActivity();
     });
     return () => subscription.remove();
   }, [page, reloadDailyActivity]);
@@ -1107,6 +1127,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const dailyActivities = dailyStateForView === 'ready' && dailySnapshotForView && dailyTrainingForView && dailyDateKey
     ? deriveHomeDailyActivities(dailySnapshotForView, dailyTrainingForView.programs.filter((program) => !program.id.startsWith('review-v1:training:')), dog.id, dailyDateKey)
     : [];
+  const visibleHomeTrainingFocus = homeTrainingFocus?.selectionKey === currentSelectionKey
+    && homeTrainingFocus.dailyLifetime === currentDailyLifetime ? homeTrainingFocus : null;
+  const homeChecklistScopeIsCurrent = homeChecklistScope?.selectionKey === currentSelectionKey
+    && homeChecklistScope.dailyLifetime === currentDailyLifetime;
+  const visiblePage: ProductPage = (page === 'checklist' || page === 'home-training-detail') && !homeChecklistScopeIsCurrent ? 'home' : page;
   const selectedTrainingKeys = new Set(dailySnapshotForView?.trainingSelections.map((row) => `${row.program_version_id}:${row.step_id}`) ?? []);
   const dailyTrainingOptions: HomeDailyTrainingOption[] = dailyStateForView === 'ready' && dailyDateKey
     ? (dailyTrainingForView?.programs ?? []).filter((program) => !program.id.startsWith('review-v1:training:')).flatMap((program) => {
@@ -2139,18 +2164,52 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     await reloadDailyActivity(true, true);
   }
 
-  async function completeStep(program: PublishedTrainingProgram, stepId: string): Promise<{ programId: string; stepId: string } | false> {
-    if (trainingMutationInFlight.current) return false;
-    const key = `${program.id}:${stepId}`;
-    trainingMutationInFlight.current = true;
+  function openHomeChecklist() {
+    setHomeChecklistScope({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime });
+    setPage('checklist');
+  }
+
+  function openHomeTrainingStep(programId: string, stepId: string, returnPage: 'home' | 'checklist') {
+    const isSelectedToday = dailyActivities.some((activity) => activity.kind === 'training'
+      && activity.programId === programId && activity.stepId === stepId);
+    if (!isSelectedToday || accountDeletionInvalidated.current || currentSelectionKeyRef.current !== currentSelectionKey) return;
+    setHomeChecklistScope({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime });
+    setHomeTrainingFocus({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, programId, stepId, returnPage });
+    setPage('home-training-detail');
+  }
+
+  function beginTrainingMutation(key: string, expectedScope: string | null): TrainingMutationLease | null {
+    const scope = currentSelectionKeyRef.current;
+    if (!mounted.current) return null;
+    const lease = acquireTrainingMutationLease(trainingMutationLease.current, expectedScope, scope, accountDeletionInvalidated.current);
+    if (!lease) return null;
+    trainingMutationLease.current = lease;
     setBusyStepKey(key);
     setTrainingError('');
+    return lease;
+  }
+
+  function isTrainingMutationCurrent(lease: TrainingMutationLease): boolean {
+    return ownsTrainingMutationLease(trainingMutationLease.current, lease, currentSelectionKeyRef.current, accountDeletionInvalidated.current);
+  }
+
+  function finishTrainingMutation(lease: TrainingMutationLease) {
+    const ownsLock = trainingMutationLease.current === lease;
+    trainingMutationLease.current = releaseTrainingMutationLease(trainingMutationLease.current, lease);
+    if (ownsLock && mounted.current && currentSelectionKeyRef.current === lease.scope && !accountDeletionInvalidated.current) setBusyStepKey(null);
+  }
+
+  async function completeStep(program: PublishedTrainingProgram, stepId: string): Promise<{ programId: string; stepId: string } | false> {
+    const key = `${program.id}:${stepId}`;
+    const lease = beginTrainingMutation(key, currentSelectionKey);
+    if (!lease || !isTrainingMutationCurrent(lease)) return false;
     try {
       const outcome = await insertTrainingProgress(client, { dog_id: dog.id, program_version_id: program.id, step_id: stepId });
+      if (!isTrainingMutationCurrent(lease)) return false;
       if (outcome.status === 'saved') {
         try {
           const refreshed = await reloadTraining({ force: true, supersede: true, publishToDaily: true });
-          if (!mounted.current) return false;
+          if (!isTrainingMutationCurrent(lease)) return false;
           const confirmedProgram = refreshed ? refreshed.programs.find((item) => item.id === program.id) : undefined;
           if (program.completedStepIds.includes(stepId) || !confirmedProgram?.completedStepIds.includes(stepId)) {
             setTrainingError('Steget sparades, men en ny statusändring kunde inte bekräftas. Läs in programmet igen innan du fortsätter.');
@@ -2159,7 +2218,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
           void analyticsService.track('training_completed');
           return { programId: program.id, stepId };
         } catch {
-          if (!mounted.current) return false;
+          if (!isTrainingMutationCurrent(lease)) return false;
           setTrainingState('error');
           setTrainingError('Steget är sparat, men programstatus kunde inte hämtas. Läs in programmet igen innan du fortsätter.');
           return false;
@@ -2167,11 +2226,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       }
       let progressChecked = true;
       try {
+        if (!isTrainingMutationCurrent(lease)) return false;
         await reloadTraining({ force: true, supersede: true, publishToDaily: true });
+        if (!isTrainingMutationCurrent(lease)) return false;
       } catch {
+        if (!isTrainingMutationCurrent(lease)) return false;
         progressChecked = false;
       }
-      if (!mounted.current) return false;
+      if (!isTrainingMutationCurrent(lease)) return false;
       setTrainingError(!progressChecked
         ? 'Vi kunde inte kontrollera om steget sparades. Läs in programmet igen innan du försöker på nytt.'
         : outcome.status === 'unknown'
@@ -2179,27 +2241,23 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
           : 'Steget kunde inte registreras. Kontrollera anslutningen och försök igen.');
       return false;
     } catch {
-      if (!mounted.current) return false;
+      if (!isTrainingMutationCurrent(lease)) return false;
       setTrainingError('Steget kunde inte registreras. Kontrollera anslutningen och försök igen.');
       return false;
     } finally {
-      trainingMutationInFlight.current = false;
-      if (mounted.current) setBusyStepKey(null);
+      finishTrainingMutation(lease);
     }
   }
 
   async function unmarkStep(program: PublishedTrainingProgram, stepId: string): Promise<{ programId: string; stepId: string } | false> {
-    if (trainingMutationInFlight.current) return false;
-    const selectionKey = currentSelectionKey;
     const key = `${program.id}:${stepId}:unmark`;
-    trainingMutationInFlight.current = true;
-    setBusyStepKey(key);
-    setTrainingError('');
+    const lease = beginTrainingMutation(key, currentSelectionKey);
+    if (!lease || !isTrainingMutationCurrent(lease)) return false;
     try {
       const outcome = await deleteTrainingProgress(client, dog.id, program.id, stepId);
-      if (!mounted.current || currentSelectionKeyRef.current !== selectionKey) return false;
+      if (!isTrainingMutationCurrent(lease)) return false;
       const refreshed = await reloadTraining({ force: true, supersede: true, publishToDaily: true });
-      if (!mounted.current || currentSelectionKeyRef.current !== selectionKey) return false;
+      if (!isTrainingMutationCurrent(lease)) return false;
       const confirmedProgram = refreshed.programs.find((item) => item.id === program.id);
       if (confirmedProgram && !confirmedProgram.completedStepIds.includes(stepId)) return { programId: program.id, stepId };
       setTrainingError(!confirmedProgram
@@ -2209,39 +2267,40 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
           : 'Vi kunde inte bekräfta att steget avmarkerades. Programmet har hämtats igen; kontrollera statusen innan du försöker på nytt.');
       return false;
     } catch {
-      if (!mounted.current || currentSelectionKeyRef.current !== selectionKey) return false;
+      if (!isTrainingMutationCurrent(lease)) return false;
       setTrainingError('Vi kunde inte kontrollera om steget avmarkerades. Hämta programmet igen innan du ändrar det.');
       return false;
     } finally {
-      trainingMutationInFlight.current = false;
-      if (mounted.current) setBusyStepKey(null);
+      finishTrainingMutation(lease);
     }
   }
 
   async function resetProgram(program: PublishedTrainingProgram) {
-    if (trainingMutationInFlight.current) return;
-    trainingMutationInFlight.current = true;
-    setBusyStepKey(`${program.id}:reset`);
-    setTrainingError('');
+    const lease = beginTrainingMutation(`${program.id}:reset`, currentSelectionKey);
+    if (!lease || !isTrainingMutationCurrent(lease)) return;
     try {
       for (const stepId of program.completedStepIds) {
+        if (!isTrainingMutationCurrent(lease)) return;
         const outcome = await deleteTrainingProgress(client, dog.id, program.id, stepId);
-        if (!mounted.current) return;
+        if (!isTrainingMutationCurrent(lease)) return;
         if (outcome.status !== 'saved') throw new Error('Progress could not be cleared');
       }
+      if (!isTrainingMutationCurrent(lease)) return;
       await reloadTraining({ force: true, supersede: true, publishToDaily: true });
+      if (!isTrainingMutationCurrent(lease)) return;
     } catch {
-      if (!mounted.current) return;
+      if (!isTrainingMutationCurrent(lease)) return;
       try {
         await reloadTraining({ force: true, supersede: true, publishToDaily: true });
+        if (!isTrainingMutationCurrent(lease)) return;
         setTrainingError('Alla genomförda steg kunde inte rensas. Kontrollera programmet och försök igen.');
       } catch {
+        if (!isTrainingMutationCurrent(lease)) return;
         setTrainingState('error');
         setTrainingError('Vi kunde inte kontrollera om stegen rensades. Hämta programmet igen innan du ändrar det.');
       }
     } finally {
-      trainingMutationInFlight.current = false;
-      if (mounted.current) setBusyStepKey(null);
+      finishTrainingMutation(lease);
     }
   }
 
@@ -2311,7 +2370,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       || pendingHealthHistoryMutation.current || pendingPlannedHealthMutation.current
       || pendingProfileMutation.current || logMutationFlight.current || healthMutationInFlight.current
       || healthHistoryMutationInFlight.current || plannedHealthMutationInFlight.current
-      || profileMutationInFlight.current || trainingMutationInFlight.current || dailyMutationInFlight.current
+      || profileMutationInFlight.current || trainingMutationLease.current !== null || dailyMutationInFlight.current
       || pendingDailyRetry.current || notificationBusy || attributionBusy || accountDeleteBusy;
     if (unresolvedWrite) {
       setAccountDeleteStatus('blocked');
@@ -2337,6 +2396,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
       serverConfirmed = true;
       accountDeletionInvalidated.current = true;
+      trainingMutationLease.current = null;
+      setBusyStepKey(null);
+      setHomeTrainingFocus(null);
+      if (page === 'checklist' || page === 'home-training-detail') setPage('home');
       reminderService.setActiveContext(null, null);
       setAccountDeleteStatus('confirmed');
       let cleanupFailed = false;
@@ -2474,7 +2537,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const transitionDirection = navigationDirection(previousPage, page);
   const mainTabToMainTab = isMainTabDestination(previousPage) && isMainTabDestination(page);
   const transitionDistance = mainTabToMainTab ? tokens.motion.pageDistance : tokens.motion.distance;
-  return <AppScreen scrollKey={page} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={activeMainTabDestination(page)} onChange={navigateMainTab} />}
+  const scrollKey = visiblePage === 'checklist' ? 'home-checklist-flow' : visiblePage;
+  const preserveScrollKey = visiblePage === 'checklist' || visiblePage === 'home-training-detail' ? 'home-checklist-flow' : undefined;
+  return <AppScreen scrollKey={scrollKey} preserveScrollKey={preserveScrollKey} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={activeMainTabDestination(visiblePage)} onChange={navigateMainTab} />}
     refreshing={page === 'home' ? dailyRefreshing : page === 'log' ? logRefreshing : false}
     onRefresh={page === 'home' ? () => { void reloadDailyActivity(true, false); } : page === 'log' ? () => { void reloadEvents('refresh'); } : undefined}
     refreshAccessibilityLabel={page === 'log' ? 'Uppdatera loggen' : 'Uppdatera Hem'}>
@@ -2484,6 +2549,42 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   </AppScreen>;
 
   function renderPage() {
+    const page = visiblePage;
+    if (page === 'checklist') return <DailyChecklistScreen key={`${currentDailyLifetime}:checklist`}
+      dogName={dog.name} dateKey={dailyDateKey ?? ''} state={dailyStateForView} activities={dailyActivities}
+      refreshing={dailyRefreshing} refreshError={dailyRefreshError} mutationBusy={Boolean(dailyBusyKey)}
+      mutationKey={dailyMessageKey} mutationMessage={dailyMessage} mutationError={dailyMessageError}
+      onBack={() => setPage('home')} onRetry={() => { void reloadDailyActivity(true); }}
+      onRetryMutation={pendingDailyRetry.current?.lifetime === currentDailyLifetime ? retryDailyMutation : undefined}
+      onOpenTrainingStep={openHomeTrainingStep} onSetRoutineCompletion={(row, itemId, completed) => {
+        void runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed));
+      }}
+      routines={dailySnapshotForView?.routines ?? []} routineDaySkips={dailySnapshotForView?.routineDaySkips ?? []}
+      trainingOptions={dailyTrainingOptions}
+      onCreateRoutine={(input: DailyRoutineCreateInput) => {
+        const row = { ...input, dog_id: dog.id };
+        return runDailyMutation(`create-routine:${row.id}`, () => createDailyRoutine(client, row, dailyTimeZone));
+      }}
+      onUpdateRoutine={(routine, label, checklist, repeat) => runDailyMutation(`update-routine:${routine.id}`,
+        () => replaceDailyRoutine(client, routine, label, checklist, repeat, dailyTimeZone))}
+      onDeleteRoutine={(routine) => runDailyMutation(`delete-routine:${routine.id}`, () => deleteDailyRoutine(client, routine))}
+      onAddRoutineToDay={(routine) => {
+        if (!dailyDateKey) return;
+        const skipped = dailySnapshotForView?.routineDaySkips.find((row) => row.routine_id === routine.id) ?? null;
+        const row: DailyRoutineDayDraft = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, routine_id: routine.id,
+          date_key: dailyDateKey, time_zone: dailyTimeZone, routine_label_snapshot: routine.label, checklist_snapshot: routine.checklist };
+        void runDailyMutation(`select-routine:${routine.id}`, () => addRoutineToDay(client, row, skipped, ExpoCrypto.randomUUID()));
+      }}
+      onRemoveRoutineFromDay={(row, routine) => { void runDailyMutation(`remove-routine:${row.id}`,
+        () => removeRoutineFromDay(client, row, routine, ExpoCrypto.randomUUID())); }}
+      onAddTrainingToDay={(option) => {
+        if (!dailyDateKey) return;
+        const row: DailyTrainingSelection = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, program_version_id: option.versionId,
+          step_id: option.stepId, date_key: dailyDateKey, time_zone: dailyTimeZone };
+        void runDailyMutation(`select-training:${option.versionId}:${option.stepId}`, () => addTrainingSelection(client, row));
+      }}
+      onRemoveTrainingFromDay={(row) => { void runDailyMutation(`remove-training:${row.id}`, () => removeTrainingSelection(client, row)); }}
+      onGoTraining={() => navigateMainTab('training')} />;
     if (page === 'home') return <HomeScreen
       dog={dog}
       ownedDogs={ownedDogs}
@@ -2518,6 +2619,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       dailyMutationMessage={dailyMessage}
       dailyMutationError={dailyMessageError}
       onRetryDaily={() => { void reloadDailyActivity(true); }}
+      onOpenChecklist={openHomeChecklist}
+      onOpenTrainingStep={openHomeTrainingStep}
       onCreateRoutine={(input: DailyRoutineCreateInput) => {
         const row = { ...input, dog_id: dog.id };
         return runDailyMutation(`create-routine:${row.id}`, () => createDailyRoutine(client, row, dailyTimeZone));
@@ -2585,6 +2688,32 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
           setPage('knowledge');
         }} />}
     </>;
+    if (page === 'home-training-detail') {
+      const focus = visibleHomeTrainingFocus;
+      const returnToSource = () => {
+        setHomeTrainingFocus(null);
+        setPage(focus?.returnPage ?? 'home');
+      };
+      if (!focus) return <>
+        <AppBar mode="Back" title="Träningssteg" actionLabel="Tillbaka till Hem" onAction={() => setPage('home')} variant="compact" />
+        <MessageCard>Träningssteget hör inte längre till dagens aktiva lista.</MessageCard>
+      </>;
+      if (visibleTrainingState === 'loading') return <>
+        <AppBar mode="Back" title="Träningssteg" actionLabel={focus.returnPage === 'checklist' ? 'Tillbaka till Checklistan' : 'Tillbaka till Hem'} onAction={returnToSource} variant="compact" />
+        <PageHeading title="Träningssteg" description="Hämtar det valda programmet…" />
+      </>;
+      if (visibleTrainingState === 'error') return <>
+        <AppBar mode="Back" title="Träningssteg" actionLabel={focus.returnPage === 'checklist' ? 'Tillbaka till Checklistan' : 'Tillbaka till Hem'} onAction={returnToSource} variant="compact" />
+        <MessageCard tone="error">{trainingError || 'Programmet kunde inte hämtas.'}</MessageCard>
+        <PrimaryButton title="Försök igen" onPress={() => { void retryTraining(); }} />
+      </>;
+      return <PublishedTrainingScreen ageWeeks={age} programs={training.programs} paused={training.paused}
+        reviewMode={reviewContentEnabled && training.programs.some((program) => program.id.startsWith('review-v1:training:'))}
+        busyStepKey={busyStepKey} error={trainingError} onCompleteStep={completeStep} onUnmarkStep={unmarkStep}
+        focusStep={{ programId: focus.programId, stepId: focus.stepId, returnPage: focus.returnPage }}
+        onCloseStep={returnToSource} onContinue={returnToSource} onResetProgram={(program) => { void resetProgram(program); }}
+        onRetry={() => { void retryTraining(); }} />;
+    }
     if (page === 'more') return <MoreScreen onNavigate={(destination) => {
       if (destination === 'reminders') {
         setNotificationSaved(false);

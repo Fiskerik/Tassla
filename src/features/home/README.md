@@ -39,3 +39,8 @@ I `DailyActivityManagerSheet` staplas rutinens dagsval och radering när fönstr
 Hem använder den befintliga dagsladdaren med aktiv hund, konto, lokal dag och tidszon. En samtidig läsning för samma scope delas i stället för att avbrytas.
 
 Logg har ett scope per konto, kontogeneration och hund. Samtidiga första-sidans läsningar delar en flight; scopebyte döljer gamla rader direkt och avbryter föregående anrop. En uppdatering bevarar lokalt bekräftade ändringar som gjorts medan nätläsningen pågår. Uppdateringsfel visas separat från initial laddning och tom lista, med raderna kvar och ett nytt försök. RefreshControl kopplas bara in på Hem och Logg; native svep behöver verifieras på enheten.
+
+
+## Dagens fullständiga checklista
+
+`ProductWorkspace` visar Hemmets permanenta Checklista-ingång som en underordnad Hem-route. `DailyChecklistScreen` återanvänder samma hund-, konto-, lokal-dag-, tidszons- och aktivitetskälla som Hem. Träningsdetaljen startar överst och tillbaka till checklistan återställer samma källrad. Scrollpositionen finns bara kvar medan checklistflödet är aktivt; när man går tillbaka till Hem töms offseten, så nästa öppning börjar vid rubriken. Konto-/hund-/dags-/tidszonsskifte tömmer också child route och fokus. De senare checklistfiltren ligger i det separata `FLOW-HOME-CHECKLIST-FILTERS-01`-paketet. Renderad evidens finns i `docs/design/evidence/flow-home-checklist-2026-10-20/`; webfixture är syntetisk och ersätter inte native eller live RLS-verifiering.

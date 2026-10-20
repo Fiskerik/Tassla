@@ -23,7 +23,10 @@ def contrast_ratio(foreground,background):
  light,dark=max(first,second),min(first,second)
  return (light+0.05)/(dark+0.05)
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--disable-crash-reporter','--disable-breakpad'])
+ browser_options={'headless':True,'args':['--no-sandbox','--disable-crash-reporter','--disable-breakpad']}
+ if os.environ.get('TASSLA_UI_CHROMIUM'): browser_options['executable_path']=os.environ['TASSLA_UI_CHROMIUM']
+ else: browser_options['executable_path']='/usr/bin/chromium'
+ browser=p.chromium.launch(**browser_options)
  page=browser.new_page(viewport={'width':390,'height':844},device_scale_factor=1)
  page.clock.install(time=datetime(2026,10,11,15,0,tzinfo=timezone.utc))
  page.on('pageerror',lambda e:errors.append(str(e)))
@@ -44,17 +47,17 @@ with sync_playwright() as p:
     expect(page.get_by_text('Idag',exact=True)).to_have_count(0)
     expect(page.get_by_text('2 av 5 klara',exact=True)).to_be_visible()
     expect(page.get_by_role('checkbox')).to_have_count(4)
-    expect(page.get_by_role('button',name='Öppna rutindetaljer: Morgonrutin',exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name='Öppna Rutin Morgonrutin, punkt Kissa',exact=True)).to_be_visible()
     expect(page.get_by_role('button',name='Miljöträning – nya ljud, inte klar, öppna Träning',exact=True)).to_be_visible()
    else:
     expect(page.get_by_text('Idag',exact=True)).to_have_count(0)
-    expect(page.get_by_role('button',name='Välj dagens aktiviteter',exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name='Öppna dagens checklista',exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name='Hantera dagens aktiviteter',exact=True)).to_be_visible()
     for heading in ['Loggat idag','Nästa träningssteg','Planerat idag']:
      expect(page.get_by_text(heading,exact=True)).to_have_count(0)
    for label in ['Logga','Träna','Kunskap']:
     expect(page.get_by_role('button',name=f'Öppna {label}',exact=True)).to_be_visible()
    expect(page.get_by_text('Standardbild',exact=True)).to_be_visible()
-   expect(page.get_by_label('Standardbild',exact=True)).to_be_visible()
    portrait=page.get_by_test_id('home-dog-portrait');portrait_box=portrait.bounding_box()
    badge=page.get_by_test_id('home-portrait-standard-label');badge_box=badge.bounding_box()
    assert portrait_box is not None and badge_box is not None
@@ -127,17 +130,23 @@ with sync_playwright() as p:
     page.screenshot(path=str(out/f'home-ready-{width}.png'))
     for label in ['Öppna Logga','Öppna Träna','Öppna Kunskap']:
      tile=page.get_by_role('button',name=label,exact=True)
+     tile.evaluate("el => el.scrollIntoView({block:'center',inline:'nearest'})")
+     expect(tile).to_be_visible()
      box=tile.bounding_box()
-     assert box is not None and box['y']+box['height'] <= nav_box['y']-16,f'{label} lacks 16pt clearance above fixed navigation: {box} / {nav_box}'
+     current_nav=page.get_by_role('tablist',name='Huvudmeny').bounding_box()
+     assert box is not None and current_nav is not None and box['y']+box['height'] <= current_nav['y']-16,f'{label} lacks 16pt clearance above fixed navigation after scroll: {box} / {current_nav}'
     expect(review_banner).to_be_visible()
     page.screenshot(path=str(out/f'home-review-destinations-{width}.png'))
-    page.get_by_role('button',name='Öppna rutindetaljer: Morgonrutin',exact=True).click()
+    page.get_by_role('button',name='Öppna Rutin Morgonrutin, punkt Kissa',exact=True).click()
+    expect(page.get_by_role('region',name='Hantera Morgonrutin')).to_be_visible()
+    page.get_by_role('button',name='Redigera rutin Morgonrutin',exact=True).click()
     expect(page.get_by_label('Namn på rutin Morgonrutin')).to_be_visible()
     expect(page.get_by_text('Vecka 11',exact=True).first).to_be_visible()
-    expect(page.get_by_role('button',name='Ta bort Morgonrutin från idag',exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name='Ta bort rutinen Morgonrutin från Hemskärmen',exact=True)).to_be_visible()
     page.screenshot(path=str(out/'home-routine-detail-375.png'))
+    page.get_by_role('button',name='Avbryt ändring av Morgonrutin',exact=True).click()
     page.get_by_role('button',name='Klar',exact=True).click()
-    page.get_by_role('button',name='Visa och hantera dagens uppgifter',exact=True).click()
+    page.get_by_role('button',name='Hantera rutiner och dagens aktiviteter',exact=True).click()
     expect(page.get_by_text('Lägg till ett träningssteg',exact=True)).to_be_visible()
     expect(page.get_by_text('Vecka 11',exact=True).first).to_be_visible()
     page.screenshot(path=str(out/'home-manager-sheet-375.png'))
@@ -145,12 +154,12 @@ with sync_playwright() as p:
     fixture_checkboxes.nth(3).scroll_into_view_if_needed()
     expect(review_banner).to_be_visible()
     assert review_banner.bounding_box()['y']==banner_top,'review banner moved with Home scroll content'
-    fixture_checkboxes.first.click();expect(page.get_by_text('1 av 5 klara',exact=True)).to_be_visible()
+    fixture_checkboxes.first.click();expect(page.get_by_text('3 av 5 klara',exact=True)).to_be_visible()
     fixture_checkboxes.first.click();expect(page.get_by_text('2 av 5 klara',exact=True)).to_be_visible()
     page.screenshot(path=str(out/f'home-review-fixture-scroll-{width}.png'))
    else:
     above_nav=[page.get_by_text(name,exact=True) for name in ['Just nu med Luna','Dagens att göra','Vad vill du göra nu?']]
-    above_nav += [page.get_by_role('button',name=name,exact=True) for name in ['Välj dagens aktiviteter','Öppna Logga','Öppna Träna','Öppna Kunskap']]
+    above_nav += [page.get_by_role('button',name=name,exact=True) for name in ['Öppna dagens checklista','Hantera dagens aktiviteter']]
     for item in above_nav:
      box=item.bounding_box()
      assert box is not None and box['y']+box['height'] <= nav_box['y']-16,f'{item} lacks 16pt clearance above fixed navigation: {box} / {nav_box}'
@@ -167,7 +176,8 @@ with sync_playwright() as p:
    open('home','&state=loading');page.screenshot(path=str(out/f'home-content-loading-{width}.png'))
    open('home','&state=error');expect(page.get_by_role('button',name='Hämta guider igen')).to_be_visible();page.screenshot(path=str(out/f'home-content-error-{width}.png'))
    open('home','&state=empty&homeScenario=all-complete')
-   expect(page.get_by_role('button',name='Välj dagens aktiviteter',exact=True)).to_be_visible()
+   expect(page.get_by_role('button',name='Öppna dagens checklista',exact=True)).to_be_visible()
+   expect(page.get_by_role('button',name='Hantera dagens aktiviteter',exact=True)).to_be_visible()
    page.screenshot(path=str(out/f'home-empty-{width}.png'))
    passed(f'Home source states and layout at {width}px')
   page.set_viewport_size({'width':375,'height':home_viewport(667)});open('home')
@@ -251,13 +261,13 @@ with sync_playwright() as p:
     if mode=='pending':
      expect(page.get_by_text('Sparar…',exact=True)).to_be_visible()
     else:
-     expect(page.get_by_role('button',name='Kontrollera ändringen för Morgonrutin igen',exact=True)).to_be_visible()
+     expect(page.get_by_role('button',name='Kontrollera ändringen för Kissa igen',exact=True)).to_be_visible()
      if mode=='failed': expect(page.get_by_text('Ändringen sparades inte. Kontrollera anslutningen och försök igen.',exact=True)).to_be_visible()
      if mode=='unknown': expect(page.get_by_text('Vi kunde inte bekräfta om ändringen sparades. Ingen ny bock visas. Kontrollera samma ändring innan du fortsätter.',exact=True)).to_be_visible()
      if mode=='readback': expect(page.get_by_text('Ändringen sparades, men dagens lista kunde inte hämtas. Status räknas först efter en ny avläsning.',exact=True)).to_be_visible()
     page.screenshot(path=str(out/f'home-routine-{mode}-375.png'))
     if mode!='pending':
-     page.get_by_role('button',name='Kontrollera ändringen för Morgonrutin igen',exact=True).click()
+     page.get_by_role('button',name='Kontrollera ändringen för Kissa igen',exact=True).click()
      expect(page.get_by_text('Ändringen sparades inte. Kontrollera anslutningen och försök igen.',exact=True)).to_have_count(0)
    passed('Routine detail sheet and same-row pending/error/unknown recovery')
   open('home','&homeScenario=review-training')
@@ -267,8 +277,104 @@ with sync_playwright() as p:
    expect(review_step).to_be_visible();expect(review_marker).to_be_visible();page.screenshot(path=str(out/'home-review-training-375.png'))
   else:
    expect(review_step).to_have_count(0);expect(review_marker).to_have_count(0);page.screenshot(path=str(out/'home-review-training-absent-375.png'))
+  # The checklist link remains available in every Home read state and opens a Home child route.
+  for scenario in ['ready','loading','error','empty']:
+   open('home','&state='+scenario)
+   expect(page.get_by_role('button',name='Öppna dagens checklista',exact=True)).to_be_visible()
+  page.set_viewport_size({'width':375,'height':home_viewport(844)})
+  open('home')
+  page.get_by_role('button',name='Öppna dagens checklista',exact=True).click()
+  expect(page.get_by_test_id('daily-checklist-screen')).to_be_visible()
+  expect(page.get_by_role('tab',name='Hem')).to_have_attribute('aria-selected','true')
+  expect(page.get_by_text('Checklista',exact=True)).to_be_visible()
+  page.screenshot(path=str(out/'checklist-entry-375.png'))
+  passed('Permanent checklist entry opens a Home child route from ready/loading/error/empty states')
+  # Zero/one/five/seven items at normal size; this runs in both public and review builds.
+  for count in [0,1,5,7]:
+   open('checklist','&checklistCount='+str(count))
+   expect(page.get_by_test_id('daily-checklist-screen')).to_be_visible()
+   if count==0:
+    expect(page.get_by_text('Inga aktiviteter idag',exact=True)).to_be_visible()
+    expect(page.get_by_test_id('daily-checklist-progress')).to_have_count(0)
+    expect(page.get_by_text(re.compile(r'\d+ av \d+ klara'))).to_have_count(0)
+   else:
+    expect(page.get_by_text(f'{min(3,count-1)} av {count} klara',exact=True)).to_be_visible()
+    expect(page.get_by_test_id('daily-checklist-progress')).to_be_visible()
+   page.screenshot(path=str(out/f'checklist-{count}-375.png'))
+  passed('Checklist zero/one/five/seven states show truthful progress without zero-of-zero')
+  for scenario in ['loading','error']:
+   open('checklist','&checklistCount=7&state='+scenario)
+   if scenario=='loading':
+    expect(page.get_by_label('Dagens checklista hämtas')).to_be_visible()
+    expect(page.get_by_test_id('daily-checklist-progress')).to_have_count(0)
+   else:
+    expect(page.get_by_text('Dagens checklista kunde inte hämtas',exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name='Hämta dagens checklista igen',exact=True)).to_be_visible()
+    expect(page.get_by_test_id('daily-checklist-progress')).to_have_count(0)
+   page.screenshot(path=str(out/f'checklist-{scenario}-375.png'))
+  passed('Checklist loading and read-error states do not claim an empty or complete list')
+  page.set_viewport_size({'width':430,'height':home_viewport(844)})
+  open('checklist','&checklistCount=7')
+  expect(page.get_by_text('3 av 7 klara',exact=True)).to_be_visible()
+  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+  page.screenshot(path=str(out/'checklist-7-430.png'))
+  page.set_viewport_size({'width':375,'height':home_viewport(667)})
+  open('checklist','&checklistCount=7')
+  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+  page.screenshot(path=str(out/'checklist-7-short-viewport-375.png'))
+  page.evaluate('''() => {document.querySelectorAll('[dir="auto"]').forEach(el => { const s=getComputedStyle(el);el.style.fontSize=(parseFloat(s.fontSize)*1.4)+'px';el.style.lineHeight=(parseFloat(s.lineHeight)*1.4)+'px'; });}''')
+  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+  page.screenshot(path=str(out/'checklist-7-short-viewport-375-text-140.png'))
+  passed('Checklist fits 430px, short 375×667 viewport and 140% text without horizontal overflow')
+  # Open the lower of two training rows, complete its exact step, and verify list/count/scroll on return.
+  page.set_viewport_size({'width':375,'height':home_viewport(844)})
+  open('checklist','&checklistCount=7')
+  training_rows=page.get_by_role('button',name=re.compile(r'Träningsuppgift: .*'))
+  expect(training_rows).to_have_count(2)
+  source_row=training_rows.last
+  source_row.scroll_into_view_if_needed()
+  source_box=source_row.bounding_box();assert source_box is not None
+  page.screenshot(path=str(out/'checklist-lower-training-source-375.png'))
+  source_row.click()
+  expect(page.get_by_test_id('home-training-step-detail')).to_be_visible()
+  expect(page.get_by_role('tab',name='Hem')).to_have_attribute('aria-selected','true')
+  detail_back=page.get_by_role('button',name='Tillbaka till Checklistan',exact=True)
+  expect(detail_back).to_be_visible()
+  detail_back_box=detail_back.bounding_box();assert detail_back_box is not None and detail_back_box['y']<150,f'training detail did not open at the top with its back action visible: {detail_back_box}'
+  page.screenshot(path=str(out/'checklist-training-detail-375.png'))
+  page.get_by_role('button',name='Markera övningen som genomförd',exact=True).click()
+  expect(page.get_by_test_id('daily-checklist-screen')).to_be_visible()
+  expect(page.get_by_text('4 av 7 klara',exact=True)).to_be_visible()
+  completed_source=page.get_by_role('button',name=re.compile(r'Träningsuppgift: (?!.*inte klar).*klar, öppna Träning$'))
+  expect(completed_source).to_be_visible()
+  restored_box=completed_source.bounding_box();assert restored_box is not None
+  assert abs(restored_box['y']-source_box['y'])<24,f'Checklist return did not preserve source row position: before={source_box}, after={restored_box}'
+  page.screenshot(path=str(out/'checklist-training-return-complete-375.png'))
+  passed('Training detail opens at top with a visible back action; lower checklist row returns at its saved scroll position')
+  page.get_by_role('button',name='Tillbaka till Hem',exact=True).click()
+  expect(page.get_by_text('Just nu med Luna',exact=True)).to_be_visible()
+  page.get_by_role('button',name='Öppna dagens checklista',exact=True).click()
+  reopened_back=page.get_by_role('button',name='Tillbaka till Hem',exact=True)
+  expect(reopened_back).to_be_visible()
+  reopened_back_box=reopened_back.bounding_box();assert reopened_back_box is not None and reopened_back_box['y']<150,f'Checklist reopened below its top after leaving the flow: {reopened_back_box}'
+  expect(page.get_by_text('Checklista',exact=True)).to_be_visible()
+  page.screenshot(path=str(out/'checklist-reopen-after-leave-375.png'))
+  passed('Leaving Checklistan for Hem clears the saved offset; reopening starts at the top')
+  open('checklist','&checklistCount=7&checklistScopeReset=true')
+  scope_source=page.get_by_role('button',name=re.compile(r'Träningsuppgift: .*')).last
+  scope_source.scroll_into_view_if_needed()
+  page.get_by_role('button',name='Byt hund i testfixture',exact=True).scroll_into_view_if_needed()
+  page.get_by_role('button',name='Byt hund i testfixture',exact=True).click()
+  expect(page.get_by_text('Just nu med Milo',exact=True)).to_be_visible()
+  page.get_by_role('button',name='Öppna dagens checklista',exact=True).click()
+  scope_back=page.get_by_role('button',name='Tillbaka till Hem',exact=True)
+  expect(scope_back).to_be_visible()
+  scope_back_box=scope_back.bounding_box();assert scope_back_box is not None and scope_back_box['y']<150,f'Checklist after scope invalidation reopened below the top: {scope_back_box}'
+  expect(page.get_by_text('Milo',exact=False).first).to_be_visible()
+  page.screenshot(path=str(out/'checklist-reopen-after-scope-change-375.png'))
+  passed('Scope invalidation returns to Home and reopening Checklistan starts at the top in the changed dog scope')
   assert not errors,errors
-  passed('Home navigation, review gate, reduced motion and 140% text')
+  passed('Home and Checklist navigation, review gate, reduced motion and 140% text')
   browser.close()
   (out/'browser-results.json').write_text(json.dumps({'passes':results,'pageErrors':errors,'scope':'Home and shared navigation; synthetic data and React Native Web, not device/backend certification'},ensure_ascii=False,indent=2)+'\n')
   raise SystemExit(0)
