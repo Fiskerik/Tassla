@@ -1,11 +1,13 @@
 # Tassla – GAP-analys: MVP v2 mot GitHub
 
+> **Läsanvisning 2026-10-16:** Analysen är en ögonblicksbild av den granskade committen nedan. [Styrande MVP](mvp.md) har uppdaterats med v2-scope; verifiera varje GAP och befintlig kö mot aktuell kod före planering. Analysens föreslagna leveransordning är underlag, inte testbevis eller ett mandat att publicera innehåll/starta pilot.
+
 **Datum för granskning:** 2026-10-15  
 **Repository:** [Fiskerik/Tassla](https://github.com/Fiskerik/Tassla)  
 **Granskad gren:** [`codex/life-periods-2026-10-15`](https://github.com/Fiskerik/Tassla/tree/codex/life-periods-2026-10-15)  
 **Granskad commit:** [`c71f5544eb9b8bd86a1aae78def6d86386f13f9a`](https://github.com/Fiskerik/Tassla/commit/c71f5544eb9b8bd86a1aae78def6d86386f13f9a) (15 oktober 2026 kl. 20:35 svensk tid)  
 **Jämförelse mot `main`:** Grenen låg två commits före `main` och hade inga commits bakom vid granskning.  
-**Mot dokument:** `Tassla-MVP-v2-forslag.md`, som ännu inte godkänts.
+**Mot dokument vid granskningen:** `Tassla-MVP-v2-forslag.md`, då ännu inte godkänt. Erik godkände senare MVP v2 2026-10-16.
 
 > **Viktig avgränsning:** Detta är en källkods- och dokumentgranskning av *angiven commit*, inte ett kört test i enhet, en ansluten Supabase-instans eller en slutlig UX-bedömning. Att funktionalitet finns i kod betyder inte automatiskt att den är driftsatt eller verifierad. Jag har inte ändrat GitHub-repot.
 
@@ -137,7 +139,7 @@ Eventuell långsiktig kohortmätning kräver separat dataskydds- och lagringsbes
 
 ## 4. Föreslagen minimal leveransordning
 
-**Innan någon ny kod:** Produktägarna godkänner eller ändrar MVP v2:s fem beslut och fastställer kvalitetsribban för vuxenhundspiloten.
+**Status efter granskningen:** Erik godkände MVP v2:s fem beslut 2026-10-16. Begär inte samma scopegodkännande igen. Fastställ fortfarande sakgranskat innehåll och verifierbar kvalitetsribba före vuxenhundspilot; följ separata grindar för persondata, faktisk pilot och release.
 
 | Slice | Leverans | Beroenden | Stopp/grind |
 |---|---|---|---|
@@ -164,7 +166,7 @@ Eventuell långsiktig kohortmätning kräver separat dataskydds- och lagringsbes
 
 ## 6. Rekommenderat beslut
 
-**Godkänn målbilden i MVP v2, men godkänn inte hela denna GAP-lista som implicit utvecklingsmandat.** Starta med **V2-01: redaktionellt relevanskontrakt och två riktiga personas (11 veckor och 5 år)**. Ett bra vuxen-Hem kan kanske nås genom ett litet innehållspaket och en avgränsad prioriteringsregel – inte genom nya skärmar, omfattande ny data eller ett AI-system.
+**Målbilden i MVP v2 är godkänd; denna GAP-lista är fortfarande ett daterat arbetsunderlag, inte en lista över verifierade fel på aktuell branch.** Starta med **V2-01: redaktionellt relevanskontrakt och två riktiga personas (11 veckor och 5 år)** efter avstämning med pågående kö. Ett bra vuxen-Hem kan kanske nås genom ett litet innehållspaket och en avgränsad prioriteringsregel – inte genom nya skärmar, omfattande ny data eller ett AI-system.
 
 **Säkra samtidigt:** Livsperiodsgrenen är två commits framför `main` vid granskningen, så kommande implementation måste explicit välja rätt bas och undvika parallella skrivningar mot samma filer.
 

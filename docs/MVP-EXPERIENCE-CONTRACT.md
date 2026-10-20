@@ -1,6 +1,6 @@
 # MVP EXPERIENCE CONTRACT — vision_rev02
 
-Förslag för godkännande · bas `codex/ux-rethink-2026-10-15` @ `2e230be44c1bdd74e74173064fdce5e60e7e9dbc` · 2026-10-15
+Godkänt panelmandat från 2026-10-15 · ursprunglig bas `codex/ux-rethink-2026-10-15` @ `2e230be44c1bdd74e74173064fdce5e60e7e9dbc`. Erik godkände MVP v2 2026-10-16. De åtta panelerna kvarstår; [styrande MVP v2](mvp.md) lägger till en avgränsad vuxenhundsresa och scenarier A–F.
 
 ## Leveransvillkor
 
@@ -21,7 +21,7 @@ Checkpoint = avgränsad fungerande resa + verifierat repo-läge + köhistorik me
 | 7 Kunskap | Publicerat innehåll → fungerande sök/filter där synligt → läsvy med källa → tillbaka; FAQ och faschecklista kvar. | Review-spärr, tom sökning, begränsat urval märkt, cache-scope och bild/kortjämförelse. |
 | 8 Insikter | Logg → periodval → fullständigt inlästa loggar → täckningsmärkt graf och numerisk läsning → Logg. Sömndiagrammet kräver godkänt intervallkontrakt innan full panelacceptans; ofullständiga perioder visas som luckor. | Sidning/period/tidszon, tomt kontra okänt, överlapp/luckor, skärmläsning och inga medicinska slutsatser. |
 
-Hälsa, Tassla-pass, onboarding/profil, notifieringar, kontoradering, samtycken, distribution och mätning kvarstår enligt `docs/mvp.md` och får inte tappas genom rev02-arbete. Nya dataändamål, migrationskörningar, externa tjänster och release följer separata beslut.
+Hälsa, Tassla-pass, onboarding/profil, notifieringar, kontoradering, samtycken, distribution och mätning kvarstår enligt `docs/mvp.md` och får inte tappas genom rev02-arbete. V2 kräver även relevant publicerat vuxeninnehåll, bibehållen historik över perioder och sanningsenlig progression från befintliga källor. Nya dataändamål, migrationskörningar, externa tjänster och release följer separata beslut.
 
 ## Risk och prioritering
 
