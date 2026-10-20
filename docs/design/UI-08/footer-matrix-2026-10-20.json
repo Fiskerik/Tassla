@@ -1,0 +1,1625 @@
+{
+  "method": "Temporary RN Web harness; useWindowDimensions.fontScale injected before React render; text and line-height scaled before post-layout measurement; web stress test, not native Dynamic Type.",
+  "results": [
+    {
+      "name": "footer-360-fs100-active-home.png",
+      "width": 360,
+      "fontScale": 1,
+      "active": "home",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": true,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 360,
+        "documentScrollWidth": 360
+      }
+    },
+    {
+      "name": "footer-360-fs100-active-log.png",
+      "width": 360,
+      "fontScale": 1,
+      "active": "log",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": true,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 360,
+        "documentScrollWidth": 360
+      }
+    },
+    {
+      "name": "footer-360-fs100-active-training.png",
+      "width": 360,
+      "fontScale": 1,
+      "active": "training",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": true,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 360,
+        "documentScrollWidth": 360
+      }
+    },
+    {
+      "name": "footer-360-fs100-active-knowledge.png",
+      "width": 360,
+      "fontScale": 1,
+      "active": "knowledge",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": true,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 360,
+        "documentScrollWidth": 360
+      }
+    },
+    {
+      "name": "footer-360-fs100-active-more.png",
+      "width": 360,
+      "fontScale": 1,
+      "active": "more",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": true,
+          "width": 72,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 360,
+        "documentScrollWidth": 360
+      }
+    },
+    {
+      "name": "footer-360-fs130-active-home.png",
+      "width": 360,
+      "fontScale": 1.3,
+      "active": "home",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": true,
+          "width": 62.39,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 62.41,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 86.41,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 86.39,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 62.41,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 360,
+        "documentScrollWidth": 360
+      }
+    },
+    {
+      "name": "footer-360-fs130-active-log.png",
+      "width": 360,
+      "fontScale": 1.3,
+      "active": "log",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 62.39,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": true,
+          "width": 62.41,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 86.41,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 86.39,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 62.41,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 360,
+        "documentScrollWidth": 360
+      }
+    },
+    {
+      "name": "footer-360-fs130-active-training.png",
+      "width": 360,
+      "fontScale": 1.3,
+      "active": "training",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 62.39,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 62.41,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": true,
+          "width": 86.41,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 86.39,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 62.41,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 360,
+        "documentScrollWidth": 360
+      }
+    },
+    {
+      "name": "footer-360-fs130-active-knowledge.png",
+      "width": 360,
+      "fontScale": 1.3,
+      "active": "knowledge",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 62.39,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 62.41,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 86.41,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": true,
+          "width": 86.39,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 62.41,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 360,
+        "documentScrollWidth": 360
+      }
+    },
+    {
+      "name": "footer-360-fs130-active-more.png",
+      "width": 360,
+      "fontScale": 1.3,
+      "active": "more",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 62.39,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 62.41,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 86.41,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 86.39,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": true,
+          "width": 62.41,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 360,
+        "documentScrollWidth": 360
+      }
+    },
+    {
+      "name": "footer-360-fs140-active-home.png",
+      "width": 360,
+      "fontScale": 1.4,
+      "active": "home",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": true,
+          "width": 62.39,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 62.41,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 86.41,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 86.39,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 62.41,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 360,
+        "documentScrollWidth": 360
+      }
+    },
+    {
+      "name": "footer-360-fs140-active-log.png",
+      "width": 360,
+      "fontScale": 1.4,
+      "active": "log",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 62.39,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": true,
+          "width": 62.41,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 86.41,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 86.39,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 62.41,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 360,
+        "documentScrollWidth": 360
+      }
+    },
+    {
+      "name": "footer-360-fs140-active-training.png",
+      "width": 360,
+      "fontScale": 1.4,
+      "active": "training",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 62.39,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 62.41,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": true,
+          "width": 86.41,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 86.39,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 62.41,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 360,
+        "documentScrollWidth": 360
+      }
+    },
+    {
+      "name": "footer-360-fs140-active-knowledge.png",
+      "width": 360,
+      "fontScale": 1.4,
+      "active": "knowledge",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 62.39,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 62.41,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 86.41,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": true,
+          "width": 86.39,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 62.41,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 360,
+        "documentScrollWidth": 360
+      }
+    },
+    {
+      "name": "footer-360-fs140-active-more.png",
+      "width": 360,
+      "fontScale": 1.4,
+      "active": "more",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 62.39,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 62.41,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 86.41,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 86.39,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": true,
+          "width": 62.41,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 360,
+        "documentScrollWidth": 360
+      }
+    },
+    {
+      "name": "footer-430-fs100-active-home.png",
+      "width": 430,
+      "fontScale": 1,
+      "active": "home",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": true,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 430,
+        "documentScrollWidth": 430
+      }
+    },
+    {
+      "name": "footer-430-fs100-active-log.png",
+      "width": 430,
+      "fontScale": 1,
+      "active": "log",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": true,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 430,
+        "documentScrollWidth": 430
+      }
+    },
+    {
+      "name": "footer-430-fs100-active-training.png",
+      "width": 430,
+      "fontScale": 1,
+      "active": "training",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": true,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 430,
+        "documentScrollWidth": 430
+      }
+    },
+    {
+      "name": "footer-430-fs100-active-knowledge.png",
+      "width": 430,
+      "fontScale": 1,
+      "active": "knowledge",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": true,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 430,
+        "documentScrollWidth": 430
+      }
+    },
+    {
+      "name": "footer-430-fs100-active-more.png",
+      "width": 430,
+      "fontScale": 1,
+      "active": "more",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": true,
+          "width": 86,
+          "height": 58,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 430,
+        "documentScrollWidth": 430
+      }
+    },
+    {
+      "name": "footer-430-fs130-active-home.png",
+      "width": 430,
+      "fontScale": 1.3,
+      "active": "home",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": true,
+          "width": 74.53,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 74.53,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 103.2,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 103.2,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 74.53,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 430,
+        "documentScrollWidth": 430
+      }
+    },
+    {
+      "name": "footer-430-fs130-active-log.png",
+      "width": 430,
+      "fontScale": 1.3,
+      "active": "log",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 74.53,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": true,
+          "width": 74.53,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 103.2,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 103.2,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 74.53,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 430,
+        "documentScrollWidth": 430
+      }
+    },
+    {
+      "name": "footer-430-fs130-active-training.png",
+      "width": 430,
+      "fontScale": 1.3,
+      "active": "training",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 74.53,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 74.53,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": true,
+          "width": 103.2,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 103.2,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 74.53,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 430,
+        "documentScrollWidth": 430
+      }
+    },
+    {
+      "name": "footer-430-fs130-active-knowledge.png",
+      "width": 430,
+      "fontScale": 1.3,
+      "active": "knowledge",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 74.53,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 74.53,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 103.2,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": true,
+          "width": 103.2,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 74.53,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 430,
+        "documentScrollWidth": 430
+      }
+    },
+    {
+      "name": "footer-430-fs130-active-more.png",
+      "width": 430,
+      "fontScale": 1.3,
+      "active": "more",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 74.53,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 74.53,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 103.2,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 103.2,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": true,
+          "width": 74.53,
+          "height": 72,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 430,
+        "documentScrollWidth": 430
+      }
+    },
+    {
+      "name": "footer-430-fs140-active-home.png",
+      "width": 430,
+      "fontScale": 1.4,
+      "active": "home",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": true,
+          "width": 74.53,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 74.53,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 103.2,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 103.2,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 74.53,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 430,
+        "documentScrollWidth": 430
+      }
+    },
+    {
+      "name": "footer-430-fs140-active-log.png",
+      "width": 430,
+      "fontScale": 1.4,
+      "active": "log",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 74.53,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": true,
+          "width": 74.53,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 103.2,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 103.2,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 74.53,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 430,
+        "documentScrollWidth": 430
+      }
+    },
+    {
+      "name": "footer-430-fs140-active-training.png",
+      "width": 430,
+      "fontScale": 1.4,
+      "active": "training",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 74.53,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 74.53,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": true,
+          "width": 103.2,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 103.2,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 74.53,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 430,
+        "documentScrollWidth": 430
+      }
+    },
+    {
+      "name": "footer-430-fs140-active-knowledge.png",
+      "width": 430,
+      "fontScale": 1.4,
+      "active": "knowledge",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 74.53,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 74.53,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 103.2,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": true,
+          "width": 103.2,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": false,
+          "width": 74.53,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 430,
+        "documentScrollWidth": 430
+      }
+    },
+    {
+      "name": "footer-430-fs140-active-more.png",
+      "width": 430,
+      "fontScale": 1.4,
+      "active": "more",
+      "labels": [
+        {
+          "label": "Hem",
+          "selected": false,
+          "width": 74.53,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Logg",
+          "selected": false,
+          "width": 74.53,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Träning",
+          "selected": false,
+          "width": 103.2,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Kunskap",
+          "selected": false,
+          "width": 103.2,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        },
+        {
+          "label": "Mer",
+          "selected": true,
+          "width": 74.53,
+          "height": 76,
+          "lines": 1,
+          "tabOverflow": false
+        }
+      ],
+      "overflow": {
+        "document": false,
+        "body": false,
+        "documentWidth": 430,
+        "documentScrollWidth": 430
+      }
+    }
+  ]
+}

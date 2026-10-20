@@ -16,3 +16,5 @@ Veckodagsval läggs till framåt i `migrations/202610150001_routine_repeat_weekd
 ## Innehållsutkast
 
 `content/mvp-content-v1.sql` är en handkörd, versionsspecifik draft-import som ska köras först och kontrollerar exakt innehållsparitet. Efter den kan `content/publish-mvp-content-v1.sql` publicera tio godkända runtimeversioner med dokumenterad reviewreferens. Den lämnar `before-homecoming` som draft tills runtime upprätthåller onboarding-only-kontext. Ingendera filen har körts mot en databas här. Verifiera RLS och publicerad readback i målmiljön. Se `../docs/content/README.md`.
+
+Före innehållsimport körs `migrations/202610180002_content_ai_origin.sql`; appkod som läser `is_ai_generated` kräver migreringen. Importen märker v1-versionerna som AI-genererade. Kör därefter publiceringsskriptet och kontrollera att tio godkända versioner är publicerade/märkta samt att `before-homecoming` fortfarande är draft. Innehållsskript är inte automatiskt applicerade i fjärrmiljön.

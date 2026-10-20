@@ -24,6 +24,11 @@ test('auxiliary pages do not enter swipe navigation and use More as active tab',
     assert.equal(nextMainTabDestination(page, 'right'), undefined);
     assert.equal(activeMainTabDestination(page), 'more');
   }
+  for (const page of ['checklist', 'home-training-detail']) {
+    assert.equal(nextMainTabDestination(page, 'left'), undefined);
+    assert.equal(nextMainTabDestination(page, 'right'), undefined);
+    assert.equal(activeMainTabDestination(page), 'home');
+  }
   for (const page of MAIN_TAB_DESTINATIONS) assert.equal(activeMainTabDestination(page), page);
 });
 

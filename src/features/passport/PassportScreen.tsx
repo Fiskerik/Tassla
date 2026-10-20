@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
@@ -42,6 +42,8 @@ const emptyHistory: readonly HealthHistoryRecord[] = [];
 
 export function PassportScreen(props: PassportScreenProps) {
   const { client, dog, isLifetimeCurrent } = props;
+  const { width, fontScale } = useWindowDimensions();
+  const compactLayout = width < 360 || fontScale >= 1.25;
   const [iconsLoaded] = useFonts(Ionicons.font);
   const [optionsVisible, setOptionsVisible] = useState(false);
   const [selection, setSelection] = useState<PassportSelection>(initialSelection);
@@ -152,13 +154,13 @@ export function PassportScreen(props: PassportScreenProps) {
 
   return (
     <View>
-      <View style={styles.headerRow}>
-        <View style={styles.headerCopy}>
+      <View style={[styles.headerRow, compactLayout && styles.headerRowStacked]}>
+        <View style={[styles.headerCopy, compactLayout && styles.headerCopyStacked]}>
           <Text accessibilityRole="header" style={styles.title}>Tassla-pass</Text>
           <Text style={styles.intro}>Hundens uppgifter som du väljer att dela.</Text>
         </View>
         <Pressable accessibilityRole="button" accessibilityLabel="Tillbaka till Mer" accessibilityState={{ disabled: busy }} disabled={busy}
-          onPress={props.onBack} style={({ pressed }) => [styles.closeButton, pressed && !busy && styles.closePressed]}>
+          onPress={props.onBack} style={({ pressed }) => [styles.closeButton, compactLayout && styles.closeButtonStacked, pressed && !busy && styles.closePressed]}>
           <Ionicons name="close" size={tokens.size.iconMd} color={tokens.colors.textPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
         </Pressable>
       </View>
@@ -206,7 +208,7 @@ export function PassportScreen(props: PassportScreenProps) {
 function SelectionRow({ iconsLoaded, icon, title, detail, checked, disabled, onPress }: {
   iconsLoaded: boolean; icon: React.ComponentProps<typeof Ionicons>['name']; title: string; detail: string; checked: boolean; disabled: boolean; onPress: () => void;
 }) {
-  return <Pressable accessibilityRole="checkbox" accessibilityState={{ checked, disabled }} disabled={disabled} onPress={onPress} style={[styles.selectionRow, disabled && styles.disabled]}>
+  return <Pressable accessibilityRole="checkbox" accessibilityLabel={`${title}. ${detail}`} accessibilityState={{ checked, disabled }} disabled={disabled} onPress={onPress} style={[styles.selectionRow, disabled && styles.disabled]}>
     <View style={styles.selectionIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       {iconsLoaded ? <Ionicons name={icon} size={tokens.size.iconSm} color={tokens.colors.support.passport.fg} /> : <Text style={styles.fallback}>•</Text>}
     </View>
@@ -243,18 +245,21 @@ function exportMessage(result: PassportExportResult): { text: string; error: boo
 
 const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, marginBottom: tokens.spacing.md },
-  headerCopy: { flex: 1 },
+  headerRowStacked: { flexDirection: 'column', alignItems: 'stretch' },
+  headerCopy: { flex: 1, minWidth: 0 },
+  headerCopyStacked: { flex: 0 },
   title: { ...tokens.typography.title, color: tokens.colors.textPrimary },
   intro: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
-  closeButton: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  closeButton: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, flexShrink: 0, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  closeButtonStacked: { alignSelf: 'flex-end' },
   closePressed: { backgroundColor: tokens.colors.selectedSurface },
-  body: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
+  body: { color: tokens.colors.textSecondary, ...tokens.typography.caption, minWidth: 0, flexShrink: 1, marginTop: tokens.spacing.xs },
   fallback: { color: tokens.colors.support.passport.fg, ...tokens.typography.label },
   selectionRow: { minHeight: tokens.size.touchMin + tokens.spacing.xxl, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.spacing.md, marginTop: tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md },
-  selectionIcon: { width: tokens.size.chipMd + tokens.spacing.sm, height: tokens.size.chipMd + tokens.spacing.sm, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.support.passport.bg, alignItems: 'center', justifyContent: 'center' },
-  selectionCopy: { flex: 1 },
-  selectionTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
-  checkbox: { width: tokens.spacing.xxl, height: tokens.spacing.xxl, borderRadius: tokens.radius.sm, borderWidth: 2, borderColor: tokens.colors.primary, alignItems: 'center', justifyContent: 'center' },
+  selectionIcon: { width: tokens.size.chipMd + tokens.spacing.sm, height: tokens.size.chipMd + tokens.spacing.sm, flexShrink: 0, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.support.passport.bg, alignItems: 'center', justifyContent: 'center' },
+  selectionCopy: { flex: 1, minWidth: 0 },
+  selectionTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label, minWidth: 0, flexShrink: 1 },
+  checkbox: { width: tokens.spacing.xxl, height: tokens.spacing.xxl, flexShrink: 0, borderRadius: tokens.radius.sm, borderWidth: 2, borderColor: tokens.colors.primary, alignItems: 'center', justifyContent: 'center' },
   checkboxChecked: { backgroundColor: tokens.colors.primary },
   checkmark: { color: tokens.colors.primary, fontWeight: '900', fontSize: tokens.typography.body.fontSize, lineHeight: tokens.typography.body.lineHeight },
   checkmarkChecked: { color: tokens.colors.onPrimary },
@@ -262,9 +267,9 @@ const styles = StyleSheet.create({
   previewCard: { borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.home.card, padding: tokens.layout.cardPadding, marginTop: tokens.spacing.sm },
   snapshotSection: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, paddingTop: tokens.spacing.md, marginTop: tokens.spacing.md },
   snapshotHeading: { color: tokens.colors.support.passport.fg, ...tokens.typography.label, marginBottom: tokens.spacing.sm },
-  previewValue: { color: tokens.colors.textPrimary, ...tokens.typography.caption, fontWeight: '700', marginTop: tokens.spacing.xs },
+  previewValue: { color: tokens.colors.textPrimary, ...tokens.typography.caption, minWidth: 0, flexShrink: 1, fontWeight: '700', marginTop: tokens.spacing.xs },
   historyRow: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, paddingTop: tokens.spacing.sm, marginTop: tokens.spacing.sm },
-  limitNotice: { color: tokens.colors.textPrimary, ...tokens.typography.caption, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.background, padding: tokens.spacing.md, marginTop: tokens.spacing.md },
+  limitNotice: { color: tokens.colors.textPrimary, ...tokens.typography.caption, minWidth: 0, flexShrink: 1, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.background, padding: tokens.spacing.md, marginTop: tokens.spacing.md },
   disclaimer: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.md },
   createdOn: { color: tokens.colors.textSecondary, ...tokens.typography.caption, fontWeight: '700', marginTop: tokens.spacing.md },
 });

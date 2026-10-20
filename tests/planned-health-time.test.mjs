@@ -27,3 +27,36 @@ test('shared time modal commits only a valid temporary choice and leaves cancel 
   assert.match(picker, /onPress=\{\(\) => setVisible\(false\)\}/);
   assert.match(picker, /animationType=\{reducedMotion \? 'none' : 'slide'\}/);
 });
+
+
+test('date and time triggers use labeled icon controls without changing the field values', async () => {
+  const source = await readFile(new URL('../src/components/AppPrimitives.tsx', import.meta.url), 'utf8');
+  const datePicker = source.slice(source.indexOf('export function DatePickerField'), source.indexOf('export function TimePickerField'));
+  const timePicker = source.slice(source.indexOf('export function TimePickerField'), source.indexOf('\nfunction parseDateValue'));
+  assert.match(datePicker, /accessibilityLabel={`Öppna kalender för \$\{label\}`}/);
+  assert.match(datePicker, /name="calendar-outline"/);
+  assert.match(datePicker, /value=\{value\}/);
+  assert.match(timePicker, /accessibilityLabel={`Öppna tidsväljare för \$\{label\}`}/);
+  assert.match(timePicker, /name="time-outline"/);
+  assert.match(timePicker, /value=\{value\}/);
+});
+
+test('calendar month controls are labeled icon buttons and date layout fits seven 44pt cells at 375pt', async () => {
+  const source = await readFile(new URL('../src/components/AppPrimitives.tsx', import.meta.url), 'utf8');
+  const tokens = await readFile(new URL('../src/theme/tokens.ts', import.meta.url), 'utf8');
+  assert.match(source, /variant="icon" label="Föregående månad" accessibilityLabel={`Visa månaden före \$\{monthLabel\}`}/);
+  assert.match(source, /variant="icon" label="Nästa månad" accessibilityLabel={`Visa månaden efter \$\{monthLabel\}`}/);
+  assert.match(source, /setMonth\(\(currentMonth\) => shiftCalendarMonth\(currentMonth, -1\)\)/);
+  assert.match(source, /setMonth\(\(currentMonth\) => shiftCalendarMonth\(currentMonth, 1\)\)/);
+  assert.match(source, /<View style=\{styles\.dateModalBackdrop\}><View style=\{styles\.dateModalCard\}>/);
+  assert.match(source, /dateModalBackdrop: \{[^}]*paddingHorizontal: tokens\.spacing\.sm/s);
+  assert.match(source, /dateModalCard: \{[^}]*padding: tokens\.spacing\.sm/s);
+  assert.match(source, /calendarDay: \{ width: tokens\.size\.touchMin, height: tokens\.size\.touchMin/s);
+  const spacing = Number(tokens.match(/spacing: \{[^}]*sm: (\d+)/s)?.[1]);
+  const touchMin = Number(tokens.match(/touchMin: (\d+)/)?.[1]);
+  const gridWidth = 375 - 4 * spacing;
+  assert.equal(spacing, 8);
+  assert.equal(touchMin, 44);
+  assert.equal(gridWidth, 343);
+  assert.ok(gridWidth >= 7 * touchMin);
+});

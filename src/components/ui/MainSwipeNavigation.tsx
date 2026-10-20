@@ -1,8 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react';
-import { PanResponder, View } from 'react-native';
-import { tokens } from '../../theme/tokens';
+import { PanResponder, StyleSheet, View } from 'react-native';
+import { mainSwipeDirection, shouldClaimMainSwipe } from './main-swipe-rules';
 
-const SWIPE_DISTANCE = tokens.size.touchMin;
 const HorizontalGestureExclusionContext = createContext<((excluded: boolean) => void) | null>(null);
 
 export function MainSwipeNavigation({ enabled, onSwipe, children }: {
@@ -18,7 +17,7 @@ export function MainSwipeNavigation({ enabled, onSwipe, children }: {
   }, [enabled, gestureController]);
 
   return <HorizontalGestureExclusionContext.Provider value={gestureController.setExcluded}>
-    <View {...(enabled ? gestureController.responder.panHandlers : {})}>{children}</View>
+    <View style={styles.surface} {...(enabled ? gestureController.responder.panHandlers : {})}>{children}</View>
   </HorizontalGestureExclusionContext.Provider>;
 }
 
@@ -30,17 +29,19 @@ function createGestureController(enabled: boolean, onSwipe: (direction: 'left' |
     },
     responder: PanResponder.create({
       onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gesture) => enabled
-        && !excluded
-        && Math.abs(gesture.dx) > SWIPE_DISTANCE
-        && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2,
+      onMoveShouldSetPanResponderCapture: (_, gesture) => enabled && !excluded && shouldClaimMainSwipe(gesture.dx, gesture.dy),
+      onMoveShouldSetPanResponder: (_, gesture) => enabled && !excluded && shouldClaimMainSwipe(gesture.dx, gesture.dy),
+      onPanResponderTerminationRequest: (_, gesture) => !shouldClaimMainSwipe(gesture.dx, gesture.dy),
       onPanResponderRelease: (_, gesture) => {
-        if (excluded || Math.abs(gesture.dx) < SWIPE_DISTANCE || Math.abs(gesture.dx) <= Math.abs(gesture.dy)) return;
-        onSwipe(gesture.dx < 0 ? 'left' : 'right');
+        if (excluded) return;
+        const direction = mainSwipeDirection(gesture.dx, gesture.dy, gesture.vx);
+        if (direction) onSwipe(direction);
       },
     }),
   };
 }
+
+const styles = StyleSheet.create({ surface: { flexGrow: 1 } });
 
 export function HorizontalGestureRegion({ children }: { children: ReactNode }) {
   const setGestureExcluded = useContext(HorizontalGestureExclusionContext);

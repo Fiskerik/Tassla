@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Keyboard, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DatePickerField, InfoModal, MessageCard, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
 import { Toast } from '../../components/ui/Toast';
@@ -45,6 +45,8 @@ export function HealthHistoryScreen({
   onSave?: (id: string | null, type: HealthHistoryType, date: string, time: string | null, note: string) => Promise<boolean>;
   onDelete?: (id: string) => Promise<boolean>;
 }) {
+  const { width, fontScale } = useWindowDimensions();
+  const stackInfoRow = width < 360 || fontScale >= 1.25;
   const [editingId, setEditingId] = useState<string | null>(initialEditingId);
   const [type, setType] = useState<HealthHistoryType>(records?.find((row) => row.id === initialEditingId)?.event_type ?? initialType);
   const [date, setDate] = useState(records?.find((row) => row.id === initialEditingId)?.occurred_on ?? localDate());
@@ -118,7 +120,7 @@ export function HealthHistoryScreen({
 
   return (
     <View style={styles.section}>
-      <View style={styles.infoRow}>
+      <View style={[styles.infoRow, stackInfoRow && styles.infoRowStacked]}>
         <Text style={styles.infoHint}>Om hälsans historik</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Visa information om hälsans historik" onPress={() => setInfoVisible(true)} style={styles.infoButton}>
           <Ionicons name="information-circle-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />
@@ -196,7 +198,8 @@ function typeLabel(type: HealthHistoryType): string {
 
 const styles = StyleSheet.create({
   section: { marginTop: tokens.layout.sectionGap },
-  infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: tokens.spacing.md, marginBottom: tokens.spacing.xs },
+  infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', columnGap: tokens.spacing.sm, rowGap: tokens.spacing.xs, marginTop: tokens.spacing.md, marginBottom: tokens.spacing.xs },
+  infoRowStacked: { flexDirection: 'column', alignItems: 'flex-start' },
   infoHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption },
   infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },
   infoButtonText: { color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '700' },

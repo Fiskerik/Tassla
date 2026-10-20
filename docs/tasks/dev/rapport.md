@@ -802,3 +802,146 @@ Codemagic-loggen i `Tassla_55_artifacts.zip` stannar i `Check application`. Den 
 Kontroller: `CI=1 pnpm check` PASS (TypeScript, edge typecheck, ESLint och 492/492 tester); Expo iOS bundle-export PASS; content/release guards PASS; `git diff --check` PASS. Oberoende QA PASS och statisk Reviewer PASS. Ingen annan Codemagic-fas finns i det bifogade utdraget, så det bevisar varken fel eller PASS för prebuild, CocoaPods, signering eller Xcode-arkivering. Expo iOS prebuild/native archive är NOT TESTABLE på denna Windows-miljö; verklig Mac/Codemagic-körning saknas.
 
 Erik har nu uttryckligen bett att committa och pusha efter de lokala gates. Erik har förtydligat att commit/push inte ska vänta på Codemagic. Samtliga lokala icke-Mac-gates är gröna; den fjärrkörningen är inte verifierad här. Om Codemagic visar ett nytt fel efter pushen ska felet rättas från steploggen före nästa push.
+
+### CONTENT-PUBLISH-LABEL-01 — lokal implementation klar, databasesteg väntar, 2026-10-18
+
+De publicerade kunskaps- och träningsdetaljerna visar nu etiketten ”AI-genererat innehåll” när ursprungsfältet är sant. Båda publicerade content-loaders validerar och mappar fältet. Importen markerar de elva versionsraderna som AI-genererade; transaktionell publicerings-SQL kontrollerar och låser de elva kända raderna, publicerar tio runtime-versioner och håller `before-homecoming` som draft.
+
+Kontroller: content-bundle publication check PASS; `pnpm check` PASS (493/493); `pnpm bundle:ios` PASS; `git diff --check` PASS. Arkitekt, Security, QA och Reviewer har PASS för plan/källkod och statisk SQL-granskning. Fjärtdatabas migration/import/publicering/readback är NOT TESTABLE: ingen Supabase CLI, länkad projektref, credential eller databasverktyg finns i körmiljön. Inga DB-rader ändrades. Kör migrationsfilen, innehållsimporten och guarded publish-filen i den avsedda Supabase-miljön i dokumenterad ordning och verifiera readback före rollout. Underlag: [paketplan](CONTENT-PUBLISH-LABEL-01.md) och [UX-spec](../../plans/CONTENT-PUBLISH-LABEL-01-ux-spec.md).
+
+
+### UI-SHEET-ACTIONS-01 — nedåtsvep och knapp-/UX-plan, 2026-10-18
+
+Användarens BottomSheet-patch är applicerad och anpassad: handtag/rubrik är dragyta, samma parent-onRequestClose hanterar alla stängvägar, useLayoutEffect håller callbacken aktuell, och timers/animationer städas på ny dragning, hide/reopen, reduced motion och unmount. Ingen lokal visibility-state eller ändrad datalagring. Guardpredikaten i Health/Training/Log/Daily manager/checklistor är källgranskade; controller-testet modellerar nekad stängning, inte hela formuläret.
+
+Reproducerbar knappinventering omfattar 120 källfiler, 0 parserfel och 416 kontroll-/actionplatser (303 app, 48 delade, 65 preview/galleri; 25 Alert-objekt och 8 system-API-platser ingår). Kodplatser är inte unika runtimeknappar. Samtliga bifogade UX-tips har nuläge, prioritet, avgränsning och testbara paket; framtida ikonbyten följer Eriks Ångra-pil och kontextuella penna men bevarar primär-/fel-/samtyckes-/destruktiv text. Inga breda knappbyten eller nya UX-funktioner byggdes utöver svepet.
+
+Architect APPROVE, Critic PROCEED, oberoende QA PASS och Reviewer PASS för den lokala checkpointen. Riktade tester 24/24, full pnpm check 517/517, public iOS JS-export, verktygsregenerering, whitespace (inklusive nya filer) och kövalidering PASS. Native gest/tangentbord/VoiceOver, visuella jämförelsebilder och verkliga appflöden är NOT TESTABLE; ingen Mac/Codemagic/DB-körning påstås. Befintlig content-publish-diff bevaras. Ingen commit/push gjord. Nästa föreslagna paket: UI-ACTIONS-COMMON. Underlag: [plan](UI-SHEET-ACTIONS-01.md), [nästa paket](../../plans/UI-UX-NEXT-PACKAGES-2026-10-18.md), [inventering](../../design/UI-ACTION-INVENTORY-2026-10-18.md) och [verifiering](../../design/evidence/sheet-actions-2026-10-18/VERIFICATION.md).
+
+
+### UI-ACTIONS-COMMON — lokal implementering, 2026-10-18
+
+Gemensamma Ångra-/datum-/tidskontroller har uppdaterats enligt plan v2. Architect APPROVE och UX Critic PROCEED. Bekräftad logg-add får en separat fokuserbar `return-up-back-outline`-knapp med objektbundet a11y-namn; toastmeddelandet är ett message-only alert. Retry/Avbryt och callbacks är bevarade. Kalender-/tidsfält visar ikoner och fältbundna etiketter; månadsnavigering använder ikonknappar och ren helper. Kalendergrid vid 375pt har 343pt enligt tokeninsets, med 44×44pt dagrutor.
+
+Riktade tester 12/12, `CI=1 pnpm check` 521/521, public `pnpm bundle:ios`, 121-filers/416-controls inventory-regenerering, `git diff --check` och `PYTHONUTF8=1 python tools/dev_flow.py validate` PASS. Se [verifieringsunderlag](../../design/evidence/ui-actions-common-2026-10-18/VERIFICATION.md). Native/VoiceOver/visuell pixeljämförelse NOT TESTABLE. Oberoende QA PASS (12/12) och Reviewer PASS; logik, tillgänglighetssemantik och 343pt/44pt gridberäkning granskade. Inga commits/pushar gjorda.
+
+### UI-MAIN-SWIPE-01 — implementation till oberoende QA, 2026-10-18
+
+Huvudflikssvepet fångar nu tydlig vågrät rörelse i PanResponder-fångstfasen med verifierade RN-layoutenheter, använder långdrags-/snabbgestregler och lämnar lodrät scroll till sidans riktningslåsning. Inre `HorizontalGestureRegion`-undantag, inaktiv sidgrind, kunskapsdetalj och befintlig no-wrap-navigering är bevarade. BottomSheet-koden från patchen var redan implementerad i nyare variant och är orörd.
+
+Riktade tester PASS (8/8), `pnpm check` PASS (529/529), offentlig iOS JS-bundle PASS, `git diff --check` PASS och kövalidering PASS. React Native Web-fixturbundle byggdes; Chromium misslyckades att starta på Windows med side-by-side-konfigurationsfel, så skärmbildsjämförelse och §14-punkt 16 är EJ TESTBARA. Faktisk nativegestprioritet, inre scroll och telefonprov är också EJ TESTBARA. Ingen full UI-, visuell eller deviceacceptans hävdas. Underlag: `docs/tasks/dev/UI-MAIN-SWIPE-01.md`, `docs/design/evidence/ui-main-swipe-2026-10-18/VERIFICATION.md`.
+
+QA hittade att ovillkorlig respondervägran kunde hindra lodrät scroll efter initialt vågrät fångst. Korrigeringsplan v5 godkändes av Architect/UX Critic; `onPanResponderTerminationRequest` lämnar nu över när senaste rörelsen inte längre uppfyller den tydligt vågräta regeln. Nytt källtest kontrollerar exakt dx/dy-villkor. Efter fix: riktade tester 8/8, `pnpm check` 529/529 och offentlig iOS-bundle passerar igen. Fysisk/native-scroll och visuell render är fortsatt EJ TESTBARA; oberoende QA körs om.
+
+Oberoende QA v5: **PASS** för avgränsad lokal acceptance. Bekräftade att termination handler lämnar över när senaste `dx`/`dy` inte längre uppfyller svepregeln och att det statiska testet kontrollerar just villkoret. Visuell render och native gesture/scroll är fortsatt EJ TESTBARA och anges inte som PASS. Nästa steg: oberoende Reviewer av slutdiffen.
+
+Oberoende Reviewer v5: **PASS** för lokal implementation och källkontrakt. Verifierade installerade React Native 0.86.3-API:er, fångst-/överlämningsvillkoret, exkludering, enabled-gate, riktning och bevarad no-wrap. Ingen visuell eller nativegest-PASS hävdas. Därefter checkpointas och pushas paketet till samma branch.
+
+
+### UI-TRAINING-OVERVIEW-01 — träningsöversikt, lokal granskning klar, 2026-10-19
+
+Bifogad träningsredesignpatch är implementerad på `codex/tassla-ui-ux-bundle-2026-10-18`. Översikten visar nästa övning och statusordnade publicerade program; programdetaljen visar klara, aktuell och kommande övningar. Versionsbunden progress, guarded completion, bekräftad save/error/retry, unmark/reset, källor och AI-etikett är bevarade. Oberoende QA och Reviewer PASS för begränsad lokal omfattning.
+
+Riktade tester 13/13, `CI=1 pnpm check` 542/542, offentlig iOS JS-bundle (1446 moduler), `git diff --check` och queue validation PASS. Renderad public/review-evidens och §14-bedömning: [VERIFICATION.md](../../design/evidence/ui-training-overview-2026-10-18/VERIFICATION.md). Live Supabase/RLS, verkligt publicerat innehåll, native tillgänglighet/enhetsbeteende och telefonprov är NOT TESTABLE. 140% webzoom radbryter befintlig `Kunskap`-etikett. Den ägarbeställda kompositionsavvikelsen från rev02-panel 6 är avgränsad; full panelacceptans hävdas inte.
+
+Implementationscheckpoint `b59169c` är pushad till `origin/`codex/tassla-ui-ux-bundle-2026-10-18; slutlig releasehistorik finns i `docs/releases/HISTORY-2026.md`. Ingen Codemagic/TestFlight-build påstås.
+### UI-ACTIONS-ROWS — 1b avslutad, 2026-10-19
+
+Rutinhallens redigering använder en ikonknapp med fullt tillgänglighetsnamn; veckodagarna visas som `Må, Ti, On, To, Fr, Lö, Sö` i en horisontellt åtkomlig rad. Loggens typväljare visar vald kategori som ikon, och öppnar en lista med ikon och namn för alla sju typer. Typbyte stänger listan och lämnar datum, tid och anteckningsutkast intakta. Radera/Avbryt/spara behåller text och befintliga flöden.
+
+Oberoende QA **PASS** och Reviewer **PASS** för avgränsad kodändring. Riktade tester 20/20; `CI=1 pnpm check` 545/545; offentlig iOS JS-bundle (1446 moduler); `git diff --check`; kövalidering; 10 syntetiska RN Web-skärmbilder och interaktionskontroller PASS. Se [verifieringsunderlag](../../design/evidence/ui-actions-rows-2026-10-19/VERIFICATION.md). Native VoiceOver/TalkBack, Dynamic Type, Supabase/RLS och signerad iOS-build är NOT TESTABLE. Full acceptans av rev02-panelerna 1/4/5 hävdas inte.
+
+Nästa UI/UX-paket: `2a UI-ACCESSIBILITY-HOME-LOG`; sedan 2b, 3 Kunskapssök, 4 Pull-to-refresh och 5 Tom-/laddnings-/felåterkoppling. Hela kvarvarande releaseinventeringen lämnades tillsammans med 1b-closeout.
+
+
+### UI-ACCESSIBILITY-HOME-LOG (2a) — QA/Reviewer PASS, 2026-10-19
+
+Home keeps the daily count and refresh state on their own summary line, allows activity titles to wrap, exposes checked state on both routine checkbox variants, announces mutation state politely, and names the training retry by activity. No Log/Toast mutation semantics or data behavior changed.
+
+Independent QA PASS and Reviewer PASS. Exact focused command (Home vision, daily activity UI, Log screen policy and compact Toast policy) passed 22/22; QA's broader rerun with `tests/home-today.test.mjs` passed 25/25. `pnpm check` passed 545/545; app/edge typechecks and ESLint passed. Public `pnpm bundle:ios` exported 1,446 modules after explicitly setting the public channel and disabling review content; the initial unconfigured call correctly stopped at the existing build-channel guard. Synthetic RN Web layout/interaction, `git diff --check`, and queue validation passed. Native VoiceOver/TalkBack, Dynamic Type, physical targets, live Supabase/RLS, signed build and full rev02-panel comparison remain NOT TESTABLE. Evidence: [verification report](../../design/evidence/ui-accessibility-home-log-2026-10-19/VERIFICATION.md).
+
+
+### UI-MAIN-TAB-TRANSITION — QA/Reviewer PASS, 2026-10-19
+
+Huvudflikarnas inkommande sida får nu 28pt riktningsstyrd förflyttning med befintlig 240ms easing/toning. Stödskärmar behåller 8pt. Första mount animeras inte; tidigare rörelse stoppas vid ny navigering; reducerad rörelse går direkt till slutläge.
+
+Riktad svit 12/12, `pnpm check` 547/547, offentlig iOS JS-export 1 446 moduler, syntetisk RN Web-klick-/svepväxling, mellanläge åt båda håll och reducerad rörelse PASS. `git diff --check` och kövalidering PASS. Webbläsaren mätte +7,69px respektive −7,11px vid 50ms; reduced motion höll 0px/opacity 1. Oberoende QA och Reviewer PASS. QA bekräftade 12/12 och båda riktningarna/reducerad rörelse; Reviewer bekräftade avgränsningen till huvudflikar, 8pt på stödvyer samt avbrott/mount-skydd. Se [verifieringsunderlag](../../design/evidence/ui-main-tab-transition-2026-10-19/VERIFICATION.md). Native touch/OS-reducerad-rörelse/VoiceOver/frame rate är NOT TESTABLE.
+
+
+## UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS (2b.1) — lokalt verifierad checkpoint, 2026-10-19
+
+Rutinens dagsval/radering och notisernas informationsrad staplas vid smal vy eller 140% webtext. Riktad svit 47/47; `pnpm check` 549/549; offentlig iOS-JS-export 1 446 moduler. Syntetisk RN Web vid 375×667/140%-proxy samt 320px, rutin redigera/avbryt/spara-readback och explicit permission-denied-callback verifierade. Oberoende QA PASS, Reviewer PASS och Security pre-/final review APPROVE. Native Dynamic Type/VoiceOver, tangentbord, OS-prompt/notisleverans, live Supabase/RLS och signerad build är NOT TESTABLE. Full rev02-panelacceptans hävdas inte. [Verifiering](../../design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md). Implementation checkpoint: `5ee2065be80d28221eff8914203b38419eb2f119`. Nästa paket: 2b.2 `UI-ACCESSIBILITY-HEALTH`; starta med Security pre-review.
+
+### UI-ACCESSIBILITY-HEALTH (2b.2) — QA/Reviewer/Security PASS, 2026-10-19
+
+Hälsa och vikt staplar långa åtgärder vid smal vy/stor text; historikens informationsåtgärd flyttas under rubriken och dess befintliga sheet använder keyboard-aware-läge. Datumfältets kalenderknapp ryms inom fältet utan att tidsfält eller kalenderflöde ändras. Vikt-/hälsodata, validering, spara/radera, scope och persistence är oförändrade.
+
+Oberoende QA PASS (117/117 riktade tester; full `pnpm check` 552/552). Reviewer PASS och Security pre-/final APPROVE. Offentlig iOS-JS-export 1 446 moduler; syntetisk RN Web vid 320×667 och 375×667/140%-proxy, diffkontroll och kövalidering PASS. Native Dynamic Type/VoiceOver, OS-tangentbord, live Supabase/RLS, signerad build och full rev02-panelacceptans är NOT TESTABLE. [Verifiering](../../design/evidence/ui-accessibility-health-2026-10-19/VERIFICATION.md). Nästa paket: 2b.3 Hundprofiler.
+
+
+### UI-ACCESSIBILITY-PROFILES (2b.3) — lokal implementation checkpoint, 2026-10-19
+
+Hundprofilens introduktionskort staplas vid smal bredd eller textskala ≥125%; namn-, ras- och kenneltext kan radbrytas och aktiv hund markeras under åldern när raden är trång. Hund-/kontoscope, selection callbacks, createDog, idempotency/request-ID, readback/recovery och spar-/konfliktsemantik är oförändrade.
+
+Oberoende statisk QA PASS: profiltester 31/31, `CI=1 pnpm check` 554/554, offentlig iOS-JS-export 1 446 moduler, `git diff --check` och queue validation PASS. Reviewer PASS för implementation och slutlig v5-dokumentdiff; Security pre-/final APPROVE. Arkitekt och UX Critic godkände att endast den lokala implementation checkpointen stängs. RN Web-rendering 375×667/140%, fysisk tangentbordsräckvidd, Dynamic Type, VoiceOver/TalkBack, fokusordning, §14-visuell acceptans och target bounds är **NOT TESTABLE** och kvarstår öppna för `UI-NATIVE-ACCESSIBILITY-VERIFY`; ingen visuell/native PASS hävdas. Ingen Codemagic, Supabase/RLS eller signerad native build kördes. Lokal implementation checkpoint `3094b6a` (`fix: improve dog profile responsive layout`) är pushad till `origin/codex/tassla-ui-ux-bundle-2026-10-18`; både commit- och push-hook körde fulla kontroller 554/554. Köstatusen stänger inte den separata visuella/native acceptansen. [Verifiering](../../design/evidence/ui-accessibility-profiles-2026-10-19/VERIFICATION.md).
+
+### UI-ACCESSIBILITY-PASSPORT (2b.4) — lokal implementation checkpoint, 2026-10-19
+
+Passport har nu en responsiv layout för smal vy/stor text och uttryckliga tillgänglighetsnamn för sektionernas valrutor. Exporten förblir ägarinitierad; urval, samtycke, exakt PDF-innehåll, konto-/hundscope, delningsmål och app-scopead filrensning är oförändrade.
+
+Architect APPROVE WITH CONDITIONS (plan v6), UX Critic PROCEED, Security pre-/final APPROVE, oberoende QA PASS och Reviewer PASS. Riktad svit 32/32; pnpm check 555/555; offentlig pnpm bundle:ios 1 446 moduler; diff- och kövalidering PASS. Commit-hook och push-hook passerade båda typecheck, edge-typecheck, ESLint och samtliga 555 tester. Checkpoint 4ffa107 (fix: improve passport accessibility layout) är pushad till origin/codex/tassla-ui-ux-bundle-2026-10-18.
+
+RN Web/DOM saknas, därför är renderad 375×667/140%-layout, §14, faktisk native share sheet, Dynamic Type, VoiceOver/TalkBack, fokus och uppmätta mål NOT TESTABLE och kvarstår i UI-NATIVE-ACCESSIBILITY-VERIFY. Ingen Codemagic, fysisk enhet, live Supabase/RLS eller signerad build kördes. Full rev02-panel-/nativeacceptans hävdas inte. [Verifiering](../../design/evidence/ui-accessibility-passport-2026-10-19/VERIFICATION.md), [plan v6](UI-ACCESSIBILITY-PHASE-2-5.md). Nästa paket: UI-KNOWLEDGE-SEARCH (3).
+
+### UI-KNOWLEDGE-SEARCH — lokal kodcheckpoint, 2026-10-19
+
+Kunskapsfliken Artiklar har nu lokal sökning i den redan valda, publicerade listan för aktiv hund. Sökningen täcker titel och parsad body-text, normaliserar svensk text och tömmer query vid konto-/hundbyte. Ingen extra fetch, schema eller filtertaxonomi tillkom.
+
+Riktade sök-/content-delivery-tester 21/21, full pnpm check 564/564, public iOS JS-export 1 447 moduler, git diff --check och kövalidering PASS. Oberoende QA och Reviewer PASS. Skärmrendring vid 375/430, §14, VoiceOver, Dynamic Type, native fokus/targets och faktisk hundswitch är OPEN / NOT TESTABLE och ligger kvar i UI-NATIVE-ACCESSIBILITY-VERIFY. Ingen live Supabase/RLS-, Codemagic- eller signerad native-build-kontroll gjordes.
+
+## UI-REFRESH-HOME-LOG (paket 4) — lokal verifierad checkpoint, 2026-10-19
+
+AppScreen har opt-in native RefreshControl; ProductWorkspace aktiverar det bara för Hem och Logg. Hem använder den befintliga dags-/träningsladdaren inom konto-, hund-, dags- och tidszonsscope. Logg samordnar första sida och paginering per konto-/hundscope, avbryter båda läsningarna vid scopebyte och behåller lokalt bekräftade insert/update/delete-resultat när en parallell läsning blir äldre. Hem refresh och retry döljer inte längre status för en olöst dagsändring.
+
+Riktad svit 11/11; `pnpm check` passerade typecheck, edge-typecheck, ESLint och 571/571 tester. Offentlig `pnpm bundle:ios` passerade med 1 447 moduler. Oberoende QA PASS, Reviewer PASS och Security final APPROVE. `git diff --check` och `python -X utf8 tools/dev_flow.py validate` passerade. Commit `0c1c345` (`feat: add Home and Log pull-to-refresh`) är pushad till `origin/codex/tassla-ui-ux-bundle-2026-10-18`; commit- och push-hookarna passerade alla lokala kontroller. Visuell capture vid 375/430 är NOT TESTABLE eftersom React Native Web, React DOM och Playwright saknas i checkouten; native RefreshControl-gest är NOT TESTABLE utan enhet. Se docs/design/evidence/ui-refresh-home-log-2026-10-19/VERIFICATION.md. Nästa beroende paket är UI-EMPTY-FEEDBACK-HOME-LOG (5a).
+
+### UI-EMPTY-FEEDBACK-HOME-LOG (5a) — QA/Reviewer PASS, redo för checkpoint, 2026-10-19
+
+Hem/Logg har tydligare nästa handling i tomlägen och kortare läsfelcopy; inga persistens-, API-, data- eller navigationskontrakt ändrades. Syntetisk stateful RN Web-fixture verifierade Logg tomt → händelseväljare → bekräftad Vatten-rad och toast. Den temporära adaptern låg utanför repot och ändrade inte produktkod eller incheckad harness. Detta är inte en live Supabase/RLS-skrivning.
+
+Fokuserade tester PASS 23/23; full pnpm check PASS (typecheck, edge typecheck, ESLint, 577/577 tester); offentlig pnpm bundle:ios PASS med 1 447 moduler; git diff --check och python -X utf8 tools/dev_flow.py validate PASS. Oberoende QA och slutlig Reviewer PASS för lokal acceptance. Första Reviewer-granskningen blockerade endast på dokumentkonsistens och saknade closeoutposter; detta åtgärdades och verifierades. Commit 67424a4 (feat: improve empty-state feedback for home and log) är pushad till origin/codex/tassla-ui-ux-bundle-2026-10-18. Native tillgänglighet, live DB/RLS, signerad build och full rev02-paneljämförelse är NOT TESTABLE. Se [verifieringsrapport](../../design/evidence/ui-empty-feedback-home-log-2026-10-19/VERIFICATION.md). Nästa paket efter checkpoint: 5b UI-EMPTY-FEEDBACK-KNOWLEDGE-TRAINING.
+
+## UI-08 — renderad QA-uppföljning 2026-10-19/20
+
+Headless RN Web kördes i isolerad Chrome-harness med syntetisk fixture. UI-08-bilder för 360/430 och 140 %-webbstresstest finns under `docs/design/UI-08/`; tre jämförelsebilder ställer Hem, Träning och Kunskap mot rev02. Aktiv Träning radbröts med nav-gap; godkänd v4-fallback tog bort endast gapet.
+
+Oberoende QA blockerade först v4 eftersom Kunskap radbröts vid 360×844/140 %. Architect/Critic godkände v5 med namngivna adaptiva flexvikter och synkad queue-acceptans. v5-matrisen passerar 30 renderingar/150 labels vid 360/430 och fontScale 1.0/1.3/1.4 utan radbrytning eller overflow; samtliga mål klarar 44×44 CSS px; separata axelminima är 62.39 px bredd respektive 58 px höjd från olika matrisceller (webbreferenser). Oberoende QA PASS för footergrinden. Reviewer/checkpoint återstår; rev02/nativeacceptans är fortsatt separat öppen. Se [UI-08-matrisen](../../design/UI-08/footer-matrix-2026-10-20.json).
+
+### UI-09 — avgränsad toastresa, QA/Reviewer PASS, 2026-10-20
+
+Den kompakta, bekräftade spar-toasten med bock/Ångra och den sanningsenliga feltoasten är verifierade i headless RN Web vid 375×667 och 360/430×844, med normal text och 140 %-webbstresstest, `Fler` öppet/stängt och error/retry/cancel. Responsmatrisen visar 12/12 körningar utan horisontell overflow eller toast/snabbval-överlapp; fokuserat policytest 5/5. Oberoende QA PASS och Reviewer PASS för endast den fokuserade toastresan. Full Logga-komposition mot aktuell rev02 är fortsatt No/öppen, efter-val-bild från `Fler` saknas, och native Dynamic Type, fysisk target, safe area, skärmläsare och reducerad rörelse är NOT TESTABLE.
+
+Vid 360×844/140 %-webbstresstest var åtgärdsknappen fullt åtkomlig utan överlapp men fri yta mot tablisten var 0,42 CSS px. Det är separat planerat i `FLOW-LOG-01`, som ska mäta faktiska `AppScreen`-insets innan padding justeras. Full `pnpm check` PASS; fokustest 5/5; publik iOS JS-bundle PASS med 1 447 moduler; `git diff --check` och queue validation PASS. Ingen produktkod ändrades i denna v4-evidensuppföljning.
+
+## 2026-10-20 — FLOW-LOG-01 checkpoint
+
+- Implementerat Logga-kalendern/markörer, visuella Kiss/Vatten-skillnaden och timeline feedback enligt plan v5. QA hittade i första varvet dagceller under minsta bredd samt saknade sidgräns-/lifecycle-regressioner.
+- Korrigering 1 genomförd. 44 pt-källgeometri vid 360 pt är 312/7≈44,57 pt. Nya tester verifierar rå mikrosekundcursor, lika timestamp vid sidgräns, avbrott efter requeststart, ändring under traversal och ny traversal efter ändring före cursor.
+- Omtest: 16/16 riktade, pnpm check 599/599, publik iOS-bundle 1 449 moduler, diff --check PASS, dev_flow validate PASS.
+- QA: kod/test PASS; samlad acceptans blockerad på renderad UI-matris, gråskala och faktisk AppScreen-marginal (NOT TESTABLE; renderer saknas). Security final APPROVE för statisk implementation; live RLS/native är NOT TESTABLE. Ingen Reviewer/DONE eftersom QA helhet inte passerar.
+- Queue: FLOW-LOG-01 blocked med nästa steg att återuppta render-/§14-bevis när godkänd renderer finns. Branch-checkpoint pushas innan nästa oberoende paket enligt Eriks mandat.
+
+### FLOW-HOME-CHECKLIST-01 — Idag-checklista, lokal checkpoint 2026-10-20
+
+- Levererar Hem → full dagslista → rutin eller exakt träningssteg → tillbaka. Endast Idag ingår; filterpaketet är nästa checkpoint och full panel 4 är fortsatt öppen tills dess.
+- Architect godkände plan v9; Security statisk PASS; slutlig UX/acceptance Reviewer PASS.
+- `AppScreen` bevarar scroll endast inom checklistflödet och tömmer offset vid exit. Scope-/dygnsbyte återför den faktiska child-routen till Hem.
+- QA: fokuserat 14/14, full `pnpm check` 611/611, public iOS-export 1 450 moduler, public/review RN Web PASS (12/13 respektive 13/13 assertions, 0 browser errors), `git diff --check` och `dev_flow validate` PASS.
+- Main hämtad och mergad: origin/main `00de202` (`mobile-ios-design`) plus två föregående upstream-commits. SwiftUI-exempel översattes till befintlig Expo/React Native-stack, tokens och tillgänglighetskontrakt; inga dependencies.
+- NOT TESTABLE: live Supabase/RLS, native VoiceOver/Dynamic Type/gestures, signerad build/TestFlight. Se `../design/evidence/flow-home-checklist-2026-10-20/VERIFICATION.md`.
+- Nästa: `FLOW-HOME-CHECKLIST-FILTERS-01` — skriv plan v1 och få Product/Architect/Critic/Security-review före implementation.
+
+
+### FLOW-HOME-CHECKLIST-FILTERS-01 — plan v1 checkpoint, 2026-10-20
+
+Plan v1 och källfynd är dokumenterade i `docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md` och `docs/tasks/dev/FLOW-HOME-CHECKLIST-FILTERS-01.md`. V1 definierar sparad ISO-vecka, 30 lokala kalenderdagar för Alla, sju framtida datum, Planerad-status, fullständiga/partiella lästillstånd, källnavigation och skydd mot historisk backfill. Riskklass H kvarstår. Product, Architect, Critic och Security review är öppna; queue står kvar som `planned`. Ingen appkod eller runtime-evidens ingår i denna checkpoint. Nästa steg: slutför de fyra rollgranskningarna innan implementation.

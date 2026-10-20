@@ -17,6 +17,7 @@ tsResolution.deregister();
 
 const serviceSource = await readFile(new URL('../src/notifications/notification-service.ts', import.meta.url), 'utf8');
 const storageSource = await readFile(new URL('../src/notifications/notification-storage.ts', import.meta.url), 'utf8');
+const settingsSource = await readFile(new URL('../src/features/notifications/NotificationSettingsScreen.tsx', import.meta.url), 'utf8');
 const workspaceSource = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
 const authProviderSource = await readFile(new URL('../src/features/account/AuthProvider.tsx', import.meta.url), 'utf8');
 
@@ -25,6 +26,16 @@ const dogId = '11111111-1111-4111-8111-111111111111';
 const otherDogId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const today = '2026-10-06';
 const tomorrow = '2026-10-07';
+
+test('notification settings stack the information action for compact or enlarged layouts while keeping prompts explicit', () => {
+  assert.match(settingsSource, /useWindowDimensions\(\)/);
+  assert.match(settingsSource, /width < 360 \|\| fontScale >= 1\.25/);
+  assert.match(settingsSource, /infoRowStacked: \{ flexDirection: 'column', alignItems: 'stretch'/);
+  assert.match(settingsSource, /infoButton: \{ minHeight: tokens\.size\.touchMin/);
+  assert.match(settingsSource, /infoButtonText: \{[^}]*flexShrink: 1/);
+  assert.match(settingsSource, /onPress=\{\(\) => \{ void requestPermission\(\); \}\}/);
+  assert.match(settingsSource, /async function save\(\)[\s\S]*?await onSave\(/);
+});
 
 test('future reminder selection filters past times today before counting its 40-row cap and paginates to a valid 41st', async () => {
   const makeRow = (index, dueOn, minutes) => ({ id: `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,

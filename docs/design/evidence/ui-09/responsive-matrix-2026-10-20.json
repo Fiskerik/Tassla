@@ -1,0 +1,693 @@
+{
+  "method": "Headless RN Web; synthetic fixture; post-layout DOM font/line-height scaling is a 140% stress proxy, not native Dynamic Type.",
+  "captures": [
+    {
+      "name": "log-success-360x844.png",
+      "width": 360,
+      "height": 844,
+      "fontScale": 1,
+      "state": "success",
+      "moreOpen": false,
+      "toast": {
+        "x": 57,
+        "y": 317,
+        "width": 222,
+        "height": 20
+      },
+      "undo": {
+        "x": 283,
+        "y": 305,
+        "width": 44,
+        "height": 44
+      },
+      "more": {
+        "x": 192.046875,
+        "y": 393,
+        "width": 27.890625,
+        "height": 24
+      },
+      "quick": [
+        {
+          "x": 103.484375,
+          "y": 180,
+          "width": 29.015625,
+          "height": 24
+        },
+        {
+          "x": 262.765625,
+          "y": 180,
+          "width": 30.453125,
+          "height": 24
+        },
+        {
+          "x": 102.921875,
+          "y": 244,
+          "width": 30.15625,
+          "height": 24
+        },
+        {
+          "x": 256.453125,
+          "y": 244,
+          "width": 43.078125,
+          "height": 24
+        }
+      ],
+      "overlapsQuick": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "horizontalOverflow": false
+    },
+    {
+      "name": "log-success-more-open-360x844.png",
+      "width": 360,
+      "height": 844,
+      "fontScale": 1,
+      "state": "success",
+      "moreOpen": true,
+      "toast": {
+        "x": 57,
+        "y": 317,
+        "width": 222,
+        "height": 20
+      },
+      "undo": {
+        "x": 283,
+        "y": 305,
+        "width": 44,
+        "height": 44
+      },
+      "more": {
+        "x": 192.046875,
+        "y": 393,
+        "width": 27.890625,
+        "height": 24
+      },
+      "quick": [
+        {
+          "x": 103.484375,
+          "y": 180,
+          "width": 29.015625,
+          "height": 24
+        },
+        {
+          "x": 262.765625,
+          "y": 180,
+          "width": 30.453125,
+          "height": 24
+        },
+        {
+          "x": 102.921875,
+          "y": 244,
+          "width": 30.15625,
+          "height": 24
+        },
+        {
+          "x": 256.453125,
+          "y": 244,
+          "width": 43.078125,
+          "height": 24
+        }
+      ],
+      "overlapsQuick": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "horizontalOverflow": false
+    },
+    {
+      "name": "log-error-360x844.png",
+      "width": 360,
+      "height": 844,
+      "fontScale": 1,
+      "state": "error",
+      "moreOpen": false,
+      "toast": {
+        "x": 37,
+        "y": 69,
+        "width": 286,
+        "height": 24
+      },
+      "undo": null,
+      "more": {
+        "x": 192.046875,
+        "y": 517,
+        "width": 27.890625,
+        "height": 24
+      },
+      "quick": [
+        {
+          "x": 103.484375,
+          "y": 386,
+          "width": 29.015625,
+          "height": 24
+        },
+        {
+          "x": 262.765625,
+          "y": 386,
+          "width": 30.453125,
+          "height": 24
+        },
+        {
+          "x": 102.921875,
+          "y": 450,
+          "width": 30.15625,
+          "height": 24
+        },
+        {
+          "x": 256.453125,
+          "y": 450,
+          "width": 43.078125,
+          "height": 24
+        }
+      ],
+      "overlapsQuick": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "horizontalOverflow": false
+    },
+    {
+      "name": "log-success-360x844-font140.png",
+      "width": 360,
+      "height": 844,
+      "fontScale": 1.4,
+      "state": "success",
+      "moreOpen": false,
+      "toast": {
+        "x": 65,
+        "y": 335.390625,
+        "width": 214,
+        "height": 28
+      },
+      "undo": {
+        "x": 283,
+        "y": 327.390625,
+        "width": 44,
+        "height": 44
+      },
+      "more": {
+        "x": 186.46875,
+        "y": 410.59375,
+        "width": 39.046875,
+        "height": 33.59375
+      },
+      "quick": [
+        {
+          "x": 97.6875,
+          "y": 197.59375,
+          "width": 40.625,
+          "height": 33.59375
+        },
+        {
+          "x": 256.671875,
+          "y": 197.59375,
+          "width": 42.640625,
+          "height": 33.59375
+        },
+        {
+          "x": 96.890625,
+          "y": 261.59375,
+          "width": 42.21875,
+          "height": 33.59375
+        },
+        {
+          "x": 247.84375,
+          "y": 261.59375,
+          "width": 60.3125,
+          "height": 33.59375
+        }
+      ],
+      "overlapsQuick": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "horizontalOverflow": false
+    },
+    {
+      "name": "log-success-more-open-360x844-font140.png",
+      "width": 360,
+      "height": 844,
+      "fontScale": 1.4,
+      "state": "success",
+      "moreOpen": true,
+      "toast": {
+        "x": 65,
+        "y": 335.390625,
+        "width": 214,
+        "height": 28
+      },
+      "undo": {
+        "x": 283,
+        "y": 327.390625,
+        "width": 44,
+        "height": 44
+      },
+      "more": {
+        "x": 186.46875,
+        "y": 410.59375,
+        "width": 39.046875,
+        "height": 33.59375
+      },
+      "quick": [
+        {
+          "x": 97.6875,
+          "y": 197.59375,
+          "width": 40.625,
+          "height": 33.59375
+        },
+        {
+          "x": 256.671875,
+          "y": 197.59375,
+          "width": 42.640625,
+          "height": 33.59375
+        },
+        {
+          "x": 96.890625,
+          "y": 261.59375,
+          "width": 42.21875,
+          "height": 33.59375
+        },
+        {
+          "x": 247.84375,
+          "y": 261.59375,
+          "width": 60.3125,
+          "height": 33.59375
+        }
+      ],
+      "overlapsQuick": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "horizontalOverflow": false
+    },
+    {
+      "name": "log-error-360x844-font140.png",
+      "width": 360,
+      "height": 844,
+      "fontScale": 1.4,
+      "state": "error",
+      "moreOpen": false,
+      "toast": {
+        "x": 37,
+        "y": 81.796875,
+        "width": 286,
+        "height": 33.59375
+      },
+      "undo": null,
+      "more": {
+        "x": 186.46875,
+        "y": 544.1875,
+        "width": 39.046875,
+        "height": 33.59375
+      },
+      "quick": [
+        {
+          "x": 97.6875,
+          "y": 413.1875,
+          "width": 40.625,
+          "height": 33.59375
+        },
+        {
+          "x": 256.671875,
+          "y": 413.1875,
+          "width": 42.640625,
+          "height": 33.59375
+        },
+        {
+          "x": 96.890625,
+          "y": 477.1875,
+          "width": 42.21875,
+          "height": 33.59375
+        },
+        {
+          "x": 247.84375,
+          "y": 477.1875,
+          "width": 60.3125,
+          "height": 33.59375
+        }
+      ],
+      "overlapsQuick": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "horizontalOverflow": false
+    },
+    {
+      "name": "log-success-430x844.png",
+      "width": 430,
+      "height": 844,
+      "fontScale": 1,
+      "state": "success",
+      "moreOpen": false,
+      "toast": {
+        "x": 57,
+        "y": 317,
+        "width": 292,
+        "height": 20
+      },
+      "undo": {
+        "x": 353,
+        "y": 305,
+        "width": 44,
+        "height": 44
+      },
+      "more": {
+        "x": 227.046875,
+        "y": 393,
+        "width": 27.890625,
+        "height": 24
+      },
+      "quick": [
+        {
+          "x": 120.984375,
+          "y": 180,
+          "width": 29.015625,
+          "height": 24
+        },
+        {
+          "x": 315.265625,
+          "y": 180,
+          "width": 30.453125,
+          "height": 24
+        },
+        {
+          "x": 120.421875,
+          "y": 244,
+          "width": 30.15625,
+          "height": 24
+        },
+        {
+          "x": 308.953125,
+          "y": 244,
+          "width": 43.078125,
+          "height": 24
+        }
+      ],
+      "overlapsQuick": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "horizontalOverflow": false
+    },
+    {
+      "name": "log-success-more-open-430x844.png",
+      "width": 430,
+      "height": 844,
+      "fontScale": 1,
+      "state": "success",
+      "moreOpen": true,
+      "toast": {
+        "x": 57,
+        "y": 317,
+        "width": 292,
+        "height": 20
+      },
+      "undo": {
+        "x": 353,
+        "y": 305,
+        "width": 44,
+        "height": 44
+      },
+      "more": {
+        "x": 227.046875,
+        "y": 393,
+        "width": 27.890625,
+        "height": 24
+      },
+      "quick": [
+        {
+          "x": 120.984375,
+          "y": 180,
+          "width": 29.015625,
+          "height": 24
+        },
+        {
+          "x": 315.265625,
+          "y": 180,
+          "width": 30.453125,
+          "height": 24
+        },
+        {
+          "x": 120.421875,
+          "y": 244,
+          "width": 30.15625,
+          "height": 24
+        },
+        {
+          "x": 308.953125,
+          "y": 244,
+          "width": 43.078125,
+          "height": 24
+        }
+      ],
+      "overlapsQuick": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "horizontalOverflow": false
+    },
+    {
+      "name": "log-error-430x844.png",
+      "width": 430,
+      "height": 844,
+      "fontScale": 1,
+      "state": "error",
+      "moreOpen": false,
+      "toast": {
+        "x": 37,
+        "y": 69,
+        "width": 356,
+        "height": 24
+      },
+      "undo": null,
+      "more": {
+        "x": 227.046875,
+        "y": 517,
+        "width": 27.890625,
+        "height": 24
+      },
+      "quick": [
+        {
+          "x": 120.984375,
+          "y": 386,
+          "width": 29.015625,
+          "height": 24
+        },
+        {
+          "x": 315.265625,
+          "y": 386,
+          "width": 30.453125,
+          "height": 24
+        },
+        {
+          "x": 120.421875,
+          "y": 450,
+          "width": 30.15625,
+          "height": 24
+        },
+        {
+          "x": 308.953125,
+          "y": 450,
+          "width": 43.078125,
+          "height": 24
+        }
+      ],
+      "overlapsQuick": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "horizontalOverflow": false
+    },
+    {
+      "name": "log-success-430x844-font140.png",
+      "width": 430,
+      "height": 844,
+      "fontScale": 1.4,
+      "state": "success",
+      "moreOpen": false,
+      "toast": {
+        "x": 65,
+        "y": 335.390625,
+        "width": 284,
+        "height": 28
+      },
+      "undo": {
+        "x": 353,
+        "y": 327.390625,
+        "width": 44,
+        "height": 44
+      },
+      "more": {
+        "x": 221.46875,
+        "y": 410.59375,
+        "width": 39.046875,
+        "height": 33.59375
+      },
+      "quick": [
+        {
+          "x": 115.1875,
+          "y": 197.59375,
+          "width": 40.625,
+          "height": 33.59375
+        },
+        {
+          "x": 309.171875,
+          "y": 197.59375,
+          "width": 42.640625,
+          "height": 33.59375
+        },
+        {
+          "x": 114.390625,
+          "y": 261.59375,
+          "width": 42.21875,
+          "height": 33.59375
+        },
+        {
+          "x": 300.34375,
+          "y": 261.59375,
+          "width": 60.3125,
+          "height": 33.59375
+        }
+      ],
+      "overlapsQuick": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "horizontalOverflow": false
+    },
+    {
+      "name": "log-success-more-open-430x844-font140.png",
+      "width": 430,
+      "height": 844,
+      "fontScale": 1.4,
+      "state": "success",
+      "moreOpen": true,
+      "toast": {
+        "x": 65,
+        "y": 335.390625,
+        "width": 284,
+        "height": 28
+      },
+      "undo": {
+        "x": 353,
+        "y": 327.390625,
+        "width": 44,
+        "height": 44
+      },
+      "more": {
+        "x": 221.46875,
+        "y": 410.59375,
+        "width": 39.046875,
+        "height": 33.59375
+      },
+      "quick": [
+        {
+          "x": 115.1875,
+          "y": 197.59375,
+          "width": 40.625,
+          "height": 33.59375
+        },
+        {
+          "x": 309.171875,
+          "y": 197.59375,
+          "width": 42.640625,
+          "height": 33.59375
+        },
+        {
+          "x": 114.390625,
+          "y": 261.59375,
+          "width": 42.21875,
+          "height": 33.59375
+        },
+        {
+          "x": 300.34375,
+          "y": 261.59375,
+          "width": 60.3125,
+          "height": 33.59375
+        }
+      ],
+      "overlapsQuick": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "horizontalOverflow": false
+    },
+    {
+      "name": "log-error-430x844-font140.png",
+      "width": 430,
+      "height": 844,
+      "fontScale": 1.4,
+      "state": "error",
+      "moreOpen": false,
+      "toast": {
+        "x": 37,
+        "y": 81.796875,
+        "width": 356,
+        "height": 33.59375
+      },
+      "undo": null,
+      "more": {
+        "x": 221.46875,
+        "y": 544.1875,
+        "width": 39.046875,
+        "height": 33.59375
+      },
+      "quick": [
+        {
+          "x": 115.1875,
+          "y": 413.1875,
+          "width": 40.625,
+          "height": 33.59375
+        },
+        {
+          "x": 309.171875,
+          "y": 413.1875,
+          "width": 42.640625,
+          "height": 33.59375
+        },
+        {
+          "x": 114.390625,
+          "y": 477.1875,
+          "width": 42.21875,
+          "height": 33.59375
+        },
+        {
+          "x": 300.34375,
+          "y": 477.1875,
+          "width": 60.3125,
+          "height": 33.59375
+        }
+      ],
+      "overlapsQuick": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "horizontalOverflow": false
+    }
+  ]
+}

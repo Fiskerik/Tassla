@@ -4,6 +4,13 @@ import { categoryColors, tokens } from '../../theme/tokens';
 import { PoopIcon } from './PoopIcon';
 import { PillIcon } from './PillIcon';
 
+function PeeIcon({ color, size = tokens.size.iconSm }: { color: string; size?: number }) {
+  return <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.peeIcon, { width: size, height: size }]}>
+    <View style={[styles.peeDrop, { width: size * 0.36, height: size * 0.48, borderColor: color, borderBottomLeftRadius: size * 0.03 }]} />
+    <View style={[styles.peeGround, { width: size * 0.78, borderColor: color }]} />
+  </View>;
+}
+
 export type IconCategory = keyof typeof categoryColors;
 export type IconChipSize = 'medium' | 'large';
 export type IconChipVariant = 'default' | 'rev02-log';
@@ -31,13 +38,14 @@ export function IconChip({ category, size = 'medium', variant = 'default', accid
       {category === 'accident' && preciseAccident ? accidentKinds === null || accidentKinds.length === 0
         ? <Ionicons name="help-circle-outline" size={iconSize} color={color.fg} />
         : <View style={styles.accidentIcons}>
-          {accidentKinds.includes('pee') ? <Ionicons name="water-outline" size={accidentIconSize} color={color.fg} /> : null}
+          {accidentKinds.includes('pee') ? <PeeIcon color={color.fg} size={accidentIconSize} /> : null}
           {accidentKinds.includes('poop') ? <PoopIcon color={color.fg} size={accidentIconSize} /> : null}
         </View>
-        : category === 'accident' ? <View style={styles.accidentIcons}><Ionicons name="water-outline" size={accidentIconSize} color={color.fg} /><PoopIcon color={color.fg} size={accidentIconSize} /></View>
+        : category === 'accident' ? <View style={styles.accidentIcons}><PeeIcon color={color.fg} size={accidentIconSize} /><PoopIcon color={color.fg} size={accidentIconSize} /></View>
+        : category === 'pee' && variant === 'rev02-log' ? <PeeIcon color={color.fg} size={iconSize} />
         : icon === 'poop' ? <PoopIcon color={color.fg} size={iconSize} /> : icon === 'medical-outline' ? <PillIcon color={color.fg} size={iconSize} /> : <Ionicons name={icon} size={iconSize} color={color.fg} />}
     </View>
   );
 }
 
-const styles = StyleSheet.create({ chip: { minWidth: tokens.size.chipMd, alignItems: 'center', justifyContent: 'center' }, accidentIcons: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.size.stroke } });
+const styles = StyleSheet.create({ chip: { minWidth: tokens.size.chipMd, alignItems: 'center', justifyContent: 'center' }, accidentIcons: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.size.stroke }, peeIcon: { alignItems: 'center', justifyContent: 'center' }, peeDrop: { borderWidth: tokens.size.stroke * 2, borderRadius: tokens.radius.full, borderTopLeftRadius: 0, transform: [{ rotate: '45deg' }] }, peeGround: { borderBottomWidth: tokens.size.stroke * 2, position: 'absolute', bottom: '12%' } });

@@ -14,6 +14,7 @@ export function nextMainTabDestination(page: string, direction: 'left' | 'right'
 }
 
 export function activeMainTabDestination(page: string): BottomNavDestination {
+  if (page === 'checklist' || page === 'home-training-detail') return 'home';
   return isMainTabDestination(page) ? page : 'more';
 }
 

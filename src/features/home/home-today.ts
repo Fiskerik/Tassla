@@ -62,3 +62,35 @@ export function homeTodaySources(
     }),
   };
 }
+
+export type TrainingMutationLease = Readonly<{ scope: string; token: object }>;
+
+export function createTrainingMutationLease(scope: string): TrainingMutationLease {
+  return { scope, token: {} };
+}
+
+export function acquireTrainingMutationLease(
+  active: TrainingMutationLease | null,
+  expectedScope: string | null,
+  currentScope: string,
+  accountDeletionInvalidated: boolean,
+): TrainingMutationLease | null {
+  if (!expectedScope || expectedScope !== currentScope || accountDeletionInvalidated || active) return null;
+  return createTrainingMutationLease(currentScope);
+}
+
+export function ownsTrainingMutationLease(
+  active: TrainingMutationLease | null,
+  expected: TrainingMutationLease,
+  currentScope: string,
+  accountDeletionInvalidated: boolean,
+): boolean {
+  return active === expected && expected.scope === currentScope && !accountDeletionInvalidated;
+}
+
+export function releaseTrainingMutationLease(
+  active: TrainingMutationLease | null,
+  expected: TrainingMutationLease,
+): TrainingMutationLease | null {
+  return active === expected ? null : active;
+}

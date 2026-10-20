@@ -19,15 +19,15 @@ export function reviewFaqFor(context: ChecklistContext) {
 }
 
 export const REVIEW_TRAINING_PROGRAMS: readonly PublishedTrainingProgram[] = [
-  { id: 'review-v1:training:trygg-start', content_id: 'review-v1:training:trygg-start', version: 1, title: 'Trygg start hemma', body: 'Korta övningar för en lugn start. Anpassa tempot efter valpen.', sources: ['Tillfälligt layoututkast – granskas före publicering'], steps: [
+  { id: 'review-v1:training:trygg-start', content_id: 'review-v1:training:trygg-start', version: 1, title: 'Trygg start hemma', body: 'Korta övningar för en lugn start. Anpassa tempot efter valpen.', sources: ['Tillfälligt layoututkast – granskas före publicering'], is_ai_generated: true, steps: [
     { id: 'review-v1:training:trygg-start:one', position: 1, title: 'Utforska i egen takt', instruction: 'Låt valpen nosa på en lugn plats och belöna frivilligt lugn.' },
     { id: 'review-v1:training:trygg-start:two', position: 2, title: 'Vila nära', instruction: 'Öva en kort stund på att slå sig till ro med familjen i närheten.' },
   ], completedStepIds: [], completedAtByStepId: {} },
-  { id: 'review-v1:training:kontakt', content_id: 'review-v1:training:kontakt', version: 1, title: 'Kontakt och namn', body: 'Lekfulla kontaktövningar i en miljö där valpen kan lyckas.', sources: ['Tillfälligt layoututkast – granskas före publicering'], steps: [
+  { id: 'review-v1:training:kontakt', content_id: 'review-v1:training:kontakt', version: 1, title: 'Kontakt och namn', body: 'Lekfulla kontaktövningar i en miljö där valpen kan lyckas.', sources: ['Tillfälligt layoututkast – granskas före publicering'], is_ai_generated: true, steps: [
     { id: 'review-v1:training:kontakt:one', position: 1, title: 'Säg namnet en gång', instruction: 'När valpen vänder sig mot dig, markera och belöna lugnt.' },
     { id: 'review-v1:training:kontakt:two', position: 2, title: 'Följ en rörelse', instruction: 'Ta ett steg åt sidan och belöna om valpen väljer att följa.' },
   ], completedStepIds: [], completedAtByStepId: {} },
-  { id: 'review-v1:training:vardagsro', content_id: 'review-v1:training:vardagsro', version: 1, title: 'Vardagsro och hantering', body: 'Frivilliga, korta steg med pauser. Avsluta medan valpen fortfarande är trygg.', sources: ['Tillfälligt layoututkast – granskas före publicering'], steps: [
+  { id: 'review-v1:training:vardagsro', content_id: 'review-v1:training:vardagsro', version: 1, title: 'Vardagsro och hantering', body: 'Frivilliga, korta steg med pauser. Avsluta medan valpen fortfarande är trygg.', sources: ['Tillfälligt layoututkast – granskas före publicering'], is_ai_generated: true, steps: [
     { id: 'review-v1:training:vardagsro:one', position: 1, title: 'Paus på filt', instruction: 'Belöna när valpen själv väljer att stanna till på en bekväm filt.' },
     { id: 'review-v1:training:vardagsro:two', position: 2, title: 'Kort beröring', instruction: 'Låt valpen nosa på handen och avsluta efter en lugn, frivillig kontakt.' },
   ], completedStepIds: [], completedAtByStepId: {} },
@@ -36,5 +36,5 @@ export const REVIEW_TRAINING_PROGRAMS: readonly PublishedTrainingProgram[] = [
 export const REVIEW_TRAINING_GUIDES: readonly HomeContent[] = REVIEW_TRAINING_PROGRAMS.map((program) => ({
   id: program.content_id, contentId: program.content_id, version: 1, title: program.title,
   body: `Tillfälligt exempel – innehållet är inte sakgranskat.\n\n${program.body}\n\n${program.steps.map((step) => `## ${step.title}\n${step.instruction}`).join('\n\n')}`,
-  contentType: 'training_program', sources: program.sources,
+  contentType: 'training_program', sources: program.sources, isAiGenerated: program.is_ai_generated,
 }));

@@ -2686,7 +2686,7 @@
       "id": "UI-08",
       "title": "Toastkanter och finjustering av Hem, Kunskap, Mer och Träning",
       "mvp_requirement": "docs/mvp.md: Hem, Valplogg, Träning och Kunskap; Eriks UI-08-besked 2026-10-10",
-      "plan": "docs/tasks/dev/ui-08.md v4",
+      "plan": "docs/tasks/dev/ui-08.md v5",
       "write_paths": [
         "src/components/ui/Toast.tsx",
         "src/components/ui/BottomNav.tsx",
@@ -2706,7 +2706,7 @@
       "acceptance": [
         "Toast-färger i appen matchar befintliga Figma-ramar (success grön, error röd, övriga semantiska varianter)",
         "Hem visar carousel före datumremsa och högst tre nyaste inlästa logghändelser per valt datum; planer räknas inte; ingen datahämtning läggs till",
-        "Mer-rader får tokens.layout.listGap; footerflikar får tokens.spacing.xs med bevarade tryckytor och enradiga etiketter vid 360/430 och 140 procent",
+        "Mer-rader får tokens.layout.listGap; footer-gapet förblir borttaget enligt godkänd v4-fallback; flikarna är lika breda vid fontScale 1.0 och använder namngivna flexvikter (Hem 0.8667, Logg 0.8667, Träning 1.2, Kunskap 1.2, Mer 0.8667) vid fontScale 1.3/1.4; alla fem labels är enradiga vid 360/430 px, utan horisontellt overflow och med tryckmål minst 44×44 pt",
         "Kunskapskortens rubriker ryms utan ensamma slutbokstäver vid 140 procent och med fortsatt Dynamic Type",
         "Endast publicerade träningsrader använder caption-variant av ListRow; övriga vyer behåller standardstorlek; visuell evidens och design-rules-checklista finns"
       ],
@@ -2714,14 +2714,15 @@
         "pnpm check",
         "EXPO_NO_TELEMETRY=1 pnpm bundle:ios",
         "git diff --check",
-        "python tools/dev_flow.py validate"
+        "python tools/dev_flow.py validate",
+        "UI-08 v5: render all five active footer tabs at 360/430 px and fontScale 1.0/1.3/1.4; record line counts, horizontal overflow and each actual touch-target size"
       ],
       "depends_on": [
         "UI-06",
         "UI-07",
         "FIX-36"
       ],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -2746,9 +2747,75 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "UI-08 implementering och källreview färdiga; QA blockerad av dokumenterad RN Web screenshotmiljö (localhost/Chromium). Pausas för att frigöra Toast-filens skrivägarskap till FIX-38 lint-rättning; visuell QA kvarstår."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Headless RN Web rendering is now available; active Träning at 360 px/140% is corrected by the already-approved UI-08 v4 fallback. §14 items 16-17 remain separate rev02 scope; resume this bounded checkpoint for QA and review."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE for current bounded local checkpoint; UI-08 v4 fallback covers removing only nav gap; full rev02 #16-17 remain open as separate scope."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume UI-08 v4 implementation/evidence closeout; only product-code change removes footer nav gap, screenshots and §14 evidence are recorded."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation and full checks complete: pnpm check 583/583, public iOS JS export 1,447 modules, git diff --check and dev_flow validate PASS; screenshots and rev02 comparisons saved. Independent QA pending."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent QA BLOCK: active Träning meets the v4 fallback at 360×844/140%, but Kunskap still wraps to two lines in the same footer; queue acceptance requires every footer label on one line at 360/430 and 140%. Evidence: docs/design/UI-08/training-360x844-font140.png and docs/design/UI-08/knowledge-360x844-font140.png. Next: resolve the v4/effective queue acceptance conflict with Architect/Product, then amend/implement only if approved; full rev02 #16–17 remain open."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "QA blocker resolved at plan level: v5 aligns queue acceptance with Architect APPROVE WITH CONDITIONS and UX Critic PROCEED WITH CHANGES. Keeps all labels/full font scale/touch targets, gapless v4 fallback, equal widths at scale 1, adaptive named widths at 1.3/1.4. Next: implement and verify matrix; no QA/commit claim yet."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect final APPROVE v5 after confirming §3 supersedes v4 footer widths/Training-only gate and queue acceptance/checks match: all five tabs, 360/430, fontScale 1.0/1.3/1.4, line count, overflow and target size. Critic PROCEED WITH CHANGES conditions incorporated."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement approved UI-08 v5 adaptive footer width only; preserve gapless fallback, equal normal widths, all labels/scaling and ≥44×44 targets. Implement responsive weights and matrix evidence in UI-08 docs; no unrelated Toast edits."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v5 implemented in BottomNav. pnpm check 583/583 PASS; public iOS export 1,447 modules PASS; 30 headless RN Web screenshots/150 label metrics across all active tabs, widths 360/430, fontScale 1.0/1.3/1.4: one line, no overflow, equal normal widths, all tap targets at least 44×44 CSS px; separate axis minima: 62.39 CSS px width and 58 CSS px height from different cells (web references). Evidence: docs/design/UI-08/footer-matrix-2026-10-20.json and footer-*.png. diff/queue checks PASS. Native Dynamic Type and full rev02 remain open; independent QA pending."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS for bounded v5 footer acceptance: 30 screenshots/150 label samples cover all five active tabs, widths 360/430 and fontScale 1.0/1.3/1.4; all one line, no horizontal overflow, tap targets at least 44×44 px; separate minima are 62.39 px width and 58 px height from different matrix cells (web references). v4 block is clearly historical; checklist §14 #2/#6 reflect adaptive widths. UI-09 files remain uncommitted and out of this checkpoint. Reviewer pending; rev02/native remain open."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS 2026-10-20 after QA PASS: bounded v5 footer acceptance verified, all five tabs one-line at 360/430 px with fontScale 1.0/1.3/1.4, no horizontal overflow, normal widths equal and targets >=44x44 CSS px. UI-08 checkpointable; full rev02/native acceptance remain open. UI-09 excluded."
         }
       ],
-      "next_step": "UI-08 implementering och källreview färdiga; QA blockerad av dokumenterad RN Web screenshotmiljö (localhost/Chromium). Pausas för att frigöra Toast-filens skrivägarskap till FIX-38 lint-rättning; visuell QA kvarstår."
+      "next_step": "Independent Reviewer PASS 2026-10-20 after QA PASS: bounded v5 footer acceptance verified, all five tabs one-line at 360/430 px with fontScale 1.0/1.3/1.4, no horizontal overflow, normal widths equal and targets >=44x44 CSS px. UI-08 checkpointable; full rev02/native acceptance remain open. UI-09 excluded."
     },
     {
       "id": "MOTION-01",
@@ -3242,7 +3309,7 @@
       "id": "UI-09",
       "title": "Kompakt loggbekräftelse med grön bock",
       "mvp_requirement": "Eriks uttryckliga UI-begäran 2026-10-10 om mindre grön sparbekräftelse, bockikon och placering närmare loggen",
-      "plan": "docs/plans/UI-09-toast-feedback-ux-spec.md v3",
+      "plan": "docs/plans/UI-09-toast-feedback-ux-spec.md v4",
       "write_paths": [
         "src/components/ui/Toast.tsx",
         "src/features/puppy-log/LogScreen.tsx",
@@ -3260,16 +3327,17 @@
         "The confirmation stays visible at a narrow mobile height with Fler expanded and collapsed, without covering controls or the undo action",
         "The icon is hidden from screen readers and the confirmation remains understandable without color; undo touch target, small widths and large text remain usable",
         "Other existing success-toast callers receive the compact check treatment without a placement change",
-        "No time/date/data-schema changes are included; those are planned separately for Home and health history"
+        "No time/date/data-schema changes are included; those are planned separately for Home and health history",
+        "UI-09 approval covers only the focused toast journey; full-screen Logga composition against vision_rev02.jpg is separately graded and may remain open."
       ],
       "checks": [
         "Focused toast policy tests and pnpm check",
         "iOS export, git diff --check and python tools/dev_flow.py validate",
         "Independent QA and Reviewer",
-        "Rendered success and error/undo states compared with vision_rev01.jpg, small/large layout and large text; otherwise itemize NOT TESTABLE"
+        "Rendered success/error/undo and Fler open/closed compared with the focused Logga journey in vision_rev02.jpg at 375x667 and 360/430x844, normal and 140%-RN-Web stress; record full-screen rev02 composition separately, and itemize missing interactions/native checks as NOT TESTABLE. Fler-selection is policy-tested but has no after-selection screenshot."
       ],
       "depends_on": [],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -3300,9 +3368,45 @@
           "to": "blocked",
           "actor": "reviewer",
           "evidence": "Independent Reviewer BLOCK: static code/API checks pass, but required rendered comparison/checklist is absent; visual acceptance is NOT TESTABLE in current RN Web tool environment. No commit/push."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Historical reviewer block was for missing screenshots. RN Web evidence is now available at 375x667 and in the 360/430x844 responsive matrix; Architect reviewed amendment v4 with conditions to use canonical vision_rev02 and keep full-screen mismatch separate. Next: incorporate review conditions and run independent QA, then Reviewer."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE WITH CONDITIONS for plan v4; all five conditions are incorporated in v4 plan, queue acceptance, release status, and evidence boundaries. UX Critic PROCEED. Focused toast journey only; whole-screen rev02 remains separately No/open."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume bounded UI-09 closeout on codex/tassla-ui-ux-bundle-2026-10-18. Toast implementation already exists at historical checkpoint 617fb67; this continuation updates evidence and docs only, with no product-code change. Independent QA is reviewing the frozen evidence."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation/evidence checkpoint frozen: no product-source change; plan v4 and full §14 matrix updated. Full pnpm check passed (typecheck, edge typecheck, ESLint, all tests); focused toast policy test passed 5/5; git diff --check and queue validation passed. Independent QA PASS for focused toast journey with stated limits."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: inspected v4 plan/queue/release/§14 evidence, current Toast/LogScreen code, all captures and responsive matrix. Confirms focused toast only; full-screen rev02 remains No/open, missing after-Fler screenshot and native NOT TESTABLE remain explicit; 0.42 CSS-px gap tracked separately."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS on v4 bounded toast journey and synchronized queue/release/plan evidence. Full-screen rev02 remains separately No/open; after-Fler selection screenshot missing; native accessibility, Dynamic Type, physical targets, safe area and reduced motion NOT TESTABLE. Checkpoint documentation/evidence only, no product-code change."
         }
       ],
-      "next_step": "Commit/push 617fb67 verified; visual acceptance remains open. QA-11 owns authorized follow-up corrections; prior write ownership released."
+      "next_step": "Independent Reviewer PASS on v4 bounded toast journey and synchronized queue/release/plan evidence. Full-screen rev02 remains separately No/open; after-Fler selection screenshot missing; native accessibility, Dynamic Type, physical targets, safe area and reduced motion NOT TESTABLE. Checkpoint documentation/evidence only, no product-code change."
     },
     {
       "id": "FIX-38",
@@ -7055,85 +7159,284 @@
       "test_evidence": [
         "Profil- och scopeprov, kataloglicensbevis, RLS där dataskrivning ändras, 375/430-render"
       ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
+      "implementation_state": "implemented; local QA PASS, frozen-diff UX Reviewer pending",
       "evidence_status": "not_run — required evidence listed in test_evidence"
     },
     {
       "id": "FLOW-HOME-CHECKLIST-01",
       "title": "Hem till daglig Checklista och tillbaka",
       "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "plan": "docs/plans/FLOW-HOME-CHECKLIST-01-ux-spec.md v9",
       "write_paths": [
+        "src/features/home/DailyChecklistScreen.tsx",
         "src/features/home/HomeScreen.tsx",
-        "src/features/home/DailyActivityManagerSheet.tsx",
-        "src/features/home/ProductWorkspace.tsx"
+        "src/features/home/ProductWorkspace.tsx",
+        "src/components/AppPrimitives.tsx",
+        "src/features/home/main-navigation.ts",
+        "src/features/home/home-today.ts",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/home/README.md",
+        "tests/daily-checklist-screen.test.mjs",
+        "tests/daily-checklist-route.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/training-step-mutation-scope.test.mjs",
+        "tests/home-vision.test.mjs",
+        "tests/main-navigation.test.mjs",
+        "tests/home-today.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "docs/design/evidence/flow-home-checklist-2026-10-20",
+        "docs/tasks/dev/FLOW-HOME-CHECKLIST-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/plans/FLOW-HOME-CHECKLIST-01-ux-spec.md"
       ],
       "acceptance": [
-        "Hem och dagslista har samma fullständiga population och bekräftade count",
-        "Skapa/ändra/ta bort/ångra rutin fungerar; träningsrad öppnar källsteg",
-        "Synliga filter fungerar; pending/failed/unknown döljer falsk progress",
-        "För full panelacceptans fungerar Idag/Denna vecka/Alla och Kommande med definierat urval och verkliga planposter"
+        "Hem visar exakt en alltid synlig Checklista-länk med etiketten Checklista och tillgängligt namn Öppna dagens checklista vid loading/error/0/1/5/7; den ersätter villkorade Visa alla och dubleras inte med separat Hantera.",
+        "Fullskärmslistan har exakt samma aktiva konto/hund/dag/tidszon, population och bekräftade count som Hem, inklusive alla rader över fem; 0 uppgifter visar neutralt tomläge utan 0 av 0 eller progress.",
+        "Rutinbock använder befintlig pending/confirmed/readback/retry; failed/unknown ändrar inte bekräftad progress.",
+        "Träningsrad öppnar exakt publicerad programversion och step-id i en Home-underordnad route; detaljen börjar överst med synlig AppBar/bakåtknapp. Close eller bekräftad completion/undo återgår med sparad scrollposition och uppdaterad källrad synlig. Ett 7-radersprov verifierar synlig detaljnavigation och samma rad/count vid retur; failed/unknown stannar vid källsteget.",
+        "Befintlig rutin-CRUD, dagsval, borttagning, ångra, Home/Training, hund-/kontoscope och dagsgräns regressionskontrolleras. Konto-/hund-/dags-/tidszonsscopebyte ändrar faktisk route till Home; A→B→A återupplivar inte child route, och en gammal finally/lock påverkar inte ny scope.",
+        "Loading, tomt, error/retry, refresh error, pending, failed och unknown är skilda; läsfel ger inte falsk 0/0-progress.",
+        "Berörda handlingar har tillgängliga namn/status och minst 44×44 pt tryckyta; reducerad rörelse och stor text förblir fungerande.",
+        "RN Web-evidens för Idag vid 375/430/667, 140%, public/review och 0/1/5/7 samt relevanta spar-/felläge; browser verifierar detaljens synliga AppBar/bakåtknapp, start vid toppen, återställd lägre källa, lämna→öppna på toppen samt hundscopebyte→öppna på toppen. §14 redovisar Idag-slicen och markerar punkt 16/full panel 4 som öppen.",
+        "Inga filter för Denna vecka/Alla/Kommande visas eller rapporteras klara i denna slice; efterföljande FLOW-HOME-CHECKLIST-FILTERS-01 bär den kvarvarande panelacceptansen."
       ],
       "checks": [
+        "node --experimental-strip-types --test tests/daily-checklist-screen.test.mjs tests/daily-checklist-route.test.mjs tests/daily-activity-ui.test.mjs tests/home-vision.test.mjs tests/training-step-mutation-scope.test.mjs tests/main-navigation.test.mjs tests/home-today.test.mjs",
         "pnpm check",
+        "pnpm bundle:ios",
         "git diff --check",
-        "python tools/dev_flow.py validate"
+        "python -X utf8 tools/dev_flow.py validate",
+        "Rendera public/review via tools/visual-check/build.cjs och verifiera via tools/visual-check/verify.py; arkivera bilder, browserresultat och §14"
       ],
       "depends_on": [
         "HOME-ROUTINE-CHECKLIST-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v6; UX Critic PROCEED v6; Security PROCEED v5 with stale scope/account-deletion guardrails. Decisions recorded in docs/tasks/dev/FLOW-HOME-CHECKLIST-01.md; plan and queue v6 synchronized."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Plan v6 approved; before app-code changes Architect re-approved exact-path/test-only amendment v7. UX Critic PROCEED v6 and Security PROCEED v5 remain applicable. Durable decisions in docs/tasks/dev/FLOW-HOME-CHECKLIST-01.md."
+        },
+        {
+          "from": "implementing",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Architect APPROVE plan v9; UX Critic final PASS; Security static PASS; public/review RN Web PASS; pnpm check 611/611; public iOS export 1,450 modules; diff check and dev_flow validation PASS. Native and live RLS remain NOT TESTABLE."
+        }
+      ],
+      "next_step": "Next P1: FLOW-HOME-CHECKLIST-FILTERS-01. Write exact range/data/UX plan v1; Product, Architect, Critic and Security review before implementation. Keep routine phone/TestFlight checks separate.",
       "priority": "P1",
       "panels": [
         "1",
         "4"
       ],
       "risk_class": "M",
-      "checkpoint": "Hel Hem till Checklista till Hem lokalt QA/Reviewer; live status separat från FLOW-ROUTINE-RUNTIME-01.",
+      "checkpoint": "Avgränsad Hem → full Idag-checklista → källhandling → Checklistan/Hem lokalt QA/Reviewer; panel 4 förblir öppen tills FILTERS-paketet är accepterat. Live RLS/native hålls separat.",
       "test_evidence": [
-        "Riktat lyckat/fel/unknown-prov, datum/scope-regression, §14-bilder public/review"
+        "Riktade lyckat/fel/unknown- och scope/dagsbytesprov; public/review §14-renderbevis för Idag, inte full panelacceptans"
       ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "implementation_state": "Implemented and independently reviewed local Idag checklist slice; full panel 4 continues in FLOW-HOME-CHECKLIST-FILTERS-01.",
+      "evidence_status": "PASS local: 611 tests, public iOS export 1,450 modules, public/review browser evidence and final UX Reviewer. NOT TESTABLE: native VoiceOver/Dynamic Type/physical gestures and live Supabase/RLS."
+    },
+    {
+      "id": "FLOW-HOME-CHECKLIST-FILTERS-01",
+      "title": "Hem: Denna vecka, Alla och Kommande i Checklistan",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 4; docs/design/vision-rev02-screen-contracts.md panel 4",
+      "plan": "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md v1; Product/Architect/Critic/Security review krävs före implementation",
+      "write_paths": [
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/daily-activity-data.ts",
+        "src/features/home/daily-activity-model.ts",
+        "src/features/home/README.md",
+        "src/data/workspace-data.ts",
+        "src/features/health/PlannedHealthScreen.tsx",
+        "tests/daily-activity-range.test.mjs",
+        "tests/daily-checklist-filters.test.mjs",
+        "tests/daily-activity-model.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "docs/design/evidence/flow-home-checklist-filters-2026-10-20",
+        "docs/tasks/dev/FLOW-HOME-CHECKLIST-FILTERS-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md"
+      ],
+      "acceptance": [
+        "Denna vecka är aktiv ISO-måndag–söndag i samma lokala datum-/hund-/kontoscope; visa endast sparade dagsförekomster med frysta snapshots, aldrig härledda missade dagar",
+        "Alla visar samtliga sparade dagsaktiviteter som finns kvar inom dokumenterad 30-dagars gallring och aldrig rutinmallar eller obegränsad historik",
+        "Kommande använder ett begränsat fönster om sju lokala kalenderdagar och endast verkliga framtida ägarplaner: återkommande rutininstanser och read-only dog_health_plans märkta Planerad; plan öppnar rätt destination och räknas aldrig som utförd eller i completed-progress",
+        "Framtida träningsval hittas inte på; visas bara om en befintlig godkänd källa faktiskt lagrar ett framtida urval",
+        "Filtersegment visas först när kompletta urval, paginering, local-date/DST/repeat-regler och distinct empty/loading/partial/error states fungerar; delvis läst data markeras aldrig som komplett",
+        "Panel 4 fungerar från Hem → Idag/Denna vecka/Alla/Kommande → korrekt hantering/källa → tillbaka; ring/count/rows och RLS-scope är sanningsenliga",
+        "Renderad public/review-evidens jämför hela panel 4 mot rev02 med §14 punkterna 1–18, stora textlägen och tydligt statusbesked för live backend/native"
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/daily-activity-range.test.mjs tests/daily-checklist-filters.test.mjs tests/daily-activity-model.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "Rendera och verifiera kompletta public/review filter- och planned-lägen; live Supabase/RLS där urvalet kräver ny range-fråga"
+      ],
+      "depends_on": [
+        "FLOW-HOME-CHECKLIST-01"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Product, Architect, Critic och Security granskar plan v1; ingen implementation eller statusövergång före dokumenterade godkännanden.",
+      "priority": "P1",
+      "panels": [
+        "4"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Full panel 4 filter- och Kommande-resa efter accepterad Idag-slice; framtida planer är skrivskyddade och ingår aldrig som utförd progress.",
+      "test_evidence": [
+        "Monday/Sunday/year/DST/repeat boundaries, pagination completeness, 30-day retention, empty/partial/error, routine/training scope, Planerad health link, §14 image matrix, runtime RLS boundary"
+      ],
+      "implementation_state": "Plan v1 dokumenterad för rollgranskning; ingen appkod ändrad.",
+      "evidence_status": "plan review pending; implementation evidence not run"
     },
     {
       "id": "FLOW-LOG-01",
       "title": "Logga med bevarad snabbresa och historik",
       "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "plan": "docs/plans/FLOW-LOG-01-calendar-ux-plan.md v5",
       "write_paths": [
         "src/features/puppy-log/LogScreen.tsx",
-        "src/features/home/ProductWorkspace.tsx"
+        "src/features/puppy-log/LogDateCalendar.tsx",
+        "src/features/puppy-log/log-calendar-model.ts",
+        "src/features/puppy-log/README.md",
+        "src/data/workspace-data.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/theme/tokens.ts",
+        "src/components/ui/IconChip.tsx",
+        "src/components/ui/QuickLogTile.tsx",
+        "src/components/ui/ListRow.tsx (log-timeline pressed-state only)",
+        "src/components/AppPrimitives.tsx (only if shared AppScreen measurement requires a correction)",
+        "tests/log-calendar-model.test.mjs",
+        "tests/workspace-log-calendar.test.mjs",
+        "tests/log-calendar-policy.test.mjs",
+        "docs/plans/FLOW-LOG-01-calendar-ux-plan.md",
+        "docs/design/evidence/flow-log-01/",
+        "docs/releases/FLOW-LOG-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/dev/FLOW-LOG-01.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/releases/HISTORY-2026.md"
       ],
       "acceptance": [
-        "Ett tryck på primärt snabbval registrerar eller begär befintlig dublettbekräftelse",
-        "Datumbyte, redigering, radering och ångra använder bekräftade händelser",
-        "Översikt öppnar Insikter när panel 8 finns; ingen död flik"
+        "Date control opens Swedish Monday-first calendar; previous month works, next month disabled in current month, future days disabled, selection updates Log history and closes calendar.",
+        "Days with one or more active-dog LOG_EVENT_TYPES are marked via authenticated active-dog query with existing RLS; local half-open month bounds, occurred_at-only keyset cursor, deduped equal timestamps and complete traversal.",
+        "Calendar day accessibility name/state conveys localized date plus has-logs/selected/today/disabled as relevant; loading, complete-empty and error+retry are distinct; day selection works if marker query fails.",
+        "Account/session, dog, month, timezone, close and stale response changes cannot leak markers; confirmed local mutations invalidate/requery; other-device changes refresh at next open. Snapshot is eventual, not transactional, and partial pages never appear complete.",
+        "Log-only pee token is warm amber; global Home pee stays blue; water blue and accident red. Pee/water are distinguishable by distinct icon forms and text without color; QA checks icon-label fit at actual quick-tile and chip sizes in grayscale at normal/140% text; confusing shapes or clipped labels fail. Text contrast >=4.5:1 and non-text control/icon contrast >=3:1 in normal/pressed/selected; Log timeline pressed uses selectedSurface without opacity, other ListRow variants unchanged.",
+        "Actual AppScreen bottom gap is >=8 CSS px at 360x844/140%/Fler-open scroll bottom; sanity-check 375/430 and Fler open/closed without duplicate inset.",
+        "RN Web evidence covers calendar, loading/empty/error, markers, selected date, quick actions and responsive spacing; full rev02 comparison reported separately.",
+        "Native checks and real RLS probe are PASS only if actually run; RLS probe uses two synthetic owner/dog scopes and verifies anon denial; otherwise explicitly NOT TESTABLE. Security review, QA, Reviewer, focused tests, pnpm check and public iOS JS bundle required."
       ],
       "checks": [
-        "pnpm check",
-        "git diff --check",
-        "python tools/dev_flow.py validate"
+        "Focused log calendar model/data/policy tests and pnpm check",
+        "Public pnpm bundle:ios",
+        "Rendered RN Web interaction/matrix evidence plus §14 rows 1-18",
+        "git diff --check and python -X utf8 tools/dev_flow.py validate",
+        "Independent QA and Reviewer"
       ],
       "depends_on": [
         "UX-LOG-EDITOR-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v4, UX Critic PROCEED v4, Security pre-implementation APPROVE v4; reviews saved in docs/tasks/dev/FLOW-LOG-01.md; live RLS remains NOT TESTABLE until synthetic dev probe."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementering startad på godkänd plan v4; segmentmandat från Eriks 2026-10-06-besked; Architect APPROVE, Critic PROCEED och Security pre-implementation APPROVE sparade i docs/tasks/dev/FLOW-LOG-01.md."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementer handoff v5: 9/9 focused tests, pnpm check 592/592, public pnpm bundle:ios 1,449 modules, queue validation PASS; diff --check EOF whitespace corrected by coordinator. Render matrix, spacing, RLS and native remain NOT TESTABLE pending independent QA."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "QA FAIL: calendar day targets were below 44 pt and query/lifecycle cases were missing; bounded correction scoped to the already approved plan v5."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction attempt 1: reduce calendar inner horizontal inset, enforce 44 pt day-cell width, add timestamp precision/equal-boundary, in-flight abort, between-page mutation, refresh, and lifecycle guard tests; keep rendering/RLS/native NOT TESTABLE."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Existing Architect APPROVE v5 remains valid: correction adds no scope or data/auth changes and implements the existing 44 pt/cursor acceptance."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Correction attempt 1 implemented; targeted FLOW-LOG tests pass 16/16 and 360 pt touch-target arithmetic now yields 44.57 pt. Independent QA rerun pending."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Correction attempt 1 complete: focused 16/16, pnpm check 599/599, public bundle 1,449 modules, diff --check and queue validation PASS; independent QA confirms code/test PASS but package acceptance still awaits rendered UI evidence."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "QA package verdict: code/test PASS, but explicit responsive render matrix, grayscale proof and AppScreen bottom-gap evidence are NOT TESTABLE because no renderer/browser is installed; design-rules §14 prevents visual PASS. Security APPROVE static; live RLS/native separately NOT TESTABLE. Preserve checkpoint and continue next independent package; revisit when approved render capability is available."
+        }
+      ],
+      "next_step": "Blocked only on required rendered UI matrix/grayscale/AppScreen gap and §14 evidence because no approved renderer is installed. Push the local code/test checkpoint, continue the next independent approved package, and resume visual acceptance when rendering is available.",
       "priority": "P2",
       "panels": [
         "5"
       ],
-      "risk_class": "M",
+      "risk_class": "H",
       "checkpoint": "Panel 5 funktionellt regressionsprov; hänvisa till tidigare design- och editor-checkpoints.",
       "test_evidence": [
-        "Riktade logg-/datumprov, fel/unknown/undo, public/review §14 och 140 %"
+        "Synthetic PostgREST tests verify dog-scoped occurred_at-only query, local half-open bounds, exact microsecond cursor, equal timestamp boundary, error/abort, mutation during traversal and fresh traversal after a change before cursor.",
+        "Calendar model and source policy tests verify Monday-first dates, DST/month bounds, accessibility/state source, 44 pt target arithmetic, request guards and mutation refresh wiring; component-level scope race remains not rendered.",
+        "Contrast calculations from current tokens pass for Pee, Water, Accident and timeline text. Grayscale actual-size comparison, 140% rendered text and AppScreen bottom-gap matrix remain NOT TESTABLE.",
+        "Live two-owner RLS/anon-denial probe and native Dynamic Type/VoiceOver/physical target/safe-area/reduced-motion are NOT TESTABLE in the current environment.",
+        "Focused tests 16/16, pnpm check 599/599, public pnpm bundle:ios 1,449 modules, git diff --check and python -X utf8 tools/dev_flow.py validate pass."
       ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "implementation_state": "v5 implemented; correction 1 verified by local tests; package visual acceptance remains blocked on render evidence",
+      "evidence_status": "QA code/test PASS (16/16, pnpm check 599/599, bundle 1,449); QA overall NOT PASS pending render/§14. Security final APPROVE static; live RLS/native NOT TESTABLE."
     },
     {
       "id": "FLOW-TRAINING-01",
@@ -7626,6 +7929,1408 @@
       ],
       "implementation_state": "Plan v5 implementerad; Codemagic Check application-felen rättade; oberoende QA och statisk Reviewer PASS.",
       "evidence_status": "partial: CI=1 pnpm check PASS (492/492), Expo iOS export PASS, guards/diff-check PASS, QA PASS, Reviewer PASS; Codemagic cloud, Xcode archive, CocoaPods/signing/native NOT TESTABLE."
+    },
+    {
+      "id": "CONTENT-PUBLISH-LABEL-01",
+      "title": "Publicera v1-innehåll med synlig AI-ursprungsmarkering",
+      "mvp_requirement": "docs/mvp.md: Kunskap och tre träningsprogram",
+      "plan": "docs/tasks/dev/CONTENT-PUBLISH-LABEL-01.md v1",
+      "write_paths": [
+        "docs/tasks/dev/CONTENT-PUBLISH-LABEL-01.md",
+        "docs/plans/CONTENT-PUBLISH-LABEL-01-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/content/README.md",
+        "src/data/app-data.ts",
+        "src/data/workspace-data.ts",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/review-content.ts",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "tests/content-delivery.test.mjs",
+        "tests/workspace-data.test.mjs",
+        "tests/training-activity-date.test.mjs",
+        "tests/content-bundle.test.mjs",
+        "supabase/migrations/202610180002_content_ai_origin.sql",
+        "supabase/content/mvp-content-v1.sql",
+        "supabase/content/publish-mvp-content-v1.sql",
+        "supabase/README.md"
+      ],
+      "acceptance": [
+        "De tio uttryckligen godkända runtimeversionerna sätts PUBLISHED och AI-markerade av transaktionellt SQL med exakt readback-guard",
+        "before-homecoming finns exakt en gång, är AI-markerad och fortsatt draft",
+        "Öppnad artikel/programdetalj visar AI-genererat innehåll; källor hålls separata",
+        "Båda publicerade content loaders validerar och mappar AI-origin-fältet",
+        "Migration/import/publish-ordning dokumenterad; fjärrdatabas redovisas endast verifierad efter riktig readback"
+      ],
+      "checks": [
+        "python tools/validate_content_bundle.py --publication-check",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "Statisk SQL-/schema-/UI-granskning; remote SQL readback separat och NOT TESTABLE tills projektet är verifierat"
+      ],
+      "depends_on": [
+        "MVP-P05-CONTENT-UI"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v1 after migration ordering/exact-row guard updates; Critic PROCEED; Security APPROVE; user explicitly requested publication and AI-origin label. Reviews in this task thread."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementing bounded local schema/app/SQL slice under approved plan v1; do not execute remote SQL without confirmed dev target and live readback."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation checkpoint complete; local bundle publication validation, pnpm check (493/493), iOS JS bundle export and diff check pass. Remote Supabase readback NOT TESTABLE due absent verified connection."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS on local acceptance, SQL guard coverage and canonical hashes. No remote DB run; still NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS; Architect and Security PASS. Local code checkpoint is complete. Remote migration/import/publish/readback remains NOT TESTABLE and must run before content is live."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS; Architect and Security PASS. Local code checkpoint is complete. Remote migration/import/publish/readback remains NOT TESTABLE and must run before content is live.",
+      "priority": "P1",
+      "panels": [
+        "Kunskap",
+        "Träning"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Slice A — local provenance field, detail label and guarded content SQL",
+      "test_evidence": "PASS: python tools/validate_content_bundle.py --publication-check; pnpm check (493/493); pnpm bundle:ios; git diff --check. Architect/Security/QA/Reviewer PASS on local SQL/schema/UI; remote Supabase migration/import/publish/readback NOT TESTABLE (no verified project link, CLI, credentials or DB tool)."
+    },
+    {
+      "id": "UI-SHEET-ACTIONS-01",
+      "title": "Svep ned i BottomSheet och inventera appens knappar",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md: kompletta användarresor; docs/design-rules.md §6, §14–15",
+      "plan": "docs/tasks/dev/UI-SHEET-ACTIONS-01.md v1",
+      "write_paths": [
+        "src/components/ui/BottomSheet.tsx",
+        "src/components/ui/sheet-dismiss.ts",
+        "src/components/ui/sheet-drag.ts",
+        "tests/sheet-dismiss.test.mjs",
+        "tools/inventory-ui-actions.cjs",
+        "docs/tasks/dev/UI-SHEET-ACTIONS-01.md",
+        "docs/plans/UI-SHEET-ACTIONS-01-ux-spec.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "docs/design/UI-ACTION-INVENTORY-2026-10-18.md",
+        "docs/design/UI-ACTION-INVENTORY-2026-10-18.csv",
+        "docs/design/evidence/sheet-actions-2026-10-18",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Nedåtgest använder senaste guardade stängvägen; scrollning och utkast bevaras",
+        "Reopen/reduced-motion/timer/animation/avbruten gest är verifierade",
+        "Alla knappkodplatser och dynamiska grupper är inventerade med text-/ikonrekommendation",
+        "Bifogade UX-tips har verifierat nuläge och testbara prioriterade paket"
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/sheet-dismiss.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "node tools/inventory-ui-actions.cjs",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v1. Adapt patch: cancel timers/animation on new drag, hide/reopen/unmount, use layout effect for current callbacks; test lifecycle races. Inventory includes wrappers/native alerts/dynamic groups and parsed coverage."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Applying reviewed patch within declared four code/test files, then exhaustive button inventory and future UX plan. Existing content publication diff protected."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Local implementation complete; pnpm check 517/517, targeted sheet tests 24/24, public iOS JS export PASS. Inventory and all future UX tips documented. Native/visual NOT TESTABLE explicitly; independent QA now verifies."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: reran 24/24 tests, byte-identical inventory regeneration, all guarded sheet callers retain protections; 120 files/416 sites. Native, keyboard, VoiceOver and visual NOT TESTABLE; local checkpoint ready for Reviewer."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS, no blockers; QA PASS; local code/docs checkpoint complete. 517 tests and iOS JS export PASS. Native, keyboard, VoiceOver, caller runtime and visual NOT TESTABLE remain open; next proposed package UI-ACTIONS-COMMON, no commit/push."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS, no blockers; QA PASS; local code/docs checkpoint complete. 517 tests and iOS JS export PASS. Native, keyboard, VoiceOver, caller runtime and visual NOT TESTABLE remain open; next proposed package UI-ACTIONS-COMMON, no commit/push.",
+      "priority": "P1",
+      "panels": [
+        "Alla BottomSheet-användare",
+        "Appövergripande inventering"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Nedåtgest lokalt, knappinventering och dokumenterad framtidsplan",
+      "test_evidence": "PASS: Architect APPROVE, Critic PROCEED, independent QA/Reviewer PASS; 24/24 sheet tests; pnpm check 517/517; public iOS JS export; inventory byte-identical 120 files/0 parse errors/416 sites; whitespace and queue. Native gesture/VoiceOver/keyboard/visual and caller-level runtime NOT TESTABLE; see evidence report."
+    },
+    {
+      "id": "UI-ACTIONS-COMMON",
+      "title": "Ikoner för bekräftad ångra, kalender och klocka",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md: sanningsenlig återkoppling och primära användarresor; docs/design-rules.md §6–7, §14–15",
+      "plan": "docs/tasks/dev/UI-ACTIONS-COMMON.md v2",
+      "write_paths": [
+        "src/components/ui/Toast.tsx",
+        "src/components/AppPrimitives.tsx",
+        "tests/toast-compact-policy.test.mjs",
+        "tests/planned-health-time.test.mjs",
+        "docs/tasks/dev/UI-ACTIONS-COMMON.md",
+        "docs/plans/UI-ACTIONS-COMMON-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/ui-actions-common-2026-10-18/VERIFICATION.md",
+        "src/components/calendar-month.ts",
+        "tests/calendar-month.test.mjs",
+        "docs/design/UI-ACTION-INVENTORY-2026-10-18.md",
+        "docs/design/UI-ACTION-INVENTORY-2026-10-18.csv"
+      ],
+      "acceptance": [
+        "Endast bekräftad, undoable logg-add visar return-up-back-outline; message-only Text annonseras som alert och Ångra-knappen är ett separat fokuserbart syskon med namn Ångra: {händelse}",
+        "Retry, uncertain, Avbryt och destructive actions behåller synlig text och oförändrad state/callback",
+        "DatePickerField visar kalenderikon och värde/etikett; TimePickerField visar time-outline och värde/etikett; båda har fältbundna svenska a11y-namn och minst 44pt",
+        "Kalendern visar månad, prev/next är ikonknappar med riktnings-/månadsnamn och navigerar rätt över årsskifte; vid 375pt viewport är dialogens grid minst 308pt brett och dagrutor minst 44×44 pt",
+        "Manuellt datum/tid, valid/invalid draft, bekräfta/Avbryt, input- och disabled-flöden bevaras"
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/toast-compact-policy.test.mjs tests/planned-health-time.test.mjs tests/calendar-month.test.mjs (message/action separation, dialog grid width and 44×44 day targets, calendar month/year boundaries)",
+        "CI=1 pnpm check",
+        "TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false pnpm bundle:ios",
+        "node tools/inventory-ui-actions.cjs",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-SHEET-ACTIONS-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v2; exact acceptance/scope reviewed in task thread; Critic PROCEED v2. Reviews saved in docs/tasks/dev/UI-ACTIONS-COMMON.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Architect APPROVE and Critic PROCEED for plan v2; beginning implementation within declared source/test/docs and generated inventory paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete; focused tests 12/12, CI=1 pnpm check (521/521), public iOS bundle export, regenerated action inventory (121 files/0 parse errors/416 sites), diff check and queue validation PASS. Native visual/VoiceOver NOT TESTABLE; evidence in docs/design/evidence/ui-actions-common-2026-10-18/VERIFICATION.md."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS; 12/12 focused tests rerun. Confirmed undo gating/accessibility, icon controls, date/time state preservation, 343pt calendar grid and 44x44 targets. Native visual/VoiceOver/Dynamic Type NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS with no blockers; QA PASS. All local acceptance and package gates pass. Native visual rendering, VoiceOver, Dynamic Type and physical device layout remain NOT TESTABLE; durable checkpoint saved in report/evidence, no commit or push."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS with no blockers; QA PASS. All local acceptance and package gates pass. Native visual rendering, VoiceOver, Dynamic Type and physical device layout remain NOT TESTABLE; durable checkpoint saved in report/evidence, no commit or push.",
+      "priority": "P1",
+      "panels": [
+        "Logga",
+        "Mer: datum och tid",
+        "Hälsa",
+        "Påminnelser"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Gemensam toast/datum/tid med ikonknappar och bevarad semantik",
+      "test_evidence": "PASS: Architect APPROVE v2, UX Critic PROCEED v2, independent QA PASS (12/12), Reviewer PASS; CI check 521/521, public iOS JS export, inventory 121 files/0 parse errors/416 sites, diff and queue validation. Native/VoiceOver/visual NOT TESTABLE."
+    },
+    {
+      "id": "UI-MAIN-SWIPE-01",
+      "title": "Fånga svep mellan huvudflikar före vertikal scroll",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md: huvudnavigation och kompletta användarresor; docs/design-rules.md §6, §14–15",
+      "plan": "docs/tasks/dev/UI-MAIN-SWIPE-01.md v5; UX: docs/plans/UI-MAIN-SWIPE-01-ux-spec.md v5",
+      "write_paths": [
+        "src/components/AppPrimitives.tsx",
+        "src/components/ui/MainSwipeNavigation.tsx",
+        "src/components/ui/main-swipe-rules.ts",
+        "tests/main-swipe-rules.test.mjs",
+        "tests/main-swipe-navigation-policy.test.mjs",
+        "src/components/README.md",
+        "docs/tasks/dev/UI-MAIN-SWIPE-01.md",
+        "docs/plans/UI-MAIN-SWIPE-01-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/ui-main-swipe-2026-10-18/VERIFICATION.md"
+      ],
+      "acceptance": [
+        "Shared vertical AppScreen ScrollView enables directionalLockEnabled.",
+        "MainSwipeNavigation captures only clear horizontal movement in responder capture and move phases; vertical/diagonal motion is left to ScrollView, including releasing an already captured responder when motion ceases to be clearly horizontal.",
+        "Long swipe (48 React Native-layoutpunkter) or same-direction fast flick (min 24 React Native-layoutpunkter, vx ≥0.5 layoutpunkt/ms) maps to left/right; no movement, opposite velocity and vertical gestures do not change tab.",
+        "Disabled page and active HorizontalGestureRegion exclusion retain existing effect; caller order and no-wrap remain unchanged.",
+        "BottomSheet and sheet gesture implementation already in this branch remain unchanged."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/main-swipe-rules.test.mjs tests/main-swipe-navigation-policy.test.mjs",
+        "CI=1 pnpm check",
+        "TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false pnpm bundle:ios",
+        "git diff --check",
+        "PYTHONUTF8=1 python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-ACTIONS-COMMON",
+        "UI-SHEET-ACTIONS-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and UX Critic PROCEED for exact plan v3; reviews saved in docs/tasks/dev/UI-MAIN-SWIPE-01.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement exact approved v3 scope; BottomSheet chunks already present and protected."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete; targeted 8/8, pnpm check 529/529, iOS bundle, diff-check and queue validate pass. Render/native gesture limitations documented in verification evidence."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "QA BLOCK: unconditional responder termination refusal can prevent vertical ScrollView takeover after initially horizontal capture; saved in report and returned for plan correction."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Return QA-blocked v3 to planned with v4 correction plan: relinquish responder when continued motion no longer meets horizontal claim rule; add direct contract test."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and UX Critic PROCEED for exact correction plan v5; saved in task planreview."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Apply v5 responder handoff and direct source-level contract test only."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "QA block corrected under approved v5; targeted 8/8, pnpm check 529/529 and iOS bundle pass again; visual/native gaps documented."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS for local v5 acceptance; handoff condition and exact source test verified; visual/native gaps remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS for scoped local implementation; QA PASS v5; full checks and bundle pass. Visual/native behavior explicitly remains NOT TESTABLE."
+        }
+      ],
+      "next_step": "Commit and push the approved checkpoint on codex/tassla-ui-ux-bundle-2026-10-18; native and visual verification remains open under VISION-R02-GESTURES.",
+      "priority": "P1",
+      "panels": [
+        "Hem",
+        "Logg",
+        "Träning",
+        "Kunskap",
+        "Mer"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Horizontal gesture policy isolated and unit tested; actual native touch arbitration remains NOT TESTABLE.",
+      "test_evidence": "Architect APPROVE v5; UX Critic PROCEED; QA PASS v5; Reviewer PASS. Targeted 8/8, pnpm check 529/529, public iOS bundle, diff-check and queue validate PASS. Visual/native runtime NOT TESTABLE."
+    },
+    {
+      "id": "UI-TRAINING-OVERVIEW-01",
+      "title": "Träningsöversikt med nästa övning och programstatus",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md: Träning — publicerat program → rätt version/steg → markera/ångra → återuppta samma hunds progress efter flikresa",
+      "plan": "docs/tasks/dev/UI-TRAINING-OVERVIEW-01.md v3.1; UX: docs/plans/UI-TRAINING-OVERVIEW-01-ux-spec.md v3",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/training-overview.ts",
+        "src/features/training/README.md",
+        "tests/training-overview.test.mjs",
+        "docs/tasks/dev/UI-TRAINING-OVERVIEW-01.md",
+        "docs/plans/UI-TRAINING-OVERVIEW-01-ux-spec.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/design/evidence/ui-training-overview-2026-10-18/VERIFICATION.md"
+      ],
+      "acceptance": [
+        "Empty fetched list, all-complete and zero-step states are distinct and truthful; the all-complete message requires nonempty steps in every listed program and every step complete",
+        "Nästa övning opens the same first incomplete step allowed by the existing completion guard",
+        "Samtliga redan laddade publicerade program nås från statusordnad lista; stabil ordning bevaras inom lika status",
+        "Status, antal, procent och återställningsknapp räknar bara giltiga steg-ID:n från aktuell version; gamla/stale-only ID:n ger 0 progress och ingen återställningsknapp",
+        "Aktuell övning märks textuellt som Nästa övning; klara och kommande steg går att skilja utan färg ensam",
+        "Programvy visar aktuell/klara/kommande steg; endast befintlig tillåtna nästa-stegslagring kan slutföra",
+        "Public/review-gating, bekräftad save/error/retry, unmark/reset och källor/AI-etikett bevaras",
+        "README beskriver flöde och ren helper testas för status/sortering/progress/edge cases",
+        "Renderad jämförelse följer ägarens patchriktning och §14 redovisar avvikelsen från panel 6; render krävs för PASS; om otillgänglig blockeras QA"
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/training-overview.test.mjs",
+        "CI=1 pnpm check",
+        "TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false pnpm bundle:ios",
+        "git diff --check",
+        "PYTHONUTF8=1 python tools/dev_flow.py validate",
+        "Required public/review RN Web render and screenshots at 375×844, 430×844, 375×667 and 140% zoom; missing renderer/capture/comparison blocks QA/done and completion commit/push"
+      ],
+      "depends_on": [
+        "UI-MAIN-SWIPE-01",
+        "UI-ACTIONS-COMMON",
+        "CONTENT-PUBLISH-LABEL-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v3; UX Critic PROCEED v3; exact reviews saved in task plan."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementing exact approved plan v3; source/test/README files only."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation and cleanup complete. Targeted tests 13/13; CI=1 pnpm check 542/542; public iOS JS bundle; public/review screenshots and §14 report saved. Initial QA evidence gap was corrected; independent QA PASS. See task and VERIFICATION.md."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: scoped acceptance, public screenshots and program detail reviewed; 13 focused tests and full CI=1 pnpm check passed (542/542); public iOS JS bundle exported successfully; git diff --check and queue validation passed. Documented native/live-data non-testable limits and owner-approved Panel 6 composition deviation."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent QA PASS and final Reviewer PASS. Implementation checkpoint b59169c is committed and pushed to origin/codex/tassla-ui-ux-bundle-2026-10-18; release history, final report, review evidence, and queue checkpoint are complete. Local checks and pre-commit/pre-push hooks passed; native/live-data limits remain documented as NOT TESTABLE."
+        }
+      ],
+      "next_step": "Independent QA PASS and final Reviewer PASS. Implementation checkpoint b59169c is committed and pushed to origin/codex/tassla-ui-ux-bundle-2026-10-18; release history, final report, review evidence, and queue checkpoint are complete. Local checks and pre-commit/pre-push hooks passed; native/live-data limits remain documented as NOT TESTABLE.",
+      "priority": "P1",
+      "panels": [
+        "Träning"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Implementation checkpoint b59169c is pushed and verified on origin/codex/tassla-ui-ux-bundle-2026-10-18; release history and closeout records are updated.",
+      "test_evidence": "Focused tests 13/13 PASS; CI=1 pnpm check PASS 542/542; public iOS JS bundle PASS (1446 modules); git diff --check PASS; queue validation PASS; public/review screenshots and §14 evidence reviewed. Native/live-data limits and owner-approved Panel 6 deviation documented. Commit b59169c pushed; pre-push hook passed."
+    },
+    {
+      "id": "UI-ACTIONS-ROWS",
+      "title": "Kontekstuell penn, händelseval och veckodagsrad",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md: Panel 4 Daglig Checklista and Panel 5 Logga; docs/design/vision-rev02-screen-contracts.md: Panels 1, 4, 5",
+      "plan": "docs/tasks/dev/UI-ACTIONS-ROWS.md v2; docs/plans/UI-ACTIONS-ROWS-ux-spec.md v2",
+      "write_paths": [
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/home/README.md",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/README.md",
+        "tests/ui-actions-rows.test.mjs",
+        "tests/log-screen-policy.test.mjs",
+        "docs/tasks/dev/UI-ACTIONS-ROWS.md",
+        "docs/plans/UI-ACTIONS-ROWS-ux-spec.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/design/evidence/ui-actions-rows-2026-10-19/VERIFICATION.md"
+      ],
+      "acceptance": [
+        "Routine edit is a 44x44-or-larger icon-only pen with the routine-specific accessible label; no wrapped Redigera residue remains.",
+        "Checklist own-item edit stays icon-only and exposes its full Ändra {title} accessible name.",
+        "Log editor shows the selected circular category icon plus down chevron; activation opens a list of every LOG_ENTRY_TYPES option with icon and Swedish name and accurate selected state.",
+        "Choosing a category closes the list and preserves existing event, accident, date/time, note, save/delete/cancel, validation and recovery semantics.",
+        "Weekday row shows Må, Ti, On, To, Fr, Lö, Sö without wrap at normal text, keeps >=44x44 targets and full accessible names, and remains horizontally reachable at narrow/larger text.",
+        "At 375x667 and 140% with the event picker expanded, scroll access reaches date/time, note, delete/cancel and footer save; collapsing via the trigger retains the event/date/time/note draft.",
+        "Primary, destructive and cancel actions retain visible words.",
+        "Scoped 18-point visual evidence, independent QA and Reviewer are recorded; full panel acceptance is not claimed."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/ui-actions-rows.test.mjs tests/log-screen-policy.test.mjs tests/daily-activity-ui.test.mjs tests/checklist-ui.test.mjs",
+        "CI=1 pnpm check",
+        "TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false pnpm bundle:ios",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "RN Web public/review captures at 375x844, 430x844, 375x667 and 140% text where supported; native VoiceOver/Dynamic Type is reported separately"
+      ],
+      "depends_on": [
+        "UI-ACTIONS-COMMON"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v2 and UX Critic PROCEED v2; exact verdicts saved in docs/tasks/dev/UI-ACTIONS-ROWS.md"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Owner-requested package 1b; exact plan v2 was approved by Architect and proceeded by UX Critic."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation and visual/interaction evidence complete. Full CI=1 pnpm check 545/545, public iOS export 1446 modules, 10 synthetic RN Web captures at 375/430/short viewport 140%, explicit aria-checked and draft-preservation regressions, diff check, and queue validation PASS. Independent QA and Reviewer PASS; native Dynamic Type/VoiceOver/live Supabase remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS 2026-10-19: exact source/draft preservation reviewed; focused 20/20, full pnpm check 545/545, public iOS JS bundle and 10 synthetic RN Web captures PASS. Native VoiceOver/TalkBack, Dynamic Type, production RLS and signed build remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS 2026-10-19: inspected exact source diff, IconOnlyButton/IconChip, type-change side effects, tests and scoped evidence; no blocking findings. QA PASS recorded. Ten synthetic captures; focused 20/20, full check 545/545 and public iOS JS bundle PASS. Native a11y/Dynamic Type, production RLS and signed build remain NOT TESTABLE."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS 2026-10-19: inspected exact source diff, IconOnlyButton/IconChip, type-change side effects, tests and scoped evidence; no blocking findings. QA PASS recorded. Ten synthetic captures; focused 20/20, full check 545/545 and public iOS JS bundle PASS. Native a11y/Dynamic Type, production RLS and signed build remain NOT TESTABLE.",
+      "priority": "P1",
+      "panels": [
+        "Hem",
+        "Daglig Checklista",
+        "Logga"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Package 1b complete; independent QA and Reviewer PASS. Scoped synthetic evidence covers changed controls only; full rev02 panel acceptance is not claimed.",
+      "test_evidence": "Focused 1b tests 20/20 PASS; CI=1 pnpm check 545/545 PASS; public iOS JS export 1446 modules PASS; RN Web synthetic interaction and 10 captures at 375x844/430x844/375x667/140% CSS zoom PASS; date/time/note draft preservation and delete-cancel PASS; git diff --check and queue validation PASS. Native Dynamic Type/VoiceOver, live Supabase/RLS and signed Codemagic/Xcode build NOT TESTABLE. Independent QA and Reviewer PASS."
+    },
+    {
+      "id": "UI-ACCESSIBILITY-HOME-LOG",
+      "title": "2a Tillgänglighet och läsbarhet för Hem och Logg",
+      "mvp_requirement": "docs/mvp.md: Skärm 1 Personligt Home/Today; Skärm 2 Snabb vardagsloggning",
+      "write_paths": [
+        "src/features/home/HomeScreen.tsx",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/components/ui/Toast.tsx",
+        "tests/home-vision.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/home-today.test.mjs",
+        "tests/log-screen-policy.test.mjs",
+        "tests/toast-compact-policy.test.mjs",
+        "src/features/home/README.md",
+        "src/features/puppy-log/README.md",
+        "docs/design/evidence/ui-accessibility-home-log-2026-10-19",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md"
+      ],
+      "acceptance": [
+        "Named Home/Log controls retain contextual accessibility names, state and >=44pt targets.",
+        "Home/Log labels and recovery actions remain reachable at 375x667, 375x844, 430x844 and 140% web text.",
+        "Undo remains distinct from navigation Back.",
+        "Error, unknown, confirmed and partial states remain distinct; no native accessibility PASS is claimed."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/home-vision.test.mjs tests/daily-activity-ui.test.mjs tests/home-today.test.mjs tests/log-screen-policy.test.mjs tests/toast-compact-policy.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "PYTHONUTF8=1 python tools/dev_flow.py validate",
+        "Synthetic RN Web captures for Home and Log at 375x667, 375x844, 430x844 and 140%; document §14 and native NOT TESTABLE items"
+      ],
+      "depends_on": [
+        "UI-ACTIONS-ROWS"
+      ],
+      "priority": "P1",
+      "panels": [
+        "Hem",
+        "Logga"
+      ],
+      "risk_class": "M",
+      "checkpoint": "2a local accessibility/UI checkpoint; native acceptance remains open under UI-NATIVE-ACCESSIBILITY-VERIFY.",
+      "test_evidence": "Pending implementation and independent verification.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v4: Architect APPROVE and UX Critic PROCEED for all package scopes; exact verdicts recorded in docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md. Exact 2a file ownership and local/native boundary reviewed."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik explicitly requested package 2a. Plan v4 and exact file ownership are approved; no native accessibility pass is claimed."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation and local verification complete: focused 22/22, pnpm check 545/545, public iOS JS export passed, synthetic Home/Log captures and interaction paths saved in docs/design/evidence/ui-accessibility-home-log-2026-10-19/. Independent QA and Reviewer are now required; native accessibility remains NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS; exact focused suite 22/22 and extended Home Today suite 25/25; diff and queue validation PASS. See docs/design/evidence/ui-accessibility-home-log-2026-10-19/VERIFICATION.md."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent QA PASS and Reviewer PASS; exact focus 22/22, QA-expanded focus 25/25, pnpm check 545/545, public iOS bundle PASS; implementation checkpoint c58f3fd. Evidence: docs/design/evidence/ui-accessibility-home-log-2026-10-19/VERIFICATION.md."
+        }
+      ],
+      "next_step": "Independent QA PASS and Reviewer PASS; exact focus 22/22, QA-expanded focus 25/25, pnpm check 545/545, public iOS bundle PASS; implementation checkpoint c58f3fd. Evidence: docs/design/evidence/ui-accessibility-home-log-2026-10-19/VERIFICATION.md.",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
+    },
+    {
+      "id": "UI-MAIN-TAB-TRANSITION",
+      "title": "Riktningsstyrd sidövergång mellan huvudflikar",
+      "mvp_requirement": "docs/mvp.md: Central produktloop; App-design",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/components/ui/Motion.tsx",
+        "src/theme/tokens.ts",
+        "tests/main-swipe-navigation-policy.test.mjs",
+        "tests/motion-policy.test.mjs",
+        "src/components/README.md",
+        "docs/design/evidence/ui-main-tab-transition-2026-10-19",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md"
+      ],
+      "acceptance": [
+        "Only main-tab to main-tab changes use the named 28pt directional offset.",
+        "Next tab enters from right after leftward navigation; prior tab enters from left after rightward navigation.",
+        "No initial-mount animation; transition interruption is safe; reduced motion switches immediately; support screens retain the 8pt default."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/main-swipe-navigation-policy.test.mjs tests/motion-policy.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "PYTHONUTF8=1 python tools/dev_flow.py validate",
+        "Capture both directions and reduced-motion output if the local visual harness can render them; otherwise record animation rendering NOT TESTABLE"
+      ],
+      "depends_on": [
+        "UI-ACCESSIBILITY-HOME-LOG"
+      ],
+      "priority": "P1",
+      "panels": [
+        "Hem",
+        "Logga",
+        "Träning",
+        "Kunskap",
+        "Mer"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Small navigation-feedback checkpoint separate from 2a; no interactive pager or navigation-stack change.",
+      "test_evidence": "Pending implementation and independent verification.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect/UX Critic APPROVE för plan v4: riktad 28pt incoming offset endast mellan huvudflikar, befintlig 240ms easing/opacity, interruption, reduced-motion immediate, no initial mount; dokumenterat i docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "2a is done and pushed (c58f3fd + 01ed888). Starting only the approved main-tab animation checkpoint with no navigation/data scope changes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Focused 12/12; pnpm check 547/547; public bundle 1,446 modules; synthetic web captures cover both directions, reduced motion, no initial mount and swipe route; diffcheck/queue validation PASS. Evidence: docs/design/evidence/ui-main-tab-transition-2026-10-19/VERIFICATION.md."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: focused 12/12, source/route/reduced-motion contract and synthetic captures verified; Reviewer PASS: 28pt restricted to main-tab pairs, support 8pt, direction/interruption/mount/reduced-motion correct. Reports in docs/design/evidence/ui-main-tab-transition-2026-10-19/VERIFICATION.md."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent QA PASS and Reviewer PASS; focused 12/12, pnpm check 547/547, public iOS bundle 1,446 modules, synthetic forward/backward/reduced-motion/swipe captures, diff and queue validation PASS. Implementation commit 0d4ecad; closeout/master-log evidence recorded."
+        }
+      ],
+      "next_step": "Independent QA PASS and Reviewer PASS; focused 12/12, pnpm check 547/547, public iOS bundle 1,446 modules, synthetic forward/backward/reduced-motion/swipe captures, diff and queue validation PASS. Implementation commit 0d4ecad; closeout/master-log evidence recorded.",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
+    },
+    {
+      "id": "UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS",
+      "title": "2b.1 Tillgänglighet för rutiner och notiser",
+      "mvp_requirement": "docs/mvp.md: Skärm 1 Personligt Home/Today; Notiser",
+      "write_paths": [
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/notifications/NotificationSettingsScreen.tsx",
+        "tests/notifications.test.mjs",
+        "tests/home-today.test.mjs",
+        "src/features/home/README.md",
+        "src/features/notifications/README.md",
+        "docs/design/evidence/ui-accessibility-routines-notifications-2026-10-19",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "docs/plans/UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS-ux-spec.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Routine edit/save/cancel and notification save/permission journeys wrap or stack long actions without shrinking touch targets.",
+        "Permission, saved, failed and unknown states remain explicit; layout/focus does not trigger permission requests or writes.",
+        "Independent Security review approves before implementation and reviews the frozen diff."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/notifications.test.mjs tests/home-today.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "PYTHONUTF8=1 python tools/dev_flow.py validate",
+        "Render routine and notification flows at 375x667/140%; document §14 and separate native limits",
+        "Security review before implementation and against the final diff"
+      ],
+      "depends_on": [
+        "UI-MAIN-TAB-TRANSITION"
+      ],
+      "priority": "P1",
+      "panels": [
+        "Hem",
+        "Daglig Checklista",
+        "Notiser"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Support journey: Mer -> Notiser -> save/permission result -> back; Hem -> routine manager -> edit/save/cancel -> return.",
+      "test_evidence": "Independent QA PASS 47/47 focused; Reviewer PASS; Security pre-review and frozen-diff re-review APPROVE. `pnpm check` 549/549, public iOS JS bundle 1446 modules, synthetic RN Web responsive screenshots/interactions PASS. Native/device/backend checks remain NOT TESTABLE; details in docs/design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Approved by UI-ACCESSIBILITY-PHASE-2-5.md v4 Architect and UX Critic; dependency UI-MAIN-TAB-TRANSITION is QA/Reviewer PASS and pushed at 13fa0f5. Next gate: independent Security pre-implementation review; code scope remains routine/notification presentation only."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Security pre-implementation review APPROVE: presentation/layout only; preserve explicit permission and save actions, owner-keyed preferences, routine draft IDs/validation/dirty-cancel/retry/readback, dog scope and callbacks unchanged. Review recorded in the task UX spec."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Responsive routine and reminder layouts implemented within the security-approved scope; focused 47/47, pnpm check 549/549, public iOS bundle 1446 modules; synthetic RN Web at 375x667/140% plus routine save/cancel and explicit denied-permission callback recorded in docs/design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md. Native checks remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: focused tests 47/47; synthetic 375x667/140% and 320px routine/notices captures and flows readable; no page errors. Reviewer PASS and final Security APPROVE against frozen diff. Native/device/backend checks explicitly remain NOT TESTABLE; report: docs/design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS; Security pre-review and final frozen-diff re-review APPROVE; QA PASS 47/47; full check 549/549; public iOS bundle 1446 modules; diff/queue validation PASS; synthetic responsive capture/interaction evidence documented. Implementation commit 5ee2065be80d28221eff8914203b38419eb2f119. Native/backend/release limits remain NOT TESTABLE. Closeout: docs/design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md."
+        }
+      ],
+      "next_step": "Begin 2b.2 UI-ACCESSIBILITY-HEALTH after its required Security pre-review.",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
+    },
+    {
+      "id": "UI-ACCESSIBILITY-HEALTH",
+      "title": "2b.2 Tillgänglighet för hälsa och vikt",
+      "mvp_requirement": "docs/mvp.md: Skärm 4 Hälsa – enkel ägarregistrerad översikt",
+      "write_paths": [
+        "src/features/health/HealthScreen.tsx",
+        "src/features/health/WeightScreen.tsx",
+        "src/features/health/HealthHistoryScreen.tsx",
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/components/AppPrimitives.tsx",
+        "tests/health-weight.test.mjs",
+        "tests/health-history.test.mjs",
+        "tests/planned-health.test.mjs",
+        "tests/planned-health-feedback.test.mjs",
+        "src/features/health/README.md",
+        "docs/design/evidence/ui-accessibility-health-2026-10-19",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "docs/plans/UI-ACCESSIBILITY-HEALTH-ux-spec.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Health and weight view/add/edit/cancel/history actions are reachable with keyboard and large text; long actions stack without shrinking targets.",
+        "Owner-entered data, save/unknown recovery and cancel semantics remain unchanged; no advice, data purpose, scope or persistence behavior changes.",
+        "Independent Security review approves before implementation and reviews the frozen diff.",
+        "At 320×667 and 375×667/140% proxy, the shared health date picker calendar target stays fully inside its field without overlap or clipping."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/health-weight.test.mjs tests/health-history.test.mjs tests/planned-health.test.mjs tests/planned-health-feedback.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "PYTHONUTF8=1 python tools/dev_flow.py validate",
+        "Render health forms/history at 375x667/140%; document §14 and native limits",
+        "Security review before implementation and against the final diff",
+        "Capture date picker input and calendar target bounds at 320×667 and 375×667/140% proxy; native Dynamic Type remains NOT TESTABLE."
+      ],
+      "depends_on": [
+        "UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS"
+      ],
+      "priority": "P1",
+      "panels": [
+        "Hälsa"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Health view/add/edit/cancel/history journey; no medical content or data-model changes.",
+      "test_evidence": "Architect approved original UX spec and the AppPrimitives date-field amendment; Security pre-implementation approved both original presentation scope and the amendment. Focused tests PASS 117/117; CI=1 pnpm check PASS 552/552; public iOS JS bundle PASS with 1,446 modules. Synthetic RN Web captures at 375x667 and 320x667 with fontScale 1.4 proxy show the 44x52pt calendar target contained in the date row, stacked 56pt edit actions and wrapped history info action; zero browser errors. Evidence: docs/design/evidence/ui-accessibility-health-2026-10-19/VERIFICATION.md. Security final APPROVE; independent QA PASS and Reviewer PASS for the frozen diff. Native accessibility, OS keyboard, live Supabase/RLS, signed build and full panel visual acceptance remain NOT TESTABLE.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect approved docs/plans/UI-ACCESSIBILITY-HEALTH-ux-spec.md after adding docs/decisions/MASTER-LOG.md to queue write_paths; Security pre-review APPROVE recorded in UX spec."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Architect and Security pre-implementation review approvals recorded in docs/plans/UI-ACCESSIBILITY-HEALTH-ux-spec.md; implementation limited to approved paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation, focused and full automated checks, public iOS JS export, RN Web bounding-box captures, docs and diff/queue validation are complete. Focused 117/117; pnpm check 552/552; bundle 1,446 modules. Architect and Security pre-reviews approved the scoped date-field amendment. Evidence: docs/design/evidence/ui-accessibility-health-2026-10-19/VERIFICATION.md. Independent QA/Reviewer and final frozen-diff Security review are next."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: 117/117 focused and 552/552 full check confirmed; screenshots and documented bounds match. Security final APPROVE recorded; native/backend/build limits remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS for frozen diff. Security pre/final APPROVE; QA PASS; evidence and closeout docs recorded. Next checkpoint: UI-ACCESSIBILITY-PROFILES (2b.3)."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS for frozen diff. Security pre/final APPROVE; QA PASS; evidence and closeout docs recorded. Next checkpoint: UI-ACCESSIBILITY-PROFILES (2b.3).",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
+    },
+    {
+      "id": "UI-ACCESSIBILITY-PROFILES",
+      "title": "2b.3 Tillgänglighet för hundprofiler",
+      "mvp_requirement": "docs/mvp.md: Stöd — hundprofil och onboarding",
+      "write_paths": [
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "tests/profile-screen-policy.test.mjs",
+        "tests/profile-edit.test.mjs",
+        "src/features/onboarding/README.md",
+        "docs/design/evidence/ui-accessibility-profiles-2026-10-19",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md"
+      ],
+      "acceptance": [
+        "Local implementation checkpoint: source and interaction tests verify responsive layout rules, selection/busy semantics, existing 44pt+ target contracts, and preservation of keyboard/save/error/unknown/create/recovery callbacks; dog/account/content scope and create/retry semantics remain unchanged.",
+        "Close this local checkpoint only after static QA, independent Reviewer, frozen-diff Security approval, all local checks, and checkpoint commit are recorded.",
+        "Rendered profile list/edit/add/recovery at 375x667/140%, physical keyboard/footer reachability, largest Dynamic Type, VoiceOver/TalkBack, focus order and measured target bounds remain OPEN / NOT TESTABLE here; no visual/native PASS is claimed. Transfer these scenarios to UI-NATIVE-ACCESSIBILITY-VERIFY.",
+        "Security pre-review approves the bounded scope and final review approves the frozen diff."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/profile-screen-policy.test.mjs tests/profile-edit.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "PYTHONUTF8=1 python tools/dev_flow.py validate",
+        "Static source-contract review; RN Web render at 375x667/140% = NOT TESTABLE in this environment",
+        "Security review before implementation and against the final diff"
+      ],
+      "depends_on": [
+        "UI-ACCESSIBILITY-HEALTH"
+      ],
+      "priority": "P1",
+      "panels": [
+        "Hundprofil",
+        "Onboarding"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Dog selection/edit/add/recovery preserves existing profile routes and data/idempotency; this closes the local implementation checkpoint only, while rendered/native acceptance remains open.",
+      "test_evidence": "Static QA PASS (31/31 focused; pnpm check 554/554; public iOS export 1,446 modules; diff/queue checks PASS). Reviewer final diff PASS. Security pre/final APPROVE. Rendered 375x667/140% and physical/native profile accessibility remain OPEN / NOT TESTABLE in UI-NATIVE-ACCESSIBILITY-VERIFY.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Phase-plan v4 approved. Independent Security pre-implementation review APPROVE for narrow responsive layout; preserve owner/account generation fencing and all create/recovery/profile callbacks."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Security pre-review APPROVE recorded. Begin approved profile layout-only changes; no owner/dog scope or persistence behavior edits."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Källkod och riktade tester klara. 31/31 profiltester, pnpm check 554/554, offentlig iOS JS-export 1 446 moduler. RN Web 375x667/140% och native profilkontroller uttryckligen NOT TESTABLE; dessa har flyttats till UI-NATIVE-ACCESSIBILITY-VERIFY enligt fasplan v5."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende statisk QA PASS enligt v5 lokal checkpoint: 31/31 fokuserade, 554/554 full check, 1 446-modulers offentlig export, diff/queue checks. Inga render-/native-påståenden; profilens visuella, tangentbords- och hjälpmedelsacceptans förblir öppen."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Local implementation checkpoint committed and pushed as 3094b6a (fix: improve dog profile responsive layout); commit and push hooks passed full check 554/554. Reviewer PASS, Security final APPROVE, static QA PASS. Rendered/native profile acceptance remains OPEN / NOT TESTABLE and is tracked by UI-NATIVE-ACCESSIBILITY-VERIFY."
+        }
+      ],
+      "next_step": "Local implementation checkpoint committed and pushed as 3094b6a (fix: improve dog profile responsive layout); commit and push hooks passed full check 554/554. Reviewer PASS, Security final APPROVE, static QA PASS. Rendered/native profile acceptance remains OPEN / NOT TESTABLE and is tracked by UI-NATIVE-ACCESSIBILITY-VERIFY.",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v5"
+    },
+    {
+      "id": "UI-ACCESSIBILITY-PASSPORT",
+      "title": "2b.4 Tillgänglighet för Tassla-pass",
+      "mvp_requirement": "docs/mvp.md: Skärm 6 Tassla-pass — enkel sammanfattning",
+      "write_paths": [
+        "src/features/passport/PassportScreen.tsx",
+        "tests/passport.test.mjs",
+        "src/features/passport/README.md",
+        "docs/design/evidence/ui-accessibility-passport-2026-10-19",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Local implementation checkpoint: source/interaction tests verify responsive layout rules, selection and checkbox accessibility names/state, busy/disabled/error/success semantics, existing 44pt+ targets and explicit owner-initiated export; selected-data and owner/dog scope remain unchanged.",
+        "Consent gate, immutable selected snapshot, PDF contents, app-scoped file ownership/cleanup, share destination/options and dialog-closed-not-delivery behavior remain unchanged.",
+        "Rendered 375x667/140%, §14 visual review, native share sheet, largest Dynamic Type, VoiceOver/TalkBack, focus order and measured target bounds remain OPEN / NOT TESTABLE here; no visual/native PASS is claimed. Transfer to UI-NATIVE-ACCESSIBILITY-VERIFY.",
+        "Close only the local checkpoint after static QA, independent Reviewer, frozen-diff Security approval, local checks and checkpoint commit."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/passport.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "PYTHONUTF8=1 python tools/dev_flow.py validate",
+        "Source-contract review; RN Web selection/export/error render at 375x667/140% = NOT TESTABLE in this environment",
+        "Security review before implementation and against the final diff"
+      ],
+      "depends_on": [
+        "UI-ACCESSIBILITY-PROFILES"
+      ],
+      "priority": "P1",
+      "panels": [
+        "Tassla-pass"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Explicit section choice -> exact selected snapshot -> owner-initiated PDF/share or cancel -> Passport; close this as a local implementation checkpoint only, with rendered/native acceptance still open.",
+      "test_evidence": "Focused suite 32/32; pnpm check 555/555; public iOS JS export 1,446 modules; diff/queue validation PASS. Independent QA PASS; frozen-diff Reviewer PASS; Security final APPROVE. Rendered/native acceptance OPEN / NOT TESTABLE.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v6 amendment APPROVE WITH CONDITIONS: local implementation-only checkpoint after QA/Reviewer/Security/checks/commit; rendered/native Passport acceptance remains OPEN / NOT TESTABLE. UX Critic PROCEED; Security pre-implementation APPROVE for responsive layout only. Evidence in docs/decisions/MASTER-LOG.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin 2b.4 responsive presentation only under v6. Preserve owner-initiated section consent, selected snapshot, owner/dog lifetime, export/share destination/options, cleanup, errors and truthful dialog-closed status."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "2b.4 source stable. Focused tests 32/32, pnpm check 555/555 (typecheck, edge typecheck, ESLint and tests), public iOS JS export 1,446 modules; diff/queue validation PASS. RN Web 375x667/140%, §14 render, native share/accessibility explicitly NOT TESTABLE and remain OPEN."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: focused Passport suite 32/32 and full pnpm check 555/555. Reviewer PASS on frozen diff after evidence correction. Security final APPROVE. Native and rendered verification remains OPEN / NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS and Security final APPROVE; local checkpoint commit 4ffa107 pushed. Full local checks 555/555; native/rendered evidence remains OPEN / NOT TESTABLE and is assigned to UI-NATIVE-ACCESSIBILITY-VERIFY."
+        }
+      ],
+      "next_step": "Reviewer PASS and Security final APPROVE; local checkpoint commit 4ffa107 pushed. Full local checks 555/555; native/rendered evidence remains OPEN / NOT TESTABLE and is assigned to UI-NATIVE-ACCESSIBILITY-VERIFY.",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v6"
+    },
+    {
+      "id": "UI-KNOWLEDGE-SEARCH",
+      "title": "3 Hundfiltrerad sökning i Kunskap",
+      "mvp_requirement": "docs/mvp.md: Skärm 5 Kunskap – avgränsad egen vy",
+      "write_paths": [
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/guide-body.ts",
+        "src/features/knowledge/guide-search.ts",
+        "tests/guide-search.test.mjs",
+        "tests/knowledge-search-screen.test.mjs",
+        "src/features/knowledge/README.md",
+        "docs/design/evidence/ui-knowledge-search-2026-10-19",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md",
+        "docs/decisions/MASTER-LOG.md",
+        "tests/content-delivery.test.mjs"
+      ],
+      "acceptance": [
+        "Search filters only supplied published age/breed-filtered active-dog items.",
+        "Query is synchronously keyed by sessionKey+dogId; NFC, Swedish lowercase and collapsed spaces normalize input.",
+        "Search supports match, clear, zero results, loading/error/retry, article open/back, and dog switch."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/guide-search.test.mjs tests/knowledge-search-screen.test.mjs tests/content-delivery.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "PYTHONUTF8=1 python tools/dev_flow.py validate",
+        "Capture result/zero/loading/error and dog-switch flow at 375/430 when render tooling is available; otherwise record NOT TESTABLE in local evidence and leave visual acceptance open for UI-NATIVE-ACCESSIBILITY-VERIFY"
+      ],
+      "depends_on": [
+        "UI-ACCESSIBILITY-PASSPORT"
+      ],
+      "priority": "P1",
+      "panels": [
+        "Kunskap"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Active dog published articles -> search -> article/source -> back; no new filter taxonomy or schema.",
+      "test_evidence": "Local implementation checkpoint PASS: focused search/content-delivery 21/21; pnpm check 564/564; public iOS bundle 1,447 modules; diff check and queue validation PASS. Independent QA PASS and Reviewer PASS. Rendered/native checks remain OPEN / NOT TESTABLE; see docs/design/evidence/ui-knowledge-search-2026-10-19/VERIFICATION.md.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v4/v6 review record: Architect APPROVE and UX Critic PROCEED for UI-KNOWLEDGE-SEARCH. Bounded to supplied published, age/breed-filtered active-dog items; scope query to sessionKey+dogId; no new schema, taxonomy, fetch path or dependency."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin package 3 under the approved Knowledge search contract. Preserve selectContent and ProductWorkspace dog/session filtering; implement only local search, scope-safe query state, article open/back and evidence."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Paused before code: task v4 requires 375/430 visual captures, but react-native-web/react-dom are unavailable locally. Review a bounded plan amendment for source/test-only local checkpoint with visual acceptance OPEN / NOT TESTABLE and search scenarios transferred to UI-NATIVE-ACCESSIBILITY-VERIFY."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan amendment v7 recorded in docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md and docs/decisions/MASTER-LOG.md; Architect APPROVE WITH CONDITIONS, UX Critic PROCEED WITH CHANGES. Local-only checkpoint and OPEN / NOT TESTABLE visual criteria are explicit."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect v7 conditions satisfied: active-dog name in scope/field copy, separate no-published/no-match states, query preserved during loading/retry/open-back and cleared on dog switch; only supplied eligible items are searched. Renderer gap transferred to UI-NATIVE-ACCESSIBILITY-VERIFY."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin Knowledge search implementation under v7; code ownership includes ProductWorkspace dogName prop only for explicit active-dog search scope. No fetch, schema, persistence, taxonomy or dependency change."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Focused tests 21/21; pnpm check 564/564; public iOS bundle 1,447 modules; diff check and queue validation pass. Evidence recorded. Rendered/native search checks remain OPEN / NOT TESTABLE and are transferred to UI-NATIVE-ACCESSIBILITY-VERIFY."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: focused 21/21, pnpm check 564/564, queue validation PASS. v7 active-dog search contract and explicit NOT TESTABLE visual/native limits verified; no blocker."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS for frozen code/data scope and final documentation check. Close local implementation checkpoint only; rendered/native/§14 acceptance remains OPEN / NOT TESTABLE under UI-NATIVE-ACCESSIBILITY-VERIFY."
+        }
+      ],
+      "next_step": "Reviewer PASS for frozen code/data scope and final documentation check. Close local implementation checkpoint only; rendered/native/§14 acceptance remains OPEN / NOT TESTABLE under UI-NATIVE-ACCESSIBILITY-VERIFY.",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v7",
+      "review_notes": [
+        {
+          "date": "2026-10-19",
+          "actor": "architect",
+          "decision": "APPROVE",
+          "evidence": "Architect follow-up approved adding tests/content-delivery.test.mjs to explicit write_paths; the existing featured-preview assertion must follow displayedItems[0] so search previews use only matched results. Run this test with both focused search tests. No phase-plan version bump or behavior scope change."
+        }
+      ]
+    },
+    {
+      "id": "UI-REFRESH-HOME-LOG",
+      "title": "4 Pull-to-refresh för Hem och Logg",
+      "mvp_requirement": "docs/mvp.md: Skärm 1 Personligt Home/Today; Skärm 2 Snabb vardagsloggning",
+      "write_paths": [
+        "src/components/AppPrimitives.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "tests/app-screen-ux.test.mjs",
+        "tests/main-refresh.test.mjs",
+        "src/components/README.md",
+        "src/features/home/README.md",
+        "docs/design/evidence/ui-refresh-home-log-2026-10-19",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md"
+      ],
+      "acceptance": [
+        "Native RefreshControl is wired only on Home/Log.",
+        "Home joins current daily/training reads; Log retains confirmed rows, joins one flight per account/dog generation and has a separate refreshing/error state.",
+        "All finish/finally updates are fenced by dog/account scope, abort and unmount; no stale response replaces current data."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/app-screen-ux.test.mjs tests/main-refresh.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "PYTHONUTF8=1 python tools/dev_flow.py validate",
+        "Render refreshing and retained-data failure at 375x844/430x844; native gesture NOT TESTABLE without device"
+      ],
+      "depends_on": [
+        "UI-KNOWLEDGE-SEARCH"
+      ],
+      "priority": "P1",
+      "panels": [
+        "Hem",
+        "Logga"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Read-only refresh; reuse existing owner/dog/date scope and serialized reads, no write operation.",
+      "test_evidence": "Focused 11/11, including pending daily-write feedback preservation and scoped/abortable Log pagination; pnpm check PASS (typecheck, edge-typecheck, ESLint, 571/571 tests); public iOS JavaScript export PASS (1,447 modules); git diff --check and python -X utf8 tools/dev_flow.py validate PASS. Security final APPROVE; independent QA PASS; Reviewer PASS. Rendered refresh/error captures and native gesture NOT TESTABLE; see docs/design/evidence/ui-refresh-home-log-2026-10-19/VERIFICATION.md.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect v4 APPROVE and UX Critic v4 PROCEED recorded in docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md; queue risk reconciled from H to approved plan risk M. Security pre-review APPROVE WITH CONDITIONS; implementation will satisfy dog/account-generation scope, single-flight joining, retained confirmed rows, and abort/unmount fencing."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik-approved phase plan v4; UI-KNOWLEDGE-SEARCH is done. Implement only UI-REFRESH-HOME-LOG under its listed write paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete. Focused tests 9/9; pnpm check passed typecheck, edge-typecheck, ESLint and 569/569 tests; public iOS JavaScript export passed with 1,447 modules; diff and queue checks pass. Rendered capture and native pull remain NOT TESTABLE as documented."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS after scoped pagination and feedback-preservation fixes; focused 11/11; pnpm check 571/571; public iOS JS export 1,447 modules; diff and queue validation PASS. Visual/native checks remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS after final evidence refresh; QA PASS; Security final APPROVE; MASTER-LOG and HISTORY-2026 summary recorded. Focused 11/11; pnpm check 571/571; public iOS JS export 1,447 modules; visual/native checks remain NOT TESTABLE."
+        }
+      ],
+      "next_step": "Closed at local implementation checkpoint. Next package: UI-EMPTY-FEEDBACK-HOME-LOG (5a). Rendered refresh/error captures and native gesture remain NOT TESTABLE in UI-NATIVE-ACCESSIBILITY-VERIFY.",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
+    },
+    {
+      "id": "UI-EMPTY-FEEDBACK-HOME-LOG",
+      "title": "5a Tom-, laddnings- och felåterkoppling för Hem och Logg",
+      "mvp_requirement": "docs/mvp.md: Skärm 1 Personligt Home/Today; Skärm 2 Snabb vardagsloggning",
+      "write_paths": [
+        "src/features/home/HomeScreen.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "tests/home-vision.test.mjs",
+        "tests/home-today.test.mjs",
+        "tests/log-screen-policy.test.mjs",
+        "tests/home-log-empty-feedback.test.mjs",
+        "docs/design/evidence/ui-empty-feedback-home-log-2026-10-19",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Home daily empty -> Hantera dagens aktiviteter -> add/select -> return with confirmed list.",
+        "Home content empty -> Kunskap; Log empty -> Lägg till händelse; read errors -> retry same scope; partial pagination stays distinct.",
+        "Uncertain writes preserve input and status; skeletons only for genuine scoped loading; no false saved/offline promise."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/home-log-empty-feedback.test.mjs tests/home-vision.test.mjs tests/home-today.test.mjs tests/log-screen-policy.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "PYTHONUTF8=1 python tools/dev_flow.py validate",
+        "Capture Home/Log empty, loading, error, unsure and partial states; document §14"
+      ],
+      "depends_on": [
+        "UI-REFRESH-HOME-LOG"
+      ],
+      "priority": "P1",
+      "panels": [
+        "Hem",
+        "Logga"
+      ],
+      "risk_class": "M",
+      "checkpoint": "First-run Home/Log empty/error/partial journey with explicitly named next actions and return state.",
+      "test_evidence": "Implementation complete. Focused tests 23/23; pnpm check passed typecheck, edge typecheck, ESLint and 577/577 tests; public iOS JavaScript export passed with 1,447 modules. Rendered RN Web states/interactions are captured at 375/430 with no page errors. The Log empty→chooser→confirmed timeline return is rendered with an out-of-tree stateful fixture adapter; the checked-in harness and product code remain unchanged. Native accessibility and full rev02 side-by-side remain NOT TESTABLE; see evidence report.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect v4 APPROVE and UX Critic v4 PROCEED cover 5a; bounded Home/Log state-to-action and return acceptance is recorded in docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md. Package 4 is done and pushed as 0c1c345."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement only the approved 5a Home/Log empty, loading, error, unsure-write and partial-pagination experience; keep confirmed write semantics and scope. Package 4 pull-to-refresh and pagination are verified and pushed."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete: focused suite 23/23; pnpm check 577/577 plus app/edge typecheck and ESLint; public iOS JS export 1,447 modules; synthetic Home/Log states and flows captured. Log empty-to-chooser was rendered; fixture cannot reflect synthetic saved events, so that UI return remains OPEN / NOT TESTABLE. Evidence in docs/design/evidence/ui-empty-feedback-home-log-2026-10-19/VERIFICATION.md."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: 23/23 focused tests, queue validation passes, stateful RN Web Log empty→chooser→saved-row journey rendered. Supabase/RLS not claimed."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent QA PASS (23/23 focused tests, queue validation, stateful synthetic Log empty→chooser→confirmed event render); Reviewer PASS on final frozen diff and docs, reran focused tests 23/23 and queue validation. pnpm check 577/577, public iOS JS bundle 1,447 modules, diff and queue checks PASS. Native/live Supabase/RLS/release/full rev02 remain NOT TESTABLE."
+        }
+      ],
+      "next_step": "Checkpoint done and pushed as 67424a4. Proceed to 5b UI-EMPTY-FEEDBACK-KNOWLEDGE-TRAINING on this branch.",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v4"
+    },
+    {
+      "id": "UI-EMPTY-FEEDBACK-KNOWLEDGE-TRAINING",
+      "title": "5b Tom-, laddnings- och felåterkoppling för Kunskap och Träning",
+      "mvp_requirement": "docs/mvp.md: Skärm 3 Guidande valpflöden; Skärm 5 Kunskap – avgränsad egen vy",
+      "write_paths": [
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "tests/knowledge-review-content.test.mjs",
+        "tests/training-overview.test.mjs",
+        "tests/knowledge-training-empty-feedback.test.mjs",
+        "tests/main-refresh.test.mjs",
+        "src/features/knowledge/README.md",
+        "src/features/training/README.md",
+        "docs/design/evidence/ui-empty-feedback-knowledge-training-2026-10-19",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/onboarding/ProfileScreenHeader.tsx"
+      ],
+      "acceptance": [
+        "Knowledge zero-search -> clear; zero-published -> Checklistor/FAQ; Training missing age -> Hundprofil -> back/save returns to Training.",
+        "Training with age-filtered empty content -> Knowledge -> back returns to Training; failures retry and never show review examples.",
+        "Dog/account query and results never show prior scope; skeleton/error/empty/completed states remain distinct.",
+        "Profile Back accessibility name matches the scoped return destination; other profile entry points retain “Tillbaka till Mer”."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/knowledge-training-empty-feedback.test.mjs tests/knowledge-review-content.test.mjs tests/training-overview.test.mjs tests/main-refresh.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "PYTHONUTF8=1 python tools/dev_flow.py validate",
+        "Capture Knowledge loading/zero-search/zero-published/Checklistor return; Training no-age → profile → Back and confirmed save → age-filtered Training; age-filtered no-match → Kunskap → Back; empty/completed/confirmed-success/read-error → retry. Index full route, 375×844 viewport and matching synthetic dog fixture; record §14 points 1–18 individually in evidence VERIFICATION.md"
+      ],
+      "depends_on": [
+        "UI-EMPTY-FEEDBACK-HOME-LOG"
+      ],
+      "priority": "P1",
+      "panels": [
+        "Kunskap",
+        "Träning",
+        "Hundprofil"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Dog-scoped Knowledge/Training empty and retry journey with Training return routes.",
+      "test_evidence": "Architect v9 APPROVE. 23 production-component headless captures at 375×844 use separate synthetic fixture-dog-no-dob and fixture-dog-12w records; every image is indexed by state, route, viewport and fixture (older supplemental captures are marked) in docs/design/evidence/ui-empty-feedback-knowledge-training-2026-10-19/VERIFICATION.md. The evidence includes zero-search clear returning the dog-scoped article and Checklistor public empty-content explanation. Focused suite 29/29, pnpm check 583/583 and public iOS JS export 1,447 modules PASS; diff/queue checks PASS. QA recheck PASS for the bounded local checkpoint and supplemental captures; independent frozen-diff Reviewer PASS with no actionable findings. Completed-program overview is captured; opening/resuming detail is NOT TESTABLE. §14 observations are itemized; native/device, full app-host, live backend and rev02 comparison remain NOT TESTABLE.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect v4 APPROVE and UX Critic v4 PROCEED cover this bounded M-class Knowledge/Training state-to-action checkpoint. Implementation begins only after 5a QA/Reviewer PASS and push as 67424a4; no new data or dependency behavior."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "5a implementation/review/documentation is done and pushed (67424a4 plus closeout 04c3980). Work only within the approved 5b Knowledge/Training state-to-action scope."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete on the approved v9 scope. Focused suite 29/29, pnpm check 583/583, public iOS JS export 1,447 modules, 23 indexed 375x844 headless captures, git diff --check and queue validation PASS; native/app-host/live-backend/rev02 limits remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS for bounded local checkpoint after rechecking supplemental search-clear and Checklistor captures; 23/23 indexed images. Completed-program overview is captured; detail open/resume remains NOT TESTABLE. Focused suite 29/29; diff and queue validation PASS. Full/native/device/live-backend/rev02 boundaries remain explicit."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent frozen-diff Reviewer PASS with no actionable findings; independent QA PASS; Architect v9 APPROVE. Focused tests 29/29, full pnpm check 583/583, public iOS JS export 1,447 modules, diff/queue validation and 23 indexed captures PASS. Local checkpoint commit d58d234. Native/device, app-host, live backend, completed-program detail tap-through and rev02 visual comparison remain explicitly NOT TESTABLE; no push performed."
+        }
+      ],
+      "next_step": "5b checkpoint closed locally in commit d58d234. Next planned verification is UI-NATIVE-ACCESSIBILITY-VERIFY on an owner-selected physical device; native/device and full rev02 visual checks remain open until then.",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v9"
+    },
+    {
+      "id": "UI-NATIVE-ACCESSIBILITY-VERIFY",
+      "title": "Batched native accessibility and gesture verification",
+      "mvp_requirement": "docs/design-rules.md: §10, §14–15; docs/dev/workflow.md: native evidence policy",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v7",
+      "write_paths": [
+        "docs/design/evidence/ui-native-accessibility-verify-2026-10-19",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Physical-device VoiceOver/TalkBack names, checkbox states and focus order recorded for the listed journeys.",
+        "Largest Dynamic Type, keyboard/footer reachability, actual text-size settings and measured target bounds recorded on the selected device.",
+        "For Hundprofil: list/selection, edit save/cancel, add-dog confirmed and unknown/recovery, error/retry and return paths; keyboard-visible reachability checked.",
+        "For Tassla-pass: open/toggle/close selection sheet, checkbox names/states/focus and target sizes; selected sections persist after sheet/share return; preview/PDF contains exactly selected sections.",
+        "Explicit PDF export opens native share sheet; dismiss without selecting recipient; record truthful busy/error/unavailable/dialog-closed state, Passport return and app-scoped temporary file cleanup.",
+        "Record exact device/OS/settings; mark any unrun platform, state or setting NOT TESTABLE. Native evidence is not replaced by synthetic web/static checks.",
+        "For Knowledge search: verify dog-named scope copy, search result and zero-result states, loading/error/retry, article open/back, and dog switch without stale prior-dog query/results; capture 375/430 and §14 where possible, otherwise record each as OPEN / NOT TESTABLE."
+      ],
+      "checks": [
+        "Owner-selected physical iOS/Android device run; attach exact device/OS/settings, scenarios and observed results to evidence directory"
+      ],
+      "depends_on": [
+        "UI-EMPTY-FEEDBACK-KNOWLEDGE-TRAINING"
+      ],
+      "priority": "P1",
+      "panels": [
+        "Hem",
+        "Logga",
+        "Kunskap",
+        "Träning",
+        "Daglig Checklista",
+        "Hälsa",
+        "Hundprofil",
+        "Tassla-pass"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Owner-selected physical-device verification for accessibility, gesture, Hundprofil and Tassla-pass export/consent journeys; remains open until real evidence exists.",
+      "test_evidence": "NOT TESTABLE until an owner-selected physical-device run is available; static and synthetic web checks cannot close this task.",
+      "status": "planned",
+      "history": [],
+      "next_step": "After all local code checkpoints, run owner-selected device batch including Passport, profile, and Knowledge search; record device/OS/text settings and mark any unrun evidence OPEN / NOT TESTABLE."
     }
   ]
 }

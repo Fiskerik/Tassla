@@ -11,11 +11,13 @@ test('only confirmed success receives the decorative green check and compact suc
   assert.match(toast, /displayContent\.tone === 'success' \? <Ionicons name="checkmark-circle"[^>]*color=\{tokens\.colors\.success\} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"/);
   assert.match(toast, /success: \{ paddingVertical: tokens\.spacing\.xs, paddingHorizontal: tokens\.spacing\.sm, gap: tokens\.spacing\.xs, backgroundColor: tokens\.colors\.successSurface, borderColor: tokens\.colors\.success \}/);
   assert.match(toast, /successMessage: \{ \.\.\.tokens\.typography\.caption/);
-  assert.match(toast, /accessibilityRole=\{exposed \? 'alert' : undefined\} accessibilityLabel=\{exposed \? displayContent\.message : undefined\}/);
+  assert.match(toast, /<Text accessible accessibilityRole="alert" accessibilityLiveRegion="polite"[^>]*>\{displayContent\.message\}<\/Text>/);
+  assert.doesNotMatch(toast, /<Animated\.View accessibilityRole=\{exposed \? 'alert'/);
 });
 test('success keeps undo and errors keep retry and cancel semantics', () => {
-  assert.match(toast, /displayContent\.tone === 'success' && displayContent\.onUndo \? \{ label: 'Ångra'/);
-  assert.match(toast, /displayContent\.tone === 'error' \|\| displayContent\.tone === 'uncertain'\) \? \{ label: 'Försök igen'/);
+  assert.match(toast, /displayContent\.tone === 'success' && displayContent\.onUndo[\s\S]*?label: 'Ångra',[\s\S]*?accessibilityLabel: `Ångra: \$\{displayContent\.message\}`,[\s\S]*?iconName: 'return-up-back-outline'/);
+  assert.match(toast, /displayContent\.tone === 'error' \|\| displayContent\.tone === 'uncertain'\)[\s\S]*?label: 'Försök igen',[\s\S]*?iconName: undefined/);
+  assert.match(toast, /variant=\{action\.iconName \? 'icon' : 'tertiary'\} label=\{action\.label\} accessibilityLabel=\{action\.accessibilityLabel\}/);
   assert.match(toast, /displayContent\.tone === 'error' && displayContent\.onCancel \? <Button variant="secondary" label="Avbryt"/);
 });
 

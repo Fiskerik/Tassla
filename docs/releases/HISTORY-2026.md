@@ -31,6 +31,7 @@ Avslutade paketnotiser har samlats här. Varje post bevarar ursprunglig status o
 | [UI-07](#ui-07) | 2026-10-10 | implementerad och pushad; QA PASS; oberoende code review PASS | `e50da50`, `3adf73d` |
 | [HOME-ROUTINE-CHECKLIST-01](#home-routine-checklist-01) | 2026-10-15 | lokal UI-slice klar; QA/Reviewer PASS; live DB/native ej verifierat | `fix: clarify routine deletion cascade` på `codex/ux-rethink-2026-10-15` |
 | [P04-CONTENT](#p04-content) | okänt | `published` i bundlen, medan onboarding-only-versionen förblir `draft` för att inte läcka till den vanliga åldersbaserade feeden | ej angivet |
+| [UI-TRAINING-OVERVIEW-01](#ui-training-overview-01) | 2026-10-19 | implementerad, lokalt verifierad och pushad; QA/Reviewer PASS; native/live-data ej verifierat | `b59169c` |
 
 ## APP-01-PHONE
 
@@ -545,3 +546,69 @@ Paketcommit: `7b9da840d2ca2ac8f5d5ed998d73495858c98eae`. Bascommit617fb67. Pusha
 2026-10-15: rutinhallens kompakta gruppering, samlade editläge, dagsval och Home-status är implementerade. QA hittade att helraderingsbekräftelsen påstod att dagskopior behålls fast migrationen cascade-raderar kopior och sparade överhoppningar. Texten korrigerades; endast den destruktiva knappen raderar och `Avbryt` bevarar rutinen. Oberoende QA och Reviewer PASS.
 
 I den isolerade källkopian passerade app-typecheck, edge-typecheck, full ESLint och Node-testsviten (492/492). Ingen databas-/migrationsåtgärd genomfördes. Native Alert-rendering, VoiceOver/Dynamic Type, live Supabase/RLS och migration är ej verifierade. Den fullständiga panel-4-resan med fungerande filter och kommande planer återstår som `FLOW-HOME-CHECKLIST-01`. Underlag: `docs/design/evidence/vision-rev02/routine-checklists/RENDER-REPORT.md` och `docs/tasks/dev/rapport.md`. Checkpoint: committen `fix: clarify routine deletion cascade` på `codex/ux-rethink-2026-10-15`.
+
+
+## UI-TRAINING-OVERVIEW-01 — Träningsöversikt
+
+2026-10-19: Den uttryckligen begärda träningsredesignpatchen är implementerad på `codex/tassla-ui-ux-bundle-2026-10-18`. Nästa övning visas som primär handling och publicerade program listas efter progress/status. Programdetaljen visar klara, aktuell och kommande övningar. Befintlig version-/stegbunden progress, guarded completion, bekräftad save/error/retry, unmark/reset, källor och AI-etikett är bevarade.
+
+Oberoende QA och Reviewer PASS för avgränsad lokal omfattning. Riktade tester 13/13, `CI=1 pnpm check` 542/542, offentlig iOS JS-bundle (1446 moduler), `git diff --check`, kövalidering och commit-/push-hook PASS. Implementationscheckpoint: commit `b59169c`, pushad och verifierad på `origin/codex/tassla-ui-ux-bundle-2026-10-18`. Uppföljande commit innehåller endast slutlig kö-/arbetshistorik.
+
+Syntetisk RN Web-evidens och §14-bedömning: [verifiering](../design/evidence/ui-training-overview-2026-10-18/VERIFICATION.md). Live Supabase/RLS, verkligt publicerat innehåll, native tillgänglighet/enhetsbeteende och telefonprov är NOT TESTABLE. 140% webzoom radbryter befintlig `Kunskap`-etikett. Panel 6-avvikelsen är ägarbeställd och avgränsad; full rev02-visuell panelacceptans hävdas inte. Ingen Codemagic/TestFlight-build verifierades.
+## UI-ACTIONS-ROWS — 1b stängt, 2026-10-19
+
+Ikonbaserad redigering i rutinhallen, horisontellt åtkomliga veckodagar och kompakt händelsetypväljare i Logg är implementerade. Händelselistan visar ikon och svenskt namn; typbyte bevarar datum, tid och anteckning. Spara, radera och avbryt behåller synliga etiketter och befintliga dataflöden.
+
+Oberoende QA PASS och Reviewer PASS. Riktade tester 20/20, `CI=1 pnpm check` 545/545, offentlig iOS JS-export 1446 moduler, diff/queue validation och 10 syntetiska RN Web-vyer/interaktionskontroller PASS. Fullskärmsacceptans hävdas inte. Native VoiceOver/TalkBack, Dynamic Type, fysisk enhet, Supabase/RLS och signerad Codemagic/Xcode-build är NOT TESTABLE. Evidens: [verifieringsrapport](../design/evidence/ui-actions-rows-2026-10-19/VERIFICATION.md), [paketplan](../tasks/dev/UI-ACTIONS-ROWS.md). Nästa UI/UX-paket: 2a.
+
+Implementationscommit: `9bfd972`. Committen och closeout-posten pushas tillsammans till `origin/codex/tassla-ui-ux-bundle-2026-10-18`.
+
+
+## UI-ACCESSIBILITY-HOME-LOG (2a) — lokal kodcheckpoint
+
+Datum: 2026-10-19. Home- och dagsaktivitetsraderna har tydligare läsordning, radbrytning och hjälpmedelsstatus; retry namnger den berörda aktiviteten. QA och Reviewer PASS. 22/22 exakta fokuserade tester; QA-utökning 25/25; `pnpm check` 545/545; offentlig iOS JS-export PASS (1 446 moduler); syntetisk RN Web och kö-/diffkontroller PASS. VoiceOver/TalkBack, native Dynamic Type/gest, live backend, signerad build och rev02-fullskärmsacceptans är NOT TESTABLE. Implementation: commit `c58f3fd` (`fix: improve home daily activity accessibility`); dokumentations-/releasepost följs upp separat. [Evidens](../design/evidence/ui-accessibility-home-log-2026-10-19/VERIFICATION.md). Nästa checkpoint: riktad huvudfliksanimation.
+
+
+## UI-MAIN-TAB-TRANSITION — lokal checkpoint QA/Reviewer PASS, 2026-10-19
+
+Huvudfliksbyte visar nu en riktad 28pt sidförflyttning; stödskärmar behåller 8pt. 240ms-easing/toning, ingen första mount-rörelse, avbrott och reducerad rörelse är bevarade. Riktad svit 12/12, `pnpm check` 547/547 och offentlig iOS JS-export PASS. Syntetisk RN Web-fixtur fångade positiv och negativ translation vid 375×844/375×667, forward vid 430×844, 0px med reduced motion och Home→Logg via swipe; ingen JS page error. Oberoende QA och Reviewer PASS. Implementationens checkpointcommit är `0d4ecad` (`feat: add directional main tab transition`); push görs tillsammans med closeout-posten. Native timing/gest/VoiceOver är NOT TESTABLE. [Evidens](../design/evidence/ui-main-tab-transition-2026-10-19/VERIFICATION.md).
+
+
+## UI-ACCESSIBILITY-ROUTINES-NOTIFICATIONS (2b.1) — QA/Reviewer/Security PASS, 2026-10-19
+
+Rutinhanteringens långa dagsval-/raderingsåtgärder och påminnelsesidans informationsrad blir responsiva vid smal skärm och 140% webtext. Spara, behörighet, rutinutkast, återhämtning och hundscope är oförändrade. Oberoende QA PASS (47/47), Reviewer PASS och Security pre-/final APPROVE. `pnpm check` 549/549; offentlig iOS-JS-bundle 1 446 moduler; syntetisk RN Web 375×667/140%-proxy och 320px PASS. Native tillgänglighet, OS-prompt/leverans, live backend/RLS och signerad build är NOT TESTABLE; full rev02-panelmatchning hävdas inte. [Verifiering](../design/evidence/ui-accessibility-routines-notifications-2026-10-19/VERIFICATION.md).
+
+Implementation checkpoint: `5ee2065be80d28221eff8914203b38419eb2f119` (`fix: improve routine and reminder layouts`).
+
+## UI-ACCESSIBILITY-HEALTH (2b.2) — lokal checkpoint, 2026-10-19
+
+Hälsa/vikt-layouten fungerar vid smal bredd och stor text; kalenderknappen stannar inom datumfältet och historikens infoknapp kan läsas och nås under rubriken. Oberoende QA **PASS** (117/117 fokuserade tester; 552/552 full check), Reviewer **PASS** och Security pre-/final **APPROVE**. Offentlig iOS-JS-export och syntetisk RN Web-evidens PASS. Native tillgänglighet/tangentbord, live Supabase/RLS, signerad build och full paneljämförelse är NOT TESTABLE. [Verifiering](../design/evidence/ui-accessibility-health-2026-10-19/VERIFICATION.md).
+
+
+## UI-ACCESSIBILITY-PROFILES (2b.3) — lokal checkpoint, 2026-10-19
+
+Hundprofilens introduktionskort och hundväljare anpassar sig för smal bredd/stor text. Hund-/kontoscope, befintliga 44pt+-targets, selection callbacks, idempotent hundskapande, readback/recovery och profilens spar-/konfliktsemantik är oförändrade.
+
+QA och Reviewer PASS; Security pre-/final APPROVE. Fokuserade tester 31/31, full `pnpm check` 554/554 och offentlig iOS-JS-export 1 446 moduler PASS. Commit `3094b6a` är pushad till `origin/codex/tassla-ui-ux-bundle-2026-10-18`; båda hooks passerade full check. Renderad layout vid 375×667/140%, native tangentbord, Dynamic Type, VoiceOver/TalkBack, fokusordning och uppmätta mål är **NOT TESTABLE** och ligger kvar i `UI-NATIVE-ACCESSIBILITY-VERIFY`. Detta stänger endast lokal implementation checkpoint; full native/visuell acceptans hävdas inte. [Verifiering](../design/evidence/ui-accessibility-profiles-2026-10-19/VERIFICATION.md).
+
+## UI-ACCESSIBILITY-PASSPORT (2b.4) — lokal implementation checkpoint, 2026-10-19
+
+Responsiv Passport-layout och namngivna sektionsval är implementerade; urval, samtycke, PDF-snapshot, konto-/hundscope, delningsmål och filrensning är oförändrade. Architect villkorligt godkände lokal checkpoint enligt plan v6; UX Critic PROCEED; Security pre-/final APPROVE; oberoende QA och Reviewer PASS. Riktad svit 32/32, full pnpm check 555/555, offentlig iOS-JS-export 1 446 moduler, diff-/kövalidering samt commit-/push-hook PASS. Commit 4ffa107 (fix: improve passport accessibility layout) är pushad till origin/codex/tassla-ui-ux-bundle-2026-10-18.
+
+Renderad 375×667/140%, §14, native share sheet/PDF, VoiceOver/TalkBack, Dynamic Type, fokusordning och target bounds är NOT TESTABLE och ligger kvar i UI-NATIVE-ACCESSIBILITY-VERIFY; full visuell/native acceptans hävdas inte. [Verifiering](../design/evidence/ui-accessibility-passport-2026-10-19/VERIFICATION.md).
+
+### UI-KNOWLEDGE-SEARCH — lokal implementation checkpoint, 2026-10-19
+
+Artikelsökning filtrerar endast redan publicerade guider som valts för aktiv hund och dess ålder/ras. Riktade tester 21/21, pnpm check 564/564, public iOS-bundle 1 447 moduler, queue/diff checks PASS; QA och Reviewer PASS. Renderad/native- och §14-acceptans kvarstår OPEN / NOT TESTABLE i UI-NATIVE-ACCESSIBILITY-VERIFY. Nästa paket: UI-REFRESH-HOME-LOG.
+
+### UI-REFRESH-HOME-LOG — lokal implementation checkpoint, 2026-10-19
+
+RefreshControl finns endast på Hem och Logg. Hund- och kontobyte avbryter refresh och äldre sidladdningar; confirmed data behålls vid refreshfel och oklara dagsändringar behåller sin återställningsstatus. Architect/UX Critic approved, QA PASS, Reviewer PASS och Security final APPROVE. Riktade tester 11/11, full `pnpm check` 571/571, offentlig iOS-JS-export 1 447 moduler samt diff-/kövalidering PASS. Commit `0c1c345` (`feat: add Home and Log pull-to-refresh`) är pushad till `origin/codex/tassla-ui-ux-bundle-2026-10-18`. Renderad/native- och §14-verifiering är NOT TESTABLE och ligger kvar i UI-NATIVE-ACCESSIBILITY-VERIFY. Se [verifiering](../design/evidence/ui-refresh-home-log-2026-10-19/VERIFICATION.md). Nästa paket: UI-EMPTY-FEEDBACK-HOME-LOG (5a).
+
+### UI-EMPTY-FEEDBACK-HOME-LOG — 5a, QA/Reviewer verifierade, 2026-10-19
+
+Status: implementation, avgränsad lokal QA och slutlig Reviewer-granskning klara; commit/push återstår. Fokuserade tester 23/23, full pnpm check 577/577, offentlig iOS-JS-export 1 447 moduler, diff- och kövalidering PASS. Syntetisk stateful RN Web-fixture verifierade Logg tomläge → händelseväljare → bekräftad tidslinjerad/toast; Supabase/RLS, native accessibility, signerad build och full rev02-jämförelse är NOT TESTABLE. Första Reviewer-granskningen blockerade endast på saknad/kvarvarande dokumentation; efter rättning gav slutlig Reviewer PASS. Commit 67424a4 (feat: improve empty-state feedback for home and log) pushad till origin/codex/tassla-ui-ux-bundle-2026-10-18. Nästa paket: 5b. Se [verifiering](../design/evidence/ui-empty-feedback-home-log-2026-10-19/VERIFICATION.md).
+
+### FLOW-HOME-CHECKLIST-01 — lokal implementation checkpoint, 2026-10-20
+
+Hem → full Idag-checklista → rätt rutin/träningssteg → tillbaka är implementerat och oberoende granskat. Architect plan v9 APPROVE, UX Critic PASS, Security static PASS; public/review RN Web verifiering PASS och pnpm check 611/611. Offentlig iOS-JS-export 1 450 moduler. Implementationens checkpointcommit 2659cb82f8ba6913436591cb25f5a627bd2f2471 (feat: add full daily checklist flow) är pushad till origin/codex/tassla-ui-ux-bundle-2026-10-18. Native VoiceOver/Dynamic Type/fysiska gester och live Supabase/RLS är NOT TESTABLE; full panel 4 fortsätter i FLOW-HOME-CHECKLIST-FILTERS-01. [Verifiering](../design/evidence/flow-home-checklist-2026-10-20/VERIFICATION.md).

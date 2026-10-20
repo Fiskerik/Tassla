@@ -571,3 +571,20 @@ function buildScreenHandler({ source, operationInFlight, snapshot, current, stat
     (value) => state.errors.push(value), 'dog-session-1', (lifetime) => current() && lifetime === 'dog-session-1',
     createAndSharePassportPdf, exportMessage);
 }
+
+test('Passport responsive layout stacks the header and wraps selected data without changing consent controls', () => {
+  assert.match(passportScreenSource, /useWindowDimensions/);
+  assert.match(passportScreenSource, /const compactLayout = width < 360 \|\| fontScale >= 1\.25/);
+  assert.match(passportScreenSource, /compactLayout && styles\.headerRowStacked/);
+  assert.match(passportScreenSource, /compactLayout && styles\.headerCopyStacked/);
+  assert.match(passportScreenSource, /headerCopyStacked: \{ flex: 0 \}/);
+  assert.match(passportScreenSource, /headerCopy: \{ flex: 1, minWidth: 0 \}/);
+  assert.match(passportScreenSource, /selectionCopy: \{ flex: 1, minWidth: 0 \}/);
+  assert.match(passportScreenSource, /selectionIcon: \{[^}]*flexShrink: 0/);
+  assert.match(passportScreenSource, /checkbox: \{[^}]*flexShrink: 0/);
+  assert.match(passportScreenSource, /accessibilityRole="checkbox" accessibilityLabel=\{`\$\{title\}\. \$\{detail\}`\} accessibilityState=\{\{ checked, disabled \}\}/);
+  assert.match(passportScreenSource, /selectionRow: \{ minHeight: tokens\.size\.touchMin \+ tokens\.spacing\.xxl/);
+  assert.match(passportScreenSource, /label="Välj vad som delas" accessibilityLabel="Välj avsnitt att dela"/);
+  assert.match(passportScreenSource, /title=\{exporting \? 'Skapar PDF…' : 'Dela som PDF'\}/);
+  assert.match(passportScreenSource, /onPress=\{\(\) => \{ void createAndShare\(\); \}\}/);
+});

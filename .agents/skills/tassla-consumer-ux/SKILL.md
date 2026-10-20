@@ -34,6 +34,20 @@ Use the repository's `mobile-ios-design` skill when designing iOS-facing UI. App
 5. **All states designed:** first use, empty, loading, partial, offline, permission denied, error, success, undo.
 6. **Accessible by default:** screen reader labels, dynamic type, contrast, touch targets, non-color status cues, reduced motion.
 
+## Visual finishing tips (Tassla examples)
+Appearance is still governed by `docs/design-rules.md`, its approved screen contracts, and the existing theme tokens. Use these Refactoring UI ideas as a practical review lens, not as permission to invent styles or override an owner decision. Preserve contrast, accessibility, and the approved visual target when an example below conflicts with a token or contract.
+
+- **Create hierarchy with restraint.** Make the screen's job and next action easiest to scan using the existing type, weight, and semantic color tokens before increasing type size or adding another heading. For example, on the daily log, `Logga kiss` or `Logga vatten` can be the prominent action while date/context text stays secondary. Shorten labels instead of shrinking text or stacking explanatory copy into every button.
+- **Give categories distinct, accessible meaning.** Do not make different quick-log actions look interchangeable. In Tassla, the owner's stated direction is a warm yellow treatment for `Kiss` and blue for `Vatten`; pair color with the existing icon and label so meaning never depends on color alone. If the approved token set does not yet express that distinction, record it as a token/design-rules change in the UX spec and get the normal plan review; do not hard-code a one-off color in a screen.
+- **Use readable foregrounds on colored surfaces.** Do not place a generic muted-gray label on a tinted category tile when it loses contrast. Select the approved foreground token for that surface and check it at normal and large text sizes.
+- **Use spacing and surfaces before decoration.** When two related rows need separation, first use the spacing scale or an already approved surface distinction. Keep a border when it communicates a control boundary, grouping, or state; avoid drawing a border around every nested element just to make the layout feel finished. Example: group the date and its calendar affordance as one clearly tappable row instead of boxing the date, icon, and hint separately.
+- **Keep elevation quiet.** Use an existing elevation/shadow only where the design system already calls for a floating layer or meaningful depth. Avoid adding a shadow to every card or increasing blur to manufacture hierarchy; prefer spacing, surface, and type tokens.
+- **Size icons by their role.** Use the intended Ionicon size inside the approved `IconChip` or category shape. If a small icon feels lost, improve its container or alignment rather than scaling the glyph until its visual weight overwhelms the label.
+- **Use accents sparingly and consistently.** An accent rail, dot, or tint should signal a real category, current selection, or state. Do not add a decorative colored stripe to every card; first check whether an existing token/component already expresses the meaning.
+- **Make action priority obvious.** Reserve the filled primary button for the one main action, such as `Spara rutin`; use secondary or tertiary variants for `Avbryt` and optional information. Keep destructive actions contextual and clearly labeled, and only give them dominant styling when the destructive choice itself is the explicit task.
+
+These principles are adapted from [Refactoring UI, “7 Practical Tips for Cheating at Design”](https://medium.com/refactoring-ui/7-practical-tips-for-cheating-at-design-40c736799886). Apply the ideas through Tassla's tokens and review gates; do not copy a visual example blindly.
+
 ## Save-state pattern (use for every write)
 ```
 Idle -> Pending  : show "Sparar..." on that item only; disable duplicate submits

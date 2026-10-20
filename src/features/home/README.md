@@ -24,4 +24,23 @@ Rutinens checkbox och dess detaljöppning är separata handlingar. Träningsrade
 
 Kunskapsartiklar och en öppen checklistmall är underordnade vyer. `KnowledgeScreen` rapporterar detaljtillståndet till `ProductWorkspace`, som stänger av huvudflikssvep medan detaljen är öppen. Tryck på den aktiva Kunskap-fliken i detalj är en no-op. Vid faktiskt utträde från Kunskap rensas fokus och detaljflagga via både bottenmeny och sidgest; återinträde visar översikten utan att återöppna en gammal artikel. Hemmets direkta innehålls-CTA behåller däremot det uttryckligen valda artikel-id:t. Kunskapsöversikten och FAQ:s inline-expansion behåller huvudflikssvep.
 
+Hemmens räknare och uppdateringsindikator ligger i en egen sammanfattningsrad under rubriken, så de inte pressar “Dagens att göra” på smala skärmar eller vid större text. Dagsradstitlar får växa i stället för att klampas till två rader; pending/failed/unknown-status annonseras när den ändras, och återförsöket namnger aktiviteten.
+
 Reproducerbara React Native Web-renderingar finns i [tools/visual-check](../../../tools/visual-check/README.md). De använder syntetiska data; Supabase/RLS-runtime, native enheter och TestFlight verifieras separat.
+
+## Små kontroller i rutinhantering
+
+I veckoupprepning visas `Må, Ti, On, To, Fr, Lö, Sö` i en horisontell rad. Fullständiga veckodagsnamn exponeras för hjälpmedelsteknik och raden kan bläddras vid smal skärm eller större text; varje knapp behåller minst 44 pt träffyta. Rutinens pennknapp är ikon-only visuellt men behåller namnbundet tillgänglighetsnamn.
+
+I `DailyActivityManagerSheet` staplas rutinens dagsval och radering när fönstret är smalare än 360 pt eller `fontScale` minst 1.25; vid större utrymme kan de ligga sida vid sida och radbrytas. Ändringen påverkar bara presentationen, inte rutinutkastets sparning, avbryt, readback eller hundscope.
+
+## Pull-to-refresh för Hem och Logg
+
+Hem använder den befintliga dagsladdaren med aktiv hund, konto, lokal dag och tidszon. En samtidig läsning för samma scope delas i stället för att avbrytas.
+
+Logg har ett scope per konto, kontogeneration och hund. Samtidiga första-sidans läsningar delar en flight; scopebyte döljer gamla rader direkt och avbryter föregående anrop. En uppdatering bevarar lokalt bekräftade ändringar som gjorts medan nätläsningen pågår. Uppdateringsfel visas separat från initial laddning och tom lista, med raderna kvar och ett nytt försök. RefreshControl kopplas bara in på Hem och Logg; native svep behöver verifieras på enheten.
+
+
+## Dagens fullständiga checklista
+
+`ProductWorkspace` visar Hemmets permanenta Checklista-ingång som en underordnad Hem-route. `DailyChecklistScreen` återanvänder samma hund-, konto-, lokal-dag-, tidszons- och aktivitetskälla som Hem. Träningsdetaljen startar överst och tillbaka till checklistan återställer samma källrad. Scrollpositionen finns bara kvar medan checklistflödet är aktivt; när man går tillbaka till Hem töms offseten, så nästa öppning börjar vid rubriken. Konto-/hund-/dags-/tidszonsskifte tömmer också child route och fokus. De senare checklistfiltren ligger i det separata `FLOW-HOME-CHECKLIST-FILTERS-01`-paketet. Renderad evidens finns i `docs/design/evidence/flow-home-checklist-2026-10-20/`; webfixture är syntetisk och ersätter inte native eller live RLS-verifiering.

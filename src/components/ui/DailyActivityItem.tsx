@@ -27,7 +27,7 @@ export function DailyActivityItem(props: DailyActivityItemProps) {
   if (props.variant === 'home') return <HomeDailyActivityItem {...props} />;
   const { label, category = 'training', detail, completed, onToggle, onOpen, onRemove, accessibilityLabel = label } = props;
   return <View style={styles.row}>
-    <MotionPressable accessibilityRole="checkbox" accessibilityLabel={accessibilityLabel}
+    <MotionPressable accessibilityRole="checkbox" aria-checked={completed} accessibilityLabel={accessibilityLabel}
       accessibilityState={{ checked: completed, disabled: !onToggle }} disabled={!onToggle}
       onPress={() => onToggle?.()} style={({ pressed }) => [styles.checkbox, pressed && onToggle && styles.pressed]}>
       <Ionicons name={completed ? 'checkmark-circle' : 'ellipse-outline'} size={tokens.size.iconMd}
@@ -68,17 +68,17 @@ function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, complete
         </View>
       </View>
       <View style={styles.homeCopy}>
-        <Text numberOfLines={2} style={[styles.homeLabel, completed && styles.completedTrainingLabel]}>{label}</Text>
-        {status ? <Text accessibilityRole={statusError ? 'alert' : undefined} style={[styles.homeStatus, statusError && styles.homeError]}>{status}</Text> : null}
+        <Text style={[styles.homeLabel, completed && styles.completedTrainingLabel]}>{label}</Text>
+        {status ? <Text accessibilityRole={statusError ? 'alert' : undefined} accessibilityLiveRegion="polite" style={[styles.homeStatus, statusError && styles.homeError]}>{status}</Text> : null}
       </View>
       <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
     </MotionPressable>
-    {statusMessage && onRetry ? <Button variant="tertiary" label="Kontrollera ändringen igen" accessibilityLabel="Kontrollera dagens ändring igen" disabled={pending} onPress={onRetry} /> : null}
+    {statusMessage && onRetry ? <Button variant="tertiary" label={`Kontrollera ändringen för ${label} igen`} accessibilityLabel={`Kontrollera ändringen för ${label} igen`} disabled={pending} onPress={onRetry} /> : null}
   </View>;
 
   return <View style={styles.homeRowWrap}>
     <View style={styles.homeRoutineRow}>
-      <MotionPressable accessibilityRole="checkbox" accessibilityLabel={`${routineItemLabel}, ${completed ? 'klar' : 'inte klar'}`}
+      <MotionPressable accessibilityRole="checkbox" aria-checked={completed} accessibilityLabel={`${routineItemLabel}, ${completed ? 'klar' : 'inte klar'}`}
         accessibilityState={{ checked: completed, disabled: !onToggle || pending }} disabled={!onToggle || pending}
         onPress={onToggle} style={({ pressed }) => [styles.homeToggleTarget, pressed && styles.pressed]}>
         {routineCheckbox}
@@ -86,8 +86,8 @@ function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, complete
       <MotionPressable accessibilityRole="button" accessibilityLabel={`Öppna ${routineItemLabel}`} onPress={onOpen}
         style={({ pressed }) => [styles.homeDetailTarget, pressed && styles.pressed]}>
         <View style={styles.homeCopy}>
-          <Text numberOfLines={2} style={styles.homeLabel}>{label}</Text>
-          {status ? <Text accessibilityRole={statusError ? 'alert' : undefined} style={[styles.homeStatus, statusError && styles.homeError]}>{status}</Text> : null}
+          <Text style={styles.homeLabel}>{label}</Text>
+          {status ? <Text accessibilityRole={statusError ? 'alert' : undefined} accessibilityLiveRegion="polite" style={[styles.homeStatus, statusError && styles.homeError]}>{status}</Text> : null}
         </View>
         <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
       </MotionPressable>

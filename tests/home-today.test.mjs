@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { registerHooks } from 'node:module';
 
 const hook = registerHooks({ resolve(specifier, context, nextResolve) { return specifier.startsWith('.') && !/\.[a-z0-9]+$/i.test(specifier) ? nextResolve(`${specifier}.ts`, context) : nextResolve(specifier); } });
 const homeToday = await import('../src/features/home/home-today.ts');
 hook.deregister();
+const routineManagerSource = await readFile(new URL('../src/features/home/DailyActivityManagerSheet.tsx', import.meta.url), 'utf8');
 
 const { homeAgeInWeeks, homeTodaySources, homeWeekStrip } = homeToday;
 
@@ -90,4 +92,14 @@ test('Home today sources use local-day events and performed health while keeping
   assert.deepEqual(sources.planned.map(({ id }) => id), ['plan-today', 'plan-untimed']);
   assert.ok(sources.planned.every((plan) => !('completed' in plan) && !('completed_at' in plan)));
   assert.ok(sources.logged.every((entry) => !('completed' in entry) && !('completed_at' in entry)));
+});
+
+test('routine manager stacks long peer actions at narrow widths or larger text without reducing touch targets', () => {
+  assert.match(routineManagerSource, /useWindowDimensions\(\)/);
+  assert.match(routineManagerSource, /width < 360 \|\| fontScale >= 1\.25/);
+  assert.match(routineManagerSource, /stackRoutineActions && styles\.routineActionsStacked/);
+  assert.match(routineManagerSource, /routineActionButtonStacked: \{ flex: 0, flexBasis: 'auto', alignSelf: 'stretch' \}/);
+  assert.match(routineManagerSource, /routineActionButton: \{ flex: 1, flexBasis: '45%', minWidth: tokens\.size\.touchMin \}/);
+  assert.match(routineManagerSource, /minHeight: tokens\.size\.touchMin/);
+  assert.match(routineManagerSource, /accessibilityLabel=\{`\$\{selected \? 'Ta bort' : skippedDay \? 'Lägg tillbaka' : 'Lägg till'\} rutinen/);
 });

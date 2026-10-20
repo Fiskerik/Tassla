@@ -9,7 +9,7 @@
 - `DailyActivityItem` visar en kategori, beskrivning och två separata kontroller: valfri completion-toggle och detaljnavigation. Hem använder den bara för sin lokala syntetiska review-fixture; den skapar eller sparar ingen produktprogress.
 - `DestinationTile` visar destinationsikoner för Logg, Träning eller Kunskap och skickar navigation via sin callback. Kategoriernas aktivitetsikoner används inte som genvägsikoner.
 - `ComponentGalleryScreen` visar svenska exempel och tillstånd, inklusive de två nya hemkomponenterna. Den nås endast från den redan flaggade `DevelopmentPreview`; ingen produktionsroute används.
-- `MainSwipeNavigation` ger ett dependencyfritt horisontellt svepresponderlager för produktens sex MVP-ytor. Den aktiveras bara av arbetsytan, använder stora touchmål som tröskel och äger ingen sidstate.
+- `MainSwipeNavigation` ger ett dependencyfritt svepresponderlager för de fem huvudflikarna. Den fångar tydligt vågräta rörelser tidigt, lämnar lodrät scroll till sidans `ScrollView` och respekterar exkluderingar från inre horisontella kontroller. En ren regelmodul hanterar fångst- och flikbyteströsklar; komponenten äger ingen sidstate. Riktade regler och källkontrakt testas med `node --experimental-strip-types --test tests/main-swipe-rules.test.mjs tests/main-swipe-navigation-policy.test.mjs`.
 - Komponentprops går direkt från den sammansättande vyn till nativekontrollerna. Biblioteket lagrar inte data.
 
 ## Setup och verifiering
@@ -28,7 +28,7 @@ Datum- och tidsfält behåller manuell textinmatning och har modalväljare för 
 
 ## Rörelse enligt MOTION
 
-`MotionPressable` och `ScreenTransition` är befintliga delade animationer. Nya animationer använder React Native `Animated`, durations från `tokens.motion` och `useReducedMotion`. De spelas inte på första rendering, får aldrig signalera osparad framgång och är aldrig enda feedbackkanal. Toast, Progress och ChecklistItem animerar bara ändringar efter mount; text och tillgänglighetsvärden behåller betydelsen med reducerad rörelse. Se `docs/design-rules.md` §15–17.
+`MotionPressable` och `ScreenTransition` är befintliga delade animationer. Nya animationer använder React Native `Animated`, durations från `tokens.motion` och `useReducedMotion`. `ScreenTransition` spelar inte vid första mount, tar valfri rörelseväg och avbryter föregående animation när nyckeln ändras. Huvudfliksbyten använder riktad `pageDistance` på 28pt; stödskärmar behåller standardavståndet 8pt. Reducerad rörelse byter direkt. Rörelse signalerar aldrig osparad framgång och är aldrig enda återkopplingen. Toast, Progress och ChecklistItem animerar bara ändringar efter mount; text och tillgänglighetsvärden behåller betydelsen med reducerad rörelse. Se `docs/design-rules.md` §15–17.
 
 `Toast` har en stabil ägarplats och kräver `visible`. Dold plats returnerar ingen yta. Ägaren behåller meddelandet tills `onExitComplete`; `autoDismissMs` räknas efter entrén och `onAutoDismiss` begär utgång. Dold och utgående Toast annonseras inte. Synliga och utgående toastar har gemensamt vertikalt avstånd från `tokens.spacing.md`. `Progress` visar startvärdet direkt och animerar bara senare värdeändringar. `ChecklistItem.confirmed` måste vara sant efter sparning för att en ny bock ska få positiv rörelse; befintlig lokal förhandsvisning skickar inte prop:en.
 
@@ -39,3 +39,7 @@ Aktuella webbskärmbilder finns i `docs/design/UI-RESET`; native begränsningar 
 `ListRow` visar `complete` med en tillgänglig etikett som slutar med “Genomförd”. `animateCompleteKey` är opt-in för en specifik bekräftad träningsrad; generella färdiga rader får ingen ny rörelse.
 
 `FirstUseTip` är den lilla visuella presentationen och har en separat tillgänglig stängknapp. `useFirstUseTip` läser status för en explicit kontoägare/skärm, ignorerar sena svar efter ägarbyte/avmontering och avfärdar omedelbart. LogScreen markerar kontrollaktivering explicit; scroll/fokus och tom yta räknas inte. SecureStore fel döljer tipset resten av appprocessen för ägaren/skärmen, utan att påstå att status sparats. Status raderas tillsammans med kontoägarens lokala data efter bekräftad serverradering.
+
+## Uppdatering i AppScreen
+
+AppScreen kan ta emot en uppdateringscallback och ett refreshing-värde. Då skapas React Natives RefreshControl för dess ScrollView; utan callback visas ingen uppdateringsgest. ProductWorkspace kopplar in kontrollen bara på Hem och Logg och äger respektive laddningsstatus.

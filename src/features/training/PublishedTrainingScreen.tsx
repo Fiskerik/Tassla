@@ -1,23 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Image, StyleSheet, Text, View } from 'react-native';
-import { BottomSheet, Button, HeroCard, ListRow, Progress, SectionHeader, Tabs, Toast } from '../../components/ui';
-import { MotionPressable } from '../../components/ui/Motion';
+import { Alert, StyleSheet, Text, View } from 'react-native';
+import { AppBar, BottomSheet, Button, Card, ListRow, Progress, SectionHeader, Toast } from '../../components/ui';
 import type { PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
 import { completeReviewTrainingStep, completeTrainingStepForMode, isReviewTrainingProgram, resetReviewTrainingProgram, unmarkReviewTrainingStep, unmarkTrainingStepForMode } from './review-training-state';
 import { tokens } from '../../theme/tokens';
+import { allProgramsComplete, completedCount, exerciseCountLabel, exerciseProgressLabel, pickNextExercise, programStatus, programStatusWord, sortPrograms, stepStates } from './training-overview';
 
-const trainingImage = require('../../../assets/images/puppy-training.png');
-const tabs = ['Rekommenderat', 'Alla övningar', 'Mina'] as const;
-
-export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, reviewMode = false }: {
+export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, onAddBirthDate, onOpenKnowledge, reviewMode = false, focusStep, onCloseStep }: {
   ageWeeks: number | null; programs: readonly PublishedTrainingProgram[]; paused: readonly PausedTrainingProgress[]; busyStepKey: string | null; error: string;
   reviewMode?: boolean;
+  focusStep?: { programId: string; stepId: string; returnPage: 'home' | 'checklist' };
+  onCloseStep?: () => void;
   onCompleteStep: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>;
   onUnmarkStep?: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>; onContinue: () => void;
   onResetProgram: (program: PublishedTrainingProgram) => void; onRetry: () => void;
+  onAddBirthDate?: () => void; onOpenKnowledge?: () => void;
 }) {
-  const [tab, setTab] = useState<string>(tabs[0]);
-  const [programId, setProgramId] = useState<string | null>(null);
+  const [openProgramId, setOpenProgramId] = useState<string | null>(null);
   const [selection, setSelection] = useState<{ programId: string; stepId: string } | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [reviewCompleted, setReviewCompleted] = useState<Record<string, string[]>>({});
@@ -26,13 +25,15 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   const pending = useRef(false);
   const mounted = useRef(true);
   const visiblePrograms = reviewMode ? programs.map((program) => ({ ...program, completedStepIds: reviewCompleted[program.id] ?? program.completedStepIds })) : programs;
-  const active = visiblePrograms.find((program) => program.id === programId) ?? visiblePrograms[0];
-  const selectedProgram = visiblePrograms.find((program) => program.id === selection?.programId);
-  const selectedStep = selectedProgram?.steps.find((step) => step.id === selection?.stepId);
+  const openProgram = visiblePrograms.find((program) => program.id === openProgramId) ?? null;
+  const selectedProgram = visiblePrograms.find((program) => program.id === (focusStep?.programId ?? selection?.programId));
+  const selectedStep = selectedProgram?.steps.find((step) => step.id === (focusStep?.stepId ?? selection?.stepId));
   const nextStep = selectedProgram?.steps.find((step) => !selectedProgram.completedStepIds.includes(step.id));
-  const mine = visiblePrograms.filter((program) => program.completedStepIds.length > 0);
-  const continueProgram = visiblePrograms.find((program) => program.completedStepIds.length > 0 && program.steps.some((step) => !program.completedStepIds.includes(step.id)));
-  const continueStep = continueProgram?.steps.find((step) => !continueProgram.completedStepIds.includes(step.id));
+  const sortedPrograms = sortPrograms(visiblePrograms);
+  const nextExercise = pickNextExercise(sortedPrograms);
+  const allComplete = allProgramsComplete(visiblePrograms);
+  const heroProgram = nextExercise ? visiblePrograms.find((program) => program.id === nextExercise.programId) : undefined;
+  const heroStep = heroProgram?.steps.find((step) => step.id === nextExercise?.stepId);
   const consumeCompletionAnimation = useCallback((key: string) => {
     setAnimateCompleteTarget((current) => current?.key === key ? null : current);
   }, []);
@@ -85,23 +86,29 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     } finally { if (mounted.current) pending.current = false; }
   }
 
-  function rows(program: PublishedTrainingProgram) {
-    return <View style={styles.rows}>{program.steps.map((step) => <ListRow key={step.id} category="training" title={step.title} titleSize="compact"
-      complete={program.completedStepIds.includes(step.id)} animateCompleteKey={animateCompleteTarget?.programId === program.id && animateCompleteTarget.stepId === step.id ? animateCompleteTarget.key : undefined} onCompleteAnimationStart={consumeCompletionAnimation}
-      onPress={() => setSelection({ programId: program.id, stepId: step.id })} />)}</View>;
-  }
-
-  function programCards(items: readonly PublishedTrainingProgram[]) {
-    return <View style={styles.programGrid}>{items.map((program) => <View key={program.id} style={styles.programCard}>
-      <HeroCard variant="training-image-top" image={trainingImage} title={program.title}
-        meta={`${program.steps.length} ${program.steps.length === 1 ? 'övning' : 'övningar'}`}
-        onPress={() => setProgramId(program.id)} selected={active?.id === program.id}>
-        <Text style={styles.programSummary} numberOfLines={2}>{program.body}</Text>
-      </HeroCard>
-    </View>)}</View>;
+  // Aktuell övning är ett eget kort med en tydlig handling. Klara och kommande övningar är rader som går att läsa.
+  function stepRows(program: PublishedTrainingProgram) {
+    const states = stepStates(program);
+    const currentIndex = states.indexOf('current');
+    return <View style={styles.path}>{program.steps.map((step, index) => {
+      const state = states[index];
+      if (state === 'current') return <View key={step.id} style={styles.currentStep}>
+        <Text style={styles.stepMeta}>Nästa övning</Text>
+        <Text style={styles.stepMeta}>{`Övning ${index + 1} av ${program.steps.length}`}</Text>
+        <Text style={styles.sheetHeading}>{step.title}</Text>
+        <Text style={styles.body} numberOfLines={3}>{step.instruction}</Text>
+        <Button label="Öva nu" accessibilityLabel={`Nästa övning: ${step.title}, övning ${index + 1} av ${program.steps.length}`} onPress={() => setSelection({ programId: program.id, stepId: step.id })} />
+      </View>;
+      return <ListRow key={step.id} category="training" title={step.title} titleSize="compact"
+        meta={state === 'done' ? 'Klar' : `Kommande · efter övning ${currentIndex + 1}`}
+        accessibilityLabel={state === 'done' ? undefined : `Kommande övning: ${step.title}, kommer efter övning ${currentIndex + 1}`}
+        complete={state === 'done'} animateCompleteKey={animateCompleteTarget?.programId === program.id && animateCompleteTarget.stepId === step.id ? animateCompleteTarget.key : undefined} onCompleteAnimationStart={consumeCompletionAnimation}
+        onPress={() => setSelection({ programId: program.id, stepId: step.id })} />;
+    })}</View>;
   }
 
   function reset(program: PublishedTrainingProgram) {
+    if (completedCount(program) === 0) return;
     Alert.alert('Börja om?', `Dina markeringar i ”${program.title}” tas bort.`, [
       { text: 'Avbryt', style: 'cancel' },
       { text: 'Börja om', style: 'destructive', onPress: () => reviewMode && isReviewTrainingProgram(program.id)
@@ -110,67 +117,96 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     ]);
   }
 
+  if (focusStep) return <View testID="home-training-step-detail" style={styles.focusedPage}>
+    <AppBar mode="Back" title="Träningssteg"
+      actionLabel={focusStep.returnPage === 'checklist' ? 'Tillbaka till Checklistan' : 'Tillbaka till Hem'}
+      onAction={onCloseStep ?? onContinue} variant="compact" />
+    {!selectedProgram || !selectedStep ? <View style={styles.emptyCard}>
+      <Text style={styles.emptyTitle}>Steget är inte tillgängligt</Text>
+      <Text style={styles.body}>Det valda träningssteget kunde inte hämtas från dagens publicerade program.</Text>
+      <Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta träningssteget igen" onPress={onRetry} />
+    </View> : <View style={styles.focusedCard}>
+      <Text style={styles.stepMeta}>{selectedProgram.title}</Text>
+      <Text accessibilityRole="header" style={styles.sheetHeading}>{selectedStep.title}</Text>
+      {selectedProgram.is_ai_generated ? <Text style={styles.note}>AI-genererat innehåll</Text> : null}
+      <Text style={styles.body}>{selectedStep.instruction}</Text>
+      <Text style={styles.note}>Anpassa efter din hund och pausa när det behövs.</Text>
+      {selectedProgram.completedStepIds.includes(selectedStep.id) ? <>
+        <Text style={styles.note}>Genomförd. Ni kan gärna öva igen.</Text>
+        {onUnmarkStep || (reviewMode && isReviewTrainingProgram(selectedProgram.id)) ? <Button variant="tertiary" label="Avmarkera" accessibilityLabel={`Avmarkera ${selectedStep.title}`} loading={busyStepKey === `${selectedProgram.id}:${selectedStep.id}:unmark`} disabled={Boolean(busyStepKey)} onPress={() => { void unmark(); }} /> : null}
+      </> : <>
+        {nextStep?.id !== selectedStep.id ? <Text style={styles.note}>Börja med {nextStep?.title} innan du markerar den här övningen.</Text> : null}
+        <Button label="Markera som genomförd" accessibilityLabel="Markera övningen som genomförd" loading={busyStepKey === `${selectedProgram.id}:${selectedStep.id}`} disabled={Boolean(busyStepKey) || nextStep?.id !== selectedStep.id} onPress={() => { void complete(); }} />
+      </>}
+      <Toast visible={Boolean(successMessage)} tone="success" confirmed message={successMessage || undefined} autoDismissMs={2500} onAutoDismiss={() => setSuccessMessage('')} />
+      <Toast visible={Boolean(error)} tone="error" message={error || undefined} onRetry={onRetry} />
+    </View>}
+  </View>;
+
   return <View>
-    <Text accessibilityRole="header" style={styles.screenTitle}>Träning</Text>
-    <Tabs items={tabs} active={tab} onChange={setTab} variant="rev02-segmented" />
+    {openProgram
+      ? <AppBar mode="Back" title={openProgram.title} onAction={() => setOpenProgramId(null)} variant="compact" />
+      : <Text accessibilityRole="header" style={styles.screenTitle}>Träning</Text>}
     {reviewMode ? <Text style={styles.note}>Tillfälligt exempel – innehållet är inte sakgranskat. Markeringar i dessa övningsutkast sparas under den här visningen.</Text> : null}
     <Toast visible={Boolean(error) && !selectedProgram} tone="error" message={error || undefined} onRetry={onRetry} />
     <Toast visible={Boolean(successMessage) && !selectedProgram} tone="success" confirmed message={successMessage} autoDismissMs={2500} onAutoDismiss={() => setSuccessMessage('')} />
-    {paused.map((item) => <View key={item.versionId} style={styles.pausedCard}><Text style={styles.note}>Ett tidigare program är pausat. Dina {item.completedCount} genomförda steg finns kvar.</Text></View>)}
+    {paused.map((item) => <View key={item.versionId} style={styles.pausedCard}><Text style={styles.note}>{item.completedCount === 1 ? 'Ett tidigare program är pausat. En genomförd övning finns kvar.' : `Ett tidigare program är pausat. ${item.completedCount} genomförda övningar finns kvar.`}</Text></View>)}
 
-    {visiblePrograms.length === 0 && tab !== 'Mina' ? <View style={styles.emptyCard}>
-      <Text style={styles.emptyTitle}>{ageWeeks === null ? 'Åldersbaserade program' : 'Träning i er takt'}</Text>
-      <Text style={styles.body}>{ageWeeks === null ? 'Lägg till hundens födelsedatum för att se åldersbaserade program. Sparade framsteg finns under Mina.' : 'Fler program kommer när de är färdiga att använda.'}</Text>
-    </View> : null}
-
-    {tab === 'Rekommenderat' && visiblePrograms.length > 0 ? <>
-      {ageWeeks === null ? <View style={styles.unknownAgeNotice}>
-        <Text style={styles.body}>Åldersbaserade program visas när hundens födelsedatum finns. Dina sparade framsteg finns kvar under Mina.</Text>
-        <Button variant="tertiary" label="Visa mina program" accessibilityLabel="Visa mina sparade träningsprogram" onPress={() => setTab('Mina')} />
+    {openProgram ? <>
+      <Progress value={percentage(openProgram)} label={exerciseProgressLabel(openProgram)} />
+      {openProgram.steps.length === 0
+        ? <View style={styles.emptyCard}><Text style={styles.emptyTitle}>Inga övningar tillgängliga ännu</Text><Text style={styles.body}>Övningarna visas här när de är färdiga.</Text></View>
+        : stepRows(openProgram)}
+      <Button variant="tertiary" label="Om programmet och källor" accessibilityLabel={`Läs om ${openProgram.title} och dess källor`} onPress={() => setSelection({ programId: openProgram.id, stepId: '' })} />
+      {completedCount(openProgram) > 0 ? <Button variant="destructive" label="Börja om" accessibilityLabel={`Börja om med ${openProgram.title}`} disabled={Boolean(busyStepKey)} onPress={() => reset(openProgram)} /> : null}
+    </> : visiblePrograms.length === 0 ? error
+      ? ageWeeks === null ? <View style={styles.ageHint}>
+        <Text style={styles.note}>Lägg till hundens födelsedatum för att se åldersbaserade program. Sparade framsteg finns kvar här.</Text>
+        {onAddBirthDate ? <Button label="Lägg till födelsedatum" accessibilityLabel="Lägg till födelsedatum" onPress={onAddBirthDate} /> : null}
+      </View> : null
+      : <View style={styles.emptyCard}>
+        <Text style={styles.emptyTitle}>{ageWeeks === null ? 'Åldersbaserade program' : 'Träning i er takt'}</Text>
+        <Text style={styles.body}>{ageWeeks === null ? 'Lägg till hundens födelsedatum för att se åldersbaserade program. Sparade framsteg finns kvar här.' : 'Fler program kommer när de är färdiga att använda.'}</Text>
+        {ageWeeks === null && onAddBirthDate ? <Button label="Lägg till födelsedatum" accessibilityLabel="Lägg till födelsedatum" onPress={onAddBirthDate} /> : null}
+        {ageWeeks !== null && onOpenKnowledge ? <Button variant="tertiary" label="Öppna Kunskap" accessibilityLabel="Öppna Kunskap" onPress={onOpenKnowledge} /> : null}
       </View> : <>
-        <View style={styles.ageHeading}>
-          <Text style={styles.sectionTitle}>{`Passar just nu (${ageWeeks} ${ageWeeks === 1 ? 'vecka' : 'veckor'})`}</Text>
-          <MotionPressable accessibilityRole="button" accessibilityLabel="Visa alla övningar" onPress={() => setTab('Alla övningar')} style={({ pressed }) => [styles.seeAllButton, pressed && styles.pressed]}>
-            <Text style={styles.seeAll}>Visa alla</Text>
-          </MotionPressable>
-        </View>
-        {programCards(visiblePrograms)}
-      </>}
-      {continueProgram && continueStep ? <>
-        <SectionHeader title="Fortsätt där ni var" />
-        <MotionPressable accessibilityRole="button" accessibilityLabel={`Fortsätt där ni var: ${continueProgram.title}, ${continueStep.title}`} accessibilityHint="Öppnar programmet vid nästa övning" onPress={() => setSelection({ programId: continueProgram.id, stepId: continueStep.id })} style={({ pressed }) => [styles.continueCard, pressed && styles.pressed]}>
-          <Image source={trainingImage} style={styles.continueImage} resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-          <View style={styles.continueContent}>
-            <Text style={styles.continueTitle}>{continueProgram.title}</Text>
-            <Text style={styles.continueStep}>{continueStep.title}</Text>
-            <Progress value={percentage(continueProgram)} label={`${continueProgram.completedStepIds.length} av ${continueProgram.steps.length} steg klara`} />
+      {ageWeeks === null ? <View style={styles.ageHint}>
+        <Text style={styles.note}>Åldersbaserade program visas när hundens födelsedatum finns. Era sparade framsteg finns kvar här.</Text>
+        {onAddBirthDate ? <Button variant="secondary" label="Lägg till födelsedatum" accessibilityLabel="Lägg till födelsedatum" onPress={onAddBirthDate} /> : null}
+      </View> : null}
+      {nextExercise && heroProgram && heroStep ? <View style={styles.nextCard}>
+        <Text style={styles.stepMeta}>Nästa övning</Text>
+        <Text style={styles.sheetHeading}>{heroStep.title}</Text>
+        <Text style={styles.stepMeta}>{`${heroProgram.title} · övning ${nextExercise.number} av ${nextExercise.total}`}</Text>
+        <Button label="Öva nu" accessibilityLabel={`Öva nu: ${heroStep.title}`} onPress={() => setSelection({ programId: heroProgram.id, stepId: heroStep.id })} />
+      </View> : <View style={styles.emptyCard}>
+        <Text style={styles.emptyTitle}>{allComplete ? 'Alla övningar är genomförda' : 'Inga övningar tillgängliga ännu'}</Text>
+        <Text style={styles.body}>{allComplete
+          ? 'Öppna ett program nedan om ni vill öva igen. Fler program kommer när de är färdiga att använda.'
+          : 'Ett eller flera program saknar övningar just nu. De visas här när innehållet är tillgängligt.'}</Text>
+      </View>}
+      <SectionHeader title="Era program" />
+      {ageWeeks !== null ? <Text style={styles.stepMeta}>{`Valda efter hundens ålder, ${ageWeeks} ${ageWeeks === 1 ? 'vecka' : 'veckor'}.`}</Text> : null}
+      <View style={styles.programList}>{sortedPrograms.map((program) => {
+        const status = programStatus(program);
+        const word = programStatusWord(status);
+        const progressLabel = exerciseProgressLabel(program);
+        return <Card key={program.id} onPress={() => setOpenProgramId(program.id)} accessibilityLabel={`${program.title}, ${word}, ${progressLabel}. Öppna programmet`}>
+          <View style={styles.programInner}>
+            <View style={styles.programHeader}>
+              <Text style={styles.programTitle}>{program.title}</Text>
+              <Text style={styles.programStatus}>{word}</Text>
+            </View>
+            <Text style={styles.stepMeta}>{exerciseCountLabel(program.steps.length)}</Text>
+            <Progress value={percentage(program)} label={progressLabel} />
           </View>
-        </MotionPressable>
-      </> : null}
-      {active && ageWeeks !== null ? <>
-        <SectionHeader title={active.title} />
-        {rows(active)}
-        <Button variant="tertiary" label="Om programmet" accessibilityLabel="Läs om programmet och dess källor" onPress={() => setSelection({ programId: active.id, stepId: '' })} />
-      </> : null}
-    </> : null}
-
-    {tab === 'Alla övningar' ? visiblePrograms.map((program) => <View key={program.id}>
-      <SectionHeader title={program.title} />{rows(program)}
-      <Button variant="tertiary" label="Om programmet" accessibilityLabel={`Läs om ${program.title} och dess källor`} onPress={() => setSelection({ programId: program.id, stepId: '' })} />
-    </View>) : null}
-
-    {tab === 'Mina' ? mine.length ? mine.map((program) => <View key={program.id} style={styles.mineCard}>
-      <Text style={styles.programTitle}>{program.title}</Text>
-      <Progress value={percentage(program)} label={`${program.completedStepIds.length} av ${program.steps.length} steg markerade`} />
-      {rows(program)}
-      {program.completedStepIds.length ? <Button variant="destructive" label="Börja om" accessibilityLabel={`Börja om med ${program.title}`} disabled={Boolean(busyStepKey)} onPress={() => reset(program)} /> : null}
-    </View>) : <View style={styles.emptyCard}>
-      <Text style={styles.emptyTitle}>{reviewMode ? 'Dina markeringar visas här' : 'Inga påbörjade program ännu'}</Text>
-      <Text style={styles.body}>{reviewMode ? 'Öppna ett tillfälligt exempel och markera ett steg för att se hur framsteg visas.' : 'När du markerar ett steg som genomfört hittar du programmets framsteg här.'}</Text>
-    </View> : null}
+        </Card>;
+      })}</View>
+    </>}
 
     <BottomSheet visible={Boolean(selectedProgram)} title={selectedStep ? 'Övning' : 'Om programmet'} onRequestClose={() => { if (!busyStepKey) setSelection(null); }}>
       <Text style={styles.sheetHeading}>{selectedStep?.title ?? selectedProgram?.title}</Text>
+      {selectedProgram?.is_ai_generated ? <Text style={styles.note}>AI-genererat innehåll</Text> : null}
       <Text style={styles.body}>{selectedStep?.instruction ?? selectedProgram?.body}</Text>
       <Text style={styles.note}>Anpassa efter din hund och pausa när det behövs.</Text>
       {!selectedStep ? <><SectionHeader title="Källor" />{selectedProgram?.sources.map((source) => <Text key={source} style={styles.note}>{source}</Text>)}</> : null}
@@ -187,29 +223,24 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   </View>;
 }
 
-function percentage(program: PublishedTrainingProgram) { return program.steps.length ? program.completedStepIds.length / program.steps.length * 100 : 0; }
+function percentage(program: PublishedTrainingProgram) { return program.steps.length ? completedCount(program) / program.steps.length * 100 : 0; }
 const styles = StyleSheet.create({
+  focusedPage: { gap: tokens.spacing.md, paddingBottom: tokens.spacing.xl },
+  focusedCard: { padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.training.continueSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   screenTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
-  rows: { gap: tokens.spacing.xs },
-  programGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.md, marginTop: tokens.spacing.md },
-  programCard: { flexBasis: '47%', flexGrow: 0, flexShrink: 1, minWidth: 145 },
-  ageHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm, marginTop: tokens.spacing.md },
-  sectionTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 },
-  seeAllButton: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'flex-end', justifyContent: 'center' },
-  seeAll: { ...tokens.typography.caption, color: tokens.colors.training.accent, fontWeight: '700' },
-  programSummary: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
-  unknownAgeNotice: { gap: tokens.spacing.xs, paddingTop: tokens.spacing.md },
-  continueCard: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', borderRadius: tokens.radius.md, overflow: 'hidden', backgroundColor: tokens.colors.training.continueSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
-  continueImage: { width: tokens.size.trainingContinueImageWidth, height: tokens.size.trainingContinueImageHeight, alignSelf: 'center' },
-  continueContent: { flex: 1, justifyContent: 'center', padding: tokens.spacing.md, gap: tokens.spacing.xs },
-  continueTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
-  continueStep: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
-  pressed: { opacity: 0.82 },
+  ageHint: { gap: tokens.spacing.xs },
+  path: { gap: tokens.spacing.xs },
+  currentStep: { padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface, borderWidth: tokens.size.stroke * 2, borderColor: tokens.colors.primary },
+  nextCard: { marginTop: tokens.spacing.sm, padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.training.continueSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
+  stepMeta: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  programList: { gap: tokens.spacing.md },
+  programInner: { gap: tokens.spacing.sm },
+  programHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm },
+  programStatus: { ...tokens.typography.caption, color: tokens.colors.textSecondary, fontWeight: '700' },
   pausedCard: { backgroundColor: tokens.colors.training.card, borderRadius: tokens.radius.md, paddingHorizontal: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   emptyCard: { marginTop: tokens.spacing.md, padding: tokens.spacing.lg, backgroundColor: tokens.colors.training.card, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, gap: tokens.spacing.xs },
   emptyTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
-  mineCard: { marginTop: tokens.spacing.md, padding: tokens.spacing.md, gap: tokens.spacing.md, backgroundColor: tokens.colors.training.card, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
-  programTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
+  programTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 },
   sheetHeading: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
   body: { ...tokens.typography.body, color: tokens.colors.textPrimary },
   note: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginVertical: tokens.spacing.md },

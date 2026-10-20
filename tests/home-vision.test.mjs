@@ -16,6 +16,8 @@ test('Home follows the rev02 content order without duplicate Today groups', () =
   assert.match(home, /homeGreetingAt\(new Date\(\)\)/);
   assert.match(home, /Just nu med \{dog\.name\}/);
   assert.match(home, /Dagens att göra/);
+  assert.match(home, /dailySummary:[\s\S]*justifyContent: 'space-between'/);
+  assert.doesNotMatch(home.slice(home.indexOf('<View style=\{styles\.dailyHeading\}'), home.indexOf('{dailyRefreshError')), /dailyCount|Dagens uppgifter uppdateras/, 'summary details do not squeeze the Home heading');
   assert.match(home, /dailyActivities\.slice\(0, 5\)/);
   assert.match(home, /DestinationTile destination="log" compact variant="home"/);
   assert.match(home, /DestinationTile destination="training" compact variant="home"/);
@@ -64,8 +66,11 @@ test('Home routines use a checkbox, training rows open training, and the manager
   assert.doesNotMatch(homeVariant, /<IconChip|list-outline|school-outline/);
   assert.match(homeVariant, /homeTrainingStatusCell/);
   assert.match(homeVariant, /homeTrainingStatusChecked/);
+  assert.doesNotMatch(homeVariant, /numberOfLines=\{2\}/, 'Home activity titles must grow with larger text instead of being clamped');
+  assert.equal((homeVariant.match(/accessibilityLiveRegion="polite"/g) ?? []).length, 2, 'routine and training mutation feedback is announced when it changes');
+  assert.match(homeVariant, /label=\{`Kontrollera ändringen för \$\{label\} igen`\} accessibilityLabel=\{`Kontrollera ändringen för \$\{label\} igen`\}/, 'training retry identifies the activity being checked');
   assert.match(home, /onToggle=\{routineDay \? \(\) => item\.routineItemId && onSetRoutineCompletion/);
-  assert.match(home, /item\.kind === 'training' \? \(\) => onGo\('training'\)/);
+  assert.match(home, /item\.kind === 'training'[\s\S]*?onOpenTrainingStep\(item\.programId, item\.stepId, 'home'\)/);
   for (const action of ['onCreateRoutine', 'onUpdateRoutine', 'onDeleteRoutine', 'onAddRoutineToDay', 'onRemoveRoutineFromDay', 'onAddTrainingToDay', 'onRemoveTrainingFromDay']) {
     assert.match(manager, new RegExp(action));
   }

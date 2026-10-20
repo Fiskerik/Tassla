@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Crypto from 'expo-crypto';
 import { BottomSheet, Button } from '../../components/ui';
@@ -322,7 +322,7 @@ function RepeatRuleControls({ value, anchorDate, newAnchorDate, onChange, disabl
   const newAnchorWeekday = isValidDateKey(newAnchorDate) ? isoWeekdayForDateKey(newAnchorDate) : anchorWeekday;
   const selectedWeekdays = value.repeat_weekdays ?? (unit === 'week' ? [anchorWeekday] : []);
   const weekdayNames = ['Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag', 'Söndag'];
-  const weekdayShortNames = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön'];
+  const weekdayShortNames = ['Må', 'Ti', 'On', 'To', 'Fr', 'Lö', 'Sö'];
   function selectUnit(nextUnit: 'day' | 'week' | 'month') {
     const repeat_weekdays = nextUnit === 'week'
       ? unit === 'week' ? value.repeat_weekdays : [newAnchorWeekday]
@@ -352,7 +352,7 @@ function RepeatRuleControls({ value, anchorDate, newAnchorDate, onChange, disabl
       </View>
       {unit === 'week' ? <View style={styles.weekdayPicker} accessibilityLabel="Välj veckodagar">
         <Text style={styles.muted}>Välj minst en veckodag. Första dagen följer startdagen.</Text>
-        <View style={styles.weekdayChoices}>{weekdayNames.map((name, index) => {
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.weekdayChoices}>{weekdayNames.map((name, index) => {
           const day = index + 1;
           const selected = selectedWeekdays.includes(day);
           return <MotionPressable key={name} accessibilityRole="checkbox" accessibilityLabel={name}
@@ -363,7 +363,7 @@ function RepeatRuleControls({ value, anchorDate, newAnchorDate, onChange, disabl
             style={({ pressed }) => [styles.weekdayButton, selected && styles.choiceButtonSelected, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
             <Text style={[styles.choiceLabel, selected && styles.choiceLabelSelected]}>{weekdayShortNames[index]}</Text>
           </MotionPressable>;
-        })}</View>
+        })}</ScrollView>
         {selectedWeekdays.length === 0 ? <Text style={[styles.helper, styles.errorText]}>Välj minst en veckodag.</Text> : null}
       </View> : null}
     </> : null}
@@ -395,6 +395,8 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
   onAdd: () => void;
   onRemove: () => void;
 }) {
+  const { width, fontScale } = useWindowDimensions();
+  const stackRoutineActions = width < 360 || fontScale >= 1.25;
   const editing = draft?.mode === 'edit' && draft.routineId === routine.id;
   const value = editing ? draft : null;
   const selected = selectedDay !== null;
@@ -404,8 +406,8 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
       {editing && value ? <TextInput accessibilityLabel={`Namn på rutin ${routine.label}`} placeholder="Namn på rutin" value={value.label}
         onChangeText={(label) => onChangeDraft({ label })} editable={!fieldsDisabled} maxLength={160} style={[styles.input, styles.routineNameInput]} />
         : <Text style={styles.routineName} accessibilityRole="header">{routine.label}</Text>}
-      {!editing ? <ActionButton icon="create-outline" label="Redigera" accessibilityLabel={`Redigera rutin ${routine.label}`}
-        disabled={disabled} onPress={onStartEdit} quiet /> : null}
+      {!editing ? <IconOnlyButton icon="create-outline" accessibilityLabel={`Redigera rutin ${routine.label}`}
+        disabled={disabled} onPress={onStartEdit} /> : null}
     </View>
     <Text style={styles.listHeading} accessibilityRole="header">Checklista</Text>
     {(value?.checklist ?? routine.checklist).map((item, index) => <View key={item.id} style={styles.editItemRow}>
@@ -435,19 +437,19 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
     </> : <View style={styles.scheduleSummaryRow}>
       <Text style={styles.repeatSummary}>{dailyRoutineRepeatSummary(routine)}</Text>
     </View>}
-    <View style={styles.routineActions}>
+    <View style={[styles.routineActions, stackRoutineActions && styles.routineActionsStacked]}>
       <ActionButton icon={selected ? 'remove-outline' : 'add-outline'} label={selected ? 'Ta bort från Hemskärmen' : 'Lägg till på Hemskärmen'}
         accessibilityLabel={`${selected ? 'Ta bort' : skippedDay ? 'Lägg tillbaka' : 'Lägg till'} rutinen ${routine.label} ${selected ? 'från' : 'på'} Hemskärmen`}
-        disabled={disabled} onPress={selected ? onRemove : onAdd} dayAction />
+        disabled={disabled} onPress={selected ? onRemove : onAdd} dayAction responsiveRow stacked={stackRoutineActions} />
       <ActionButton icon="trash-outline" label="Ta bort rutin" accessibilityLabel={`Ta bort rutin ${routine.label}`}
-        disabled={disabled} danger onPress={() => Alert.alert('Ta bort rutin?', `Rutinen ”${routine.label}” och alla dess dagskopior och sparade överhoppningar tas bort.`, [
+        disabled={disabled} danger responsiveRow stacked={stackRoutineActions} onPress={() => Alert.alert('Ta bort rutin?', `Rutinen ”${routine.label}” och alla dess dagskopior och sparade överhoppningar tas bort.`, [
           { text: 'Avbryt', style: 'cancel' }, { text: 'Ta bort rutin', style: 'destructive', onPress: () => { void onDelete(); } },
         ])} />
     </View>
   </View>;
 }
 
-function ActionButton({ icon, label, accessibilityLabel, disabled = false, onPress, dayAction = false, danger = false, quiet = false }: {
+function ActionButton({ icon, label, accessibilityLabel, disabled = false, onPress, dayAction = false, danger = false, quiet = false, responsiveRow = false, stacked = false }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   accessibilityLabel: string;
@@ -456,9 +458,12 @@ function ActionButton({ icon, label, accessibilityLabel, disabled = false, onPre
   dayAction?: boolean;
   danger?: boolean;
   quiet?: boolean;
+  responsiveRow?: boolean;
+  stacked?: boolean;
 }) {
   return <MotionPressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} accessibilityState={{ disabled }}
     disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.actionButton, dayAction && styles.actionButtonDay,
+      responsiveRow && styles.routineActionButton, stacked && styles.routineActionButtonStacked,
       danger && styles.actionButtonDanger, quiet && styles.actionButtonQuiet, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
     <Ionicons name={icon} size={tokens.size.iconSm} color={danger ? tokens.colors.danger : tokens.colors.primary} accessibilityElementsHidden />
     <Text style={[styles.actionButtonText, dayAction && styles.actionButtonDayText, danger && styles.actionButtonDangerText]}>{label}</Text>
@@ -509,15 +514,18 @@ const styles = StyleSheet.create({
   itemLabel: { ...tokens.typography.caption, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 },
   itemActions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
   inlineEditor: { gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs },
-  routineActions: { flexDirection: 'row', alignItems: 'stretch', gap: tokens.spacing.xs, paddingTop: tokens.spacing.xs },
+  routineActions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch', gap: tokens.spacing.xs, paddingTop: tokens.spacing.xs },
+  routineActionsStacked: { flexDirection: 'column' },
+  routineActionButton: { flex: 1, flexBasis: '45%', minWidth: tokens.size.touchMin },
+  routineActionButtonStacked: { flex: 0, flexBasis: 'auto', alignSelf: 'stretch' },
   scheduleSummaryRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, paddingTop: tokens.spacing.xs },
   repeatSummary: { ...tokens.typography.caption, color: tokens.colors.textSecondary, flex: 1 },
   scheduleEdit: { gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs },
   repeatControls: { gap: tokens.spacing.xs },
   repeatChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
   weekdayPicker: { gap: tokens.spacing.xs, paddingTop: tokens.spacing.xs },
-  weekdayChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
-  weekdayButton: { flexBasis: '22%', flexGrow: 1, minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },
+  weekdayChoices: { flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', gap: tokens.spacing.xs },
+  weekdayButton: { flexShrink: 0, minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, paddingHorizontal: tokens.spacing.xs, alignItems: 'center', justifyContent: 'center', borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },
   choiceButton: { minHeight: tokens.size.touchMin, justifyContent: 'center', paddingHorizontal: tokens.spacing.sm, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },
   choiceButtonSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   choiceLabel: { ...tokens.typography.caption, color: tokens.colors.textSecondary, fontWeight: '600' },

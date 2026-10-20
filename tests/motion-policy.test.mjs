@@ -13,6 +13,17 @@ test('motion durations live in tokens and stay within the approved range', () =>
   for (const duration of durations) assert.ok(duration >= 120 && duration <= 350, `${duration}ms is outside 120–350ms`);
 });
 
+test('ScreenTransition skips mount motion and accepts an explicit directional distance', () => {
+  const motion = read('src/components/ui/Motion.tsx');
+  assert.match(motion, /distance = tokens\.motion\.distance/);
+  assert.match(motion, /distance\?: number/);
+  assert.match(motion, /const previousTransitionKey = useRef\(transitionKey\)/);
+  assert.match(motion, /const keyChanged = previousTransitionKey\.current !== transitionKey/);
+  assert.match(motion, /if \(!keyChanged \|\| reduced\) \{ progress\.setValue\(1\); return; \}/);
+  assert.match(motion, /progress\.stopAnimation\(\)/);
+  assert.match(motion, /outputRange: \[shift, 0\]/);
+});
+
 test('animated feedback uses the shared reduced-motion hook and native driver except progress width', () => {
   for (const file of ['Toast.tsx', 'Progress.tsx', 'ChecklistItem.tsx']) {
     const source = read(`src/components/ui/${file}`);
