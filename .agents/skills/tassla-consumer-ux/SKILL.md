@@ -16,6 +16,9 @@ Tassla should feel calm, trustworthy and effortless for a new puppy owner. This 
 
 Apply the highest relevant rule. Design rules govern appearance; this skill governs behavior, feedback, and states. Do not reopen decisions already recorded in the task or governing documents. If the rules leave a material product decision unresolved, record the conflict and ask the owner before dependent work. Follow the repository plan/review gates for scope changes, data, dependencies, and security. A visual component variant explicitly required by an approved design contract is within that contract.
 
+## iOS design skill
+Use the repository's `mobile-ios-design` skill when designing iOS-facing UI. Apply its Apple Human Interface Guidelines principles through the Expo adaptation documented in that skill. This skill continues to govern interaction, feedback, and states. Follow Tassla's `docs/design-rules.md`, approved screen contracts, and recorded owner decisions wherever they are more specific. Use existing React Native components, Expo Router, Ionicons, and theme tokens; treat SwiftUI examples as references, not implementation instructions. Do not add dependencies or ask the owner to reconfirm decisions already recorded in the repository.
+
 ## Scope limits
 - Do not add features, tabs, fields, onboarding, personalized feeds, share links, notifications, data collection, or schema changes unless the task explicitly approves them. A picture or a component list is not approval.
 - Product strategy (retention, distribution, feed design) is out of scope here. Ask the owner.
