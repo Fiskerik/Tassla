@@ -945,3 +945,15 @@ Vid 360×844/140 %-webbstresstest var åtgärdsknappen fullt åtkomlig utan öve
 ### FLOW-HOME-CHECKLIST-FILTERS-01 — plan v1 checkpoint, 2026-10-20
 
 Plan v1 och källfynd är dokumenterade i `docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md` och `docs/tasks/dev/FLOW-HOME-CHECKLIST-FILTERS-01.md`. V1 definierar sparad ISO-vecka, 30 lokala kalenderdagar för Alla, sju framtida datum, Planerad-status, fullständiga/partiella lästillstånd, källnavigation och skydd mot historisk backfill. Riskklass H kvarstår. Product, Architect, Critic och Security review är öppna; queue står kvar som `planned`. Ingen appkod eller runtime-evidens ingår i denna checkpoint. Nästa steg: slutför de fyra rollgranskningarna innan implementation.
+
+
+### FLOW-HOME-CHECKLIST-FILTERS-01 — plan v2, 2026-10-20
+
+Plan v2 godkänd för implementation. Product APPROVE (befintliga ägarregistrerade hälsoplaner read-only inom panel 4), Architect APPROVE, Critic PROCEED och Security APPROVE för statiskt kontrakt. **Live Supabase/deployerad RLS är NOT TESTABLE.** Planen begränsar historik till kvarvarande källrader efter befintlig rutin-delete cascade och specificerar exact published training lookups, paginering, abort/lifetime och 375×667/140 %-segment. Ingen appkod eller implementationsevidens ännu; queue övergår planned → ready.
+
+
+### FLOW-HOME-CHECKLIST-FILTERS-01 — avgränsad stoppcheckpoint, 2026-10-20
+
+Ägaren bad avsluta den fortsatta implementationen eftersom riktningen inte kändes rätt. Endast data-/modellskivan sparas på `codex/tassla-mvp-remainder-2026-10-20`; inga skärmar eller routes är inkopplade och tasken är ofärdig. Den exakta restlistan och begränsningarna finns i `FLOW-HOME-CHECKLIST-FILTERS-01.md`.
+
+Fokuserat data-/modelltest: 13/13 PASS. Full `pnpm check` (typecheck, edge typecheck, lint, 619 tester), `git diff --check` och `python -X utf8 tools/dev_flow.py validate` PASS. Commit-hook körde samma fulla check och passerade 619/619. Data-/modellcheckpoint: `41adec0` (`wip: checkpoint checklist filter data model`). Dokumentationscommit och push återstår när denna rapportpost skrivs. Live Supabase/RLS, UI acceptance, navigation/lifecycle, visuell §14, native VoiceOver/Dynamic Type och TestFlight är NOT TESTABLE eller inte körda i denna partiella skiva. Inget `MASTER-LOG`/DONE-utslag eftersom acceptansen inte är uppfylld.

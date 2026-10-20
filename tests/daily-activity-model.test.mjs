@@ -1,6 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { localDateKeyAt, isValidDateKey, isTrainingCompletionForDay, nextSelectableTrainingStep, trainingProgressStamp, deriveHomeDailyActivities } from '../src/features/home/daily-activity-model.ts';
+import { localDateKeyAt, isValidDateKey, isTrainingCompletionForDay, nextSelectableTrainingStep, trainingProgressStamp, deriveHomeDailyActivities, deriveSavedRangeActivities, checklistFilterRange, addCalendarDays, projectUpcomingRoutineDates } from '../src/features/home/daily-activity-model.ts';
+
+test('checklist date ranges use local date keys and exact inclusive calendar bounds', () => {
+  assert.deepEqual(checklistFilterRange('Denna vecka', '2026-10-18'), { from: '2026-10-12', to: '2026-10-18' });
+  assert.deepEqual(checklistFilterRange('Denna vecka', '2027-01-01'), { from: '2026-12-28', to: '2027-01-03' });
+  assert.deepEqual(checklistFilterRange('Alla', '2026-03-01'), { from: '2026-01-31', to: '2026-03-01' });
+  assert.deepEqual(checklistFilterRange('Kommande', '2026-03-01'), { from: '2026-03-02', to: '2026-03-08' });
+  assert.equal(addCalendarDays('2028-02-28', 1), '2028-02-29');
+  assert.equal(checklistFilterRange('Alla', '2026-02-30'), null);
+});
+
+test('upcoming repeat projection honors anchor, weekdays and month-end without creating occurrences', () => {
+  const routine = { id: 'monthly', dog_id: 'dog-a', label: 'Månad', checklist: [], checklist_revision: 1,
+    legacy_single_item: false, repeat_unit: 'month', repeat_interval: 1, repeat_weekdays: null, repeat_anchor_date: '2026-01-31' };
+  const weekly = { ...routine, id: 'weekly', repeat_unit: 'week', repeat_interval: 2, repeat_weekdays: [1, 3], repeat_anchor_date: '2026-10-05' };
+  assert.deepEqual(projectUpcomingRoutineDates([routine], '2026-02-25', '2026-03-03').map(({ dateKey }) => dateKey), ['2026-02-28']);
+  assert.deepEqual(projectUpcomingRoutineDates([weekly], '2026-10-19', '2026-10-25').map(({ dateKey }) => dateKey), ['2026-10-19', '2026-10-21']);
+  assert.deepEqual(projectUpcomingRoutineDates([weekly], '2026-10-04', '2026-10-04'), []);
+});
 
 test('projects saved training timestamps into the selected IANA local day across UTC boundaries', () => {
   assert.equal(localDateKeyAt('2026-10-13T00:30:00.000Z', 'America/Los_Angeles'), '2026-10-12');
@@ -81,4 +99,17 @@ test('daily activities count owner marks and exact saved training source while e
   ]);
   assert.deepEqual(deriveHomeDailyActivities(snapshot, [activeProgram], 'dog-b', '2026-10-12'), []);
   assert.deepEqual(deriveHomeDailyActivities(snapshot, [activeProgram], 'dog-a', '2026-10-13'), []);
+});
+
+test('saved range activities use exact source metadata and do not invent unresolved training labels', () => {
+  const selection = { id: 'selection-1', dog_id: 'dog-a', program_version_id: 'version-2', step_id: 'step-1', date_key: '2026-10-12', time_zone: 'America/Los_Angeles' };
+  const snapshot = { routines: [], routineDays: [], routineDaySkips: [], trainingSelections: [selection], completeSources: [], failedSources: [] };
+  const sources = new Map([['version-2:step-1', {
+    programVersionId: 'version-2', programTitle: 'Trygg vardag', stepId: 'step-1', stepTitle: 'Sitt lugnt',
+    completedAt: '2026-10-13T00:30:00.000Z',
+  }]]);
+  assert.deepEqual(deriveSavedRangeActivities(snapshot, sources, 'dog-a', '2026-10-12', '2026-10-12').map(({ label, completed, programTitle }) => ({ label, completed, programTitle })), [
+    { label: 'Sitt lugnt', completed: true, programTitle: 'Trygg vardag' },
+  ]);
+  assert.deepEqual(deriveSavedRangeActivities(snapshot, new Map(), 'dog-a', '2026-10-12', '2026-10-12'), []);
 });

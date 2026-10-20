@@ -125,6 +125,104 @@ export interface PlannedHealthRecord {
   reminder_minutes: number | null;
 }
 
+export interface PlannedHealthChecklistRow { id: string; dog_id: string; event_type: PlannedHealthType; due_on: string; }
+
+export type HistoricalTrainingSelectionKey = { programVersionId: string; stepId: string };
+export type HistoricalTrainingSource = {
+  programVersionId: string;
+  programTitle: string;
+  stepId: string;
+  stepTitle: string;
+  completedAt: string | null;
+};
+export type HistoricalTrainingSources = { sources: Map<string, HistoricalTrainingSource>; unresolvedKeys: string[] };
+
+export async function fetchExactHistoricalTrainingSources(
+  client: SupabaseClient, dogId: string, selections: readonly HistoricalTrainingSelectionKey[], parentSignal?: AbortSignal,
+): Promise<HistoricalTrainingSources> {
+  const unique = [...new Map(selections.map((item) => [`${item.programVersionId}:${item.stepId}`, item])).values()];
+  const results = await Promise.all(unique.map(async ({ programVersionId, stepId }) => {
+    const versionResult = await withRequestDeadline(async (signal) => await client.from('content_versions')
+      .select('id,status,title,content_items!inner(content_type)')
+      .eq('id', programVersionId).eq('status', 'published').abortSignal(signal).maybeSingle(), DEFAULT_REQUEST_TIMEOUT_MS, parentSignal);
+    if (parentSignal?.aborted) throw new Error('Historical training lookup aborted');
+    const version = versionResult.data;
+    if (versionResult.error) throw new Error('Could not load exact historical training source');
+    if (version === null) return [`${programVersionId}:${stepId}`, null] as const;
+    if (!version || typeof version !== 'object' || !('id' in version) || !('status' in version) || !('title' in version)
+      || !('content_items' in version) || typeof version.id !== 'string' || typeof version.status !== 'string'
+      || typeof version.title !== 'string' || !version.content_items || typeof version.content_items !== 'object'
+      || !('content_type' in version.content_items) || typeof version.content_items.content_type !== 'string') {
+      throw new Error('Invalid exact historical training source');
+    }
+    if (version.id !== programVersionId || version.status !== 'published' || version.content_items.content_type !== 'training_program') {
+      return [`${programVersionId}:${stepId}`, null] as const;
+    }
+    const stepResult = await withRequestDeadline(async (signal) => await client.from('training_steps')
+      .select('id,program_version_id,title').eq('program_version_id', programVersionId).eq('id', stepId)
+      .abortSignal(signal).maybeSingle(), DEFAULT_REQUEST_TIMEOUT_MS, parentSignal);
+    if (parentSignal?.aborted) throw new Error('Historical training lookup aborted');
+    if (stepResult.error) throw new Error('Could not load exact historical training step');
+    if (stepResult.data === null) return [`${programVersionId}:${stepId}`, null] as const;
+    if (!stepResult.data || typeof stepResult.data !== 'object' || !('id' in stepResult.data)
+      || !('program_version_id' in stepResult.data) || !('title' in stepResult.data)
+      || typeof stepResult.data.id !== 'string' || typeof stepResult.data.program_version_id !== 'string'
+      || typeof stepResult.data.title !== 'string') throw new Error('Invalid exact historical training step');
+    if (stepResult.data.id !== stepId || stepResult.data.program_version_id !== programVersionId) return [`${programVersionId}:${stepId}`, null] as const;
+    const progressResult = await withRequestDeadline(async (signal) => await client.from('training_progress')
+      .select('dog_id,program_version_id,step_id,completed_at').eq('dog_id', dogId).eq('program_version_id', programVersionId)
+      .eq('step_id', stepId).abortSignal(signal).maybeSingle(), DEFAULT_REQUEST_TIMEOUT_MS, parentSignal);
+    if (parentSignal?.aborted) throw new Error('Historical training lookup aborted');
+    if (progressResult.error || progressResult.data !== null && (!isProgressRow(progressResult.data)
+      || progressResult.data.dog_id !== dogId || progressResult.data.program_version_id !== programVersionId || progressResult.data.step_id !== stepId)) {
+      throw new Error('Could not load exact historical training progress');
+    }
+    const completedAt = progressResult.data?.completed_at ?? null;
+    return [`${programVersionId}:${stepId}`, {
+      programVersionId, programTitle: version.title, stepId, stepTitle: stepResult.data.title, completedAt,
+    }] as const;
+  }));
+  const sources = new Map<string, HistoricalTrainingSource>();
+  const unresolvedKeys: string[] = [];
+  for (const [key, value] of results) {
+    if (value) sources.set(key, value);
+    else unresolvedKeys.push(key);
+  }
+  return { sources, unresolvedKeys };
+}
+
+export async function fetchPlannedHealthChecklistRange(
+  client: SupabaseClient, dogId: string, from: string, to: string, parentSignal?: AbortSignal,
+): Promise<PlannedHealthChecklistRow[]> {
+  if (!dogId || !isCalendarDate(from) || !isCalendarDate(to) || from > to) throw new Error('Invalid planned health range');
+  const rows: PlannedHealthChecklistRow[] = []; let dueOn: string | null = null; let id: string | null = null;
+  while (true) {
+    if (parentSignal?.aborted) throw new Error('Planned health range aborted');
+    const page = await withRequestDeadline(async (signal) => {
+      let query: any = client.from('dog_health_plans').select('id,dog_id,event_type,due_on').eq('dog_id', dogId)
+        .gte('due_on', from).lte('due_on', to);
+      if (id) query = query.or(`due_on.gt.${dueOn},and(due_on.eq.${dueOn},id.gt.${id})`);
+      return await query.order('due_on', { ascending: true }).order('id', { ascending: true }).limit(WORKSPACE_PAGE_SIZE).retry(false).abortSignal(signal);
+    }, DEFAULT_REQUEST_TIMEOUT_MS, parentSignal);
+    if (parentSignal?.aborted) throw new Error('Planned health range aborted');
+    if (page.error || !Array.isArray(page.data) || !page.data.every((value: unknown) => {
+      if (!value || typeof value !== 'object') return false;
+      const row = value as Record<string, unknown>;
+      return typeof row.id === 'string' && row.dog_id === dogId && isPlannedHealthType(row.event_type)
+        && typeof row.due_on === 'string' && isCalendarDate(row.due_on) && row.due_on >= from && row.due_on <= to;
+    })) throw new Error('Could not load planned health checklist rows');
+    if (!page.data.length) break;
+    for (const row of page.data as PlannedHealthChecklistRow[]) {
+      if (rows.some((item) => item.id === row.id) || id && (row.due_on < dueOn! || row.due_on === dueOn && row.id <= id)) throw new Error('Invalid planned health cursor');
+      rows.push(row);
+    }
+    const last = page.data.at(-1) as PlannedHealthChecklistRow;
+    dueOn = last.due_on; id = last.id;
+    if (page.data.length < WORKSPACE_PAGE_SIZE) break;
+  }
+  return rows;
+}
+
 export interface PlannedHealthOperation {
   id: string;
   dog_id: string;
