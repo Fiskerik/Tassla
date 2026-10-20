@@ -1,10 +1,22 @@
-# Tassla — samlat besluts- och leveransregister
+# Tassla — samlat ägarbeslutsregister
 
-Status: kanonisk sammanfattning för produkt-, design- och utvecklingsagenter. Baslinje för branchuppdateringen: codex/ux-rethink-2026-10-15 @ 2e230be44c1bdd74e74173064fdce5e60e7e9dbc. Senast sammanställd 2026-10-15.
+Status: kanoniskt ägarbeslutsregister. Senast synkat 2026-10-20 mot `main` @ `2967a3f34cfe4b33d4777626c911695552cce728`. Aktuell produktplan är `docs/mvp.md` (godkänd MVP rev02). Äldre leveransposter nedan beskriver sina respektive checkpoints och är inte dagens samlade acceptans.
 
 Läs denna fil först när ett beslut eller tidigare paket efterfrågas. Läs sedan bara den länkade detaljplanen för uppgiften. Vid konflikt gäller senaste uttryckliga ägarbeslutet och den aktuella posten här. De numrerade beslutsfilerna behålls som historiska underlag; de är inte separata, uppdaterade styrkällor. Detaljerade testresultat finns i respektive task- och releaseunderlag.
 
 ## Aktuella ägarbeslut
+
+### MVP rev02 — godkänd plan och dokumentharmonisering, 2026-10-20
+
+**Källa:** Eriks besked i chatten ”Tassla – Product Consistency & Delivery Reset”: ”Ja, gör MVP rev 02 som den godkända planen och fixa de filer som säger emot varandra först”. Detta bekräftar godkänd produktinriktning och beställer dokumenträttning före appkod.
+
+`docs/mvp.md` är enda aktuella produktdefinition: MVP v2:s hundlivsperspektiv, begränsad vuxenhundsresa och A–F, tidigare godkända Main-krav inklusive flerhundsstöd samt alla åtta funktionella paneler i `vision_rev02.jpg`. Bilden är visuell auktoritet; exempeldata är inte produktfakta. Historiska v2-/GAP-filer är källunderlag. Ingen färdig implementation eller verifierad panel följer av planbeslutet.
+
+Befintliga säkerhets-, innehålls-, dataskydds- och publiceringsgrindar kvarstår. Förslag om antal testare/innehållsobjekt är inte nya bindande detaljbeslut. Ingen ny dependency, dataanvändning, live-migration, extern pilot eller release godkänns här.
+
+Nästa apppilot efter dokumentharmoniseringen: delad sökbar rasväljare i första profil, lägg till hund och profilredigering, baserad på aktuell Main och befintlig katalog. Full katalogimport/Mix-utökning är separata delar. Det ägarstoppade checklistfilterpaketet ska inte återupptas automatiskt.
+
+Aktuell uppgiftsstatus finns i kön; full verifiering i taskunderlaget; kort slututfall i `docs/releases/HISTORY-2026.md`. MASTER-LOG behåller ägarbeslut och historiska leveransposter men nya paketresultat dubbleras inte här.
 
 ### Stack och leveransbas
 
@@ -26,7 +38,7 @@ Källa: [0003-auth.md](0003-auth.md). Beslutet är inte bevis på fungerande run
 
 Källor: [0004-motion-package.md](0004-motion-package.md), [0005-motion-batched-mobile-qa.md](0005-motion-batched-mobile-qa.md). Beslut 0005 ändrar bara samordningen av telefonprovet.
 
-### MVP och användarresor
+### Ursprungligt rev02-beslut 2026-10-15 (kompletterat ovan)
 
 **Ägarbeslut 2026-10-15.** Samtliga åtta paneler i vision_rev02.jpg är obligatoriska, funktionella MVP-mål: Hem, Utveckling, Dagens framsteg, daglig Checklista, Logga, Träning, Kunskap och Insikter. Leveransmodellen är kompletta användarresor i små checkpoints. Granskningen är riskbaserad. Hela referensen omfattas; bildens exempeldata och råd är inte datakällor.
 
@@ -44,9 +56,9 @@ Höj risk vid osäkerhet. pnpm check, föreskrivna kögrindar och oberoende Revi
 
 ## Leveransregister
 
-Nya paket förs in i denna fil när deras queue-status övergår till done. Koordinatorn sammanfattar det faktiska utfallet efter oberoende Reviewer-pass och före den slutliga done-checkpointen. Varje post anger paket-ID, mål/ändrade delar, faktisk status, kontroller och resultat, QA/Reviewer/Security-verdict där relevant, commit eller dokumenterad checkpoint samt öppna luckor. Skilj lokal PASS, ägarrapport, live runtime och release. Länka taskens fulla underlag i stället för att kopiera långa loggar. Korrigera en post med datum och rättelse; skriv inte om historien tyst.
+Äldre paketposter nedan bevaras. Från 2026-10-20 registreras nya slututfall i `docs/releases/HISTORY-2026.md`; nya ägarbeslut registreras här. Koordinatorn sammanfattar det faktiska utfallet efter oberoende Reviewer-pass och före den slutliga done-checkpointen. Varje post anger paket-ID, mål/ändrade delar, faktisk status, kontroller och resultat, QA/Reviewer/Security-verdict där relevant, commit eller dokumenterad checkpoint samt öppna luckor. Skilj lokal PASS, ägarrapport, live runtime och release. Länka taskens fulla underlag i stället för att kopiera långa loggar. Korrigera en post med datum och rättelse; skriv inte om historien tyst.
 
-### Paket som redan är klara enligt vald branch
+### Historiska paketstatusar på 2e230be
 
 Följande är lokala köstatusar på 2e230be, inte ett påstående om live databas eller native verifiering. Fulla bevis och begränsningar finns i task- och renderunderlagen.
 
@@ -64,7 +76,7 @@ Följande är lokala köstatusar på 2e230be, inte ett påstående om live datab
 | HOME-ROUTINE-WEEKDAYS-01 | done | Veckodagsval och legacy NULL-regel; migrationen är inte applicerad och runtime-paritet ej verifierad. |
 | HOME-ROUTINE-CHECKLIST-01 | done | Kompakt rutinhall och Hem-åtgärder passerade oberoende QA/Reviewer efter att helraderingsbekräftelsen korrigerats; fullskärmsresan för panel 4 är fortfarande separat. |
 
-Tidigare MVP- och byggpaket har detaljerad historik i [HISTORY-2026.md](../releases/HISTORY-2026.md). Denna tabell ersätter inte dess exakta commit- och QA-notiser. Nya rev02-paket och efterföljande slutförda tasks får en egen post ovan med verkliga resultat.
+Tidigare MVP- och byggpaket har detaljerad historik i [HISTORY-2026.md](../releases/HISTORY-2026.md). Denna tabell ersätter inte dess exakta commit- och QA-notiser. Tabellen ovan bevarar tidigare paketposter; nya slututfall från 2026-10-20 registreras i HISTORY-2026.md och länkas till taskens verifiering.
 
 ## Beslut som inte följer automatiskt
 

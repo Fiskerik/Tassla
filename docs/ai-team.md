@@ -1,5 +1,7 @@
 # Tasslas AI-organisation
 
+Aktuellt produktmandat: [godkänd MVP rev02](mvp.md), bekräftad 2026-10-20. Codex koordinerar en komplett användarresa åt gången med relevanta specialistroller enligt [utvecklarflödet](dev/workflow.md). SDK-hierarkin nedan är rådgivande och inför inte en obligatorisk agentkedja för implementation.
+
 ```text
 Du – slutliga beslut
 ├── AI Chief of Staff – samordnar Product och Commercial
@@ -23,7 +25,7 @@ Chief of Staff kan inhämta tekniskt underlag via AI Tech Lead, men är inte Eri
 
 Alla SDK-roller är rådgivande. Inga externa meddelande-, webb-, fil- eller shellverktyg finns. Market Intelligence arbetar med tillhandahållet underlag och markerar aktuella fakta utan källor som obekräftade. SDK-rollen Codex implementation är en rådgivare; verklig utveckling sker i Codex under Erik. QA får inte hävda att tester har körts.
 
-Codex-definitionerna i `.codex/agents/` är separata från SDK-agenterna. Vilande Dev-definitioner ligger i `.codex/agents-later/`, original i `.codex/archive/original-agents/`. Hundgranskning och compliance finns kvar som Codex-stöd vid behov och ersätts inte av Commercial.
+Codex-definitionerna i `.codex/agents/` är separata från SDK-agenterna. Aktiva Dev-definitioner ligger i `.codex/agents/`; original i `.codex/archive/original-agents/` är historik och ska inte aktiveras. Hundgranskning och compliance finns kvar som Codex-stöd vid behov och ersätts inte av Commercial.
 
 ## Selektivt urval och kostnadsgränser
 Chief of Staff väljer normalt ett relevant team, högst två per fråga. Varje team får noll till två relevanta specialister; ledaren kan svara utan specialister. Programmet avvisar okända roller, roller i fel team och dubbletter innan specialistkörning. Endast valda roller anropas; modellerna får inga verktyg för att starta fler agenter.
@@ -52,4 +54,4 @@ Testa produktprioritering, partnerersättning och QA var för sig. Kontrollera a
 Större arbeten delas upp enligt `docs/tasks/template.md` och AGENTS.md, med högst två samtidiga deluppgifter och sparade checkpoints. Detta förfarande garanterar inte att en avbruten körning automatiskt återstartas.
 
 ## Codex-utvecklarflöde 2026-10-04
-Dev-definitionerna är nu tillgängliga i `.codex/agents/`, inte vilande. Implementation, QA och reviewer använder GPT-6 Luna high; Tech Lead och Security behåller sina granskningsmodeller. Faktisk appimplementation kräver fortfarande godkänt segment och plan. Se `docs/dev/workflow.md` och `tools/dev_flow.py`. SDK-teamets modellinställning är oförändrad och ger bara råd. Ingen nattlig automation har skapats.
+Dev-definitionerna är nu tillgängliga i `.codex/agents/`, inte vilande. Aktuella modellinställningar läses ur rollfilerna; tidigare high-/APP-modellnotiser är historik. Godkänt MVP-mandat och oförändrade plangodkännanden återanvänds enligt utvecklarflödet; relevanta nya risker granskas före berörd ändring. Se `docs/dev/workflow.md` och `tools/dev_flow.py`. SDK-teamets modellinställning är oförändrad och ger bara råd. Ingen nattlig automation har skapats.

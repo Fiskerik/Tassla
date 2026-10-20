@@ -1,12 +1,20 @@
 # MVP EXPERIENCE CONTRACT — vision_rev02
 
-Förslag för godkännande · bas `codex/ux-rethink-2026-10-15` @ `2e230be44c1bdd74e74173064fdce5e60e7e9dbc` · 2026-10-15
+Godkänt upplevelsekontrakt för [MVP rev02](mvp.md), bekräftat av Erik 2026-10-20. Ursprungligt underlag: `2e230be44c1bdd74e74173064fdce5e60e7e9dbc` (2026-10-15); detta är historisk bas, inte aktuell acceptanscommit.
 
 ## Leveransvillkor
 
-Eriks beslut: leverera alla åtta paneler som fungerande MVP-resor i små checkpoints. En panel är färdig först när en valpägare kan nå den från avsedd ingång, utföra dess centrala uppgift med riktig datakälla, se bekräftat eller ärligt okänt resultat, navigera tillbaka utan att förlora bekräftad data och få motsvarande visuella form. Referensens exempelvärden, hälsoråd, hundkänslor och dekor är inte produktdata.
+Eriks beslut: leverera alla åtta paneler som fungerande MVP-resor i små checkpoints. En panel är färdig först när hundägaren kan nå den från avsedd ingång, utföra dess centrala uppgift med riktig datakälla, se bekräftat eller ärligt okänt resultat, navigera tillbaka utan att förlora bekräftad data och få motsvarande visuella form. Referensens exempelvärden, hälsoråd, hundkänslor och dekor är inte produktdata.
 
-Checkpoint = avgränsad fungerande resa + verifierat repo-läge + köhistorik med exakt nästa steg. Stäng inte panelen genom att stänga en checkpoint. Status redovisas per nivå: dokumenterat mål / kod / lokal QA / live DB-RLS / native / release. `done` i befintlig kö betyder endast att den gamla taskens uttryckliga acceptans klarats enligt dess historik.
+Checkpoint = avgränsad fungerande resa + verifierat repo-läge + köhistorik med exakt nästa steg. Stäng inte panelen genom att stänga en checkpoint. Status redovisas per nivå: godkänt mål / kod och integration / lokal QA / live DB-RLS / native / visuell acceptans / release. `done` i befintlig kö betyder endast att den gamla taskens uttryckliga acceptans klarats enligt dess historik.
+
+## Gemensamt acceptansbevis
+
+Använd befintlig köpost och dess task-/QA-underlag: krav/beslut → kod och samtliga relevanta komponentanrop → regression → aktuell skärmbild/avvikelse → slutacceptans. Ange exakt branch, granskad commit (eller uttryckligt lokalt checkpoint med diffidentitet), miljö och build-ID. En lokal arbetsdiff är inte en integrerad eller släppt build. Okänd/ej skapad build anges som sådan.
+
+Redovisa separat kod/integration, lokal QA, live DB/RLS, native, visuell likhet och release med PASS/FAIL/NOT TESTABLE eller ej påbörjat där relevant, evidens och nästa steg. För §14.16 bedöms komposition, färger, typografi, former, bildspråk och täthet separat. Samma presentationskomponent ska användas i produkt och fixture; vid delad ändring omfattar regressionen alla berörda anrop. Fulla resor omfattar relevanta v2-scenarier A–F i `docs/mvp.md`, återbesök och konto-/hundbyte.
+
+Detta preciserar dokumentkraven; `dev_flow.py` har ännu ingen automatisk validering av dessa acceptansfält. Koordinator och oberoende granskare kontrollerar dem manuellt. NOT TESTABLE stänger inte ett nödvändigt slutkriterium. Befintlig policy om ägarvalda samlade nativeprov kvarstår.
 
 ## Paneler och verifierbar slutacceptans
 
@@ -25,6 +33,6 @@ Hälsa, Tassla-pass, onboarding/profil, notifieringar, kontoradering, samtycken,
 
 ## Risk och prioritering
 
-P0: återuppta befintliga köposter UX-FIX-BASELINE-MOTION-01 och HOME-ROUTINE-CHECKLIST-01 (nu QA), därefter HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01 och FOUNDATION-DB-VERIFY i utvecklingsmiljö. P1: Hem/daglig Checklista och onboarding; dessa ger riktiga källor för panelerna 2/3. P2: Logga/Träning/Kunskap med fungerande filter och bildroller. P3: Utveckling, Dagens framsteg och Insikter. Prioritet ändrar inte kravet att alla åtta blir funktionella före MVP-klar.
+Aktuell ordning enligt Eriks besked 2026-10-20: harmonisera motstridiga dokument först; därefter gemensam sökbar rasväljare som komplett pilot över första profil, lägg till hund och redigering. Övriga resor prioriteras från faktiskt integrerat kodläge och återstående acceptans i kön. Checklistfilterpaketet är ägarstoppat och får inte återupptas automatiskt. Gamla P0-listor eller taskstatusar från 2026-10-15 styr inte dagens arbete. Alla åtta paneler kvarstår som slutmål; DB/native-verifiering är separata bevis, inte rutinmässiga telefonstopp.
 
 L = lokal presentation utan dataskrivning; M = förändrad användarresa eller befintlig datalogik; H = auth/RLS/migration/radering/hälsa/notifiering/nya ändamål/oklar integration. Dokumentera skälet och höj vid osäkerhet. Riskbaserad QA avser val av bevis; `pnpm check`, Git-hookar, sanningsenlighet, tillgänglighet och oberoende slutgranskning består. Ett lokalt PASS säger inget om live Supabase eller native om detta inte uttryckligen provats.

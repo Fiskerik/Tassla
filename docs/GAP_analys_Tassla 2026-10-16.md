@@ -1,4 +1,6 @@
-# Tassla – GAP-analys: MVP v2 mot GitHub
+# Tassla – historisk GAP-analys: MVP v2 mot GitHub
+
+**Status 2026-10-20:** historisk analys av nedan angiven branch/commit. [Godkänd MVP rev02](mvp.md) är nu styrande. Förslagets godkännandefrågor och dåvarande gren-/kodstatus nedan ska inte återanvändas som aktuella blockerare. Kontrollera senaste Main, [beslutsregistret](decisions/MASTER-LOG.md) och [kön](tasks/dev/queue.json) före nytt arbete; analysen är inte ett parallellt implementationsmandat.
 
 **Datum för granskning:** 2026-10-15
 **Repository:** [Fiskerik/Tassla](https://github.com/Fiskerik/Tassla)
