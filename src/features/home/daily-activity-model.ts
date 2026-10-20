@@ -1,5 +1,5 @@
-import type { PublishedTrainingProgram, PublishedTrainingStep } from '../../data/workspace-data';
-import type { DailyActivitySnapshot, DailyRoutine, DailyRoutineDay, DailyTrainingSelection } from './daily-activity-data';
+import type { HistoricalTrainingSource, PublishedTrainingProgram, PublishedTrainingStep } from '../../data/workspace-data';
+import type { DailyActivityRangeSnapshot, DailyActivitySnapshot, DailyRoutine, DailyRoutineDay, DailyRoutineDaySkip, DailyTrainingSelection } from './daily-activity-data';
 
 export type HomeDailyActivity = {
   id: string;
@@ -13,6 +13,10 @@ export type HomeDailyActivity = {
   programId?: string;
   stepId?: string;
   programTitle?: string;
+  dateKey?: string;
+  skipped?: boolean;
+  routineDaySkip?: DailyRoutineDaySkip;
+  healthType?: 'vaccination' | 'vet_visit';
 };
 
 export type TrainingProgressStamp = {
@@ -90,6 +94,30 @@ export function isoWeekdayForDateKey(dateKey: string): number {
   return day === 0 ? 7 : day;
 }
 
+export type ChecklistFilter = 'Idag' | 'Denna vecka' | 'Alla' | 'Kommande';
+
+export function addCalendarDays(dateKey: string, amount: number): string | null {
+  if (!isValidDateKey(dateKey) || !Number.isInteger(amount)) return null;
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + amount));
+  return Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 10) : null;
+}
+
+export function checklistFilterRange(filter: Exclude<ChecklistFilter, 'Idag'>, today: string): { from: string; to: string } | null {
+  if (!isValidDateKey(today)) return null;
+  if (filter === 'Kommande') {
+    const from = addCalendarDays(today, 1); const to = addCalendarDays(today, 7);
+    return from && to ? { from, to } : null;
+  }
+  if (filter === 'Alla') {
+    const from = addCalendarDays(today, -29);
+    return from ? { from, to: today } : null;
+  }
+  const monday = addCalendarDays(today, -(isoWeekdayForDateKey(today) - 1));
+  const sunday = monday && addCalendarDays(monday, 6);
+  return monday && sunday ? { from: monday, to: sunday } : null;
+}
+
 export function isTrainingCompletionForDay(
   progress: TrainingProgressStamp,
   scope: { dogId: string; programVersionId: string; stepId: string },
@@ -138,6 +166,7 @@ export function deriveHomeDailyActivities(
       kind: 'routine',
       completed: row.completed_item_ids.includes(item.id),
       routineDay: row,
+      dateKey,
     });
   }
   const programById = new Map(programs.map((program) => [program.id, program]));
@@ -160,9 +189,54 @@ export function deriveHomeDailyActivities(
       programId: program.id,
       stepId: step.id,
       programTitle: program.title,
+      dateKey,
     });
   }
   return activities;
+}
+
+export function deriveSavedRangeActivities(
+  snapshot: DailyActivityRangeSnapshot,
+  trainingSources: ReadonlyMap<string, HistoricalTrainingSource>,
+  dogId: string,
+  from: string,
+  to: string,
+): HomeDailyActivity[] {
+  const result: HomeDailyActivity[] = [];
+  for (const row of snapshot.routineDays) {
+    if (row.dog_id !== dogId || row.date_key < from || row.date_key > to) continue;
+    for (const item of row.checklist_snapshot) result.push({ id: `routine:${row.id}:${item.id}`, label: item.label,
+      routineLabel: row.routine_label_snapshot, routineItemId: item.id, kind: 'routine',
+      completed: row.completed_item_ids.includes(item.id), routineDay: row, dateKey: row.date_key });
+  }
+  for (const row of snapshot.routineDaySkips) {
+    if (row.dog_id !== dogId || row.date_key < from || row.date_key > to) continue;
+    result.push({ id: `skip:${row.day_id}`, label: row.routine_label_snapshot, routineLabel: row.routine_label_snapshot,
+      kind: 'routine', completed: false, dateKey: row.date_key, skipped: true, routineDaySkip: row });
+  }
+  for (const row of snapshot.trainingSelections) {
+    if (row.dog_id !== dogId || row.date_key < from || row.date_key > to) continue;
+    const source = trainingSources.get(`${row.program_version_id}:${row.step_id}`);
+    if (!source) continue;
+    const stamp = source.completedAt ? {
+      dogId, programVersionId: source.programVersionId, stepId: source.stepId, completedAt: source.completedAt,
+    } : null;
+    result.push({ id: `training:${row.id}`, label: source.stepTitle, kind: 'training',
+      completed: stamp ? isTrainingCompletionForDay(stamp, { dogId, programVersionId: row.program_version_id, stepId: row.step_id }, row.date_key, row.time_zone) : false,
+      trainingSelection: row, programId: source.programVersionId, stepId: source.stepId, programTitle: source.programTitle, dateKey: row.date_key });
+  }
+  return result.sort((a, b) => (a.dateKey ?? '').localeCompare(b.dateKey ?? '') || a.id.localeCompare(b.id));
+}
+
+export function projectUpcomingRoutineDates(routines: readonly DailyRoutine[], from: string, to: string): { routine: DailyRoutine; dateKey: string }[] {
+  if (!isValidDateKey(from) || !isValidDateKey(to) || from > to) return [];
+  const result: { routine: DailyRoutine; dateKey: string }[] = [];
+  let cursor: string | null = from;
+  while (cursor && cursor <= to) {
+    for (const routine of routines) if (routine.repeat_unit && isRoutineDueOnDate(routine, cursor)) result.push({ routine, dateKey: cursor });
+    cursor = addCalendarDays(cursor, 1);
+  }
+  return result;
 }
 
 export function isValidIanaTimeZone(value: string): boolean {

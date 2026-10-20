@@ -69,6 +69,78 @@ export type DailyActivitySnapshot = {
   trainingSelections: DailyTrainingSelection[];
 };
 
+export type DailyActivityRangeSnapshot = {
+  routines: DailyRoutine[];
+  routineDays: DailyRoutineDay[];
+  routineDaySkips: DailyRoutineDaySkip[];
+  trainingSelections: DailyTrainingSelection[];
+  completeSources: string[];
+  failedSources: string[];
+};
+
+const RANGE_PAGE_SIZE = 40;
+
+export async function fetchDailyActivityRangeSnapshot(
+  client: SupabaseClient, dogId: string, from: string, to: string, includeRoutines: boolean, parentSignal?: AbortSignal,
+): Promise<DailyActivityRangeSnapshot> {
+  if (!isCanonicalUuid(dogId) || !isValidDateKey(from) || !isValidDateKey(to) || from > to) throw new Error('Invalid daily activity range');
+  const sources = await Promise.allSettled([
+    includeRoutines ? fetchRangePages<DailyRoutine>(client, 'dog_daily_routines', DAILY_ROUTINE_COLUMNS, dogId, null, null, isDailyRoutine, parentSignal) : Promise.resolve([]),
+    fetchRangePages<DailyRoutineDay>(client, 'dog_daily_routine_days', DAILY_ROUTINE_DAY_COLUMNS, dogId, from, to, isDailyRoutineDay, parentSignal),
+    fetchRangePages<DailyRoutineDaySkip>(client, 'dog_daily_routine_day_skips', DAILY_ROUTINE_DAY_SKIP_COLUMNS, dogId, from, to, isDailyRoutineDaySkip, parentSignal, 'day_id'),
+    fetchRangePages<DailyTrainingSelection>(client, 'dog_daily_training_selections', 'id,dog_id,program_version_id,step_id,date_key,time_zone', dogId, from, to, isDailyTrainingSelection, parentSignal),
+  ]);
+  if (parentSignal?.aborted) throw new Error('Range read aborted');
+  const sourceNames = ['routines', 'routineDays', 'routineDaySkips', 'trainingSelections'];
+  const values: unknown[][] = [];
+  const completeSources: string[] = []; const failedSources: string[] = [];
+  sources.forEach((source, index) => {
+    if (index === 0 && !includeRoutines) { values.push([]); return; }
+    if (source.status === 'fulfilled') { values.push(source.value); completeSources.push(sourceNames[index]); }
+    else { values.push([]); failedSources.push(sourceNames[index]); }
+  });
+  return { routines: values[0] as DailyRoutine[], routineDays: values[1] as DailyRoutineDay[],
+    routineDaySkips: values[2] as DailyRoutineDaySkip[], trainingSelections: values[3] as DailyTrainingSelection[],
+    completeSources, failedSources };
+}
+
+async function fetchRangePages<T extends Record<string, unknown>>(
+  client: SupabaseClient, table: string, columns: string, dogId: string, from: string | null, to: string | null,
+  validate: (row: unknown) => row is T, parentSignal?: AbortSignal, tieColumn = 'id',
+): Promise<T[]> {
+  const rows: T[] = []; const seen = new Set<string>(); let cursorDate: string | null = null; let cursorTie: string | null = null;
+  while (true) {
+    if (parentSignal?.aborted) throw new Error('Range read aborted');
+    const page = await withRequestDeadline(async (signal) => {
+      let query: any = client.from(table).select(columns).eq('dog_id', dogId);
+      if (from && to) query = query.gte('date_key', from).lte('date_key', to);
+      if (cursorTie) {
+        const cursorValue = from ? `date_key.gt.${cursorDate},and(date_key.eq.${cursorDate},${tieColumn}.gt.${cursorTie})` : `${tieColumn}.gt.${cursorTie}`;
+        query = query.or(cursorValue);
+      }
+      if (from) query = query.order('date_key', { ascending: true });
+      query = query.order(tieColumn, { ascending: true }).limit(RANGE_PAGE_SIZE).retry(false).abortSignal(signal);
+      return await query;
+    }, REQUEST_TIMEOUT_MS, parentSignal);
+    if (parentSignal?.aborted) throw new Error('Range read aborted');
+    if (page.error || !Array.isArray(page.data) || !page.data.every((row: unknown) => validate(row) && (row as any).dog_id === dogId
+      && (!from || (row as any).date_key >= from && (row as any).date_key <= to!))) throw new Error(`Could not load ${table}`);
+    if (!page.data.length) break;
+    for (const row of page.data as T[]) {
+      const rowRecord = row as Record<string, unknown>;
+      const unique = String(rowRecord[tieColumn]);
+      const date = from ? String(rowRecord.date_key) : '';
+      const key = `${date}:${unique}`;
+      if (seen.has(key) || cursorTie !== null && (from ? date < cursorDate! || date === cursorDate && unique <= cursorTie : unique <= cursorTie)) throw new Error(`Invalid ${table} cursor`);
+      seen.add(key); rows.push(row);
+    }
+    const last = page.data.at(-1) as Record<string, unknown>;
+    cursorTie = String(last[tieColumn]); cursorDate = from ? String(last.date_key) : null;
+    if (page.data.length < RANGE_PAGE_SIZE) break;
+  }
+  return rows;
+}
+
 export async function fetchDailyActivitySnapshot(
   client: SupabaseClient,
   dogId: string,
