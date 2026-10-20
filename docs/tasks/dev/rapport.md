@@ -945,3 +945,8 @@ Vid 360×844/140 %-webbstresstest var åtgärdsknappen fullt åtkomlig utan öve
 ### FLOW-HOME-CHECKLIST-FILTERS-01 — plan v1 checkpoint, 2026-10-20
 
 Plan v1 och källfynd är dokumenterade i `docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md` och `docs/tasks/dev/FLOW-HOME-CHECKLIST-FILTERS-01.md`. V1 definierar sparad ISO-vecka, 30 lokala kalenderdagar för Alla, sju framtida datum, Planerad-status, fullständiga/partiella lästillstånd, källnavigation och skydd mot historisk backfill. Riskklass H kvarstår. Product, Architect, Critic och Security review är öppna; queue står kvar som `planned`. Ingen appkod eller runtime-evidens ingår i denna checkpoint. Nästa steg: slutför de fyra rollgranskningarna innan implementation.
+
+
+### FLOW-HOME-CHECKLIST-FILTERS-01 — plan v2, 2026-10-20
+
+Plan v2 godkänd för implementation. Product APPROVE (befintliga ägarregistrerade hälsoplaner read-only inom panel 4), Architect APPROVE, Critic PROCEED och Security APPROVE för statiskt kontrakt. **Live Supabase/deployerad RLS är NOT TESTABLE.** Planen begränsar historik till kvarvarande källrader efter befintlig rutin-delete cascade och specificerar exact published training lookups, paginering, abort/lifetime och 375×667/140 %-segment. Ingen appkod eller implementationsevidens ännu; queue övergår planned → ready.
