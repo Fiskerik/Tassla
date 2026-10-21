@@ -47,16 +47,18 @@ export function DailyChecklistScreen({ dogName, dateKey, state, activities, refr
 }) {
   const [managerVisible, setManagerVisible] = useState(false);
   const [focusRoutineId, setFocusRoutineId] = useState<string | null>(null);
+  const [editFocusedRoutineOnOpen, setEditFocusedRoutineOnOpen] = useState(false);
   const completedCount = activities.filter((activity) => activity.completed).length;
   const dateLabel = checklistDateLabel(dateKey);
 
-  function openManager(routineId: string | null = null) {
+  function openManager(routineId: string | null = null, editFocusedRoutine = false) {
     setFocusRoutineId(routineId);
+    setEditFocusedRoutineOnOpen(editFocusedRoutine);
     setManagerVisible(true);
   }
 
   return <View testID="daily-checklist-screen" style={styles.page}>
-    <AppBar mode="Back" title="Checklista" actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" />
+    <AppBar mode="Back" title="Checklistor" actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" />
     <View style={styles.heading}>
       <Text style={styles.date}>{dateLabel}</Text>
       <Text style={styles.description}>Dagens aktiviteter för {dogName}</Text>
@@ -88,6 +90,9 @@ export function DailyChecklistScreen({ dogName, dateKey, state, activities, refr
         accessibilityValue={{ min: 0, max: activities.length, now: completedCount }} style={styles.progressTrack}>
         <View style={[styles.progressFill, { width: `${Math.round(completedCount / activities.length * 100)}%` }]} />
       </View>
+      {activities.some((activity) => activity.kind === 'routine')
+        ? <Text style={styles.longPressHint}>Håll inne på rutinen för att redigera.</Text>
+        : null}
       <View style={styles.rows}>
         {activities.map((item) => {
           const routineDay = item.routineDay;
@@ -96,19 +101,24 @@ export function DailyChecklistScreen({ dogName, dateKey, state, activities, refr
           const readbackError = itemMutation && mutationMessage.startsWith('Ändringen sparades, men dagens lista');
           return <DailyActivityItem key={item.id} variant="home" kind={item.kind} label={item.label} routineLabel={item.routineLabel}
             accessibilityLabel={item.kind === 'routine' ? `Rutin ${item.routineLabel ?? ''}, punkt ${item.label}` : `Träningsuppgift: ${item.label}`}
+            accessibilityHint={item.kind === 'routine' && routineDay?.routine_id ? 'Håll inne på rutinen för att redigera.' : undefined}
             completed={item.completed} pending={itemMutation && mutationBusy}
             statusMessage={itemMutation ? mutationMessage : ''} statusError={itemMutation && mutationError}
             onToggle={routineDay ? () => item.routineItemId && onSetRoutineCompletion?.(routineDay, item.routineItemId, !item.completed) : undefined}
             onOpen={item.kind === 'training' && item.programId && item.stepId
               ? () => onOpenTrainingStep?.(item.programId!, item.stepId!, 'checklist')
               : () => openManager(routineDay?.routine_id ?? null)}
+            onLongPress={item.kind === 'routine' && routineDay?.routine_id
+              ? () => openManager(routineDay.routine_id, true)
+              : undefined}
             onRetry={itemMutation ? (onRetryMutation ?? (readbackError ? onRetry : undefined)) : undefined} />;
         })}
       </View>
     </> : null}
 
-    <DailyActivityManagerSheet key={`${dateKey}:${focusRoutineId ?? 'all'}:${managerVisible}`}
-      visible={managerVisible} onClose={() => setManagerVisible(false)} focusRoutineId={focusRoutineId}
+    <DailyActivityManagerSheet key={`${dateKey}:${focusRoutineId ?? 'all'}:${managerVisible}:${editFocusedRoutineOnOpen}`}
+      visible={managerVisible} onClose={() => { setManagerVisible(false); setEditFocusedRoutineOnOpen(false); }} focusRoutineId={focusRoutineId}
+      editFocusedRoutineOnOpen={editFocusedRoutineOnOpen}
       activities={activities} routines={routines} routineDaySkips={routineDaySkips} trainingOptions={trainingOptions}
       busy={mutationBusy} mutationMessage={mutationMessage} mutationError={mutationError} onRetryMutation={onRetryMutation}
       onCreateRoutine={onCreateRoutine} onUpdateRoutine={onUpdateRoutine} onDeleteRoutine={onDeleteRoutine}
@@ -138,4 +148,5 @@ const styles = StyleSheet.create({
   progressTrack: { height: tokens.size.progress, borderRadius: tokens.radius.full, overflow: 'hidden', backgroundColor: tokens.colors.home.progressTrack },
   progressFill: { height: '100%', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.greenFill },
   rows: { gap: 0 },
+  longPressHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
 });

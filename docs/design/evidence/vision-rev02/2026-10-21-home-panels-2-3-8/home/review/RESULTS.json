@@ -1,0 +1,409 @@
+{
+  "mode": "review",
+  "evidence_dir": "docs/design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/home/review",
+  "results": [
+    {
+      "check": "Home checklist action is a chevron-only touch target at 375px",
+      "result": "PASS",
+      "control": {
+        "x": 294,
+        "y": 335,
+        "width": 44,
+        "height": 44
+      },
+      "chevron": {
+        "x": 308,
+        "y": 348,
+        "width": 16,
+        "height": 18
+      }
+    },
+    {
+      "check": "Home header contains no checklist or manager text action at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Home actions meet the 44pt touch target at 375px",
+      "result": "PASS",
+      "targets": [
+        {
+          "name": "Checklistor chevron",
+          "box": {
+            "x": 294,
+            "y": 335,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "name": "Logga",
+          "box": {
+            "x": 24,
+            "y": 681,
+            "width": 103.65625,
+            "height": 86
+          }
+        },
+        {
+          "name": "Träna",
+          "box": {
+            "x": 135.65625,
+            "y": 681,
+            "width": 103.671875,
+            "height": 86
+          }
+        },
+        {
+          "name": "Kunskap",
+          "box": {
+            "x": 247.328125,
+            "y": 681,
+            "width": 103.671875,
+            "height": 86
+          }
+        }
+      ]
+    },
+    {
+      "check": "Home routine checkbox target meets 44pt at 375px",
+      "result": "PASS",
+      "box": {
+        "x": 37,
+        "y": 392,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "initial Home and three destinations at 375x844 (review)",
+      "result": "PASS",
+      "app_viewport": {
+        "x": 0,
+        "y": 32,
+        "width": 375,
+        "height": 844
+      },
+      "nav": {
+        "x": 0,
+        "y": 783,
+        "width": 375,
+        "height": 59
+      },
+      "destination_tiles": [
+        {
+          "name": "Öppna Logga",
+          "box": {
+            "x": 24,
+            "y": 681,
+            "width": 103.65625,
+            "height": 86
+          }
+        },
+        {
+          "name": "Öppna Träna",
+          "box": {
+            "x": 135.65625,
+            "y": 681,
+            "width": 103.671875,
+            "height": 86
+          }
+        },
+        {
+          "name": "Öppna Kunskap",
+          "box": {
+            "x": 247.328125,
+            "y": 681,
+            "width": 103.671875,
+            "height": 86
+          }
+        }
+      ],
+      "clearance_pt": 16
+    },
+    {
+      "check": "no horizontal overflow or browser error at 375px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "chevron opens Checklistor route at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "routine detail passes the exact hold-to-edit accessibility hint",
+      "result": "PASS",
+      "native_hint_source": true,
+      "hint_forwarded_to_pressable": true,
+      "react_native_web_note": "RN Web does not expose React Native accessibilityHint as a DOM attribute"
+    },
+    {
+      "check": "ordinary routine press opens the focused manager without edit mode",
+      "result": "PASS"
+    },
+    {
+      "check": "longpress opens edit mode without falling through to ordinary onPress",
+      "result": "PASS"
+    },
+    {
+      "check": "longpress does not invoke the separate routine checkbox action",
+      "result": "PASS",
+      "before": 0,
+      "after": 0,
+      "checkbox": "false"
+    },
+    {
+      "check": "140% text does not overflow horizontally at 375px",
+      "result": "PASS",
+      "destination_tiles": [
+        {
+          "name": "Öppna Logga",
+          "box": {
+            "x": 24,
+            "y": 803.390625,
+            "width": 103.65625,
+            "height": 112.40625
+          }
+        },
+        {
+          "name": "Öppna Träna",
+          "box": {
+            "x": 135.65625,
+            "y": 803.390625,
+            "width": 103.671875,
+            "height": 112.40625
+          }
+        },
+        {
+          "name": "Öppna Kunskap",
+          "box": {
+            "x": 247.328125,
+            "y": 803.390625,
+            "width": 103.671875,
+            "height": 112.40625
+          }
+        }
+      ]
+    },
+    {
+      "check": "Home checklist action is a chevron-only touch target at 430px",
+      "result": "PASS",
+      "control": {
+        "x": 349,
+        "y": 335,
+        "width": 44,
+        "height": 44
+      },
+      "chevron": {
+        "x": 363,
+        "y": 348,
+        "width": 16,
+        "height": 18
+      }
+    },
+    {
+      "check": "Home header contains no checklist or manager text action at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Home actions meet the 44pt touch target at 430px",
+      "result": "PASS",
+      "targets": [
+        {
+          "name": "Checklistor chevron",
+          "box": {
+            "x": 349,
+            "y": 335,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "name": "Logga",
+          "box": {
+            "x": 24,
+            "y": 681,
+            "width": 122,
+            "height": 86
+          }
+        },
+        {
+          "name": "Träna",
+          "box": {
+            "x": 154,
+            "y": 681,
+            "width": 122,
+            "height": 86
+          }
+        },
+        {
+          "name": "Kunskap",
+          "box": {
+            "x": 284,
+            "y": 681,
+            "width": 122,
+            "height": 86
+          }
+        }
+      ]
+    },
+    {
+      "check": "Home routine checkbox target meets 44pt at 430px",
+      "result": "PASS",
+      "box": {
+        "x": 37,
+        "y": 392,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "initial Home and three destinations at 430x844 (review)",
+      "result": "PASS",
+      "app_viewport": {
+        "x": 0,
+        "y": 32,
+        "width": 430,
+        "height": 844
+      },
+      "nav": {
+        "x": 0,
+        "y": 783,
+        "width": 430,
+        "height": 59
+      },
+      "destination_tiles": [
+        {
+          "name": "Öppna Logga",
+          "box": {
+            "x": 24,
+            "y": 681,
+            "width": 122,
+            "height": 86
+          }
+        },
+        {
+          "name": "Öppna Träna",
+          "box": {
+            "x": 154,
+            "y": 681,
+            "width": 122,
+            "height": 86
+          }
+        },
+        {
+          "name": "Öppna Kunskap",
+          "box": {
+            "x": 284,
+            "y": 681,
+            "width": 122,
+            "height": 86
+          }
+        }
+      ],
+      "clearance_pt": 16
+    },
+    {
+      "check": "no horizontal overflow or browser error at 430px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "chevron opens Checklistor route at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "140% text does not overflow horizontally at 430px",
+      "result": "PASS",
+      "destination_tiles": [
+        {
+          "name": "Öppna Logga",
+          "box": {
+            "x": 24,
+            "y": 803.390625,
+            "width": 122,
+            "height": 112.40625
+          }
+        },
+        {
+          "name": "Öppna Träna",
+          "box": {
+            "x": 154,
+            "y": 803.390625,
+            "width": 122,
+            "height": 112.40625
+          }
+        },
+        {
+          "name": "Öppna Kunskap",
+          "box": {
+            "x": 284,
+            "y": 803.390625,
+            "width": 122,
+            "height": 112.40625
+          }
+        }
+      ]
+    },
+    {
+      "check": "loading state keeps one checklist control",
+      "result": "PASS"
+    },
+    {
+      "check": "empty daily source does not show 0/0",
+      "result": "PASS"
+    },
+    {
+      "check": "empty state keeps one checklist control",
+      "result": "PASS"
+    },
+    {
+      "check": "error state keeps one checklist control",
+      "result": "PASS"
+    },
+    {
+      "check": "unknown daily source does not show 0/0",
+      "result": "PASS"
+    },
+    {
+      "check": "unknown state keeps one checklist control",
+      "result": "PASS"
+    },
+    {
+      "check": "partial daily source does not show 0/0",
+      "result": "PASS"
+    },
+    {
+      "check": "partial state keeps one checklist control",
+      "result": "PASS"
+    },
+    {
+      "check": "seven-item fixture shows total count and keeps only the chevron action",
+      "result": "PASS"
+    },
+    {
+      "check": "pending routine status keeps the unconfirmed checkbox and feedback",
+      "result": "PASS"
+    },
+    {
+      "check": "failed routine status keeps the unconfirmed checkbox and feedback",
+      "result": "PASS"
+    },
+    {
+      "check": "unknown routine status keeps the unconfirmed checkbox and feedback",
+      "result": "PASS"
+    },
+    {
+      "check": "readback routine status keeps the unconfirmed checkbox and feedback",
+      "result": "PASS"
+    },
+    {
+      "check": "routine interaction stays unchecked while pending, then updates checkbox and count after synthetic confirmation",
+      "result": "PASS"
+    },
+    {
+      "check": "375x667 Home scroll reaches the last destination above the menu",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}

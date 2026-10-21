@@ -9,15 +9,25 @@ const manager = await readFile(new URL('../src/features/home/DailyActivityManage
 const workspace = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
 
 test('Home offers one permanent checklist entry while keeping its compact summary to five rows', () => {
-  assert.match(home, /dailyActivities\.filter\(\(item\) => item\.completed\)\.length/);
-  assert.match(home, /dailyState === 'ready' && dailyActivities\.length === 0/);
-  assert.match(home, /dailySummary/);
-  assert.match(home, /dailyActivities\.filter\(\(item\) => item\.completed\)\.length\} av \{dailyActivities\.length\} klara/);
-  assert.match(home, /dailyActivities\.slice\(0, 5\)/);
-  assert.match(home, /testID="home-open-checklist" accessibilityRole="button" accessibilityLabel="Öppna dagens checklista"/);
-  assert.match(home, /<Text style=\{styles\.checklistLinkLabel\}>Checklista<\/Text>/);
-  assert.doesNotMatch(home, /Visa alla/);
-  assert.match(home, /Hantera dagens aktiviteter/);
+  assert.match(home, /selectDailyProgress\(dailyActivities, dailyState === 'hidden' \? 'unknown' : dailyState\)/);
+  assert.match(home, /dailyHeading/);
+  assert.match(home, /checklistCompleted\}\/\{checklistTotal\}/);
+  assert.match(home, /accessibilityLabel=\{`\$\{checklistCompleted\} av \$\{checklistTotal\} klara`\}/);
+  assert.match(home, /accessibilityLabel=\{`\$\{dailyProgress\.completedCount\} av \$\{dailyProgress\.totalCount\} dagsuppgifter klara`\}/);
+  assert.match(home, /dailyProgress\.activities\.slice\(0, 5\)/);
+  assert.equal((home.match(/testID="home-open-checklist"/g) ?? []).length, 1, 'the Home card exposes one full-checklist control');
+  assert.match(home, /accessibilityLabel="Öppna Checklistor"/);
+  assert.match(home, /checklistInline/);
+  const heading = home.slice(home.indexOf('<View style={styles.dailyHeading}'), home.indexOf('{dailyRefreshError'));
+  assert.doesNotMatch(heading, /Hantera|Checklista|Visa alla/);
+  const checklistControl = home.slice(home.indexOf('function ChecklistControl'), home.indexOf('function previewText'));
+  assert.match(checklistControl, /accessibilityLabel="Öppna Checklistor"[\s\S]*?testID="home-open-checklist-chevron" name="chevron-forward"/);
+  assert.doesNotMatch(checklistControl, /<Text/);
+  assert.match(home, /dailyProgress\.coverage === 'empty'/);
+  assert.match(home, /dailyProgress\.coverage === 'unknown' \|\| dailyProgress\.coverage === 'partial'/);
+  assert.match(home, /Dagens uppgifter är inte tillgängliga ännu\./);
+  const emptyState = home.slice(home.indexOf("dailyProgress.coverage === 'empty'"), home.indexOf("dailyProgress.coverage === 'complete'", home.indexOf("dailyProgress.coverage === 'empty'")));
+  assert.doesNotMatch(emptyState, /<Button|Hantera dagens aktiviteter/, 'the empty summary does not duplicate the direct manager action');
   assert.match(home, /DailyActivityManagerSheet/);
   assert.match(workspace, /dailyStateLifetime === currentDailyLifetime/);
   assert.match(workspace, /dailySnapshotLifetime === currentDailyLifetime/);
@@ -44,7 +54,8 @@ test('routine and training rows expose separate accessible actions and truthful 
   assert.match(manager, /onUpdateRoutine/);
   assert.match(manager, /onDeleteRoutine/);
   assert.match(manager, /<BottomSheet/);
-  assert.doesNotMatch(manager, /useEffect|setCreating/);
+  assert.match(manager, /editFocusedRoutineOnOpen/);
+  assert.match(manager, /startEdit\(focusedRoutine\)/);
   assert.match(manager, /type RoutineDraft/);
   assert.match(manager, /function startCreate\(/);
 });
@@ -62,8 +73,23 @@ test('full checklist owns all daily rows and never renders zero-of-zero progress
   assert.match(screen, /state === 'ready' && activities\.length > 0/);
   assert.match(screen, /completedCount\} av \{activities\.length\} klara/);
   assert.match(screen, /testID="daily-checklist-progress"/);
+  assert.match(screen, /title="Checklistor"/);
+  assert.match(screen, /Håll inne på rutinen för att redigera\./);
+  assert.match(screen, /accessibilityHint=\{item\.kind === 'routine'[\s\S]*?Håll inne på rutinen för att redigera\./);
+  assert.match(screen, /onLongPress=\{item\.kind === 'routine'[\s\S]*?openManager\(routineDay\.routine_id, true\)/);
   assert.match(screen, /Inga aktiviteter idag/);
   assert.doesNotMatch(screen, /0 av 0/);
+});
+
+test('routine detail adds a long-press action while training rows stay navigation-only', () => {
+  const trainingStart = item.indexOf("if (kind === 'training')");
+  const routineStart = item.indexOf('return <View style={styles.homeRowWrap}>', trainingStart + 1);
+  const routineItem = item.slice(routineStart, item.indexOf('const styles'));
+  assert.match(routineItem, /accessibilityHint=\{accessibilityHint\}/);
+  assert.match(routineItem, /onPress=\{onOpen\} onLongPress=\{onLongPress\}/);
+  const trainingRow = item.slice(trainingStart, routineStart);
+  assert.doesNotMatch(trainingRow, /onLongPress/);
+  assert.match(manager, /accessibilityLabel=\{`Redigera rutin \$\{routine\.label\}`\}/);
 });
 
 test('daily activity derivation excludes unrelated log, guide, health plan and checklist data', () => {

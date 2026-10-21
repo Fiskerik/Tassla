@@ -14,8 +14,10 @@ export type DailyActivityItemProps = {
   completed: boolean;
   onToggle?: () => void;
   onOpen?: () => void;
+  onLongPress?: () => void;
   onRemove?: () => void;
   accessibilityLabel?: string;
+  accessibilityHint?: string;
   variant?: 'default' | 'home';
   pending?: boolean;
   statusMessage?: string;
@@ -50,7 +52,7 @@ export function DailyActivityItem(props: DailyActivityItemProps) {
   </View>;
 }
 
-function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, completed, onToggle, onOpen, accessibilityLabel = label,
+function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, completed, onToggle, onOpen, onLongPress, accessibilityHint, accessibilityLabel = label,
   pending = false, statusMessage = '', statusError = false, onRetry }: DailyActivityItemProps) {
   const status = pending ? 'Sparar…' : statusMessage;
   const rowLabel = accessibilityLabel + (kind === 'training' ? `, ${completed ? 'klar' : 'inte klar'}, öppna Träning` : '');
@@ -83,7 +85,8 @@ function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, complete
         onPress={onToggle} style={({ pressed }) => [styles.homeToggleTarget, pressed && styles.pressed]}>
         {routineCheckbox}
       </MotionPressable>
-      <MotionPressable accessibilityRole="button" accessibilityLabel={`Öppna ${routineItemLabel}`} onPress={onOpen}
+      <MotionPressable accessibilityRole="button" accessibilityLabel={`Öppna ${routineItemLabel}`} accessibilityHint={accessibilityHint}
+        onPress={onOpen} onLongPress={onLongPress}
         style={({ pressed }) => [styles.homeDetailTarget, pressed && styles.pressed]}>
         <View style={styles.homeCopy}>
           <Text style={styles.homeLabel}>{label}</Text>
