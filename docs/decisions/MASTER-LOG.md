@@ -63,6 +63,7 @@ Följande är lokala köstatusar på 2e230be, inte ett påstående om live datab
 | UX-TRAINING-UNMARK-01 | done | Källstyrd avmarkering med readback och scope fence; Supabase/RLS och native separat. |
 | HOME-ROUTINE-WEEKDAYS-01 | done | Veckodagsval och legacy NULL-regel; migrationen är inte applicerad och runtime-paritet ej verifierad. |
 | HOME-ROUTINE-CHECKLIST-01 | done | Kompakt rutinhall och Hem-åtgärder passerade oberoende QA/Reviewer efter att helraderingsbekräftelsen korrigerats; fullskärmsresan för panel 4 är fortfarande separat. |
+| VISION-R02-HEM-01 | done | Lokal Home/panel 1-checkpoint: pil-only till Checklistor och rutin-longpress-redigering. Commit `1b22370` pushad; QA/Reviewer PASS. Native/live/release kvarstår NOT TESTABLE. |
 
 Tidigare MVP- och byggpaket har detaljerad historik i [HISTORY-2026.md](../releases/HISTORY-2026.md). Denna tabell ersätter inte dess exakta commit- och QA-notiser. Nya rev02-paket och efterföljande slutförda tasks får en egen post ovan med verkliga resultat.
 
@@ -176,3 +177,8 @@ Architect v4 APPROVE, UX Critic PROCEED; Security pre-review APPROVE WITH CONDIT
 ## FLOW-HOME-CHECKLIST-01 — lokal Idag-slice, 2026-10-20
 
 Implementera checklistans fulla Idag-resa som en underordnad Hem-vy med samma konto-/hund-/dag-/tidszonscope och bekräftade datakällor. Visa inga Denna vecka/Alla/Kommande-filter innan verkliga urval och fullständig paginering finns; de tillhör `FLOW-HOME-CHECKLIST-FILTERS-01`. Träningsdetaljen börjar överst; scrollposition bevaras endast inom checklistflödet och rensas vid exit eller scope-/dygnsinvalidering. Inga parallella completion writes, ny cache, schema eller dataändamål tillkommer. Mobile iOS Design skill från `origin/main` används enligt Tasslas React Native-anpassning; SwiftUI-exempel är inte implementeringskrav. Native, TestFlight och live RLS redovisas separat.
+
+
+### VISION-R02-HEM-01 — lokal Home-checkpoint, 2026-10-21
+
+Home visar endast pilen till Checklistor; rutinrader öppnar fokuserad hantering med vanligt tryck och redigering med longpress utan checkboxskrivning. QA verifierade v15-kod/render/evidens och v16/v17 dokumentationsrättningar. Oberoende QA PASS, Architect APPROVE, Critic PROCEED och frozen Reviewer PASS. `pnpm check` passerade vid commit (app/edge typecheck, ESLint, 63/63 filer); pre-push hook passerade 621/622 tester (1 skip). Public/review RN Web-evidens 25/25 och 35/35; content guard och direkt offline Expo iOS-export 1 450 moduler passerade. Commit `1b22370` (`feat: polish home checklist navigation`) pushades till `origin/2026-10-21-hem-utveckling-framsteg-insikter`. `pnpm bundle:ios`-wrappern är NOT VERIFIED efter sandbox-EPERM vid registry-attestering; native VoiceOver/Dynamic Type, live Supabase/RLS och signerad release är NOT TESTABLE. Full panelacceptans hävdas inte. Underlag: [Home-taskjournal](../tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md), [plan v17](../plans/VISION-R02-HEM-2-3-8-2026-10-21-v17.md) och [visuell verifiering](../design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/home/VERIFICATION.md).
