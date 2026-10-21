@@ -7256,9 +7256,10 @@
       "id": "FLOW-HOME-CHECKLIST-FILTERS-01",
       "title": "Hem: Denna vecka, Alla och Kommande i Checklistan",
       "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 4; docs/design/vision-rev02-screen-contracts.md panel 4",
-      "plan": "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md v2 — Product APPROVE, Architect APPROVE, Critic PROCEED, Security APPROVE (2026-10-20)",
+      "plan": "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md v2 + visual addendum A01 — Product APPROVE, Architect APPROVE WITH CONDITIONS (2026-10-21), Critic PROCEED, Security APPROVE (2026-10-20)",
       "write_paths": [
         "src/features/home/DailyChecklistScreen.tsx",
+        "src/components/ui/Tabs.tsx",
         "src/features/home/DailyActivityManagerSheet.tsx",
         "src/features/home/ProductWorkspace.tsx",
         "src/features/training/PublishedTrainingScreen.tsx",
@@ -7288,7 +7289,8 @@
         "Framtida träningsval hittas inte på; visas bara om en befintlig godkänd källa faktiskt lagrar ett framtida urval",
         "Filtersegment visas först när kompletta urval, paginering, local-date/DST/repeat-regler och distinct empty/loading/partial/error states fungerar; delvis läst data markeras aldrig som komplett",
         "Panel 4 fungerar från Hem → Idag/Denna vecka/Alla/Kommande → korrekt hantering/källa → tillbaka; ring/count/rows och RLS-scope är sanningsenliga",
-        "Renderad public/review-evidens jämför hela panel 4 mot rev02 med §14 punkterna 1–18, stora textlägen och tydligt statusbesked för live backend/native"
+        "Renderad public/review-evidens jämför hela panel 4 mot rev02 med §14 punkterna 1–18, stora textlägen och tydligt statusbesked för live backend/native",
+        "Checklistans tre segment vid 375×844 och 430×844 delar innehållsbredden; valt segment använder befintliga home-green/onPrimary-token och har aria-selected true/false. Endast Checklistan opt-in:ar denna ton; övriga Tabs-konsumenter behåller utseendet."
       ],
       "checks": [
         "node --experimental-strip-types --test tests/daily-activity-range.test.mjs tests/daily-checklist-filters.test.mjs tests/daily-activity-model.test.mjs",
@@ -7316,7 +7318,7 @@
           "evidence": "Starting approved plan v2 implementation on codex/tassla-mvp-remainder-2026-10-20 from checkpoint 7f37d8e; Product/Architect/Critic/Security reviews recorded in docs/tasks/dev/FLOW-HOME-CHECKLIST-FILTERS-01.md."
         }
       ],
-      "next_step": "Owner requested stopping the implementation because the direction did not feel right. Save and push only the verified data/model checkpoint; leave this task incomplete. If resumed, first realign direction with the owner, then connect the readers to ProductWorkspace and complete the filter UI, source navigation/return, lifecycle tests and visual evidence. No UI/route is currently connected.",
+      "next_step": "Owner resumed approved plan v2 on codex/tassla-home-checklist-filters-2026-10-21. Current slice: integrate ProductWorkspace-owned Idag/Denna vecka/Alla selection, saved-only range reads, exact training metadata/progress, grouped rows, truthful loading/empty/partial/error/retry, and abort/generation lifetime tests. Leave Kommande and source navigation for slice 2; then complete visual §14 evidence and independent QA/Reviewer.",
       "priority": "P1",
       "panels": [
         "4"
@@ -7326,8 +7328,8 @@
       "test_evidence": [
         "Monday/Sunday/year/DST/repeat boundaries, pagination completeness, 30-day retention, empty/partial/error, routine/training scope, Planerad health link, §14 image matrix, runtime RLS boundary"
       ],
-      "implementation_state": "Partiell data-/modellkod checkpointas efter ägarens stoppbesked; UI/routing inte inkopplad; task ofärdig.",
-      "evidence_status": "focused tests 13/13 PASS; pnpm check, diff check and queue validation PASS; UI acceptance not run; live Supabase RLS NOT TESTABLE"
+      "implementation_state": "Data-/modellcheckpoint 1 merged to main; historical-filter UI slice resumed on codex/tassla-home-checklist-filters-2026-10-21; task incomplete.",
+      "evidence_status": "checkpoint 1 focused tests 13/13 and pnpm check 619/619 PASS; current UI slice not yet verified; live Supabase RLS NOT TESTABLE"
     },
     {
       "id": "FLOW-LOG-01",

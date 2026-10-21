@@ -95,6 +95,17 @@ export function isoWeekdayForDateKey(dateKey: string): number {
 }
 
 export type ChecklistFilter = 'Idag' | 'Denna vecka' | 'Alla' | 'Kommande';
+export type ChecklistRangeStatus = 'ready' | 'partial' | 'error';
+
+const CHECKLIST_RANGE_SOURCES = ['routineDays', 'routineDaySkips', 'trainingSelections'] as const;
+
+export function checklistRangeReadStatus(completeSources: readonly string[], failedSources: readonly string[], unresolvedSourceCount = 0): ChecklistRangeStatus {
+  const complete = new Set(completeSources);
+  const completedRequiredCount = CHECKLIST_RANGE_SOURCES.filter((source) => complete.has(source)).length;
+  const hasRequiredFailure = failedSources.some((source) => source === 'trainingSources' || CHECKLIST_RANGE_SOURCES.includes(source as typeof CHECKLIST_RANGE_SOURCES[number]));
+  if (!hasRequiredFailure && unresolvedSourceCount === 0 && completedRequiredCount === CHECKLIST_RANGE_SOURCES.length) return 'ready';
+  return completedRequiredCount === 0 ? 'error' : 'partial';
+}
 
 export function addCalendarDays(dateKey: string, amount: number): string | null {
   if (!isValidDateKey(dateKey) || !Number.isInteger(amount)) return null;

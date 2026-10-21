@@ -1,7 +1,7 @@
 # FLOW-HOME-CHECKLIST-FILTERS-01 — status och granskningsunderlag
 
 Datum: 2026-10-20
-Status: plan v2 godkänd; ägaren bad stoppa den fortsatta implementationen. Endast data-/modellskivan checkpointas; UI-resan är inte färdig.
+Status: plan v2 godkänd; ägaren har återupptagit implementationen enligt samma plan. Data-/modellcheckpoint 1 är mergad i main; återstående UI-/källresa pågår i `codex/tassla-home-checklist-filters-2026-10-21`.
 
 ## Omfattning
 
@@ -41,6 +41,14 @@ Riktade tester: `tests/daily-activity-range.test.mjs` provar sidbyte och cursor 
 
 Detta stänger endast läs-/modellskivan, inte tasken. Ingen UI eller route har kopplats in; inga appskärmar ändras av checkpointen. Exakt kvar: filtret måste ägas av `ProductWorkspace`; filterbyte/route/account/dog/timezone/day invalidation och generationskontroller måste abortera stale reads; checklistan behöver fungerande responsiva 2×2 filter, loading/empty/partial/error/retry och datumgrupper; health/routine/exact-training destinationer måste öppnas och återställa filter/grupp/scroll; rutinhändelser i Kommande måste dölja dagsåtgärder; historisk träning ska vara skrivskyddad och hämta detaljtext först när den öppnas; queue-integrerad visuell evidens och §14 samt UI-/lifecycle-/navigationstester saknas. Native VoiceOver/Dynamic Type, live RLS, TestFlight och renderad 375/430/375×667/140 %-evidens är NOT TESTABLE i denna skiva.
 
-Ägaren bad uttryckligen stoppa den fortsatta implementationen eftersom riktningen inte kändes rätt. Denna checkpoint sparar endast den avgränsade data-/modellskivan; ingen UI-respons eller fullgod användarresa hävdas. Tasken är ofärdig och ska inte markeras `done`. Om arbetet återupptas är nästa steg att först bekräfta riktningen med ägaren, därefter koppla läsarna till `ProductWorkspace` och bygga/testa UI-/källreturresan.
+Ägaren stoppade först arbetet och har därefter uttryckligen bett att fortsätta enligt den godkända plan v2. Riktningen och scope bekräftas därmed återanvända; ingen ny produktfunktion eller datanvändning läggs till. Tasken är fortsatt ofärdig.
 
-Git-checkpoint: `41adec0` (`wip: checkpoint checklist filter data model`) på `codex/tassla-mvp-remainder-2026-10-20`; remote push verifieras efter rapportuppdateringen.
+Git-checkpoint: `41adec0` (`wip: checkpoint checklist filter data model`) är pushad och mergad i main via PR #22 (`2967a3f`). Återstående implementation sker på `codex/tassla-home-checklist-filters-2026-10-21`.
+
+## Återstående implementation — deluppgifter
+
+1. **Historiska filter i Checklistan** — ägarskap i `ProductWorkspace`; integrera Idag/Denna vecka/Alla med saved-only data, exakta träningskällor och partial/error/retry; datumgrupper utan historisk progress; filter-/scope-livstid, abort/generation och tester. Inga Kommande-rader eller källnavigation i denna del.
+2. **Kommande och källretur** — projektera återkommande rutiner och läsa minimala hälsoplaner; visa endast Planerad; öppna rätt rutin-/hälsokälla och exakt historiskt träningssteg skrivskyddat; återställ filter/grupp/scroll och invalidera stale källor.
+3. **Visuell acceptans och closeout** — rendera public/review-states och viewports enligt v2, fylla §14-evidens, QA och oberoende Reviewer; rapportera kvarstående live RLS/native begränsningar. Därefter checkpointa, uppdatera kö, MASTER-LOG och HISTORY.
+
+Nuvarande deluppgift 1 är godkänd inom planens befintliga paths. Architect/Critic/Security planreview gäller fortsatt eftersom planversion och risk inte ändrats. Live Supabase/RLS kräver separat verifiering; inga migrationer eller nya policies ingår.
