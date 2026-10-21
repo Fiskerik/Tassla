@@ -957,3 +957,10 @@ Plan v2 godkänd för implementation. Product APPROVE (befintliga ägarregistrer
 Ägaren bad avsluta den fortsatta implementationen eftersom riktningen inte kändes rätt. Endast data-/modellskivan sparas på `codex/tassla-mvp-remainder-2026-10-20`; inga skärmar eller routes är inkopplade och tasken är ofärdig. Den exakta restlistan och begränsningarna finns i `FLOW-HOME-CHECKLIST-FILTERS-01.md`.
 
 Fokuserat data-/modelltest: 13/13 PASS. Full `pnpm check` (typecheck, edge typecheck, lint, 619 tester), `git diff --check` och `python -X utf8 tools/dev_flow.py validate` PASS. Commit-hook körde samma fulla check och passerade 619/619. Data-/modellcheckpoint: `41adec0` (`wip: checkpoint checklist filter data model`). Dokumentationscommit och push återstår när denna rapportpost skrivs. Live Supabase/RLS, UI acceptance, navigation/lifecycle, visuell §14, native VoiceOver/Dynamic Type och TestFlight är NOT TESTABLE eller inte körda i denna partiella skiva. Inget `MASTER-LOG`/DONE-utslag eftersom acceptansen inte är uppfylld.
+
+
+### FLOW-HOME-CHECKLIST-FILTERS-01 — återupptagning, 2026-10-21
+
+Erik bad fortsätta enligt godkänd v2 efter att ha stoppat arbetet vid data-/modellcheckpointen. Branch `codex/tassla-mvp-remainder-2026-10-20` med checkpoint `41adec0` och docs-commit `1d78cb6` är inmergad i main (`2967a3f`, PR #22). En ny branch `codex/tassla-home-checklist-filters-2026-10-21` är skapad från ren, uppdaterad main.
+
+Planversion, produktbeslut, dataändamål och write paths ändras inte. Deluppgift 1 är historiska Idag/Denna vecka/Alla-filter med ProductWorkspace-ägarskap, saved-only reads, source/partial states och request-lifetime-skydd. Kommande och källretur är deluppgift 2; renderad §14/QA/Reviewer är deluppgift 3. Nästa verifierbara resultat är fungerande filterbyten med grouped saved activities och korrekta loading/empty/partial/error/retry, utan att ännu införa framtida rader eller nya destinationer.

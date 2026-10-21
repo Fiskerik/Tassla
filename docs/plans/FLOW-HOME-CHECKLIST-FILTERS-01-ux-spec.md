@@ -2,7 +2,7 @@
 
 Datum: 2026-10-20
 Version: v2 — reviderad efter första Architect/Critic/Security review; skickas åter för Product, Architect, Critic och Security review
-Status: v2 godkänd för implementation; ingen implementation påbörjad
+Status: v2 godkänd för implementation; data-/modellcheckpoint 1 är mergad i main; implementationen fortsätter i `codex/tassla-home-checklist-filters-2026-10-21` med det snäva, villkorat godkända visuella tillägget A01 nedan.
 MVP: `docs/MVP-EXPERIENCE-CONTRACT.md` panel 4; `docs/design/vision-rev02-screen-contracts.md` panel 4
 
 ## Mål och avgränsning
@@ -62,6 +62,7 @@ Tydliga tillstånd för varje serverhämtat filter:
 Exakta avsedda skrivvägar, inga ändringar utanför listan utan ny planversion/review:
 
 - `src/features/home/DailyChecklistScreen.tsx`
+- `src/components/ui/Tabs.tsx` — endast opt-in-tonen för Checklistans rev02-segment; befintliga Tabs-varianter utan opt-in lämnas oförändrade
 - `src/features/home/DailyActivityManagerSheet.tsx` — valfri rutin-only-kontekst från Kommande; befintligt defaultflöde lämnas oförändrat
 - `src/features/home/ProductWorkspace.tsx` — filterstate, scope-generation, källa/back och historisk source focus
 - `src/features/training/PublishedTrainingScreen.tsx` — exakta historiska steg i skrivskyddat läge
@@ -107,3 +108,16 @@ Skyddat: migrations-/RLS-filer, tabell-/RPC-/grant-kontrakt, `dog_events`, loggf
 Valda skills: `.agents/skills/tassla-consumer-ux/SKILL.md`, `.agents/skills/mobile-ios-design/SKILL.md`, `docs/design-rules.md`; använd de relevanta repo-/session-skillsen för data/security när deras instruktioner träffar implementationen. Artikeln Refactoring UI används endast som Tassla-anpassade finishprinciper i `tassla-consumer-ux`, under token-, kontrast- och planreglerna.
 
 Granskningsbeslut v2, 2026-10-20: **Product APPROVE** för read-only ägarregistrerade hälsoplaner inom befintlig panel-4-nytta; **Architect APPROVE** (exakta publicerade källor, RLS, recurrence, keyset och routekontrakt); **Critic PROCEED**; **Security APPROVE** för statisk plan/kodscope. Security har inte verifierat live Supabase RLS/deployerad policy. Ingen implementation eller appkod ingår i denna plancheckpoint. Alla läsare och skrivvägar är avgränsade; ny produktbetydelse eller write path kräver ny planversion och review.
+
+## Implementation addendum A01 — rev02-segmentets bredd, färg och valt tillstånd (2026-10-21)
+
+Ägaren har åter betonat att implementationen ska likna `vision_rev02.jpg`, panel 4. En headless 375×844-rendering visade att befintliga `rev02-segmented`-segment tog ungefär två tredjedelar av innehållsbredden, hade en blek aktiv yta och saknade `aria-selected` i web-DOM. Referensen visar tre jämnbreda segment över innehållsytan med ett tydligt grönt aktivt segment.
+
+Architect granskade den föreslagna smala korrigeringen och gav **APPROVE WITH CONDITIONS**: lägg till den exakta skrivvägen, bevara befintliga Tabs-konsumenters utseende genom en opt-in-ton för Checklistan och behåll callback-, label-, touchmåls- och rörelselogik. Tillägget uppfyller dessa villkor:
+
+- En valfri home-ton används endast av `DailyChecklistScreen`. Den gör segmentraden lika bred som Checklistans innehåll och fördelar tillgänglig bredd jämnt, med minst 44 pt segmenthöjd. Befintlig `underline` och `rev02-segmented` utan opt-in behåller nuvarande utseende och beteende för Hälsa, Kunskap och komponentgalleriet.
+- Aktivt segment använder befintliga `tokens.colors.home.greenStrong` och `tokens.colors.onPrimary`; övriga segment behåller befintlig yta/typografi. Behåll `accessibilityState.selected` och exponera explicit `aria-selected` true/false i webben.
+- Tillägget ändrar inte filterurval, dataläsning, navigation, callback, labels eller rörelse och tillför inga dependencies eller datafält.
+- Acceptans: jämför Checklistan med panel 4 vid 375×844 och 430×844; verifiera tre lika breda segment, grön aktiv pill med vit text, `aria-selected=true` endast på valt segment och minst 44×44 pt tryckytor. Bekräfta att standard-/underline-konsumenterna förblir oförändrade. När Kommande läggs till gäller fortsatt v2:s 140 %-text- och fyrsegmentskriterier.
+
+Architect-beslutet avser endast A01:s implementationstillägg; Product-, Security- och övriga v2-beslut är oförändrade eftersom data- och navigationsscope inte ändras.

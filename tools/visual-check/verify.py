@@ -36,6 +36,12 @@ with sync_playwright() as p:
  if os.environ.get('TASSLA_UI_SCOPE')=='home':
   review_mode=os.environ.get('TASSLA_UI_REVIEW')=='true' or '/review' in str(out).replace('\\','/')
   def home_viewport(height): return height+(32 if review_mode else 0)
+ def screenshot_checklist(label):
+  banner=page.get_by_test_id('checklist-fixture-banner').bounding_box()
+  assert banner is not None
+  page.set_viewport_size({'width':int(page.evaluate('innerWidth')),'height':844+round(banner['height'])})
+  page.screenshot(path=str(out/f'{label}-with-fixture-banner.png'))
+  page.get_by_test_id('review-app-viewport').screenshot(path=str(out/f'{label}.png'))
   for width in [375,430]:
    page.set_viewport_size({'width':width,'height':home_viewport(844)})
    open('home')
@@ -308,8 +314,8 @@ with sync_playwright() as p:
     expect(page.get_by_label('Dagens checklista hämtas')).to_be_visible()
     expect(page.get_by_test_id('daily-checklist-progress')).to_have_count(0)
    else:
-    expect(page.get_by_text('Dagens checklista kunde inte hämtas',exact=True)).to_be_visible()
-    expect(page.get_by_role('button',name='Hämta dagens checklista igen',exact=True)).to_be_visible()
+    expect(page.get_by_text('Checklistan kunde inte hämtas',exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name='Hämta checklistan igen',exact=True)).to_be_visible()
     expect(page.get_by_test_id('daily-checklist-progress')).to_have_count(0)
    page.screenshot(path=str(out/f'checklist-{scenario}-375.png'))
   passed('Checklist loading and read-error states do not claim an empty or complete list')
@@ -326,10 +332,69 @@ with sync_playwright() as p:
   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
   page.screenshot(path=str(out/'checklist-7-short-viewport-375-text-140.png'))
   passed('Checklist fits 430px, short 375×667 viewport and 140% text without horizontal overflow')
+  # Panel 4 visual regression: use an explicitly labelled synthetic fixture whose row titles and density follow vision_rev02.
+  for width in [375,430]:
+   page.set_viewport_size({'width':width,'height':home_viewport(844)})
+   open('checklist','&checklistVisual=true')
+   fixture_banner=page.get_by_test_id('checklist-fixture-banner').bounding_box()
+   assert fixture_banner is not None
+   page.set_viewport_size({'width':width,'height':844+round(fixture_banner['height'])})
+   expect(page.get_by_role('tab',name='Idag',exact=True)).to_have_attribute('aria-selected','true')
+   expect(page.get_by_role('tab',name='Denna vecka',exact=True)).to_have_attribute('aria-selected','false')
+   expect(page.get_by_role('tab',name='Alla',exact=True)).to_have_attribute('aria-selected','false')
+   expect(page.get_by_role('tab',name='Denna vecka',exact=True)).to_be_visible()
+   expect(page.get_by_role('tab',name='Alla',exact=True)).to_be_visible()
+   expect(page.get_by_text('2 av 5 klara',exact=True)).to_be_visible()
+   for title in ['Morgonrast','Träna sitt','Miljöträning ute','Kontrollera vaccinationsplan','Kvällsrutin']:
+    expect(page.get_by_text(title,exact=True)).to_be_visible()
+   assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+   segment_metrics=page.evaluate('''() => {const tabs=[...document.querySelectorAll('[role="tablist"][aria-label="Avsnitt"] [role="tab"]')];const boxes=tabs.map(node=>{const r=node.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bg:getComputedStyle(node).backgroundColor,text:getComputedStyle(node.querySelector('div,span')||node).color,selected:node.getAttribute('aria-selected')}});return {trackWidth:document.querySelector('[role="tablist"][aria-label="Avsnitt"]').getBoundingClientRect().width,tabs:boxes};}''')
+   assert len(segment_metrics['tabs'])==3,segment_metrics
+   assert max(t['width'] for t in segment_metrics['tabs'])-min(t['width'] for t in segment_metrics['tabs'])<=1.5,segment_metrics
+   assert min(t['height'] for t in segment_metrics['tabs'])>=44,segment_metrics
+   selected_segment=next(tab for tab in segment_metrics['tabs'] if tab['selected']=='true')
+   assert selected_segment['bg']=='rgb(33, 116, 72)',segment_metrics
+   assert selected_segment['text']=='rgb(255, 255, 255)',segment_metrics
+   assert abs(sum(t['width'] for t in segment_metrics['tabs'])+16-segment_metrics['trackWidth'])<=3,segment_metrics
+   page.screenshot(path=str(out/f'checklist-rev02-today-{width}-with-fixture-banner.png'))
+   page.get_by_test_id('review-app-viewport').screenshot(path=str(out/f'checklist-rev02-today-{width}.png'))
+  passed('MVP rev02 today composition, three filter labels, five short rows and 375/430 widths')
+  page.set_viewport_size({'width':375,'height':home_viewport(844)})
+  open('checklist','&checklistVisual=true')
+  page.get_by_role('tab',name='Denna vecka',exact=True).click()
+  expect(page.get_by_role('tab',name='Denna vecka',exact=True)).to_have_attribute('aria-selected','true')
+  expect(page.get_by_text('Igår',exact=True)).to_be_visible()
+  expect(page.get_by_text('6 oktober',exact=False)).to_be_visible()
+  expect(page.get_by_test_id('daily-checklist-progress')).to_have_count(0)
+  expect(page.get_by_role('checkbox')).to_have_count(0)
+  expect(page.get_by_role('button',name=re.compile(r'Öppna träningssteget|Öppna rutin'))).to_have_count(0)
+  screenshot_checklist('checklist-rev02-week-375')
+  page.get_by_role('tab',name='Alla',exact=True).click()
+  expect(page.get_by_text('Senaste 30 dagarna',exact=True)).to_be_visible()
+  expect(page.get_by_test_id('daily-checklist-progress')).to_have_count(0)
+  expect(page.get_by_role('checkbox')).to_have_count(0)
+  screenshot_checklist('checklist-rev02-all-375')
+  passed('Historical filters group saved rows by date, stay read-only and hide current-day progress')
+  for scenario in ['loading','partial','error']:
+   open('checklist','&checklistVisual=true&checklistFilter=Denna+vecka&checklistRangeState='+scenario)
+   if scenario=='loading':
+    expect(page.get_by_label('Sparade uppgifter hämtas')).to_be_visible()
+   elif scenario=='partial':
+    expect(page.get_by_text('Några sparade uppgifter kunde inte hämtas.',exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name='Hämta sparade uppgifter igen',exact=True)).to_be_visible()
+   else:
+    expect(page.get_by_text('Sparade uppgifter kunde inte hämtas',exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name='Hämta checklistan igen',exact=True)).to_be_visible()
+   screenshot_checklist(f'checklist-range-{scenario}-375')
+  open('checklist','&checklistVisual=true&checklistFilter=Alla&checklistRangeEmpty=true')
+  expect(page.get_by_text('Inga sparade uppgifter i perioden',exact=True)).to_be_visible()
+  expect(page.get_by_text('Senaste 30 dagarna',exact=True)).to_be_visible()
+  screenshot_checklist('checklist-range-empty-375')
+  passed('Historical loading, partial, error and empty states are distinct and retryable where appropriate')
   # Open the lower of two training rows, complete its exact step, and verify list/count/scroll on return.
   page.set_viewport_size({'width':375,'height':home_viewport(844)})
   open('checklist','&checklistCount=7')
-  training_rows=page.get_by_role('button',name=re.compile(r'Träningsuppgift: .*'))
+  training_rows=page.get_by_role('button',name=re.compile(r'Öppna träningssteget .*'))
   expect(training_rows).to_have_count(2)
   source_row=training_rows.last
   source_row.scroll_into_view_if_needed()
@@ -345,7 +410,7 @@ with sync_playwright() as p:
   page.get_by_role('button',name='Markera övningen som genomförd',exact=True).click()
   expect(page.get_by_test_id('daily-checklist-screen')).to_be_visible()
   expect(page.get_by_text('4 av 7 klara',exact=True)).to_be_visible()
-  completed_source=page.get_by_role('button',name=re.compile(r'Träningsuppgift: (?!.*inte klar).*klar, öppna Träning$'))
+  completed_source=page.get_by_role('button',name=re.compile(r'Öppna träningssteget .*')).last
   expect(completed_source).to_be_visible()
   restored_box=completed_source.bounding_box();assert restored_box is not None
   assert abs(restored_box['y']-source_box['y'])<24,f'Checklist return did not preserve source row position: before={source_box}, after={restored_box}'
@@ -360,9 +425,7 @@ with sync_playwright() as p:
   expect(page.get_by_text('Checklista',exact=True)).to_be_visible()
   page.screenshot(path=str(out/'checklist-reopen-after-leave-375.png'))
   passed('Leaving Checklistan for Hem clears the saved offset; reopening starts at the top')
-  open('checklist','&checklistCount=7&checklistScopeReset=true')
-  scope_source=page.get_by_role('button',name=re.compile(r'Träningsuppgift: .*')).last
-  scope_source.scroll_into_view_if_needed()
+  open('checklist','&checklistCount=7&checklistFilter=Alla&checklistScopeReset=true')
   page.get_by_role('button',name='Byt hund i testfixture',exact=True).scroll_into_view_if_needed()
   page.get_by_role('button',name='Byt hund i testfixture',exact=True).click()
   expect(page.get_by_text('Just nu med Milo',exact=True)).to_be_visible()
@@ -370,7 +433,8 @@ with sync_playwright() as p:
   scope_back=page.get_by_role('button',name='Tillbaka till Hem',exact=True)
   expect(scope_back).to_be_visible()
   scope_back_box=scope_back.bounding_box();assert scope_back_box is not None and scope_back_box['y']<150,f'Checklist after scope invalidation reopened below the top: {scope_back_box}'
-  expect(page.get_by_text('Milo',exact=False).first).to_be_visible()
+  expect(page.get_by_role('tab',name='Idag',exact=True)).to_have_attribute('aria-selected','true')
+  expect(page.get_by_role('tab',name='Alla',exact=True)).to_have_attribute('aria-selected','false')
   page.screenshot(path=str(out/'checklist-reopen-after-scope-change-375.png'))
   passed('Scope invalidation returns to Home and reopening Checklistan starts at the top in the changed dog scope')
   assert not errors,errors

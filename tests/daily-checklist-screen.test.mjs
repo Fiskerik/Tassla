@@ -5,19 +5,20 @@ import { readFile } from 'node:fs/promises';
 const screen = await readFile(new URL('../src/features/home/DailyChecklistScreen.tsx', import.meta.url), 'utf8');
 
 test('Checklist shows every activity and keeps loading, read error and empty distinct', () => {
-  assert.match(screen, /state === 'loading'/);
-  assert.match(screen, /state === 'error'/);
-  assert.match(screen, /state === 'ready' && activities\.length === 0/);
-  assert.match(screen, /state === 'ready' && activities\.length > 0/);
+  assert.match(screen, /visibleState === 'loading'/);
+  assert.match(screen, /visibleState === 'error'/);
+  assert.match(screen, /visibleState === 'ready' && visibleActivities\.length === 0/);
+  assert.match(screen, /showingToday && state === 'ready' && activities\.length > 0/);
   assert.match(screen, /activities\.map\(/);
-  assert.match(screen, /Dagens checklista kunde inte hämtas/);
+  assert.match(screen, /groupActivitiesByDate\(rangeActivities\)\.map\(/);
+  assert.match(screen, /Checklistan kunde inte hämtas/);
   assert.match(screen, /Inga aktiviteter idag/);
-  const emptyState = screen.slice(screen.indexOf("state === 'ready' && activities.length === 0"), screen.indexOf("state === 'ready' && activities.length > 0"));
+  const emptyState = screen.slice(screen.indexOf("visibleState === 'ready' && visibleActivities.length === 0"), screen.indexOf("showingToday && state === 'ready' && activities.length > 0"));
   assert.doesNotMatch(emptyState, /0 av 0|daily-checklist-progress|progressTrack|completedCount/);
 });
 
-test('Checklist count and progress use confirmed activity state only', () => {
-  assert.match(screen, /const completedCount = activities\.filter\(\(activity\) => activity\.completed\)\.length/);
+test('Checklist count and progress use confirmed, non-skipped activity state only', () => {
+  assert.match(screen, /const completedCount = visibleActivities\.filter\(\(activity\) => activity\.completed && !activity\.skipped\)\.length/);
   assert.match(screen, /completedCount\} av \{activities\.length\} klara/);
   assert.match(screen, /accessibilityValue=\{\{ min: 0, max: activities\.length, now: completedCount \}\}/);
   assert.match(screen, /onToggle=\{routineDay \? \(\) => item\.routineItemId && onSetRoutineCompletion/);
