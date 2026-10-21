@@ -1,3 +1,5 @@
+> **INAKTIV — äldre identisk rapportkopia.** Historiskt innehåll bevaras. Kanonisk rapport: [`QA-REPORT-first-fit-failure.md`](./QA-REPORT-first-fit-failure.md). Git visar samma tillkomstcommit; den generiska filen inaktiveras enligt namnlinjen.
+
 # HOME-NEXT-01 v7.2 — QA result
 
 **Result: UNDERKÄND.** Visual acceptance is blocked by §14 point 16: on both 375 px and 430 px renders, the three Home action tiles extend behind the fixed bottom navigation. No product or visual harness files were changed by QA. The rendered results and screenshots are in `public/` and `review/` beside this report.

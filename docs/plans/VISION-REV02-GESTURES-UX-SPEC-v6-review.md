@@ -1,3 +1,5 @@
+> **INAKTIV — äldre reviewkopia.** Historiskt innehåll bevaras. Använd den slutliga versionen [`VISION-REV02-GESTURES-UX-SPEC-v6.md`](./VISION-REV02-GESTURES-UX-SPEC-v6.md). Git visar samma tillkomstcommit för paret; reviewfilen är äldre i versionslinjen.
+
 # Svep för veckoremsa och huvudflikar — UX-spec v6
 
 Datum: 2026-10-13 · Status: korrigeringsförslag; Architect/Critic-review återstår.
