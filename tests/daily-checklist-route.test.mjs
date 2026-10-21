@@ -12,7 +12,7 @@ const training = await readFile(new URL('../src/features/training/PublishedTrain
 test('Checklist is a Home child route with the existing Home active and no main-tab swipe destination', () => {
   assert.match(workspace, /'home' \| 'checklist' \| 'home-training-detail'/);
   assert.match(workspace, /if \(page === 'checklist'\) return <DailyChecklistScreen/);
-  assert.match(workspace, /onBack=\{\(\) => setPage\('home'\)\}/);
+  assert.match(workspace, /onBack=\{\(\) => \{ setChecklistFilter\('Idag'\); setPage\('home'\); \}\}/);
   assert.match(navigation, /page === 'checklist' \|\| page === 'home-training-detail'\) return 'home'/);
   assert.doesNotMatch(navigation, /MAIN_TAB_DESTINATIONS = .*checklist/);
 });
@@ -29,8 +29,9 @@ test('Training focus is bound to the selected version and step, returns to its s
 });
 
 test('Checklist preserves its offset while the focused training detail gets a fresh top position', () => {
-  assert.match(workspace, /const scrollKey = visiblePage === 'checklist' \? 'home-checklist-flow' : visiblePage/);
-  assert.match(workspace, /const preserveScrollKey = visiblePage === 'checklist' \|\| visiblePage === 'home-training-detail' \? 'home-checklist-flow' : undefined/);
+  assert.match(workspace, /const historicalChecklist = visiblePage === 'checklist' && checklistFilter !== 'Idag'/);
+  assert.match(workspace, /const scrollKey = historicalChecklist \? 'home-checklist-range:' \+ checklistFilter : visiblePage === 'checklist' \? 'home-checklist-flow' : visiblePage/);
+  assert.match(workspace, /const preserveScrollKey = \(visiblePage === 'checklist' && checklistFilter === 'Idag'[\s\S]*?visiblePage === 'home-training-detail' && checklistFilter === 'Idag'\) \? 'home-checklist-flow' : undefined/);
   assert.match(workspace, /<AppScreen scrollKey=\{scrollKey\} preserveScrollKey=\{preserveScrollKey\}/);
   assert.match(primitives, /preserveScrollKey\?: string/);
   assert.match(primitives, /const flowActive = Boolean\(preserveScrollKey\)/);

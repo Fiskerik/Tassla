@@ -58,8 +58,9 @@ test('training row presents the step title and keeps full program title in detai
 test('full checklist owns all daily rows and never renders zero-of-zero progress', async () => {
   const screen = await readFile(new URL('../src/features/home/DailyChecklistScreen.tsx', import.meta.url), 'utf8');
   assert.match(screen, /activities\.map\(/);
-  assert.match(screen, /state === 'ready' && activities\.length === 0/);
-  assert.match(screen, /state === 'ready' && activities\.length > 0/);
+  assert.match(screen, /visibleState === 'ready' && visibleActivities\.length === 0/);
+  assert.match(screen, /showingToday && state === 'ready' && activities\.length > 0/);
+  assert.match(screen, /group\.items\.map\(/);
   assert.match(screen, /completedCount\} av \{activities\.length\} klara/);
   assert.match(screen, /testID="daily-checklist-progress"/);
   assert.match(screen, /Inga aktiviteter idag/);
