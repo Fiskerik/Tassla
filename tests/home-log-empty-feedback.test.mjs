@@ -41,7 +41,7 @@ test('initial Home and Log failures are distinct from scoped loading skeletons',
   assert.match(home, /contentState === 'loading' \? <Skeleton/);
   assert.match(home, /dailyState === 'loading' \? <Skeleton/);
   assert.match(home, /dailyState === 'error' \? <View style=\{styles\.dailyState\}/);
-  assert.match(log, /\{loading \? <>[\s\S]*?<Skeleton shape="card"/);
+  assert.match(log, /\{loading \? <>[\s\S]*?<Skeleton shape="row"/);
   assert.match(log, /: loadError \? <View style=\{styles\.errorState\}/);
   assert.match(log, /refreshError[\s\S]*?Dina visade händelser är kvar/);
 });

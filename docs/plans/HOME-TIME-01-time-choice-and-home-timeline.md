@@ -1,5 +1,7 @@
 # HOME-TIME-01 — Välj tid och visa händelser på Hem
 
+> **Ägarbeslut 2026-10-21 gäller alla MVP-checkpoints:** kvarvarande QA fokuserar funktion och relevant standardvy. Stor-text/Dynamic Type, VoiceOver/TalkBack, reducerad-rörelse-, kontrast- och träffyteaudit görs efter att MVP:n är släppt och godkänd. Behåll befintliga labels/semantik och verifiera funktionellt tangentbordsbeteende där det påverkar formulärresan. Se [AGENTS.md](../../AGENTS.md) och [arbetsflödet](../dev/workflow.md).
+
 Status: v7.1 godkänd; lokal implementation finns, QA kvarstår
 Datum: 2026-10-10
 Mandat: Erik bad om valbar tid när händelser/hälsoposter läggs till och att tiden ska visas på Hem; han bekräftade destinationen som Hemmavyn och omfattningen som tid för händelser och hälsa.
@@ -39,7 +41,7 @@ Erik förtydligade 2026-10-10 att snabb loggning inte ska kräva tid och att tid
 5. DevelopmentPreview använder samma befintliga snabbloggsflöde; inget extra tidsteg tillkommer.
 6. Inga ändringar görs i planerade health, reminders, viktposter, export/PDF, delning, retention eller datasyfte. Ingen ny dependency.
 7. Migration shape/range constraint, grants och RLS-policy testas statiskt; relevanta tester täcker strict `HH:mm` serialisering/avvisning, lokal datumgräns, sorting, null legacy, add/edit/delete/readback, stale concurrent time edit och owner-scoped queries. Verklig DB/RLS körs endast i den godkända syntetiska utvecklingsmiljön om den finns; annars redovisas NOT TESTABLE.
-8. UI körs renderat på smal/stor mobilbredd med stor text, valfritt health-tidsfält både tomt/sparat och ifyllt/sparat, Home blandad tidslinje samt relevanta spar-/fel/undo-tillstånd; avsnitt 14 i designreglerna dokumenteras. Nativ/telefon kontroll kan läggas i Eriks samlade mobil-QA utan att hävda PASS här.
+8. UI verifieras renderat vid relevanta smala/standardbredder i standardskala, valfritt health-tidsfält både tomt/sparat och ifyllt/sparat, Home blandad tidslinje samt relevanta spar-/fel/undo-tillstånd; avsnitt 14 i designreglerna dokumenteras. Nativ/telefon kontroll kan läggas i Eriks samlade mobil-QA utan att hävda PASS här.
 
 ## Implementationsfiler och testmål
 

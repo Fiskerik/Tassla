@@ -1,0 +1,127 @@
+{
+  "mode": "public",
+  "branch": "codex/dog-profile-search-pilot",
+  "commit": "a57e17388d380800c6a378b6368babe6877b4f1c",
+  "environment": {
+    "browser": "Playwright Chromium",
+    "binary": "/usr/bin/chromium",
+    "host": "127.0.0.1",
+    "baseUrl": "http://127.0.0.1:4283/know02/"
+  },
+  "fixture": "synthetic public guide/article; no review content",
+  "route": "Knowledge search/read, FAQ and phase checklist journeys",
+  "viewports": [
+    "375x844",
+    "430x844",
+    "375x667"
+  ],
+  "browserScriptRequests": [
+    "http://127.0.0.1:4283/know02/know02-app.js"
+  ],
+  "servedBundleSha256": "95cb34b35aee3c919daeb0ab62702f91a8a1c2e805283acfa9e1ced387947d02",
+  "buildArtifact": {
+    "file": "/tmp/tassla-knowledge/public/know02/know02-app.js",
+    "sha256": "95cb34b35aee3c919daeb0ab62702f91a8a1c2e805283acfa9e1ced387947d02"
+  },
+  "bundleMatchesArtifact": true,
+  "captures": [
+    {
+      "file": "knowledge-public-375x844.png",
+      "viewport": "375x844",
+      "routeState": "Knowledge root/top",
+      "fixture": "synthetic public"
+    },
+    {
+      "file": "knowledge-public-shortcuts-375x844.png",
+      "viewport": "375x844",
+      "routeState": "Knowledge root/scrolled support shortcuts",
+      "fixture": "synthetic public"
+    },
+    {
+      "file": "faq-public-empty-375x844.png",
+      "viewport": "375x844",
+      "routeState": "FAQ/public honest empty state",
+      "fixture": "synthetic public"
+    },
+    {
+      "file": "checklist-public-empty-375x844.png",
+      "viewport": "375x844",
+      "routeState": "Checklist/public honest empty state",
+      "fixture": "synthetic public"
+    },
+    {
+      "file": "knowledge-public-430x844.png",
+      "viewport": "430x844",
+      "routeState": "Knowledge root/top",
+      "fixture": "synthetic public"
+    },
+    {
+      "file": "faq-public-empty-430x844.png",
+      "viewport": "430x844",
+      "routeState": "FAQ/public honest empty state",
+      "fixture": "synthetic public"
+    },
+    {
+      "file": "checklist-public-empty-430x844.png",
+      "viewport": "430x844",
+      "routeState": "Checklist/public honest empty state",
+      "fixture": "synthetic public"
+    },
+    {
+      "file": "knowledge-public-375x667.png",
+      "viewport": "375x667",
+      "routeState": "Knowledge root/top",
+      "fixture": "synthetic public"
+    },
+    {
+      "file": "faq-public-empty-375x667.png",
+      "viewport": "375x667",
+      "routeState": "FAQ/public honest empty state",
+      "fixture": "synthetic public"
+    },
+    {
+      "file": "checklist-public-empty-375x667.png",
+      "viewport": "375x667",
+      "routeState": "Checklist/public honest empty state",
+      "fixture": "synthetic public"
+    }
+  ],
+  "buildId": "ej skapad",
+  "command": "python3 tools/visual-check/verify-know02.py --base-url http://127.0.0.1:4283/know02/ --output-dir docs/design/evidence/flow-knowledge-01/public --bundle-file /tmp/tassla-knowledge/public/know02/know02-app.js",
+  "passes": [
+    "Public Knowledge has no top content tabs at 375x844",
+    "Public guide fixture is visible at 375x844",
+    "Public Knowledge excludes review guide fixtures at 375x844",
+    "Public Knowledge fits at 375x844",
+    "Knowledge root exposes both support destinations",
+    "Public FAQ hides inactive context choices at 375x844",
+    "Public FAQ fits at 375x844",
+    "Public checklist hides phase navigation at 375x844",
+    "Public checklist has zero reads and writes at 375x844",
+    "Public checklist fits at 375x844",
+    "Public Knowledge has no top content tabs at 430x844",
+    "Public guide fixture is visible at 430x844",
+    "Public Knowledge excludes review guide fixtures at 430x844",
+    "Public Knowledge fits at 430x844",
+    "Public FAQ hides inactive context choices at 430x844",
+    "Public FAQ fits at 430x844",
+    "Public checklist hides phase navigation at 430x844",
+    "Public checklist has zero reads and writes at 430x844",
+    "Public checklist fits at 430x844",
+    "Public Knowledge has no top content tabs at 375x667",
+    "Public guide fixture is visible at 375x667",
+    "Public Knowledge excludes review guide fixtures at 375x667",
+    "Public Knowledge fits at 375x667",
+    "Public FAQ hides inactive context choices at 375x667",
+    "Public FAQ fits at 375x667",
+    "Public checklist hides phase navigation at 375x667",
+    "Public checklist has zero reads and writes at 375x667",
+    "Public checklist fits at 375x667",
+    "No browser page errors in public flows",
+    "Served KNOW-02 script bytes match the exact build artifact",
+    "Browser requested the exact KNOW-02 script URL"
+  ],
+  "failures": [],
+  "pageErrors": [],
+  "scope": "Local React Native Web harness with synthetic records. Native behavior, live content/DB/RLS and account isolation are not verified."
+}

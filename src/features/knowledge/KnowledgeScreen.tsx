@@ -4,7 +4,7 @@ import { useFonts } from 'expo-font';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { HomeContent } from '../../data/app-data';
 import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
-import { AppBar, Card, IconChip, SectionHeader, Skeleton, Tabs } from '../../components/ui';
+import { AppBar, Card, SectionHeader, Skeleton } from '../../components/ui';
 import { Field } from '../../components/ui/Field';
 import { tokens } from '../../theme/tokens';
 import { MotionPressable } from '../../components/ui/Motion';
@@ -17,6 +17,7 @@ import { checklistReadCacheScope } from './checklist-data';
 import type { PendingChecklistMemory } from './checklist-intent';
 import { FAQScreen } from './FAQScreen';
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID } from './review-content';
+import { KnowledgeIconBadge } from './KnowledgeIconBadge';
 
 type ContentState = 'loading' | 'ready' | 'error';
 
@@ -58,7 +59,6 @@ export function KnowledgeScreen({
   const [openedId, setOpenedId] = useState<string | null>(focusedContentId);
   const [tab, setTab] = useState(() => focusedContentId === CHECKLIST_DESTINATION_ID ? 'Checklistor' : focusedContentId === FAQ_DESTINATION_ID ? 'FAQ' : 'För dig');
   const [checklistDetailOpen, setChecklistDetailOpen] = useState(false);
-  const [emptyReturnToForYou, setEmptyReturnToForYou] = useState(false);
   const searchScopeKey = guideSearchScopeKey(sessionKey, dogId);
   const [searchState, setSearchState] = useState<ScopedGuideSearchState>(() => ({ scopeKey: searchScopeKey, value: '' }));
   const searchQuery = guideSearchValueForScope(searchState, searchScopeKey);
@@ -71,20 +71,15 @@ export function KnowledgeScreen({
   const checklistInvalidate = useRef<(() => void) | null>(null);
   const selectedItem = items.find((item) => item.id === openedId) ?? null;
   const detailOpen = Boolean(selectedItem) || (tab === 'Checklistor' && checklistDetailOpen);
-  const visibleItems = items.filter((item) => tab === 'För dig' || (tab === 'Artiklar' && item.contentType !== 'checklist' && item.contentType !== 'training_program'));
-  const displayedItems = tab === 'Artiklar' ? searchGuideItems(visibleItems, searchQuery) : visibleItems;
+  const visibleItems = items.filter((item) => item.contentType === 'article' || item.contentType === 'guide');
+  const displayedItems = searchGuideItems(visibleItems, searchQuery);
   useEffect(() => { onDetailChange?.(detailOpen); }, [detailOpen, onDetailChange]);
   useEffect(() => () => { onDetailChange?.(false); }, [onDetailChange]);
   function openArticle(id: string) { setOpenedId(id); setSourceMessage(''); onSelectContent(id); }
   function clearSearch() { setSearchState({ scopeKey: searchScopeKey, value: '' }); }
   function changeTab(nextTab: string) {
     if (tab === 'Checklistor' && nextTab !== 'Checklistor') { checklistInvalidate.current?.(); checklistInvalidate.current = null; }
-    if (nextTab === 'För dig') setEmptyReturnToForYou(false);
     setTab(nextTab);
-  }
-  function openEmptyDestination(nextTab: 'Checklistor' | 'FAQ') {
-    setEmptyReturnToForYou(true);
-    changeTab(nextTab);
   }
 
   async function openSource(source: string) {
@@ -104,50 +99,44 @@ export function KnowledgeScreen({
     <View style={styles.screen}>
       {selectedItem ? <AppBar mode="Back" title="Kunskap" actionLabel="Tillbaka till guider" onAction={() => { setOpenedId(null); onSelectContent(null); }} /> : null}
       {!selectedItem && !(tab === 'Checklistor' && checklistDetailOpen) ? <>
-        {returnToTraining
-          ? <AppBar mode="Back" title="Kunskap" actionLabel="Tillbaka till Träning" onAction={onBack} />
-          : <Text accessibilityRole="header" style={styles.pageTitle}>Kunskap</Text>}
-        <Tabs items={["För dig", "Artiklar", "Checklistor", "FAQ"]} active={tab} onChange={changeTab} variant="rev02-segmented" />
+        {tab !== 'För dig'
+          ? <AppBar mode="Back" title={tab === 'FAQ' ? 'Vanliga frågor' : 'Checklistor'} actionLabel="Tillbaka till Kunskap" onAction={() => changeTab('För dig')} />
+          : returnToTraining
+            ? <AppBar mode="Back" title="Kunskap" actionLabel="Tillbaka till Träning" onAction={onBack} />
+            : <Text accessibilityRole="header" style={styles.pageTitle}>Kunskap</Text>}
       </> : null}
-      {tab === 'Artiklar' && !selectedItem ? <View style={styles.searchSection}>
+      {tab === 'För dig' && !selectedItem ? <View style={styles.searchSection}>
         <Field
-          label={'Sök i artiklar för ' + dogLabel}
+          label={'Sök guider för ' + dogLabel}
           value={searchQuery}
           onChangeText={(value) => setSearchState({ scopeKey: searchScopeKey, value })}
           placeholder="Titel eller innehåll"
-          help={'Visar publicerade artiklar för ' + dogLabel + '.'}
+          help={'Visar publicerade guider och artiklar för ' + dogLabel + '.'}
         />
         {searchQuery !== '' && (!hasSearchQuery || displayedItems.length > 0)
           ? <QuietButton title="Rensa sökning" onPress={clearSearch} />
           : null}
       </View> : null}
-      {reviewEnabled ? <Text style={styles.reviewNotice}>Tillfälligt exempel – innehållet är inte sakgranskat.</Text> : null}
-      {(tab === 'För dig' || tab === 'Artiklar' || selectedItem) && contentState === 'loading' && <Skeleton shape="card" lines={4} />}
-      {(tab === 'För dig' || tab === 'Artiklar' || selectedItem) && contentState === 'error' && <>
+      {reviewEnabled && tab !== 'FAQ' ? <Text style={styles.reviewNotice}>Exempel · ej sakgranskat</Text> : null}
+      {(tab === 'För dig' || selectedItem) && contentState === 'loading' && <Skeleton shape="card" lines={4} />}
+      {(tab === 'För dig' || selectedItem) && contentState === 'error' && <>
         <MessageCard tone="error">Guiderna kunde inte hämtas. Försök igen.</MessageCard>
         <PrimaryButton title="Försök igen" onPress={onRetry} />
       </>}
-      {tab === 'För dig' && contentState === 'ready' && visibleItems.length === 0 && <MessageCard>
-        Här kommer guider för din hund. Titta gärna in igen.
+      {tab === 'För dig' && !selectedItem && contentState === 'ready' && visibleItems.length === 0 && <MessageCard>
+        Det finns inga publicerade guider eller artiklar för {dogLabel} ännu.
       </MessageCard>}
-      {tab === 'Artiklar' && !selectedItem && contentState === 'ready' && visibleItems.length === 0 && <View style={styles.searchEmpty}>
-        <MessageCard>{'Det finns inga publicerade artiklar för ' + dogLabel + ' ännu.'}</MessageCard>
-        <QuietButton title="Öppna Checklistor" onPress={() => openEmptyDestination('Checklistor')} />
-        <QuietButton title="Öppna Vanliga frågor" onPress={() => openEmptyDestination('FAQ')} />
-      </View>}
-      {tab === 'Artiklar' && !selectedItem && contentState === 'ready' && visibleItems.length > 0 && hasSearchQuery && displayedItems.length === 0
+      {tab === 'För dig' && !selectedItem && contentState === 'ready' && visibleItems.length > 0 && hasSearchQuery && displayedItems.length === 0
         ? <View style={styles.searchEmpty}>
-          <MessageCard>{'Inga artiklar matchar "' + searchQuery.trim() + '" för ' + dogLabel + '.'}</MessageCard>
+          <MessageCard>{'Inga guider eller artiklar matchar "' + searchQuery.trim() + '" för ' + dogLabel + '.'}</MessageCard>
           <QuietButton title="Rensa sökning" onPress={clearSearch} />
         </View>
         : null}
-      {tab === 'Artiklar' && !selectedItem && contentState === 'ready' && hasSearchQuery && displayedItems.length > 0
+      {tab === 'För dig' && !selectedItem && contentState === 'ready' && hasSearchQuery && displayedItems.length > 0
         ? <Text style={styles.searchCount}>{displayedItems.length === 1 ? '1 träff' : displayedItems.length + ' träffar'}</Text>
         : null}
-      {emptyReturnToForYou && tab === 'FAQ' && !selectedItem ? <QuietButton title="Tillbaka till För dig" onPress={() => changeTab('För dig')} /> : null}
-      {emptyReturnToForYou && tab === 'Checklistor' && !checklistDetailOpen ? <QuietButton title="Tillbaka till För dig" onPress={() => changeTab('För dig')} /> : null}
       {tab === 'FAQ' && !selectedItem ? <FAQScreen context="by_age" reviewEnabled={process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true'} /> : null}
-      {(tab === 'För dig' || tab === 'Artiklar' || selectedItem) && contentState === 'ready' && items.length > 0 && <>
+      {(tab === 'För dig' || selectedItem) && contentState === 'ready' && visibleItems.length > 0 && <>
         {!selectedItem && displayedItems.length > 0 && <View style={styles.guideList}>
           {displayedItems[0] ? <MotionPressable accessibilityRole="button" accessibilityLabel={`Läs ${displayedItems[0].title}`} onPress={() => openArticle(displayedItems[0].id)} style={styles.featured}>
             <Image source={require('../../../assets/images/puppy-resting-carousel.png')} style={styles.featuredImage} resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
@@ -193,10 +182,10 @@ export function KnowledgeScreen({
         <SectionHeader title="Fler i Kunskap" />
         <View style={styles.categoryLinks}>
           <Card onPress={() => changeTab('Checklistor')} accessibilityLabel="Öppna Checklistor">
-            <View style={styles.categoryLink}><IconChip category="training" /><View style={styles.categoryCopy}><Text style={styles.guideTitle}>Checklistor</Text><Text style={styles.sourceText}>För valpens olika faser</Text></View></View>
+            <View style={styles.categoryLink}><KnowledgeIconBadge id={CHECKLIST_DESTINATION_ID} /><View style={styles.categoryCopy}><Text style={styles.guideTitle}>Checklistor</Text><Text style={styles.sourceText}>För valpens olika faser</Text></View></View>
           </Card>
           <Card onPress={() => changeTab('FAQ')} accessibilityLabel="Öppna Vanliga frågor">
-            <View style={styles.categoryLink}><IconChip category="sleep" /><View style={styles.categoryCopy}><Text style={styles.guideTitle}>Vanliga frågor</Text><Text style={styles.sourceText}>Svar efter var ni är just nu</Text></View></View>
+            <View style={styles.categoryLink}><KnowledgeIconBadge id={FAQ_DESTINATION_ID} /><View style={styles.categoryCopy}><Text style={styles.guideTitle}>Vanliga frågor</Text><Text style={styles.sourceText}>Svar efter var ni är just nu</Text></View></View>
           </Card>
         </View>
       </View> : null}

@@ -29,6 +29,9 @@ test('auxiliary pages do not enter swipe navigation and use More as active tab',
     assert.equal(nextMainTabDestination(page, 'right'), undefined);
     assert.equal(activeMainTabDestination(page), 'home');
   }
+  assert.equal(nextMainTabDestination('insights', 'left'), undefined);
+  assert.equal(nextMainTabDestination('insights', 'right'), undefined);
+  assert.equal(activeMainTabDestination('insights'), 'log');
   for (const page of MAIN_TAB_DESTINATIONS) assert.equal(activeMainTabDestination(page), page);
 });
 

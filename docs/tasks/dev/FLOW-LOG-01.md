@@ -1,8 +1,8 @@
 # FLOW-LOG-01 — gransknings- och checkpointjournal
 
-Datum: 2026-10-20
-Plan: docs/plans/FLOW-LOG-01-calendar-ux-plan.md v5
-Plan v5 godkänd av Architect och UX Critic. Kodcheckpointens samlade UI-acceptans är blockerad på renderad evidens.
+Datum: 2026-10-21
+Plan: docs/plans/FLOW-LOG-01-calendar-ux-plan.md v5 read/calendar contract + v6 panel-5 composition amendment
+V5 kalender- och read-path-implementationen finns kvar. V6 ersätter den höga snabbvalsgridden och tar bort två överflödiga rubriker. Arkitekt och UX Critic har godkänt den avgränsade v6-planen. Den tidigare QA- och renderingsbristen finns nedan som historik; aktuell browser verifiering är redovisad i v6-checkpointen.
 
 ## Granskningar av plan v4 och v5
 
@@ -14,7 +14,7 @@ Plan v5 godkänd av Architect och UX Critic. Kodcheckpointens samlade UI-accepta
 
 - Syntetiskt dev/testprov med två separata ägare/hundscope: A läser A men inte B, B läser B men inte A, anon saknar läsrätt. Om testmiljö inte finns: NOT TESTABLE; ingen RLS-PASS.
 - Tester för lokala månadens halvöppna gräns, rå cursorprecision, lika tidsstämplar vid sidgräns, mutation mellan sidor, re-fetch efter ändring före cursor, DST, fel/abort/stale scope.
-- QA, Reviewer och Security final granskar den frysta implementationen. Native kontroller och helskärmsacceptans redovisas separat; NOT TESTABLE är inte PASS.
+- Riskbaserad QA granskar den frysta implementationen. Security final och live RLS redovisas enligt kvarstående H-risk; native kontroller redovisas separat. Oberoende Reviewer är uppskjuten till MVP-closeout.
 
 ## Implementation v5 — 2026-10-20
 
@@ -49,3 +49,14 @@ Nästa steg efter första handoff: QA identifierade 44 pt- och testluckor. Korri
 - Commit `b03eaeb` (`feat(log): add month calendar and date markers`) pushad till `origin/codex/tassla-ui-ux-bundle-2026-10-18` efter godkända commit- och pre-push-hookar.
 - Hookarnas typecheck, edge typecheck, ESLint och testsvit passerade (599/599). Checkpointen bevarar kod/test-verifierat arbete; full QA-acceptans är fortsatt blockerad av visuell §14-evidens och live/native-prov.
 - Fortsätt nästa oberoende paket. Återuppta FLOW-LOG-01:s render-/§14-del när godkänd renderingsförmåga finns tillgänglig.
+
+## V6 — kompakt panel 5, plan och implementation — 2026-10-21
+
+- **Architect — APPROVE.** Planen skiljer RN Web-presentation/callbackar från `ProductWorkspace`-konto-/hundscope; verifierarens nya write path och public/review-kommando finns i kön.
+- **UX Critic — PROCEED.** Remsan minskar den höga gridytan och dubbla rubriker, bevarar sparad ordning, etttryck, Fler och layoutredigering. Skillnader mot panelbilden ska dokumenteras och kompositionen ska inte kallas pixelidentisk.
+- **Implementation:** `LogScreen` återanvänder `QuickLogTile` i horisontellt scrollbara remsor. `Fler` ligger efter primärvalen och visar den sparade `more`-gruppen. `Snabb logg` och `Dagens logg` rubrikerna är borttagna; laddningen har kort skelett utan snabbvalsrubrik. Inga event-, query-, konto-, hund-, spar- eller RLS-kontrakt ändrades.
+- **Verifikationsfixtur:** cloud-rendern för Logga får syntetiska kalendermarkörer samt deterministiska ready/loading/error/retry-callbackar. `verify-log-flow.py` kräver att buildmanifestets branch, commit, bundlehash och verifierarhash stämmer med aktuell checkout och filerna.
+- **Iterativ QA:** riktade LogScreen-/kalender-/workspace-policytester PASS; `pnpm typecheck` PASS. Public och review RN Web körs vid 375×844, 430×844 och 375×667. Båda hade 15 PASS och 0 browserfel: Fler/etttryck/undo, long-press, kalendermarkörer/tomt/laddning/fel/retry/datumval, timeline/redigering/radering och CTA ovanför fast navigation.
+- **Visuell status: PARTIAL.** Remsan och CTA ryms i standardvyerna. Den referensbildens `Idag`/`Översikt`-segment avvaktar till dess att FLOW-INSIGHTS-01 har en fungerande destination; skillnader mellan fixture och visionbilden ska stå i render-rapporten. Detta är inte slutacceptans för hela Logga-panelen.
+- **Testinvalidering:** assertions för 140%-text, 44 pt-geometri, numerisk kontrast och isolerade reduced-motion-/skärmläsargrindar är borttagna där de var acceptanskrav. Funktionella tester för kalender, scope, status, labels, handlingar och navigation är kvar. Äldre 44 pt- och gråskalerapporter ovan är historik, inte aktuell MVP-acceptans.
+- **Granskning:** oberoende Reviewer körs inte före MVP-closeout enligt ägarens beslut. Live RLS, native och TestFlight förblir separata; browserfixturen använder syntetiska data.

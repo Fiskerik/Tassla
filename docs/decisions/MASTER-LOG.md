@@ -14,9 +14,23 @@ Läs denna fil först när ett beslut eller tidigare paket efterfrågas. Läs se
 
 Befintliga säkerhets-, innehålls-, dataskydds- och publiceringsgrindar kvarstår. Förslag om antal testare/innehållsobjekt är inte nya bindande detaljbeslut. Ingen ny dependency, dataanvändning, live-migration, extern pilot eller release godkänns här.
 
-Nästa apppilot efter dokumentharmoniseringen: delad sökbar rasväljare i första profil, lägg till hund och profilredigering, baserad på aktuell Main och befintlig katalog. Full katalogimport/Mix-utökning är separata delar. Det ägarstoppade checklistfilterpaketet ska inte återupptas automatiskt.
+Nästa apppilot efter dokumentharmoniseringen: delad sökbar rasväljare i första profil, lägg till hund och profilredigering, baserad på aktuell Main och befintlig katalog. Full katalogimport/Mix-utökning är separata delar. Checklistfilterpaketet stoppades tidigare men återupptogs uttryckligen på ägarens besked 2026-10-21; detta senare besked ersätter stoppet.
 
 Aktuell uppgiftsstatus finns i kön; full verifiering i taskunderlaget; kort slututfall i `docs/releases/HISTORY-2026.md`. MASTER-LOG behåller ägarbeslut och historiska leveransposter men nya paketresultat dubbleras inte här.
+
+### Tillgänglighetsomfattning — alla MVP-checkpoints, 2026-10-21
+
+**Källa:** Eriks besked i chatten: ”Ja, inte bara för denna checkpointen, utan för ALLA framtida checkpoints. Ändra i gällande dokument så det återspeglas. När första versionen av Tassla är släppt och godkänd (MVP), så kan vi börja fundera på tillgänglighetsanpassning”.
+
+Systematisk tillgänglighetsanpassning och bred testmatris ligger efter att första MVP-versionen är släppt och godkänd. Ingen MVP-checkpoint ska rutinmässigt kräva 140 % zoom, stor text/Dynamic Type, VoiceOver/TalkBack, reducerad rörelse, generell tangentbords-/fokusmatris eller mätning av träffytor. Funktionell native-verifiering av appens kärnresor ligger kvar där MVP-acceptansen kräver det och är separat från a11y-audit.
+
+Befintliga fungerande synliga etiketter, begripligt innehåll och semantik/tillstånd bevaras; kända regressioner införs inte. Beslutet är en scopeavgränsning och inte ett juridiskt utlåtande eller undantag från en konkret bindande regel. Äldre generiska skills och taskplaner ändras inte retroaktivt i sina historiska resultat, men styr inte framtida MVP-checkpoints mot en bredare a11y-matris.
+
+### Oberoende Reviewer — samlad MVP-closeout, 2026-10-21
+
+**Källa:** Eriks besked i chatten: ”Skippa oberoende reviewer nu, gör det i slutet när HELA mvpn nästan är klar. Så den kan vi sätta som GO.”
+
+Oberoende Reviewer körs inte som grind för varje checkpoint. Lokal kod, riktad QA, relevanta plan-/riskgranskningar, visuell jämförelse och exakt checkpoint fortsätter. En avgränsad task kan markeras `done` efter QA endast när kön anger `review_status: deferred_to_mvp_closeout`; detta betyder inte Reviewer-PASS, full panelacceptans eller releaseklarhet. Den samlade oberoende granskningen läggs i kön efter att alla åtta panelresor och nödvändiga MVP-provkörningar närmar sig closeout. Då uppdateras berörda köposter med verkligt reviewutfall.
 
 ### Stack och leveransbas
 
@@ -48,15 +62,15 @@ Källor: [MVP EXPERIENCE CONTRACT](../MVP-EXPERIENCE-CONTRACT.md), [MVP](../mvp.
 
 ## Risknivå för granskning
 
-- **L:** lokal presentation/copy utan ändrad persistens eller semantik. Riktad funktions- och visuell QA, därefter oberoende Reviewer.
-- **M:** ändrad användarresa eller befintlig datahantering. Prova lyckat, fel och osäker status, visuell QA och oberoende QA/Reviewer.
+- **L:** lokal presentation/copy utan ändrad persistens eller semantik. Riktad funktions- och visuell QA; oberoende Reviewer vid samlad MVP-closeout.
+- **M:** ändrad användarresa eller befintlig datahantering. Prova lyckat, fel och osäker status samt visuell QA; oberoende Reviewer vid samlad MVP-closeout.
 - **H:** auth, RLS, konto/hundscope, migration, radering, hälsa, notifiering, nya persondataändamål, extern integration eller oklar datamodell. M-bevis plus relevanta Architect/Security/Compliance/Dog Expert-granskningar och riktig integration där acceptansen kräver det.
 
-Höj risk vid osäkerhet. pnpm check, föreskrivna kögrindar och oberoende Reviewer gäller fortsatt. Rapportera lokal render, kodtester, live DB/RLS, native/telefon och release separat. NOT TESTABLE är inte PASS.
+Höj risk vid osäkerhet. pnpm check och riskbaserade kögrindar gäller fortsatt. Oberoende Reviewer är uppskjuten till samlad MVP-closeout. Rapportera lokal render, kodtester, live DB/RLS, native/telefon och release separat. NOT TESTABLE är inte PASS.
 
 ## Leveransregister
 
-Äldre paketposter nedan bevaras. Från 2026-10-20 registreras nya slututfall i `docs/releases/HISTORY-2026.md`; nya ägarbeslut registreras här. Koordinatorn sammanfattar det faktiska utfallet efter oberoende Reviewer-pass och före den slutliga done-checkpointen. Varje post anger paket-ID, mål/ändrade delar, faktisk status, kontroller och resultat, QA/Reviewer/Security-verdict där relevant, commit eller dokumenterad checkpoint samt öppna luckor. Skilj lokal PASS, ägarrapport, live runtime och release. Länka taskens fulla underlag i stället för att kopiera långa loggar. Korrigera en post med datum och rättelse; skriv inte om historien tyst.
+Äldre paketposter nedan bevaras. Från 2026-10-20 registreras nya slututfall i `docs/releases/HISTORY-2026.md`; nya ägarbeslut registreras här. Per checkpoint sammanfattar koordinatorn faktiskt kod-/QA-utfall, relevant riskgranskning, commit eller dokumenterad checkpoint och öppna luckor; `review_status: deferred_to_mvp_closeout` hålls separat från Reviewer-verdict. Den samlade oberoende Reviewer-granskningen loggas vid MVP-closeout och uppdaterar berörda poster. Skilj lokal PASS, ägarrapport, live runtime, native, visuell acceptans och release. Länka taskens fulla underlag i stället för att kopiera långa loggar. Korrigera en post med datum och rättelse; skriv inte om historien tyst.
 
 ### Historiska paketstatusar på 2e230be
 

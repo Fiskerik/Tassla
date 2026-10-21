@@ -1,5 +1,7 @@
 # VISION-REV02-DOG-PROFILE — implementationsplan v8
 
+> **Ägarbeslut 2026-10-21 gäller alla MVP-checkpoints:** kvarvarande ras-/profilverifiering gäller funktion och relevanta standardvyer. 140 %/stor text, Dynamic Type, VoiceOver/TalkBack och generell mål-/kontrastaudit görs efter att MVP:n är släppt och godkänd; tidigare kriterier i denna plan är inte MVP-grindar. Behåll befintliga labels/semantik. Se [AGENTS.md](../../../AGENTS.md) och [arbetsflödet](../../dev/workflow.md).
+
 Datum: 2026-10-13 · Status: plan v8 godkänd av Architect (APPROVE) och Critic (PROCEED); Slice A har QA-PASS, Reviewer PASS och Security APPROVE för statisk/local handoff, men är blockerad för verklig Supabase/RLS och native-flöden som är NOT TESTABLE. Slice B inväntar verifierad Wikidata-export efter HTTP 403 från WDQS · Segmentmandat: Erik har uttryckligen beställt hela profilarbetet i chatten.
 
 ## Scope och beslut
@@ -61,6 +63,8 @@ Se `docs/plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md` för UI/data/age-format.
 
 ## Slice B — DOG-PROFILE-BREED-MIX
 
+> **Aktuell statusnotis, 2026-10-20:** Denna v8-slice är historisk och slog tidigare ihop sökbar väljare, katalogimport, Mix och Home-identitet. Godkänd MVP rev02 skiljer nu ut den gemensamma sökningen mot redan befintlig katalog i [DOG-PROFILE-SEARCH-PILOT-01](DOG-PROFILE-SEARCH-PILOT-01.md) och dess UX-spec. Pilotens sökning får starta utan Wikidata-snapshot. Blockeringen nedan gäller fortsatt full katalogimport, Mix-delraser/schema och de tillhörande Home-/profiländringarna; den ska inte användas för att stoppa pilotens sökbara väljare. V8-historiken och dess tidigare reviewverdicts skrivs inte om.
+
 **Mål:** godkänd licensierad katalog, återanvändbar sökbar picker, robust Mix-profil och Home-identitet med ras.
 
 **Skrivfiler:**
@@ -113,9 +117,9 @@ Slice A (AGE-DISPLAY) routes on both public/review ports: `/?screen=profile-edit
 
 Slice B (BREED-MIX) routes: `/?screen=profile-create&profileScenario=ready`, `/?screen=profile-edit&profileScenario=ready|loading|error`, `/?screen=profile-edit&state=conflict`, `/?screen=profile-create&profileScenario=breed-loading|breed-error`, `/?screen=profile-edit&profileScenario=breed-loading|breed-error`, and `/?screen=home&homeScenario=ready`. Here `profileScenario=loading|error` is dog-profile load/save status; `profileScenario=breed-loading|breed-error` is the separate breed-catalog request status. On create/edit, capture normal and long breed labels, matching and no-match search, direct `Okänd ras` selection from the main-picker empty state, Mix checkbox off, checkbox on with zero components, with only the first component, and with two different breeds. Verify each missing selector is identified, Save stays disabled until two distinct breeds are selected, the second picker excludes the first selection, and `Okänd ras` cannot be used as a Mix component. Review Home with a long breed label and the final single-breed/Mix identity. Capture representative states at 375×844, 430×844, and 375×667.
 
-For both slices, use Firefox View → Zoom → Zoom Text Only at 140% for profile-edit-ready and Home; if unavailable, report that check NOT TESTABLE. Native Dynamic Type and VoiceOver remain NOT TESTABLE. Save public/review captures under `docs/design/evidence/vision-rev02/dog-profile/public/` and `docs/design/evidence/vision-rev02/dog-profile/review/`. Prefix every screenshot filename with `synthetic-` and record route/state, viewport, text scale, and fixture mode in the evidence README; both modes are synthetic, including public mode. Complete docs/design-rules.md §14 for layout, color distribution, typography, component shape, imagery and density. Do not add or run test suites. SQL/RLS runtime remains NOT TESTABLE without a development database.
+For both slices, capture relevant functional states at standard viewports and preserve public/review fixture labeling. Record route/state, viewport, and fixture mode in the evidence README; both modes are synthetic, including public mode. Complete the relevant visual parts of design-rules §14 for layout, color distribution, typography, component shape, imagery and density. 140% text, native Dynamic Type and VoiceOver are deferred until after MVP release and approval and are not MVP gates. SQL/RLS runtime remains NOT TESTABLE without a development database.
 
 ## Ordning
 
 1. `DOG-PROFILE-AGE-DISPLAY` (Slice A); första Reviewer-granskningen hittade två fel i statusjämförelsen och skottårsberäkningen. Båda är rättade; färsk statisk QA är PASS, Reviewer gav PASS och Security gav APPROVE. Åtkomst-/kopieinventeringen inkluderar nu uttryckligen `dogs.age_display_unit`. Queue är blockerad för verklig migration/RLS, sparad preferens och native PDF/tillgänglighet som är NOT TESTABLE; ändring av `passport-model.ts` genomfördes efter v8 Architect/Critic-godkännande.
-2. `DOG-PROFILE-BREED-MIX` (Slice B); startar efter Slice A:s QA/Reviewer-checkpoint och först när ett daterat Wikidata-snapshot är verifierat.
+2. `DOG-PROFILE-BREED-MIX` (återstående Slice B: verifierad katalogimport och Mix); katalog-/Mix-implementation kräver fortsatt Slice A:s checkpoint och ett daterat verifierat Wikidata-snapshot. Den gemensamma sökningen mot nuvarande katalog följer separat `DOG-PROFILE-SEARCH-PILOT-01` och väntar inte på snapshotet.

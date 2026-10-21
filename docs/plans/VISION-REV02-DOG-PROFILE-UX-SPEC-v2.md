@@ -1,5 +1,9 @@
 # UX-spec — hundras, Mix och åldersvisning
 
+> **Ägarbeslut 2026-10-21 gäller alla MVP-checkpoints:** ras-/profilflöden verifieras funktionellt och visuellt vid relevanta standardvyer. 140 %/stor text, Dynamic Type, VoiceOver/TalkBack, reduced motion och generell träffyte-/kontrastaudit görs efter att MVP:n är släppt och godkänd. Behåll befintliga labels/semantik; äldre a11y-kriterier här är inte MVP-grindar. Se [AGENTS.md](../../AGENTS.md) och [arbetsflödet](../dev/workflow.md).
+
+> **Statusnotis 2026-10-20:** v8 är historisk plan för ålder, katalogimport, Mix och Home-identitet. Godkänd MVP rev02 har brutit ut sökbar rasväljare över befintlig katalog till [`DOG-PROFILE-SEARCH-PILOT-01`](DOG-PROFILE-SEARCH-PILOT-UX-SPEC.md). Den delen är inte blockerad av Wikidata-snapshot. Snapshotkravet gäller fortsatt katalogutökning och Mix. Historiska acceptanskriterier och v8-review ändras inte retroaktivt; aktuell avgränsning finns i kön och nya pilotplanen.
+
 Datum: 2026-10-13 · Version: 8 · Status: Wikidata CC0 valt; åldersdelen kan gå först medan katalogsnapshoten inväntar åtkomst.
 
 ## Användaruppgift och omfång
@@ -8,7 +12,7 @@ Datum: 2026-10-13 · Version: 8 · Status: Wikidata CC0 valt; åldersdelen kan g
 
 Detta beslut utökar den tidigare begränsade raslistan. Erik valde 2026-10-13 **Wikidatas strukturerade data under CC0**. Källomfånget definieras som Wikidata-poster som är instanser av `dog breed (Q39367)` eller dess underklasser och har en svensk eller engelsk etikett. Urvalet ska ha stabila QID:n; svensk etikett används när den finns, annars engelsk. Detta är Wikidatas dokumenterade datamängd, inte ett löfte om att den innehåller varje hundras i världen. SKK-listan används inte utan skriftligt medgivande enligt deras återanvändningsvillkor.
 
-Exakt snapshot, antal, etiketter och QID:n har ännu inte hämtats. Försök att läsa WDQS och den dokumenterade QLever-spegeln misslyckades i den här exekveringsmiljön (nätverkstunneln svarar 403 och webbläsarverktyget nekar API-endpoints). Därför finns ingen importerbar katalogfil och katalogimport/picker/Mix kan inte börja. Ålderspreferensen och Home-raden kan byggas självständigt mot befintliga ras-ID:n medan snapshotåtkomsten löses. Den reviderade planen ska granskas på nytt; ett daterat, verifierat exportresultat krävs innan katalogdelen startar.
+Exakt snapshot, antal, etiketter och QID:n har ännu inte hämtats. Försök att läsa WDQS och den dokumenterade QLever-spegeln misslyckades i den här exekveringsmiljön (nätverkstunneln svarar 403 och webbläsarverktyget nekar API-endpoints). En importerbar katalogfil saknas. **Historisk v8-avgränsning:** katalogutökning och Mix kunde inte börja utan snapshot. **Aktuell avgränsning enligt statusnotisen ovan:** den sökbara väljaren över redan tillgängliga katalogposter levereras separat och väntar inte på snapshot; resterande katalog-/Mix-del behöver fortsatt ett daterat verifierat exportresultat och ny review.
 
 Planerad SPARQL-fråga för snapshoten:
 
@@ -45,7 +49,7 @@ SELECT DISTINCT ?item ?sv ?en WHERE {
 
 - Följ `docs/design-rules.md` och profilkontraktet i `docs/plans/VISION-REV02-R02-4E-PROFILE-UX-SPEC.md`: varm canvas, ljusa rundade grupper, profilaccent, kompakt rubrik, grupperade rader och fulla träffytor.
 - Väljaren är en native-/webbmodal med en enda vertikal `FlatList`; använd inte en virtualiserad lista inuti den befintliga `BottomSheet`-scrollviewen. Sökfältet och stängningsknappen är tillgängliga med skärmläsare.
-- Varje rad och checkbox har minst 44 pt träffyta, synlig vald-status och skärmläsartext. Långa rasnamn radbryts. Färg är inte enda urvalssignal.
+- Behåll befintliga synliga labels och valda states; långa rasnamn radbryts och färg är inte enda urvalssignal. Ingen ny mål-/skärmläsargranskning krävs före MVP.
 - Hemmets identitet är två vänsterställda rader. Porträtt och vecko-karusell ändras inte.
 
 ## Dataskydd och innehåll
@@ -54,7 +58,7 @@ Ras och Mix-delraser lagras på samma hundprofil och följer befintlig ägar-RLS
 
 ## Visuell och funktionell acceptans
 
-En renderad React Native Web-granskning ska omfatta vyportarna 375×844, 430×844 och 375×667, vanlig och lång rasetikett på picker och Hem, Mix utan delraser, Mix med checkbox på och noll val, Mix med ett val, Mix med två olika raser, sökning med träff och utan träff, separata loading/error-tillstånd för hundprofil och raskatalog, konfliktläge samt Hem med varje åldersenhet. **Slice A — AGE-DISPLAY** kommer först och verifierar åldersväljaren samt veckor/månader/år på Hundprofil, Hem och Tassla-pass med samma sparade preferens; Hem visar `Namn | Ras` från hundprofilens befintliga ras-ID och katalognamn, och en lång rasetikett får radbrytas utan att kapas. **Slice B — BREED-MIX** kommer efter A och verifierar Wikidata-katalogen, picker, Mix samt Home-identiteten `Namn | Ras/Mix`; ålderspreferensen från A ska finnas kvar. Kontrollera att saknade delraser identifieras, Spara är inaktiverad tills två olika raser valts och den andra väljaren utesluter den första rasen. Testa 140 % textskala i webbfiksturen med Firefox: View → Zoom → Zoom Text Only. Om webbläsaren inte stöder text-only-zoom, rapportera den kontrollen NOT TESTABLE. Native Dynamic Type och skärmläsare verifieras separat och får inte anses godkända av webbrenderingen. Jämför Hem med vision_rev02 och profilredigeringen med profilens stödskärmskontrakt. Alla skärmbilder från fixturebyggen, även public-läget utan granskningsbanner, märks som syntetiska i filnamnet och i evidensindexet. Saknad rendering eller native-/RLS-runtime redovisas som NOT TESTABLE, aldrig PASS.
+Renderad React Native Web-evidens vid 375×844, 430×844 och 375×667 ska täcka vanliga/långa rasetiketter, Mix utan delraser, Mix med noll/ett/två olika val, sökträff/ingen träff, profil- och katalogens loading/error, konfliktläge samt Hem med varje åldersenhet. Slice A verifierar den sparade ålderspreferensen på Hundprofil, Hem och Tassla-pass; Slice B verifierar Wikidata-katalog, picker, Mix och `Namn | Ras/Mix`. Spara syntetiska public/review-captures, jämför Hem med vision_rev02 och dokumentera §14:s relevanta visuella avvikelser. 140 %/Dynamic Type/skärmläsare/native tillgänglighetsmatris ingår inte i MVP-acceptansen. Funktionell native-/RLS-runtime redovisas separat och är NOT TESTABLE om den inte körs.
 
 ## Källor och avgränsningar
 

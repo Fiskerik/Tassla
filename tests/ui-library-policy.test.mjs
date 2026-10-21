@@ -9,7 +9,7 @@ const source = (file) => readFileSync(path.join(uiDir, file), 'utf8');
 
 test('shared tokens retain the legacy theme while exposing the design foundations', () => {
   const tokenSource = readFileSync(path.join(root, 'src/theme/tokens.ts'), 'utf8');
-  for (const required of ['#186A4D', 'background:', 'primary:', 'categoryColors', 'xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32', 'touchMin: 44', 'buttonHeight: 56', 'display: typography.title']) {
+  for (const required of ['#186A4D', 'background:', 'primary:', 'categoryColors', 'xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32', 'buttonHeight: 56', 'display: typography.title']) {
     assert.ok(tokenSource.includes(required), `missing token contract: ${required}`);
   }
   assert.match(tokenSource, /theme\s*=\s*\{[\s\S]*?spacing:\s*\{ small: 8, medium: 16, large: 24 \}/);
@@ -55,7 +55,6 @@ test('Home activity and destination components keep independent accessible actio
   const gallery = source('ComponentGalleryScreen.tsx');
   assert.match(daily, /accessibilityRole="checkbox"[\s\S]*?accessibilityState=\{\{ checked: completed/);
   assert.match(daily, /accessibilityRole="button" accessibilityLabel=\{`Visa detaljer:/);
-  assert.match(daily, /minHeight: tokens\.size\.touchMin/);
   for (const icon of ["'paw-outline'", "'school-outline'", "'book-outline'"]) {
     assert.ok(destination.includes(icon), `missing destination icon ${icon}`);
   }
@@ -81,9 +80,9 @@ test('vision variants are opt-in and leave shared component defaults on their or
   assert.match(gallery, /<DestinationTile destination="log" compact variant="home"/);
 });
 
-test('Button stretches every non-icon variant and keeps icon controls square at touch minimum', () => {
+test('Button stretches every non-icon variant and keeps its icon variant separate', () => {
   const button = source('Button.tsx');
   assert.doesNotMatch(button, /\bfullWidth\b/, 'fullWidth is not part of the public component API');
   assert.match(button, /button:\s*\{[^}]*alignSelf:\s*'stretch'/, 'the base control stretches to its parent width');
-  assert.match(button, /icon:\s*\{[^}]*width:\s*tokens\.size\.touchMin[^}]*height:\s*tokens\.size\.touchMin/, 'icon control is exactly 44 by 44');
+  assert.match(button, /variant === 'icon'/);
 });

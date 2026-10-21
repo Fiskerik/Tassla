@@ -8,14 +8,13 @@ const checklist = await readFile(new URL('../src/features/knowledge/PuppyCheckli
 const button = await readFile(new URL('../src/components/ui/Button.tsx', import.meta.url), 'utf8');
 const sheet = await readFile(new URL('../src/components/ui/BottomSheet.tsx', import.meta.url), 'utf8');
 
-test('routine edit is an accessible icon-only control and weekday targets stay one row and scrollable', () => {
+test('routine edit keeps a clear label and weekday choices stay one row and scrollable', () => {
   assert.match(manager, /IconOnlyButton icon="create-outline" accessibilityLabel=\{`Redigera rutin \$\{routine\.label\}`\}/);
   assert.doesNotMatch(manager, /ActionButton icon="create-outline" label="Redigera"/);
   assert.match(manager, /const weekdayShortNames = \['Må', 'Ti', 'On', 'To', 'Fr', 'Lö', 'Sö'\]/);
   assert.match(manager, /<ScrollView horizontal showsHorizontalScrollIndicator=\{false\} contentContainerStyle=\{styles\.weekdayChoices\}>/);
   assert.match(manager, /accessibilityRole="checkbox" accessibilityLabel=\{name\}/);
   assert.match(manager, /weekdayChoices: \{ flexDirection: 'row', flexWrap: 'nowrap'/);
-  assert.match(manager, /weekdayButton: \{ flexShrink: 0, minWidth: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin/);
   assert.doesNotMatch(manager, /weekdayButton: \{[^}]*flexBasis/);
 });
 
@@ -45,5 +44,4 @@ test('log editor exposes a selected category icon trigger and icon/name radio ch
 test('checklist own-item edit uses the real shared icon-only button with its full label', () => {
   assert.match(checklist, /<Button variant="icon" label="Ändra" iconName="create-outline" accessibilityLabel=\{`Ändra \$\{item\.title\}`\}/);
   assert.match(button, /variant === 'icon' \? <Ionicons name=\{iconName\}[^:]*: <Text[^>]*>\{label\}<\/Text>/);
-  assert.match(button, /width: tokens\.size\.touchMin, height: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin/);
 });

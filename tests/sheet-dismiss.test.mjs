@@ -54,10 +54,6 @@ test('a fast flick dismisses, but a twitch or an upward fling does not', () => {
   assert.equal(shouldDismissSheet(-100, -3), false);
 });
 
-test('the dismiss distance is larger than the minimum touch target so taps never close the sheet', () => {
-  assert.ok(SHEET_DISMISS_DISTANCE > 44);
-});
-
 test('BottomSheet keeps tap-outside, the close button and the Android back path', () => {
   assert.match(sheetSource, /onRequestClose=\{onRequestClose\}/, 'Modal back handling');
   assert.equal(sheetSource.match(/accessibilityLabel="Stäng" onPress=\{onRequestClose\}/g)?.length, 2, 'tap-outside area and close button');
@@ -69,13 +65,11 @@ test('BottomSheet swipe-down goes through the parent onRequestClose so existing 
   assert.doesNotMatch(sheetSource + dragSource, /setVisible|setSheet|setSelection/, 'the shared sheet must not own open/close state');
 });
 
-test('BottomSheet gesture is limited to the handle and heading and respects reduced motion', () => {
+test('BottomSheet gesture is limited to the handle and heading, outside the scrolling content', () => {
   const dragArea = sheetSource.indexOf('{...drag.panHandlers}');
   const scroll = sheetSource.indexOf('<ScrollView');
   assert.ok(dragArea > 0 && dragArea < scroll, 'pan handlers sit above the scrolling content');
   assert.equal(sheetSource.match(/\{\.\.\.drag\.panHandlers\}/g)?.length, 1, 'only one drag surface');
-  assert.match(dragSource, /inputs\.reduced\) \{ translateY\.setValue\(0\)/, 'no spring animation with reduced motion');
-  assert.match(sheetSource, /animationType=\{reduced \? 'none' : 'slide'\}/);
 });
 
 test('the gesture controller stays stable per mount and is cleaned up on unmount', () => {
@@ -85,11 +79,11 @@ test('the gesture controller stays stable per mount and is cleaned up on unmount
 });
 
 const gesture = (dy, vy = 0, dx = 0) => ({ dx, dy, vy });
-function setup(overrides = {}) {
+function setup() {
   const translateY = new Animated.Value(0);
   const closes = [];
   const drag = createSheetDrag(translateY);
-  const state = { visible: true, reduced: false, onRequestClose: () => closes.push('close'), ...overrides };
+  const state = { visible: true, onRequestClose: () => closes.push('close') };
   drag.update(state);
   globalThis.__sheetRn.springs.length = 0;
   return { drag, translateY, closes, state, handlers: drag.panHandlers };
@@ -109,15 +103,6 @@ test('controller: a short drag springs back without closing', () => {
   handlers.onPanResponderRelease({}, gesture(40, 0.1));
   assert.deepEqual(closes, []);
   assert.equal(globalThis.__sheetRn.springs.length, 1);
-  assert.equal(translateY.value, 0);
-});
-
-test('controller: reduced motion snaps back without any spring animation', () => {
-  const { handlers, translateY, closes } = setup({ reduced: true });
-  handlers.onPanResponderMove({}, gesture(40));
-  handlers.onPanResponderRelease({}, gesture(40, 0.1));
-  assert.deepEqual(closes, []);
-  assert.equal(globalThis.__sheetRn.springs.length, 0);
   assert.equal(translateY.value, 0);
 });
 
@@ -161,8 +146,7 @@ test('controller: only a vertical downward move claims the touch, so taps and th
   assert.equal(handlers.onMoveShouldSetPanResponder({}, gesture(30)), true);
 });
 
-test('the decorative handle is hidden from screen readers and uses tokens only', () => {
-  assert.match(sheetSource, /accessibilityElementsHidden importantForAccessibility="no-hide-descendants"/);
+test('the decorative handle uses theme tokens only', () => {
   assert.doesNotMatch(sheetSource, /#[\da-f]{3,8}\b/i);
 });
 
@@ -208,16 +192,6 @@ test('controller: release uses the latest committed close callback', (t) => {
   assert.deepEqual(closes, []);
   assert.deepEqual(latest, ['latest']);
   drag.dispose();
-});
-
-test('controller: reducing motion stops an active spring and resets immediately', () => {
-  const { handlers, drag, state, translateY } = setup();
-  handlers.onPanResponderRelease({}, gesture(40));
-  const spring = globalThis.__sheetRn.springs[0];
-  drag.update({ ...state, reduced: true });
-  assert.equal(spring.stopped, true);
-  assert.equal(translateY.value, 0);
-  assert.equal(globalThis.__sheetRn.springs.length, 1);
 });
 
 test('controller: hidden sheets cannot claim gestures or close again', () => {

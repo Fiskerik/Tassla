@@ -5,6 +5,7 @@ import path from 'node:path';
 
 const o = await import('../src/features/training/training-overview.ts');
 const screen = readFileSync(path.join(process.cwd(), 'src/features/training/PublishedTrainingScreen.tsx'), 'utf8');
+const workspace = readFileSync(path.join(process.cwd(), 'src/features/home/ProductWorkspace.tsx'), 'utf8');
 const prog = (id, steps, done = []) => ({ id, steps: steps.map((s) => ({ id: s })), completedStepIds: done });
 
 test('program status follows only current-version completed steps and ignores unknown or duplicate ids', () => {
@@ -43,6 +44,14 @@ test('the first incomplete step is current, later steps are upcoming, and comple
 test('the next exercise continues a started program before starting a new one', () => {
   const list = [prog('new', ['n1', 'n2']), prog('going', ['g1', 'g2', 'g3'], ['g1', 'g2'])];
   assert.deepEqual(o.pickNextExercise(list), { programId: 'going', stepId: 'g3', number: 3, total: 3, kind: 'continue' });
+});
+
+test('Home uses the Training selector when an unstarted program comes first in source order', () => {
+  const sourceOrder = [prog('new', ['n1', 'n2']), prog('going', ['g1', 'g2', 'g3'], ['g1'])];
+  assert.deepEqual(o.pickNextExercise(sourceOrder), { programId: 'going', stepId: 'g2', number: 2, total: 3, kind: 'continue' });
+  assert.match(workspace, /const nextExercise = pickNextExercise\(training\.programs\)/);
+  assert.match(workspace, /program\.id === nextExercise\?\.programId/);
+  assert.match(workspace, /step\.id === nextExercise\?\.stepId/);
 });
 
 test('with nothing started the first program starts at its first exercise', () => {

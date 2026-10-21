@@ -6,6 +6,8 @@
 **Mandate:** Erik requested implementation of packages 2a, 2b, 3, 4 and 5, and asked for a clearer directional transition when navigating between main pages.
 **Scope source:** `docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md`; this plan converts the accepted package list into reviewable checkpoints.
 
+> **Ägarbeslut 2026-10-21 — scopeuppdatering för framtida checkpoints:** De historiska lokala implementationerna nedan behåller sina dåtida resultat. Systematisk tillgänglighetsanpassning, 140 %-/stor-textgrindar, VoiceOver/TalkBack, Dynamic Type, generell fokus-/tangentbords- och träffytematris skjuts däremot upp tills första MVP:n är släppt och godkänd. Detta upphäver de ostartade a11y-delarna i den äldre planen och gäller alla kommande MVP-checkpoints. Funktionell native-verifiering av PDF/delning, profil och Kunskap ligger kvar separat före MVP-release där resans acceptans kräver den.
+
 ## Shared constraints
 
 - Preserve existing product scope, dog/account filtering, writes, retry/unknown semantics, and the five named main tabs.
@@ -23,6 +25,10 @@ The current main-page transition is already horizontal and direction-aware, but 
 **Acceptance:** main-tab swipes and bottom-tab taps show the correct directional incoming page; child/support screens retain their current transition; a new navigation interrupts the previous animation; reduced motion switches immediately; no initial-mount animation. Check both directions and small/large viewports. If local animated rendering cannot be captured, mark that visual/native part NOT TESTABLE rather than inferring it from the token test.
 
 ## Checkpoints
+
+### Funktionell native-verifiering som kvarstår inom MVP
+
+Den tidigare samlade enhetsuppgiften blandade funktionell kontroll med tillgänglighetsaudit. Följande funktionella scenarier behålls i MVP och ligger i den separata kön `MVP-NATIVE-FUNCTIONAL-VERIFY`: profilens create/edit/save/cancel/felåterhämtning; Tassla-pass-valens kvarstående urval, PDF-innehåll, native share sheet, avbryt/retur och tillfällig filstädning; Kunskapens sök-/nollresultat-/fel-/retry-/artikelretur och hundbyte. Samla dem i en begränsad enhetsrunda när beroende kodresor är klara. Skärmläsare, stor text, träffytor, 140 % och generell fokusnavigering ingår inte.
 
 ### 2a — `UI-ACCESSIBILITY-HOME-LOG` (risk M)
 
@@ -126,7 +132,7 @@ The current main-page transition is already horizontal and direction-aware, but 
 
 Required plan review: Architect and UX Critic review this plan version before any app-code change. The order is 2a → `UI-MAIN-TAB-TRANSITION` → 2b.1 → 2b.2 → 2b.3 → 2b.4 → 3 → 4 → 5a → 5b. Re-review if files, behavior, dependency or data scope materially changes. Local code checkpoints may close after local QA/Reviewer, but the named native verification below remains open and the larger MVP panel is not thereby complete.
 
-**Batched device verification remains planned:** `UI-NATIVE-ACCESSIBILITY-VERIFY` runs after the code checkpoints. On an owner-selected physical device, record VoiceOver/TalkBack names and focus order, largest Dynamic Type, keyboard/footer reachability, reduced-motion transitions, main-tab swipes and pull-to-refresh gestures. For Hundprofil exercise list/selection → edit → save or cancel → profile; add dog → confirmed result and unknown/recovery → profile; error/retry and return destinations. Keep the keyboard visible while editing/adding and record whether fields and save/cancel actions remain reachable. For Tassla-pass open the selection sheet, toggle each section, verify checkbox name/state/focus and 44pt+ targets, then close and confirm selected sections remain selected. Create a PDF explicitly, verify preview/PDF contains exactly selected sections, observe the native share sheet and cancel without choosing a recipient; verify truthful busy/error/unavailable/dialog-closed feedback, return to Passport, and app-scoped temp-file cleanup. Record actual device/OS/text-size settings and measured target bounds. Mark every unrun OS/platform/state NOT TESTABLE. No device result is implied by this plan or by a web fixture. The checkpoint stays open until an owner-selected device run records its real results.
+**Historisk plantext — uppdaterad styrning 2026-10-21:** Den tidigare breda device-matrisen för VoiceOver/TalkBack, Dynamic Type, fokus, rörelser och målgränser är uppskjuten tills MVP:n är släppt och godkänd; `UI-NATIVE-ACCESSIBILITY-VERIFY` står blockerad. Funktionella native scenarier som fortfarande behövs före release (profil, PDF/share, Kunskap) ligger i `MVP-NATIVE-FUNCTIONAL-VERIFY` och beskrivs ovan. Inga breda a11y-resultat behöver samlas in före den tiden.
 
 ### Plan review record
 

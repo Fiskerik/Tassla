@@ -2,10 +2,11 @@ import { MotionPressable } from './Motion';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { HorizontalGestureRegion } from './MainSwipeNavigation';
 import { tokens } from '../../theme/tokens';
-export type TabsVariant = 'underline' | 'rev02-segmented';
+export type TabsVariant = 'underline' | 'rev02-segmented' | 'rev02-segmented-strong';
 export function Tabs({ items, active, onChange, variant = 'underline' }: { items: readonly string[]; active: string; onChange: (item: string) => void; variant?: TabsVariant }) {
-  const segmented = variant === 'rev02-segmented';
-  return <HorizontalGestureRegion><ScrollView style={[styles.scroll, segmented && styles.segmentedScroll]} horizontal showsHorizontalScrollIndicator={false} accessibilityRole="tablist" accessibilityLabel="Avsnitt" contentContainerStyle={[styles.tabs, segmented && styles.segmentedTabs]}>{items.map((item) => { const selected = item === active; return <MotionPressable key={item} accessibilityRole="tab" accessibilityLabel={item} accessibilityState={{ selected }} onPress={() => onChange(item)} style={({ pressed }) => [styles.tab, segmented && styles.segmentedTab, selected && segmented && styles.segmentedSelected, pressed && styles.pressed]}><Text style={[styles.label, selected && styles.active, selected && segmented && styles.segmentedActive]}>{item}</Text>{!segmented ? <View style={[styles.underline, selected && styles.selectedUnderline]} /> : null}</MotionPressable>; })}</ScrollView></HorizontalGestureRegion>;
+  const segmented = variant !== 'underline';
+  const strongSelected = variant === 'rev02-segmented-strong';
+  return <HorizontalGestureRegion><ScrollView style={[styles.scroll, segmented && styles.segmentedScroll]} horizontal showsHorizontalScrollIndicator={false} accessibilityRole="tablist" accessibilityLabel="Avsnitt" contentContainerStyle={[styles.tabs, segmented && styles.segmentedTabs]}>{items.map((item) => { const selected = item === active; return <MotionPressable key={item} accessibilityRole="tab" accessibilityLabel={item} accessibilityState={{ selected }} onPress={() => onChange(item)} style={({ pressed }) => [styles.tab, segmented && styles.segmentedTab, selected && segmented && styles.segmentedSelected, selected && strongSelected && styles.segmentedSelectedStrong, pressed && styles.pressed]}><Text style={[styles.label, selected && styles.active, selected && segmented && styles.segmentedActive, selected && strongSelected && styles.segmentedActiveStrong]}>{item}</Text>{!segmented ? <View style={[styles.underline, selected && styles.selectedUnderline]} /> : null}</MotionPressable>; })}</ScrollView></HorizontalGestureRegion>;
 }
 const styles = StyleSheet.create({
   scroll: { flexGrow: 0, marginBottom: tokens.spacing.lg },
@@ -21,4 +22,6 @@ const styles = StyleSheet.create({
   segmentedTab: { flexGrow: 1, minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, justifyContent: 'center', alignItems: 'center', paddingTop: 0, borderRadius: tokens.radius.full },
   segmentedSelected: { backgroundColor: tokens.colors.training.selectedSurface },
   segmentedActive: { color: tokens.colors.training.accent },
+  segmentedSelectedStrong: { backgroundColor: tokens.colors.home.greenStrong },
+  segmentedActiveStrong: { color: tokens.colors.onPrimary },
 });

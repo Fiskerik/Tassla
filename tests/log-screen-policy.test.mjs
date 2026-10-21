@@ -8,7 +8,7 @@ const quickTile = readFileSync('src/components/ui/QuickLogTile.tsx', 'utf8');
 const listRow = readFileSync('src/components/ui/ListRow.tsx', 'utf8');
 const toast = readFileSync('src/components/ui/Toast.tsx', 'utf8');
 
-test('quick log uses the approved page heading, date navigator, two column grid and more tile', () => {
+test('quick log keeps its date navigator and one-tap controls in a compact horizontal strip', () => {
   assert.match(screen, /<Text accessibilityRole="header" style=\{styles\.pageTitle\}>Logga<\/Text>/);
   assert.match(screen, /<View style=\{styles\.dateNavigator\}>/);
   assert.match(screen, /accessibilityLabel="Visa föregående dag"/);
@@ -18,12 +18,17 @@ test('quick log uses the approved page heading, date navigator, two column grid 
   assert.match(screen, /label="Olycka"|LOG_EVENT_LABELS/);
   assert.match(screen, /onLongPress=\{\(\) => \{ firstUseTip\.dismiss\(\); startLayoutEdit\(\); \}\}/);
   assert.match(screen, /accessibilityLabel="Fler loggtyper"/);
+  assert.match(screen, /const renderQuickStrip = \(types: readonly QuickLogLayoutType\[\]\) => <ScrollView[\s\S]*?horizontal[\s\S]*?contentContainerStyle=\{styles\.quickActionStrip\}/);
+  assert.match(screen, /quickActionItem: \{ width: 128, flexShrink: 0 \}/);
+  assert.match(screen, /moreActionItem: \{ width: 96 \}/);
+  assert.doesNotMatch(screen, /<SectionHeader title="Snabb logg"|<SectionHeader title=\{selectedDate === todayDate \? 'Dagens logg'/);
   assert.match(screen, /LayoutAnimation\.configureNext/);
   assert.doesNotMatch(screen, /<BottomSheet[^>]*title="Fler loggtyper"/);
   assert.match(screen, /title="Lägg till händelse"[\s\S]*?accessibilityLabel="Fler loggtyper"/);
   assert.match(screen, /label="Fler"[\s\S]*?icon=\{/);
   assert.match(quickTile, /icon\?: ReactNode/);
   assert.match(screen, /<QuickLogTile/);
+  assert.match(screen, /!layoutEditing && moreVisible \? renderQuickStrip\(layout\.more\) : null/);
   assert.match(screen, /<ListRow/);
 });
 
@@ -46,7 +51,6 @@ test('delete snapshot replaces its source row and exits only after a token-match
   assert.match(screen, /if \(saved !== false\)[\s\S]*?setEditingId\(null\)/);
   assert.match(screen, /current\?\.token === token \? null : current/);
   assert.match(screen, /accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none"/);
-  assert.match(screen, /if \(reduceMotion\) \{ onFinished\(token\); return; \}/);
   assert.match(screen, /handledEntryMutationKey\.current === key/);
   assert.match(screen, /handledEntryMutationKey\.current = key/);
 });

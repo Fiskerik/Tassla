@@ -2,6 +2,8 @@
 
 Planversion 6 · Slice B godkänd; kod i review i väntan på runtime-/visuell evidens · 2026-10-18
 
+> **Ägarbeslut 2026-10-21 gäller alla MVP-checkpoints:** systematisk tillgänglighetsanpassning och granskning av 140 %/stor text, VoiceOver/TalkBack, reducerad rörelse och träffytor görs efter att MVP:n är släppt och godkänd. Äldre sådana kriterier i denna plan är inte grindar för kvarvarande MVP-arbete. Behåll befintliga synliga etiketter och fungerande semantik; verifiera nativebeteende som behövs för själva hundbytes-/tilläggsresan. Se [AGENTS.md](../../../AGENTS.md) och [arbetsflödet](../../dev/workflow.md).
+
 ## Mål och källor
 
 Tillåt flera hundar per konto. Ägaren ska kunna byta aktiv hund via hundporträttet på Hem och via Inställningar → Hundprofil, samt lägga till hund från båda ytorna. Hem, Kunskap och hundbundna data följer alltid den aktiva hunden.
@@ -32,7 +34,7 @@ Exempel-PDF:en visar artikelmetadata (Kunskap, ålder 6–16 veckor, alla raser,
 | Rev02 Inställningar → Hundprofil | Samma ägarlista och aktiv markering; add-entry | EditDogProfileScreen, Button/ListRow | Byt hund och gå till Hem med vald hund, eller starta add-flöde utan oklart läge |
 | Hem/Kunskap | Aktiv hundens ålder och ras styr publicerat urval | Befintlig HomeContent/KnowledgeScreen/selectContent | Korrekt urval per vald hund; om publicerat innehåll saknas visas befintlig tomvy |
 
-Tillstånd: initial loading, tom lista/onboarding, en hund, flera hundar, picker öppen, form, saving, confirmed, unknown/pending, definite error, retry, och profilbyte medan data hämtas. Alla tryckytor och val har VoiceOver/TalkBack-labels. Samma illustration benämns inte användarens foto.
+Tillstånd: initial loading, tom lista/onboarding, en hund, flera hundar, picker öppen, form, saving, confirmed, unknown/pending, definite error, retry, och profilbyte medan data hämtas. Behåll befintliga labels/semantik; ingen ny VoiceOver/TalkBack-matris krävs före MVP. Samma illustration benämns inte användarens foto.
 
 ## Sekventiella vertikala slices
 
@@ -104,6 +106,6 @@ Riskklass H: membership-schema, auth-scope, RPC, SecureStore och barnprofiler. S
 
 Data inventory: återanvänder samma hundnamn, ras, födelsedatum och kontoägare som befintlig profilfunktion. Tillkommer endast operationellt request_id för säker retry och relation till dog_id; request_id skickas till Tasslas egen RPC och sparas lokalt i SecureStore under en auth-user-namnområdad nyckel samt privat i databasen. Ingen profilinformation ligger i SecureStore-nyckeln och request_id skickas inte till analytics eller externa mottagare. FK-kaskad raderar databasraderna; efter bekräftad kontoradering försöker befintlig lokal cleanup också radera den ägarspecifika SecureStore-nyckeln. Vid unknown behålls nyckeln för säker återhämtning. Ingen ny ägarinformation samlas in eller delas.
 
-Visuell evidens enligt design-rules §14 krävs innan respektive UI-slice kan markeras done: public/review-state, 375×844, 430×844, 375×667 och 140 % text. Spara skärmbilder och kort rapport under `docs/design/evidence/multi-dog-2026-10-18/`. Om native-/skärmbildsunderlag inte går att få i denna miljö rapporteras det som NOT TESTABLE och slice lämnas i review i väntan på separat evidens.
+Relevant funktionell och visuell evidens enligt design-rules §14 krävs innan respektive UI-slice kan markeras lokalt verifierad: public/review-state vid relevanta standardvyer 375×844, 430×844 och 375×667. Spara skärmbilder och kort rapport under `docs/design/evidence/multi-dog-2026-10-18/`. Funktionell native-/Supabase-evidens som krävs av resan rapporteras separat; bred 140 %/stor-text-/skärmläsarmatris är uppskjuten efter godkänd MVP.
 
 Ändrade väsentliga beslut kräver ny planreview. Dokumentera faktiskt resultat i docs/tasks/dev/rapport.md och lägg till MASTER-LOG först efter respektive slice review.

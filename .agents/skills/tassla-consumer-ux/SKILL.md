@@ -9,12 +9,14 @@ Tassla should feel calm, trustworthy and effortless for a new puppy owner. This 
 
 ## Precedence and conflict handling
 1. Current explicit owner decisions and the authorized task scope
-2. Truthfulness, safety, and accessibility
+2. Truthfulness, safety, and concrete applicable legal/platform requirements
 3. `docs/design-rules.md`, its linked rev02 screen/object specifications, and the target image `vision_rev02.jpg`
 4. This skill
 5. Existing code
 
 Apply the highest relevant rule. Design rules govern appearance; this skill governs behavior, feedback, and states. Do not reopen decisions already recorded in the task or governing documents. If the rules leave a material product decision unresolved, record the conflict and ask the owner before dependent work. Follow the repository plan/review gates for scope changes, data, dependencies, and security. A visual component variant explicitly required by an approved design contract is within that contract.
+
+**Current MVP accessibility scope:** Eriks decision 2026-10-21 applies to every MVP checkpoint. Preserve existing visible labels, meaningful state and semantics without knowingly regressing them, but do not add a systematic accessibility audit, 140% zoom, large-text/Dynamic Type, screen-reader, reduced-motion, keyboard/focus or target-size matrix as a task acceptance gate. Plan broad accessibility adaptations after the first MVP release and approval. Test keyboard/control behavior when it is needed for the feature's functional journey. `AGENTS.md` and `docs/design-rules.md` are authoritative if generic skill advice below differs.
 
 ## iOS design skill
 Use the repository's `mobile-ios-design` skill when designing iOS-facing UI. Apply its Apple Human Interface Guidelines principles through the Expo adaptation documented in that skill. This skill continues to govern interaction, feedback, and states. Follow Tassla's `docs/design-rules.md`, approved screen contracts, and recorded owner decisions wherever they are more specific. Use existing React Native components, Expo Router, Ionicons, and theme tokens; treat SwiftUI examples as references, not implementation instructions. Do not add dependencies or ask the owner to reconfirm decisions already recorded in the repository.
@@ -32,14 +34,14 @@ Use the repository's `mobile-ios-design` skill when designing iOS-facing UI. App
 3. **Honest, immediate feedback.** Every action shows pressed, loading, success, error, or disabled state as fitting. Never show "Sparat" until the write has actually succeeded. Optimistic UI must reconcile failures.
 4. **Native conventions first.** Follow platform back behavior, sheets, safe areas, and keyboard handling. No hidden gesture as the only way to finish a task.
 5. **All states designed:** first use, empty, loading, partial, offline, permission denied, error, success, undo.
-6. **Accessible by default:** screen reader labels, dynamic type, contrast, touch targets, non-color status cues, reduced motion.
+6. **Preserve the working baseline:** keep existing visible labels, understandable status and semantic names/states. Systematic screen-reader, Dynamic Type, target-size, contrast and reduced-motion adaptation follows the post-MVP owner decision; do not treat generic guidance as an MVP gate.
 
 ## Visual finishing tips (Tassla examples)
 Appearance is still governed by `docs/design-rules.md`, its approved screen contracts, and the existing theme tokens. Use these Refactoring UI ideas as a practical review lens, not as permission to invent styles or override an owner decision. Preserve contrast, accessibility, and the approved visual target when an example below conflicts with a token or contract.
 
 - **Create hierarchy with restraint.** Make the screen's job and next action easiest to scan using the existing type, weight, and semantic color tokens before increasing type size or adding another heading. For example, on the daily log, `Logga kiss` or `Logga vatten` can be the prominent action while date/context text stays secondary. Shorten labels instead of shrinking text or stacking explanatory copy into every button.
 - **Give categories distinct, accessible meaning.** Do not make different quick-log actions look interchangeable. In Tassla, the owner's stated direction is a warm yellow treatment for `Kiss` and blue for `Vatten`; pair color with the existing icon and label so meaning never depends on color alone. If the approved token set does not yet express that distinction, record it as a token/design-rules change in the UX spec and get the normal plan review; do not hard-code a one-off color in a screen.
-- **Use readable foregrounds on colored surfaces.** Do not place a generic muted-gray label on a tinted category tile when it loses contrast. Select the approved foreground token for that surface and check it at normal and large text sizes.
+- **Use readable foregrounds on colored surfaces.** Do not place a generic muted-gray label on a tinted category tile when it is hard to read at standard scale. Select the approved foreground token for that surface.
 - **Use spacing and surfaces before decoration.** When two related rows need separation, first use the spacing scale or an already approved surface distinction. Keep a border when it communicates a control boundary, grouping, or state; avoid drawing a border around every nested element just to make the layout feel finished. Example: group the date and its calendar affordance as one clearly tappable row instead of boxing the date, icon, and hint separately.
 - **Keep elevation quiet.** Use an existing elevation/shadow only where the design system already calls for a floating layer or meaningful depth. Avoid adding a shadow to every card or increasing blur to manufacture hierarchy; prefer spacing, surface, and type tokens.
 - **Size icons by their role.** Use the intended Ionicon size inside the approved `IconChip` or category shape. If a small icon feels lost, improve its container or alignment rather than scaling the glyph until its visual weight overwhelms the label.
@@ -68,11 +70,11 @@ Pending -> Unsure: toast "Vi kunde inte kontrollera om det sparades" + "Försök
 
 ## Delivery workflow
 1. **Inspect:** affected screens, components, references, acceptance criteria, current behavior.
-2. **Specify (before coding):** write a short UX spec in `docs/plans/<TASK>-ux-spec.md` with user goal, entry point, happy path, all relevant states, feedback, accessibility, and assumptions. For UI work, include a compact comparison: reference element → current difference → token/component/asset → acceptance. List only unresolved deviations from the target image; do not repeat decisions already made in the design contracts.
+2. **Specify (before coding):** write a short UX spec in `docs/plans/<TASK>-ux-spec.md` with user goal, entry point, happy path, relevant functional states, feedback, baseline labels/semantics to preserve, and assumptions. For UI work, include a compact comparison: reference element → current difference → token/component/asset → acceptance. List only unresolved deviations from the target image; do not repeat decisions already made in the design contracts.
 3. **Scope:** list intended files and protected areas. Ask before leaving scope.
 4. **Implement** with existing components and tokens.
-5. **Verify:** run typecheck, lint, tests. Check accessibility behavior. Take screenshots in each state, small and large phone, large text. If there is no baseline or no rendering, mark it NOT TESTABLE. Never claim visual approval from code checks. Physical device or TestFlight testing only when the owner asks for it.
-6. **Review:** a role other than the implementer (for example the Critic or visual QA role defined in AGENTS.md) reviews behavior and perceived quality. The reviewer reports findings and does not silently fix the code under review.
+5. **Verify:** run typecheck, lint and relevant functional tests. Take screenshots for changed states/viewports when visual behavior is material. 140% zoom and broad accessibility matrices are optional/informational, not MVP gates. If required evidence has no baseline or rendering, mark it NOT TESTABLE. Never claim visual approval from code checks. Physical device or TestFlight testing only when the owner asks for it.
+6. **Review:** local QA verifies behavior and perceived quality for each checkpoint. The independent Reviewer evaluates the aggregate MVP closeout, not every checkpoint; never report a deferred review as PASS.
 7. **Report (short):** what changed, files touched, tests run and results, screenshots, assumptions, limitations, and explicit approval requests.
 
 ## Behavior QA checklist
@@ -82,7 +84,7 @@ Visual points (tokens, spacing, icons, colors, contrast, touch size, copy rules,
 - [ ] Success feedback matches real persisted state.
 - [ ] Double taps, slow network, offline, and failed writes are handled.
 - [ ] Keyboard, focus, scrolling, and safe areas work. Input is preserved on failure.
-- [ ] Screen reader labels, dynamic text, and reduced motion are checked.
+- [ ] Existing labels and action/state semantics are preserved; broad screen-reader, Dynamic Type and reduced-motion audits are deferred until after MVP release and approval.
 - [ ] No unintended changes outside the declared scope, and no new patterns or dependencies without approval.
 - [ ] Tests pass, or failures are documented and block approval.
 
@@ -90,7 +92,7 @@ Visual points (tokens, spacing, icons, colors, contrast, touch size, copy rules,
 - A screen deviates from the approved design without authorization.
 - A "minor" task would change navigation, dog-profile data, or the schema.
 - The UI could show success after a failed or unconfirmed write.
-- A critical accessibility check or regression test fails.
+- A concrete applicable legal/platform requirement or functional regression fails; broad accessibility adaptation follows the post-MVP decision.
 - Evidence is missing for a critical redesign (state NOT TESTABLE, do not approve).
 - You find an out-of-scope change.
 

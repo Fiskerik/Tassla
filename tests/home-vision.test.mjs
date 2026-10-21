@@ -63,10 +63,14 @@ test('Home routines use a checkbox, training rows open training, and the manager
   assert.match(activityItem, /accessibilityRole="button" accessibilityLabel=\{rowLabel\}/);
   const homeVariant = activityItem.slice(activityItem.indexOf('function HomeDailyActivityItem'), activityItem.indexOf('const styles'));
   assert.doesNotMatch(homeVariant, /Ta bort|>Visa</);
-  assert.doesNotMatch(homeVariant, /<IconChip|list-outline|school-outline/);
+  const compactRoutineRows = homeVariant.slice(homeVariant.indexOf('return <View style={styles.homeRowWrap}>\n    <View style={styles.homeRoutineRow}>'));
+  assert.doesNotMatch(compactRoutineRows, /<IconChip|list-outline/);
+  assert.match(homeVariant, /presentation === 'preview'[\s\S]*?icon \? <View accessibilityElementsHidden style=\{styles\.homeItemIcon\}/,
+    'the Home upcoming preview may show each planned checklist item icon while today rows stay compact');
   assert.match(homeVariant, /homeTrainingStatusCell/);
   assert.match(homeVariant, /homeTrainingStatusChecked/);
-  assert.doesNotMatch(homeVariant, /numberOfLines=\{2\}/, 'Home activity titles must grow with larger text instead of being clamped');
+  assert.match(homeVariant, /homeTrainingTitleRow[\s\S]*?school-outline/);
+  assert.match(activityItem, /homeTrainingStatus:[^{]*\{[^}]*width: tokens\.size\.homeCheckbox, height: tokens\.size\.homeCheckbox[^}]*borderRadius: tokens\.spacing\.xs/);
   assert.equal((homeVariant.match(/accessibilityLiveRegion="polite"/g) ?? []).length, 2, 'routine and training mutation feedback is announced when it changes');
   assert.match(homeVariant, /label=\{`Kontrollera ändringen för \$\{label\} igen`\} accessibilityLabel=\{`Kontrollera ändringen för \$\{label\} igen`\}/, 'training retry identifies the activity being checked');
   assert.match(home, /onToggle=\{routineDay \? \(\) => item\.routineItemId && onSetRoutineCompletion/);

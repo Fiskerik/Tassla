@@ -75,7 +75,7 @@ Hem       Logg       Träning       Kunskap       Mer
 
 ### H4. Genvägar
 
-Tre lika breda tonade destinationskort med symbol och etikett. Logga = tass/logg, Träna = träningssymbol, Kunskap = bok. De öppnar sidor, inte snabbregistrering av kiss/träning/läsning. Behåll minsta tryckyta och läsbara etiketter vid stor text.
+Tre lika breda tonade destinationskort med symbol och etikett. Logga = tass/logg, Träna = träningssymbol, Kunskap = bok. De öppnar sidor, inte snabbregistrering av kiss/träning/läsning. Återanvänd befintliga kontrollkomponenter och läsbara standardetiketter; stor-text- och träffyteaudit görs efter MVP.
 
 ## Komponentkontrakt
 
@@ -84,10 +84,10 @@ Kontrollera faktiska exporter i `src/components/ui/index.ts` före implementatio
 | Befintligt | Föreslagen utveckling | Kontrakt / verifiering |
 |---|---|---|
 | `Card` | Namngivna neutral/tonad/list-varianter | Gemensam radie/padding, inga lokala färgkopior; innehållsstyrd höjd |
-| `Tabs(items, active, onChange)` | Opt-in segmented/chips-varianter | Nuvarande underline-default bibehålls tills berörd vy migreras; vald-semantik, scroll vid stor text |
+| `Tabs(items, active, onChange)` | Opt-in segmented/chips-varianter | Nuvarande underline-default bibehålls tills berörd vy migreras; vald vy är tydlig, stor-text-audit efter MVP |
 | `HeroCard(title, meta, image, ...)` | Bild över text för guide-/träningskort, valfri kompakt variant | Befintlig overlayvariant bevaras; foto och text får inte få olika tryckdestinationer |
-| `Button(variant, label, ...)` | Gemensam kompakt tertiary-variant | Minst 44×44; ersätter Home-lokala specialknappar vid migration |
-| `ListRow`, `ChecklistItem` | Kompakt grupprad med separator och tydligt separerade toggle/detail-handlingar | Tydlig status, ingen dubbeltryckning; 44pt även om synlig checkbox är mindre |
+| `Button(variant, label, ...)` | Gemensam kompakt tertiary-variant | Återanvänd etablerad kontroll och synlig label; separat träffytemätning efter MVP |
+| `ListRow`, `ChecklistItem` | Kompakt grupprad med separator och tydligt separerade toggle/detail-handlingar | Tydlig status, ingen dubbeltryckning; befintlig kontrollkomponent återanvänds |
 | `QuickLogTile` | Behåll snabbloggsbeteende; föreslagen separat `DestinationTile` | Destination har destinationsikon/färg; ingen kopppling till eventkategori för att få rätt kulör |
 | `Progress(value, label)` | Gemensam progresspresentation med explicit unavailable/empty-status före rendering | Befintlig Progress tolkar ogiltigt värde som 0; adaptern måste stoppa okänd data från att se ut som noll |
 | Ingen ringkomponent | Föreslagen `ProgressRing` för panel 3 | Samma count/total som listan; åtkomlig text; bedöm befintlig teknik före eventuellt nytt bibliotek |
@@ -109,7 +109,7 @@ Bildmanifest och beskärningar ingår i respektive leverans. Befintliga `assets/
 |---|---|
 | Standard 375×844 och 430×844, fem korta uppgifter, två bekräftade | H1–H4 i ordning; riktig 2/5 i fixture; minst 16pt mellan hela genvägskort och meny |
 | Inga uppgifter / alla klara / fler än fem | Ingen 0/0; full count; Visa alla när listan är begränsad |
-| Långt hundnamn, långa svenska titlar, 140 % text | Inget horisontellt överflöde, ingen dold kritisk copy, naturlig scroll och nåbara kontroller |
+| Långt hundnamn och långa svenska titlar i standardskala | Ingen dold kritisk copy, naturlig scroll och fungerande kontroller; stor-text-audit efter MVP |
 | 375×667 med normal text | Scroll till samtliga handlingar; korrekt meny-/safe-area-utrymme |
 | Spara → fel / osäkert / kontroll → sparat / ångra | Ingen falsk bock/räknare, bibehållen avsikt, samma resultat i alla konsumenter |
 | Midnatt / app-resume / sommartid / ändrad tidszon | Ny dag härleds enligt objektkontrakt; ingen dubbelgenerering eller flyttad äldre dagsmarkering |
@@ -117,7 +117,7 @@ Bildmanifest och beskärningar ingår i respektive leverans. Befintliga `assets/
 | Public / explicit review / innehållsfel | Inga reviewobjekt eller reviewskrivningar i public; verkligt fel kvarstår som fel |
 | Genväg, uppgift, ålder, progress, tillbaka | Verklig destination, korrekt föräldraflik; inga dekorativa klick utan funktion |
 
-QA jämför panel 1 och faktisk Hem-render sida vid sida samt relevanta komponentdetaljer. Dokumentera även 100 % och stor text separat; webbsimulering är lokal layoutverifiering. Ingen numerisk likhetspoäng får överrösta synligt felaktig komposition eller falskt innehåll.
+QA jämför panel 1 och faktisk Hem-render sida vid sida samt relevanta komponentdetaljer. Dokumentera standardvy och relevant viewport; webbsimulering är lokal layoutverifiering. Stor-text-/a11y-matris görs efter MVP. Ingen numerisk likhetspoäng får överrösta synligt felaktig komposition eller falskt innehåll.
 
 ## Avvikelser och beroenden vid start
 

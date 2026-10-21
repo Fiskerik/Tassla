@@ -5,6 +5,8 @@ description: Apply Apple Human Interface Guidelines and iOS platform conventions
 
 > **Tassla adaptation of [wshobson/agents mobile-ios-design](https://github.com/wshobson/agents/tree/main/plugins/ui-design/skills/mobile-ios-design), source commit `931c50668b5ebba95d5eced9e2d28463c94c64e5`.** The source skill is written for SwiftUI. Tassla uses Expo and React Native, so apply the Apple Human Interface Guidelines, accessibility, safe-area, adaptive-layout, and platform-convention principles in the project's existing stack. Treat SwiftUI code, APIs, SF Symbols, and SwiftUI-specific component guidance as reference only. Use Tassla's Expo Router, existing React Native components, Ionicons, and theme tokens. Preserve Android conventions on shared screens. Follow `AGENTS.md`, `docs/design-rules.md`, approved screen contracts, and `tassla-consumer-ux` wherever they are more specific; do not add dependencies or expand scope based on generic examples.
 
+> **Current MVP scope:** Eriks decision 2026-10-21 defers systematic accessibility adaptations and large-text/screen-reader audits until the first MVP release is approved. Preserve existing working labels and semantics; generic Dynamic Type, VoiceOver, 44 pt target and reduced-motion advice below does not add per-checkpoint acceptance gates. Check platform behavior when it is part of the feature's functional journey or a concrete release requirement.
+
 # iOS Mobile Design
 
 Master iOS Human Interface Guidelines (HIG) and SwiftUI patterns to build polished, native iOS applications that feel at home on Apple platforms.
@@ -257,5 +259,5 @@ struct FeatureCard: View {
 - **Performance Issues**: Use `LazyVStack`/`LazyHStack` for long scrolling lists
 - **Navigation Bugs**: Ensure `NavigationLink` values are `Hashable`
 - **Dark Mode Problems**: Avoid hardcoded colors; use semantic or asset catalog colors
-- **Accessibility Failures**: Test with VoiceOver enabled
+- **Accessibility Failures**: VoiceOver verification is deferred until after MVP release and approval unless the task covers a concrete applicable release requirement.
 - **Memory Leaks**: Watch for strong reference cycles in closures

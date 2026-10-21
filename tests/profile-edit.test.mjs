@@ -17,6 +17,17 @@ tsResolution.deregister();
 const productWorkspaceSource = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
 const profileEditorSource = await readFile(new URL('../src/features/onboarding/EditDogProfileScreen.tsx', import.meta.url), 'utf8');
 
+test('profile editor retains saved breed ID until an explicit catalog selection', () => {
+  assert.match(profileEditorSource, /const \[breedId, setBreedId\] = useState\(dog\.breed_id\)/);
+  assert.match(profileEditorSource, /<SearchableBreedPicker[\s\S]*?selectedId=\{breedId\}/);
+  assert.match(profileEditorSource, /missingValueLabel=\{currentBreed\}/);
+  assert.match(profileEditorSource, /onSelect=\{\(id\) => \{ setBreedId\(id\); setFormError\(''\); \}\}/);
+  assert.match(profileEditorSource, /const currentBreed = breeds\.find\(\(breed\) => breed\.id === dog\.breed_id\)\?\.name \?\? dog\.breed_id/);
+  assert.match(profileEditorSource, /if \(breedState !== 'ready' \|\| !breeds\.some\(\(breed\) => breed\.id === breedId\)\)/);
+  assert.match(profileEditorSource, /Nuvarande ras \(\{currentBreed\}\) finns inte i listan/);
+  assert.doesNotMatch(profileEditorSource, /setBreedId\([^)]*breeds\[0\]/);
+});
+
 const projectUrl = 'https://local-test.supabase.invalid';
 const dogId = '11111111-1111-4111-8111-111111111111';
 const otherDogId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';

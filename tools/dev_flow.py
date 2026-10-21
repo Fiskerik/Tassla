@@ -57,7 +57,8 @@ def transition(data, key, target, actor, evidence):
     if not evidence.strip(): raise ValueError('Evidence/checkpoint required')
     current=task['status']
     gates={('planned','ready'):'architect',('ready','implementing'):'implementer',
-           ('implementing','qa'):'implementer',('qa','review'):'qa',('review','done'):'reviewer'}
+           ('implementing','qa'):'implementer',('qa','review'):'qa',('review','done'):'reviewer',
+           ('qa','done'):'coordinator'}
     if target=='blocked': pass
     elif current=='blocked' and target=='planned':
         if actor!='coordinator': raise ValueError('Coordinator must replan blocked task')
@@ -71,6 +72,8 @@ def transition(data, key, target, actor, evidence):
         done={t['id'] for t in data['tasks'] if t['status']=='done'}
         if not set(task['depends_on']).issubset(done): raise ValueError('Dependencies not done')
     if target=='review' and not task.get('checks'): raise ValueError('Checks not defined')
+    if target=='done' and current=='qa' and task.get('review_status')!='deferred_to_mvp_closeout':
+        raise ValueError('QA-only closeout requires review_status=deferred_to_mvp_closeout')
     task['status']=target
     task.setdefault('history',[]).append({'from':current,'to':target,'actor':actor,'evidence':evidence})
     task['next_step']=evidence

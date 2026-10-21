@@ -7,6 +7,7 @@ import { clearSecurePendingReferral, normalizeKennelCode, readSecurePendingRefer
 import { clearDogCreationRequest, getOrCreateDogCreationRequestId, readDogCreationRequestId } from './dog-creation-storage';
 import { tokens } from '../../theme/tokens';
 import { ageInWeeks, localDate } from './dog';
+import { SearchableBreedPicker } from './SearchableBreedPicker';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAccount, onCreated, mode = 'initial', onCancel }: {
@@ -21,7 +22,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   const { width, fontScale } = useWindowDimensions();
   const stackIntro = width < 360 || fontScale >= 1.25;
   const [breeds, setBreeds] = useState<BreedOption[]>([]);
-  const [breedsState, setBreedsState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [breedsState, setBreedsState] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading');
   const [breedAttempt, setBreedAttempt] = useState(0);
   const [name, setName] = useState('');
   const [breedId, setBreedId] = useState('');
@@ -59,8 +60,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
     void fetchBreeds(client).then((options) => {
       if (!active || !isCurrentAccount(ownerId, accountGeneration)) return;
       setBreeds(options);
-      setBreedId((current) => current || options[0]?.id || '');
-      setBreedsState('ready');
+      setBreedsState(options.length > 0 ? 'ready' : 'empty');
     }).catch(() => {
       if (active && isCurrentAccount(ownerId, accountGeneration)) setBreedsState('error');
     });
@@ -87,7 +87,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   }
 
   async function createAndConfirm() {
-    if (operationInFlight.current || !canSubmit) return;
+    if (operationInFlight.current || !canSubmit || breedsState !== 'ready') return;
     const desired = { name: name.trim(), breedId, birthDate: birthDate.trim() };
     const referralCode = sourceSelected ? normalizeKennelCode(kennelCode) : null;
     operationInFlight.current = true;
@@ -190,7 +190,8 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
     setSaveState((current) => current === 'unknown' || current === 'sourceUnconfirmed' ? current : 'idle');
   }
 
-  const canSubmit = name.trim().length > 0 && name.trim().length <= 80 && Boolean(breedId)
+  const canSubmit = name.trim().length > 0 && name.trim().length <= 80
+    && breeds.some((breed) => breed.id === breedId)
     && isValidBirthDate(birthDate) && (!sourceSelected || Boolean(normalizeKennelCode(kennelCode)));
 
   return (
@@ -215,26 +216,13 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
           <PrimaryButton title="Försök igen" onPress={() => { setBreedsState('loading'); setBreedAttempt((count) => count + 1); }} />
         </View>
       </>}
-      {breedsState === 'ready' && (
-        <View accessibilityRole="radiogroup" accessibilityLabel="Välj hundras" style={styles.breedList}>
-          {breeds.map((breed) => {
-            const selected = breedId === breed.id;
-            return (
-              <Pressable
-                key={breed.id}
-                accessibilityRole="radio"
-                accessibilityLabel={breed.name}
-                accessibilityState={{ selected }}
-                onPress={() => { setBreedId(breed.id); markEdited(); }}
-                style={({ pressed }) => [styles.breedOption, selected && styles.breedSelected, pressed && styles.breedPressed]}
-              >
-                <Text style={[styles.breedText, selected && styles.breedTextSelected]}>{breed.name}</Text>
-                {selected && <Text style={styles.checkmark}>✓</Text>}
-              </Pressable>
-            );
-          })}
+      {breedsState === 'empty' && <>
+        <MessageCard>Raslistan saknar val just nu. Uppdatera listan innan du skapar hundprofilen.</MessageCard>
+        <View style={styles.breedRetrySpacing}>
+          <PrimaryButton title="Försök igen" onPress={() => { setBreedsState('loading'); setBreedAttempt((count) => count + 1); }} />
         </View>
-      )}
+      </>}
+      {breedsState === 'ready' && <SearchableBreedPicker breeds={breeds} selectedId={breedId} disabled={busy} onSelect={(id) => { setBreedId(id); markEdited(); }} />}
       <FormField
         autoCapitalize="none"
         autoComplete="off"
@@ -318,14 +306,7 @@ const styles = StyleSheet.create({
   profileCard: { marginBottom: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   sectionTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
   label: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.sm, marginTop: tokens.spacing.xs },
-  breedList: { gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg },
   breedRetrySpacing: { marginBottom: tokens.spacing.md },
-  breedOption: { minHeight: tokens.size.touchMin, borderRadius: tokens.radius.md, paddingHorizontal: tokens.spacing.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  breedSelected: { borderColor: tokens.colors.support.profile.fg, backgroundColor: tokens.colors.support.profile.bg },
-  breedPressed: { opacity: 0.72 },
-  breedText: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1, minWidth: 0 },
-  breedTextSelected: { color: tokens.colors.support.profile.fg, fontWeight: '700' },
-  checkmark: { ...tokens.typography.label, color: tokens.colors.support.profile.fg },
   sourceCard: { borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, padding: tokens.spacing.md, marginTop: tokens.spacing.md, marginBottom: tokens.spacing.lg },
   sourceInfo: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginBottom: tokens.spacing.md },
   sourceChoice: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },

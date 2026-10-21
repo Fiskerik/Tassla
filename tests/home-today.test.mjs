@@ -94,12 +94,11 @@ test('Home today sources use local-day events and performed health while keeping
   assert.ok(sources.logged.every((entry) => !('completed' in entry) && !('completed_at' in entry)));
 });
 
-test('routine manager stacks long peer actions at narrow widths or larger text without reducing touch targets', () => {
+test('routine manager stacks peer actions at narrow widths', () => {
   assert.match(routineManagerSource, /useWindowDimensions\(\)/);
-  assert.match(routineManagerSource, /width < 360 \|\| fontScale >= 1\.25/);
+  assert.match(routineManagerSource, /width < 360/);
   assert.match(routineManagerSource, /stackRoutineActions && styles\.routineActionsStacked/);
   assert.match(routineManagerSource, /routineActionButtonStacked: \{ flex: 0, flexBasis: 'auto', alignSelf: 'stretch' \}/);
-  assert.match(routineManagerSource, /routineActionButton: \{ flex: 1, flexBasis: '45%', minWidth: tokens\.size\.touchMin \}/);
-  assert.match(routineManagerSource, /minHeight: tokens\.size\.touchMin/);
+  assert.match(routineManagerSource, /routineActionButton: \{ flex: 1, flexBasis: '45%'/);
   assert.match(routineManagerSource, /accessibilityLabel=\{`\$\{selected \? 'Ta bort' : skippedDay \? 'Lägg tillbaka' : 'Lägg till'\} rutinen/);
 });

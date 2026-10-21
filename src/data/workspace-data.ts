@@ -2,10 +2,13 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { selectContent } from '../content/select-content';
 import { isCanonicalAccidentKinds, LOG_EVENT_TYPES, type AccidentKind, type LogEventType } from '../features/puppy-log/log-model';
 import { dedupeLocalDateMarkers, localMonthRange } from '../features/puppy-log/log-calendar-model';
+import type { InsightsEvent, InsightsPartialReason } from '../features/puppy-log/insights-model';
 import type { HomeContent, OwnedDog } from './app-data';
 
 export const WORKSPACE_PAGE_SIZE = 40;
 const DEFAULT_REQUEST_TIMEOUT_MS = 12_000;
+const INSIGHTS_PAGE_SIZE = 250;
+const INSIGHTS_SINCE_START_LIMIT = 10_000;
 
 export type WorkspaceSnapshotReadDecision = 'cache' | 'join' | 'request';
 
@@ -137,11 +140,57 @@ export type HistoricalTrainingSource = {
 };
 export type HistoricalTrainingSources = { sources: Map<string, HistoricalTrainingSource>; unresolvedKeys: string[] };
 
+export async function fetchExactHistoricalTrainingDetail(
+  client: SupabaseClient, dogId: string, programVersionId: string, stepId: string, parentSignal?: AbortSignal,
+): Promise<PublishedTrainingProgram | null> {
+  if (!isCanonicalUuid(dogId) || !isCanonicalUuid(programVersionId) || !isCanonicalUuid(stepId)) {
+    throw new Error('Invalid exact historical training detail scope');
+  }
+  const versionResult = await withRequestDeadline(async (signal) => await client.from('content_versions')
+    .select('id,content_id,version,status,title,body,min_age_weeks,max_age_weeks,sources,is_ai_generated,content_items!inner(slug,content_type),content_breed_targets(breed_id)')
+    .eq('id', programVersionId).eq('status', 'published').abortSignal(signal).maybeSingle(), DEFAULT_REQUEST_TIMEOUT_MS, parentSignal);
+  if (parentSignal?.aborted) throw new Error('Historical training detail aborted');
+  if (versionResult.error) throw new Error('Could not load exact historical training detail');
+  if (versionResult.data === null) return null;
+  if (!isPublishedVersionRow(versionResult.data) || versionResult.data.id !== programVersionId
+    || versionResult.data.content_items.content_type !== 'training_program') return null;
+
+  const stepResult = await withRequestDeadline(async (signal) => await client.from('training_steps')
+    .select('id,program_version_id,position,title,instruction').eq('program_version_id', programVersionId).eq('id', stepId)
+    .abortSignal(signal).maybeSingle(), DEFAULT_REQUEST_TIMEOUT_MS, parentSignal);
+  if (parentSignal?.aborted) throw new Error('Historical training detail aborted');
+  if (stepResult.error) throw new Error('Could not load exact historical training step detail');
+  if (stepResult.data === null) return null;
+  if (!isTrainingStepRow(stepResult.data) || stepResult.data.id !== stepId || stepResult.data.program_version_id !== programVersionId) return null;
+
+  const progressResult = await withRequestDeadline(async (signal) => await client.from('training_progress')
+    .select('dog_id,program_version_id,step_id,completed_at').eq('dog_id', dogId).eq('program_version_id', programVersionId)
+    .eq('step_id', stepId).abortSignal(signal).maybeSingle(), DEFAULT_REQUEST_TIMEOUT_MS, parentSignal);
+  if (parentSignal?.aborted) throw new Error('Historical training detail aborted');
+  if (progressResult.error || progressResult.data !== null && (!isProgressRow(progressResult.data)
+    || progressResult.data.dog_id !== dogId || progressResult.data.program_version_id !== programVersionId
+    || progressResult.data.step_id !== stepId)) throw new Error('Could not load exact historical training progress');
+
+  return {
+    id: versionResult.data.id,
+    content_id: versionResult.data.content_id,
+    version: versionResult.data.version,
+    title: versionResult.data.title,
+    body: versionResult.data.body,
+    sources: versionResult.data.sources,
+    is_ai_generated: versionResult.data.is_ai_generated,
+    steps: [stepResult.data],
+    completedStepIds: progressResult.data ? [stepId] : [],
+    completedAtByStepId: progressResult.data ? { [stepId]: progressResult.data.completed_at } : {},
+  };
+}
+
 export async function fetchExactHistoricalTrainingSources(
   client: SupabaseClient, dogId: string, selections: readonly HistoricalTrainingSelectionKey[], parentSignal?: AbortSignal,
 ): Promise<HistoricalTrainingSources> {
+  if (parentSignal?.aborted) throw new Error('Historical training lookup aborted');
   const unique = [...new Map(selections.map((item) => [`${item.programVersionId}:${item.stepId}`, item])).values()];
-  const results = await Promise.all(unique.map(async ({ programVersionId, stepId }) => {
+  const results = await mapWithConcurrency(unique, 3, async ({ programVersionId, stepId }) => {
     const versionResult = await withRequestDeadline(async (signal) => await client.from('content_versions')
       .select('id,status,title,content_items!inner(content_type)')
       .eq('id', programVersionId).eq('status', 'published').abortSignal(signal).maybeSingle(), DEFAULT_REQUEST_TIMEOUT_MS, parentSignal);
@@ -181,7 +230,7 @@ export async function fetchExactHistoricalTrainingSources(
     return [`${programVersionId}:${stepId}`, {
       programVersionId, programTitle: version.title, stepId, stepTitle: stepResult.data.title, completedAt,
     }] as const;
-  }));
+  });
   const sources = new Map<string, HistoricalTrainingSource>();
   const unresolvedKeys: string[] = [];
   for (const [key, value] of results) {
@@ -194,8 +243,10 @@ export async function fetchExactHistoricalTrainingSources(
 export async function fetchPlannedHealthChecklistRange(
   client: SupabaseClient, dogId: string, from: string, to: string, parentSignal?: AbortSignal,
 ): Promise<PlannedHealthChecklistRow[]> {
-  if (!dogId || !isCalendarDate(from) || !isCalendarDate(to) || from > to) throw new Error('Invalid planned health range');
-  const rows: PlannedHealthChecklistRow[] = []; let dueOn: string | null = null; let id: string | null = null;
+  if (!dogId || !isCalendarDate(from) || !isCalendarDate(to) || from > to || calendarDayCount(from, to) > 7) {
+    throw new Error('Invalid planned health range');
+  }
+  const rows: PlannedHealthChecklistRow[] = []; const seenIds = new Set<string>(); let dueOn: string | null = null; let id: string | null = null;
   while (true) {
     if (parentSignal?.aborted) throw new Error('Planned health range aborted');
     const page = await withRequestDeadline(async (signal) => {
@@ -212,15 +263,45 @@ export async function fetchPlannedHealthChecklistRange(
         && typeof row.due_on === 'string' && isCalendarDate(row.due_on) && row.due_on >= from && row.due_on <= to;
     })) throw new Error('Could not load planned health checklist rows');
     if (!page.data.length) break;
+    let previousDueOn = dueOn;
+    let previousId = id;
     for (const row of page.data as PlannedHealthChecklistRow[]) {
-      if (rows.some((item) => item.id === row.id) || id && (row.due_on < dueOn! || row.due_on === dueOn && row.id <= id)) throw new Error('Invalid planned health cursor');
+      if (seenIds.has(row.id) || previousId && (row.due_on < previousDueOn! || row.due_on === previousDueOn && row.id <= previousId)) {
+        throw new Error('Invalid planned health cursor');
+      }
+      seenIds.add(row.id);
       rows.push(row);
+      previousDueOn = row.due_on;
+      previousId = row.id;
     }
     const last = page.data.at(-1) as PlannedHealthChecklistRow;
     dueOn = last.due_on; id = last.id;
     if (page.data.length < WORKSPACE_PAGE_SIZE) break;
   }
   return rows;
+}
+
+async function mapWithConcurrency<T, R>(items: readonly T[], concurrency: number, map: (item: T, index: number) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+  let failure: unknown;
+  let failed = false;
+  const workerCount = Math.min(items.length, Math.max(1, Math.floor(concurrency)));
+  await Promise.all(Array.from({ length: workerCount }, async () => {
+    while (true) {
+      if (failed) return;
+      const index = nextIndex++;
+      if (index >= items.length) return;
+      try { results[index] = await map(items[index], index); }
+      catch (error) { failed = true; failure ??= error; return; }
+    }
+  }));
+  if (failed) throw failure;
+  return results;
+}
+
+function calendarDayCount(from: string, to: string): number {
+  return (Date.parse(`${to}T00:00:00.000Z`) - Date.parse(`${from}T00:00:00.000Z`)) / 86_400_000 + 1;
 }
 
 export interface PlannedHealthOperation {
@@ -379,6 +460,108 @@ export async function fetchDogLogMonthMarkers(
     cursor = lastTimestamp;
   }
   return dedupeLocalDateMarkers(timestamps);
+}
+
+export type DogInsightsReadResult = {
+  events: InsightsEvent[];
+  status: 'ready' | 'partial';
+  partialReason?: InsightsPartialReason;
+};
+
+export async function fetchDogInsightsEvents(
+  client: SupabaseClient,
+  dogId: string,
+  startIso: string | null,
+  endIso: string,
+  parentSignal?: AbortSignal,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<DogInsightsReadResult> {
+  if (!dogId || !Number.isFinite(Date.parse(endIso)) || startIso !== null && !Number.isFinite(Date.parse(startIso))) {
+    throw new Error('Invalid Insights query range');
+  }
+  const deadline = Date.now() + Math.max(1, timeoutMs);
+  const events: InsightsEvent[] = [];
+  const seenIds = new Set<string>();
+  let cursor: InsightsEvent | null = null;
+
+  while (true) {
+    if (parentSignal?.aborted) throw new Error('Insights read cancelled');
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) {
+      if (events.length) return { events, status: 'partial', partialReason: 'timeout' };
+      throw new Error('Insights request timed out');
+    }
+
+    let page: InsightsEvent[];
+    try {
+      page = await withRequestDeadline(async (signal) => {
+        let query = client.from('dog_events')
+          .select('id,event_type,occurred_at')
+          .eq('dog_id', dogId)
+          .in('event_type', ['pee', 'poop'])
+          .lt('occurred_at', endIso);
+        if (startIso) query = query.gte('occurred_at', startIso);
+        if (cursor) query = query.or(`occurred_at.lt.${cursor.occurred_at},and(occurred_at.eq.${cursor.occurred_at},id.lt.${cursor.id})`);
+        const { data, error } = await query
+          .order('occurred_at', { ascending: false })
+          .order('id', { ascending: false })
+          .limit(INSIGHTS_PAGE_SIZE)
+          .abortSignal(signal);
+        if (error) throw new Error('Could not load Insights events');
+        if (!Array.isArray(data) || data.length > INSIGHTS_PAGE_SIZE || !data.every(isInsightsEvent)) throw new Error('Insights response did not match the query contract');
+        return data;
+      }, remaining, parentSignal);
+    } catch (error) {
+      if (parentSignal?.aborted) throw error;
+      if (events.length) {
+        return { events, status: 'partial', partialReason: Date.now() >= deadline ? 'timeout' : 'read-error' };
+      }
+      throw error;
+    }
+
+    validateInsightsPage(page, cursor, seenIds);
+    events.push(...page);
+    if (page.length < INSIGHTS_PAGE_SIZE) return { events, status: 'ready' };
+    cursor = page.at(-1)!;
+    if (startIso === null && events.length >= INSIGHTS_SINCE_START_LIMIT) {
+      return { events, status: 'partial', partialReason: 'limit' };
+    }
+  }
+}
+
+function isInsightsEvent(value: unknown): value is InsightsEvent {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return typeof row.id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.id)
+    && (row.event_type === 'pee' || row.event_type === 'poop')
+    && typeof row.occurred_at === 'string' && insightsTimestampOrder(row.occurred_at) !== null;
+}
+
+function validateInsightsPage(page: readonly InsightsEvent[], cursor: InsightsEvent | null, seenIds: Set<string>): void {
+  let previous = cursor;
+  for (const event of page) {
+    if (seenIds.has(event.id) || previous && compareInsightsTuple(previous, event) <= 0) {
+      throw new Error('Insights page cursor did not advance');
+    }
+    seenIds.add(event.id);
+    previous = event;
+  }
+}
+
+function compareInsightsTuple(left: InsightsEvent, right: InsightsEvent): number {
+  const leftTime = insightsTimestampOrder(left.occurred_at)!;
+  const rightTime = insightsTimestampOrder(right.occurred_at)!;
+  if (leftTime !== rightTime) return leftTime > rightTime ? 1 : -1;
+  return left.id.localeCompare(right.id);
+}
+
+function insightsTimestampOrder(value: string): bigint | null {
+  const match = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,9}))?(Z|[+-]\d{2}:\d{2})$/.exec(value);
+  if (!match) return null;
+  const second = Date.parse(`${match[1]}${match[3]}`);
+  if (!Number.isFinite(second)) return null;
+  const fraction = BigInt((match[2] ?? '').padEnd(9, '0'));
+  return BigInt(second) * 1_000_000n + fraction;
 }
 
 export async function fetchDogEventById(
@@ -1346,6 +1529,10 @@ function isProgressRow(value: unknown): value is ProgressRow {
   const row = value as Record<string, unknown>;
   return typeof row.dog_id === 'string' && typeof row.program_version_id === 'string'
     && typeof row.step_id === 'string' && typeof row.completed_at === 'string';
+}
+
+function isCanonicalUuid(value: unknown): value is string {
+  return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
 function isTrainingStepRow(value: unknown): value is TrainingStepRow {

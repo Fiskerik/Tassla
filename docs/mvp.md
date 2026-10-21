@@ -8,6 +8,8 @@ Läs [upplevelsekontraktet](MVP-EXPERIENCE-CONTRACT.md) för resor/acceptans, [d
 
 Mandatet omfattar stegvis färdigställande av godkänd scope med riskbaserad QA. Den aktuella beställningen utför dokumentharmonisering först. Befintliga beslut om stack, persondata, innehållsgranskning, notifieringar och PDF kvarstår. Nya dataändamål, dependencies/kostnader, live-migration, extern pilot och publicering kräver sina befintliga separata beslut. Väsentliga detaljförslag som uttryckligen är preliminära nedan förblir preliminära.
 
+**Avgränsning beslutad 2026-10-21:** systematisk tillgänglighetsanpassning och bred tillgänglighetsgranskning ingår inte som återkommande grind i MVP-checkpoints. Arbetet kan planeras efter att första MVP-versionen är släppt och godkänd. Befintliga fungerande etiketter och tillstånd ska bevaras; uppgiftens grundläggande funktion ska fortfarande fungera. Detta ändrar inte ett konkret bindande krav som faktiskt gäller för den avsedda releasen.
+
 > **En hund. En profil. En tidslinje.** Valpen är distributionsögonblicket. Hundens hela liv är produkten.
 
 ## 1. Produktlöfte och målgrupp
@@ -273,7 +275,7 @@ Koordinatorn klassificerar berört krav före implementation, med relevanta gran
 - **Nytt krav utanför godkänt scope:** separat produktbeslut före berörd implementation.
 - **Utanför scope eller blockerad:** Dokumentera; implementera inte implicit.
 
-Arbeta i vertikala flöden, ett åt gången, med plan → relevant granskning → implementation → QA → oberoende Reviewer → hållbar checkpoint. Produktägaren slutaccepterar hela resor och beslutar pilot/release; rutinmässig lokal utveckling kräver inte nytt segmentmandat. Bevara designstandarder, komponenter, dataskydd och pågående arbete. Uppdatera denna specifikation och beslutslogg när produktägarna uttryckligen ändrar scope.
+Arbeta i vertikala flöden, ett åt gången, med plan → relevant risk-/planreview → implementation → QA → hållbar checkpoint. Oberoende Reviewer granskar den samlade MVP:n nära closeout, inte varje enskild checkpoint. Produktägaren slutaccepterar hela resor och beslutar pilot/release; rutinmässig lokal utveckling kräver inte nytt segmentmandat. Bevara designstandarder, komponenter, dataskydd och pågående arbete. Uppdatera denna specifikation och beslutslogg när produktägarna uttryckligen ändrar scope.
 
 ## 14. Beslut och genomförandestatus
 

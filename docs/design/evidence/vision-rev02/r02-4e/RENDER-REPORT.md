@@ -49,7 +49,7 @@ Chromium/RN Web användes med syntetiska fixturedata. Inga sparningar eller kont
 13. **Ja** — rubrik → sammanfattning → uppgifter → frivillig källa/status.
 14. **Ja för renderade tillstånd** — läsvy, edit, loading, error, pending, konflikt, ingen kennelkälla och sparar renderade. Spar-/serverutfall ej exekverade.
 15. **Delvis / NOT TESTABLE native** — tillbakaåtgärd och fältens tryckytor granskade; 140 % webzoom visas; native hjälpmedel och tangentbord ej verifierade.
-16. **Nej för exakt panelmatch; panel saknas.**
+16. **NOT TESTABLE/ej tillämpligt för exakt panelmatch** — målbilden saknar profilpanel; stödskärmens dimensioner nedan bedöms separat mot närmast relevanta mönster.
     - **Komposition: Delvis** — kort och ikon hierarki följer rev02; panelen är nyanpassad till profildata.
     - **Färger: Ja för profilroll** — varm canvas, grön profilaccent och primäråtgärd.
     - **Typografi: Ja** — vänsterställd titel, faktarubriker och värden har separata nivåer.
@@ -61,3 +61,7 @@ Chromium/RN Web användes med syntetiska fixturedata. Inga sparningar eller kont
 18. **Ja** — profilvärden kommer från hundobjektet; inga personliga bild- eller hälsopåståenden tillförs.
 
 Rapporten är implementerens renderingsöverlämning, inte separat QA, Reviewer eller Security.
+
+### Redaktionell korrigering — 2026-10-21
+
+Den ursprungliga etiketten “Nej för exakt panelmatch” var fel status för en referenspanel som saknas. Den är korrigerad till **NOT TESTABLE/ej tillämpligt** enligt `docs/design-rules.md` §14.16. Skärmbilder, bedömningarna av stödskärmens enskilda dimensioner och den historiska granskningsgränsen ändras inte.

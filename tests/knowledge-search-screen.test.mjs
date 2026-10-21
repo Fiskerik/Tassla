@@ -5,11 +5,13 @@ import { readFile } from 'node:fs/promises';
 const screenPath = new URL('../src/features/knowledge/KnowledgeScreen.tsx', import.meta.url);
 const workspacePath = new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url);
 
-test('search uses only the already selected knowledge items and only on the Articles tab', async () => {
+test('search uses only already selected guide and article items in the Knowledge root view', async () => {
   const screen = await readFile(screenPath, 'utf8');
   const workspace = await readFile(workspacePath, 'utf8');
   assert.match(screen, /const visibleItems = items\.filter/);
-  assert.match(screen, /const displayedItems = tab === 'Artiklar' \? searchGuideItems\(visibleItems, searchQuery\) : visibleItems/);
+  assert.match(screen, /items\.filter\(\(item\) => item\.contentType === 'article' \|\| item\.contentType === 'guide'\)/);
+  assert.match(screen, /const displayedItems = searchGuideItems\(visibleItems, searchQuery\)/);
+  assert.doesNotMatch(screen, /<Tabs|Artiklar/);
   assert.match(workspace, /items=\{visibleGuideContent\}/);
   assert.match(workspace, /onSelectContent=\{\(contentId\) => setKnowledgeFocus/);
   assert.doesNotMatch(screen, /fetch\(/);
@@ -21,8 +23,8 @@ test('active dog is named in search copy and the query is keyed by session and d
   const workspace = await readFile(workspacePath, 'utf8');
   assert.match(screen, /guideSearchScopeKey\(sessionKey, dogId\)/);
   assert.match(screen, /guideSearchValueForScope\(searchState, searchScopeKey\)/);
-  assert.match(screen, /Sök i artiklar för /);
-  assert.match(screen, /Visar publicerade artiklar för /);
+  assert.match(screen, /Sök guider för /);
+  assert.match(screen, /Visar publicerade guider och artiklar för /);
   assert.match(workspace, /dogName=\{dog\.name\}/);
 });
 
@@ -44,8 +46,16 @@ test('loading, errors, retries and article open/back remain separate from the se
 
 test('empty publication state and zero-match state have distinct copy and a clear action', async () => {
   const screen = await readFile(screenPath, 'utf8');
-  assert.match(screen, /Det finns inga publicerade artiklar för /);
-  assert.match(screen, /Inga artiklar matchar/);
+  assert.match(screen, /Det finns inga publicerade guider eller artiklar för /);
+  assert.match(screen, /Inga guider eller artiklar matchar/);
   assert.match(screen, /Rensa sökning/);
   assert.match(screen, /displayedItems\.length === 0/);
+});
+
+test('FAQ and Checklist destinations use explicit semantic badges and visible back paths', async () => {
+  const screen = await readFile(screenPath, 'utf8');
+  assert.match(screen, /KnowledgeIconBadge id=\{CHECKLIST_DESTINATION_ID\}/);
+  assert.match(screen, /KnowledgeIconBadge id=\{FAQ_DESTINATION_ID\}/);
+  assert.match(screen, /actionLabel="Tillbaka till Kunskap"/);
+  assert.match(screen, /actionLabel="Tillbaka till Träning"/);
 });

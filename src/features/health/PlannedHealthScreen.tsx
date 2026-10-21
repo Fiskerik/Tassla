@@ -26,6 +26,7 @@ type LoadState = 'loading' | 'ready' | 'error';
 
 export function PlannedHealthScreen({
   onBack,
+  backLabel = 'Hälsa',
   records,
   loadState,
   busy = false,
@@ -40,6 +41,7 @@ export function PlannedHealthScreen({
   onDelete,
 }: {
   onBack: () => void;
+  backLabel?: string;
   records: readonly PlannedHealthRecord[];
   loadState: LoadState;
   busy?: boolean;
@@ -212,10 +214,10 @@ export function PlannedHealthScreen({
   }
 
   return <View>
-    <Pressable accessibilityRole="button" accessibilityLabel="Tillbaka till Hälsa" accessibilityState={{ disabled: busy }} disabled={busy}
+    <Pressable accessibilityRole="button" accessibilityLabel={`Tillbaka till ${backLabel}`} accessibilityState={{ disabled: busy }} disabled={busy}
       onPress={onBack} style={({ pressed }) => [styles.backAction, pressed && !busy && styles.actionPressed]}>
       <Ionicons name="chevron-back" size={tokens.size.iconMd} color={tokens.colors.textPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-      <Text style={styles.backLabel}>Hälsa</Text>
+      <Text style={styles.backLabel}>{backLabel}</Text>
     </Pressable>
     <PageHeading title="Planerade hälsohändelser" description="Egna planer för vaccinationer och veterinärbesök." />
     <View style={styles.heroCard}>

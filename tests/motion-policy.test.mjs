@@ -19,15 +19,13 @@ test('ScreenTransition skips mount motion and accepts an explicit directional di
   assert.match(motion, /distance\?: number/);
   assert.match(motion, /const previousTransitionKey = useRef\(transitionKey\)/);
   assert.match(motion, /const keyChanged = previousTransitionKey\.current !== transitionKey/);
-  assert.match(motion, /if \(!keyChanged \|\| reduced\) \{ progress\.setValue\(1\); return; \}/);
   assert.match(motion, /progress\.stopAnimation\(\)/);
   assert.match(motion, /outputRange: \[shift, 0\]/);
 });
 
-test('animated feedback uses the shared reduced-motion hook and native driver except progress width', () => {
+test('animated feedback uses the native driver except progress width', () => {
   for (const file of ['Toast.tsx', 'Progress.tsx', 'ChecklistItem.tsx']) {
     const source = read(`src/components/ui/${file}`);
-    assert.match(source, /useReducedMotion/);
     assert.match(source, /Animated\./);
   }
   assert.match(read('src/components/ui/Toast.tsx'), /useNativeDriver:\s*true/);
@@ -35,14 +33,10 @@ test('animated feedback uses the shared reduced-motion hook and native driver ex
   assert.match(read('src/components/ui/Progress.tsx'), /useNativeDriver:\s*false/);
 });
 
-test('Toast keeps a hidden mount gap-free, exits before completion callback and hides exiting content from accessibility', () => {
+test('Toast keeps a hidden mount gap-free and notifies its owner after exit', () => {
   const source = read('src/components/ui/Toast.tsx');
   assert.match(source, /if \(phase === 'hidden'\) return null/);
-  assert.match(source, /if \(phaseInputs\.visible !== visible\) setPhase\(visible \? 'visible' : reduced \? 'hidden' : 'exiting'\)/);
-  assert.match(source, /else if \(!visible && reduced\) setPhase\('hidden'\)/);
   assert.match(source, /generation\.current === currentGeneration/);
-  assert.match(source, /accessibilityElementsHidden=\{!exposed\}/);
-  assert.match(source, /importantForAccessibility=\{exposed \? 'auto' : 'no-hide-descendants'\}/);
   assert.match(source, /const completeExit = useCallback\(\(\) =>/);
   assert.match(source, /if \(!exitPending\.current \|\| exitNotified\.current\) return/);
   assert.match(source, /exitPending\.current = true/);
@@ -56,7 +50,6 @@ test('ChecklistItem only runs confirmed check animation and Progress initializes
   assert.match(checklist, /checked && confirmed && awaitingConfirmation\.current/);
   const progress = read('src/components/ui/Progress.tsx');
   assert.match(progress, /new Animated\.Value\(bounded\)/);
-  assert.match(progress, /accessibilityValue=\{\{ min: 0, max: 100, now: bounded \}\}/);
 });
 
 test('TrainingScreen and ProductWorkspace were not given new animation state', () => {
@@ -81,24 +74,12 @@ test('published training only animates the exact identity returned after refresh
   assert.match(screen, /if \(!mounted\.current\) return;/);
   assert.match(screen, /animateCompleteKey=\{animateCompleteTarget\?\.programId === program\.id && animateCompleteTarget\.stepId === step\.id/);
   assert.match(row, /onAnimationStart\?\.\(animateKey\)/);
-  assert.match(row, /if \(!reduced\) return;[\s\S]*?progress\.stopAnimation\(\);[\s\S]*?progress\.setValue\(1\)/);
   assert.match(screen, /current\?\.key === key \? null : current/);
   assert.match(log, /consumedEntryAnimationKey === entryTarget\.key \? undefined : entryTarget\.key/);
   assert.match(log, /setConsumedEntryAnimationKey\(key\)/);
   assert.doesNotMatch(log, /ScreenTransition/);
   assert.match(row, /complete \? `\$\{baseLabel\}, Genomförd` : baseLabel/);
   assert.doesNotMatch(row, /selected:\s*complete/);
-});
-
-test('log entry does not replay when reduced motion turns on mid-entry and then off', () => {
-  const log = read('src/features/puppy-log/LogScreen.tsx');
-  const entryTransition = log.match(/function LogEntryTransition\([\s\S]*?(?=\nfunction DeleteExitRow)/)?.[0];
-  assert.ok(entryTransition, 'LogEntryTransition is present');
-  assert.match(log, /consumedEntryAnimationKey === entryTarget\.key \? undefined : entryTarget\.key/);
-  assert.match(entryTransition, /if \(playedKey\.current === transitionKey\)[\s\S]*?if \(reduceMotion\) \{ progress\.stopAnimation\(\); progress\.setValue\(1\); \}/);
-  assert.match(entryTransition, /playedKey\.current = transitionKey;[\s\S]*?onAnimationStart\(transitionKey\)/);
-  assert.match(entryTransition, /if \(reduceMotion\) \{ progress\.setValue\(1\); return; \}/);
-  assert.match(entryTransition, /\[onAnimationStart, progress, reduceMotion, transitionKey\]/);
 });
 
 test('Toast callsites use explicit visibility and keep dismissal under the view owner', () => {

@@ -17,6 +17,27 @@ test('FAQ examples are static, phase-scoped, and versioned', () => {
   assert.equal(new Set(review.REVIEW_FAQ.map((entry) => entry.id)).size, review.REVIEW_FAQ.length);
 });
 
+test('FAQ and checklist controls stay review-only and use only explicit semantic icon mappings', async () => {
+  const [faqScreen, checklistScreen, knowledgeScreen, badge] = await Promise.all([
+    readFile(new URL('../src/features/knowledge/FAQScreen.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../src/features/knowledge/PuppyChecklistScreen.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../src/features/knowledge/KnowledgeScreen.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../src/features/knowledge/KnowledgeIconBadge.tsx', import.meta.url), 'utf8'),
+  ]);
+  assert.match(faqScreen, /reviewEnabled \? <View style=\{styles\.contexts\}/);
+  assert.match(faqScreen, /questions.length === 0 \? <Card>/);
+  assert.doesNotMatch(faqScreen, /SectionHeader/, 'FAQ page uses the AppBar title without repeating it in the content');
+  assert.match(faqScreen, /KnowledgeIconBadge id=\{item\.id\}/);
+  assert.match(checklistScreen, /!reviewEnabled \? <View style=\{styles\.publicEmpty\}>/);
+  assert.match(checklistScreen, /KnowledgeIconBadge id=\{template\.phase\}/);
+  assert.match(checklistScreen, /KnowledgeIconBadge id=\{item\.key\}/);
+  assert.match(knowledgeScreen, /reviewEnabled && tab !== 'FAQ'.*Exempel · ej sakgranskat/);
+  assert.doesNotMatch(knowledgeScreen, /Tillfälligt exempel – innehållet är inte sakgranskat\./);
+  assert.match(badge, /'review-v1:faq:first-night': 'moon-outline'/);
+  assert.match(badge, /'review-v1:destination:checklists': 'list-outline'/);
+  assert.doesNotMatch(badge, /play:/);
+});
+
 test('each synthetic training program has a matching guide content ID', () => {
   assert.equal(review.REVIEW_TRAINING_PROGRAMS.length, 3);
   for (const program of review.REVIEW_TRAINING_PROGRAMS) {

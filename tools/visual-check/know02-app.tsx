@@ -19,6 +19,17 @@ const ageWeeksQuery = query.get('ageWeeks');
 const ageWeeks = ageWeeksQuery === 'missing' ? null : ageWeeksQuery === null ? 10 : Number.isFinite(Number(ageWeeksQuery)) ? Number(ageWeeksQuery) : null;
 const reviewContentEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
 
+const publicGuideFixtures: readonly HomeContent[] = [
+  { id: 'know02-guide-routine', contentId: 'know02-guide-routine', version: 1, title: 'Skapa en lugn vardagsrutin', body: 'En trygg rutin hjälper valpen att förstå vad som händer härnäst.\n\nBörja med korta stunder av vila efter lek och promenad.', contentType: 'guide', sources: ['https://www.skk.se/hundagande/'], isAiGenerated: false },
+  { id: 'know02-article-rest', contentId: 'know02-article-rest', version: 1, title: 'Valpens vila och återhämtning', body: 'Valpar behöver många pauser under dagen.\n\nVälj en lugn plats och låt valpen vila ostört.', contentType: 'article', sources: ['https://www.skk.se/hundagande/'], isAiGenerated: false },
+  { id: 'know02-guide-alone', contentId: 'know02-guide-alone', version: 1, title: 'Träna korta stunder ensam', body: 'Börja enkelt och håll stunderna korta.\n\nÖka tiden gradvis när valpen är trygg.', contentType: 'guide', sources: [], isAiGenerated: false },
+];
+const reviewGuideFixture: HomeContent = {
+  id: 'know02-review-guide', contentId: 'know02-review-guide', version: 1,
+  title: 'Review: syntetiskt guideexempel', body: 'Detta är enbart ett syntetiskt granskningsprov och inte publicerat innehåll.',
+  contentType: 'guide', sources: [], isAiGenerated: false,
+};
+
 declare global {
   interface Window {
     __know02MutationFault?: string;
@@ -135,20 +146,20 @@ function makeClient() {
 }
 
 const client = makeClient();
-const items: readonly HomeContent[] = reviewContentEnabled ? REVIEW_TRAINING_GUIDES.slice(0, 3) : [];
+const items: readonly HomeContent[] = reviewContentEnabled ? [...publicGuideFixtures, reviewGuideFixture] : publicGuideFixtures;
 
-function KnowledgeRoute({ pending, onPendingChange, sessionKey, dogId }: { pending: PendingChecklistMemory | null; onPendingChange: (state: PendingChecklistMemory | null) => void; sessionKey: string; dogId: string }) {
+function KnowledgeRoute({ pending, onPendingChange, sessionKey, dogId, returnToTraining, onBack }: { pending: PendingChecklistMemory | null; onPendingChange: (state: PendingChecklistMemory | null) => void; sessionKey: string; dogId: string; returnToTraining?: boolean; onBack?: () => void }) {
   const focusedContentId = query.get('screen') === 'faq' ? FAQ_DESTINATION_ID : query.get('screen') === 'checklist-detail' || query.get('screen') === 'checklist-overview' ? CHECKLIST_DESTINATION_ID : null;
   const contentState = initialState === 'empty' ? 'ready' : initialState === 'error' ? 'error' : initialState === 'loading' ? 'loading' : 'ready';
   return <AppScreen scrollKey="know02-knowledge" footer={<BottomNav active="knowledge" onChange={() => undefined} />}>
-    <KnowledgeScreen onBack={() => undefined} items={items} contentState={contentState} focusedContentId={focusedContentId}
-      client={client as never} dogId={dogId} ageWeeks={ageWeeks} sessionKey={sessionKey}
+    <KnowledgeScreen onBack={onBack ?? (() => undefined)} returnToTraining={returnToTraining} items={items} contentState={contentState} focusedContentId={focusedContentId}
+      client={client as never} dogId={dogId} dogName="Luna" ageWeeks={ageWeeks} sessionKey={sessionKey}
       checklistPending={pending} onChecklistPendingChange={onPendingChange} />
   </AppScreen>;
 }
 
-function TrainingRoute() {
-  const [programs, setPrograms] = useState<readonly PublishedTrainingProgram[]>(REVIEW_TRAINING_PROGRAMS);
+function TrainingRoute({ onOpenKnowledge, empty = false }: { onOpenKnowledge: () => void; empty?: boolean }) {
+  const [programs, setPrograms] = useState<readonly PublishedTrainingProgram[]>(empty ? [] : REVIEW_TRAINING_PROGRAMS);
   const onCompleteStep = async (program: PublishedTrainingProgram, stepId: string) => {
     window.__know02CloudWrites = (window.__know02CloudWrites ?? 0) + 1;
     setPrograms((current) => current.map((item) => item.id === program.id ? { ...item, completedStepIds: [...item.completedStepIds, stepId] } : item));
@@ -157,20 +168,21 @@ function TrainingRoute() {
   return <AppScreen scrollKey="know02-training" footer={<BottomNav active="training" onChange={() => undefined} />}>
     <PublishedTrainingScreen programs={programs} paused={[]} busyStepKey={null} error="" reviewMode
       onCompleteStep={onCompleteStep} onContinue={() => { window.__know02ContinueCount = (window.__know02ContinueCount ?? 0) + 1; }}
-      onResetProgram={() => undefined} onRetry={() => undefined} />
+      onResetProgram={() => undefined} onRetry={() => undefined} onOpenKnowledge={onOpenKnowledge} />
   </AppScreen>;
 }
 
 function HomeRoute() {
   const dog: OwnedDog = { id: DOG_ID, name: 'Luna', breed_id: 'synthetic-mix', birth_date: '2026-08-01' };
   return <AppScreen scrollKey="know02-home-carousel" footer={<BottomNav active="home" onChange={() => undefined} />}>
-    <HomeCarousel dog={dog} plans={[]} selectedDatePlans={[]} content={REVIEW_TRAINING_GUIDES} contentState="ready"
+    <HomeCarousel dog={dog} plans={[]} selectedDatePlans={[]} content={items} contentState="ready"
       onGo={() => undefined} onOpenContent={(id) => { window.__know02OpenedContent = id; }} />
   </AppScreen>;
 }
 
 function App() {
   const screen = query.get('screen') ?? 'checklist-overview';
+  const [route, setRoute] = useState(screen === 'knowledge' ? 'knowledge-root' : screen);
   const [routeMounted, setRouteMounted] = useState(true);
   const [pending, setPending] = useState<PendingChecklistMemory | null>(null);
   const [scope, setScope] = useState(0);
@@ -184,10 +196,11 @@ function App() {
       delete window.__know02ChangeScope;
     };
   }, []);
-  if (screen === 'home-carousel') return <HomeRoute />;
+  if (route === 'home-carousel') return <HomeRoute />;
   if (!routeMounted) return null;
-  if (screen === 'review-training-list' || screen === 'review-training-detail') return <TrainingRoute />;
-  return <KnowledgeRoute key={`scope-${scope}`} pending={pending} onPendingChange={setPending} sessionKey={`synthetic-session-${scope}`} dogId={scope ? `${DOG_ID}-scope-${scope}` : DOG_ID} />;
+  if (route === 'review-training-list' || route === 'review-training-detail') return <TrainingRoute onOpenKnowledge={() => setRoute('knowledge')} />;
+  if (route === 'review-training-route') return <TrainingRoute empty onOpenKnowledge={() => setRoute('knowledge')} />;
+  return <KnowledgeRoute key={`scope-${scope}`} pending={pending} onPendingChange={setPending} sessionKey={`synthetic-session-${scope}`} dogId={scope ? `${DOG_ID}-scope-${scope}` : DOG_ID} returnToTraining={route === 'knowledge'} onBack={() => setRoute('review-training-route')} />;
 }
 
 createRoot(document.getElementById('root')!).render(<App />);

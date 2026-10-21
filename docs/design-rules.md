@@ -8,7 +8,7 @@ Godkänd produktplan är [MVP rev02](mvp.md), bekräftad av Erik 2026-10-20. MVP
 
 `vision_rev02.jpg` är aktuell visuell målbild. Dess åtta paneler är enligt Eriks beslut 2026-10-15 obligatoriska funktionella MVP-mål, men är inte åtta redan verifierade funktioner. `vision_rev01.jpg` och äldre paketspecifikationer är historik. Detta regelverk ersätter motstridiga äldre visuella anvisningar för kommande arbete; tidigare leveranser skrivs inte om retroaktivt.
 
-Rangordning: aktuella ägarbeslut → sanningsenlighet, säkerhet och tillgänglighet → detta regelverk och rev02-specifikationen → UX-skillens beteenderegler → befintlig kod. Bilden styr komposition, objekt, komponentformer, bildspråk och innehållshierarki. Namn, räknetal och råd i bilden är exempel, inte datakällor. Olösta faktiska konflikter dokumenteras; redan fattade beslut frågas inte om igen.
+Rangordning: aktuella ägarbeslut och konkreta bindande krav → sanningsenlighet och säkerhet → detta regelverk och rev02-specifikationen → UX-skillens beteenderegler → befintlig kod. Eriks beslut 2026-10-21 skjuter upp systematisk tillgänglighetsanpassning och dess testmatris tills första MVP-versionen är släppt och godkänd; generiska checklistor nedan är underordnade det beslutet. Bevara fungerande etiketter, läsbar standardtext och semantik utan kända regressioner. Bilden styr komposition, objekt, komponentformer, bildspråk och innehållshierarki. Namn, räknetal och råd i bilden är exempel, inte datakällor. Olösta faktiska konflikter dokumenteras; redan fattade beslut frågas inte om igen.
 
 Läs tillsammans:
 
@@ -30,7 +30,7 @@ Varje berörd skärm ska aktivt närma sig sin panel i `vision_rev02.jpg` i **ko
 
 Återanvändning betyder att utveckla gemensamma komponenter så att de klarar referensen. Behåll inte fel radform, stora rubriker, monokroma ytor eller saknade bilder bara för att de redan finns i kod. Inför avgränsade namngivna varianter; migrera inom godkänt scope. Ingen generell ombyggnad av andra skärmar krävs för att rätta den aktuella. En ändring av en delad komponent ska däremot inventera och regressionsverifiera samtliga berörda anrop inom ändringens faktiska påverkan; välj opt-in-variant om en global migrering annars hamnar utanför scope.
 
-Funktion, tillgänglighet och sanningsenlighet ska fungera tillsammans med designen. En nödvändig avvikelse ska avgränsas till det berörda elementet och redovisas enligt §12. Den får inte bli skäl att förenkla bort resten av bildens formspråk eller ett nytt rutinmässigt tillståndskrav för redan beställt arbete.
+Funktion, baseline-läsbarhet och sanningsenlighet ska fungera tillsammans med designen. Systematisk tillgänglighetsanpassning följer §10 och är uppskjuten till efter MVP-release och godkännande. En nödvändig avvikelse ska avgränsas till det berörda elementet och redovisas enligt §12. Den får inte bli skäl att förenkla bort resten av bildens formspråk eller ett nytt rutinmässigt tillståndskrav för redan beställt arbete.
 
 ## 1. Arbetsordning
 
@@ -39,7 +39,7 @@ Funktion, tillgänglighet och sanningsenlighet ska fungera tillsammans med desig
 3. Skriv en jämförelsematris: referenselement → nuvarande skillnad → komponent/token/bildasset → avsedd korrigering → visuell acceptans. Ange skrivfiler, verkliga API:er och beroenden. Saknad bild eller innehållsmetadata blir en konkret leveranspunkt, inte en tyst ersättning. Följ planreview i `docs/dev/workflow.md`.
 4. Implementera en vertikal del med gemensamma komponenter. Föreslagna API:er får inte beskrivas som befintliga.
 5. Rendera jämförbara skärmar med matchande innehållslängd, tillstånd och dokumenterad viewport. Jämför sida vid sida och rätta de största synliga avvikelserna i berörd del. Kör beteendekontroll och §14. Använd samma presentationskomponenter i referensfixture och verkligt dataflöde; en separat demo godkänner inte produktvyn.
-6. Separat QA och Reviewer bedömer helheten. Spara bilder, resultat, luckor och nästa steg.
+6. Lokal QA bedömer varje ändrad resa. Oberoende Reviewer granskar den samlade MVP:n nära closeout; checkpointar som ännu inte ingår i den granskningen får inte hävda Reviewer-PASS. Spara bilder, resultat, luckor och nästa steg.
 
 ## 2. Visuellt språk
 
@@ -62,9 +62,9 @@ Hem ska uttryckligen visa blå Logga-, gröna Träna- och lila Kunskap-ytor i st
 | Träna-yta / träningshatt | `destination.training.surface #E8F2E7` / `.icon #277A49` | Tydligt grönt destinationskort |
 | Kunskap-yta / bok | `destination.knowledge.surface #F1EAF7` / `.icon #8061B5` | Tydligt lila destinationskort |
 
-Tabellen återger Hem-kontraktets §3. Vid ändring ska båda uppdateras tillsammans; motsägande värden rättas före implementation. Detta är färgmål för namngivna tokens, inte redan införda kodvärden. Kalibrering ska bevara färgroller och uppmätt kontrast. Ingen monokrom standardvariant får godkännas som full färgmatchning när referensen visar flera färgade ytor.
+Tabellen återger Hem-kontraktets §3. Vid ändring ska båda uppdateras tillsammans; motsägande värden rättas före implementation. Detta är färgmål för namngivna tokens, inte redan införda kodvärden. Kalibrering ska bevara färgroller och göra synliga etiketter läsbara i standardskala; formell kontrastmatris görs efter MVP. Ingen monokrom standardvariant får godkännas som full färgmatchning när referensen visar flera färgade ytor.
 
-För övriga skärmar styr respektive panel färgernas placering och visuella vikt. Tvinga inte in Hemmets tre destinationsfärger där panelen använder foto, segmenterade flikar eller händelsekategorier. Normal text kräver minst 4,5:1, nödvändiga kontrollgränser/statussymboler minst 3:1 mot angränsande ytor.
+För övriga skärmar styr respektive panel färgernas placering och visuella vikt. Tvinga inte in Hemmets tre destinationsfärger där panelen använder foto, segmenterade flikar eller händelsekategorier. Text och handlingar ska vara tydligt urskiljbara i standardskala; numerisk kontrastmätning är del av den uppskjutna post-MVP-auditen.
 
 ## 3. Tokens och proportioner
 
@@ -76,30 +76,30 @@ För övriga skärmar styr respektive panel färgernas placering och visuella vi
 | Sidmarginal | Gemensam token, utgångspunkt 24; ändringar bedöms på hela berörda kompositionen |
 | Typografi | Semantiska title/heading/body/caption/label; ingen lokal textkrympning för att pressa in innehåll |
 | Ytor | Gemensam kortbas med namngivna neutral/tonad/bild/list-varianter |
-| Färger | Semantiska tokens; normal text har minst 4,5:1 kontrast |
-| Träffytor | Minst 44×44 pt; visuell ikon kan vara mindre |
+| Färger | Semantiska tokens; etiketter och innehåll är tydligt läsbara vid standardskala. Formell kontrastmatris görs efter MVP. |
+| Träffytor | Återanvänd befintliga kontrollkomponenter och krymp inte deras nuvarande mål; storleksmätning/audit är uppskjuten och inte en per-checkpoint MVP-grind. |
 | Bilder | Gemensamma porträtt-/kortformat, radier och definierad beskärning |
 
 Inga råa hexvärden eller ad hoc-mått i skärmfiler. Nya komponentbehov får dokumenterade tokens. Telefonram, systemklocka och statusikoner i målbilden är inte appkomponenter.
 
-För Hem preciseras ovanstående standardvärden i [Hem-kontraktets §4](plans/HOME-REV02-visual-ux-spec.md#4-geometri-och-typografi): 12 pt sektionsgap/kortpadding, radie 16, kompakta textroller, 44 pt listrader och namngivna färgvarianter. Dessa ska införas i gemensamma tokens/opt-in komponentvarianter, inte som skärmlokala råvärden.
+För Hem preciseras ovanstående visuella mått i [Hem-kontraktets §4](plans/HOME-REV02-visual-ux-spec.md#4-geometri-och-typografi): 12 pt sektionsgap/kortpadding, radie 16, kompakta textroller, listrader och namngivna färgvarianter. Dessa ska införas i gemensamma tokens/opt-in komponentvarianter, inte som skärmlokala råvärden. Detta inför inte en separat träffytemätning.
 
 ## 4. Komponentfamiljer
 
 Utveckla befintliga `Card`, `Tabs`, `Button`, `ListRow`, `ChecklistItem`, `Progress`, `HeroCard`, `IconChip` och `BottomNav` med avgränsade varianter. [Komponentmatrisen](design/vision-rev02-spec.md#komponentkontrakt) skiljer nuvarande API från föreslaget.
 
-Rev02 behöver segmenterade flikar, filterchips, bild över text, kompakt checklistrad, tonat destinationskort och progress med definierad uppgiftsmängd. Visa varianterna i komponentgalleriet med stor text och relevanta tillstånd.
+Rev02 behöver segmenterade flikar, filterchips, bild över text, kompakt checklistrad, tonat destinationskort och progress med definierad uppgiftsmängd. Visa varianterna i komponentgalleriet med relevanta funktionella tillstånd; stor-textmatrisen görs efter MVP-release och godkännande.
 
 Hem har personlig hälsning som huvudrubrik. Lägg inte till extra Tassla-appbar/notisknapp från rev01. Logga/Träning/Kunskap har vänsterställda titlar; detaljvyer kan ha centrerad titel och bakåtknapp enligt motsvarande panel.
 
 ### Hem: former som ska följas
 
 - Exakt en dagsrubrik: **Dagens att göra**. Räknare och synlig chevron till hantering på samma rubrikrad; progress under.
-- Sammanhållen listyta med diskreta separatorer. Manuella rutiner har fyrkantig visuell checkbox inom separat 44×44 pt träffyta. Träningsrad har icke-interaktiv fyrkantig status och en öppningshandling till rätt träningssteg.
+- Sammanhållen listyta med diskreta separatorer. Manuella rutiner har fyrkantig visuell checkbox inom befintlig separat träffyta. Träningsrad har icke-interaktiv fyrkantig status och en öppningshandling till rätt träningssteg.
 - Hem-rader har kort titel och fungerande detaljväg. Kategoriikon, separat `Visa`-text, `Ta bort` och extra program-/veckorubriker ingår inte i översiktsraden.
 - Rutinredigering, träningsval och borttagning finns i fungerande fördjupning enligt Hem-kontraktet. Enbart att fälla ihop formulär räcker inte om hanteringsrubriker och teknisk text fortfarande fyller översikten.
 - Tre jämställda pastellkort med stora tass-/träningshatt-/boksymboler. De ska vara synliga i standardfixturens första vy. En färgad liten ikon på vit bakgrund ersätter inte ett färgat destinationskort.
-- Kortpadding 12, radie 16, kompakta textroller och normalviktig uppgiftstext enligt Hem-kontraktets §4. Träffytor och stor text får inte krympas för att få plats.
+- Kortpadding 12, radie 16, kompakta textroller och normalviktig uppgiftstext enligt Hem-kontraktets §4. Krymp inte befintliga kontroller för att få plats; bred stor-textanpassning ligger efter MVP.
 
 ## 5. Layout, scrollning och safe area
 
@@ -107,7 +107,7 @@ Bottenmenyn respekterar safe area. Scrollinnehållet får utrymme för meny och 
 
 Normal Hem-fixture vid 375×844 och 430×844 med standardskrift och korta titlar: hälsning, åldersremsa, Just nu, upp till fem dagsrader och tre genvägar ska rymmas med **minst 16 pt fri marginal** ovanför menyn. Detta är nytt rev02-mål; den gamla leveransens 1 px marginal är ingen kvalitetsreferens.
 
-Långa titlar, reviewmarkering, fler uppgifter eller större text får ge naturlig scrollning. Krymp aldrig text/tryckytor och dölj aldrig innehåll bakom menyn. Mindre skärmhöjder och stora textlägen bedöms separat från standardskärmens första vy. Visningsgräns och total progressmängd får inte blandas ihop.
+Långa titlar, reviewmarkering, fler uppgifter eller större text får ge naturlig scrollning. Krymp aldrig text eller befintliga tryckytor och dölj aldrig innehåll bakom menyn. Mindre skärmhöjder provas när de påverkar den aktuella funktionella resan; systematisk stor-textmatris görs efter MVP-release och godkännande. Visningsgräns och total progressmängd får inte blandas ihop.
 
 ## 6. Handlingar och navigation
 
@@ -123,7 +123,7 @@ Långa titlar, reviewmarkering, fler uppgifter eller större text får ge naturl
 
 Skilj **personligt foto**, **generiskt porträtt**, **redaktionellt foto** och **illustration**. Redaktionella hundbilder kan användas i guider och träningskort utan att föreställa ägarens hund. Saknat profilfoto blockerar inte dessa bildkort.
 
-**Hem har ett uttryckligt visuellt undantag:** tills personligt fotostöd finns använder public Home och granskningsläget samma runda, fotoestetiska generiska hundbild som standardplatshållare enligt Eriks önskemål 2026-10-13. Visa den korta synliga etiketten **Standardbild** direkt på porträttet i båda lägena, med solid varm bakning och mörk text som behåller minst 4,5:1 kontrast vid standardskrift och 140 % text. Etiketten får inte klippas. Den nuvarande asseten är AI-genererad bildkonst, inte ett fotografi av en verklig hund och inte ägarens hund. Den får inte kopplas till hundens namn/ras i alternativtext, copy, data eller produktanspråk. Skärmläsaren får annonsera den synliga etiketten `Standardbild`; den dekorativa bilden är fortsatt utanför skärmläsarens fokus. Detta ger Hem rätt porträttform och varma bildspråk men bevisar inte en personlig hundidentitet eller att en faktisk fotografisk asset används. Ersättning med ägarens foto kräver separat stöd för val, behörighet, lagring och radering; inget sådant byggs här.
+**Hem har ett uttryckligt visuellt undantag:** tills personligt fotostöd finns använder public Home och granskningsläget samma runda, fotoestetiska generiska hundbild som standardplatshållare enligt Eriks önskemål 2026-10-13. Visa den korta synliga etiketten **Standardbild** direkt på porträttet i båda lägena, med solid varm bakning och läsbar mörk text i standardskala; etiketten får inte klippas. 140 %/stor-textmätning ingår inte i MVP-grinden. Den nuvarande asseten är AI-genererad bildkonst, inte ett fotografi av en verklig hund och inte ägarens hund. Den får inte kopplas till hundens namn/ras i alternativtext, copy, data eller produktanspråk. Skärmläsaren får annonsera den synliga etiketten `Standardbild`; den dekorativa bilden är fortsatt utanför skärmläsarens fokus. Detta ger Hem rätt porträttform och varma bildspråk men bevisar inte en personlig hundidentitet eller att en faktisk fotografisk asset används. Ersättning med ägarens foto kräver separat stöd för val, behörighet, lagring och radering; inget sådant byggs här.
 
 Utveckling använder ägarfoto när verifierat stöd finns; annars en tydligt beskriven generisk platshållare eller illustration enligt sitt eget kontrakt. Syntetiska granskningsdata och standardplatshållare hålls åtskilda från produktionsidentitet. Bildmanifest anger fil, källa/generation, användningsrätt, roll, tillgänglighet och beskärning. Ingen skärmbild från visionen används som fungerande UI.
 
@@ -149,11 +149,11 @@ Publicerat, versionsmärkt och ålders-/rasrelevant innehåll driver råd och ö
 
 Tekniska driftord hör hemma i rapporter. Medicinsk säkerhetsinformation och sanningsenlig osäker sparstatus får aldrig döljas för att passa målbilden.
 
-## 10. Tillstånd och tillgänglighet
+## 10. Tillstånd och tillgänglighetsomfattning
 
 Varje del har ready/loading/empty/error och relevanta partial/pending/failed/unsure-lägen. Läsfel är inte noll aktiviteter. Konto-/hundbyte tömmer gamla data och ignorerar sena svar. Publicerings- och reviewgränser gäller vid både läsning och skrivning.
 
-Skärmläsare ska skilja ålder, vald flik, bock, destination och progress. Färg/bild/rörelse är aldrig enda information. Prova standardskrift, 140 %, lång svensk copy, reducerad rörelse och tangentbord. Webbsimulering är inte verklig Dynamic Type/VoiceOver.
+MVP-baslinje: synliga etiketter ska beskriva handlingar, användarens uppgift ska fungera och befintliga semantiska namn/tillstånd får inte medvetet försämras. Ägarbeslutet 2026-10-21 skjuter upp systematisk tillgänglighetsanpassning och granskningsmatris till efter att första MVP-versionen är släppt och godkänd. Därför är standardskrift-/140 %-stressprov, lång-textmatris, VoiceOver/TalkBack, Dynamic Type, reducerad rörelse, fokus-/tangentbordsnavigeringsaudit och träffytemätning inte obligatoriska checkpointgrindar. Verifiera fortfarande tangentbord/kontroller när det är del av funktionens normala användning. Ett konkret tillämpligt releasekrav hanteras separat med belägg; detta scopebeslut ersätter inte sådana krav.
 
 ## 11. Skärmar och produktresor
 
@@ -179,7 +179,7 @@ Byggordning: Hem-referens och komponenter → dagliga uppgifter med persistens �
 
 ## 14. Obligatorisk visuell och funktionell granskning
 
-Numreringen 1–18 behålls. Svara Ja, Nej eller Ej tillämpligt med motivering. Saknade bevis = NOT TESTABLE. Nej blockerar berörd acceptans; inget medelvärde kan dölja det.
+Numreringen 1–18 behålls. Svara Ja, Nej eller Ej tillämpligt med motivering för punkter som gäller uppgiften. Saknade bevis för en tillämplig punkt = NOT TESTABLE. Nej blockerar berörd acceptans; inget medelvärde kan dölja det. För alla MVP-checkpoints före första MVP-release och ägarens godkännande markeras punkt 15 **Ej tillämpligt** enligt ägarbeslutet 2026-10-21; den kräver ingen testmatris/evidens och kan inte hålla checklistan eller checkpointen öppen. Ett konkret belagt bindande releasekrav hanteras separat.
 
 1. Högst en primär handling och tydlig nästa handling?
 2. Jämställda handlingar har samma visuella vikt, format och storlek?
@@ -188,14 +188,14 @@ Numreringen 1–18 behålls. Svara Ja, Nej eller Ej tillämpligt med motivering.
 5. Avstånd, sektioner, safe area och fri marginal följer specifikationen?
 6. Delade tokens/komponenter används utan lokala stylingundantag?
 7. Ikoner använder samma familj och verifierade symboler?
-8. Referensens färgfördelning syns på ytor och symboler; Hem visar blå/grön/lila genvägar samt varm tipsaccent; kontrast är kontrollerad?
+8. Referensens färgfördelning syns på ytor och symboler; Hem visar blå/grön/lila genvägar samt varm tipsaccent; text och ytor går att skilja åt i standardskala?
 9. Symbol, etikett och faktisk handling betyder samma sak?
 10. Normala poster saknar onödiga statusbadges; bockar är bekräftade?
 11. Banners/uppmuntran följer §8 utan brus eller falska slutsatser?
 12. Copy är vardaglig och korrekt utan interna driftbeskrivningar?
 13. Copy, metadata och bildandel har målbildens ton och hierarki?
 14. Relevanta loading/empty/error/partial/sparlägen har renderats?
-15. Minst 44×44 pt, skärmläsarsemantik, större text och reducerad rörelse fungerar?
+15. (Efter MVP-release och godkännande) Minst 44×44 pt, skärmläsarsemantik, större text och reducerad rörelse fungerar? **Före dess: Ej tillämpligt, ingen MVP-checkpointgrind** enligt ägarbeslut 2026-10-21; bevara befintliga etiketter/semantik och redovisa bara faktisk regression.
 16. **Matchar layout, färgfördelning, typografi, komponentformer, objekt, innehållstäthet och bildspråk rev02-panelen?** Jämförelse sida vid sida krävs. Överlappstest ensamt räcker inte.
 17. Rubriker, segment/filter, huvudflikar, aktiv förälder och tillbakaresor stämmer?
 18. Hundnamn, bildroll och relevant innehåll används där målbilden visar dem?
@@ -226,4 +226,4 @@ Illustration är dekorativ och kan ersätta saknat foto. Reaktioner beskriver be
 
 Regelverket är inte bevis på implementerade vyer. Bilden godkänner inte externa tjänster, nya kostnader, fotoinsamling eller produktionsmigreringar. Hantera konkreta frågor i respektive vertikal del och fortsätt med oberoende arbete.
 
-Commit/push, signerad build, distribution och verklig databasverifiering redovisas var för sig. Ingen automatisk telefon-/TestFlight-grind införs. Källor, säkerhet och tillgänglighet gäller även där målbilden förenklar dem.
+Commit/push, signerad build, distribution och verklig databasverifiering redovisas var för sig. Ingen automatisk telefon-/TestFlight-grind införs. Källor, säkerhet och konkreta bindande krav gäller även där målbilden förenklar dem. Systematisk tillgänglighetsanpassning följer det uttryckliga post-MVP-beslutet ovan.

@@ -1,6 +1,6 @@
 # UX-spec — rev02 R02-4E: Hundprofil och profilredigering
 
-Datum: 2026-10-13 · Version: 1 · Status: implementing · Ägardirektiv: fortsätt med återstående skärmar.
+Datum: 2026-10-13 · Version: 1.1 · Status: local UI checkpoint complete · Ägardirektiv: fortsätt med återstående skärmar.
 
 ## Användaruppgift
 
@@ -31,4 +31,8 @@ Rendera public/review vid 375×844, 430×844, 375×667 och 140 % browserzoom. Vi
 
 ## §14 jämförelse
 
-Ingen profilpanel finns i `vision_rev02.jpg`. Jämför mot rev02:s kort-, ikon-, färg- och rubrikhierarki; punkt 16 ska vara Nej för exakt panelmatch och samtliga deldimensioner redovisas.
+Ingen profilpanel finns i `vision_rev02.jpg`. Redovisa därför punkt 16 som **NOT TESTABLE/ej tillämpligt** för exakt panelmatch; frånvaron av en jämförbar panel är inte ett negativt kvalitetsbetyg. Bedöm profilens stödskärm separat mot närmast relevanta rev02-mönster och redovisa kort, ikon, färg, rubrikhierarki samt övriga tillgängliga deldimensioner var för sig.
+
+### Versionsnotis 1.1 — 2026-10-21
+
+Förtydligar punkt 16 i linje med taskens befintliga acceptans och `docs/design-rules.md`: en saknad referenspanel markeras **NOT TESTABLE**, inte **Nej**. Ingen produktfunktion, visuell riktning eller övrig acceptans ändras.

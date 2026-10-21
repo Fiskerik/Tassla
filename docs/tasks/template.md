@@ -11,6 +11,7 @@ För större arbeten: dela upp före start. En aktiv deluppgift är standard, h�
 - UI vid relevans: brand, färg/typografi, tryckrespons, övergångar och reducerad rörelse enligt docs/dev/ui-and-code-standards.md.
 - Dokumentation: README/guide som ändras, målgrupp och relevanta startpunkter. Ingen separat README behövs för varje liten fil.
 - API-verifiering: ändrade externa anrop/importer, installerad version och hur verklig funktion verifieras; redovisa luckor.
+- Oberoende review: på MVP-checkpoints är `review_status: deferred_to_mvp_closeout` tills den samlade slutreviewen. Skriv aldrig Reviewer-PASS innan den körts.
 - ID och status: ej startad / pågår / verifierad / blockerad.
 - Vad ändrades och var finns resultatet?
 - Vilka kontroller kördes, resultat och vad är ännu overifierat?

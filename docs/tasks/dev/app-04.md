@@ -2,6 +2,8 @@
 
 Plan v6, 2026-10-05. Erik godkände i chatten 2026-10-05 APP-04A-UX som första segment, därefter APP-04A-PHONE, APP-04B1 vikt, APP-04B2 övrig hälsa och APP-04C profil. Mandatet omfattar lokal implementation av APP-04A-UX; ny signerad TestFlight-build och fysisk telefonverifiering kräver separat APP-04A-PHONE-mandat. Utförande ska använda GPT-5.6 Luna Medium.
 
+> **Ägarbeslut 2026-10-21 gäller alla MVP-checkpoints:** telefonverifiering av kontoresan är funktionell. 140 %/Dynamic Type, VoiceOver/TalkBack och generell tryckytegranskning görs efter att MVP:n är släppt och godkänd. Behåll befintliga etiketter/semantik; tangentbord och native navigation verifieras där de behövs för att slutföra kontoflödet. Se [AGENTS.md](../../../AGENTS.md) och [arbetsflödet](../../dev/workflow.md).
+
 ## Korrigeringsplan 1 – APP-04A-UX
 
 Plan v8, 2026-10-05. Review och Security blockerade den lokala checkpointen med två verifierbara fynd: auth-kontraktstester saknas och React-state ensam garanterar inte exakt ett utloggningsanrop vid samtidiga bekräftelser. Erik delegerade beslutet om serverfel; vald semantik är fail-safe lokal utloggning. Installerad Supabase Auth 2.117.2 kan rensa lokal session även när global sign-out returnerar serverfel, så auth-resultatet ska skilja `localSessionCleared` från `serverRevocationConfirmed`. Efter lokal utloggning visas en eventuell servervarning på signed-out-vyn; inget retry under Mer påstås finnas efter att sessionen är borta. Detta är ett lokalt säkerhets-/UX-beslut, inte ett påstående om serverns globala sessionsstatus.
@@ -30,10 +32,10 @@ Kunskap, Vardagslogg och Träning har redan verklig lokal/molnkopplad funktion. 
 - [ ] Lägg till bekräftelse före utloggning: Avbryt behåller sessionen, Bekräfta anropar utloggning högst en gång, vänteläge blockerar dubbeltryck och fel visas på Mer med möjlighet till nytt försök.
 - [ ] Säkerställ separat för login, onboardingprofil och loggredigering att fokuserat fält och primär knapp kan scrollas fram och tryckas medan tangentbordet är öppet.
 - [ ] Dragscroll ska kunna stänga tangentbordet och Klar ska användas där tangentbordstypen stöder det. Multiline-noteringen ska ha en tydlig tillgänglig väg att stänga tangentbordet.
-- [ ] Kontrollera liten telefon, stor text, skärmläsaretiketter, tryckytor och att bottennavigationen inte täcker innehåll.
+- [ ] Kontrollera liten telefon i standardskala, synliga etiketter, fungerande formulärkontroller och att bottennavigationen inte täcker innehåll.
 - [ ] Gör den obligatoriska avgränsade cleanup-passen, kör om relevanta kontroller och dokumentera resultatet före QA.
 - [ ] Kör `pnpm check`, `pnpm bundle:ios` och `git diff --check`. Bundle bevisar inte tangentbordsbeteende.
-- [ ] Dokumentera tangentbords-runtime, VoiceOver och faktisk bottennavigation som NOT TESTABLE i den lokala delen. De verifieras endast i separata APP-04A-PHONE efter uttryckligt Erik-mandat för ny build/TestFlight.
+- [ ] Dokumentera tangentbords-runtime och faktisk bottennavigation som NOT TESTABLE i den lokala delen. Funktionell native-verifiering ligger i separata APP-04A-PHONE; VoiceOver-/stortextmatrisen ingår inte före godkänd MVP.
 - [ ] Spara godkända kontroller och exakt nästa steg som hållbar checkpoint innan APP-04C får starta.
 
 **Lokal acceptans:** Logga ut är kopplat under Mer och borttaget från Hem. Källan och kontrollerade kontraktstester täcker att Avbryt inte anropar utloggning, Bekräfta anropar högst en gång och vänteläge stoppar dubbeltryck. Om lokal rensning lyckas men serverrevokering är obekräftad går appen till signed-out-vyn med sanningsenlig varning och ingen retry under Mer erbjuds. Om lokal sessionsrensning misslyckas stannar användaren kvar utan att UI påstår utloggning och nytt försök är tillåtet. Login-, onboardingprofil- och loggredigeringsformulären använder installerade React Native-mekanismer för keyboard-aware layout, dragavvisning, Klar där det stöds och en tillgänglig multiline-stängning; props och callbacks är korrekt kopplade och iOS-bundlen byggs. Detta bevisar inte faktisk fysisk UX.

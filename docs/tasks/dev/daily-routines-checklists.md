@@ -1,5 +1,7 @@
 # Egna dagsrutiner med separata checklistor
 
+> **Ägarbeslut 2026-10-21 gäller alla MVP-checkpoints:** kvarvarande runtime-task verifierar funktionell native-/databasresa där uppgiften kräver den. 140 %/stor text, Dynamic Type, VoiceOver/TalkBack, reduced-motion-, kontrast- och träffyte-audit är uppskjutna tills MVP:n är släppt och godkänd. Tidigare UI-kontrakt/captures nedan är historisk dokumentation, inte nya releasegrindar. Behåll befintliga labels/semantik. Se [AGENTS.md](../../../AGENTS.md) och [arbetsflödet](../../dev/workflow.md).
+
 Datum: 2026-10-14 · Version: 5 · Status: Architect APPROVE, Critic PROCEED; ägaren har mandatgett implementation · Kö-ID: `HOME-ROUTINE-CHECKLIST-01`
 
 ## V5-tillägg från Erik — 2026-10-14
@@ -79,7 +81,7 @@ Architect APPROVE och Critic PROCEED gällde exakt v5-plan före UI-kod. Oberoen
 
 1. Skapa/redigera en rutin i ett sammanhållet formulär. `Namn på rutin` ligger först; direkt under kommer rubriken `Checklista` och just den rutinens punkter. Två sparade rutiner har skilda ordnade listor och item-ID:n.
 2. Skapaformuläret visar från start ett obligatoriskt första punktfält. Namn och mall måste vara giltiga innan `Spara rutin` aktiveras. En sparad mall måste ha minst en punkt; sista punkten får redigeras men inte tas bort och visar hjälpen `En rutin behöver minst en checklistepunkt.` Namn/punkttext trimmas och får ha högst 160 Unicode-tecken. En rutin får högst 50 punkter.
-3. I läsvy finns en enda pennknapp `Redigera` intill rutinens namn, minst 44 pt hög. Ingen checklistepunkt har egen synlig redigeringsknapp eller long-press-meny.
+3. I läsvy finns en enda tydligt märkt pennknapp `Redigera` intill rutinens namn. Ingen checklistepunkt har egen synlig redigeringsknapp eller long-press-meny.
 4. `Redigera` öppnar ett sammanhållet edit mode med textfält för rutinens namn och alla punkter samt upprepningskontroller. En plusknapp lägger till en rad sist med ett nytt stabilt punkt-ID; retry återanvänder ID:t. Minusknappen tar bort sin rad; kvarvarande ordning och ID:n bevaras. Sista punkten kan inte tas bort. Endast en rutin kan vara i edit mode. Medan utkastet är öppet blockeras annan rutinedit, allt dagsurval (rutiner och träningssteg) samt hel-rutin-delete; `Avbryt` krävs för att lämna ett osparat utkast. Vid pending/unknown kan varken edit mode lämnas eller dagsval ändras innan readback/retry löst resultatet. `Spara rutin` sparar hela definitionen atomiskt.
 5. Varje sparad rutin visar namn och sina egna checklistpunkter. Dess add-kontroll är en ikon/textknapp med exakt etikett `Lägg till på Hemskärmen`; efter tillägg visas `Ta bort från Hemskärmen`.
 6. En `(i)`-knapp visar den korta hjälpen om lokalt startdatum, veckodag/månadsdag, hoppa över idag och att malländringar gäller framtida kopior. Förklaringen visas inte som lång introtext eller upprepas per rutin. Dagens befintliga kopia ändras inte vid redigering av mallen.
@@ -155,3 +157,9 @@ Granskning före implementation: Architect APPROVE, Critic PROCEED, Security pla
 ## Öppna och förbjudna sidospår
 
 Planen omfattar återkommande dagsrutiner enligt V4 och den samlade rutinredigeringen enligt V5, men inte påminnelser, mallkategorier, checklist-progress i Knowledge eller redesign av Hemmets dagskort. Den ändrar inte källor för träningsprogress.
+
+## Ägarbeslut v6 — Checklista detaljvy, 2026-10-21
+
+Eriks senare instruktion ger checklistans separata **Checklista / Idag**-rad en long-press-genväg till den befintliga samlade rutinredigeringen, fokuserad på vald rutinpunkt. Det supersederar V5:s förbud mot long-press endast i denna Checklista-kontext. Det återinför inte punktvisa redigeringsknappar, menyer eller long-press i rutinhallens läsvy. Vanligt tryck och checkbox har kvar sina separata handlingar; long-press på dagens rutinrad öppnar inte samtidigt normal tryckhandling. Long-press på checkbox, historiska/skipprader, tränings- eller hälsorader redigerar inte rutin.
+
+Den befintliga rutineditorn får välja ikon från en smal Ionicons-standardlista och ändra valfri kort beskrivning per rutinpunkt. Checklista visar varierad ikon och beskrivning när en sådan finns; Hem behåller slimmad överblick utan punktbeskrivning eller extra rutinpunktsikon. Ikon-/beskrivningsändring sparar rutinmallen via befintlig owner-scoped, revisionskontrollerad RPC och gäller framtida dagskopior. Den redan materialiserade dags-/skip-kopian ändras inte. Detaljerad data-/migration-/testplan och review finns i [FLOW-HOME-CHECKLIST-FILTERS-01 v4-amendment](../../plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md#radpresentation-och-ikonval-amendment-v4--2026-10-21); Architect och Security APPROVE är registrerade där och implementation följer dessa godkännanden.

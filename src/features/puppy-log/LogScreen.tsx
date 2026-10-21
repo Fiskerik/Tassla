@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ExpoCrypto from 'expo-crypto';
-import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { BottomSheet, Button, Card, CheckboxCard, Dialog, FirstUseTip, HorizontalGestureRegion, IconChip, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast, useFirstUseTip } from '../../components/ui';
+import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, LayoutAnimation, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { BottomSheet, Button, Card, CheckboxCard, Dialog, FirstUseTip, HorizontalGestureRegion, IconChip, ListRow, QuickLogTile, SectionHeader, Skeleton, Tabs, Toast, useFirstUseTip } from '../../components/ui';
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
@@ -15,7 +15,7 @@ import { localMonthKey } from './log-calendar-model';
 export type QuickLogMutationView = { kind: 'add' | 'update' | 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; accidentKinds?: readonly AccidentKind[] | null; status: 'pending' | 'failed' | 'unsure' | 'saved' };
 type EditorActionState = { canSave: boolean; saving: boolean };
 
-export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, refreshError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore, calendarMarkerMonth = '', calendarMarkers = [], calendarStatus = 'ready', onLoadCalendarMonth, onCancelCalendarRead }: {
+export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, refreshError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore, calendarMarkerMonth = '', calendarMarkers = [], calendarStatus = 'ready', onLoadCalendarMonth, onCancelCalendarRead, selectedDate: selectedDateProp, onSelectedDateChange, onOpenInsights }: {
   events: readonly LogEvent[];
   onAdd: (type: LogEventType, intent?: AccidentLogIntent) => void;
   onUpdate?: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
@@ -41,6 +41,9 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   calendarStatus?: 'loading' | 'ready' | 'error';
   onLoadCalendarMonth?: (month: string) => void;
   onCancelCalendarRead?: () => void;
+  selectedDate?: string;
+  onSelectedDateChange?: (date: string) => void;
+  onOpenInsights?: () => void;
 }) {
   const [moreVisible, setMoreVisible] = useState(false);
   const [addEventVisible, setAddEventVisible] = useState(false);
@@ -59,7 +62,13 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const [layout, setLayout] = useState<QuickLogLayout>(DEFAULT_QUICK_LOG_LAYOUT);
   const [layoutEditing, setLayoutEditing] = useState(false);
   const [layoutError, setLayoutError] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(() => localDate());
+  const [internalSelectedDate, setInternalSelectedDate] = useState(() => localDate());
+  const selectedDate = selectedDateProp ?? internalSelectedDate;
+  function updateSelectedDate(next: string | ((current: string) => string)) {
+    const value = typeof next === 'function' ? next(selectedDate) : next;
+    if (selectedDateProp === undefined) setInternalSelectedDate(value);
+    onSelectedDateChange?.(value);
+  }
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(() => localDate().slice(0, 7));
   const refreshedCalendarMutation = useRef('');
@@ -177,7 +186,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     lastSubmitAt.current = timestamp;
     setDuplicate(null);
     setMoreVisible(false);
-    if (selectedDate !== todayDate) setSelectedDate(todayDate);
+    if (selectedDate !== todayDate) updateSelectedDate(todayDate);
     firstUseTip.dismiss();
     onAdd(type);
   }
@@ -198,7 +207,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     lastSubmitAt.current = timestamp;
     setDuplicate(null);
     setAccidentDraft(null);
-    if (selectedDate !== todayDate) setSelectedDate(todayDate);
+    if (selectedDate !== todayDate) updateSelectedDate(todayDate);
     firstUseTip.dismiss();
     onAdd('accident', intent);
   }
@@ -275,6 +284,18 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     onLongPress={() => { firstUseTip.dismiss(); startLayoutEdit(); }}
     onPress={(event) => { firstUseTip.dismiss(); selectType(type, event.nativeEvent.timestamp); }}
   />;
+  const renderQuickStrip = (types: readonly QuickLogLayoutType[]) => <ScrollView
+    horizontal
+    accessibilityLabel="Snabbval för loggning"
+    showsHorizontalScrollIndicator={false}
+    contentContainerStyle={styles.quickActionStrip}
+    style={styles.quickActionViewport}
+  >
+    {types.map((type) => <View key={type} style={styles.quickActionItem}>{renderQuickTile(type)}</View>)}
+    <View style={[styles.quickActionItem, styles.moreActionItem]}>
+      <QuickLogTile subtle label="Fler" accessibilityLabel={moreVisible ? 'Dölj fler loggtyper' : 'Visa fler loggtyper'} accessibilityHint="Håll inne för att ändra snabbvalens layout" icon={<View style={styles.moreIcon}><Ionicons name={moreVisible ? 'close-outline' : 'grid-outline'} size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></View>} disabled={disabled} onLongPress={() => { firstUseTip.dismiss(); startLayoutEdit(); }} onPress={() => { firstUseTip.dismiss(); toggleMore(); }} />
+    </View>
+  </ScrollView>;
   const renderRows = (types: readonly QuickLogLayoutType[]) => Array.from({ length: Math.ceil(types.length / 2) }, (_, index) => (
     <View key={`${types[index * 2]}-${types[index * 2 + 1] ?? 'single'}`} style={styles.gridRow}>
       {types.slice(index * 2, index * 2 + 2).map(renderQuickTile)}
@@ -319,12 +340,13 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     onAutoDismiss={() => setDismissedMutationKey(successMutationKey)} />;
   return <View style={styles.screen}>
     <Text accessibilityRole="header" style={styles.pageTitle}>Logga</Text>
+    {onOpenInsights ? <Tabs items={['Idag', 'Översikt']} active="Idag" variant="rev02-segmented-strong" onChange={(value) => { if (value === 'Översikt') onOpenInsights(); }} /> : null}
     {firstUseTip.visible ? <FirstUseTip text="Tryck på Fler för fler loggtyper." onDismiss={firstUseTip.dismiss} /> : null}
     <Toast visible={loadMoreError} tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore ? () => { firstUseTip.dismiss(); return onLoadMore(); } : undefined} />
     <Toast visible={!editingEvent && mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} onCancel={() => { firstUseTip.dismiss(); onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
     <Toast visible={!editingEvent && mutation?.status === 'unsure'} tone="uncertain" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} />
     <View style={styles.dateNavigator}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Visa föregående dag" onPress={() => setSelectedDate((date) => shiftLocalDate(date, -1))} style={({ pressed }) => [styles.dateButton, pressed && styles.datePressed]}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Visa föregående dag" onPress={() => updateSelectedDate((date) => shiftLocalDate(date, -1))} style={({ pressed }) => [styles.dateButton, pressed && styles.datePressed]}>
         <Ionicons name="chevron-back" size={tokens.size.iconMd} color={tokens.colors.textPrimary} />
       </Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={`Valt datum ${formatSelectedDate(selectedDate, todayDate)}. Öppna kalender`} accessibilityHint="Välj en dag och se vilka dagar som har loggar" onPress={() => {
@@ -336,7 +358,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         <Text accessibilityLiveRegion="polite" style={styles.selectedDate}>{formatSelectedDate(selectedDate, todayDate)}</Text>
         <Ionicons name="calendar-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />
       </Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel="Visa nästa dag" accessibilityState={{ disabled: selectedDate >= todayDate }} disabled={selectedDate >= todayDate} onPress={() => setSelectedDate((date) => shiftLocalDate(date, 1))} style={({ pressed }) => [styles.dateButton, pressed && styles.datePressed]}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Visa nästa dag" accessibilityState={{ disabled: selectedDate >= todayDate }} disabled={selectedDate >= todayDate} onPress={() => updateSelectedDate((date) => shiftLocalDate(date, 1))} style={({ pressed }) => [styles.dateButton, pressed && styles.datePressed]}>
         <Ionicons name="chevron-forward" size={tokens.size.iconMd} color={selectedDate >= todayDate ? tokens.colors.textSecondary : tokens.colors.textPrimary} />
       </Pressable>
     </View>
@@ -345,12 +367,11 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       markers={mode === 'preview' ? displayedEvents.map((event) => localDateTimeParts(event.occurredAt).date).filter((date) => date.startsWith(`${calendarMonth}-`)) : calendarMarkerMonth === calendarMonth ? calendarMarkers : []}
       status={mode === 'preview' ? 'ready' : calendarMarkerMonth === calendarMonth ? calendarStatus : 'loading'}
       onMonthChange={(month) => { setCalendarMonth(month); onLoadCalendarMonth?.(month); }}
-      onSelectDate={(date) => { setSelectedDate(date); closeCalendar(); }}
+      onSelectDate={(date) => { updateSelectedDate(date); closeCalendar(); }}
       onRetry={() => onLoadCalendarMonth?.(calendarMonth)} />
     </BottomSheet>
     {loading ? <>
-      <SectionHeader title="Snabb logg" />
-      <Skeleton shape="card" lines={3} />
+      <Skeleton shape="row" lines={1} />
       <Skeleton shape="row" lines={2} />
     </> : loadError ? <View style={styles.errorState}>
       <Text style={styles.errorText}>Loggen kunde inte hämtas.</Text>
@@ -360,13 +381,11 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         <MessageCard tone="error">Loggen kunde inte uppdateras. Dina visade händelser är kvar.</MessageCard>
         <Button variant="tertiary" label="Försök igen" accessibilityLabel="Försök uppdatera loggen igen" onPress={() => { firstUseTip.dismiss(); onReload?.(); }} />
       </View> : null}
-      <SectionHeader title="Snabb logg" />
-      <View style={styles.grid}>
-        {layoutEditing ? <LayoutEditor layout={layout} onMove={moveLayoutType} onDone={() => setLayoutEditing(false)} error={layoutError} /> : renderRows(layout.primary)}
-      </View>
+      {layoutEditing
+        ? <LayoutEditor layout={layout} onMove={moveLayoutType} onDone={() => setLayoutEditing(false)} error={layoutError} />
+        : renderQuickStrip(layout.primary)}
       {successToast}
-      {!layoutEditing && <View style={styles.moreRow}><QuickLogTile subtle label="Fler" accessibilityLabel={moreVisible ? 'Dölj fler loggtyper' : 'Visa fler loggtyper'} accessibilityHint="Håll inne för att ändra snabbvalens layout" icon={<View style={styles.moreIcon}><Ionicons name={moreVisible ? 'close-outline' : 'grid-outline'} size={tokens.size.iconMd} color={tokens.colors.textPrimary} /></View>} disabled={disabled} onLongPress={() => { firstUseTip.dismiss(); startLayoutEdit(); }} onPress={() => { firstUseTip.dismiss(); toggleMore(); }} /></View>}
-      {!layoutEditing && moreVisible ? <View style={styles.grid} accessibilityLabel="Fler loggtyper">{renderRows(layout.more)}</View> : null}
+      {!layoutEditing && moreVisible ? renderQuickStrip(layout.more) : null}
 
       {accidentDraft ? <BottomSheet visible={!duplicate?.accidentIntent} title="Logga olycka" onRequestClose={closeAccidentSelector}>
         <View style={styles.accidentTypeGroup}>
@@ -387,7 +406,6 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         <LogEventEditor key={editingEvent.id} event={editingEvent} disabled={editLocked} onSave={(changes) => { firstUseTip.dismiss(); return saveEdit(editingEvent, changes); }} onSaved={() => setEditingId(null)} onCancel={() => { firstUseTip.dismiss(); setEditingId(null); }} onDelete={() => { firstUseTip.dismiss(); askToDelete(editingEvent); }} submitRef={editorSubmitRef} onActionStateChange={updateEditorActionState} />
       </BottomSheet> : null}
 
-      <SectionHeader title={selectedDate === todayDate ? 'Dagens logg' : 'Händelser'} />
       {timelineItems.map((item, index) => {
         if (item.kind === 'pending') {
           const parts = localDateTimeParts(item.event.occurredAt);
@@ -625,7 +643,9 @@ const styles = StyleSheet.create({
   datePressed: { backgroundColor: tokens.colors.selectedSurface },
   dateLabelButton: { flex: 1, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs },
   selectedDate: { ...tokens.typography.label, flexShrink: 1, color: tokens.colors.textPrimary, textAlign: 'center' },
-  grid: { gap: tokens.spacing.sm }, gridRow: { flexDirection: 'row', gap: tokens.spacing.sm }, moreRow: { marginTop: tokens.spacing.sm }, moreIcon: { width: tokens.size.chipLg, minHeight: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.selectedSurface },
+  grid: { gap: tokens.spacing.sm }, gridRow: { flexDirection: 'row', gap: tokens.spacing.sm },
+  quickActionViewport: { flexGrow: 0, overflow: 'visible' }, quickActionStrip: { flexDirection: 'row', alignItems: 'stretch', gap: tokens.spacing.sm, paddingVertical: tokens.spacing.xs },
+  quickActionItem: { width: 128, flexShrink: 0 }, moreActionItem: { width: 96 }, moreIcon: { width: tokens.size.chipLg, minHeight: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.selectedSurface },
   addEventButton: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.primary, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.primary }, addEventPressed: { backgroundColor: tokens.colors.primaryPressed, borderColor: tokens.colors.primaryPressed }, addEventDisabled: { opacity: 0.55 }, addEventLabel: { ...tokens.typography.label, color: tokens.colors.onPrimary }, addEventHelp: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   loadingOlder: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.sm }, loadingOlderText: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   patternText: { ...tokens.typography.body, color: tokens.colors.textPrimary, paddingVertical: tokens.spacing.xs },

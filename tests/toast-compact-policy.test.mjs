@@ -26,13 +26,11 @@ test('all visible and exiting toasts use the shared tokenized vertical margin an
   assert.match(toast, /marginVertical: tokens\.spacing\.md/);
 });
 
-test('LogScreen puts every confirmed mutation result after the normal grid and before Fler', () => {
-  const gridEnd = logScreen.indexOf('</View>\n      {successToast}');
-  const feedback = logScreen.indexOf('{successToast}', gridEnd);
-  const more = logScreen.indexOf('label="Fler"', feedback);
-  assert.ok(gridEnd >= 0 && feedback > gridEnd && more > feedback, 'confirmation follows the primary grid and precedes Fler');
-  const expandedTiles = logScreen.indexOf('{!layoutEditing && moreVisible ? <View style={styles.grid} accessibilityLabel="Fler loggtyper"', more);
-  assert.ok(expandedTiles > more, 'expanded quick-log choices follow the success feedback');
+test('LogScreen puts confirmed mutation feedback after the primary strip and before expanded choices', () => {
+  const primaryStrip = logScreen.indexOf(': renderQuickStrip(layout.primary)');
+  const feedback = logScreen.indexOf('{successToast}', primaryStrip);
+  const expandedTiles = logScreen.indexOf('{!layoutEditing && moreVisible ? renderQuickStrip(layout.more) : null}', feedback);
+  assert.ok(primaryStrip >= 0 && feedback > primaryStrip && expandedTiles > feedback, 'confirmation follows primary controls and precedes expanded choices');
   assert.match(logScreen.slice(logScreen.indexOf('const successToast ='), logScreen.indexOf('\n  return <View', logScreen.indexOf('const successToast ='))), /visible=\{mutation\?\.status === 'saved'/);
   assert.match(logScreen, /mutation\.kind === 'add' \? `\$\{LOG_EVENT_LABELS\[mutation\.type\]\} loggat` : mutation\.kind === 'update' \? 'Ändring sparad' : 'Händelsen är raderad'/);
   assert.doesNotMatch(logScreen, /DogMascot|dogReaction/);
@@ -46,5 +44,5 @@ test('selecting a quick log while Fler is expanded collapses Fler before the sav
   const selection = logScreen.slice(selectStart, selectEnd);
   assert.match(selection, /setMoreVisible\(false\)/);
   assert.match(selection, /onAdd\(type\)/);
-  assert.match(logScreen, /!layoutEditing && moreVisible \? <View style=\{styles\.grid\} accessibilityLabel="Fler loggtyper"/);
+  assert.match(logScreen, /!layoutEditing && moreVisible \? renderQuickStrip\(layout\.more\) : null/);
 });

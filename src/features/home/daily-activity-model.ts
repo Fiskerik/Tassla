@@ -1,12 +1,16 @@
 import type { HistoricalTrainingSource, PublishedTrainingProgram, PublishedTrainingStep } from '../../data/workspace-data';
 import type { DailyActivityRangeSnapshot, DailyActivitySnapshot, DailyRoutine, DailyRoutineDay, DailyRoutineDaySkip, DailyTrainingSelection } from './daily-activity-data';
+import { assignDailyRoutineChecklistIcons, type DailyRoutineChecklistIcon } from './daily-routine-checklist-icons';
 
 export type HomeDailyActivity = {
   id: string;
   label: string;
   routineLabel?: string;
+  routineId?: string;
   routineItemId?: string;
-  kind: 'routine' | 'training';
+  icon?: DailyRoutineChecklistIcon;
+  description?: string;
+  kind: 'routine' | 'training' | 'health';
   completed: boolean;
   routineDay?: DailyRoutineDay;
   trainingSelection?: DailyTrainingSelection;
@@ -15,6 +19,7 @@ export type HomeDailyActivity = {
   programTitle?: string;
   dateKey?: string;
   skipped?: boolean;
+  planned?: boolean;
   routineDaySkip?: DailyRoutineDaySkip;
   healthType?: 'vaccination' | 'vet_visit';
 };
@@ -42,6 +47,18 @@ export function localDateKeyAt(instant: string | Date, timeZone: string): string
   } catch {
     return null;
   }
+}
+
+export function dailyActivityScopeKey(input: {
+  accountId: string | null;
+  accountGeneration: number;
+  selectionKey: string;
+  instant: string | Date;
+  timeZone: string;
+  review: boolean;
+}): string {
+  const dateKey = localDateKeyAt(input.instant, input.timeZone);
+  return `${input.accountId ?? 'signed-out'}:${input.accountGeneration}:${input.selectionKey}:${dateKey ?? 'invalid-date'}:${input.timeZone}:${input.review ? 'review' : 'public'}`;
 }
 
 export function isValidDateKey(value: string): boolean {
@@ -158,16 +175,20 @@ export function deriveHomeDailyActivities(
   const activities: HomeDailyActivity[] = [];
   for (const row of snapshot.routineDays) {
     if (row.dog_id !== dogId || row.date_key !== dateKey || !routinesById.has(row.routine_id)) continue;
-    for (const item of row.checklist_snapshot) activities.push({
+    const icons = assignDailyRoutineChecklistIcons(row.checklist_snapshot);
+    row.checklist_snapshot.forEach((item, index) => activities.push({
       id: `routine:${row.id}:${item.id}`,
       label: item.label,
+      icon: item.icon ?? icons[index],
+      description: item.description,
       routineLabel: row.routine_label_snapshot,
+      routineId: row.routine_id,
       routineItemId: item.id,
       kind: 'routine',
       completed: row.completed_item_ids.includes(item.id),
       routineDay: row,
       dateKey,
-    });
+    }));
   }
   const programById = new Map(programs.map((program) => [program.id, program]));
   for (const row of snapshot.trainingSelections) {
@@ -205,13 +226,15 @@ export function deriveSavedRangeActivities(
   const result: HomeDailyActivity[] = [];
   for (const row of snapshot.routineDays) {
     if (row.dog_id !== dogId || row.date_key < from || row.date_key > to) continue;
-    for (const item of row.checklist_snapshot) result.push({ id: `routine:${row.id}:${item.id}`, label: item.label,
-      routineLabel: row.routine_label_snapshot, routineItemId: item.id, kind: 'routine',
-      completed: row.completed_item_ids.includes(item.id), routineDay: row, dateKey: row.date_key });
+    const icons = assignDailyRoutineChecklistIcons(row.checklist_snapshot);
+    row.checklist_snapshot.forEach((item, index) => result.push({ id: `routine:${row.id}:${item.id}`, label: item.label,
+      icon: item.icon ?? icons[index], description: item.description,
+      routineLabel: row.routine_label_snapshot, routineId: row.routine_id, routineItemId: item.id, kind: 'routine',
+      completed: row.completed_item_ids.includes(item.id), routineDay: row, dateKey: row.date_key }));
   }
   for (const row of snapshot.routineDaySkips) {
     if (row.dog_id !== dogId || row.date_key < from || row.date_key > to) continue;
-    result.push({ id: `skip:${row.day_id}`, label: row.routine_label_snapshot, routineLabel: row.routine_label_snapshot,
+    result.push({ id: `skip:${row.day_id}`, label: row.routine_label_snapshot, routineLabel: row.routine_label_snapshot, routineId: row.routine_id,
       kind: 'routine', completed: false, dateKey: row.date_key, skipped: true, routineDaySkip: row });
   }
   for (const row of snapshot.trainingSelections) {

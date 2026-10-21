@@ -1,13 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { withRequestDeadline, type WriteOutcome } from '../../data/workspace-data';
 import { isRoutineDueOnDate, isValidDateKey, isValidIanaTimeZone } from './daily-activity-model';
+import { isDailyRoutineChecklistIcon, type DailyRoutineChecklistIcon } from './daily-routine-checklist-icons';
 
 const REQUEST_TIMEOUT_MS = 12_000;
 const DAILY_ROUTINE_COLUMNS = 'id,dog_id,label,checklist,checklist_revision,legacy_single_item,repeat_unit,repeat_interval,repeat_weekdays,repeat_anchor_date';
 const DAILY_ROUTINE_DAY_COLUMNS = 'id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence,routine_revision_snapshot,routine_day_revision,last_state_mutation_id';
 const DAILY_ROUTINE_DAY_SKIP_COLUMNS = 'day_id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence,routine_revision_snapshot,routine_day_revision,last_state_mutation_id';
 
-export type DailyRoutineChecklistItem = { id: string; label: string };
+export type DailyRoutineChecklistItem = { id: string; label: string; icon?: DailyRoutineChecklistIcon; description?: string };
 export type DailyRoutineRepeatUnit = 'day' | 'week' | 'month';
 export type DailyRoutine = {
   id: string;
@@ -79,11 +80,13 @@ export type DailyActivityRangeSnapshot = {
 };
 
 const RANGE_PAGE_SIZE = 40;
+const MAX_SAVED_ACTIVITY_RANGE_DAYS = 30;
 
 export async function fetchDailyActivityRangeSnapshot(
   client: SupabaseClient, dogId: string, from: string, to: string, includeRoutines: boolean, parentSignal?: AbortSignal,
 ): Promise<DailyActivityRangeSnapshot> {
-  if (!isCanonicalUuid(dogId) || !isValidDateKey(from) || !isValidDateKey(to) || from > to) throw new Error('Invalid daily activity range');
+  if (!isCanonicalUuid(dogId) || !isValidDateKey(from) || !isValidDateKey(to) || from > to
+    || calendarDayCount(from, to) > MAX_SAVED_ACTIVITY_RANGE_DAYS) throw new Error('Invalid daily activity range');
   const sources = await Promise.allSettled([
     includeRoutines ? fetchRangePages<DailyRoutine>(client, 'dog_daily_routines', DAILY_ROUTINE_COLUMNS, dogId, null, null, isDailyRoutine, parentSignal) : Promise.resolve([]),
     fetchRangePages<DailyRoutineDay>(client, 'dog_daily_routine_days', DAILY_ROUTINE_DAY_COLUMNS, dogId, from, to, isDailyRoutineDay, parentSignal),
@@ -126,19 +129,29 @@ async function fetchRangePages<T extends Record<string, unknown>>(
     if (page.error || !Array.isArray(page.data) || !page.data.every((row: unknown) => validate(row) && (row as any).dog_id === dogId
       && (!from || (row as any).date_key >= from && (row as any).date_key <= to!))) throw new Error(`Could not load ${table}`);
     if (!page.data.length) break;
+    let previousDate = cursorDate;
+    let previousTie = cursorTie;
     for (const row of page.data as T[]) {
       const rowRecord = row as Record<string, unknown>;
       const unique = String(rowRecord[tieColumn]);
       const date = from ? String(rowRecord.date_key) : '';
       const key = `${date}:${unique}`;
-      if (seen.has(key) || cursorTie !== null && (from ? date < cursorDate! || date === cursorDate && unique <= cursorTie : unique <= cursorTie)) throw new Error(`Invalid ${table} cursor`);
+      if (seen.has(key) || previousTie !== null && (from
+        ? date < previousDate! || date === previousDate && unique <= previousTie
+        : unique <= previousTie)) throw new Error(`Invalid ${table} cursor`);
       seen.add(key); rows.push(row);
+      previousDate = from ? date : null;
+      previousTie = unique;
     }
     const last = page.data.at(-1) as Record<string, unknown>;
     cursorTie = String(last[tieColumn]); cursorDate = from ? String(last.date_key) : null;
     if (page.data.length < RANGE_PAGE_SIZE) break;
   }
   return rows;
+}
+
+function calendarDayCount(from: string, to: string): number {
+  return (Date.parse(`${to}T00:00:00.000Z`) - Date.parse(`${from}T00:00:00.000Z`)) / 86_400_000 + 1;
 }
 
 export async function fetchDailyActivitySnapshot(
@@ -564,9 +577,14 @@ function isValidRoutineChecklist(value: unknown): value is DailyRoutineChecklist
   return value.every((item) => {
     if (!item || typeof item !== 'object') return false;
     const row = item as Record<string, unknown>;
-    if (Object.keys(row).sort().join(',') !== 'id,label' || !isCanonicalUuid(row.id)
+    const shape = Object.keys(row).sort().join(',');
+    if (!['id,label', 'icon,id,label', 'description,id,label', 'description,icon,id,label'].includes(shape)
+      || !isCanonicalUuid(row.id)
       || typeof row.label !== 'string' || row.label.trim() !== row.label
       || Array.from(row.label).length < 1 || Array.from(row.label).length > 160 || seen.has(row.id)) return false;
+    if (Object.hasOwn(row, 'icon') && !isDailyRoutineChecklistIcon(row.icon)) return false;
+    if (Object.hasOwn(row, 'description') && (typeof row.description !== 'string' || row.description.trim() !== row.description
+      || Array.from(row.description).length < 1 || Array.from(row.description).length > 160)) return false;
     seen.add(row.id);
     return true;
   });
@@ -703,7 +721,8 @@ function sameRoutineOccurrence(left: DailyRoutineDay | DailyRoutineDaySkip, righ
 }
 
 function sameChecklist(left: readonly DailyRoutineChecklistItem[], right: readonly DailyRoutineChecklistItem[]): boolean {
-  return left.length === right.length && left.every((item, index) => item.id === right[index]?.id && item.label === right[index]?.label);
+  return left.length === right.length && left.every((item, index) => item.id === right[index]?.id && item.label === right[index]?.label
+    && item.icon === right[index]?.icon && item.description === right[index]?.description);
 }
 
 function sameStringArray(left: readonly string[], right: readonly string[]): boolean {

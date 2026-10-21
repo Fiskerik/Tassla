@@ -10,10 +10,12 @@ hook.deregister();
 const screen = await readFile(new URL('../src/features/knowledge/PuppyChecklistScreen.tsx', import.meta.url), 'utf8');
 const knowledge = await readFile(new URL('../src/features/knowledge/KnowledgeScreen.tsx', import.meta.url), 'utf8');
 
-test('checklist review content is gated before any account read or write', () => {
+test('checklist review content is gated before any account read or write and public mode has no controls', () => {
   assert.match(screen, /if \(reviewEnabled && active\) void load\(templateId\);\s*else setState\('ready'\)/);
   assert.match(screen, /if \(!reviewEnabled \|\|/);
-  assert.match(knowledge, /\["För dig", "Artiklar", "Checklistor", "FAQ"\]/);
+  assert.match(screen, /!reviewEnabled \? <View style=\{styles\.publicEmpty\}>/);
+  assert.match(knowledge, /KnowledgeIconBadge id=\{CHECKLIST_DESTINATION_ID\}/);
+  assert.doesNotMatch(knowledge, /<Tabs/);
 });
 
 test('navigation invalidates and aborts the current read/write before changing checklist view', () => {
@@ -32,6 +34,15 @@ test('screen feedback reflects only confirmed state and review drafts identify t
   assert.ok(screen.includes('label={`${done} av ${total} genomförda`}'));
   assert.match(screen, /label=\{form \? form\.id \? 'Fortsätt redigera punkt' : 'Fortsätt med egen punkt' : 'Lägg till egen punkt'\}/);
   assert.match(screen, /<Button label="Spara"/);
+});
+
+test('phase overview uses one featured image and compact shared phase rows', () => {
+  assert.match(screen, /const PHASE_ARTWORK: Partial<Record<ChecklistTemplate\['phase'\], ImageSourcePropType>>/);
+  assert.match(screen, /function renderFeaturedTemplate/);
+  assert.match(screen, /function renderTemplateRow/);
+  assert.match(screen, /styles\.phaseList/);
+  assert.doesNotMatch(screen, /<Text style=\{styles\.templateIntro\}>\{template\.intro\}<\/Text>/);
+  assert.doesNotMatch(screen, /reviewInfoOverview/);
 });
 
 test('pending status reconciliation classifies exact postimages before replay', () => {

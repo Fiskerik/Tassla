@@ -32,6 +32,8 @@ Avslutade paketnotiser har samlats här. Varje post bevarar ursprunglig status o
 | [HOME-ROUTINE-CHECKLIST-01](#home-routine-checklist-01) | 2026-10-15 | lokal UI-slice klar; QA/Reviewer PASS; live DB/native ej verifierat | `fix: clarify routine deletion cascade` på `codex/ux-rethink-2026-10-15` |
 | [P04-CONTENT](#p04-content) | okänt | `published` i bundlen, medan onboarding-only-versionen förblir `draft` för att inte läcka till den vanliga åldersbaserade feeden | ej angivet |
 | [UI-TRAINING-OVERVIEW-01](#ui-training-overview-01) | 2026-10-19 | implementerad, lokalt verifierad och pushad; QA/Reviewer PASS; native/live-data ej verifierat | `b59169c` |
+| [DOG-PROFILE-SEARCH-PILOT-01](#dog-profile-search-pilot-01) | 2026-10-21 | lokal implementation checkpoint; QA, Security och Reviewer PASS; inte pushad | bas `a57e1738`; bundle-ID:n i evidens |
+| [FLOW-TRAINING-01](#flow-training-01) | 2026-10-21 | lokal Home/Träning-checkpoint; QA/Reviewer PASS; ingen separat commit/push; panel/live/native/release accepterade separat | bas `a57e1738`; public/review bundle-ID:n i evidens |
 
 ## APP-01-PHONE
 
@@ -621,3 +623,38 @@ Eriks aktuella besked gör MVP rev02 till styrande plan i `docs/mvp.md`. V2:s vu
 Architect APPROVE, Critic PROCEED, oberoende QA PASS och Reviewer PASS. `pnpm check`: typkontroller/lint PASS; 619 tester totalt, 618 PASS, 1 SKIP, 0 FAIL. JSON, nio TOML, kö och whitespace PASS; 126 relativa länkar utan nya saknade mål. En redan saknad historisk rapportlänk redovisas i [taskunderlaget](../tasks/dev/rapport.md#docs-mvp-rev02-align-01--plan-v1-2026-10-20).
 
 Checkpoint: `codex/mvp-rev02-approved-plan`, bas `2967a3f34cfe4b33d4777626c911695552cce728`; innehållsdiff SHA-256 `1ea4c63367844978d9b08aa029f730054720a9fcae14deb4884e35514e4d01dc` (exklusive kö/rapport/historik). Leveranscommit finns i grenens Git-historik efter ordinarie hookar. Detta är endast dokumentation; appkod, databas, tester, verktyg och dependencies är oförändrade. Ingen signerad build skapad eller native/live/visuell/releaseacceptans utförd. Rasväljarpiloten är nästa separata appuppgift.
+
+## DOG-PROFILE-SEARCH-PILOT-01
+
+2026-10-21: en gemensam lokal sökbar rasväljare används nu i första hundprofilen, lägg till hund och profilredigering. Skapande kräver ett uttryckligt befintligt katalog-ID; söktext sparas inte. Redigering behåller sitt sparade ID och varnar oförändrat om katalogposten saknas. Laddning, katalogfel, tom katalog och sökning utan träff har separata tillstånd. Befintlig persistens, readback, RLS, routes och hund-/kontoscope ändrades inte.
+
+Architect **APPROVE** och Critic **PROCEED** för beteendekontrakt v2; redaktionella docs v2.1/v2.2 behöll samma scope och acceptans. Oberoende QA **PASS**: riktat Node-test 3 filer; `pnpm check` PASS, 64/64 testfiler; separata public/review RN Web-builds och 28/28 browserkontroller per bundle; 28 app-only skärmbilder per läge. Security **APPROVE**, inga fynd. Reviewer **PASS**, inga fynd; följdgranskade även v2.2:s korrigerade R02-4E-renderingsrapport. Punkt 16 markerar exakt profilpanelmatch som **NOT TESTABLE/ej tillämpligt**, eftersom `vision_rev02.jpg` saknar profilpanel; stödskärmen bedöms separat.
+
+Lokal checkpoint: branch `codex/dog-profile-search-pilot`, bas-HEAD `a57e17388d380800c6a378b6368babe6877b4f1c`. Arbetsdiffen är ännu inte committad; HEAD identifierar därför inte ensam arbetskopian. De två faktiskt granskade bundle-ID:na är `app.js` SHA-256 public `c4d08bcc6daf2acdc86c75d565a00aa304c4734160a5954010f7554dc9b8d62f` och review `64382951bd9ee5b2aa76f2212c40fe1d2d87b121edfb5e7ae105c9c5f01984a7`; viewportar, capture-fixtures och kommandon finns i [QA-underlaget](../design/evidence/vision-rev02/dog-profile-breed-search/README.md). Ingen kodcommit, push, PR eller release-build har skapats.
+
+Detta stänger endast den lokala väljarslicen. Live Supabase/RLS, native iOS-tangentbord/VoiceOver, Dynamic Type/140 % text, hela onboarding→Hem-resan och signerad release/build är **NOT TESTABLE** och godkänns inte av dessa syntetiska fixturer. Plan och status: [task](../tasks/dev/DOG-PROFILE-SEARCH-PILOT-01.md), [UX-spec](../plans/DOG-PROFILE-SEARCH-PILOT-UX-SPEC.md).
+
+## FLOW-TRAINING-01 — lokal Home/Träning-checkpoint, 2026-10-21
+
+Home använder nu samma `pickNextExercise`-regel som Träning. Fixen gör att ett pågående program vinner över ett opåbörjat program som råkar ligga tidigare i källordningen. Syntetisk public-resa verifierade nästa steg, bekräftad markering, Hem → Logg → Träning, bekräftad avmarkering och en ny flikresa. Review-fixturen verifierade lokal utkastcopy och att borttagna filter inte syns.
+
+Architect **APPROVE**, Critic **PROCEED**, oberoende QA **PASS** och Reviewer **PASS**. Reviewerns initiala **CHANGES** gällde endast föråldrade kömetadata; koordinatorn rättade tre statusfält och Reviewer gav därefter PASS. `pnpm check` 65/65; riktade träningsfiler PASS; public/review RN Web-bundles PASS; Playwright public 13/13 och review 5/5; Python syntax, `git diff --check` och kövalidering PASS. Full resultattabell, §14 och screenshots finns i [verifieringen](../design/evidence/flow-training-2026-10-21/VERIFICATION.md).
+
+Exakta lokala builds: implementerens public/review `app.js` SHA-256 `c07d2959db9c28c253f3892afa072576b0bd4ca37d04a18d975728bba280ada3` / `38e61f76ec19314a7d1b91ce485f47f987622f606c3f88b9619186551c93bdd0`; oberoende QA-builds `6974cda754e377deb188ea0655735d84410eafeb13c5ee5540df8ea94db2fdd9` / `25cc89d0016412f249468fa664cd4ad8866393d16210efaf2592b2c2f8959384`. Sextons screenshot-PNG:er är byte-identiska mellan körningarna. Lokal checkpoint på `codex/dog-profile-search-pilot`, HEAD/bascommit `a57e17388d380800c6c378b6368babe6877b4f1c`; sexfils-snapshot SHA-256 `e7362a077ebb96a1a0068251557780578e90b4215780ff2296f0b806c2dac1e7`. Ingen separat commit, push, PR, native build, signering eller release skapades.
+
+Detta stänger lokal kod-/QA-/reviewcheckpoint, inte hela panel 6. Live Supabase/RLS och verkligt publicerat innehåll samt funktionell native enhet är **NOT TESTABLE**; bred VoiceOver/TalkBack/Dynamic Type/140 %-granskning är uppskjuten efter MVP-release/godkännande. Signerad build/release är inte skapad. Full rev02-panel 6-visuell acceptans är **NOT ACCEPTED** enligt det dokumenterade ägarundantaget. Nästa prioriterade tillgängliga resa är `FLOW-KNOWLEDGE-01`; `FLOW-ONBOARD-01` har blockerade beroenden.
+
+
+## MVP-ACCESSIBILITY-SCOPE-ALIGN — alla framtida checkpoints, 2026-10-21
+
+Erik beslutade att skjuta upp systematisk tillgänglighetsanpassning till efter att första MVP-versionen är släppt och godkänd. Styrande dokument och framtida kögrindar är justerade: 140 %/stor-text- och screenreader-/native-a11y-matriser är inte rutinmässiga MVP-acceptanskriterier; synliga etiketter och befintlig funktionell semantik ska bevaras. Kvarvarande native verifiering av PDF/delning och funktionella profil-/Kunskapsresor har en separat MVP-task. Den planerade breda a11y-tasken är blockerad tills MVP-release och godkännande.
+
+Ändringen är dokument-/köharmonisering på `codex/dog-profile-search-pilot` med HEAD `a57e17388d380800c6c378b6368babe6877b4f1c`; inga ytterligare appfiler, tester eller verifieringsskript ändrades. Ingen release- eller juridisk slutsats görs; ett konkret bindande krav hanteras separat. `FLOW-TRAINING-01` tidigare QA:s 140 %-bilder behålls som informativ evidens, inte som framtida grind.
+
+## FLOW-KNOWLEDGE-01 — lokal UI-checkpoint, QA/Reviewer PASS, 2026-10-21
+
+Kunskapens rot behåller sökningen och får ikonledda vägval. FAQ visar kontextkort, expanderbara frågor och en separat svarsyta. Faschecklistor delar upp rekommenderad fas, övriga faser, bekräftad progress och uppgiftsrader. FAQ har en enda rubrik; regressionstest skyddar mot dubblering. Publicläge med saknat innehåll visar ärliga tomlägen utan inaktiva FAQ-/checklistval eller checklist-I/O. Ingen taxonomi, publicerad innehållspost, datamodell eller dependency infördes.
+
+Architect **APPROVE** och Critic **PROCEED** för plan v5; oberoende QA **PASS** och final Reviewer **PASS**. Efter Reviewer begärde §14-bedömning, aktuella köfält och rättad FAQ-rubrik åtgärdades alla tre inom oförändrat scope. Riktad testsvit 5/5, `pnpm check` 65/65, public browser 31/31 och review browser 68/68, utan fel. Public checklista gjorde noll läsningar/skrivningar. Alla 38 public/review-skärmbilder listas en gång med state/viewport-metadata; servad JS-hash matchar build-artifakten. QA:s isolerade runner blockerade localhost (EPERM), vilket redovisas; koordinatorn körde båda browserverifierarna mot samma exakt hashade artifacts.
+
+Public/review `know02-app.js` SHA-256: `95cb34b35aee3c919daeb0ab62702f91a8a1c2e805283acfa9e1ced387947d02` / `f7dcb6f166e6aeed95cc33311c4c9d3469dbbccc3f3fd9daa038b681b41b182d`. Scoped 55-file code/test/render snapshot SHA-256 `dac39f96ba809f928747dde04eb00dc597ddd06149c4886cddf8c69494774d74` (mutable queue/report/history excluded). Branch `codex/dog-profile-search-pilot`, HEAD/baseline `a57e17388d380800c6c378b6368babe6877b4f1c`; arbetskopian är ej committad; `build ID: ej skapad`. §14.16 bedöms **DELVIS**: panel 7:s ämneschips och fulla färgfördelning saknas; FAQ/checklist är stödyte-extrapolationer; live publicerat innehåll/Supabase/RLS och native är **NOT TESTABLE**. Signerad build/release är inte skapad. Se [renderingsrapport och skärmbevis](../design/evidence/flow-knowledge-01/RENDER-REPORT.md), [arbetsrapport](../tasks/dev/rapport.md#flow-knowledge-01--faqchecklist-ui-checkpoint-2026-10-21) och [plan v5](../plans/FLOW-KNOWLEDGE-01-ux-spec.md).

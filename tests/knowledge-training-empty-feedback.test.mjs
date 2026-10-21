@@ -10,20 +10,16 @@ const [knowledge, training, workspace, profileEditor, profileHeader] = await Pro
   readFile(new URL('../src/features/onboarding/ProfileScreenHeader.tsx', import.meta.url), 'utf8'),
 ]);
 
-test('Knowledge separates no published articles from no search matches and offers existing destinations', () => {
-  assert.ok(knowledge.includes("visibleItems.length === 0 && <View style={styles.searchEmpty}>"));
-  assert.ok(knowledge.includes('title="Öppna Checklistor"'));
-  assert.ok(knowledge.includes('title="Öppna Vanliga frågor"'));
+test('Knowledge separates no published articles from no search matches and keeps support destinations visible', () => {
+  assert.ok(knowledge.includes('visibleItems.length === 0 && <MessageCard>'));
+  assert.ok(knowledge.includes('accessibilityLabel="Öppna Checklistor"'));
+  assert.ok(knowledge.includes('accessibilityLabel="Öppna Vanliga frågor"'));
   assert.ok(knowledge.includes("visibleItems.length > 0 && hasSearchQuery && displayedItems.length === 0"));
-  assert.ok(knowledge.includes("openEmptyDestination('Checklistor')"));
-  assert.ok(knowledge.includes("openEmptyDestination('FAQ')"));
 });
 
-test('Knowledge restores För dig after opening Checklistor or FAQ from the no-content state', () => {
-  assert.ok(knowledge.includes('setEmptyReturnToForYou(true)'));
-  assert.ok(knowledge.includes("emptyReturnToForYou && tab === 'FAQ'"));
-  assert.ok(knowledge.includes("emptyReturnToForYou && tab === 'Checklistor'"));
-  assert.ok(knowledge.includes("onPress={() => changeTab('För dig')}"));
+test('Knowledge support screens return to the root, whose existing action returns to Training', () => {
+  assert.ok(knowledge.includes('actionLabel="Tillbaka till Kunskap" onAction={() => changeTab(\'För dig\')}'));
+  assert.ok(knowledge.includes('actionLabel="Tillbaka till Träning" onAction={onBack}'));
   assert.ok(knowledge.includes("onBack={() => changeTab('För dig')}"));
 });
 

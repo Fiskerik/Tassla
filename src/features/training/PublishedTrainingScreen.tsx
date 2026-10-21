@@ -9,7 +9,7 @@ import { allProgramsComplete, completedCount, exerciseCountLabel, exerciseProgre
 export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, onAddBirthDate, onOpenKnowledge, reviewMode = false, focusStep, onCloseStep }: {
   ageWeeks: number | null; programs: readonly PublishedTrainingProgram[]; paused: readonly PausedTrainingProgress[]; busyStepKey: string | null; error: string;
   reviewMode?: boolean;
-  focusStep?: { programId: string; stepId: string; returnPage: 'home' | 'checklist' };
+  focusStep?: { programId: string; stepId: string; returnPage: 'home' | 'checklist'; readOnly?: boolean };
   onCloseStep?: () => void;
   onCompleteStep: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>;
   onUnmarkStep?: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>; onContinue: () => void;
@@ -131,7 +131,8 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       {selectedProgram.is_ai_generated ? <Text style={styles.note}>AI-genererat innehåll</Text> : null}
       <Text style={styles.body}>{selectedStep.instruction}</Text>
       <Text style={styles.note}>Anpassa efter din hund och pausa när det behövs.</Text>
-      {selectedProgram.completedStepIds.includes(selectedStep.id) ? <>
+      {focusStep.readOnly ? <Text style={styles.note}>Historisk aktivitet · skrivskyddad · {selectedProgram.completedStepIds.includes(selectedStep.id) ? 'Klar' : 'Inte markerad'}</Text>
+        : selectedProgram.completedStepIds.includes(selectedStep.id) ? <>
         <Text style={styles.note}>Genomförd. Ni kan gärna öva igen.</Text>
         {onUnmarkStep || (reviewMode && isReviewTrainingProgram(selectedProgram.id)) ? <Button variant="tertiary" label="Avmarkera" accessibilityLabel={`Avmarkera ${selectedStep.title}`} loading={busyStepKey === `${selectedProgram.id}:${selectedStep.id}:unmark`} disabled={Boolean(busyStepKey)} onPress={() => { void unmark(); }} /> : null}
       </> : <>

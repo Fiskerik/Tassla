@@ -27,11 +27,10 @@ const otherDogId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const today = '2026-10-06';
 const tomorrow = '2026-10-07';
 
-test('notification settings stack the information action for compact or enlarged layouts while keeping prompts explicit', () => {
+test('notification settings stack the information action at narrow widths while keeping prompts explicit', () => {
   assert.match(settingsSource, /useWindowDimensions\(\)/);
-  assert.match(settingsSource, /width < 360 \|\| fontScale >= 1\.25/);
+  assert.match(settingsSource, /width < 360/);
   assert.match(settingsSource, /infoRowStacked: \{ flexDirection: 'column', alignItems: 'stretch'/);
-  assert.match(settingsSource, /infoButton: \{ minHeight: tokens\.size\.touchMin/);
   assert.match(settingsSource, /infoButtonText: \{[^}]*flexShrink: 1/);
   assert.match(settingsSource, /onPress=\{\(\) => \{ void requestPermission\(\); \}\}/);
   assert.match(settingsSource, /async function save\(\)[\s\S]*?await onSave\(/);

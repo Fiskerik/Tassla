@@ -712,7 +712,7 @@
       ],
       "acceptance": [
         "Login, onboarding profile and log editor actions remain reachable with the keyboard open on a small iPhone",
-        "Drag dismiss, supported Done action, multiline dismiss path, large text, VoiceOver focus and bottom navigation are physically checked",
+        "Drag dismiss, supported Done action, multiline dismiss path and bottom navigation are physically checked",
         "Physical sign-out cancel, confirm and pending/double-tap behavior are recorded without exposing personal data; controlled failure/retry is verified locally in APP-04A-UX"
       ],
       "checks": [
@@ -797,7 +797,7 @@
         "docs/tasks/dev/app-05-phone-db.md"
       ],
       "acceptance": [
-        "Physical weight form keyboard, decimal input, edit/delete confirmation and accessibility are recorded",
+        "Physical weight form keyboard, decimal input and edit/delete confirmation are recorded",
         "Two synthetic accounts verify weight read/insert/update/delete ownership, actor handling and old-session behavior in development Supabase",
         "Any remaining limitation is recorded as NOT TESTABLE; no real owner data is used"
       ],
@@ -1784,7 +1784,7 @@
       ],
       "acceptance": [
         "Nya UI-tokens och beställda komponentfamiljer är enda källa för ny UI; legacyalias bevarar befintliga skärmar",
-        "Alla nya interaktiva komponenter har minst 44x44 tryckyta, märkt tillgänglighet och stor-textflöde",
+        "Nya komponenter använder befintliga tokens och behåller fungerande synliga etiketter; systematisk träffyte- och stor-textaudit skjuts upp efter MVP",
         "Galleri nås endast genom befintligt explicit utvecklingspreviewflöde; produktionsnavigationen är oförändrad",
         "Legacy lintvarningar redovisas, nya UI-filer har noll hårdkodade hex eller numeriska fontSize",
         "Renderad visuell evidens och checklista finns; annars är visuell status NOT TESTABLE och paketet inte klart"
@@ -1793,7 +1793,7 @@
         "Focused UI policy and preview tests",
         "pnpm check",
         "git diff --check",
-        "Rendered gallery screenshots at small/large width and large text",
+        "Rendered gallery screenshots at relevant standard widths",
         "Independent QA and Reviewer"
       ],
       "depends_on": [
@@ -1872,7 +1872,7 @@
           "evidence": "Erik reports 2026-10-10 that DS-CODE-01 and LOGGA-QUICK were already verified on phone and work well. Recorded as user-reported; build/version, screenshots and independent visual QA are not attached. Erik selected option A and directed MOTION to continue based on this report."
         }
       ],
-      "next_step": "Render dev gallery on small/large phone widths and large text, save screenshots, run independent visual QA checklist, then renewed reviewer"
+      "next_step": "Render dev gallery at relevant standard widths, save screenshots, run proportionate visual QA, then renewed reviewer"
     },
     {
       "id": "LOGGA-QUICK",
@@ -1905,7 +1905,7 @@
         "Single-flight add visar pending på rätt rad, saved-toast först efter bekräftelse, failed/unsure med fungerande retry och undo endast för exakt bekräftad insert",
         "Samma kategori inom två minuter frågar före ny write; double tap skapar ingen extra write",
         "Mönster visas bara per Kiss/Bajs med minst två poster och behåller medianberäkningen",
-        "Liten/stor telefon och stor text samt laddar/tom/fel/normal, Fler, mutationstoasts och dubblettdialog har renderad evidens och oberoende visuell QA",
+        "Relevanta standardbredder samt laddar/tom/fel/normal, Fler, mutationstoasts och dubblettdialog har renderad evidens och oberoende visuell QA",
         "Befintlig update/delete-funktion är nåbar fram till LOGGA-EDIT; QUICK tar inte bort godkända rättnings- eller raderingsmöjligheter"
       ],
       "checks": [
@@ -2044,7 +2044,7 @@
           "evidence": "Erik reports 2026-10-10 that DS-CODE-01 and LOGGA-QUICK were already verified on phone and work well. Recorded as user-reported; build/version, screenshots and independent visual QA are not attached. Erik selected option A and directed MOTION to continue based on this report."
         }
       ],
-      "next_step": "Erik opens the development preview on a phone or provides a native rendering environment; capture the required screenshot matrix and run independent visual QA before DONE"
+      "next_step": "Erik opens the development preview on a phone or provides a native rendering environment; capture relevant standard-width screenshots and run independent visual QA before DONE"
     },
     {
       "id": "LOGGA-EDIT",
@@ -3231,13 +3231,13 @@
         "DevelopmentPreview keeps the existing one-tap quick-log behavior without a time-selection step",
         "Existing add/edit/delete/readback, undo, retry, conflict and owner-scoped mutation behavior remains truthful",
         "No planned-health/reminder, weight, PDF, data-purpose, dependency or live database changes; Erik explicitly scoped work to log + vaccination/veterinary history",
-        "Focused/full checks, migration/grant policy checks and render evidence for narrow/wide/large text are recorded; actual database/RLS is reported NOT TESTABLE unless approved synthetic environment is available"
+        "Focused/full checks, migration/grant policy checks and render evidence for narrow/wide standard viewports are recorded; actual database/RLS is reported NOT TESTABLE unless approved synthetic environment is available"
       ],
       "checks": [
         "Focused log, health history, workspace data and Home timeline tests; pnpm check (not run at this checkpoint per coordinator instruction)",
         "iOS export, git diff --check and python tools/dev_flow.py validate (not run at this checkpoint per coordinator instruction)",
         "Independent QA, Reviewer and Security review of frozen data/schema diff",
-        "Rendered optional health-time field in blank-save and selected-time states, Home timeline and toast matrix at narrow/wide/large text compared with vision_rev01.jpg; DB/RLS probe only in approved synthetic dev DB"
+        "Rendered optional health-time field in blank-save and selected-time states, Home timeline and toast matrix at narrow/wide standard viewports against the approved visual reference; DB/RLS probe only in approved synthetic dev DB"
       ],
       "depends_on": [],
       "status": "blocked",
@@ -5715,7 +5715,7 @@
     },
     {
       "id": "DOG-PROFILE-BREED-MIX",
-      "title": "Sökbar raslista, Mix och Home-identitet",
+      "title": "Wikidata-katalog, Mix-delraser och Home-identitet",
       "mvp_requirement": "docs/mvp.md: Stöd — hundprofil/onboarding; Skärm 1 — Home/Today",
       "plan": "docs/tasks/dev/vision-rev02-dog-profile-v2.md v8; docs/plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md v8",
       "write_paths": [
@@ -5745,7 +5745,7 @@
       ],
       "acceptance": [
         "Catalog source has documented redistribution rights, verified snapshot/date/count and stable IDs; Mix is first, and all remaining breed labels including Okänd ras are sorted together alphabetically using Swedish collation.",
-        "One accessible searchable picker is reused in onboarding and profile edit; arbitrary typed text cannot be persisted. A no-match in the main picker offers direct selection of Okänd ras; Mix component pickers never offer Okänd ras.",
+        "The independent DOG-PROFILE-SEARCH-PILOT-01 delivers the shared searchable picker for the existing catalog; this task owns only the remaining verified catalog import and Mix extension. Mix component pickers never offer Okänd ras.",
         "Mix can save without components or with two distinct known breeds; neither Mix nor Okänd ras can be a component.",
         "Migration, RPC, owner RLS, narrow grants, condition/readback, and create behavior protect the profile fields; no duplicate legacy RPC ambiguity.",
         "Home shows name | breed or name | Mix, wraps long names without clipping, and preserves the saved age preference. Mix parts remain visible in profile and do not change content targeting.",
@@ -5761,7 +5761,7 @@
         "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-dog-profile/review node tools/visual-check/build.cjs",
         "python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-dog-profile/public",
         "python -m http.server 4174 --bind 127.0.0.1 --directory /tmp/tassla-dog-profile/review",
-        "For public and review fixtures inspect Slice B routes: /?screen=profile-create&profileScenario=ready; /?screen=profile-edit&profileScenario=ready|loading|error; /?screen=profile-edit&state=conflict; /?screen=profile-create&profileScenario=breed-loading|breed-error; /?screen=profile-edit&profileScenario=breed-loading|breed-error; /?screen=home&homeScenario=ready. Here profileScenario=loading|error is dog-profile load/save status; profileScenario=breed-loading|breed-error is the separate breed-catalog request status. On create/edit capture normal and long breed labels, matching and no-match search, direct Okänd ras selection from the main-picker empty state, Mix checkbox off, checkbox on with zero components, with only the first component, and with two distinct breeds. Verify missing-selector status, disabled Save until two distinct breeds are selected, second-picker exclusion of the first, and duplicate-component rejection, Okänd ras exclusion from Mix components, long Home identity wrapping, and preserved age preference. Slice B Home review verifies final name | breed/Mix identity and keeps the age preference saved by Slice A. Capture representative Slice B states at 375x844, 430x844, and 375x667. For 140% text scaling use Firefox View > Zoom > Zoom Text Only on profile-edit-ready and Home; if unavailable, report NOT TESTABLE. Native Dynamic Type/VoiceOver and database runtime are NOT TESTABLE. Save public/review captures to docs/design/evidence/vision-rev02/dog-profile/public/ and docs/design/evidence/vision-rev02/dog-profile/review/. Prefix all filenames with synthetic- and record route/state, viewport, text scale, and fixture mode in docs/design/evidence/vision-rev02/dog-profile/README.md; both fixtures are synthetic even without a review banner. Complete docs/design-rules.md §14; no test suites. SQL/RLS runtime NOT TESTABLE without dev DB."
+        "For public and review fixtures inspect Slice B routes: /?screen=profile-create&profileScenario=ready; /?screen=profile-edit&profileScenario=ready|loading|error; /?screen=profile-edit&state=conflict; /?screen=profile-create&profileScenario=breed-loading|breed-error; /?screen=profile-edit&profileScenario=breed-loading|breed-error; /?screen=home&homeScenario=ready. Here profileScenario=loading|error is dog-profile load/save status; profileScenario=breed-loading|breed-error is the separate breed-catalog request status. On create/edit capture normal and long breed labels, matching and no-match search, direct Okänd ras selection from the main-picker empty state, Mix checkbox off, checkbox on with zero components, with only the first component, and with two distinct breeds. Verify missing-selector status, disabled Save until two distinct breeds are selected, second-picker exclusion of the first, and duplicate-component rejection, Okänd ras exclusion from Mix components, long Home identity wrapping, and preserved age preference. Slice B Home review verifies final name | breed/Mix identity and keeps the age preference saved by Slice A. Capture representative Slice B states at 375x844, 430x844, and 375x667. No 140%/large-text or screen-reader matrix is required before MVP release. Functional native/database checks, if required by the accepted journey, are reported separately. Save public/review captures to docs/design/evidence/vision-rev02/dog-profile/public/ and docs/design/evidence/vision-rev02/dog-profile/review/. Prefix all filenames with synthetic- and record route/state, viewport, text scale, and fixture mode in docs/design/evidence/vision-rev02/dog-profile/README.md; both fixtures are synthetic even without a review banner. Complete docs/design-rules.md §14; no test suites. SQL/RLS runtime NOT TESTABLE without dev DB."
       ],
       "depends_on": [
         "DOG-PROFILE-AGE-DISPLAY"
@@ -5775,7 +5775,103 @@
           "evidence": "At the time of the initial block, the source choice was unresolved. Erik has since selected Wikidata structured data under CC0 (2026-10-13). The exact SPARQL snapshot remains unavailable: WDQS GET and POST both returned HTTP 403 and the web tool cannot access API endpoints. No catalogue snapshot or app code may begin until the dated export is locally verified."
         }
       ],
-      "next_step": "Source choice is resolved: Wikidata CC0. Snapshot acquisition remains blocked because the exact WDQS query returned HTTP 403 on both GET and POST; the web tool also cannot access API endpoints. Keep Slice B blocked and do not create a partial/fabricated breed list. Once a dated export is available, verify exact query, count, unique QIDs, Swedish/English label mapping and breeds.name 1–100 character limit; add the snapshot file to write_paths and re-review the updated plan before catalogue code."
+      "next_step": "Wikidata CC0 source choice is resolved; the dated snapshot is still unavailable, so verified catalog import and Mix schema/components remain blocked. This block no longer applies to local search over the existing catalog: that bounded journey is tracked by DOG-PROFILE-SEARCH-PILOT-01. Do not create a partial/fabricated breed list. When a dated export is available, verify query, count, unique QIDs, Swedish/English labels and breeds.name 1–100 character limit, then re-review the catalog/Mix plan before implementation."
+    },
+    {
+      "id": "DOG-PROFILE-SEARCH-PILOT-01",
+      "title": "Gemensam sökbar rasväljare i profil, lägg till hund och redigering",
+      "mvp_requirement": "docs/mvp.md §4.1 Hundprofil och onboarding; §14 genomförandestatus",
+      "plan": "docs/tasks/dev/DOG-PROFILE-SEARCH-PILOT-01.md v2.2; docs/plans/DOG-PROFILE-SEARCH-PILOT-UX-SPEC.md v2.2",
+      "write_paths": [
+        "src/features/onboarding/SearchableBreedPicker.tsx",
+        "src/features/onboarding/breed-search.ts",
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/onboarding/README.md",
+        "tests/breed-search.test.mjs",
+        "tests/profile-screen-policy.test.mjs",
+        "tests/profile-edit.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/README.md",
+        "tools/visual-check/verify-dog-profile-breed-search.py",
+        "docs/design/evidence/vision-rev02/dog-profile-breed-search/",
+        "docs/plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md",
+        "docs/tasks/dev/vision-rev02-dog-profile-v2.md",
+        "docs/design/evidence/vision-rev02/r02-4e/RENDER-REPORT.md",
+        "docs/plans/VISION-REV02-R02-4E-PROFILE-UX-SPEC.md",
+        "docs/plans/DOG-PROFILE-SEARCH-PILOT-UX-SPEC.md",
+        "docs/tasks/dev/DOG-PROFILE-SEARCH-PILOT-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Initial profile and add-dog start with no selected breed; the same accessible picker requires an explicit existing catalog selection before create.",
+        "Profile edit reuses the same picker and starts with the saved dog.breed_id; when absent from the current catalog, the ID and existing missing-catalog warning/validation remain until explicit replacement.",
+        "Local search filters fetched catalog names only; exact normalization and catalog order are tested. Typing, clear, close and system-back do not call onSelect; explicit result or the previously approved no-match `Okänd ras` action (when that real catalog entry exists) passes only its catalog ID, and free text never creates or persists an ID.",
+        "Loading, fetch error, successful empty catalog, and no search match are distinct. Search resets on close, focus moves to search on open and back to the trigger on dismissal, and busy/pending locks the relevant picker and form actions.",
+        "Existing fetch/retry, create request ID/readback, edit conditional save/readback, kennel, age, account/dog scope, error/unknown recovery, routes, add cancellation callback and selection flow are regression-verified.",
+        "Synthetic public/review harness has separate profile-create, profile-add and profile-edit routes; it verifies initial/add disabled before selection and enabled after selection, saved/missing edit ID, add cancellation callback, matching/no-match/close, empty catalog, and available loading/error/retry/busy/pending at 375x844, 430x844, 375x667 and 140% text where available. §14 records exact profile-panel comparison as NOT TESTABLE because vision_rev02.jpg has no profile panel; support-screen criteria and limitations are documented separately.",
+        "Independent QA, Security review of the existing profile data-field UI and independent Reviewer assess the frozen diff; code, local QA, live/RLS, native, visual and release statuses remain separate."
+      ],
+      "checks": [
+        "pnpm check",
+        "node --experimental-strip-types --test tests/breed-search.test.mjs tests/profile-screen-policy.test.mjs tests/profile-edit.test.mjs",
+        "pnpm exec eslint src/features/onboarding/SearchableBreedPicker.tsx src/features/onboarding/breed-search.ts src/features/onboarding/ProfileScreen.tsx src/features/onboarding/EditDogProfileScreen.tsx tools/visual-check/app.tsx",
+        "git diff --check",
+        "python tools/dev_flow.py validate",
+        "TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-dog-profile-search/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-dog-profile-search/review node tools/visual-check/build.cjs",
+        "python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-dog-profile-search/public",
+        "python tools/visual-check/verify-dog-profile-breed-search.py --base-url http://127.0.0.1:4173/",
+        "Capture synthetic public/review renders for profile-create, profile-add and profile-edit and complete docs/design-rules.md §14."
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v2 och Critic PROCEED för exakt plan/UX-spec v2; båda reviewresultaten dokumenterade i DOG-PROFILE-SEARCH-PILOT-01.md. Ägarens Ja avser första pilotresan; kontroll och avgränsning klar."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik har godkänt MVP rev02 och sagt Ja till första kompletta pilotresa. Implementer tilldelas nu exakt de godkända app-/harnessvägarna; ingen datamodell, persistens, RLS eller dependency ändras."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementer-fryst handoff: public/review build, Playwright 28/28, typecheck, edge typecheck, lint, Python compile och diff-check PASS. pnpm check: 62/63; enda felet är gammal source-text assertion i profile-screen-policy.test.mjs efter godkänd komponentextraktion. App-/harnessfiler frysta; QA äger assertionens uppdatering och full regression."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "QA PASS: targeted Node regression 3/3 files; pnpm check typecheck/edge/lint and 64/64 test files; separate public/review builds and 28/28 browser checks each; 28 app-only captures per mode at planned sizes; §14 recorded. Exact profile-panel #16 remains NOT TESTABLE (no such panel). Evidence: docs/design/evidence/vision-rev02/dog-profile-breed-search/README.md."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS for frozen v2.2 code/docs/evidence; follow-up verified the R02-4E exact-panel status correction and queue write-path/version sync. QA PASS (focused tests 3 files; pnpm check 64/64; public/review browser verification 28/28 each); Security APPROVE. Local checkpoint only: live/RLS, native, full onboarding-to-Home and release remain NOT TESTABLE; no commit or push. Next broader journey: FLOW-ONBOARD-01."
+        }
+      ],
+      "next_step": "Independent Reviewer PASS for frozen v2.2 code/docs/evidence; follow-up verified the R02-4E exact-panel status correction and queue write-path/version sync. QA PASS (focused tests 3 files; pnpm check 64/64; public/review browser verification 28/28 each); Security APPROVE. Local checkpoint only: live/RLS, native, full onboarding-to-Home and release remain NOT TESTABLE; no commit or push. Next broader journey: FLOW-ONBOARD-01.",
+      "priority": "P1",
+      "panels": [
+        "support:dog-profile"
+      ],
+      "risk_class": "M",
+      "checkpoint": "One local complete create/add/edit breed-selection journey using the existing catalog; no new catalog/Mix integration. Keep live/RLS, native, exact panel visual, whole onboarding and release acceptance separate.",
+      "test_evidence": [
+        "Explicit selection and local-search behavior; existing Okänd ras fallback uses a real catalog ID; create/add/edit regression; empty catalog/no-match/failure/retry and unknown-result preservation; rendered public/review states and §14 deviation record."
+      ],
+      "implementation_state": "Shared searchable picker implemented in create/add/edit; independent QA PASS; Security APPROVE; Reviewer PASS for frozen code/docs v2.2.",
+      "evidence_status": "Local QA PASS: focused tests 3 files; pnpm check 64/64 test files; public/review builds and browser checks 28/28 each; 28 captures per mode. Security APPROVE; independent Reviewer PASS. NOT TESTABLE: live/RLS, native/140% text, full onboarding→Home, exact panel comparison, release."
     },
     {
       "id": "DOG-PROFILE-AGE-DISPLAY",
@@ -5827,7 +5923,7 @@
         "TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-dog-profile/review node tools/visual-check/build.cjs",
         "python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-dog-profile/public",
         "python -m http.server 4174 --bind 127.0.0.1 --directory /tmp/tassla-dog-profile/review",
-        "For public and review fixtures inspect Slice A age routes: /?screen=profile-edit&profileScenario=ready for the age-unit selector, plus /?screen=profile&ageUnit=weeks|months|years, /?screen=home&ageUnit=weeks|months|years, and /?screen=passport&ageUnit=weeks|months|years. Verify that one saved dog preference is consistent across read-only Dog Profile, Home, and Tassla-pass, while Home keeps its full name | breed identity above the age line and wraps a long breed label without clipping. Manually inspect createPassportSnapshot and renderPassportHtml for weeks, months, and years: each PassportSnapshot.dog.ageLabel must equal the rendered HTML age and derive from that snapshot createdOn; with profile sharing off, both dog and age are omitted. This is a manual non-test-suite check; native PDF rendering remains NOT TESTABLE. Capture every profile/Home/Passport age-unit route at 375x844, 430x844, and 375x667. For 140% text scaling use Firefox View > Zoom > Zoom Text Only on profile-edit-ready and Home; if unavailable, report NOT TESTABLE. Native Dynamic Type/VoiceOver and database runtime are NOT TESTABLE. Save public/review captures to docs/design/evidence/vision-rev02/dog-profile/public/ and docs/design/evidence/vision-rev02/dog-profile/review/. Prefix all filenames with synthetic- and record route/state, viewport, text scale, and fixture mode in docs/design/evidence/vision-rev02/dog-profile/README.md; both fixtures are synthetic even without a review banner. Complete docs/design-rules.md §14; no test suites. SQL/RLS runtime NOT TESTABLE without dev DB."
+        "For public and review fixtures inspect Slice A age routes: /?screen=profile-edit&profileScenario=ready for the age-unit selector, plus /?screen=profile&ageUnit=weeks|months|years, /?screen=home&ageUnit=weeks|months|years, and /?screen=passport&ageUnit=weeks|months|years. Verify that one saved dog preference is consistent across read-only Dog Profile, Home, and Tassla-pass, while Home keeps its full name | breed identity above the age line and wraps a long breed label without clipping. Manually inspect createPassportSnapshot and renderPassportHtml for weeks, months, and years: each PassportSnapshot.dog.ageLabel must equal the rendered HTML age and derive from that snapshot createdOn; with profile sharing off, both dog and age are omitted. This is a manual non-test-suite check; native PDF rendering remains NOT TESTABLE. Capture every profile/Home/Passport age-unit route at 375x844, 430x844, and 375x667. No 140%/large-text or screen-reader matrix is required before MVP release. Native PDF function and database runtime are reported separately where applicable. Save public/review captures to docs/design/evidence/vision-rev02/dog-profile/public/ and docs/design/evidence/vision-rev02/dog-profile/review/. Prefix all filenames with synthetic- and record route/state, viewport, text scale, and fixture mode in docs/design/evidence/vision-rev02/dog-profile/README.md; both fixtures are synthetic even without a review banner. Complete docs/design-rules.md §14; no test suites. SQL/RLS runtime NOT TESTABLE without dev DB."
       ],
       "depends_on": [],
       "status": "blocked",
@@ -5863,7 +5959,7 @@
           "evidence": "Local Slice A static handoff passes independent QA and Reviewer; Security APPROVE, including closure of the access/copy inventory note. Keep blocked for integration completion: actual Supabase migration, owner RLS, saved-preference persistence, native PDF and native accessibility are NOT TESTABLE in this environment. No database/runtime pass is claimed."
         }
       ],
-      "next_step": "Local Slice A static handoff passes independent QA and Reviewer; Security APPROVE, including closure of the access/copy inventory note. Keep blocked for integration completion: actual Supabase migration, owner RLS, saved-preference persistence, native PDF and native accessibility are NOT TESTABLE in this environment. No database/runtime pass is claimed."
+      "next_step": "Local Slice A static handoff passes independent QA and Reviewer; Security APPROVE, including closure of the access/copy inventory note. Keep blocked for integration completion: actual Supabase migration, owner RLS, saved-preference persistence, native PDF function remains unverified; broad accessibility testing is deferred until after MVP release and approval. No database/runtime pass is claimed."
     },
     {
       "id": "CHECKLIST-UI-LUNA-DETAIL",
@@ -7256,10 +7352,14 @@
       "id": "FLOW-HOME-CHECKLIST-FILTERS-01",
       "title": "Hem: Denna vecka, Alla och Kommande i Checklistan",
       "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 4; docs/design/vision-rev02-screen-contracts.md panel 4",
-      "plan": "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md v2 — Product APPROVE, Architect APPROVE, Critic PROCEED, Security APPROVE (2026-10-20)",
+      "plan": "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md v2 + approved v3/v4/v5 panel-4 composition amendment (2026-10-21); Architect APPROVE, Critic PROCEED with clarity criteria incorporated",
       "write_paths": [
+        "src/components/AppPrimitives.tsx",
         "src/features/home/DailyChecklistScreen.tsx",
+        "src/components/ui/Tabs.tsx",
         "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/features/home/daily-routine-checklist-icons.ts",
         "src/features/home/ProductWorkspace.tsx",
         "src/features/training/PublishedTrainingScreen.tsx",
         "src/features/home/daily-activity-data.ts",
@@ -7268,12 +7368,21 @@
         "src/data/workspace-data.ts",
         "src/features/health/PlannedHealthScreen.tsx",
         "tests/daily-activity-range.test.mjs",
-        "tests/daily-checklist-filters.test.mjs",
+        "tests/daily-activity-data.test.mjs",
         "tests/daily-activity-model.test.mjs",
+        "tests/daily-routine-checklist-icons.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/daily-checklist-screen.test.mjs",
+        "tests/daily-checklist-route.test.mjs",
+        "tests/tabs.test.mjs",
         "tools/visual-check/app.tsx",
         "tools/visual-check/verify.py",
         "tools/visual-check/README.md",
         "docs/design/evidence/flow-home-checklist-filters-2026-10-20",
+        "docs/MVP-EXPERIENCE-CONTRACT.md",
+        "docs/design/vision-rev02-screen-contracts.md",
+        "docs/tasks/dev/daily-routines-checklists.md",
+        "supabase/migrations/202610210001_routine_checklist_item_presentation.sql",
         "docs/tasks/dev/FLOW-HOME-CHECKLIST-FILTERS-01.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
@@ -7288,10 +7397,14 @@
         "Framtida träningsval hittas inte på; visas bara om en befintlig godkänd källa faktiskt lagrar ett framtida urval",
         "Filtersegment visas först när kompletta urval, paginering, local-date/DST/repeat-regler och distinct empty/loading/partial/error states fungerar; delvis läst data markeras aldrig som komplett",
         "Panel 4 fungerar från Hem → Idag/Denna vecka/Alla/Kommande → korrekt hantering/källa → tillbaka; ring/count/rows och RLS-scope är sanningsenliga",
-        "Renderad public/review-evidens jämför hela panel 4 mot rev02 med §14 punkterna 1–18, stora textlägen och tydligt statusbesked för live backend/native"
+        "Idag visar tre referenssegment och en separat Kommande, 7 dagar-preview under dagssektionerna; preview har upp till tre verkliga framtida rutin-/hälsoplaner med datum och Planerad, aldrig checkbox/progress. Inline-länken Visa alla kommande öppnar full Kommande från tom/laddar/partial/fel/data och delar previewns scope/resultat när möjligt; partial får visa en tillgänglig rad för att hålla felstatus, återförsök och innehåll ovanför navigationen. Rangevyer behåller fyra direkt nåbara segment; previewstatus följer aktiv konto-/hund-/datum-/tidszonsscope.",
+        "På Idag är bockbara rutinpunkter och sparade träningssteg separata sektioner; checklistans count/progress gäller endast rutinpunkter. Blandat läge verifierar rutin-only progress trots träningsrader; rutin-only och training-only visar ingen falsk 0 av 0; träningsstatus och exakt källnavigation bevaras.",
+        "Hem behåller kompakt överblick utan per-punkt rutinikon/beskrivning; Checklistan visar varierad ikon och valfri kort rutinbeskrivning. Long-press på dagens rutinrad öppnar befintlig editor fokuserad på rätt rutin/punkt utan att trigga vanligt tryck; checkbox/history/training/health rows öppnar inte rutinredigering. Ikonbiblioteket visar alla 20 val som en symbolgrid utan synlig rubrik eller textetiketter; hjälpmedelsnamn och vald markering behålls. Ikonknappen ligger intill varje egen rubrikrad, beskrivningen har visuellt sekundär stil och minst spacing.md används runt relevanta kontroller.",
+        "Routine JSON accepts only legacy {id,label} and the three exact optional icon/description shapes; SQL/TypeScript use the same installed-Ionicons allowlist and reject null/extra/invalid values. Icon/description-only update follows existing owner-scoped RPC, revision, retry/readback; old day/skip snapshots stay unchanged.",
+        "Renderad public/review-evidens bedömer hela panel 4 mot rev02 med relevanta §14-punkter, exakta 375×844/430×844/375×667 viewports och dokumenterade visuella avvikelser; live backend/RLS och native står separat som PASS eller NOT TESTABLE. Systematisk tillgänglighetsmatris är uppskjuten efter godkänd MVP."
       ],
       "checks": [
-        "node --experimental-strip-types --test tests/daily-activity-range.test.mjs tests/daily-checklist-filters.test.mjs tests/daily-activity-model.test.mjs",
+        "node --experimental-strip-types --test tests/daily-activity-range.test.mjs tests/daily-activity-data.test.mjs tests/daily-activity-model.test.mjs tests/daily-activity-ui.test.mjs tests/daily-checklist-screen.test.mjs tests/daily-checklist-route.test.mjs tests/daily-routine-checklist-icons.test.mjs tests/tabs.test.mjs",
         "pnpm check",
         "pnpm bundle:ios",
         "git diff --check",
@@ -7301,7 +7414,7 @@
       "depends_on": [
         "FLOW-HOME-CHECKLIST-01"
       ],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -7320,9 +7433,51 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Ägarens stopp finns i 2026-10-20-checkpointen; endast data/modell är sparad. Dokumentharmonisering utförs först enligt nytt ägarbesked. Återuppta inte filterimplementation utan ny riktningsavstämning."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Erik directly authorized continuing the next panel-4 Checklist part on 2026-10-21 after the prior stop. Resume only the unchanged approved plan v2; Product/Architect/Critic/Security verdicts from 2026-10-20 remain applicable. The saved range data/model checkpoint is present. The owner’s 2026-10-21 accessibility decision removes large-text/140% audit gates. Run a current-code Security preflight on the exact data paths before UI integration."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Reuse approved plan v2 from 2026-10-20: Product APPROVE, Architect APPROVE, Critic PROCEED, Security APPROVE. Erik directly authorized resumption on 2026-10-21; no scope/contract change."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resumed approved panel-4 implementation per Erik's direct 2026-10-21 instruction; current preflight corrections, route integration and verification are in progress."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "architect",
+          "evidence": "Erik requested v4 persisted checklist icon/description editing and a richer Checklist detail while Home stays compact. v4 plan gate requires final Architect APPROVE before implementation. Security APPROVE and Critic PROCEED are recorded; queue paths, test scope, and panel 1/4 contracts are now synchronized."
+        },
+        {
+          "from": "blocked",
+          "to": "implementing",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v4 after synchronized queue paths/checks, review record, and panel 1/4 contracts. Security APPROVE and Critic PROCEED are recorded. Implementation starts within the exact v4 write paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Fresh v5 public/review RN Web rerender passed 22/23 groups with 38 captures each, zero JS errors; focused Home/Checklist regressions 4/4, prior full pnpm check 67/67, diff check and queue validation pass. Reviewer remains deferred to MVP closeout. See docs/design/evidence/flow-home-checklist-filters-2026-10-20/RENDER-REPORT.md."
+        },
+        {
+          "from": "qa",
+          "to": "done",
+          "actor": "coordinator",
+          "evidence": "QA PASS for this local checkpoint; MVP-closeout Reviewer explicitly deferred by owner. Visual similarity remains PARTIAL, live RLS/native/release NOT TESTABLE. See current v5 report and exact public/review manifests."
         }
       ],
-      "next_step": "Ägarens stopp finns i 2026-10-20-checkpointen; endast data/modell är sparad. Dokumentharmonisering utförs först enligt nytt ägarbesked. Återuppta inte filterimplementation utan ny riktningsavstämning.",
+      "next_step": "Done for this local checkpoint with visual status PARTIAL; independent Reviewer remains deferred to MVP-closeout. Live Supabase/RLS, native/device and release are NOT TESTABLE.",
       "priority": "P1",
       "panels": [
         "4"
@@ -7330,16 +7485,21 @@
       "risk_class": "H",
       "checkpoint": "Full panel 4 filter- och Kommande-resa efter accepterad Idag-slice; framtida planer är skrivskyddade och ingår aldrig som utförd progress.",
       "test_evidence": [
-        "Monday/Sunday/year/DST/repeat boundaries, pagination completeness, 30-day retention, empty/partial/error, routine/training scope, Planerad health link, §14 image matrix, runtime RLS boundary"
+        "pnpm check PASS: 67/67 test files, 67 pass, 0 fail/skip. Targeted checklist test, git diff --check, verifier py_compile and python -X utf8 tools/dev_flow.py validate PASS.",
+        "Public/review RN Web browserflows PASS: public 22 groups and review 23 groups, 38 manifest captures each, 0 JS errors at 375×844, 430×844 and 375×667. Preview states assert heading/action/message and the partial row remain above fixed navigation; partial preview is capped at one row. Exact hashes and screenshots are in docs/design/evidence/flow-home-checklist-filters-2026-10-20/RENDER-REPORT.md.",
+        "Public iOS JavaScript export PASS: 1,454 modules; entry-773fe3e97f5adf0ec8ce207de2ff92e4.hbc SHA-256 343a304a60d24d85497493ec1936050eb65c39a333a9302e0e5ffa09c9d03ccc. Export is not a signed/installed native app.",
+        "Stockholm midnight model boundary test PASS for daily scope and Kommande date window; route test verifies refresh wiring on resume. Mounted native/AppState runtime, live Supabase/RLS, physical iPhone and release are NOT TESTABLE.",
+        "§14.16 visual status PARTIAL: v5 same-screen three-segment Idag composition and upcoming preview align with Panel 4; documented deviations are Hem active per child-route contract, card surface/divider treatment, fixture banner and synthetic example content."
       ],
-      "implementation_state": "Partiell data-/modellkod checkpointas efter ägarens stoppbesked; UI/routing inte inkopplad; task ofärdig.",
-      "evidence_status": "focused tests 13/13 PASS; pnpm check, diff check and queue validation PASS; UI acceptance not run; live Supabase RLS NOT TESTABLE"
+      "implementation_state": "Fyra filter och källresor är integrerade. Rutinändring uppdaterar Kommande-projektionen; filterbyte nollställer scroll men källretur bevarar den. Träningssteg behåller källseparat status. Hemrader är kompakta; Checklistan visar varierade ikoner och ifyllda beskrivningar. Varje ikonknapp sitter på samma rad som sin egen punkttitel; förklaringsfältet under skiljs visuellt från rubriken via varm canvasbakgrund, sekundär textfärg och “Förklaring (valfri)”. Spacing mellan inmatningsrader/gridval är ökat. Ikonvalet är en 20-symbolers grid utan synliga etiketter eller rubrik; skärmläsarnamn och vald markering finns kvar. Long-press fokuserar dagens rutinpunkt; checkbox och dags-snapshot är isolerade. V5 adds the same-screen scoped Kommande preview (up to three planned routine/health rows, date and Planerad, no checkbox/progress) and full four-segment destination from every preview state. The visible “Visa alla” action sits inline with the preview title and retains the full accessibility label; a partial read shows one available row so its message/retry remain above fixed navigation. Public/review renders and viewport assertions pass.",
+      "evidence_status": "Local code: PASS. pnpm check: 67/67. Public/review RN Web QA: PASS; public 22 groups, review 23 groups, 38 manifest captures per mode and 0 JS errors; exact bundles/verifier and §14.16 evidence are in docs/design/evidence/flow-home-checklist-filters-2026-10-20/RENDER-REPORT.md. Public iOS JS export: PASS, 1,454 modules, SHA-256 343a304a60d24d85497493ec1936050eb65c39a333a9302e0e5ffa09c9d03ccc. §14.16: PARTIAL with explicit deviations. Independent Reviewer deferred to MVP-closeout per owner instruction. Live Supabase/RLS, mounted native/AppState runtime, native/iPhone and release: NOT TESTABLE.",
+      "review_status": "deferred_to_mvp_closeout"
     },
     {
       "id": "FLOW-LOG-01",
       "title": "Logga med bevarad snabbresa och historik",
       "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/plans/FLOW-LOG-01-calendar-ux-plan.md v5",
+      "plan": "docs/plans/FLOW-LOG-01-calendar-ux-plan.md: v5 calendar/read scope preserved; v6 panel-5 composition amendment approved by Architect and UX Critic",
       "write_paths": [
         "src/features/puppy-log/LogScreen.tsx",
         "src/features/puppy-log/LogDateCalendar.tsx",
@@ -7362,29 +7522,36 @@
         "docs/tasks/dev/rapport.md",
         "docs/tasks/dev/FLOW-LOG-01.md",
         "docs/decisions/MASTER-LOG.md",
-        "docs/releases/HISTORY-2026.md"
+        "docs/releases/HISTORY-2026.md",
+        "tests/log-screen-policy.test.mjs",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/build.cjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/README.md",
+        "tools/visual-check/verify-log-flow.py",
+        "docs/design/evidence/flow-log-01/public",
+        "docs/design/evidence/flow-log-01/review"
       ],
       "acceptance": [
-        "Date control opens Swedish Monday-first calendar; previous month works, next month disabled in current month, future days disabled, selection updates Log history and closes calendar.",
-        "Days with one or more active-dog LOG_EVENT_TYPES are marked via authenticated active-dog query with existing RLS; local half-open month bounds, occurred_at-only keyset cursor, deduped equal timestamps and complete traversal.",
-        "Calendar day accessibility name/state conveys localized date plus has-logs/selected/today/disabled as relevant; loading, complete-empty and error+retry are distinct; day selection works if marker query fails.",
-        "Account/session, dog, month, timezone, close and stale response changes cannot leak markers; confirmed local mutations invalidate/requery; other-device changes refresh at next open. Snapshot is eventual, not transactional, and partial pages never appear complete.",
-        "Log-only pee token is warm amber; global Home pee stays blue; water blue and accident red. Pee/water are distinguishable by distinct icon forms and text without color; QA checks icon-label fit at actual quick-tile and chip sizes in grayscale at normal/140% text; confusing shapes or clipped labels fail. Text contrast >=4.5:1 and non-text control/icon contrast >=3:1 in normal/pressed/selected; Log timeline pressed uses selectedSurface without opacity, other ListRow variants unchanged.",
-        "Actual AppScreen bottom gap is >=8 CSS px at 360x844/140%/Fler-open scroll bottom; sanity-check 375/430 and Fler open/closed without duplicate inset.",
-        "RN Web evidence covers calendar, loading/empty/error, markers, selected date, quick actions and responsive spacing; full rev02 comparison reported separately.",
-        "Native checks and real RLS probe are PASS only if actually run; RLS probe uses two synthetic owner/dog scopes and verifies anon denial; otherwise explicitly NOT TESTABLE. Security review, QA, Reviewer, focused tests, pnpm check and public iOS JS bundle required."
+        "Existing date calendar, marker-query, local-day selection, lifecycle invalidation and scoped read behavior remain unchanged and pass their focused regressions.",
+        "Logga quick actions use a compact horizontally scrolling row of the existing one-tap controls in saved order, with Fler retained; remove the redundant Snabb logg and Dagens logg headings.",
+        "Timeline keeps its fixed time column, category symbols and thin dividers; the primary green add action remains visible in the standard reference view where content fits and naturally scrollable on the short view.",
+        "Render actual LogScreen in public/review at 375×844, 430×844 and 375×667, checking Fler closed/open, one-tap actions, date/calendar states, timeline, normal spacing and fixed navigation; record differences from vision_rev02 panel 5.",
+        "Do not show Idag/Översikt until FLOW-INSIGHTS-01 has a working route; the subsequent panel-8 task adds and verifies the complete return journey.",
+        "No event type, callback, write, persistence, pagination, data field, auth, RLS or query behavior changes. Broad accessibility audit is deferred; functional labels and controls remain."
       ],
       "checks": [
-        "Focused log calendar model/data/policy tests and pnpm check",
+        "node --experimental-strip-types --test tests/log-calendar-model.test.mjs tests/workspace-log-calendar.test.mjs tests/log-calendar-policy.test.mjs tests/log-screen-policy.test.mjs",
+        "pnpm check",
         "Public pnpm bundle:ios",
-        "Rendered RN Web interaction/matrix evidence plus §14 rows 1-18",
+        "Build public/review with tools/visual-check/build.cjs; serve each exact bundle and run python tools/visual-check/verify-log-flow.py --base-url <server-url> --output-dir docs/design/evidence/flow-log-01/{public,review} --bundle-file /tmp/tassla-log/{public,review}/app.js [--review]",
         "git diff --check and python -X utf8 tools/dev_flow.py validate",
-        "Independent QA and Reviewer"
+        "Risk-based QA; independent Reviewer deferred to MVP-closeout"
       ],
       "depends_on": [
         "UX-LOG-EDITOR-01"
       ],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -7439,99 +7606,330 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "QA package verdict: code/test PASS, but explicit responsive render matrix, grayscale proof and AppScreen bottom-gap evidence are NOT TESTABLE because no renderer/browser is installed; design-rules §14 prevents visual PASS. Security APPROVE static; live RLS/native separately NOT TESTABLE. Preserve checkpoint and continue next independent package; revisit when approved render capability is available."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "FLOW-LOG-01 v6 plan is complete; Architect APPROVE and UX Critic PROCEED recorded in FLOW-LOG-01.md. Scope remains visual composition only; independent Reviewer is deferred to MVP closeout."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v6 and UX Critic PROCEED are recorded in docs/tasks/dev/FLOW-LOG-01.md. The exact browser QA scope and verifier are listed in the contract; prior data/query security scope is unchanged."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement only the approved v6 compact quick-action composition and render regression. Existing Log event data, calendar scope, query and RLS remain unchanged."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "V6 compact quick-action strip and redundant-heading removal are implemented. Focused functional tests, typecheck, public/review rendering and 15 browser assertions per mode pass; visual status remains PARTIAL with Idag/Översikt deferred to FLOW-INSIGHTS-01. Exact post-commit manifests and evidence are pending closeout."
+        },
+        {
+          "from": "qa",
+          "to": "done",
+          "actor": "coordinator",
+          "evidence": "V6 local checkpoint accepted as code and browser-QA complete; visual acceptance is explicitly PARTIAL and recorded. Independent Reviewer deferred_to_mvp_closeout. Post-commit build evidence and the later Insights return journey remain closeout follow-ups, not false visual PASS."
         }
       ],
-      "next_step": "Blocked only on required rendered UI matrix/grayscale/AppScreen gap and §14 evidence because no approved renderer is installed. Push the local code/test checkpoint, continue the next independent approved package, and resume visual acceptance when rendering is available.",
+      "next_step": "V6 local checkpoint accepted as code and browser-QA complete; visual acceptance is explicitly PARTIAL and recorded. Independent Reviewer deferred_to_mvp_closeout. Post-commit build evidence and the later Insights return journey remain closeout follow-ups, not false visual PASS.",
       "priority": "P2",
       "panels": [
         "5"
       ],
       "risk_class": "H",
-      "checkpoint": "Panel 5 funktionellt regressionsprov; hänvisa till tidigare design- och editor-checkpoints.",
+      "checkpoint": "Panel 5 visual-composition correction while preserving the existing Logga calendar/data contract.",
       "test_evidence": [
-        "Synthetic PostgREST tests verify dog-scoped occurred_at-only query, local half-open bounds, exact microsecond cursor, equal timestamp boundary, error/abort, mutation during traversal and fresh traversal after a change before cursor.",
-        "Calendar model and source policy tests verify Monday-first dates, DST/month bounds, accessibility/state source, 44 pt target arithmetic, request guards and mutation refresh wiring; component-level scope race remains not rendered.",
-        "Contrast calculations from current tokens pass for Pee, Water, Accident and timeline text. Grayscale actual-size comparison, 140% rendered text and AppScreen bottom-gap matrix remain NOT TESTABLE.",
-        "Live two-owner RLS/anon-denial probe and native Dynamic Type/VoiceOver/physical target/safe-area/reduced-motion are NOT TESTABLE in the current environment.",
-        "Focused tests 16/16, pnpm check 599/599, public pnpm bundle:ios 1,449 modules, git diff --check and python -X utf8 tools/dev_flow.py validate pass."
+        "Existing Logga calendar/query regressions: 16/16 focused tests and prior pnpm check 599/599; the data contract is unchanged by v6.",
+        "The new browser fixture covers presentation/callbacks only; existing tests/workspace-log-calendar.test.mjs and tests/log-calendar-policy.test.mjs retain active-dog/account lifecycle and cancelation regressions. Browser fixture does not claim ProductWorkspace scope integration.",
+        "Logga panel-5 comparison documents current match and remaining deviations separately from code, local QA, live data, native and visual acceptance.",
+        "Live two-owner RLS/anon probe, native/device behavior and release remain separate PASS only with direct evidence; otherwise NOT TESTABLE. No broad accessibility matrix in MVP."
       ],
-      "implementation_state": "v5 implemented; correction 1 verified by local tests; package visual acceptance remains blocked on render evidence",
-      "evidence_status": "QA code/test PASS (16/16, pnpm check 599/599, bundle 1,449); QA overall NOT PASS pending render/§14. Security final APPROVE static; live RLS/native NOT TESTABLE."
+      "implementation_state": "v5 calendar/data implementation remains; v6 composition amendment is owner-authorized and awaits Architect/Critic review.",
+      "evidence_status": "v5 calendar code/test checkpoint PASS; prior visual status was blocked for unavailable renderer. Renderer is now available. v6 visual implementation has not started; Architect/Critic review pending. Reviewer deferred to MVP-closeout.",
+      "review_status": "deferred_to_mvp_closeout"
     },
     {
       "id": "FLOW-TRAINING-01",
       "title": "Träning från rekommendation till återupptagen progress",
-      "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "mvp_requirement": "docs/mvp.md §4.4 och rev02-panel 6; docs/MVP-EXPERIENCE-CONTRACT.md panel 6",
+      "plan": "docs/tasks/dev/FLOW-TRAINING-01.md v2; Architect APPROVE, Critic PROCEED 2026-10-21",
       "write_paths": [
-        "src/features/training/PublishedTrainingScreen.tsx",
-        "src/features/home/ProductWorkspace.tsx"
+        "src/features/home/ProductWorkspace.tsx",
+        "tests/training-overview.test.mjs",
+        "tests/training-tab-roundtrip.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-training-flow.py",
+        "tools/visual-check/README.md",
+        "docs/tasks/dev/FLOW-TRAINING-01.md",
+        "docs/design/evidence/flow-training-2026-10-21/VERIFICATION.md",
+        "docs/design/evidence/flow-training-2026-10-21/public/",
+        "docs/design/evidence/flow-training-2026-10-21/review/",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
       ],
       "acceptance": [
-        "Rätt publicerad version och steg öppnas och markering/avmarkering bekräftas",
-        "Mina/Rekommenderat/Alla har dokumenterat fungerande urval eller syns inte",
-        "Fortsättkort och Hem visar samma sparade progress efter flikresa"
+        "Hem och Träning använder samma statusprioriterade nästa övning även när källordningen placerar ett opåbörjat program före ett pågående",
+        "Bekräftad markering och avmarkering ändrar nästa steg; Hem och Träning visar samma steg efter varje ändring och efter flikresa",
+        "Mina/Rekommenderat/Alla syns inte i den ägarbeställda träningsredesignen; ingen separat Fortsättkort-komposition återinförs",
+        "Public browserresa verifierar markering, Hem → annan huvudflik → Träning, avmarkering och ny flikresa; review-fixture verifierar synlig reviewcopy",
+        "Public/review-bilder och §14-matris sparas; panel 6:s ägarbeställda visuella avvikelse och NOT TESTABLE-gränser redovisas separat"
       ],
       "checks": [
+        "node --experimental-strip-types --test tests/training-overview.test.mjs tests/training-tab-roundtrip.test.mjs",
         "pnpm check",
+        "TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_REVIEW=false TASSLA_UI_OUTPUT=/tmp/tassla-training-flow/public node tools/visual-check/build.cjs",
+        "TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_REVIEW=true TASSLA_UI_OUTPUT=/tmp/tassla-training-flow/review node tools/visual-check/build.cjs",
+        "python tools/visual-check/verify-training-flow.py",
         "git diff --check",
         "python tools/dev_flow.py validate"
       ],
       "depends_on": [
         "UX-TRAINING-UNMARK-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED for exact plan v2 2026-10-21; corrects stale Fortsättkort acceptance and includes confirmed Home/Training status-order mismatch without changing product or data contract."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin exact plan v2 after Architect APPROVE and Critic PROCEED; implementation limited to the ProductWorkspace next-step selector, focused tests, and synthetic visual harness."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementer frös exakt sex app/test/harnessvägar; rapporterade pnpm check 65/65, riktade test 17/17, public/review-bundle, Playwright 13/13 + 5/5, py_compile och diff-check PASS; temporära skärmbilder överlämnade till oberoende QA. Ingen commit/push."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende QA PASS plan v2: pnpm check (65/65), riktade träningsfiler, separata public/review-builds, egna browserflöden public 13/13 och review 5/5, Python syntax, diff-check och kövalidering passerade. Screenshots 375x844, 430x844, 375x667, 140% granskade; resan sammanfaller efter markering/avmarkering. Live/RLS, publicerat innehåll, native/tillgänglighet, signerad build och full panel-6 visuell acceptans kvarstår NOT TESTABLE/öppen."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS 2026-10-21 recorded in docs/tasks/dev/rapport.md and docs/releases/HISTORY-2026.md after the queue-only corrections; existing independent QA PASS and full local evidence are recorded. Closes only the local functional checkpoint, not panel 6, live/native integration or release. Next queued journey: FLOW-KNOWLEDGE-01."
+        }
+      ],
+      "next_step": "Reviewer PASS 2026-10-21 recorded in docs/tasks/dev/rapport.md and docs/releases/HISTORY-2026.md after the queue-only corrections; existing independent QA PASS and full local evidence are recorded. Closes only the local functional checkpoint, not panel 6, live/native integration or release. Next queued journey: FLOW-KNOWLEDGE-01.",
       "priority": "P2",
       "panels": [
         "6"
       ],
       "risk_class": "M",
-      "checkpoint": "Full panel 6-resa med visuell och funktionell evidens; live progress-scope separat om inte provat.",
+      "checkpoint": "Lokal Home/Training-progresscheckpoint. Panel 6:s visuella acceptans, live progress/RLS, native och release är separata.",
       "test_evidence": [
-        "0/halv/klar, okänd ålder, unknown/readback, public/review och bildmanifest"
+        "Ordningsfixtur: opåbörjat före pågående; public mark/unmark med Home → Logg → Träning-flikresa; reviewcopy/filtersynlighet; screenshots och §14 bedömning"
       ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "implementation_state": "Lokal produktionsfix, regression, public/review-evidens, oberoende QA och Reviewer klara; endast lokal checkpoint stängd",
+      "evidence_status": "run — public/review-bilder och §14-bedömning sparade; QA PASS och Reviewer PASS 2026-10-21; full panelacceptans, live/native och release kvarstår separat"
     },
     {
       "id": "FLOW-KNOWLEDGE-01",
-      "title": "Kunskap från sök till källmärkt läsning",
-      "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "title": "Kunskap med visuella FAQ- och faschecklistor",
+      "mvp_requirement": "docs/mvp.md: Rev02-panel 7, fungerande publicerad sök-/läsresa med åtkomst till FAQ och faschecklistor; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/plans/FLOW-KNOWLEDGE-01-ux-spec.md v5; Architect APPROVE v5; Critic PROCEED v5",
       "write_paths": [
+        "docs/plans/FLOW-KNOWLEDGE-01-ux-spec.md",
         "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/FAQScreen.tsx",
         "src/features/knowledge/PuppyChecklistScreen.tsx",
-        "src/features/knowledge/FAQScreen.tsx"
+        "src/features/knowledge/KnowledgeIconBadge.tsx",
+        "src/features/knowledge/README.md",
+        "tests/knowledge-search-screen.test.mjs",
+        "tests/guide-search.test.mjs",
+        "tests/knowledge-review-content.test.mjs",
+        "tests/knowledge-training-empty-feedback.test.mjs",
+        "tests/checklist-ui.test.mjs",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify-know02.py",
+        "tools/visual-check/README.md",
+        "docs/design/evidence/flow-knowledge-01/public",
+        "docs/design/evidence/flow-knowledge-01/review",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
       ],
       "acceptance": [
-        "Visade sök- och filterkontroller ändrar verkligt publicerat urval",
-        "Guide öppnas med källa; FAQ och faschecklistor nås",
-        "Reviewinnehåll läcker inte till public och cache blandar inte hund/konto"
+        "Knowledge huvudvy visar sökning direkt under rubrik, aktiv hunds redan laddade publicerade guide/article-kort och visuellt sammanhållen ikonledd väg till FAQ och faschecklistor; ingen påhittad taxonomi eller ny innehållsquery.",
+        "Sökning/läsning behåller titel/body-match, svensk normalisering, no-match/clear/public-empty/error/retry, fulltext/källor/tillbaka och hundscope-regression.",
+        "FAQ reviewläge har tydligt aktiv kontext, expanderbar fråga och separat svarsyta; kontextbyte visar motsvarande reviewexempel. Publikt tomläge är ärligt och döljer inaktiva kontextval. Reviewexempel korrekt gate:ade.",
+        "Reviewläge visar checklistöversiktens kontextval, rekommenderad fas och övriga faskort. Progress kommer enbart från bekräftad läsning; detaljens checkboxes, egna punkter och confirmed/pending/failed/unknown-semantik bevaras. Publicläget visar endast checklist-empty och har inga kontextval/fasnavigering eller reads/writes.",
+        "FAQ/faschecklistor nås från Knowledge och Hemmets befintliga direkta länkar. Träning öppnar Knowledge-roten; root back går till Träning, FAQ/checklist back går till Knowledge-root. KNOW-02-browser verifierar Träning→Kunskap→FAQ→Kunskap→Träning samt Träning→Kunskap→checklistdetalj→översikt→Kunskap→Träning. Inga direkta Training→FAQ/Checklistor-länkar tillkommer.",
+        "Public-läge exponerar inga reviewexempel, FAQ-kontextval, checklistkontextval/fasnavigering eller checklist reads/writes (verifiera nollanrop). Review-fixtures är syntetiska och visar inte falsk publiceringsstatus.",
+        "Public/review-evidens visar Knowledge, FAQ-empty/expanded, checklist-empty/overview/detail mot vision_rev02 och dokumenterar att FAQ/checklistsidor är en stödyte-extrapolation. Inga 140%- eller systematiska a11y-krav."
       ],
       "checks": [
+        "node --experimental-strip-types --test tests/guide-search.test.mjs tests/knowledge-search-screen.test.mjs tests/knowledge-review-content.test.mjs tests/knowledge-training-empty-feedback.test.mjs tests/checklist-ui.test.mjs",
         "pnpm check",
-        "git diff --check",
-        "python tools/dev_flow.py validate"
+        "TASSLA_UI_REVIEW=false TASSLA_UI_ENTRY=tools/visual-check/know02-app.tsx TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-knowledge/public/know02 node tools/visual-check/build.cjs",
+        "TASSLA_UI_REVIEW=true TASSLA_UI_ENTRY=tools/visual-check/know02-app.tsx TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-knowledge/review/know02 node tools/visual-check/build.cjs",
+        "Serve public on 127.0.0.1:4173 and run verify-know02.py --base-url http://127.0.0.1:4173/know02/ --output-dir docs/design/evidence/flow-knowledge-01/public",
+        "Serve review separately on 127.0.0.1:4174 and run verify-know02.py --base-url http://127.0.0.1:4174/know02/ --output-dir docs/design/evidence/flow-knowledge-01/review --review",
+        "git diff --check; python tools/dev_flow.py validate; bounded cleanup and rerun relevant checks after edits; independent QA and Reviewer on frozen diff"
       ],
       "depends_on": [
         "UX-KNOWLEDGE-CACHE-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v2 2026-10-21; Critic PROCEED plan v2; exact review evidence in docs/tasks/dev/rapport.md after execution."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin exact approved plan v2 after Architect APPROVE and Critic PROCEED; scoped fixture/verifier corrections are part of the plan."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Owner expanded the approved journey to include substantial FAQ and phase-checklist UI work. Paused the v2 implementation at a safe boundary; replan FLOW-KNOWLEDGE-01 v3 and obtain Architect/Critic review before further app edits."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v3 and queue write paths now cover FAQ and phase-checklist presentation, shared local icon badge and public/review regression. V2 app draft edits remain unverified. Await fresh Architect and Critic review before ready/implementation."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v3 after correcting Training/Knowledge return-path semantics and adding the exact round-trip browser journey; exact review saved in docs/tasks/dev/rapport.md. Critic review remains pending before implementation."
+        },
+        {
+          "from": "ready",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Critic returned PROCEED WITH CHANGES on plan v3: use only semantically mapped icons and hide FAQ context choices in the public-empty state. No app implementation has resumed; revise acceptance and obtain updated Architect/Critic review before proceeding."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Updated plan v4 per Critic CHANGES: explicitly mapped only meaningful existing context/FAQ/phase/item icon IDs, omitted unsupported play/custom-item icons, and hid non-operative FAQ contexts in public empty mode. Fresh Architect/Critic review required before implementation."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v4, including full review-v1:faq:* icon keys and the public FAQ no-context empty state; review saved in docs/tasks/dev/rapport.md. Critic review of exact v4 remains pending before implementation."
+        },
+        {
+          "from": "ready",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Critic returned PROCEED WITH CHANGES on plan v4: state that phase navigation/context and checklist I/O are review-only in public-empty mode, and define the Knowledge destination-card icon IDs. No app code has resumed; revise to v5 and re-review."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Updated plan v5 per Critic CHANGES: public empty FAQ/checklist has no non-operative choices/navigation and zero checklist I/O; explicit FAQ/Checklist destination IDs now have icon mappings. Fresh Architect/Critic review required before implementation."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v5, including review-only checklist controls, public no-I/O assertions and explicit destination icon IDs; exact result saved in docs/tasks/dev/rapport.md. Critic review of v5 remains pending."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Architect APPROVE plan v5 and Critic PROCEED v5 are saved in docs/tasks/dev/rapport.md. Resume the approved FAQ/checklist UI slice with exact v5 file paths and public/review browser evidence requirements."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementer froze FLOW-KNOWLEDGE-01 plan v5. Focused suite 5/5, pnpm check 65/65, public/review builds and browser runs passed before final assertion expansion; latest search/no-match/clear and FAQ-context assertions require independent rerun by QA."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS on final frozen v5 diff and final evidence-only update. pnpm check 65/65; focused suite 5/5; both bundles build; browser verifier public 31 PASS and review 68 PASS, no failures/page errors. Public checklist reads/writes are zero and review fixtures are correctly gated. All 38 screenshots are manifested once with matching route/state/viewports including 430x844 and 375x667; served bundle bytes match named build artifacts by SHA. py_compile, git diff --check, and queue validation PASS. QA report saved in docs/tasks/dev/rapport.md at closeout."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Independent Reviewer BLOCK: queue implementation/evidence fields are stale; render report lacks numbered §14 assessment and §14.16 dimension breakdown; duplicate FAQ heading observed. Prior QA evidence remains valid only for its reviewed bundle. Correct the UI/report, rerun QA, then obtain final Reviewer decision."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Reviewer BLOCK findings were corrected within unchanged plan v5. Independent QA PASS on final UI/report: focused 5/5, pnpm check 65/65, exact-bundle manifests and 38 captures validated; coordinator browser rerun public 31/31 and review 68/68. Resume the unchanged approved checkpoint for final Reviewer."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Reuse existing Architect APPROVE plan v5 and Critic PROCEED v5 recorded in docs/tasks/dev/rapport.md. No acceptance, scope, data, dependency or write-path changes; the FAQ heading and §14 evidence corrections stay inside the approved plan."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume final v5 checkpoint only to record the corrected FAQ title and evidence update; approved UI scope remains unchanged."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Corrected v5 checkpoint frozen. Focused tests 5/5, pnpm check 65/65, public/review builds; coordinator browser verifier 31/31 and 68/68 against exact bundle artifacts; final independent QA PASS recorded in docs/tasks/dev/rapport.md."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Final independent QA PASS. QA reran focused 5/5 and pnpm check 65/65, validated py_compile/diff/queue checks, inspected updated FAQ screenshots, and confirmed all 38 captures/manifests and exact artifact hashes. QA runner could not access localhost; coordinator independently ran both browser verifiers against the reviewed exact artifacts (public 31/31, review 68/68)."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Final Reviewer PASS after resolving the earlier BLOCK. Reviewer confirmed current queue metadata, one FAQ heading, numbered §14 and six §14.16 assessments, exact public/review hashes/manifests and 38 captures. Closes only this local code/QA/review checkpoint; full panel visual match, live content/Supabase/RLS, native verification and signed release remain separate statuses."
+        }
+      ],
+      "next_step": "Local code, QA and Reviewer checkpoint closed. Full panel 7 visual acceptance remains partial; live published content/Supabase/RLS and native behavior remain NOT TESTABLE; signed app build/release was not created.",
       "priority": "P2",
       "panels": [
         "7"
       ],
       "risk_class": "M",
-      "checkpoint": "Panel 7 full resa med bevarad FAQ och faschecklista.",
+      "checkpoint": "Panel 7 local journey: active-dog published search/article and icon-led FAQ/phase-checklist support journeys with preserved functional semantics. Production content, native behavior, full visual acceptance and release remain separate statuses.",
       "test_evidence": [
-        "Sök/filter/tomt/läsfel, public/review-spärr, 375/430/140 %"
+        "Independent QA PASS: focused five-file suite 5/5; pnpm check 65/65; py_compile, git diff --check and python tools/dev_flow.py validate passed.",
+        "Public browser verifier 31/31 and review verifier 68/68, no failures/page errors; public checklist reads/writes zero. All 38 public/review captures are listed once with matching route/state/viewport metadata, and browserResults bundleMatchesArtifact=true for exact current SHA.",
+        "Final Reviewer PASS. Render report contains relevant numbered §14 findings and all six §14.16 dimensions. Local synthetic evidence does not prove live content, Supabase/RLS, native behavior or signed release; full visual panel 7 acceptance is partial/open."
       ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "implementation_state": "Plan v5 local Knowledge/FAQ/phase-checklist UI slice complete. Independent QA PASS and final Reviewer PASS; this does not mark full rev02 panel 7 or support-view visual acceptance complete.",
+      "evidence_status": "Final local evidence in docs/design/evidence/flow-knowledge-01/RENDER-REPORT.md: focused 5/5, pnpm check 65/65, public 31/31, review 68/68; 38 captures and exact hashes public 95cb34b35aee3c919daeb0ab62702f91a8a1c2e805283acfa9e1ced387947d02 / review f7dcb6f166e6aeed95cc33311c4c9d3469dbbccc3f3fd9daa038b681b41b182d. QA and Reviewer PASS. Live/native/full visual/release statuses remain separate. Scoped 55-file code/test/render-evidence snapshot SHA-256 dac39f96ba809f928747dde04eb00dc597ddd06149c4886cddf8c69494774d74 (excludes mutable queue, rapport and release history)."
     },
     {
       "id": "FLOW-DEVELOPMENT-01",
@@ -7566,7 +7964,7 @@
       "risk_class": "H",
       "checkpoint": "Panel 2 funktionell detaljresa; nytt milstolpsinnehåll sakgranskas före public.",
       "test_evidence": [
-        "Datum-/publiceringsprov, navigationsresa, 375/430/140 % och bildroll",
+        "Datum-/publiceringsprov, navigationsresa, 375/430 standard viewports och bildroll",
         "Dog Expert granskar milstolpetexter före publicering"
       ],
       "implementation_state": "föreslagen; ingen kod i denna diff",
@@ -7606,50 +8004,94 @@
       "risk_class": "H",
       "checkpoint": "Panel 3 full resa med tillbaka till samma Hem-kontext.",
       "test_evidence": [
-        "Dagsgräns, partial/error, källa/undo, 375/430/140 % visuell jämförelse",
+        "Dagsgräns, partial/error, källa/undo, 375/430 standard-view comparison",
         "Architect/Security om ny målpersistens, datum-/periodprov"
       ],
       "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "evidence_status": "not_run — required evidence listed in test_evidence",
+      "review_status": "deferred_to_mvp_closeout"
     },
     {
       "id": "FLOW-INSIGHTS-01",
       "title": "Insikter med korrekt period och täckning",
       "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "plan": "docs/plans/FLOW-INSIGHTS-01-ux-spec.md v1; Architect CHANGES resolved, Critic PROCEED, Security APPROVE with conditions incorporated",
       "write_paths": [
+        "src/features/puppy-log/insights-model.ts",
+        "src/features/puppy-log/InsightsScreen.tsx",
         "src/features/puppy-log/LogScreen.tsx",
-        "src/features/puppy-log/log-model.ts",
-        "src/features/home/ProductWorkspace.tsx"
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/main-navigation.ts",
+        "src/components/AppPrimitives.tsx",
+        "src/data/workspace-data.ts",
+        "src/features/puppy-log/README.md",
+        "src/features/home/README.md",
+        "tests/insights-model.test.mjs",
+        "tests/insights-data.test.mjs",
+        "tests/insights-screen-policy.test.mjs",
+        "tests/log-insights-route.test.mjs",
+        "tests/main-navigation.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-insights-flow.py",
+        "tools/visual-check/README.md",
+        "docs/design/evidence/flow-insights-01/",
+        "docs/design/vision-rev02-screen-contracts.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/FLOW-INSIGHTS-01.md",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
       ],
       "acceptance": [
-        "Vecka/Månad/Sedan start läser hela relevanta perioden och visar täckning",
-        "Kiss/bajs-graf har korrekta tal, legend och tillgänglig numerisk text",
-        "Sömngrafen bygger på godkänt intervallkontrakt; överlapp, luckor och saknat slut visas som okänt"
+        "Logga → Översikt → Insikter → tillbaka preserves exact selected Logga date, active Logg tab and original Logga offset; Insights opens at top and its own scroll never overwrites Logga offset.",
+        "Only authenticated active-dog pee/poop events are aggregated from id,event_type,occurred_at; existing dog_events RLS remains authoritative. No notes, accidents, extra fields, writes, RPC, migration or permission changes.",
+        "Week, month and since-start use the exact local half-open boundaries and stable descending (occurred_at,id) keyset traversal; counts, buckets and coverage match loaded events.",
+        "Empty/loading/error-with-retry/partial/ready are distinct. 10,000-row cap has no sentinel or retry, shows actual covered dates and says older logs may be missing; oldest potentially incomplete bucket is visibly partial.",
+        "Sleep duration is never invented; the screen states that interval data is unavailable.",
+        "Public/review RN Web and exact bundle manifests verify panel 8 at 375×844, 430×844 and 375×667; record deviations from vision_rev02. Live RLS and native/release status are separate."
       ],
       "checks": [
+        "Focused model/data/query/route tests (half-open boundaries, DST/year change, actual Supabase builder on each page, timestamp tie at page boundary, duplicate/nonprogressing cursor, 9,999/10,000/10,001, cumulative timeout, abort/stale scope, route/date/offset round trip)",
         "pnpm check",
-        "git diff --check",
-        "python tools/dev_flow.py validate"
+        "Public pnpm bundle:ios",
+        "Public/review React Native Web interactions and captures at 375×844, 430×844 and 375×667, including two-year bucket switch at 375 px",
+        "git diff --check and python -X utf8 tools/dev_flow.py validate",
+        "Risk-based QA; independent Reviewer deferred to MVP-closeout; live RLS/native/device/release explicitly separate"
       ],
       "depends_on": [
         "FLOW-LOG-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "status": "implementing",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE on revised docs/plans/FLOW-INSIGHTS-01-ux-spec.md v1 after earlier CHANGES were resolved; Critic PROCEED and Security APPROVE WITH CONDITIONS are recorded in the plan. No Reviewer run; deferred to MVP closeout."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Starting approved panel-8 journey with existing dog_events read/RLS, route/date/offset return contract, and security conditions unchanged."
+        }
+      ],
+      "next_step": "Starting approved panel-8 journey with existing dog_events read/RLS, route/date/offset return contract, and security conditions unchanged.",
       "priority": "P3",
       "panels": [
         "8"
       ],
       "risk_class": "H",
-      "checkpoint": "Panel 8 beskrivande loggresa; sömnens verifierade intervallmodell är del av samma slutacceptans.",
+      "checkpoint": "Panel 8 functional journey and honest pee/poop coverage; this local checkpoint does not claim a sleep graph or full panel visual acceptance.",
       "test_evidence": [
-        "Periodgräns, paginering, tomt/partiellt/okänt, skärmläsartext, 375/430 render",
-        "Dog Expert granskar eventuell tolkningscopy; Architect granskar sömnintervall"
+        "Period model: exact before/at/after half-open boundaries; year transition, DST, local weekday/month mapping and two-year bucket switch at 375 px.",
+        "Query integration: exact projection and dog/event/period filters on every page; real PostgREST tuple cursor; ties at 250-row page boundary without gaps/duplicates; malformed/nonprogressing cursor fails; cumulative traversal deadline.",
+        "Cap and status: 9,999/10,000/10,001+ rows; oldest partial bucket and exact covered dates; no misleading retry on cap; timeout before first page is error, after complete pages honest partial.",
+        "Route/lifecycle: session, dog, period, timezone, close/unmount and route changes cancel/invalidate reads; back round trip preserves selected date, active Logg tab and Logga offset while Insights starts at top and keeps separate offset.",
+        "All preview data synthetic. Live Supabase/RLS, native/iPhone and release remain NOT TESTABLE unless directly run."
       ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "implementation_state": "Approved plan only; no Insights implementation until the preceding Logga package is locally QA-complete.",
+      "evidence_status": "not_run — plan approved; dependent on FLOW-LOG-01 completion",
+      "review_status": "deferred_to_mvp_closeout"
     },
     {
       "id": "MULTI-DOG-HOME-01",
@@ -7760,7 +8202,7 @@
         "Byte från Hundprofil uppdaterar samma AppFlow-val och öppnar Hem med vald hund",
         "Lägg till hund återanvänder Slice A:s idempotenta RPC och readback; root-listan uppdateras efter bekräftelse",
         "Unknown state kan kontrolleras och återupptas utan ny request-id eller falsk framgång",
-        "Profilvyn håller tillgänglighet, loading/error states och §14-komposition",
+        "Profilflödet bevarar befintliga synliga etiketter och fungerande states, loading/error states och §14-komposition",
         "Avbryt från add-form återgår till hundlistan med tidigare aktiva hund markerad",
         "Bekräftat add från Hundprofil återvänder till Hundprofil med den nya hunden aktiv"
       ],
@@ -7839,11 +8281,11 @@
       "checkpoint": "Hundprofiler kan bytas och läggas till från Inställningar → Hundprofil.",
       "test_evidence": [
         "Hundbyte och säker add från profilrouten, inklusive pending/unknown recovery",
-        "§14-skärmbilder public/review, 375×844, 430×844, 375×667 och 140% text sparas i docs/design/evidence/multi-dog-2026-10-18/; saknad native/skärmbildsevidens är NOT TESTABLE och hindrar done",
+        "§14-relevanta public/review-skärmbilder vid 375×844, 430×844 och 375×667 sparas i docs/design/evidence/multi-dog-2026-10-18/; saknad funktionell native/skärmbildsevidens är NOT TESTABLE och hindrar berörd acceptans",
         "Ingen ny SQL eller policy; bygger på granskad Slice A"
       ],
       "implementation_state": "Slice B implementerad; pnpm check 492/492 och statisk Reviewer PASS; kodcheckpoint pushas enligt Eriks besked och väntar på live app-/Supabase-/RLS-/visuell evidens.",
-      "evidence_status": "partial: typecheck/lint/diff/queue validation och statisk Reviewer PASS; riktig app/Supabase/RLS, native tillgänglighet och §14-skärmbilder återstår för Eriks manuella verifiering."
+      "evidence_status": "partial: typecheck/lint/diff/queue validation och statisk Reviewer PASS; riktig app/Supabase/RLS, funktionell native-verifiering och relevanta §14-skärmbilder återstår för Eriks manuella verifiering. Bred tillgänglighetsaudit är uppskjuten till efter godkänd MVP."
     },
     {
       "id": "BUILD-CHECK-03",
@@ -9307,34 +9749,28 @@
           "evidence": "Independent frozen-diff Reviewer PASS with no actionable findings; independent QA PASS; Architect v9 APPROVE. Focused tests 29/29, full pnpm check 583/583, public iOS JS export 1,447 modules, diff/queue validation and 23 indexed captures PASS. Local checkpoint commit d58d234. Native/device, app-host, live backend, completed-program detail tap-through and rev02 visual comparison remain explicitly NOT TESTABLE; no push performed."
         }
       ],
-      "next_step": "5b checkpoint closed locally in commit d58d234. Next planned verification is UI-NATIVE-ACCESSIBILITY-VERIFY on an owner-selected physical device; native/device and full rev02 visual checks remain open until then.",
+      "next_step": "Lokal checkpoint stängd i commit d58d234. Nästa funktionella resa är FLOW-KNOWLEDGE-01. Samlad native funktionstestning finns separat i MVP-NATIVE-FUNCTIONAL-VERIFY; systematisk tillgänglighetsgranskning är uppskjuten till efter MVP-release och godkännande.",
       "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v9"
     },
     {
       "id": "UI-NATIVE-ACCESSIBILITY-VERIFY",
-      "title": "Batched native accessibility and gesture verification",
-      "mvp_requirement": "docs/design-rules.md: §10, §14–15; docs/dev/workflow.md: native evidence policy",
-      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md v7",
+      "title": "Post-MVP review av tillgänglighetsanpassning (uppskjuten)",
+      "mvp_requirement": "Eriks beslut 2026-10-21: tillgänglighetsanpassning övervägs efter att första MVP-versionen är släppt och godkänd.",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md — historiska anteckningar; ingen ny a11y-plan före MVP-release",
       "write_paths": [
         "docs/design/evidence/ui-native-accessibility-verify-2026-10-19",
         "docs/tasks/dev/rapport.md"
       ],
       "acceptance": [
-        "Physical-device VoiceOver/TalkBack names, checkbox states and focus order recorded for the listed journeys.",
-        "Largest Dynamic Type, keyboard/footer reachability, actual text-size settings and measured target bounds recorded on the selected device.",
-        "For Hundprofil: list/selection, edit save/cancel, add-dog confirmed and unknown/recovery, error/retry and return paths; keyboard-visible reachability checked.",
-        "For Tassla-pass: open/toggle/close selection sheet, checkbox names/states/focus and target sizes; selected sections persist after sheet/share return; preview/PDF contains exactly selected sections.",
-        "Explicit PDF export opens native share sheet; dismiss without selecting recipient; record truthful busy/error/unavailable/dialog-closed state, Passport return and app-scoped temporary file cleanup.",
-        "Record exact device/OS/settings; mark any unrun platform, state or setting NOT TESTABLE. Native evidence is not replaced by synthetic web/static checks.",
-        "For Knowledge search: verify dog-named scope copy, search result and zero-result states, loading/error/retry, article open/back, and dog switch without stale prior-dog query/results; capture 375/430 and §14 where possible, otherwise record each as OPEN / NOT TESTABLE."
+        "Tasken får öppnas först efter att första MVP-versionen är släppt och godkänd och efter att Erik godkänt en avgränsad plan för nästa version."
       ],
       "checks": [
-        "Owner-selected physical iOS/Android device run; attach exact device/OS/settings, scenarios and observed results to evidence directory"
+        "Inga kontroller före att tasken öppnas efter MVP-release/godkännande."
       ],
       "depends_on": [
         "UI-EMPTY-FEEDBACK-KNOWLEDGE-TRAINING"
       ],
-      "priority": "P1",
+      "priority": "P3",
       "panels": [
         "Hem",
         "Logga",
@@ -9346,11 +9782,18 @@
         "Tassla-pass"
       ],
       "risk_class": "M",
-      "checkpoint": "Owner-selected physical-device verification for accessibility, gesture, Hundprofil and Tassla-pass export/consent journeys; remains open until real evidence exists.",
-      "test_evidence": "NOT TESTABLE until an owner-selected physical-device run is available; static and synthetic web checks cannot close this task.",
-      "status": "planned",
-      "history": [],
-      "next_step": "After all local code checkpoints, run owner-selected device batch including Passport, profile, and Knowledge search; record device/OS/text settings and mark any unrun evidence OPEN / NOT TESTABLE."
+      "checkpoint": "Avsiktligt uppskjuten framtida produktplanering; blockerar inte MVP-funktion eller release.",
+      "test_evidence": "Inte tillämpligt före MVP-release/godkännande; inga test- eller anpassningskrav är nu beslutade.",
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Eriks beslut 2026-10-21 gäller alla MVP-checkpoints: bred tillgänglighetsanpassning efter första MVP-release och godkännande. Den tidigare blandade funktionella enhetskontrollen har delats; MVP-NATIVE-FUNCTIONAL-VERIFY behåller funktionsprov före release. Nästa steg: vänta på MVP-release/godkännande innan denna task öppnas."
+        }
+      ],
+      "next_step": "Eriks beslut 2026-10-21 gäller alla MVP-checkpoints: bred tillgänglighetsanpassning efter första MVP-release och godkännande. Den tidigare blandade funktionella enhetskontrollen har delats; MVP-NATIVE-FUNCTIONAL-VERIFY behåller funktionsprov före release. Nästa steg: vänta på MVP-release/godkännande innan denna task öppnas."
     },
     {
       "id": "DOCS-MVP-REV02-ALIGN-01",
@@ -9447,6 +9890,184 @@
         "Architect APPROVE; Critic PROCEED; oberoende docs_qa PASS och docs_reviewer PASS för plan v1; verkliga resultat sparade i rapporten",
         "Endast dokument/roller/kö; inga app/data/test/verktyg/dependencyändringar eller runtime-/releasepåståenden"
       ]
+    },
+    {
+      "id": "MVP-NATIVE-FUNCTIONAL-VERIFY",
+      "title": "Ägarvald native funktionsverifiering av kärnresor",
+      "mvp_requirement": "docs/mvp.md §4.1 och Tassla-pass/Kunskap-resorna; funktionell native integration verifieras separat där webbfixtur inte täcker den.",
+      "plan": "docs/tasks/dev/UI-ACCESSIBILITY-PHASE-2-5.md — Funktionell native-verifiering som kvarstår inom MVP",
+      "write_paths": [
+        "docs/design/evidence/mvp-native-functional-verify",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Hundprofilens create/edit/save/cancel samt bekräftat, fel- och återhämtningsflöde fungerar på det valda native bygget utan att data blandas mellan testhundar.",
+        "Tassla-pass behåller valda sektioner, PDF/preview visar exakt valt urval, ägarinitierad native share sheet kan öppnas/stängas, återgången är sanningsenlig och tillfälliga filer städas enligt befintligt kontrakt.",
+        "Kunskapssökning, nollresultat/rensa, artikelöppning/tillbaka, fel/retry och hundbyte visar rätt funktion och aldrig föregående hunds innehåll.",
+        "Spara exakt branch/commit, native build-ID, enhet/OS och observerat resultat för varje körd resa; markera ej körda funktionella scenarier NOT TESTABLE.",
+        "Ingen 140 %-zoom, VoiceOver/TalkBack, Dynamic Type, reducerad rörelse, fokusordnings- eller träffyte-audit krävs för denna funktionella task."
+      ],
+      "checks": [
+        "Ägarvald iOS-enhet med testkonto och den exakta signerade builden; kör de funktionella scenarier som är kvar när beroende kodresor är klara. Inga produktionskonton eller verkliga ägardata."
+      ],
+      "depends_on": [
+        "APP-04C-PROFILE",
+        "MVP-P06-PASSPORT",
+        "FLOW-KNOWLEDGE-01"
+      ],
+      "priority": "P1",
+      "panels": [
+        "Hundprofil",
+        "Tassla-pass",
+        "Kunskap"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Samlad native verifiering av MVP-funktion; ingen bred tillgänglighetsacceptans.",
+      "test_evidence": "Inte körd; planerad efter att funktionella lokala resor för beroendena är klara och en ägarvald signerad build finns.",
+      "status": "planned",
+      "history": [],
+      "next_step": "Vänta tills profil-, Tassla-pass- och FLOW-KNOWLEDGE-01-resorna har lokalt verifierad funktion. Kör sedan endast relevanta native funktionsprov på ägarvald build."
+    },
+    {
+      "id": "FLOW-KNOWLEDGE-CHECKLIST-UI-02",
+      "title": "Kunskap: kompakt och bildledd fasöversikt",
+      "mvp_requirement": "docs/mvp.md rev02 panel 7; docs/MVP-EXPERIENCE-CONTRACT.md Kunskap; stödvy enligt vision_rev02-screen-contracts.md panel 7",
+      "plan": "docs/plans/FLOW-KNOWLEDGE-CHECKLIST-UI-02-ux-spec.md v1",
+      "write_paths": [
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/README.md",
+        "tests/checklist-ui.test.mjs",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify-know02.py",
+        "docs/design/evidence/flow-knowledge-checklist-ui-02/",
+        "docs/tasks/dev/FLOW-KNOWLEDGE-CHECKLIST-UI-02.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/plans/FLOW-KNOWLEDGE-CHECKLIST-UI-02-ux-spec.md"
+      ],
+      "acceptance": [
+        "Kunskapens fasöversikt använder en kompakt kontextrad och inte två staplade stora informationskort.",
+        "Rekommenderad fas visas först i ett bildlett kort med titel och bekräftad progress; övriga faser visas i en gemensam kompakt lista med befintliga fasikoner, titlar, progress och fungerande öppningshandling.",
+        "Översikten tar bort upprepad intro-/hjälpcopy men behåller nödvändig fasinformation och en kort sanningsenlig markering av syntetiska, ej sakgranskade exempel.",
+        "Befintligt kontextval, sparstatus, loading/error/unknown, hundscope, public-empty, review-gate samt checklist reads/writes och fasretur fungerar oförändrat.",
+        "Public/review standardrenders vid 375x844, 430x844 och 375x667 verifieras; relevanta loading/error/empty och faskort skärmdumpas mot panel 7:s bildkort-/täthetsmönster.",
+        "Bildassets är befintliga generiska redaktionella bilder; de framställs inte som användarens hund. Ingen ny innehållsmetadata, taxonomi, datafråga eller dependency tillkommer.",
+        "Kod, lokal QA, visuell likhet, live innehåll/RLS, native och release redovisas var för sig; §14.15 är Ej tillämpligt före MVP-release enligt ägarbeslut."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/checklist-ui.test.mjs tests/knowledge-review-content.test.mjs tests/knowledge-search-screen.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "KNOW-02 public/review browserresor med 375x844, 430x844 och 375x667 samt dokumenterade skärm-manifest/hashes"
+      ],
+      "depends_on": [
+        "FLOW-KNOWLEDGE-01"
+      ],
+      "priority": "P1",
+      "panels": [
+        "7"
+      ],
+      "risk_class": "L",
+      "checkpoint": "En lokal visuell användarresa för Knowledge → Checklistor-översikt → faskort; ingen ny data- eller skrivsemantik.",
+      "test_evidence": "Architect APPROVE/Critic PROCEED. Independent QA PASS: pnpm check 65/65, riktade tester 3/3; public/review KNOW-02 31/31 och 90/90 vid 375x844, 430x844 och 375x667. Reviewer PASS; 38 captures, 0 browser errors, alla fem sekundära fasers detalj/retur och exakta bundlehashar verifierade. §14.16 visual PARTIAL; live/RLS och native NOT TESTABLE; signerad release ej skapad.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v1 and Critic PROCEED recorded 2026-10-21; implementation limited to approved local UI/evidence scope."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Plan v1 received Architect APPROVE and Critic PROCEED; implementation in progress. Focused tests and public/review renders pass; final doc/evidence/QA/reviewer closeout still open."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation and evidence frozen for independent QA. The review verifier covers open/detail/back for each of the five secondary phase rows; public/review KNOW-02 results are 31/31 and 90/90. pnpm check 65/65, public iOS JS export, 38 manifest-verified captures, diff and queue validation pass; visual match remains partial/open."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: pnpm check 65/65, focused tests 3/3, public/review browser 31/31 and 90/90, all 38 screenshots/manifests and exact bundle hashes checked; five secondary phase detail/back round trips verified. Visual PARTIAL; live/RLS and native NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer PASS on synchronized frozen checkpoint after independent QA PASS: 65/65 full check, 3/3 focused tests, public/review 31/31 and 90/90, 38 manifest-verified captures, exact branch/HEAD/bundle hashes, and all five secondary phase detail/back rounds. Local code/QA/review checkpoint done; §14.16 remains PARTIAL, live/RLS and native NOT TESTABLE, signed release not created."
+        }
+      ],
+      "next_step": "Local Checklistor overview code/QA/review checkpoint DONE. §14.16 remains PARTIAL; FAQ layout and panel 4 daily checklist are separate scope; live/RLS and native NOT TESTABLE; signed release not created.",
+      "implementation_state": "Implementerad lokalt; funktionell regressionssvit, public/review renders och public iOS JavaScript-export passerar.",
+      "evidence_status": "Independent QA PASS and Reviewer PASS; public 31/31, review 90/90; 10+28 captures; exact branch/HEAD/bundle hashes, route, synthetic fixture and viewport recorded, including five secondary phase detail/back round trips. §14.16 visual match PARTIAL/open; live/RLS and native NOT TESTABLE; signed release not created."
+    },
+    {
+      "id": "MVP-REV02-CLOSEOUT-REVIEW",
+      "title": "Samlad oberoende slutreview av MVP rev02",
+      "mvp_requirement": "docs/mvp.md §12–13; docs/MVP-EXPERIENCE-CONTRACT.md — samtliga åtta panelresor",
+      "plan": "Ägarbeslut 2026-10-21 i docs/decisions/MASTER-LOG.md; closeoutkontrakt i docs/MVP-EXPERIENCE-CONTRACT.md",
+      "write_paths": [
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Alla åtta panelresor och nödvändiga MVP-kärnprov har lokalt QA-bevis och en exakt branch/commit/build-identitet.",
+        "Oberoende Reviewer granskar kravspårbarhet, kod/test, visuella referensbilder, avvikelser och statusseparation för hela MVP-diffen.",
+        "Reviewer-PASS/CHANGES/BLOCK registreras ärligt; NOT TESTABLE live/native/production eller olösta visuella panelgap blir inte PASS."
+      ],
+      "checks": [
+        "Full pnpm check och iOS export på fryst commit",
+        "Granska samtliga åtta panelrapporter, användarresor, ändringsspårbarhet och dokumenterade avvikelser",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "DOG-PROFILE-SEARCH-PILOT-01",
+        "FLOW-ONBOARD-01",
+        "FLOW-HOME-CHECKLIST-01",
+        "FLOW-HOME-CHECKLIST-FILTERS-01",
+        "FLOW-DEVELOPMENT-01",
+        "FLOW-PROGRESS-01",
+        "FLOW-LOG-01",
+        "FLOW-INSIGHTS-01",
+        "FLOW-TRAINING-01",
+        "FLOW-KNOWLEDGE-01",
+        "FLOW-KNOWLEDGE-CHECKLIST-UI-02",
+        "MVP-P06-PASSPORT",
+        "MVP-NATIVE-FUNCTIONAL-VERIFY"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Starta först när beroenden visar lokalt QA-avslutade resor; frys exakt branch/commit/build och gör en samlad, oberoende Reviewer-granskning av hela MVP:n.",
+      "priority": "P0",
+      "panels": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Samlad review-closeout; ändrar inte ägarens visuella, live-, native- eller releaseacceptans.",
+      "test_evidence": [
+        "Reviewerrapport med branch/commit/build, alla åtta panelstatusar, spårbarhet och blockerare."
+      ],
+      "implementation_state": "planned; owner-deferred independent review closeout",
+      "evidence_status": "not_run"
     }
   ]
 }

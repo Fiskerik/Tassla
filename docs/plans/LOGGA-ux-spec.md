@@ -1,5 +1,7 @@
 # LOGGA – UX-specifikation
 
+> **Ägarbeslut 2026-10-21 gäller alla MVP-checkpoints:** LOGGA-QUICK:s kvarvarande MVP-acceptans fokuserar funktion, sparstatusar och relevant standardvy. 140 %/stor text, VoiceOver/TalkBack, reducerad-rörelse-, kontrast- och träffyteaudit görs efter att MVP:n är släppt och godkänd. Behåll befintliga labels/semantik; historiska matrisrader nedan ersätts som MVP-grindar. Se [AGENTS.md](../../AGENTS.md) och [arbetsflödet](../dev/workflow.md).
+
 Datum: 2026-10-08
 Task-ID: LOGGA
 Version: 7
@@ -165,7 +167,7 @@ Erik har efter att `37bf93f` publicerades uttryckligen instruerat att LOGGA ska 
 
 ## Delar och acceptans
 
-1. **LOGGA-QUICK, fungerande vertikal slice:** nödvändiga komponentprop-delta, AppBar, laddar/tom/fel/normal, 2×2 + Fler, mönsterkort, kompakt lista, global single-flight, add pending/saved/failed/unsure, retry med samma ID, dubblettskydd och fungerande Ångra efter bekräftad insert. Före DONE renderas liten/stor telefon, stor text, laddar/tom/fel/normal, Fler-sheet, pending, saved/undo, failed, unsure och dubblettdialog; annan roll fyller checklistorna. Saknad rendering betyder QUICK stannar NOT TESTABLE/blocked och får inte tillgodoräknas som visuell PASS. Eriks senare ägarundantag för LOGGA-EDIT beskrivs nedan och ändrar inte QUICK:s grind.
+1. **LOGGA-QUICK, fungerande vertikal slice:** nödvändiga komponentprop-delta, AppBar, laddar/tom/fel/normal, 2×2 + Fler, mönsterkort, kompakt lista, global single-flight, add pending/saved/failed/unsure, retry med samma ID, dubblettskydd och fungerande Ångra efter bekräftad insert. Före DONE renderas relevanta standardvyer med laddar/tom/fel/normal, Fler-sheet, pending, saved/undo, failed, unsure och dubblettdialog; annan roll fyller checklistorna. Saknad rendering betyder QUICK stannar NOT TESTABLE/blocked och får inte tillgodoräknas som visuell PASS. Eriks senare ägarundantag för LOGGA-EDIT beskrivs nedan och ändrar inte QUICK:s grind.
 2. **LOGGA-EDIT, fungerande vertikal slice (ursprungligt mål):** edit-sheet med bibehållet typval/inmatning, update/delete/retry, delete-only ActionMenu, destructive dialog, lokal försoning av lista/mönster samt hela visuella evidensmatrisen. Eriks daterade ägarundantag nedan accepterar nuvarande delete-presentation och saknad screenshotmatris som kända avvikelser. Oberoende QA/Reviewer av accepterad omfattning kvarstår.
 
 Tester ska minst täcka lokal datumgruppering, nyaste först, dold mönstersammanfattning vid färre än två poster, frånvaro av `SPARAD`, Vaken/Promenad via Fler och rättning av kategori. Dubblettmatrisen omfattar exakt tvåminutersgräns, strax utanför, annan kategori, framtida tidsstämpel, avbryt och `Lägg till ändå`; pending dubbeltryck ger noll extra writes och override ger exakt ett nytt UUID/write. Mutationsmatrisen omfattar saved/failed/unsure och reload-fel för add/update/delete/undo, samma insert-ID vid retry, failed → retry med samma intent, failed → uttryckligt Avbryt, ingen undo före confirmed, stale svar efter hund/session/unmount, global spärr för andra writes tills retry/cancel löser failed samt bevarad input/sheet vid failed/unsure. Slutgranskning fyller alla tillämpliga punkter i `docs/design-rules.md` avsnitt 14 och behavior-checklistan i UX-skillen.

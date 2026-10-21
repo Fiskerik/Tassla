@@ -121,6 +121,89 @@ test('routine create recovers a lost response only after exact owner/id/label re
   } finally { await mismatchClient.auth.dispose(); }
 });
 
+test('routine create accepts the four exact optional checklist metadata shapes and rejects unsafe variants before writing', async () => {
+  const shapes = [
+    { id: '77777777-7777-4777-8777-777777777777', label: 'Morgonrunda' },
+    { id: '77777777-7777-4777-8777-777777777777', label: 'Morgonrunda', icon: 'paw' },
+    { id: '77777777-7777-4777-8777-777777777777', label: 'Morgonrunda', description: 'Kort och lugnt' },
+    { id: '77777777-7777-4777-8777-777777777777', label: 'Morgonrunda', icon: 'paw', description: 'Kort och lugnt' },
+  ];
+  for (const [index, item] of shapes.entries()) {
+    const { client, requests } = localClient(({ body }) => {
+      const result = { ...routine, id: `88888888-8888-4888-8888-${String(index + 1).padStart(12, '0')}`, checklist: [item] };
+      assert.deepEqual(body.p_checklist, [item]);
+      return jsonResponse(result);
+    });
+    try {
+      const draft = { ...routineDraft, id: `88888888-8888-4888-8888-${String(index + 1).padStart(12, '0')}`, checklist: [item] };
+      assert.equal((await data.createDailyRoutine(client, draft, 'Europe/Stockholm')).status, 'saved');
+      assert.equal(requests.length, 1);
+    } finally { await client.auth.dispose(); }
+  }
+
+  const invalidItems = [
+    { ...shapes[0], icon: null },
+    { ...shapes[0], description: null },
+    { ...shapes[0], description: '' },
+    { ...shapes[0], description: ' Kort' },
+    { ...shapes[0], description: '\tKort' },
+    { ...shapes[0], description: 'Kort\n' },
+    { ...shapes[0], description: 'x'.repeat(161) },
+    { ...shapes[0], icon: 'not-an-ionicon' },
+    { ...shapes[0], extra: true },
+    { ...shapes[0], icon: 7 },
+    { ...shapes[0], description: false },
+  ];
+  for (const item of invalidItems) {
+    const { client, requests } = localClient(() => { throw new Error('Invalid checklist must not reach RPC'); });
+    try {
+      assert.deepEqual(await data.createDailyRoutine(client, { ...routineDraft, checklist: [item] }, 'Europe/Stockholm'), { status: 'failed' });
+      assert.equal(requests.length, 0);
+    } finally { await client.auth.dispose(); }
+  }
+});
+
+test('routine icon and description only changes use revision CAS/readback and leave saved day snapshots untouched', async () => {
+  const changedChecklist = [{ ...checklist[0], icon: 'water-outline', description: 'Fyll skålen till kanten' }];
+  const repeat = { repeat_unit: null, repeat_interval: null, repeat_weekdays: null };
+  const saved = { ...routine, checklist: changedChecklist, checklist_revision: 2 };
+  const { client, requests } = localClient(({ method, url, body }) => {
+    assert.equal(method, 'POST');
+    assert.equal(url.pathname, '/rest/v1/rpc/replace_daily_routine_v2');
+    assert.equal(body.p_expected_revision, 1);
+    assert.equal(body.p_dog_id, dogId);
+    assert.deepEqual(body.p_checklist, changedChecklist);
+    return jsonResponse(saved);
+  });
+  try {
+    assert.deepEqual(await data.replaceDailyRoutine(client, routine, routine.label, changedChecklist, repeat, 'Europe/Stockholm'), { status: 'saved', value: saved });
+    assert.equal(requests.length, 1);
+    assert.deepEqual(routineDay.checklist_snapshot, checklist, 'an already-saved day snapshot is not rewritten');
+  } finally { await client.auth.dispose(); }
+
+  const { client: lostResponseClient, requests: lostRequests } = localClient(({ method, url, body }) => {
+    if (method === 'POST') {
+      assert.equal(body.p_expected_revision, 1);
+      throw new TypeError('simulated response loss after commit');
+    }
+    assert.equal(url.pathname, '/rest/v1/dog_daily_routines');
+    assert.equal(url.searchParams.get('id'), `eq.${routine.id}`);
+    assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
+    return jsonResponse(saved);
+  });
+  try {
+    assert.deepEqual(await data.replaceDailyRoutine(lostResponseClient, routine, routine.label, changedChecklist, repeat, 'Europe/Stockholm'), { status: 'saved', value: saved });
+    assert.deepEqual(lostRequests.map(({ method }) => method), ['POST', 'GET']);
+  } finally { await lostResponseClient.auth.dispose(); }
+
+  const { client: mismatchClient } = localClient(({ method }) => method === 'POST'
+    ? (() => { throw new TypeError('response status unknown'); })()
+    : jsonResponse({ ...saved, checklist: checklist }));
+  try {
+    assert.notEqual((await data.replaceDailyRoutine(mismatchClient, routine, routine.label, changedChecklist, repeat, 'Europe/Stockholm')).status, 'saved');
+  } finally { await mismatchClient.auth.dispose(); }
+});
+
 test('daily training retry reconciles the existing logical key when its stable UUID is unknown', async () => {
   const existing = { ...trainingSelection, id: '77777777-7777-4777-8777-777777777777' };
   const { client, requests } = localClient(({ method, url }) => {

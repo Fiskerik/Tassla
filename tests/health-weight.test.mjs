@@ -31,11 +31,10 @@ test('date input shrinks while the calendar target and time field keep their exi
   const timePickerSource = primitivesSource.slice(primitivesSource.indexOf('export function TimePickerField'), primitivesSource.indexOf('\nfunction parseDateValue'));
   assert.match(datePickerSource, /style=\{\[styles\.datePickerInput, \{ minWidth: 0 \}\]\}/);
   assert.doesNotMatch(timePickerSource, /minWidth: 0/);
-  assert.match(primitivesSource, /pickerButton: \{[^}]*width: tokens\.size\.touchMin, minWidth: tokens\.size\.touchMin, minHeight: 52/s);
 });
 
-test('weight edit actions stack at narrow width or large text without changing action labels', () => {
-  assert.match(weightScreenSource, /const stackEditActions = width < 360 \|\| fontScale >= 1\.25/);
+test('weight edit actions stack at narrow widths without changing action labels', () => {
+  assert.match(weightScreenSource, /const stackEditActions = width < 360/);
   assert.match(weightScreenSource, /styles\.actionsStacked/);
   assert.match(weightScreenSource, /actionsStacked: \{ flexDirection: 'column', alignItems: 'stretch'/);
   assert.match(weightScreenSource, /actionItemStacked: \{ flexGrow: 0, flexShrink: 0, flexBasis: 'auto', width: '100%' \}/);

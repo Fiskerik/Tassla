@@ -1,0 +1,35 @@
+{
+  "branch": "codex/dog-profile-search-pilot",
+  "commit": "a57e17388d380800c6a378b6368babe6877b4f1c",
+  "mode": "public",
+  "build": {
+    "file": "/tmp/tassla-flow-checklist/public/app.js",
+    "sha256": "04341af2d00caf1f72a2a340ba50d59e95e67e578b39583d36def59d5aa5d9ad"
+  },
+  "verifierSha256": "ac97fd10f712c5649de9da000defcd5e7f6ea3105ecebc4a2509867b8dc3ce41",
+  "passes": [
+    "Portrait label 14.91:1 and measured week-strip fade at 375px",
+    "Home source states and layout at 375px",
+    "Portrait label 14.91:1 and measured week-strip fade at 430px",
+    "Home source states and layout at 430px",
+    "Permanent checklist entry opens a Home child route from ready/loading/error/empty states",
+    "Checklist zero/one/five/seven states keep routine-only progress separate from training",
+    "Checklist loading and read-error states do not claim an empty or complete list",
+    "All four Checklist filters render with correct selection, rows and no progress outside Idag at 375/430/short 375 widths",
+    "Routine-only and training-only Checklist states stay distinct without 0-of-0 progress at all three viewports",
+    "Changing a Checklist filter resets the scroll offset to the top of the new date groups",
+    "Range loading, empty, partial, retry and error states remain distinct and never claim complete progress",
+    "Historical training opens exact fixture source read-only and returns to the selected filter",
+    "Editing a planned routine returns to Kommande with the refreshed projected rows",
+    "Planned routine deletion stays confirmed and removes its projected rows from Kommande",
+    "Planned routine hides day-level actions; planned health opens and returns to Kommande",
+    "Checklist fits the standard 430px and short 375×667 viewports",
+    "Training detail opens at top with a visible back action; lower checklist row returns at its saved scroll position",
+    "Leaving Checklistan for Hem clears the saved offset; reopening starts at the top",
+    "Scope invalidation returns to Home and reopening Checklistan starts at the top in the changed dog scope",
+    "Home and Checklist navigation, review gate and standard-scale layouts"
+  ],
+  "pageErrors": [],
+  "scope": "Home and Checklist; synthetic data and React Native Web, not device/backend certification",
+  "deferred": "Broad accessibility, Dynamic Type, screen-reader, reduced-motion and target-size matrix after MVP release and approval"
+}

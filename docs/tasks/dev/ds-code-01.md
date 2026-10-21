@@ -1,5 +1,7 @@
 # DS-CODE-01 – Tokens och komponentbibliotek i appkoden
 
+> **Ägarbeslut 2026-10-21 gäller alla MVP-checkpoints:** kvarvarande galleriverifiering fokuserar funktion och relevanta standardvyer. Stor text/Dynamic Type, VoiceOver/TalkBack, reducerad-rörelse-, kontrast- och träffyteaudit görs efter att MVP:n är släppt och godkänd. Redan implementerade komponentkontrakt bevaras; äldre a11y-resultat nedan är historik, inte framtida grindar. Se [AGENTS.md](../../../AGENTS.md) och [arbetsflödet](../../dev/workflow.md).
+
 Datum: 2026-10-07<br>
 Planversion: v4.1 – korrigeringsförsök 1<br>
 Status: BLOCK – kod QA/reviewer PASS; visuell QA NOT TESTABLE utan renderade skärmdumpar<br>
@@ -68,7 +70,7 @@ Fokuserat test förbjuder UI-orden server, synk/synkronisera, backend, databas, 
 - `pnpm lint` (PASS med befintliga fynd som varningar, nya UI-fynd som fel)
 - `pnpm test`
 - `git diff --check`
-- renderat galleri på liten/stor mobilbredd och stor text när lokal previewmiljö med skärmdump är tillgänglig
+- renderat galleri vid relevanta standardvyer när lokal previewmiljö med skärmdump är tillgänglig
 
 ## Exakt nästa steg
 
@@ -112,4 +114,4 @@ Reviewer BLOCK: den publika `Button.fullWidth` kan låta icke-ikonknappar bryta 
 
 Implementerat: `fullWidth` borttaget; bas-Button stretchar och icon överskriver med 44×44. Förnyad QA PASS: fokuserat 9/9, `pnpm check` 356/356 och `git diff --check` PASS. iOS-export PASS från implementer.
 
-Förnyad reviewer: kod-PASS efter korrigering v4.1. Total leverans BLOCK eftersom inga renderade galleriskärmdumpar finns. Exakt nästa steg är att köra befintligt `pnpm start:preview` på en native-enhet/emulator eller en separat godkänd webbruntime, fånga liten/stor bredd och stor text, spara evidens och låta oberoende visuell QA fylla om §14 innan renewed reviewer.
+Förnyad reviewer: kod-PASS efter korrigering v4.1. Total leverans BLOCK eftersom inga renderade galleriskärmdumpar finns. Exakt nästa steg är att köra befintligt `pnpm start:preview` på en native-enhet/emulator eller en separat godkänd webbruntime, fånga relevanta standardvyer, spara evidens och låta oberoende visuell QA bedöma relevant §14 innan renewed reviewer. Stor-text-/skärmläsar-/native-tillgänglighetsaudit skjuts upp enligt ägarbeslutet 2026-10-21.

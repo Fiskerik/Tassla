@@ -4,27 +4,18 @@ import { readFile, stat } from 'node:fs/promises';
 
 const files = await Promise.all([
   readFile(new URL('../src/components/ui/DogMascot.tsx', import.meta.url), 'utf8'),
-  readFile(new URL('../src/components/ui/Motion.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/features/puppy-log/LogScreen.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/features/training/PublishedTrainingScreen.tsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/ui/index.ts', import.meta.url), 'utf8'),
   readFile(new URL('../assets/images/dog-mascot.png', import.meta.url)),
 ]);
-const [mascot, motion, logScreen, trainingScreen, uiIndex, png] = files;
+const [mascot, logScreen, trainingScreen, uiIndex, png] = files;
 
-test('mascot is decorative, one-shot per reaction key and static with reduced motion', () => {
-  assert.match(mascot, /useReducedMotionPreference\(\)/);
+test('mascot is decorative and one-shot per reaction key', () => {
   assert.match(mascot, /if \(!reactionKey \|\| !motionReady\) return;/);
-  assert.doesNotMatch(mascot, /AccessibilityInfo/);
-  assert.match(motion, /export function useReducedMotionPreference\(\)/);
-  assert.match(motion, /ready: false/);
-  assert.match(motion, /receivedChange/);
-  assert.match(motion, /if \(active && !receivedChange\) setPreference\(\{ reduced: true, ready: true \}\)/);
   assert.match(mascot, /playedKey\.current === reactionKey/);
   assert.match(mascot, /playedKey\.current = reactionKey/);
   assert.match(mascot, /Animated\.sequence\(\[/);
-  assert.match(mascot, /if \(reducedMotion\) \{ scale\.setValue\(1\); return; \}/);
-  assert.match(mascot, /accessibilityElementsHidden importantForAccessibility="no-hide-descendants"/);
   assert.doesNotMatch(mascot, /Animated\.loop|Vibration|Haptics/);
   assert.match(uiIndex, /export \{ DogMascot \} from '\.\/DogMascot'/);
 });

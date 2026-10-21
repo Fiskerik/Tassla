@@ -1,6 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { localDateKeyAt, isValidDateKey, isTrainingCompletionForDay, nextSelectableTrainingStep, trainingProgressStamp, deriveHomeDailyActivities, deriveSavedRangeActivities, checklistFilterRange, addCalendarDays, projectUpcomingRoutineDates } from '../src/features/home/daily-activity-model.ts';
+import { registerHooks } from 'node:module';
+
+const resolution = registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier.startsWith('.') && !/\.[a-z0-9]+$/i.test(specifier)) return nextResolve(`${specifier}.ts`, context);
+    return nextResolve(specifier);
+  },
+});
+const model = await import('../src/features/home/daily-activity-model.ts');
+resolution.deregister();
+const { localDateKeyAt, dailyActivityScopeKey, isValidDateKey, isTrainingCompletionForDay, nextSelectableTrainingStep, trainingProgressStamp,
+  deriveHomeDailyActivities, deriveSavedRangeActivities, checklistFilterRange, addCalendarDays, projectUpcomingRoutineDates } = model;
 
 test('checklist date ranges use local date keys and exact inclusive calendar bounds', () => {
   assert.deepEqual(checklistFilterRange('Denna vecka', '2026-10-18'), { from: '2026-10-12', to: '2026-10-18' });
@@ -11,6 +22,19 @@ test('checklist date ranges use local date keys and exact inclusive calendar bou
   assert.equal(checklistFilterRange('Alla', '2026-02-30'), null);
 });
 
+test('the checklist daily scope rolls over at local midnight and changes the Kommande range', () => {
+  const scopeAt = (instant) => dailyActivityScopeKey({ accountId: 'owner-1', accountGeneration: 3, selectionKey: 'owner-1:dog-1',
+    instant, timeZone: 'Europe/Stockholm', review: false });
+  const justBefore = scopeAt('2026-10-21T21:59:00.000Z');
+  const justAfter = scopeAt('2026-10-21T22:01:00.000Z');
+
+  assert.notEqual(justBefore, justAfter);
+  assert.equal(localDateKeyAt('2026-10-21T21:59:00.000Z', 'Europe/Stockholm'), '2026-10-21');
+  assert.equal(localDateKeyAt('2026-10-21T22:01:00.000Z', 'Europe/Stockholm'), '2026-10-22');
+  assert.deepEqual(checklistFilterRange('Kommande', '2026-10-21'), { from: '2026-10-22', to: '2026-10-28' });
+  assert.deepEqual(checklistFilterRange('Kommande', '2026-10-22'), { from: '2026-10-23', to: '2026-10-29' });
+});
+
 test('upcoming repeat projection honors anchor, weekdays and month-end without creating occurrences', () => {
   const routine = { id: 'monthly', dog_id: 'dog-a', label: 'Månad', checklist: [], checklist_revision: 1,
     legacy_single_item: false, repeat_unit: 'month', repeat_interval: 1, repeat_weekdays: null, repeat_anchor_date: '2026-01-31' };
@@ -18,6 +42,38 @@ test('upcoming repeat projection honors anchor, weekdays and month-end without c
   assert.deepEqual(projectUpcomingRoutineDates([routine], '2026-02-25', '2026-03-03').map(({ dateKey }) => dateKey), ['2026-02-28']);
   assert.deepEqual(projectUpcomingRoutineDates([weekly], '2026-10-19', '2026-10-25').map(({ dateKey }) => dateKey), ['2026-10-19', '2026-10-21']);
   assert.deepEqual(projectUpcomingRoutineDates([weekly], '2026-10-04', '2026-10-04'), []);
+});
+
+test('daily, weekly, fortnightly and monthly recurrence boundaries remain calendar-date based', () => {
+  const base = { id: 'repeat', dog_id: 'dog-a', label: 'Återkomst', checklist: [], checklist_revision: 1,
+    legacy_single_item: false, repeat_unit: 'day', repeat_interval: 1, repeat_weekdays: null, repeat_anchor_date: '2026-03-28' };
+  const everyOtherDay = { ...base, repeat_interval: 2, repeat_anchor_date: '2026-03-29' };
+  const weekly = { ...base, repeat_unit: 'week', repeat_anchor_date: '2026-03-21' };
+  const fortnightlyWeekdays = { ...weekly, repeat_interval: 2, repeat_weekdays: [1, 3], repeat_anchor_date: '2026-03-02' };
+  const monthly = { ...base, repeat_unit: 'month', repeat_anchor_date: '2026-01-31' };
+  const everyOtherMonth = { ...monthly, repeat_interval: 2 };
+  const futureAnchor = { ...base, repeat_anchor_date: '2026-04-10' };
+
+  assert.deepEqual(projectUpcomingRoutineDates([base], '2026-03-28', '2026-03-30').map(({ dateKey }) => dateKey), [
+    '2026-03-28', '2026-03-29', '2026-03-30',
+  ]);
+  assert.deepEqual(projectUpcomingRoutineDates([everyOtherDay], '2026-03-28', '2026-04-04').map(({ dateKey }) => dateKey), [
+    '2026-03-29', '2026-03-31', '2026-04-02', '2026-04-04',
+  ]);
+  assert.deepEqual(projectUpcomingRoutineDates([weekly], '2026-03-22', '2026-03-29').map(({ dateKey }) => dateKey), ['2026-03-28']);
+  assert.deepEqual(projectUpcomingRoutineDates([fortnightlyWeekdays], '2026-03-08', '2026-03-22').map(({ dateKey }) => dateKey), [
+    '2026-03-16', '2026-03-18',
+  ]);
+  assert.deepEqual(projectUpcomingRoutineDates([monthly], '2026-02-01', '2026-04-30').map(({ dateKey }) => dateKey), [
+    '2026-02-28', '2026-03-31', '2026-04-30',
+  ]);
+  assert.deepEqual(projectUpcomingRoutineDates([everyOtherMonth], '2026-02-01', '2026-05-31').map(({ dateKey }) => dateKey), [
+    '2026-03-31', '2026-05-31',
+  ]);
+  assert.deepEqual(projectUpcomingRoutineDates([futureAnchor], '2026-03-28', '2026-04-09'), []);
+  assert.deepEqual(projectUpcomingRoutineDates([base], '2026-10-24', '2026-10-26').map(({ dateKey }) => dateKey), [
+    '2026-10-24', '2026-10-25', '2026-10-26',
+  ]);
 });
 
 test('projects saved training timestamps into the selected IANA local day across UTC boundaries', () => {
@@ -64,7 +120,10 @@ test('daily activities count owner marks and exact saved training source while e
     id: 'routine-1',
     dog_id: 'dog-a',
     label: 'Kvällsrutin',
-    checklist: [{ id: 'routine-item-1', label: 'Kissa' }, { id: 'routine-item-2', label: 'Fyll på vatten' }],
+    checklist: [
+      { id: 'routine-item-1', label: 'Kissa', icon: 'paw', description: 'Efter måltid' },
+      { id: 'routine-item-2', label: 'Fyll på vatten' },
+    ],
     checklist_revision: 1,
     legacy_single_item: false,
     repeat_unit: null,
@@ -89,11 +148,13 @@ test('daily activities count owner marks and exact saved training source while e
   const selection = { id: 'selection-1', dog_id: 'dog-a', program_version_id: 'version-2', step_id: 'step-1', date_key: '2026-10-12', time_zone: 'America/Los_Angeles' };
   const snapshot = { routines: [routine], routineDays: [selectedRoutine], routineDaySkips: [], trainingSelections: [selection] };
   const activeProgram = { id: 'version-2', title: 'Trygg vardag', steps: [{ id: 'step-1', position: 1, title: 'Sitt lugnt', instruction: '' }], completedStepIds: ['step-1'], completedAtByStepId: { 'step-1': '2026-10-13T00:30:00.000Z' } };
-  assert.deepEqual(deriveHomeDailyActivities(snapshot, [activeProgram], 'dog-a', '2026-10-12').map(({ label, routineLabel, kind, completed, programTitle }) => ({ label, routineLabel, kind, completed, programTitle })), [
-    { label: 'Kissa', routineLabel: 'Kvällsrutin', kind: 'routine', completed: true, programTitle: undefined },
-    { label: 'Fyll på vatten', routineLabel: 'Kvällsrutin', kind: 'routine', completed: false, programTitle: undefined },
-    { label: 'Sitt lugnt', routineLabel: undefined, kind: 'training', completed: true, programTitle: 'Trygg vardag' },
+  const derived = deriveHomeDailyActivities(snapshot, [activeProgram], 'dog-a', '2026-10-12');
+  assert.deepEqual(derived.map(({ label, routineLabel, kind, completed, programTitle, icon, description }) => ({ label, routineLabel, kind, completed, programTitle, icon, description })), [
+    { label: 'Kissa', routineLabel: 'Kvällsrutin', kind: 'routine', completed: true, programTitle: undefined, icon: 'paw', description: 'Efter måltid' },
+    { label: 'Fyll på vatten', routineLabel: 'Kvällsrutin', kind: 'routine', completed: false, programTitle: undefined, icon: derived[1].icon, description: undefined },
+    { label: 'Sitt lugnt', routineLabel: undefined, kind: 'training', completed: true, programTitle: 'Trygg vardag', icon: undefined, description: undefined },
   ]);
+  assert.notEqual(derived[1].icon, 'paw', 'a legacy checklist point receives its own deterministic default icon');
   assert.deepEqual(deriveHomeDailyActivities(snapshot, [], 'dog-a', '2026-10-12').map(({ label, completed }) => [label, completed]), [
     ['Kissa', true], ['Fyll på vatten', false],
   ]);
