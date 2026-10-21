@@ -1,6 +1,6 @@
-# DOG-PROFILE-SEARCH-PILOT-01 — UX-spec v2.2
+# DOG-PROFILE-SEARCH-PILOT-01 — UX-spec v2.3
 
-**Status:** v2-beteendekontrakt oförändrat; v2.1–v2.2 synkar endast §14-terminologin med R02-4E:s korrigerade stödskärmsbedömning.
+**Status:** Beteendekontrakt v2 och §14-korrigeringarna kvarstår. Ägarbeslutet 2026-10-21 gäller alla MVP-checkpoints: systematisk tillgänglighetsgranskning och oberoende slutreview görs efter att hela MVP:n är nära klar; standardvyernas funktionella regressioner och säkerhetskrav gäller fortsatt.
 
 ## Beslut och avgränsning
 
@@ -30,7 +30,7 @@ Målet är att göra rasvalet konsekvent och sökbart i dessa tre användningsst
 | Redigering bevarar befintlig profil | Sparat ID är initialvärde; en saknad katalogmatchning varnas | Delar samma komponent utan att byta initialt ID | Sparad ras syns vald; saknat ID och varning bevaras tills uttryckligt byte; befintlig edit/readback-regression |
 | Katalogtillstånd förblir begripliga | Laddning och fel har egna tillstånd; tom katalog kan komma som lyckat svar | Skilj lyckat nollresultat från sökning utan träff | Visa retry/blockering för tom katalog och separat Ingen ras hittades för tom sökning |
 
-Skärmbilderna är syntetiska; jämför stödyta med `vision_rev02.jpg` endast genom närmast relevanta gemensamma språk. I `docs/design-rules.md` §14 ska exakt profilpanelmatchning uttryckligen vara **NOT TESTABLE/ej tillämplig** eftersom motsvarande panel saknas, med motivering; stödskärmens layout, färgfördelning, typografi, komponentform, bildspråk och innehållstäthet bedöms var för sig. Dokumentera övriga ej tillgängliga kontroller som **NOT TESTABLE**, inklusive native Dynamic Type/VoiceOver, fysiskt tangentbord och verklig Supabase/RLS. Visuell kontroll ska innehålla 375×844, 430×844, 375×667 och 140 % text där harnessmiljön kan visa det.
+Skärmbilderna är syntetiska; jämför stödyta med `vision_rev02.jpg` endast genom närmast relevanta gemensamma språk. I `docs/design-rules.md` §14 ska exakt profilpanelmatchning uttryckligen vara **NOT TESTABLE/ej tillämplig** eftersom motsvarande panel saknas, med motivering; stödskärmens layout, färgfördelning, typografi, komponentform, bildspråk och innehållstäthet bedöms var för sig. Dokumentera live Supabase/RLS och native som **NOT TESTABLE** när de inte körts. Visuell kontroll gäller standardvyerna 375×844, 430×844 och 375×667. 140 %/stor text, skärmläsare, reducerad rörelse och generell träffyteaudit är inte MVP-grindar enligt ägarbeslutet.
 
 Bygg public och review som separata RN Web-bundles. Mellan build och browser-check startas den faktiska bundle-katalogen, exempelvis `python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-dog-profile-search/public`; kör verifieraren mot `http://127.0.0.1:4173/`, stoppa servern och upprepa mot review-bundlen. Spara buildläge, route, serveradress, viewport, textskala och bundle-commit med captures.
 
@@ -69,6 +69,7 @@ Uttryckligen utanför scope: `app-data.ts`, Supabase/schema/RPC/RLS, katalogimpo
 - **v2, 2026-10-20:** Architect APPROVE och Critic PROCEED för beteendekontraktet och pilotens verifiering.
 - **v2.1, 2026-10-21:** redaktionell synk av §14-språk: exakt panelmatchning mot en panel som saknas anges som NOT TESTABLE/ej tillämpligt; stödskärmen bedöms separat. Beteende, risk, scope och acceptanskriterier är oförändrade; v2-verdicts återanvänds endast för det oförändrade kontraktet.
 - **v2.2, 2026-10-21:** samma redaktionella korrigering förs in i R02-4E:s renderingsrapport, som pilotens länkade stödskärmsunderlag. Skärmbilder och deldimensionernas resultat ändras inte; beteende, risk, scope och acceptans är oförändrade.
+- **v2.3, 2026-10-21:** ägarens GO uppdaterar checkpointens DoD: ingen 140 %/stor-text-audit och ingen fristående Reviewer före samlad MVP-closeout. Standardvy, funktion, verkliga catalog-ID:n, live/native-status och riskbaserad säkerhet redovisas separat. Ingen produktfunktion eller profilens data-/sparkontrakt ändras.
 
 ## Acceptans
 
@@ -78,7 +79,7 @@ Uttryckligen utanför scope: `app-data.ts`, Supabase/schema/RPC/RLS, katalogimpo
 4. Laddning, fetch-fel, lyckad tom katalog och sökning utan träff är skilda och testade; väljare/primär handling låses i busy/pending och fokus flyttas enligt kontrakt.
 5. Befintlig fetch/retry, create/readback/idempotens, editvillkor/readback, fel/osäkert läge, kennelkoppling, ålder, konto-/hundscope, rutt och avbrytning förblir oförändrade och regressionsverifieras.
 6. Visuell harness har egna `profile-create`, `profile-add` och `profile-edit` scenarier och interaktivt verifierar inget förhandsval, aktivering efter val, vald editras, add-avbrytning, tom katalog samt match/ingen träff/stängning. Evidens anger fixtures, viewport, textskala, branch/commit och avvikelser.
-7. `pnpm check`, riktade profiltester, UI-render/harnesskontroll, kövalidering och `git diff --check` passerar. Oberoende QA och Reviewer granskar faktisk diff. Security gör en lokal teknisk granskning eftersom ras-ID tillhör hundprofilens befintliga personuppgifter; ingen ändring av ändamål, åtkomst eller lagring planeras.
+7. `pnpm check`, riktade profiltester, UI-render/harnesskontroll, kövalidering och `git diff --check` passerar. QA verifierar faktisk implementation. Security-granskning följer risk och alla säkerhetskrav kvarstår; oberoende slutreview av hela MVP:n görs nära MVP-closeout enligt ägarens GO.
 
 ## Separata acceptansstatusar
 

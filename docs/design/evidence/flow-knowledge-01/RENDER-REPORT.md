@@ -69,3 +69,7 @@ Samlad visuell status är **DELVIS**, inte full rev02-acceptans. Den godkända s
 - **Native:** NOT TESTABLE i React Native Web-förhandsvisningen.
 - **Visuell acceptans:** DELVIS. FAQ och Checklistor har en tydligare och konsekvent kort-/ikonhierarki. Panel 7:s fulla rotvy-match och godkännande av de extrapolerade stödytevyerna återstår.
 - **Signerad build och release:** EJ SKAPADE.
+
+## Exakt samlad implementationcommit — 2026-10-21
+
+Public och review verifierades på `codex/dog-profile-search-pilot`, commit `c3eedd5e4da14e36789963d3fe352a28d8dca56b`: public 31 PASS och review 90 PASS, noll browserfel. Denna körning täcker aktuella FAQ-/checklist-/guideflöden och sparar captures, resultat samt exakta bundle- och verifieraridentiteter i [public](../ui-checkpoint-c3eedd5/knowledge/public/) och [review](../ui-checkpoint-c3eedd5/knowledge/review/). Visuell status är fortsatt DELVIS; tidigare 68/68-run är historiskt testresultat, inte denna checkpoints resultat.

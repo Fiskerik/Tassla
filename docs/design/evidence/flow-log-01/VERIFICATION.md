@@ -41,3 +41,9 @@ Full `pnpm check`, public `pnpm bundle:ios`, `git diff --check` och `python -X u
 ## Säkerhet och data
 
 Den tidigare statiska Security-granskningen gäller samma autentiserade, hundscopade, timestamp-only kalendermarkörfråga. V6 ändrar inga läsningar, skrivningar, behörigheter, schema, sessioner eller hundscope. Granskningen visar inte live RLS. Tvåägarprov och anon-denial är fortsatt NOT TESTABLE utan en godkänd Supabase-testmiljö.
+
+## Exakt samlad implementationcommit — 2026-10-21
+
+Efter att FLOW-INSIGHTS-01 landat byggdes Logga public/review på nytt från `codex/dog-profile-search-pilot`, commit `c3eedd5e4da14e36789963d3fe352a28d8dca56b`. Båda körningarna passerar 15/15 kontroller med 0 browserfel. Aktuella captures och maskinläsbara resultat finns i [checkpointens Logga public](../ui-checkpoint-c3eedd5/logga/public/) och [review](../ui-checkpoint-c3eedd5/logga/review/); respektive `build-manifest.json` anger exakt `app.js`, bundle-SHA-256 och verifierar-SHA-256. Insiktsreturen finns dessutom i [panel 8-evidensen](../flow-insights-01/VERIFICATION.md).
+
+Detta är ett lokalt funktions-/browser-QA-checkpoint. Visuell status är fortsatt PARTIAL, signerad TestFlight-build saknas, och live RLS/native/telefon är NOT TESTABLE. Full MVP-review är uppskjuten enligt ägarens GO.

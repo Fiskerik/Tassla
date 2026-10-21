@@ -1,0 +1,248 @@
+{
+  "flow": "FLOW-INSIGHTS-01",
+  "mode": "public",
+  "branch": "codex/dog-profile-search-pilot",
+  "commit": "c3eedd5e4da14e36789963d3fe352a28d8dca56b",
+  "browser": "Chromium via Playwright, actual LogScreen and InsightsScreen with synthetic fixture data",
+  "base_url": "http://127.0.0.1:43210/insights/public/",
+  "bundle_file": "app.js",
+  "bundle_sha256": "16a03ee0409e139cef4458d5ce097d23b3e8b6230bdd511317601d82e2adf7b7",
+  "build_script_sha256": "9eb9455fcbaa49be2b11783d99031d9981d47fdaa55c8c3538b375b6112867e3",
+  "verifier_file": "tools/visual-check/verify-insights-flow.py",
+  "verifier_sha256": "0af3c76eb6432396b158084c83645a3c80071a6343f4ceeeaa8d4cfa1bb5f367",
+  "captures": [
+    {
+      "file": "insights-ready-375x844.png",
+      "route": "?screen=insights&period=Vecka&insightsScenario=ready",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Insights ready composition at 375x844"
+    },
+    {
+      "file": "insights-ready-430x844.png",
+      "route": "?screen=insights&period=Vecka&insightsScenario=ready",
+      "viewport": {
+        "width": 430,
+        "height": 844
+      },
+      "state": "Insights ready composition at 430x844"
+    },
+    {
+      "file": "insights-ready-375x667.png",
+      "route": "?screen=insights&period=Vecka&insightsScenario=ready",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "state": "Insights ready composition at 375x667"
+    },
+    {
+      "file": "insights-month-375x844.png",
+      "route": "?screen=insights&period=Vecka&insightsScenario=ready",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Month period changes the projection and grouped calendar-week bars"
+    },
+    {
+      "file": "insights-since-start-375x667.png",
+      "route": "?screen=insights&period=Vecka&insightsScenario=ready",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Since-start period groups longer history by year"
+    },
+    {
+      "file": "insights-empty-375x844.png",
+      "route": "?screen=insights&period=Sedan+start&insightsScenario=empty",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Empty history remains distinct from loading and failure"
+    },
+    {
+      "file": "insights-loading-375x844.png",
+      "route": "?screen=insights&period=Vecka&insightsScenario=loading",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Insights loading state"
+    },
+    {
+      "file": "insights-error-375x844.png",
+      "route": "?screen=insights&period=Vecka&insightsScenario=error",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Insights read failure offers recovery"
+    },
+    {
+      "file": "insights-partial-cap-375x844.png",
+      "route": "?screen=insights&period=Sedan+start&insightsScenario=partial-limit",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Hard history cap shows its covered interval without a futile retry"
+    },
+    {
+      "file": "insights-partial-timeout-375x844.png",
+      "route": "?screen=insights&period=Vecka&insightsScenario=partial-timeout",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Timeout partial state offers a fresh read"
+    },
+    {
+      "file": "log-before-insights-375x844.png",
+      "route": "?screen=log-insights",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Logga date selection before opening Insights"
+    },
+    {
+      "file": "insights-route-open-375x400.png",
+      "route": "?screen=log-insights",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      },
+      "state": "Logga → Översikt opens Insights at its own route top"
+    }
+  ],
+  "checks": [
+    {
+      "check": "Insights ready composition at 375x844",
+      "route": "?screen=insights&period=Vecka&insightsScenario=ready",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Insights ready composition at 430x844",
+      "route": "?screen=insights&period=Vecka&insightsScenario=ready",
+      "viewport": {
+        "width": 430,
+        "height": 844
+      }
+    },
+    {
+      "check": "Insights ready composition at 375x667",
+      "route": "?screen=insights&period=Vecka&insightsScenario=ready",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      }
+    },
+    {
+      "check": "Month period changes the projection and grouped calendar-week bars",
+      "route": "?screen=insights&period=Vecka&insightsScenario=ready",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Since-start period groups longer history by year",
+      "route": "?screen=insights&period=Vecka&insightsScenario=ready",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Empty history remains distinct from loading and failure",
+      "route": "?screen=insights&period=Sedan+start&insightsScenario=empty",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Insights loading state",
+      "route": "?screen=insights&period=Vecka&insightsScenario=loading",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Insights read failure offers recovery",
+      "route": "?screen=insights&period=Vecka&insightsScenario=error",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Retry returns from error to current synthetic data",
+      "route": "",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Hard history cap shows its covered interval without a futile retry",
+      "route": "?screen=insights&period=Sedan+start&insightsScenario=partial-limit",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Timeout partial state offers a fresh read",
+      "route": "?screen=insights&period=Vecka&insightsScenario=partial-timeout",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Logga date selection before opening Insights",
+      "route": "?screen=log-insights",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Logga → Översikt opens Insights at its own route top",
+      "route": "?screen=log-insights",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      }
+    },
+    {
+      "check": "Insights back preserves exact selected date, active Logg tab and Logga offset",
+      "route": "",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      }
+    },
+    {
+      "check": "Each route restores its own saved scroll offset",
+      "route": "",
+      "viewport": {
+        "width": 375,
+        "height": 400
+      }
+    }
+  ],
+  "page_errors": [],
+  "visual_status": "PARTIAL — production components rendered and compared; complete panel-8 live/native acceptance remains separate",
+  "live_data_rls_native_release": "NOT TESTABLE in this synthetic browser fixture"
+}

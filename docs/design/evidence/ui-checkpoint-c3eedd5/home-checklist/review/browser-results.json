@@ -1,0 +1,38 @@
+{
+  "branch": "codex/dog-profile-search-pilot",
+  "commit": "c3eedd5e4da14e36789963d3fe352a28d8dca56b",
+  "mode": "review",
+  "build": {
+    "file": "/tmp/tassla-postcommit/home/review/app.js",
+    "sha256": "cfb8c2f5918cee1c5045c25603ab84c74499954ddc10661e8162d73825ac35fc"
+  },
+  "verifierSha256": "ac692852a783a656886f2bf40b6293134fe3c6abc9ba04c9c783e8a84c23996a",
+  "passes": [
+    "Portrait label bounds and measured week-strip fade at 375px",
+    "Home source states and layout at 375px",
+    "Portrait label bounds and measured week-strip fade at 430px",
+    "Home source states and layout at 430px",
+    "Routine detail sheet and same-row pending/error/unknown recovery",
+    "Permanent checklist entry opens a Home child route from ready/loading/error/empty states",
+    "Checklist zero/one/five/seven states keep routine-only progress separate from training",
+    "Checklist loading and read-error states do not claim an empty or complete list",
+    "Home stays compact; Checklist shows optional detail; normal open, checkbox, long-press edit and frozen day snapshot work independently",
+    "Idag has three reference segments and a three-row upcoming preview; CTA opens the full four-segment Kommande view at all three viewports",
+    "Kommande preview loading, empty, partial and error keep the inline action and available rows visible above fixed navigation",
+    "Routine-only and training-only Checklist states stay distinct without 0-of-0 progress at all three viewports",
+    "Changing a Checklist filter resets the scroll offset to the top of the new date groups",
+    "Range loading, empty, partial, retry and error states remain distinct and never claim complete progress",
+    "Historical training opens exact fixture source read-only and returns to the selected filter",
+    "Editing a planned routine returns to Kommande with the refreshed projected rows",
+    "Planned routine deletion stays confirmed and removes its projected rows from Kommande",
+    "Planned routine hides day-level actions; planned health opens and returns to Kommande",
+    "Checklist fits the standard 430px and short 375×667 viewports",
+    "Training detail opens at top with a visible back action; lower checklist row returns at its saved scroll position",
+    "Leaving Checklistan for Hem clears the saved offset; reopening starts at the top",
+    "Scope invalidation returns to Home and reopening Checklistan starts at the top after selection change",
+    "Home and Checklist navigation, review gate and standard-scale layouts"
+  ],
+  "pageErrors": [],
+  "scope": "Home and Checklist; synthetic data and React Native Web, not device/backend certification",
+  "deferred": "Broad accessibility, Dynamic Type, screen-reader, reduced-motion and target-size matrix after MVP release and approval"
+}

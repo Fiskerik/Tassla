@@ -92,3 +92,7 @@ Bedömningen gäller den här selektor-/resecheckpointen. Den innebär inte att 
 | Native build, signering och release | NOT TESTABLE / ej skapad | Endast lokala visual-check-bundles byggdes; ingen iOS-arkivering, signering, push eller release. |
 
 Oberoende Reviewer gav först **CHANGES** för inaktuella `next_step`, `implementation_state` och `evidence_status` i köposten. Fälten rättades; uppföljningsreview gav **PASS** utan kvarstående blockerare.
+
+## Exakt samlad implementationcommit — 2026-10-21
+
+Träningsflödet verifierades på `codex/dog-profile-search-pilot`, commit `c3eedd5e4da14e36789963d3fe352a28d8dca56b`: public 11 PASS och review 4 PASS. Captures och exakta public/review bundlemanifest finns i [public](../ui-checkpoint-c3eedd5/training/public/) och [review](../ui-checkpoint-c3eedd5/training/review/). Detta är en syntetisk webbkörning. Native, live data och release är separata. Tidigare slice-review-resultat kvarstår som historik; ingen ny oberoende Reviewer kördes för den samlade MVP-checkpointen enligt ägarens GO.

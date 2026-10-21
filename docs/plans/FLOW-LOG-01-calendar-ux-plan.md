@@ -64,7 +64,7 @@ Spara skärmbilder, responsmatris, keyset-/mutationsprov, kalender-querytest, Se
 | Referens | Nuvarande skillnad | Ändring | Verifiering |
 |---|---|---|---|
 | `Logga`-rubrik och datumrad | Fungerar, men datumraden följs av en hög 2×2-grid och separat Fler-rad | Samma QuickLogTile-kontroller i en kompakt horisontell remsa, sparad ordning och Fler kvar; ta bort överflödiga `Snabb logg`/`Dagens logg`-rubriker | Bildjämförelse 375×844, 430×844, 375×667; Fler stängt/öppet |
-| Idag/Översikt-segment | Inte visat eftersom destination saknas | Visa först när panel 8 öppnar verkliga Insikter; Översikt navigerar till den vyn och tillbaka behåller vald dag och scrollposition | Hela Logga → Insikter → tillbaka-resan efter FLOW-INSIGHTS-01 |
+| Idag/Översikt-segment | V6-planen väntade på panel 8 | Implementerat tillsammans med FLOW-INSIGHTS-01; Översikt öppnar Insikter och tillbaka bevarar valt datum, aktiv Loggflik och Logga-scroll | Public/review-returresan är verifierad; live RLS/native/TestFlight bedöms separat |
 | Tidslinje/CTA | Raderna fungerar, men CTA hamnar under första skärmfältet efter den höga snabbvalsytan | Behåll fast tidskolumn, kategorisymboler, tunna avdelare och grön CTA; komprimera endast presentationsytan ovanför tidslinjen | CTA synlig i referenshöjden där innehållet ryms; vid kort vy går den nås genom normal scroll |
 
 Inga eventtyper, callback, dublettregler, persistens, datafält, RLS, pagination eller skrivflöden ändras. `QuickLogTile` är fortsatt produktkomponenten; ingen dekorativ ny kontroll eller separat mockskärm läggs till.

@@ -1,0 +1,9 @@
+{
+  "branch": "codex/dog-profile-search-pilot",
+  "commit": "c3eedd5e4da14e36789963d3fe352a28d8dca56b",
+  "bundle_file": "app.js",
+  "bundle_sha256": "6754555d57fb73e457428504624b0b458af8e3a3b465f20fb31fe4c6dfd3676e",
+  "build_script_sha256": "9eb9455fcbaa49be2b11783d99031d9981d47fdaa55c8c3538b375b6112867e3",
+  "verifier_file": "tools/visual-check/verify.py",
+  "verifier_sha256": "ac692852a783a656886f2bf40b6293134fe3c6abc9ba04c9c783e8a84c23996a"
+}

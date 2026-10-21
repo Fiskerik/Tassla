@@ -58,3 +58,7 @@ Granskningen gäller stödformuläret och den gemensamma väljaren, inte en huvu
 | 18. Hundnamn/bild/innehåll | Ja för tillgängliga tillstånd | Luna visas i create fixture; editens befintliga porträtt är kvar. Initial create saknar hundfoto och denna pilot introducerar inget nytt bildmaterial. |
 
 Den tydligt fokuserade svarta ramen i `profile-search-*.png` sitter på sökfältet medan väljaren är öppen och visar fokus. Den tidigare DOB-kantavvikelsen berodde på capture-skriptets aktiva datumfält; nya idle-fångster blur:ar datumfältet och visar normal kant. De två 44 px syntetiska banneretiketterna hade tidigare tagit 88 px av 844 px create/add-vyn (44 px i edit). De finns kvar i verifieringsfixturen men är dolda endast i de dokumenterade app-only-captures; därför har bilderna korrekt 844/667 px app-viewport och fångar inte den förminskade 756 px harneskvyn.
+
+## Exakt samlad implementationcommit — 2026-10-21
+
+Public och review kördes på commit `c3eedd5e4da14e36789963d3fe352a28d8dca56b` med exakt bundle-SHA-256 och verifierar-SHA-256 i [checkpointens public](../../ui-checkpoint-c3eedd5/breed-picker/public/) och [review](../../ui-checkpoint-c3eedd5/breed-picker/review/) manifests. Båda syntetiska browserkörningarna passerade 28 kontroller. Ingen 140 %-grind användes. Exakt matchning mot en profilpanel i `vision_rev02.jpg` är inte tillämplig eftersom panelen saknas; live datakoppling, native och TestFlight är separata statusar.

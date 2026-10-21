@@ -5781,7 +5781,7 @@
       "id": "DOG-PROFILE-SEARCH-PILOT-01",
       "title": "Gemensam sökbar rasväljare i profil, lägg till hund och redigering",
       "mvp_requirement": "docs/mvp.md §4.1 Hundprofil och onboarding; §14 genomförandestatus",
-      "plan": "docs/tasks/dev/DOG-PROFILE-SEARCH-PILOT-01.md v2.2; docs/plans/DOG-PROFILE-SEARCH-PILOT-UX-SPEC.md v2.2",
+      "plan": "docs/tasks/dev/DOG-PROFILE-SEARCH-PILOT-01.md v2.3; docs/plans/DOG-PROFILE-SEARCH-PILOT-UX-SPEC.md v2.3",
       "write_paths": [
         "src/features/onboarding/SearchableBreedPicker.tsx",
         "src/features/onboarding/breed-search.ts",
@@ -5811,8 +5811,8 @@
         "Local search filters fetched catalog names only; exact normalization and catalog order are tested. Typing, clear, close and system-back do not call onSelect; explicit result or the previously approved no-match `Okänd ras` action (when that real catalog entry exists) passes only its catalog ID, and free text never creates or persists an ID.",
         "Loading, fetch error, successful empty catalog, and no search match are distinct. Search resets on close, focus moves to search on open and back to the trigger on dismissal, and busy/pending locks the relevant picker and form actions.",
         "Existing fetch/retry, create request ID/readback, edit conditional save/readback, kennel, age, account/dog scope, error/unknown recovery, routes, add cancellation callback and selection flow are regression-verified.",
-        "Synthetic public/review harness has separate profile-create, profile-add and profile-edit routes; it verifies initial/add disabled before selection and enabled after selection, saved/missing edit ID, add cancellation callback, matching/no-match/close, empty catalog, and available loading/error/retry/busy/pending at 375x844, 430x844, 375x667 and 140% text where available. §14 records exact profile-panel comparison as NOT TESTABLE because vision_rev02.jpg has no profile panel; support-screen criteria and limitations are documented separately.",
-        "Independent QA, Security review of the existing profile data-field UI and independent Reviewer assess the frozen diff; code, local QA, live/RLS, native, visual and release statuses remain separate."
+        "Synthetic public/review harness has separate profile-create, profile-add and profile-edit routes; it verifies initial/add disabled before selection and enabled after selection, saved/missing edit ID, add cancellation callback, matching/no-match/close, empty catalog, and available loading/error/retry/busy/pending at 375x844, 430x844 and 375x667. §14 records exact profile-panel comparison as NOT TESTABLE because vision_rev02.jpg has no profile panel; systematic 140%/large-text/a11y matrix is deferred for all MVP checkpoints.",
+        "Local QA and risk-based Security review the bounded picker changes; functional code, local QA, live/RLS, native, visual and release statuses remain separate. Independent Reviewer is deferred to MVP closeout under the owner GO."
       ],
       "checks": [
         "pnpm check",
@@ -5860,7 +5860,7 @@
           "evidence": "Independent Reviewer PASS for frozen v2.2 code/docs/evidence; follow-up verified the R02-4E exact-panel status correction and queue write-path/version sync. QA PASS (focused tests 3 files; pnpm check 64/64; public/review browser verification 28/28 each); Security APPROVE. Local checkpoint only: live/RLS, native, full onboarding-to-Home and release remain NOT TESTABLE; no commit or push. Next broader journey: FLOW-ONBOARD-01."
         }
       ],
-      "next_step": "Independent Reviewer PASS for frozen v2.2 code/docs/evidence; follow-up verified the R02-4E exact-panel status correction and queue write-path/version sync. QA PASS (focused tests 3 files; pnpm check 64/64; public/review browser verification 28/28 each); Security APPROVE. Local checkpoint only: live/RLS, native, full onboarding-to-Home and release remain NOT TESTABLE; no commit or push. Next broader journey: FLOW-ONBOARD-01.",
+      "next_step": "After a signed TestFlight build is available, manually verify create/add/edit selection and persistence against the live catalogue. Independent Reviewer of the full MVP remains deferred to closeout.",
       "priority": "P1",
       "panels": [
         "support:dog-profile"
@@ -5870,8 +5870,9 @@
       "test_evidence": [
         "Explicit selection and local-search behavior; existing Okänd ras fallback uses a real catalog ID; create/add/edit regression; empty catalog/no-match/failure/retry and unknown-result preservation; rendered public/review states and §14 deviation record."
       ],
-      "implementation_state": "Shared searchable picker implemented in create/add/edit; independent QA PASS; Security APPROVE; Reviewer PASS for frozen code/docs v2.2.",
-      "evidence_status": "Local QA PASS: focused tests 3 files; pnpm check 64/64 test files; public/review builds and browser checks 28/28 each; 28 captures per mode. Security APPROVE; independent Reviewer PASS. NOT TESTABLE: live/RLS, native/140% text, full onboarding→Home, exact panel comparison, release."
+      "implementation_state": "Shared searchable picker is integrated in create/add/edit and included in implementation commit c3eedd5. Current exact public/review browser rerun passes 28 checks per bundle; prior v2.2 QA/Security/Reviewer results are historical slice reviews, not review of the cumulative MVP checkpoint.",
+      "evidence_status": "Combined commit c3eedd5 public/review browser rerun: 28 checks per bundle; exact current bundle/verifier hashes and captures are in docs/design/evidence/ui-checkpoint-c3eedd5/breed-picker/. Prior targeted QA/Security/Reviewer results remain historical for the isolated v2.2 slice. Live/RLS/native/full onboarding/TestFlight NOT TESTABLE; no profile panel exists for exact vision comparison.",
+      "review_status": "deferred_to_mvp_closeout"
     },
     {
       "id": "DOG-PROFILE-AGE-DISPLAY",
@@ -7492,7 +7493,7 @@
         "§14.16 visual status PARTIAL: v5 same-screen three-segment Idag composition and upcoming preview align with Panel 4; documented deviations are Hem active per child-route contract, card surface/divider treatment, fixture banner and synthetic example content."
       ],
       "implementation_state": "Fyra filter och källresor är integrerade. Rutinändring uppdaterar Kommande-projektionen; filterbyte nollställer scroll men källretur bevarar den. Träningssteg behåller källseparat status. Hemrader är kompakta; Checklistan visar varierade ikoner och ifyllda beskrivningar. Varje ikonknapp sitter på samma rad som sin egen punkttitel; förklaringsfältet under skiljs visuellt från rubriken via varm canvasbakgrund, sekundär textfärg och “Förklaring (valfri)”. Spacing mellan inmatningsrader/gridval är ökat. Ikonvalet är en 20-symbolers grid utan synliga etiketter eller rubrik; skärmläsarnamn och vald markering finns kvar. Long-press fokuserar dagens rutinpunkt; checkbox och dags-snapshot är isolerade. V5 adds the same-screen scoped Kommande preview (up to three planned routine/health rows, date and Planerad, no checkbox/progress) and full four-segment destination from every preview state. The visible “Visa alla” action sits inline with the preview title and retains the full accessibility label; a partial read shows one available row so its message/retry remain above fixed navigation. Public/review renders and viewport assertions pass.",
-      "evidence_status": "Local code: PASS. pnpm check: 67/67. Public/review RN Web QA: PASS; public 22 groups, review 23 groups, 38 manifest captures per mode and 0 JS errors; exact bundles/verifier and §14.16 evidence are in docs/design/evidence/flow-home-checklist-filters-2026-10-20/RENDER-REPORT.md. Public iOS JS export: PASS, 1,454 modules, SHA-256 343a304a60d24d85497493ec1936050eb65c39a333a9302e0e5ffa09c9d03ccc. §14.16: PARTIAL with explicit deviations. Independent Reviewer deferred to MVP-closeout per owner instruction. Live Supabase/RLS, mounted native/AppState runtime, native/iPhone and release: NOT TESTABLE.",
+      "evidence_status": "Local code: PASS. pnpm check: 67/67. Public/review RN Web QA: PASS; public 22 groups, review 23 groups, 38 manifest captures per mode and 0 JS errors; exact bundles/verifier and §14.16 evidence are in docs/design/evidence/flow-home-checklist-filters-2026-10-20/RENDER-REPORT.md. Public iOS JS export: PASS, 1,454 modules, SHA-256 343a304a60d24d85497493ec1936050eb65c39a333a9302e0e5ffa09c9d03ccc. §14.16: PARTIAL with explicit deviations. Independent Reviewer deferred to MVP-closeout per owner instruction. Live Supabase/RLS, mounted native/AppState runtime, native/iPhone and release: NOT TESTABLE. Exact post-commit c3eedd5 public/review Home/Checklist rerun: 22/23 PASS and 0 browser errors; bundles and captures are in docs/design/evidence/ui-checkpoint-c3eedd5/home-checklist/. Visual status remains PARTIAL.",
       "review_status": "deferred_to_mvp_closeout"
     },
     {
@@ -7537,7 +7538,7 @@
         "Logga quick actions use a compact horizontally scrolling row of the existing one-tap controls in saved order, with Fler retained; remove the redundant Snabb logg and Dagens logg headings.",
         "Timeline keeps its fixed time column, category symbols and thin dividers; the primary green add action remains visible in the standard reference view where content fits and naturally scrollable on the short view.",
         "Render actual LogScreen in public/review at 375×844, 430×844 and 375×667, checking Fler closed/open, one-tap actions, date/calendar states, timeline, normal spacing and fixed navigation; record differences from vision_rev02 panel 5.",
-        "Do not show Idag/Översikt until FLOW-INSIGHTS-01 has a working route; the subsequent panel-8 task adds and verifies the complete return journey.",
+        "The Idag/Översikt segments are integrated with FLOW-INSIGHTS-01; Översikt preserves the selected date, active Logg tab and Logga offset on return. Public/review route regression passes; the exact branch/build evidence is linked from docs/design/evidence/flow-log-01/VERIFICATION.md.",
         "No event type, callback, write, persistence, pagination, data field, auth, RLS or query behavior changes. Broad accessibility audit is deferred; functional labels and controls remain."
       ],
       "checks": [
@@ -7638,7 +7639,7 @@
           "evidence": "V6 local checkpoint accepted as code and browser-QA complete; visual acceptance is explicitly PARTIAL and recorded. Independent Reviewer deferred_to_mvp_closeout. Post-commit build evidence and the later Insights return journey remain closeout follow-ups, not false visual PASS."
         }
       ],
-      "next_step": "V6 local checkpoint accepted as code and browser-QA complete; visual acceptance is explicitly PARTIAL and recorded. Independent Reviewer deferred_to_mvp_closeout. Post-commit build evidence and the later Insights return journey remain closeout follow-ups, not false visual PASS.",
+      "next_step": "Create and distribute the signed TestFlight build through the existing release path, then run the manual Logga/Insikter journey listed in docs/design/evidence/ui-checkpoint-c3eedd5/VERIFICATION.md. Keep full MVP Reviewer deferred; do not mark visual acceptance PASS without a recorded vision_rev02 comparison.",
       "priority": "P2",
       "panels": [
         "5"
@@ -7651,8 +7652,8 @@
         "Logga panel-5 comparison documents current match and remaining deviations separately from code, local QA, live data, native and visual acceptance.",
         "Live two-owner RLS/anon probe, native/device behavior and release remain separate PASS only with direct evidence; otherwise NOT TESTABLE. No broad accessibility matrix in MVP."
       ],
-      "implementation_state": "v5 calendar/data implementation remains; v6 composition amendment is owner-authorized and awaits Architect/Critic review.",
-      "evidence_status": "v5 calendar code/test checkpoint PASS; prior visual status was blocked for unavailable renderer. Renderer is now available. v6 visual implementation has not started; Architect/Critic review pending. Reviewer deferred to MVP-closeout.",
+      "implementation_state": "Panel 5 calendar/read contract and v6 compact composition are integrated. Idag/Översikt now opens Insikter and returns with date, Logg tab and Logga offset preserved. Local code checkpoint only; visual acceptance remains PARTIAL.",
+      "evidence_status": "Implementation commit c3eedd5e4da14e36789963d3fe352a28d8dca56b: pnpm check 71/71; public/review Logga 15/15 each, Insights route return 15/15 each, 0 browser errors. Exact manifests/captures: docs/design/evidence/ui-checkpoint-c3eedd5/; panel 5 visual status PARTIAL. Public iOS JS export 1,456 modules, SHA-256 32afa6f070bf5c43371d173e72e6d575a0e25a78fb170c2c29667df15ae72e06; not signed. Live RLS/native/iPhone/TestFlight NOT TESTABLE. Independent Reviewer deferred to MVP closeout.",
       "review_status": "deferred_to_mvp_closeout"
     },
     {
@@ -7738,7 +7739,7 @@
         "Ordningsfixtur: opåbörjat före pågående; public mark/unmark med Home → Logg → Träning-flikresa; reviewcopy/filtersynlighet; screenshots och §14 bedömning"
       ],
       "implementation_state": "Lokal produktionsfix, regression, public/review-evidens, oberoende QA och Reviewer klara; endast lokal checkpoint stängd",
-      "evidence_status": "run — public/review-bilder och §14-bedömning sparade; QA PASS och Reviewer PASS 2026-10-21; full panelacceptans, live/native och release kvarstår separat"
+      "evidence_status": "run — public/review-bilder och §14-bedömning sparade; QA PASS och Reviewer PASS 2026-10-21; full panelacceptans, live/native och release kvarstår separat Exact combined-commit c3eedd5 browser rerun: public 11 PASS, review 4 PASS; exact captures and app.js hashes are in docs/design/evidence/ui-checkpoint-c3eedd5/training/. No new Reviewer run for the combined MVP checkpoint."
     },
     {
       "id": "FLOW-KNOWLEDGE-01",
@@ -7929,7 +7930,7 @@
         "Final Reviewer PASS. Render report contains relevant numbered §14 findings and all six §14.16 dimensions. Local synthetic evidence does not prove live content, Supabase/RLS, native behavior or signed release; full visual panel 7 acceptance is partial/open."
       ],
       "implementation_state": "Plan v5 local Knowledge/FAQ/phase-checklist UI slice complete. Independent QA PASS and final Reviewer PASS; this does not mark full rev02 panel 7 or support-view visual acceptance complete.",
-      "evidence_status": "Final local evidence in docs/design/evidence/flow-knowledge-01/RENDER-REPORT.md: focused 5/5, pnpm check 65/65, public 31/31, review 68/68; 38 captures and exact hashes public 95cb34b35aee3c919daeb0ab62702f91a8a1c2e805283acfa9e1ced387947d02 / review f7dcb6f166e6aeed95cc33311c4c9d3469dbbccc3f3fd9daa038b681b41b182d. QA and Reviewer PASS. Live/native/full visual/release statuses remain separate. Scoped 55-file code/test/render-evidence snapshot SHA-256 dac39f96ba809f928747dde04eb00dc597ddd06149c4886cddf8c69494774d74 (excludes mutable queue, rapport and release history)."
+      "evidence_status": "Final local evidence in docs/design/evidence/flow-knowledge-01/RENDER-REPORT.md: focused 5/5, pnpm check 65/65, public 31/31, review 68/68; 38 captures and exact hashes public 95cb34b35aee3c919daeb0ab62702f91a8a1c2e805283acfa9e1ced387947d02 / review f7dcb6f166e6aeed95cc33311c4c9d3469dbbccc3f3fd9daa038b681b41b182d. QA and Reviewer PASS. Live/native/full visual/release statuses remain separate. Scoped 55-file code/test/render-evidence snapshot SHA-256 dac39f96ba809f928747dde04eb00dc597ddd06149c4886cddf8c69494774d74 (excludes mutable queue, rapport and release history). Combined implementation commit c3eedd5 was re-rendered: public 31 PASS, review 90 PASS, 0 browser errors; exact current bundle hashes/captures are in docs/design/evidence/ui-checkpoint-c3eedd5/knowledge/. Previous 68/68 result remains historical."
     },
     {
       "id": "FLOW-DEVELOPMENT-01",
@@ -8039,7 +8040,8 @@
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/FLOW-INSIGHTS-01.md",
         "docs/tasks/dev/rapport.md",
-        "docs/releases/HISTORY-2026.md"
+        "docs/releases/HISTORY-2026.md",
+        "docs/design/evidence/ui-checkpoint-c3eedd5/"
       ],
       "acceptance": [
         "Logga → Översikt → Insikter → tillbaka preserves exact selected Logga date, active Logg tab and original Logga offset; Insights opens at top and its own scroll never overwrites Logga offset.",
@@ -8060,7 +8062,7 @@
       "depends_on": [
         "FLOW-LOG-01"
       ],
-      "status": "implementing",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -8073,9 +8075,21 @@
           "to": "implementing",
           "actor": "implementer",
           "evidence": "Starting approved panel-8 journey with existing dog_events read/RLS, route/date/offset return contract, and security conditions unchanged."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation handoff on c3eedd5e4da14e36789963d3fe352a28d8dca56b: focused models/data/route regression and pnpm check 71/71 pass; public/review bundle manifests are exact; browser QA is next and Reviewer is owner-deferred."
+        },
+        {
+          "from": "qa",
+          "to": "done",
+          "actor": "coordinator",
+          "evidence": "Local code and QA checkpoint PASS on c3eedd5e4da14e36789963d3fe352a28d8dca56b: pnpm check 71/71; public/review browser QA 15/15 each with 0 browser errors; public iOS JS export 1,456 modules. Exact build IDs and captures recorded in docs/design/evidence/flow-insights-01/VERIFICATION.md. Visual panel status remains PARTIAL/OPEN; live RLS/native/TestFlight remain NOT TESTABLE. Independent Reviewer deferred to MVP closeout by owner GO."
         }
       ],
-      "next_step": "Starting approved panel-8 journey with existing dog_events read/RLS, route/date/offset return contract, and security conditions unchanged.",
+      "next_step": "Create and distribute a signed TestFlight build through the existing release path. Then run the manual live-data, date/period, return-navigation and empty/error checks listed in docs/design/evidence/ui-checkpoint-c3eedd5/VERIFICATION.md. Full MVP Reviewer remains deferred; visual acceptance remains PARTIAL/OPEN.",
       "priority": "P3",
       "panels": [
         "8"
@@ -8089,8 +8103,8 @@
         "Route/lifecycle: session, dog, period, timezone, close/unmount and route changes cancel/invalidate reads; back round trip preserves selected date, active Logg tab and Logga offset while Insights starts at top and keeps separate offset.",
         "All preview data synthetic. Live Supabase/RLS, native/iPhone and release remain NOT TESTABLE unless directly run."
       ],
-      "implementation_state": "Approved plan only; no Insights implementation until the preceding Logga package is locally QA-complete.",
-      "evidence_status": "not_run — plan approved; dependent on FLOW-LOG-01 completion",
+      "implementation_state": "Panel 8 implemented: authenticated active-dog pee/poop aggregation, bounded partial states, period projections, and exact Logga → Översikt → back route/date/offset return. Sleep duration remains unavailable without interval data.",
+      "evidence_status": "Implementation commit c3eedd5e4da14e36789963d3fe352a28d8dca56b: pnpm check 71/71; public/review browser QA 15/15 each with 0 browser errors; public iOS JS export 1,456 modules. Exact captures, bundle/verifier hashes: docs/design/evidence/ui-checkpoint-c3eedd5/insights/ and docs/design/evidence/flow-insights-01/VERIFICATION.md. Visual panel status PARTIAL/OPEN; live RLS/native/TestFlight NOT TESTABLE.",
       "review_status": "deferred_to_mvp_closeout"
     },
     {

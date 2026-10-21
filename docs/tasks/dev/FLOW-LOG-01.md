@@ -4,6 +4,8 @@ Datum: 2026-10-21
 Plan: docs/plans/FLOW-LOG-01-calendar-ux-plan.md v5 read/calendar contract + v6 panel-5 composition amendment
 V5 kalender- och read-path-implementationen finns kvar. V6 ersätter den höga snabbvalsgridden och tar bort två överflödiga rubriker. Arkitekt och UX Critic har godkänt den avgränsade v6-planen. Den tidigare QA- och renderingsbristen finns nedan som historik; aktuell browser verifiering är redovisad i v6-checkpointen.
 
+Äldre v4/v5-reviewnoteringar om gråskala, 140 % och Reviewer är historik där de stred mot det senare ägarbeslutet. Samlad tillgänglighetsgranskning och oberoende MVP-review är uppskjutna till efter att implementationen närmar sig release; funktion och säkerhet verifieras fortsatt riskbaserat.
+
 ## Granskningar av plan v4 och v5
 
 - **Architect — APPROVE.** V4:s occurred_at-only keysettraversering, eventual snapshot, lokal mutation/återöppningsinvalidering och att delresultat aldrig visas som komplett är genomförbara. Installerad Supabase/PostgREST-klient har gt-filter och kedjad order. Implementation ska använda oförändrad rå tidsstämpel som cursor; konvertering via Date kan tappa submillisekundprecision.

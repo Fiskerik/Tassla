@@ -34,6 +34,7 @@ Avslutade paketnotiser har samlats här. Varje post bevarar ursprunglig status o
 | [UI-TRAINING-OVERVIEW-01](#ui-training-overview-01) | 2026-10-19 | implementerad, lokalt verifierad och pushad; QA/Reviewer PASS; native/live-data ej verifierat | `b59169c` |
 | [DOG-PROFILE-SEARCH-PILOT-01](#dog-profile-search-pilot-01) | 2026-10-21 | lokal implementation checkpoint; QA, Security och Reviewer PASS; inte pushad | bas `a57e1738`; bundle-ID:n i evidens |
 | [FLOW-TRAINING-01](#flow-training-01) | 2026-10-21 | lokal Home/Träning-checkpoint; QA/Reviewer PASS; ingen separat commit/push; panel/live/native/release accepterade separat | bas `a57e1738`; public/review bundle-ID:n i evidens |
+| [Samlad MVP rev02 UI-checkpoint](#samlad-mvp-rev02-ui-checkpoint-2026-10-21) | 2026-10-21 | Checklist, Logga/Insikter, Kunskap, Träning och rasväljaren integrerade; lokal kod/QA klar; visuell acceptans delvis öppen; ingen signerad TestFlight-build | `c3eedd5e4da14e36789963d3fe352a28d8dca56b` |
 
 ## APP-01-PHONE
 
@@ -658,3 +659,13 @@ Kunskapens rot behåller sökningen och får ikonledda vägval. FAQ visar kontex
 Architect **APPROVE** och Critic **PROCEED** för plan v5; oberoende QA **PASS** och final Reviewer **PASS**. Efter Reviewer begärde §14-bedömning, aktuella köfält och rättad FAQ-rubrik åtgärdades alla tre inom oförändrat scope. Riktad testsvit 5/5, `pnpm check` 65/65, public browser 31/31 och review browser 68/68, utan fel. Public checklista gjorde noll läsningar/skrivningar. Alla 38 public/review-skärmbilder listas en gång med state/viewport-metadata; servad JS-hash matchar build-artifakten. QA:s isolerade runner blockerade localhost (EPERM), vilket redovisas; koordinatorn körde båda browserverifierarna mot samma exakt hashade artifacts.
 
 Public/review `know02-app.js` SHA-256: `95cb34b35aee3c919daeb0ab62702f91a8a1c2e805283acfa9e1ced387947d02` / `f7dcb6f166e6aeed95cc33311c4c9d3469dbbccc3f3fd9daa038b681b41b182d`. Scoped 55-file code/test/render snapshot SHA-256 `dac39f96ba809f928747dde04eb00dc597ddd06149c4886cddf8c69494774d74` (mutable queue/report/history excluded). Branch `codex/dog-profile-search-pilot`, HEAD/baseline `a57e17388d380800c6c378b6368babe6877b4f1c`; arbetskopian är ej committad; `build ID: ej skapad`. §14.16 bedöms **DELVIS**: panel 7:s ämneschips och fulla färgfördelning saknas; FAQ/checklist är stödyte-extrapolationer; live publicerat innehåll/Supabase/RLS och native är **NOT TESTABLE**. Signerad build/release är inte skapad. Se [renderingsrapport och skärmbevis](../design/evidence/flow-knowledge-01/RENDER-REPORT.md), [arbetsrapport](../tasks/dev/rapport.md#flow-knowledge-01--faqchecklist-ui-checkpoint-2026-10-21) och [plan v5](../plans/FLOW-KNOWLEDGE-01-ux-spec.md).
+
+## Samlad MVP rev02 UI-checkpoint — 2026-10-21
+
+Implementationcommit `c3eedd5e4da14e36789963d3fe352a28d8dca56b` samlar de godkända UI-resorna för Hem/Checklistor, Logga/Insikter, Kunskap/FAQ/checklistor, Träning och sökbar rasväljare på `codex/dog-profile-search-pilot`. Checkpointen drar inte om datamodeller eller produktvision.
+
+`pnpm check` passerade 71/71 tester. Public iOS JavaScript-export passerade med 1 456 moduler. Public/review browser-QA på exakt commit passerade för Checklist/Home (22/23), Logga (15/15), Insikter/retur (15/15), Kunskap (31/90), Träning (11/4) och rasväljaren (28/28); inga browserfel rapporterades. Exakta bundle-/verifierarhashar och screenshots finns i [samlad verifiering](../design/evidence/ui-checkpoint-c3eedd5/VERIFICATION.md).
+
+Systematiska 140 %/stor-text-, 44 pt-mät-, kontrast-, reduced-motion- och skärmläsargrindar är borttagna eller omskrivna där de var ovidkommande MVP-acceptans. Funktionella labels och produktflödestester behålls. Den samlade oberoende Reviewer-granskningen skjuts till nära MVP-closeout enligt ägarens GO; tidigare avgränsade slice-reviewresultat är historiska.
+
+Lokal kod och syntetisk browser-QA är PASS. Visuell jämförelse är fortsatt PARTIAL/OPEN och redovisas per skärm. Live RLS, native/iPhone och signerad TestFlight är NOT TESTABLE/ej skapade. iOS-exporten är en JavaScript-bundle, inte en installerbar eller signerad app.

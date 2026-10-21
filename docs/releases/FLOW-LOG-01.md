@@ -1,7 +1,7 @@
 # FLOW-LOG-01 — Logga kalender, snabbval och luft
 
 Datum: 2026-10-21
-Status: v6 kod- och browser-QA checkpoint på arbetsbranchen; fullskärmsmatchning mot `vision_rev02.jpg`, live RLS, native och signerad TestFlight-build accepteras separat. Tidigare v5-checkpoint `b03eaeb` är historik.
+Status: v6 kod- och browser-QA checkpoint ingår nu i den samlade implementationcommitten `c3eedd5e4da14e36789963d3fe352a28d8dca56b` på `codex/dog-profile-search-pilot`; fullskärmsmatchning mot `vision_rev02.jpg`, live RLS, native och signerad TestFlight-build accepteras separat. Tidigare v5-checkpoint `b03eaeb` är historik.
 
 ## Levererat i kodcheckpointen
 
@@ -10,7 +10,7 @@ Svensk månadskalender i befintlig BottomSheet, aktiva hundens dagmarkörer, lad
 ## Verifierat
 
 - Fokusregressioner för datumkalender, scope/livslängd och LogScreen-komposition passerar. RN Web-verifieraren kör public och review vid 375×844, 430×844 och 375×667 och täcker Fler, etttryck/undo, long-press-layout, kalenderns markör-/tom-/loading-/error-/retrytillstånd, datumval, tidslinje, redigering, radering och CTA.
-- Slutliga branch-/commit-/bundle-/verifierarhashar och skärmbilder registreras i [FLOW-LOG-01 verifiering](../design/evidence/flow-log-01/VERIFICATION.md). Planbeslut och handoff finns i [granskningsjournalen](../tasks/dev/FLOW-LOG-01.md).
+- Exakta branch-/commit-/bundle-/verifierarhashar och skärmbilder för denna samlade commit finns i [post-commit-evidensen](../design/evidence/ui-checkpoint-c3eedd5/logga/) och [FLOW-LOG-01 verifiering](../design/evidence/flow-log-01/VERIFICATION.md). Planbeslut och handoff finns i [granskningsjournalen](../tasks/dev/FLOW-LOG-01.md).
 
 ## Öppna blockerare och gränser
 
@@ -21,4 +21,4 @@ Svensk månadskalender i befintlig BottomSheet, aktiva hundens dagmarkörer, lad
 
 ## Nästa steg
 
-Fortsätt till FLOW-INSIGHTS-01. Oberoende Reviewer är uppskjuten till MVP-closeout enligt ägarens GO. TestFlight-prov görs efter att public build är exporterad och distribuerad.
+FLOW-INSIGHTS-01:s Logga-returresa är nu verifierad på samma implementationcommit. Oberoende Reviewer är uppskjuten till MVP-closeout enligt ägarens GO. TestFlight-prov återstår efter att en signerad build har skapats och distribuerats.

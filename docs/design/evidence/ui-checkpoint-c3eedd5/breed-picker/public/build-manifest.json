@@ -1,0 +1,9 @@
+{
+  "branch": "codex/dog-profile-search-pilot",
+  "commit": "c3eedd5e4da14e36789963d3fe352a28d8dca56b",
+  "bundle_file": "app.js",
+  "bundle_sha256": "246c9ded718faae2a06484b469967d2c7e1b81b88a4f1d2389d35855d0a34e8a",
+  "build_script_sha256": "9eb9455fcbaa49be2b11783d99031d9981d47fdaa55c8c3538b375b6112867e3",
+  "verifier_file": "tools/visual-check/verify-dog-profile-breed-search.py",
+  "verifier_sha256": "02736d5ad4bd2e6eec9c9843e2e8ed124cc30f4e0355918a8558dfa747ece30d"
+}

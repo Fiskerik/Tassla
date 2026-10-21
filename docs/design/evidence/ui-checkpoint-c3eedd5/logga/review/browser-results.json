@@ -1,0 +1,248 @@
+{
+  "flow": "FLOW-LOG-01",
+  "mode": "review",
+  "branch": "codex/dog-profile-search-pilot",
+  "commit": "c3eedd5e4da14e36789963d3fe352a28d8dca56b",
+  "browser": "Chromium via Playwright, React Native Web fixture, synthetic data only",
+  "base_url": "http://127.0.0.1:43210/log/review/",
+  "bundle_file": "app.js",
+  "bundle_sha256": "0bd28b3a56f093013ec508dd4c9dde97a3b1569f44c26fb6240f8bf2bd685b71",
+  "build_script_sha256": "9eb9455fcbaa49be2b11783d99031d9981d47fdaa55c8c3538b375b6112867e3",
+  "verifier_file": "tools/visual-check/verify-log-flow.py",
+  "verifier_sha256": "7425edefdd5844bd85371b04adc2c87af8c716e3789b653ce75c4be604923a91",
+  "captures": [
+    {
+      "file": "log-standard-375x844.png",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Logga standard composition at 375x844; CTA initially visible"
+    },
+    {
+      "file": "log-cta-375x844.png",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Add-event action is reachable above fixed navigation at 375x844"
+    },
+    {
+      "file": "log-standard-430x844.png",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 430,
+        "height": 844
+      },
+      "state": "Logga standard composition at 430x844; CTA initially visible"
+    },
+    {
+      "file": "log-cta-430x844.png",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 430,
+        "height": 844
+      },
+      "state": "Add-event action is reachable above fixed navigation at 430x844"
+    },
+    {
+      "file": "log-standard-375x667.png",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "state": "Logga standard composition at 375x667; CTA initially below fold"
+    },
+    {
+      "file": "log-cta-375x667.png",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "state": "Add-event action is reachable above fixed navigation at 375x667"
+    },
+    {
+      "file": "log-fler-open-375x844.png",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Fler reveals the remaining log actions without a tall grid"
+    },
+    {
+      "file": "log-quick-action-undo-375x844.png",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "A quick action invokes the add callback, confirms success, and undo removes it"
+    },
+    {
+      "file": "log-calendar-ready-375x844.png",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Calendar opens with synthetic log markers"
+    },
+    {
+      "file": "log-calendar-loading-375x844.png",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Calendar shows its loading state"
+    },
+    {
+      "file": "log-calendar-error-375x844.png",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Calendar read error is distinct from an empty month"
+    },
+    {
+      "file": "log-calendar-retry-375x844.png",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "state": "Calendar retry returns to ready state"
+    }
+  ],
+  "checks": [
+    {
+      "check": "Logga standard composition at 375x844; CTA initially visible",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Add-event action is reachable above fixed navigation at 375x844",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Logga standard composition at 430x844; CTA initially visible",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 430,
+        "height": 844
+      }
+    },
+    {
+      "check": "Add-event action is reachable above fixed navigation at 430x844",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 430,
+        "height": 844
+      }
+    },
+    {
+      "check": "Logga standard composition at 375x667; CTA initially below fold",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      }
+    },
+    {
+      "check": "Add-event action is reachable above fixed navigation at 375x667",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      }
+    },
+    {
+      "check": "Fler reveals the remaining log actions without a tall grid",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "A quick action invokes the add callback, confirms success, and undo removes it",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Long-press still opens the quick-action layout editor",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Calendar opens with synthetic log markers",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Calendar month navigation and day selection update the selected date",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Calendar shows its loading state",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Calendar read error is distinct from an empty month",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Calendar retry returns to ready state",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    },
+    {
+      "check": "Timeline details open and confirmed synthetic delete removes the row",
+      "route": "?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      }
+    }
+  ],
+  "page_errors": [],
+  "visual_status": "PARTIAL — browser presentation verified; full-screen vision_rev02 acceptance remains separate",
+  "live_data_rls_native_release": "NOT TESTABLE in this synthetic browser fixture"
+}

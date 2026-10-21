@@ -1,0 +1,365 @@
+{
+  "branch": "codex/dog-profile-search-pilot",
+  "commit": "c3eedd5e4da14e36789963d3fe352a28d8dca56b",
+  "mode": "review",
+  "build": {
+    "file": "/tmp/tassla-postcommit/home/review/app.js",
+    "sha256": "cfb8c2f5918cee1c5045c25603ab84c74499954ddc10661e8162d73825ac35fc"
+  },
+  "verifierSha256": "ac692852a783a656886f2bf40b6293134fe3c6abc9ba04c9c783e8a84c23996a",
+  "captures": [
+    {
+      "file": "checklist-filters-routine-details-with-varied-icons.png",
+      "route": "checklist?filter=Idag&details=icons-descriptions",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "routine-details-with-varied-icons"
+    },
+    {
+      "file": "checklist-filters-routine-long-press-focused-editor.png",
+      "route": "checklist?filter=Idag&edit=long-press",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "routine-long-press-focused-editor"
+    },
+    {
+      "file": "checklist-filters-routine-template-edit-keeps-todays-snapshot.png",
+      "route": "checklist?filter=Idag&snapshot=frozen",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "routine-template-edit-keeps-todays-snapshot"
+    },
+    {
+      "file": "checklist-filters-375x844-routine-training-separation.png",
+      "route": "checklist?filter=Idag&groups=separate",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "375x844-routine-training-separation"
+    },
+    {
+      "file": "checklist-filters-375x844-denna-vecka.png",
+      "route": "checklist?filter=Denna vecka",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "375x844-denna-vecka"
+    },
+    {
+      "file": "checklist-filters-375x844-alla.png",
+      "route": "checklist?filter=Alla",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "375x844-alla"
+    },
+    {
+      "file": "checklist-filters-375x844-kommande-from-preview.png",
+      "route": "checklist?filter=Idag&action=Visa-alla-kommande",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "375x844-kommande-from-preview"
+    },
+    {
+      "file": "checklist-filters-430x844-routine-training-separation.png",
+      "route": "checklist?filter=Idag&groups=separate",
+      "viewport": {
+        "width": 430,
+        "height": 844
+      },
+      "scenario": "430x844-routine-training-separation"
+    },
+    {
+      "file": "checklist-filters-430x844-denna-vecka.png",
+      "route": "checklist?filter=Denna vecka",
+      "viewport": {
+        "width": 430,
+        "height": 844
+      },
+      "scenario": "430x844-denna-vecka"
+    },
+    {
+      "file": "checklist-filters-430x844-alla.png",
+      "route": "checklist?filter=Alla",
+      "viewport": {
+        "width": 430,
+        "height": 844
+      },
+      "scenario": "430x844-alla"
+    },
+    {
+      "file": "checklist-filters-430x844-kommande-from-preview.png",
+      "route": "checklist?filter=Idag&action=Visa-alla-kommande",
+      "viewport": {
+        "width": 430,
+        "height": 844
+      },
+      "scenario": "430x844-kommande-from-preview"
+    },
+    {
+      "file": "checklist-filters-375x667-routine-training-separation.png",
+      "route": "checklist?filter=Idag&groups=separate",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "scenario": "375x667-routine-training-separation"
+    },
+    {
+      "file": "checklist-filters-375x667-denna-vecka.png",
+      "route": "checklist?filter=Denna vecka",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "scenario": "375x667-denna-vecka"
+    },
+    {
+      "file": "checklist-filters-375x667-alla.png",
+      "route": "checklist?filter=Alla",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "scenario": "375x667-alla"
+    },
+    {
+      "file": "checklist-filters-375x667-kommande-from-preview.png",
+      "route": "checklist?filter=Idag&action=Visa-alla-kommande",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "scenario": "375x667-kommande-from-preview"
+    },
+    {
+      "file": "checklist-filters-preview-loading-state.png",
+      "route": "checklist?filter=Idag&preview=loading",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "preview-loading-state"
+    },
+    {
+      "file": "checklist-filters-preview-loading-cta.png",
+      "route": "checklist?filter=Idag&preview=loading",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "preview-loading-cta"
+    },
+    {
+      "file": "checklist-filters-preview-empty-state.png",
+      "route": "checklist?filter=Idag&preview=empty",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "preview-empty-state"
+    },
+    {
+      "file": "checklist-filters-preview-empty-cta.png",
+      "route": "checklist?filter=Idag&preview=empty",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "preview-empty-cta"
+    },
+    {
+      "file": "checklist-filters-preview-partial-state.png",
+      "route": "checklist?filter=Idag&preview=partial",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "preview-partial-state"
+    },
+    {
+      "file": "checklist-filters-preview-partial-cta.png",
+      "route": "checklist?filter=Idag&preview=partial",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "preview-partial-cta"
+    },
+    {
+      "file": "checklist-filters-preview-error-state.png",
+      "route": "checklist?filter=Idag&preview=error",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "preview-error-state"
+    },
+    {
+      "file": "checklist-filters-preview-error-cta.png",
+      "route": "checklist?filter=Idag&preview=error",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "preview-error-cta"
+    },
+    {
+      "file": "checklist-filters-375x844-training-only.png",
+      "route": "checklist?filter=Idag&groups=training-only",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "375x844-training-only"
+    },
+    {
+      "file": "checklist-filters-430x844-training-only.png",
+      "route": "checklist?filter=Idag&groups=training-only",
+      "viewport": {
+        "width": 430,
+        "height": 844
+      },
+      "scenario": "430x844-training-only"
+    },
+    {
+      "file": "checklist-filters-375x667-training-only.png",
+      "route": "checklist?filter=Idag&groups=training-only",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "scenario": "375x667-training-only"
+    },
+    {
+      "file": "checklist-filters-filter-change-scroll-reset.png",
+      "route": "checklist?filter=Alla-to-Denna-vecka&rangeScenario=scroll",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "filter-change-scroll-reset"
+    },
+    {
+      "file": "checklist-filters-range-loading.png",
+      "route": "checklist?filter=Alla&rangeScenario=loading",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "range-loading"
+    },
+    {
+      "file": "checklist-filters-range-empty.png",
+      "route": "checklist?filter=Alla&rangeScenario=empty",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "range-empty"
+    },
+    {
+      "file": "checklist-filters-range-partial.png",
+      "route": "checklist?filter=Alla&rangeScenario=partial",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "range-partial"
+    },
+    {
+      "file": "checklist-filters-range-error.png",
+      "route": "checklist?filter=Alla&rangeScenario=error",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "range-error"
+    },
+    {
+      "file": "checklist-filters-historical-training-read-only.png",
+      "route": "home-training-detail?returnFilter=Alla",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "historical-training-read-only"
+    },
+    {
+      "file": "checklist-filters-historical-training-return.png",
+      "route": "checklist?filter=Alla",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "historical-training-return"
+    },
+    {
+      "file": "checklist-filters-planned-routine-source.png",
+      "route": "checklist?filter=Kommande&source=routine",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "planned-routine-source"
+    },
+    {
+      "file": "checklist-filters-planned-routine-after-edit.png",
+      "route": "checklist?filter=Kommande&source=updated-routine",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "planned-routine-after-edit"
+    },
+    {
+      "file": "checklist-filters-planned-routine-after-delete.png",
+      "route": "checklist?filter=Kommande&source=deleted-routine",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "planned-routine-after-delete"
+    },
+    {
+      "file": "checklist-filters-planned-health-source.png",
+      "route": "planned-health?returnFilter=Kommande",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "planned-health-source"
+    },
+    {
+      "file": "checklist-filters-planned-health-return.png",
+      "route": "checklist?filter=Kommande",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "scenario": "planned-health-return"
+    }
+  ],
+  "passes": [
+    "Changing a Checklist filter resets the scroll offset to the top of the new date groups",
+    "Range loading, empty, partial, retry and error states remain distinct and never claim complete progress",
+    "Historical training opens exact fixture source read-only and returns to the selected filter",
+    "Planned routine deletion stays confirmed and removes its projected rows from Kommande",
+    "Planned routine hides day-level actions; planned health opens and returns to Kommande"
+  ],
+  "pageErrors": [],
+  "liveSupabaseRls": "NOT TESTABLE",
+  "native": "NOT TESTABLE",
+  "visualReference": "vision_rev02.jpg panel 4; see RENDER-REPORT.md for observed match and deviations"
+}

@@ -1,0 +1,9 @@
+{
+  "branch": "codex/dog-profile-search-pilot",
+  "commit": "c3eedd5e4da14e36789963d3fe352a28d8dca56b",
+  "bundle_file": "know02-app.js",
+  "bundle_sha256": "5baf2690212ea6068caeed29d189b066d1225710cb8403917f40b2210934d7ec",
+  "build_script_sha256": "9eb9455fcbaa49be2b11783d99031d9981d47fdaa55c8c3538b375b6112867e3",
+  "verifier_file": "tools/visual-check/verify-know02.py",
+  "verifier_sha256": "1f0f472dec962e20502a55d5201d445666e95e9161747164381f13aa492c8bb5"
+}
