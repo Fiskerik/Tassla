@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Crypto from 'expo-crypto';
@@ -16,6 +16,26 @@ const CONTEXTS: { id: ChecklistContext; title: string }[] = [
   { id: 'first_days', title: 'Första dagarna hemma' },
   { id: 'by_age', title: 'Efter ålder' },
 ];
+const CHECKLIST_ITEM_ICONS: Record<string, ComponentProps<typeof Ionicons>['name']> = {
+  'safe-space': 'bed-outline',
+  supplies: 'basket-outline',
+  'vet-contact': 'medkit-outline',
+  'quiet-start': 'volume-mute-outline',
+  routine: 'time-outline',
+  rest: 'moon-outline',
+  name: 'text-outline',
+  handling: 'hand-left-outline',
+  alone: 'home-outline',
+  recall: 'walk-outline',
+  settle: 'leaf-outline',
+  walks: 'trail-sign-outline',
+  review: 'refresh-outline',
+  focus: 'locate-outline',
+  breaks: 'pause-outline',
+  enjoy: 'star-outline',
+  adapt: 'options-outline',
+  play: 'tennisball-outline',
+};
 function sameCustom(left: ChecklistCustomItem, right: ChecklistCustomItem) {
   return left.id === right.id && left.dogId === right.dogId && left.templateId === right.templateId && left.title === right.title && left.completed === right.completed;
 }
@@ -523,11 +543,11 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
           <View style={styles.groupedList}>
             <SectionHeader title="Att göra" />
             {activeTemplate.items.map((item, index) => <View key={item.key} style={[styles.groupedRow, (index < activeTemplate.items.length - 1 || customItems.length > 0) && styles.dividedRow]}>
-              <ChecklistItem variant="grouped" label={item.title} checked={progress.has(item.key)} disabled={busy || uncertain} pending={savingRowKey === `preset:${activeTemplate.id}:${item.key}`} onPress={() => { void togglePreset(item.key); }} />
+              <ChecklistItem variant="grouped" label={item.title} checked={progress.has(item.key)} leadingIcon={CHECKLIST_ITEM_ICONS[item.key] ?? 'list-outline'} disabled={busy || uncertain} pending={savingRowKey === `preset:${activeTemplate.id}:${item.key}`} onPress={() => { void togglePreset(item.key); }} />
             </View>)}
             {customItems.length > 0 ? <SectionHeader title="Egna punkter" /> : null}
             {customItems.length === 0 ? <Text style={styles.meta}>Lägg till något som passar er.</Text> : customItems.map((item, index) => <View key={item.id} style={[styles.groupedRow, styles.customRow, index < customItems.length - 1 && styles.dividedRow]}>
-              <ChecklistItem variant="grouped" label={item.title} checked={item.completed} disabled={busy || uncertain} pending={savingRowKey === `custom:${item.id}`} onPress={() => { void toggleCustom(item); }} />
+              <ChecklistItem variant="grouped" label={item.title} checked={item.completed} leadingIcon="list-outline" disabled={busy || uncertain} pending={savingRowKey === `custom:${item.id}`} onPress={() => { void toggleCustom(item); }} />
               <Button variant="icon" label="Ändra" iconName="create-outline" accessibilityLabel={`Ändra ${item.title}`} disabled={busy || uncertain} onPress={() => openEditForm(item)} />
             </View>)}
             <Button label={form ? form.id ? 'Fortsätt redigera punkt' : 'Fortsätt med egen punkt' : 'Lägg till egen punkt'} accessibilityLabel={form ? form.id ? 'Fortsätt redigera egen punkt' : 'Fortsätt med egen punkt' : 'Lägg till egen punkt'} variant="tertiary" disabled={busy || (uncertain && !form)} onPress={openAddForm} />

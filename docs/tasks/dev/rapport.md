@@ -1022,3 +1022,19 @@ Bred Home-review-fixture fann separat en 4 pt initial-fit-överlappning endast i
 A03 checkpointcommit `25bde34` (`feat: add upcoming checklist filters and source routes`) pushad till `origin/2026-10-22-checklist-kommande-navigation`.
 
 Ägarönskemål registrerat för nästa separata slice: använd liknande ikon-/radgrammatik i Kunskapens faschecklistor och Hemmets rutiner, men behåll deras olika betydelser och datamodeller. Kunskap har ännu inget sparat ikonfält på egna punkter; A03 ändrar inte den skärmen eller dess schema. Felet `Kontrollera den föregående ändringen` är osäker readback, inte belägg för saknad tabell; A02-migrationen ändrar en validator för befintlig rutin-JSON och är inte applicerad.
+
+### HOME-ROUTINE-SAVE-RECOVERY-01 — checkpoint under implementation, 2026-10-22
+
+Efter A03:s frysta checkpoint hittade felsökningen att både definitiva avslag och okända utfall behöll samma retry-lås. Definitivt `failed` låste därmed rutinredigeraren och tvingade ägaren att upprepa ett oförändrat försök. A04 skiljer nu mellan `failed`, `unknown` och CAS-konflikt: definitivt fel behåller redigeringsutkast och låser upp; okänt utfall behåller exakt retry; konflikt kräver ett uttryckligt val innan senaste, hund-/rutinvaliderade versionen ersätter utkastet. Ingen tabell, migration, RPC eller RLS-policy ändrades och ingen databasoperation kördes.
+
+Plan v3 har Architect APPROVE, Critic PROCEED och Security APPROVE. Riktade tester är `daily-activity-data.test.mjs` 10/10, `daily-activity-ui.test.mjs` 9/9; TypeScript och `git diff --check` PASS. Full check/build, rendered state review, oberoende QA/Reviewer och slutlig Security review återstår. Supabase/RLS, migrationens live apply och native VoiceOver/Dynamic Type är NOT TESTABLE.
+
+Panel 7 är nästa separata paket via godkända `FLOW-KNOWLEDGE-01` plan v3. Det behåller de befintliga fyra Träning/Kunskap-bilderna och genererar endast tre nya, ämnesspecifika guidebilder; den äldre panel-6/7-bildcheckpointen fortsätter separat i blocked status tills dess Träningsrender är tillgänglig.
+
+### A04 och Kunskap panel 7 — verifiering uppdaterad, 2026-10-22
+
+A04:s rutinändringar skiljer nu på definitive failure, unknown och revisionskonflikt. Konflikt med validerad aktuell rutin lagras innan bakgrundsrefresh, och ett save-svar från en avmonterad editor får inte skriva över ett nyare utkast. Architect **APPROVE**, Critic **PROCEED**, Security **PASS** och oberoende A04 QA **PASS**. Full `pnpm check` passerade med 65 testfiler; riktade UI/data-seamkontroller är 12/12 och 11/11. Public iOS export/content guard passerade med 1 465 moduler. Syntetisk save-recovery-render passerade public 9/9 och review 9/9 vid 375/430 px. Live Supabase/RLS, målmiljöns migration och native VoiceOver/Dynamic Type är fortfarande NOT TESTABLE.
+
+Panel 7 levererar färska komponentrenderingar, 15/15 public och 14/14 reviewkontroller utan browserfel samt 6/6 fokuserade testfiler. §14-underlaget är avsiktligt **delvis öppet**: panelkomposition/innehållstäthet, native-safe-area/kontrast, radering, checklistans partial/failed/unknown-vyer och native-/returresor saknar full acceptans. Publicerade punkter har explicita redaktionella glyphs; ägarens egna Kunskapspunkter visar neutral listikon eftersom befintlig `dog_checklist_custom_items`-modell saknar ikonfält. Inget schema ändrades; detta betyder att full ikonparitet för egna Kunskapspunkter inte ingår i denna lokala checkpoint. Se `docs/design/evidence/flow-knowledge-01/VERIFICATION.md`.
+
+A03:s oberoende QA/Reviewer och full panel-4 §14-granskning fortsätter separat. Home-reviewns syntetiska 4 px överlappning ligger utanför A04. Ingen databasoperation utfördes.

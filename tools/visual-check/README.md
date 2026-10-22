@@ -91,6 +91,18 @@ TASSLA_UI_BASE_URL=http://127.0.0.1:4173 TASSLA_UI_EVIDENCE=docs/design/evidence
 
 Bygg review separat i `/tmp/tassla-preview/a02/review`, servera den på en annan port och kör samma verifierare med `TASSLA_UI_REVIEW=true` och evidenskatalogen `.../a02/review`. Bilderna visar syntetiskt React Native Web; de bekräftar inte native Alert/VoiceOver/gestures, Supabase/RLS, migrationsutrullning eller TestFlight. Den framåtriktade SQL-migrationen körs inte av denna kontroll.
 
+### A04 — rutinändringar som misslyckas, är okända eller har konflikt
+
+`verify-routine-save-recovery.py` öppnar Checklistor och redigerar en syntetisk rutin med både ändrad text och ikon. `routineMutation=failed` kontrollerar att utkastet behålls och att ägaren kan trycka Spara igen; `unknown` kontrollerar låst utkast och exakt retry; `conflict` kontrollerar read-only-utkast, uttrycklig ersättning med senaste revisionen och att en ny redigering efter ersättningen kan sparas. Public och review körs separat vid 375 och 430 px. Resultat och skärmbilder skrivs till `docs/design/evidence/flow-home-checklist-filters-2026-10-20/a04/{public,review}/`.
+
+```sh
+TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/a04/public node tools/visual-check/build.cjs
+python -m http.server 4193 --bind 127.0.0.1 --directory /tmp/tassla-preview/a04/public
+TASSLA_UI_BASE_URL=http://127.0.0.1:4193 TASSLA_UI_REVIEW=false TASSLA_UI_EVIDENCE=docs/design/evidence/flow-home-checklist-filters-2026-10-20/a04/public python tools/visual-check/verify-routine-save-recovery.py
+```
+
+Bygg review i `/tmp/tassla-preview/a04/review`, servera på port 4194 och kör verifieraren med `TASSLA_UI_REVIEW=true`, motsvarande bas-URL och `.../a04/review` som evidenskatalog. Båda lägena använder syntetiska callbacks; de bekräftar inte live Supabase/RLS, applicerad migration, äldre klienters runtime, native VoiceOver/Dynamic Type eller TestFlight.
+
 ### A03 — Checklistans fyra filter och källresor
 
 `verify-checklist-filters.py` renderar produktionsskärmarna från `vision-r02-home-panels-app.tsx`. Public visar tomläget med lokal syntetisk data; review injicerar tydligt märkt syntetiskt innehåll för filter, kommande rutin/hälsoplan och historiskt träningssteg. Verifieraren täcker fyra filter i 375/430 pt-bredder, 44×44-mål, horisontell overflow, Kommande loading/empty/partial/error, historisk och planerad read-only-semantik samt öppning/retur från exakt källa. Review provar även 375×667 med CSS-skalad 140 %-text; detta är ett layoutproxyprov, inte native Dynamic Type. Kör public och review som separata byggen:

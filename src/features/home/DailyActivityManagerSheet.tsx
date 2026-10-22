@@ -9,24 +9,10 @@ import { tokens } from '../../theme/tokens';
 import { DAILY_ROUTINE_CHECKLIST_ICONS, DAILY_ROUTINE_CHECKLIST_ICON_LABELS, dailyRoutineChecklistDisplayIcon, dailyRoutineChecklistIconTone, isDailyRoutineChecklistIcon, type DailyRoutineChecklistIcon } from './daily-routine-checklist-icons';
 import type { DailyRoutine, DailyRoutineChecklistItem, DailyRoutineCreateInput, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineRepeatValues, DailyTrainingSelection } from './daily-activity-data';
 import { dailyRoutineRepeatSummary, isoWeekdayForDateKey, type HomeDailyActivity } from './daily-activity-model';
+import { routineConflictAfterWrite, routineConflictForDraft, routineDraftAfterWrite, routineConflictMessage, routineEditDraftFromConflict, type RoutineDraft, type RoutineDraftConflict, type RoutineDraftRecovery } from './daily-activity-recovery';
 import type { HomeDailyTrainingOption } from './HomeScreen';
 
-type ActionResult = { status: 'saved' | 'failed' | 'unknown' } | void;
-
-type RoutineDraft = {
-  mode: 'create' | 'edit';
-  submissionId: string;
-  routineId: string | null;
-  baseRevision: number | null;
-  initialLabel: string;
-  initialChecklist: DailyRoutineChecklistItem[];
-  initialRepeat: DailyRoutineRepeatValues;
-  anchorDate: string;
-  newAnchorDate: string;
-  label: string;
-  checklist: DailyRoutineChecklistItem[];
-  repeat: DailyRoutineRepeatValues;
-};
+type ActionResult = { status: 'saved' | 'failed' | 'unknown' } | { status: 'conflict'; value: DailyRoutine } | void;
 
 function copyChecklist(items: readonly DailyRoutineChecklistItem[]) {
   return items.map((item) => ({ ...item }));
@@ -97,7 +83,8 @@ function routineDraftHasReadback(draft: RoutineDraft, routines: readonly DailyRo
 
 export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, focusRoutineId, focusRoutineItemId, editFocusedRoutineOnOpen = false, activities, routines, routineDaySkips, trainingOptions,
   busy, mutationMessage, mutationError, onRetryMutation, onCreateRoutine, onUpdateRoutine, onDeleteRoutine,
-  onAddRoutineToDay, onRemoveRoutineFromDay, onAddTrainingToDay, onRemoveTrainingFromDay, onGoTraining, upcomingRoutineOnly = false }: {
+  onAddRoutineToDay, onRemoveRoutineFromDay, onAddTrainingToDay, onRemoveTrainingFromDay, onGoTraining, upcomingRoutineOnly = false,
+  routineRecovery = null, onRoutineRecoveryChange }: {
   visible: boolean;
   dailyScopeKey?: string;
   onClose: () => void;
@@ -121,12 +108,17 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   onRemoveTrainingFromDay?: (row: DailyTrainingSelection) => void;
   onGoTraining: () => void;
   upcomingRoutineOnly?: boolean;
+  routineRecovery?: RoutineDraftRecovery | null;
+  onRoutineRecoveryChange?: (draft: RoutineDraft | null, conflict: RoutineDraftConflict | null) => void;
 }) {
-  const [draft, setDraft] = useState<RoutineDraft | null>(null);
+  const [draft, setDraftState] = useState<RoutineDraft | null>(() => routineRecovery?.draft ?? null);
   const [iconPickerItemId, setIconPickerItemId] = useState<string | null>(null);
   const [savingDraft, setSavingDraft] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [showDiscardConfirmation, setShowDiscardConfirmation] = useState(false);
+  const [routineConflict, setRoutineConflictState] = useState<RoutineDraftConflict | null>(() => routineRecovery?.conflict ?? null);
+  const recoveryState = useRef({ draft: routineRecovery?.draft ?? null, conflict: routineRecovery?.conflict ?? null });
+  const mounted = useRef(true);
   const leaveAction = useRef<(() => void) | null>(null);
   const autoEditStarted = useRef(false);
   const selectedRoutines = new Map(activities.filter((item) => item.routineDay)
@@ -134,12 +126,41 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   const skippedRoutines = new Map(routineDaySkips.map((row) => [row.routine_id, row]));
   const selectedTraining = upcomingRoutineOnly ? [] : activities.filter((item) => item.kind === 'training' && item.trainingSelection);
   const visibleRoutines = upcomingRoutineOnly ? routines.filter((routine) => routine.id === focusRoutineId) : routines;
-  const focusedRoutine = visibleRoutines.find((routine) => routine.id === focusRoutineId);
-  const draftConfirmed = draft ? routineDraftHasReadback(draft, routines) : false;
+  const draftSource = draft?.mode === 'edit' ? draft.sourceRoutine : null;
+  const routinesForDisplay = draftSource && !visibleRoutines.some((routine) => routine.id === draftSource.id)
+    ? [...visibleRoutines, draftSource] : visibleRoutines;
+  const focusedRoutine = routinesForDisplay.find((routine) => routine.id === (focusRoutineId ?? draft?.routineId));
+  const draftHasConflict = routineConflictForDraft(draft, routineConflict, dailyScopeKey ?? '');
+  const draftConfirmed = draft && !draftHasConflict ? routineDraftHasReadback(draft, routines) : false;
   const activeDraft = draftConfirmed ? null : draft;
+  const conflictForDraft = draftHasConflict;
   const creating = activeDraft?.mode === 'create';
   const unresolvedMutation = busy || Boolean(mutationError && onRetryMutation);
   const selectionLocked = Boolean(activeDraft) || unresolvedMutation || showDiscardConfirmation;
+  const showMutationMessage = Boolean(conflictForDraft) || Boolean(mutationMessage);
+  const visibleMutationMessage = conflictForDraft
+    ? routineConflictMessage
+    : mutationMessage;
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
+  const updateRecovery = useCallback((nextDraft: RoutineDraft | null, nextConflict: RoutineDraftConflict | null = recoveryState.current.conflict) => {
+    recoveryState.current = { draft: nextDraft, conflict: nextConflict };
+    setDraftState(nextDraft);
+    setRoutineConflictState(nextConflict);
+    onRoutineRecoveryChange?.(nextDraft, nextConflict);
+  }, [onRoutineRecoveryChange]);
+
+  function setDraft(nextDraft: RoutineDraft | null) {
+    updateRecovery(nextDraft);
+  }
+
+  function setRoutineConflict(nextConflict: RoutineDraftConflict | null) {
+    updateRecovery(recoveryState.current.draft, nextConflict);
+  }
 
   function requestLeave(action: () => void) {
     if (unresolvedMutation || savingDraft || showDiscardConfirmation) return;
@@ -169,9 +190,10 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
     const firstItem = { id: Crypto.randomUUID(), label: '' };
     const anchorDate = localDateKeyToday();
     setIconPickerItemId(null);
-    setDraft({ mode: 'create', submissionId: Crypto.randomUUID(), routineId: null, baseRevision: null,
+    const nextDraft = { mode: 'create' as const, submissionId: Crypto.randomUUID(), routineId: null, baseRevision: null, sourceRoutine: null,
       initialLabel: '', initialChecklist: [firstItem], initialRepeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null }, anchorDate, newAnchorDate: anchorDate,
-      label: '', checklist: [firstItem], repeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null } });
+      label: '', checklist: [firstItem], repeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null } };
+    updateRecovery(nextDraft, null);
   }
 
   const startEdit = useCallback((routine: DailyRoutine, focusItemId?: string | null) => {
@@ -180,10 +202,11 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
     setIconPickerItemId(focusItemId && checklist.some((item) => item.id === focusItemId) ? focusItemId : null);
     const repeat = { repeat_unit: routine.repeat_unit, repeat_interval: routine.repeat_interval, repeat_weekdays: routine.repeat_weekdays };
     const newAnchorDate = localDateKeyToday();
-    setDraft({ mode: 'edit', submissionId: Crypto.randomUUID(), routineId: routine.id, baseRevision: routine.checklist_revision,
+    const nextDraft = { mode: 'edit' as const, submissionId: Crypto.randomUUID(), routineId: routine.id, baseRevision: routine.checklist_revision, sourceRoutine: routine,
       initialLabel: routine.label, initialChecklist: checklist, initialRepeat: repeat, anchorDate: routine.repeat_anchor_date ?? newAnchorDate, newAnchorDate,
-      label: routine.label, checklist, repeat });
-  }, [selectionLocked]);
+      label: routine.label, checklist, repeat };
+    updateRecovery(nextDraft, null);
+  }, [selectionLocked, updateRecovery]);
 
   useEffect(() => {
     if (!visible || !editFocusedRoutineOnOpen || !focusedRoutine || selectionLocked || autoEditStarted.current) return;
@@ -192,29 +215,43 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   }, [visible, editFocusedRoutineOnOpen, focusedRoutine, focusRoutineItemId, selectionLocked, startEdit]);
 
   function updateDraft(patch: Partial<Pick<RoutineDraft, 'label' | 'checklist' | 'repeat'>>) {
-    setDraft((current) => current ? { ...current, ...patch } : current);
+    const current = recoveryState.current.draft;
+    if (current) setDraft({ ...current, ...patch });
+  }
+
+  function replaceDraftWithLatestRoutine() {
+    if (busy || savingDraft) return;
+    const replacement = routineEditDraftFromConflict(draft, routineConflict, dailyScopeKey ?? '', Crypto.randomUUID(), localDateKeyToday());
+    if (!replacement) return;
+    setIconPickerItemId(null);
+    updateRecovery(replacement, null);
   }
 
   function selectChecklistIcon(itemId: string, icon: DailyRoutineChecklistIcon) {
-    setDraft((current) => current ? { ...current, checklist: current.checklist.map((item) => item.id === itemId ? { ...item, icon } : item) } : current);
+    const current = recoveryState.current.draft;
+    if (current) setDraft({ ...current, checklist: current.checklist.map((item) => item.id === itemId ? { ...item, icon } : item) });
     setIconPickerItemId(null);
   }
 
   async function saveDraft() {
-    if (!draft || !routineDraftIsValid(draft) || !routineDraftIsDirty(draft) || unresolvedMutation || savingDraft) return;
-    const submissionId = draft.submissionId;
-    const label = cleanRoutineLabel(draft.label);
-    const checklist = cleanChecklist(draft.checklist);
-    const repeat = { ...draft.repeat };
+    if (!draft || !routineDraftIsValid(draft) || !routineDraftIsDirty(draft) || unresolvedMutation || savingDraft || conflictForDraft) return;
+    const submittedDraft = draft;
+    const submissionId = submittedDraft.submissionId;
+    const label = cleanRoutineLabel(submittedDraft.label);
+    const checklist = cleanChecklist(submittedDraft.checklist);
+    const repeat = { ...submittedDraft.repeat };
     setSavingDraft(true);
     try {
-      const sourceRoutine = draft.mode === 'edit' ? routines.find((routine) => routine.id === draft.routineId) : null;
-      const result = draft.mode === 'create'
+      const sourceRoutine = submittedDraft.mode === 'edit'
+        ? submittedDraft.sourceRoutine ?? routines.find((routine) => routine.id === submittedDraft.routineId) ?? null : null;
+      const result = submittedDraft.mode === 'create'
         ? await onCreateRoutine?.({ id: submissionId, label, checklist, ...repeat })
         : sourceRoutine ? await onUpdateRoutine?.(sourceRoutine, label, checklist, repeat) : undefined;
-      if (result?.status === 'saved') setDraft((current) => current?.submissionId === submissionId ? null : current);
+      if (!mounted.current) return;
+      setDraft(routineDraftAfterWrite(recoveryState.current.draft, submissionId, result?.status));
+      if (result?.status === 'conflict') setRoutineConflict(routineConflictAfterWrite(submittedDraft, result, dailyScopeKey ?? ''));
     } finally {
-      setSavingDraft(false);
+      if (mounted.current) setSavingDraft(false);
     }
   }
 
@@ -228,9 +265,11 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
 
   return <BottomSheet visible={visible} title={focusedRoutine ? `Hantera ${focusedRoutine.label}` : 'Rutiner och aktiviteter'}
     onRequestClose={closeSheet} onPrimaryAction={activeDraft ? undefined : closeSheet} primaryLabel="Klar">
-    {mutationMessage ? <View style={[styles.message, mutationError && styles.errorMessage]}>
-      <Text accessibilityRole={mutationError ? 'alert' : undefined} style={[styles.body, mutationError && styles.errorText]}>{mutationMessage}</Text>
+    {showMutationMessage ? <View style={[styles.message, (mutationError || Boolean(conflictForDraft)) && styles.errorMessage]}>
+      <Text accessibilityRole={mutationError || conflictForDraft ? 'alert' : undefined} style={[styles.body, (mutationError || Boolean(conflictForDraft)) && styles.errorText]}>{visibleMutationMessage}</Text>
       {onRetryMutation ? <Button variant="tertiary" label="Kontrollera samma ändring igen" accessibilityLabel="Kontrollera samma ändring igen" disabled={busy} onPress={onRetryMutation} /> : null}
+      {conflictForDraft ? <Button variant="tertiary" label="Ersätt utkastet med senaste versionen" accessibilityLabel="Ersätt utkastet med senaste versionen"
+        disabled={busy || savingDraft} onPress={replaceDraftWithLatestRoutine} /> : null}
     </View> : null}
     {showDiscardConfirmation ? <View style={styles.discardConfirmation} accessibilityRole="alert" accessibilityLiveRegion="assertive">
       <Text style={styles.sectionTitle} accessibilityRole="header">Kasta ändringar?</Text>
@@ -256,13 +295,13 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
       {creating && activeDraft ? <CreateRoutineForm draft={activeDraft} disabled={unresolvedMutation || savingDraft || showDiscardConfirmation}
         iconPickerItemId={iconPickerItemId} onToggleIconPicker={(itemId) => setIconPickerItemId((current) => current === itemId ? null : itemId)}
         onSelectChecklistIcon={selectChecklistIcon} onChange={updateDraft} onCancel={() => requestLeave(() => setDraft(null))} onSave={() => { void saveDraft(); }} /> : null}
-      {routines.length > 0 ? <View style={styles.routineList}>
-        {visibleRoutines.map((routine, index) => <RoutineTemplateRow key={`${dailyScopeKey ?? ''}:${visible}:${focusRoutineId ?? 'all'}:${routine.id}`}
+      {routinesForDisplay.length > 0 ? <View style={styles.routineList}>
+        {routinesForDisplay.map((routine, index) => <RoutineTemplateRow key={`${dailyScopeKey ?? ''}:${visible}:${focusRoutineId ?? 'all'}:${routine.id}`}
           routine={routine} selectedDay={selectedRoutines.get(routine.id) ?? null} skippedDay={skippedRoutines.get(routine.id) ?? null}
           draft={activeDraft?.mode === 'edit' && activeDraft.routineId === routine.id ? activeDraft : null}
           iconPickerItemId={iconPickerItemId} onToggleIconPicker={(itemId) => setIconPickerItemId((current) => current === itemId ? null : itemId)}
           onSelectChecklistIcon={selectChecklistIcon}
-          disabled={selectionLocked} fieldsDisabled={unresolvedMutation || savingDraft || showDiscardConfirmation}
+          disabled={selectionLocked} fieldsDisabled={unresolvedMutation || savingDraft || showDiscardConfirmation || Boolean(conflictForDraft)}
           highlighted={routine.id === focusRoutineId} isLast={index === visibleRoutines.length - 1} hideDayActions={upcomingRoutineOnly}
           onStartEdit={() => startEdit(routine)} onChangeDraft={updateDraft}
           onCancelEdit={() => requestLeave(() => setDraft(null))} onSave={() => { void saveDraft(); }}

@@ -6,7 +6,7 @@ import { HorizontalGestureRegion } from '../../components/ui/MainSwipeNavigation
 import { MotionPressable } from '../../components/ui/Motion';
 import type { HomeContent, OwnedDog } from '../../data/app-data';
 import type { HealthHistoryRecord, PlannedHealthRecord } from '../../data/workspace-data';
-import type { DailyRoutine, DailyRoutineChecklistItem, DailyRoutineCreateInput, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineRepeatValues, DailyTrainingSelection } from './daily-activity-data';
+import type { DailyRoutine, DailyRoutineChecklistItem, DailyRoutineCreateInput, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineRepeatValues, DailyRoutineWriteResult, DailyTrainingSelection } from './daily-activity-data';
 import { selectDailyProgress, type DailyProgressCoverage, type HomeDailyActivity } from './daily-activity-model';
 import { tokens } from '../../theme/tokens';
 import { automaticDogAge, localDate } from '../onboarding/dog';
@@ -15,6 +15,7 @@ import { homeAgeMarkerLabel, homeAgeStrip } from './home-today';
 import { homeGreetingAt } from './home-greeting';
 import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
 import { DogProfileSwitcherSheet } from './DogProfileSwitcherSheet';
+import type { RoutineDraft, RoutineDraftConflict, RoutineDraftRecovery } from './daily-activity-recovery';
 
 type Destination = 'log' | 'training' | 'knowledge' | 'health' | 'planned-health';
 type LoadState = 'loading' | 'ready' | 'error';
@@ -36,6 +37,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   dailyFixture, dailyState = 'hidden', dailyDateKey = '', dailyScopeKey, dailyActivities = [], routineTemplates = [], routineDaySkips = [], dailyTrainingOptions = [],
   dailyRefreshing = false, dailyRefreshError = false,
   dailyMutationBusy = false, dailyMutationKey = '', dailyMutationMessage = '', dailyMutationError = false, onRetryDaily,
+  routineRecovery = null, onRoutineRecoveryChange,
   onOpenChecklist, onOpenProgress, onOpenTrainingStep, onOpenDevelopment,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay,
   onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, onGo, onOpenContent, onRetryContent }: {
@@ -78,7 +80,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   onOpenTrainingStep?: (programId: string, stepId: string, returnPage: 'home' | 'checklist') => void;
   onRetryDaily?: () => void;
   onCreateRoutine?: (routine: DailyRoutineCreateInput) => Promise<{ status: 'saved' | 'failed' | 'unknown' } | void>;
-  onUpdateRoutine?: (routine: DailyRoutine, label: string, checklist: DailyRoutineChecklistItem[], repeat: DailyRoutineRepeatValues) => Promise<{ status: 'saved' | 'failed' | 'unknown' } | void>;
+  onUpdateRoutine?: (routine: DailyRoutine, label: string, checklist: DailyRoutineChecklistItem[], repeat: DailyRoutineRepeatValues) => Promise<DailyRoutineWriteResult | void>;
   onDeleteRoutine?: (routine: DailyRoutine) => Promise<{ status: 'saved' | 'failed' | 'unknown' } | void>;
   onAddRoutineToDay?: (routine: DailyRoutine) => void;
   onRemoveRoutineFromDay?: (row: DailyRoutineDay, routine: DailyRoutine) => void;
@@ -86,12 +88,14 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   onAddTrainingToDay?: (option: HomeDailyTrainingOption) => void;
   onRemoveTrainingFromDay?: (row: DailyTrainingSelection) => void;
   onRetryDailyMutation?: () => void;
+  routineRecovery?: RoutineDraftRecovery | null;
+  onRoutineRecoveryChange?: (draft: RoutineDraft | null, conflict: RoutineDraftConflict | null) => void;
   onGo: (page: Destination) => void;
   onOpenContent: (id: string) => void;
   onRetryContent: () => void;
 }) {
-  const [managerVisible, setManagerVisible] = useState(false);
-  const [focusRoutineId, setFocusRoutineId] = useState<string | null>(null);
+  const [managerVisible, setManagerVisible] = useState(() => Boolean(routineRecovery?.draft));
+  const [focusRoutineId, setFocusRoutineId] = useState<string | null>(() => routineRecovery?.draft.routineId ?? null);
   const [reviewCompletion, setReviewCompletion] = useState<Record<string, boolean>>(() => Object.fromEntries((dailyFixture ?? []).map((item) => [item.id, item.completed])));
   const [portraitFrame, setPortraitFrame] = useState<{ left: number; right: number } | null>(null);
   const [dogSwitcherVisible, setDogSwitcherVisible] = useState(openDogSwitcherInitially);
@@ -246,6 +250,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
 
     <DailyActivityManagerSheet key={`${dailyScopeKey ?? ''}:${dailyDateKey}:${focusRoutineId ?? 'all'}:${managerVisible}`}
       visible={managerVisible} dailyScopeKey={dailyScopeKey} onClose={() => setManagerVisible(false)} focusRoutineId={focusRoutineId}
+      routineRecovery={routineRecovery} onRoutineRecoveryChange={onRoutineRecoveryChange}
       activities={dailyActivities} routines={routineTemplates} routineDaySkips={routineDaySkips} trainingOptions={dailyTrainingOptions}
       busy={dailyMutationBusy} mutationMessage={dailyMutationMessage} mutationError={dailyMutationError}
       onRetryMutation={onRetryDailyMutation} onCreateRoutine={onCreateRoutine} onUpdateRoutine={onUpdateRoutine}

@@ -12,11 +12,12 @@ import { Tabs } from '../../components/ui/Tabs';
 import { MessageCard } from '../../components/AppPrimitives';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { tokens } from '../../theme/tokens';
-import type { DailyRoutine, DailyRoutineChecklistItem, DailyRoutineCreateInput, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineRepeatValues, DailyTrainingSelection } from './daily-activity-data';
+import type { DailyRoutine, DailyRoutineChecklistItem, DailyRoutineCreateInput, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineRepeatValues, DailyRoutineWriteResult, DailyTrainingSelection } from './daily-activity-data';
 import type { ChecklistFilter, HomeDailyActivity } from './daily-activity-model';
 import { dailyRoutineChecklistIconTone } from './daily-routine-checklist-icons';
 import type { HomeDailyTrainingOption } from './HomeScreen';
 import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
+import type { RoutineDraft, RoutineDraftConflict, RoutineDraftRecovery } from './daily-activity-recovery';
 
 type WriteStatus = { status: 'saved' | 'failed' | 'unknown' } | void;
 type RangeStatus = 'loading' | 'ready' | 'partial' | 'error';
@@ -25,7 +26,7 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
   mutationError, onBack, onRetry, onRetryRange, onRetryMutation, onOpenTrainingStep, onSetRoutineCompletion, routines, routineDaySkips, trainingOptions,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay, onAddTrainingToDay, onRemoveTrainingFromDay,
   onGoTraining, filter, onChangeFilter, rangeState, rangeActivities, upcomingRoutines = [], onOpenHistoricalTrainingStep,
-  onOpenUpcomingRoutine, onOpenPlannedHealth, openManagerInitially = false }: {
+  onOpenUpcomingRoutine, onOpenPlannedHealth, openManagerInitially = false, dailyScopeKey, routineRecovery = null, onRoutineRecoveryChange }: {
   dateKey: string;
   state: 'loading' | 'ready' | 'error';
   activities: readonly HomeDailyActivity[];
@@ -53,7 +54,7 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
   rangeActivities: readonly HomeDailyActivity[];
   upcomingRoutines?: readonly DailyRoutine[];
   onCreateRoutine?: (routine: DailyRoutineCreateInput) => Promise<WriteStatus | void>;
-  onUpdateRoutine?: (routine: DailyRoutine, label: string, checklist: DailyRoutineChecklistItem[], repeat: DailyRoutineRepeatValues) => Promise<WriteStatus | void>;
+  onUpdateRoutine?: (routine: DailyRoutine, label: string, checklist: DailyRoutineChecklistItem[], repeat: DailyRoutineRepeatValues) => Promise<DailyRoutineWriteResult | void>;
   onDeleteRoutine?: (routine: DailyRoutine) => Promise<WriteStatus | void>;
   onAddRoutineToDay: (routine: DailyRoutine) => void;
   onRemoveRoutineFromDay?: (row: DailyRoutineDay, routine: DailyRoutine) => void;
@@ -61,9 +62,12 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
   onRemoveTrainingFromDay?: (row: DailyTrainingSelection) => void;
   onGoTraining: () => void;
   openManagerInitially?: boolean;
+  dailyScopeKey?: string;
+  routineRecovery?: RoutineDraftRecovery | null;
+  onRoutineRecoveryChange?: (draft: RoutineDraft | null, conflict: RoutineDraftConflict | null) => void;
 }) {
-  const [managerVisible, setManagerVisible] = useState(openManagerInitially);
-  const [focusRoutineId, setFocusRoutineId] = useState<string | null>(null);
+  const [managerVisible, setManagerVisible] = useState(() => openManagerInitially || Boolean(routineRecovery?.draft));
+  const [focusRoutineId, setFocusRoutineId] = useState<string | null>(() => routineRecovery?.draft.routineId ?? null);
   const [focusRoutineItemId, setFocusRoutineItemId] = useState<string | null>(null);
   const [editFocusedRoutineOnOpen, setEditFocusedRoutineOnOpen] = useState(false);
   const [routineOnlyContext, setRoutineOnlyContext] = useState(false);
@@ -225,6 +229,7 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
 
     <DailyActivityManagerSheet key={`${dateKey}:${focusRoutineId ?? 'all'}:${focusRoutineItemId ?? 'all-items'}:${managerVisible}:${editFocusedRoutineOnOpen}:${routineOnlyContext}`}
       visible={managerVisible} onClose={closeManager} focusRoutineId={focusRoutineId} focusRoutineItemId={focusRoutineItemId}
+      dailyScopeKey={dailyScopeKey} routineRecovery={routineRecovery} onRoutineRecoveryChange={onRoutineRecoveryChange}
       editFocusedRoutineOnOpen={editFocusedRoutineOnOpen} upcomingRoutineOnly={routineOnlyContext}
       activities={activities} routines={routineOnlyContext && focusedUpcomingRoutine ? [focusedUpcomingRoutine] : showingUpcoming ? upcomingRoutines : routines}
       routineDaySkips={routineDaySkips} trainingOptions={trainingOptions}

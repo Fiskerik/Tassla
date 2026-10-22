@@ -10,21 +10,19 @@ const [knowledge, training, workspace, profileEditor, profileHeader] = await Pro
   readFile(new URL('../src/features/onboarding/ProfileScreenHeader.tsx', import.meta.url), 'utf8'),
 ]);
 
-test('Knowledge separates no published articles from no search matches and offers existing destinations', () => {
-  assert.ok(knowledge.includes("visibleItems.length === 0 && <View style={styles.searchEmpty}>"));
-  assert.ok(knowledge.includes('title="Öppna Checklistor"'));
-  assert.ok(knowledge.includes('title="Öppna Vanliga frågor"'));
+test('Knowledge distinguishes no published guides from a search with no matches and keeps separate destinations', () => {
+  assert.ok(knowledge.includes("contentState === 'ready' && visibleItems.length === 0 && <MessageCard>"));
+  assert.ok(knowledge.includes('Inga guider är publicerade för {dogLabel} ännu.'));
   assert.ok(knowledge.includes("visibleItems.length > 0 && hasSearchQuery && displayedItems.length === 0"));
-  assert.ok(knowledge.includes("openEmptyDestination('Checklistor')"));
-  assert.ok(knowledge.includes("openEmptyDestination('FAQ')"));
+  assert.ok(knowledge.includes("Card onPress={() => changeTab('Checklistor')} accessibilityLabel=\"Öppna Checklistor\""));
+  assert.ok(knowledge.includes("Card onPress={() => changeTab('FAQ')} accessibilityLabel=\"Öppna Vanliga frågor\""));
 });
 
-test('Knowledge restores För dig after opening Checklistor or FAQ from the no-content state', () => {
-  assert.ok(knowledge.includes('setEmptyReturnToForYou(true)'));
-  assert.ok(knowledge.includes("emptyReturnToForYou && tab === 'FAQ'"));
-  assert.ok(knowledge.includes("emptyReturnToForYou && tab === 'Checklistor'"));
-  assert.ok(knowledge.includes("onPress={() => changeTab('För dig')}"));
+test('FAQ and Checklistor return to the guide view through their existing back actions', () => {
+  assert.ok(knowledge.includes("tab === 'FAQ' ? <AppBar mode=\"Back\" title=\"Kunskap\" actionLabel=\"Tillbaka till guider\" onAction={() => changeTab('För dig')}"));
+  assert.ok(knowledge.includes("tab === 'Checklistor' && !checklistDetailOpen ? <AppBar mode=\"Back\" title=\"Kunskap\" actionLabel=\"Tillbaka till guider\" onAction={() => changeTab('För dig')}"));
   assert.ok(knowledge.includes("onBack={() => changeTab('För dig')}"));
+  assert.ok(knowledge.includes("tab === 'För dig' && !selectedItem ? <View style={styles.shortcuts}>"));
 });
 
 test('unknown Training age opens the existing profile editor and returns only after an explicit back or confirmed save', () => {
@@ -62,5 +60,5 @@ test('Knowledge and Training hide old content while the active dog or account sc
   assert.ok(workspace.includes("const visibleContent = contentSelectionKey === currentSelectionKey ? content : [];"));
   assert.ok(workspace.includes("const visibleTrainingState = trainingSelectionKey === currentSelectionKey ? trainingState : 'loading';"));
   assert.ok(knowledge.includes('guideSearchScopeKey(sessionKey, dogId)'));
-  assert.ok(knowledge.includes("setSearchState({ scopeKey: searchScopeKey, value: '' })"));
+  assert.match(knowledge, /if \(guideViewState\.scopeKey !== searchScopeKey\) \{\s*setGuideViewState\(\{ scopeKey: searchScopeKey, value: '', showAll: false \}\);/);
 });

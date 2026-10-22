@@ -1,7 +1,7 @@
 # FLOW-HOME-CHECKLIST-FILTERS-01 — status och granskningsunderlag
 
 Datum: 2026-10-22
-Status: `implementing` på `2026-10-22-checklist-kommande-navigation`. Filter-UI och dataanslutning för Idag, Denna vecka, Alla och Kommande är lokalt implementerade. A02:s ikonval per rutinpunkt och kompakta ikonhandlingar har QA- och Reviewer-PASS. A03:s read-only källnavigation, retur och riktade public/review-kontroller passerar lokalt. Full panel-4-acceptans är fortsatt öppen för oberoende A03-review och full §14-avslutning; live backend/RLS är NOT TESTABLE. Native kontroller är också NOT TESTABLE men stoppar inte lokal checkpoint.
+Status: A03 är `blocked` i väntan på oberoende QA/Reviewer och fullständig panel-4-§14-granskning. Den lokala checkpointen `25bde34` är fryst; Erik har godkänt att avgränsade följdarbeten byggs medan dessa separata grindar löses. A02:s ikonval per rutinpunkt och kompakta ikonhandlingar har QA- och Reviewer-PASS. Live Supabase/RLS, A02-migrationens apply/äldre klienters runtime och native VoiceOver/Dynamic Type är NOT TESTABLE.
 
 ## Omfattning
 
@@ -98,6 +98,25 @@ Detta stänger endast A02:s lokala ikon-/handlingsslice. Hela panel-4-tasken fö
 
 Erik vill att checklistor i Kunskap och Hem ska kännas och fungera på samma eller liknande sätt. Beslut för fortsatt UX: återanvänd ikonfamilj, radvisuell grammatik och tydliga bekräftelsemönster där de passar, men behåll deras olika innebörd. Hemrutiner är ägarens återanvändbara/återkommande rutiner; Kunskap visar publicerade fasuppgifter och ägarens egna punkter i en viss fas. Kunskapsflödet är därför inte omgjort i A03. Där finns inget explicit ikonfält på egna punkter; beständig ikonväljare där behöver ett separat granskat datakontrakt/migrationssteg, inte en gissning om en saknad tabell. Detta är en dokumenterad uppföljning, inte implementerad funktion.
 
-Nästa arbete för denna task är oberoende granskning av A03 och full panel-4-§14-avslutning. Separat återstår HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01 innan rutinikonernas verkliga create/replace/readback/RLS kan verifieras; ingen databasoperation har utförts. Kunskapens visuella samordning planeras som en egen efterföljande UI-slice med användarens ovanstående önskemål som riktning. Tasken står kvar som `implementing`.
+Nästa arbete för A03 är oberoende QA/Reviewer och full panel-4-§14-avslutning; dess queue-status är `blocked` medan Erik låter separata, avgränsade uppgifter fortsätta. HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01 krävs fortfarande för live create/replace/readback/RLS; ingen databasoperation har utförts. Ikon-/radgrammatiken i Kunskap går vidare i FLOW-KNOWLEDGE-01 efter A04:s checkpoint.
 
 A03 checkpointcommit `25bde34` (`feat: add upcoming checklist filters and source routes`) är pushad till `origin/2026-10-22-checklist-kommande-navigation`.
+
+## A04 — återhämtning av rutinändringar, 2026-10-22
+
+Erik rapporterade att rutinens text/checklista och punktikoner inte gick att ändra och spara efter sin databasändring; redigeraren blev låst med en generell status. Kodspåret visade att `runDailyMutation` sparade både definitivt `failed` och osäkert `unknown` som en pending retry. Managerbladet låser formuläret när felstatus och retry finns, vilket gjorde att ett definitivt avslag krävde samma oförändrade försök i stället för rättning. Detta bevisar inte att live-tabell, RLS eller migration saknas; dessa är inte tillgängliga för verifiering här.
+
+Plan [A04 save recovery v7](../../plans/FLOW-HOME-CHECKLIST-FILTERS-01-save-recovery-v7.md) fick Architect **APPROVE**, Critic **PROCEED**, Security **PASS** och oberoende A04 QA **PASS**. A03 ligger kvar fryst vid `25bde34` och har separat blockerad status medan denna skrivåterhämtning har eget kö-id `HOME-ROUTINE-SAVE-RECOVERY-01`.
+
+Implementerat lokalt:
+
+- Definitivt avslag rensar pending-retry och visar `Ändringen sparades inte. Försök igen.` Utkastets etikett, punktordning och ikonval behålls, redigeraren låses upp och endast ett nytt uttryckligt knapptryck skickar nästa mutation.
+- Osäkert utfall behåller exakt samma operation och befintlig retry/readback. Andra mutationer är fortsatt spärrade tills det osäkra utfallet är avstämt.
+- CAS-konflikt för rutinersättning blir en egen status. Readback validerar både exakt `dog_id` och rutin-id innan raden visas. Utkastet blir skrivskyddat och ändras först när ägaren trycker `Ersätt utkastet med senaste versionen`; nästa redigering använder då den nya revisionen.
+- Inga tabeller, migrationer, RPC:er, grants, RLS-regler eller dataändamål har ändrats. Ingen databasoperation har körts.
+
+Riktade tester: `daily-activity-data.test.mjs` **11/11 PASS**, `daily-activity-ui.test.mjs` **12/12 PASS**. Full `pnpm check` **PASS** (65 testfiler), iOS-export **PASS**, `git diff --check` och `python -X utf8 tools/dev_flow.py validate` **PASS**. Syntetisk RN Web-verifiering passerade **9/9 public och 9/9 review**: failed vid 375/430 px, unknown/exakt retry vid 375 px, conflict/read-only/uttrycklig ersättning vid 375/430 px samt ny sparning mot senaste syntetiska revision. Se [A04-verifiering](../design/evidence/flow-home-checklist-filters-2026-10-20/a04/VERIFICATION.md).
+
+Ingen schemaändring, migration, RPC, grant, RLS-ändring eller databasoperation ingår. Backendorsaken till det faktiska misslyckade sparandet är inte fastställd; live Supabase/RLS, målmiljöns migrationsstatus, äldre klienters runtime och native VoiceOver/Dynamic Type är NOT TESTABLE. A03:s oberoende QA/Reviewer och full panel-4 §14-granskning förblir öppna; Home-reviewns 4 px syntetiska överlappning är separat och utanför A04.
+
+Panel 7 fortsätter separat enligt godkända [FLOW-KNOWLEDGE-01 v3](../../plans/FLOW-KNOWLEDGE-01-ux-spec-v3.md). Den använder tre nya ämnesspecifika guidebilder. Lokal rendering och paketkontroller har passerat, men full panel-7-acceptans är fortfarande öppen. Den äldre `FLOW-PANELS-6-7-IMAGE-DIVERSITY`-checkpointen hålls separat.

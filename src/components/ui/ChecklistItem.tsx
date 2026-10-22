@@ -1,12 +1,13 @@
 import { MotionPressable, useReducedMotion } from './Motion';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ComponentProps } from 'react';
 import { Animated, Easing, Platform, StyleSheet, Text, type TextStyle } from 'react-native';
 import { tokens } from '../../theme/tokens';
 
 type ChecklistItemVariant = 'standalone' | 'grouped';
+type ChecklistIcon = ComponentProps<typeof Ionicons>['name'];
 
-export function ChecklistItem({ label, checked, confirmed = false, onPress, disabled = false, pending = false, variant = 'standalone' }: { label: string; checked: boolean; confirmed?: boolean; onPress: () => void; disabled?: boolean; pending?: boolean; variant?: ChecklistItemVariant }) {
+export function ChecklistItem({ label, checked, confirmed = false, onPress, disabled = false, pending = false, variant = 'standalone', leadingIcon }: { label: string; checked: boolean; confirmed?: boolean; onPress: () => void; disabled?: boolean; pending?: boolean; variant?: ChecklistItemVariant; leadingIcon?: ChecklistIcon }) {
   const reduced = useReducedMotion();
   const [checkScale] = useState(() => new Animated.Value(1));
   const firstCommit = useRef(true);
@@ -35,7 +36,7 @@ export function ChecklistItem({ label, checked, confirmed = false, onPress, disa
     animation.start();
     return () => animation.stop();
   }, [checked, checkScale, confirmed, reduced]);
-  return <MotionPressable accessibilityRole="checkbox" accessibilityLabel={pending ? `${label}, sparar` : label} accessibilityState={{ checked, disabled, busy: pending }} aria-checked={checked} aria-busy={pending} disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.row, variant === 'grouped' && styles.groupedRow, pressed && !disabled && styles.pressed, disabled && !pending && styles.disabled]}><Animated.View style={{ transform: [{ scale: checkScale }] }}><Ionicons name={checkIcon} size={tokens.size.iconMd} color={checked ? tokens.colors.success : tokens.colors.textSecondary} /></Animated.View><Text style={[styles.label, Platform.OS === 'web' ? webLongWordWrap : null]}>{label}</Text>{pending ? <Text style={styles.pendingLabel}>Sparar…</Text> : null}</MotionPressable>;
+  return <MotionPressable accessibilityRole="checkbox" accessibilityLabel={pending ? `${label}, sparar` : label} accessibilityState={{ checked, disabled, busy: pending }} aria-checked={checked} aria-busy={pending} disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.row, variant === 'grouped' && styles.groupedRow, pressed && !disabled && styles.pressed, disabled && !pending && styles.disabled]}><Animated.View style={{ transform: [{ scale: checkScale }] }}><Ionicons name={checkIcon} size={tokens.size.iconMd} color={checked ? tokens.colors.success : tokens.colors.textSecondary} /></Animated.View>{leadingIcon ? <Ionicons name={leadingIcon} size={tokens.size.iconSm} color={tokens.colors.destination.knowledge.icon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}<Text style={[styles.label, Platform.OS === 'web' ? webLongWordWrap : null]}>{label}</Text>{pending ? <Text style={styles.pendingLabel}>Sparar…</Text> : null}</MotionPressable>;
 }
 const webLongWordWrap = { overflowWrap: 'anywhere' } as unknown as TextStyle;
 const styles = StyleSheet.create({ row: { alignSelf: 'stretch', minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, paddingVertical: tokens.spacing.sm, borderWidth: tokens.size.stroke, borderColor: tokens.colors.borderStrong, borderRadius: tokens.radius.md, paddingHorizontal: tokens.spacing.sm }, groupedRow: { flex: 1, minWidth: 0, borderWidth: 0, borderRadius: 0, paddingHorizontal: 0 }, label: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 }, pendingLabel: { ...tokens.typography.caption, color: tokens.colors.textSecondary, flexShrink: 0 }, pressed: { backgroundColor: tokens.colors.selectedSurface }, disabled: { opacity: 0.55 } });

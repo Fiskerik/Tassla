@@ -46,7 +46,7 @@ export type DailyRoutineDay = {
 export type DailyRoutineDaySkip = Omit<DailyRoutineDay, 'id'> & { day_id: string };
 export type DailyRoutineRepeatRule = Pick<DailyRoutine, 'repeat_unit' | 'repeat_interval' | 'repeat_weekdays'>;
 export type DailyRoutineSaveInput = Pick<DailyRoutine, 'label' | 'checklist' | 'repeat_unit' | 'repeat_interval' | 'repeat_weekdays'>;
-export type DailyRoutineWriteResult = WriteOutcome<DailyRoutine>;
+export type DailyRoutineWriteResult = WriteOutcome<DailyRoutine> | { status: 'conflict'; value: DailyRoutine };
 export type DailyRoutineSkipSnapshot = Pick<DailyRoutineDaySkip, 'day_id' | 'routine_day_revision' | 'last_state_mutation_id'>;
 export type DailyRoutineDayRevision = Pick<DailyRoutineDay, 'routine_day_revision' | 'last_state_mutation_id'>;
 export type DailyRoutineRepeatValues = {
@@ -247,7 +247,7 @@ export async function replaceDailyRoutine(
   checklist: DailyRoutineChecklistItem[],
   repeat: DailyRoutineRepeatValues,
   timeZone: string,
-): Promise<WriteOutcome<DailyRoutine>> {
+): Promise<DailyRoutineWriteResult> {
   const normalized = label.trim();
   if (!isValidRoutineDefinition(normalized, checklist) || !isValidRepeatRule(repeat.repeat_unit, repeat.repeat_interval)
     || !isValidRepeatWeekdays(repeat.repeat_unit, repeat.repeat_weekdays) || !isValidIanaTimeZone(timeZone)) return { status: 'failed' };
@@ -270,29 +270,20 @@ export async function replaceDailyRoutine(
       p_time_zone: timeZone,
     }).abortSignal(signal));
     const rpcRow = Array.isArray(result.data) ? result.data[0] : result.data;
-    if (!result.error && isDailyRoutine(rpcRow) && sameRoutineSave(rpcRow, desired) && hasValidAnchor(rpcRow)
+    if (!result.error && isDailyRoutine(rpcRow) && rpcRow.id === routine.id && rpcRow.dog_id === routine.dog_id
+      && sameRoutineSave(rpcRow, desired) && hasValidAnchor(rpcRow)
       && (!sameRepeat || rpcRow.repeat_anchor_date === routine.repeat_anchor_date)
       && rpcRow.checklist_revision === expectedRevision + 1) {
       return { status: 'saved', value: rpcRow };
     }
-    if (!result.error && rpcRow !== null && rpcRow !== undefined) {
-      failure = new Error('Routine replacement response did not match the requested revision');
-    } else {
-      failure = result.error ?? new Error('Empty routine replacement response');
-    }
-    const found = await fetchRoutineById(client, routine.dog_id, routine.id);
-    if (found && sameRoutineSave(found, desired) && hasValidAnchor(found)
-      && (!sameRepeat || found.repeat_anchor_date === routine.repeat_anchor_date)
-      && found.checklist_revision === expectedRevision + 1) {
-      return { status: 'saved', value: found };
-    }
+    failure = result.error ?? new Error('Routine replacement response did not match the requested revision');
   } catch (error) { failure = error; }
   try {
     const found = await fetchRoutineById(client, routine.dog_id, routine.id);
     if (found && sameRoutineSave(found, desired) && hasValidAnchor(found)
       && (!sameRepeat || found.repeat_anchor_date === routine.repeat_anchor_date)
       && found.checklist_revision === expectedRevision + 1) return { status: 'saved', value: found };
-    if (found && found.checklist_revision !== expectedRevision) return { status: 'failed' };
+    if (found && found.checklist_revision !== expectedRevision) return { status: 'conflict', value: found };
     return isDefiniteRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
   } catch { return { status: 'unknown' }; }
 }
@@ -501,7 +492,9 @@ async function fetchRoutineById(client: SupabaseClient, dogId: string, id: strin
     .select(DAILY_ROUTINE_COLUMNS).eq('dog_id', dogId).eq('id', id).retry(false).abortSignal(signal).maybeSingle());
   if (result.error) throw new Error('Could not confirm routine status');
   if (result.data === null) return null;
-  if (!isDailyRoutine(result.data)) throw new Error('Routine response did not match the database contract');
+  if (!isDailyRoutine(result.data) || result.data.dog_id !== dogId || result.data.id !== id) {
+    throw new Error('Routine response did not match the requested scope');
+  }
   return result.data;
 }
 
@@ -747,6 +740,8 @@ function sameTrainingSelection(left: DailyTrainingSelection, right: DailyTrainin
 function isDefiniteRejection(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
   const row = error as Record<string, unknown>;
+  const code = typeof row.code === 'string' ? row.code : '';
+  if (/^08[0-9A-Z]{3}$/.test(code)) return false;
   if (typeof row.status === 'number' && row.status >= 400 && row.status < 500) return true;
-  return typeof row.code === 'string' && (/^[0-9A-Z]{5}$/.test(row.code) || /^PGRST\d{3}$/.test(row.code));
+  return /^[0-9A-Z]{5}$/.test(code) || /^PGRST\d{3}$/.test(code);
 }

@@ -9,11 +9,35 @@ hook.deregister();
 
 const screen = await readFile(new URL('../src/features/knowledge/PuppyChecklistScreen.tsx', import.meta.url), 'utf8');
 const knowledge = await readFile(new URL('../src/features/knowledge/KnowledgeScreen.tsx', import.meta.url), 'utf8');
+const checklistItem = await readFile(new URL('../src/components/ui/ChecklistItem.tsx', import.meta.url), 'utf8');
 
 test('checklist review content is gated before any account read or write', () => {
   assert.match(screen, /if \(reviewEnabled && active\) void load\(templateId\);\s*else setState\('ready'\)/);
   assert.match(screen, /if \(!reviewEnabled \|\|/);
-  assert.match(knowledge, /\["För dig", "Artiklar", "Checklistor", "FAQ"\]/);
+  assert.match(knowledge, /CHECKLIST_DESTINATION_ID/);
+  assert.match(knowledge, /FAQ_DESTINATION_ID/);
+  assert.match(knowledge, /onPress=\{\(\) => changeTab\('Checklistor'\)\}/);
+  assert.match(knowledge, /onPress=\{\(\) => changeTab\('FAQ'\)\}/);
+});
+
+test('every review template point has a verified Ionicons glyph and custom or unknown points stay neutral', async () => {
+  const templateContent = await readFile(new URL('../src/features/knowledge/checklist-content.ts', import.meta.url), 'utf8');
+  const iconMapSource = screen.match(/const CHECKLIST_ITEM_ICONS: Record<string, ComponentProps<typeof Ionicons>\['name'\]> = \{([\s\S]*?)\n\};/);
+  assert.ok(iconMapSource, 'explicit review item icon map exists');
+  const entries = [...iconMapSource[1].matchAll(/^\s*(?:'([^']+)'|([\w-]+)):\s*'([\w-]+)',?\s*$/gm)];
+  const iconByKey = Object.fromEntries(entries.map(([, quotedKey, plainKey, icon]) => [quotedKey ?? plainKey, icon]));
+  const templateKeys = [...templateContent.matchAll(/row\('([^']+)'/g)].map(([, key]) => key);
+  assert.deepEqual(Object.keys(iconByKey).sort(), [...templateKeys].sort());
+
+  const vectorPackage = JSON.parse(await readFile(new URL('../node_modules/@expo/vector-icons/package.json', import.meta.url), 'utf8'));
+  const ioniconGlyphs = JSON.parse(await readFile(new URL('../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Ionicons.json', import.meta.url), 'utf8'));
+  assert.equal(vectorPackage.version, '15.0.2');
+  for (const icon of Object.values(iconByKey)) assert.ok(Object.hasOwn(ioniconGlyphs, icon), `${icon} exists in @expo/vector-icons 15.0.2`);
+
+  assert.match(screen, /CHECKLIST_ITEM_ICONS\[item\.key\] \?\? 'list-outline'/);
+  assert.match(screen, /leadingIcon="list-outline"/);
+  assert.match(checklistItem, /leadingIcon\?: ChecklistIcon/);
+  assert.match(checklistItem, /\{leadingIcon \? <Ionicons name=\{leadingIcon\}/);
 });
 
 test('navigation invalidates and aborts the current read/write before changing checklist view', () => {

@@ -68,3 +68,37 @@ Fyra fotorealistiska, dekorativa bilder genererades 2026-10-21 med ChatGPT `imag
 | `training-next-step-puppy-corgi-home.jpg` | Nära fotorealistiskt corgiporträtt på neutral träningsmatta i lugnt hem; tydliga ögon och öron i litet utsnitt | `exec-302611d4-5547-491a-983a-f7d8ac5bb58c.png`, 1254×1254, 2,318,108 B → 1254×1254 JPEG, 242,738 B | Träningens nästa-övning-miniatyr 88×88 pt (`tokens.size.trainingImage`) och HomeCarousel-bilden för samma nästa träningssteg; `cover` | Dekorativ, VoiceOver/TalkBack ignorerar bilden. Delas endast mellan samma träningssteg i Träning och dess HomeCarousel-genväg. |
 
 Alla JPEG-filer konverterades från angivna original med `magick <source.png> -strip -quality 86 <asset.jpg>`. Samlad storlek är 1,106,442 B; varje fil understiger 350 KB och summan 1.4 MB. Metadata tas bort. Bildkällorna är AI-genererade och ska inte märkas som personliga hundfoton, utbildningsbevis eller hälsopåståenden. Motiven är bedömda separat; faktisk React Native `cover`-rendering i appen kvarstår **NOT TESTABLE** tills fungerande renderer finns.
+
+## FLOW-KNOWLEDGE-01: tre nya dekorativa guidefoton
+
+Skapade 2026-10-22 med ChatGPT `image_gen`. Inga uppladdade referensbilder eller tredjepartsbilder användes. Original-PNG ligger kvar i Codex generated images under `/workspace/generated_images/`; appkopiorna är metadatafria 1536×1024 JPEG, konverterade med `magick <source.png> -strip -quality 86 <asset.jpg>`. De är generiska dekorbilder, inte användarens hund eller verifierade händelser. De ger ingen tränings-, vikt- eller medicinsk bedömning.
+
+### `knowledge-guide-handling.jpg`
+
+- Källa: `/workspace/generated_images/exec-f11935e6-b74d-4db1-a7a9-54cf05ffdf33.png`, 1536×1024 px, 2,308,501 B.
+- Appasset: 1536×1024 px, 240,918 B; beskärning centreras med `cover`. I hero på 430 pt beskärs över-/underkant i 382×200 pt-fönster; i mindre kort beskärs sidorna i 185×132 pt-fönster. Hunden och den frivilliga, lugna kontakten förblir synliga i båda beskärningsproven.
+- Roll: guide om varsam hantering hemma.
+- VoiceOver/TalkBack: bilden är dekorativ och döljs med `accessibilityElementsHidden`; kortets namn kommer från guideversionens titel.
+- Exakt genereringsprompt:
+
+> Photorealistic natural editorial photograph for a calm puppy-care app. A generic young puppy in a bright, quiet Scandinavian home, voluntarily relaxed during gentle handling by a caregiver: the caregiver softly offers one hand at the puppy’s chest while the puppy stays loose and comfortable, with no restraint, tools, or forced pose. Warm neutral cream and muted sage surroundings, soft natural window light, believable dog anatomy, calm positive body language. Landscape 3:2 composition, dog clearly visible with room around the body for a mobile card crop. Decorative image only; it is not a verified event, a training result, or a photograph of a user's dog. No medical equipment, no text, no logos, no watermark.
+
+### `knowledge-guide-weight.jpg`
+
+- Källa: `/workspace/generated_images/exec-13175f6d-a9b6-4e15-99aa-4544de00b772.png`, 1536×1024 px, 2,169,977 B.
+- Appasset: 1536×1024 px, 217,433 B; centered `cover` in the 382×200 pt hero and 185×132 pt small-card windows. All four paws and the full relaxed stance remain visible in both 430 pt crop previews.
+- Roll: guide about a dog's weight history. No scale or body-condition result is shown.
+- VoiceOver/TalkBack: the image is decorative and döljs with `accessibilityElementsHidden`; kortets namn kommer från guideversionens titel.
+- Exakt genereringsprompt:
+
+> Photorealistic natural editorial photograph for a calm puppy-care app. A generic young dog standing in a relaxed, balanced full-body pose on a warm neutral floor in a softly lit Scandinavian home. Show the whole dog from nose to tail and all four paws, with natural posture, even daylight, uncluttered cream and muted beige surroundings, believable anatomy, and no emphasis on thinness or heaviness. Landscape 3:2 composition with generous space around the dog so a mobile card crop keeps the complete silhouette. Decorative image only; it does not show a measured weight, health assessment, or a user's dog. No scale, no text, no logos, no watermark.
+
+### `knowledge-guide-vet.jpg`
+
+- Källa: `/workspace/generated_images/exec-4860066e-f395-4ba2-8808-d7cbe66d0ee1.png`, 1536×1024 px, 2,304,474 B.
+- Appasset: 1536×1024 px, 230,041 B; centered `cover` in the 382×200 pt hero and 185×132 pt small-card windows. The dog and calm greeting contact remain visible in both 430 pt crop previews.
+- Roll: guide about health records and veterinary contact. No examination or treatment is depicted.
+- VoiceOver/TalkBack: the image is decorative and döljs with `accessibilityElementsHidden`; kortets namn kommer från guideversionens titel.
+- Exakt genereringsprompt:
+
+> Photorealistic natural editorial photograph for a calm puppy-care app. A generic young dog having a calm, positive first contact with a veterinarian in a clean, warm-toned clinic room: the veterinarian is at the dog's eye level and offers a gentle hand near the shoulder while the dog stands relaxed beside its caregiver. Friendly, unhurried body language, soft daylight, muted cream and sage palette, believable anatomy, simple background. Landscape 3:2 composition with the dog's face and the gentle interaction clear for a mobile card crop. Decorative image only; it does not claim an examination, diagnosis, or medical result and is not a user's dog. No procedure, needles, medical treatment, text, logos, or watermark.

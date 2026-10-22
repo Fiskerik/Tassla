@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Alert, AppState } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
 import * as ExpoCrypto from 'expo-crypto';
 import * as Notifications from 'expo-notifications';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { AppScreen, MessageCard, PageHeading, PrimaryButton } from '../../components/AppPrimitives';
+import { AppScreen, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import {
   deleteDogEvent,
   deleteHealthWeight,
@@ -84,6 +84,7 @@ import {
   type DailyRoutine,
   type DailyRoutineCreateInput,
   type DailyRoutineDayDraft,
+  type DailyRoutineWriteResult,
   type DailyTrainingSelection,
 } from './daily-activity-data';
 import {
@@ -103,6 +104,7 @@ import {
 import { localDate } from '../onboarding/dog';
 import { calendarMarkerScopeKey } from '../puppy-log/log-calendar-model';
 import { acquireTrainingMutationLease, homeAgeInWeeks, ownsTrainingMutationLease, releaseTrainingMutationLease, type TrainingMutationLease } from './home-today';
+import { canStartDailyMutation, clearDailyMutationForLifetimeChange, dailyMutationBlocksAccountDeletion, dailyMutationForOwner, dailyMutationStore, recoverDailyMutation, resolvedDailyMutation, routineConflictAfterWrite, routineDraftStore, type PendingDailyMutation } from './daily-activity-recovery';
 import { HealthScreen } from '../health/HealthScreen';
 import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
 import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
@@ -177,6 +179,21 @@ function mergeConfirmedLogRows(fetched: readonly DogEventRecord[], baseline: rea
 
 function shouldClearDailyMutationFeedback(pendingRetryLifetime: string | undefined, activeLifetime: string): boolean {
   return pendingRetryLifetime !== activeLifetime;
+}
+
+function dailyMutationActionLabel(key: string): string {
+  const action = key.split(':', 1)[0];
+  switch (action) {
+    case 'update-routine': return 'Ändra rutin';
+    case 'create-routine': return 'Skapa rutin';
+    case 'delete-routine': return 'Ta bort rutin';
+    case 'complete-routine': return 'Ändra checklista';
+    case 'select-routine': return 'Lägga till rutin på Hemskärmen';
+    case 'remove-routine': return 'Ta bort rutin från Hemskärmen';
+    case 'select-training': return 'Lägga till träningssteg';
+    case 'remove-training': return 'Ta bort träningssteg';
+    default: return 'Ändring';
+  }
 }
 
 type LogReadFlight = { scope: string; generation: number; controller: AbortController; promise: Promise<boolean>; baseline: DogEventRecord[]; refreshRequested: boolean };
@@ -343,6 +360,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [dailyMessageKey, setDailyMessageKey] = useState('');
   const [dailyMessage, setDailyMessage] = useState('');
   const [dailyMessageError, setDailyMessageError] = useState(false);
+  const [dailyMessageIsGlobal, setDailyMessageIsGlobal] = useState(false);
   const [signOutError, setSignOutError] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const signOutInFlight = useRef(false);
@@ -370,7 +388,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const trainingReadFlight = useRef<WorkspaceResourceFlight<TrainingWorkspaceSnapshot> | null>(null);
   const dailySnapshotRef = useRef<{ scope: string; daily: DailyActivitySnapshot; training: TrainingWorkspaceSnapshot; dailyUpdatedAt: number } | null>(null);
   const dailyReadFlight = useRef<WorkspaceResourceFlight<boolean> | null>(null);
-  const pendingDailyRetry = useRef<{ lifetime: string; key: string; run: () => Promise<WriteOutcome<unknown>> } | null>(null);
   const mounted = useRef(false);
   const eventReadQueue = useRef<Promise<void>>(Promise.resolve());
   const logDataLifetimeRef = useRef('');
@@ -482,7 +499,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const dailyTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const validDailyTimeZone = isValidIanaTimeZone(dailyTimeZone);
   const dailyDateKey = validDailyTimeZone ? localDateKeyAt(dailyClock, dailyTimeZone) : null;
+  const currentDailyOwnerScope = session?.user.id ?? 'signed-out';
+  const pendingDailyWriteForOwner = useSyncExternalStore(
+    dailyMutationStore.subscribe,
+    () => dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null,
+    () => dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null,
+  );
   const currentDailyLifetime = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${currentSelectionKey}:${dailyDateKey ?? 'invalid-date'}:${dailyTimeZone}:${reviewContentEnabled ? 'review' : 'public'}`;
+  // The editor owns keystroke state locally. Read recovery only when this workspace renders
+  // (for example when returning to a dog) so every draft keystroke does not rerender the shell.
+  const routineRecovery = routineDraftStore.get(currentDailyOwnerScope, dog.id, currentDailyLifetime);
+  const routineDraftOwnerGeneration = routineDraftStore.ownerGeneration(currentDailyOwnerScope);
   const checklistRange = useMemo(() => checklistFilter === 'Idag' || !dailyDateKey ? null : checklistFilterRange(checklistFilter, dailyDateKey), [checklistFilter, dailyDateKey]);
   const currentChecklistRangeScope = currentDailyLifetime + ':' + checklistFilter + ':'
     + (checklistRange ? checklistRange.from + ':' + checklistRange.to : 'invalid-range');
@@ -498,10 +525,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [currentChecklistMemoryScope, currentChecklistReadScope]);
   useEffect(() => () => clearChecklistReadCache(currentChecklistReadScope), [currentChecklistReadScope]);
   const currentSelectionKeyRef = useRef(currentSelectionKey);
+  const currentDailyOwnerScopeRef = useRef(currentDailyOwnerScope);
   const previousTrainingLifetime = useRef(currentSelectionKey);
 
   useLayoutEffect(() => {
     currentSelectionKeyRef.current = currentSelectionKey;
+    currentDailyOwnerScopeRef.current = currentDailyOwnerScope;
     if (previousTrainingLifetime.current !== currentSelectionKey) {
       trainingGeneration.current += 1;
       trainingReadFlight.current?.controller.abort();
@@ -527,10 +556,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       }
     }
     previousTrainingLifetime.current = currentSelectionKey;
-  }, [currentSelectionKey, knowledgeFocus, page, setPage]);
+  }, [currentDailyOwnerScope, currentSelectionKey, knowledgeFocus, page, setPage]);
 
   useLayoutEffect(() => {
     if (dailyLifetime.current && dailyLifetime.current !== currentDailyLifetime) {
+      const clearedMutation = clearDailyMutationForLifetimeChange();
       dailyGeneration.current += 1;
       dailyReadFlight.current?.controller.abort();
       dailyReadFlight.current = null;
@@ -551,9 +581,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setDailyStateLifetime(currentDailyLifetime);
       setDailyRefreshing(false);
       setDailyRefreshError(false);
-      pendingDailyRetry.current = null;
-      setDailyMessage('');
-      setDailyMessageError(false);
+      setDailyMessage(clearedMutation.message);
+      setDailyMessageError(clearedMutation.error);
+      setDailyMessageIsGlobal(false);
       setHomeChecklistScope(null);
       if (page === 'checklist' || page === 'progress' || page === 'home-training-detail') {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- a day/timezone boundary invalidates the child route before it can render stale data.
@@ -915,7 +945,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         setDailyState('ready');
         setDailyStateLifetime(scope);
         setDailyRefreshError(false);
-        if (shouldClearDailyMutationFeedback(pendingDailyRetry.current?.lifetime, scope)) {
+        const pending = dailyMutationForOwner(dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null, currentDailyOwnerScope);
+        if (pending && pending.phase !== 'resolved' && shouldClearDailyMutationFeedback(pending.lifetime, scope)) {
           setDailyMessage('');
           setDailyMessageError(false);
         }
@@ -945,7 +976,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     });
     dailyReadFlight.current = { scope, generation, controller, promise };
     return promise;
-  }, [client, currentDailyLifetime, currentSelectionKey, dailyDateKey, dailyTimeZone, dog.id, reloadTraining, validDailyTimeZone]);
+  }, [client, currentDailyLifetime, currentDailyOwnerScope, currentSelectionKey, dailyDateKey, dailyTimeZone, dog.id, reloadTraining, validDailyTimeZone]);
 
   useEffect(() => {
     const ownerId = session?.user.id;
@@ -2587,49 +2618,94 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     }
   }
 
-  async function runDailyMutation<T>(key: string, operation: () => Promise<WriteOutcome<T>>, retry = false): Promise<WriteOutcome<T> | undefined> {
-    const lifetime = currentDailyLifetime;
-    if (!dailyDateKey || !validDailyTimeZone || dailyMutationInFlight.current) return undefined;
-    if (pendingDailyRetry.current && pendingDailyRetry.current.lifetime === lifetime && !retry) {
-      setDailyMessage('Kontrollera den föregående ändringen innan du gör en ny.');
-      setDailyMessageError(true);
+  async function runDailyMutation<T>(key: string, operation: () => Promise<WriteOutcome<T>>, retry?: boolean, retryPending?: PendingDailyMutation): Promise<WriteOutcome<T> | undefined>;
+  async function runDailyMutation(key: string, operation: () => Promise<DailyRoutineWriteResult>, retry?: boolean, retryPending?: PendingDailyMutation): Promise<DailyRoutineWriteResult | undefined>;
+  async function runDailyMutation(key: string, operation: () => Promise<WriteOutcome<unknown> | DailyRoutineWriteResult>, retry?: boolean, retryPending?: PendingDailyMutation): Promise<WriteOutcome<unknown> | DailyRoutineWriteResult | undefined>;
+  async function runDailyMutation<T>(key: string, operation: () => Promise<WriteOutcome<T> | { status: 'conflict'; value: DailyRoutine }>, retry = false, retryPending?: PendingDailyMutation): Promise<WriteOutcome<T> | { status: 'conflict'; value: DailyRoutine } | undefined> {
+    const retryablePending = retryPending && retryPending.phase !== 'resolved' ? retryPending : undefined;
+    const ownerScope = retryablePending?.ownerScope ?? currentDailyOwnerScope;
+    const dailyMutationOwnerGeneration = dailyMutationStore.ownerGeneration(ownerScope);
+    const routineDraftOwnerGeneration = routineDraftStore.ownerGeneration(ownerScope);
+    const lifetime = retryablePending?.lifetime ?? currentDailyLifetime;
+    const pending = dailyMutationForOwner(dailyMutationStore.getSnapshot().get(ownerScope) ?? null, ownerScope);
+    if (ownerScope !== currentDailyOwnerScope) return undefined;
+    if ((!retryPending && (!dailyDateKey || !validDailyTimeZone)) || dailyMutationInFlight.current) return undefined;
+    if (!canStartDailyMutation(pending, ownerScope, retryablePending)) {
+      if (!retry && pending && pending.phase !== 'resolved') {
+        setDailyMessage(pending.phase === 'in-flight'
+          ? `${pending.actionLabel} för ${pending.dogName} behandlas fortfarande.`
+          : `Kontrollera samma ${pending.actionLabel.toLowerCase()} för ${pending.dogName} innan du gör en ny.`);
+        setDailyMessageError(true);
+      }
       return undefined;
     }
     dailyMutationInFlight.current = true;
     setDailyBusyKey(key);
     setDailyMessageKey(key);
-    if (!retry || shouldClearDailyMutationFeedback(pendingDailyRetry.current?.lifetime, lifetime)) {
+    const origin = retryablePending ?? { dogId: dog.id, dogName: dog.name, actionLabel: dailyMutationActionLabel(key) };
+    const inFlightMutation = { ownerScope, ...origin, lifetime, key, run: operation, phase: 'in-flight' as const };
+    updatePendingDailyWrite(ownerScope, inFlightMutation, dailyMutationOwnerGeneration);
+    if (!retry || (pending && pending.phase !== 'resolved' && shouldClearDailyMutationFeedback(pending.lifetime, lifetime))) {
       setDailyMessage('');
       setDailyMessageError(false);
+      setDailyMessageIsGlobal(false);
     }
-    let outcome: WriteOutcome<T>;
+    let outcome: WriteOutcome<T> | { status: 'conflict'; value: DailyRoutine };
     try {
       outcome = await operation();
     } catch {
       outcome = { status: 'unknown' };
     }
-    if (!mounted.current || dailyLifetime.current !== lifetime || currentSelectionKeyRef.current !== currentSelectionKey) {
+    const recovery = recoverDailyMutation(outcome.status, ownerScope, lifetime, key, operation,
+      { dogId: origin.dogId, dogName: origin.dogName, actionLabel: origin.actionLabel });
+    if (outcome.status === 'conflict' && key.startsWith('update-routine:') && outcome.value.dog_id === origin.dogId) {
+      const draftRecovery = routineDraftStore.get(ownerScope, origin.dogId, lifetime);
+      const draft = draftRecovery?.draft;
+      if (draft?.mode === 'edit' && draft.routineId === outcome.value.id) {
+        const conflict = routineConflictAfterWrite(draft, outcome, lifetime);
+        if (conflict) routineDraftStore.update(ownerScope, origin.dogId, lifetime, draft, conflict, routineDraftOwnerGeneration);
+      }
+    }
+    if (outcome.status === 'saved' && (key.startsWith('create-routine:') || key.startsWith('update-routine:'))) {
+      const draftRecovery = routineDraftStore.get(ownerScope, origin.dogId, lifetime);
+      const matchesMutation = draftRecovery && (key.startsWith('create-routine:')
+        ? draftRecovery.draft.submissionId === key.slice('create-routine:'.length)
+        : draftRecovery.draft.routineId === key.slice('update-routine:'.length));
+      if (matchesMutation) routineDraftStore.update(ownerScope, origin.dogId, lifetime, null, null, routineDraftOwnerGeneration);
+    }
+    const ownerStillCurrent = currentDailyOwnerScopeRef.current === ownerScope
+      && dailyMutationStore.ownerGeneration(ownerScope) === dailyMutationOwnerGeneration;
+    const lifetimeStillCurrent = dailyLifetime.current === lifetime && currentSelectionKeyRef.current === currentSelectionKey;
+    if (!mounted.current || !ownerStillCurrent || !lifetimeStillCurrent) {
+      const staleResolution = recovery.pendingRetry ?? (outcome.status === 'unknown' ? null : resolvedDailyMutation(inFlightMutation, outcome.status));
+      const currentMutation = dailyMutationStore.getSnapshot().get(ownerScope);
+      if (currentMutation && currentMutation.phase !== 'resolved' && currentMutation.run === operation) {
+        updatePendingDailyWrite(ownerScope, staleResolution, dailyMutationOwnerGeneration);
+      }
+      if (mounted.current && ownerStillCurrent && staleResolution?.phase === 'resolved') {
+        setDailyMessageKey(key);
+        setDailyMessage(staleResolution.notice.message);
+        setDailyMessageError(staleResolution.notice.error);
+        setDailyMessageIsGlobal(true);
+      }
       dailyMutationInFlight.current = false;
       if (mounted.current) setDailyBusyKey(null);
-      return;
+      return outcome;
     }
+    updatePendingDailyWrite(ownerScope, recovery.pendingRetry, dailyMutationOwnerGeneration);
+    setDailyMessage(recovery.message);
+    setDailyMessageError(recovery.error);
+    setDailyMessageIsGlobal(false);
     if (outcome.status === 'saved') {
-      pendingDailyRetry.current = null;
-      setDailyMessage('');
-      setDailyMessageError(false);
       const refreshed = await reloadDailyActivity(true, true);
       if (!refreshed && mounted.current && dailyLifetime.current === lifetime) {
         setDailyMessage('Ändringen sparades, men dagens lista kunde inte hämtas. Status räknas först efter en ny avläsning.');
         setDailyMessageError(true);
       }
-    } else if (outcome.status === 'unknown') {
-      pendingDailyRetry.current = { lifetime, key, run: operation };
-      setDailyMessage('Vi kunde inte bekräfta om ändringen sparades. Ingen ny bock visas. Kontrollera samma ändring innan du fortsätter.');
-      setDailyMessageError(true);
-    } else {
-      pendingDailyRetry.current = { lifetime, key, run: operation };
-      setDailyMessage('Ändringen sparades inte. Kontrollera anslutningen och försök igen.');
-      setDailyMessageError(true);
+    } else if (outcome.status === 'conflict') {
+      void reloadDailyActivity(true, true).catch(() => false);
+      setDailyMessage(recovery.message);
+      setDailyMessageError(recovery.error);
     }
     dailyMutationInFlight.current = false;
     if (mounted.current) setDailyBusyKey(null);
@@ -2637,9 +2713,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }
 
   function retryDailyMutation() {
-    const pending = pendingDailyRetry.current;
-    if (!pending || pending.lifetime !== currentDailyLifetime) return;
-    void runDailyMutation(pending.key, pending.run, true);
+    const pending = dailyMutationForOwner(dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null, currentDailyOwnerScope);
+    if (!pending || pending.phase !== 'unknown') return;
+    void runDailyMutation(pending.key, pending.run, true, pending);
+  }
+
+  function updatePendingDailyWrite(ownerScope: string, pending: PendingDailyMutation | null, expectedOwnerGeneration?: number) {
+    dailyMutationStore.update(ownerScope, pending, expectedOwnerGeneration);
   }
 
   async function handleAccountDeletion(): Promise<AccountDeleteResult> {
@@ -2653,8 +2733,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       || pendingHealthHistoryMutation.current || pendingPlannedHealthMutation.current
       || pendingProfileMutation.current || logMutationFlight.current || healthMutationInFlight.current
       || healthHistoryMutationInFlight.current || plannedHealthMutationInFlight.current
-      || profileMutationInFlight.current || trainingMutationLease.current !== null || dailyMutationInFlight.current
-      || pendingDailyRetry.current || notificationBusy || attributionBusy || accountDeleteBusy;
+      || profileMutationInFlight.current || trainingMutationLease.current !== null
+      || dailyMutationBlocksAccountDeletion(dailyMutationInFlight.current,
+        dailyMutationForOwner(dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null, currentDailyOwnerScope), currentDailyOwnerScope)
+      || notificationBusy || attributionBusy || accountDeleteBusy;
     if (unresolvedWrite) {
       setAccountDeleteStatus('blocked');
       return { status: 'failed' };
@@ -2679,6 +2761,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
       serverConfirmed = true;
       accountDeletionInvalidated.current = true;
+      dailyMutationStore.clearOwner(ownerId);
+      routineDraftStore.clearOwner(ownerId);
       checklistRangeGeneration.current += 1;
       checklistRangeFlight.current?.controller.abort();
       checklistRangeFlight.current = null;
@@ -2796,6 +2880,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   async function handleSignOut() {
     if (signOutInFlight.current) return;
+    const ownerId = session?.user.id;
     signOutInFlight.current = true;
     setSigningOut(true);
     let result = { localSessionCleared: false, serverRevocationConfirmed: false };
@@ -2806,6 +2891,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     } finally {
       if (mounted.current) setSigningOut(false);
       signOutInFlight.current = false;
+    }
+    if (result.localSessionCleared && ownerId) {
+      dailyMutationStore.clearOwner(ownerId);
+      routineDraftStore.clearOwner(ownerId);
     }
     if (mounted.current) setSignOutError(!result.localSessionCleared);
   }
@@ -2821,6 +2910,35 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   if (!fontsLoaded && !fontError) return <AppScreen><MessageCard>Laddar Tasslas ikoner…</MessageCard></AppScreen>;
   if (fontError) return <AppScreen><MessageCard tone="error">Ikonerna kunde inte laddas. Starta om appen och försök igen.</MessageCard></AppScreen>;
 
+  const pendingDailyWriteFromOtherLifetime = Boolean(pendingDailyWriteForOwner && pendingDailyWriteForOwner.phase !== 'resolved'
+    && pendingDailyWriteForOwner.lifetime !== currentDailyLifetime);
+  const dailyMutationIsBusy = Boolean(dailyBusyKey) || pendingDailyWriteForOwner?.phase === 'in-flight';
+  const dailyMutationMessageForView = pendingDailyWriteForOwner?.phase === 'resolved'
+    ? pendingDailyWriteForOwner.notice.message
+    : pendingDailyWriteForOwner?.phase === 'in-flight'
+      ? `${pendingDailyWriteForOwner.actionLabel} för ${pendingDailyWriteForOwner.dogName} behandlas fortfarande.`
+      : pendingDailyWriteForOwner?.phase === 'unknown'
+        ? dailyMessage || `Vi kunde inte bekräfta om ${pendingDailyWriteForOwner.actionLabel.toLowerCase()} för ${pendingDailyWriteForOwner.dogName} sparades. Kontrollera samma ändring innan du fortsätter.`
+        : pendingDailyWriteFromOtherLifetime && pendingDailyWriteForOwner
+          ? `${pendingDailyWriteForOwner.actionLabel} för ${pendingDailyWriteForOwner.dogName} behöver kontrolleras innan du fortsätter.`
+          : dailyMessage;
+  const dailyMutationErrorForView = pendingDailyWriteForOwner?.phase === 'resolved'
+    ? pendingDailyWriteForOwner.notice.error
+    : pendingDailyWriteForOwner?.phase === 'unknown' || pendingDailyWriteFromOtherLifetime || dailyMessageError;
+  const showDailyRecoveryBanner = Boolean(dailyMessageIsGlobal || pendingDailyWriteForOwner?.phase === 'resolved'
+    || (pendingDailyWriteForOwner && (pendingDailyWriteForOwner.phase === 'unknown' || pendingDailyWriteFromOtherLifetime
+      || pendingDailyWriteForOwner.phase === 'in-flight') && !dailyBusyKey));
+  const dailyRecoveryBannerMessage = pendingDailyWriteForOwner
+    ? pendingDailyWriteForOwner.phase === 'resolved'
+      ? pendingDailyWriteForOwner.notice.message
+      : pendingDailyWriteForOwner.phase === 'in-flight'
+        ? `${pendingDailyWriteForOwner.actionLabel} för ${pendingDailyWriteForOwner.dogName} behandlas fortfarande. Vänta tills resultatet är känt.`
+        : dailyBusyKey ? `${pendingDailyWriteForOwner.actionLabel} för ${pendingDailyWriteForOwner.dogName} kontrolleras fortfarande.`
+          : `Vi kunde inte bekräfta om ${pendingDailyWriteForOwner.actionLabel.toLowerCase()} för ${pendingDailyWriteForOwner.dogName} sparades. Kontrollera samma ändring innan du fortsätter.`
+    : dailyMessage;
+  const dailyRecoveryBannerError = pendingDailyWriteForOwner?.phase === 'resolved'
+    ? pendingDailyWriteForOwner.notice.error
+    : pendingDailyWriteForOwner?.phase === 'unknown' || dailyMessageError;
   const pageContent = renderPage();
   const transitionDirection = navigationDirection(previousPage, page);
   const mainTabToMainTab = isMainTabDestination(previousPage) && isMainTabDestination(page);
@@ -2838,6 +2956,19 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     refreshing={page === 'home' || page === 'progress' ? dailyRefreshing : page === 'log' ? logRefreshing : false}
     onRefresh={page === 'home' || page === 'progress' ? () => { void reloadDailyActivity(true, false); } : page === 'log' ? () => { void reloadEvents('refresh'); } : undefined}
     refreshAccessibilityLabel={page === 'log' ? 'Uppdatera loggen' : 'Uppdatera Hem'}>
+    {showDailyRecoveryBanner ? <>
+      <MessageCard tone={dailyRecoveryBannerError ? 'error' : 'neutral'}>{dailyRecoveryBannerMessage}</MessageCard>
+      {pendingDailyWriteForOwner?.phase === 'unknown' ? <PrimaryButton title={dailyMutationIsBusy ? 'Kontrollerar ändringen…' : 'Kontrollera samma ändring igen'}
+        disabled={dailyMutationIsBusy} onPress={retryDailyMutation} /> : null}
+      {pendingDailyWriteForOwner?.phase === 'resolved' ? <QuietButton title="Stäng" onPress={() => {
+        if (dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) === pendingDailyWriteForOwner) {
+          dailyMutationStore.update(currentDailyOwnerScope, null);
+        }
+        setDailyMessage('');
+        setDailyMessageError(false);
+        setDailyMessageIsGlobal(false);
+      }} /> : null}
+    </> : null}
     <MainSwipeNavigation enabled={isMainTabDestination(page) && !(page === 'knowledge' && knowledgeDetailOpen)} onSwipe={handleMainSwipe}>
       <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x" distance={transitionDistance}>{pageContent}</ScreenTransition>
     </MainSwipeNavigation>
@@ -2847,24 +2978,26 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     const page = visiblePage;
     if (page === 'progress') return <DailyProgressScreen
       dogName={dog.name} dateKey={dailyDateKey ?? ''} state={dailyStateForView} activities={dailyActivities}
-      refreshing={dailyRefreshing} refreshError={dailyRefreshError} mutationBusy={Boolean(dailyBusyKey)}
-      mutationKey={dailyMessageKey} mutationMessage={dailyMessage} mutationError={dailyMessageError}
+      refreshing={dailyRefreshing} refreshError={dailyRefreshError} mutationBusy={dailyMutationIsBusy}
+      mutationKey={dailyMessageKey} mutationMessage={dailyMutationMessageForView} mutationError={dailyMutationErrorForView}
       onBack={() => { setHomeChecklistScope(null); setPage('home'); }}
       onRetry={() => { void reloadDailyActivity(true); }}
-      onRetryMutation={pendingDailyRetry.current?.lifetime === currentDailyLifetime ? retryDailyMutation : undefined}
+      onRetryMutation={pendingDailyWriteForOwner?.phase === 'unknown' ? retryDailyMutation : undefined}
       onManage={() => openHomeChecklist(true)} onOpenChecklist={() => openHomeChecklist()}
       onOpenTrainingStep={(programId, stepId) => openHomeTrainingStep(programId, stepId, 'progress')}
       onSetRoutineCompletion={(row, itemId, completed) => { void runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed)); }} />;
     if (page === 'checklist') return <DailyChecklistScreen key={`${currentDailyLifetime}:checklist:${homeChecklistScope?.openManagerOnEntry ? 'manager' : 'list'}`}
-      dateKey={dailyDateKey ?? ''} state={dailyStateForView} activities={dailyActivities}
-      refreshing={dailyRefreshing} refreshError={dailyRefreshError} mutationBusy={Boolean(dailyBusyKey)}
-      mutationKey={dailyMessageKey} mutationMessage={dailyMessage} mutationError={dailyMessageError}
+      dateKey={dailyDateKey ?? ''} dailyScopeKey={currentDailyLifetime} routineRecovery={routineRecovery}
+      onRoutineRecoveryChange={(draft, conflict) => routineDraftStore.update(currentDailyOwnerScope, dog.id, currentDailyLifetime, draft, conflict, routineDraftOwnerGeneration)}
+      state={dailyStateForView} activities={dailyActivities}
+      refreshing={dailyRefreshing} refreshError={dailyRefreshError} mutationBusy={dailyMutationIsBusy}
+      mutationKey={dailyMessageKey} mutationMessage={dailyMutationMessageForView} mutationError={dailyMutationErrorForView}
       onBack={() => { setHomeChecklistScope(null); setPage('home'); }} onRetry={() => { void reloadDailyActivity(true); }}
       filter={checklistFilter} onChangeFilter={setChecklistFilter}
       rangeState={checklistRangeView?.scope === currentChecklistRangeScope ? checklistRangeView.status : 'loading'}
       rangeActivities={checklistRangeView?.scope === currentChecklistRangeScope ? checklistRangeView.activities : []}
       onRetryRange={() => setChecklistRangeRetry((value) => value + 1)}
-      onRetryMutation={pendingDailyRetry.current?.lifetime === currentDailyLifetime ? retryDailyMutation : undefined}
+      onRetryMutation={pendingDailyWriteForOwner?.phase === 'unknown' ? retryDailyMutation : undefined}
       openManagerInitially={homeChecklistScopeIsCurrent && Boolean(homeChecklistScope?.openManagerOnEntry)}
       onOpenTrainingStep={openHomeTrainingStep} onOpenHistoricalTrainingStep={openHistoricalTrainingStep}
       onOpenUpcomingRoutine={openUpcomingRoutine} onOpenPlannedHealth={openUpcomingHealthPlan}
@@ -2931,14 +3064,16 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       dailyRefreshError={dailyRefreshError}
       dailyDateKey={dailyDateKey ?? '—'}
       dailyScopeKey={currentDailyLifetime}
+      routineRecovery={routineRecovery}
+      onRoutineRecoveryChange={(draft, conflict) => routineDraftStore.update(currentDailyOwnerScope, dog.id, currentDailyLifetime, draft, conflict, routineDraftOwnerGeneration)}
       dailyActivities={dailyActivities}
       routineTemplates={dailySnapshotForView?.routines ?? []}
       routineDaySkips={dailySnapshotForView?.routineDaySkips ?? []}
       dailyTrainingOptions={dailyTrainingOptions}
-      dailyMutationBusy={Boolean(dailyBusyKey)}
+      dailyMutationBusy={dailyMutationIsBusy}
       dailyMutationKey={dailyMessageKey}
-      dailyMutationMessage={dailyMessage}
-      dailyMutationError={dailyMessageError}
+      dailyMutationMessage={dailyMutationMessageForView}
+      dailyMutationError={dailyMutationErrorForView}
       onRetryDaily={() => { void reloadDailyActivity(true); }}
       onOpenDevelopment={() => {
         setDevelopmentFocus({ selectionKey: currentSelectionKey });
@@ -2974,7 +3109,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         void runDailyMutation(`select-training:${option.versionId}:${option.stepId}`, () => addTrainingSelection(client, row));
       }}
       onRemoveTrainingFromDay={(row) => { void runDailyMutation(`remove-training:${row.id}`, () => removeTrainingSelection(client, row)); }}
-      onRetryDailyMutation={pendingDailyRetry.current?.lifetime === currentDailyLifetime ? retryDailyMutation : undefined}
+      onRetryDailyMutation={pendingDailyWriteForOwner?.phase === 'unknown' ? retryDailyMutation : undefined}
       onGo={(destination) => {
         navigateMainTab(destination);
       }}
