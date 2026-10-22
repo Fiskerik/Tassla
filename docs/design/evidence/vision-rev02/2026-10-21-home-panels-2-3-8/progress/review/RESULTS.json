@@ -15,13 +15,13 @@
       "vector_strokes": 1
     },
     {
-      "check": "Environment-training status is a round 24pt checkbox at 375px",
+      "check": "Environment-training status is a round 28pt checkbox at 375px",
       "result": "PASS",
       "checkbox": {
-        "x": 47,
-        "y": 724,
-        "width": 24,
-        "height": 24
+        "x": 45,
+        "y": 722,
+        "width": 28,
+        "height": 28
       }
     },
     {
@@ -45,13 +45,13 @@
       "vector_strokes": 1
     },
     {
-      "check": "Environment-training status is a round 24pt checkbox at 430px",
+      "check": "Environment-training status is a round 28pt checkbox at 430px",
       "result": "PASS",
       "checkbox": {
-        "x": 47,
-        "y": 724,
-        "width": 24,
-        "height": 24
+        "x": 45,
+        "y": 722,
+        "width": 28,
+        "height": 28
       }
     },
     {

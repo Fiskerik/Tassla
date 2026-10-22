@@ -311,10 +311,14 @@ export interface PublishedTrainingProgram {
   steps: PublishedTrainingStep[];
   completedStepIds: string[];
   completedAtByStepId: Record<string, string>;
+  /** True only when this exact published version is selected for the dog's current age and breed. */
+  currentAgeBreedMatch?: boolean;
 }
 
 export interface PausedTrainingProgress {
   versionId: string;
+  title: string | null;
+  versionNumber: number | null;
   completedCount: number;
 }
 
@@ -1138,18 +1142,16 @@ export async function fetchTrainingWorkspace(
     maxAgeWeeks: row.max_age_weeks,
     breedIds: row.content_breed_targets.map((target) => target.breed_id),
   })), ageWeeks, dog.breed_id);
-  const selectedByContent = new Map<string, PublishedVersionRow>();
+  const selectedById = new Map<string, PublishedVersionRow>();
   for (const version of current) {
     const row = publishedPrograms.find((item) => item.id === version.id);
-    if (row) selectedByContent.set(row.content_id, row);
+    if (row) selectedById.set(row.id, row);
   }
-  const progressedByContent = new Map<string, PublishedVersionRow>();
   for (const row of resumable) {
-    const progressed = progressedByContent.get(row.content_id);
-    if (!progressed || row.version > progressed.version) progressedByContent.set(row.content_id, row);
+    selectedById.set(row.id, row);
   }
-  for (const [contentId, row] of progressedByContent) selectedByContent.set(contentId, row);
-  const selectedRows = [...selectedByContent.values()];
+  const selectedRows = [...selectedById.values()];
+  const currentAgeAndBreedIds = new Set(current.map((item) => item.id));
   const activeVersionIds = selectedRows.map((item) => item.id);
   const steps = activeVersionIds.length ? await fetchTrainingSteps(client, activeVersionIds, timeoutMs, parentSignal) : [];
   const programs = selectedRows.map((row) => ({
@@ -1165,6 +1167,7 @@ export async function fetchTrainingWorkspace(
     completedAtByStepId: Object.fromEntries(progress
       .filter((item) => item.program_version_id === row.id)
       .map((item) => [item.step_id, item.completed_at])),
+    currentAgeBreedMatch: currentAgeAndBreedIds.has(row.id),
   }));
   const activeIds = new Set(activeVersionIds);
   const pausedByVersion = new Map<string, Set<string>>();
@@ -1176,7 +1179,10 @@ export async function fetchTrainingWorkspace(
   }
   return {
     programs,
-    paused: [...pausedByVersion].map(([versionId, completed]) => ({ versionId, completedCount: completed.size })),
+    paused: [...pausedByVersion].map(([versionId, completed]) => {
+      const published = publishedPrograms.find((row) => row.id === versionId);
+      return { versionId, title: published?.title ?? null, versionNumber: published?.version ?? null, completedCount: completed.size };
+    }),
   };
 }
 

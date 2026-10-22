@@ -65,9 +65,9 @@ Browserklockan låses till 2026-10-11 kl. 15 UTC för reproducerbara loggtider. 
 
 React Native Web-harnessen registrerar RN `Alert`-alternativen och kan anropa en vald callback via `window.__tasslaAlertActions`; detta verifierar menyvalens kopplade åtgärder, inte native Alert-visning, tangentbords-/VoiceOver-beteende, native PDF eller databas/RLS. Harnessen verifierar inte animationers native bildfrekvens. 140 % text är ett layoutprov, inte fullständig Dynamic Type-verifiering.
 
-## UX-FIX 2026-10-15 — Training continuation
+## Historical Training continuation checkpoint — 2026-10-15 (superseded)
 
-The production `PublishedTrainingScreen` can be rendered with `?screen=training&trainingScenario=default|unstarted|half|complete|several|long-title|unknown-age`. Use `state=empty` and `state=error` for its existing read states. `TASSLA_UI_REVIEW=false|true` builds public and review fixtures separately. The content is synthetic; no account or backend data is read. Current captures and the §14 assessment are in `docs/design/evidence/vision-rev02/ux-fix-2026-10-15/continue-card/`.
+The production `PublishedTrainingScreen` historically rendered with `?screen=training&trainingScenario=default|unstarted|half|complete|several|long-title|unknown-age`. Use `state=empty` and `state=error` for its read states. `TASSLA_UI_REVIEW=false|true` builds public and review fixtures separately. The content is synthetic; no account or backend data is read. Archived captures and the prior §14 assessment are in `docs/design/evidence/vision-rev02/ux-fix-2026-10-15/continue-card/`. Current Panel 6 rendering is documented below under FLOW-TRAINING-01.
 
 For `UX-TRAINING-UNMARK-01`, use `?screen=training&trainingScenario=later-completed` to render two completed steps with one unfinished step between them. Open `Mina`, choose `Utforska i egen takt`, then select `Avmarkera`. `trainingUnmark=pending` keeps the previous progress visible while the operation is pending and then confirms; `trainingUnmark=failed|unknown` keeps progress and shows one retry state without a success message. The confirmed fixture removes only the chosen step, leaving `Vila nära` checked. These fixtures exercise the production screen with synthetic callbacks; they do not validate Supabase/RLS or native accessibility. Evidence and the §14 delta are in `docs/design/evidence/vision-rev02/ux-fix-2026-10-15/training-unmark/`.
 
@@ -120,3 +120,9 @@ TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:45673 TASSLA_UI_EVIDEN
 ```
 
 Välj andra lediga loopback-portar om dessa är upptagna. Resultat och skärmbilder sparas i `docs/design/evidence/flow-home-checklist-filters-2026-10-20/a03/{public,review}/`. Körningen gav 10/10 public och 19/19 review-kontroller. Detta är avgränsad syntetisk RN Web-verifiering, inte full §14-granskning, oberoende QA/Reviewer, live Supabase/RLS, migrations-/äldre-klientruntime, native VoiceOver/Dynamic Type, fysiska gester eller TestFlight.
+
+## FLOW-TRAINING-01 — aktuell Panel 6-render
+
+Bygg `tools/visual-check/app.tsx` separat för public/review och servera respektive output. Kör `tools/visual-check/verify-flow-training.py` med `TASSLA_UI_BASE_URL`, `TASSLA_UI_REVIEW` och `TASSLA_UI_EVIDENCE`. Syntetiska fixture-program märks i visningsläget; inga konton eller backenddata läses.
+
+Verifieraren täcker 375×844, 430×844, 375×667, två olika 4:3 standardbilder, fortsättkort, alla tre tabbar, exakt öppnad övning, okänd ålder med sparad progress, ingen matchande rekommendation med väg till Alla övningar, pausad äldre version, läsfel med fungerande retry, slutfört program, lång svensk text och 140 %-proxy utan horisontell overflow. Bevisen sparas i `docs/design/evidence/flow-training-01/{public,review}/`. RN Web täcker inte native VoiceOver/Dynamic Type, live content/RLS eller iOS-buildens native beteende.

@@ -64,8 +64,8 @@ test('routine and training rows expose separate accessible actions and truthful 
   assert.match(homeVariant, /homeTrainingStatusCell/);
   assert.match(homeVariant, /homeTrainingStatusChecked/);
   assert.match(item, /testID="daily-training-status-checkbox"/);
-  assert.match(item, /homeTrainingStatus:[^{]*\{[^}]*width: tokens\.size\.homeCheckbox \+ tokens\.spacing\.xs,[^}]*height: tokens\.size\.homeCheckbox \+ tokens\.spacing\.xs,[^}]*borderRadius: tokens\.radius\.full/);
-  assert.match(item, /name="checkmark" size=\{tokens\.size\.iconSm \+ tokens\.spacing\.xs\}/);
+  assert.match(item, /homeTrainingStatus:[^{]*\{[^}]*width: tokens\.size\.homeCheckbox \+ tokens\.spacing\.sm,[^}]*height: tokens\.size\.homeCheckbox \+ tokens\.spacing\.sm,[^}]*borderRadius: tokens\.radius\.full/);
+  assert.match(item, /name="checkmark" size=\{tokens\.size\.iconMd \+ tokens\.spacing\.xs\}/);
   assert.match(item, /testID="daily-training-status-checkmark"/);
   assert.match(workspace, /setRoutineDayCompletion\(client, row, itemId, completed\)/);
   assert.match(recoverySource, /Ingen ny bock visas/);

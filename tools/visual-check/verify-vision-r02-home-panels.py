@@ -335,9 +335,9 @@ def verify_progress_views(browser) -> None:
                box is not None and abs(box['width'] - 248) <= 1 and abs(box['height'] - 248) <= 1
                and ring_stroke_count == 1 and page.get_by_text('Kissa', exact=True).is_visible(),
                {'ring': box, 'vector_strokes': ring_stroke_count})
-        record(f'Environment-training status is a round 24pt checkbox at {width}px',
-               training_status_box is not None and abs(training_status_box['width'] - 24) <= 1
-               and abs(training_status_box['height'] - 24) <= 1
+        record(f'Environment-training status is a round 28pt checkbox at {width}px',
+               training_status_box is not None and abs(training_status_box['width'] - 28) <= 1
+               and abs(training_status_box['height'] - 28) <= 1
                and training_status.evaluate('(element) => parseFloat(getComputedStyle(element).borderRadius) >= element.getBoundingClientRect().width / 2'),
                {'checkbox': training_status_box})
         record(f'Progress does not invent completion timestamps at {width}px',

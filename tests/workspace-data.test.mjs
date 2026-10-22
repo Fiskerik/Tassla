@@ -235,13 +235,14 @@ test('training uses published version and server step UUIDs, preserving in-progr
       assert.equal(method, 'GET');
       const requestedVersions = url.searchParams.get('program_version_id');
       assert.ok(requestedVersions?.startsWith('in.(') && requestedVersions.endsWith(')'));
-      const requestedVersion = requestedVersions.slice(4, -1);
-      const steps = requestedVersion === oldVersion.id
-        ? [
+      const requestedVersionIds = requestedVersions.slice(4, -1).split(',');
+      const steps = [
+        ...(requestedVersionIds.includes(oldVersion.id) ? [
           { id: 'cccccccc-cccc-4ccc-8ccc-ccccccccccc2', program_version_id: oldVersion.id, position: 2, title: 'Steg två', instruction: 'Instruktion två' },
           { id: finishedStep.step_id, program_version_id: oldVersion.id, position: 1, title: 'Steg ett', instruction: 'Instruktion ett' },
-        ]
-        : [{ id: 'dddddddd-dddd-4ddd-8ddd-ddddddddddd2', program_version_id: newVersion.id, position: 1, title: 'Nytt steg', instruction: 'Ny instruktion' }];
+        ] : []),
+        ...(requestedVersionIds.includes(newVersion.id) ? [{ id: 'dddddddd-dddd-4ddd-8ddd-ddddddddddd2', program_version_id: newVersion.id, position: 1, title: 'Nytt steg', instruction: 'Ny instruktion' }] : []),
+      ];
       return jsonResponse(steps);
     }
     throw new Error(`Unexpected request ${method} ${url.pathname}`);
@@ -255,14 +256,18 @@ test('training uses published version and server step UUIDs, preserving in-progr
       birth_date: '2026-08-01',
     }, 10);
 
-    assert.equal(result.programs.length, 1);
-    assert.equal(result.programs[0].id, oldVersion.id);
-    assert.deepEqual(result.programs[0].steps.map(({ id }) => id), [
+    assert.equal(result.programs.length, 2, 'the current version and the exact version with saved progress remain available');
+    const programsById = new Map(result.programs.map((program) => [program.id, program]));
+    assert.ok(programsById.has(newVersion.id), 'saved progress in an older version does not hide the current version');
+    assert.equal(programsById.get(newVersion.id).currentAgeBreedMatch, true);
+    assert.deepEqual(programsById.get(oldVersion.id).steps.map(({ id }) => id), [
       finishedStep.step_id,
       'cccccccc-cccc-4ccc-8ccc-ccccccccccc2',
     ]);
-    assert.deepEqual(result.programs[0].completedStepIds, [finishedStep.step_id]);
-    assert.deepEqual(result.programs[0].completedAtByStepId, { [finishedStep.step_id]: finishedStep.completed_at });
+    assert.deepEqual(programsById.get(oldVersion.id).completedStepIds, [finishedStep.step_id]);
+    assert.deepEqual(programsById.get(oldVersion.id).completedAtByStepId, { [finishedStep.step_id]: finishedStep.completed_at });
+    assert.equal(programsById.get(oldVersion.id).currentAgeBreedMatch, false, 'a resumable older version is not described as current-age-matched');
+    assert.equal(programsById.get(newVersion.id).steps[0].id, 'dddddddd-dddd-4ddd-8ddd-ddddddddddd2');
     assert.deepEqual(result.paused, []);
     assert.ok(requests.every(({ method }) => method === 'GET'));
   } finally {
@@ -323,9 +328,50 @@ test('keeps progress for a withdrawn or unavailable published version as paused 
     }, 10);
 
     assert.deepEqual(result.programs, []);
-    assert.deepEqual(result.paused, [{ versionId: unavailableVersionId, completedCount: 2 }]);
+    assert.deepEqual(result.paused, [{ versionId: unavailableVersionId, title: null, versionNumber: null, completedCount: 2 }]);
     assert.equal(requests.some(({ url }) => url.pathname === '/rest/v1/training_steps'), false);
     assert.equal(requests.some(({ method }) => method === 'DELETE' || method === 'PATCH'), false);
+  } finally {
+    await client.auth.dispose();
+  }
+});
+
+test('a paused published program keeps its human-readable title and version', async () => {
+  const pausedVersion = versionRow({
+    id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee2',
+    contentId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    version: 3,
+    title: 'Lugn vardag',
+  });
+  pausedVersion.content_breed_targets = [{ breed_id: 'other-breed' }];
+  const progress = [{
+    dog_id: dogId,
+    program_version_id: pausedVersion.id,
+    step_id: 'ffffffff-ffff-4fff-8fff-fffffffffff3',
+    completed_at: '2026-10-04T10:00:00.000Z',
+  }];
+  const { client } = localClient(({ method, url }) => {
+    assert.equal(method, 'GET');
+    if (url.pathname === '/rest/v1/content_versions') return jsonResponse([pausedVersion]);
+    if (url.pathname === '/rest/v1/training_progress') return jsonResponse(progress);
+    throw new Error(`Unexpected request ${method} ${url.pathname}`);
+  });
+
+  try {
+    const result = await workspaceData.fetchTrainingWorkspace(client, {
+      id: dogId,
+      name: 'Milo',
+      breed_id: 'mixed',
+      birth_date: '2026-08-01',
+    }, 10);
+
+    assert.deepEqual(result.programs, []);
+    assert.deepEqual(result.paused, [{
+      versionId: pausedVersion.id,
+      title: 'Lugn vardag',
+      versionNumber: 3,
+      completedCount: 1,
+    }]);
   } finally {
     await client.auth.dispose();
   }
