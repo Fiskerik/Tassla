@@ -11,11 +11,13 @@ import { loadQuickLogLayout, saveQuickLogLayout } from './quick-log-layout-stora
 import { DEFAULT_QUICK_LOG_LAYOUT, moveQuickLogType, type QuickLogLayout, type QuickLogLayoutType } from './quick-log-layout';
 import { LogDateCalendar } from './LogDateCalendar';
 import { localMonthKey } from './log-calendar-model';
+import { InsightsScreen, type InsightsLoadState } from './InsightsScreen';
+import type { InsightsPeriod } from './insights-model';
 
 export type QuickLogMutationView = { kind: 'add' | 'update' | 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; accidentKinds?: readonly AccidentKind[] | null; status: 'pending' | 'failed' | 'unsure' | 'saved' };
 type EditorActionState = { canSave: boolean; saving: boolean };
 
-export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, refreshError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore, calendarMarkerMonth = '', calendarMarkers = [], calendarStatus = 'ready', onLoadCalendarMonth, onCancelCalendarRead }: {
+export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, refreshError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore, calendarMarkerMonth = '', calendarMarkers = [], calendarStatus = 'ready', onLoadCalendarMonth, onCancelCalendarRead, view = 'today', onViewChange, profileOrigin = false, onReturnToProfile, insightsPeriod = 'week', onInsightsPeriodChange, insightsState, onRefreshInsights, dogName = 'hunden' }: {
   events: readonly LogEvent[];
   onAdd: (type: LogEventType, intent?: AccidentLogIntent) => void;
   onUpdate?: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
@@ -41,6 +43,15 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   calendarStatus?: 'loading' | 'ready' | 'error';
   onLoadCalendarMonth?: (month: string) => void;
   onCancelCalendarRead?: () => void;
+  view?: 'today' | 'overview';
+  onViewChange?: (view: 'today' | 'overview') => void;
+  profileOrigin?: boolean;
+  onReturnToProfile?: () => void;
+  insightsPeriod?: InsightsPeriod;
+  onInsightsPeriodChange?: (period: InsightsPeriod) => void;
+  insightsState?: InsightsLoadState;
+  onRefreshInsights?: () => void;
+  dogName?: string;
 }) {
   const [moreVisible, setMoreVisible] = useState(false);
   const [addEventVisible, setAddEventVisible] = useState(false);
@@ -313,12 +324,26 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     ]);
   }
 
+  if (view === 'overview' && insightsState) {
+    return <View style={styles.screen}>
+      <Text accessibilityRole="header" style={styles.pageTitle}>Logga</Text>
+      <LogViewTabs view={view} onChange={(next) => onViewChange?.(next)} />
+      <InsightsScreen period={insightsPeriod} onPeriodChange={(period) => onInsightsPeriodChange?.(period)}
+        state={insightsState} onRefresh={() => onRefreshInsights?.()}
+        onOpenLog={() => { setSelectedDate(localDate()); onViewChange?.('today'); }}
+        onBack={profileOrigin ? () => onReturnToProfile?.() : () => onViewChange?.('today')}
+        backLabel={profileOrigin ? 'Tillbaka till Hundprofil' : 'Tillbaka till Logga'} dogName={dogName} />
+    </View>;
+  }
+
   const successMutationKey = mutation?.status === 'saved' ? `${mutation.kind}:${mutation.mutationId}` : '';
   const successToast = <Toast visible={mutation?.status === 'saved' && dismissedMutationKey !== successMutationKey} tone="success" confirmed message={mutation?.status === 'saved' ? mutation.kind === 'add' ? `${LOG_EVENT_LABELS[mutation.type]} loggat` : mutation.kind === 'update' ? 'Ändring sparad' : 'Händelsen är raderad' : ''}
     onUndo={mutation?.status === 'saved' && mutation.kind === 'add' ? () => { firstUseTip.dismiss(); onUndo?.(mutation.id); } : undefined} autoDismissMs={2500}
     onAutoDismiss={() => setDismissedMutationKey(successMutationKey)} />;
   return <View style={styles.screen}>
     <Text accessibilityRole="header" style={styles.pageTitle}>Logga</Text>
+    <LogViewTabs view={view} onChange={(next) => onViewChange?.(next)} />
+    {profileOrigin ? <Button variant="tertiary" label="Tillbaka till Hundprofil" accessibilityLabel="Tillbaka till Hundprofil" onPress={() => onReturnToProfile?.()} /> : null}
     {firstUseTip.visible ? <FirstUseTip text="Tryck på Fler för fler loggtyper." onDismiss={firstUseTip.dismiss} /> : null}
     <Toast visible={loadMoreError} tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore ? () => { firstUseTip.dismiss(); return onLoadMore(); } : undefined} />
     <Toast visible={!editingEvent && mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} onCancel={() => { firstUseTip.dismiss(); onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
@@ -464,6 +489,19 @@ function LogEntryTransition({ children, transitionKey, reduceMotion, onAnimation
   useEffect(() => () => progress.stopAnimation(), [progress]);
   const translation = progress.interpolate({ inputRange: [0, 1], outputRange: [tokens.motion.distance, 0] });
   return <Animated.View style={{ opacity: progress, transform: [{ translateY: translation }] }}>{children}</Animated.View>;
+}
+
+function LogViewTabs({ view, onChange }: { view: 'today' | 'overview'; onChange: (view: 'today' | 'overview') => void }) {
+  return <View style={styles.viewTabs} accessibilityRole="tablist" accessibilityLabel="Loggvy">
+    {([['today', 'Idag'], ['overview', 'Översikt']] as const).map(([key, label]) => {
+      const selected = view === key;
+      return <Pressable key={key} accessibilityRole="tab" accessibilityLabel={label}
+        accessibilityState={{ selected }} aria-selected={selected} onPress={() => onChange(key)}
+        style={({ pressed }) => [styles.viewTab, selected && styles.viewTabSelected, pressed && styles.pressed]}>
+        <Text style={[styles.viewTabLabel, selected && styles.viewTabLabelSelected]}>{label}</Text>
+      </Pressable>;
+    })}
+  </View>;
 }
 
 function DeleteExitRow({ token, event, reduceMotion, onFinished }: { token: number; event: LogEvent; reduceMotion: boolean; onFinished: (token: number) => void }) {
@@ -618,6 +656,11 @@ function formatSelectedDate(dateKey: string, today: string): string {
 
 const styles = StyleSheet.create({
   screen: { gap: tokens.spacing.xs }, pageTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.xs },
+  viewTabs: { flexDirection: 'row', minHeight: tokens.size.buttonHeight, padding: tokens.spacing.xs, gap: tokens.spacing.xs, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.training.segmentedSurface },
+  viewTab: { minHeight: tokens.size.touchMin, flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.full },
+  viewTabSelected: { backgroundColor: tokens.colors.surface },
+  viewTabLabel: { ...tokens.typography.label, color: tokens.colors.textSecondary },
+  viewTabLabelSelected: { color: tokens.colors.primary },
   accidentTypeGroup: { gap: tokens.spacing.sm },
   accidentHelp: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   accidentValidation: { ...tokens.typography.caption, color: tokens.colors.danger },

@@ -29,9 +29,10 @@ def record(name: str, passed: bool, details: dict[str, object] | None = None) ->
         print(f'PASS {name}')
 
 
-def home_url(scenario: str = 'ready', daily_mutation: str | None = None) -> str:
+def home_url(scenario: str = 'ready', daily_mutation: str | None = None, *, image_fixture: str | None = None) -> str:
     mutation = f'&dailyMutation={daily_mutation}' if daily_mutation else ''
-    return f'{BASE}/?screen=home&homeScenario={scenario}{mutation}'
+    images = f'&imageFixture={image_fixture}' if image_fixture else ''
+    return f'{BASE}/?screen=home&homeScenario={scenario}{mutation}{images}'
 
 
 def development_url(*, guides_state: str | None = None, age_scenario: str | None = None) -> str:
@@ -48,6 +49,18 @@ def progress_url(*, state: str = 'ready', completed: int | None = None) -> str:
     if completed is not None:
         query.append(f'progressCount={completed}')
     return f"{BASE}/?{'&'.join(query)}"
+
+
+def profile_url() -> str:
+    return f'{BASE}/?screen=profile'
+
+
+def insights_url(*, state: str = 'ready', period: str = 'week', origin: str = 'profile') -> str:
+    return f'{BASE}/?screen=insights&origin={origin}&insightsPeriod={period}&insightsState={state}'
+
+
+def image_fixture_url(screen: str) -> str:
+    return f'{BASE}/?screen={screen}&imageFixture={screen}'
 
 
 def visible_destinations(page) -> list[dict[str, object]]:
@@ -297,6 +310,256 @@ def verify_development_states(browser) -> None:
     page.close()
 
 
+def verify_insights_views(browser) -> None:
+    for width in (375, 430):
+        page = browser.new_page(viewport={'width': width, 'height': 844 + (32 if REVIEW else 0)})
+        page_errors: list[str] = []
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.goto(profile_url(), wait_until='networkidle')
+        entry = page.get_by_role('button', name='Insikter', exact=True)
+        expect(entry).to_be_visible()
+        expect(entry).to_be_enabled()
+        page.screenshot(path=str(OUT / f'profile-insights-entry-{width}.png'), full_page=True)
+
+        # The actual edit form owns this action. A dirty profile draft keeps it visible but blocks navigation.
+        name = page.get_by_role('textbox', name='Hundens namn', exact=True)
+        name.fill('Luna prov')
+        expect(entry).to_be_disabled()
+        expect(page.get_by_text('Spara eller ändra tillbaka profiluppgifterna för att öppna Insikter.', exact=True)).to_be_visible()
+        name.fill('Luna')
+        expect(entry).to_be_enabled()
+        entry.click()
+        expect(page.get_by_role('tablist', name='Loggvy')).to_be_visible()
+        expect(page.get_by_role('tab', name='Översikt', exact=True)).to_have_attribute('aria-selected', 'true')
+        return_button = page.get_by_role('button', name='Tillbaka till Hundprofil', exact=True)
+        expect(return_button).to_be_visible()
+        expect(page.get_by_text('Registreringar över tid med Luna.', exact=True)).to_be_visible()
+        if REVIEW:
+            expect(page.get_by_text('Kiss ·', exact=False)).to_be_visible()
+            expect(page.get_by_text('Bajs ·', exact=False)).to_be_visible()
+        else:
+            expect(page.get_by_text('Inga kiss-, bajs- eller olycksmarkeringar i perioden.', exact=True)).to_be_visible()
+        page.screenshot(path=str(OUT / f'insights-week-profile-{width}.png'), full_page=True)
+
+        page.get_by_role('tab', name='Månad', exact=True).click()
+        expect(page.get_by_role('tab', name='Månad', exact=True)).to_have_attribute('aria-selected', 'true')
+        page.screenshot(path=str(OUT / f'insights-month-profile-{width}.png'), full_page=True)
+        page.get_by_role('tab', name='Sedan första loggen', exact=True).click()
+        expect(page.get_by_role('tab', name='Sedan första loggen', exact=True)).to_have_attribute('aria-selected', 'true')
+        if REVIEW:
+            latest_marker = page.get_by_text('Pågår', exact=True).first
+            expect(latest_marker).to_be_visible()
+            record(f'All-history timeline opens at its current month at {width}px', True)
+            other_marker = page.get_by_text('Andra', exact=True)
+            other_marker.scroll_into_view_if_needed()
+            expect(other_marker).to_be_visible()
+            page.screenshot(path=str(OUT / f'insights-history-sparse-{width}.png'), full_page=True)
+            gap_count = page.locator('[aria-label*="månader utan registreringar"]').count()
+            record(f'Sparse history explains each omitted month interval at {width}px', gap_count > 0, {'accessible_gap_columns': gap_count})
+            expect(page.get_by_text('Från första registreringen', exact=False)).to_be_visible()
+        else:
+            expect(page.get_by_text('Du har inga registreringar ännu', exact=True)).to_be_visible()
+            log_button = page.get_by_role('button', name='Logga', exact=True)
+            expect(log_button).to_be_visible()
+            log_button.click()
+            expect(page.get_by_role('tab', name='Idag', exact=True)).to_have_attribute('aria-selected', 'true')
+            expect(page.get_by_role('button', name='Tillbaka till Hundprofil', exact=True)).to_be_visible()
+            page.get_by_role('tab', name='Översikt', exact=True).click()
+        page.screenshot(path=str(OUT / f'insights-history-profile-{width}.png'), full_page=True)
+
+        # Idag keeps the profile return action until the main Logg tab is explicitly selected.
+        page.get_by_role('tab', name='Idag', exact=True).click()
+        expect(page.get_by_role('button', name='Tillbaka till Hundprofil', exact=True)).to_be_visible()
+        page.get_by_role('tab', name='Översikt', exact=True).click()
+        page.get_by_role('button', name='Tillbaka till Hundprofil', exact=True).click()
+        expect(page.get_by_role('button', name='Insikter', exact=True)).to_be_visible()
+        page.get_by_role('button', name='Insikter', exact=True).click()
+        page.get_by_role('tab', name='Logg', exact=True).click()
+        expect(page.get_by_role('tab', name='Idag', exact=True)).to_have_attribute('aria-selected', 'true')
+        expect(page.get_by_role('button', name='Tillbaka till Hundprofil', exact=True)).to_have_count(0)
+        record(f'Profile-origin return can be explicitly cleared from the selected Logg tab at {width}px', True)
+        record(f'Profile entry, draft gate, shared overview periods and scoped return work at {width}px', not page_errors,
+               {'page_errors': page_errors})
+        page.close()
+
+    # Distinct loading/error/empty copy and an actionable retry, using the same production LogScreen.
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(insights_url(state='loading'), wait_until='networkidle')
+    expect(page.get_by_text('Hämtar registreringar…', exact=True)).to_be_visible()
+    page.screenshot(path=str(OUT / 'insights-loading-375.png'), full_page=True)
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(insights_url(state='error'), wait_until='networkidle')
+    expect(page.get_by_text('Insikterna kunde inte hämtas', exact=True)).to_be_visible()
+    retry = page.get_by_role('button', name='Försök igen', exact=True)
+    expect(retry).to_be_visible()
+    retry.click()
+    record('Insights error state offers the supplied retry action', page.evaluate('window.__insightsRefreshCalls === 1'))
+    page.screenshot(path=str(OUT / 'insights-error-375.png'), full_page=True)
+    page.close()
+
+    # 375×667 and a 140% web text proxy check the chart/footer fit and scroll path.
+    page = browser.new_page(viewport={'width': 375, 'height': 667 + (32 if REVIEW else 0)})
+    page.goto(insights_url(), wait_until='networkidle')
+    page.get_by_text('Sömnmarkeringar', exact=True).scroll_into_view_if_needed()
+    chart_title = page.get_by_text('Sömnmarkeringar', exact=True).bounding_box()
+    bottom_nav = page.get_by_role('tablist', name='Huvudmeny').bounding_box()
+    record('Insights remains scrollable above the fixed menu at 375×667',
+           chart_title is not None and bottom_nav is not None and chart_title['y'] + chart_title['height'] <= bottom_nav['y'],
+           {'chart_title': chart_title, 'bottom_nav': bottom_nav})
+    page.screenshot(path=str(OUT / 'insights-short-viewport-375.png'), full_page=True)
+    page.evaluate("""() => document.querySelectorAll('[dir="auto"]').forEach((element) => {
+      const style = getComputedStyle(element);
+      element.style.fontSize = `${parseFloat(style.fontSize) * 1.4}px`;
+      element.style.lineHeight = `${parseFloat(style.lineHeight) * 1.4}px`;
+    })""")
+    page.get_by_text('Sömnmarkeringar', exact=True).scroll_into_view_if_needed()
+    large_text_fits = page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    record('Insights has no horizontal page overflow with the 140% text layout proxy', large_text_fits)
+    page.screenshot(path=str(OUT / 'insights-text-140-375.png'), full_page=True)
+    page.close()
+
+
+def verify_image_diversity(browser) -> None:
+    if not REVIEW:
+        for width in (375, 430):
+            page = browser.new_page(viewport={'width': width, 'height': 844})
+            page.goto(image_fixture_url('knowledge'), wait_until='networkidle')
+            expect(page.get_by_text('Inga guider är publicerade för Luna ännu.', exact=True)).to_be_visible()
+            page.screenshot(path=str(OUT / f'knowledge-empty-{width}.png'), full_page=True)
+            page.goto(image_fixture_url('training'), wait_until='networkidle')
+            expect(page.get_by_text('Inga övningar tillgängliga ännu', exact=True)).to_be_visible()
+            record(f'Public Knowledge and Training use honest empty content at {width}px',
+                   page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+            page.screenshot(path=str(OUT / f'training-empty-{width}.png'), full_page=True)
+            page.close()
+        return
+
+    for width in (375, 430):
+        page = browser.new_page(viewport={'width': width, 'height': 844 + 32})
+        page_errors: list[str] = []
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.goto(image_fixture_url('knowledge'), wait_until='networkidle')
+        expect(page.get_by_text('Tillfälligt exempel – innehållet är inte sakgranskat.', exact=True)).to_be_visible()
+        guide_cards = [
+            page.get_by_role('button', name='Läs Trygg start hemma', exact=True),
+            page.get_by_role('button', name='Läs Kontakt och namn', exact=True),
+            page.get_by_role('button', name='Läs Vardagsro och hantering', exact=True),
+        ]
+        image_sources: list[str | None] = []
+        image_boxes = []
+        for guide in guide_cards:
+            expect(guide).to_be_visible()
+            image = guide.locator('img').first
+            image_sources.append(image.get_attribute('src'))
+            image_boxes.append(image.bounding_box())
+        record(f'Knowledge maps three stable guide identities to three different visible photos at {width}px',
+               all(image_sources) and len(set(image_sources)) == 3,
+               {'image_sources': image_sources, 'image_boxes': image_boxes})
+        record(f'Knowledge image crops use the planned 200pt hero and 132pt guide images at {width}px',
+               image_boxes[1] is not None and abs(image_boxes[1]['height'] - 200) <= 1
+               and all(box is not None and abs(box['height'] - 132) <= 1 for index, box in enumerate(image_boxes) if index != 1),
+               {'image_boxes': image_boxes})
+        page.screenshot(path=str(OUT / f'knowledge-guides-{width}.png'), full_page=True)
+        expect(page.get_by_role('textbox', name='Sök i guider för Luna', exact=True)).to_be_visible()
+        expect(page.get_by_role('tablist', name='Huvudmeny').get_by_role('tab', name='Kunskap', exact=True)).to_be_visible()
+        record(f'Knowledge guide search and the selected bottom destination remain visible at {width}px',
+               not page_errors and page.evaluate('document.documentElement.scrollWidth <= innerWidth'),
+               {'page_errors': page_errors})
+        page.close()
+
+    # Home opens the exact stable guide identity used by Knowledge's image manifest.
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + 32})
+    page_errors: list[str] = []
+    page.on('pageerror', lambda error: page_errors.append(str(error)))
+    page.goto(home_url(image_fixture='knowledge'), wait_until='networkidle')
+    home_knowledge = page.get_by_role('button', name='Just nu med Luna, 11 veckor: Trygg start hemma', exact=True)
+    home_knowledge.scroll_into_view_if_needed()
+    page.screenshot(path=str(OUT / 'home-knowledge-card-375.png'), full_page=True)
+    home_knowledge.click()
+    expect(page.get_by_role('heading', name='Trygg start hemma', exact=True)).to_be_visible()
+    record('Home knowledge recommendation opens its exact guide identity',
+           page.evaluate("window.__homePanelsOpened === 'content:review-v1:training:trygg-start'") and not page_errors,
+           {'page_errors': page_errors})
+    page.close()
+
+    # Home's current exercise recommendation opens the exact Training continuation card.
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + 32})
+    page_errors = []
+    page.on('pageerror', lambda error: page_errors.append(str(error)))
+    page.goto(home_url(image_fixture='training'), wait_until='networkidle')
+    home_training = page.get_by_role('button', name='Just nu med Luna, 11 veckor: Vila nära', exact=True)
+    home_training.scroll_into_view_if_needed()
+    page.screenshot(path=str(OUT / 'home-training-card-375.png'), full_page=True)
+    home_training.click()
+    expect(page.get_by_role('heading', name='Träning', exact=True)).to_be_visible()
+    continue_card = page.get_by_role('button', name='Fortsätt Trygg start hemma, nästa övning Vila nära, 1 av 2 övningar klara', exact=True)
+    continue_card.scroll_into_view_if_needed()
+    training_image = continue_card.locator('img').first
+    training_source = training_image.get_attribute('src')
+    training_box = training_image.bounding_box()
+    page.screenshot(path=str(OUT / 'training-continuation-375.png'), full_page=True)
+    record('Training continuation uses the Corgi photo and planned 88pt crop',
+           training_box is not None
+           and abs(training_box['width'] - 88) <= 1 and abs(training_box['height'] - 88) <= 1,
+           {'training_source': training_source, 'training_image': training_box})
+    record('Home recommendation and Training continuation use the same next-exercise title',
+           'Vila nära' in continue_card.inner_text())
+    continue_card.click()
+    expect(page.get_by_role('dialog')).to_be_visible()
+    expect(page.get_by_role('dialog').get_by_text('Vila nära', exact=True)).to_be_visible()
+    expect(page.get_by_role('button', name='Markera övningen som genomförd', exact=True)).to_be_visible()
+    record('Training continuation still opens the same in-progress exercise', not page_errors, {'page_errors': page_errors})
+    page.close()
+
+    for width in (375, 430):
+        page = browser.new_page(viewport={'width': width, 'height': 844 + 32})
+        page_errors = []
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.goto(image_fixture_url('training'), wait_until='networkidle')
+        expect(page.get_by_role('heading', name='Träning', exact=True)).to_be_visible()
+        continuation = page.get_by_role('button', name='Fortsätt Trygg start hemma, nästa övning Vila nära, 1 av 2 övningar klara', exact=True)
+        continuation.scroll_into_view_if_needed()
+        image_box = continuation.locator('img').first.bounding_box()
+        nav_box = page.get_by_role('tablist', name='Huvudmeny').bounding_box()
+        record(f'Training continuation has a square 88pt image and clear navigation at {width}px',
+               image_box is not None and abs(image_box['width'] - 88) <= 1
+               and abs(image_box['height'] - 88) <= 1
+               and nav_box is not None and image_box['y'] + image_box['height'] <= nav_box['y'] and not page_errors,
+               {'image': image_box, 'bottom_nav': nav_box, 'page_errors': page_errors})
+        page.screenshot(path=str(OUT / f'training-overview-{width}.png'), full_page=True)
+        page.close()
+
+    # Short device and large-text layout proxy keep the large photographs scrollable above navigation.
+    for screen in ('knowledge', 'training'):
+        page = browser.new_page(viewport={'width': 375, 'height': 667 + 32})
+        page.goto(image_fixture_url(screen), wait_until='networkidle')
+        if screen == 'knowledge':
+            page.get_by_role('button', name='Läs Vardagsro och hantering', exact=True).scroll_into_view_if_needed()
+            target = page.get_by_role('button', name='Läs Vardagsro och hantering', exact=True).locator('img').first
+        else:
+            continuation = page.get_by_role('button', name='Fortsätt Trygg start hemma, nästa övning Vila nära, 1 av 2 övningar klara', exact=True)
+            continuation.scroll_into_view_if_needed()
+            target = continuation.locator('img').first
+        image_box = target.bounding_box()
+        nav_box = page.get_by_role('tablist', name='Huvudmeny').bounding_box()
+        record(f'{screen.title()} crop is reachable without covering the bottom menu at 375×667',
+               image_box is not None and nav_box is not None and image_box['y'] + image_box['height'] <= nav_box['y'],
+               {'image': image_box, 'bottom_nav': nav_box})
+        page.screenshot(path=str(OUT / f'{screen}-short-375.png'), full_page=True)
+        page.evaluate("""() => document.querySelectorAll('[dir="auto"]').forEach((element) => {
+          const style = getComputedStyle(element);
+          element.style.fontSize = `${parseFloat(style.fontSize) * 1.4}px`;
+          element.style.lineHeight = `${parseFloat(style.lineHeight) * 1.4}px`;
+        })""")
+        page.wait_for_timeout(80)
+        record(f'{screen.title()} has no horizontal overflow with 140% text proxy',
+               page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+        page.screenshot(path=str(OUT / f'{screen}-text-140-375.png'), full_page=True)
+        page.close()
+
+
 def verify_progress_views(browser) -> None:
     if not REVIEW:
         page = browser.new_page(viewport={'width': 375, 'height': 844})
@@ -435,6 +698,36 @@ if os.environ.get('TASSLA_UI_PANEL') == 'progress':
     raise SystemExit(1 if failures else 0)
 
 
+if os.environ.get('TASSLA_UI_PANEL') == 'insights':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_insights_views(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'insights', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
+if os.environ.get('TASSLA_UI_PANEL') == 'image-diversity':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_image_diversity(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'image-diversity', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
 with sync_playwright() as playwright:
     browser = playwright.chromium.launch(
         headless=True,
@@ -564,6 +857,7 @@ with sync_playwright() as playwright:
 
     verify_development_views(browser)
     verify_development_states(browser)
+    verify_insights_views(browser)
 
     # Loading, empty, error, unknown and partial source states keep the full-list control visible.
     for scenario, message in (

@@ -4,7 +4,13 @@
 - **Uppgift:** uppdatera bildspråket i Träning och Kunskap enligt `vision_rev02.jpg`
 - **Riskklass:** L — lokala dekorativa bilder och presentation; ingen persondata, persistence, navigation, datamodell eller API ändras.
 - **Version:** v1
-- **Status:** Architect APPROVE och Critic PROCEED; bild-/UI-koppling implementerad. Verklig produkt-rendering och visuell panelacceptans är NOT TESTABLE.
+- **Status:** Historisk ursprungsplan; renderad komponentkontroll dokumenteras i uppdateringen 2026-10-22 nedan.
+
+## Implementation update — 2026-10-22
+
+Kontroll av aktiva routes visade att `HomeCarousel` inte är monterad i `HomeScreen` eller `ProductWorkspace`. Hemmets faktiska `Just nu`-kort är textbaserat i målbilden och öppnar vald guide eller träningsväg. Den inaktiva karusellens bild visas därför inte som produktfunktion och ingår inte i renderbeviset. Bildkravet för Home justeras till att öppna exakt guide-ID/nästa träningssteg; Home får ingen påhittad bildlayout.
+
+Den aktiva Kunskap-vyn binder tre review-guider stabilt till tre olika foton; en saknad guidebild ger fortsatt textkort. Träning visar corgibilden i 88×88 pt på fortsättningskortet och öppnar samma nästa steg som Hemmets textkort. Faktisk React Native-komponentrendering samt §14-bedömning finns i `docs/design/evidence/vision-r02/2026-10-21-panels-6-7-image-diversity/`. Den äldre HomeCarousel-formuleringen i v1 nedan är supersederad av denna observation.
 
 ## Syfte
 

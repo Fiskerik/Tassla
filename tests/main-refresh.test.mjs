@@ -13,9 +13,9 @@ const [primitives, workspace, logScreen] = await Promise.all([
 test('native refresh is opt-in and ProductWorkspace opts in only on Home and Log', () => {
   assert.match(primitives, /refreshControl=\{onRefresh \? <RefreshControl/);
   assert.match(primitives, /refreshing=\{refreshing\} onRefresh=\{onRefresh\}/);
-  assert.match(workspace, /refreshing=\{page === 'home' \|\| page === 'progress' \? dailyRefreshing : page === 'log' \? logRefreshing : false\}/);
-  assert.match(workspace, /page === 'home' \|\| page === 'progress' \? \(\) => \{ void reloadDailyActivity\(true, false\); \} : page === 'log' \? \(\) => \{ void reloadEvents\('refresh'\); \} : undefined/);
-  assert.match(workspace, /refreshAccessibilityLabel=\{page === 'log' \? 'Uppdatera loggen' : 'Uppdatera Hem'\}/);
+  assert.match(workspace, /refreshing=\{page === 'home' \|\| page === 'progress' \? dailyRefreshing : page === 'log' && logView === 'today' \? logRefreshing : page === 'log' && logView === 'overview' \? insightsState\.status === 'loading' : false\}/);
+  assert.match(workspace, /page === 'home' \|\| page === 'progress' \? \(\) => \{ void reloadDailyActivity\(true, false\); \} : page === 'log' && logView === 'today' \? \(\) => \{ void reloadEvents\('refresh'\); \} : page === 'log' && logView === 'overview' \? refreshInsights : undefined/);
+  assert.match(workspace, /refreshAccessibilityLabel=\{page === 'log' && logView === 'overview' \? 'Uppdatera insikter' : page === 'log' \? 'Uppdatera loggen' : 'Uppdatera Hem'\}/);
 });
 
 test('Log reads are scoped to account generation and active dog; old rows are hidden before replacement', () => {

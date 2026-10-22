@@ -34,8 +34,8 @@ test('guide metadata comes from published fields and secondary destinations stay
   const screen = await readFile(screenPath, 'utf8');
   assert.match(screen, /readingMinutes\(item\.body\)/);
   assert.match(screen, /item\.contentType === 'guide' \? 'Guide' : 'Artikel'/);
-  assert.match(screen, /featuredImage: \{ width: '100%', height: 136 \}/);
-  assert.match(screen, /smallImage: \{ width: '100%', height: 44 \}/);
+  assert.match(screen, /featuredImage: \{ width: '100%', height: 200 \}/);
+  assert.match(screen, /smallImage: \{ width: '100%', height: 132 \}/);
   assert.match(screen, /accessibilityLabel="Öppna Checklistor"/);
   assert.match(screen, /accessibilityLabel="Öppna Vanliga frågor"/);
   assert.match(screen, /categoryLink: \{ flexDirection: 'column', alignItems: 'center'/);
@@ -78,7 +78,9 @@ test('published guide versions use the six explicit images and unknown items hav
   assert.ok(nullableLookup);
   assert.match(nullableLookup[0], /KNOWLEDGE_IMAGE_BY_GUIDE_VERSION\.get/);
   assert.match(nullableLookup[0], /return null/);
-  assert.doesNotMatch(nullableLookup[0], /EDITORIAL_IMAGES|REVIEW_IMAGE_BY_GUIDE_VERSION|hash/);
+  assert.match(nullableLookup[0], /const reviewIndex = REVIEW_IMAGE_BY_GUIDE_VERSION\.get\(identity\)/);
+  assert.match(nullableLookup[0], /reviewIndex === undefined \? KNOWLEDGE_IMAGE_BY_GUIDE_VERSION\.get\(identity\) \?\? null : EDITORIAL_IMAGES\[reviewIndex\]/);
+  assert.doesNotMatch(nullableLookup[0], /hash/);
   for (const identity of [
     'review-v1:training:trygg-start:1',
     'review-v1:training:kontakt:1',

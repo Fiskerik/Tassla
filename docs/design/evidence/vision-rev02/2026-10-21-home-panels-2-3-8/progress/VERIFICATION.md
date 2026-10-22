@@ -3,13 +3,13 @@
 **Datum:** 2026-10-22
 **Task:** `FLOW-PROGRESS-01`
 **Referens:** panel 3 i [`vision_rev02.jpg`](../../../../../../vision_rev02.jpg) och [rev02-screenkontraktet](../../../../vision-rev02-screen-contracts.md)
-**Status:** implementation och syntetisk UI-verifiering klara. Panelen förblir partiell eftersom ingen verklig veckomålskälla finns. Panel 2:s frysta Reviewer-re-review är fortfarande en separat öppen checkpoint; den här panelens formella QA/review är inte genomförd.
+**Status:** lokal UI-/funktionscheckpoint accepterad av ägaren efter rapporterad intern och extern QA. Ägaren rapporterar även att iOS-proven passerat; den här sessionen gjorde inte om dessa kontroller. Panelen förblir partiell eftersom ingen verklig veckomålskälla eller rutincompletion-tider finns. Den externa QA-rapporten har inte lagts i repot.
 
 ## Ändring
 
 - Progressringen använder samma `selectDailyProgress`-urval som Hem för värde, etikett och hela dagslistan. En sammanhängande SVG-stroke ger en slät båge, rundad ände under 100 % och diskret grön toning; vid 100 % stängs cirkeln utan överlappande ändar. Visuellt verifierad vid 40 % och 100 %.
 - Porträttet använder panelens separata `daily-progress-hero-puppy-terrier.jpg` och märks `Standardbild`. Ringen är 248 pt med 12 pt statusbana på skärmbredderna som verifierats.
-- Träningsstatusen för `Miljöträning – nya ljud` använder nu en 28 pt rund statusruta med tydlig bock. Raden öppnar fortsatt träningssteget och lägger inte till en andra skrivhandling.
+- Träningsstatusen för `Miljöträning – nya ljud` använder nu en 28×28 pt rund statusruta med 28 pt bock. Raden öppnar fortsatt träningssteget och lägger inte till en andra skrivhandling.
 - Aktivitetsraderna behåller befintlig rutinmutation och öppnar exakt träningssteg. Vyn hittar inte på tider, veckomål eller beteende-/hälsopåståenden.
 - En varm, faktabaserad sammanfattning visas först när alla dagens aktiviteter är markerade som klara. Tomdagen saknar 0/0-ring och har en huvudhandling som öppnar befintlig aktivitetshantering. Loading, error, unknown och partial visas separat utan en komplett ring.
 
@@ -47,17 +47,17 @@ Public visar det riktiga tomläget: [progress-empty-375.png](public/progress-emp
 
 ## Körda kontroller
 
-- `pnpm check` — PASS: app-/edge-TypeScript, ESLint och 665/666 tester (1 skip).
+- `pnpm check` — PASS: app-/edge-TypeScript, ESLint och 665/666 tester (1 skip); detta är den lokalt sparade körningen.
 - Fokuserade progress-, daily-activity-ui-, route- och Logga-calendar-policytester — PASS.
 - Public iOS content guard/export efter SVG-ändringen: PASS, 1 577 JS-moduler.
 - Public React Native Web: 2/2 kontroller PASS; tomlägets huvudknapp öppnar manager-sheeten.
-- Den tidigare fulla review-renderingen passerade 13/13 kontroller; efter ring-/checkboxändringen passerar den panelspecifika review-renderingen 15/15 och public-renderingen 2/2.
+- Den tidigare 13/13 review-renderingen är historisk; efter ring-/checkboxändringen är aktuell panelrender public 2/2 och review 15/15.
 - `dailyProgressRingFill`-tester täcker 0 %, 1 %, 49 %, 50 %, 51 %, 99 %, 100 % och ogiltiga inputs. Review-render visar 40 % och 100 %.
-- Ägarens visuella korrigering den 2026-10-22 ersatte segmentringen med en vektorbåge och förstorar Miljöträningens runda statusruta till 28 pt med en 28 pt bock. Den aktuella panelspecifika renderingen passerar public 2/2 och review 15/15; den kontrollerar statusform vid 375/430 pt, ring, kort viewport, 140 %-textproxy och loading/empty/error/unknown/partial.
+- Ägarens visuella korrigering den 2026-10-22 ersatte segmentringen med en kontinuerlig vektorbåge och förstorar Miljöträningens runda statusruta till 28×28 pt med en 28 pt bock. Den aktuella panelspecifika renderingen passerar public 2/2 och review 15/15; den kontrollerar statusform vid 375/430 pt, ring, kort viewport, 140 %-textproxy och loading/empty/error/unknown/partial.
 - Kalenderikonen i Logga ligger minst 20,4 px från datumtexten vid 360 px; datumet ligger kvar centrerat. Public/review Logga-render passerar 13/13 vardera vid 360/375/430 px.
 - Skärmbilder efter korrigeringen finns i [progress-375.png](review/progress-375.png), [progress-complete-375.png](review/progress-complete-375.png) och [Logga public/review](../../../../flow-log-01/render/).
 - `git diff --check` PASS. Full panel-2/3-rendering har inte körts om tillsammans; panel 2:s sparade resultat står i dess egen verifiering.
 
 ## Öppna gränser
 
-Panel 3 är en lokal UI-/funktionsslice, inte full panelacceptans. Ägarens visuella korrigering supersederar v8-planens tidigare no-SVG-renderingsval; detta ska hanteras i nästa panel-3-review. `react-native-svg` 15.15.4 motsvarar Expo SDK:s rekommenderade version och kräver en ny iOS-appbuild före enhetstest. Veckomål kräver en verklig population, period och datakälla eller ändrat MVP-kontrakt. Verkliga completion-tider saknas för rutinpunkter och visas därför inte. Ingen live Supabase/RLS, app-resume, account/dog-scope på fysisk enhet, native VoiceOver/Dynamic Type, signerad iOS-build eller användartest har verifierats. Oberoende QA och frozen Reviewer för panel 3 återstår.
+Panel 3:s lokala UI-/funktionscheckpoint är accepterad; full panelacceptans är fortsatt partiell. Plan v9 godkänner den kontinuerliga SVG-ringen och tydliggör att ägarens verifiering är rapporterad, inte en ny körning i denna session. `react-native-svg` 15.15.4 motsvarar Expo SDK:s rekommenderade version. Veckomål kräver en verklig population, period och datakälla eller ändrat MVP-kontrakt. Verkliga completion-tider saknas för rutinpunkter och visas därför inte. Ägaren rapporterar att intern/extern QA och manuella iOS-prov för paketet passerade. Ägaren har även tidigare sagt generellt att VoiceOver/Dynamic Type och Supabase/RLS fungerar; detta är inte en verifiering av panel 3:s specifika vy eller den nya Insikter-RPC:n. Native hjälpmedel och live RLS för den nya Insikter-funktionen är därför inte verifierade här. Den signerade release-builden återstår.

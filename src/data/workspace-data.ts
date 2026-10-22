@@ -3,6 +3,7 @@ import { selectContent } from '../content/select-content';
 import { isCanonicalAccidentKinds, LOG_EVENT_TYPES, type AccidentKind, type LogEventType } from '../features/puppy-log/log-model';
 import { dedupeLocalDateMarkers, localMonthRange } from '../features/puppy-log/log-calendar-model';
 import type { HomeContent, OwnedDog } from './app-data';
+import type { InsightsPeriod } from '../features/puppy-log/insights-model';
 
 export const WORKSPACE_PAGE_SIZE = 40;
 const DEFAULT_REQUEST_TIMEOUT_MS = 12_000;
@@ -390,6 +391,24 @@ export async function fetchDogEvents(
     if (error || !Array.isArray(data) || !data.every(isDogEventRecord)) throw new Error('Could not load dog events');
     return data;
   }, timeoutMs, parentSignal);
+}
+
+export async function fetchDogEventInsights(
+  client: SupabaseClient,
+  dogId: string,
+  period: InsightsPeriod,
+  timezone: string,
+  parentSignal?: AbortSignal,
+): Promise<unknown> {
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.rpc('dog_event_insights', {
+      p_dog_id: dogId,
+      p_period: period,
+      p_timezone: timezone,
+    }).abortSignal(signal);
+    if (error || data === null || data === undefined) throw new Error('Could not load dog event insights');
+    return data;
+  }, DEFAULT_REQUEST_TIMEOUT_MS, parentSignal);
 }
 
 export async function fetchDogLogMonthMarkers(

@@ -4,19 +4,24 @@ import { View, Text } from 'react-native';
 import { AppScreen } from '../../src/components/AppPrimitives';
 import { BottomNav } from '../../src/components/ui';
 import { HomeScreen } from '../../src/features/home/HomeScreen';
+import { EditDogProfileScreen } from '../../src/features/onboarding/EditDogProfileScreen';
+import { LogScreen } from '../../src/features/puppy-log/LogScreen';
 import { DailyChecklistScreen } from '../../src/features/home/DailyChecklistScreen';
 import { DailyProgressScreen } from '../../src/features/home/DailyProgressScreen';
 import { DevelopmentScreen } from '../../src/features/home/DevelopmentScreen';
 import { KnowledgeScreen } from '../../src/features/knowledge/KnowledgeScreen';
 import { PlannedHealthScreen } from '../../src/features/health/PlannedHealthScreen';
 import { PublishedTrainingScreen } from '../../src/features/training/PublishedTrainingScreen';
-import { activeMainTabDestination, productRouteScrollKeys } from '../../src/features/home/main-navigation';
+import { activeMainTabDestination, logViewScrollKeys, productRouteScrollKeys } from '../../src/features/home/main-navigation';
 import type { ChecklistFilter, HomeDailyActivity } from '../../src/features/home/daily-activity-model';
 import type { HomeContent, OwnedDog } from '../../src/data/app-data';
 import type { HistoricalTrainingStepDetail, PlannedHealthRecord, PublishedTrainingProgram } from '../../src/data/workspace-data';
 import type { DailyRoutine, DailyRoutineDay } from '../../src/features/home/daily-activity-data';
 import { deriveUpcomingActivities, isRoutineDueOnDate, isoWeekdayForDateKey } from '../../src/features/home/daily-activity-model';
 import type { LogEvent } from '../../src/features/puppy-log/log-model';
+import type { DogEventInsights, InsightsPeriod } from '../../src/features/puppy-log/insights-model';
+import type { InsightsLoadState } from '../../src/features/puppy-log/InsightsScreen';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { localDate } from '../../src/features/onboarding/dog';
 import { tokens } from '../../src/theme/tokens';
 
@@ -28,7 +33,10 @@ const developmentGuidesState = requestedDevelopmentGuidesState === 'loading' || 
 const ageScenario = params.get('ageScenario') ?? 'normal';
 const dailyMutationScenario = params.get('dailyMutation') ?? '';
 const reviewMode = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
+const imageFixture = params.get('imageFixture') ?? '';
 const today = localDate();
+const insightsScenario = params.get('insightsState') ?? (reviewMode ? 'ready' : 'empty');
+const insightsTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 const dog: OwnedDog = {
   id: '00000000-0000-4000-8000-000000000021',
   name: 'Luna',
@@ -57,6 +65,29 @@ const developmentGuides: HomeContent[] = [{
   sources: [],
   isAiGenerated: false,
 }];
+const knowledgeReviewGuides: HomeContent[] = [
+  { id: 'review-v1:training:trygg-start', contentId: 'review-v1:training:trygg-start', version: 1, title: 'Trygg start hemma', body: 'Korta övningar för en lugn start. Anpassa tempot efter valpen.', contentType: 'guide', sources: ['Syntetisk visningsfixture.'], isAiGenerated: false },
+  { id: 'review-v1:training:kontakt', contentId: 'review-v1:training:kontakt', version: 1, title: 'Kontakt och namn', body: 'Lekfulla kontaktövningar i en miljö där valpen kan lyckas.', contentType: 'guide', sources: ['Syntetisk visningsfixture.'], isAiGenerated: false },
+  { id: 'review-v1:training:vardagsro', contentId: 'review-v1:training:vardagsro', version: 1, title: 'Vardagsro och hantering', body: 'Frivilliga, korta steg med pauser. Avsluta medan valpen fortfarande är trygg.', contentType: 'guide', sources: ['Syntetisk visningsfixture.'], isAiGenerated: false },
+];
+const imageTrainingFixture: PublishedTrainingProgram = {
+  id: 'review-v1:training:trygg-start', content_id: 'review-v1:training:trygg-start', version: 1,
+  title: 'Trygg start hemma', body: 'Korta övningar för en lugn start. Anpassa tempot efter valpen.',
+  sources: ['Syntetisk visningsfixture.'], is_ai_generated: false,
+  steps: [
+    { id: 'review-v1:training:trygg-start:one', position: 1, title: 'Utforska i egen takt', instruction: 'Låt valpen nosa på en lugn plats och belöna frivilligt lugn.' },
+    { id: 'review-v1:training:trygg-start:two', position: 2, title: 'Vila nära', instruction: 'Öva en kort stund på att slå sig till ro med familjen i närheten.' },
+  ],
+  completedStepIds: ['review-v1:training:trygg-start:one'],
+  completedAtByStepId: { 'review-v1:training:trygg-start:one': `${dateOffset(today, -1)}T10:00:00.000Z` },
+};
+const imageTrainingNewProgram: PublishedTrainingProgram = {
+  id: 'review-v1:training:kontakt', content_id: 'review-v1:training:kontakt', version: 1,
+  title: 'Kontakt och namn', body: 'Lekfulla kontaktövningar i en miljö där valpen kan lyckas.',
+  sources: ['Syntetisk visningsfixture.'], is_ai_generated: false,
+  steps: [{ id: 'review-v1:training:kontakt:one', position: 1, title: 'Säg namnet en gång', instruction: 'När valpen vänder sig mot dig, markera och belöna lugnt.' }],
+  completedStepIds: [], completedAtByStepId: {},
+};
 const events: LogEvent[] = [];
 const rows = makeActivities(today, dog.id, scenario === 'seven' ? 7 : 5);
 const routineTemplates: DailyRoutine[] = [...new Map(rows.flatMap((activity) => {
@@ -110,6 +141,91 @@ function dateOffset(dateKey: string, amount: number) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
+function insightsFixture(period: InsightsPeriod): DogEventInsights {
+  const now = new Date();
+  const observedThroughLocal = dateInTimeZone(now, insightsTimeZone);
+  const zero = { peeCount: 0, poopCount: 0, unclassifiedAccidentCount: 0, sleepCount: 0, awakeCount: 0 };
+  if (period === 'since_first_log') {
+    if (insightsScenario === 'empty') return {
+      period, timezone: insightsTimeZone, asOf: now.toISOString(), periodStartLocal: null,
+      periodEndExclusiveLocal: null, observedThroughLocal, firstLogDay: null, bucket: 'month', days: [],
+    };
+    const firstMonth = shiftMonthKey(observedThroughLocal.slice(0, 7), -11);
+    const quietMonth = shiftMonthKey(observedThroughLocal.slice(0, 7), -7);
+    const olderMonth = shiftMonthKey(observedThroughLocal.slice(0, 7), -3);
+    const currentMonth = observedThroughLocal.slice(0, 7);
+    return {
+      period, timezone: insightsTimeZone, asOf: now.toISOString(),
+      periodStartLocal: `${firstMonth}-01`, periodEndExclusiveLocal: shiftDateKey(observedThroughLocal, 1),
+      observedThroughLocal, firstLogDay: `${firstMonth}-03`, bucket: 'month', days: [
+        { date: firstMonth, ...zero, peeCount: 1 },
+        { date: quietMonth, ...zero },
+        { date: olderMonth, ...zero, poopCount: 2, unclassifiedAccidentCount: 1 },
+        { date: currentMonth, ...zero, peeCount: 2, sleepCount: 1, awakeCount: 1 },
+      ],
+    };
+  }
+
+  const periodStartLocal = period === 'week'
+    ? shiftDateKey(observedThroughLocal, -((new Date(`${observedThroughLocal}T12:00:00Z`).getUTCDay() + 6) % 7))
+    : `${observedThroughLocal.slice(0, 7)}-01`;
+  if (insightsScenario === 'empty') return {
+    period, timezone: insightsTimeZone, asOf: now.toISOString(), periodStartLocal,
+    periodEndExclusiveLocal: period === 'week' ? shiftDateKey(periodStartLocal, 7) : shiftMonthKey(observedThroughLocal.slice(0, 7), 1) + '-01',
+    observedThroughLocal, firstLogDay: null, bucket: 'day',
+    days: daysBetween(periodStartLocal, observedThroughLocal).map((date) => ({ date, ...zero })),
+  };
+  const baseDates = daysBetween(periodStartLocal, observedThroughLocal);
+  const eventsByDay: Record<string, Partial<typeof zero>> = {
+    [baseDates.at(-1) ?? observedThroughLocal]: { peeCount: 2, sleepCount: 1 },
+    [shiftDateKey(observedThroughLocal, -1)]: { poopCount: 1, awakeCount: 1 },
+    [shiftDateKey(observedThroughLocal, -3)]: { peeCount: 1, unclassifiedAccidentCount: 1 },
+    [shiftDateKey(observedThroughLocal, -5)]: { awakeCount: 1 },
+  };
+  return {
+    period, timezone: insightsTimeZone, asOf: now.toISOString(), periodStartLocal,
+    periodEndExclusiveLocal: period === 'week' ? shiftDateKey(periodStartLocal, 7) : shiftMonthKey(observedThroughLocal.slice(0, 7), 1) + '-01',
+    observedThroughLocal, firstLogDay: null, bucket: 'day',
+    days: baseDates.map((date) => ({ date, ...zero, ...(eventsByDay[date] ?? {}) })),
+  };
+}
+
+function daysBetween(start: string, end: string): string[] {
+  const days: string[] = [];
+  for (let date = start; date <= end; date = shiftDateKey(date, 1)) days.push(date);
+  return days;
+}
+
+function shiftDateKey(date: string, amount: number): string {
+  const value = new Date(`${date}T12:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + amount);
+  return value.toISOString().slice(0, 10);
+}
+
+function shiftMonthKey(month: string, amount: number): string {
+  const value = new Date(`${month}-01T12:00:00Z`);
+  value.setUTCMonth(value.getUTCMonth() + amount);
+  return value.toISOString().slice(0, 7);
+}
+
+function dateInTimeZone(value: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(value);
+  const fields = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${fields.year}-${fields.month}-${fields.day}`;
+}
+
+const syntheticProfileClient = {
+  from: (table: string) => ({
+    select: () => ({
+      order: () => ({
+        abortSignal: async () => table === 'breeds'
+          ? { data: [{ id: 'golden', name: 'Golden retriever' }], error: null }
+          : { data: null, error: new Error('Unexpected synthetic table') },
+      }),
+    }),
+  }),
+} as unknown as SupabaseClient;
+
 function makeActivities(dateKey: string, dogId: string, count: number): HomeDailyActivity[] {
   const labels = ['Kissa', 'Fyll på vatten', 'Gå en kort runda', 'Torka tassar', 'Miljöträning – nya ljud', 'Borsta pälsen', 'Kvällsrutin'];
   return labels.slice(0, count).map((label, index) => {
@@ -156,7 +272,14 @@ function VisualCheckApp() {
   const [mutationFlow, setMutationFlow] = useState<'idle' | 'pending' | 'confirmed'>('idle');
   const [navigation, setNavigation] = useState(() => {
     const initialScreen = params.get('screen');
-    return initialScreen === 'checklist' || initialScreen === 'progress' || initialScreen === 'development' ? initialScreen : 'home';
+    return initialScreen === 'checklist' || initialScreen === 'progress' || initialScreen === 'development'
+      || initialScreen === 'profile' || initialScreen === 'insights' || initialScreen === 'log'
+      || initialScreen === 'training' || initialScreen === 'knowledge' ? initialScreen : 'home';
+  });
+  const [profileOrigin, setProfileOrigin] = useState(params.get('origin') === 'profile');
+  const [insightsPeriod, setInsightsPeriod] = useState<InsightsPeriod>(() => {
+    const requested = params.get('insightsPeriod');
+    return requested === 'month' || requested === 'since_first_log' ? requested : 'week';
   });
   const [checklistFilter, setChecklistFilter] = useState<ChecklistFilter>(() => {
     const requested = params.get('checklistFilter');
@@ -182,10 +305,16 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
     ? checklistFilter === 'Kommande' ? upcomingActivities : historicalActivities
     : [];
   const historicalFocus = navigation === 'historical-training';
-  const routePage = historicalFocus ? 'home-training-detail' : navigation;
+  const routePage = historicalFocus ? 'home-training-detail'
+    : navigation === 'insights' || navigation === 'log' ? 'log' : navigation;
   const routeScroll = navigation === 'planned-health' && focusedPlanId
     ? { scrollKey: 'planned-health-checklist-source', preserveScrollKey: 'home-checklist-flow' }
-    : productRouteScrollKeys(routePage, undefined, historicalFocus ? 'checklist' : undefined);
+    : navigation === 'insights' ? logViewScrollKeys('overview')
+      : navigation === 'log' ? logViewScrollKeys('today')
+        : productRouteScrollKeys(routePage, undefined, historicalFocus ? 'checklist' : undefined);
+  const insightsLoadState: InsightsLoadState = insightsScenario === 'loading' ? { status: 'loading' }
+    : insightsScenario === 'error' ? { status: 'error' }
+      : { status: 'ready', data: insightsFixture(insightsPeriod) };
 
   return <View style={{ flex: 1, minHeight: 0 }}>
     {reviewMode ? <View testID="review-banner" style={{ height: 32, minHeight: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card }}>
@@ -193,6 +322,10 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
         ? 'Syntetiskt granskningsläge · AI-genererad standardbild'
         : navigation === 'development' || navigation === 'knowledge' ? 'Syntetiskt granskningsläge · ålder och guide'
           : navigation === 'progress' ? 'Syntetiskt granskningsläge · dagsprogress'
+            : navigation === 'profile' ? 'Syntetiskt granskningsläge · hundprofil'
+              : navigation === 'insights' || navigation === 'log' ? 'Syntetiskt granskningsläge · insikter'
+                : navigation === 'training' ? 'Syntetiskt granskningsläge · träning'
+                  : navigation === 'knowledge' ? 'Syntetiskt granskningsläge · kunskap'
           : 'Syntetiskt granskningsläge · checklistdata'}</Text>
     </View> : null}
     <View testID="review-app-viewport" style={{ flex: 1, minHeight: 0 }}>
@@ -200,16 +333,16 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
         <AppScreen {...(navigation === 'knowledge'
           ? productRouteScrollKeys(navigation, 'development') : routeScroll)}
           scrollMemoryScope={`visual-check:owner-generation:account-generation:dog:${dog.id}:breed:${dog.breed_id}:birth-date:${dog.birth_date}:age:${77}:context:${reviewMode ? 'review' : 'public'}:${scrollScopeRevision}`}
-          footer={<View style={{ paddingBottom: 34 }}><BottomNav active={activeMainTabDestination(navigation === 'knowledge' ? 'development' : routePage)} onChange={(destination) => { setDevelopmentGuideId(null); setNavigation(destination); }} /></View>}>
+          footer={<View style={{ paddingBottom: 34 }}><BottomNav active={activeMainTabDestination(navigation === 'knowledge' && !imageFixture ? 'development' : routePage)} onChange={(destination) => { setDevelopmentGuideId(null); setProfileOrigin(false); setNavigation(destination); }} /></View>}>
           {navigation === 'home' ? <HomeScreen
             dog={dog}
             breed="Golden retriever"
             today={today}
             events={events}
-            content={content}
+            content={reviewMode && imageFixture === 'knowledge' ? knowledgeReviewGuides : imageFixture === 'training' ? [] : content}
             contentState="ready"
             trainingState="ready"
-            nextStep="Miljöträning – nya ljud"
+            nextStep={imageFixture ? 'Vila nära' : 'Miljöträning – nya ljud'}
             dailyState={dailyState}
             dailyDateKey={today}
             dailyScopeKey={`visual-check:${dog.id}:${today}`}
@@ -242,7 +375,13 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
               setCompletion((current) => ({ ...current, [activity.id]: completed }));
             }}
             onGo={(destination) => { setNavigation(destination); window.__homePanelsOpened = destination; }}
-            onOpenContent={(id) => { window.__homePanelsOpened = `content:${id}`; }}
+            onOpenContent={(id) => {
+              window.__homePanelsOpened = `content:${id}`;
+              if (reviewMode && imageFixture === 'knowledge' && knowledgeReviewGuides.some((item) => item.id === id)) {
+                setDevelopmentGuideId(id);
+                setNavigation('knowledge');
+              }
+            }}
             onRetryContent={() => {}}
           /> : navigation === 'progress' ? <DailyProgressScreen
             dogName={dog.name}
@@ -271,7 +410,7 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
           /> : navigation === 'knowledge' ? <KnowledgeScreen
             onBack={() => { setDevelopmentGuideId(null); setNavigation('development'); }}
             returnToDevelopment
-            items={developmentGuides}
+            items={imageFixture === 'knowledge' ? (reviewMode ? knowledgeReviewGuides : []) : developmentGuides}
             contentState="ready"
             focusedContentId={developmentGuideId}
             onSelectContent={setDevelopmentGuideId}
@@ -279,6 +418,50 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
             dogName={dog.name}
             ageWeeks={77}
             sessionKey={`visual-check:${dog.id}`}
+          /> : navigation === 'training' ? <PublishedTrainingScreen
+            ageWeeks={77}
+            programs={reviewMode && imageFixture === 'training' ? [imageTrainingFixture, imageTrainingNewProgram] : []}
+            paused={[]}
+            busyStepKey={null}
+            error=""
+            reviewMode={reviewMode}
+            onCompleteStep={async () => false}
+            onUnmarkStep={async () => false}
+            onContinue={() => {}}
+            onResetProgram={() => {}}
+            onRetry={() => {}}
+            onOpenKnowledge={() => setNavigation('knowledge')}
+          /> : navigation === 'profile' ? <EditDogProfileScreen
+            client={syntheticProfileClient}
+            dog={dog}
+            attribution={null}
+            attributionState="ready"
+            ownedDogs={[dog]}
+            activeDogId={dog.id}
+            onBack={() => setNavigation('more')}
+            onSave={async () => true}
+            onSaveAttribution={async () => true}
+            onRetryStatus={() => {}}
+            onAcceptCurrent={() => {}}
+            onOpenInsights={(canOpen) => {
+              if (!canOpen) return;
+              setProfileOrigin(true);
+              setNavigation('insights');
+            }}
+          /> : navigation === 'insights' || navigation === 'log' ? <LogScreen
+            events={[]}
+            onAdd={() => {}}
+            mode="preview"
+            persistLayout={false}
+            view={navigation === 'log' ? 'today' : 'overview'}
+            onViewChange={(view) => setNavigation(view === 'today' ? 'log' : 'insights')}
+            profileOrigin={profileOrigin}
+            onReturnToProfile={() => { setProfileOrigin(false); setNavigation('profile'); }}
+            insightsPeriod={insightsPeriod}
+            onInsightsPeriodChange={setInsightsPeriod}
+            insightsState={insightsLoadState}
+            onRefreshInsights={() => { window.__insightsRefreshCalls = (window.__insightsRefreshCalls ?? 0) + 1; }}
+            dogName={dog.name}
           /> : navigation === 'checklist' ? <DailyChecklistScreen
             dogName={dog.name}
             dateKey={today}
@@ -353,6 +536,7 @@ declare global {
     __routineToggleCalls?: number;
     __homePanelsChangeScrollScope?: (revision: string) => void;
     __developmentGuideRetryCalls?: number;
+    __insightsRefreshCalls?: number;
   }
 }
 

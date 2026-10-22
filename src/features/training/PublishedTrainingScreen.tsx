@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   continuationCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md },
   path: { gap: tokens.spacing.xs },
   currentStep: { padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface, borderWidth: tokens.size.stroke * 2, borderColor: tokens.colors.primary },
-  nextImage: { width: tokens.size.trainingContinueImageWidth, height: tokens.size.trainingContinueImageHeight, borderRadius: tokens.radius.md, flexShrink: 0 },
+  nextImage: { width: tokens.size.trainingImage, height: tokens.size.trainingImage, borderRadius: tokens.radius.md, flexShrink: 0 },
   nextCopy: { flex: 1, minWidth: 0, gap: tokens.spacing.sm },
   stepMeta: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   programList: { gap: tokens.spacing.md },
