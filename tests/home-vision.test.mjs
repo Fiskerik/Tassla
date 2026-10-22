@@ -6,6 +6,7 @@ const source = (file) => readFileSync(new URL(file, import.meta.url), 'utf8');
 const home = source('../src/features/home/HomeScreen.tsx');
 const workspace = source('../src/features/home/ProductWorkspace.tsx');
 const harness = source('../tools/visual-check/app.tsx');
+const panelsHarness = source('../tools/visual-check/vision-r02-home-panels-app.tsx');
 const activityItem = source('../src/components/ui/DailyActivityItem.tsx');
 const destinationTile = source('../src/components/ui/DestinationTile.tsx');
 const gallery = source('../src/components/ui/ComponentGalleryScreen.tsx');
@@ -16,9 +17,14 @@ test('Home follows the rev02 content order without duplicate Today groups', () =
   assert.match(home, /homeGreetingAt\(new Date\(\)\)/);
   assert.match(home, /Just nu med \{dog\.name\}/);
   assert.match(home, /Dagens att göra/);
-  assert.match(home, /dailySummary:[\s\S]*justifyContent: 'space-between'/);
-  assert.doesNotMatch(home.slice(home.indexOf('<View style=\{styles\.dailyHeading\}'), home.indexOf('{dailyRefreshError')), /dailyCount|Dagens uppgifter uppdateras/, 'summary details do not squeeze the Home heading');
-  assert.match(home, /dailyActivities\.slice\(0, 5\)/);
+  assert.match(home, /dailyHeading:[\s\S]*flexDirection: 'row'/);
+  assert.match(home.slice(home.indexOf('<View style=\{styles\.dailyHeading\}'), home.indexOf('{dailyRefreshError')), /<ProgressControl coverage=\{checklistCoverage\} completed=\{checklistCompleted\} total=\{checklistTotal\} onPress=\{onOpenProgress\} \/>/);
+  assert.match(home, /selectDailyProgress\(dailyActivities, dailyState === 'hidden' \? 'unknown' : dailyState\)/);
+  assert.match(home, /dailyProgress\.activities\.slice\(0, 5\)/);
+  assert.match(home, /accessibilityLabel=\{`\$\{dailyProgress\.completedCount\} av \$\{dailyProgress\.totalCount\} dagsuppgifter klara`\}/);
+  assert.match(home, /accessibilityLabel="Öppna Checklistor"/);
+  const dailyHeading = home.slice(home.indexOf('<View style={styles.dailyHeading}'), home.indexOf('{dailyRefreshError'));
+  assert.doesNotMatch(dailyHeading, /Hantera|Checklista|Visa alla/);
   assert.match(home, /DestinationTile destination="log" compact variant="home"/);
   assert.match(home, /DestinationTile destination="training" compact variant="home"/);
   assert.match(home, /DestinationTile destination="knowledge" compact variant="home"/);
@@ -48,7 +54,7 @@ test('public and review Home share a generic portrait and expose the dog switche
   assert.match(home, /dogPortrait: \{ position: 'absolute'.*zIndex: 1/);
   assert.match(home, /styles\.weekNumberBacked/);
   assert.match(home, /rgba\(245, 240, 232, \$\{washOpacity\}\)/);
-  assert.match(home, /dailyFixture\s*\?\s*<ReviewDailyFixture/);
+  assert.match(home, /dailyFixture\s*\?\s*<>\s*<ReviewDailyFixture/);
   assert.match(harness, /reviewFixtureEnabled&&homeScenario==='ready'&&state==='ready'\?homeReviewFixture:undefined/);
   assert.match(harness, /testID="review-banner"/);
   assert.match(harness, /testID="review-app-viewport"/);
@@ -56,6 +62,9 @@ test('public and review Home share a generic portrait and expose the dog switche
   assert.match(harness, /Syntetiskt granskningsläge\. AI-genererad standardbild\./);
   assert.match(harness, /appViewport:\{flex:1,minHeight:0\}/);
   assert.match(harness, /height:tokens\.spacing\.xxl,minHeight:tokens\.spacing\.xxl/);
+  assert.match(panelsHarness, /<DailyChecklistScreen/);
+  assert.match(panelsHarness, /setNavigation\('checklist'\)/);
+  assert.match(panelsHarness, /__routineToggleCalls/);
 });
 
 test('Home routines use a checkbox, training rows open training, and the manager preserves actions in a BottomSheet', () => {

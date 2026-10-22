@@ -26,6 +26,31 @@ export type TrainingProgressStamp = {
   completedAt: string;
 };
 
+export type DailyProgressCoverage = 'complete' | 'empty' | 'loading' | 'unknown' | 'partial' | 'error';
+export type DailyProgressSourceState = 'ready' | 'loading' | 'unknown' | 'partial' | 'error';
+export type DailyProgressSelection<T extends Pick<HomeDailyActivity, 'completed'>> = {
+  activities: readonly T[];
+  completedCount: number;
+  totalCount: number;
+  coverage: DailyProgressCoverage;
+};
+
+/** Selects the single scope-current daily result shared by Home and Daily Progress. */
+export function selectDailyProgress<T extends Pick<HomeDailyActivity, 'completed'>>(
+  activities: readonly T[],
+  state: DailyProgressSourceState,
+): DailyProgressSelection<T> {
+  const coverage: DailyProgressCoverage = state === 'ready'
+    ? activities.length === 0 ? 'empty' : 'complete'
+    : state;
+  return {
+    activities,
+    completedCount: activities.reduce((count, activity) => count + Number(activity.completed), 0),
+    totalCount: activities.length,
+    coverage,
+  };
+}
+
 export function localDateKeyAt(instant: string | Date, timeZone: string): string | null {
   const date = instant instanceof Date ? instant : new Date(instant);
   if (!Number.isFinite(date.getTime()) || !isValidIanaTimeZone(timeZone)) return null;

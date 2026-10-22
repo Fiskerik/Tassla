@@ -1,6 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { localDateKeyAt, isValidDateKey, isTrainingCompletionForDay, nextSelectableTrainingStep, trainingProgressStamp, deriveHomeDailyActivities, deriveSavedRangeActivities, checklistFilterRange, addCalendarDays, projectUpcomingRoutineDates } from '../src/features/home/daily-activity-model.ts';
+import { localDateKeyAt, isValidDateKey, isTrainingCompletionForDay, nextSelectableTrainingStep, trainingProgressStamp, deriveHomeDailyActivities, deriveSavedRangeActivities, checklistFilterRange, addCalendarDays, projectUpcomingRoutineDates, selectDailyProgress } from '../src/features/home/daily-activity-model.ts';
+
+test('daily progress selector shares complete counts and keeps incomplete coverage explicit', () => {
+  const activities = [{ completed: true }, { completed: false }, { completed: true }];
+  assert.deepEqual(selectDailyProgress(activities, 'ready'), {
+    activities, completedCount: 2, totalCount: 3, coverage: 'complete',
+  });
+  assert.deepEqual(selectDailyProgress([], 'ready'), {
+    activities: [], completedCount: 0, totalCount: 0, coverage: 'empty',
+  });
+  for (const state of ['loading', 'unknown', 'partial', 'error']) {
+    assert.equal(selectDailyProgress(activities, state).coverage, state);
+  }
+});
 
 test('checklist date ranges use local date keys and exact inclusive calendar bounds', () => {
   assert.deepEqual(checklistFilterRange('Denna vecka', '2026-10-18'), { from: '2026-10-12', to: '2026-10-18' });

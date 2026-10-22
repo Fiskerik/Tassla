@@ -106,9 +106,11 @@ import { checklistMemoryScope, keepChecklistMemoryForScope, updateChecklistMemor
 import { checklistReadCacheScope, clearChecklistReadCache, keepChecklistReadCacheForScope } from '../knowledge/checklist-data';
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, REVIEW_TRAINING_PROGRAMS } from '../knowledge/review-content';
 import { HomeScreen, type HomeDailyTrainingOption } from './HomeScreen';
+import { DevelopmentScreen } from './DevelopmentScreen';
+import { DailyProgressScreen } from './DailyProgressScreen';
 import { DailyChecklistScreen } from './DailyChecklistScreen';
-import { checklistFilterRange, checklistRangeReadStatus, deriveHomeDailyActivities, deriveSavedRangeActivities, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep, type ChecklistFilter, type HomeDailyActivity } from './daily-activity-model';
-import { activeMainTabDestination, isMainTabDestination, mainTabTransitionDirection, nextMainTabDestination } from './main-navigation';
+import { deriveHomeDailyActivities, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep } from './daily-activity-model';
+import { activeMainTabDestination, isMainTabDestination, mainTabTransitionDirection, nextMainTabDestination, productRouteScrollKeys } from './main-navigation';
 import { AppBar, BottomNav, MainSwipeNavigation } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
 import { tokens } from '../../theme/tokens';
@@ -131,8 +133,8 @@ import { reminderService, type ReminderContext, type ReminderReconcileResult } f
 
 const reviewContentEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
 
-type ProductPage = 'home' | 'checklist' | 'home-training-detail' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings' | 'account-settings' | 'beta-info';
-type HomeTrainingFocus = { selectionKey: string; dailyLifetime: string; programId: string; stepId: string; returnPage: 'home' | 'checklist' };
+type ProductPage = 'home' | 'development' | 'progress' | 'checklist' | 'home-training-detail' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings' | 'account-settings' | 'beta-info';
+type HomeTrainingFocus = { selectionKey: string; dailyLifetime: string; programId: string; stepId: string; returnPage: 'home' | 'checklist' | 'progress' };
 type PendingLogMutation =
   | { kind: 'insert'; operation: DogEventOperation; lifetime: string }
   | { kind: 'update'; mutationId: string; id: string; type: LogEventType; occurredAt: string; changes: DogEventChanges; lifetime: string }
@@ -193,7 +195,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>(() => ({ page: initialPage, previousPage: 'home' }));
   const [checklistFilter, setChecklistFilter] = useState<ChecklistFilter>('Idag');
   const [homeTrainingFocus, setHomeTrainingFocus] = useState<HomeTrainingFocus | null>(null);
-  const [homeChecklistScope, setHomeChecklistScope] = useState<{ selectionKey: string; dailyLifetime: string } | null>(null);
+  const [homeChecklistScope, setHomeChecklistScope] = useState<{ selectionKey: string; dailyLifetime: string; openManagerOnEntry: boolean } | null>(null);
   const [deviceTimeZone, setDeviceTimeZone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
   const initialPageConsumed = useRef(false);
   useEffect(() => {
@@ -223,7 +225,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [content, setContent] = useState<HomeContent[]>([]);
   const [contentState, setContentState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [contentSelectionKey, setContentSelectionKey] = useState<string | null>(null);
-  const [knowledgeFocus, setKnowledgeFocus] = useState<{ selectionKey: string; contentId: string | null; returnPage: 'home' | 'more' | 'training' } | null>(null);
+  const [knowledgeFocus, setKnowledgeFocus] = useState<{ selectionKey: string; contentId: string | null; returnPage: 'home' | 'more' | 'training' | 'development' } | null>(null);
+  const [developmentFocus, setDevelopmentFocus] = useState<{ selectionKey: string } | null>(null);
   const [knowledgeDetailOpen, setKnowledgeDetailOpen] = useState(false);
   const navigateMainTab = useCallback((destination: ProductPage) => {
     if (page === 'checklist' || page === 'home-training-detail') setChecklistFilter('Idag');
@@ -457,7 +460,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const homeToday = localDate();
   // An unknown date has no age-based content selection and must not crash Home.
   const age = homeAgeInWeeks(dog.birth_date, homeToday);
-  const currentSelectionKey = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${dog.id}:${dog.breed_id}:${age ?? 'unknown-age'}:${reviewContentEnabled ? 'review' : 'public'}`;
+  const currentSelectionKey = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${dog.id}:${dog.breed_id}:${dog.birth_date}:${age ?? 'unknown-age'}:${reviewContentEnabled ? 'review' : 'public'}`;
   const dailyTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const validDailyTimeZone = isValidIanaTimeZone(dailyTimeZone);
   const dailyDateKey = validDailyTimeZone ? localDateKeyAt(dailyClock, dailyTimeZone) : null;
@@ -494,13 +497,19 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setTrainingError('');
       setHomeChecklistScope(null);
       setHomeTrainingFocus(null);
-      if (page === 'checklist' || page === 'home-training-detail') {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- scope ownership invalidates the child route before it can render for a different dog/account.
+      setDevelopmentFocus(null);
+      const staleDevelopmentGuide = page === 'knowledge' && knowledgeFocus?.returnPage === 'development';
+      if (staleDevelopmentGuide) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- clear scope-owned article focus before this account/dog view can paint.
+        setKnowledgeFocus(null);
+        setKnowledgeDetailOpen(false);
+      }
+      if (page === 'checklist' || page === 'progress' || page === 'home-training-detail' || page === 'development' || staleDevelopmentGuide) {
         setPage('home');
       }
     }
     previousTrainingLifetime.current = currentSelectionKey;
-  }, [currentSelectionKey, page, setPage]);
+  }, [currentSelectionKey, knowledgeFocus, page, setPage]);
 
   useLayoutEffect(() => {
     if (dailyLifetime.current && dailyLifetime.current !== currentDailyLifetime) {
@@ -528,7 +537,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setDailyMessage('');
       setDailyMessageError(false);
       setHomeChecklistScope(null);
-      if (page === 'checklist' || page === 'home-training-detail') {
+      if (page === 'checklist' || page === 'progress' || page === 'home-training-detail') {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- a day/timezone boundary invalidates the child route before it can render stale data.
         setPage('home');
       }
@@ -1126,14 +1135,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [age, client, currentSelectionKey, dog]);
 
   useEffect(() => {
-    if (page !== 'home' && page !== 'checklist' && page !== 'home-training-detail' && page !== 'training') return;
+    if (page !== 'home' && page !== 'progress' && page !== 'checklist' && page !== 'home-training-detail' && page !== 'training') return;
     const refresh = setTimeout(() => { void reloadDailyActivity(); }, 0);
     return () => clearTimeout(refresh);
   }, [currentDailyLifetime, page, reloadDailyActivity]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active' && (page === 'home' || page === 'checklist' || page === 'home-training-detail' || page === 'training')) void reloadDailyActivity();
+      if (state === 'active' && (page === 'home' || page === 'progress' || page === 'checklist' || page === 'home-training-detail' || page === 'training')) void reloadDailyActivity();
     });
     return () => subscription.remove();
   }, [page, reloadDailyActivity]);
@@ -1218,7 +1227,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     && homeTrainingFocus.dailyLifetime === currentDailyLifetime ? homeTrainingFocus : null;
   const homeChecklistScopeIsCurrent = homeChecklistScope?.selectionKey === currentSelectionKey
     && homeChecklistScope.dailyLifetime === currentDailyLifetime;
-  const visiblePage: ProductPage = (page === 'checklist' || page === 'home-training-detail') && !homeChecklistScopeIsCurrent ? 'home' : page;
+  const developmentScopeIsCurrent = developmentFocus?.selectionKey === currentSelectionKey;
+  const developmentGuideScopeIsCurrent = knowledgeFocus?.returnPage !== 'development'
+    || knowledgeFocus.selectionKey === currentSelectionKey;
+  const visiblePage: ProductPage = (page === 'checklist' || page === 'progress' || page === 'home-training-detail') && !homeChecklistScopeIsCurrent
+    || page === 'development' && !developmentScopeIsCurrent
+    || page === 'knowledge' && !developmentGuideScopeIsCurrent
+    ? 'home' : page;
   const selectedTrainingKeys = new Set(dailySnapshotForView?.trainingSelections.map((row) => `${row.program_version_id}:${row.step_id}`) ?? []);
   const dailyTrainingOptions: HomeDailyTrainingOption[] = dailyStateForView === 'ready' && dailyDateKey
     ? (dailyTrainingForView?.programs ?? []).filter((program) => !program.id.startsWith('review-v1:training:')).flatMap((program) => {
@@ -2251,17 +2266,21 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     await reloadDailyActivity(true, true);
   }
 
-  function openHomeChecklist() {
-    setChecklistFilter('Idag');
-    setHomeChecklistScope({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime });
+  function openHomeChecklist(openManagerOnEntry = false) {
+    setHomeChecklistScope({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, openManagerOnEntry });
     setPage('checklist');
   }
 
-  function openHomeTrainingStep(programId: string, stepId: string, returnPage: 'home' | 'checklist') {
+  function openHomeProgress() {
+    setHomeChecklistScope({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, openManagerOnEntry: false });
+    setPage('progress');
+  }
+
+  function openHomeTrainingStep(programId: string, stepId: string, returnPage: 'home' | 'checklist' | 'progress') {
     const isSelectedToday = dailyActivities.some((activity) => activity.kind === 'training'
       && activity.programId === programId && activity.stepId === stepId);
     if (!isSelectedToday || accountDeletionInvalidated.current || currentSelectionKeyRef.current !== currentSelectionKey) return;
-    setHomeChecklistScope({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime });
+    setHomeChecklistScope({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, openManagerOnEntry: false });
     setHomeTrainingFocus({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, programId, stepId, returnPage });
     setPage('home-training-detail');
   }
@@ -2630,13 +2649,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const transitionDirection = navigationDirection(previousPage, page);
   const mainTabToMainTab = isMainTabDestination(previousPage) && isMainTabDestination(page);
   const transitionDistance = mainTabToMainTab ? tokens.motion.pageDistance : tokens.motion.distance;
-  const historicalChecklist = visiblePage === 'checklist' && checklistFilter !== 'Idag';
-  const scrollKey = historicalChecklist ? 'home-checklist-range:' + checklistFilter : visiblePage === 'checklist' ? 'home-checklist-flow' : visiblePage;
-  const preserveScrollKey = (visiblePage === 'checklist' && checklistFilter === 'Idag'
-    || visiblePage === 'home-training-detail' && checklistFilter === 'Idag') ? 'home-checklist-flow' : undefined;
-  return <AppScreen scrollKey={scrollKey} preserveScrollKey={preserveScrollKey} footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={activeMainTabDestination(visiblePage)} onChange={navigateMainTab} />}
-    refreshing={page === 'home' ? dailyRefreshing : page === 'log' ? logRefreshing : false}
-    onRefresh={page === 'home' ? () => { void reloadDailyActivity(true, false); } : page === 'log' ? () => { void reloadEvents('refresh'); } : undefined}
+  const routeScroll = productRouteScrollKeys(visiblePage,
+    knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : undefined,
+    visibleHomeTrainingFocus?.returnPage);
+  const activeTabPage = visiblePage === 'knowledge' && knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'development'
+    ? 'development' : visiblePage;
+  return <AppScreen scrollKey={routeScroll.scrollKey} preserveScrollKey={routeScroll.preserveScrollKey} scrollMemoryScope={`${currentSelectionKey}:${currentDailyLifetime}`}
+    footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={activeMainTabDestination(activeTabPage)} onChange={navigateMainTab} />}
+    refreshing={page === 'home' || page === 'progress' ? dailyRefreshing : page === 'log' ? logRefreshing : false}
+    onRefresh={page === 'home' || page === 'progress' ? () => { void reloadDailyActivity(true, false); } : page === 'log' ? () => { void reloadEvents('refresh'); } : undefined}
     refreshAccessibilityLabel={page === 'log' ? 'Uppdatera loggen' : 'Uppdatera Hem'}>
     <MainSwipeNavigation enabled={isMainTabDestination(page) && !(page === 'knowledge' && knowledgeDetailOpen)} onSwipe={handleMainSwipe}>
       <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x" distance={transitionDistance}>{pageContent}</ScreenTransition>
@@ -2645,16 +2666,23 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   function renderPage() {
     const page = visiblePage;
-    if (page === 'checklist') return <DailyChecklistScreen key={`${currentDailyLifetime}:checklist`}
-      dateKey={dailyDateKey ?? ''} state={dailyStateForView} activities={dailyActivities}
-      filter={checklistFilter} onChangeFilter={setChecklistFilter}
-      rangeState={checklistRangeView?.scope === currentChecklistRangeScope ? checklistRangeView.status : 'loading'}
-      rangeActivities={checklistRangeView?.scope === currentChecklistRangeScope ? checklistRangeView.activities : []}
-      onRetryRange={() => setChecklistRangeRetry((value) => value + 1)}
+    if (page === 'progress') return <DailyProgressScreen
+      dogName={dog.name} dateKey={dailyDateKey ?? ''} state={dailyStateForView} activities={dailyActivities}
       refreshing={dailyRefreshing} refreshError={dailyRefreshError} mutationBusy={Boolean(dailyBusyKey)}
       mutationKey={dailyMessageKey} mutationMessage={dailyMessage} mutationError={dailyMessageError}
-      onBack={() => { setChecklistFilter('Idag'); setPage('home'); }} onRetry={() => { void reloadDailyActivity(true); }}
+      onBack={() => { setHomeChecklistScope(null); setPage('home'); }}
+      onRetry={() => { void reloadDailyActivity(true); }}
       onRetryMutation={pendingDailyRetry.current?.lifetime === currentDailyLifetime ? retryDailyMutation : undefined}
+      onManage={() => openHomeChecklist(true)} onOpenChecklist={() => openHomeChecklist()}
+      onOpenTrainingStep={(programId, stepId) => openHomeTrainingStep(programId, stepId, 'progress')}
+      onSetRoutineCompletion={(row, itemId, completed) => { void runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed)); }} />;
+    if (page === 'checklist') return <DailyChecklistScreen key={`${currentDailyLifetime}:checklist:${homeChecklistScope?.openManagerOnEntry ? 'manager' : 'list'}`}
+      dogName={dog.name} dateKey={dailyDateKey ?? ''} state={dailyStateForView} activities={dailyActivities}
+      refreshing={dailyRefreshing} refreshError={dailyRefreshError} mutationBusy={Boolean(dailyBusyKey)}
+      mutationKey={dailyMessageKey} mutationMessage={dailyMessage} mutationError={dailyMessageError}
+      onBack={() => { setHomeChecklistScope(null); setPage('home'); }} onRetry={() => { void reloadDailyActivity(true); }}
+      onRetryMutation={pendingDailyRetry.current?.lifetime === currentDailyLifetime ? retryDailyMutation : undefined}
+      openManagerInitially={homeChecklistScopeIsCurrent && Boolean(homeChecklistScope?.openManagerOnEntry)}
       onOpenTrainingStep={openHomeTrainingStep} onSetRoutineCompletion={(row, itemId, completed) => {
         void runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed));
       }}
@@ -2718,6 +2746,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       dailyMutationMessage={dailyMessage}
       dailyMutationError={dailyMessageError}
       onRetryDaily={() => { void reloadDailyActivity(true); }}
+      onOpenDevelopment={() => {
+        setDevelopmentFocus({ selectionKey: currentSelectionKey });
+        setPage('development');
+      }}
+      onOpenProgress={openHomeProgress}
       onOpenChecklist={openHomeChecklist}
       onOpenTrainingStep={openHomeTrainingStep}
       onCreateRoutine={(input: DailyRoutineCreateInput) => {
@@ -2758,6 +2791,23 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       }}
       onRetryContent={() => { void retryContent(); }}
     />;
+    if (page === 'development') return <DevelopmentScreen
+      dogName={dog.name}
+      birthDate={dog.birth_date}
+      today={homeToday}
+      guides={age === null ? [] : visibleContent.filter((item) => item.contentType === 'guide')}
+      guidesState={age === null ? 'ready' : visibleContentState}
+      onBack={() => {
+        setDevelopmentFocus(null);
+        setPage('home');
+      }}
+      onOpenGuide={(contentId) => {
+        setKnowledgeDetailOpen(false);
+        setKnowledgeFocus({ selectionKey: currentSelectionKey, contentId, returnPage: 'development' });
+        setPage('knowledge');
+      }}
+      onRetryGuides={() => { void retryContent(); }}
+    />;
     if (page === 'log') return <LogScreen events={displayEvents} onAdd={addEvent}
       onUpdate={updateEvent} onDelete={(id) => deleteEvent(id)} mode="cloud"
       calendarMarkerMonth={calendarDataMonth} calendarMarkers={calendarDataIsCurrent ? logCalendarData.markers : []}
@@ -2797,12 +2847,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         <AppBar mode="Back" title="Träningssteg" actionLabel="Tillbaka till Hem" onAction={() => setPage('home')} variant="compact" />
         <MessageCard>Träningssteget hör inte längre till dagens aktiva lista.</MessageCard>
       </>;
+      const sourceReturnLabel = focus.returnPage === 'checklist' ? 'Tillbaka till Checklistan'
+        : focus.returnPage === 'progress' ? 'Tillbaka till Dagens framsteg' : 'Tillbaka till Hem';
       if (visibleTrainingState === 'loading') return <>
-        <AppBar mode="Back" title="Träningssteg" actionLabel={focus.returnPage === 'checklist' ? 'Tillbaka till Checklistan' : 'Tillbaka till Hem'} onAction={returnToSource} variant="compact" />
+        <AppBar mode="Back" title="Träningssteg" actionLabel={sourceReturnLabel} onAction={returnToSource} variant="compact" />
         <PageHeading title="Träningssteg" description="Hämtar det valda programmet…" />
       </>;
       if (visibleTrainingState === 'error') return <>
-        <AppBar mode="Back" title="Träningssteg" actionLabel={focus.returnPage === 'checklist' ? 'Tillbaka till Checklistan' : 'Tillbaka till Hem'} onAction={returnToSource} variant="compact" />
+        <AppBar mode="Back" title="Träningssteg" actionLabel={sourceReturnLabel} onAction={returnToSource} variant="compact" />
         <MessageCard tone="error">{trainingError || 'Programmet kunde inte hämtas.'}</MessageCard>
         <PrimaryButton title="Försök igen" onPress={() => { void retryTraining(); }} />
       </>;
@@ -2905,6 +2957,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (page === 'knowledge') return <KnowledgeScreen
       onBack={() => setPage(knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : 'more')}
       returnToTraining={knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'training'}
+      returnToDevelopment={knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'development'}
       items={visibleGuideContent}
       contentState={visibleContentState}
       focusedContentId={focusedKnowledgeContentId}

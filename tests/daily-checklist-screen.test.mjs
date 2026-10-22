@@ -5,10 +5,11 @@ import { readFile } from 'node:fs/promises';
 const screen = await readFile(new URL('../src/features/home/DailyChecklistScreen.tsx', import.meta.url), 'utf8');
 
 test('Checklist shows every activity and keeps loading, read error and empty distinct', () => {
-  assert.match(screen, /visibleState === 'loading'/);
-  assert.match(screen, /visibleState === 'error'/);
-  assert.match(screen, /visibleState === 'ready' && visibleActivities\.length === 0/);
-  assert.match(screen, /showingToday && state === 'ready' && activities\.length > 0/);
+  assert.match(screen, /title="Checklistor"/);
+  assert.match(screen, /state === 'loading'/);
+  assert.match(screen, /state === 'error'/);
+  assert.match(screen, /state === 'ready' && activities\.length === 0/);
+  assert.match(screen, /state === 'ready' && activities\.length > 0/);
   assert.match(screen, /activities\.map\(/);
   assert.match(screen, /groupActivitiesByDate\(rangeActivities\)\.map\(/);
   assert.match(screen, /Checklistan kunde inte hämtas/);
@@ -23,6 +24,15 @@ test('Checklist count and progress use confirmed, non-skipped activity state onl
   assert.match(screen, /accessibilityValue=\{\{ min: 0, max: activities\.length, now: completedCount \}\}/);
   assert.match(screen, /onToggle=\{routineDay \? \(\) => item\.routineItemId && onSetRoutineCompletion/);
   assert.match(screen, /onOpenTrainingStep\?\.\(item\.programId!, item\.stepId!, 'checklist'\)/);
+});
+
+test('Checklist separates routine tap, longpress edit and checkbox actions', () => {
+  assert.match(screen, /function openManager\(routineId: string \| null = null, editFocusedRoutine = false\)/);
+  assert.match(screen, /onOpen=\{item\.kind === 'training'[\s\S]*?openManager\(routineDay\?\.routine_id \?\? null\)/);
+  assert.match(screen, /onLongPress=\{item\.kind === 'routine' && routineDay\?\.routine_id[\s\S]*?openManager\(routineDay\.routine_id, true\)/);
+  assert.match(screen, /accessibilityHint=\{item\.kind === 'routine' && routineDay\?\.routine_id \? 'Håll inne på rutinen för att redigera\.'/);
+  assert.match(screen, /editFocusedRoutineOnOpen=\{editFocusedRoutineOnOpen\}/);
+  assert.match(screen, /Håll inne på rutinen för att redigera\./);
 });
 
 test('Checklist local date label is calendar-based and does not shift across device timezones', () => {

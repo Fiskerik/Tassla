@@ -3919,7 +3919,7 @@
           "from": "qa",
           "to": "blocked",
           "actor": "qa",
-          "evidence": "Independent v7.2 QA UNDERKÄND: public and review at 375/430 place 78px action tiles at y=754 under fixed nav starting y=785 (47px overlap), failing §14 point 16. All other reported checks pass. Screenshots/checklist in docs/design/evidence/home-next-01/v7.2/QA-REPORT.md."
+          "evidence": "Independent v7.2 QA UNDERKÄND: public and review at 375/430 place 78px action tiles at y=754 under fixed nav starting y=785 (47px overlap), failing §14 point 16. All other reported checks pass. Screenshots/checklist in docs/design/evidence/home-next-01/v7.2/QA-REPORT-first-fit-failure.md."
         },
         {
           "from": "blocked",
@@ -3949,7 +3949,7 @@
           "from": "qa",
           "to": "blocked",
           "actor": "qa",
-          "evidence": "Second v7.2 QA UNDERKÄND: compact rows reduce but do not eliminate fit failure; all tiles y=718 h=78 end 11px below nav y=785 at both widths/modes. Public/review verifier also stops at stale exact-text  locator after compact row accessibility name changed. Rerun report/screenshots in docs/design/evidence/home-next-01/v7.2/QA-REPORT-rerun.md and rerun/{public,review}."
+          "evidence": "Second v7.2 QA UNDERKÄND: compact rows reduce but do not eliminate fit failure; all tiles y=718 h=78 end 11px below nav y=785 at both widths/modes. Public/review verifier also stops at stale exact-text  locator after compact row accessibility name changed. Rerun report/screenshots in docs/design/evidence/home-next-01/v7.2/QA-REPORT-second-fit-failure.md and rerun/{public,review}."
         },
         {
           "from": "blocked",
@@ -7303,7 +7303,7 @@
       "depends_on": [
         "FLOW-HOME-CHECKLIST-01"
       ],
-      "status": "implementing",
+      "status": "blocked",
       "history": [
         {
           "from": "planned",
@@ -7316,9 +7316,15 @@
           "to": "implementing",
           "actor": "implementer",
           "evidence": "Starting approved plan v2 implementation on codex/tassla-mvp-remainder-2026-10-20 from checkpoint 7f37d8e; Product/Architect/Critic/Security reviews recorded in docs/tasks/dev/FLOW-HOME-CHECKLIST-FILTERS-01.md."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Owner stop was already recorded in the task journal and next_step; stale implementing status corrected to blocked on 2026-10-21. This package does not resume filter UI or route work."
         }
       ],
-      "next_step": "Owner resumed approved plan v2 on codex/tassla-home-checklist-filters-2026-10-21. Current slice: integrate ProductWorkspace-owned Idag/Denna vecka/Alla selection, saved-only range reads, exact training metadata/progress, grouped rows, truthful loading/empty/partial/error/retry, and abort/generation lifetime tests. Leave Kommande and source navigation for slice 2; then complete visual §14 evidence and independent QA/Reviewer.",
+      "next_step": "Owner stop was already recorded in the task journal and next_step; stale implementing status corrected to blocked on 2026-10-21. This package does not resume filter UI or route work.",
       "priority": "P1",
       "panels": [
         "4"
@@ -7531,119 +7537,284 @@
     },
     {
       "id": "FLOW-DEVELOPMENT-01",
-      "title": "Utveckling från Hem till publicerad milstolpe",
-      "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "title": "Utveckling/panel 2 från Hem till åldersfas och publicerad guide",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 2; docs/design/vision-rev02-screen-contracts.md panel 2.",
+      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v8.md; docs/plans/FLOW-DEVELOPMENT-01-route-correction-v6.md; docs/plans/FLOW-PANELS-2-3-image-optimization-v5.md",
       "write_paths": [
-        "src/features/home/DevelopmentPreview.tsx",
+        "assets/images/development-hero-puppy-black-tan-forest-wide.jpg",
+        "assets/images/README.md",
+        "src/features/home/DevelopmentScreen.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/components/AppPrimitives.tsx",
         "src/features/home/ProductWorkspace.tsx",
-        "src/features/home/main-navigation.ts"
+        "src/features/home/main-navigation.ts",
+        "src/theme/tokens.ts",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/home/README.md",
+        "tests/development-screen-model.test.mjs",
+        "tests/home-panel-routes.test.mjs",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "docs/design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/development",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md",
+        "docs/plans/FLOW-DEVELOPMENT-01-route-correction-v6.md"
       ],
       "acceptance": [
-        "Ålder och fas härleds utan påstådd uppnådd färdighet",
-        "Publicerad sakgranskad milstolpe öppnar verklig guide och tillbaka till Hem",
-        "Saknade/ogiltiga/framtida datum och saknat innehåll visas ärligt"
+        "Show chronological age and approximate phase with a static 0–24 month arc; no skill judgement.",
+        "Published guides have their own heading and are never presented as milestones.",
+        "Use “Granskade milstolpar är inte tillgängliga ännu”; label the generic portrait Standardbild.",
+        "Age missing/invalid/future is neutral; guide loading/empty/error and source version are distinct.",
+        "Development guide return shows “Tillbaka till Utveckling” and reaches Development; Knowledge and Training returns keep their actual existing destinations.",
+        "Full panel remains partial until a reviewed, published milestone source exists.",
+        "Create tests/home-panel-routes.test.mjs and verify rendered Home, Development and Checklist routes keep three distinct offsets through the guide roundtrip; scope changes and leaving the flow clear saved offsets before restoration.",
+        "Screen-specific scroll keys and parent preserveScrollKey mappings match the exact v5 contract; AppScreen calls without keys keep their existing fresh-route behavior."
       ],
       "checks": [
+        "Focused tests listed in v8 §2",
         "pnpm check",
+        "pnpm bundle:ios",
         "git diff --check",
-        "python tools/dev_flow.py validate"
+        "python -X utf8 tools/dev_flow.py validate",
+        "Render public/review at the v7 viewports and record §14."
       ],
       "depends_on": [
-        "FLOW-ONBOARD-01"
+        "VISION-R02-HEM-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
-      "priority": "P3",
+      "status": "implementing",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Approved package plan v8; Architect APPROVE, Critic PROCEED, Security APPROVE and Compliance APPROVE are recorded in the Home/panel package journal. Home dependency VISION-R02-HEM-01 is done and pushed (1b22370, closeout 2cbbdda). Panel 2 scope remains chronological age/approximate phase, static 0–24 month arc, published guide, truthful missing milestones, Standardbild and preserved return state; no milestone facts invented."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start Panel 2 under approved plan v8 on the pushed branch. Dependency Home/panel 1 is done. Implement only FLOW-DEVELOPMENT-01 write_paths and preserve the partial-panel and no-invented-milestone contract."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Implementering pausad före produktkod: godkänd v8 route-map saknar KnowledgeScreen-returtext/callback för att en öppnad guide ska återgå direkt till Utveckling; labeln Tillbaka till guider vore missvisande. Ingen kod ändrad. En avgränsad v9-plan behövs för KnowledgeScreen.tsx och befintligt home-panel-routes.test.mjs; ingen data-/riskändring."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "v8 route gap is specified in standalone docs/plans/FLOW-DEVELOPMENT-01-route-correction-v1.md. It covers Development-only Knowledge return, unchanged Knowledge/Training destinations, exact guide version, scope fencing and home-detail-flow; Architect/Critic review pending. No product code changed."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE route correction plan v1; Critic PROCEED. Exact guide return, preserved Knowledge/Training destinations, exact DOB scope fencing, Home child route and home-detail-flow are approved."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start Panel 2 under approved v8 plus FLOW-DEVELOPMENT-01 route correction v1; focus on complete rev02 screen, real published guide route and user-friendly states."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Implementation paused before code for Erik’s explicit request to add unique generated dog art. Route correction v1 had Architect APPROVE and Critic PROCEED; v2 adds only the Development hero image and its asset provenance path, pending exact plan review."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "FLOW-DEVELOPMENT-01 route correction v2 preserves approved v1 route requirements and adds `assets/images/development-hero-puppy.png` plus image provenance in `assets/images/README.md`; Architect/Critic v2 review required before adding product assets/code."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Approved exact route correction plan v3: Architect APPROVE and Critic PROCEED. Dedicated brindle/cream mixed-breed Development hero is distinct from Home; exact guide return, scope and home-detail-flow remain bounded."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin Panel 2 UI/functionality under package plan v8 and approved route correction v3, using the new unique Development hero asset."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Implementation paused after v3 approval and before route code. Product integration inspection found AppScreen stores only one preservedOffset scalar, so Home and Checklist flows cannot both restore independently as v3 assumes. A bounded per-flow scroll-memory correction is needed to protect user-visible return behavior."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "v4 received Architect CHANGES and Critic CHANGES. Architect requested the current v5 plan be an explicit write path, exact preserveScrollKey-to-flow mapping, scope clearing before useLayoutEffect restoration, unchanged behavior for unkeyed AppScreen calls, and creation of the missing route test file. Critic additionally requires rendered verification of distinct Home/Development/Checklist offsets through the guide roundtrip, scope invalidation and flow exit. v5 records these corrections and awaits exact Architect/Critic review before route or scroll code. Architect v5 review found the superseded v3 plan still listed as writable in queue.json; v3 is removed from the active write paths to match v5’s history-only rule. Architect confirmation pending."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact route correction v5 approved: Architect APPROVE and Critic PROCEED. Architect's queue scope finding was corrected by removing historical v3 from active write_paths. Rendered three-offset guide-return scenario, scope clearing and unkeyed AppScreen preservation are mandatory. Distinct generated Development and Progress image assets are staged."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin Panel 2 under approved package v8 and exact route correction v5. Implement per-route AppScreen offset map and scope clearing first, preserving Home and Checklist positions; do not start Panel 3 UI or Insights."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "architect",
+          "evidence": "Exakt routeplan v6 granskad och godkänd: Architect APPROVE och Critic PROCEED. Queue-plan och aktiv skrivväg uppdaterade från route-v5 till route-v6; separat FLOW-PANELS-2-3-image-optimization-v5 behålls. Båda saknade panel-2-testfilerna, public/review-rendering och §14 återstår."
+        }
+      ],
+      "next_step": "Kör de saknade tests/development-screen-model.test.mjs och tests/home-panel-routes.test.mjs enligt v8 checkpoint 2; därefter verifiera riktiga public/review-renderingar och §14. Routekod finns, men tester och app-rendering är inte verifierade. Milstolpskälla saknas, så panel 2 förblir partiell.",
+      "priority": "P1",
       "panels": [
-        "2"
+        "Utveckling"
       ],
-      "risk_class": "H",
-      "checkpoint": "Panel 2 funktionell detaljresa; nytt milstolpsinnehåll sakgranskas före public.",
-      "test_evidence": [
-        "Datum-/publiceringsprov, navigationsresa, 375/430/140 % och bildroll",
-        "Dog Expert granskar milstolpetexter före publicering"
-      ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "risk_class": "M",
+      "checkpoint": "Checkpoint 2: partial Development route with truthful age, phase and guide data.",
+      "test_evidence": "`pnpm check` PASS (typecheck, edge typecheck, ESLint, tests 63/63). The specific tests/development-screen-model.test.mjs and tests/home-panel-routes.test.mjs are still absent; route/scroll scenario and real public/review screenshots plus §14 remain unverified. Earlier crop previews exist. Public content guard PASS; direct offline Expo iOS export PASS (1,458 modules). `pnpm bundle:ios` wrapper could not complete because registry requests failed with sandbox EPERM. No published milestone source; panel remains partial.",
+      "implementation_state": "Source implementation present; route/model QA and real visual acceptance pending; milestone source unpublished.",
+      "evidence_status": "incomplete — pnpm check PASS; route-specific tests absent and public/review render plus §14 not testable"
     },
     {
       "id": "FLOW-PROGRESS-01",
-      "title": "Dagens framsteg med källhärledd progress",
-      "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "title": "Dagens framsteg/panel 3 med samma källhärledda dagsprogress som Hem",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 3; docs/design/vision-rev02-screen-contracts.md panel 3.",
+      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v8.md; docs/plans/FLOW-PANELS-2-3-image-optimization-v5.md",
       "write_paths": [
-        "src/features/home/ProductWorkspace.tsx",
+        "assets/images/README.md",
+        "assets/images/daily-progress-hero-puppy-terrier.jpg",
+        "src/features/home/DailyProgressScreen.tsx",
         "src/features/home/HomeScreen.tsx",
-        "src/features/home/main-navigation.ts"
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/main-navigation.ts",
+        "src/features/home/daily-activity-model.ts",
+        "src/theme/tokens.ts",
+        "src/features/home/README.md",
+        "tests/daily-activity-model.test.mjs",
+        "tests/home-panel-routes.test.mjs",
+        "tests/daily-progress-screen.test.mjs",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "docs/design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/progress",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md"
       ],
       "acceptance": [
-        "Ring och lista bygger på exakt samma fullständiga dagsmängd som Hem",
-        "Manuell och träningskällans markering/ångra uppdaterar båda vyer",
-        "Unknown/partial ger ingen komplett ring; inget påhittat veckomål",
-        "Veckomål har godkänd målpopulation, period och verifierad källa före full panelacceptans"
+        "Use `daily-progress-hero-puppy-terrier.jpg` as the distinct Panel 3 portrait; do not reuse Home or Development hero art.",
+        "Ring, count and full list use the same scope-current selector and only complete states show a complete ring.",
+        "Zero-activity day has no 0/0 and one primary Hantera dagens aktiviteter action; the checklist action appears when activities exist.",
+        "Routine mutation uses existing status/readback; training row has no second checkbox and returns to the exact step.",
+        "Day/app-resume/dog/account scope changes cannot show prior complete counts; Home scroll resets on return.",
+        "Ring geometry has no seam/rotation defects for 0, 1–49, 50, 51–99 and 100 percent; §14 is recorded.",
+        "Full panel remains partial until a real weekly goal is defined or the MVP contract changes."
       ],
       "checks": [
+        "Focused tests listed in v8 §3",
         "pnpm check",
+        "pnpm bundle:ios",
         "git diff --check",
-        "python tools/dev_flow.py validate"
+        "python -X utf8 tools/dev_flow.py validate",
+        "Render public/review at the v7 viewports and record §14."
       ],
       "depends_on": [
-        "FLOW-HOME-CHECKLIST-01"
+        "FLOW-DEVELOPMENT-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
-      "priority": "P3",
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin panel 3 from the existing shared daily-activity source and route contract. Scope is implemented in code; full visual acceptance remains NOT TESTABLE and weekly-goal data is unavailable."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Panel 3 source changes are present but its dependency FLOW-DEVELOPMENT-01 has not completed its checkpoint; this task also shares active write paths with Development. Panel 3 test/render/§14 evidence is not available, and no tests were run. Keep it blocked until Development is checkpointed and the Progress verification is completed."
+        }
+      ],
+      "next_step": "Återuppta efter att FLOW-DEVELOPMENT-01 har en godkänd checkpoint. Skapa och kör tests/daily-progress-screen.test.mjs samt panel-3-specifika kontroller; därefter verifiera riktiga public/review-renderingar med §14, källgemensam ring/lista och saknat veckomål. Panel 3 förblir partiell tills veckomålskälla finns.",
+      "priority": "P1",
       "panels": [
-        "3"
+        "Dagens framsteg"
       ],
-      "risk_class": "H",
-      "checkpoint": "Panel 3 full resa med tillbaka till samma Hem-kontext.",
-      "test_evidence": [
-        "Dagsgräns, partial/error, källa/undo, 375/430/140 % visuell jämförelse",
-        "Architect/Security om ny målpersistens, datum-/periodprov"
-      ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "risk_class": "M",
+      "checkpoint": "Checkpoint 3: partial Daily Progress route with truthful source-derived counts.",
+      "test_evidence": "`pnpm check` PASS (63/63); daily activity and checklist regression suites are included. The specifically planned tests/daily-progress-screen.test.mjs is absent, so the panel-specific route, ring and visual behavior remain unproven. Rendered route/crop/§14 evidence remains absent and actual app screenshot is NOT TESTABLE. Weekly-goal source is unavailable, so full panel remains partial.",
+      "implementation_state": "Source implementation present; dependency checkpoint, QA and visual acceptance pending.",
+      "evidence_status": "blocked — check PASS, dependency checkpoint and route/render/§14 evidence pending"
     },
     {
       "id": "FLOW-INSIGHTS-01",
-      "title": "Insikter med korrekt period och täckning",
-      "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "title": "Insikter/panel 8: owner-scoped period aggregates and log overview",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 8; docs/design/vision-rev02-screen-contracts.md panel 8; checkpoint 4b of approved v8 plan.",
+      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v8.md",
       "write_paths": [
+        "src/features/puppy-log/InsightsScreen.tsx",
+        "src/features/puppy-log/insights-model.ts",
         "src/features/puppy-log/LogScreen.tsx",
-        "src/features/puppy-log/log-model.ts",
-        "src/features/home/ProductWorkspace.tsx"
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/main-navigation.ts",
+        "src/data/workspace-data.ts",
+        "supabase/migrations/202610210001_dog_event_insights_read.sql",
+        "supabase/tests/dog-event-insights-read.sql",
+        "src/features/puppy-log/README.md",
+        "tests/insights-model.test.mjs",
+        "tests/insights-period-read.test.mjs",
+        "tests/insights-scope.test.mjs",
+        "tests/log-insights-route.test.mjs",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "docs/design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/insights",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md"
       ],
       "acceptance": [
-        "Vecka/Månad/Sedan start läser hela relevanta perioden och visar täckning",
-        "Kiss/bajs-graf har korrekta tal, legend och tillgänglig numerisk text",
-        "Sömngrafen bygger på godkänt intervallkontrakt; överlapp, luckor och saknat slut visas som okänt"
+        "Checkpoint 4a has an approved Compliance review before this task becomes ready.",
+        "Default to Vecka and fetch only the selected period; never prefetch Månad or Sedan första loggen; abort/clear on change and reread only the active period after mutation.",
+        "Read aggregation is statement-consistent, SECURITY INVOKER, empty search_path, authenticated-only ACL and existing RLS.",
+        "Only the exact minimized JSON contract leaves SQL; client validates exact shape/nullability/types/order and fails closed.",
+        "Accessible chart explains sparse month gaps, zero-valued months, current incomplete period, unclassified accidents and period-empty actions; every period can reach Logga while preserving selection.",
+        "Telemetry/error reporting excludes RPC params/responses, account/owner/dog IDs, timezone, count payloads and raw errors.",
+        "Local UI/data-contract checkpoint does not claim live owner/RLS acceptance; sleep interval visualization remains open."
       ],
       "checks": [
+        "Focused tests and static SQL probe listed in v8 §4",
         "pnpm check",
+        "pnpm bundle:ios",
         "git diff --check",
-        "python tools/dev_flow.py validate"
+        "python -X utf8 tools/dev_flow.py validate",
+        "Render public/review at the v7 viewports and record §14.",
+        "Live two-account/anon/auth-change/two-session/RLS gates remain NOT TESTABLE until real environment evidence exists."
       ],
       "depends_on": [
-        "FLOW-LOG-01"
+        "FLOW-INSIGHTS-01A"
       ],
       "status": "planned",
       "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
-      "priority": "P3",
+      "next_step": "Do not start before checkpoint 4a has both Compliance approval and queue/report evidence.",
+      "priority": "P1",
       "panels": [
-        "8"
+        "Insikter"
       ],
       "risk_class": "H",
-      "checkpoint": "Panel 8 beskrivande loggresa; sömnens verifierade intervallmodell är del av samma slutacceptans.",
-      "test_evidence": [
-        "Periodgräns, paginering, tomt/partiellt/okänt, skärmläsartext, 375/430 render",
-        "Dog Expert granskar eventuell tolkningscopy; Architect granskar sömnintervall"
-      ],
+      "checkpoint": "Checkpoint 4b: local Insights UI/datacontract implementation after approved 4a gate.",
+      "test_evidence": "Not run for the v8 package. Awaiting its own checkpoint evidence and independent review.",
       "implementation_state": "föreslagen; ingen kod i denna diff",
       "evidence_status": "not_run — required evidence listed in test_evidence"
     },
@@ -9347,6 +9518,407 @@
       "status": "planned",
       "history": [],
       "next_step": "After all local code checkpoints, run owner-selected device batch including Passport, profile, and Knowledge search; record device/OS/text settings and mark any unrun evidence OPEN / NOT TESTABLE."
+    },
+    {
+      "id": "VISION-R02-DOC-CLEANUP-20261021",
+      "title": "Inaktivera äldsta identiska rev02-dokument och städa historiska länkar",
+      "mvp_requirement": "docs/design-rules.md §14; owner instruction 2026-10-21: invalidate the oldest exact duplicate.",
+      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v7.md",
+      "write_paths": [
+        "docs/plans/VISION-REV02-GESTURES-UX-SPEC.md",
+        "docs/plans/VISION-REV02-GESTURES-UX-SPEC-v6-review.md",
+        "docs/design/evidence/home-next-01/v7.2/QA-REPORT.md",
+        "docs/design/evidence/home-next-01/v7.2/QA-REPORT-rerun.md",
+        "docs/tasks/dev/vision-rev02-gestures.md",
+        "docs/tasks/dev/vision-rev02-gestures-v5-approved.md",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/dev/HOME-NEXT-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md"
+      ],
+      "acceptance": [
+        "Only the four byte-identical older copies receive inactive banners; historical content remains intact.",
+        "Historical task/report/queue links point to the canonical identical copy.",
+        "The owner-stopped FLOW-HOME-CHECKLIST-FILTERS-01 is blocked and is not resumed.",
+        "Before banner hashes confirm exact duplicate pairs; all new docs preserve the version-lineage explanation."
+      ],
+      "checks": [
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "priority": "P1",
+      "panels": [
+        "Hem",
+        "Daglig Checklista"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Checkpoint 0: historical documentation cleanup, independent of panel acceptance.",
+      "test_evidence": "PASS: exact duplicate SHA-256 pairs recorded before banners; historical content retained; canonical links updated; stale stopped filter task blocked; git diff --check and dev_flow validate pass. Independent review pending.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact v7 plan received Architect APPROVE, Critic PROCEED, Security APPROVE and Compliance local/synthetic APPROVE; checkpoint 0 scope and acceptance are approved."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Checkpoint 0 edits are limited to the four exact duplicate copies, their historical links, this task journal and queue; no app source changed."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Four duplicate pairs were byte-identical before banners (SHA-256 recorded in session); historical content retained; task/report/queue links point to canonical copies; stale filter task is blocked; git diff --check and queue validation PASS."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent Architect Review PASS checkpoint 0: exact hashes, banner-only changes, retained content, canonical links, blocked filter status, and v7 journal all verified; diff-check and queue validation PASS."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent document review PASS with no actionable findings. Checkpoint 0 closed; plan v7 approved. Commit/push this docs-only checkpoint before beginning Home code."
+        }
+      ],
+      "next_step": "Independent document review PASS with no actionable findings. Checkpoint 0 closed; plan v7 approved. Commit/push this docs-only checkpoint before beginning Home code.",
+      "implementation_state": "Documentation-only checkpoint complete; independent diff review and commit pending.",
+      "evidence_status": "Local document and queue checks PASS; independent review pending."
+    },
+    {
+      "id": "VISION-R02-HEM-01",
+      "title": "Hem/panel 1: minska dagsytan och ge panelerna 2 och 3 tydliga ingångar",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 1; docs/design/vision-rev02-screen-contracts.md panel 1.",
+      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v17.md",
+      "write_paths": [
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/features/home/daily-activity-model.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/main-navigation.ts",
+        "src/features/home/README.md",
+        "tests/daily-activity-model.test.mjs",
+        "tests/home-vision.test.mjs",
+        "tests/home-log-empty-feedback.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/daily-checklist-screen.test.mjs",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "tools/visual-check/README.md",
+        "docs/design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/home",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md",
+        "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v16.md",
+        "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v17.md"
+      ],
+      "acceptance": [
+        "Home and DailyProgress share one scope-current selector for activities/count/coverage.",
+        "Home shows the compact count and only a single chevron action in the daily card header; it has no Hantera or Checklista text action.",
+        "The accessible chevron opens the existing full daily checklist route, titled Checklistor, and returns to Home.",
+        "On Checklistor, long-pressing a manual routine's detail/text area opens the existing scoped routine editor directly; the checkbox stays a separate normal-tap action and long-press never changes completion. Training rows do not open routine editing.",
+        "Ordinary press on a routine detail opens the focused routine manager without entering edit mode; its accessible Redigera rutin pencil remains available. Long-press enters edit state without also invoking ordinary press or changing the checkbox.",
+        "Checklistor visibly says `Håll inne på rutinen för att redigera.` and exposes that same instruction as the routine detail accessibilityHint.",
+        "Checklistor keeps the visible manager path for create, delete and day selection; no existing routine-management operation is lost.",
+        "Public/review renders show the three real destinations fully with at least 16 pt clearance above bottom navigation at 375×844 and 430×844; §14 is recorded.",
+        "Local UI checkpoint closes only on render evidence; owner-bound runtime/RLS acceptance remains open.",
+        "Daily model and Home/Checklist policy tests assert the shared selector, arrow-only checklist action, route title/return and routine long-press editor path without conflating it with checkbox completion; existing Home/Log feedback tests preserve honest empty/loading/error states.",
+        "The task journal current-plan pointer/next step, queue pointer and evidence report are synchronized; current fresh evidence records are linked and explicitly label the public/review RN Web fixtures as synthetic/local."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/daily-activity-model.test.mjs tests/daily-activity-ui.test.mjs tests/daily-checklist-screen.test.mjs tests/home-vision.test.mjs tests/home-log-empty-feedback.test.mjs tests/ui-actions-rows.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "Render public/review at the v15 viewports, verify arrow destination, ordinary tap, longpress edit mode, onPress/checkbox separation, both exact long-press hints, and record §14."
+      ],
+      "depends_on": [
+        "VISION-R02-DOC-CLEANUP-20261021"
+      ],
+      "priority": "P1",
+      "panels": [
+        "Hem"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Checkpoint 1: Home visual hierarchy and shared daily progress model.",
+      "test_evidence": "Implementation evidence for approved v15: focused suite 6/6 PASS; `pnpm check` PASS (app/edge typecheck, ESLint, 63/63 tests); public/review RN Web synthetic renders 25/25 and 35/35 PASS, including arrow-only Home action, Checklistor route, normal tap vs longpress edit, no checkbox callback on longpress, exact visible/native hint, 16pt clearance at 375/430, 140% text and states; §14 recorded. Public content guard and direct offline Expo iOS export PASS (1,450 modules). The `pnpm bundle:ios` wrapper itself is NOT VERIFIED because its registry-attestation fetch failed with sandbox EPERM; equivalent guard/export commands passed without dependency changes. `git diff --check` and queue validation pass. Independent v15 QA PASS; first frozen Reviewer BLOCK on §14 marker-shape description and stale next-step docs. v16 Architect APPROVE and Critic PROCEED; its docs-only correction clarifies the owner-reference circle exception in Home evidence §14, leaves design-rules unchanged, and reuses v15 source/render/test results. Independent v16 documentation QA PASS: §14, plan/queue/journal/report pointers, diff check and queue validation are consistent; no source or render changes. Frozen Reviewer re-review pending. Native VoiceOver/Dynamic Type, live Supabase/RLS and signed release remain NOT TESTABLE. v16 frozen Reviewer confirmed §14 correction but BLOCKED on the remaining stale sentence in the journal plan pointer; v17 is docs-only and awaits Architect/Critic review, independent docs QA and frozen Reviewer re-review. Plan v17 Architect APPROVE and Critic PROCEED: fix the journal current plan sentence and checkpoint pointer, keep v17 QA pending until PASS, then frozen Reviewer re-review; no product/test/render changes. v17 docs correction applied: journal current plan sentence and checkpoint summary now point to v17; v17 documentation QA pending. No app/test/render changes. Independent v17 documentation QA PASS: journal plan/current checkpoint pointers, queue/report and v16/v17 history align; v15/v16 evidence reused; no v17 source/test/render edits; diff and queue validation PASS. Updating next step to Reviewer; narrow QA recheck pending. QA narrow status recheck found one stale next-step sentence in the journal plan history; corrected under approved v17 docs scope. Final narrow QA recheck pending. Final narrow v17 status recheck PASS; current journal/plan/queue/report agree that v17 QA passed and frozen Reviewer re-review is next. Frozen Reviewer v17 re-review PASS on the corrected Home implementation/evidence and docs/history; no actionable findings. Native VoiceOver/Dynamic Type, live Supabase/RLS and signed release remain NOT TESTABLE; `pnpm bundle:ios` wrapper remains unverified due sandbox registry-attestation EPERM. Queue status transitioned review→done after Reviewer PASS; MASTER-LOG and HISTORY-2026 record checkpoint 1b22370, verification and remaining NOT TESTABLE boundaries.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact approved v7 plan; checkpoint 0 is reviewed, done, committed as 9fc7036, and pushed. Home checkpoint 1 is bounded to Home layout/shared daily selector and local rendering."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement only checkpoint 1 on the approved 2026-10-21 branch; keep Development/Daily Progress routes inactive until their dependent slices are implemented."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Approved v9 implementation complete. Focused Home suite passes; pnpm check passes app and edge TypeScript, ESLint, and 63/63 test files; public iOS JS bundle exports 1,450 modules; public/review Home render evidence passes 21/21 and 26/26 with §14 recorded. git diff --check and queue validation pending final post-update run. Native/device, live Supabase/RLS and release remain NOT TESTABLE. Next: independent QA, then frozen-diff Reviewer."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS on the corrected frozen diff. The 26/26 versus 27/27 documentation mismatch was fixed; public/review evidence is now 21/21 and 27/27. QA rechecked the actual checkbox interaction: still unchecked while pending, then checked and 3/5 only after synthetic confirmation. Visual comparison, viewports, §14, focused tests, full-check result and scope limitations verified. Next: independent frozen-diff Reviewer, then checkpoint commit/push."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer BLOCK: the approved v9 route/UI contract requires the checklist label and chevron in one control; current ChecklistControl lacked the chevron. After implementing the required chevron, a first review render wrapped the Home heading at 375px and reduced menu clearance to 12pt. Correction: keep the chevron inside ChecklistControl, remove the non-required chevron from the direct Hantera text control, preserve 44pt target height, and prove 16pt clearance at 375/430 with fresh render. This must be reviewed as v10 before QA/reviewer resumes."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction plan v10 recorded the Reviewer blocker and exact layout resolution. v11 added the journal and synchronized Home, queue and latest evidence (public 23/23, review 29/29); Architect approved v11 and Critic asked that later panel 2/3/8 queue items pointing to v8 be distinguished from Home. v12 clarifies that split. ChecklistControl owns its chevron, Hantera remains a separate text action, title/counter stay on one line, and renders preserve 16pt clearance. No data/route behavior changes. Architect/Critic v12 plan review is required before resuming the QA/review gate."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Approved exact plan v12: Architect APPROVE and Critic PROCEED. Journal distinguishes Home v12 from later panel 2/3/8 v8 pointers; Home queue and VERIFICATION show public 23/23 and review 29/29."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume the already-rendered Home chevron/layout correction under approved v12. Scope remains Home UI/tests/evidence and checkpoint documentation; no route, data or RLS behavior changes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Final implementation ready for fresh independent QA. Focused Home suite passes; pnpm check passes app/edge typecheck, ESLint and 63/63 test files; public iOS JS export passes at 1,450 modules; public/review renders pass 23/23 and 29/29, with 16pt clearance at 375/430 and §14 recorded. git diff --check and queue validation pass. Native/live owner data/RLS/release remain NOT TESTABLE. Next: QA of exact final chevron diff, then frozen Reviewer."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Owner steering after v12 QA start changes the Home checklist action to a chevron-only Checklistor route and requests long-press editing on the list. Existing QA/render proof is not applicable to the new UI contract; write and review correction plan v13 before touching source."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "v13 captures the owner's exact preference: Home exposes only the arrow to Checklistor, while long-pressing a routine opens the same dog-scoped editor without changing checkbox state. Current DailyChecklistScreen has no long-press path, so this is an explicit small UI interaction correction; Architect/Critic plan review required before implementation."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v15 APPROVE från Architect och PROCEED från Critic; exakta planreviewresultat sparade i plan, journal och rapport. v12-render/QA är superseded av ägarens pil-only/longpress-kontrakt."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Startar implementation enligt godkänd v15: arrow-only till Checklistor, vanlig tryckning fokuserar manager, longpress öppnar befintligt editläge, checkbox separat; inga nya data/RLS-operationer."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v15 implementation complete; focused 6/6 and pnpm check 63/63 PASS; synthetic public/review render 25/25 and 35/35 PASS including tap/longpress/checkbox contract and §14; public content guard/direct Expo iOS export 1,450 modules PASS; diff and queue checks PASS. Native/live RLS/release NOT TESTABLE. Independent QA now required."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS on the frozen v15 implementation/evidence. Rechecked exact tap/longpress/checkbox/training/a11y contracts, screenshots, §14 and limits; focused 6/6, pnpm check 63/63, diff and queue validation PASS. Native/live RLS/release remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer BLOCK on frozen v15 diff: §14 row 16 incorrectly claimed all markers were square/visual Ja despite the round training status shown in Erik's attached 2026-10-21 reference and design-rules §4's square default; journal/report next steps also stale after QA PASS. Correct by preserving the owner-reference circle, documenting the narrow exception and revising §14 plus next-step records. No source change requested; fresh QA/documentation check and Reviewer re-review required."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Correction plan v16 prepared after recorded Reviewer BLOCK. UI code and screenshots are unchanged: the user's attached reference shows the training-row circle, now recorded as a panel-specific owner-reference exception to design-rules §4. §14 and stale next steps corrected. Architect/Critic must review v16 before documentation QA and final Reviewer re-review."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v16 Architect APPROVE and Critic PROCEED. v16 is docs-only: correct Home evidence §14 and queue/journal/report pointers; retain round training marker shown in the owner screenshot as a narrow Home exception; no source or render edits."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Independent QA: check v16 documentation consistency, §14 owner exception, queue/journal/report pointers, git diff --check and dev_flow validate; reuse v15 source/render/test evidence. No app/source/test/render changes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Approved v16 docs-only correction applied and synchronized. QA scope: verify Home evidence report §14 row 16 owner-reference exception, plan/queue/journal/report pointer and next-step consistency, git diff --check and dev_flow validation. Reuse v15 focused/full checks and render evidence; no source or screenshot changed."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "v16 independent documentation QA PASS: Home evidence §14 row 16 and owner-reference exception are explicit; plan/queue/journal/report align; no source or render edits; git diff --check and dev_flow validate PASS. v15 QA/render/test evidence reused. Frozen Reviewer re-review required."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer v16 BLOCK: journal line 6 still says documentation QA remains, although v16 documentation QA has PASS. No source/test/render issue. Correct this stale next-step sentence, record the block, run independent docs QA and Reviewer re-review."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Replan v17 records frozen Reviewer BLOCK on the one stale journal plan sentence. Scope is docs-only: correct the status/next-step pointer and synchronize queue/report/review history; no app, test, render or §14 changes. Architect/Critic review is required before QA resumes."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact correction plan v17 reviewed: Architect APPROVE and Critic PROCEED. It fixes the stale journal plan sentence and current checkpoint pointer, syncs queue/report/review history, keeps QA pending until verified, and excludes product/tests/renders."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement the approved v17 documentation-only correction: update both current journal pointers and sync the plan/queue/report history; no app, test, §14, render or screenshot edits."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v17 docs-only correction applied: journal current plan sentence and current checkpoint summary now point to v17; queue/report/review history are synchronized; no app/source/test/render/screenshot edits. Independent documentation QA required."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "v17 documentation QA PASS and final narrow status recheck PASS. Journal line 3/6/108/118, v16/v17 plan history, queue and report consistently say QA complete and frozen Reviewer re-review next. No v17 source/test/render edits; v15/v16 evidence reused. Diff and queue validation PASS."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS on frozen v15/v16/v17 diff; independent QA PASS; master-log and release-history checkpoint entries prepared with commit 1b22370, hook results and open limits. Commit/push confirmed; final queue/log closeout follows in documentation commit."
+        }
+      ],
+      "next_step": "Start FLOW-DEVELOPMENT-01 (Panel 2) after the checkpoint closeout documentation commit is pushed."
+    },
+    {
+      "id": "FLOW-INSIGHTS-01A",
+      "title": "Insikter/panel 8: datainventering och beta-information före kod",
+      "mvp_requirement": "docs/dev/beta-data-lifecycle.md; docs/privacy/beta-information.md; v8 checkpoint 4a.",
+      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v8.md",
+      "write_paths": [
+        "docs/dev/beta-data-lifecycle.md",
+        "docs/privacy/beta-information.md",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md"
+      ],
+      "acceptance": [
+        "Only the two data lifecycle/privacy documents receive product-scope edits before any Insights SQL/app code.",
+        "Inventory covers purpose, raw fields, RPC inputs, all derived fields, account owner, recipients, transient memory, retention, rights/correction/deletion/cascade, telemetry and no persistent aggregate.",
+        "Privacy copy explains the derived count calculation and why there is no separate aggregate export.",
+        "Raw correction/deletion, dog/account cascade and beta-end plus 30-day purge are stated against current policy; no new retention is implied.",
+        "Compliance review of the finished documents is recorded in both queue and work report; checkpoint 4a is approved before checkpoint 4b can start."
+      ],
+      "checks": [
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "Independent Compliance review of the finished two documents."
+      ],
+      "depends_on": [
+        "FLOW-PROGRESS-01"
+      ],
+      "priority": "P1",
+      "panels": [
+        "Insikter"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Checkpoint 4a: documentation-only data inventory gate before Insights implementation.",
+      "test_evidence": "Not run. Awaiting the documented checkpoint evidence and independent review.",
+      "status": "planned",
+      "history": [],
+      "next_step": "Do not add migration, RPC, client or UI files until Compliance has reviewed and approved the finished documents."
+    },
+    {
+      "id": "FLOW-PANELS-6-7-IMAGE-DIVERSITY",
+      "title": "Unika hundbilder för Träning och Kunskap",
+      "mvp_requirement": "docs/design/vision-rev02-screen-contracts.md: panel 6 Träning och panel 7 Kunskap; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/plans/FLOW-PANELS-6-7-image-diversity-v1.md",
+      "write_paths": [
+        "assets/images/knowledge-featured-puppy-lagotto-forest.jpg",
+        "assets/images/knowledge-card-puppy-sheltie-window.jpg",
+        "assets/images/knowledge-card-puppy-cocker-coast.jpg",
+        "assets/images/training-next-step-puppy-corgi-home.jpg",
+        "assets/images/README.md",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/README.md",
+        "src/features/knowledge/editorial-image-assignment.ts",
+        "src/features/home/HomeCarousel.tsx",
+        "src/features/home/README.md",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "docs/design/evidence/vision-rev02/2026-10-21-panels-6-7-image-diversity",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md"
+      ],
+      "acceptance": [
+        "Three Knowledge review guides map stably and distinctly to the Lagotto, Sheltie and Cocker photos by content ID/version; Home opens the same guide image.",
+        "The Home Training recommendation and Training next-exercise card use the Corgi photo for the same step, with existing destination and progress behavior.",
+        "Real Knowledge and Training renders at 375×844, 430×844, 375×667 and 140% text preserve legible image crops, controls and bottom navigation; §14 is recorded.",
+        "AI image provenance, decorative accessibility and asset byte limits are recorded; no test or panel PASS is claimed without evidence."
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "Render Knowledge and Training at the planned viewports; inspect crops/controls and record §14"
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "The four JPEGs and source image assignment/UI links are implemented, and provenance records five generated motifs with the Dachshund crop intentionally unused. Architect APPROVE and Critic PROCEED for exact image plan v1. Byte/dimension/metadata source checks are recorded. App-component renders and §14 remain NOT TESTABLE, so panel-level acceptance stays blocked."
+        }
+      ],
+      "next_step": "Render actual Knowledge and Training components at the planned viewports, inspect crop/control/navigation behavior and record §14; run required project checks before closeout. Until then keep panel-level visual acceptance NOT TESTABLE.",
+      "priority": "P2",
+      "panels": [
+        "6",
+        "7"
+      ],
+      "risk_class": "L",
+      "checkpoint": "Distinct editorial image assignment for the current Knowledge and Training surfaces; this does not complete either panel.",
+      "test_evidence": "`pnpm check` PASS (typecheck, edge typecheck, ESLint, tests 63/63); no image-specific crop/render test exists. Four deployed JPEGs total 1,106,442 B, q86, stripped metadata, dimensions preserved and each under 350 KB. Source mapping is ID/version-stable; app component crops and interactions NOT TESTABLE. Public content guard PASS; direct offline Expo iOS export PASS (1,458 modules); wrapper registry fetch failed with sandbox EPERM.",
+      "implementation_state": "Images and source mappings implemented; app rendering and panel acceptance pending.",
+      "evidence_status": "blocked — required actual component render and §14 absent; pnpm check passed"
     }
   ]
 }

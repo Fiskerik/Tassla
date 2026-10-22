@@ -103,12 +103,12 @@ v7.2-planen har skapats i docs/plans/HOME-NEXT-01-ux-spec-v7.2.md. Efter Archite
 
 ### v7.2 first-fit correction
 
-Independent QA UNDERKÄNDE point 16: at 375/430 px the three 78px quick-action tiles start at y=754 while fixed navigation starts at y=785, leaving 47px behind navigation. All other reported checks passed. Evidence and the full §14 checklist are saved in `docs/design/evidence/home-next-01/v7.2/QA-REPORT.md`. Architect confirmed the existing v7.2 approval covers a same-scope correction in `HomeScreen.tsx`: use compact, tokenized daily summary rows with interactive targets at least 44pt, then rerun dense-fixture and §14 QA. No plan, acceptance, or write-path expansion.
+Independent QA UNDERKÄNDE point 16: at 375/430 px the three 78px quick-action tiles start at y=754 while fixed navigation starts at y=785, leaving 47px behind navigation. All other reported checks passed. Evidence and the full §14 checklist are saved in `docs/design/evidence/home-next-01/v7.2/QA-REPORT-first-fit-failure.md`. Architect confirmed the existing v7.2 approval covers a same-scope correction in `HomeScreen.tsx`: use compact, tokenized daily summary rows with interactive targets at least 44pt, then rerun dense-fixture and §14 QA. No plan, acceptance, or write-path expansion.
 
 
 ### v7.2 second first-fit correction
 
-Public/review rerun measured all three 78px tiles at y=718..796, while fixed nav starts at y=785: 11px remains covered at 375/430. The compact Home rows saved 36px but did not satisfy §14 point 16. The Home-scoped verifier also stops on a stale exact-text `Mat` locator because the compact summary button now exposes “12:05, Mat”; independent browser geometry confirms the overlap. Evidence: `docs/design/evidence/home-next-01/v7.2/QA-REPORT-rerun.md` and `rerun/{public,review}/`. Next same-scope correction: move “Idag” into the shared Today Card and fix the verifier locator; Architect confirmed the same approved scope covers both HomeScreen composition and verifier locator. No acceptance or product-scope change. Fresh QA remains mandatory.
+Public/review rerun measured all three 78px tiles at y=718..796, while fixed nav starts at y=785: 11px remains covered at 375/430. The compact Home rows saved 36px but did not satisfy §14 point 16. The Home-scoped verifier also stops on a stale exact-text `Mat` locator because the compact summary button now exposes “12:05, Mat”; independent browser geometry confirms the overlap. Evidence: `docs/design/evidence/home-next-01/v7.2/QA-REPORT-second-fit-failure.md` and `rerun/{public,review}/`. Next same-scope correction: move “Idag” into the shared Today Card and fix the verifier locator; Architect confirmed the same approved scope covers both HomeScreen composition and verifier locator. No acceptance or product-scope change. Fresh QA remains mandatory.
 
 
 ### HOME-NEXT-01 v7.2 final QA — UNDERKÄND

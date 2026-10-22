@@ -1,0 +1,351 @@
+{
+  "mode": "public",
+  "evidence_dir": "docs/design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/home/public",
+  "results": [
+    {
+      "check": "Home checklist action is a chevron-only touch target at 375px",
+      "result": "PASS",
+      "control": {
+        "x": 294,
+        "y": 303,
+        "width": 44,
+        "height": 44
+      },
+      "chevron": {
+        "x": 308,
+        "y": 316,
+        "width": 16,
+        "height": 18
+      }
+    },
+    {
+      "check": "Home header contains no checklist or manager text action at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Home actions meet the 44pt touch target at 375px",
+      "result": "PASS",
+      "targets": [
+        {
+          "name": "Checklistor chevron",
+          "box": {
+            "x": 294,
+            "y": 303,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "name": "Logga",
+          "box": {
+            "x": 24,
+            "y": 448,
+            "width": 103.65625,
+            "height": 86
+          }
+        },
+        {
+          "name": "Träna",
+          "box": {
+            "x": 135.65625,
+            "y": 448,
+            "width": 103.671875,
+            "height": 86
+          }
+        },
+        {
+          "name": "Kunskap",
+          "box": {
+            "x": 247.328125,
+            "y": 448,
+            "width": 103.671875,
+            "height": 86
+          }
+        }
+      ]
+    },
+    {
+      "check": "initial Home and three destinations at 375x844 (public)",
+      "result": "PASS",
+      "app_viewport": {
+        "x": 0,
+        "y": 0,
+        "width": 375,
+        "height": 844
+      },
+      "nav": {
+        "x": 0,
+        "y": 751,
+        "width": 375,
+        "height": 59
+      },
+      "destination_tiles": [
+        {
+          "name": "Öppna Logga",
+          "box": {
+            "x": 24,
+            "y": 448,
+            "width": 103.65625,
+            "height": 86
+          }
+        },
+        {
+          "name": "Öppna Träna",
+          "box": {
+            "x": 135.65625,
+            "y": 448,
+            "width": 103.671875,
+            "height": 86
+          }
+        },
+        {
+          "name": "Öppna Kunskap",
+          "box": {
+            "x": 247.328125,
+            "y": 448,
+            "width": 103.671875,
+            "height": 86
+          }
+        }
+      ],
+      "clearance_pt": 217
+    },
+    {
+      "check": "no horizontal overflow or browser error at 375px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "public empty day has no 0/0 progress at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "chevron opens Checklistor route at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "140% text does not overflow horizontally at 375px",
+      "result": "PASS",
+      "destination_tiles": [
+        {
+          "name": "Öppna Logga",
+          "box": {
+            "x": 24,
+            "y": 586.390625,
+            "width": 103.65625,
+            "height": 112.40625
+          }
+        },
+        {
+          "name": "Öppna Träna",
+          "box": {
+            "x": 135.65625,
+            "y": 586.390625,
+            "width": 103.671875,
+            "height": 112.40625
+          }
+        },
+        {
+          "name": "Öppna Kunskap",
+          "box": {
+            "x": 247.328125,
+            "y": 586.390625,
+            "width": 103.671875,
+            "height": 112.40625
+          }
+        }
+      ]
+    },
+    {
+      "check": "Home checklist action is a chevron-only touch target at 430px",
+      "result": "PASS",
+      "control": {
+        "x": 349,
+        "y": 303,
+        "width": 44,
+        "height": 44
+      },
+      "chevron": {
+        "x": 363,
+        "y": 316,
+        "width": 16,
+        "height": 18
+      }
+    },
+    {
+      "check": "Home header contains no checklist or manager text action at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Home actions meet the 44pt touch target at 430px",
+      "result": "PASS",
+      "targets": [
+        {
+          "name": "Checklistor chevron",
+          "box": {
+            "x": 349,
+            "y": 303,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "name": "Logga",
+          "box": {
+            "x": 24,
+            "y": 428,
+            "width": 122,
+            "height": 86
+          }
+        },
+        {
+          "name": "Träna",
+          "box": {
+            "x": 154,
+            "y": 428,
+            "width": 122,
+            "height": 86
+          }
+        },
+        {
+          "name": "Kunskap",
+          "box": {
+            "x": 284,
+            "y": 428,
+            "width": 122,
+            "height": 86
+          }
+        }
+      ]
+    },
+    {
+      "check": "initial Home and three destinations at 430x844 (public)",
+      "result": "PASS",
+      "app_viewport": {
+        "x": 0,
+        "y": 0,
+        "width": 430,
+        "height": 844
+      },
+      "nav": {
+        "x": 0,
+        "y": 751,
+        "width": 430,
+        "height": 59
+      },
+      "destination_tiles": [
+        {
+          "name": "Öppna Logga",
+          "box": {
+            "x": 24,
+            "y": 428,
+            "width": 122,
+            "height": 86
+          }
+        },
+        {
+          "name": "Öppna Träna",
+          "box": {
+            "x": 154,
+            "y": 428,
+            "width": 122,
+            "height": 86
+          }
+        },
+        {
+          "name": "Öppna Kunskap",
+          "box": {
+            "x": 284,
+            "y": 428,
+            "width": 122,
+            "height": 86
+          }
+        }
+      ],
+      "clearance_pt": 237
+    },
+    {
+      "check": "no horizontal overflow or browser error at 430px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "public empty day has no 0/0 progress at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "chevron opens Checklistor route at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "140% text does not overflow horizontally at 430px",
+      "result": "PASS",
+      "destination_tiles": [
+        {
+          "name": "Öppna Logga",
+          "box": {
+            "x": 24,
+            "y": 586.390625,
+            "width": 122,
+            "height": 112.40625
+          }
+        },
+        {
+          "name": "Öppna Träna",
+          "box": {
+            "x": 154,
+            "y": 586.390625,
+            "width": 122,
+            "height": 112.40625
+          }
+        },
+        {
+          "name": "Öppna Kunskap",
+          "box": {
+            "x": 284,
+            "y": 586.390625,
+            "width": 122,
+            "height": 112.40625
+          }
+        }
+      ]
+    },
+    {
+      "check": "loading state keeps one checklist control",
+      "result": "PASS"
+    },
+    {
+      "check": "empty daily source does not show 0/0",
+      "result": "PASS"
+    },
+    {
+      "check": "empty state keeps one checklist control",
+      "result": "PASS"
+    },
+    {
+      "check": "error state keeps one checklist control",
+      "result": "PASS"
+    },
+    {
+      "check": "unknown daily source does not show 0/0",
+      "result": "PASS"
+    },
+    {
+      "check": "unknown state keeps one checklist control",
+      "result": "PASS"
+    },
+    {
+      "check": "partial daily source does not show 0/0",
+      "result": "PASS"
+    },
+    {
+      "check": "partial state keeps one checklist control",
+      "result": "PASS"
+    },
+    {
+      "check": "375x667 Home scroll reaches the last destination above the menu",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}

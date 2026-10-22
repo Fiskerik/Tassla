@@ -40,6 +40,20 @@ TASSLA_UI_SCOPE=home TASSLA_UI_REVIEW=true TASSLA_UI_EVIDENCE=docs/design/eviden
 
 Home-harnessen täcker varm Home-komposition, porträttets public/review-roll, fem dagsrader och tre destinationskort, rutinhantering, träningsradsnavigation, pending/failed/unknown/readback samt loading/empty/error, 375/430 px, 375×667, 140 % text, reducerad rörelse och navigation. `homeScenario` väljer syntetiska tillstånd; `TASSLA_UI_REVIEW` avgör om reviewfixture byggs in. Verifieringen av initialfit sker före scroll och kontrollerar appens egna viewportgränser. Detta är en React Native Web-rendering med syntetiska data, inte native Dynamic Type/VoiceOver eller databas/RLS-verifiering.
 
+## 2026-10-21 — Hem / panel 1 checkpoint
+
+`vision-r02-home-panels-app.tsx` renderar produktions-`HomeScreen` och `DailyChecklistScreen` i en fristående RN Web-yta. Publicläget använder tom dagsdata och visar därför det riktiga tomläget; syntetiska aktivitetsrader finns bara i reviewläget. Reviewmärkningen ligger utanför appens 844 pt viewport. Verifieraren sparar 375/430, kort 375×667, 140 %-text samt loading/empty/error/unknown/partial-state och kontrollerar destinationsmarginal, pil-only 44×44-knappen, Checklistor-routen, vanlig rutintryckning till fokuserad manager, managerpennan och verkligt långt pointer-tryck till editläge. Den kontrollerar att långtryck inte öppnar vanlig tap-vy eller ändrar checkboxen, att den synliga hjälpen har exakt instruktion och att samma instruktion skickas i komponentens native `accessibilityHint`. RN Web exponerar inte den native-egenskapen i DOM-trädet; därför verifieras hint-prop-ledet direkt i källan/testerna. Separat verifieras pending och syntetisk checkboxbekräftelse; inget av detta provar backend eller RLS.
+
+Installera renderverktygen utanför projektets dependencies enligt kommandot ovan. Bygg och servera public-läget:
+
+```sh
+TASSLA_UI_REVIEW=false TASSLA_UI_ENTRY=tools/visual-check/vision-r02-home-panels-app.tsx TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/home/public node tools/visual-check/build.cjs
+python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-preview/home/public
+TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:4173 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/home/public python tools/visual-check/verify-vision-r02-home-panels.py
+```
+
+Bygg review i en separat katalog och kör en separat server för samma verifierare med `TASSLA_UI_REVIEW=true` och evidencekatalogen `.../home/review`. Reviewbilder är syntetisk UI-evidens. De verifierar inte native Dynamic Type/VoiceOver, live ägardata, Supabase/RLS eller betaacceptans.
+
 KNOW-02 har en separat entry/output och skriver till `docs/design/KNOW-02/evidence/`:
 
 ```sh

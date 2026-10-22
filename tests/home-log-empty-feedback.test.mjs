@@ -21,8 +21,11 @@ test('Home training errors point to the existing Träna destination and its same
   assert.match(workspace, /visibleTrainingState === 'error'[\s\S]*?PrimaryButton title="Försök igen" onPress=\{\(\) => \{ void retryTraining\(\); \}\}/);
 });
 
-test('Home daily empty state opens the manager and successful selections are confirmed by a scoped reread', () => {
-  assert.match(home, /dailyState === 'ready' && dailyActivities\.length === 0[\s\S]*?label="Hantera dagens aktiviteter"[^\n]*onPress=\{\(\) => openManager\(\)\}/);
+test('Home daily empty state keeps its arrow to Checklistor and successful selections are confirmed by a scoped reread', () => {
+  assert.match(home, /accessibilityLabel="Öppna Checklistor"[\s\S]*?onPress=\{onPress\}/);
+  assert.doesNotMatch(home, /accessibilityLabel="Hantera rutiner och dagens aktiviteter"/);
+  assert.doesNotMatch(home, /label="Hantera dagens aktiviteter"/);
+  assert.match(home, /dailyProgress\.coverage === 'empty'[\s\S]*?Skapa en rutin eller välj ett träningssteg att ha med idag\./);
   assert.match(home, /activities=\{dailyActivities\}/);
   assert.match(workspace, /onRetryDaily=\{\(\) => \{ void reloadDailyActivity\(true\); \}\}/);
   assert.match(workspace, /if \(outcome\.status === 'saved'\)[\s\S]*?const refreshed = await reloadDailyActivity\(true, true\)/);
@@ -39,8 +42,8 @@ test('Log empty feedback points to the add-event sheet while partial paging keep
 
 test('initial Home and Log failures are distinct from scoped loading skeletons', () => {
   assert.match(home, /contentState === 'loading' \? <Skeleton/);
-  assert.match(home, /dailyState === 'loading' \? <Skeleton/);
-  assert.match(home, /dailyState === 'error' \? <View style=\{styles\.dailyState\}/);
+  assert.match(home, /dailyState === 'loading' \? <>[\s\S]*?<Skeleton shape="row" lines=\{2\}/);
+  assert.match(home, /dailyState === 'error' \? <>[\s\S]*?<View style=\{styles\.dailyState\}/);
   assert.match(log, /\{loading \? <>[\s\S]*?<Skeleton shape="card"/);
   assert.match(log, /: loadError \? <View style=\{styles\.errorState\}/);
   assert.match(log, /refreshError[\s\S]*?Dina visade händelser är kvar/);

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, StyleSheet, Text, View } from 'react-native';
 import { AppBar, BottomSheet, Button, Card, ListRow, Progress, SectionHeader, Toast } from '../../components/ui';
 import type { PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
 import { completeReviewTrainingStep, completeTrainingStepForMode, isReviewTrainingProgram, resetReviewTrainingProgram, unmarkReviewTrainingStep, unmarkTrainingStepForMode } from './review-training-state';
@@ -9,7 +9,7 @@ import { allProgramsComplete, completedCount, exerciseCountLabel, exerciseProgre
 export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, onAddBirthDate, onOpenKnowledge, reviewMode = false, focusStep, onCloseStep }: {
   ageWeeks: number | null; programs: readonly PublishedTrainingProgram[]; paused: readonly PausedTrainingProgress[]; busyStepKey: string | null; error: string;
   reviewMode?: boolean;
-  focusStep?: { programId: string; stepId: string; returnPage: 'home' | 'checklist' };
+  focusStep?: { programId: string; stepId: string; returnPage: 'home' | 'checklist' | 'progress' };
   onCloseStep?: () => void;
   onCompleteStep: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>;
   onUnmarkStep?: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>; onContinue: () => void;
@@ -119,7 +119,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
 
   if (focusStep) return <View testID="home-training-step-detail" style={styles.focusedPage}>
     <AppBar mode="Back" title="Träningssteg"
-      actionLabel={focusStep.returnPage === 'checklist' ? 'Tillbaka till Checklistan' : 'Tillbaka till Hem'}
+      actionLabel={focusStep.returnPage === 'checklist' ? 'Tillbaka till Checklistan' : focusStep.returnPage === 'progress' ? 'Tillbaka till Dagens framsteg' : 'Tillbaka till Hem'}
       onAction={onCloseStep ?? onContinue} variant="compact" />
     {!selectedProgram || !selectedStep ? <View style={styles.emptyCard}>
       <Text style={styles.emptyTitle}>Steget är inte tillgängligt</Text>
@@ -175,10 +175,13 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
         {onAddBirthDate ? <Button variant="secondary" label="Lägg till födelsedatum" accessibilityLabel="Lägg till födelsedatum" onPress={onAddBirthDate} /> : null}
       </View> : null}
       {nextExercise && heroProgram && heroStep ? <View style={styles.nextCard}>
-        <Text style={styles.stepMeta}>Nästa övning</Text>
-        <Text style={styles.sheetHeading}>{heroStep.title}</Text>
-        <Text style={styles.stepMeta}>{`${heroProgram.title} · övning ${nextExercise.number} av ${nextExercise.total}`}</Text>
-        <Button label="Öva nu" accessibilityLabel={`Öva nu: ${heroStep.title}`} onPress={() => setSelection({ programId: heroProgram.id, stepId: heroStep.id })} />
+        <Image source={require('../../../assets/images/training-next-step-puppy-corgi-home.jpg')} style={styles.nextImage} resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
+        <View style={styles.nextCopy}>
+          <Text style={styles.stepMeta}>Nästa övning</Text>
+          <Text style={styles.sheetHeading}>{heroStep.title}</Text>
+          <Text style={styles.stepMeta}>{`${heroProgram.title} · övning ${nextExercise.number} av ${nextExercise.total}`}</Text>
+          <Button label="Öva nu" accessibilityLabel={`Öva nu: ${heroStep.title}`} onPress={() => setSelection({ programId: heroProgram.id, stepId: heroStep.id })} />
+        </View>
       </View> : <View style={styles.emptyCard}>
         <Text style={styles.emptyTitle}>{allComplete ? 'Alla övningar är genomförda' : 'Inga övningar tillgängliga ännu'}</Text>
         <Text style={styles.body}>{allComplete
@@ -231,7 +234,9 @@ const styles = StyleSheet.create({
   ageHint: { gap: tokens.spacing.xs },
   path: { gap: tokens.spacing.xs },
   currentStep: { padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface, borderWidth: tokens.size.stroke * 2, borderColor: tokens.colors.primary },
-  nextCard: { marginTop: tokens.spacing.sm, padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.training.continueSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
+  nextCard: { marginTop: tokens.spacing.sm, padding: tokens.spacing.lg, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.training.continueSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
+  nextImage: { width: tokens.size.trainingImage, height: tokens.size.trainingImage, borderRadius: tokens.radius.md, flexShrink: 0 },
+  nextCopy: { flex: 1, minWidth: 0, gap: tokens.spacing.sm },
   stepMeta: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   programList: { gap: tokens.spacing.md },
   programInner: { gap: tokens.spacing.sm },

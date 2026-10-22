@@ -14,8 +14,23 @@ export function nextMainTabDestination(page: string, direction: 'left' | 'right'
 }
 
 export function activeMainTabDestination(page: string): BottomNavDestination {
-  if (page === 'checklist' || page === 'home-training-detail') return 'home';
+  if (page === 'development' || page === 'progress' || page === 'checklist' || page === 'home-training-detail') return 'home';
   return isMainTabDestination(page) ? page : 'more';
+}
+
+export type ProductRouteScrollKeys = { scrollKey: string; preserveScrollKey?: string };
+
+export function productRouteScrollKeys(page: string, knowledgeReturnPage?: string, trainingReturnPage?: string): ProductRouteScrollKeys {
+  if (page === 'home') return { scrollKey: 'home-detail-flow', preserveScrollKey: 'home-detail-flow' };
+  if (page === 'development') return { scrollKey: 'home-development-flow', preserveScrollKey: 'home-development-flow' };
+  if (page === 'progress') return { scrollKey: 'home-progress-flow', preserveScrollKey: 'home-progress-flow' };
+  if (page === 'checklist') return { scrollKey: 'home-checklist-flow', preserveScrollKey: 'home-checklist-flow' };
+  if (page === 'home-training-detail' && trainingReturnPage === 'progress') return { scrollKey: 'home-progress-training-detail', preserveScrollKey: 'home-progress-flow' };
+  if (page === 'home-training-detail') return { scrollKey: page, preserveScrollKey: 'home-checklist-flow' };
+  if (page === 'knowledge' && knowledgeReturnPage === 'development') {
+    return { scrollKey: 'home-development-guide-detail', preserveScrollKey: 'home-development-flow' };
+  }
+  return { scrollKey: page };
 }
 
 export function mainTabTransitionDirection(previous: string, current: string): 'forward' | 'backward' {

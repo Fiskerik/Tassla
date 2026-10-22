@@ -18,10 +18,11 @@ import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
 type WriteStatus = { status: 'saved' | 'failed' | 'unknown' } | void;
 type RangeStatus = 'loading' | 'ready' | 'partial' | 'error';
 
-export function DailyChecklistScreen({ dateKey, state, activities, refreshing, refreshError, mutationBusy, mutationKey, mutationMessage,
-  mutationError, onBack, onRetry, onRetryRange, onRetryMutation, onOpenTrainingStep, onSetRoutineCompletion, routines, routineDaySkips, trainingOptions,
-  filter, onChangeFilter, rangeState, rangeActivities, onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay, onAddTrainingToDay, onRemoveTrainingFromDay,
-  onGoTraining }: {
+export function DailyChecklistScreen({ dogName, dateKey, state, activities, refreshing, refreshError, mutationBusy, mutationKey, mutationMessage,
+  mutationError, onBack, onRetry, onRetryMutation, onOpenTrainingStep, onSetRoutineCompletion, routines, routineDaySkips, trainingOptions,
+  onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay, onAddTrainingToDay, onRemoveTrainingFromDay,
+  onGoTraining, openManagerInitially = false }: {
+  dogName: string;
   dateKey: string;
   state: 'loading' | 'ready' | 'error';
   activities: readonly HomeDailyActivity[];
@@ -52,27 +53,27 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
   onAddTrainingToDay?: (option: HomeDailyTrainingOption) => void;
   onRemoveTrainingFromDay?: (row: DailyTrainingSelection) => void;
   onGoTraining: () => void;
+  openManagerInitially?: boolean;
 }) {
-  const [managerVisible, setManagerVisible] = useState(false);
+  const [managerVisible, setManagerVisible] = useState(openManagerInitially);
   const [focusRoutineId, setFocusRoutineId] = useState<string | null>(null);
-  const showingToday = filter === 'Idag';
-  const visibleState = showingToday ? state : rangeState;
-  const visibleActivities = showingToday ? activities : rangeActivities;
-  const completedCount = visibleActivities.filter((activity) => activity.completed && !activity.skipped).length;
+  const [editFocusedRoutineOnOpen, setEditFocusedRoutineOnOpen] = useState(false);
+  const completedCount = activities.filter((activity) => activity.completed).length;
   const dateLabel = checklistDateLabel(dateKey);
   const retry = showingToday ? onRetry : onRetryRange;
 
-  function openManager(routineId: string | null = null) {
+  function openManager(routineId: string | null = null, editFocusedRoutine = false) {
     setFocusRoutineId(routineId);
+    setEditFocusedRoutineOnOpen(editFocusedRoutine);
     setManagerVisible(true);
   }
 
   return <View testID="daily-checklist-screen" style={styles.page}>
-    <AppBar mode="Back" title="Checklista" actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" />
-    <Tabs items={CHECKLIST_FILTERS} active={filter} variant="rev02-segmented" activeTone="home" onChange={(value) => {
-      if (isChecklistFilter(value)) onChangeFilter(value);
-    }} />
-    {filter === 'Alla' ? <Text accessibilityRole="text" style={styles.rangeContext}>Senaste 30 dagarna</Text> : null}
+    <AppBar mode="Back" title="Checklistor" actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" />
+    <View style={styles.heading}>
+      <Text style={styles.date}>{dateLabel}</Text>
+      <Text style={styles.description}>Dagens aktiviteter för {dogName}</Text>
+    </View>
 
     {refreshError && showingToday && state === 'ready' ? <MessageCard tone="error">Uppdateringen kunde inte hämtas. Du ser senast hämtade uppgifter.</MessageCard> : null}
     {!showingToday && rangeState === 'partial' ? <View style={styles.partialFeedback}>
@@ -105,20 +106,27 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
         accessibilityValue={{ min: 0, max: activities.length, now: completedCount }} style={styles.progressTrack}>
         <View style={[styles.progressFill, { width: (Math.round(completedCount / activities.length * 100) + '%') as import('react-native').DimensionValue }]} />
       </View>
-      <View style={styles.activityList}>
-        {activities.map((item, index) => {
+      {activities.some((activity) => activity.kind === 'routine')
+        ? <Text style={styles.longPressHint}>Håll inne på rutinen för att redigera.</Text>
+        : null}
+      <View style={styles.rows}>
+        {activities.map((item) => {
           const routineDay = item.routineDay;
           const itemMutationKey = routineDay && item.routineItemId ? 'complete-routine:' + routineDay.id + ':' + item.routineItemId : '';
           const itemMutation = Boolean(itemMutationKey && mutationKey === itemMutationKey);
           const readbackError = itemMutation && mutationMessage.startsWith('Ändringen sparades, men dagens lista');
-          return <ChecklistActivityRow key={item.id} item={item} first={index === 0}
-            accessibilityLabel={item.kind === 'routine' ? 'Rutin ' + (item.routineLabel ?? '') + ', punkt ' + item.label : 'Träningsuppgift: ' + item.label}
+          return <DailyActivityItem key={item.id} variant="home" kind={item.kind} label={item.label} routineLabel={item.routineLabel}
+            accessibilityLabel={item.kind === 'routine' ? `Rutin ${item.routineLabel ?? ''}, punkt ${item.label}` : `Träningsuppgift: ${item.label}`}
+            accessibilityHint={item.kind === 'routine' && routineDay?.routine_id ? 'Håll inne på rutinen för att redigera.' : undefined}
             completed={item.completed} pending={itemMutation && mutationBusy}
             statusMessage={itemMutation ? mutationMessage : ''} statusError={itemMutation && mutationError}
             onToggle={routineDay ? () => item.routineItemId && onSetRoutineCompletion?.(routineDay, item.routineItemId, !item.completed) : undefined}
             onOpen={item.kind === 'training' && item.programId && item.stepId
               ? () => onOpenTrainingStep?.(item.programId!, item.stepId!, 'checklist')
               : () => openManager(routineDay?.routine_id ?? null)}
+            onLongPress={item.kind === 'routine' && routineDay?.routine_id
+              ? () => openManager(routineDay.routine_id, true)
+              : undefined}
             onRetry={itemMutation ? (onRetryMutation ?? (readbackError ? onRetry : undefined)) : undefined} />;
         })}
       </View>
@@ -136,8 +144,9 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
       </View>
     </Card> : null}
 
-    <DailyActivityManagerSheet key={dateKey + ':' + (focusRoutineId ?? 'all') + ':' + managerVisible}
-      visible={managerVisible} onClose={() => setManagerVisible(false)} focusRoutineId={focusRoutineId}
+    <DailyActivityManagerSheet key={`${dateKey}:${focusRoutineId ?? 'all'}:${managerVisible}:${editFocusedRoutineOnOpen}`}
+      visible={managerVisible} onClose={() => { setManagerVisible(false); setEditFocusedRoutineOnOpen(false); }} focusRoutineId={focusRoutineId}
+      editFocusedRoutineOnOpen={editFocusedRoutineOnOpen}
       activities={activities} routines={routines} routineDaySkips={routineDaySkips} trainingOptions={trainingOptions}
       busy={mutationBusy} mutationMessage={mutationMessage} mutationError={mutationError} onRetryMutation={onRetryMutation}
       onCreateRoutine={onCreateRoutine} onUpdateRoutine={onUpdateRoutine} onDeleteRoutine={onDeleteRoutine}
@@ -254,20 +263,6 @@ const styles = StyleSheet.create({
   count: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700', flexShrink: 0 },
   progressTrack: { height: tokens.size.progress, borderRadius: tokens.radius.full, overflow: 'hidden', backgroundColor: tokens.colors.home.progressTrack, marginBottom: tokens.spacing.sm },
   progressFill: { height: '100%', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.greenFill },
-  activityList: { gap: 0 },
-  row: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs },
-  rowDivider: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border },
-  checkboxTarget: { width: tokens.size.touchMin, minHeight: 64, alignItems: 'center', justifyContent: 'center' },
-  checkbox: { width: tokens.size.homeCheckbox, height: tokens.size.homeCheckbox, borderWidth: 1, borderColor: tokens.colors.home.textMuted, borderRadius: tokens.spacing.xs, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card },
-  checkboxChecked: { borderColor: tokens.colors.home.greenStrong, backgroundColor: tokens.colors.home.greenStrong },
-  routineIcon: { width: tokens.size.chipMd, minHeight: tokens.size.chipMd, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.card },
-  rowContent: { flex: 1, minWidth: 0, minHeight: 64, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm, paddingRight: tokens.spacing.xs },
-  copy: { flex: 1, minWidth: 0, gap: tokens.spacing.xs / 2 },
-  rowTitle: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '500', flexShrink: 1 },
-  rowDetail: { ...tokens.typography.caption, color: tokens.colors.home.textMuted, flexShrink: 1 },
-  rowStatus: { ...tokens.typography.caption, color: tokens.colors.home.textMuted, flexShrink: 1 },
-  dateGroupHeading: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700', paddingTop: tokens.spacing.sm, paddingBottom: tokens.spacing.xs },
-  laterDateGroup: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, marginTop: tokens.spacing.sm },
-  errorText: { color: tokens.colors.danger },
-  pressed: { backgroundColor: tokens.colors.selectedSurface },
+  rows: { gap: 0 },
+  longPressHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
 });

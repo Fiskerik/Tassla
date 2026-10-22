@@ -1,3 +1,5 @@
+> **INAKTIV — äldre identisk rerun-kopia.** Historiskt innehåll bevaras. Kanonisk rapport: [`QA-REPORT-second-fit-failure.md`](./QA-REPORT-second-fit-failure.md). Git visar samma tillkomstcommit; den generiska filen inaktiveras enligt namnlinjen.
+
 # HOME-NEXT-01 v7.2 correction rerun — QA result
 
 **Result: UNDERKÄND.** Compact Home rows moved the action tiles upward 36 px, but did not make them fit above the fixed navigation. The layout assertion still fails at both widths and in both modes: tiles start at y=718 and are 78 px high (bottom y=796); navigation starts at y=785. Each tile overlaps the navigation by 11 px. The screenshots show tile labels partly hidden by the nav. The original first-fit failure and evidence remain preserved under `first-fit-failure/`; this rerun is kept separately under `rerun/`.

@@ -6,7 +6,7 @@ Datum: 2026-10-13 · Status: implementation lokalt verifierad; QA och Reviewer �
 
 Ägaren bad uttryckligen att veckoremsan ska gå att bläddra åt höger/vänster och att svep ska byta sida i huvudmenyn. Det är tillägg till befintliga Hem- och huvudflikar; inga nya produktdata eller skrivningar ingår.
 
-UX-kontrakt: `docs/plans/VISION-REV02-GESTURES-UX-SPEC.md` v5.
+UX-kontrakt: `docs/plans/VISION-REV02-GESTURES-UX-SPEC-v5-approved.md` v5.
 
 ## Integrerad leverans
 

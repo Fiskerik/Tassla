@@ -1,3 +1,5 @@
+> **INAKTIV — äldre identisk kopia.** Historiskt innehåll bevaras. Använd den kanoniska identiska versionen [`VISION-REV02-GESTURES-UX-SPEC-v5-approved.md`](./VISION-REV02-GESTURES-UX-SPEC-v5-approved.md). Git visar samma tillkomstcommit för paret; äldre status följer versions-/filnamnslinjen.
+
 # Svep för veckoremsa och huvudflikar — UX-spec v5
 
 Datum: 2026-10-13 · Status: Product IN MVP; Architect APPROVE och Critic PROCEED för v5; implementation lokalt verifierad; QA/Reviewer och browserinteraktion återstår.

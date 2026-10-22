@@ -7,7 +7,7 @@ import { MotionPressable } from '../../components/ui/Motion';
 import type { HomeContent, OwnedDog } from '../../data/app-data';
 import type { HealthHistoryRecord, PlannedHealthRecord } from '../../data/workspace-data';
 import type { DailyRoutine, DailyRoutineChecklistItem, DailyRoutineCreateInput, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineRepeatValues, DailyTrainingSelection } from './daily-activity-data';
-import type { HomeDailyActivity } from './daily-activity-model';
+import { selectDailyProgress, type DailyProgressCoverage, type HomeDailyActivity } from './daily-activity-model';
 import { tokens } from '../../theme/tokens';
 import { automaticDogAge, localDate } from '../onboarding/dog';
 import type { LogEvent } from '../puppy-log/log-model';
@@ -36,7 +36,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   dailyFixture, dailyState = 'hidden', dailyDateKey = '', dailyScopeKey, dailyActivities = [], routineTemplates = [], routineDaySkips = [], dailyTrainingOptions = [],
   dailyRefreshing = false, dailyRefreshError = false,
   dailyMutationBusy = false, dailyMutationKey = '', dailyMutationMessage = '', dailyMutationError = false, onRetryDaily,
-  onOpenChecklist, onOpenTrainingStep,
+  onOpenChecklist, onOpenProgress, onOpenTrainingStep, onOpenDevelopment,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay,
   onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, onGo, onOpenContent, onRetryContent }: {
   dog: OwnedDog;
@@ -59,7 +59,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   nextStep?: string;
   reviewTrainingStep?: boolean;
   dailyFixture?: readonly HomeDailyFixtureItem[];
-  dailyState?: 'hidden' | 'loading' | 'ready' | 'error';
+  dailyState?: 'hidden' | 'loading' | 'ready' | 'partial' | 'error';
   dailyRefreshing?: boolean;
   dailyRefreshError?: boolean;
   dailyDateKey?: string;
@@ -73,6 +73,8 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   dailyMutationMessage?: string;
   dailyMutationError?: boolean;
   onOpenChecklist?: () => void;
+  onOpenProgress?: () => void;
+  onOpenDevelopment?: () => void;
   onOpenTrainingStep?: (programId: string, stepId: string, returnPage: 'home' | 'checklist') => void;
   onRetryDaily?: () => void;
   onCreateRoutine?: (routine: DailyRoutineCreateInput) => Promise<{ status: 'saved' | 'failed' | 'unknown' } | void>;
@@ -101,6 +103,13 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
     : undefined;
   const preview = relevantContent ? previewText(relevantContent.body) : '';
   const pageLabel = dailyFixture ? 'Hem. Syntetiskt granskningsläge.' : 'Hem';
+  const dailyProgress = selectDailyProgress(dailyActivities, dailyState === 'hidden' ? 'unknown' : dailyState);
+  const fixtureProgress = dailyFixture
+    ? selectDailyProgress(dailyFixture.map((item) => ({ ...item, completed: reviewCompletion[item.id] ?? item.completed })), 'ready')
+    : undefined;
+  const checklistCoverage = fixtureProgress?.coverage ?? dailyProgress.coverage;
+  const checklistTotal = fixtureProgress?.totalCount ?? dailyProgress.totalCount;
+  const checklistCompleted = fixtureProgress?.completedCount ?? dailyProgress.completedCount;
 
   useEffect(() => {
     if (openDogSwitcherInitially) onDogSwitcherInitiallyOpened?.();
@@ -119,11 +128,13 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
             <Text style={styles.greetingTitle} accessibilityRole="header">{homeGreetingAt(new Date())}</Text>
             <Ionicons name="sunny" size={tokens.size.iconSm} color={tokens.colors.home.sun} accessibilityElementsHidden />
           </View>
-          <Text style={styles.dogMeta}>{dog.name} | {breedLabel}</Text>
-          {age ? <>
-            <Text style={styles.dogAge}>{age.label}</Text>
+          <Text style={styles.dogMeta}>{dog.name}{age ? ` · ${age.label}` : ` · ${breedLabel}`}</Text>
+          {age ? <MotionPressable accessibilityRole="button" accessibilityLabel={`Visa utveckling för ${dog.name}`}
+            accessibilityHint="Öppnar ålder och ungefärlig utvecklingsfas."
+            onPress={onOpenDevelopment} style={({ pressed }) => [styles.dogPhaseAction, pressed && styles.headingPressed]}>
             <Text style={styles.dogPhase}>Ungefärlig fas: {age.stage}</Text>
-          </> : null}
+            <Ionicons name="chevron-forward" size={tokens.size.iconSm - tokens.spacing.xs} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
+          </MotionPressable> : null}
         </View>
       </View>
       <MotionPressable style={({ pressed }) => [styles.dogPortrait, pressed && styles.portraitPressed]}
@@ -144,14 +155,13 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
     </View>
 
     <Card variant="home" onPress={relevantContent ? () => onOpenContent(relevantContent.id) : nextStep && trainingState === 'ready' ? () => onGo('training') : undefined}
-      accessibilityLabel={`Just nu med ${dog.name}${relevantContent ? `: ${relevantContent.title}` : nextStep && trainingState === 'ready' ? `: ${nextStep}` : ''}${age ? `, hundens ålder ${age.label}` : ''}`}>
+      accessibilityLabel={`Just nu med ${dog.name}${age ? `, ${age.label}` : ''}${relevantContent ? `: ${relevantContent.title}` : nextStep && trainingState === 'ready' ? `: ${nextStep}` : ''}`}>
       <View style={styles.currentCard}>
         <View style={styles.cardHeadingRow}>
           <Ionicons name="bulb" size={tokens.size.iconSm} color={tokens.colors.home.bulb} accessibilityElementsHidden />
-          <Text style={styles.cardHeading}>Just nu med {dog.name}</Text>
+          <Text style={styles.cardHeading}>Just nu med {dog.name}{age ? ` · ${age.label}` : ''}</Text>
           {relevantContent || (nextStep && trainingState === 'ready') ? <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden /> : null}
         </View>
-        {age ? <Text style={styles.dogAge}>Hundens ålder: {age.label}</Text> : null}
         {contentState === 'loading' ? <Skeleton shape="line" lines={2} /> : null}
         {contentState === 'error' ? <Text style={styles.body}>Artiklarna kunde inte hämtas just nu.</Text> : null}
         {relevantContent ? <Text numberOfLines={3} style={styles.body}>{preview}</Text> : null}
@@ -170,42 +180,40 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
       <View style={styles.dailyCardContent}>
         <View style={styles.dailyHeading}>
           <Text style={styles.dailyTitle} accessibilityRole="header">Dagens att göra</Text>
-          <MotionPressable accessibilityRole="button" accessibilityLabel="Hantera rutiner och dagens aktiviteter"
-            onPress={() => openManager()} style={({ pressed }) => [styles.manageDaily, pressed && styles.headingPressed]}>
-            <Ionicons name="create-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
-            <Text style={styles.manageDailyLabel}>Hantera</Text>
-          </MotionPressable>
+          <ProgressControl coverage={checklistCoverage} completed={checklistCompleted} total={checklistTotal} onPress={onOpenProgress} />
+          <ChecklistControl onPress={onOpenChecklist} />
         </View>
-        <MotionPressable testID="home-open-checklist" accessibilityRole="button" accessibilityLabel="Öppna dagens checklista"
-          onPress={onOpenChecklist} style={({ pressed }) => [styles.checklistLink, pressed && styles.headingPressed]}>
-          <Ionicons name="list-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
-          <Text style={styles.checklistLinkLabel}>Checklista</Text>
-          <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
-        </MotionPressable>
         {dailyRefreshError && dailyState === 'ready' ? <View style={styles.dailyRefreshError} accessibilityLiveRegion="polite">
           <Text style={styles.emptyText}>Uppdateringen kunde inte hämtas. Du ser senast hämtade uppgifter.</Text>
           {onRetryDaily ? <Button variant="tertiary" label="Försök igen" accessibilityLabel="Försök uppdatera dagens uppgifter igen" onPress={onRetryDaily} /> : null}
         </View> : null}
-        {dailyFixture ? <ReviewDailyFixture items={dailyFixture} completion={reviewCompletion} refreshing={dailyRefreshing} onCompletionChange={setReviewCompletion} onGo={onGo} onOpenRoutine={(routineId) => openManager(routineId)} /> : dailyState === 'loading' ? <Skeleton shape="row" lines={2} />
-          : dailyState === 'error' ? <View style={styles.dailyState}>
+        {dailyFixture ? <>
+          <ReviewDailyFixture items={dailyFixture} completion={reviewCompletion} refreshing={dailyRefreshing} onCompletionChange={setReviewCompletion} onGo={onGo} onOpenRoutine={(routineId) => openManager(routineId)} />
+        </> : dailyState === 'loading' ? <>
+          <Skeleton shape="row" lines={2} />
+        </> : dailyState === 'error' ? <>
+          <View style={styles.dailyState}>
             <Text style={styles.emptyText}>Dagens uppgifter kunde inte hämtas. Ingen status räknas just nu.</Text>
             {onRetryDaily ? <Button variant="tertiary" label="Hämta dagens uppgifter igen" accessibilityLabel="Hämta dagens uppgifter igen" onPress={onRetryDaily} /> : null}
           </View>
-            : dailyState === 'ready' && dailyActivities.length === 0 ? <View style={styles.dailyState}>
+        </> : dailyProgress.coverage === 'unknown' || dailyProgress.coverage === 'partial' ? <>
+          <View style={styles.dailyState}>
+              <Text style={styles.emptyText}>Dagens uppgifter är inte tillgängliga ännu.</Text>
+              {onRetryDaily ? <Button variant="tertiary" label="Hämta dagens uppgifter" accessibilityLabel="Hämta dagens uppgifter" onPress={onRetryDaily} /> : null}
+          </View>
+        </> : dailyProgress.coverage === 'empty' ? <>
+          <View style={styles.dailyState}>
               {dailyRefreshing ? <ActivityIndicator accessibilityRole="progressbar" accessibilityLabel="Dagens uppgifter uppdateras" size="small" color={tokens.colors.home.textMuted} /> : null}
               <Text style={styles.emptyText}>Skapa en rutin eller välj ett träningssteg att ha med idag.</Text>
-              <Button variant="tertiary" label="Hantera dagens aktiviteter" accessibilityLabel="Hantera dagens aktiviteter" onPress={() => openManager()} />
-            </View>
-              : dailyState === 'ready' ? <View style={styles.dailyList}>
-                <View style={styles.dailySummary}>
-                  <Text style={styles.dailyCount}>{dailyActivities.filter((item) => item.completed).length} av {dailyActivities.length} klara</Text>
-                  {dailyRefreshing ? <ActivityIndicator accessibilityRole="progressbar" accessibilityLabel="Dagens uppgifter uppdateras" size="small" color={tokens.colors.home.textMuted} /> : null}
-                </View>
-                <View accessibilityRole="progressbar" accessibilityLabel={`${dailyActivities.filter((item) => item.completed).length} av ${dailyActivities.length} dagsuppgifter klara`}
-                  accessibilityValue={{ min: 0, max: dailyActivities.length, now: dailyActivities.filter((item) => item.completed).length }} style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${Math.round(dailyActivities.filter((item) => item.completed).length / dailyActivities.length * 100)}%` }]} />
-                </View>
-                {dailyActivities.slice(0, 5).map((item) => {
+          </View>
+        </> : dailyProgress.coverage === 'complete' ? <>
+          <View accessibilityRole="progressbar" accessibilityLabel={`${dailyProgress.completedCount} av ${dailyProgress.totalCount} dagsuppgifter klara`}
+            accessibilityValue={{ min: 0, max: dailyProgress.totalCount, now: dailyProgress.completedCount }} style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${Math.round(dailyProgress.completedCount / dailyProgress.totalCount * 100)}%` }]} />
+          </View>
+          {dailyRefreshing ? <ActivityIndicator accessibilityRole="progressbar" accessibilityLabel="Dagens uppgifter uppdateras" size="small" color={tokens.colors.home.textMuted} /> : null}
+          <View style={styles.dailyList}>
+                {dailyProgress.activities.slice(0, 5).map((item) => {
                   const routineDay = item.routineDay;
                   const itemMutationKey = routineDay && item.routineItemId ? `complete-routine:${routineDay.id}:${item.routineItemId}` : '';
                   const itemMutation = Boolean(itemMutationKey && dailyMutationKey === itemMutationKey);
@@ -222,7 +230,8 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
                       : () => openManager(routineDay?.routine_id ?? null)}
                     onRetry={itemMutation ? (onRetryDailyMutation ?? (isReadbackError ? onRetryDaily : undefined)) : undefined} />;
                 })}
-              </View> : null}
+          </View>
+        </> : null}
       </View>
     </Card>
 
@@ -250,15 +259,14 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
 }
 
 function ReviewDailyFixture({ items, completion, refreshing, onCompletionChange, onGo, onOpenRoutine }: { items: readonly HomeDailyFixtureItem[]; completion: Readonly<Record<string, boolean>>; refreshing: boolean; onCompletionChange: (update: (current: Record<string, boolean>) => Record<string, boolean>) => void; onGo: (page: Destination) => void; onOpenRoutine: (routineId?: string | null) => void }) {
-  const completed = items.filter((item) => completion[item.id] ?? item.completed).length;
+  const fixtureActivities = items.map((item) => ({ ...item, completed: completion[item.id] ?? item.completed }));
+  const progress = selectDailyProgress(fixtureActivities, 'ready');
+  if (progress.coverage === 'empty') return <View style={styles.dailyState}><Text style={styles.emptyText}>Skapa en rutin eller välj ett träningssteg att ha med idag.</Text></View>;
   return <View style={styles.dailyList}>
-    <View style={styles.dailySummary}>
-      <Text style={styles.dailyCount}>{completed} av {items.length} klara</Text>
-      {refreshing ? <ActivityIndicator accessibilityRole="progressbar" accessibilityLabel="Dagens uppgifter uppdateras" size="small" color={tokens.colors.home.textMuted} /> : null}
-    </View>
-    <View accessibilityRole="progressbar" accessibilityLabel={`${completed} av ${items.length} dagsuppgifter klara`}
-      accessibilityValue={{ min: 0, max: items.length, now: completed }} style={styles.progressTrack}>
-      <View style={[styles.progressFill, { width: `${Math.round(completed / items.length * 100)}%` }]} />
+    {refreshing ? <ActivityIndicator accessibilityRole="progressbar" accessibilityLabel="Dagens uppgifter uppdateras" size="small" color={tokens.colors.home.textMuted} /> : null}
+    <View accessibilityRole="progressbar" accessibilityLabel={`${progress.completedCount} av ${progress.totalCount} dagsuppgifter klara`}
+      accessibilityValue={{ min: 0, max: progress.totalCount, now: progress.completedCount }} style={styles.progressTrack}>
+      <View style={[styles.progressFill, { width: `${Math.round(progress.completedCount / progress.totalCount * 100)}%` }]} />
     </View>
     <View style={styles.activityRows}>{items.map((item) => <DailyActivityItem key={item.id} variant="home"
       kind={item.kind ?? 'routine'} label={item.label} accessibilityLabel={item.label}
@@ -267,6 +275,32 @@ function ReviewDailyFixture({ items, completion, refreshing, onCompletionChange,
       routineLabel={item.routineLabel}
       onOpen={() => item.kind === 'training' ? onGo('training') : onOpenRoutine(item.routineId)} />)}</View>
   </View>;
+}
+
+function ChecklistControl({ onPress }: { onPress?: () => void }) {
+  return <MotionPressable testID="home-open-checklist" accessibilityRole="button" accessibilityLabel="Öppna Checklistor"
+    accessibilityHint="Visar hela dagens checklista."
+    onPress={onPress} style={({ pressed }) => [styles.checklistInline, pressed && styles.headingPressed]}>
+    <Ionicons testID="home-open-checklist-chevron" name="chevron-forward" size={tokens.size.iconSm - tokens.spacing.xs}
+      color={tokens.colors.primary} accessibilityElementsHidden />
+  </MotionPressable>;
+}
+
+function ProgressControl({ coverage, completed, total, onPress }: {
+  coverage: DailyProgressCoverage;
+  completed: number;
+  total: number;
+  onPress?: () => void;
+}) {
+  const complete = coverage === 'complete';
+  if (!onPress) return complete ? <Text accessibilityLabel={`${completed} av ${total} klara`} style={styles.dailyCount}>{completed}/{total}</Text> : null;
+  return <MotionPressable testID="home-open-progress" accessibilityRole="button"
+    accessibilityLabel={complete ? `${completed} av ${total} dagsuppgifter klara. Se dagens framsteg` : 'Se dagens framsteg'}
+    accessibilityHint="Visar dagens sammanställning och hela aktivitetslistan."
+    onPress={onPress} style={({ pressed }) => [styles.progressControl, pressed && styles.headingPressed]}>
+    <Ionicons name="stats-chart-outline" size={tokens.spacing.md} color={tokens.colors.home.greenStrong} accessibilityElementsHidden />
+    <Text style={styles.progressControlText}>{complete ? `${completed}/${total} · Framsteg` : 'Se framsteg'}</Text>
+  </MotionPressable>;
 }
 
 function previewText(body: string): string {
@@ -368,6 +402,7 @@ const styles = StyleSheet.create({
   greetingTitle: { ...tokens.typography.heading, color: tokens.colors.home.text, fontWeight: '600' },
   dogMeta: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700' },
   dogAge: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
+  dogPhaseAction: { minHeight: tokens.size.touchMin, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, marginVertical: -tokens.spacing.xs / 2, paddingHorizontal: tokens.spacing.xs, marginLeft: -tokens.spacing.xs, borderRadius: tokens.radius.sm },
   dogPhase: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
   dogPortrait: { position: 'absolute', top: 0, right: 0, zIndex: 1, width: portraitSize, height: portraitSize, borderRadius: tokens.radius.full },
   portraitPressed: { opacity: 0.84, transform: [{ scale: 0.98 }] },
@@ -385,22 +420,20 @@ const styles = StyleSheet.create({
   currentWeekNumber: { color: tokens.colors.onPrimary, fontWeight: '700' },
   weekDot: { width: tokens.spacing.xs + 1, height: tokens.spacing.xs + 1, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.border },
   currentWeekDot: { backgroundColor: tokens.colors.home.greenStrong },
-  currentCard: { gap: tokens.spacing.sm },
+  currentCard: { gap: 0 },
   cardHeadingRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   cardHeading: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },
   body: { ...tokens.typography.caption, color: tokens.colors.home.text, flexShrink: 1 },
   exampleLabel: { ...tokens.typography.caption, color: tokens.colors.warning },
   dailyCardContent: { gap: tokens.spacing.xs },
-  dailyHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
+  dailyHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs / 2 },
   dailyTitle: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },
-  dailyCount: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
-  manageDaily: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.xs, borderRadius: tokens.radius.sm },
-  checklistLink: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.home.canvas },
-  checklistLinkLabel: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700', flex: 1 },
-  manageDailyLabel: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
+  dailyCount: { ...tokens.typography.caption, color: tokens.colors.home.textMuted, flexShrink: 0 },
+  progressControl: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs / 2, paddingHorizontal: tokens.spacing.xs, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.selectedSurface, flexShrink: 0 },
+  progressControlText: { ...tokens.typography.smallCaption, color: tokens.colors.home.greenStrong, fontWeight: '700' },
+  checklistInline: { width: tokens.size.touchMin, height: tokens.size.touchMin, flexShrink: 0, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.sm },
   headingPressed: { backgroundColor: tokens.colors.selectedSurface },
   dailyList: { gap: tokens.spacing.xs },
-  dailySummary: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   progressTrack: { height: tokens.size.progress, borderRadius: tokens.radius.full, overflow: 'hidden', backgroundColor: tokens.colors.home.progressTrack },
   progressFill: { height: '100%', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.greenFill },
   activityRows: { gap: 0 },

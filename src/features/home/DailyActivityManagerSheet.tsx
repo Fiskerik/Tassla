@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Crypto from 'expo-crypto';
@@ -91,13 +91,14 @@ function routineDraftHasReadback(draft: RoutineDraft, routines: readonly DailyRo
   return draft.mode === 'create' ? matchesDraft : routine.checklist_revision > (draft.baseRevision ?? routine.checklist_revision) && matchesDraft;
 }
 
-export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, focusRoutineId, activities, routines, routineDaySkips, trainingOptions,
+export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, focusRoutineId, editFocusedRoutineOnOpen = false, activities, routines, routineDaySkips, trainingOptions,
   busy, mutationMessage, mutationError, onRetryMutation, onCreateRoutine, onUpdateRoutine, onDeleteRoutine,
   onAddRoutineToDay, onRemoveRoutineFromDay, onAddTrainingToDay, onRemoveTrainingFromDay, onGoTraining }: {
   visible: boolean;
   dailyScopeKey?: string;
   onClose: () => void;
   focusRoutineId?: string | null;
+  editFocusedRoutineOnOpen?: boolean;
   activities: readonly HomeDailyActivity[];
   routines: readonly DailyRoutine[];
   routineDaySkips: readonly DailyRoutineDaySkip[];
@@ -120,6 +121,7 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   const [helpOpen, setHelpOpen] = useState(false);
   const [showDiscardConfirmation, setShowDiscardConfirmation] = useState(false);
   const leaveAction = useRef<(() => void) | null>(null);
+  const autoEditStarted = useRef(false);
   const selectedRoutines = new Map(activities.filter((item) => item.routineDay)
     .map((item) => [item.routineDay?.routine_id, item.routineDay as DailyRoutineDay]));
   const skippedRoutines = new Map(routineDaySkips.map((row) => [row.routine_id, row]));
@@ -163,7 +165,7 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
       label: '', checklist: [firstItem], repeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null } });
   }
 
-  function startEdit(routine: DailyRoutine) {
+  const startEdit = useCallback((routine: DailyRoutine) => {
     if (selectionLocked) return;
     const checklist = copyChecklist(routine.checklist);
     const repeat = { repeat_unit: routine.repeat_unit, repeat_interval: routine.repeat_interval, repeat_weekdays: routine.repeat_weekdays };
@@ -171,7 +173,13 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
     setDraft({ mode: 'edit', submissionId: Crypto.randomUUID(), routineId: routine.id, baseRevision: routine.checklist_revision,
       initialLabel: routine.label, initialChecklist: checklist, initialRepeat: repeat, anchorDate: routine.repeat_anchor_date ?? newAnchorDate, newAnchorDate,
       label: routine.label, checklist, repeat });
-  }
+  }, [selectionLocked]);
+
+  useEffect(() => {
+    if (!visible || !editFocusedRoutineOnOpen || !focusedRoutine || autoEditStarted.current) return;
+    autoEditStarted.current = true;
+    startEdit(focusedRoutine);
+  }, [visible, editFocusedRoutineOnOpen, focusedRoutine, startEdit]);
 
   function updateDraft(patch: Partial<Pick<RoutineDraft, 'label' | 'checklist' | 'repeat'>>) {
     setDraft((current) => current ? { ...current, ...patch } : current);
