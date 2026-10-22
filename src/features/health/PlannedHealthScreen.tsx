@@ -26,7 +26,11 @@ type LoadState = 'loading' | 'ready' | 'error';
 
 export function PlannedHealthScreen({
   onBack,
+  backLabel = 'Hälsa',
   records,
+  checklistFocusState = 'idle',
+  checklistFocusRecord = null,
+  onRetryChecklistFocus,
   loadState,
   busy = false,
   pending = false,
@@ -40,7 +44,11 @@ export function PlannedHealthScreen({
   onDelete,
 }: {
   onBack: () => void;
+  backLabel?: string;
   records: readonly PlannedHealthRecord[];
+  checklistFocusState?: 'idle' | 'loading' | 'ready' | 'error' | 'missing';
+  checklistFocusRecord?: PlannedHealthRecord | null;
+  onRetryChecklistFocus?: () => void;
   loadState: LoadState;
   busy?: boolean;
   pending?: boolean;
@@ -72,6 +80,11 @@ export function PlannedHealthScreen({
   const blocked = busy || pending;
   const editingRecord = records.find((record) => record.id === editingId) ?? null;
   const recovery = selectPlannedHealthRecovery({ conflict: Boolean(conflict), pending, statusError, loadError: loadState === 'error' });
+  const recordsForView = checklistFocusState === 'ready' && checklistFocusRecord
+    ? [checklistFocusRecord, ...records.filter((record) => record.id !== checklistFocusRecord.id)] : records;
+  const focusedChecklistRecord = checklistFocusState === 'ready' ? checklistFocusRecord : null;
+  const remainingRecords = focusedChecklistRecord
+    ? recordsForView.filter((record) => record.id !== focusedChecklistRecord.id) : recordsForView;
 
   useEffect(() => {
     if (editingId === null || editingRecord !== null) return;
@@ -211,11 +224,39 @@ export function PlannedHealthScreen({
     restoreInfoFocus();
   }
 
+  function renderRecord(record: PlannedHealthRecord, openedFromChecklist = false) {
+    const timing = record.due_on < today ? 'Passerat datum' : record.due_on === today ? 'Idag' : 'Kommande';
+    const reminderText = reminderLabel(record.reminder_enabled, record.due_on, record.reminder_minutes);
+    return <View key={record.id} style={styles.recordCard}>
+      {openedFromChecklist ? <Text accessibilityRole="text" style={styles.sourceContext}>Öppnad från Checklistan</Text> : null}
+      <View style={styles.recordHeading}>
+        <View style={styles.recordType}>
+          <IconChip category={record.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} />
+          <Text style={styles.recordTitle}>{typeLabel(record.event_type)}</Text>
+        </View>
+        <Text style={[styles.timingLabel, record.due_on < today && styles.overdueLabel]}>{timing.toUpperCase()}</Text>
+      </View>
+      <Text style={styles.recordDate}>{record.due_on}</Text>
+      {record.due_time ? <Text style={styles.reminderRow}>Tid {record.due_time.slice(0, 5)}</Text> : null}
+      {record.description ? <Text style={styles.recordNote}>{record.description}</Text> : null}
+      {reminderText ? <Text style={styles.reminderRow}>{reminderText}</Text> : null}
+      <Pressable accessibilityRole="button" accessibilityLabel={`Åtgärder för ${typeLabel(record.event_type)} ${record.due_on}`}
+        accessibilityState={{ disabled: blocked }} disabled={blocked}
+        onPress={() => Alert.alert('Åtgärder', undefined, buildPlannedHealthActionButtons(
+          () => { if (!blocked) edit(record); },
+          () => { if (!blocked) confirmDelete(record); },
+        ))}
+        style={({ pressed }) => [styles.actionsButton, pressed && !blocked && styles.actionsButtonPressed]}>
+        <Ionicons name="ellipsis-horizontal" size={tokens.size.iconMd} color={blocked ? tokens.colors.textSecondary : tokens.colors.textPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+      </Pressable>
+    </View>;
+  }
+
   return <View>
-    <Pressable accessibilityRole="button" accessibilityLabel="Tillbaka till Hälsa" accessibilityState={{ disabled: busy }} disabled={busy}
+    <Pressable accessibilityRole="button" accessibilityLabel={`Tillbaka till ${backLabel}`} accessibilityState={{ disabled: busy }} disabled={busy}
       onPress={onBack} style={({ pressed }) => [styles.backAction, pressed && !busy && styles.actionPressed]}>
       <Ionicons name="chevron-back" size={tokens.size.iconMd} color={tokens.colors.textPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-      <Text style={styles.backLabel}>Hälsa</Text>
+      <Text style={styles.backLabel}>{backLabel}</Text>
     </Pressable>
     <PageHeading title="Planerade hälsohändelser" description="Egna planer för vaccinationer och veterinärbesök." />
     <View style={styles.heroCard}>
@@ -241,6 +282,12 @@ export function PlannedHealthScreen({
       <Text style={styles.infoBody}>Datum som passerat ligger kvar som planerade tills du själv ändrar eller tar bort dem. Lokala påminnelser är frivilliga och styrs även av enhetens tillstånd.</Text>
     </InfoModal>
     {reminderSummary ? <MessageCard>{reminderSummary}</MessageCard> : null}
+    {checklistFocusState === 'loading' ? <MessageCard>Hämtar den valda planen från Checklistan…</MessageCard> : null}
+    {checklistFocusState === 'missing' ? <MessageCard tone="error">Planen finns inte längre. Listan har uppdaterats.</MessageCard> : null}
+    {checklistFocusState === 'error' ? <View style={styles.focusMessage}>
+      <MessageCard tone="error">Planen kunde inte hämtas.</MessageCard>
+      {onRetryChecklistFocus ? <QuietButton title="Hämta planen igen" disabled={busy} onPress={onRetryChecklistFocus} /> : null}
+    </View> : null}
 
     {(pending || statusError) && <MessageCard tone={statusError ? 'error' : 'neutral'}>{statusMessage || (pending ? 'Ändringen väntar på kontroll av sparstatus.' : 'Åtgärden kunde inte slutföras.')}</MessageCard>}
     {conflict && <View style={styles.conflictCard}>
@@ -255,6 +302,8 @@ export function PlannedHealthScreen({
     {loadState === 'error' && <MessageCard tone="error">Planerna kunde inte hämtas.</MessageCard>}
     {recovery === 'pending' && <PrimaryButton title="Kontrollera sparstatus" disabled={busy} onPress={onRetry} />}
     {recovery === 'error' && <PrimaryButton title="Försök igen" disabled={busy} onPress={onRetry} />}
+
+    {loadState === 'ready' && focusedChecklistRecord ? renderRecord(focusedChecklistRecord, true) : null}
 
     {loadState === 'ready' && <>
       {busy && <MessageCard>Sparar och kontrollerar ändringen…</MessageCard>}
@@ -294,9 +343,11 @@ export function PlannedHealthScreen({
         {editingRecord && <QuietButton title="Avbryt rättning" disabled={blocked} onPress={resetForm} />}
       </View>
 
-      <Text style={styles.listTitle} accessibilityRole="header">Sparade planer</Text>
-      {records.length >= 40 && <MessageCard>Visar de 40 närmaste planerna. Äldre planer kan saknas från listan.</MessageCard>}
-      {records.length === 0 && <View style={styles.emptyCard}>
+      {remainingRecords.length > 0 ? <Text style={styles.listTitle} accessibilityRole="header">Sparade planer</Text> : null}
+      {records.length >= 40 && <MessageCard>{checklistFocusState === 'ready' && checklistFocusRecord
+        ? 'Visar vald plan från Checklistan och upp till 40 närmaste planer.'
+        : 'Visar de 40 närmaste planerna. Äldre planer kan saknas från listan.'}</MessageCard>}
+      {recordsForView.length === 0 && checklistFocusState !== 'loading' && <View style={styles.emptyCard}>
         <Image source={require('../../../assets/images/dog-resting.png')} style={styles.emptyImage}
           accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
         <View style={styles.emptyCopy}>
@@ -304,34 +355,7 @@ export function PlannedHealthScreen({
           <Text style={styles.emptyBody}>Lägg till något som du själv vill komma ihåg.</Text>
         </View>
       </View>}
-      {records.map((record) => {
-        const timing = record.due_on < today ? 'Passerat datum' : record.due_on === today ? 'Idag' : 'Kommande';
-        const reminderText = reminderLabel(record.reminder_enabled, record.due_on, record.reminder_minutes);
-        return <View key={record.id} style={styles.recordCard}>
-          <View style={styles.recordHeading}>
-            <View style={styles.recordType}>
-              <IconChip category={record.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} />
-              <Text style={styles.recordTitle}>{typeLabel(record.event_type)}</Text>
-            </View>
-            <Text style={[styles.timingLabel, record.due_on < today && styles.overdueLabel]}>{timing.toUpperCase()}</Text>
-          </View>
-          <Text style={styles.recordDate}>{record.due_on}</Text>
-          {record.due_time ? <Text style={styles.reminderRow}>Tid {record.due_time.slice(0, 5)}</Text> : null}
-          {record.description ? <Text style={styles.recordNote}>{record.description}</Text> : null}
-          {reminderText
-            ? <Text style={styles.reminderRow}>{reminderText}</Text>
-            : null}
-          <Pressable accessibilityRole="button" accessibilityLabel={`Åtgärder för ${typeLabel(record.event_type)} ${record.due_on}`}
-            accessibilityState={{ disabled: blocked }} disabled={blocked}
-            onPress={() => Alert.alert('Åtgärder', undefined, buildPlannedHealthActionButtons(
-              () => { if (!blocked) edit(record); },
-              () => { if (!blocked) confirmDelete(record); },
-            ))}
-            style={({ pressed }) => [styles.actionsButton, pressed && !blocked && styles.actionsButtonPressed]}>
-            <Ionicons name="ellipsis-horizontal" size={tokens.size.iconMd} color={blocked ? tokens.colors.textSecondary : tokens.colors.textPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-          </Pressable>
-        </View>;
-      })}
+      {remainingRecords.map((record) => renderRecord(record))}
     </>}
   </View>;
 }
@@ -360,6 +384,8 @@ const styles = StyleSheet.create({
   description: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   infoRow: { marginTop: tokens.spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: tokens.spacing.sm },
   infoHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption },
+  focusMessage: { gap: tokens.spacing.xs },
+  sourceContext: { color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '700', marginBottom: tokens.spacing.sm },
   infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },
   infoButtonText: { color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '700' },
   infoBody: { color: tokens.colors.textPrimary, ...tokens.typography.body, marginBottom: tokens.spacing.md },

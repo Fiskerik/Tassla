@@ -8,10 +8,14 @@ import { DailyChecklistScreen } from '../../src/features/home/DailyChecklistScre
 import { DailyProgressScreen } from '../../src/features/home/DailyProgressScreen';
 import { DevelopmentScreen } from '../../src/features/home/DevelopmentScreen';
 import { KnowledgeScreen } from '../../src/features/knowledge/KnowledgeScreen';
+import { PlannedHealthScreen } from '../../src/features/health/PlannedHealthScreen';
+import { PublishedTrainingScreen } from '../../src/features/training/PublishedTrainingScreen';
 import { activeMainTabDestination, productRouteScrollKeys } from '../../src/features/home/main-navigation';
-import type { HomeDailyActivity } from '../../src/features/home/daily-activity-model';
+import type { ChecklistFilter, HomeDailyActivity } from '../../src/features/home/daily-activity-model';
 import type { HomeContent, OwnedDog } from '../../src/data/app-data';
+import type { HistoricalTrainingStepDetail, PlannedHealthRecord, PublishedTrainingProgram } from '../../src/data/workspace-data';
 import type { DailyRoutine, DailyRoutineDay } from '../../src/features/home/daily-activity-data';
+import { deriveUpcomingActivities, isRoutineDueOnDate, isoWeekdayForDateKey } from '../../src/features/home/daily-activity-model';
 import type { LogEvent } from '../../src/features/puppy-log/log-model';
 import { localDate } from '../../src/features/onboarding/dog';
 import { tokens } from '../../src/theme/tokens';
@@ -60,12 +64,34 @@ const routineTemplates: DailyRoutine[] = [...new Map(rows.flatMap((activity) => 
     checklist: row.checklist_snapshot,
     checklist_revision: 1,
     legacy_single_item: false,
-    repeat_unit: null,
-    repeat_interval: null,
-    repeat_weekdays: null,
-    repeat_anchor_date: null,
+    repeat_unit: row.routine_id === 'routine-morning' ? 'day' : row.routine_id === 'routine-walk' ? 'week' : null,
+    repeat_interval: row.routine_id === 'routine-morning' ? 3 : row.routine_id === 'routine-walk' ? 1 : null,
+    repeat_weekdays: row.routine_id === 'routine-walk' ? [isoWeekdayForDateKey(dateOffset(today, 3))] : null,
+    repeat_anchor_date: row.routine_id ? today : null,
   } satisfies DailyRoutine] as const];
 }))].map(([, routine]) => routine);
+const plannedHealthFixture: PlannedHealthRecord = {
+  id: 'review-health-plan', dog_id: dog.id, event_type: 'vaccination', due_on: dateOffset(today, 2), due_time: null,
+  description: 'Syntetisk framtida plan för visuell granskning.', created_at: today, reminder_enabled: false, reminder_minutes: null,
+};
+const upcomingActivities = deriveUpcomingActivities(
+  routineTemplates, [plannedHealthFixture], dog.id, dateOffset(today, 1), dateOffset(today, 7),
+);
+const historicalActivities: HomeDailyActivity[] = [
+  { id: 'history-routine', label: 'Torka tassar', icon: 'paw', routineLabel: 'Promenad', kind: 'routine', completed: true, dateKey: dateOffset(today, -1) },
+  { id: 'history-training', label: 'Miljöträning – nya ljud', kind: 'training', completed: true, dateKey: dateOffset(today, -3), programId: 'review-program', stepId: 'review-step', programTitle: 'Trygg vardagsstart' },
+];
+const historicalTrainingProgram: PublishedTrainingProgram = {
+  id: 'review-program', content_id: 'review-training', version: 1, title: 'Trygg vardagsstart',
+  body: 'Syntetiskt träningsinnehåll för visuell granskning.', sources: ['Syntetisk UI-fixture.'], is_ai_generated: false,
+  steps: [{ id: 'review-step', position: 0, title: 'Miljöträning – nya ljud', instruction: 'Syntetisk historisk instruktion för att kontrollera läsbarhet.' }],
+  completedStepIds: ['review-step'], completedAtByStepId: { 'review-step': `${dateOffset(today, -3)}T10:00:00.000Z` },
+};
+const historicalTrainingDetail: HistoricalTrainingStepDetail = {
+  programVersionId: 'review-program', programTitle: 'Trygg vardagsstart', stepId: 'review-step',
+  stepTitle: 'Miljöträning – nya ljud', instruction: 'Syntetisk historisk instruktion för att kontrollera läsbarhet.',
+  sources: ['Syntetisk UI-fixture.'], isAiGenerated: false,
+};
 const firstRoutine = rows[0]?.routineDay;
 const firstRoutineItemId = rows[0]?.routineItemId;
 const firstMutationKey = firstRoutine && firstRoutineItemId ? `complete-routine:${firstRoutine.id}:${firstRoutineItemId}` : '';
@@ -116,7 +142,12 @@ function makeActivities(dateKey: string, dogId: string, count: number): HomeDail
 function VisualCheckApp() {
   const [completion, setCompletion] = useState<Record<string, boolean>>({});
   const [mutationFlow, setMutationFlow] = useState<'idle' | 'pending' | 'confirmed'>('idle');
-  const [navigation, setNavigation] = useState('home');
+  const [navigation, setNavigation] = useState(() => params.get('screen') === 'checklist' ? 'checklist' : 'home');
+  const [checklistFilter, setChecklistFilter] = useState<ChecklistFilter>(() => {
+    const requested = params.get('checklistFilter');
+    return requested === 'Denna vecka' || requested === 'Alla' || requested === 'Kommande' ? requested : 'Idag';
+  });
+  const [focusedPlanId, setFocusedPlanId] = useState<string | null>(null);
   const [developmentGuideId, setDevelopmentGuideId] = useState<string | null>(null);
   const [openChecklistManager, setOpenChecklistManager] = useState(false);
   const dailyState = scenario === 'loading' ? 'loading'
@@ -129,16 +160,28 @@ function VisualCheckApp() {
   })), [completion]);
   const dailyActivities = reviewMode && !['empty', 'loading', 'error', 'unknown', 'partial'].includes(scenario)
     ? activities : [];
+  const rangeState = ['loading', 'partial', 'error'].includes(params.get('rangeState') ?? '')
+    ? params.get('rangeState') as 'loading' | 'partial' | 'error' : 'ready';
+const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
+    ? checklistFilter === 'Kommande' ? upcomingActivities : historicalActivities
+    : [];
+  const historicalFocus = navigation === 'historical-training';
+  const routePage = historicalFocus ? 'home-training-detail' : navigation;
+  const routeScroll = navigation === 'planned-health' && focusedPlanId
+    ? { scrollKey: 'planned-health-checklist-source', preserveScrollKey: 'home-checklist-flow' }
+    : productRouteScrollKeys(routePage, undefined, historicalFocus ? 'checklist' : undefined);
 
   return <View style={{ flex: 1, minHeight: 0 }}>
     {reviewMode ? <View testID="review-banner" style={{ height: 32, minHeight: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card }}>
-      <Text style={{ ...tokens.typography.caption, color: tokens.colors.home.text }}>Syntetiskt granskningsläge · AI-genererad standardbild</Text>
+      <Text style={{ ...tokens.typography.caption, color: tokens.colors.home.text }}>{navigation === 'home'
+        ? 'Syntetiskt granskningsläge · AI-genererad standardbild' : 'Syntetiskt granskningsläge · checklistdata'}</Text>
     </View> : null}
     <View testID="review-app-viewport" style={{ flex: 1, minHeight: 0 }}>
       <View style={{ flex: 1, minHeight: 0, paddingTop: 44 }}>
-        <AppScreen {...productRouteScrollKeys(navigation, navigation === 'knowledge' ? 'development' : undefined)}
+        <AppScreen {...(navigation === 'knowledge'
+          ? productRouteScrollKeys(navigation, 'development') : routeScroll)}
           scrollMemoryScope={`visual-check:${dog.id}:${dog.birth_date}`}
-          footer={<View style={{ paddingBottom: 34 }}><BottomNav active={activeMainTabDestination(navigation === 'knowledge' ? 'development' : navigation)} onChange={(destination) => { setDevelopmentGuideId(null); setNavigation(destination); }} /></View>}>
+          footer={<View style={{ paddingBottom: 34 }}><BottomNav active={activeMainTabDestination(navigation === 'knowledge' ? 'development' : routePage)} onChange={(destination) => { setDevelopmentGuideId(null); setNavigation(destination); }} /></View>}>
           {navigation === 'home' ? <HomeScreen
             dog={dog}
             breed="Golden retriever"
@@ -162,7 +205,7 @@ function VisualCheckApp() {
             dailyMutationError={['failed', 'unknown', 'readback'].includes(dailyMutationScenario)}
             onRetryDaily={() => {}}
             onRetryDailyMutation={() => {}}
-            onOpenChecklist={() => { window.__homePanelsOpened = 'checklist'; setOpenChecklistManager(false); setNavigation('checklist'); }}
+            onOpenChecklist={() => { window.__homePanelsOpened = 'checklist'; setChecklistFilter('Idag'); setOpenChecklistManager(false); setNavigation('checklist'); }}
             onOpenProgress={() => { window.__homePanelsOpened = 'progress'; setNavigation('progress'); }}
             onOpenDevelopment={() => { window.__homePanelsOpened = 'development'; setNavigation('development'); }}
             onOpenTrainingStep={() => { window.__homePanelsOpened = 'training-step'; }}
@@ -228,8 +271,22 @@ function VisualCheckApp() {
             mutationKey=""
             mutationMessage=""
             mutationError={false}
-            onBack={() => { setOpenChecklistManager(false); setNavigation('home'); }}
+            onBack={() => { setOpenChecklistManager(false); setChecklistFilter('Idag'); setNavigation('home'); }}
             openManagerInitially={openChecklistManager}
+            filter={checklistFilter}
+            onChangeFilter={setChecklistFilter}
+            rangeState={rangeState}
+            rangeActivities={rangeState === 'loading' || rangeState === 'error' ? [] : rangeActivities}
+            onRetryRange={() => {}}
+            upcomingRoutines={reviewMode ? routineTemplates : []}
+            onOpenUpcomingRoutine={async (routineId, activityDate) => {
+              const routine = routineTemplates.find((item) => item.id === routineId);
+              return routine && isRoutineDueOnDate(routine, activityDate)
+                ? { status: 'ready' as const, routine }
+                : { status: 'missing' as const };
+            }}
+            onOpenPlannedHealth={(planId) => { setFocusedPlanId(planId); setNavigation('planned-health'); }}
+            onOpenHistoricalTrainingStep={() => { setNavigation('historical-training'); }}
             routines={routineTemplates}
             routineDaySkips={[]}
             trainingOptions={[]}
@@ -240,6 +297,30 @@ function VisualCheckApp() {
             }}
             onAddRoutineToDay={() => {}}
             onGoTraining={() => setNavigation('training')}
+          /> : navigation === 'planned-health' ? <PlannedHealthScreen
+            onBack={() => { setFocusedPlanId(null); setNavigation('checklist'); }}
+            backLabel="Checklistan"
+            records={reviewMode ? [plannedHealthFixture] : []}
+            checklistFocusState={focusedPlanId ? 'ready' : 'idle'}
+            checklistFocusRecord={focusedPlanId === plannedHealthFixture.id ? plannedHealthFixture : null}
+            loadState="ready"
+            onRetry={() => {}}
+            onResolveConflict={() => {}}
+            onSave={async () => true}
+            onDelete={async () => true}
+          /> : historicalFocus ? <PublishedTrainingScreen
+            ageWeeks={77}
+            programs={[historicalTrainingProgram]}
+            paused={[]}
+            busyStepKey={null}
+            error=""
+            onCompleteStep={async () => false}
+            onContinue={() => setNavigation('checklist')}
+            onResetProgram={() => {}}
+            onRetry={() => {}}
+            focusStep={{ programId: historicalTrainingProgram.id, stepId: 'review-step', returnPage: 'checklist', readOnly: true, dateKey: dateOffset(today, -3), completed: true }}
+            historicalDetail={{ status: 'ready', detail: historicalTrainingDetail }}
+            onCloseStep={() => setNavigation('checklist')}
           /> : <View testID="destination-result"><Text>{navigation}</Text></View>}
         </AppScreen>
       </View>

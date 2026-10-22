@@ -87,6 +87,131 @@ test('daily activity snapshot rejects partial responses and enforces requested d
   } finally { await foreignClient.auth.dispose(); }
 });
 
+test('selected routine icons survive template and day-snapshot reads while unknown icons are rejected', async () => {
+  const iconChecklist = [{ ...checklist[0], icon: 'water-outline' }];
+  const iconRoutine = { ...routine, checklist: iconChecklist };
+  const iconDay = { ...routineDay, checklist_snapshot: iconChecklist };
+  const { client } = localClient(({ url }) => {
+    if (url.pathname.endsWith('/rpc/ensure_due_daily_routine_days')) return jsonResponse([]);
+    if (url.pathname.endsWith('/dog_daily_routines')) return jsonResponse([iconRoutine]);
+    if (url.pathname.endsWith('/dog_daily_routine_days')) return jsonResponse([iconDay]);
+    if (url.pathname.endsWith('/dog_daily_routine_day_skips')) return jsonResponse([]);
+    if (url.pathname.endsWith('/dog_daily_training_selections')) return jsonResponse([]);
+    throw new Error('Unexpected request ' + url.pathname);
+  });
+  try {
+    const snapshot = await data.fetchDailyActivitySnapshot(client, dogId, dateKey, 'Europe/Stockholm');
+    assert.deepEqual(snapshot.routines[0].checklist, iconChecklist);
+    assert.deepEqual(snapshot.routineDays[0].checklist_snapshot, iconChecklist);
+  } finally { await client.auth.dispose(); }
+
+  for (const invalidItem of [
+    { ...checklist[0], icon: 'unknown-icon' },
+    { ...checklist[0], icon: null },
+    { ...checklist[0], icon: 'water-outline', extra: true },
+  ]) {
+    const invalidIconRoutine = { ...routine, checklist: [invalidItem] };
+    const { client: invalidClient } = localClient(({ url }) => {
+      if (url.pathname.endsWith('/rpc/ensure_due_daily_routine_days')) return jsonResponse([]);
+      if (url.pathname.endsWith('/dog_daily_routines')) return jsonResponse([invalidIconRoutine]);
+      if (url.pathname.endsWith('/dog_daily_routine_days')) return jsonResponse([routineDay]);
+      if (url.pathname.endsWith('/dog_daily_routine_day_skips')) return jsonResponse([]);
+      if (url.pathname.endsWith('/dog_daily_training_selections')) return jsonResponse([]);
+      throw new Error('Unexpected request ' + url.pathname);
+    });
+    try {
+      await assert.rejects(data.fetchDailyActivitySnapshot(invalidClient, dogId, dateKey, 'Europe/Stockholm'), /Could not load routine templates/);
+    } finally { await invalidClient.auth.dispose(); }
+  }
+});
+
+test('routine creation persists and reads back a selected checklist icon', async () => {
+  const iconChecklist = [{ ...checklist[0], icon: 'water-outline' }];
+  const iconRoutine = { ...routine, checklist: iconChecklist };
+  const iconDraft = { ...routineDraft, checklist: iconChecklist };
+  const { client, requests } = localClient(async ({ method, url, body }) => {
+    if (method === 'POST' && url.pathname.endsWith('/rpc/create_daily_routine_v2')) {
+      assert.deepEqual(body.p_checklist, iconChecklist);
+      throw new TypeError('simulated lost response after server commit');
+    }
+    assert.equal(method, 'GET');
+    assert.equal(url.pathname, '/rest/v1/dog_daily_routines');
+    return jsonResponse(iconRoutine);
+  });
+  try {
+    const result = await data.createDailyRoutine(client, iconDraft, 'Europe/Stockholm');
+    assert.deepEqual(result, { status: 'saved', value: iconRoutine });
+    assert.deepEqual(requests.map(({ method }) => method), ['POST', 'GET']);
+  } finally { await client.auth.dispose(); }
+});
+
+test('routine replacement persists and reads back a selected checklist icon at the next revision', async () => {
+  const iconChecklist = [{ ...checklist[0], icon: 'water-outline' }];
+  const updatedRoutine = { ...routine, checklist: iconChecklist, checklist_revision: 2 };
+  const repeat = { repeat_unit: null, repeat_interval: null, repeat_weekdays: null };
+  const { client, requests } = localClient(({ method, url, body }) => {
+    assert.equal(method, 'POST');
+    assert.equal(url.pathname, '/rest/v1/rpc/replace_daily_routine_v2');
+    assert.equal(body.p_expected_revision, routine.checklist_revision);
+    assert.deepEqual(body.p_checklist, iconChecklist);
+    return jsonResponse(updatedRoutine);
+  });
+  try {
+    const result = await data.replaceDailyRoutine(client, routine, routine.label, iconChecklist, repeat, 'Europe/Stockholm');
+    assert.deepEqual(result, { status: 'saved', value: updatedRoutine });
+    assert.equal(requests.length, 1);
+  } finally { await client.auth.dispose(); }
+});
+
+test('routine replacement distinguishes a verified newer revision from an ordinary rejection', async () => {
+  const repeat = { repeat_unit: null, repeat_interval: null, repeat_weekdays: null };
+  const latest = { ...routine, label: 'Uppdaterad rutin', checklist_revision: 2 };
+  const conflict = await localClient(({ method, url }) => method === 'POST'
+    ? jsonResponse({ code: '40001', message: 'Routine changed before replacement' }, 409)
+    : url.pathname.endsWith('/dog_daily_routines') ? jsonResponse(latest) : jsonResponse([]));
+  try {
+    assert.deepEqual(await data.replaceDailyRoutine(conflict.client, routine, 'Mitt utkast', checklist, repeat, 'Europe/Stockholm'), {
+      status: 'conflict', value: latest,
+    });
+    assert.equal(conflict.requests.length, 2);
+    assert.equal(conflict.requests[1].url.searchParams.get('dog_id'), `eq.${dogId}`);
+    assert.equal(conflict.requests[1].url.searchParams.get('id'), `eq.${routine.id}`);
+  } finally { await conflict.client.auth.dispose(); }
+
+  const rejected = await localClient(({ method, url }) => method === 'POST'
+    ? jsonResponse({ code: '42501', message: 'Routine update denied' }, 403)
+    : url.pathname.endsWith('/dog_daily_routines') ? jsonResponse(routine) : jsonResponse([]));
+  try {
+    assert.deepEqual(await data.replaceDailyRoutine(rejected.client, routine, 'Mitt utkast', checklist, repeat, 'Europe/Stockholm'), { status: 'failed' });
+  } finally { await rejected.client.auth.dispose(); }
+});
+
+test('routine replacement keeps a class 08 connection error unresolved after stale readback', async () => {
+  const repeat = { repeat_unit: null, repeat_interval: null, repeat_weekdays: null };
+  const { client, requests } = localClient(({ method, url }) => method === 'POST'
+    ? jsonResponse({ code: '08006', message: 'connection failure during write' }, 503)
+    : url.pathname.endsWith('/dog_daily_routines') ? jsonResponse(routine) : jsonResponse([]));
+  try {
+    assert.deepEqual(await data.replaceDailyRoutine(client, routine, 'Mitt utkast', checklist, repeat, 'Europe/Stockholm'), { status: 'unknown' });
+    assert.equal(requests.length, 2);
+  } finally { await client.auth.dispose(); }
+});
+
+test('routine conflict readback rejects rows outside the exact dog and routine scope', async () => {
+  const repeat = { repeat_unit: null, repeat_interval: null, repeat_weekdays: null };
+  for (const foreignRow of [
+    { ...routine, id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', checklist_revision: 2 },
+    { ...routine, dog_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', checklist_revision: 2 },
+  ]) {
+    const { client } = localClient(({ method, url }) => method === 'POST'
+      ? jsonResponse({ code: '40001', message: 'Routine changed before replacement' }, 409)
+      : url.pathname.endsWith('/dog_daily_routines') ? jsonResponse(foreignRow) : jsonResponse([]));
+    try {
+      assert.deepEqual(await data.replaceDailyRoutine(client, routine, 'Mitt utkast', checklist, repeat, 'Europe/Stockholm'), { status: 'unknown' });
+    } finally { await client.auth.dispose(); }
+  }
+});
+
 test('routine create recovers a lost response only after exact owner/id/label readback', async () => {
   const { client, requests } = localClient(async ({ method, url, body }) => {
     if (method === 'POST' && url.pathname === '/rest/v1/rpc/create_daily_routine_v2') {

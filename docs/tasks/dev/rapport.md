@@ -992,3 +992,49 @@ Fem hundmotiv genererades till bildvariationsarbetet; fyra används nu: lagotto,
 Appcrop/komponentrender och §14 för panel 6/7 är **NOT TESTABLE**; bildcheckpointen är `blocked` tills faktisk render finns. Panel 3-koden finns men `FLOW-PROGRESS-01` är `blocked` tills panel 2-checkpointen är klar och panel 3:s render/testevidens går att ta fram; verifierat veckomål saknas. Panel 8 inväntar `FLOW-INSIGHTS-01A` och Compliance. `pnpm check` PASS: app-TypeScript, edge-TypeScript, ESLint och testsamlingen **63/63**. De särskilda panel-2-testfilerna finns ännu inte. Public content guard PASS; direkt offline Expo iOS-export PASS med **1 458 moduler**. `pnpm bundle:ios`-wrappern kunde inte slutföras eftersom dess registryhämtningar stoppades med sandbox-EPERM. Inga app-screenshots kördes. `git diff --check` och `python -X utf8 tools/dev_flow.py validate` passerar.
 
 Oberoende källgranskning av den aktuella checkpointen fann inga blockerande fel i routes, scrollhantering, dagsprogressens dataväg eller bildkoppling. Granskningen bekräftade samtidigt att `tests/development-screen-model.test.mjs`, `tests/home-panel-routes.test.mjs` och `tests/daily-progress-screen.test.mjs` saknas; `pnpm check` täcker därför inte dessa riktade kontrakt. De förblir öppna tillsammans med riktiga app-renderingar/§14 och telefonkontroll. Ingen panel markeras färdig.
+
+
+## 2026-10-22 — Checklista: återställ merge-regression
+
+Den tidigare filter-UI-/workspace-anslutningen hittades före merge `824ab20` i `c562bdf`. Panelmerge och checklistfiltren skrev samtidigt i `DailyChecklistScreen.tsx` och `ProductWorkspace.tsx`; konfliktlösningen behöll range-modellen men tappade UI-props, filter state och dataanslutningen. Det förklarar Codemagics saknade `showingToday`, range-state och `DailyActivityItem`-props. De äldre rev02-dokumenten var inte orsaken; deras identiska kopior hade redan inaktiverats i checkpointen `9fc7036`.
+
+På `2026-10-22-fix-main-checklist-build` återställdes Idag/Denna vecka/Alla, historikens hund-/dag-/kontoscope, korrekta laddnings-/tom-/partial-/felläge, retry och skrivskyddade datumgrupper. Hemmets pil-only navigation till Checklistor och långtryck för redigering behölls. `Kommande`, källroutes/retur och full panel-4 §14-acceptans är inte klara; tasken förblir `implementing`.
+
+Verifiering: `pnpm check` PASS (64/64), public iOS export PASS (1 458 moduler), riktad Playwright-check av de tre filtren och range loading/partial/error/empty PASS utan browserfel, `git diff --check` och `python -X utf8 tools/dev_flow.py validate` PASS. Native/telefon, live Supabase/RLS och TestFlight är NOT TESTABLE i denna lokala checkpoint.
+
+
+### FLOW-HOME-CHECKLIST-FILTERS-01 — merge-återställning och A02 lokal checkpoint, 2026-10-22
+
+Den tidigare filter-/historikanslutningen för Idag, Denna vecka och Alla är återställd på `2026-10-22-fix-main-checklist-build`. A02 återförde ikonval per rutinpunkt: 20 tillgängliga Ionicons, långtryck som fokuserar rätt punkt och öppnar dess väljare, sparad ikon/readback och deterministisk neutral fallback för äldre punkter. Checklista visar de diskreta tokenbaserade ikonytorna; Hemkortet förblir kompakt och ikonfritt. De två rutinhandlingarna är ikon-only och öppnar varsin bekräftelsepopup med korrekt text. Avbryt och bekräfta verifierades i syntetisk browser-fixture.
+
+Architect **APPROVE**, Critic **PROCEED**, Security **CLEAR med utrullningsvillkor**, oberoende QA **PASS** och frozen Reviewer **PASS** för v5-renderingen. Public/review render verifierades vid 375×844, 430×844 och 375×667; 20 val, 44×44-mål, fokus på exakt punkt, save/readback, fryst dagsstatus, båda bekräftelseflödena och inga browserfel. Minsta uppmätta ikonkontrast 4,97:1. `pnpm check` 65/65, public `pnpm bundle:ios` 1 460 moduler, diffkontroll, kövalidering, allowlist och glyphkontroll PASS. Se [A02-verifiering](../design/evidence/flow-home-checklist-filters-2026-10-20/a02/VERIFICATION.md).
+
+Erik rapporterar manuella tester 1–4 som PASS; de kördes inte om och förblir stängda. Native Alert/VoiceOver/Dynamic Type/long-press, live Supabase/RLS, migrationens apply, äldre klienters runtime och TestFlight är NOT TESTABLE. Ingen migration eller databasoperation utfördes. A02 stänger endast den lokala ikon-/handlingsslicen: `Kommande`, källnavigation/retur och full §14-acceptans för panel 4 återstår. Produktionsskrivningar med ikonmetadata kräver den separat granskade old-client read-access/runtime-grinden.
+
+### FLOW-HOME-CHECKLIST-FILTERS-01 — A03 lokal panel-4-slice, 2026-10-22
+
+Branch: `2026-10-22-checklist-kommande-navigation`. Kommande och de exakta källresorna är inkopplade: kommande rutiner/hälsoplaner är read-only och `Planerad`; framtida rader får ingen checkbox/progress; historiskt träningssteg öppnas exakt i read-only-läge; retur bevarar filter och scroll. Fyra filter visas i två rader vid smal bredd.
+
+Dedikerad RN Web-verifiering: public 10/10 och review 19/19. `pnpm check` PASS (app-/edge-TypeScript, ESLint; 642 passerade, 1 skip av 643 testfall), offentlig `pnpm bundle:ios` PASS (1 460 moduler), diffcheck och kövalidering PASS. Skärmbilder/resultat finns i [A03-verifieringen](../design/evidence/flow-home-checklist-filters-2026-10-20/a03/VERIFICATION.md). Syntetisk 140 %-text är CSS-proxy. A03 saknar oberoende QA/Reviewer och full §14-closeout.
+
+Bred Home-review-fixture fann separat en 4 pt initial-fit-överlappning endast i reviewdata; Home ligger utanför A03 och följs upp separat. Live Supabase/RLS, A02-migration/apply, äldre klienters runtime, native VoiceOver/Dynamic Type/gestures och TestFlight är NOT TESTABLE. Ingen SQL/databasoperation kördes. Erik bekräftade tidigare att manuella tester 1–4 passerat; de kördes inte om.
+
+A03 checkpointcommit `25bde34` (`feat: add upcoming checklist filters and source routes`) pushad till `origin/2026-10-22-checklist-kommande-navigation`.
+
+Ägarönskemål registrerat för nästa separata slice: använd liknande ikon-/radgrammatik i Kunskapens faschecklistor och Hemmets rutiner, men behåll deras olika betydelser och datamodeller. Kunskap har ännu inget sparat ikonfält på egna punkter; A03 ändrar inte den skärmen eller dess schema. Felet `Kontrollera den föregående ändringen` är osäker readback, inte belägg för saknad tabell; A02-migrationen ändrar en validator för befintlig rutin-JSON och är inte applicerad.
+
+### HOME-ROUTINE-SAVE-RECOVERY-01 — checkpoint under implementation, 2026-10-22
+
+Efter A03:s frysta checkpoint hittade felsökningen att både definitiva avslag och okända utfall behöll samma retry-lås. Definitivt `failed` låste därmed rutinredigeraren och tvingade ägaren att upprepa ett oförändrat försök. A04 skiljer nu mellan `failed`, `unknown` och CAS-konflikt: definitivt fel behåller redigeringsutkast och låser upp; okänt utfall behåller exakt retry; konflikt kräver ett uttryckligt val innan senaste, hund-/rutinvaliderade versionen ersätter utkastet. Ingen tabell, migration, RPC eller RLS-policy ändrades och ingen databasoperation kördes.
+
+Plan v3 har Architect APPROVE, Critic PROCEED och Security APPROVE. Riktade tester är `daily-activity-data.test.mjs` 10/10, `daily-activity-ui.test.mjs` 9/9; TypeScript och `git diff --check` PASS. Full check/build, rendered state review, oberoende QA/Reviewer och slutlig Security review återstår. Supabase/RLS, migrationens live apply och native VoiceOver/Dynamic Type är NOT TESTABLE.
+
+Panel 7 är nästa separata paket via godkända `FLOW-KNOWLEDGE-01` plan v3. Det behåller de befintliga fyra Träning/Kunskap-bilderna och genererar endast tre nya, ämnesspecifika guidebilder; den äldre panel-6/7-bildcheckpointen fortsätter separat i blocked status tills dess Träningsrender är tillgänglig.
+
+### A04 och Kunskap panel 7 — verifiering uppdaterad, 2026-10-22
+
+A04:s rutinändringar skiljer nu på definitive failure, unknown och revisionskonflikt. Konflikt med validerad aktuell rutin lagras innan bakgrundsrefresh, och ett save-svar från en avmonterad editor får inte skriva över ett nyare utkast. Architect **APPROVE**, Critic **PROCEED**, Security **PASS** och oberoende A04 QA **PASS**. Full `pnpm check` passerade med 65 testfiler; riktade UI/data-seamkontroller är 12/12 och 11/11. Public iOS export/content guard passerade med 1 465 moduler. Syntetisk save-recovery-render passerade public 9/9 och review 9/9 vid 375/430 px. Live Supabase/RLS, målmiljöns migration och native VoiceOver/Dynamic Type är fortfarande NOT TESTABLE.
+
+Panel 7 levererar färska komponentrenderingar, 15/15 public och 14/14 reviewkontroller utan browserfel samt 6/6 fokuserade testfiler. §14-underlaget är avsiktligt **delvis öppet**: panelkomposition/innehållstäthet, native-safe-area/kontrast, radering, checklistans partial/failed/unknown-vyer och native-/returresor saknar full acceptans. Publicerade punkter har explicita redaktionella glyphs; ägarens egna Kunskapspunkter visar neutral listikon eftersom befintlig `dog_checklist_custom_items`-modell saknar ikonfält. Inget schema ändrades; detta betyder att full ikonparitet för egna Kunskapspunkter inte ingår i denna lokala checkpoint. Se `docs/design/evidence/flow-knowledge-01/VERIFICATION.md`.
+
+A03:s oberoende QA/Reviewer och full panel-4 §14-granskning fortsätter separat. Home-reviewns syntetiska 4 px överlappning ligger utanför A04. Ingen databasoperation utfördes.

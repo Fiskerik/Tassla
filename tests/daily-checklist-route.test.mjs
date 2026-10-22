@@ -8,6 +8,7 @@ const [workspace, primitives] = await Promise.all([
 ]);
 const navigation = await readFile(new URL('../src/features/home/main-navigation.ts', import.meta.url), 'utf8');
 const training = await readFile(new URL('../src/features/training/PublishedTrainingScreen.tsx', import.meta.url), 'utf8');
+const plannedHealth = await readFile(new URL('../src/features/health/PlannedHealthScreen.tsx', import.meta.url), 'utf8');
 
 test('Checklist is a Home child route with the existing Home active and no main-tab swipe destination', () => {
   assert.match(workspace, /type ProductPage = 'home' \| 'development' \| 'progress' \| 'checklist'/);
@@ -21,15 +22,22 @@ test('Training focus is bound to the selected version and step, returns to its s
   assert.match(workspace, /activity\.programId === programId && activity\.stepId === stepId/);
   assert.match(workspace, /setHomeTrainingFocus\(\{ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime/);
   assert.match(workspace, /focusStep=\{\{ programId: focus\.programId, stepId: focus\.stepId, returnPage: focus\.returnPage \}\}/);
-  assert.match(workspace, /page === 'home' \|\| page === 'progress' \|\| page === 'checklist' \|\| page === 'home-training-detail'/);
+  assert.match(workspace, /const needsDailyRefresh = page === 'home' \|\| page === 'progress' \|\| page === 'training'[\s\S]*page === 'checklist' && checklistFilter === 'Idag'/);
+  assert.match(workspace, /page === 'home-training-detail' && !homeTrainingFocus\?\.readOnly/);
+  assert.match(workspace, /openHistoricalTrainingStep\(programId: string, stepId: string\)/);
+  assert.match(workspace, /fetchExactPublishedTrainingStep\(client, focus\.programId, focus\.stepId, controller\.signal\)/);
+  assert.match(workspace, /readOnly: true, dateKey: activity\.dateKey, completed: activity\.completed/);
+  assert.match(training, /if \(focusStep\?\.readOnly\) return <View testID="historical-training-step-detail"/);
+  assert.match(training, /Endast läsning/);
   assert.match(workspace, /const homeChecklistScopeIsCurrent = homeChecklistScope\?\.selectionKey === currentSelectionKey[\s\S]*?const visiblePage: ProductPage = \(page === 'checklist' \|\| page === 'progress' \|\| page === 'home-training-detail'\) && !homeChecklistScopeIsCurrent/);
   assert.match(training, /focusStep\?\.programId/);
   assert.match(training, /focusStep\?\.stepId/);
   assert.match(training, /onCloseStep \?\? onContinue/);
 });
 
-test('Checklist preserves its offset while the focused training detail gets a fresh top position', () => {
-  assert.match(workspace, /const routeScroll = productRouteScrollKeys\(visiblePage/);
+test('Checklist preserves its offset through training and planned-health source routes', () => {
+  assert.match(workspace, /const defaultRouteScroll = productRouteScrollKeys\(visiblePage/);
+  assert.match(workspace, /visiblePage === 'planned-health' && visiblePlannedHealthChecklistFocus[\s\S]*?preserveScrollKey: 'home-checklist-flow'/);
   assert.match(workspace, /<AppScreen scrollKey=\{routeScroll\.scrollKey\} preserveScrollKey=\{routeScroll\.preserveScrollKey\} scrollMemoryScope=/);
   assert.match(navigation, /if \(page === 'checklist'\) return \{ scrollKey: 'home-checklist-flow', preserveScrollKey: 'home-checklist-flow' \}/);
   assert.match(navigation, /if \(page === 'home-training-detail'\) return \{ scrollKey: page, preserveScrollKey: 'home-checklist-flow' \}/);
@@ -42,6 +50,13 @@ test('Checklist preserves its offset while the focused training detail gets a fr
   assert.match(primitives, /preservedOffsets\.current\.set\(scrollKey, Math\.max\(0, event\.nativeEvent\.contentOffset\.y\)\)/);
   assert.match(training, /actionLabel=\{focusStep\.returnPage === 'checklist' \? 'Tillbaka till Checklistan'/);
   assert.match(workspace, /setPage\(focus\?\.returnPage \?\? 'home'\)/);
+  assert.match(workspace, /backLabel=\{visiblePlannedHealthChecklistFocus \? 'Checklistan' : 'Hälsa'\}/);
+  assert.match(workspace, /setChecklistRangeRetry\(\(value\) => value \+ 1\);[\s\S]*setPage\('checklist'\)/);
+  assert.match(plannedHealth, /const focusedChecklistRecord = checklistFocusState === 'ready' \? checklistFocusRecord : null/);
+  assert.match(plannedHealth, /loadState === 'ready' && focusedChecklistRecord \? renderRecord\(focusedChecklistRecord, true\) : null/);
+  assert.match(plannedHealth, /function renderRecord\(record: PlannedHealthRecord, openedFromChecklist = false\)/);
+  assert.ok(plannedHealth.indexOf('renderRecord(focusedChecklistRecord, true)') < plannedHealth.indexOf('style={styles.formCard}'));
+  assert.match(plannedHealth, /remainingRecords\.map\(\(record\) => renderRecord\(record\)\)/);
 });
 
 test('scope changes invalidate the stored child route so A to B to A cannot revive an old checklist', () => {

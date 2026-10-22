@@ -6547,19 +6547,21 @@
         "Verify legacy direct DELETE of a scheduled routine selection remains absent to the old client and prevents ensure from recreating it; legacy INSERT restores the frozen skipped snapshot, including NULL weekday-array compatibility",
         "Owner A cannot read or mutate owner B routine/template/day/skip snapshots; triggers reject forged snapshots, invalid schedule values, invalid zones and stale revision",
         "Retry after uncertain writes does not duplicate routine templates, day rows or completion state; delete/cascade and existing 30-day purge cover free-text day and skip snapshots",
-        "Call legacy and v2 create/replace RPCs plus ensure and skip through PostgREST; verify PUBLIC/anon denial, owner success, other-owner denial and private-schema isolation without using production"
+        "Call legacy and v2 create/replace RPCs plus ensure and skip through PostgREST; verify PUBLIC/anon denial, owner success, other-owner denial and private-schema isolation without using production",
+        "Verify 202610220001_daily_routine_checklist_icons: old {id,label} and new {id,label,icon} payloads, exact TS/SQL 20-icon allowlist parity, unknown/null/extra-key rejection, icon create/replace/readback, and unchanged existing day/skip snapshots."
       ],
       "checks": [
         "Use synthetic data with two authenticated owners in a disposable development database",
         "Apply reviewed migration transactionally; probe TS/SQL weekday parity, daily/interval recurrence, date-zone, month-end, anchor retry, legacy delete/restore, skip/re-add, ABA retry, snapshot, RPC grants, RLS, CAS/readback, cascade and purge behavior",
-        "Record outputs without real owner data; do not use production"
+        "Record outputs without real owner data; do not use production",
+        "Apply the reviewed icon-validator migration only in the approved disposable development database; probe owner success, other-owner denial, legacy payload compatibility and frozen historical snapshots. Never use production."
       ],
       "depends_on": [
         "HOME-ROUTINE-CHECKLIST-01"
       ],
       "status": "planned",
       "history": [],
-      "next_step": "Release verification only, separate from local weekday implementation and HOME UI. Schedule after the v2.1 migration and both legacy/v2 RPCs receive local review, and an approved disposable development Supabase project is available; no database action is part of local UX-FIX or HOME implementation."
+      "next_step": "Release verification only, separate from local weekday implementation and HOME UI. Schedule after the v2.1 migration and both legacy/v2 RPCs receive local review, and an approved disposable development Supabase project is available; no database action is part of local UX-FIX or HOME implementation. Include the reviewed routine-checklist icon validator migration and persistence/readback probes before any real-build icon test."
     },
     {
       "id": "UX-FIX-BASELINE-WINDOWS-01",
@@ -7256,7 +7258,7 @@
       "id": "FLOW-HOME-CHECKLIST-FILTERS-01",
       "title": "Hem: Denna vecka, Alla och Kommande i Checklistan",
       "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 4; docs/design/vision-rev02-screen-contracts.md panel 4",
-      "plan": "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md v2 + visual addendum A01 — Product APPROVE, Architect APPROVE WITH CONDITIONS (2026-10-21), Critic PROCEED, Security APPROVE (2026-10-20)",
+      "plan": "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md v2 + A01 + A02 v5 visual tone amendment; A03 within approved Kommande/source-routing scope",
       "write_paths": [
         "src/features/home/DailyChecklistScreen.tsx",
         "src/components/ui/Tabs.tsx",
@@ -7280,7 +7282,24 @@
         "docs/tasks/dev/rapport.md",
         "docs/releases/HISTORY-2026.md",
         "docs/decisions/MASTER-LOG.md",
-        "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md"
+        "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/features/home/daily-routine-checklist-icons.ts",
+        "supabase/migrations/202610220001_daily_routine_checklist_icons.sql",
+        "tests/daily-activity-data.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/daily-checklist-screen.test.mjs",
+        "tests/daily-routine-checklist-icons.test.mjs",
+        "docs/design/evidence/flow-home-checklist-filters-2026-10-20/",
+        "src/components/README.md",
+        "src/components/ui/index.ts",
+        "src/components/ui/ThemedIcon.tsx",
+        "tools/visual-check/build.cjs",
+        "tools/visual-check/verify-checklist-icons.py",
+        "tests/daily-checklist-route.test.mjs",
+        "tests/planned-health.test.mjs",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-checklist-filters.py"
       ],
       "acceptance": [
         "Denna vecka är aktiv ISO-måndag–söndag i samma lokala datum-/hund-/kontoscope; visa endast sparade dagsförekomster med frysta snapshots, aldrig härledda missade dagar",
@@ -7290,7 +7309,10 @@
         "Filtersegment visas först när kompletta urval, paginering, local-date/DST/repeat-regler och distinct empty/loading/partial/error states fungerar; delvis läst data markeras aldrig som komplett",
         "Panel 4 fungerar från Hem → Idag/Denna vecka/Alla/Kommande → korrekt hantering/källa → tillbaka; ring/count/rows och RLS-scope är sanningsenliga",
         "Renderad public/review-evidens jämför hela panel 4 mot rev02 med §14 punkterna 1–18, stora textlägen och tydligt statusbesked för live backend/native",
-        "Checklistans tre segment vid 375×844 och 430×844 delar innehållsbredden; valt segment använder befintliga home-green/onPrimary-token och har aria-selected true/false. Endast Checklistan opt-in:ar denna ton; övriga Tabs-konsumenter behåller utseendet."
+        "Checklistans fyra fungerande filter använder jämnbreda segment och en tydlig grön valdton; vid 375/430 pt och stor text får de bryta till en 2×2-layout utan klippning/overflow och behålla minst 44×44 pt-mål. Endast Checklistan opt-in:ar home-tonen; övriga Tabs-konsumenter behåller sitt utseende.",
+        "A02: each routine point can store one of the same 20 validated Ionicons; the icon-only grid is accessible and Home remains free of per-point icons.",
+        "A02: Checklist rows use the saved icon or a deterministic read-only legacy fallback; long-press focuses the matching routine point and opens its picker, separate from checkbox and ordinary row press.",
+        "A02: icon persists through existing owner-scoped create/replace RPC and exact readback; snapshots remain frozen. The forward migration only expands the JSON validator and is not applied to a database."
       ],
       "checks": [
         "node --experimental-strip-types --test tests/daily-activity-range.test.mjs tests/daily-checklist-filters.test.mjs tests/daily-activity-model.test.mjs",
@@ -7298,7 +7320,8 @@
         "pnpm bundle:ios",
         "git diff --check",
         "python -X utf8 tools/dev_flow.py validate",
-        "Rendera och verifiera kompletta public/review filter- och planned-lägen; live Supabase/RLS där urvalet kräver ny range-fråga"
+        "Rendera och verifiera kompletta public/review filter- och planned-lägen; live Supabase/RLS där urvalet kräver ny range-fråga",
+        "A02 focused icon validator/data/model/UI tests, installed Ionicons glyph verification, fresh public/review Checklist renders, pnpm check, pnpm bundle:ios, git diff --check, and python -X utf8 tools/dev_flow.py validate; no SQL/database execution"
       ],
       "depends_on": [
         "FLOW-HOME-CHECKLIST-01"
@@ -7322,9 +7345,57 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Owner stop was already recorded in the task journal and next_step; stale implementing status corrected to blocked on 2026-10-21. This package does not resume filter UI or route work."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Erik bad återställa checklistarbetet som försvann vid merge; fortsätt från main 500a25f inom tidigare godkänd plan v2 och A01."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Återanvänd exakt tidigare Architect APPROVE plan v2/A01 enligt docs/tasks/dev/FLOW-HOME-CHECKLIST-FILTERS-01.md; korrigeringen återställer bara saknade merge-delar inom redan godkända skrivvägar."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Merge repair started on 2026-10-22-fix-main-checklist-build from 500a25f; restoring filter UI/workspace integration while preserving panel 2/3 changes."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Erik requested recovery of per-routine checklist icons after the merge and confirmed manual tests 1–4 pass. Existing v2/A01 scope does not include icon persistence or its validator migration; the partial icon draft is frozen while A02 and exact write paths receive Architect/Critic/Security review. No database operation."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "A02 v4: recorded exact legacy fallback mapping, Critic v3 PROCEED, Security v3 CLEAR with stronger old-client read-access gate; awaiting renewed Architect review. No DB operation."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE A02 v4; Critic PROCEED v4; Security CLEAR v4 with production old-client read-access gate. Reviews recorded in A02 amendment/task journal. No DB operations."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Starting approved A02 v4 icon restore on 2026-10-22-fix-main-checklist-build; manual tests 1–4 remain closed. Database migration is source-only and will not be applied."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "A03 implementation is frozen at checkpoint 25bde34. As Erik accepted, independent A03 QA/Reviewer and full panel-4 §14 remain open while separately scoped follow-up proceeds; live Supabase/RLS, migration apply and native VoiceOver/Dynamic Type remain NOT TESTABLE."
         }
       ],
-      "next_step": "Owner stop was already recorded in the task journal and next_step; stale implementing status corrected to blocked on 2026-10-21. This package does not resume filter UI or route work.",
+      "next_step": "A03 implementation is frozen at checkpoint 25bde34. As Erik accepted, independent A03 QA/Reviewer and full panel-4 §14 remain open while separately scoped follow-up proceeds; live Supabase/RLS, migration apply and native VoiceOver/Dynamic Type remain NOT TESTABLE.",
       "priority": "P1",
       "panels": [
         "4"
@@ -7332,10 +7403,16 @@
       "risk_class": "H",
       "checkpoint": "Full panel 4 filter- och Kommande-resa efter accepterad Idag-slice; framtida planer är skrivskyddade och ingår aldrig som utförd progress.",
       "test_evidence": [
-        "Monday/Sunday/year/DST/repeat boundaries, pagination completeness, 30-day retention, empty/partial/error, routine/training scope, Planerad health link, §14 image matrix, runtime RLS boundary"
+        "Merge-restored Idag/Denna vecka/Alla read states and saved-range loading/partial/error/empty were browser-verified; no historical completion progress.",
+        "A02 public/review renders at 375x844, 430x844 and 375x667: exact-point long-press, 20 named 44x44 options, save/readback, frozen day state, and confirm/cancel for both icon actions; no browser errors.",
+        "Tone-map and contrast verification: only clear semantic matches use existing category tokens; generic icons remain neutral; minimum measured icon contrast 4.97:1.",
+        "pnpm check 65/65; public pnpm bundle:ios 1,460 modules; git diff --check; python -X utf8 tools/dev_flow.py validate; SQL/TS allowlist and installed glyph checks PASS.",
+        "A03 public/review focused Playwright verification: public 10/10 and synthetic review 19/19; 375/430 widths, 375x667 CSS-scaled 140% layout proxy, all four filters, upcoming loading/empty/partial/error, exact read-only health/training routes and return scroll state.",
+        "A03: pnpm check PASS (app/edge TypeScript, ESLint, 642 passed/1 skipped of 643 tests); public pnpm bundle:ios PASS (1,460 modules); git diff --check and python -X utf8 tools/dev_flow.py validate PASS.",
+        "A03 has no independent QA/Reviewer verdict yet. A separate broad Home review fixture shows a pre-existing 4pt initial-fit overlap; outside this task and tracked separately. NOT TESTABLE: live Supabase/RLS, A02 migration apply/old-client runtime, native accessibility/gestures and TestFlight."
       ],
-      "implementation_state": "Data-/modellcheckpoint 1 merged to main; historical-filter UI slice resumed on codex/tassla-home-checklist-filters-2026-10-21; task incomplete.",
-      "evidence_status": "checkpoint 1 focused tests 13/13 and pnpm check 619/619 PASS; current UI slice not yet verified; live Supabase RLS NOT TESTABLE"
+      "implementation_state": "A03 implements the four responsive filters, read-only upcoming routine/health sources, exact read-only historical training detail, and source return preserving filter/scroll. Dedicated synthetic RN Web verification passes 10/10 public and 19/19 review. A02 icon/actions retain their independent QA/Reviewer PASS. A03 independent QA/Reviewer and full panel-4 §14 remain open; live RLS and migration/old-client runtime remain separate gates.",
+      "evidence_status": "A03 local focused PASS: 10/10 public and 19/19 review; pnpm check 642 passed/1 skipped of 643; public iOS bundle 1,460 modules; diffcheck and dev_flow validate PASS. OPEN: independent A03 QA/Reviewer and full panel-4 §14 closure. NOT TESTABLE: live Supabase/RLS, migration apply, old-client runtime, native VoiceOver/Dynamic Type/gestures and TestFlight. Erik’s manual tests 1–4 remain user-reported PASS and were not rerun."
     },
     {
       "id": "FLOW-LOG-01",
@@ -7499,41 +7576,72 @@
     },
     {
       "id": "FLOW-KNOWLEDGE-01",
-      "title": "Kunskap från sök till källmärkt läsning",
-      "mvp_requirement": "docs/mvp.md: Rev02-panelernas minsta funktionella innebörd; docs/MVP-EXPERIENCE-CONTRACT.md",
-      "plan": "docs/MVP-EXPERIENCE-CONTRACT.md v1 + docs/design/vision-rev02-screen-contracts.md v1; exakt delplan före ready",
+      "title": "Kunskap: guideupptäckt, källmärkt läsning och enhetliga faschecklistor",
+      "mvp_requirement": "docs/design/vision-rev02-screen-contracts.md panel 7; docs/MVP-EXPERIENCE-CONTRACT.md panel 7",
+      "plan": "docs/plans/FLOW-KNOWLEDGE-01-ux-spec-v3.md",
       "write_paths": [
         "src/features/knowledge/KnowledgeScreen.tsx",
         "src/features/knowledge/PuppyChecklistScreen.tsx",
-        "src/features/knowledge/FAQScreen.tsx"
+        "src/features/knowledge/editorial-image-assignment.ts",
+        "src/components/ui/ChecklistItem.tsx",
+        "src/features/knowledge/README.md",
+        "assets/images/knowledge-guide-handling.jpg",
+        "assets/images/knowledge-guide-weight.jpg",
+        "assets/images/knowledge-guide-vet.jpg",
+        "assets/images/README.md",
+        "tests/knowledge-search-screen.test.mjs",
+        "tests/checklist-ui.test.mjs",
+        "docs/plans/FLOW-KNOWLEDGE-01-ux-spec-v3.md",
+        "docs/tasks/dev/FLOW-KNOWLEDGE-01.md",
+        "docs/design/evidence/flow-knowledge-01/VERIFICATION.md",
+        "docs/design/evidence/flow-knowledge-01/public",
+        "docs/design/evidence/flow-knowledge-01/review"
       ],
       "acceptance": [
-        "Visade sök- och filterkontroller ändrar verkligt publicerat urval",
-        "Guide öppnas med källa; FAQ och faschecklistor nås",
-        "Reviewinnehåll läcker inte till public och cache blandar inte hund/konto"
+        "Kunskapsöversikten och sökningen visar endast redan laddade publicerade guide-/artikelobjekt; alla träffar går att öppna med källor, och FAQ/faschecklista behåller sina befintliga destinationer och returflöden.",
+        "Panel 7 visar ett större första guidkort och högst två mindre; Visa alla öppnar hela urvalet. Ingen rangordningsetikett eller ämnestaxonomi antyds utan stöd i data.",
+        "Laddning, saknade publicerade guider, noll sökträffar och läsfel är tydligt åtskilda; sökfrågan bevaras vid guide/back och töms vid konto-/hundbyte.",
+        "De sex explicita contentId:version-bilderna är ämnesrelevanta; okända guider får textkort utan hashfallback. HomeCarousel behåller sin befintliga icke-null kontrakt och tre review-training-bilder.",
+        "Faschecklistor får samma lugna ikon-/radgrammatik som Hem där det passar; review-only-gate och fasprogress bevaras, egna punkter får neutral listikon och delad ChecklistItem ändras inte när leadingIcon utelämnas.",
+        "Public läge visar ärligt att checklistmallar saknas och gör inga review-fixture-anrop; review-läge testar checklistans bock, egna punkter och scope. Ingen ikonpersistens, schema-, RPC-, RLS- eller databasändring.",
+        "Färska public/review-render jämförs med rev02 panel 7 vid 375×844, 430×844, 375×667 och 140%-proxy; skärmbilder och §14-status dokumenteras utan att påstå native- eller live-RLS-verifiering."
       ],
       "checks": [
+        "node --experimental-strip-types --test tests/knowledge-search-screen.test.mjs tests/checklist-ui.test.mjs",
         "pnpm check",
+        "pnpm bundle:ios",
         "git diff --check",
-        "python tools/dev_flow.py validate"
+        "python -X utf8 tools/dev_flow.py validate",
+        "Rendera aktuella Knowledge- och checklistkomponenter i public/review; registrera §14 och markera native/live Supabase som NOT TESTABLE där verifiering saknas"
       ],
       "depends_on": [
         "UX-KNOWLEDGE-CACHE-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Ta fram exakt delplan och riskgranskning före ready; inget nytt segmentmandat för redan godkänd MVP.",
+      "status": "implementing",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact Knowledge plan v3 approved before implementation: Architect APPROVE, Critic PROCEED, Security APPROVE; dependency UX-KNOWLEDGE-CACHE-01 is done and user authorized parallel progress while A04 findings are resolved."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin the approved panel-7 slice on disjoint Knowledge app/test/asset/evidence paths. Coordinator retains ownership of shared queue/report and A04 paths; no DB or schema operation."
+        }
+      ],
+      "next_step": "Complete panel-7 §14 gaps and review the remaining custom-checklist icon parity question against the existing owner-item schema before claiming panel acceptance; preserve A04 and A03 scopes.",
       "priority": "P2",
       "panels": [
         "7"
       ],
-      "risk_class": "M",
-      "checkpoint": "Panel 7 full resa med bevarad FAQ och faschecklista.",
-      "test_evidence": [
-        "Sök/filter/tomt/läsfel, public/review-spärr, 375/430/140 %"
-      ],
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "risk_class": "H",
+      "checkpoint": "Panel 7 guideupptäckt → källmärkt artikel → FAQ/faschecklista → retur, med public/review-gränser och checklistornas skilda semantik bevarade.",
+      "test_evidence": "Plan v3 Architect APPROVE, Critic PROCEED, Security APPROVE. Focused Knowledge/content-delivery/checklist checks 6/6 files PASS; pnpm check PASS (65 test files); public/review RN Web checks 15/15 and 14/14 with pageErrors=0. Public/review builds and local evidence completed. See docs/design/evidence/flow-knowledge-01/VERIFICATION.md.",
+      "implementation_state": "Knowledge UI, tests, three topic-specific guide assets and local public/review renders are implemented. Shared checklist row/icon grammar was aligned; published items have explicit editorial glyphs while owner-added Knowledge items remain neutral because dog_checklist_custom_items has no icon field. No schema change was made. §14 records open visual composition, deletion, native and persistence cases; full panel-7 acceptance remains open.",
+      "evidence_status": "partial — local behavior/render checks pass; full panel-7 §14 and visual acceptance remain open"
     },
     {
       "id": "FLOW-DEVELOPMENT-01",
@@ -7582,7 +7690,7 @@
       "depends_on": [
         "VISION-R02-HEM-01"
       ],
-      "status": "implementing",
+      "status": "blocked",
       "history": [
         {
           "from": "planned",
@@ -7673,9 +7781,15 @@
           "to": "implementing",
           "actor": "architect",
           "evidence": "Exakt routeplan v6 granskad och godkänd: Architect APPROVE och Critic PROCEED. Queue-plan och aktiv skrivväg uppdaterade från route-v5 till route-v6; separat FLOW-PANELS-2-3-image-optimization-v5 behålls. Båda saknade panel-2-testfilerna, public/review-rendering och §14 återstår."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Pausad 2026-10-22 under checklist-mergeåterställning eftersom båda uppgifterna skriver ProductWorkspace.tsx; befintliga panel 2/3-filer bevaras och återupptas efter denna avgränsade reparation."
         }
       ],
-      "next_step": "Kör de saknade tests/development-screen-model.test.mjs och tests/home-panel-routes.test.mjs enligt v8 checkpoint 2; därefter verifiera riktiga public/review-renderingar och §14. Routekod finns, men tester och app-rendering är inte verifierade. Milstolpskälla saknas, så panel 2 förblir partiell.",
+      "next_step": "Pausad 2026-10-22 under checklist-mergeåterställning eftersom båda uppgifterna skriver ProductWorkspace.tsx; befintliga panel 2/3-filer bevaras och återupptas efter denna avgränsade reparation.",
       "priority": "P1",
       "panels": [
         "Utveckling"
@@ -9919,6 +10033,115 @@
       "test_evidence": "`pnpm check` PASS (typecheck, edge typecheck, ESLint, tests 63/63); no image-specific crop/render test exists. Four deployed JPEGs total 1,106,442 B, q86, stripped metadata, dimensions preserved and each under 350 KB. Source mapping is ID/version-stable; app component crops and interactions NOT TESTABLE. Public content guard PASS; direct offline Expo iOS export PASS (1,458 modules); wrapper registry fetch failed with sandbox EPERM.",
       "implementation_state": "Images and source mappings implemented; app rendering and panel acceptance pending.",
       "evidence_status": "blocked — required actual component render and §14 absent; pnpm check passed"
+    },
+    {
+      "id": "HOME-ROUTINE-SAVE-RECOVERY-01",
+      "title": "Hem: återhämta rutinändringar utan att låsa redigeraren",
+      "mvp_requirement": "docs/design/vision-rev02-screen-contracts.md panel 1; FLOW-HOME-CHECKLIST-FILTERS-01 routine editor",
+      "plan": "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-save-recovery-v7.md",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/daily-activity-data.ts",
+        "src/features/home/daily-activity-recovery.ts",
+        "src/features/home/README.md",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/daily-activity-data.test.mjs",
+        "tests/main-refresh.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-routine-save-recovery.py",
+        "tools/visual-check/README.md",
+        "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-save-recovery-v7.md",
+        "docs/tasks/dev/FLOW-HOME-CHECKLIST-FILTERS-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/design/evidence/flow-home-checklist-filters-2026-10-20/a04"
+      ],
+      "acceptance": [
+        "Definitivt failed rensar retry-lås, behåller rutinutkastets text/ordning/ikoner och tillåter ett nytt uttryckligt spartryck.",
+        "Unknown bevarar exakt oförändrad operation och kräver befintlig explicit retry innan andra skrivningar kan fortsätta; SQLSTATE 08006 med HTTP 5xx och oförändrad readback blir unknown.",
+        "Verifierad CAS-konflikt håller utkastet oförändrat och read-only tills uttryckligt tryck ersätter det med senaste rutin/revision/sourceRoutine.",
+        "Lokal konfliktförklaring och ersättningsåtgärd förblir synliga efter reload även när delad mutation-feedback rensas.",
+        "Conflict-readback validerar uttryckligen både hund-id och rutin-id. Konto/hund/dag/livstidsscope, befintlig RPC/CAS/idempotens och bekräftad readback bevaras.",
+        "Account deletion förblir blockerad vid in-flight och unknown, och öppnas igen efter definitive failed eller resolved conflict.",
+        "Samma statuskontrakt gäller alla runDailyMutation-anrop; failed icke-formuläråtgärd lämnar inte globalt lås.",
+        "Ingen tabell, migration, RPC, grant, RLS, persistens eller live databasoperation ändras eller körs."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/daily-activity-ui.test.mjs tests/daily-activity-data.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "TASSLA_UI_REVIEW=false ... python tools/visual-check/verify-routine-save-recovery.py (9/9 PASS vid 375/430 px).",
+        "TASSLA_UI_REVIEW=true ... python tools/visual-check/verify-routine-save-recovery.py (9/9 PASS vid 375/430 px)."
+      ],
+      "depends_on": [
+        "FLOW-HOME-CHECKLIST-01"
+      ],
+      "status": "qa",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact save-recovery v3 approved before implementation: Architect APPROVE, Critic PROCEED, Security APPROVE. A03 remains blocked only for its accepted independent QA/Reviewer and full panel-4 §14 gates; A04 write paths are isolated."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Starting A04 from the frozen A03 checkpoint. Implement only approved save-recovery paths; preserve failed drafts/icons, exact unknown replay, dog/routine CAS scope validation, and explicit conflict replacement. No database operation."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete. Focused data/UI tests pass 10/10 and 9/9; pnpm check passes 65/65 with app/edge typecheck and lint; public pnpm bundle:ios passes (1,460 modules); diff/queue validation pass. Browser state review is NOT TESTABLE because local sockets are denied and Chromium exits SIGTRAP. Independent QA, Security and Reviewer remain."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Independent QA and Security blocked the current snapshot: source-regex UI checks do not behavior-test recovery; class 08 SQLSTATE and conflict feedback after reload need regressions. Plan v5 adds a pure feature-local transition module and direct tests. Awaiting exact-plan reviews before adding that module."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "A04 QA/security findings are addressed in exact plan v5. Architect APPROVE, Critic PROCEED, Security APPROVE; blocked implementation resumes with the added testable pure transition seam and scoped checks."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact save-recovery v5 approved before resuming: Architect APPROVE, Critic PROCEED, Security APPROVE. Added UI post-reload conflict visibility and account-deletion gating tests; no product/data contract change."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume A04 implementation with the approved feature-local pure transition module and direct behavior tests. Keep ProductWorkspace/DailyActivityManagerSheet as side-effect callers; no database operation."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "A04 v7 implementation complete: pnpm check 65 test files PASS, public iOS bundle 1465 modules PASS, synthetic public/review 9/9 each, independent QA PASS, final Security PASS; live Supabase/RLS and native checks remain separate NOT TESTABLE gates."
+        }
+      ],
+      "next_step": "A04 v7 implementation complete: pnpm check 65 test files PASS, public iOS bundle 1465 modules PASS, synthetic public/review 9/9 each, independent QA PASS, final Security PASS; live Supabase/RLS and native checks remain separate NOT TESTABLE gates.",
+      "priority": "P1",
+      "panels": [
+        "1"
+      ],
+      "risk_class": "H",
+      "checkpoint": "A04 lokal sparningsåterhämtning efter fryst A03-checkpoint 25bde34; A03 panel-4-review förblir separat.",
+      "test_evidence": "Focused UI/data tests 12/12 and 11/11 PASS; pnpm check PASS (65 test files); public/review React Native Web save-recovery verifier 9/9 each; public pnpm bundle:ios content guard PASS (1,465 modules), git diff --check and python -X utf8 tools/dev_flow.py validate PASS. A04 Architect APPROVE, Critic PROCEED, Security PASS and independent QA PASS. Live Supabase/RLS/native remain NOT TESTABLE.",
+      "implementation_state": "A04 implementation and owner/dog/lifetime recovery are complete locally. Definitive failure retains and unlocks draft; unknown keeps exact retry; verified conflict is persisted before refresh and requires explicit replacement. Rendered evidence under docs/design/evidence/flow-home-checklist-filters-2026-10-20/a04. Queue status advances to qa; broader A03/panel-4 acceptance remains separate.",
+      "evidence_status": "local implementation checks pass; awaiting workflow QA/review checkpoint; live backend and native gates remain open"
     }
   ]
 }

@@ -617,3 +617,18 @@ Hem → full Idag-checklista → rätt rutin/träningssteg → tillbaka är impl
 ## VISION-R02-HEM-01 — Home/panel 1 lokal checkpoint, 2026-10-21
 
 Home-headern visar endast en pil till `Checklistor`. Vanligt tryck på rutin öppnar fokuserad manager; longpress går direkt till befintligt redigeringsläge utan att ändra checkboxstatus. Oberoende QA och frozen Reviewer PASS efter v16/v17 dokumentationskorrigeringar. `pnpm check` vid commit: typecheck, edge typecheck, ESLint och 63/63 testfiler PASS. Pre-push hook: 621/622 tester PASS, ett skip. Public/review RN Web-render 25/25 och 35/35; content guard och direkt offline Expo-export 1 450 moduler PASS. Commit/push: `1b22370` (`feat: polish home checklist navigation`), branch `2026-10-21-hem-utveckling-framsteg-insikter`. `pnpm bundle:ios`-wrappern NOT VERIFIED (registry-attestation sandbox EPERM); native VoiceOver/Dynamic Type, live Supabase/RLS, signed build/release och full panelacceptans är NOT TESTABLE. [Taskjournal](../tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md) · [Evidens](../design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/home/VERIFICATION.md).
+
+
+## FLOW-HOME-CHECKLIST-FILTERS-01 — A02 lokal ikon-/handlingscheckpoint, 2026-10-22
+
+Checklistans valbara rutinpunktsikoner är återinförda: 20 alternativ, long-press till rätt punkt, sparat ikonval och deterministisk fallback. Hemkortet är fortsatt kompakt och ikonfritt. Båda rutinhandlingarna använder ikonknappar med separata bekräftelsepopup:ar. Tokenbaserade ämnesytor passerade v5:s visuella granskning; minsta uppmätta ikonkontrast är 4,97:1.
+
+Public/review-render vid 375×844, 430×844 och 375×667; QA PASS och frozen Reviewer PASS. `pnpm check` PASS (642 passerade, 1 skip av 643 testfall), public iOS JS-bundle 1 460 moduler, `git diff --check` och kövalidering PASS. Verifieringsrapporten och skärmbilder finns i [A02-evidensen](../design/evidence/flow-home-checklist-filters-2026-10-20/a02/VERIFICATION.md). Detta är en lokal kodcheckpoint, inte en TestFlight-release eller full panel-4-closeout. Kommande, källnavigation/retur och full §14-acceptans återstår. Ingen databasoperation kördes; migration/apply, live RLS, äldre klienters runtime och native Alert/VoiceOver/Dynamic Type är NOT TESTABLE. Eriks manuella tester 1–4 hålls stängda efter ägarbekräftelse.
+
+## FLOW-HOME-CHECKLIST-FILTERS-01 — A03 lokal Kommande-/källresa, 2026-10-22
+
+Fyra filter och Kommande är implementerade i den nya branchen `2026-10-22-checklist-kommande-navigation`. Planerade rutiner och hälsoplaner är skrivskyddade och räknas inte som utförda. Hälsoplan öppnar rätt plan; historisk träning öppnar exakt sparat steg read-only. Källretur bevarar valt filter och scroll.
+
+A03:s dedikerade public/review RN Web-verifiering gav 10/10 och 19/19. `pnpm check` 65/65, public iOS JS-bundle 1 460 moduler, `git diff --check` och `python -X utf8 tools/dev_flow.py validate` PASS. Skärmbilder/resultat: [A03](../design/evidence/flow-home-checklist-filters-2026-10-20/a03/VERIFICATION.md). Detta är lokal avgränsad UI-verifiering; oberoende QA/Reviewer och full panel-4-§14-closeout är öppna.
+
+NOT TESTABLE: live Supabase/RLS, A02-migrationens apply och äldre klientruntime, native VoiceOver/Dynamic Type/gester och TestFlight. Ingen databasoperation kördes. Erik hade tidigare bekräftat manuella tester 1–4 som PASS; de kördes inte om. Separat Home-review-fixture visade 4 pt initial-fit-överlappning i syntetisk review-vy; den ligger utanför A03. Checkpointcommit `25bde34` (`feat: add upcoming checklist filters and source routes`) pushad till `origin/2026-10-22-checklist-kommande-navigation`.

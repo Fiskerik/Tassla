@@ -78,3 +78,45 @@ The Knowledge review fixture exposes `window.__know02UnmountRoute`, `__know02Rem
 ## FLOW-HOME-CHECKLIST-01
 
 `TASSLA_UI_CHROMIUM` can point to Playwright Chromium on Windows or another host without `/usr/bin/chromium`; when unset, the verifier uses the documented Linux path. Run the public and review bundles separately with `TASSLA_UI_SCOPE=home`, `TASSLA_UI_BASE_URL` set to the served bundle, and `TASSLA_UI_EVIDENCE` set to the matching evidence folder. The checklist cases cover 0/1/5/7 rows, 375/430 px, 375×667, 140% text, loading/error, return from a lower training row with confirmed count and preserved scroll position, leave/reopen at the top, and dog-scope invalidation/reopen at the top (`checklistScopeReset=true`). All data is synthetic; browser rendering does not verify live RLS, native VoiceOver/Dynamic Type, or a physical device.
+
+### A02 — rutinpunkternas valbara ikoner
+
+`verify-checklist-icons.py` använder den aktuella Checklistan och syntetiska rutinmallar. Den provar långtryck till rätt rutinpunkt, alla 20 tillgängligt namngivna 44×44-ikoner vid 375×844, 430×844 och 375×667, sparat val/readback, skapande av en rutin med vald ikon, oförändrad status på dagens frysta checklistrad samt båda ikonknapparnas separata bekräftelsetexter och bekräftade/avbrutna handlingar. Kör public och review var för sig:
+
+```sh
+TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/a02/public node tools/visual-check/build.cjs
+python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-preview/a02/public
+TASSLA_UI_BASE_URL=http://127.0.0.1:4173 TASSLA_UI_EVIDENCE=docs/design/evidence/flow-home-checklist-filters-2026-10-20/a02/public python tools/visual-check/verify-checklist-icons.py
+```
+
+Bygg review separat i `/tmp/tassla-preview/a02/review`, servera den på en annan port och kör samma verifierare med `TASSLA_UI_REVIEW=true` och evidenskatalogen `.../a02/review`. Bilderna visar syntetiskt React Native Web; de bekräftar inte native Alert/VoiceOver/gestures, Supabase/RLS, migrationsutrullning eller TestFlight. Den framåtriktade SQL-migrationen körs inte av denna kontroll.
+
+### A04 — rutinändringar som misslyckas, är okända eller har konflikt
+
+`verify-routine-save-recovery.py` öppnar Checklistor och redigerar en syntetisk rutin med både ändrad text och ikon. `routineMutation=failed` kontrollerar att utkastet behålls och att ägaren kan trycka Spara igen; `unknown` kontrollerar låst utkast och exakt retry; `conflict` kontrollerar read-only-utkast, uttrycklig ersättning med senaste revisionen och att en ny redigering efter ersättningen kan sparas. Public och review körs separat vid 375 och 430 px. Resultat och skärmbilder skrivs till `docs/design/evidence/flow-home-checklist-filters-2026-10-20/a04/{public,review}/`.
+
+```sh
+TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/a04/public node tools/visual-check/build.cjs
+python -m http.server 4193 --bind 127.0.0.1 --directory /tmp/tassla-preview/a04/public
+TASSLA_UI_BASE_URL=http://127.0.0.1:4193 TASSLA_UI_REVIEW=false TASSLA_UI_EVIDENCE=docs/design/evidence/flow-home-checklist-filters-2026-10-20/a04/public python tools/visual-check/verify-routine-save-recovery.py
+```
+
+Bygg review i `/tmp/tassla-preview/a04/review`, servera på port 4194 och kör verifieraren med `TASSLA_UI_REVIEW=true`, motsvarande bas-URL och `.../a04/review` som evidenskatalog. Båda lägena använder syntetiska callbacks; de bekräftar inte live Supabase/RLS, applicerad migration, äldre klienters runtime, native VoiceOver/Dynamic Type eller TestFlight.
+
+### A03 — Checklistans fyra filter och källresor
+
+`verify-checklist-filters.py` renderar produktionsskärmarna från `vision-r02-home-panels-app.tsx`. Public visar tomläget med lokal syntetisk data; review injicerar tydligt märkt syntetiskt innehåll för filter, kommande rutin/hälsoplan och historiskt träningssteg. Verifieraren täcker fyra filter i 375/430 pt-bredder, 44×44-mål, horisontell overflow, Kommande loading/empty/partial/error, historisk och planerad read-only-semantik samt öppning/retur från exakt källa. Review provar även 375×667 med CSS-skalad 140 %-text; detta är ett layoutproxyprov, inte native Dynamic Type. Kör public och review som separata byggen:
+
+```sh
+TASSLA_UI_REVIEW=false TASSLA_UI_ENTRY=tools/visual-check/vision-r02-home-panels-app.tsx TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/a03/public node tools/visual-check/build.cjs
+python -m http.server 45674 --bind 127.0.0.1 --directory /tmp/tassla-preview/a03/public
+TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:45674 TASSLA_UI_EVIDENCE=docs/design/evidence/flow-home-checklist-filters-2026-10-20/a03/public python tools/visual-check/verify-checklist-filters.py
+```
+
+```sh
+TASSLA_UI_REVIEW=true TASSLA_UI_ENTRY=tools/visual-check/vision-r02-home-panels-app.tsx TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/a03/review node tools/visual-check/build.cjs
+python -m http.server 45673 --bind 127.0.0.1 --directory /tmp/tassla-preview/a03/review
+TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:45673 TASSLA_UI_EVIDENCE=docs/design/evidence/flow-home-checklist-filters-2026-10-20/a03/review python tools/visual-check/verify-checklist-filters.py
+```
+
+Välj andra lediga loopback-portar om dessa är upptagna. Resultat och skärmbilder sparas i `docs/design/evidence/flow-home-checklist-filters-2026-10-20/a03/{public,review}/`. Körningen gav 10/10 public och 19/19 review-kontroller. Detta är avgränsad syntetisk RN Web-verifiering, inte full §14-granskning, oberoende QA/Reviewer, live Supabase/RLS, migrations-/äldre-klientruntime, native VoiceOver/Dynamic Type, fysiska gester eller TestFlight.

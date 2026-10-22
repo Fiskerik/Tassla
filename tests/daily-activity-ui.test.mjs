@@ -1,12 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { registerHooks } from 'node:module';
+
+const resolution = registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier.startsWith('.') && !/\.[a-z0-9]+$/i.test(specifier)) return nextResolve(`${specifier}.ts`, context);
+    return nextResolve(specifier);
+  },
+});
+const recovery = await import('../src/features/home/daily-activity-recovery.ts');
+resolution.deregister();
 
 const home = await readFile(new URL('../src/features/home/HomeScreen.tsx', import.meta.url), 'utf8');
 const model = await readFile(new URL('../src/features/home/daily-activity-model.ts', import.meta.url), 'utf8');
 const item = await readFile(new URL('../src/components/ui/DailyActivityItem.tsx', import.meta.url), 'utf8');
 const manager = await readFile(new URL('../src/features/home/DailyActivityManagerSheet.tsx', import.meta.url), 'utf8');
 const workspace = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
+const appFlow = await readFile(new URL('../src/features/home/AppFlow.tsx', import.meta.url), 'utf8');
+const dailyData = await readFile(new URL('../src/features/home/daily-activity-data.ts', import.meta.url), 'utf8');
+const dailyChecklist = await readFile(new URL('../src/features/home/DailyChecklistScreen.tsx', import.meta.url), 'utf8');
+const routineIcons = await readFile(new URL('../src/features/home/daily-routine-checklist-icons.ts', import.meta.url), 'utf8');
+const iconMigration = await readFile(new URL('../supabase/migrations/202610220001_daily_routine_checklist_icons.sql', import.meta.url), 'utf8');
+const recoverySource = await readFile(new URL('../src/features/home/daily-activity-recovery.ts', import.meta.url), 'utf8');
 
 test('Home offers one permanent checklist entry while keeping its compact summary to five rows', () => {
   assert.match(home, /selectDailyProgress\(dailyActivities, dailyState === 'hidden' \? 'unknown' : dailyState\)/);
@@ -43,11 +59,13 @@ test('routine and training rows expose separate accessible actions and truthful 
   assert.match(item, /onRetry/);
   const homeVariant = item.slice(item.indexOf('function HomeDailyActivityItem'), item.indexOf('const styles'));
   assert.doesNotMatch(homeVariant, /<IconChip|list-outline|school-outline/);
+  assert.match(homeVariant, /showRoutineIcon && icon/);
+  assert.match(dailyChecklist, /showRoutineIcon=\{item\.kind === 'routine'\}/);
   assert.match(homeVariant, /homeTrainingStatusCell/);
   assert.match(homeVariant, /homeTrainingStatusChecked/);
   assert.match(item, /homeTrainingStatus:[^{]*\{[^}]*borderRadius: tokens\.radius\.full/);
   assert.match(workspace, /setRoutineDayCompletion\(client, row, itemId, completed\)/);
-  assert.match(workspace, /Ingen ny bock visas/);
+  assert.match(recoverySource, /Ingen ny bock visas/);
   assert.match(manager, /onRemoveRoutineFromDay/);
   assert.match(manager, /onRemoveTrainingFromDay/);
   assert.match(manager, /onCreateRoutine/);
@@ -55,9 +73,272 @@ test('routine and training rows expose separate accessible actions and truthful 
   assert.match(manager, /onDeleteRoutine/);
   assert.match(manager, /<BottomSheet/);
   assert.match(manager, /editFocusedRoutineOnOpen/);
-  assert.match(manager, /startEdit\(focusedRoutine\)/);
-  assert.match(manager, /type RoutineDraft/);
+  assert.match(manager, /startEdit\(focusedRoutine, focusRoutineItemId\)/);
+  assert.match(manager, /useState<RoutineDraft \| null>/);
   assert.match(manager, /function startCreate\(/);
+});
+
+test('routine home and delete actions are icon-only and confirm before removal', () => {
+  const routineRow = manager.slice(manager.indexOf('function RoutineTemplateRow'), manager.indexOf('function ActionButton'));
+  const actions = routineRow.slice(routineRow.indexOf('<View style={styles.routineActions}>'));
+  assert.match(actions, /<IconOnlyButton icon=\{selected \? 'remove-outline' : 'add-outline'\}/);
+  assert.match(actions, /accessibilityLabel=\{`\$\{selected \? 'Ta bort' : skippedDay \? 'Lägg tillbaka' : 'Lägg till'\} rutinen/);
+  assert.match(actions, /Alert\.alert\('Ta bort från Hemskärmen\?'/);
+  assert.match(actions, /\{ text: 'Avbryt', style: 'cancel' \}, \{ text: 'Ta bort', onPress: onRemove \}/);
+  assert.match(actions, /<IconOnlyButton icon="trash-outline" accessibilityLabel=\{`Ta bort rutin/);
+  assert.match(actions, /Alert\.alert\('Ta bort rutin\?'/);
+  assert.match(actions, /style: 'destructive', onPress: \(\) => \{ void onDelete\(\); \}/);
+  assert.doesNotMatch(actions, /<ActionButton|<Text/);
+  assert.match(manager, /iconOnlyButton: \{ width: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin/);
+});
+
+test('routine checklist icons are selectable, saved in the model, and shown on Checklistor', () => {
+  assert.match(manager, /function ChecklistIconButton/);
+  assert.match(manager, /function ChecklistIconOptions/);
+  assert.match(manager, /DAILY_ROUTINE_CHECKLIST_ICONS\.map\(\(icon\)/);
+  const picker = manager.slice(manager.indexOf('function ChecklistIconOptions'), manager.indexOf('function RepeatRuleControls'));
+  assert.match(picker, /accessibilityRole="radiogroup" accessibilityLabel=/);
+  assert.doesNotMatch(picker, /<Text/);
+  assert.match(picker, /styles\.iconChoiceSelected/);
+  assert.match(picker, /name="checkmark-circle"/);
+  assert.match(manager, /accessibilityRole="radio" accessibilityLabel=\{DAILY_ROUTINE_CHECKLIST_ICON_LABELS\[icon\]\}/);
+  assert.match(manager, /sameChecklist[\s\S]*?item\.icon === right\[index\]\?\.icon/);
+  assert.match(manager, /dailyRoutineChecklistDisplayIcon\(item\)/);
+  assert.match(manager, /setIconPickerItemId\(focusItemId && checklist\.some\(\(item\) => item\.id === focusItemId\) \? focusItemId : null\)/);
+  assert.match(manager, /startEdit\(focusedRoutine, focusRoutineItemId\)/);
+  assert.match(dailyChecklist, /routineLabel=\{item\.routineLabel\}[\s\S]*?icon=\{item\.icon\} showRoutineIcon=\{item\.kind === 'routine'\}/);
+  assert.match(dailyChecklist, /const icon = item\.icon \?\? 'list-outline';/);
+  assert.match(routineIcons, /'water-outline'/);
+  assert.match(iconMigration, /create or replace function private\.valid_daily_routine_checklist/);
+  assert.match(iconMigration, /v_item ->> 'icon' not in/);
+  assert.match(iconMigration, /'water-outline'/);
+  const homeRoutineRow = home.slice(home.indexOf('return <DailyActivityItem key={item.id} variant="home" kind={item.kind}'), home.indexOf('onRetry={itemMutation'));
+  assert.doesNotMatch(homeRoutineRow, /icon=\{item\.icon\}/, 'the compact Home rows remain icon-free');
+});
+
+test('routine write failures unlock the editor while unknown writes retain exact retry and conflicts require explicit replacement', () => {
+  const mutation = workspace.slice(workspace.indexOf('async function runDailyMutation'), workspace.indexOf('function retryDailyMutation'));
+  assert.match(mutation, /recoverDailyMutation\(outcome\.status, ownerScope, lifetime, key, operation,/);
+  assert.match(workspace, /dailyMutationBlocksAccountDeletion\(dailyMutationInFlight\.current,[\s\S]*dailyMutationForOwner\(dailyMutationStore\.getSnapshot\(\)\.get\(currentDailyOwnerScope\)[\s\S]*currentDailyOwnerScope\)/);
+  assert.match(workspace, /dailyMutationForOwner\(dailyMutationStore\.getSnapshot\(\)\.get\(currentDailyOwnerScope\)[\s\S]*runDailyMutation\(pending\.key, pending\.run, true, pending\)/);
+  const lifetimeEffect = workspace.slice(workspace.indexOf('if (dailyLifetime.current && dailyLifetime.current !== currentDailyLifetime)'), workspace.indexOf('dailyLifetime.current = currentDailyLifetime'));
+  assert.match(lifetimeEffect, /clearDailyMutationForLifetimeChange\(\)[\s\S]*setDailyMessage\(clearedMutation\.message\)/);
+  assert.doesNotMatch(lifetimeEffect, /pendingDailyWrites\.current\.(?:clear|delete)/, 'view-scope changes clear feedback without discarding owner-scoped unresolved writes');
+  assert.match(mutation, /dailyMutationOwnerGeneration = dailyMutationStore\.ownerGeneration\(ownerScope\)/);
+  assert.match(mutation, /updatePendingDailyWrite\(ownerScope, inFlightMutation, dailyMutationOwnerGeneration\)[\s\S]*recoverDailyMutation\(outcome\.status, ownerScope, lifetime, key, operation,/);
+  assert.match(mutation, /ownerStillCurrent = currentDailyOwnerScopeRef\.current === ownerScope[\s\S]*dailyMutationStore\.ownerGeneration\(ownerScope\) === dailyMutationOwnerGeneration/);
+  assert.match(mutation, /if \(!mounted\.current \|\| !ownerStillCurrent \|\| !lifetimeStillCurrent\)[\s\S]*resolvedDailyMutation\(inFlightMutation, outcome\.status\)[\s\S]*updatePendingDailyWrite\(ownerScope, staleResolution, dailyMutationOwnerGeneration\)[\s\S]*setDailyMessageIsGlobal\(true\)/);
+  assert.match(workspace, /useSyncExternalStore\([\s\S]*dailyMutationStore\.getSnapshot\(\)\.get\(currentDailyOwnerScope\)/);
+  assert.match(recoverySource, /export const dailyMutationStore = createDailyMutationStore\(\)/);
+  assert.match(recoverySource, /export const routineDraftStore = createRoutineDraftStore\(\)/);
+  assert.match(workspace, /routineDraftStore\.get\(currentDailyOwnerScope, dog\.id, currentDailyLifetime\)/);
+  assert.match(home, /routineRecovery=\{routineRecovery\} onRoutineRecoveryChange=\{onRoutineRecoveryChange\}/);
+  assert.match(dailyChecklist, /routineRecovery=\{routineRecovery\} onRoutineRecoveryChange=\{onRoutineRecoveryChange\}/);
+  assert.match(appFlow, /return <ProductWorkspace[\s\S]*key=\{activeDog\.id\}/);
+  assert.match(workspace, /showDailyRecoveryBanner[\s\S]*<MessageCard tone=\{dailyRecoveryBannerError \? 'error' : 'neutral'\}>\{dailyRecoveryBannerMessage\}<\/MessageCard>[\s\S]*<PrimaryButton title=\{dailyMutationIsBusy \? 'Kontrollerar ändringen…' : 'Kontrollera samma ändring igen'\}[\s\S]*onPress=\{retryDailyMutation\}/);
+  assert.match(workspace, /dailyMutationIsBusy = Boolean\(dailyBusyKey\) \|\| pendingDailyWriteForOwner\?\.phase === 'in-flight'/);
+  assert.match(workspace, /pendingDailyWriteForOwner\.phase === 'in-flight'\) && !dailyBusyKey/);
+  assert.match(workspace, /if \(result\.localSessionCleared && ownerId\) \{\s*dailyMutationStore\.clearOwner\(ownerId\)/);
+  assert.match(workspace, /serverConfirmed = true;[\s\S]{0,180}dailyMutationStore\.clearOwner\(ownerId\)/);
+  assert.match(recoverySource, /ownerGeneration\(ownerScope: string\) \{[\s\S]{0,80}return ownerGenerations\.get\(ownerScope\)/);
+  assert.match(recoverySource, /update\(ownerScope: string, pending: PendingDailyMutation \| null, expectedOwnerGeneration\?: number\)[\s\S]*expectedOwnerGeneration !== \(ownerGenerations\.get\(ownerScope\) \?\? 0\)/);
+  assert.match(recoverySource, /clearOwner\(ownerScope: string\) \{[\s\S]{0,100}ownerGenerations\.set\(ownerScope, \(ownerGenerations\.get\(ownerScope\) \?\? 0\) \+ 1\)/);
+  assert.doesNotMatch(mutation, /Rutinen har ändrats sedan du öppnade den/);
+
+  assert.match(manager, /\[routineConflict, setRoutineConflictState\] = useState<RoutineDraftConflict \| null>/);
+  assert.match(manager, /routineConflictForDraft\(draft, routineConflict, dailyScopeKey \?\? ''\)/);
+  assert.match(manager, /routineDraftAfterWrite\(recoveryState\.current\.draft, submissionId, result\?\.status\)/);
+  assert.match(manager, /routineEditDraftFromConflict\(draft, routineConflict, dailyScopeKey \?\? ''/);
+  assert.match(manager, /Ersätt utkastet med senaste versionen/);
+  assert.match(manager, /const showMutationMessage = Boolean\(conflictForDraft\) \|\| Boolean\(mutationMessage\)/);
+  assert.match(manager, /const visibleMutationMessage = conflictForDraft[\s\S]*routineConflictMessage/);
+  assert.match(manager, /\{conflictForDraft \? <Button[\s\S]*Ersätt utkastet med senaste versionen/);
+  assert.match(manager, /<Button variant="tertiary" label="Ersätt utkastet med senaste versionen"[\s\S]*onPress=\{replaceDraftWithLatestRoutine\}/);
+  assert.match(manager, /routineEditDraftFromConflict\(draft, routineConflict, dailyScopeKey \?\? ''/);
+  assert.match(manager, /fieldsDisabled=\{unresolvedMutation \|\| savingDraft \|\| showDiscardConfirmation \|\| Boolean\(conflictForDraft\)\}/);
+  assert.match(manager, /savingDraft \|\| conflictForDraft\) return;/);
+  assert.match(recoverySource, /sourceRoutine: latest/);
+  assert.match(manager, /sourceRoutine: routine/);
+  assert.match(recoverySource, /conflict\.scopeKey !== scopeKey/);
+  assert.match(dailyData, /result\.data\.dog_id !== dogId \|\| result\.data\.id !== id/);
+});
+
+test('daily recovery transitions preserve the routine draft and exact unknown operation', async () => {
+  const mutationSource = workspace.slice(workspace.indexOf('async function runDailyMutation'), workspace.indexOf('function retryDailyMutation'));
+  const conflictBranch = mutationSource.indexOf("outcome.status === 'conflict' && key.startsWith('update-routine:')");
+  const conflictStoreWrite = mutationSource.indexOf('routineDraftStore.update(ownerScope, origin.dogId, lifetime, draft, conflict', conflictBranch);
+  const conflictRefresh = mutationSource.indexOf('void reloadDailyActivity(true, true)', conflictStoreWrite);
+  assert.ok(conflictBranch >= 0 && conflictStoreWrite > conflictBranch && conflictRefresh > conflictStoreWrite,
+    'the latest routine conflict is persisted before its background refresh can finish');
+  assert.match(mutationSource.slice(conflictStoreWrite, conflictRefresh), /routineDraftStore\.update\(ownerScope, origin\.dogId, lifetime, draft, conflict, routineDraftOwnerGeneration\)/);
+  assert.match(manager, /useEffect\(\(\) => \{\s*mounted\.current = true;\s*return \(\) => \{ mounted\.current = false; \};\s*\}, \[\]\)/);
+  assert.match(manager, /const result = submittedDraft\.mode === 'create'[\s\S]*?if \(!mounted\.current\) return;\s*setDraft\(routineDraftAfterWrite/);
+  assert.match(manager, /finally \{\s*if \(mounted\.current\) setSavingDraft\(false\);\s*\}/);
+
+  const operationCalls = [];
+  const operation = async () => { operationCalls.push('retry'); return { status: 'unknown' }; };
+  const ownerScope = 'account-1';
+  const lifetime = 'account:dog:day';
+  const failed = recovery.recoverDailyMutation('failed', ownerScope, lifetime, 'update:routine', operation);
+  assert.equal(failed.pendingRetry, null);
+  assert.equal(failed.message, 'Ändringen sparades inte. Försök igen.');
+  assert.equal(failed.error, true);
+
+  const unknown = recovery.recoverDailyMutation('unknown', ownerScope, lifetime, 'update:routine', operation);
+  assert.equal(unknown.pendingRetry.phase, 'unknown');
+  assert.strictEqual(unknown.pendingRetry.run, operation);
+  assert.strictEqual(recovery.dailyMutationRetryForLifetime(unknown.pendingRetry, lifetime), unknown.pendingRetry);
+  assert.equal(recovery.dailyMutationRetryForLifetime(unknown.pendingRetry, 'other-scope'), null);
+  await recovery.dailyMutationRetryForLifetime(unknown.pendingRetry, lifetime).run();
+  assert.deepEqual(operationCalls, ['retry']);
+
+  const staleDraft = {
+    mode: 'edit', submissionId: 'submission-1', routineId: 'routine-1', baseRevision: 1,
+    sourceRoutine: { id: 'routine-1', dog_id: 'dog-1', label: 'Morgon', checklist_revision: 1, legacy_single_item: false,
+      checklist: [{ id: 'item-1', label: 'Kissa', icon: 'water-outline' }, { id: 'item-2', label: 'Promenad', icon: 'walk-outline' }],
+      repeat_unit: null, repeat_interval: null, repeat_weekdays: null, repeat_anchor_date: null }, initialLabel: 'Morgon', initialChecklist: [
+      { id: 'item-1', label: 'Kissa', icon: 'water-outline' }, { id: 'item-2', label: 'Promenad', icon: 'walk-outline' },
+    ], initialRepeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null }, anchorDate: '2026-10-21', newAnchorDate: '2026-10-21',
+    label: 'Morgon uppdaterad', checklist: [
+      { id: 'item-2', label: 'Promenad', icon: 'walk-outline' }, { id: 'item-1', label: 'Kissa', icon: 'heart-outline' },
+    ], repeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null },
+  };
+  assert.strictEqual(recovery.routineDraftAfterWrite(staleDraft, staleDraft.submissionId, 'failed'), staleDraft);
+  assert.strictEqual(recovery.routineDraftAfterWrite(staleDraft, staleDraft.submissionId, 'unknown'), staleDraft);
+  assert.deepEqual(staleDraft.checklist.map(({ label, icon }) => [label, icon]), [
+    ['Promenad', 'walk-outline'], ['Kissa', 'heart-outline'],
+  ]);
+
+  const latest = {
+    id: 'routine-1', dog_id: 'dog-1', label: 'Morgon senast', checklist_revision: 3,
+    checklist: [{ id: 'item-3', label: 'Drick', icon: 'water-outline' }], repeat_unit: 'week',
+    repeat_interval: 1, repeat_weekdays: [1], repeat_anchor_date: '2026-10-19',
+  };
+  const conflict = recovery.routineConflictAfterWrite(staleDraft, { status: 'conflict', value: latest }, lifetime);
+  assert.strictEqual(recovery.routineDraftAfterWrite(staleDraft, staleDraft.submissionId, 'conflict'), staleDraft);
+  assert.strictEqual(recovery.routineConflictForDraft(staleDraft, conflict, lifetime), conflict);
+  assert.equal(recovery.routineConflictForDraft(staleDraft, conflict, 'other-scope'), null);
+  assert.equal(recovery.routineConflictMessage, 'Rutinen har ändrats sedan du öppnade den. Ladda den senaste versionen för att fortsätta. Dina osparade ändringar ersätts.');
+
+  const routineDrafts = recovery.createRoutineDraftStore();
+  routineDrafts.update(ownerScope, 'dog-1', lifetime, staleDraft, conflict);
+  let finishRefresh;
+  let refreshFinished = false;
+  const backgroundRefresh = new Promise((resolve) => {
+    finishRefresh = () => { refreshFinished = true; resolve(); };
+  });
+  void backgroundRefresh;
+  assert.equal(routineDrafts.get(ownerScope, 'dog-2', lifetime), null, 'dog B cannot hydrate dog A’s draft or conflict');
+  const restored = routineDrafts.get(ownerScope, 'dog-1', lifetime);
+  assert.equal(restored.draft.label, 'Morgon uppdaterad');
+  assert.equal(restored.draft.submissionId, 'submission-1');
+  assert.deepEqual(restored.draft.checklist.map(({ id, icon }) => [id, icon]), [
+    ['item-2', 'walk-outline'], ['item-1', 'heart-outline'],
+  ], 'the exact text order and selected icons survive the dog A → B → A remount');
+  assert.strictEqual(recovery.routineConflictForDraft(restored.draft, restored.conflict, lifetime).latest, restored.conflict.latest);
+  restored.draft.checklist[0].label = 'mutation outside the store';
+  assert.equal(routineDrafts.get(ownerScope, 'dog-1', lifetime).draft.checklist[0].label, 'Promenad',
+    'restoring a draft returns a deep copy rather than a mutable store reference');
+
+  const replacement = recovery.routineEditDraftFromConflict(staleDraft, conflict, lifetime, 'submission-2', '2026-10-22');
+  assert.equal(replacement.submissionId, 'submission-2');
+  assert.equal(replacement.routineId, latest.id);
+  assert.equal(replacement.baseRevision, 3);
+  assert.strictEqual(replacement.sourceRoutine, latest);
+  assert.deepEqual(replacement.checklist, latest.checklist);
+  assert.deepEqual(replacement.repeat, { repeat_unit: 'week', repeat_interval: 1, repeat_weekdays: [1] });
+  assert.strictEqual(staleDraft.checklist[1].icon, 'heart-outline', 'the stale draft remains unchanged until the replacement action is explicitly invoked');
+  routineDrafts.update(ownerScope, 'dog-1', lifetime, replacement, null);
+  assert.equal(routineDrafts.get(ownerScope, 'dog-1', lifetime).draft.submissionId, 'submission-2', 'conflict replacement survives the remount only after explicit confirmation');
+  assert.equal(routineDrafts.get(ownerScope, 'dog-1', lifetime).conflict, null);
+  assert.equal(refreshFinished, false, 'the user can act on the stored conflict without waiting for its refresh');
+  finishRefresh();
+  await backgroundRefresh;
+  assert.equal(routineDrafts.get(ownerScope, 'dog-1', lifetime).draft.submissionId, 'submission-2', 'a late refresh cannot overwrite the replacement draft');
+});
+
+test('daily recovery clears write locks only after a definitive result and guards account deletion', () => {
+  const operation = async () => ({ status: 'failed' });
+  const ownerScope = 'account-1';
+  const otherOwnerScope = 'account-2';
+  const lifetime = 'account:dog:day';
+  const unknown = recovery.recoverDailyMutation('unknown', ownerScope, lifetime, 'update:routine', operation);
+  const failed = recovery.recoverDailyMutation('failed', ownerScope, lifetime, 'update:routine', operation);
+  const conflict = recovery.recoverDailyMutation('conflict', ownerScope, lifetime, 'update:routine', operation);
+  assert.equal(recovery.dailyMutationBlocksAccountDeletion(true, null, ownerScope), true, 'an in-flight write blocks deletion');
+  assert.equal(recovery.dailyMutationBlocksAccountDeletion(false, unknown.pendingRetry, ownerScope), true, 'an unknown write blocks deletion while exact retry remains pending');
+  assert.equal(recovery.dailyMutationBlocksAccountDeletion(true, conflict.pendingRetry, ownerScope), true, 'conflict reconciliation remains locked during reload');
+  assert.equal(recovery.dailyMutationBlocksAccountDeletion(false, failed.pendingRetry, ownerScope), false, 'definitive failure releases the daily-write gate');
+  assert.equal(recovery.dailyMutationBlocksAccountDeletion(false, conflict.pendingRetry, ownerScope), false, 'readback-resolved conflict releases the gate even while the local stale draft stays visible');
+  const changedLifetime = recovery.clearDailyMutationForLifetimeChange();
+  assert.equal(changedLifetime.message, '');
+  assert.equal(changedLifetime.error, false);
+  const scopedPending = recovery.dailyMutationForOwner(unknown.pendingRetry, ownerScope);
+  assert.strictEqual(scopedPending, unknown.pendingRetry, 'a dog/day view change retains the unresolved write for the same account');
+  assert.equal(recovery.dailyMutationRetryForLifetime(scopedPending, 'account:other-dog:other-day'), null, 'the old-scope retry does not appear in another day');
+  assert.equal(recovery.dailyMutationBlocksAccountDeletion(false, scopedPending, ownerScope), true, 'the same owner remains blocked from account deletion across dog/day changes');
+  assert.equal(recovery.dailyMutationForOwner(scopedPending, otherOwnerScope), null, 'an unrelated signed-in owner cannot see the previous owner’s write');
+  assert.equal(recovery.dailyMutationBlocksAccountDeletion(false, scopedPending, otherOwnerScope), false, 'another owner is not blocked by this unresolved write');
+  assert.equal(recovery.canStartDailyMutation(scopedPending, ownerScope), false, 'dog B cannot start or overwrite a daily write while dog A is unknown');
+  assert.equal(recovery.canStartDailyMutation(scopedPending, otherOwnerScope), true, 'another authenticated owner has an independent write scope');
+  const resolved = recovery.resolvedDailyMutation({ ...scopedPending, phase: 'in-flight', dogId: 'dog-1', dogName: 'Luna', actionLabel: 'Ändra rutin' }, 'conflict');
+  assert.equal(recovery.dailyMutationBlocksAccountDeletion(false, resolved, ownerScope), false, 'a readback-resolved conflict does not block account deletion');
+  assert.equal(resolved.notice.error, true);
+  assert.match(resolved.notice.message, /Ändra rutin för Luna/);
+  assert.equal(Object.hasOwn(resolved, 'run'), false, 'resolved feedback does not retain the retry closure or its captured routine payload');
+  assert.deepEqual(Object.keys(resolved).sort(), ['notice', 'ownerScope', 'phase'], 'resolved feedback retains only its owner and minimal display notice');
+  assert.equal(recovery.canStartDailyMutation(resolved, ownerScope), true, 'a resolved notice can be dismissed or replaced by a new write');
+  assert.equal(resolved.run, undefined, 'resolved feedback cannot be replayed');
+  const routineDrafts = recovery.createRoutineDraftStore();
+  const generation = routineDrafts.ownerGeneration(ownerScope);
+  routineDrafts.update(ownerScope, 'dog-1', lifetime, { mode: 'create', submissionId: 'draft', routineId: null, baseRevision: null,
+    sourceRoutine: null, initialLabel: '', initialChecklist: [{ id: 'one', label: '' }], initialRepeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null },
+    anchorDate: '2026-10-22', newAnchorDate: '2026-10-22', label: '', checklist: [{ id: 'one', label: '' }], repeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null } }, null, generation);
+  routineDrafts.clearOwner(ownerScope);
+  assert.equal(routineDrafts.get(ownerScope, 'dog-1', lifetime), null, 'account cleanup removes owner-scoped draft recovery');
+  const lateDraft = { mode: 'create', submissionId: 'late', routineId: null, baseRevision: null, sourceRoutine: null,
+    initialLabel: '', initialChecklist: [{ id: 'late-item', label: '' }], initialRepeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null },
+    anchorDate: '2026-10-22', newAnchorDate: '2026-10-22', label: 'late', checklist: [{ id: 'late-item', label: 'late' }],
+    repeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null } };
+  routineDrafts.update(ownerScope, 'dog-1', lifetime, lateDraft, null, generation);
+  assert.equal(routineDrafts.get(ownerScope, 'dog-1', lifetime), null, 'a completion from the signed-out generation cannot repopulate the cleared draft');
+});
+
+test('unknown writes survive dog-keyed workspace remounts and remain owner-scoped', () => {
+  const store = recovery.createDailyMutationStore();
+  const ownerScope = 'account-remount';
+  const otherOwnerScope = 'other-account';
+  const lifetime = `${ownerScope}:dog-a:today`;
+  let calls = 0;
+  const operation = async () => { calls += 1; return { status: 'unknown' }; };
+  const active = { ownerScope, lifetime, key: 'update:routine-a', run: operation, phase: 'in-flight' };
+  const firstGeneration = store.ownerGeneration(ownerScope);
+  store.update(ownerScope, active, firstGeneration);
+  store.clearOwner(ownerScope);
+  store.update(ownerScope, active, firstGeneration);
+  assert.equal(store.getSnapshot().has(ownerScope), false, 'a mutation callback from the cleared sign-out generation cannot restore its pending write');
+  assert.ok(store.ownerGeneration(ownerScope) > firstGeneration, 'owner cleanup advances the generation fence');
+  store.update(ownerScope, active);
+
+  const dogAUnmounted = store.getSnapshot();
+  const dogBWorkspaceSnapshot = store.getSnapshot();
+  assert.strictEqual(dogBWorkspaceSnapshot.get(ownerScope), active, 'switching dogs keeps the in-flight barrier above the keyed workspace');
+  assert.equal(recovery.dailyMutationBlocksAccountDeletion(false, dogBWorkspaceSnapshot.get(ownerScope), ownerScope), true);
+
+  const unknown = recovery.recoverDailyMutation('unknown', ownerScope, lifetime, 'update:routine-a', operation);
+  store.update(ownerScope, unknown.pendingRetry);
+  const dogARemountedSnapshot = store.getSnapshot();
+  const pending = dogARemountedSnapshot.get(ownerScope);
+  assert.notStrictEqual(dogARemountedSnapshot, dogAUnmounted, 'store publishes a new immutable snapshot to remounted workspaces');
+  assert.strictEqual(pending.run, operation, 'the remounted workspace receives the exact original retry closure');
+  assert.equal(pending.lifetime, lifetime, 'retry keeps the original dog/day lifetime');
+  assert.equal(pending.phase, 'unknown');
+  assert.equal(recovery.dailyMutationBlocksAccountDeletion(false, pending, ownerScope), true);
+  assert.equal(recovery.dailyMutationBlocksAccountDeletion(false, pending, otherOwnerScope), false);
+
+  store.update(ownerScope, null);
+  assert.equal(recovery.dailyMutationBlocksAccountDeletion(false, store.getSnapshot().get(ownerScope) ?? null, ownerScope), false);
+  assert.equal(calls, 0, 'storing the retry does not execute it a second time');
 });
 
 test('training row presents the step title and keeps full program title in detail data', () => {
@@ -75,9 +356,9 @@ test('full checklist owns all daily rows and never renders zero-of-zero progress
   assert.match(screen, /completedCount\} av \{activities\.length\} klara/);
   assert.match(screen, /testID="daily-checklist-progress"/);
   assert.match(screen, /title="Checklistor"/);
-  assert.match(screen, /Håll inne på rutinen för att redigera\./);
-  assert.match(screen, /accessibilityHint=\{item\.kind === 'routine'[\s\S]*?Håll inne på rutinen för att redigera\./);
-  assert.match(screen, /onLongPress=\{item\.kind === 'routine'[\s\S]*?openManager\(routineDay\.routine_id, true\)/);
+  assert.match(screen, /Håll inne på en rutinpunkt för att öppna redigeringen\./);
+  assert.match(screen, /accessibilityHint=\{item\.kind === 'routine'[\s\S]*?Håll inne på en rutinpunkt för att öppna redigeringen\./);
+  assert.match(screen, /onLongPress=\{item\.kind === 'routine'[\s\S]*?openManager\(routineDay\.routine_id, true, item\.routineItemId \?\? null\)/);
   assert.match(screen, /Inga aktiviteter idag/);
   assert.doesNotMatch(screen, /0 av 0/);
 });

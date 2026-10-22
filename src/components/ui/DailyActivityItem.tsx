@@ -2,14 +2,18 @@ import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { MotionPressable } from './Motion';
 import { IconChip, type IconCategory } from './IconChip';
+import { ThemedIcon } from './ThemedIcon';
 import { tokens } from '../../theme/tokens';
 import { Button } from './Button';
+import { dailyRoutineChecklistIconTone, type DailyRoutineChecklistDisplayIcon } from '../../features/home/daily-routine-checklist-icons';
 
 export type DailyActivityItemProps = {
   label: string;
   category?: IconCategory;
   kind?: 'routine' | 'training';
   routineLabel?: string;
+  icon?: DailyRoutineChecklistDisplayIcon;
+  showRoutineIcon?: boolean;
   detail?: string;
   completed: boolean;
   onToggle?: () => void;
@@ -52,7 +56,7 @@ export function DailyActivityItem(props: DailyActivityItemProps) {
   </View>;
 }
 
-function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, completed, onToggle, onOpen, onLongPress, accessibilityHint, accessibilityLabel = label,
+function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, icon, showRoutineIcon = false, completed, onToggle, onOpen, onLongPress, accessibilityHint, accessibilityLabel = label,
   pending = false, statusMessage = '', statusError = false, onRetry }: DailyActivityItemProps) {
   const status = pending ? 'Sparar…' : statusMessage;
   const rowLabel = accessibilityLabel + (kind === 'training' ? `, ${completed ? 'klar' : 'inte klar'}, öppna Träning` : '');
@@ -88,6 +92,8 @@ function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, complete
       <MotionPressable accessibilityRole="button" accessibilityLabel={`Öppna ${routineItemLabel}`} accessibilityHint={accessibilityHint}
         onPress={onOpen} onLongPress={onLongPress}
         style={({ pressed }) => [styles.homeDetailTarget, pressed && styles.pressed]}>
+        {showRoutineIcon && icon ? <ThemedIcon name={icon} tone={dailyRoutineChecklistIconTone(icon)}
+          testID={`checklist-routine-icon-${icon}`} style={styles.checklistRoutineIcon} /> : null}
         <View style={styles.homeCopy}>
           <Text style={styles.homeLabel}>{label}</Text>
           {status ? <Text accessibilityRole={statusError ? 'alert' : undefined} accessibilityLiveRegion="polite" style={[styles.homeStatus, statusError && styles.homeError]}>{status}</Text> : null}
@@ -112,6 +118,7 @@ const styles = StyleSheet.create({
   homeRoutineRow: { minHeight: tokens.size.touchMin, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center' },
   homeToggleTarget: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'flex-start', justifyContent: 'center', paddingLeft: tokens.spacing.sm },
   homeDetailTarget: { flex: 1, minWidth: 0, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', paddingRight: tokens.spacing.xs },
+  checklistRoutineIcon: { marginRight: tokens.spacing.sm },
   homeTrainingRow: { minHeight: tokens.size.touchMin, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', paddingRight: tokens.spacing.xs },
   homeCheckbox: { width: tokens.size.homeCheckbox, height: tokens.size.homeCheckbox, borderWidth: 2, borderColor: tokens.colors.home.textMuted, borderRadius: tokens.spacing.xs, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card },
   homeCheckboxChecked: { borderColor: tokens.colors.home.greenStrong, backgroundColor: tokens.colors.home.greenStrong },

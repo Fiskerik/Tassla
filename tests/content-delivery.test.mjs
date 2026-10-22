@@ -153,8 +153,9 @@ test('guide-body helper renders supported headings and lists as plain text and p
   assert.match(knowledgeSource, /parseGuideBody\(selectedItem\.body\)\.map/);
   assert.match(knowledgeSource, /selectedItem\.isAiGenerated\s*\?\s*<Text[^>]*>AI-genererat innehåll<\/Text>/);
   assert.match(trainingSource, /selectedProgram\?\.is_ai_generated\s*\?\s*<Text[^>]*>AI-genererat innehåll<\/Text>/);
-  assert.match(knowledgeSource, /displayedItems\[0\]\.title/);
-  assert.match(knowledgeSource, /getGuidePreviewText\(displayedItems\[0\]\.body\)/);
+  assert.match(knowledgeSource, /renderGuideCard\(cardItems\[0\], true\)/);
+  assert.match(knowledgeSource, /<Text[^>]*>\{item\.title\}<\/Text>/);
+  assert.match(knowledgeSource, /getGuidePreviewText\(item\.body\)/);
 });
 
 test('Home opens the exact fetched version and Knowledge resolves that exact row without a reload', () => {

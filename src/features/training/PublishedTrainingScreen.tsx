@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Image, StyleSheet, Text, View } from 'react-native';
 import { AppBar, BottomSheet, Button, Card, ListRow, Progress, SectionHeader, Toast } from '../../components/ui';
-import type { PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
+import type { HistoricalTrainingStepDetail, PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
 import { completeReviewTrainingStep, completeTrainingStepForMode, isReviewTrainingProgram, resetReviewTrainingProgram, unmarkReviewTrainingStep, unmarkTrainingStepForMode } from './review-training-state';
 import { tokens } from '../../theme/tokens';
 import { allProgramsComplete, completedCount, exerciseCountLabel, exerciseProgressLabel, pickNextExercise, programStatus, programStatusWord, sortPrograms, stepStates } from './training-overview';
 
-export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, onAddBirthDate, onOpenKnowledge, reviewMode = false, focusStep, onCloseStep }: {
+export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, onAddBirthDate, onOpenKnowledge, reviewMode = false, focusStep, historicalDetail, onCloseStep }: {
   ageWeeks: number | null; programs: readonly PublishedTrainingProgram[]; paused: readonly PausedTrainingProgress[]; busyStepKey: string | null; error: string;
   reviewMode?: boolean;
-  focusStep?: { programId: string; stepId: string; returnPage: 'home' | 'checklist' | 'progress' };
+  focusStep?: { programId: string; stepId: string; returnPage: 'home' | 'checklist' | 'progress'; readOnly?: boolean; dateKey?: string; completed?: boolean };
+  historicalDetail?: { status: 'loading' | 'ready' | 'partial' | 'unavailable'; detail: HistoricalTrainingStepDetail | null };
   onCloseStep?: () => void;
   onCompleteStep: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>;
   onUnmarkStep?: (program: PublishedTrainingProgram, stepId: string) => Promise<{ programId: string; stepId: string } | false>; onContinue: () => void;
@@ -116,6 +117,27 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
         : onResetProgram(program) },
     ]);
   }
+
+  if (focusStep?.readOnly) return <View testID="historical-training-step-detail" style={styles.focusedPage}>
+    <AppBar mode="Back" title="Träningssteg" actionLabel="Tillbaka till Checklistan" onAction={onCloseStep ?? onContinue} variant="compact" />
+    {historicalDetail?.status === 'loading' || !historicalDetail ? <View style={styles.focusedCard}>
+      <Text style={styles.stepMeta}>Sparad aktivitet · {formatHistoricalDate(focusStep.dateKey)}</Text>
+      <Text style={styles.body}>Hämtar det publicerade träningssteget…</Text>
+    </View> : historicalDetail.status === 'partial' ? <View style={styles.focusedCard}>
+      <Text style={styles.emptyTitle}>Steget kunde inte hämtas</Text>
+      <Text style={styles.body}>Försök igen när anslutningen fungerar.</Text>
+      <Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta träningssteget igen" onPress={onRetry} />
+    </View> : historicalDetail.status === 'unavailable' || !historicalDetail.detail ? <View style={styles.focusedCard}>
+      <Text style={styles.emptyTitle}>Steget är inte längre tillgängligt</Text>
+      <Text style={styles.body}>Det publicerade träningssteget kunde inte hittas. Checklistan uppdateras när du går tillbaka.</Text>
+    </View> : <View style={styles.focusedCard}>
+      <Text style={styles.stepMeta}>{historicalDetail.detail.programTitle} · {formatHistoricalDate(focusStep.dateKey)}</Text>
+      <Text accessibilityRole="header" style={styles.sheetHeading}>{historicalDetail.detail.stepTitle}</Text>
+      {historicalDetail.detail.isAiGenerated ? <Text style={styles.note}>AI-genererat innehåll</Text> : null}
+      <Text style={styles.body}>{historicalDetail.detail.instruction}</Text>
+      <Text style={styles.note}>{focusStep.completed ? 'Markerad som genomförd' : 'Inte markerad för den dagen'} · Endast läsning</Text>
+    </View>}
+  </View>;
 
   if (focusStep) return <View testID="home-training-step-detail" style={styles.focusedPage}>
     <AppBar mode="Back" title="Träningssteg"
@@ -227,6 +249,12 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
 }
 
 function percentage(program: PublishedTrainingProgram) { return program.steps.length ? completedCount(program) / program.steps.length * 100 : 0; }
+function formatHistoricalDate(dateKey?: string): string {
+  if (!dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return 'Sparad dag';
+  const date = new Date(`${dateKey}T12:00:00.000Z`);
+  return new Intl.DateTimeFormat('sv-SE', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(date);
+}
+
 const styles = StyleSheet.create({
   focusedPage: { gap: tokens.spacing.md, paddingBottom: tokens.spacing.xl },
   focusedCard: { padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.training.continueSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },

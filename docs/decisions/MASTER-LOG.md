@@ -1,6 +1,6 @@
 # Tassla — samlat besluts- och leveransregister
 
-Status: kanonisk sammanfattning för produkt-, design- och utvecklingsagenter. Baslinje för branchuppdateringen: codex/ux-rethink-2026-10-15 @ 2e230be44c1bdd74e74173064fdce5e60e7e9dbc. Senast sammanställd 2026-10-15.
+Status: kanonisk sammanfattning för produkt-, design- och utvecklingsagenter. Baslinje för branchuppdateringen: codex/ux-rethink-2026-10-15 @ 2e230be44c1bdd74e74173064fdce5e60e7e9dbc. Senast sammanställd 2026-10-22.
 
 Läs denna fil först när ett beslut eller tidigare paket efterfrågas. Läs sedan bara den länkade detaljplanen för uppgiften. Vid konflikt gäller senaste uttryckliga ägarbeslutet och den aktuella posten här. De numrerade beslutsfilerna behålls som historiska underlag; de är inte separata, uppdaterade styrkällor. Detaljerade testresultat finns i respektive task- och releaseunderlag.
 
@@ -182,3 +182,15 @@ Implementera checklistans fulla Idag-resa som en underordnad Hem-vy med samma ko
 ### VISION-R02-HEM-01 — lokal Home-checkpoint, 2026-10-21
 
 Home visar endast pilen till Checklistor; rutinrader öppnar fokuserad hantering med vanligt tryck och redigering med longpress utan checkboxskrivning. QA verifierade v15-kod/render/evidens och v16/v17 dokumentationsrättningar. Oberoende QA PASS, Architect APPROVE, Critic PROCEED och frozen Reviewer PASS. `pnpm check` passerade vid commit (app/edge typecheck, ESLint, 63/63 filer); pre-push hook passerade 621/622 tester (1 skip). Public/review RN Web-evidens 25/25 och 35/35; content guard och direkt offline Expo iOS-export 1 450 moduler passerade. Commit `1b22370` (`feat: polish home checklist navigation`) pushades till `origin/2026-10-21-hem-utveckling-framsteg-insikter`. `pnpm bundle:ios`-wrappern är NOT VERIFIED efter sandbox-EPERM vid registry-attestering; native VoiceOver/Dynamic Type, live Supabase/RLS och signerad release är NOT TESTABLE. Full panelacceptans hävdas inte. Underlag: [Home-taskjournal](../tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md), [plan v17](../plans/VISION-R02-HEM-2-3-8-2026-10-21-v17.md) och [visuell verifiering](../design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/home/VERIFICATION.md).
+
+### FLOW-HOME-CHECKLIST-FILTERS-01 — A02 lokal ikon-/handlingscheckpoint, 2026-10-22
+
+Ikonval per rutinpunkt är återinfört i Checklista, med 20 val, long-press till rätt punkt och befintlig owner-scoped sparväg. Hem behåller kompakta ikonfria rader. Båda rutinhandlingarna är ikon-only och kräver bekräftelse i separat popup. A02 v5 fick oberoende QA PASS och frozen Reviewer PASS efter tokenbaserad, varierad visuell behandling; se [verifieringen](../design/evidence/flow-home-checklist-filters-2026-10-20/a02/VERIFICATION.md).
+
+Detta stänger inte hela panel 4: Kommande, källnavigation/retur och full §14-acceptans återstår. Migrationen är endast källkod och har inte applicerats. Produktionsskrivning med ikonmetadata är spärrad tills separat migration/runtime-granskning och skydd mot gamla klienters läsning är uppfyllda. Ingen live RLS, native Alert/accessibility eller TestFlight-verifiering hävdas. Erik bekräftade manuella tester 1–4 som godkända; de hålls stängda.
+
+### FLOW-HOME-CHECKLIST-FILTERS-01 — A03 lokal Kommande-/källresa, 2026-10-22
+
+Panel-4:s fyra filter, read-only Kommande, exakta historiska träningskällor och retur med bibehållet filter/scroll är lokalt implementerade på `2026-10-22-checklist-kommande-navigation`. Riktad syntetisk RN Web-kontroll PASS: public 10/10, review 19/19. Check-hook: 642 passerade, 1 skip av 643 testfall. Commit `25bde34` pushad till `origin/2026-10-22-checklist-kommande-navigation`. Full panelacceptans, oberoende A03-review och live RLS är fortfarande öppna; native accessibility är NOT TESTABLE.
+
+Erik vill att Kunskapens checklistor delar mer av Hemmets ikon- och radgrammatik. Fortsatt beslut: harmonisera presentation och återkoppling där de passar, men bevara skillnaden mellan publicerade fasuppgifter/egna fas-punkter och ägarens återanvändbara återfallsrutiner. Kunskapens egna punkter saknar sparat ikonfält; beständigt val kräver separat datakontrakt och granskning. A03 ändrar inte Kunskap. Skärmens generella `Kontrollera den föregående ändringen`-status bevisar inte saknad tabell: ikonändringen kräver en ännu icke-applicerad validator-migration i den befintliga rutindatakällan, inte en ny tabell.

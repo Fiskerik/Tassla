@@ -1,11 +1,13 @@
-import type { HistoricalTrainingSource, PublishedTrainingProgram, PublishedTrainingStep } from '../../data/workspace-data';
+import type { HistoricalTrainingSource, PlannedHealthChecklistRow, PublishedTrainingProgram, PublishedTrainingStep } from '../../data/workspace-data';
 import type { DailyActivityRangeSnapshot, DailyActivitySnapshot, DailyRoutine, DailyRoutineDay, DailyRoutineDaySkip, DailyTrainingSelection } from './daily-activity-data';
+import { dailyRoutineChecklistDisplayIcon, type DailyRoutineChecklistDisplayIcon } from './daily-routine-checklist-icons';
 
 export type HomeDailyActivity = {
   id: string;
   label: string;
   routineLabel?: string;
   routineItemId?: string;
+  icon?: DailyRoutineChecklistDisplayIcon;
   kind: 'routine' | 'training';
   completed: boolean;
   routineDay?: DailyRoutineDay;
@@ -16,6 +18,10 @@ export type HomeDailyActivity = {
   dateKey?: string;
   skipped?: boolean;
   routineDaySkip?: DailyRoutineDaySkip;
+  routineId?: string;
+  healthPlanId?: string;
+  planned?: boolean;
+  repeatSummary?: string;
   healthType?: 'vaccination' | 'vet_visit';
 };
 
@@ -197,6 +203,7 @@ export function deriveHomeDailyActivities(
     for (const item of row.checklist_snapshot) activities.push({
       id: `routine:${row.id}:${item.id}`,
       label: item.label,
+      icon: dailyRoutineChecklistDisplayIcon(item),
       routineLabel: row.routine_label_snapshot,
       routineItemId: item.id,
       kind: 'routine',
@@ -241,7 +248,7 @@ export function deriveSavedRangeActivities(
   const result: HomeDailyActivity[] = [];
   for (const row of snapshot.routineDays) {
     if (row.dog_id !== dogId || row.date_key < from || row.date_key > to) continue;
-    for (const item of row.checklist_snapshot) result.push({ id: `routine:${row.id}:${item.id}`, label: item.label,
+    for (const item of row.checklist_snapshot) result.push({ id: `routine:${row.id}:${item.id}`, label: item.label, icon: dailyRoutineChecklistDisplayIcon(item),
       routineLabel: row.routine_label_snapshot, routineItemId: item.id, kind: 'routine',
       completed: row.completed_item_ids.includes(item.id), routineDay: row, dateKey: row.date_key });
   }
@@ -273,6 +280,45 @@ export function projectUpcomingRoutineDates(routines: readonly DailyRoutine[], f
     cursor = addCalendarDays(cursor, 1);
   }
   return result;
+}
+
+export function deriveUpcomingActivities(
+  routines: readonly DailyRoutine[],
+  plannedHealth: readonly PlannedHealthChecklistRow[],
+  dogId: string,
+  from: string,
+  to: string,
+): HomeDailyActivity[] {
+  if (!dogId || !isValidDateKey(from) || !isValidDateKey(to) || from > to) return [];
+  const activities: HomeDailyActivity[] = projectUpcomingRoutineDates(
+    routines.filter((routine) => routine.dog_id === dogId), from, to,
+  ).map(({ routine, dateKey }) => ({
+    id: `planned-routine:${routine.id}:${dateKey}`,
+    label: routine.label,
+    routineLabel: routine.label,
+    routineId: routine.id,
+    repeatSummary: dailyRoutineRepeatSummary(routine),
+    kind: 'routine',
+    completed: false,
+    planned: true,
+    dateKey,
+  }));
+  for (const plan of plannedHealth) {
+    if (plan.dog_id !== dogId || plan.due_on < from || plan.due_on > to || !isValidDateKey(plan.due_on)) continue;
+    activities.push({
+      id: `planned-health:${plan.id}`,
+      label: plan.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök',
+      kind: 'routine',
+      completed: false,
+      planned: true,
+      healthType: plan.event_type,
+      healthPlanId: plan.id,
+      dateKey: plan.due_on,
+    });
+  }
+  return activities.sort((left, right) => (left.dateKey ?? '').localeCompare(right.dateKey ?? '')
+    || left.kind.localeCompare(right.kind) || Number(Boolean(left.healthPlanId)) - Number(Boolean(right.healthPlanId))
+    || left.id.localeCompare(right.id));
 }
 
 export function isValidIanaTimeZone(value: string): boolean {

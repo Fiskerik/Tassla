@@ -10,6 +10,7 @@ import type {HomeDailyFixtureItem} from '../../src/features/home/HomeScreen';
 import type {ChecklistFilter,HomeDailyActivity} from '../../src/features/home/daily-activity-model';
 import type {DailyRoutine,DailyRoutineChecklistItem,DailyRoutineCreateInput,DailyRoutineDay,DailyRoutineDaySkip,DailyRoutineRepeatValues} from '../../src/features/home/daily-activity-data';
 import {isRoutineDueOnDate,isoWeekdayForDateKey} from '../../src/features/home/daily-activity-model';
+import {dailyRoutineChecklistDisplayIcon} from '../../src/features/home/daily-routine-checklist-icons';
 import {LogScreen} from '../../src/features/puppy-log/LogScreen';
 import type {AccidentKind,AccidentLogIntent,LogEvent,LogEventChanges,LogEventType} from '../../src/features/puppy-log/log-model';
 import {ComponentGalleryScreen} from '../../src/components/ui/ComponentGalleryScreen';
@@ -68,9 +69,9 @@ const homeReviewFixture:HomeDailyFixtureItem[]=[
  {id:'walk-paws',label:'Torka tassar',detail:'Promenad',category:'walk',completed:true,destination:'log',routineId:'routine-walk',routineLabel:'Promenad'},
  {id:'handling',label:'Miljöträning – nya ljud',detail:'Vecka 11 · Trygghet och vardag',category:'training',completed:false,destination:'training',kind:'training'},
 ];
-const routineMorningItems:DailyRoutineChecklistItem[]=[{id:'00000000-0000-4000-8000-000000000001',label:'Kissa'},{id:'00000000-0000-4000-8000-000000000002',label:'Fyll på vatten'}];
-const routineWalkItems:DailyRoutineChecklistItem[]=[{id:'00000000-0000-4000-8000-000000000003',label:'Ta på sele'},{id:'00000000-0000-4000-8000-000000000004',label:'Gå en kort runda'},{id:'00000000-0000-4000-8000-000000000005',label:'Torka tassar'}];
-const routineEveningItems:DailyRoutineChecklistItem[]=[{id:'00000000-0000-4000-8000-000000000006',label:'Borsta tänderna'},{id:'00000000-0000-4000-8000-000000000007',label:'Förbered kvällsmat'}];
+const routineMorningItems:DailyRoutineChecklistItem[]=[{id:'00000000-0000-4000-8000-000000000001',label:'Kissa',icon:'paw'},{id:'00000000-0000-4000-8000-000000000002',label:'Fyll på vatten',icon:'water-outline'}];
+const routineWalkItems:DailyRoutineChecklistItem[]=[{id:'00000000-0000-4000-8000-000000000003',label:'Ta på sele'},{id:'00000000-0000-4000-8000-000000000004',label:'Gå en kort runda',icon:'walk-outline'},{id:'00000000-0000-4000-8000-000000000005',label:'Torka tassar',icon:'paw'}];
+const routineEveningItems:DailyRoutineChecklistItem[]=[{id:'00000000-0000-4000-8000-000000000006',label:'Borsta tänderna',icon:'brush-outline'},{id:'00000000-0000-4000-8000-000000000007',label:'Förbered kvällsmat',icon:'restaurant-outline'}];
 const reviewRoutines:DailyRoutine[]=[
  {id:'routine-morning',dog_id:dog.id,label:'Morgonrutin',checklist:routineMorningItems,checklist_revision:1,legacy_single_item:false,repeat_unit:'day',repeat_interval:1,repeat_weekdays:null,repeat_anchor_date:today},
  {id:'routine-walk',dog_id:dog.id,label:'Promenad',checklist:routineWalkItems,checklist_revision:1,legacy_single_item:false,repeat_unit:'week',repeat_interval:1,repeat_weekdays:[1,5],repeat_anchor_date:today},
@@ -82,7 +83,7 @@ const reviewRoutineDays:DailyRoutineDay[]=[
 ];
 function fixtureDailyActivities(routines:DailyRoutine[],days:DailyRoutineDay[]):HomeDailyActivity[]{
  const routineRows=days.filter(day=>routines.some(routine=>routine.id===day.routine_id&&routine.dog_id===dog.id)).flatMap(day=>day.checklist_snapshot.map(item=>({
-  id:`routine:${day.id}:${item.id}`,label:item.label,routineLabel:day.routine_label_snapshot,routineItemId:item.id,kind:'routine' as const,
+  id:`routine:${day.id}:${item.id}`,label:item.label,icon:dailyRoutineChecklistDisplayIcon(item),routineLabel:day.routine_label_snapshot,routineItemId:item.id,kind:'routine' as const,
   completed:day.completed_item_ids.includes(item.id),routineDay:day,
  })));
  return [...routineRows,{id:'training:day-step',label:'Miljöträning – nya ljud',kind:'training',completed:false,programTitle:'Vecka 11',trainingSelection:{id:'selection-1',dog_id:dog.id,program_version_id:'review-version-11',step_id:'step-2',date_key:today,time_zone:'Europe/Stockholm'}}];
@@ -176,6 +177,7 @@ function App(){
  const [fixtureRoutineDays,setFixtureRoutineDays]=useState<DailyRoutineDay[]>(reviewRoutineDays);
  const [fixtureRoutineSkips,setFixtureRoutineSkips]=useState<DailyRoutineDaySkip[]>([]);
  const retryRoutineMutation=useRef<(()=>void)|null>(null);
+ const conflictReturned=useRef(false);
  function addLogFixture(type:LogEventType,intent?:AccidentLogIntent){if(type==='accident'&&!intent)return;const event:LogEvent={id:intent?.id??crypto.randomUUID(),dogId:dog.id,type,occurredAt:intent?.occurredAt??new Date().toISOString(),note:null,origin:'local-test',accidentKinds:intent?.accidentKinds??null};const status=logScenario==='accident-failed'?'failed':logScenario==='accident-unsure'?'unsure':'saved';if(status==='saved')setLogEvents(rows=>[event,...rows]);setMutation({kind:'add',id:event.id,mutationId:event.id,type:event.type,occurredAt:event.occurredAt,accidentKinds:event.accidentKinds,status});}
  function retryLogFixture(){if(mutation?.kind==='update'&&pendingLogUpdate){setLogEvents(rows=>rows.map(row=>row.id===pendingLogUpdate.id?{...row,...pendingLogUpdate.changes}:row));setMutation({...mutation,type:pendingLogUpdate.changes.type,occurredAt:pendingLogUpdate.changes.occurredAt,accidentKinds:pendingLogUpdate.changes.accidentKinds,status:'saved'});setPendingLogUpdate(null);return true;}if(mutation?.kind!=='add')return true;const event:LogEvent={id:mutation.id,dogId:dog.id,type:mutation.type,occurredAt:mutation.occurredAt,note:null,origin:'local-test',accidentKinds:mutation.accidentKinds??null};setLogEvents(rows=>rows.some(row=>row.id===event.id)?rows:[event,...rows]);setMutation({...mutation,status:'saved'});return true;}
  function loadMoreLog(){if(logLoadingMore||!logHasMore)return;setLogLoadingMore(true);setLogLoadMoreError(false);window.setTimeout(()=>{setLogLoadingMore(false);if(logScenario==='split-day-error'&&logLoadAttempt===0){setLogLoadAttempt(1);setLogLoadMoreError(true);return;}setLogEvents(rows=>[...rows,...logSplitContinuation.filter(next=>!rows.some(row=>row.id===next.id))]);setLogHasMore(false);},650);}
@@ -198,24 +200,39 @@ function App(){
  const fixtureChecklistActivities=checklistCandidates.slice(0,checklistCount);
  const visualTraining=trainingChecklistActivities[0];
  const checklistVisualActivities:HomeDailyActivity[]=[
-  {id:'visual-morning-walk',label:'Morgonrast',routineLabel:'Morgonrast',kind:'routine',completed:true,dateKey:today},
+  {id:'visual-morning-walk',label:'Morgonrast',icon:'walk-outline',routineLabel:'Morgonrast',kind:'routine',completed:true,dateKey:today},
   ...(visualTraining?[{...visualTraining,id:'visual-training-sit',label:'Träna sitt',completed:true,dateKey:today}]:[]),
-  {id:'visual-environment',label:'Miljöträning ute',routineLabel:'Miljöträning ute',kind:'routine',completed:false,dateKey:today},
-  {id:'visual-vaccination',label:'Kontrollera vaccinationsplan',routineLabel:'Kontrollera vaccinationsplan',kind:'routine',completed:false,healthType:'vaccination',dateKey:today},
-  {id:'visual-evening',label:'Kvällsrutin',routineLabel:'Kvällsrutin',kind:'routine',completed:false,dateKey:today},
+  {id:'visual-environment',label:'Miljöträning ute',icon:'fitness-outline',routineLabel:'Miljöträning ute',kind:'routine',completed:false,dateKey:today},
+  {id:'visual-vaccination',label:'Kontrollera vaccinationsplan',icon:'bandage-outline',routineLabel:'Kontrollera vaccinationsplan',kind:'routine',completed:false,healthType:'vaccination',dateKey:today},
+  {id:'visual-evening',label:'Kvällsrutin',icon:'moon-outline',routineLabel:'Kvällsrutin',kind:'routine',completed:false,dateKey:today},
  ];
  const checklistActivities=checklistVisual?checklistVisualActivities:fixtureChecklistActivities;
  const checklistRangeActivities:HomeDailyActivity[]=params.get('checklistRangeEmpty')==='true'?[]:checklistVisual?[
   {...checklistVisualActivities[0],id:'visual-history-walk-1',dateKey:shiftFixtureDate(today,-1)},
   ...(visualTraining?[{...visualTraining,id:'visual-history-training-1',label:'Träna sitt',completed:true,dateKey:shiftFixtureDate(today,-1)}]:[]),
   {...checklistVisualActivities[2],id:'visual-history-environment-1',dateKey:shiftFixtureDate(today,-3)},
-  {...checklistVisualActivities[3],id:'visual-history-vaccination-1',completed:true,dateKey:shiftFixtureDate(today,-5)},
+  {...checklistVisualActivities[4],id:'visual-history-evening-1',dateKey:shiftFixtureDate(today,-5)},
  ]:fixtureChecklistActivities.map((item,index)=>({...item,id:'fixture-history-'+index,dateKey:shiftFixtureDate(today,-(index<2?1:index+1))}));
  const requestedChecklistRangeState=params.get('checklistRangeState')||'ready';
  const checklistRangeState=requestedChecklistRangeState==='loading'||requestedChecklistRangeState==='partial'||requestedChecklistRangeState==='error'?requestedChecklistRangeState:'ready';
  async function createRoutineFixture(input:DailyRoutineCreateInput){const routine:DailyRoutine={...input,dog_id:dog.id,checklist_revision:1,legacy_single_item:false,repeat_anchor_date:input.repeat_unit?today:null};setFixtureRoutines(rows=>[routine,...rows]);return {status:'saved' as const};}
  function saveRoutineFixture(routine:DailyRoutine,label:string,checklist:DailyRoutineChecklistItem[],repeat:DailyRoutineRepeatValues){const legacyDay=routine.repeat_anchor_date?isoWeekdayForDateKey(routine.repeat_anchor_date):null;const currentWeekdays=routine.repeat_weekdays??(legacyDay?[legacyDay]:[]);const desiredWeekdays=repeat.repeat_weekdays??(legacyDay?[legacyDay]:[]);const sameWeekdays=JSON.stringify(currentWeekdays)===JSON.stringify(desiredWeekdays);const sameRule=routine.repeat_unit===repeat.repeat_unit&&routine.repeat_interval===repeat.repeat_interval&&(routine.repeat_unit!=='week'||sameWeekdays);const weekdays=routine.repeat_unit==='week'&&repeat.repeat_unit==='week'&&routine.repeat_weekdays===null&&repeat.repeat_weekdays?.length===1&&repeat.repeat_weekdays[0]===legacyDay?null:repeat.repeat_weekdays;setFixtureRoutines(rows=>rows.map(row=>row.id===routine.id?{...row,label,checklist,...repeat,repeat_weekdays:weekdays,repeat_anchor_date:sameRule?row.repeat_anchor_date:repeat.repeat_unit?today:null,checklist_revision:row.checklist_revision+1,legacy_single_item:false}:row));}
- async function updateRoutineFixture(routine:DailyRoutine,label:string,checklist:DailyRoutineChecklistItem[],repeat:DailyRoutineRepeatValues){const simulatedFailure=params.get('routineMutation');if(simulatedFailure==='failed'||simulatedFailure==='unknown'){retryRoutineMutation.current=()=>{saveRoutineFixture(routine,label,checklist,repeat);retryRoutineMutation.current=null;setDailyMutationMode('');};setDailyMutationMode(simulatedFailure);return {status:simulatedFailure};}saveRoutineFixture(routine,label,checklist,repeat);return {status:'saved' as const};}
+ async function updateRoutineFixture(routine:DailyRoutine,label:string,checklist:DailyRoutineChecklistItem[],repeat:DailyRoutineRepeatValues){
+  const simulatedFailure=params.get('routineMutation');
+  if(simulatedFailure==='failed'||simulatedFailure==='unknown'){
+   retryRoutineMutation.current=()=>{saveRoutineFixture(routine,label,checklist,repeat);retryRoutineMutation.current=null;setDailyMutationMode('');};
+   setDailyMutationMode(simulatedFailure);
+   return {status:simulatedFailure};
+  }
+  if(simulatedFailure==='conflict'&&!conflictReturned.current){
+   conflictReturned.current=true;
+   const latest:DailyRoutine={...routine,label:`${routine.label} · senaste`,checklist:routine.checklist.map((item,index)=>index===0?{...item,label:`${item.label} · senaste`}:{...item}),checklist_revision:routine.checklist_revision+1};
+   setFixtureRoutines(rows=>rows.map(row=>row.id===routine.id?latest:row));
+   return {status:'conflict' as const,value:latest};
+  }
+  saveRoutineFixture(routine,label,checklist,repeat);
+  return {status:'saved' as const};
+ }
  async function unmarkTrainingFixture(program:PublishedTrainingProgram,stepId:string){const key=`${program.id}:${stepId}:unmark`;setTrainingBusyStepKey(key);setTrainingError('');try{if(trainingUnmarkScenario)await new Promise(resolve=>window.setTimeout(resolve,trainingUnmarkScenario==='pending'?1800:500));if(trainingUnmarkScenario==='failed'){setTrainingError('Steget är fortfarande markerat. Kontrollera anslutningen och försök igen.');return false;}if(trainingUnmarkScenario==='unknown'){setTrainingError('Vi kunde inte bekräfta att steget avmarkerades. Kontrollera statusen innan du försöker på nytt.');return false;}setTrainingPrograms(current=>current.map(item=>item.id===program.id?{...item,completedStepIds:item.completedStepIds.filter(id=>id!==stepId)}:item));return {programId:program.id,stepId};}finally{setTrainingBusyStepKey(null);}}
  function retryDailyFixtureMutation(){if(retryRoutineMutation.current){retryRoutineMutation.current();return;}setDailyMutationMode('');}
  async function deleteRoutineFixture(routine:DailyRoutine){setFixtureRoutines(rows=>rows.filter(row=>row.id!==routine.id));setFixtureRoutineDays(rows=>rows.filter(row=>row.routine_id!==routine.id));return {status:'saved' as const};}
@@ -251,19 +268,19 @@ function App(){
   dailyActivities={visibleRoutineActivities} routineTemplates={reviewFixtureEnabled&&state==='ready'?fixtureRoutines:[]} routineDaySkips={reviewFixtureEnabled&&state==='ready'?fixtureRoutineSkips:[]}
   dailyTrainingOptions={reviewFixtureEnabled&&state==='ready'&&['ready','product-daily'].includes(homeScenario)?reviewTrainingOptions:[]}
   dailyMutationBusy={dailyMutationMode==='pending'} dailyMutationKey={dailyMutationMode?'complete-routine:day-morning:00000000-0000-4000-8000-000000000001':''}
-  dailyMutationMessage={dailyMutationMode==='failed'?'Ändringen sparades inte. Kontrollera anslutningen och försök igen.':dailyMutationMode==='unknown'?'Vi kunde inte bekräfta om ändringen sparades. Ingen ny bock visas. Kontrollera samma ändring innan du fortsätter.':dailyMutationMode==='readback'?'Ändringen sparades, men dagens lista kunde inte hämtas. Status räknas först efter en ny avläsning.':''}
-  dailyMutationError={['failed','unknown','readback'].includes(dailyMutationMode)} onRetryDaily={()=>setDailyMutationMode('')} onRetryDailyMutation={['failed','unknown'].includes(dailyMutationMode)?retryDailyFixtureMutation:undefined}
+  dailyMutationMessage={dailyMutationMode==='failed'?'Ändringen sparades inte. Försök igen.':dailyMutationMode==='unknown'?'Vi kunde inte bekräfta om ändringen sparades. Ingen ny bock visas. Kontrollera samma ändring innan du fortsätter.':dailyMutationMode==='readback'?'Ändringen sparades, men dagens lista kunde inte hämtas. Status räknas först efter en ny avläsning.':''}
+  dailyMutationError={['failed','unknown','readback'].includes(dailyMutationMode)} onRetryDaily={()=>setDailyMutationMode('')} onRetryDailyMutation={dailyMutationMode==='unknown'?retryDailyFixtureMutation:undefined}
   onCreateRoutine={createRoutineFixture} onUpdateRoutine={updateRoutineFixture} onDeleteRoutine={deleteRoutineFixture}
   onAddRoutineToDay={addRoutineFixture} onRemoveRoutineFromDay={removeRoutineFixture} onSetRoutineCompletion={setRoutineItemFixture}
   onAddTrainingToDay={()=>{}} onRemoveTrainingFromDay={()=>{}} onGo={go}
-  onOpenContent={id=>{setFocused(id);setKnowledgeDetailOpen(false);setPage('knowledge')}} onRetryContent={()=>{}} onOpenChecklist={()=>setPage('checklist')}/>:null}
+  onOpenContent={id=>{setFocused(id);setKnowledgeDetailOpen(false);setPage('knowledge')}} onRetryContent={()=>{}} onOpenChecklist={()=>{setChecklistFilter('Idag');setPage('checklist')}}/>:null}
  {page==='checklist'?<DailyChecklistScreen dateKey={today} state={state==='loading'?'loading':state==='error'?'error':'ready'}
   activities={state==='empty'?[]:checklistActivities} refreshing={workspaceState==='refreshing'} refreshError={workspaceState==='refresh-error'}
   filter={checklistFilter} onChangeFilter={setChecklistFilter} rangeState={checklistRangeState} rangeActivities={checklistRangeActivities}
   onRetryRange={()=>{}}
   mutationBusy={dailyMutationMode==='pending'} mutationKey={dailyMutationMode?'complete-routine:day-morning:00000000-0000-4000-8000-000000000001':''}
-  mutationMessage={dailyMutationMode==='failed'?'Ändringen sparades inte. Kontrollera anslutningen och försök igen.':dailyMutationMode==='unknown'?'Vi kunde inte bekräfta om ändringen sparades. Ingen ny bock visas. Kontrollera samma ändring innan du fortsätter.':dailyMutationMode==='readback'?'Ändringen sparades, men dagens lista kunde inte hämtas. Status räknas först efter en ny avläsning.':''}
-  mutationError={['failed','unknown','readback'].includes(dailyMutationMode)} onBack={()=>setPage('home')} onRetry={()=>setDailyMutationMode('')} onRetryMutation={['failed','unknown'].includes(dailyMutationMode)?retryDailyFixtureMutation:undefined}
+  mutationMessage={dailyMutationMode==='failed'?'Ändringen sparades inte. Försök igen.':dailyMutationMode==='unknown'?'Vi kunde inte bekräfta om ändringen sparades. Ingen ny bock visas. Kontrollera samma ändring innan du fortsätter.':dailyMutationMode==='readback'?'Ändringen sparades, men dagens lista kunde inte hämtas. Status räknas först efter en ny avläsning.':''}
+  mutationError={['failed','unknown','readback'].includes(dailyMutationMode)} onBack={()=>setPage('home')} onRetry={()=>setDailyMutationMode('')} onRetryMutation={dailyMutationMode==='unknown'?retryDailyFixtureMutation:undefined}
   onOpenTrainingStep={(programId,stepId)=>{setFocusedChecklistStep({programId,stepId});setPage('home-training-detail')}} onSetRoutineCompletion={setRoutineItemFixture}
   routines={fixtureRoutines} routineDaySkips={fixtureRoutineSkips} trainingOptions={reviewTrainingOptions} onCreateRoutine={createRoutineFixture} onUpdateRoutine={updateRoutineFixture} onDeleteRoutine={deleteRoutineFixture}
   onAddRoutineToDay={addRoutineFixture} onRemoveRoutineFromDay={removeRoutineFixture} onAddTrainingToDay={()=>{}} onRemoveTrainingFromDay={()=>{}} onGoTraining={()=>go('training')}/>:null}

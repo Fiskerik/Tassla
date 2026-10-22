@@ -1,0 +1,42 @@
+[
+  {
+    "check": "definitive failure keeps the edited checklist and icon while leaving the explicit save enabled",
+    "result": "PASS",
+    "width": 375
+  },
+  {
+    "check": "definitive failure keeps the edited checklist and icon while leaving the explicit save enabled",
+    "result": "PASS",
+    "width": 430
+  },
+  {
+    "check": "unknown result preserves a locked draft and exposes only the exact retry action",
+    "result": "PASS"
+  },
+  {
+    "check": "exact retry resolves the synthetic unknown routine write and closes the read-back-confirmed editor",
+    "result": "PASS"
+  },
+  {
+    "check": "conflict retains the stale draft read-only and asks before replacing it with the latest routine",
+    "result": "PASS",
+    "width": 375
+  },
+  {
+    "check": "explicit replacement uses the latest server text, checklist, icon and revision source",
+    "result": "PASS"
+  },
+  {
+    "check": "a new edit after explicit replacement saves against the latest synthetic revision",
+    "result": "PASS"
+  },
+  {
+    "check": "conflict retains the stale draft read-only and asks before replacing it with the latest routine",
+    "result": "PASS",
+    "width": 430
+  },
+  {
+    "check": "explicit replacement uses the latest server text, checklist, icon and revision source",
+    "result": "PASS"
+  }
+]

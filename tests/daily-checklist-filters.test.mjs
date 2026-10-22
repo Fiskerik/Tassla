@@ -1,8 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { registerHooks } from 'node:module';
 
+const resolution = registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier.startsWith('.') && !/\.[a-z0-9]+$/i.test(specifier)) return nextResolve(`${specifier}.ts`, context);
+    return nextResolve(specifier);
+  },
+});
 const { checklistRangeReadStatus } = await import('../src/features/home/daily-activity-model.ts');
+resolution.deregister();
 const checklistScreen = await readFile(new URL('../src/features/home/DailyChecklistScreen.tsx', import.meta.url), 'utf8');
 const tabsSource = await readFile(new URL('../src/components/ui/Tabs.tsx', import.meta.url), 'utf8');
 
@@ -15,6 +23,10 @@ test('Checklist opts into a full-width home-toned segment with explicit web sele
   assert.ok(tabsSource.includes('homeSegmentedTab: { flex: 1, minWidth: 0 }'));
   assert.ok(tabsSource.includes('backgroundColor: tokens.colors.home.greenStrong'));
   assert.ok(tabsSource.includes('color: tokens.colors.onPrimary'));
+  assert.match(checklistScreen, /CHECKLIST_FILTERS: readonly ChecklistFilter\[\] = \['Idag', 'Denna vecka', 'Alla', 'Kommande'\]/);
+  assert.match(tabsSource, /items\.length >= 4 && \(width < 480 \|\| fontScale >= 1\.25\)/);
+  assert.match(tabsSource, /horizontal=\{!homeGrid\}/);
+  assert.match(tabsSource, /homeGridTab: \{ flexBasis: '48%', flexGrow: 1/);
 });
 
 test('historical checklist is complete only after every saved source is fully read', () => {

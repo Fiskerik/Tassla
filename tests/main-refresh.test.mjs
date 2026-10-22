@@ -84,6 +84,6 @@ test('daily refresh and retry preserve unresolved same-scope write feedback', ()
   assert.equal(context.shouldClear('account:dog:today', 'account:other:today'), true);
   assert.equal(context.shouldClear(undefined, 'account:dog:today'), true);
 
-  assert.match(workspace, /if \(shouldClearDailyMutationFeedback\(pendingDailyRetry\.current\?\.lifetime, scope\)\) \{\s*setDailyMessage\(''\);\s*setDailyMessageError\(false\);/);
-  assert.match(workspace, /if \(!retry \|\| shouldClearDailyMutationFeedback\(pendingDailyRetry\.current\?\.lifetime, lifetime\)\) \{\s*setDailyMessage\(''\);\s*setDailyMessageError\(false\);/);
+  assert.match(workspace, /dailyMutationForOwner\(dailyMutationStore\.getSnapshot\(\)\.get\(currentDailyOwnerScope\)[\s\S]{0,160}if \(pending && pending\.phase !== 'resolved' && shouldClearDailyMutationFeedback\(pending\.lifetime, scope\)\) \{\s*setDailyMessage\(''\);\s*setDailyMessageError\(false\);/);
+  assert.match(workspace, /if \(!retry \|\| \(pending && pending\.phase !== 'resolved' && shouldClearDailyMutationFeedback\(pending\.lifetime, lifetime\)\)\) \{\s*setDailyMessage\(''\);\s*setDailyMessageError\(false\);/);
 });

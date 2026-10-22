@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Alert, AppState } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
 import * as ExpoCrypto from 'expo-crypto';
 import * as Notifications from 'expo-notifications';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { AppScreen, MessageCard, PageHeading, PrimaryButton } from '../../components/AppPrimitives';
+import { AppScreen, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import {
   deleteDogEvent,
   deleteHealthWeight,
@@ -23,6 +23,8 @@ import {
   normalizePlannedHealthTime,
   fetchFuturePlannedHealthReminders,
   fetchPlannedHealthById,
+  fetchPlannedHealthChecklistRange,
+  fetchExactPublishedTrainingStep,
   fetchHomeContent,
   fetchTrainingWorkspace,
   fetchExactHistoricalTrainingSources,
@@ -60,6 +62,7 @@ import {
   type PlannedHealthType,
   type PublishedTrainingProgram,
   type HistoricalTrainingSource,
+  type HistoricalTrainingStepDetail,
   type PausedTrainingProgress,
   type WriteOutcome,
 } from '../../data/workspace-data';
@@ -70,14 +73,18 @@ import {
   deleteDailyRoutine,
   fetchDailyActivitySnapshot,
   fetchDailyActivityRangeSnapshot,
+  fetchDailyRoutineTemplates,
+  fetchDailyRoutineTemplateById,
   removeRoutineFromDay,
   removeTrainingSelection,
   replaceDailyRoutine,
   setRoutineDayCompletion,
   type DailyActivitySnapshot,
   type DailyActivityRangeSnapshot,
+  type DailyRoutine,
   type DailyRoutineCreateInput,
   type DailyRoutineDayDraft,
+  type DailyRoutineWriteResult,
   type DailyTrainingSelection,
 } from './daily-activity-data';
 import {
@@ -97,6 +104,7 @@ import {
 import { localDate } from '../onboarding/dog';
 import { calendarMarkerScopeKey } from '../puppy-log/log-calendar-model';
 import { acquireTrainingMutationLease, homeAgeInWeeks, ownsTrainingMutationLease, releaseTrainingMutationLease, type TrainingMutationLease } from './home-today';
+import { canStartDailyMutation, clearDailyMutationForLifetimeChange, dailyMutationBlocksAccountDeletion, dailyMutationForOwner, dailyMutationStore, recoverDailyMutation, resolvedDailyMutation, routineConflictAfterWrite, routineDraftStore, type PendingDailyMutation } from './daily-activity-recovery';
 import { HealthScreen } from '../health/HealthScreen';
 import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
 import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
@@ -109,7 +117,7 @@ import { HomeScreen, type HomeDailyTrainingOption } from './HomeScreen';
 import { DevelopmentScreen } from './DevelopmentScreen';
 import { DailyProgressScreen } from './DailyProgressScreen';
 import { DailyChecklistScreen } from './DailyChecklistScreen';
-import { deriveHomeDailyActivities, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep } from './daily-activity-model';
+import { checklistFilterRange, checklistRangeReadStatus, deriveHomeDailyActivities, deriveSavedRangeActivities, deriveUpcomingActivities, isRoutineDueOnDate, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep, type ChecklistFilter, type HomeDailyActivity } from './daily-activity-model';
 import { activeMainTabDestination, isMainTabDestination, mainTabTransitionDirection, nextMainTabDestination, productRouteScrollKeys } from './main-navigation';
 import { AppBar, BottomNav, MainSwipeNavigation } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
@@ -134,7 +142,7 @@ import { reminderService, type ReminderContext, type ReminderReconcileResult } f
 const reviewContentEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
 
 type ProductPage = 'home' | 'development' | 'progress' | 'checklist' | 'home-training-detail' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings' | 'account-settings' | 'beta-info';
-type HomeTrainingFocus = { selectionKey: string; dailyLifetime: string; programId: string; stepId: string; returnPage: 'home' | 'checklist' | 'progress' };
+type HomeTrainingFocus = { selectionKey: string; dailyLifetime: string; programId: string; stepId: string; returnPage: 'home' | 'checklist' | 'progress'; readOnly?: boolean; dateKey?: string; completed?: boolean };
 type PendingLogMutation =
   | { kind: 'insert'; operation: DogEventOperation; lifetime: string }
   | { kind: 'update'; mutationId: string; id: string; type: LogEventType; occurredAt: string; changes: DogEventChanges; lifetime: string }
@@ -173,11 +181,28 @@ function shouldClearDailyMutationFeedback(pendingRetryLifetime: string | undefin
   return pendingRetryLifetime !== activeLifetime;
 }
 
+function dailyMutationActionLabel(key: string): string {
+  const action = key.split(':', 1)[0];
+  switch (action) {
+    case 'update-routine': return 'Ändra rutin';
+    case 'create-routine': return 'Skapa rutin';
+    case 'delete-routine': return 'Ta bort rutin';
+    case 'complete-routine': return 'Ändra checklista';
+    case 'select-routine': return 'Lägga till rutin på Hemskärmen';
+    case 'remove-routine': return 'Ta bort rutin från Hemskärmen';
+    case 'select-training': return 'Lägga till träningssteg';
+    case 'remove-training': return 'Ta bort träningssteg';
+    default: return 'Ändring';
+  }
+}
+
 type LogReadFlight = { scope: string; generation: number; controller: AbortController; promise: Promise<boolean>; baseline: DogEventRecord[]; refreshRequested: boolean };
 type LogPaginationFlight = { scope: string; generation: number; controller: AbortController };
 type TrainingWorkspaceSnapshot = Awaited<ReturnType<typeof fetchTrainingWorkspace>>;
 type WorkspaceResourceFlight<T> = { scope: string; generation: number; controller: AbortController; promise: Promise<T> };
-type ChecklistRangeView = { scope: string; status: 'loading' | 'ready' | 'partial' | 'error'; activities: HomeDailyActivity[]; failedSources: string[]; unresolvedCount: number };
+type ChecklistRangeView = { scope: string; status: 'loading' | 'ready' | 'partial' | 'error'; activities: HomeDailyActivity[]; failedSources: string[]; unresolvedCount: number; routines?: DailyRoutine[] };
+type HistoricalTrainingDetailView = { scope: string; status: 'loading' | 'ready' | 'partial' | 'unavailable'; detail: HistoricalTrainingStepDetail | null };
+type UpcomingRoutineLookup = { status: 'ready'; routine: DailyRoutine } | { status: 'missing' } | { status: 'error' };
 
 export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog], onSelectDog, onAddDog, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened, initialPage = 'home', onInitialPageOpened }: {
   client: SupabaseClient;
@@ -195,6 +220,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>(() => ({ page: initialPage, previousPage: 'home' }));
   const [checklistFilter, setChecklistFilter] = useState<ChecklistFilter>('Idag');
   const [homeTrainingFocus, setHomeTrainingFocus] = useState<HomeTrainingFocus | null>(null);
+  const [historicalTrainingDetailView, setHistoricalTrainingDetailView] = useState<HistoricalTrainingDetailView | null>(null);
+  const [historicalTrainingDetailRetry, setHistoricalTrainingDetailRetry] = useState(0);
+  const [plannedHealthChecklistFocus, setPlannedHealthChecklistFocus] = useState<{ selectionKey: string; dailyLifetime: string; planId: string } | null>(null);
+  const [plannedHealthChecklistRecord, setPlannedHealthChecklistRecord] = useState<{ scope: string; status: 'loading' | 'ready' | 'error' | 'missing'; record: PlannedHealthRecord | null } | null>(null);
+  const [plannedHealthChecklistRetry, setPlannedHealthChecklistRetry] = useState(0);
   const [homeChecklistScope, setHomeChecklistScope] = useState<{ selectionKey: string; dailyLifetime: string; openManagerOnEntry: boolean } | null>(null);
   const [deviceTimeZone, setDeviceTimeZone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
   const initialPageConsumed = useRef(false);
@@ -230,6 +260,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [knowledgeDetailOpen, setKnowledgeDetailOpen] = useState(false);
   const navigateMainTab = useCallback((destination: ProductPage) => {
     if (page === 'checklist' || page === 'home-training-detail') setChecklistFilter('Idag');
+    setPlannedHealthChecklistFocus(null);
+    if (page === 'home-training-detail') setHomeTrainingFocus(null);
     const enteringKnowledge = page !== 'knowledge' && destination === 'knowledge';
     const leavingKnowledge = page === 'knowledge' && destination !== 'knowledge';
     if (enteringKnowledge || leavingKnowledge) {
@@ -328,6 +360,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [dailyMessageKey, setDailyMessageKey] = useState('');
   const [dailyMessage, setDailyMessage] = useState('');
   const [dailyMessageError, setDailyMessageError] = useState(false);
+  const [dailyMessageIsGlobal, setDailyMessageIsGlobal] = useState(false);
   const [signOutError, setSignOutError] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const signOutInFlight = useRef(false);
@@ -339,6 +372,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const healthHistoryMutationInFlight = useRef(false);
   const healthHistoryFlightToken = useRef<object | null>(null);
   const pendingPlannedHealthMutation = useRef<PendingPlannedHealthMutation | null>(null);
+  const historicalTrainingDetailGeneration = useRef(0);
+  const plannedHealthChecklistGeneration = useRef(0);
+  const upcomingRoutineSourceFlight = useRef<AbortController | null>(null);
   const plannedHealthMutationInFlight = useRef(false);
   const plannedHealthFlightToken = useRef<object | null>(null);
   const pendingProfileMutation = useRef<PendingProfileMutation | null>(null);
@@ -352,7 +388,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const trainingReadFlight = useRef<WorkspaceResourceFlight<TrainingWorkspaceSnapshot> | null>(null);
   const dailySnapshotRef = useRef<{ scope: string; daily: DailyActivitySnapshot; training: TrainingWorkspaceSnapshot; dailyUpdatedAt: number } | null>(null);
   const dailyReadFlight = useRef<WorkspaceResourceFlight<boolean> | null>(null);
-  const pendingDailyRetry = useRef<{ lifetime: string; key: string; run: () => Promise<WriteOutcome<unknown>> } | null>(null);
   const mounted = useRef(false);
   const eventReadQueue = useRef<Promise<void>>(Promise.resolve());
   const logDataLifetimeRef = useRef('');
@@ -464,7 +499,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const dailyTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const validDailyTimeZone = isValidIanaTimeZone(dailyTimeZone);
   const dailyDateKey = validDailyTimeZone ? localDateKeyAt(dailyClock, dailyTimeZone) : null;
+  const currentDailyOwnerScope = session?.user.id ?? 'signed-out';
+  const pendingDailyWriteForOwner = useSyncExternalStore(
+    dailyMutationStore.subscribe,
+    () => dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null,
+    () => dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null,
+  );
   const currentDailyLifetime = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${currentSelectionKey}:${dailyDateKey ?? 'invalid-date'}:${dailyTimeZone}:${reviewContentEnabled ? 'review' : 'public'}`;
+  // The editor owns keystroke state locally. Read recovery only when this workspace renders
+  // (for example when returning to a dog) so every draft keystroke does not rerender the shell.
+  const routineRecovery = routineDraftStore.get(currentDailyOwnerScope, dog.id, currentDailyLifetime);
+  const routineDraftOwnerGeneration = routineDraftStore.ownerGeneration(currentDailyOwnerScope);
   const checklistRange = useMemo(() => checklistFilter === 'Idag' || !dailyDateKey ? null : checklistFilterRange(checklistFilter, dailyDateKey), [checklistFilter, dailyDateKey]);
   const currentChecklistRangeScope = currentDailyLifetime + ':' + checklistFilter + ':'
     + (checklistRange ? checklistRange.from + ':' + checklistRange.to : 'invalid-range');
@@ -480,10 +525,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [currentChecklistMemoryScope, currentChecklistReadScope]);
   useEffect(() => () => clearChecklistReadCache(currentChecklistReadScope), [currentChecklistReadScope]);
   const currentSelectionKeyRef = useRef(currentSelectionKey);
+  const currentDailyOwnerScopeRef = useRef(currentDailyOwnerScope);
   const previousTrainingLifetime = useRef(currentSelectionKey);
 
   useLayoutEffect(() => {
     currentSelectionKeyRef.current = currentSelectionKey;
+    currentDailyOwnerScopeRef.current = currentDailyOwnerScope;
     if (previousTrainingLifetime.current !== currentSelectionKey) {
       trainingGeneration.current += 1;
       trainingReadFlight.current?.controller.abort();
@@ -509,10 +556,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       }
     }
     previousTrainingLifetime.current = currentSelectionKey;
-  }, [currentSelectionKey, knowledgeFocus, page, setPage]);
+  }, [currentDailyOwnerScope, currentSelectionKey, knowledgeFocus, page, setPage]);
 
   useLayoutEffect(() => {
     if (dailyLifetime.current && dailyLifetime.current !== currentDailyLifetime) {
+      const clearedMutation = clearDailyMutationForLifetimeChange();
       dailyGeneration.current += 1;
       dailyReadFlight.current?.controller.abort();
       dailyReadFlight.current = null;
@@ -533,9 +581,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setDailyStateLifetime(currentDailyLifetime);
       setDailyRefreshing(false);
       setDailyRefreshError(false);
-      pendingDailyRetry.current = null;
-      setDailyMessage('');
-      setDailyMessageError(false);
+      setDailyMessage(clearedMutation.message);
+      setDailyMessageError(clearedMutation.error);
+      setDailyMessageIsGlobal(false);
       setHomeChecklistScope(null);
       if (page === 'checklist' || page === 'progress' || page === 'home-training-detail') {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- a day/timezone boundary invalidates the child route before it can render stale data.
@@ -897,7 +945,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         setDailyState('ready');
         setDailyStateLifetime(scope);
         setDailyRefreshError(false);
-        if (shouldClearDailyMutationFeedback(pendingDailyRetry.current?.lifetime, scope)) {
+        const pending = dailyMutationForOwner(dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null, currentDailyOwnerScope);
+        if (pending && pending.phase !== 'resolved' && shouldClearDailyMutationFeedback(pending.lifetime, scope)) {
           setDailyMessage('');
           setDailyMessageError(false);
         }
@@ -927,7 +976,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     });
     dailyReadFlight.current = { scope, generation, controller, promise };
     return promise;
-  }, [client, currentDailyLifetime, currentSelectionKey, dailyDateKey, dailyTimeZone, dog.id, reloadTraining, validDailyTimeZone]);
+  }, [client, currentDailyLifetime, currentDailyOwnerScope, currentSelectionKey, dailyDateKey, dailyTimeZone, dog.id, reloadTraining, validDailyTimeZone]);
 
   useEffect(() => {
     const ownerId = session?.user.id;
@@ -1135,17 +1184,23 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [age, client, currentSelectionKey, dog]);
 
   useEffect(() => {
-    if (page !== 'home' && page !== 'progress' && page !== 'checklist' && page !== 'home-training-detail' && page !== 'training') return;
+    const needsDailyRefresh = page === 'home' || page === 'progress' || page === 'training'
+      || page === 'checklist' && checklistFilter === 'Idag'
+      || page === 'home-training-detail' && !homeTrainingFocus?.readOnly;
+    if (!needsDailyRefresh) return;
     const refresh = setTimeout(() => { void reloadDailyActivity(); }, 0);
     return () => clearTimeout(refresh);
-  }, [currentDailyLifetime, page, reloadDailyActivity]);
+  }, [checklistFilter, currentDailyLifetime, homeTrainingFocus?.readOnly, page, reloadDailyActivity]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active' && (page === 'home' || page === 'progress' || page === 'checklist' || page === 'home-training-detail' || page === 'training')) void reloadDailyActivity();
+      const needsDailyRefresh = page === 'home' || page === 'progress' || page === 'training'
+        || page === 'checklist' && checklistFilter === 'Idag'
+        || page === 'home-training-detail' && !homeTrainingFocus?.readOnly;
+      if (state === 'active' && needsDailyRefresh) void reloadDailyActivity();
     });
     return () => subscription.remove();
-  }, [page, reloadDailyActivity]);
+  }, [checklistFilter, homeTrainingFocus?.readOnly, page, reloadDailyActivity]);
 
   useEffect(() => {
     if (page !== 'checklist' || checklistFilter === 'Idag') {
@@ -1173,6 +1228,29 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
     void (async () => {
       try {
+        if (filter === 'Kommande') {
+          const [routineResult, healthResult] = await Promise.allSettled([
+            fetchDailyRoutineTemplates(client, dog.id, controller.signal),
+            fetchPlannedHealthChecklistRange(client, dog.id, range.from, range.to, controller.signal),
+          ]);
+          if (!isCurrent()) return;
+          const routines = routineResult.status === 'fulfilled' ? routineResult.value : [];
+          const plannedHealth = healthResult.status === 'fulfilled' ? healthResult.value : [];
+          const completeSources = [
+            ...(routineResult.status === 'fulfilled' ? ['routines'] : []),
+            ...(healthResult.status === 'fulfilled' ? ['plannedHealth'] : []),
+          ];
+          const failedSources = [
+            ...(routineResult.status === 'rejected' ? ['routines'] : []),
+            ...(healthResult.status === 'rejected' ? ['plannedHealth'] : []),
+          ];
+          const status: ChecklistRangeView['status'] = failedSources.length === 0 ? 'ready'
+            : completeSources.length > 0 ? 'partial' : 'error';
+          const activities = status === 'error' ? [] : deriveUpcomingActivities(routines, plannedHealth, dog.id, range.from, range.to);
+          setChecklistRangeView({ scope, status, activities, failedSources, unresolvedCount: 0, routines });
+          return;
+        }
+
         const snapshot: DailyActivityRangeSnapshot = await fetchDailyActivityRangeSnapshot(
           client, dog.id, range.from, range.to, false, controller.signal,
         );
@@ -1214,6 +1292,70 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     };
   }, [checklistFilter, checklistRange, checklistRangeRetry, client, currentChecklistRangeScope, currentDailyLifetime, dailyDateKey, dog.id, page, validDailyTimeZone]);
 
+  useEffect(() => {
+    if (page === 'checklist' && checklistFilter === 'Kommande') return () => {
+      upcomingRoutineSourceFlight.current?.abort();
+      upcomingRoutineSourceFlight.current = null;
+    };
+    upcomingRoutineSourceFlight.current?.abort();
+    upcomingRoutineSourceFlight.current = null;
+    return undefined;
+  }, [checklistFilter, currentDailyLifetime, currentSelectionKey, page]);
+
+  useEffect(() => {
+    const focus = homeTrainingFocus;
+    if (page !== 'home-training-detail' || !focus?.readOnly) {
+      historicalTrainingDetailGeneration.current += 1;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Source detail is scoped to the active route.
+      setHistoricalTrainingDetailView(null);
+      return undefined;
+    }
+    const scope = `${focus.selectionKey}:${focus.dailyLifetime}:${focus.programId}:${focus.stepId}`;
+    const generation = ++historicalTrainingDetailGeneration.current;
+    const controller = new AbortController();
+    setHistoricalTrainingDetailView({ scope, status: 'loading', detail: null });
+    const isCurrent = () => mounted.current && !controller.signal.aborted && !accountDeletionInvalidated.current
+      && historicalTrainingDetailGeneration.current === generation && homeTrainingFocus === focus
+      && currentSelectionKeyRef.current === focus.selectionKey && dailyLifetime.current === focus.dailyLifetime
+      && page === 'home-training-detail';
+    void fetchExactPublishedTrainingStep(client, focus.programId, focus.stepId, controller.signal).then((detail) => {
+      if (isCurrent()) setHistoricalTrainingDetailView({ scope, status: detail ? 'ready' : 'unavailable', detail });
+    }).catch(() => {
+      if (isCurrent()) setHistoricalTrainingDetailView({ scope, status: 'partial', detail: null });
+    });
+    return () => controller.abort();
+  }, [client, currentDailyLifetime, currentSelectionKey, historicalTrainingDetailRetry, homeTrainingFocus, page]);
+
+  useEffect(() => {
+    const focus = plannedHealthChecklistFocus;
+    if (page !== 'planned-health' || !focus || focus.selectionKey !== currentSelectionKey || focus.dailyLifetime !== currentDailyLifetime) {
+      plannedHealthChecklistGeneration.current += 1;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Source detail is scoped to the active route.
+      setPlannedHealthChecklistRecord(null);
+      return undefined;
+    }
+    const scope = `${focus.selectionKey}:${focus.dailyLifetime}:${focus.planId}`;
+    const generation = ++plannedHealthChecklistGeneration.current;
+    const controller = new AbortController();
+    setPlannedHealthChecklistRecord({ scope, status: 'loading', record: null });
+    const isCurrent = () => mounted.current && !controller.signal.aborted && !accountDeletionInvalidated.current
+      && plannedHealthChecklistGeneration.current === generation && plannedHealthChecklistFocus === focus
+      && currentSelectionKeyRef.current === focus.selectionKey && dailyLifetime.current === focus.dailyLifetime
+      && page === 'planned-health';
+    void serializePlannedHealthRead(() => fetchPlannedHealthById(client, dog.id, focus.planId, undefined, controller.signal)).then(async (record) => {
+      if (!isCurrent()) return;
+      if (record) {
+        setPlannedHealthChecklistRecord({ scope, status: 'ready', record });
+        return;
+      }
+      setPlannedHealthChecklistRecord({ scope, status: 'missing', record: null });
+      try { await reloadPlannedHealth(currentPlannedHealthLifetime); } catch { /* Keep the exact source marked missing; retry remains available. */ }
+    }).catch(() => {
+      if (isCurrent()) setPlannedHealthChecklistRecord({ scope, status: 'error', record: null });
+    });
+    return () => controller.abort();
+  }, [client, currentDailyLifetime, currentPlannedHealthLifetime, currentSelectionKey, dog.id, page, plannedHealthChecklistFocus, plannedHealthChecklistRetry, reloadPlannedHealth, serializePlannedHealthRead]);
+
   const visibleContent = contentSelectionKey === currentSelectionKey ? content : [];
   const visibleContentState = contentSelectionKey === currentSelectionKey ? contentState : 'loading';
   const visibleTrainingState = trainingSelectionKey === currentSelectionKey ? trainingState : 'loading';
@@ -1225,6 +1367,16 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     : [];
   const visibleHomeTrainingFocus = homeTrainingFocus?.selectionKey === currentSelectionKey
     && homeTrainingFocus.dailyLifetime === currentDailyLifetime ? homeTrainingFocus : null;
+  const historicalTrainingDetailScope = visibleHomeTrainingFocus?.readOnly
+    ? `${visibleHomeTrainingFocus.selectionKey}:${visibleHomeTrainingFocus.dailyLifetime}:${visibleHomeTrainingFocus.programId}:${visibleHomeTrainingFocus.stepId}` : '';
+  const visibleHistoricalTrainingDetail = historicalTrainingDetailView?.scope === historicalTrainingDetailScope
+    ? historicalTrainingDetailView : null;
+  const visiblePlannedHealthChecklistFocus = plannedHealthChecklistFocus?.selectionKey === currentSelectionKey
+    && plannedHealthChecklistFocus.dailyLifetime === currentDailyLifetime ? plannedHealthChecklistFocus : null;
+  const plannedHealthChecklistScope = visiblePlannedHealthChecklistFocus
+    ? `${visiblePlannedHealthChecklistFocus.selectionKey}:${visiblePlannedHealthChecklistFocus.dailyLifetime}:${visiblePlannedHealthChecklistFocus.planId}` : '';
+  const visiblePlannedHealthChecklistRecord = plannedHealthChecklistRecord?.scope === plannedHealthChecklistScope
+    ? plannedHealthChecklistRecord : null;
   const homeChecklistScopeIsCurrent = homeChecklistScope?.selectionKey === currentSelectionKey
     && homeChecklistScope.dailyLifetime === currentDailyLifetime;
   const developmentScopeIsCurrent = developmentFocus?.selectionKey === currentSelectionKey;
@@ -2029,6 +2181,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         ? [value, ...plannedHealthRows.current.filter((row) => row.id !== mutationId)]
           .sort((a, b) => a.due_on.localeCompare(b.due_on) || a.id.localeCompare(b.id))
         : plannedHealthRows.current;
+    if (plannedHealthChecklistFocus?.planId === mutationId) {
+      const focusScope = `${plannedHealthChecklistFocus.selectionKey}:${plannedHealthChecklistFocus.dailyLifetime}:${mutationId}`;
+      setPlannedHealthChecklistRecord({ scope: focusScope, status: value ? 'ready' : 'missing', record: value });
+    }
     plannedHealthRows.current = next;
     setPlannedHealth(next);
     setPlannedHealthMessage('Ändringen är sparad.');
@@ -2101,7 +2257,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     const lifetime = plannedHealthLifetime.current;
     if (plannedHealthMutationInFlight.current || pendingPlannedHealthMutation.current || plannedHealthState !== 'ready') return Promise.resolve(false);
     const localToday = localDate();
-    const previous = id === null ? null : plannedHealthRows.current.find((row) => row.id === id && row.event_type === eventType) ?? null;
+    const focusedRecord = plannedHealthChecklistRecord?.scope === plannedHealthChecklistScope && plannedHealthChecklistRecord.status === 'ready'
+      && plannedHealthChecklistFocus?.planId === id ? plannedHealthChecklistRecord.record : null;
+    const previous = id === null ? null : plannedHealthRows.current.find((row) => row.id === id && row.event_type === eventType)
+      ?? (focusedRecord?.event_type === eventType ? focusedRecord : null);
     if ((id !== null && !previous) || (!isValidPlannedHealthDate(dueOn, localToday) && dueOn !== previous?.due_on)) return Promise.resolve(false);
     const description = normalizePlannedHealthDescription(note);
     if (description === undefined || (eventType !== 'vaccination' && eventType !== 'vet_visit')) return Promise.resolve(false);
@@ -2119,7 +2278,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   function removePlannedHealth(id: string): Promise<boolean> {
     const lifetime = plannedHealthLifetime.current;
     if (plannedHealthMutationInFlight.current || pendingPlannedHealthMutation.current || plannedHealthState !== 'ready') return Promise.resolve(false);
-    const previous = plannedHealthRows.current.find((row) => row.id === id);
+    const focusedRecord = plannedHealthChecklistRecord?.scope === plannedHealthChecklistScope && plannedHealthChecklistRecord.status === 'ready'
+      && plannedHealthChecklistFocus?.planId === id ? plannedHealthChecklistRecord.record : null;
+    const previous = plannedHealthRows.current.find((row) => row.id === id) ?? focusedRecord ?? undefined;
     if (!previous) return Promise.resolve(false);
     return runPlannedHealthMutation({ kind: 'delete', id, previous, lifetime });
   }
@@ -2267,6 +2428,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }
 
   function openHomeChecklist(openManagerOnEntry = false) {
+    setChecklistFilter('Idag');
     setHomeChecklistScope({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, openManagerOnEntry });
     setPage('checklist');
   }
@@ -2283,6 +2445,51 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     setHomeChecklistScope({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, openManagerOnEntry: false });
     setHomeTrainingFocus({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, programId, stepId, returnPage });
     setPage('home-training-detail');
+  }
+
+  function openHistoricalTrainingStep(programId: string, stepId: string) {
+    const activity = checklistRangeView?.scope === currentChecklistRangeScope
+      ? checklistRangeView.activities.find((item) => item.kind === 'training' && item.programId === programId && item.stepId === stepId)
+      : undefined;
+    if (page !== 'checklist' || checklistFilter === 'Idag' || !activity || accountDeletionInvalidated.current) return;
+    setHomeChecklistScope({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, openManagerOnEntry: false });
+    setHomeTrainingFocus({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, programId, stepId,
+      returnPage: 'checklist', readOnly: true, dateKey: activity.dateKey, completed: activity.completed });
+    setPage('home-training-detail');
+  }
+
+  async function openUpcomingRoutine(routineId: string, dateKey: string): Promise<UpcomingRoutineLookup> {
+    const scope = currentChecklistRangeScope;
+    const activityIsCurrent = checklistRangeView?.scope === scope && checklistRangeView.activities.some((item) =>
+      item.planned && item.routineId === routineId && item.dateKey === dateKey);
+    if (page !== 'checklist' || checklistFilter !== 'Kommande' || !activityIsCurrent || accountDeletionInvalidated.current) return { status: 'missing' };
+    upcomingRoutineSourceFlight.current?.abort();
+    const controller = new AbortController();
+    upcomingRoutineSourceFlight.current = controller;
+    const isCurrent = () => !controller.signal.aborted && mounted.current && !accountDeletionInvalidated.current
+      && dailyLifetime.current === currentDailyLifetime && currentChecklistRangeScope === scope
+      && page === 'checklist' && checklistFilter === 'Kommande';
+    try {
+      const routine = await fetchDailyRoutineTemplateById(client, dog.id, routineId, controller.signal);
+      if (!isCurrent()) return { status: 'missing' };
+      if (!routine || !isRoutineDueOnDate(routine, dateKey)) {
+        setChecklistRangeRetry((value) => value + 1);
+        return { status: 'missing' };
+      }
+      return { status: 'ready', routine };
+    } catch {
+      return isCurrent() ? { status: 'error' } : { status: 'missing' };
+    } finally {
+      if (upcomingRoutineSourceFlight.current === controller) upcomingRoutineSourceFlight.current = null;
+    }
+  }
+
+  function openUpcomingHealthPlan(planId: string) {
+    const activityIsCurrent = checklistRangeView?.scope === currentChecklistRangeScope && checklistRangeView.activities.some((item) =>
+      item.planned && item.healthPlanId === planId);
+    if (page !== 'checklist' || checklistFilter !== 'Kommande' || !activityIsCurrent || accountDeletionInvalidated.current) return;
+    setPlannedHealthChecklistFocus({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, planId });
+    setPage('planned-health');
   }
 
   function beginTrainingMutation(key: string, expectedScope: string | null): TrainingMutationLease | null {
@@ -2411,49 +2618,94 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     }
   }
 
-  async function runDailyMutation<T>(key: string, operation: () => Promise<WriteOutcome<T>>, retry = false): Promise<WriteOutcome<T> | undefined> {
-    const lifetime = currentDailyLifetime;
-    if (!dailyDateKey || !validDailyTimeZone || dailyMutationInFlight.current) return undefined;
-    if (pendingDailyRetry.current && pendingDailyRetry.current.lifetime === lifetime && !retry) {
-      setDailyMessage('Kontrollera den föregående ändringen innan du gör en ny.');
-      setDailyMessageError(true);
+  async function runDailyMutation<T>(key: string, operation: () => Promise<WriteOutcome<T>>, retry?: boolean, retryPending?: PendingDailyMutation): Promise<WriteOutcome<T> | undefined>;
+  async function runDailyMutation(key: string, operation: () => Promise<DailyRoutineWriteResult>, retry?: boolean, retryPending?: PendingDailyMutation): Promise<DailyRoutineWriteResult | undefined>;
+  async function runDailyMutation(key: string, operation: () => Promise<WriteOutcome<unknown> | DailyRoutineWriteResult>, retry?: boolean, retryPending?: PendingDailyMutation): Promise<WriteOutcome<unknown> | DailyRoutineWriteResult | undefined>;
+  async function runDailyMutation<T>(key: string, operation: () => Promise<WriteOutcome<T> | { status: 'conflict'; value: DailyRoutine }>, retry = false, retryPending?: PendingDailyMutation): Promise<WriteOutcome<T> | { status: 'conflict'; value: DailyRoutine } | undefined> {
+    const retryablePending = retryPending && retryPending.phase !== 'resolved' ? retryPending : undefined;
+    const ownerScope = retryablePending?.ownerScope ?? currentDailyOwnerScope;
+    const dailyMutationOwnerGeneration = dailyMutationStore.ownerGeneration(ownerScope);
+    const routineDraftOwnerGeneration = routineDraftStore.ownerGeneration(ownerScope);
+    const lifetime = retryablePending?.lifetime ?? currentDailyLifetime;
+    const pending = dailyMutationForOwner(dailyMutationStore.getSnapshot().get(ownerScope) ?? null, ownerScope);
+    if (ownerScope !== currentDailyOwnerScope) return undefined;
+    if ((!retryPending && (!dailyDateKey || !validDailyTimeZone)) || dailyMutationInFlight.current) return undefined;
+    if (!canStartDailyMutation(pending, ownerScope, retryablePending)) {
+      if (!retry && pending && pending.phase !== 'resolved') {
+        setDailyMessage(pending.phase === 'in-flight'
+          ? `${pending.actionLabel} för ${pending.dogName} behandlas fortfarande.`
+          : `Kontrollera samma ${pending.actionLabel.toLowerCase()} för ${pending.dogName} innan du gör en ny.`);
+        setDailyMessageError(true);
+      }
       return undefined;
     }
     dailyMutationInFlight.current = true;
     setDailyBusyKey(key);
     setDailyMessageKey(key);
-    if (!retry || shouldClearDailyMutationFeedback(pendingDailyRetry.current?.lifetime, lifetime)) {
+    const origin = retryablePending ?? { dogId: dog.id, dogName: dog.name, actionLabel: dailyMutationActionLabel(key) };
+    const inFlightMutation = { ownerScope, ...origin, lifetime, key, run: operation, phase: 'in-flight' as const };
+    updatePendingDailyWrite(ownerScope, inFlightMutation, dailyMutationOwnerGeneration);
+    if (!retry || (pending && pending.phase !== 'resolved' && shouldClearDailyMutationFeedback(pending.lifetime, lifetime))) {
       setDailyMessage('');
       setDailyMessageError(false);
+      setDailyMessageIsGlobal(false);
     }
-    let outcome: WriteOutcome<T>;
+    let outcome: WriteOutcome<T> | { status: 'conflict'; value: DailyRoutine };
     try {
       outcome = await operation();
     } catch {
       outcome = { status: 'unknown' };
     }
-    if (!mounted.current || dailyLifetime.current !== lifetime || currentSelectionKeyRef.current !== currentSelectionKey) {
+    const recovery = recoverDailyMutation(outcome.status, ownerScope, lifetime, key, operation,
+      { dogId: origin.dogId, dogName: origin.dogName, actionLabel: origin.actionLabel });
+    if (outcome.status === 'conflict' && key.startsWith('update-routine:') && outcome.value.dog_id === origin.dogId) {
+      const draftRecovery = routineDraftStore.get(ownerScope, origin.dogId, lifetime);
+      const draft = draftRecovery?.draft;
+      if (draft?.mode === 'edit' && draft.routineId === outcome.value.id) {
+        const conflict = routineConflictAfterWrite(draft, outcome, lifetime);
+        if (conflict) routineDraftStore.update(ownerScope, origin.dogId, lifetime, draft, conflict, routineDraftOwnerGeneration);
+      }
+    }
+    if (outcome.status === 'saved' && (key.startsWith('create-routine:') || key.startsWith('update-routine:'))) {
+      const draftRecovery = routineDraftStore.get(ownerScope, origin.dogId, lifetime);
+      const matchesMutation = draftRecovery && (key.startsWith('create-routine:')
+        ? draftRecovery.draft.submissionId === key.slice('create-routine:'.length)
+        : draftRecovery.draft.routineId === key.slice('update-routine:'.length));
+      if (matchesMutation) routineDraftStore.update(ownerScope, origin.dogId, lifetime, null, null, routineDraftOwnerGeneration);
+    }
+    const ownerStillCurrent = currentDailyOwnerScopeRef.current === ownerScope
+      && dailyMutationStore.ownerGeneration(ownerScope) === dailyMutationOwnerGeneration;
+    const lifetimeStillCurrent = dailyLifetime.current === lifetime && currentSelectionKeyRef.current === currentSelectionKey;
+    if (!mounted.current || !ownerStillCurrent || !lifetimeStillCurrent) {
+      const staleResolution = recovery.pendingRetry ?? (outcome.status === 'unknown' ? null : resolvedDailyMutation(inFlightMutation, outcome.status));
+      const currentMutation = dailyMutationStore.getSnapshot().get(ownerScope);
+      if (currentMutation && currentMutation.phase !== 'resolved' && currentMutation.run === operation) {
+        updatePendingDailyWrite(ownerScope, staleResolution, dailyMutationOwnerGeneration);
+      }
+      if (mounted.current && ownerStillCurrent && staleResolution?.phase === 'resolved') {
+        setDailyMessageKey(key);
+        setDailyMessage(staleResolution.notice.message);
+        setDailyMessageError(staleResolution.notice.error);
+        setDailyMessageIsGlobal(true);
+      }
       dailyMutationInFlight.current = false;
       if (mounted.current) setDailyBusyKey(null);
-      return;
+      return outcome;
     }
+    updatePendingDailyWrite(ownerScope, recovery.pendingRetry, dailyMutationOwnerGeneration);
+    setDailyMessage(recovery.message);
+    setDailyMessageError(recovery.error);
+    setDailyMessageIsGlobal(false);
     if (outcome.status === 'saved') {
-      pendingDailyRetry.current = null;
-      setDailyMessage('');
-      setDailyMessageError(false);
       const refreshed = await reloadDailyActivity(true, true);
       if (!refreshed && mounted.current && dailyLifetime.current === lifetime) {
         setDailyMessage('Ändringen sparades, men dagens lista kunde inte hämtas. Status räknas först efter en ny avläsning.');
         setDailyMessageError(true);
       }
-    } else if (outcome.status === 'unknown') {
-      pendingDailyRetry.current = { lifetime, key, run: operation };
-      setDailyMessage('Vi kunde inte bekräfta om ändringen sparades. Ingen ny bock visas. Kontrollera samma ändring innan du fortsätter.');
-      setDailyMessageError(true);
-    } else {
-      pendingDailyRetry.current = { lifetime, key, run: operation };
-      setDailyMessage('Ändringen sparades inte. Kontrollera anslutningen och försök igen.');
-      setDailyMessageError(true);
+    } else if (outcome.status === 'conflict') {
+      void reloadDailyActivity(true, true).catch(() => false);
+      setDailyMessage(recovery.message);
+      setDailyMessageError(recovery.error);
     }
     dailyMutationInFlight.current = false;
     if (mounted.current) setDailyBusyKey(null);
@@ -2461,9 +2713,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }
 
   function retryDailyMutation() {
-    const pending = pendingDailyRetry.current;
-    if (!pending || pending.lifetime !== currentDailyLifetime) return;
-    void runDailyMutation(pending.key, pending.run, true);
+    const pending = dailyMutationForOwner(dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null, currentDailyOwnerScope);
+    if (!pending || pending.phase !== 'unknown') return;
+    void runDailyMutation(pending.key, pending.run, true, pending);
+  }
+
+  function updatePendingDailyWrite(ownerScope: string, pending: PendingDailyMutation | null, expectedOwnerGeneration?: number) {
+    dailyMutationStore.update(ownerScope, pending, expectedOwnerGeneration);
   }
 
   async function handleAccountDeletion(): Promise<AccountDeleteResult> {
@@ -2477,8 +2733,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       || pendingHealthHistoryMutation.current || pendingPlannedHealthMutation.current
       || pendingProfileMutation.current || logMutationFlight.current || healthMutationInFlight.current
       || healthHistoryMutationInFlight.current || plannedHealthMutationInFlight.current
-      || profileMutationInFlight.current || trainingMutationLease.current !== null || dailyMutationInFlight.current
-      || pendingDailyRetry.current || notificationBusy || attributionBusy || accountDeleteBusy;
+      || profileMutationInFlight.current || trainingMutationLease.current !== null
+      || dailyMutationBlocksAccountDeletion(dailyMutationInFlight.current,
+        dailyMutationForOwner(dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null, currentDailyOwnerScope), currentDailyOwnerScope)
+      || notificationBusy || attributionBusy || accountDeleteBusy;
     if (unresolvedWrite) {
       setAccountDeleteStatus('blocked');
       return { status: 'failed' };
@@ -2503,6 +2761,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
       serverConfirmed = true;
       accountDeletionInvalidated.current = true;
+      dailyMutationStore.clearOwner(ownerId);
+      routineDraftStore.clearOwner(ownerId);
       checklistRangeGeneration.current += 1;
       checklistRangeFlight.current?.controller.abort();
       checklistRangeFlight.current = null;
@@ -2620,6 +2880,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   async function handleSignOut() {
     if (signOutInFlight.current) return;
+    const ownerId = session?.user.id;
     signOutInFlight.current = true;
     setSigningOut(true);
     let result = { localSessionCleared: false, serverRevocationConfirmed: false };
@@ -2630,6 +2891,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     } finally {
       if (mounted.current) setSigningOut(false);
       signOutInFlight.current = false;
+    }
+    if (result.localSessionCleared && ownerId) {
+      dailyMutationStore.clearOwner(ownerId);
+      routineDraftStore.clearOwner(ownerId);
     }
     if (mounted.current) setSignOutError(!result.localSessionCleared);
   }
@@ -2645,13 +2910,45 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   if (!fontsLoaded && !fontError) return <AppScreen><MessageCard>Laddar Tasslas ikoner…</MessageCard></AppScreen>;
   if (fontError) return <AppScreen><MessageCard tone="error">Ikonerna kunde inte laddas. Starta om appen och försök igen.</MessageCard></AppScreen>;
 
+  const pendingDailyWriteFromOtherLifetime = Boolean(pendingDailyWriteForOwner && pendingDailyWriteForOwner.phase !== 'resolved'
+    && pendingDailyWriteForOwner.lifetime !== currentDailyLifetime);
+  const dailyMutationIsBusy = Boolean(dailyBusyKey) || pendingDailyWriteForOwner?.phase === 'in-flight';
+  const dailyMutationMessageForView = pendingDailyWriteForOwner?.phase === 'resolved'
+    ? pendingDailyWriteForOwner.notice.message
+    : pendingDailyWriteForOwner?.phase === 'in-flight'
+      ? `${pendingDailyWriteForOwner.actionLabel} för ${pendingDailyWriteForOwner.dogName} behandlas fortfarande.`
+      : pendingDailyWriteForOwner?.phase === 'unknown'
+        ? dailyMessage || `Vi kunde inte bekräfta om ${pendingDailyWriteForOwner.actionLabel.toLowerCase()} för ${pendingDailyWriteForOwner.dogName} sparades. Kontrollera samma ändring innan du fortsätter.`
+        : pendingDailyWriteFromOtherLifetime && pendingDailyWriteForOwner
+          ? `${pendingDailyWriteForOwner.actionLabel} för ${pendingDailyWriteForOwner.dogName} behöver kontrolleras innan du fortsätter.`
+          : dailyMessage;
+  const dailyMutationErrorForView = pendingDailyWriteForOwner?.phase === 'resolved'
+    ? pendingDailyWriteForOwner.notice.error
+    : pendingDailyWriteForOwner?.phase === 'unknown' || pendingDailyWriteFromOtherLifetime || dailyMessageError;
+  const showDailyRecoveryBanner = Boolean(dailyMessageIsGlobal || pendingDailyWriteForOwner?.phase === 'resolved'
+    || (pendingDailyWriteForOwner && (pendingDailyWriteForOwner.phase === 'unknown' || pendingDailyWriteFromOtherLifetime
+      || pendingDailyWriteForOwner.phase === 'in-flight') && !dailyBusyKey));
+  const dailyRecoveryBannerMessage = pendingDailyWriteForOwner
+    ? pendingDailyWriteForOwner.phase === 'resolved'
+      ? pendingDailyWriteForOwner.notice.message
+      : pendingDailyWriteForOwner.phase === 'in-flight'
+        ? `${pendingDailyWriteForOwner.actionLabel} för ${pendingDailyWriteForOwner.dogName} behandlas fortfarande. Vänta tills resultatet är känt.`
+        : dailyBusyKey ? `${pendingDailyWriteForOwner.actionLabel} för ${pendingDailyWriteForOwner.dogName} kontrolleras fortfarande.`
+          : `Vi kunde inte bekräfta om ${pendingDailyWriteForOwner.actionLabel.toLowerCase()} för ${pendingDailyWriteForOwner.dogName} sparades. Kontrollera samma ändring innan du fortsätter.`
+    : dailyMessage;
+  const dailyRecoveryBannerError = pendingDailyWriteForOwner?.phase === 'resolved'
+    ? pendingDailyWriteForOwner.notice.error
+    : pendingDailyWriteForOwner?.phase === 'unknown' || dailyMessageError;
   const pageContent = renderPage();
   const transitionDirection = navigationDirection(previousPage, page);
   const mainTabToMainTab = isMainTabDestination(previousPage) && isMainTabDestination(page);
   const transitionDistance = mainTabToMainTab ? tokens.motion.pageDistance : tokens.motion.distance;
-  const routeScroll = productRouteScrollKeys(visiblePage,
+  const defaultRouteScroll = productRouteScrollKeys(visiblePage,
     knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : undefined,
     visibleHomeTrainingFocus?.returnPage);
+  const routeScroll = visiblePage === 'planned-health' && visiblePlannedHealthChecklistFocus
+    ? { scrollKey: 'planned-health-checklist-source', preserveScrollKey: 'home-checklist-flow' }
+    : defaultRouteScroll;
   const activeTabPage = visiblePage === 'knowledge' && knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'development'
     ? 'development' : visiblePage;
   return <AppScreen scrollKey={routeScroll.scrollKey} preserveScrollKey={routeScroll.preserveScrollKey} scrollMemoryScope={`${currentSelectionKey}:${currentDailyLifetime}`}
@@ -2659,6 +2956,19 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     refreshing={page === 'home' || page === 'progress' ? dailyRefreshing : page === 'log' ? logRefreshing : false}
     onRefresh={page === 'home' || page === 'progress' ? () => { void reloadDailyActivity(true, false); } : page === 'log' ? () => { void reloadEvents('refresh'); } : undefined}
     refreshAccessibilityLabel={page === 'log' ? 'Uppdatera loggen' : 'Uppdatera Hem'}>
+    {showDailyRecoveryBanner ? <>
+      <MessageCard tone={dailyRecoveryBannerError ? 'error' : 'neutral'}>{dailyRecoveryBannerMessage}</MessageCard>
+      {pendingDailyWriteForOwner?.phase === 'unknown' ? <PrimaryButton title={dailyMutationIsBusy ? 'Kontrollerar ändringen…' : 'Kontrollera samma ändring igen'}
+        disabled={dailyMutationIsBusy} onPress={retryDailyMutation} /> : null}
+      {pendingDailyWriteForOwner?.phase === 'resolved' ? <QuietButton title="Stäng" onPress={() => {
+        if (dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) === pendingDailyWriteForOwner) {
+          dailyMutationStore.update(currentDailyOwnerScope, null);
+        }
+        setDailyMessage('');
+        setDailyMessageError(false);
+        setDailyMessageIsGlobal(false);
+      }} /> : null}
+    </> : null}
     <MainSwipeNavigation enabled={isMainTabDestination(page) && !(page === 'knowledge' && knowledgeDetailOpen)} onSwipe={handleMainSwipe}>
       <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x" distance={transitionDistance}>{pageContent}</ScreenTransition>
     </MainSwipeNavigation>
@@ -2668,22 +2978,31 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     const page = visiblePage;
     if (page === 'progress') return <DailyProgressScreen
       dogName={dog.name} dateKey={dailyDateKey ?? ''} state={dailyStateForView} activities={dailyActivities}
-      refreshing={dailyRefreshing} refreshError={dailyRefreshError} mutationBusy={Boolean(dailyBusyKey)}
-      mutationKey={dailyMessageKey} mutationMessage={dailyMessage} mutationError={dailyMessageError}
+      refreshing={dailyRefreshing} refreshError={dailyRefreshError} mutationBusy={dailyMutationIsBusy}
+      mutationKey={dailyMessageKey} mutationMessage={dailyMutationMessageForView} mutationError={dailyMutationErrorForView}
       onBack={() => { setHomeChecklistScope(null); setPage('home'); }}
       onRetry={() => { void reloadDailyActivity(true); }}
-      onRetryMutation={pendingDailyRetry.current?.lifetime === currentDailyLifetime ? retryDailyMutation : undefined}
+      onRetryMutation={pendingDailyWriteForOwner?.phase === 'unknown' ? retryDailyMutation : undefined}
       onManage={() => openHomeChecklist(true)} onOpenChecklist={() => openHomeChecklist()}
       onOpenTrainingStep={(programId, stepId) => openHomeTrainingStep(programId, stepId, 'progress')}
       onSetRoutineCompletion={(row, itemId, completed) => { void runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed)); }} />;
     if (page === 'checklist') return <DailyChecklistScreen key={`${currentDailyLifetime}:checklist:${homeChecklistScope?.openManagerOnEntry ? 'manager' : 'list'}`}
-      dogName={dog.name} dateKey={dailyDateKey ?? ''} state={dailyStateForView} activities={dailyActivities}
-      refreshing={dailyRefreshing} refreshError={dailyRefreshError} mutationBusy={Boolean(dailyBusyKey)}
-      mutationKey={dailyMessageKey} mutationMessage={dailyMessage} mutationError={dailyMessageError}
+      dateKey={dailyDateKey ?? ''} dailyScopeKey={currentDailyLifetime} routineRecovery={routineRecovery}
+      onRoutineRecoveryChange={(draft, conflict) => routineDraftStore.update(currentDailyOwnerScope, dog.id, currentDailyLifetime, draft, conflict, routineDraftOwnerGeneration)}
+      state={dailyStateForView} activities={dailyActivities}
+      refreshing={dailyRefreshing} refreshError={dailyRefreshError} mutationBusy={dailyMutationIsBusy}
+      mutationKey={dailyMessageKey} mutationMessage={dailyMutationMessageForView} mutationError={dailyMutationErrorForView}
       onBack={() => { setHomeChecklistScope(null); setPage('home'); }} onRetry={() => { void reloadDailyActivity(true); }}
-      onRetryMutation={pendingDailyRetry.current?.lifetime === currentDailyLifetime ? retryDailyMutation : undefined}
+      filter={checklistFilter} onChangeFilter={setChecklistFilter}
+      rangeState={checklistRangeView?.scope === currentChecklistRangeScope ? checklistRangeView.status : 'loading'}
+      rangeActivities={checklistRangeView?.scope === currentChecklistRangeScope ? checklistRangeView.activities : []}
+      onRetryRange={() => setChecklistRangeRetry((value) => value + 1)}
+      onRetryMutation={pendingDailyWriteForOwner?.phase === 'unknown' ? retryDailyMutation : undefined}
       openManagerInitially={homeChecklistScopeIsCurrent && Boolean(homeChecklistScope?.openManagerOnEntry)}
-      onOpenTrainingStep={openHomeTrainingStep} onSetRoutineCompletion={(row, itemId, completed) => {
+      onOpenTrainingStep={openHomeTrainingStep} onOpenHistoricalTrainingStep={openHistoricalTrainingStep}
+      onOpenUpcomingRoutine={openUpcomingRoutine} onOpenPlannedHealth={openUpcomingHealthPlan}
+      upcomingRoutines={checklistRangeView?.scope === currentChecklistRangeScope ? checklistRangeView.routines ?? [] : []}
+      onSetRoutineCompletion={(row, itemId, completed) => {
         void runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed));
       }}
       routines={dailySnapshotForView?.routines ?? []} routineDaySkips={dailySnapshotForView?.routineDaySkips ?? []}
@@ -2692,9 +3011,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         const row = { ...input, dog_id: dog.id };
         return runDailyMutation(`create-routine:${row.id}`, () => createDailyRoutine(client, row, dailyTimeZone));
       }}
-      onUpdateRoutine={(routine, label, checklist, repeat) => runDailyMutation(`update-routine:${routine.id}`,
-        () => replaceDailyRoutine(client, routine, label, checklist, repeat, dailyTimeZone))}
-      onDeleteRoutine={(routine) => runDailyMutation(`delete-routine:${routine.id}`, () => deleteDailyRoutine(client, routine))}
+      onUpdateRoutine={async (routine, label, checklist, repeat) => {
+        const result = await runDailyMutation(`update-routine:${routine.id}`,
+          () => replaceDailyRoutine(client, routine, label, checklist, repeat, dailyTimeZone));
+        if (result?.status === 'saved' && checklistFilter === 'Kommande') setChecklistRangeRetry((value) => value + 1);
+        return result;
+      }}
+      onDeleteRoutine={async (routine) => {
+        const result = await runDailyMutation(`delete-routine:${routine.id}`, () => deleteDailyRoutine(client, routine));
+        if (result?.status === 'saved' && checklistFilter === 'Kommande') setChecklistRangeRetry((value) => value + 1);
+        return result;
+      }}
       onAddRoutineToDay={(routine) => {
         if (!dailyDateKey) return;
         const skipped = dailySnapshotForView?.routineDaySkips.find((row) => row.routine_id === routine.id) ?? null;
@@ -2737,14 +3064,16 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       dailyRefreshError={dailyRefreshError}
       dailyDateKey={dailyDateKey ?? '—'}
       dailyScopeKey={currentDailyLifetime}
+      routineRecovery={routineRecovery}
+      onRoutineRecoveryChange={(draft, conflict) => routineDraftStore.update(currentDailyOwnerScope, dog.id, currentDailyLifetime, draft, conflict, routineDraftOwnerGeneration)}
       dailyActivities={dailyActivities}
       routineTemplates={dailySnapshotForView?.routines ?? []}
       routineDaySkips={dailySnapshotForView?.routineDaySkips ?? []}
       dailyTrainingOptions={dailyTrainingOptions}
-      dailyMutationBusy={Boolean(dailyBusyKey)}
+      dailyMutationBusy={dailyMutationIsBusy}
       dailyMutationKey={dailyMessageKey}
-      dailyMutationMessage={dailyMessage}
-      dailyMutationError={dailyMessageError}
+      dailyMutationMessage={dailyMutationMessageForView}
+      dailyMutationError={dailyMutationErrorForView}
       onRetryDaily={() => { void reloadDailyActivity(true); }}
       onOpenDevelopment={() => {
         setDevelopmentFocus({ selectionKey: currentSelectionKey });
@@ -2780,7 +3109,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         void runDailyMutation(`select-training:${option.versionId}:${option.stepId}`, () => addTrainingSelection(client, row));
       }}
       onRemoveTrainingFromDay={(row) => { void runDailyMutation(`remove-training:${row.id}`, () => removeTrainingSelection(client, row)); }}
-      onRetryDailyMutation={pendingDailyRetry.current?.lifetime === currentDailyLifetime ? retryDailyMutation : undefined}
+      onRetryDailyMutation={pendingDailyWriteForOwner?.phase === 'unknown' ? retryDailyMutation : undefined}
       onGo={(destination) => {
         navigateMainTab(destination);
       }}
@@ -2840,6 +3169,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (page === 'home-training-detail') {
       const focus = visibleHomeTrainingFocus;
       const returnToSource = () => {
+        if (focus?.readOnly) setChecklistRangeRetry((value) => value + 1);
         setHomeTrainingFocus(null);
         setPage(focus?.returnPage ?? 'home');
       };
@@ -2847,6 +3177,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         <AppBar mode="Back" title="Träningssteg" actionLabel="Tillbaka till Hem" onAction={() => setPage('home')} variant="compact" />
         <MessageCard>Träningssteget hör inte längre till dagens aktiva lista.</MessageCard>
       </>;
+      if (focus.readOnly) return <PublishedTrainingScreen ageWeeks={age} programs={training.programs} paused={training.paused}
+        busyStepKey={null} error="" onCompleteStep={async () => false} onContinue={returnToSource}
+        onResetProgram={() => undefined} onRetry={() => setHistoricalTrainingDetailRetry((value) => value + 1)}
+        focusStep={{ programId: focus.programId, stepId: focus.stepId, returnPage: 'checklist', readOnly: true, dateKey: focus.dateKey, completed: focus.completed }}
+        historicalDetail={visibleHistoricalTrainingDetail ?? { status: 'loading', detail: null }} onCloseStep={returnToSource} />;
       const sourceReturnLabel = focus.returnPage === 'checklist' ? 'Tillbaka till Checklistan'
         : focus.returnPage === 'progress' ? 'Tillbaka till Dagens framsteg' : 'Tillbaka till Hem';
       if (visibleTrainingState === 'loading') return <>
@@ -2940,8 +3275,19 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onOpenPlannedHealth={() => setPage('planned-health')}
     />;
     if (page === 'planned-health') return <PlannedHealthScreen
-      onBack={() => setPage('health')}
+      onBack={() => {
+        if (!visiblePlannedHealthChecklistFocus) { setPage('health'); return; }
+        setPlannedHealthChecklistFocus(null);
+        setChecklistRangeRetry((value) => value + 1);
+        void reloadPlannedHealth(currentPlannedHealthLifetime).catch(() => undefined);
+        setPage('checklist');
+      }}
+      backLabel={visiblePlannedHealthChecklistFocus ? 'Checklistan' : 'Hälsa'}
       records={plannedHealth}
+      checklistFocusState={visiblePlannedHealthChecklistFocus ? visiblePlannedHealthChecklistRecord?.status ?? 'loading' : 'idle'}
+      checklistFocusRecord={visiblePlannedHealthChecklistFocus && visiblePlannedHealthChecklistRecord?.status === 'ready'
+        ? visiblePlannedHealthChecklistRecord.record : null}
+      onRetryChecklistFocus={() => setPlannedHealthChecklistRetry((value) => value + 1)}
       loadState={plannedHealthState}
       busy={plannedHealthBusy}
       pending={plannedHealthPending}

@@ -1,5 +1,5 @@
 import { MotionPressable } from './Motion';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { HorizontalGestureRegion } from './MainSwipeNavigation';
 import { tokens } from '../../theme/tokens';
 export type TabsVariant = 'underline' | 'rev02-segmented';
@@ -7,7 +7,21 @@ export type TabsActiveTone = 'default' | 'home';
 export function Tabs({ items, active, onChange, variant = 'underline', activeTone = 'default' }: { items: readonly string[]; active: string; onChange: (item: string) => void; variant?: TabsVariant; activeTone?: TabsActiveTone }) {
   const segmented = variant === 'rev02-segmented';
   const homeSegmented = segmented && activeTone === 'home';
-  return <HorizontalGestureRegion><ScrollView style={[styles.scroll, segmented && styles.segmentedScroll, homeSegmented && styles.homeSegmentedScroll]} horizontal showsHorizontalScrollIndicator={false} accessibilityRole="tablist" accessibilityLabel="Avsnitt" contentContainerStyle={[styles.tabs, segmented && styles.segmentedTabs, homeSegmented && styles.homeSegmentedTabs]}>{items.map((item) => { const selected = item === active; return <MotionPressable key={item} accessibilityRole="tab" accessibilityLabel={item} accessibilityState={{ selected }} aria-selected={selected} onPress={() => onChange(item)} style={({ pressed }) => [styles.tab, segmented && styles.segmentedTab, homeSegmented && styles.homeSegmentedTab, selected && segmented && styles.segmentedSelected, selected && homeSegmented && styles.homeSegmentedSelected, pressed && styles.pressed]}><Text style={[styles.label, selected && styles.active, selected && segmented && styles.segmentedActive, selected && homeSegmented && styles.homeSegmentedActive]}>{item}</Text>{!segmented ? <View style={[styles.underline, selected && styles.selectedUnderline]} /> : null}</MotionPressable>; })}</ScrollView></HorizontalGestureRegion>;
+  const { width, fontScale } = useWindowDimensions();
+  const homeGrid = homeSegmented && items.length >= 4 && (width < 480 || fontScale >= 1.25);
+  return <HorizontalGestureRegion><ScrollView style={[styles.scroll, segmented && styles.segmentedScroll, homeSegmented && styles.homeSegmentedScroll, homeGrid && styles.homeGridScroll]}
+    horizontal={!homeGrid} showsHorizontalScrollIndicator={false} accessibilityRole="tablist" accessibilityLabel="Avsnitt"
+    contentContainerStyle={[styles.tabs, segmented && styles.segmentedTabs, homeSegmented && styles.homeSegmentedTabs, homeGrid && styles.homeGridTabs]}>
+    {items.map((item) => {
+      const selected = item === active;
+      return <MotionPressable key={item} accessibilityRole="tab" accessibilityLabel={item} accessibilityState={{ selected }} aria-selected={selected} onPress={() => onChange(item)}
+        style={({ pressed }) => [styles.tab, segmented && styles.segmentedTab, homeSegmented && styles.homeSegmentedTab, homeGrid && styles.homeGridTab,
+          selected && segmented && styles.segmentedSelected, selected && homeSegmented && styles.homeSegmentedSelected, pressed && styles.pressed]}>
+        <Text style={[styles.label, selected && styles.active, selected && segmented && styles.segmentedActive, selected && homeSegmented && styles.homeSegmentedActive]}>{item}</Text>
+        {!segmented ? <View style={[styles.underline, selected && styles.selectedUnderline]} /> : null}
+      </MotionPressable>;
+    })}
+  </ScrollView></HorizontalGestureRegion>;
 }
 const styles = StyleSheet.create({
   scroll: { flexGrow: 0, marginBottom: tokens.spacing.lg },
@@ -26,6 +40,9 @@ const styles = StyleSheet.create({
   homeSegmentedScroll: { width: '100%' },
   homeSegmentedTabs: { width: '100%', flexGrow: 1 },
   homeSegmentedTab: { flex: 1, minWidth: 0 },
+  homeGridScroll: { width: '100%' },
+  homeGridTabs: { width: '100%', flexGrow: 1, flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs, padding: tokens.spacing.xs },
+  homeGridTab: { flexBasis: '48%', flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: tokens.size.touchMin },
   homeSegmentedSelected: { backgroundColor: tokens.colors.home.greenStrong },
   homeSegmentedActive: { color: tokens.colors.onPrimary },
 });
