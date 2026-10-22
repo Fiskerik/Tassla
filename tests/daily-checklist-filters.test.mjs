@@ -23,6 +23,10 @@ test('Checklist opts into a full-width home-toned segment with explicit web sele
   assert.ok(tabsSource.includes('homeSegmentedTab: { flex: 1, minWidth: 0 }'));
   assert.ok(tabsSource.includes('backgroundColor: tokens.colors.home.greenStrong'));
   assert.ok(tabsSource.includes('color: tokens.colors.onPrimary'));
+  assert.match(checklistScreen, /CHECKLIST_FILTERS: readonly ChecklistFilter\[\] = \['Idag', 'Denna vecka', 'Alla', 'Kommande'\]/);
+  assert.match(tabsSource, /items\.length >= 4 && \(width < 480 \|\| fontScale >= 1\.25\)/);
+  assert.match(tabsSource, /horizontal=\{!homeGrid\}/);
+  assert.match(tabsSource, /homeGridTab: \{ flexBasis: '48%', flexGrow: 1/);
 });
 
 test('historical checklist is complete only after every saved source is fully read', () => {

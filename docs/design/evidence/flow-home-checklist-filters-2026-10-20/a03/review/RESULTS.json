@@ -1,0 +1,432 @@
+{
+  "mode": "review",
+  "evidence_dir": "docs/design/evidence/flow-home-checklist-filters-2026-10-20/a03/review",
+  "scope": "Panel 4 Checklist filters and source routes; synthetic React Native Web, not live backend/native certification",
+  "results": [
+    {
+      "check": "Idag is selected with 44pt controls and fits 375px",
+      "result": "PASS",
+      "segments": [
+        {
+          "x": 28,
+          "y": 164,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 189.5,
+          "y": 164,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 28,
+          "y": 212,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 189.5,
+          "y": 212,
+          "width": 157.5,
+          "height": 44
+        }
+      ],
+      "container": {
+        "x": 24,
+        "y": 160,
+        "width": 327,
+        "height": 100
+      },
+      "selected_count": 1
+    },
+    {
+      "check": "Denna vecka is selected with 44pt controls and fits 375px",
+      "result": "PASS",
+      "segments": [
+        {
+          "x": 28,
+          "y": 164,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 189.5,
+          "y": 164,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 28,
+          "y": 212,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 189.5,
+          "y": 212,
+          "width": 157.5,
+          "height": 44
+        }
+      ],
+      "container": {
+        "x": 24,
+        "y": 160,
+        "width": 327,
+        "height": 100
+      },
+      "selected_count": 1
+    },
+    {
+      "check": "Alla is selected with 44pt controls and fits 375px",
+      "result": "PASS",
+      "segments": [
+        {
+          "x": 28,
+          "y": 164,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 189.5,
+          "y": 164,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 28,
+          "y": 212,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 189.5,
+          "y": 212,
+          "width": 157.5,
+          "height": 44
+        }
+      ],
+      "container": {
+        "x": 24,
+        "y": 160,
+        "width": 327,
+        "height": 100
+      },
+      "selected_count": 1
+    },
+    {
+      "check": "Kommande is selected with 44pt controls and fits 375px",
+      "result": "PASS",
+      "segments": [
+        {
+          "x": 28,
+          "y": 164,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 189.5,
+          "y": 164,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 28,
+          "y": 212,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 189.5,
+          "y": 212,
+          "width": 157.5,
+          "height": 44
+        }
+      ],
+      "container": {
+        "x": 24,
+        "y": 160,
+        "width": 327,
+        "height": 100
+      },
+      "selected_count": 1
+    },
+    {
+      "check": "no browser errors at 375px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Idag is selected with 44pt controls and fits 430px",
+      "result": "PASS",
+      "segments": [
+        {
+          "x": 28,
+          "y": 164,
+          "width": 185,
+          "height": 44
+        },
+        {
+          "x": 217,
+          "y": 164,
+          "width": 185,
+          "height": 44
+        },
+        {
+          "x": 28,
+          "y": 212,
+          "width": 185,
+          "height": 44
+        },
+        {
+          "x": 217,
+          "y": 212,
+          "width": 185,
+          "height": 44
+        }
+      ],
+      "container": {
+        "x": 24,
+        "y": 160,
+        "width": 382,
+        "height": 100
+      },
+      "selected_count": 1
+    },
+    {
+      "check": "Denna vecka is selected with 44pt controls and fits 430px",
+      "result": "PASS",
+      "segments": [
+        {
+          "x": 28,
+          "y": 164,
+          "width": 185,
+          "height": 44
+        },
+        {
+          "x": 217,
+          "y": 164,
+          "width": 185,
+          "height": 44
+        },
+        {
+          "x": 28,
+          "y": 212,
+          "width": 185,
+          "height": 44
+        },
+        {
+          "x": 217,
+          "y": 212,
+          "width": 185,
+          "height": 44
+        }
+      ],
+      "container": {
+        "x": 24,
+        "y": 160,
+        "width": 382,
+        "height": 100
+      },
+      "selected_count": 1
+    },
+    {
+      "check": "Alla is selected with 44pt controls and fits 430px",
+      "result": "PASS",
+      "segments": [
+        {
+          "x": 28,
+          "y": 164,
+          "width": 185,
+          "height": 44
+        },
+        {
+          "x": 217,
+          "y": 164,
+          "width": 185,
+          "height": 44
+        },
+        {
+          "x": 28,
+          "y": 212,
+          "width": 185,
+          "height": 44
+        },
+        {
+          "x": 217,
+          "y": 212,
+          "width": 185,
+          "height": 44
+        }
+      ],
+      "container": {
+        "x": 24,
+        "y": 160,
+        "width": 382,
+        "height": 100
+      },
+      "selected_count": 1
+    },
+    {
+      "check": "Kommande is selected with 44pt controls and fits 430px",
+      "result": "PASS",
+      "segments": [
+        {
+          "x": 28,
+          "y": 164,
+          "width": 185,
+          "height": 44
+        },
+        {
+          "x": 217,
+          "y": 164,
+          "width": 185,
+          "height": 44
+        },
+        {
+          "x": 28,
+          "y": 212,
+          "width": 185,
+          "height": 44
+        },
+        {
+          "x": 217,
+          "y": 212,
+          "width": 185,
+          "height": 44
+        }
+      ],
+      "container": {
+        "x": 24,
+        "y": 160,
+        "width": 382,
+        "height": 100
+      },
+      "selected_count": 1
+    },
+    {
+      "check": "no browser errors at 430px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "375x667 at 140% text keeps the filter targets reachable without horizontal overflow",
+      "result": "PASS",
+      "before": [
+        {
+          "x": 28,
+          "y": 164,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 189.5,
+          "y": 164,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 28,
+          "y": 212,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 189.5,
+          "y": 212,
+          "width": 157.5,
+          "height": 44
+        }
+      ],
+      "after": [
+        {
+          "x": 28,
+          "y": 164,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 189.5,
+          "y": 164,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 28,
+          "y": 212,
+          "width": 157.5,
+          "height": 44
+        },
+        {
+          "x": 189.5,
+          "y": 212,
+          "width": 157.5,
+          "height": 44
+        }
+      ]
+    },
+    {
+      "check": "Kommande loading state is explicit and has no progress claim",
+      "result": "PASS"
+    },
+    {
+      "check": "Kommande partial state is explicit and has no progress claim",
+      "result": "PASS"
+    },
+    {
+      "check": "Kommande error state is explicit and has no progress claim",
+      "result": "PASS"
+    },
+    {
+      "check": "Kommande empty state is distinct from loading and read failures",
+      "result": "PASS"
+    },
+    {
+      "check": "planned health destination brings the selected plan into the first viewport",
+      "result": "PASS",
+      "focus_label": {
+        "x": 41,
+        "y": 485,
+        "width": 293,
+        "height": 20
+      }
+    },
+    {
+      "check": "planned health opens the correct source and returns to Kommande at the same scroll offset",
+      "result": "PASS",
+      "before": {
+        "x": 73,
+        "y": 353,
+        "width": 265,
+        "height": 64
+      },
+      "after": {
+        "x": 73,
+        "y": 353,
+        "width": 265,
+        "height": 64
+      }
+    },
+    {
+      "check": "historical training source is read-only and returns to Alla at the same scroll offset",
+      "result": "PASS",
+      "before": {
+        "x": 121,
+        "y": 353,
+        "width": 217,
+        "height": 64
+      },
+      "after": {
+        "x": 121,
+        "y": 353,
+        "width": 217,
+        "height": 64
+      }
+    },
+    {
+      "check": "planned routine opens focused template management without day actions",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}

@@ -12,7 +12,7 @@ const model = await import('../src/features/home/daily-activity-model.ts');
 resolution.deregister();
 
 const { localDateKeyAt, isValidDateKey, isTrainingCompletionForDay, nextSelectableTrainingStep, trainingProgressStamp,
-  deriveHomeDailyActivities, deriveSavedRangeActivities, checklistFilterRange, addCalendarDays, projectUpcomingRoutineDates, selectDailyProgress } = model;
+  deriveHomeDailyActivities, deriveSavedRangeActivities, deriveUpcomingActivities, checklistFilterRange, addCalendarDays, projectUpcomingRoutineDates, selectDailyProgress } = model;
 
 test('daily progress selector shares complete counts and keeps incomplete coverage explicit', () => {
   const activities = [{ completed: true }, { completed: false }, { completed: true }];
@@ -43,6 +43,30 @@ test('upcoming repeat projection honors anchor, weekdays and month-end without c
   assert.deepEqual(projectUpcomingRoutineDates([routine], '2026-02-25', '2026-03-03').map(({ dateKey }) => dateKey), ['2026-02-28']);
   assert.deepEqual(projectUpcomingRoutineDates([weekly], '2026-10-19', '2026-10-25').map(({ dateKey }) => dateKey), ['2026-10-19', '2026-10-21']);
   assert.deepEqual(projectUpcomingRoutineDates([weekly], '2026-10-04', '2026-10-04'), []);
+});
+
+test('upcoming activities contain only valid planned recurrence and minimal health rows, never progress', () => {
+  const routine = { id: 'routine-1', dog_id: 'dog-a', label: 'Kvällsrutin', checklist: [{ id: 'item-1', label: 'Vatten' }],
+    checklist_revision: 1, legacy_single_item: false, repeat_unit: 'day', repeat_interval: 1, repeat_weekdays: null, repeat_anchor_date: '2026-10-20' };
+  const never = { ...routine, id: 'routine-never', repeat_unit: null, repeat_interval: null, repeat_anchor_date: null };
+  const otherDog = { ...routine, id: 'routine-other', dog_id: 'dog-b' };
+  const health = [
+    { id: 'plan-tomorrow', dog_id: 'dog-a', event_type: 'vaccination', due_on: '2026-10-23' },
+    { id: 'plan-last-day', dog_id: 'dog-a', event_type: 'vet_visit', due_on: '2026-10-29' },
+    { id: 'plan-today', dog_id: 'dog-a', event_type: 'vaccination', due_on: '2026-10-22' },
+    { id: 'plan-after-window', dog_id: 'dog-a', event_type: 'vaccination', due_on: '2026-10-30' },
+    { id: 'plan-other-dog', dog_id: 'dog-b', event_type: 'vaccination', due_on: '2026-10-23' },
+  ];
+  const activities = deriveUpcomingActivities([routine, never, otherDog], health, 'dog-a', '2026-10-23', '2026-10-29');
+  assert.deepEqual(activities.map((item) => [item.label, item.dateKey, item.planned, item.completed]), [
+    ['Kvällsrutin', '2026-10-23', true, false], ['Vaccination', '2026-10-23', true, false],
+    ['Kvällsrutin', '2026-10-24', true, false], ['Kvällsrutin', '2026-10-25', true, false],
+    ['Kvällsrutin', '2026-10-26', true, false], ['Kvällsrutin', '2026-10-27', true, false],
+    ['Kvällsrutin', '2026-10-28', true, false], ['Kvällsrutin', '2026-10-29', true, false],
+    ['Veterinärbesök', '2026-10-29', true, false],
+  ]);
+  assert.ok(activities.every((item) => !item.routineDay && !item.trainingSelection && !item.completed));
+  assert.equal(activities.find((item) => item.healthPlanId === 'plan-tomorrow').healthType, 'vaccination');
 });
 
 test('projects saved training timestamps into the selected IANA local day across UTC boundaries', () => {

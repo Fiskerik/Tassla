@@ -1,5 +1,5 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AppBar } from '../../components/ui/AppBar';
 import { Button } from '../../components/ui/Button';
@@ -24,7 +24,8 @@ type RangeStatus = 'loading' | 'ready' | 'partial' | 'error';
 export function DailyChecklistScreen({ dateKey, state, activities, refreshing, refreshError, mutationBusy, mutationKey, mutationMessage,
   mutationError, onBack, onRetry, onRetryRange, onRetryMutation, onOpenTrainingStep, onSetRoutineCompletion, routines, routineDaySkips, trainingOptions,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay, onAddTrainingToDay, onRemoveTrainingFromDay,
-  onGoTraining, filter, onChangeFilter, rangeState, rangeActivities, openManagerInitially = false }: {
+  onGoTraining, filter, onChangeFilter, rangeState, rangeActivities, upcomingRoutines = [], onOpenHistoricalTrainingStep,
+  onOpenUpcomingRoutine, onOpenPlannedHealth, openManagerInitially = false }: {
   dateKey: string;
   state: 'loading' | 'ready' | 'error';
   activities: readonly HomeDailyActivity[];
@@ -39,6 +40,9 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
   onRetryRange?: () => void;
   onRetryMutation?: () => void;
   onOpenTrainingStep?: (programId: string, stepId: string, returnPage: 'checklist') => void;
+  onOpenHistoricalTrainingStep?: (programId: string, stepId: string) => void;
+  onOpenUpcomingRoutine?: (routineId: string, dateKey: string) => Promise<{ status: 'ready'; routine: DailyRoutine } | { status: 'missing' } | { status: 'error' }>;
+  onOpenPlannedHealth?: (planId: string) => void;
   onSetRoutineCompletion?: (row: DailyRoutineDay, itemId: string, completed: boolean) => void;
   routines: readonly DailyRoutine[];
   routineDaySkips: readonly DailyRoutineDaySkip[];
@@ -47,6 +51,7 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
   onChangeFilter: (filter: ChecklistFilter) => void;
   rangeState: RangeStatus;
   rangeActivities: readonly HomeDailyActivity[];
+  upcomingRoutines?: readonly DailyRoutine[];
   onCreateRoutine?: (routine: DailyRoutineCreateInput) => Promise<WriteStatus | void>;
   onUpdateRoutine?: (routine: DailyRoutine, label: string, checklist: DailyRoutineChecklistItem[], repeat: DailyRoutineRepeatValues) => Promise<WriteStatus | void>;
   onDeleteRoutine?: (routine: DailyRoutine) => Promise<WriteStatus | void>;
@@ -61,7 +66,14 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
   const [focusRoutineId, setFocusRoutineId] = useState<string | null>(null);
   const [focusRoutineItemId, setFocusRoutineItemId] = useState<string | null>(null);
   const [editFocusedRoutineOnOpen, setEditFocusedRoutineOnOpen] = useState(false);
+  const [routineOnlyContext, setRoutineOnlyContext] = useState(false);
+  const [focusedUpcomingRoutine, setFocusedUpcomingRoutine] = useState<DailyRoutine | null>(null);
+  const [routineSourceMessage, setRoutineSourceMessage] = useState('');
+  const [routineSourceRetryId, setRoutineSourceRetryId] = useState<{ routineId: string; dateKey: string } | null>(null);
+  const [routineSourceLoadingId, setRoutineSourceLoadingId] = useState<string | null>(null);
+  const upcomingRoutineRequest = useRef(0);
   const showingToday = filter === 'Idag';
+  const showingUpcoming = filter === 'Kommande';
   const visibleState = showingToday ? state : rangeState;
   const visibleActivities = showingToday ? activities : rangeActivities;
   const completedCount = visibleActivities.filter((activity) => activity.completed && !activity.skipped).length;
@@ -72,10 +84,13 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
   const dateLabel = checklistDateLabel(dateKey);
   const retry = showingToday ? onRetry : onRetryRange;
 
-  function openManager(routineId: string | null = null, editFocusedRoutine = false, routineItemId: string | null = null) {
+  useEffect(() => () => { upcomingRoutineRequest.current += 1; }, []);
+
+  function openManager(routineId: string | null = null, editFocusedRoutine = false, routineItemId: string | null = null, upcomingOnly = false) {
     setFocusRoutineId(routineId);
     setFocusRoutineItemId(routineItemId);
     setEditFocusedRoutineOnOpen(editFocusedRoutine);
+    setRoutineOnlyContext(upcomingOnly);
     setManagerVisible(true);
   }
 
@@ -84,29 +99,71 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
     setFocusRoutineId(null);
     setFocusRoutineItemId(null);
     setEditFocusedRoutineOnOpen(false);
+    setRoutineOnlyContext(false);
+    setFocusedUpcomingRoutine(null);
+  }
+
+  async function openUpcomingRoutine(routineId: string, activityDate: string) {
+    if (!onOpenUpcomingRoutine || routineSourceLoadingId) return;
+    const request = ++upcomingRoutineRequest.current;
+    setRoutineSourceMessage('');
+    setRoutineSourceRetryId(null);
+    setRoutineSourceLoadingId(routineId);
+    try {
+      const result = await onOpenUpcomingRoutine(routineId, activityDate);
+      if (request !== upcomingRoutineRequest.current || filter !== 'Kommande') return;
+      if (result.status === 'ready') {
+        setFocusedUpcomingRoutine(result.routine);
+        openManager(result.routine.id, false, null, true);
+      } else if (result.status === 'missing') {
+        setRoutineSourceMessage('Rutinen har ändrats eller tagits bort. Listan har uppdaterats.');
+      } else {
+        setRoutineSourceMessage('Rutinen kunde inte hämtas. Försök igen.');
+        setRoutineSourceRetryId({ routineId, dateKey: activityDate });
+      }
+    } catch {
+      if (request === upcomingRoutineRequest.current && filter === 'Kommande') {
+        setRoutineSourceMessage('Rutinen kunde inte hämtas. Försök igen.');
+        setRoutineSourceRetryId({ routineId, dateKey: activityDate });
+      }
+    } finally {
+      if (request === upcomingRoutineRequest.current) setRoutineSourceLoadingId(null);
+    }
   }
 
   return <View testID="daily-checklist-screen" style={styles.page}>
     <AppBar mode="Back" title="Checklistor" actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" />
     <Tabs items={CHECKLIST_FILTERS} active={filter} variant="rev02-segmented" activeTone="home" onChange={(value) => {
-      if (isChecklistFilter(value)) onChangeFilter(value);
+      if (isChecklistFilter(value)) {
+        upcomingRoutineRequest.current += 1;
+        setRoutineSourceLoadingId(null);
+        setRoutineSourceMessage('');
+        setRoutineSourceRetryId(null);
+        onChangeFilter(value);
+      }
     }} />
     {filter === 'Alla' ? <Text accessibilityRole="text" style={styles.rangeContext}>Senaste 30 dagarna</Text> : null}
+    {showingUpcoming ? <Text accessibilityRole="text" style={styles.rangeContext}>Planerat, inte utfört</Text> : null}
+    {routineSourceMessage ? <View style={styles.partialFeedback}>
+      <MessageCard tone={routineSourceRetryId ? 'error' : 'neutral'}>{routineSourceMessage}</MessageCard>
+      {routineSourceRetryId && onOpenUpcomingRoutine ? <Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta rutinen igen" disabled={Boolean(routineSourceLoadingId)}
+        onPress={() => { void openUpcomingRoutine(routineSourceRetryId.routineId, routineSourceRetryId.dateKey); }} /> : null}
+    </View> : null}
     {refreshError && showingToday && state === 'ready' ? <MessageCard tone="error">Uppdateringen kunde inte hämtas. Du ser senast hämtade uppgifter.</MessageCard> : null}
     {!showingToday && rangeState === 'partial' ? <View style={styles.partialFeedback}>
-      <MessageCard tone="error">Några sparade uppgifter kunde inte hämtas.</MessageCard>
-      {onRetryRange ? <Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta sparade uppgifter igen" onPress={onRetryRange} /> : null}
+      <MessageCard tone="error">{showingUpcoming ? 'Några planerade aktiviteter kunde inte hämtas.' : 'Några sparade uppgifter kunde inte hämtas.'}</MessageCard>
+      {onRetryRange ? <Button variant="tertiary" label="Försök igen" accessibilityLabel={showingUpcoming ? 'Hämta planerade aktiviteter igen' : 'Hämta sparade uppgifter igen'} onPress={onRetryRange} /> : null}
     </View> : null}
-    {isLoading ? <View accessibilityLabel={showingToday ? 'Dagens checklista hämtas' : 'Sparade uppgifter hämtas'} style={styles.stateCard}>
+    {isLoading ? <View accessibilityLabel={showingToday ? 'Dagens checklista hämtas' : showingUpcoming ? 'Planerade aktiviteter hämtas' : 'Sparade uppgifter hämtas'} style={styles.stateCard}>
       <Skeleton shape="row" lines={4} />
     </View> : null}
     {hasError ? <Card variant="home"><View style={styles.stateCard}>
-      <Text accessibilityRole="header" style={styles.stateTitle}>{showingToday ? 'Checklistan kunde inte hämtas' : 'Sparade uppgifter kunde inte hämtas'}</Text>
+      <Text accessibilityRole="header" style={styles.stateTitle}>{showingToday ? 'Checklistan kunde inte hämtas' : showingUpcoming ? 'Planerade aktiviteter kunde inte hämtas' : 'Sparade uppgifter kunde inte hämtas'}</Text>
       <Text style={styles.body}>Prova att hämta igen.</Text>
-      {retry ? <Button variant="tertiary" label="Försök igen" accessibilityLabel={showingToday ? 'Hämta checklistan igen' : 'Hämta sparade uppgifter igen'} onPress={retry} /> : null}
+      {retry ? <Button variant="tertiary" label="Försök igen" accessibilityLabel={showingToday ? 'Hämta checklistan igen' : showingUpcoming ? 'Hämta planerade aktiviteter igen' : 'Hämta sparade uppgifter igen'} onPress={retry} /> : null}
     </View></Card> : null}
     {isEmpty ? <Card variant="home"><View style={styles.stateCard}>
-      <Text accessibilityRole="header" style={styles.stateTitle}>{showingToday ? 'Inga aktiviteter idag' : 'Inga sparade uppgifter i perioden'}</Text>
+      <Text accessibilityRole="header" style={styles.stateTitle}>{showingToday ? 'Inga aktiviteter idag' : showingUpcoming ? 'Inget planerat den närmaste veckan' : 'Inga sparade uppgifter i perioden'}</Text>
       {showingToday ? <Text style={styles.body}>Lägg till en rutin eller ett träningssteg.</Text> : null}
       {showingToday && refreshing ? <ActivityIndicator accessibilityRole="progressbar" accessibilityLabel="Dagens checklista uppdateras" size="small" color={tokens.colors.textSecondary} /> : null}
       {showingToday ? <Button variant="tertiary" label="Hantera aktiviteter" accessibilityLabel="Hantera dagens aktiviteter" onPress={() => openManager()} /> : null}
@@ -157,15 +214,20 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
           {group.items.map((item, index) => <ChecklistActivityRow key={item.id} item={item}
             first={groupIndex === 0 && index === 0} accessibilityLabel={activityAccessibilityLabel(item)}
             completed={item.completed} statusMessage={item.skipped ? 'Överhoppad' : ''}
-            statusError={false} />)}
+            statusError={false}
+            disabled={Boolean(routineSourceLoadingId)}
+            onOpen={item.planned && item.routineId && item.dateKey ? () => { void openUpcomingRoutine(item.routineId!, item.dateKey!); }
+              : item.planned && item.healthPlanId ? () => onOpenPlannedHealth?.(item.healthPlanId!)
+                : item.kind === 'training' && item.programId && item.stepId ? () => onOpenHistoricalTrainingStep?.(item.programId!, item.stepId!) : undefined} />)}
         </View>)}
       </View>
     </Card> : null}
 
-    <DailyActivityManagerSheet key={`${dateKey}:${focusRoutineId ?? 'all'}:${focusRoutineItemId ?? 'all-items'}:${managerVisible}:${editFocusedRoutineOnOpen}`}
+    <DailyActivityManagerSheet key={`${dateKey}:${focusRoutineId ?? 'all'}:${focusRoutineItemId ?? 'all-items'}:${managerVisible}:${editFocusedRoutineOnOpen}:${routineOnlyContext}`}
       visible={managerVisible} onClose={closeManager} focusRoutineId={focusRoutineId} focusRoutineItemId={focusRoutineItemId}
-      editFocusedRoutineOnOpen={editFocusedRoutineOnOpen}
-      activities={activities} routines={routines} routineDaySkips={routineDaySkips} trainingOptions={trainingOptions}
+      editFocusedRoutineOnOpen={editFocusedRoutineOnOpen} upcomingRoutineOnly={routineOnlyContext}
+      activities={activities} routines={routineOnlyContext && focusedUpcomingRoutine ? [focusedUpcomingRoutine] : showingUpcoming ? upcomingRoutines : routines}
+      routineDaySkips={routineDaySkips} trainingOptions={trainingOptions}
       busy={mutationBusy} mutationMessage={mutationMessage} mutationError={mutationError} onRetryMutation={onRetryMutation}
       onCreateRoutine={onCreateRoutine} onUpdateRoutine={onUpdateRoutine} onDeleteRoutine={onDeleteRoutine}
       onAddRoutineToDay={onAddRoutineToDay} onRemoveRoutineFromDay={onRemoveRoutineFromDay}
@@ -181,27 +243,32 @@ type ChecklistActivityRowProps = {
   pending?: boolean;
   statusMessage?: string;
   statusError?: boolean;
+  disabled?: boolean;
   onToggle?: () => void;
   onOpen?: () => void;
   onRetry?: () => void;
 };
 
-function ChecklistActivityRow({ item, first, accessibilityLabel, completed, pending = false, statusMessage = '', statusError = false, onToggle, onOpen, onRetry }: ChecklistActivityRowProps) {
-  const status = pending ? 'Sparar…' : statusMessage;
+function ChecklistActivityRow({ item, first, accessibilityLabel, completed, pending = false, statusMessage = '', statusError = false, disabled = false, onToggle, onOpen, onRetry }: ChecklistActivityRowProps) {
+  const status = pending ? 'Sparar…' : item.planned ? 'Planerad' : statusMessage;
   const checkedBox = <View accessibilityElementsHidden style={[styles.checkbox, completed && styles.checkboxChecked]}>
     {completed ? <Ionicons name="checkmark" size={tokens.size.iconSm} color={tokens.colors.onPrimary} /> : null}
   </View>;
-  const rowStatus = accessibilityLabel + ', ' + (item.skipped ? 'överhoppad' : completed ? 'klar' : 'inte markerad');
+  const rowStatus = item.planned ? accessibilityLabel + ', planerad'
+    : accessibilityLabel + ', ' + (item.skipped ? 'överhoppad' : completed ? 'klar' : 'inte markerad');
   return <View style={[styles.row, !first && styles.rowDivider]}>
-    {onToggle ? <MotionPressable accessibilityRole="checkbox" aria-checked={completed} accessibilityLabel={rowStatus}
+    {item.planned ? null : onToggle ? <MotionPressable accessibilityRole="checkbox" aria-checked={completed} accessibilityLabel={rowStatus}
       accessibilityState={{ checked: completed, disabled: pending }} disabled={pending} onPress={onToggle}
       style={({ pressed }) => [styles.checkboxTarget, pressed && styles.pressed]}>{checkedBox}</MotionPressable>
       : <View accessibilityElementsHidden style={styles.checkboxTarget}>{checkedBox}</View>}
     <ActivitySourceIcon item={item} />
-    {onOpen ? <MotionPressable accessibilityRole="button" accessibilityLabel={item.kind === 'training' ? 'Öppna träningssteget ' + item.label : 'Öppna rutin ' + (item.routineLabel ?? item.label)}
-      onPress={onOpen} style={({ pressed }) => [styles.rowContent, pressed && styles.pressed]}>
+    {onOpen ? <MotionPressable accessibilityRole="button" accessibilityLabel={item.planned
+      ? item.healthPlanId ? `Öppna planerad ${item.label.toLocaleLowerCase('sv-SE')} ${item.dateKey ?? ''}` : `Öppna planerad rutin ${item.routineLabel ?? item.label} ${item.dateKey ?? ''}`
+      : item.kind === 'training' ? 'Öppna sparat träningssteg ' + item.label : 'Öppna rutin ' + (item.routineLabel ?? item.label)}
+      accessibilityState={{ disabled }} disabled={disabled} onPress={onOpen} style={({ pressed }) => [styles.rowContent, pressed && styles.pressed, disabled && styles.disabled]}>
       <View style={styles.copy}>
         <Text style={styles.rowTitle}>{item.label}</Text>
+        {item.planned && item.repeatSummary ? <Text style={styles.rowDetail}>{item.repeatSummary}</Text> : null}
         {item.kind === 'training' && item.programTitle ? <Text style={styles.rowDetail}>{item.programTitle}</Text> : null}
         {status ? <Text accessibilityRole={statusError ? 'alert' : undefined} accessibilityLiveRegion="polite" style={[styles.rowStatus, statusError && styles.errorText]}>{status}</Text> : null}
       </View>
@@ -220,6 +287,10 @@ function ChecklistActivityRow({ item, first, accessibilityLabel, completed, pend
 function ActivitySourceIcon({ item }: { item: HomeDailyActivity }) {
   if (item.kind === 'training') return <IconChip category="training" size="medium" />;
   if (item.healthType === 'vaccination') return <IconChip category="vaccination" size="medium" />;
+  if (item.healthType === 'vet_visit') return <IconChip category="veterinary" size="medium" />;
+  if (item.planned && item.routineId) return <View accessibilityRole="image" accessibilityLabel="Återkommande rutin" style={styles.routineIcon}>
+    <Ionicons name="repeat-outline" size={tokens.size.iconMd} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
+  </View>;
   const icon = item.icon ?? 'list-outline';
   return <View accessibilityRole="image" accessibilityLabel="Rutin" style={styles.routineIcon}>
     <ThemedIcon name={icon} tone={dailyRoutineChecklistIconTone(icon)} size="small" testID={`checklist-icon-${item.id}`} />
@@ -227,6 +298,10 @@ function ActivitySourceIcon({ item }: { item: HomeDailyActivity }) {
 }
 
 function activityAccessibilityLabel(item: HomeDailyActivity): string {
+  if (item.planned) {
+    const source = item.healthPlanId ? 'Hälsa' : 'Återkommande rutin';
+    return `${source}: ${item.label}, ${item.dateKey ? checklistDateLabel(item.dateKey) : ''}, planerad`;
+  }
   const source = item.kind === 'training' ? 'Träning: ' + (item.programTitle ?? 'sparat träningssteg') : 'Rutin: ' + (item.routineLabel ?? item.label);
   return source + ', ' + item.label + (item.skipped ? ', överhoppad' : item.completed ? ', klar' : ', inte markerad');
 }
@@ -260,7 +335,7 @@ function isChecklistFilter(value: string): value is ChecklistFilter {
   return value === 'Idag' || value === 'Denna vecka' || value === 'Alla' || value === 'Kommande';
 }
 
-const CHECKLIST_FILTERS: readonly ChecklistFilter[] = ['Idag', 'Denna vecka', 'Alla'];
+const CHECKLIST_FILTERS: readonly ChecklistFilter[] = ['Idag', 'Denna vecka', 'Alla', 'Kommande'];
 
 export function checklistDateLabel(dateKey: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey);
@@ -298,6 +373,7 @@ const styles = StyleSheet.create({
   laterDateGroup: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, marginTop: tokens.spacing.sm },
   errorText: { color: tokens.colors.danger },
   pressed: { backgroundColor: tokens.colors.selectedSurface },
+  disabled: { opacity: 0.65 },
   rows: { gap: 0 },
   longPressHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
 });

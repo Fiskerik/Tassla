@@ -557,6 +557,9 @@ function createPlannedHealthHandlerHarness({ rows = [], ...overrides } = {}) {
     client: {}, dog: { id: dogId }, mounted: state.mounted,
     plannedHealthLifetime: lifetime, plannedHealthState: state.loadState,
     plannedHealthRows: state.rowRef,
+    plannedHealthChecklistFocus: null,
+    plannedHealthChecklistRecord: null,
+    plannedHealthChecklistScope: '',
     pendingPlannedHealthMutation: state.pendingMutation,
     plannedHealthMutationInFlight: state.inFlight,
     plannedHealthFlightToken: state.flightToken,
@@ -579,6 +582,7 @@ function createPlannedHealthHandlerHarness({ rows = [], ...overrides } = {}) {
     setPlannedHealthConflict(value) { state.conflict = value; },
     setPlannedHealth(value) { state.rows = value; state.rowRef.current = value; },
     setPlannedHealthState(value) { state.loadState = value; },
+    setPlannedHealthChecklistRecord(value) { state.checklistFocusRecord = value; },
   };
   Object.assign(dependencies, overrides);
   const functionSource = [
@@ -601,6 +605,22 @@ function createPlannedHealthHandlerHarness({ rows = [], ...overrides } = {}) {
   const rebuild = () => build(...Object.values(dependencies));
   return { handlers: rebuild(), rebuild, dependencies, calls, state };
 }
+
+test('Checklist health source remains actionable when it is outside the first planned-health page', async () => {
+  const focusScope = `owner:dog:${planId}`;
+  const focusView = { scope: focusScope, status: 'ready', record: plan };
+  const harness = createPlannedHealthHandlerHarness({
+    plannedHealthChecklistFocus: { selectionKey: 'owner', dailyLifetime: 'dog', planId },
+    plannedHealthChecklistRecord: focusView,
+    plannedHealthChecklistScope: focusScope,
+  });
+  assert.equal(await harness.handlers.removePlannedHealth(planId), true);
+  assert.equal(harness.calls.delete.length, 1);
+  assert.equal(harness.calls.delete[0][1], dogId);
+  assert.equal(harness.calls.delete[0][2], planId);
+  assert.equal(harness.calls.delete[0][3].due_on, plan.due_on);
+  assert.equal(harness.state.checklistFocusRecord.status, 'missing');
+});
 
 function extractFunction(source, name) {
   let start = source.indexOf(`async function ${name}(`);

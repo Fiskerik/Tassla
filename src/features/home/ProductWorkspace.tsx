@@ -23,6 +23,8 @@ import {
   normalizePlannedHealthTime,
   fetchFuturePlannedHealthReminders,
   fetchPlannedHealthById,
+  fetchPlannedHealthChecklistRange,
+  fetchExactPublishedTrainingStep,
   fetchHomeContent,
   fetchTrainingWorkspace,
   fetchExactHistoricalTrainingSources,
@@ -60,6 +62,7 @@ import {
   type PlannedHealthType,
   type PublishedTrainingProgram,
   type HistoricalTrainingSource,
+  type HistoricalTrainingStepDetail,
   type PausedTrainingProgress,
   type WriteOutcome,
 } from '../../data/workspace-data';
@@ -70,12 +73,15 @@ import {
   deleteDailyRoutine,
   fetchDailyActivitySnapshot,
   fetchDailyActivityRangeSnapshot,
+  fetchDailyRoutineTemplates,
+  fetchDailyRoutineTemplateById,
   removeRoutineFromDay,
   removeTrainingSelection,
   replaceDailyRoutine,
   setRoutineDayCompletion,
   type DailyActivitySnapshot,
   type DailyActivityRangeSnapshot,
+  type DailyRoutine,
   type DailyRoutineCreateInput,
   type DailyRoutineDayDraft,
   type DailyTrainingSelection,
@@ -109,7 +115,7 @@ import { HomeScreen, type HomeDailyTrainingOption } from './HomeScreen';
 import { DevelopmentScreen } from './DevelopmentScreen';
 import { DailyProgressScreen } from './DailyProgressScreen';
 import { DailyChecklistScreen } from './DailyChecklistScreen';
-import { checklistFilterRange, checklistRangeReadStatus, deriveHomeDailyActivities, deriveSavedRangeActivities, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep, type ChecklistFilter, type HomeDailyActivity } from './daily-activity-model';
+import { checklistFilterRange, checklistRangeReadStatus, deriveHomeDailyActivities, deriveSavedRangeActivities, deriveUpcomingActivities, isRoutineDueOnDate, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep, type ChecklistFilter, type HomeDailyActivity } from './daily-activity-model';
 import { activeMainTabDestination, isMainTabDestination, mainTabTransitionDirection, nextMainTabDestination, productRouteScrollKeys } from './main-navigation';
 import { AppBar, BottomNav, MainSwipeNavigation } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
@@ -134,7 +140,7 @@ import { reminderService, type ReminderContext, type ReminderReconcileResult } f
 const reviewContentEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
 
 type ProductPage = 'home' | 'development' | 'progress' | 'checklist' | 'home-training-detail' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings' | 'account-settings' | 'beta-info';
-type HomeTrainingFocus = { selectionKey: string; dailyLifetime: string; programId: string; stepId: string; returnPage: 'home' | 'checklist' | 'progress' };
+type HomeTrainingFocus = { selectionKey: string; dailyLifetime: string; programId: string; stepId: string; returnPage: 'home' | 'checklist' | 'progress'; readOnly?: boolean; dateKey?: string; completed?: boolean };
 type PendingLogMutation =
   | { kind: 'insert'; operation: DogEventOperation; lifetime: string }
   | { kind: 'update'; mutationId: string; id: string; type: LogEventType; occurredAt: string; changes: DogEventChanges; lifetime: string }
@@ -177,7 +183,9 @@ type LogReadFlight = { scope: string; generation: number; controller: AbortContr
 type LogPaginationFlight = { scope: string; generation: number; controller: AbortController };
 type TrainingWorkspaceSnapshot = Awaited<ReturnType<typeof fetchTrainingWorkspace>>;
 type WorkspaceResourceFlight<T> = { scope: string; generation: number; controller: AbortController; promise: Promise<T> };
-type ChecklistRangeView = { scope: string; status: 'loading' | 'ready' | 'partial' | 'error'; activities: HomeDailyActivity[]; failedSources: string[]; unresolvedCount: number };
+type ChecklistRangeView = { scope: string; status: 'loading' | 'ready' | 'partial' | 'error'; activities: HomeDailyActivity[]; failedSources: string[]; unresolvedCount: number; routines?: DailyRoutine[] };
+type HistoricalTrainingDetailView = { scope: string; status: 'loading' | 'ready' | 'partial' | 'unavailable'; detail: HistoricalTrainingStepDetail | null };
+type UpcomingRoutineLookup = { status: 'ready'; routine: DailyRoutine } | { status: 'missing' } | { status: 'error' };
 
 export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog], onSelectDog, onAddDog, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened, initialPage = 'home', onInitialPageOpened }: {
   client: SupabaseClient;
@@ -195,6 +203,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>(() => ({ page: initialPage, previousPage: 'home' }));
   const [checklistFilter, setChecklistFilter] = useState<ChecklistFilter>('Idag');
   const [homeTrainingFocus, setHomeTrainingFocus] = useState<HomeTrainingFocus | null>(null);
+  const [historicalTrainingDetailView, setHistoricalTrainingDetailView] = useState<HistoricalTrainingDetailView | null>(null);
+  const [historicalTrainingDetailRetry, setHistoricalTrainingDetailRetry] = useState(0);
+  const [plannedHealthChecklistFocus, setPlannedHealthChecklistFocus] = useState<{ selectionKey: string; dailyLifetime: string; planId: string } | null>(null);
+  const [plannedHealthChecklistRecord, setPlannedHealthChecklistRecord] = useState<{ scope: string; status: 'loading' | 'ready' | 'error' | 'missing'; record: PlannedHealthRecord | null } | null>(null);
+  const [plannedHealthChecklistRetry, setPlannedHealthChecklistRetry] = useState(0);
   const [homeChecklistScope, setHomeChecklistScope] = useState<{ selectionKey: string; dailyLifetime: string; openManagerOnEntry: boolean } | null>(null);
   const [deviceTimeZone, setDeviceTimeZone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
   const initialPageConsumed = useRef(false);
@@ -230,6 +243,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [knowledgeDetailOpen, setKnowledgeDetailOpen] = useState(false);
   const navigateMainTab = useCallback((destination: ProductPage) => {
     if (page === 'checklist' || page === 'home-training-detail') setChecklistFilter('Idag');
+    setPlannedHealthChecklistFocus(null);
+    if (page === 'home-training-detail') setHomeTrainingFocus(null);
     const enteringKnowledge = page !== 'knowledge' && destination === 'knowledge';
     const leavingKnowledge = page === 'knowledge' && destination !== 'knowledge';
     if (enteringKnowledge || leavingKnowledge) {
@@ -339,6 +354,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const healthHistoryMutationInFlight = useRef(false);
   const healthHistoryFlightToken = useRef<object | null>(null);
   const pendingPlannedHealthMutation = useRef<PendingPlannedHealthMutation | null>(null);
+  const historicalTrainingDetailGeneration = useRef(0);
+  const plannedHealthChecklistGeneration = useRef(0);
+  const upcomingRoutineSourceFlight = useRef<AbortController | null>(null);
   const plannedHealthMutationInFlight = useRef(false);
   const plannedHealthFlightToken = useRef<object | null>(null);
   const pendingProfileMutation = useRef<PendingProfileMutation | null>(null);
@@ -1135,17 +1153,23 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [age, client, currentSelectionKey, dog]);
 
   useEffect(() => {
-    if (page !== 'home' && page !== 'progress' && page !== 'checklist' && page !== 'home-training-detail' && page !== 'training') return;
+    const needsDailyRefresh = page === 'home' || page === 'progress' || page === 'training'
+      || page === 'checklist' && checklistFilter === 'Idag'
+      || page === 'home-training-detail' && !homeTrainingFocus?.readOnly;
+    if (!needsDailyRefresh) return;
     const refresh = setTimeout(() => { void reloadDailyActivity(); }, 0);
     return () => clearTimeout(refresh);
-  }, [currentDailyLifetime, page, reloadDailyActivity]);
+  }, [checklistFilter, currentDailyLifetime, homeTrainingFocus?.readOnly, page, reloadDailyActivity]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active' && (page === 'home' || page === 'progress' || page === 'checklist' || page === 'home-training-detail' || page === 'training')) void reloadDailyActivity();
+      const needsDailyRefresh = page === 'home' || page === 'progress' || page === 'training'
+        || page === 'checklist' && checklistFilter === 'Idag'
+        || page === 'home-training-detail' && !homeTrainingFocus?.readOnly;
+      if (state === 'active' && needsDailyRefresh) void reloadDailyActivity();
     });
     return () => subscription.remove();
-  }, [page, reloadDailyActivity]);
+  }, [checklistFilter, homeTrainingFocus?.readOnly, page, reloadDailyActivity]);
 
   useEffect(() => {
     if (page !== 'checklist' || checklistFilter === 'Idag') {
@@ -1173,6 +1197,29 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
     void (async () => {
       try {
+        if (filter === 'Kommande') {
+          const [routineResult, healthResult] = await Promise.allSettled([
+            fetchDailyRoutineTemplates(client, dog.id, controller.signal),
+            fetchPlannedHealthChecklistRange(client, dog.id, range.from, range.to, controller.signal),
+          ]);
+          if (!isCurrent()) return;
+          const routines = routineResult.status === 'fulfilled' ? routineResult.value : [];
+          const plannedHealth = healthResult.status === 'fulfilled' ? healthResult.value : [];
+          const completeSources = [
+            ...(routineResult.status === 'fulfilled' ? ['routines'] : []),
+            ...(healthResult.status === 'fulfilled' ? ['plannedHealth'] : []),
+          ];
+          const failedSources = [
+            ...(routineResult.status === 'rejected' ? ['routines'] : []),
+            ...(healthResult.status === 'rejected' ? ['plannedHealth'] : []),
+          ];
+          const status: ChecklistRangeView['status'] = failedSources.length === 0 ? 'ready'
+            : completeSources.length > 0 ? 'partial' : 'error';
+          const activities = status === 'error' ? [] : deriveUpcomingActivities(routines, plannedHealth, dog.id, range.from, range.to);
+          setChecklistRangeView({ scope, status, activities, failedSources, unresolvedCount: 0, routines });
+          return;
+        }
+
         const snapshot: DailyActivityRangeSnapshot = await fetchDailyActivityRangeSnapshot(
           client, dog.id, range.from, range.to, false, controller.signal,
         );
@@ -1214,6 +1261,70 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     };
   }, [checklistFilter, checklistRange, checklistRangeRetry, client, currentChecklistRangeScope, currentDailyLifetime, dailyDateKey, dog.id, page, validDailyTimeZone]);
 
+  useEffect(() => {
+    if (page === 'checklist' && checklistFilter === 'Kommande') return () => {
+      upcomingRoutineSourceFlight.current?.abort();
+      upcomingRoutineSourceFlight.current = null;
+    };
+    upcomingRoutineSourceFlight.current?.abort();
+    upcomingRoutineSourceFlight.current = null;
+    return undefined;
+  }, [checklistFilter, currentDailyLifetime, currentSelectionKey, page]);
+
+  useEffect(() => {
+    const focus = homeTrainingFocus;
+    if (page !== 'home-training-detail' || !focus?.readOnly) {
+      historicalTrainingDetailGeneration.current += 1;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Source detail is scoped to the active route.
+      setHistoricalTrainingDetailView(null);
+      return undefined;
+    }
+    const scope = `${focus.selectionKey}:${focus.dailyLifetime}:${focus.programId}:${focus.stepId}`;
+    const generation = ++historicalTrainingDetailGeneration.current;
+    const controller = new AbortController();
+    setHistoricalTrainingDetailView({ scope, status: 'loading', detail: null });
+    const isCurrent = () => mounted.current && !controller.signal.aborted && !accountDeletionInvalidated.current
+      && historicalTrainingDetailGeneration.current === generation && homeTrainingFocus === focus
+      && currentSelectionKeyRef.current === focus.selectionKey && dailyLifetime.current === focus.dailyLifetime
+      && page === 'home-training-detail';
+    void fetchExactPublishedTrainingStep(client, focus.programId, focus.stepId, controller.signal).then((detail) => {
+      if (isCurrent()) setHistoricalTrainingDetailView({ scope, status: detail ? 'ready' : 'unavailable', detail });
+    }).catch(() => {
+      if (isCurrent()) setHistoricalTrainingDetailView({ scope, status: 'partial', detail: null });
+    });
+    return () => controller.abort();
+  }, [client, currentDailyLifetime, currentSelectionKey, historicalTrainingDetailRetry, homeTrainingFocus, page]);
+
+  useEffect(() => {
+    const focus = plannedHealthChecklistFocus;
+    if (page !== 'planned-health' || !focus || focus.selectionKey !== currentSelectionKey || focus.dailyLifetime !== currentDailyLifetime) {
+      plannedHealthChecklistGeneration.current += 1;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Source detail is scoped to the active route.
+      setPlannedHealthChecklistRecord(null);
+      return undefined;
+    }
+    const scope = `${focus.selectionKey}:${focus.dailyLifetime}:${focus.planId}`;
+    const generation = ++plannedHealthChecklistGeneration.current;
+    const controller = new AbortController();
+    setPlannedHealthChecklistRecord({ scope, status: 'loading', record: null });
+    const isCurrent = () => mounted.current && !controller.signal.aborted && !accountDeletionInvalidated.current
+      && plannedHealthChecklistGeneration.current === generation && plannedHealthChecklistFocus === focus
+      && currentSelectionKeyRef.current === focus.selectionKey && dailyLifetime.current === focus.dailyLifetime
+      && page === 'planned-health';
+    void serializePlannedHealthRead(() => fetchPlannedHealthById(client, dog.id, focus.planId, undefined, controller.signal)).then(async (record) => {
+      if (!isCurrent()) return;
+      if (record) {
+        setPlannedHealthChecklistRecord({ scope, status: 'ready', record });
+        return;
+      }
+      setPlannedHealthChecklistRecord({ scope, status: 'missing', record: null });
+      try { await reloadPlannedHealth(currentPlannedHealthLifetime); } catch { /* Keep the exact source marked missing; retry remains available. */ }
+    }).catch(() => {
+      if (isCurrent()) setPlannedHealthChecklistRecord({ scope, status: 'error', record: null });
+    });
+    return () => controller.abort();
+  }, [client, currentDailyLifetime, currentPlannedHealthLifetime, currentSelectionKey, dog.id, page, plannedHealthChecklistFocus, plannedHealthChecklistRetry, reloadPlannedHealth, serializePlannedHealthRead]);
+
   const visibleContent = contentSelectionKey === currentSelectionKey ? content : [];
   const visibleContentState = contentSelectionKey === currentSelectionKey ? contentState : 'loading';
   const visibleTrainingState = trainingSelectionKey === currentSelectionKey ? trainingState : 'loading';
@@ -1225,6 +1336,16 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     : [];
   const visibleHomeTrainingFocus = homeTrainingFocus?.selectionKey === currentSelectionKey
     && homeTrainingFocus.dailyLifetime === currentDailyLifetime ? homeTrainingFocus : null;
+  const historicalTrainingDetailScope = visibleHomeTrainingFocus?.readOnly
+    ? `${visibleHomeTrainingFocus.selectionKey}:${visibleHomeTrainingFocus.dailyLifetime}:${visibleHomeTrainingFocus.programId}:${visibleHomeTrainingFocus.stepId}` : '';
+  const visibleHistoricalTrainingDetail = historicalTrainingDetailView?.scope === historicalTrainingDetailScope
+    ? historicalTrainingDetailView : null;
+  const visiblePlannedHealthChecklistFocus = plannedHealthChecklistFocus?.selectionKey === currentSelectionKey
+    && plannedHealthChecklistFocus.dailyLifetime === currentDailyLifetime ? plannedHealthChecklistFocus : null;
+  const plannedHealthChecklistScope = visiblePlannedHealthChecklistFocus
+    ? `${visiblePlannedHealthChecklistFocus.selectionKey}:${visiblePlannedHealthChecklistFocus.dailyLifetime}:${visiblePlannedHealthChecklistFocus.planId}` : '';
+  const visiblePlannedHealthChecklistRecord = plannedHealthChecklistRecord?.scope === plannedHealthChecklistScope
+    ? plannedHealthChecklistRecord : null;
   const homeChecklistScopeIsCurrent = homeChecklistScope?.selectionKey === currentSelectionKey
     && homeChecklistScope.dailyLifetime === currentDailyLifetime;
   const developmentScopeIsCurrent = developmentFocus?.selectionKey === currentSelectionKey;
@@ -2029,6 +2150,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         ? [value, ...plannedHealthRows.current.filter((row) => row.id !== mutationId)]
           .sort((a, b) => a.due_on.localeCompare(b.due_on) || a.id.localeCompare(b.id))
         : plannedHealthRows.current;
+    if (plannedHealthChecklistFocus?.planId === mutationId) {
+      const focusScope = `${plannedHealthChecklistFocus.selectionKey}:${plannedHealthChecklistFocus.dailyLifetime}:${mutationId}`;
+      setPlannedHealthChecklistRecord({ scope: focusScope, status: value ? 'ready' : 'missing', record: value });
+    }
     plannedHealthRows.current = next;
     setPlannedHealth(next);
     setPlannedHealthMessage('Ändringen är sparad.');
@@ -2101,7 +2226,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     const lifetime = plannedHealthLifetime.current;
     if (plannedHealthMutationInFlight.current || pendingPlannedHealthMutation.current || plannedHealthState !== 'ready') return Promise.resolve(false);
     const localToday = localDate();
-    const previous = id === null ? null : plannedHealthRows.current.find((row) => row.id === id && row.event_type === eventType) ?? null;
+    const focusedRecord = plannedHealthChecklistRecord?.scope === plannedHealthChecklistScope && plannedHealthChecklistRecord.status === 'ready'
+      && plannedHealthChecklistFocus?.planId === id ? plannedHealthChecklistRecord.record : null;
+    const previous = id === null ? null : plannedHealthRows.current.find((row) => row.id === id && row.event_type === eventType)
+      ?? (focusedRecord?.event_type === eventType ? focusedRecord : null);
     if ((id !== null && !previous) || (!isValidPlannedHealthDate(dueOn, localToday) && dueOn !== previous?.due_on)) return Promise.resolve(false);
     const description = normalizePlannedHealthDescription(note);
     if (description === undefined || (eventType !== 'vaccination' && eventType !== 'vet_visit')) return Promise.resolve(false);
@@ -2119,7 +2247,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   function removePlannedHealth(id: string): Promise<boolean> {
     const lifetime = plannedHealthLifetime.current;
     if (plannedHealthMutationInFlight.current || pendingPlannedHealthMutation.current || plannedHealthState !== 'ready') return Promise.resolve(false);
-    const previous = plannedHealthRows.current.find((row) => row.id === id);
+    const focusedRecord = plannedHealthChecklistRecord?.scope === plannedHealthChecklistScope && plannedHealthChecklistRecord.status === 'ready'
+      && plannedHealthChecklistFocus?.planId === id ? plannedHealthChecklistRecord.record : null;
+    const previous = plannedHealthRows.current.find((row) => row.id === id) ?? focusedRecord ?? undefined;
     if (!previous) return Promise.resolve(false);
     return runPlannedHealthMutation({ kind: 'delete', id, previous, lifetime });
   }
@@ -2284,6 +2414,51 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     setHomeChecklistScope({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, openManagerOnEntry: false });
     setHomeTrainingFocus({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, programId, stepId, returnPage });
     setPage('home-training-detail');
+  }
+
+  function openHistoricalTrainingStep(programId: string, stepId: string) {
+    const activity = checklistRangeView?.scope === currentChecklistRangeScope
+      ? checklistRangeView.activities.find((item) => item.kind === 'training' && item.programId === programId && item.stepId === stepId)
+      : undefined;
+    if (page !== 'checklist' || checklistFilter === 'Idag' || !activity || accountDeletionInvalidated.current) return;
+    setHomeChecklistScope({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, openManagerOnEntry: false });
+    setHomeTrainingFocus({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, programId, stepId,
+      returnPage: 'checklist', readOnly: true, dateKey: activity.dateKey, completed: activity.completed });
+    setPage('home-training-detail');
+  }
+
+  async function openUpcomingRoutine(routineId: string, dateKey: string): Promise<UpcomingRoutineLookup> {
+    const scope = currentChecklistRangeScope;
+    const activityIsCurrent = checklistRangeView?.scope === scope && checklistRangeView.activities.some((item) =>
+      item.planned && item.routineId === routineId && item.dateKey === dateKey);
+    if (page !== 'checklist' || checklistFilter !== 'Kommande' || !activityIsCurrent || accountDeletionInvalidated.current) return { status: 'missing' };
+    upcomingRoutineSourceFlight.current?.abort();
+    const controller = new AbortController();
+    upcomingRoutineSourceFlight.current = controller;
+    const isCurrent = () => !controller.signal.aborted && mounted.current && !accountDeletionInvalidated.current
+      && dailyLifetime.current === currentDailyLifetime && currentChecklistRangeScope === scope
+      && page === 'checklist' && checklistFilter === 'Kommande';
+    try {
+      const routine = await fetchDailyRoutineTemplateById(client, dog.id, routineId, controller.signal);
+      if (!isCurrent()) return { status: 'missing' };
+      if (!routine || !isRoutineDueOnDate(routine, dateKey)) {
+        setChecklistRangeRetry((value) => value + 1);
+        return { status: 'missing' };
+      }
+      return { status: 'ready', routine };
+    } catch {
+      return isCurrent() ? { status: 'error' } : { status: 'missing' };
+    } finally {
+      if (upcomingRoutineSourceFlight.current === controller) upcomingRoutineSourceFlight.current = null;
+    }
+  }
+
+  function openUpcomingHealthPlan(planId: string) {
+    const activityIsCurrent = checklistRangeView?.scope === currentChecklistRangeScope && checklistRangeView.activities.some((item) =>
+      item.planned && item.healthPlanId === planId);
+    if (page !== 'checklist' || checklistFilter !== 'Kommande' || !activityIsCurrent || accountDeletionInvalidated.current) return;
+    setPlannedHealthChecklistFocus({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, planId });
+    setPage('planned-health');
   }
 
   function beginTrainingMutation(key: string, expectedScope: string | null): TrainingMutationLease | null {
@@ -2650,9 +2825,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const transitionDirection = navigationDirection(previousPage, page);
   const mainTabToMainTab = isMainTabDestination(previousPage) && isMainTabDestination(page);
   const transitionDistance = mainTabToMainTab ? tokens.motion.pageDistance : tokens.motion.distance;
-  const routeScroll = productRouteScrollKeys(visiblePage,
+  const defaultRouteScroll = productRouteScrollKeys(visiblePage,
     knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : undefined,
     visibleHomeTrainingFocus?.returnPage);
+  const routeScroll = visiblePage === 'planned-health' && visiblePlannedHealthChecklistFocus
+    ? { scrollKey: 'planned-health-checklist-source', preserveScrollKey: 'home-checklist-flow' }
+    : defaultRouteScroll;
   const activeTabPage = visiblePage === 'knowledge' && knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'development'
     ? 'development' : visiblePage;
   return <AppScreen scrollKey={routeScroll.scrollKey} preserveScrollKey={routeScroll.preserveScrollKey} scrollMemoryScope={`${currentSelectionKey}:${currentDailyLifetime}`}
@@ -2688,7 +2866,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onRetryRange={() => setChecklistRangeRetry((value) => value + 1)}
       onRetryMutation={pendingDailyRetry.current?.lifetime === currentDailyLifetime ? retryDailyMutation : undefined}
       openManagerInitially={homeChecklistScopeIsCurrent && Boolean(homeChecklistScope?.openManagerOnEntry)}
-      onOpenTrainingStep={openHomeTrainingStep} onSetRoutineCompletion={(row, itemId, completed) => {
+      onOpenTrainingStep={openHomeTrainingStep} onOpenHistoricalTrainingStep={openHistoricalTrainingStep}
+      onOpenUpcomingRoutine={openUpcomingRoutine} onOpenPlannedHealth={openUpcomingHealthPlan}
+      upcomingRoutines={checklistRangeView?.scope === currentChecklistRangeScope ? checklistRangeView.routines ?? [] : []}
+      onSetRoutineCompletion={(row, itemId, completed) => {
         void runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed));
       }}
       routines={dailySnapshotForView?.routines ?? []} routineDaySkips={dailySnapshotForView?.routineDaySkips ?? []}
@@ -2697,9 +2878,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         const row = { ...input, dog_id: dog.id };
         return runDailyMutation(`create-routine:${row.id}`, () => createDailyRoutine(client, row, dailyTimeZone));
       }}
-      onUpdateRoutine={(routine, label, checklist, repeat) => runDailyMutation(`update-routine:${routine.id}`,
-        () => replaceDailyRoutine(client, routine, label, checklist, repeat, dailyTimeZone))}
-      onDeleteRoutine={(routine) => runDailyMutation(`delete-routine:${routine.id}`, () => deleteDailyRoutine(client, routine))}
+      onUpdateRoutine={async (routine, label, checklist, repeat) => {
+        const result = await runDailyMutation(`update-routine:${routine.id}`,
+          () => replaceDailyRoutine(client, routine, label, checklist, repeat, dailyTimeZone));
+        if (result?.status === 'saved' && checklistFilter === 'Kommande') setChecklistRangeRetry((value) => value + 1);
+        return result;
+      }}
+      onDeleteRoutine={async (routine) => {
+        const result = await runDailyMutation(`delete-routine:${routine.id}`, () => deleteDailyRoutine(client, routine));
+        if (result?.status === 'saved' && checklistFilter === 'Kommande') setChecklistRangeRetry((value) => value + 1);
+        return result;
+      }}
       onAddRoutineToDay={(routine) => {
         if (!dailyDateKey) return;
         const skipped = dailySnapshotForView?.routineDaySkips.find((row) => row.routine_id === routine.id) ?? null;
@@ -2845,6 +3034,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (page === 'home-training-detail') {
       const focus = visibleHomeTrainingFocus;
       const returnToSource = () => {
+        if (focus?.readOnly) setChecklistRangeRetry((value) => value + 1);
         setHomeTrainingFocus(null);
         setPage(focus?.returnPage ?? 'home');
       };
@@ -2852,6 +3042,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         <AppBar mode="Back" title="Träningssteg" actionLabel="Tillbaka till Hem" onAction={() => setPage('home')} variant="compact" />
         <MessageCard>Träningssteget hör inte längre till dagens aktiva lista.</MessageCard>
       </>;
+      if (focus.readOnly) return <PublishedTrainingScreen ageWeeks={age} programs={training.programs} paused={training.paused}
+        busyStepKey={null} error="" onCompleteStep={async () => false} onContinue={returnToSource}
+        onResetProgram={() => undefined} onRetry={() => setHistoricalTrainingDetailRetry((value) => value + 1)}
+        focusStep={{ programId: focus.programId, stepId: focus.stepId, returnPage: 'checklist', readOnly: true, dateKey: focus.dateKey, completed: focus.completed }}
+        historicalDetail={visibleHistoricalTrainingDetail ?? { status: 'loading', detail: null }} onCloseStep={returnToSource} />;
       const sourceReturnLabel = focus.returnPage === 'checklist' ? 'Tillbaka till Checklistan'
         : focus.returnPage === 'progress' ? 'Tillbaka till Dagens framsteg' : 'Tillbaka till Hem';
       if (visibleTrainingState === 'loading') return <>
@@ -2945,8 +3140,19 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onOpenPlannedHealth={() => setPage('planned-health')}
     />;
     if (page === 'planned-health') return <PlannedHealthScreen
-      onBack={() => setPage('health')}
+      onBack={() => {
+        if (!visiblePlannedHealthChecklistFocus) { setPage('health'); return; }
+        setPlannedHealthChecklistFocus(null);
+        setChecklistRangeRetry((value) => value + 1);
+        void reloadPlannedHealth(currentPlannedHealthLifetime).catch(() => undefined);
+        setPage('checklist');
+      }}
+      backLabel={visiblePlannedHealthChecklistFocus ? 'Checklistan' : 'Hälsa'}
       records={plannedHealth}
+      checklistFocusState={visiblePlannedHealthChecklistFocus ? visiblePlannedHealthChecklistRecord?.status ?? 'loading' : 'idle'}
+      checklistFocusRecord={visiblePlannedHealthChecklistFocus && visiblePlannedHealthChecklistRecord?.status === 'ready'
+        ? visiblePlannedHealthChecklistRecord.record : null}
+      onRetryChecklistFocus={() => setPlannedHealthChecklistRetry((value) => value + 1)}
       loadState={plannedHealthState}
       busy={plannedHealthBusy}
       pending={plannedHealthPending}

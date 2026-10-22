@@ -109,6 +109,61 @@ test('range reader treats owner scope abort as cancellation instead of partial d
   } finally { await client.auth.dispose(); }
 });
 
+test('upcoming routine template reads are paginated, dog-scoped and read-only', async () => {
+  const routines = Array.from({ length: 41 }, (_, index) => ({
+    id: `77777777-7777-4777-8777-${String(index + 1).padStart(12, '0')}`,
+    dog_id: dogId, label: `Rutin ${index + 1}`, checklist: [{ id: itemId, label: 'Promenad' }], checklist_revision: 1,
+    legacy_single_item: false, repeat_unit: 'day', repeat_interval: 1, repeat_weekdays: null, repeat_anchor_date: dateKey,
+  }));
+  const requests = [];
+  const client = createClient('https://upcoming-routines.supabase.invalid', 'synthetic-publishable-key', {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    global: { fetch: async (input, init = {}) => {
+      const url = new URL(String(input)); requests.push({ url, method: init.method ?? 'GET' });
+      assert.equal(url.pathname, '/rest/v1/dog_daily_routines');
+      assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
+      assert.equal(url.searchParams.get('select'), 'id,dog_id,label,checklist,checklist_revision,legacy_single_item,repeat_unit,repeat_interval,repeat_weekdays,repeat_anchor_date');
+      return Response.json(url.searchParams.has('id') ? routines.slice(0, 1) : url.searchParams.has('or') ? routines.slice(40) : routines.slice(0, 40));
+    } },
+  });
+  try {
+    const result = await activity.fetchDailyRoutineTemplates(client, dogId);
+    assert.equal(result.length, 41);
+    const exact = await activity.fetchDailyRoutineTemplateById(client, dogId, routines[0].id);
+    assert.equal(exact.id, routines[0].id);
+    assert.equal(requests.length, 3);
+    assert.ok(requests.every(({ method }) => method === 'GET'));
+    assert.ok(requests.every(({ url }) => !url.pathname.includes('/rpc/')));
+    assert.equal(requests[2].url.searchParams.get('id'), `eq.${routines[0].id}`);
+  } finally { await client.auth.dispose(); }
+});
+
+test('historical step detail reads only the exact published source and selected step body', async () => {
+  const versionId = '55555555-5555-4555-8555-555555555555';
+  const stepId = '66666666-6666-4666-8666-666666666666';
+  const seen = [];
+  const client = createClient('https://training-detail-test.supabase.invalid', 'synthetic-publishable-key', {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    global: { fetch: async (input) => {
+      const url = new URL(String(input)); const table = url.pathname.split('/').at(-1); seen.push({ table, url });
+      if (table === 'content_versions') return Response.json({ id: versionId, status: 'published', title: 'Trygg vardag', sources: ['Veterinärförbundet'], is_ai_generated: false, content_items: { content_type: 'training_program' } });
+      if (table === 'training_steps') return Response.json({ id: stepId, program_version_id: versionId, title: 'Sitt lugnt', instruction: 'Vänta in hundens lugn.' });
+      throw new Error(`Unexpected table ${table}`);
+    } },
+  });
+  try {
+    const result = await workspace.fetchExactPublishedTrainingStep(client, versionId, stepId);
+    assert.deepEqual(result, { programVersionId: versionId, programTitle: 'Trygg vardag', stepId, stepTitle: 'Sitt lugnt',
+      instruction: 'Vänta in hundens lugn.', sources: ['Veterinärförbundet'], isAiGenerated: false });
+    assert.equal(seen.length, 2);
+    assert.equal(seen[0].url.searchParams.get('id'), `eq.${versionId}`);
+    assert.equal(seen[0].url.searchParams.get('status'), 'eq.published');
+    assert.equal(seen[1].url.searchParams.get('id'), `eq.${stepId}`);
+    assert.equal(seen[1].url.searchParams.get('program_version_id'), `eq.${versionId}`);
+    assert.equal(seen[1].url.searchParams.get('select'), 'id,program_version_id,title,instruction');
+  } finally { await client.auth.dispose(); }
+});
+
 test('planned health range is dog-scoped, minimal, bounded and paginated', async () => {
   const rows = Array.from({ length: 41 }, (_, index) => ({ id: `88888888-8888-4888-8888-${String(index + 1).padStart(12, '0')}`, dog_id: dogId, event_type: 'vaccination', due_on: '2026-10-20' }));
   const requests = [];

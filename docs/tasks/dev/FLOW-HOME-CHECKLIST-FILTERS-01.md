@@ -1,7 +1,7 @@
 # FLOW-HOME-CHECKLIST-FILTERS-01 — status och granskningsunderlag
 
 Datum: 2026-10-22
-Status: `implementing` på `2026-10-22-fix-main-checklist-build`. Filter-UI och dataanslutning för Idag, Denna vecka och Alla är återställda. A02:s ikonval per rutinpunkt och kompakta ikonhandlingar är lokalt implementerade och godkända av QA och frozen Reviewer. Kommande, källnavigation och full panel-4-acceptans är fortfarande öppna.
+Status: `implementing` på `2026-10-22-checklist-kommande-navigation`. Filter-UI och dataanslutning för Idag, Denna vecka, Alla och Kommande är lokalt implementerade. A02:s ikonval per rutinpunkt och kompakta ikonhandlingar har QA- och Reviewer-PASS. A03:s read-only källnavigation, retur och riktade public/review-kontroller passerar lokalt. Full panel-4-acceptans är fortsatt öppen för oberoende A03-review och full §14-avslutning; live backend/RLS är NOT TESTABLE. Native kontroller är också NOT TESTABLE men stoppar inte lokal checkpoint.
 
 ## Omfattning
 
@@ -76,16 +76,26 @@ Architect granskade A02 v3 och gav **CHANGES**: definiera fallbackens exakta tex
 - Public och review-render PASS i 375×844, 430×844 och 375×667. Ikonval/readback, 20 tillgängligt namngivna alternativ, 44×44-träffytor och inga browserfel verifierade. Evidens: [verifieringsrapport](../../design/evidence/flow-home-checklist-filters-2026-10-20/a02/VERIFICATION.md), [public](../../design/evidence/flow-home-checklist-filters-2026-10-20/a02/public/) och [review](../../design/evidence/flow-home-checklist-filters-2026-10-20/a02/review/).
 - `pnpm check` PASS (65/65); offentlig `pnpm bundle:ios` PASS (1 460 moduler); `git diff --check`, `python -X utf8 tools/dev_flow.py validate`, exakt SQL/TypeScript-allowlist och installerade Ionicons-glyphs PASS.
 - Ingen migration eller DB-operation körd. Äldre klienter avvisar icon-payloads; verkligt create/replace/readback och RLS kräver separat godkänd development-runtime-verifiering. Produktionsskrivning är spärrad tills gamla klienter inte kan läsa sådana checklistor eller separat granskad kompatibilitet verifierats. Native gestures/VoiceOver/Dynamic Type och TestFlight är NOT TESTABLE.
+- Skärmens text `Kontrollera den föregående ändringen` är en generell osäker spar-/readbackstatus. Den visar inte i sig att en tabell saknas. A02-migrationen ändrar validatorn för JSON i den befintliga rutinkällan; den skapar ingen tabell. Om just ikonpayload skickades mot gammal validator kan den avvisas, men den exakta orsaken kräver backendens felkod/logg och verifierad migrationsstatus.
 - Erik rapporterar manuella testerna 1–4 som PASS i senaste bygget. De hålls stängda.
 
 V4-reviewens visuella blockering är historik och löstes i A02 v5. Architect **APPROVE** och Critic **PROCEED** godkände den reviderade tokenplanen; efter implementation gav oberoende QA **PASS** och frozen Reviewer **PASS**. Båda rutinhandlingarna använder nu varsin ikonknapp och visar först bekräftelsetext när användaren trycker. Kompakta handlingar och varierade, diskreta checklistikoner finns i [A02-verifieringen](../../design/evidence/flow-home-checklist-filters-2026-10-20/a02/VERIFICATION.md).
 
 Detta stänger endast A02:s lokala ikon-/handlingsslice. Hela panel-4-tasken förblir `implementing`; Kommande, källnavigation/retur och full §14-acceptans återstår. Native Alert-utseende, live Supabase/RLS, migrationsapply, äldre klienters runtime, VoiceOver/Dynamic Type och TestFlight är inte verifierade. Ingen migration eller databasoperation kördes. Eriks manuella tester 1–4 är fortsatt PASS och återöppnas inte.
 
-## Återstående implementation — deluppgifter
+## A03 — Kommande och källnavigation, lokal implementation verifierad (2026-10-22)
 
-1. **Historiska filter i Checklistan** — ägarskap i `ProductWorkspace`; integrera Idag/Denna vecka/Alla med saved-only data, exakta träningskällor och partial/error/retry; datumgrupper utan historisk progress; filter-/scope-livstid, abort/generation och tester. Inga Kommande-rader eller källnavigation i denna del.
-2. **Kommande och källretur** — projektera återkommande rutiner och läsa minimala hälsoplaner; visa endast Planerad; öppna rätt rutin-/hälsokälla och exakt historiskt träningssteg skrivskyddat; återställ filter/grupp/scroll och invalidera stale källor.
-3. **Visuell acceptans och closeout** — rendera public/review-states och viewports enligt v2, fylla §14-evidens, QA och oberoende Reviewer; rapportera kvarstående live RLS/native begränsningar. Därefter checkpointa, uppdatera kö, MASTER-LOG och HISTORY.
+- Fyra fungerande filter visas i två rader vid 375 och 430 pt. Vald status, 44 pt-mål, inga checkboxar eller progress i historik/Kommande samt korrekt tomt, laddande, partiellt och felaktigt Kommande-läge verifieras.
+- Kommande projicerar endast befintliga återkommande rutiner och minimalt lästa ägarplaner för hälsa. Raderna är `Planerad`, skrivskyddade och saknar completion/progress. Planerad rutin öppnar fokuserad rutinhantering utan dagens Lägg till/Ta bort-handlingar.
+- Hälsoresa öppnar den valda planen direkt i första vyn och återgår till Kommande med filter/scroll bevarade. Historiskt träningssteg öppnas exakt och skrivskyddat och återgår till Alla med scrollpositionen bevarad.
+- Ny dedikerad verifierare: `tools/visual-check/verify-checklist-filters.py`; produktionsskärmarna renderas genom `tools/visual-check/vision-r02-home-panels-app.tsx`. Syntetisk review ger 19/19 och public ger 10/10 kontroller. Resultat och bilder: [A03-verifiering](../../design/evidence/flow-home-checklist-filters-2026-10-20/a03/VERIFICATION.md).
+- `pnpm check` PASS (TypeScript, edge-TypeScript, ESLint och 65/65 tester); offentlig `pnpm bundle:ios` PASS (1 460 moduler); `git diff --check` och `python -X utf8 tools/dev_flow.py validate` PASS. Eriks manuella tester 1–4 är redan bekräftade och kördes inte om.
+- A03-renders är syntetisk React Native Web. De bevisar inte live Supabase/RLS, applicerad A02-migration, äldre klienters läsbeteende, native VoiceOver/Dynamic Type/gest eller TestFlight. 140 % text är ett CSS-layoutprov.
+- En separat bred Home-review-kontroll visade en befintlig 4 pt-överlappning mellan destinationskorten och bottenmenyn i review-fixturens initialvy; public Home-fixturen passerade. Den ändrades inte i denna panel-4-uppgift och behöver en egen Home-korrigering.
+- A03 har ännu inte oberoende QA/Reviewer-PASS. A02:s tidigare oberoende godkännanden gäller bara ikon- och rutinhandlingsslicen.
 
-Nuvarande deluppgift 1 är godkänd inom planens befintliga paths. Architect/Critic/Security planreview gäller fortsatt eftersom planversion och risk inte ändrats. Live Supabase/RLS kräver separat verifiering; inga migrationer eller nya policies ingår.
+### Ägarönskemål om checklistor i Kunskap
+
+Erik vill att checklistor i Kunskap och Hem ska kännas och fungera på samma eller liknande sätt. Beslut för fortsatt UX: återanvänd ikonfamilj, radvisuell grammatik och tydliga bekräftelsemönster där de passar, men behåll deras olika innebörd. Hemrutiner är ägarens återanvändbara/återkommande rutiner; Kunskap visar publicerade fasuppgifter och ägarens egna punkter i en viss fas. Kunskapsflödet är därför inte omgjort i A03. Där finns inget explicit ikonfält på egna punkter; beständig ikonväljare där behöver ett separat granskat datakontrakt/migrationssteg, inte en gissning om en saknad tabell. Detta är en dokumenterad uppföljning, inte implementerad funktion.
+
+Nästa arbete för denna task är oberoende granskning av A03 och full panel-4-§14-avslutning. Separat återstår HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01 innan rutinikonernas verkliga create/replace/readback/RLS kan verifieras; ingen databasoperation har utförts. Kunskapens visuella samordning planeras som en egen efterföljande UI-slice med användarens ovanstående önskemål som riktning. Tasken står kvar som `implementing`.

@@ -2,7 +2,7 @@
 
 Datum: 2026-10-20
 Version: v2 — reviderad efter första Architect/Critic/Security review; skickas åter för Product, Architect, Critic och Security review
-Status: v2/A01 och A02 v5-planen godkända. Merge-återställningen och A02:s lokala ikon-/handlingsslice finns på `2026-10-22-fix-main-checklist-build`; A02 v5 har public/review-render, oberoende QA och frozen Reviewer **PASS**. Kommande, källnavigation och full panel-4-acceptans återstår. Ikonmigration/runtime är inte körd och produktionsskrivning är spärrad tills äldre klienter inte kan läsa ikondata.
+Status: v2/A01 och A02 v5-planen godkända. Merge-återställning och A02:s lokala ikon-/handlingsslice finns på `2026-10-22-checklist-kommande-navigation`; A02 v5 har public/review-render, oberoende QA och frozen Reviewer **PASS**. A03:s Kommande/källflöde passerar riktad lokal public/review-kontroll. Oberoende A03-review och full panel-4-acceptans återstår. Ikonmigration/runtime är inte körd och produktionsskrivning är spärrad tills äldre klienter inte kan läsa ikondata.
 MVP: `docs/MVP-EXPERIENCE-CONTRACT.md` panel 4; `docs/design/vision-rev02-screen-contracts.md` panel 4
 
 ## Mål och avgränsning
@@ -201,3 +201,11 @@ Architect review A02 v4, 2026-10-22: **APPROVE** — explicit Swedish token mapp
 Critic review A02 v4, 2026-10-22: **PROCEED** — the deterministic normalized-token map and neutral fallback avoid misleading subject icons. Saved icons take precedence and the fallback stays read-only. Manual tests 1–4 remain closed.
 
 Security review A02 v4, 2026-10-22: **CLEAR** — the plan blocks production icon writes until old clients cannot access icon-bearing checklist data or a separately reviewed compatibility solution is verified. Migration source is unchanged. Database application, grants/RLS and runtime remain untested.
+
+## A03 implementation checkpoint — Kommande och källretur (2026-10-22)
+
+A03 implementerar redan godkända v2-resor utan att ändra dataändamål, schema, RLS, mutationer eller migrationer: alla fyra filter använder den avgränsade workspace-state; Kommande visar read-only planerade återfallsrutiner och befintliga hälsoplaner; planerade rader räknas aldrig som utförda; historisk träning öppnas på exakt publicerat steg i read-only-läge; källretur bevarar filter och scroll. Fokuserad verifiering använder produktionsskärmarna via `tools/visual-check/vision-r02-home-panels-app.tsx` och `tools/visual-check/verify-checklist-filters.py`. De tillhörande skrivvägarna omfattar även `tests/daily-checklist-route.test.mjs`, `tests/daily-checklist-screen.test.mjs`, `tests/planned-health.test.mjs` och A03-evidensmappen.
+
+Den dedikerade verifieraren ger 19/19 syntetiska review-kontroller och 10/10 public-kontroller. Detta är en lokal kontroll av panel-4-filter/källresor, inte full §14-acceptans eller oberoende A03 QA/Reviewer. En separat bred Home-review-kontroll hittar en 4 pt-överlappning i review-fixturens initiala Home-layout; den ligger utanför panel-4-skrivvägarna och flyttas till en separat Home-korrigering. Live Supabase/RLS, A02-migration/runtime och native accessibility är fortsatt NOT TESTABLE.
+
+Eriks önskemål om att checklistor i Kunskap ska kännas mer som Hemmets checklistor registreras som en separat UX-uppföljning. Den publicerade faschecklistan och ägarens återanvändbara/återkommande Hemrutiner har olika innebörd och persistence; den här planen ändrar inte Kunskap. Ikonval på Kunskapens egna punkter kräver ett separat granskat persistenskontrakt om valet ska sparas. Någon tabell saknas inte utifrån nuvarande fynd; A02:s migration utökar en JSON-validator i befintlig rutinväg och har inte applicerats.

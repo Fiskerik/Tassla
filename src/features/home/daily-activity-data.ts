@@ -79,6 +79,26 @@ export type DailyActivityRangeSnapshot = {
   failedSources: string[];
 };
 
+export async function fetchDailyRoutineTemplates(
+  client: SupabaseClient, dogId: string, parentSignal?: AbortSignal,
+): Promise<DailyRoutine[]> {
+  if (!isCanonicalUuid(dogId)) throw new Error('Invalid routine owner scope');
+  return fetchRangePages<DailyRoutine>(client, 'dog_daily_routines', DAILY_ROUTINE_COLUMNS, dogId, null, null, isDailyRoutine, parentSignal);
+}
+
+export async function fetchDailyRoutineTemplateById(
+  client: SupabaseClient, dogId: string, routineId: string, parentSignal?: AbortSignal,
+): Promise<DailyRoutine | null> {
+  if (!isCanonicalUuid(dogId) || !isCanonicalUuid(routineId)) throw new Error('Invalid routine source scope');
+  const result = await withRequestDeadline(async (signal) => await client.from('dog_daily_routines')
+    .select(DAILY_ROUTINE_COLUMNS).eq('dog_id', dogId).eq('id', routineId).abortSignal(signal).maybeSingle(), REQUEST_TIMEOUT_MS, parentSignal);
+  if (parentSignal?.aborted) throw new Error('Routine source read aborted');
+  if (result.error) throw new Error('Could not load routine source');
+  if (result.data === null) return null;
+  if (!isDailyRoutine(result.data) || result.data.dog_id !== dogId || result.data.id !== routineId) throw new Error('Routine source response did not match the requested dog and routine');
+  return result.data;
+}
+
 const RANGE_PAGE_SIZE = 40;
 
 export async function fetchDailyActivityRangeSnapshot(

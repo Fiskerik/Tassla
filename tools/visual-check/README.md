@@ -90,3 +90,21 @@ TASSLA_UI_BASE_URL=http://127.0.0.1:4173 TASSLA_UI_EVIDENCE=docs/design/evidence
 ```
 
 Bygg review separat i `/tmp/tassla-preview/a02/review`, servera den på en annan port och kör samma verifierare med `TASSLA_UI_REVIEW=true` och evidenskatalogen `.../a02/review`. Bilderna visar syntetiskt React Native Web; de bekräftar inte native Alert/VoiceOver/gestures, Supabase/RLS, migrationsutrullning eller TestFlight. Den framåtriktade SQL-migrationen körs inte av denna kontroll.
+
+### A03 — Checklistans fyra filter och källresor
+
+`verify-checklist-filters.py` renderar produktionsskärmarna från `vision-r02-home-panels-app.tsx`. Public visar tomläget med lokal syntetisk data; review injicerar tydligt märkt syntetiskt innehåll för filter, kommande rutin/hälsoplan och historiskt träningssteg. Verifieraren täcker fyra filter i 375/430 pt-bredder, 44×44-mål, horisontell overflow, Kommande loading/empty/partial/error, historisk och planerad read-only-semantik samt öppning/retur från exakt källa. Review provar även 375×667 med CSS-skalad 140 %-text; detta är ett layoutproxyprov, inte native Dynamic Type. Kör public och review som separata byggen:
+
+```sh
+TASSLA_UI_REVIEW=false TASSLA_UI_ENTRY=tools/visual-check/vision-r02-home-panels-app.tsx TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/a03/public node tools/visual-check/build.cjs
+python -m http.server 45674 --bind 127.0.0.1 --directory /tmp/tassla-preview/a03/public
+TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:45674 TASSLA_UI_EVIDENCE=docs/design/evidence/flow-home-checklist-filters-2026-10-20/a03/public python tools/visual-check/verify-checklist-filters.py
+```
+
+```sh
+TASSLA_UI_REVIEW=true TASSLA_UI_ENTRY=tools/visual-check/vision-r02-home-panels-app.tsx TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/a03/review node tools/visual-check/build.cjs
+python -m http.server 45673 --bind 127.0.0.1 --directory /tmp/tassla-preview/a03/review
+TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:45673 TASSLA_UI_EVIDENCE=docs/design/evidence/flow-home-checklist-filters-2026-10-20/a03/review python tools/visual-check/verify-checklist-filters.py
+```
+
+Välj andra lediga loopback-portar om dessa är upptagna. Resultat och skärmbilder sparas i `docs/design/evidence/flow-home-checklist-filters-2026-10-20/a03/{public,review}/`. Körningen gav 10/10 public och 19/19 review-kontroller. Detta är avgränsad syntetisk RN Web-verifiering, inte full §14-granskning, oberoende QA/Reviewer, live Supabase/RLS, migrations-/äldre-klientruntime, native VoiceOver/Dynamic Type, fysiska gester eller TestFlight.

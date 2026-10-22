@@ -135,6 +135,15 @@ export type HistoricalTrainingSource = {
   stepTitle: string;
   completedAt: string | null;
 };
+export type HistoricalTrainingStepDetail = {
+  programVersionId: string;
+  programTitle: string;
+  stepId: string;
+  stepTitle: string;
+  instruction: string;
+  sources: string[];
+  isAiGenerated: boolean;
+};
 export type HistoricalTrainingSources = { sources: Map<string, HistoricalTrainingSource>; unresolvedKeys: string[] };
 
 export async function fetchExactHistoricalTrainingSources(
@@ -189,6 +198,42 @@ export async function fetchExactHistoricalTrainingSources(
     else unresolvedKeys.push(key);
   }
   return { sources, unresolvedKeys };
+}
+
+export async function fetchExactPublishedTrainingStep(
+  client: SupabaseClient, programVersionId: string, stepId: string, parentSignal?: AbortSignal,
+): Promise<HistoricalTrainingStepDetail | null> {
+  if (!programVersionId || !stepId) throw new Error('Invalid historical training detail scope');
+  const versionResult = await withRequestDeadline(async (signal) => await client.from('content_versions')
+    .select('id,status,title,sources,is_ai_generated,content_items!inner(content_type)')
+    .eq('id', programVersionId).eq('status', 'published').abortSignal(signal).maybeSingle(), DEFAULT_REQUEST_TIMEOUT_MS, parentSignal);
+  if (parentSignal?.aborted) throw new Error('Historical training detail read aborted');
+  const version = versionResult.data;
+  if (versionResult.error) throw new Error('Could not load exact historical training program');
+  if (version === null) return null;
+  if (!version || typeof version !== 'object' || !('id' in version) || !('title' in version) || !('status' in version)
+    || !('sources' in version) || !('is_ai_generated' in version) || !('content_items' in version)
+    || typeof version.id !== 'string' || typeof version.title !== 'string' || typeof version.status !== 'string'
+    || !Array.isArray(version.sources) || !version.sources.every((source: unknown) => typeof source === 'string')
+    || typeof version.is_ai_generated !== 'boolean' || !version.content_items || typeof version.content_items !== 'object'
+    || !('content_type' in version.content_items) || typeof version.content_items.content_type !== 'string') {
+    throw new Error('Invalid exact historical training program');
+  }
+  if (version.id !== programVersionId || version.status !== 'published' || version.content_items.content_type !== 'training_program') return null;
+  const stepResult = await withRequestDeadline(async (signal) => await client.from('training_steps')
+    .select('id,program_version_id,title,instruction').eq('program_version_id', programVersionId).eq('id', stepId)
+    .abortSignal(signal).maybeSingle(), DEFAULT_REQUEST_TIMEOUT_MS, parentSignal);
+  if (parentSignal?.aborted) throw new Error('Historical training detail read aborted');
+  if (stepResult.error) throw new Error('Could not load exact historical training step');
+  if (stepResult.data === null) return null;
+  const step = stepResult.data;
+  if (!step || typeof step !== 'object' || !('id' in step) || !('program_version_id' in step) || !('title' in step) || !('instruction' in step)
+    || typeof step.id !== 'string' || typeof step.program_version_id !== 'string' || typeof step.title !== 'string' || typeof step.instruction !== 'string') {
+    throw new Error('Invalid exact historical training step');
+  }
+  if (step.id !== stepId || step.program_version_id !== programVersionId) return null;
+  return { programVersionId, programTitle: version.title, stepId, stepTitle: step.title, instruction: step.instruction,
+    sources: [...version.sources] as string[], isAiGenerated: version.is_ai_generated };
 }
 
 export async function fetchPlannedHealthChecklistRange(
@@ -908,6 +953,7 @@ export async function fetchPlannedHealthById(
   dogId: string,
   id: string,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  parentSignal?: AbortSignal,
 ): Promise<PlannedHealthRecord | null> {
   return withRequestDeadline(async (signal) => {
     const { data, error } = await client.from('dog_health_plans')
@@ -919,7 +965,7 @@ export async function fetchPlannedHealthById(
       throw new Error('Planned health response did not match the database contract');
     }
     return canonicalPlannedHealthRecord(data);
-  }, timeoutMs);
+  }, timeoutMs, parentSignal);
 }
 
 export async function insertPlannedHealth(

@@ -1,4 +1,4 @@
-import type { HistoricalTrainingSource, PublishedTrainingProgram, PublishedTrainingStep } from '../../data/workspace-data';
+import type { HistoricalTrainingSource, PlannedHealthChecklistRow, PublishedTrainingProgram, PublishedTrainingStep } from '../../data/workspace-data';
 import type { DailyActivityRangeSnapshot, DailyActivitySnapshot, DailyRoutine, DailyRoutineDay, DailyRoutineDaySkip, DailyTrainingSelection } from './daily-activity-data';
 import { dailyRoutineChecklistDisplayIcon, type DailyRoutineChecklistDisplayIcon } from './daily-routine-checklist-icons';
 
@@ -18,6 +18,10 @@ export type HomeDailyActivity = {
   dateKey?: string;
   skipped?: boolean;
   routineDaySkip?: DailyRoutineDaySkip;
+  routineId?: string;
+  healthPlanId?: string;
+  planned?: boolean;
+  repeatSummary?: string;
   healthType?: 'vaccination' | 'vet_visit';
 };
 
@@ -276,6 +280,45 @@ export function projectUpcomingRoutineDates(routines: readonly DailyRoutine[], f
     cursor = addCalendarDays(cursor, 1);
   }
   return result;
+}
+
+export function deriveUpcomingActivities(
+  routines: readonly DailyRoutine[],
+  plannedHealth: readonly PlannedHealthChecklistRow[],
+  dogId: string,
+  from: string,
+  to: string,
+): HomeDailyActivity[] {
+  if (!dogId || !isValidDateKey(from) || !isValidDateKey(to) || from > to) return [];
+  const activities: HomeDailyActivity[] = projectUpcomingRoutineDates(
+    routines.filter((routine) => routine.dog_id === dogId), from, to,
+  ).map(({ routine, dateKey }) => ({
+    id: `planned-routine:${routine.id}:${dateKey}`,
+    label: routine.label,
+    routineLabel: routine.label,
+    routineId: routine.id,
+    repeatSummary: dailyRoutineRepeatSummary(routine),
+    kind: 'routine',
+    completed: false,
+    planned: true,
+    dateKey,
+  }));
+  for (const plan of plannedHealth) {
+    if (plan.dog_id !== dogId || plan.due_on < from || plan.due_on > to || !isValidDateKey(plan.due_on)) continue;
+    activities.push({
+      id: `planned-health:${plan.id}`,
+      label: plan.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök',
+      kind: 'routine',
+      completed: false,
+      planned: true,
+      healthType: plan.event_type,
+      healthPlanId: plan.id,
+      dateKey: plan.due_on,
+    });
+  }
+  return activities.sort((left, right) => (left.dateKey ?? '').localeCompare(right.dateKey ?? '')
+    || left.kind.localeCompare(right.kind) || Number(Boolean(left.healthPlanId)) - Number(Boolean(right.healthPlanId))
+    || left.id.localeCompare(right.id));
 }
 
 export function isValidIanaTimeZone(value: string): boolean {

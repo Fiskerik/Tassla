@@ -624,3 +624,11 @@ Home-headern visar endast en pil till `Checklistor`. Vanligt tryck på rutin öp
 Checklistans valbara rutinpunktsikoner är återinförda: 20 alternativ, long-press till rätt punkt, sparat ikonval och deterministisk fallback. Hemkortet är fortsatt kompakt och ikonfritt. Båda rutinhandlingarna använder ikonknappar med separata bekräftelsepopup:ar. Tokenbaserade ämnesytor passerade v5:s visuella granskning; minsta uppmätta ikonkontrast är 4,97:1.
 
 Public/review-render vid 375×844, 430×844 och 375×667; QA PASS och frozen Reviewer PASS. `pnpm check` 65/65, public iOS JS-bundle 1 460 moduler, `git diff --check` och kövalidering PASS. Verifieringsrapporten och skärmbilder finns i [A02-evidensen](../design/evidence/flow-home-checklist-filters-2026-10-20/a02/VERIFICATION.md). Detta är en lokal kodcheckpoint, inte en TestFlight-release eller full panel-4-closeout. Kommande, källnavigation/retur och full §14-acceptans återstår. Ingen databasoperation kördes; migration/apply, live RLS, äldre klienters runtime och native Alert/VoiceOver/Dynamic Type är NOT TESTABLE. Eriks manuella tester 1–4 hålls stängda efter ägarbekräftelse.
+
+## FLOW-HOME-CHECKLIST-FILTERS-01 — A03 lokal Kommande-/källresa, 2026-10-22
+
+Fyra filter och Kommande är implementerade i den nya branchen `2026-10-22-checklist-kommande-navigation`. Planerade rutiner och hälsoplaner är skrivskyddade och räknas inte som utförda. Hälsoplan öppnar rätt plan; historisk träning öppnar exakt sparat steg read-only. Källretur bevarar valt filter och scroll.
+
+A03:s dedikerade public/review RN Web-verifiering gav 10/10 och 19/19. `pnpm check` 65/65, public iOS JS-bundle 1 460 moduler, `git diff --check` och `python -X utf8 tools/dev_flow.py validate` PASS. Skärmbilder/resultat: [A03](../design/evidence/flow-home-checklist-filters-2026-10-20/a03/VERIFICATION.md). Detta är lokal avgränsad UI-verifiering; oberoende QA/Reviewer och full panel-4-§14-closeout är öppna.
+
+NOT TESTABLE: live Supabase/RLS, A02-migrationens apply och äldre klientruntime, native VoiceOver/Dynamic Type/gester och TestFlight. Ingen databasoperation kördes. Erik hade tidigare bekräftat manuella tester 1–4 som PASS; de kördes inte om. Separat Home-review-fixture visade 4 pt initial-fit-överlappning i syntetisk review-vy; den ligger utanför A03. Commit/pushstatus uppdateras efter checkpoint.
