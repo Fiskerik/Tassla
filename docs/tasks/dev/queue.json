@@ -7630,7 +7630,7 @@
       "depends_on": [
         "UX-KNOWLEDGE-CACHE-01"
       ],
-      "status": "ready",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -7661,18 +7661,42 @@
           "to": "ready",
           "actor": "architect",
           "evidence": "Existing exact plan v3 remains in force; recorded Architect APPROVE, Critic PROCEED, Security APPROVE. Owner explicitly unblocks Panel 7; no data/schema scope change."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume the approved Panel 7 v3 local UI slice after FLOW-DEVELOPMENT-01 reached its reviewed partial checkpoint and committed closeout. Scope remains current published guides, existing checklist read/write paths and local UI/render evidence; no schema/RPC/RLS/data-use changes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation stable. Focused tests 3/3 files, full Node suite 69/69, app/edge TypeScript, ESLint, content guard and Expo iOS export 1579 modules pass. Fresh public/review browser evidence 15/15 and 14/14, pageErrors=0; viewport/interaction matrix passes. §14 and owner-approved limitations recorded; independent QA requested."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende QA PASS på korrigerad diff: verifierade 136/44 pt, aktuella 3/3 fokuserade filer och 69/69 helsuite, rapport-/köstatus, diffcheck och kövalidering. Sparade public/review-captures och browserresultat granskades; Chromium kunde inte startas i QA-sandboxen, så 15/15 och 14/14 ommättes inte. Nästa steg: fryst Reviewer granskar exakt denna snapshot."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS on the final corrected snapshot. Reviewer confirmed queue/report/verification QA PASS status agrees; asset README distinguishes captured RN Web cover crops from unverified native/full-app image behavior; saved captures and explicit partial/native/live limitations are consistent. No code blocker or new review issue. Next step: commit this partial local UI checkpoint, then continue the independently scoped Insights flow."
         }
       ],
-      "next_step": "Existing exact plan v3 remains in force; recorded Architect APPROVE, Critic PROCEED, Security APPROVE. Owner explicitly unblocks Panel 7; no data/schema scope change.",
+      "next_step": "Frozen Reviewer PASS on the final corrected snapshot. Reviewer confirmed queue/report/verification QA PASS status agrees; asset README distinguishes captured RN Web cover crops from unverified native/full-app image behavior; saved captures and explicit partial/native/live limitations are consistent. No code blocker or new review issue. Next step: commit this partial local UI checkpoint, then continue the independently scoped Insights flow.",
       "priority": "P2",
       "panels": [
         "7"
       ],
       "risk_class": "H",
       "checkpoint": "Panel 7 guideupptäckt → källmärkt artikel → FAQ/faschecklista → retur, med public/review-gränser och checklistornas skilda semantik bevarade.",
-      "test_evidence": "Plan v3 Architect APPROVE, Critic PROCEED, Security APPROVE. Focused Knowledge/content-delivery/checklist checks 6/6 files PASS; pnpm check PASS (65 test files); public/review RN Web checks 15/15 and 14/14 with pageErrors=0. Public/review builds and local evidence completed. See docs/design/evidence/flow-knowledge-01/VERIFICATION.md.",
-      "implementation_state": "Knowledge UI, tests, three topic-specific guide assets and local public/review renders are implemented. Shared checklist row/icon grammar was aligned; published items have explicit editorial glyphs while owner-added Knowledge items remain neutral because dog_checklist_custom_items has no icon field. No schema change was made. §14 records open visual composition, deletion, native and persistence cases; full panel-7 acceptance remains open.",
-      "evidence_status": "partial — local behavior/render checks pass; full panel-7 §14 and visual acceptance remain open"
+      "test_evidence": "Plan v3 Architect APPROVE, Critic PROCEED, Security APPROVE. Latest focused Knowledge/checklist/empty-feedback suite: 3/3 files PASS; full pnpm check: 69/69 tests, app/edge TypeScript and ESLint PASS. Public content guard and direct Expo iOS export PASS (1,579 modules). Saved RN Web results: public 15/15, review 14/14, pageErrors=0. Independent QA PASS on corrected docs and saved captures/results; Chromium could not relaunch under QA sandbox socket restrictions, so browser counts were inspected, not rerun. Frozen Reviewer PASS on the final corrected snapshot. See docs/design/evidence/flow-knowledge-01/VERIFICATION.md.",
+      "implementation_state": "Compact Panel 7 guide hierarchy, facts-only metadata, visible scoped search and compact FAQ/Checklistor cards implemented; current public/review captures regenerated.",
+      "evidence_status": "Implementation checks and saved browser evidence pass. Independent QA PASS on the corrected 136/44 pt image documentation, current 3/3 + 69/69 results, queue/report consistency, and captured flows. Frozen Reviewer PASS on the final corrected snapshot. QA inspected saved captures/results because Chromium could not relaunch under its sandbox. Native/live RLS and full visual match remain open."
     },
     {
       "id": "FLOW-DEVELOPMENT-01",

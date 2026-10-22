@@ -25,8 +25,20 @@ test('active dog is named in search copy and query state is scoped by session an
   assert.match(screen, /guideSearchScopeKey\(sessionKey, dogId\)/);
   assert.match(screen, /guideSearchValueForScope\(guideViewState, searchScopeKey\)/);
   assert.match(screen, /accessibilityLabel=\{`Sök i guider för \$\{dogLabel\}`\}/);
-  assert.match(screen, /Sök bland guider för \{dogLabel\}/);
+  assert.match(screen, /placeholder=\{`Sök bland guider för \$\{dogLabel\}`\}/);
+  assert.doesNotMatch(screen, /searchHelp/);
   assert.match(workspace, /dogName=\{dog\.name\}/);
+});
+
+test('guide metadata comes from published fields and secondary destinations stay compact and labeled', async () => {
+  const screen = await readFile(screenPath, 'utf8');
+  assert.match(screen, /readingMinutes\(item\.body\)/);
+  assert.match(screen, /item\.contentType === 'guide' \? 'Guide' : 'Artikel'/);
+  assert.match(screen, /featuredImage: \{ width: '100%', height: 136 \}/);
+  assert.match(screen, /smallImage: \{ width: '100%', height: 44 \}/);
+  assert.match(screen, /accessibilityLabel="Öppna Checklistor"/);
+  assert.match(screen, /accessibilityLabel="Öppna Vanliga frågor"/);
+  assert.match(screen, /categoryLink: \{ flexDirection: 'column', alignItems: 'center'/);
 });
 
 test('scope changes clear the prior query and expanded guide view', async () => {

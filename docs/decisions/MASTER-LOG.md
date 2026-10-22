@@ -193,6 +193,10 @@ Detta stänger inte hela panel 4: Kommande, källnavigation/retur och full §14-
 
 Panel-4:s fyra filter, read-only Kommande, exakta historiska träningskällor och retur med bibehållet filter/scroll är lokalt implementerade på `2026-10-22-checklist-kommande-navigation`. Riktad syntetisk RN Web-kontroll PASS: public 10/10, review 19/19. Check-hook: 642 passerade, 1 skip av 643 testfall. Commit `25bde34` pushad till `origin/2026-10-22-checklist-kommande-navigation`. Full panelacceptans, oberoende A03-review och live RLS är fortfarande öppna; native accessibility är NOT TESTABLE.
 
+### FLOW-KNOWLEDGE-01 — Panel 7 lokal UI-checkpoint, 2026-10-22
+
+Kompakt guideyta (136/44 pt), hundnamn i sökfältet och två separata ikon-/textgenvägar till FAQ och Checklistor. Ingen taxonomi, rangordning, rekommendation eller ny datahantering har lagts till. Fokuserade tester 3/3, full check 69/69, public content guard och Expo iOS-export 1 579 moduler passerar. Sparade RN Web-kontroller: public 15/15, review 14/14, `pageErrors=0`; oberoende QA PASS och frozen Reviewer PASS. QA kunde inte starta om Chromium och granskade sparade captures/resultat i stället. Checkpointen är partiell: full §14-match, native accessibility/safe area, live data/RLS samt checklistans browser-delete/failure/unknown-vyer återstår. Se [verifiering](../design/evidence/flow-knowledge-01/VERIFICATION.md) och [rapport](../tasks/dev/rapport.md).
+
 Erik vill att Kunskapens checklistor delar mer av Hemmets ikon- och radgrammatik. Fortsatt beslut: harmonisera presentation och återkoppling där de passar, men bevara skillnaden mellan publicerade fasuppgifter/egna fas-punkter och ägarens återanvändbara återfallsrutiner. Kunskapens egna punkter saknar sparat ikonfält; beständigt val kräver separat datakontrakt och granskning. A03 ändrar inte Kunskap. Skärmens generella `Kontrollera den föregående ändringen`-status bevisar inte saknad tabell: ikonändringen kräver en ännu icke-applicerad validator-migration i den befintliga rutindatakällan, inte en ny tabell.
 
 
