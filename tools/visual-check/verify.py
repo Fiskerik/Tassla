@@ -384,7 +384,7 @@ with sync_playwright() as p:
     expect(page.get_by_role('button',name='Hämta sparade uppgifter igen',exact=True)).to_be_visible()
    else:
     expect(page.get_by_text('Sparade uppgifter kunde inte hämtas',exact=True)).to_be_visible()
-    expect(page.get_by_role('button',name='Hämta checklistan igen',exact=True)).to_be_visible()
+    expect(page.get_by_role('button',name='Hämta sparade uppgifter igen',exact=True)).to_be_visible()
    screenshot_checklist(f'checklist-range-{scenario}-375')
   open('checklist','&checklistVisual=true&checklistFilter=Alla&checklistRangeEmpty=true')
   expect(page.get_by_text('Inga sparade uppgifter i perioden',exact=True)).to_be_visible()

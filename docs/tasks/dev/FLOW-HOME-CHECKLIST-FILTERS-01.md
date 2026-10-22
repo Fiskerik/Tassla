@@ -1,7 +1,7 @@
 # FLOW-HOME-CHECKLIST-FILTERS-01 — status och granskningsunderlag
 
-Datum: 2026-10-20
-Status: plan v2 godkänd; ägaren har återupptagit implementationen enligt samma plan. Data-/modellcheckpoint 1 är mergad i main; återstående UI-/källresa pågår i `codex/tassla-home-checklist-filters-2026-10-21`.
+Datum: 2026-10-22
+Status: merge-återställning på `2026-10-22-fix-main-checklist-build`. Filter-UI och dataanslutning för Idag, Denna vecka och Alla är återställda från tidigare implementation; Kommande, källnavigation och full visuell acceptans är fortfarande öppna.
 
 ## Omfattning
 
@@ -44,6 +44,15 @@ Detta stänger endast läs-/modellskivan, inte tasken. Ingen UI eller route har 
 Ägaren stoppade först arbetet och har därefter uttryckligen bett att fortsätta enligt den godkända plan v2. Riktningen och scope bekräftas därmed återanvända; ingen ny produktfunktion eller datanvändning läggs till. Tasken är fortsatt ofärdig.
 
 Git-checkpoint: `41adec0` (`wip: checkpoint checklist filter data model`) är pushad och mergad i main via PR #22 (`2967a3f`). Återstående implementation sker på `codex/tassla-home-checklist-filters-2026-10-21`.
+
+## Merge-återställning — checkpoint, 2026-10-22
+
+- Den tidigare UI-/workspace-anslutningen finns i `c562bdf` före merge-commit `824ab20`. Konfliktlösningen för panel 2/3 tog bort filterprops, historiska lästillstånd och range-dataanslutningen ur `DailyChecklistScreen`/`ProductWorkspace`, trots att modell- och datalagret låg kvar. Det är samma saknade symboler och props som Codemagic rapporterade i Check application.
+- Återställt segmenten Idag, Denna vecka och Alla, anslutningen till den hund-/dags-/kontoscope:ade historikläsningen, tydliga loading/partial/error/empty-tillstånd, återförsök och datumgrupperade skrivskyddade historikrader. Historiska rader får ingen dagens progress.
+- Panel 1:s ändrade beteende är bevarat: Hem öppnar Checklistor via pilen; redigering sker genom långtryck på rutinraden. Den gemensamma `DailyActivityItem`-komponenten finns kvar för dagens interaktiva rader.
+- Denna återställning gör inte den fullständiga plan v2-resan klar. `Kommande` exponeras ännu inte i segmenten; framtida plan-/rutinlänkar, full källretur, route/lifecycle-tester samt public/review-§14-acceptans återstår. Tasken står därför kvar som `implementing`.
+- Verifiering: `pnpm check` PASS (TypeScript, edge-TypeScript, ESLint och 64/64 tester); `pnpm bundle:ios` PASS (1 458 moduler); riktad Playwright-render för Idag/Denna vecka/Alla och range loading/partial/error/empty PASS utan browserfel; `git diff --check` och `python -X utf8 tools/dev_flow.py validate` PASS.
+- NOT TESTABLE: live Supabase/RLS, native VoiceOver/Dynamic Type/gestures och TestFlight.
 
 ## Återstående implementation — deluppgifter
 

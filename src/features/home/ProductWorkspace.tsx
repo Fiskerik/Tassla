@@ -109,7 +109,7 @@ import { HomeScreen, type HomeDailyTrainingOption } from './HomeScreen';
 import { DevelopmentScreen } from './DevelopmentScreen';
 import { DailyProgressScreen } from './DailyProgressScreen';
 import { DailyChecklistScreen } from './DailyChecklistScreen';
-import { deriveHomeDailyActivities, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep } from './daily-activity-model';
+import { checklistFilterRange, checklistRangeReadStatus, deriveHomeDailyActivities, deriveSavedRangeActivities, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep, type ChecklistFilter, type HomeDailyActivity } from './daily-activity-model';
 import { activeMainTabDestination, isMainTabDestination, mainTabTransitionDirection, nextMainTabDestination, productRouteScrollKeys } from './main-navigation';
 import { AppBar, BottomNav, MainSwipeNavigation } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
@@ -2267,6 +2267,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }
 
   function openHomeChecklist(openManagerOnEntry = false) {
+    setChecklistFilter('Idag');
     setHomeChecklistScope({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, openManagerOnEntry });
     setPage('checklist');
   }
@@ -2677,10 +2678,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onOpenTrainingStep={(programId, stepId) => openHomeTrainingStep(programId, stepId, 'progress')}
       onSetRoutineCompletion={(row, itemId, completed) => { void runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed)); }} />;
     if (page === 'checklist') return <DailyChecklistScreen key={`${currentDailyLifetime}:checklist:${homeChecklistScope?.openManagerOnEntry ? 'manager' : 'list'}`}
-      dogName={dog.name} dateKey={dailyDateKey ?? ''} state={dailyStateForView} activities={dailyActivities}
+      dateKey={dailyDateKey ?? ''} state={dailyStateForView} activities={dailyActivities}
       refreshing={dailyRefreshing} refreshError={dailyRefreshError} mutationBusy={Boolean(dailyBusyKey)}
       mutationKey={dailyMessageKey} mutationMessage={dailyMessage} mutationError={dailyMessageError}
       onBack={() => { setHomeChecklistScope(null); setPage('home'); }} onRetry={() => { void reloadDailyActivity(true); }}
+      filter={checklistFilter} onChangeFilter={setChecklistFilter}
+      rangeState={checklistRangeView?.scope === currentChecklistRangeScope ? checklistRangeView.status : 'loading'}
+      rangeActivities={checklistRangeView?.scope === currentChecklistRangeScope ? checklistRangeView.activities : []}
+      onRetryRange={() => setChecklistRangeRetry((value) => value + 1)}
       onRetryMutation={pendingDailyRetry.current?.lifetime === currentDailyLifetime ? retryDailyMutation : undefined}
       openManagerInitially={homeChecklistScopeIsCurrent && Boolean(homeChecklistScope?.openManagerOnEntry)}
       onOpenTrainingStep={openHomeTrainingStep} onSetRoutineCompletion={(row, itemId, completed) => {

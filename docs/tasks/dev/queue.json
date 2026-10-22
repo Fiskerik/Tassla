@@ -7303,7 +7303,7 @@
       "depends_on": [
         "FLOW-HOME-CHECKLIST-01"
       ],
-      "status": "blocked",
+      "status": "implementing",
       "history": [
         {
           "from": "planned",
@@ -7322,9 +7322,27 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Owner stop was already recorded in the task journal and next_step; stale implementing status corrected to blocked on 2026-10-21. This package does not resume filter UI or route work."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Erik bad återställa checklistarbetet som försvann vid merge; fortsätt från main 500a25f inom tidigare godkänd plan v2 och A01."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Återanvänd exakt tidigare Architect APPROVE plan v2/A01 enligt docs/tasks/dev/FLOW-HOME-CHECKLIST-FILTERS-01.md; korrigeringen återställer bara saknade merge-delar inom redan godkända skrivvägar."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Merge repair started on 2026-10-22-fix-main-checklist-build from 500a25f; restoring filter UI/workspace integration while preserving panel 2/3 changes."
         }
       ],
-      "next_step": "Owner stop was already recorded in the task journal and next_step; stale implementing status corrected to blocked on 2026-10-21. This package does not resume filter UI or route work.",
+      "next_step": "Fortsätt enligt plan v2/A01: exponera Kommande först med kompletta sju-dagarsdata och korrekta read-only destinations-/returflöden; därefter route/lifecycle-tester, public/review-§14 och oberoende acceptans.",
       "priority": "P1",
       "panels": [
         "4"
@@ -7334,8 +7352,8 @@
       "test_evidence": [
         "Monday/Sunday/year/DST/repeat boundaries, pagination completeness, 30-day retention, empty/partial/error, routine/training scope, Planerad health link, §14 image matrix, runtime RLS boundary"
       ],
-      "implementation_state": "Data-/modellcheckpoint 1 merged to main; historical-filter UI slice resumed on codex/tassla-home-checklist-filters-2026-10-21; task incomplete.",
-      "evidence_status": "checkpoint 1 focused tests 13/13 and pnpm check 619/619 PASS; current UI slice not yet verified; live Supabase RLS NOT TESTABLE"
+      "implementation_state": "Återställt merge-regressionen för filter-UI och dataanslutning Idag/Denna vecka/Alla från c562bdf; tasken är fortsatt ofärdig eftersom Kommande, källnavigation och full panelacceptans återstår.",
+      "evidence_status": "PASS: pnpm check (64/64), public iOS export (1,458 moduler), riktad browserkontroll av Idag/Denna vecka/Alla och loading/partial/error/empty utan browserfel. NOT TESTABLE: live Supabase/RLS, native VoiceOver/Dynamic Type/gestures och TestFlight."
     },
     {
       "id": "FLOW-LOG-01",
@@ -7582,7 +7600,7 @@
       "depends_on": [
         "VISION-R02-HEM-01"
       ],
-      "status": "implementing",
+      "status": "blocked",
       "history": [
         {
           "from": "planned",
@@ -7673,9 +7691,15 @@
           "to": "implementing",
           "actor": "architect",
           "evidence": "Exakt routeplan v6 granskad och godkänd: Architect APPROVE och Critic PROCEED. Queue-plan och aktiv skrivväg uppdaterade från route-v5 till route-v6; separat FLOW-PANELS-2-3-image-optimization-v5 behålls. Båda saknade panel-2-testfilerna, public/review-rendering och §14 återstår."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Pausad 2026-10-22 under checklist-mergeåterställning eftersom båda uppgifterna skriver ProductWorkspace.tsx; befintliga panel 2/3-filer bevaras och återupptas efter denna avgränsade reparation."
         }
       ],
-      "next_step": "Kör de saknade tests/development-screen-model.test.mjs och tests/home-panel-routes.test.mjs enligt v8 checkpoint 2; därefter verifiera riktiga public/review-renderingar och §14. Routekod finns, men tester och app-rendering är inte verifierade. Milstolpskälla saknas, så panel 2 förblir partiell.",
+      "next_step": "Pausad 2026-10-22 under checklist-mergeåterställning eftersom båda uppgifterna skriver ProductWorkspace.tsx; befintliga panel 2/3-filer bevaras och återupptas efter denna avgränsade reparation.",
       "priority": "P1",
       "panels": [
         "Utveckling"

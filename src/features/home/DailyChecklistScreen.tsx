@@ -4,6 +4,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { AppBar } from '../../components/ui/AppBar';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
+import { DailyActivityItem } from '../../components/ui/DailyActivityItem';
 import { IconChip } from '../../components/ui/IconChip';
 import { MotionPressable } from '../../components/ui/Motion';
 import { Tabs } from '../../components/ui/Tabs';
@@ -18,11 +19,10 @@ import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
 type WriteStatus = { status: 'saved' | 'failed' | 'unknown' } | void;
 type RangeStatus = 'loading' | 'ready' | 'partial' | 'error';
 
-export function DailyChecklistScreen({ dogName, dateKey, state, activities, refreshing, refreshError, mutationBusy, mutationKey, mutationMessage,
-  mutationError, onBack, onRetry, onRetryMutation, onOpenTrainingStep, onSetRoutineCompletion, routines, routineDaySkips, trainingOptions,
+export function DailyChecklistScreen({ dateKey, state, activities, refreshing, refreshError, mutationBusy, mutationKey, mutationMessage,
+  mutationError, onBack, onRetry, onRetryRange, onRetryMutation, onOpenTrainingStep, onSetRoutineCompletion, routines, routineDaySkips, trainingOptions,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay, onAddTrainingToDay, onRemoveTrainingFromDay,
-  onGoTraining, openManagerInitially = false }: {
-  dogName: string;
+  onGoTraining, filter, onChangeFilter, rangeState, rangeActivities, openManagerInitially = false }: {
   dateKey: string;
   state: 'loading' | 'ready' | 'error';
   activities: readonly HomeDailyActivity[];
@@ -58,7 +58,14 @@ export function DailyChecklistScreen({ dogName, dateKey, state, activities, refr
   const [managerVisible, setManagerVisible] = useState(openManagerInitially);
   const [focusRoutineId, setFocusRoutineId] = useState<string | null>(null);
   const [editFocusedRoutineOnOpen, setEditFocusedRoutineOnOpen] = useState(false);
-  const completedCount = activities.filter((activity) => activity.completed).length;
+  const showingToday = filter === 'Idag';
+  const visibleState = showingToday ? state : rangeState;
+  const visibleActivities = showingToday ? activities : rangeActivities;
+  const completedCount = visibleActivities.filter((activity) => activity.completed && !activity.skipped).length;
+  const isLoading = showingToday ? state === 'loading' : rangeState === 'loading';
+  const hasError = showingToday ? state === 'error' : rangeState === 'error';
+  const isTodayEmpty = state === 'ready' && activities.length === 0;
+  const isEmpty = showingToday ? isTodayEmpty : visibleState === 'ready' && visibleActivities.length === 0;
   const dateLabel = checklistDateLabel(dateKey);
   const retry = showingToday ? onRetry : onRetryRange;
 
@@ -70,25 +77,24 @@ export function DailyChecklistScreen({ dogName, dateKey, state, activities, refr
 
   return <View testID="daily-checklist-screen" style={styles.page}>
     <AppBar mode="Back" title="Checklistor" actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" />
-    <View style={styles.heading}>
-      <Text style={styles.date}>{dateLabel}</Text>
-      <Text style={styles.description}>Dagens aktiviteter för {dogName}</Text>
-    </View>
-
+    <Tabs items={CHECKLIST_FILTERS} active={filter} variant="rev02-segmented" activeTone="home" onChange={(value) => {
+      if (isChecklistFilter(value)) onChangeFilter(value);
+    }} />
+    {filter === 'Alla' ? <Text accessibilityRole="text" style={styles.rangeContext}>Senaste 30 dagarna</Text> : null}
     {refreshError && showingToday && state === 'ready' ? <MessageCard tone="error">Uppdateringen kunde inte hämtas. Du ser senast hämtade uppgifter.</MessageCard> : null}
     {!showingToday && rangeState === 'partial' ? <View style={styles.partialFeedback}>
       <MessageCard tone="error">Några sparade uppgifter kunde inte hämtas.</MessageCard>
       {onRetryRange ? <Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta sparade uppgifter igen" onPress={onRetryRange} /> : null}
     </View> : null}
-    {visibleState === 'loading' ? <View accessibilityLabel={showingToday ? 'Dagens checklista hämtas' : 'Sparade uppgifter hämtas'} style={styles.stateCard}>
+    {isLoading ? <View accessibilityLabel={showingToday ? 'Dagens checklista hämtas' : 'Sparade uppgifter hämtas'} style={styles.stateCard}>
       <Skeleton shape="row" lines={4} />
     </View> : null}
-    {visibleState === 'error' ? <Card variant="home"><View style={styles.stateCard}>
+    {hasError ? <Card variant="home"><View style={styles.stateCard}>
       <Text accessibilityRole="header" style={styles.stateTitle}>{showingToday ? 'Checklistan kunde inte hämtas' : 'Sparade uppgifter kunde inte hämtas'}</Text>
       <Text style={styles.body}>Prova att hämta igen.</Text>
-      {retry ? <Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta checklistan igen" onPress={retry} /> : null}
+      {retry ? <Button variant="tertiary" label="Försök igen" accessibilityLabel={showingToday ? 'Hämta checklistan igen' : 'Hämta sparade uppgifter igen'} onPress={retry} /> : null}
     </View></Card> : null}
-    {visibleState === 'ready' && visibleActivities.length === 0 ? <Card variant="home"><View style={styles.stateCard}>
+    {isEmpty ? <Card variant="home"><View style={styles.stateCard}>
       <Text accessibilityRole="header" style={styles.stateTitle}>{showingToday ? 'Inga aktiviteter idag' : 'Inga sparade uppgifter i perioden'}</Text>
       {showingToday ? <Text style={styles.body}>Lägg till en rutin eller ett träningssteg.</Text> : null}
       {showingToday && refreshing ? <ActivityIndicator accessibilityRole="progressbar" accessibilityLabel="Dagens checklista uppdateras" size="small" color={tokens.colors.textSecondary} /> : null}
@@ -263,6 +269,22 @@ const styles = StyleSheet.create({
   count: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700', flexShrink: 0 },
   progressTrack: { height: tokens.size.progress, borderRadius: tokens.radius.full, overflow: 'hidden', backgroundColor: tokens.colors.home.progressTrack, marginBottom: tokens.spacing.sm },
   progressFill: { height: '100%', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.greenFill },
+  activityList: { gap: 0 },
+  row: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs },
+  rowDivider: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border },
+  checkboxTarget: { width: tokens.size.touchMin, minHeight: 64, alignItems: 'center', justifyContent: 'center' },
+  checkbox: { width: tokens.size.homeCheckbox, height: tokens.size.homeCheckbox, borderWidth: 1, borderColor: tokens.colors.home.textMuted, borderRadius: tokens.spacing.xs, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card },
+  checkboxChecked: { borderColor: tokens.colors.home.greenStrong, backgroundColor: tokens.colors.home.greenStrong },
+  routineIcon: { width: tokens.size.chipMd, minHeight: tokens.size.chipMd, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.card },
+  rowContent: { flex: 1, minWidth: 0, minHeight: 64, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm, paddingRight: tokens.spacing.xs },
+  copy: { flex: 1, minWidth: 0, gap: tokens.spacing.xs / 2 },
+  rowTitle: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '500', flexShrink: 1 },
+  rowDetail: { ...tokens.typography.caption, color: tokens.colors.home.textMuted, flexShrink: 1 },
+  rowStatus: { ...tokens.typography.caption, color: tokens.colors.home.textMuted, flexShrink: 1 },
+  dateGroupHeading: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700', paddingTop: tokens.spacing.sm, paddingBottom: tokens.spacing.xs },
+  laterDateGroup: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, marginTop: tokens.spacing.sm },
+  errorText: { color: tokens.colors.danger },
+  pressed: { backgroundColor: tokens.colors.selectedSurface },
   rows: { gap: 0 },
   longPressHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
 });

@@ -209,7 +209,7 @@ function App(){
   {...checklistVisualActivities[0],id:'visual-history-walk-1',dateKey:shiftFixtureDate(today,-1)},
   ...(visualTraining?[{...visualTraining,id:'visual-history-training-1',label:'Träna sitt',completed:true,dateKey:shiftFixtureDate(today,-1)}]:[]),
   {...checklistVisualActivities[2],id:'visual-history-environment-1',dateKey:shiftFixtureDate(today,-3)},
-  {...checklistVisualActivities[3],id:'visual-history-vaccination-1',completed:true,dateKey:shiftFixtureDate(today,-5)},
+  {...checklistVisualActivities[4],id:'visual-history-evening-1',dateKey:shiftFixtureDate(today,-5)},
  ]:fixtureChecklistActivities.map((item,index)=>({...item,id:'fixture-history-'+index,dateKey:shiftFixtureDate(today,-(index<2?1:index+1))}));
  const requestedChecklistRangeState=params.get('checklistRangeState')||'ready';
  const checklistRangeState=requestedChecklistRangeState==='loading'||requestedChecklistRangeState==='partial'||requestedChecklistRangeState==='error'?requestedChecklistRangeState:'ready';
@@ -256,7 +256,7 @@ function App(){
   onCreateRoutine={createRoutineFixture} onUpdateRoutine={updateRoutineFixture} onDeleteRoutine={deleteRoutineFixture}
   onAddRoutineToDay={addRoutineFixture} onRemoveRoutineFromDay={removeRoutineFixture} onSetRoutineCompletion={setRoutineItemFixture}
   onAddTrainingToDay={()=>{}} onRemoveTrainingFromDay={()=>{}} onGo={go}
-  onOpenContent={id=>{setFocused(id);setKnowledgeDetailOpen(false);setPage('knowledge')}} onRetryContent={()=>{}} onOpenChecklist={()=>setPage('checklist')}/>:null}
+  onOpenContent={id=>{setFocused(id);setKnowledgeDetailOpen(false);setPage('knowledge')}} onRetryContent={()=>{}} onOpenChecklist={()=>{setChecklistFilter('Idag');setPage('checklist')}}/>:null}
  {page==='checklist'?<DailyChecklistScreen dateKey={today} state={state==='loading'?'loading':state==='error'?'error':'ready'}
   activities={state==='empty'?[]:checklistActivities} refreshing={workspaceState==='refreshing'} refreshError={workspaceState==='refresh-error'}
   filter={checklistFilter} onChangeFilter={setChecklistFilter} rangeState={checklistRangeState} rangeActivities={checklistRangeActivities}
