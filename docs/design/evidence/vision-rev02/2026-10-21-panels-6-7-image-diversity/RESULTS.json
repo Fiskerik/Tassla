@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-21",
+  "task": "FLOW-PANELS-6-7-image-diversity",
+  "plan": "docs/plans/FLOW-PANELS-6-7-image-diversity-v1.md",
+  "scope": "Decorative dog-image assignment for Knowledge and Training only",
+  "assets": {
+    "files": 4,
+    "dimensions_preserved": true,
+    "jpeg_quality": 86,
+    "metadata_stripped": true,
+    "total_bytes": 1106442,
+    "per_file_limit_bytes": 350000,
+    "total_limit_bytes": 1400000,
+    "file_format_and_dimensions": "PASS — inspected with file and ImageMagick identify",
+    "source_motifs_visually_reviewed": "PASS",
+    "app_component_crops": "NOT TESTABLE"
+  },
+  "code": {
+    "knowledge_image_mapping": "Implemented; fixed review-guide mappings and deterministic contentId/version mapping",
+    "home_knowledge_image_consistency": "Implemented; carousel and opened guide share the same mapping",
+    "training_thumbnail": "Implemented at tokens.size.trainingImage with decorative accessibility props",
+    "training_home_image_consistency": "Implemented for the same next-step destination",
+    "navigation_and_progress_contracts": "Source paths retained; runtime interaction NOT TESTABLE"
+  },
+  "visual_acceptance": {
+    "375x844": "NOT TESTABLE",
+    "430x844": "NOT TESTABLE",
+    "375x667": "NOT TESTABLE",
+    "140_percent_text": "NOT TESTABLE",
+    "reason": "A working React Native Web/component renderer is unavailable in this environment; no real app screenshots were captured.",
+    "panel_visual_pass": false
+  },
+  "tests": "pnpm check PASS: app typecheck, edge typecheck, ESLint and 63/63 tests. No focused image render test; actual component crops remain NOT TESTABLE.",
+  "next_step": "Render actual Knowledge and Training components at the planned sizes and complete §14 before accepting panel-level visual quality."
+}

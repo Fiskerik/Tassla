@@ -7,7 +7,7 @@ import { MotionPressable } from '../../components/ui/Motion';
 import type { HomeContent, OwnedDog } from '../../data/app-data';
 import type { HealthHistoryRecord, PlannedHealthRecord } from '../../data/workspace-data';
 import type { DailyRoutine, DailyRoutineChecklistItem, DailyRoutineCreateInput, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineRepeatValues, DailyTrainingSelection } from './daily-activity-data';
-import { selectDailyProgress, type HomeDailyActivity } from './daily-activity-model';
+import { selectDailyProgress, type DailyProgressCoverage, type HomeDailyActivity } from './daily-activity-model';
 import { tokens } from '../../theme/tokens';
 import { automaticDogAge, localDate } from '../onboarding/dog';
 import type { LogEvent } from '../puppy-log/log-model';
@@ -36,7 +36,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   dailyFixture, dailyState = 'hidden', dailyDateKey = '', dailyScopeKey, dailyActivities = [], routineTemplates = [], routineDaySkips = [], dailyTrainingOptions = [],
   dailyRefreshing = false, dailyRefreshError = false,
   dailyMutationBusy = false, dailyMutationKey = '', dailyMutationMessage = '', dailyMutationError = false, onRetryDaily,
-  onOpenChecklist, onOpenTrainingStep,
+  onOpenChecklist, onOpenProgress, onOpenTrainingStep, onOpenDevelopment,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay,
   onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, onGo, onOpenContent, onRetryContent }: {
   dog: OwnedDog;
@@ -73,6 +73,8 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   dailyMutationMessage?: string;
   dailyMutationError?: boolean;
   onOpenChecklist?: () => void;
+  onOpenProgress?: () => void;
+  onOpenDevelopment?: () => void;
   onOpenTrainingStep?: (programId: string, stepId: string, returnPage: 'home' | 'checklist') => void;
   onRetryDaily?: () => void;
   onCreateRoutine?: (routine: DailyRoutineCreateInput) => Promise<{ status: 'saved' | 'failed' | 'unknown' } | void>;
@@ -127,7 +129,12 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
             <Ionicons name="sunny" size={tokens.size.iconSm} color={tokens.colors.home.sun} accessibilityElementsHidden />
           </View>
           <Text style={styles.dogMeta}>{dog.name}{age ? ` · ${age.label}` : ` · ${breedLabel}`}</Text>
-          {age ? <Text style={styles.dogPhase}>Ungefärlig fas: {age.stage}</Text> : null}
+          {age ? <MotionPressable accessibilityRole="button" accessibilityLabel={`Visa utveckling för ${dog.name}`}
+            accessibilityHint="Öppnar ålder och ungefärlig utvecklingsfas."
+            onPress={onOpenDevelopment} style={({ pressed }) => [styles.dogPhaseAction, pressed && styles.headingPressed]}>
+            <Text style={styles.dogPhase}>Ungefärlig fas: {age.stage}</Text>
+            <Ionicons name="chevron-forward" size={tokens.size.iconSm - tokens.spacing.xs} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
+          </MotionPressable> : null}
         </View>
       </View>
       <MotionPressable style={({ pressed }) => [styles.dogPortrait, pressed && styles.portraitPressed]}
@@ -173,7 +180,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
       <View style={styles.dailyCardContent}>
         <View style={styles.dailyHeading}>
           <Text style={styles.dailyTitle} accessibilityRole="header">Dagens att göra</Text>
-          {checklistCoverage === 'complete' ? <Text accessibilityLabel={`${checklistCompleted} av ${checklistTotal} klara`} style={styles.dailyCount}>{checklistCompleted}/{checklistTotal}</Text> : null}
+          <ProgressControl coverage={checklistCoverage} completed={checklistCompleted} total={checklistTotal} onPress={onOpenProgress} />
           <ChecklistControl onPress={onOpenChecklist} />
         </View>
         {dailyRefreshError && dailyState === 'ready' ? <View style={styles.dailyRefreshError} accessibilityLiveRegion="polite">
@@ -279,6 +286,23 @@ function ChecklistControl({ onPress }: { onPress?: () => void }) {
   </MotionPressable>;
 }
 
+function ProgressControl({ coverage, completed, total, onPress }: {
+  coverage: DailyProgressCoverage;
+  completed: number;
+  total: number;
+  onPress?: () => void;
+}) {
+  const complete = coverage === 'complete';
+  if (!onPress) return complete ? <Text accessibilityLabel={`${completed} av ${total} klara`} style={styles.dailyCount}>{completed}/{total}</Text> : null;
+  return <MotionPressable testID="home-open-progress" accessibilityRole="button"
+    accessibilityLabel={complete ? `${completed} av ${total} dagsuppgifter klara. Se dagens framsteg` : 'Se dagens framsteg'}
+    accessibilityHint="Visar dagens sammanställning och hela aktivitetslistan."
+    onPress={onPress} style={({ pressed }) => [styles.progressControl, pressed && styles.headingPressed]}>
+    <Ionicons name="stats-chart-outline" size={tokens.spacing.md} color={tokens.colors.home.greenStrong} accessibilityElementsHidden />
+    <Text style={styles.progressControlText}>{complete ? `${completed}/${total} · Framsteg` : 'Se framsteg'}</Text>
+  </MotionPressable>;
+}
+
 function previewText(body: string): string {
   const paragraph = body.split(/\n\s*\n/).find((part) => part.trim() && !/^\s*#{1,6}\s/.test(part));
   const text = (paragraph ?? body).replace(/^\s*[-*]\s+/gm, '').trim();
@@ -378,6 +402,7 @@ const styles = StyleSheet.create({
   greetingTitle: { ...tokens.typography.heading, color: tokens.colors.home.text, fontWeight: '600' },
   dogMeta: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700' },
   dogAge: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
+  dogPhaseAction: { minHeight: tokens.size.touchMin, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, marginVertical: -tokens.spacing.xs / 2, paddingHorizontal: tokens.spacing.xs, marginLeft: -tokens.spacing.xs, borderRadius: tokens.radius.sm },
   dogPhase: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
   dogPortrait: { position: 'absolute', top: 0, right: 0, zIndex: 1, width: portraitSize, height: portraitSize, borderRadius: tokens.radius.full },
   portraitPressed: { opacity: 0.84, transform: [{ scale: 0.98 }] },
@@ -404,6 +429,8 @@ const styles = StyleSheet.create({
   dailyHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs / 2 },
   dailyTitle: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },
   dailyCount: { ...tokens.typography.caption, color: tokens.colors.home.textMuted, flexShrink: 0 },
+  progressControl: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs / 2, paddingHorizontal: tokens.spacing.xs, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.selectedSurface, flexShrink: 0 },
+  progressControlText: { ...tokens.typography.smallCaption, color: tokens.colors.home.greenStrong, fontWeight: '700' },
   checklistInline: { width: tokens.size.touchMin, height: tokens.size.touchMin, flexShrink: 0, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.sm },
   headingPressed: { backgroundColor: tokens.colors.selectedSurface },
   dailyList: { gap: tokens.spacing.xs },

@@ -34,6 +34,7 @@ const semanticColors = {
 const visionRev02Colors = {
   canvas: '#F5F0E8',
   card: '#FFFCF7',
+  heroOverlay: '#FFFCF7F2',
   text: '#20262D',
   textMuted: '#626871',
   greenFill: '#35875A',
@@ -92,6 +93,8 @@ const typography = {
   heading: { fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }), fontSize: 20, lineHeight: 28, fontWeight: '700' as const },
   body: { fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }), fontSize: 16, lineHeight: 24, fontWeight: '400' as const },
   caption: { fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }), fontSize: 14, lineHeight: 20, fontWeight: '400' as const },
+  smallCaption: { fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }), fontSize: 12, lineHeight: 16, fontWeight: '400' as const },
+  eyebrow: { fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }), fontSize: 12, lineHeight: 16, fontWeight: '700' as const, letterSpacing: 0.8 },
   label: { fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }), fontSize: 16, lineHeight: 24, fontWeight: '700' as const },
 };
 
@@ -101,7 +104,7 @@ export const tokens = {
   spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 },
   layout: { headingGap: 8, listGap: 12, cardPadding: 16, pageInset: 24, sectionGap: 24 },
   radius: { sm: 8, md: 14, lg: 20, full: 999 },
-  size: { quickLogHeight: 104, quickLogCompactHeight: 76, homeDestinationTile: 76, homeCheckbox: 20, touchMin: 44, buttonHeight: 56, navHeight: 56, iconSm: 20, iconMd: 24, chipMd: 32, chipLg: 44, stroke: 1, progress: 4, heroHeight: 200, trainingImage: 88, trainingContinueImageWidth: 84, trainingContinueImageHeight: 76 },
+  size: { quickLogHeight: 104, quickLogCompactHeight: 76, homeDestinationTile: 76, homeCheckbox: 20, touchMin: 44, buttonHeight: 56, navHeight: 56, iconSm: 20, iconMd: 24, chipMd: 32, chipLg: 44, stroke: 1, progress: 4, heroHeight: 200, developmentHeroHeight: 232, developmentAgeArcDiameter: 176, developmentAgeArcStroke: 8, developmentAgeMarkerWidth: 88, developmentAgeJourneyHeight: 120, homeProgressRingDiameter: 232, homeProgressRingStroke: 12, trainingImage: 88, trainingContinueImageWidth: 84, trainingContinueImageHeight: 76 },
   motion: { press: 120, enter: 240, release: 180, progress: 220, toastEnter: 240, toastExit: 180, check: 180, distance: 8, pageDistance: 28, pressedScale: 0.98 },
   typography: { ...typography, display: typography.title },
 } as const;

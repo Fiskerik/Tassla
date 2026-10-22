@@ -5,6 +5,10 @@ import { AppScreen } from '../../src/components/AppPrimitives';
 import { BottomNav } from '../../src/components/ui';
 import { HomeScreen } from '../../src/features/home/HomeScreen';
 import { DailyChecklistScreen } from '../../src/features/home/DailyChecklistScreen';
+import { DailyProgressScreen } from '../../src/features/home/DailyProgressScreen';
+import { DevelopmentScreen } from '../../src/features/home/DevelopmentScreen';
+import { KnowledgeScreen } from '../../src/features/knowledge/KnowledgeScreen';
+import { activeMainTabDestination, productRouteScrollKeys } from '../../src/features/home/main-navigation';
 import type { HomeDailyActivity } from '../../src/features/home/daily-activity-model';
 import type { HomeContent, OwnedDog } from '../../src/data/app-data';
 import type { DailyRoutine, DailyRoutineDay } from '../../src/features/home/daily-activity-data';
@@ -31,6 +35,16 @@ const content: HomeContent[] = [{
   title: 'Låt valpen landa i sin takt',
   body: 'En lugn plats, tydliga pauser och korta stunder tillsammans gör den första tiden enklare.',
   contentType: 'article',
+  sources: [],
+  isAiGenerated: false,
+}];
+const developmentGuides: HomeContent[] = [{
+  id: 'published-guide-version-02',
+  contentId: 'published-guide',
+  version: 2,
+  title: 'Så bygger ni lugna rutiner',
+  body: 'Korta, återkommande stunder kan hjälpa er skapa en vardag som passar just er.',
+  contentType: 'guide',
   sources: [],
   isAiGenerated: false,
 }];
@@ -103,6 +117,8 @@ function VisualCheckApp() {
   const [completion, setCompletion] = useState<Record<string, boolean>>({});
   const [mutationFlow, setMutationFlow] = useState<'idle' | 'pending' | 'confirmed'>('idle');
   const [navigation, setNavigation] = useState('home');
+  const [developmentGuideId, setDevelopmentGuideId] = useState<string | null>(null);
+  const [openChecklistManager, setOpenChecklistManager] = useState(false);
   const dailyState = scenario === 'loading' ? 'loading'
     : scenario === 'error' ? 'error'
       : scenario === 'unknown' ? 'hidden'
@@ -120,7 +136,9 @@ function VisualCheckApp() {
     </View> : null}
     <View testID="review-app-viewport" style={{ flex: 1, minHeight: 0 }}>
       <View style={{ flex: 1, minHeight: 0, paddingTop: 44 }}>
-        <AppScreen scrollKey={navigation} footer={<View style={{ paddingBottom: 34 }}><BottomNav active="home" onChange={(destination) => setNavigation(destination)} /></View>}>
+        <AppScreen {...productRouteScrollKeys(navigation, navigation === 'knowledge' ? 'development' : undefined)}
+          scrollMemoryScope={`visual-check:${dog.id}:${dog.birth_date}`}
+          footer={<View style={{ paddingBottom: 34 }}><BottomNav active={activeMainTabDestination(navigation === 'knowledge' ? 'development' : navigation)} onChange={(destination) => { setDevelopmentGuideId(null); setNavigation(destination); }} /></View>}>
           {navigation === 'home' ? <HomeScreen
             dog={dog}
             breed="Golden retriever"
@@ -144,7 +162,9 @@ function VisualCheckApp() {
             dailyMutationError={['failed', 'unknown', 'readback'].includes(dailyMutationScenario)}
             onRetryDaily={() => {}}
             onRetryDailyMutation={() => {}}
-            onOpenChecklist={() => { window.__homePanelsOpened = 'checklist'; setNavigation('checklist'); }}
+            onOpenChecklist={() => { window.__homePanelsOpened = 'checklist'; setOpenChecklistManager(false); setNavigation('checklist'); }}
+            onOpenProgress={() => { window.__homePanelsOpened = 'progress'; setNavigation('progress'); }}
+            onOpenDevelopment={() => { window.__homePanelsOpened = 'development'; setNavigation('development'); }}
             onOpenTrainingStep={() => { window.__homePanelsOpened = 'training-step'; }}
             onSetRoutineCompletion={(_day, itemId, completed) => {
               const activity = activities.find((item) => item.routineItemId === itemId);
@@ -162,6 +182,41 @@ function VisualCheckApp() {
             onGo={(destination) => { setNavigation(destination); window.__homePanelsOpened = destination; }}
             onOpenContent={(id) => { window.__homePanelsOpened = `content:${id}`; }}
             onRetryContent={() => {}}
+          /> : navigation === 'progress' ? <DailyProgressScreen
+            dogName={dog.name}
+            dateKey={today}
+            state={dailyState === 'hidden' ? 'unknown' : dailyState}
+            activities={dailyActivities}
+            refreshing={false}
+            onBack={() => setNavigation('home')}
+            onRetry={() => {}}
+            onManage={() => { setOpenChecklistManager(true); setNavigation('checklist'); }}
+            onOpenChecklist={() => { setOpenChecklistManager(false); setNavigation('checklist'); }}
+            onOpenTrainingStep={() => { window.__homePanelsOpened = 'training-step'; }}
+            onSetRoutineCompletion={(_day, itemId, completed) => {
+              const activity = activities.find((item) => item.routineItemId === itemId);
+              if (activity) setCompletion((current) => ({ ...current, [activity.id]: completed }));
+            }}
+          /> : navigation === 'development' ? <DevelopmentScreen
+            dogName={dog.name}
+            birthDate={dog.birth_date}
+            today={today}
+            guides={developmentGuides}
+            guidesState="ready"
+            onBack={() => { setDevelopmentGuideId(null); setNavigation('home'); }}
+            onOpenGuide={(id) => { setDevelopmentGuideId(id); setNavigation('knowledge'); }}
+            onRetryGuides={() => {}}
+          /> : navigation === 'knowledge' ? <KnowledgeScreen
+            onBack={() => { setDevelopmentGuideId(null); setNavigation('development'); }}
+            returnToDevelopment
+            items={developmentGuides}
+            contentState="ready"
+            focusedContentId={developmentGuideId}
+            onSelectContent={setDevelopmentGuideId}
+            dogId={dog.id}
+            dogName={dog.name}
+            ageWeeks={77}
+            sessionKey={`visual-check:${dog.id}`}
           /> : navigation === 'checklist' ? <DailyChecklistScreen
             dogName={dog.name}
             dateKey={today}
@@ -173,7 +228,8 @@ function VisualCheckApp() {
             mutationKey=""
             mutationMessage=""
             mutationError={false}
-            onBack={() => setNavigation('home')}
+            onBack={() => { setOpenChecklistManager(false); setNavigation('home'); }}
+            openManagerInitially={openChecklistManager}
             routines={routineTemplates}
             routineDaySkips={[]}
             trainingOptions={[]}

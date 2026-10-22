@@ -7537,13 +7537,17 @@
       "id": "FLOW-DEVELOPMENT-01",
       "title": "Utveckling/panel 2 från Hem till åldersfas och publicerad guide",
       "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 2; docs/design/vision-rev02-screen-contracts.md panel 2.",
-      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v8.md",
+      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v8.md; docs/plans/FLOW-DEVELOPMENT-01-route-correction-v6.md; docs/plans/FLOW-PANELS-2-3-image-optimization-v5.md",
       "write_paths": [
+        "assets/images/development-hero-puppy-black-tan-forest-wide.jpg",
+        "assets/images/README.md",
         "src/features/home/DevelopmentScreen.tsx",
         "src/features/home/HomeScreen.tsx",
+        "src/components/AppPrimitives.tsx",
         "src/features/home/ProductWorkspace.tsx",
         "src/features/home/main-navigation.ts",
         "src/theme/tokens.ts",
+        "src/features/knowledge/KnowledgeScreen.tsx",
         "src/features/home/README.md",
         "tests/development-screen-model.test.mjs",
         "tests/home-panel-routes.test.mjs",
@@ -7552,15 +7556,18 @@
         "docs/design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/development",
         "docs/tasks/dev/rapport.md",
         "docs/tasks/dev/queue.json",
-        "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md"
+        "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md",
+        "docs/plans/FLOW-DEVELOPMENT-01-route-correction-v6.md"
       ],
       "acceptance": [
         "Show chronological age and approximate phase with a static 0–24 month arc; no skill judgement.",
         "Published guides have their own heading and are never presented as milestones.",
         "Use “Granskade milstolpar är inte tillgängliga ännu”; label the generic portrait Standardbild.",
         "Age missing/invalid/future is neutral; guide loading/empty/error and source version are distinct.",
-        "Return from a guide restores Development and Home scroll; §14 is recorded.",
-        "Full panel remains partial until a reviewed, published milestone source exists."
+        "Development guide return shows “Tillbaka till Utveckling” and reaches Development; Knowledge and Training returns keep their actual existing destinations.",
+        "Full panel remains partial until a reviewed, published milestone source exists.",
+        "Create tests/home-panel-routes.test.mjs and verify rendered Home, Development and Checklist routes keep three distinct offsets through the guide roundtrip; scope changes and leaving the flow clear saved offsets before restoration.",
+        "Screen-specific scroll keys and parent preserveScrollKey mappings match the exact v5 contract; AppScreen calls without keys keep their existing fresh-route behavior."
       ],
       "checks": [
         "Focused tests listed in v8 §2",
@@ -7573,25 +7580,118 @@
       "depends_on": [
         "VISION-R02-HEM-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Start after the Home checkpoint is committed; do not invent milestone facts or user observations.",
+      "status": "implementing",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Approved package plan v8; Architect APPROVE, Critic PROCEED, Security APPROVE and Compliance APPROVE are recorded in the Home/panel package journal. Home dependency VISION-R02-HEM-01 is done and pushed (1b22370, closeout 2cbbdda). Panel 2 scope remains chronological age/approximate phase, static 0–24 month arc, published guide, truthful missing milestones, Standardbild and preserved return state; no milestone facts invented."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start Panel 2 under approved plan v8 on the pushed branch. Dependency Home/panel 1 is done. Implement only FLOW-DEVELOPMENT-01 write_paths and preserve the partial-panel and no-invented-milestone contract."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Implementering pausad före produktkod: godkänd v8 route-map saknar KnowledgeScreen-returtext/callback för att en öppnad guide ska återgå direkt till Utveckling; labeln Tillbaka till guider vore missvisande. Ingen kod ändrad. En avgränsad v9-plan behövs för KnowledgeScreen.tsx och befintligt home-panel-routes.test.mjs; ingen data-/riskändring."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "v8 route gap is specified in standalone docs/plans/FLOW-DEVELOPMENT-01-route-correction-v1.md. It covers Development-only Knowledge return, unchanged Knowledge/Training destinations, exact guide version, scope fencing and home-detail-flow; Architect/Critic review pending. No product code changed."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE route correction plan v1; Critic PROCEED. Exact guide return, preserved Knowledge/Training destinations, exact DOB scope fencing, Home child route and home-detail-flow are approved."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start Panel 2 under approved v8 plus FLOW-DEVELOPMENT-01 route correction v1; focus on complete rev02 screen, real published guide route and user-friendly states."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Implementation paused before code for Erik’s explicit request to add unique generated dog art. Route correction v1 had Architect APPROVE and Critic PROCEED; v2 adds only the Development hero image and its asset provenance path, pending exact plan review."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "FLOW-DEVELOPMENT-01 route correction v2 preserves approved v1 route requirements and adds `assets/images/development-hero-puppy.png` plus image provenance in `assets/images/README.md`; Architect/Critic v2 review required before adding product assets/code."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Approved exact route correction plan v3: Architect APPROVE and Critic PROCEED. Dedicated brindle/cream mixed-breed Development hero is distinct from Home; exact guide return, scope and home-detail-flow remain bounded."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin Panel 2 UI/functionality under package plan v8 and approved route correction v3, using the new unique Development hero asset."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Implementation paused after v3 approval and before route code. Product integration inspection found AppScreen stores only one preservedOffset scalar, so Home and Checklist flows cannot both restore independently as v3 assumes. A bounded per-flow scroll-memory correction is needed to protect user-visible return behavior."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "v4 received Architect CHANGES and Critic CHANGES. Architect requested the current v5 plan be an explicit write path, exact preserveScrollKey-to-flow mapping, scope clearing before useLayoutEffect restoration, unchanged behavior for unkeyed AppScreen calls, and creation of the missing route test file. Critic additionally requires rendered verification of distinct Home/Development/Checklist offsets through the guide roundtrip, scope invalidation and flow exit. v5 records these corrections and awaits exact Architect/Critic review before route or scroll code. Architect v5 review found the superseded v3 plan still listed as writable in queue.json; v3 is removed from the active write paths to match v5’s history-only rule. Architect confirmation pending."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact route correction v5 approved: Architect APPROVE and Critic PROCEED. Architect's queue scope finding was corrected by removing historical v3 from active write_paths. Rendered three-offset guide-return scenario, scope clearing and unkeyed AppScreen preservation are mandatory. Distinct generated Development and Progress image assets are staged."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin Panel 2 under approved package v8 and exact route correction v5. Implement per-route AppScreen offset map and scope clearing first, preserving Home and Checklist positions; do not start Panel 3 UI or Insights."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "architect",
+          "evidence": "Exakt routeplan v6 granskad och godkänd: Architect APPROVE och Critic PROCEED. Queue-plan och aktiv skrivväg uppdaterade från route-v5 till route-v6; separat FLOW-PANELS-2-3-image-optimization-v5 behålls. Båda saknade panel-2-testfilerna, public/review-rendering och §14 återstår."
+        }
+      ],
+      "next_step": "Kör de saknade tests/development-screen-model.test.mjs och tests/home-panel-routes.test.mjs enligt v8 checkpoint 2; därefter verifiera riktiga public/review-renderingar och §14. Routekod finns, men tester och app-rendering är inte verifierade. Milstolpskälla saknas, så panel 2 förblir partiell.",
       "priority": "P1",
       "panels": [
         "Utveckling"
       ],
       "risk_class": "M",
       "checkpoint": "Checkpoint 2: partial Development route with truthful age, phase and guide data.",
-      "test_evidence": "Not run for the v8 package. Awaiting its own checkpoint evidence and independent review.",
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "test_evidence": "`pnpm check` PASS (typecheck, edge typecheck, ESLint, tests 63/63). The specific tests/development-screen-model.test.mjs and tests/home-panel-routes.test.mjs are still absent; route/scroll scenario and real public/review screenshots plus §14 remain unverified. Earlier crop previews exist. Public content guard PASS; direct offline Expo iOS export PASS (1,458 modules). `pnpm bundle:ios` wrapper could not complete because registry requests failed with sandbox EPERM. No published milestone source; panel remains partial.",
+      "implementation_state": "Source implementation present; route/model QA and real visual acceptance pending; milestone source unpublished.",
+      "evidence_status": "incomplete — pnpm check PASS; route-specific tests absent and public/review render plus §14 not testable"
     },
     {
       "id": "FLOW-PROGRESS-01",
       "title": "Dagens framsteg/panel 3 med samma källhärledda dagsprogress som Hem",
       "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 3; docs/design/vision-rev02-screen-contracts.md panel 3.",
-      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v8.md",
+      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v8.md; docs/plans/FLOW-PANELS-2-3-image-optimization-v5.md",
       "write_paths": [
+        "assets/images/README.md",
+        "assets/images/daily-progress-hero-puppy-terrier.jpg",
         "src/features/home/DailyProgressScreen.tsx",
         "src/features/home/HomeScreen.tsx",
         "src/features/home/DailyChecklistScreen.tsx",
@@ -7611,6 +7711,7 @@
         "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md"
       ],
       "acceptance": [
+        "Use `daily-progress-hero-puppy-terrier.jpg` as the distinct Panel 3 portrait; do not reuse Home or Development hero art.",
         "Ring, count and full list use the same scope-current selector and only complete states show a complete ring.",
         "Zero-activity day has no 0/0 and one primary Hantera dagens aktiviteter action; the checklist action appears when activities exist.",
         "Routine mutation uses existing status/readback; training row has no second checkbox and returns to the exact step.",
@@ -7629,18 +7730,31 @@
       "depends_on": [
         "FLOW-DEVELOPMENT-01"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Start after Development is committed; preserve existing mutation/readback semantics.",
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin panel 3 from the existing shared daily-activity source and route contract. Scope is implemented in code; full visual acceptance remains NOT TESTABLE and weekly-goal data is unavailable."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Panel 3 source changes are present but its dependency FLOW-DEVELOPMENT-01 has not completed its checkpoint; this task also shares active write paths with Development. Panel 3 test/render/§14 evidence is not available, and no tests were run. Keep it blocked until Development is checkpointed and the Progress verification is completed."
+        }
+      ],
+      "next_step": "Återuppta efter att FLOW-DEVELOPMENT-01 har en godkänd checkpoint. Skapa och kör tests/daily-progress-screen.test.mjs samt panel-3-specifika kontroller; därefter verifiera riktiga public/review-renderingar med §14, källgemensam ring/lista och saknat veckomål. Panel 3 förblir partiell tills veckomålskälla finns.",
       "priority": "P1",
       "panels": [
         "Dagens framsteg"
       ],
       "risk_class": "M",
       "checkpoint": "Checkpoint 3: partial Daily Progress route with truthful source-derived counts.",
-      "test_evidence": "Not run for the v8 package. Awaiting its own checkpoint evidence and independent review.",
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "test_evidence": "`pnpm check` PASS (63/63); daily activity and checklist regression suites are included. The specifically planned tests/daily-progress-screen.test.mjs is absent, so the panel-specific route, ring and visual behavior remain unproven. Rendered route/crop/§14 evidence remains absent and actual app screenshot is NOT TESTABLE. Weekly-goal source is unavailable, so full panel remains partial.",
+      "implementation_state": "Source implementation present; dependency checkpoint, QA and visual acceptance pending.",
+      "evidence_status": "blocked — check PASS, dependency checkpoint and route/render/§14 evidence pending"
     },
     {
       "id": "FLOW-INSIGHTS-01",
@@ -9746,6 +9860,63 @@
       "status": "planned",
       "history": [],
       "next_step": "Do not add migration, RPC, client or UI files until Compliance has reviewed and approved the finished documents."
+    },
+    {
+      "id": "FLOW-PANELS-6-7-IMAGE-DIVERSITY",
+      "title": "Unika hundbilder för Träning och Kunskap",
+      "mvp_requirement": "docs/design/vision-rev02-screen-contracts.md: panel 6 Träning och panel 7 Kunskap; docs/MVP-EXPERIENCE-CONTRACT.md",
+      "plan": "docs/plans/FLOW-PANELS-6-7-image-diversity-v1.md",
+      "write_paths": [
+        "assets/images/knowledge-featured-puppy-lagotto-forest.jpg",
+        "assets/images/knowledge-card-puppy-sheltie-window.jpg",
+        "assets/images/knowledge-card-puppy-cocker-coast.jpg",
+        "assets/images/training-next-step-puppy-corgi-home.jpg",
+        "assets/images/README.md",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/README.md",
+        "src/features/knowledge/editorial-image-assignment.ts",
+        "src/features/home/HomeCarousel.tsx",
+        "src/features/home/README.md",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "docs/design/evidence/vision-rev02/2026-10-21-panels-6-7-image-diversity",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md"
+      ],
+      "acceptance": [
+        "Three Knowledge review guides map stably and distinctly to the Lagotto, Sheltie and Cocker photos by content ID/version; Home opens the same guide image.",
+        "The Home Training recommendation and Training next-exercise card use the Corgi photo for the same step, with existing destination and progress behavior.",
+        "Real Knowledge and Training renders at 375×844, 430×844, 375×667 and 140% text preserve legible image crops, controls and bottom navigation; §14 is recorded.",
+        "AI image provenance, decorative accessibility and asset byte limits are recorded; no test or panel PASS is claimed without evidence."
+      ],
+      "checks": [
+        "pnpm check",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "Render Knowledge and Training at the planned viewports; inspect crops/controls and record §14"
+      ],
+      "depends_on": [],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "The four JPEGs and source image assignment/UI links are implemented, and provenance records five generated motifs with the Dachshund crop intentionally unused. Architect APPROVE and Critic PROCEED for exact image plan v1. Byte/dimension/metadata source checks are recorded. App-component renders and §14 remain NOT TESTABLE, so panel-level acceptance stays blocked."
+        }
+      ],
+      "next_step": "Render actual Knowledge and Training components at the planned viewports, inspect crop/control/navigation behavior and record §14; run required project checks before closeout. Until then keep panel-level visual acceptance NOT TESTABLE.",
+      "priority": "P2",
+      "panels": [
+        "6",
+        "7"
+      ],
+      "risk_class": "L",
+      "checkpoint": "Distinct editorial image assignment for the current Knowledge and Training surfaces; this does not complete either panel.",
+      "test_evidence": "`pnpm check` PASS (typecheck, edge typecheck, ESLint, tests 63/63); no image-specific crop/render test exists. Four deployed JPEGs total 1,106,442 B, q86, stripped metadata, dimensions preserved and each under 350 KB. Source mapping is ID/version-stable; app component crops and interactions NOT TESTABLE. Public content guard PASS; direct offline Expo iOS export PASS (1,458 modules); wrapper registry fetch failed with sandbox EPERM.",
+      "implementation_state": "Images and source mappings implemented; app rendering and panel acceptance pending.",
+      "evidence_status": "blocked — required actual component render and §14 absent; pnpm check passed"
     }
   ]
 }

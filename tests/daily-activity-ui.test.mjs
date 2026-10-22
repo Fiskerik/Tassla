@@ -11,8 +11,8 @@ const workspace = await readFile(new URL('../src/features/home/ProductWorkspace.
 test('Home offers one permanent checklist entry while keeping its compact summary to five rows', () => {
   assert.match(home, /selectDailyProgress\(dailyActivities, dailyState === 'hidden' \? 'unknown' : dailyState\)/);
   assert.match(home, /dailyHeading/);
-  assert.match(home, /checklistCompleted\}\/\{checklistTotal\}/);
-  assert.match(home, /accessibilityLabel=\{`\$\{checklistCompleted\} av \$\{checklistTotal\} klara`\}/);
+  assert.match(home, /<ProgressControl coverage=\{checklistCoverage\} completed=\{checklistCompleted\} total=\{checklistTotal\} onPress=\{onOpenProgress\} \/>/);
+  assert.match(home, /accessibilityLabel=\{complete \? `\$\{completed\} av \$\{total\} dagsuppgifter klara\. Se dagens framsteg`/);
   assert.match(home, /accessibilityLabel=\{`\$\{dailyProgress\.completedCount\} av \$\{dailyProgress\.totalCount\} dagsuppgifter klara`\}/);
   assert.match(home, /dailyProgress\.activities\.slice\(0, 5\)/);
   assert.equal((home.match(/testID="home-open-checklist"/g) ?? []).length, 1, 'the Home card exposes one full-checklist control');
@@ -20,7 +20,7 @@ test('Home offers one permanent checklist entry while keeping its compact summar
   assert.match(home, /checklistInline/);
   const heading = home.slice(home.indexOf('<View style={styles.dailyHeading}'), home.indexOf('{dailyRefreshError'));
   assert.doesNotMatch(heading, /Hantera|Checklista|Visa alla/);
-  const checklistControl = home.slice(home.indexOf('function ChecklistControl'), home.indexOf('function previewText'));
+  const checklistControl = home.slice(home.indexOf('function ChecklistControl'), home.indexOf('function ProgressControl'));
   assert.match(checklistControl, /accessibilityLabel="Öppna Checklistor"[\s\S]*?testID="home-open-checklist-chevron" name="chevron-forward"/);
   assert.doesNotMatch(checklistControl, /<Text/);
   assert.match(home, /dailyProgress\.coverage === 'empty'/);

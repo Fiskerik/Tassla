@@ -17,6 +17,7 @@ import { checklistReadCacheScope } from './checklist-data';
 import type { PendingChecklistMemory } from './checklist-intent';
 import { FAQScreen } from './FAQScreen';
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID } from './review-content';
+import { editorialImageForGuide } from './editorial-image-assignment';
 
 type ContentState = 'loading' | 'ready' | 'error';
 
@@ -36,9 +37,11 @@ export function KnowledgeScreen({
   onChecklistPendingChange = () => undefined,
   onDetailChange,
   returnToTraining = false,
+  returnToDevelopment = false,
 }: {
   onBack: () => void;
   returnToTraining?: boolean;
+  returnToDevelopment?: boolean;
   items?: readonly HomeContent[];
   contentState?: ContentState;
   focusedContentId?: string | null;
@@ -102,7 +105,9 @@ export function KnowledgeScreen({
   const checklistScope = checklistReadCacheScope(sessionKey, dogId, reviewEnabled);
   return (
     <View style={styles.screen}>
-      {selectedItem ? <AppBar mode="Back" title="Kunskap" actionLabel="Tillbaka till guider" onAction={() => { setOpenedId(null); onSelectContent(null); }} /> : null}
+      {selectedItem ? <AppBar mode="Back" title="Kunskap"
+        actionLabel={returnToDevelopment ? 'Tillbaka till Utveckling' : 'Tillbaka till guider'}
+        onAction={() => { setOpenedId(null); onSelectContent(null); if (returnToDevelopment) onBack(); }} /> : null}
       {!selectedItem && !(tab === 'Checklistor' && checklistDetailOpen) ? <>
         {returnToTraining
           ? <AppBar mode="Back" title="Kunskap" actionLabel="Tillbaka till Träning" onAction={onBack} />
@@ -150,11 +155,11 @@ export function KnowledgeScreen({
       {(tab === 'För dig' || tab === 'Artiklar' || selectedItem) && contentState === 'ready' && items.length > 0 && <>
         {!selectedItem && displayedItems.length > 0 && <View style={styles.guideList}>
           {displayedItems[0] ? <MotionPressable accessibilityRole="button" accessibilityLabel={`Läs ${displayedItems[0].title}`} onPress={() => openArticle(displayedItems[0].id)} style={styles.featured}>
-            <Image source={require('../../../assets/images/puppy-resting-carousel.png')} style={styles.featuredImage} resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+            <Image source={editorialImageForGuide(displayedItems[0])} style={styles.featuredImage} resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
             <View style={styles.cardCopy}><Text style={styles.featuredEyebrow}>REKOMMENDERAT FÖR ER</Text><Text style={styles.guideTitle}>{displayedItems[0].title}</Text><Text style={styles.sourceText} numberOfLines={2}>{getGuidePreviewText(displayedItems[0].body)}</Text><Text style={styles.readTime}>{readingMinutes(displayedItems[0].body)} min läsning</Text></View>
           </MotionPressable> : null}
-          <View style={styles.articleGrid}>{displayedItems.slice(1).map((item, index) => <MotionPressable key={item.id} accessibilityRole="button" accessibilityLabel={`Läs ${item.title}`} onPress={() => openArticle(item.id)} style={styles.smallCard}>
-            <Image source={index % 2 ? require('../../../assets/images/dog-resting.png') : require('../../../assets/images/dog-welcome.png')} style={styles.smallImage} resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+          <View style={styles.articleGrid}>{displayedItems.slice(1).map((item) => <MotionPressable key={item.id} accessibilityRole="button" accessibilityLabel={`Läs ${item.title}`} onPress={() => openArticle(item.id)} style={styles.smallCard}>
+            <Image source={editorialImageForGuide(item)} style={styles.smallImage} resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
             <View style={styles.smallCardCopy}><Text style={styles.smallGuideTitle}>{item.title}</Text><Text style={styles.readTime}>{readingMinutes(item.body)} min läsning</Text></View>
           </MotionPressable>)}</View>
         </View>}

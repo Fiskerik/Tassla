@@ -17,7 +17,7 @@ type WriteStatus = { status: 'saved' | 'failed' | 'unknown' } | void;
 export function DailyChecklistScreen({ dogName, dateKey, state, activities, refreshing, refreshError, mutationBusy, mutationKey, mutationMessage,
   mutationError, onBack, onRetry, onRetryMutation, onOpenTrainingStep, onSetRoutineCompletion, routines, routineDaySkips, trainingOptions,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay, onAddTrainingToDay, onRemoveTrainingFromDay,
-  onGoTraining }: {
+  onGoTraining, openManagerInitially = false }: {
   dogName: string;
   dateKey: string;
   state: 'loading' | 'ready' | 'error';
@@ -44,8 +44,9 @@ export function DailyChecklistScreen({ dogName, dateKey, state, activities, refr
   onAddTrainingToDay?: (option: HomeDailyTrainingOption) => void;
   onRemoveTrainingFromDay?: (row: DailyTrainingSelection) => void;
   onGoTraining: () => void;
+  openManagerInitially?: boolean;
 }) {
-  const [managerVisible, setManagerVisible] = useState(false);
+  const [managerVisible, setManagerVisible] = useState(openManagerInitially);
   const [focusRoutineId, setFocusRoutineId] = useState<string | null>(null);
   const [editFocusedRoutineOnOpen, setEditFocusedRoutineOnOpen] = useState(false);
   const completedCount = activities.filter((activity) => activity.completed).length;

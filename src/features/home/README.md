@@ -24,7 +24,7 @@ Rutinens checkbox och dess detaljöppning är separata handlingar. Träningsrade
 
 Kunskapsartiklar och en öppen checklistmall är underordnade vyer. `KnowledgeScreen` rapporterar detaljtillståndet till `ProductWorkspace`, som stänger av huvudflikssvep medan detaljen är öppen. Tryck på den aktiva Kunskap-fliken i detalj är en no-op. Vid faktiskt utträde från Kunskap rensas fokus och detaljflagga via både bottenmeny och sidgest; återinträde visar översikten utan att återöppna en gammal artikel. Hemmets direkta innehålls-CTA behåller däremot det uttryckligen valda artikel-id:t. Kunskapsöversikten och FAQ:s inline-expansion behåller huvudflikssvep.
 
-Hemmets `selectDailyProgress` är den gemensamma urvalsfunktionen för dagsaktiviteter, räknare och täckning. `ProductWorkspace` skickar endast data för verifierat aktuellt konto/hund/dag/tidszon; Hem visar komplett progress bara vid komplett läsning, lämnar 0/0 utanför tomläget, ger en separat neutral status vid okänd/partiell källa och använder upp till fem urvalda rader. Panel 3 ska återanvända samma selector när den implementeras. Rubrikraden har en ensam pil till Checklistor; den kompakta synliga räknaren (`2/5`) har det fullständiga tillgänglighetsnamnet (`2 av 5 klara`) och progressindikatorn ligger direkt under rubriken. Hemmets kort använder varm yta, tokeniserad radie och diskret kant; destinationskortens tre färger är oförändrade. Dagsradstitlar får växa i stället för att klampas till två rader; pending/failed/unknown-status annonseras när den ändras, och återförsöket namnger aktiviteten.
+Hemmets `selectDailyProgress` är den gemensamma urvalsfunktionen för dagsaktiviteter, räknare och täckning. `ProductWorkspace` skickar endast data för verifierat aktuellt konto/hund/dag/tidszon; Hem och panel 3 använder samma selector och hela aktuella aktivitetsmängd. Hem visar komplett progress bara vid komplett läsning, lämnar 0/0 utanför tomläget, ger en separat neutral status vid okänd/partiell källa och visar högst fem rader. Panel 3 visar hela listan utan tider där verifierad klockslagstid saknas och utan ett påhittat veckomål. Hemmets checklistpil går alltid till `Checklistor`; den separata `Framsteg`-kontrollen öppnar panel 3. Dagsradstitlar får växa i stället för att klampas till två rader; pending/failed/unknown-status annonseras när den ändras, och återförsöket namnger aktiviteten.
 
 Reproducerbara React Native Web-renderingar finns i [tools/visual-check](../../../tools/visual-check/README.md). De använder syntetiska data; Supabase/RLS-runtime, native enheter och TestFlight verifieras separat.
 
@@ -33,6 +33,14 @@ Reproducerbara React Native Web-renderingar finns i [tools/visual-check](../../.
 I veckoupprepning visas `Må, Ti, On, To, Fr, Lö, Sö` i en horisontell rad. Fullständiga veckodagsnamn exponeras för hjälpmedelsteknik och raden kan bläddras vid smal skärm eller större text; varje knapp behåller minst 44 pt träffyta. Rutinens pennknapp är ikon-only visuellt men behåller namnbundet tillgänglighetsnamn.
 
 I `DailyActivityManagerSheet` staplas rutinens dagsval och radering när fönstret är smalare än 360 pt eller `fontScale` minst 1.25; vid större utrymme kan de ligga sida vid sida och radbrytas. Ändringen påverkar bara presentationen, inte rutinutkastets sparning, avbryt, readback eller hundscope.
+
+## Utvecklingens panel
+
+`HomeScreen` öppnar `DevelopmentScreen` från fasraden och behåller hundväxlingen separat på porträttet. Vyn använder `development-hero-puppy-black-tan-forest-wide.jpg` som synligt märkt `Standardbild`. Den statiska 0–24-månadersbågen utgår från födelsedatum och `automaticDogAge`; efter 24 månader visas ålder/fas utan en full båge. Saknat, ogiltigt och framtida födelsedatum ger neutralt tillstånd. Publicerade guider öppnas på exakt valt versions-ID i Kunskap och återgår till Utveckling. Milstolpskällan är ännu inte publicerad, därför visas luckan tydligt och inga milstolpar hittas på.
+
+`HomeCarousel` använder nästa träningsstegs egen corgibild. Kunskapens Home-kort använder samma stabila guide-ID-/versionsbild som målsidan i `KnowledgeScreen`; motiv byts därför inte när listan söks eller sorteras. Träning/Kunskap-bildernas ursprung, optimering och användningsgränser dokumenteras i `assets/images/README.md` och `docs/plans/FLOW-PANELS-6-7-image-diversity-v1.md`.
+
+Panelrutterna har separata `AppScreen`-nycklar: Hem, Utveckling, Utvecklingsguide, Dagens framsteg och Checklistor behåller varsin scrollposition medan konto-/hund-/ålders-/dag-/tidszonsscope är aktivt. Byte av detta scope tömmer offsetminnet innan en position återställs.
 
 ## Pull-to-refresh för Hem och Logg
 

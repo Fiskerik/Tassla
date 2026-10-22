@@ -18,7 +18,7 @@ test('Home follows the rev02 content order without duplicate Today groups', () =
   assert.match(home, /Just nu med \{dog\.name\}/);
   assert.match(home, /Dagens att göra/);
   assert.match(home, /dailyHeading:[\s\S]*flexDirection: 'row'/);
-  assert.match(home.slice(home.indexOf('<View style=\{styles\.dailyHeading\}'), home.indexOf('{dailyRefreshError')), /checklistCompleted\}\/\{checklistTotal\}/);
+  assert.match(home.slice(home.indexOf('<View style=\{styles\.dailyHeading\}'), home.indexOf('{dailyRefreshError')), /<ProgressControl coverage=\{checklistCoverage\} completed=\{checklistCompleted\} total=\{checklistTotal\} onPress=\{onOpenProgress\} \/>/);
   assert.match(home, /selectDailyProgress\(dailyActivities, dailyState === 'hidden' \? 'unknown' : dailyState\)/);
   assert.match(home, /dailyProgress\.activities\.slice\(0, 5\)/);
   assert.match(home, /accessibilityLabel=\{`\$\{dailyProgress\.completedCount\} av \$\{dailyProgress\.totalCount\} dagsuppgifter klara`\}/);
