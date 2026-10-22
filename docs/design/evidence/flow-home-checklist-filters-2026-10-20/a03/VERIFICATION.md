@@ -23,7 +23,7 @@ Rendererna jämfördes visuellt mot `vision_rev02.jpg` panel 4 och panelkontrakt
 
 ## Körningar
 
-- `pnpm check`: PASS — TypeScript, edge TypeScript, ESLint och 65/65 tester.
+- `pnpm check`: PASS — app-/edge-TypeScript, ESLint; 642 passerade, 1 skip av 643 testfall.
 - `TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false EXPO_OFFLINE=1 EXPO_TELEMETRY_DISABLED=1 __UNSAFE_EXPO_HOME_DIRECTORY=/tmp/tassla-expo-home pnpm bundle:ios`: PASS, 1 460 moduler.
 - `git diff --check`: PASS.
 - `python -X utf8 tools/dev_flow.py validate`: PASS.

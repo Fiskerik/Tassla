@@ -1015,8 +1015,10 @@ Erik rapporterar manuella tester 1–4 som PASS; de kördes inte om och förblir
 
 Branch: `2026-10-22-checklist-kommande-navigation`. Kommande och de exakta källresorna är inkopplade: kommande rutiner/hälsoplaner är read-only och `Planerad`; framtida rader får ingen checkbox/progress; historiskt träningssteg öppnas exakt i read-only-läge; retur bevarar filter och scroll. Fyra filter visas i två rader vid smal bredd.
 
-Dedikerad RN Web-verifiering: public 10/10 och review 19/19. `pnpm check` PASS (type/edge type/lint, 65/65), offentlig `pnpm bundle:ios` PASS (1 460 moduler), diffcheck och kövalidering PASS. Skärmbilder/resultat finns i [A03-verifieringen](../design/evidence/flow-home-checklist-filters-2026-10-20/a03/VERIFICATION.md). Syntetisk 140 %-text är CSS-proxy. A03 saknar oberoende QA/Reviewer och full §14-closeout.
+Dedikerad RN Web-verifiering: public 10/10 och review 19/19. `pnpm check` PASS (app-/edge-TypeScript, ESLint; 642 passerade, 1 skip av 643 testfall), offentlig `pnpm bundle:ios` PASS (1 460 moduler), diffcheck och kövalidering PASS. Skärmbilder/resultat finns i [A03-verifieringen](../design/evidence/flow-home-checklist-filters-2026-10-20/a03/VERIFICATION.md). Syntetisk 140 %-text är CSS-proxy. A03 saknar oberoende QA/Reviewer och full §14-closeout.
 
 Bred Home-review-fixture fann separat en 4 pt initial-fit-överlappning endast i reviewdata; Home ligger utanför A03 och följs upp separat. Live Supabase/RLS, A02-migration/apply, äldre klienters runtime, native VoiceOver/Dynamic Type/gestures och TestFlight är NOT TESTABLE. Ingen SQL/databasoperation kördes. Erik bekräftade tidigare att manuella tester 1–4 passerat; de kördes inte om.
+
+A03 checkpointcommit `25bde34` (`feat: add upcoming checklist filters and source routes`) pushad till `origin/2026-10-22-checklist-kommande-navigation`.
 
 Ägarönskemål registrerat för nästa separata slice: använd liknande ikon-/radgrammatik i Kunskapens faschecklistor och Hemmets rutiner, men behåll deras olika betydelser och datamodeller. Kunskap har ännu inget sparat ikonfält på egna punkter; A03 ändrar inte den skärmen eller dess schema. Felet `Kontrollera den föregående ändringen` är osäker readback, inte belägg för saknad tabell; A02-migrationen ändrar en validator för befintlig rutin-JSON och är inte applicerad.

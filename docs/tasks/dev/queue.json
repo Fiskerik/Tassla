@@ -7402,11 +7402,11 @@
         "Tone-map and contrast verification: only clear semantic matches use existing category tokens; generic icons remain neutral; minimum measured icon contrast 4.97:1.",
         "pnpm check 65/65; public pnpm bundle:ios 1,460 modules; git diff --check; python -X utf8 tools/dev_flow.py validate; SQL/TS allowlist and installed glyph checks PASS.",
         "A03 public/review focused Playwright verification: public 10/10 and synthetic review 19/19; 375/430 widths, 375x667 CSS-scaled 140% layout proxy, all four filters, upcoming loading/empty/partial/error, exact read-only health/training routes and return scroll state.",
-        "A03: pnpm check PASS (typecheck, edge typecheck, ESLint, 65/65); public pnpm bundle:ios PASS (1,460 modules); git diff --check and python -X utf8 tools/dev_flow.py validate PASS.",
+        "A03: pnpm check PASS (app/edge TypeScript, ESLint, 642 passed/1 skipped of 643 tests); public pnpm bundle:ios PASS (1,460 modules); git diff --check and python -X utf8 tools/dev_flow.py validate PASS.",
         "A03 has no independent QA/Reviewer verdict yet. A separate broad Home review fixture shows a pre-existing 4pt initial-fit overlap; outside this task and tracked separately. NOT TESTABLE: live Supabase/RLS, A02 migration apply/old-client runtime, native accessibility/gestures and TestFlight."
       ],
       "implementation_state": "A03 implements the four responsive filters, read-only upcoming routine/health sources, exact read-only historical training detail, and source return preserving filter/scroll. Dedicated synthetic RN Web verification passes 10/10 public and 19/19 review. A02 icon/actions retain their independent QA/Reviewer PASS. A03 independent QA/Reviewer and full panel-4 §14 remain open; live RLS and migration/old-client runtime remain separate gates.",
-      "evidence_status": "A03 local focused PASS: 10/10 public and 19/19 review; pnpm check 65/65; public iOS bundle 1,460 modules; diffcheck and dev_flow validate PASS. OPEN: independent A03 QA/Reviewer and full panel-4 §14 closure. NOT TESTABLE: live Supabase/RLS, migration apply, old-client runtime, native VoiceOver/Dynamic Type/gestures and TestFlight. Erik’s manual tests 1–4 remain user-reported PASS and were not rerun."
+      "evidence_status": "A03 local focused PASS: 10/10 public and 19/19 review; pnpm check 642 passed/1 skipped of 643; public iOS bundle 1,460 modules; diffcheck and dev_flow validate PASS. OPEN: independent A03 QA/Reviewer and full panel-4 §14 closure. NOT TESTABLE: live Supabase/RLS, migration apply, old-client runtime, native VoiceOver/Dynamic Type/gestures and TestFlight. Erik’s manual tests 1–4 remain user-reported PASS and were not rerun."
     },
     {
       "id": "FLOW-LOG-01",
