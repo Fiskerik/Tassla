@@ -209,3 +209,8 @@ Erik bad uttryckligen att de övriga panelerna fortsätter medan panel 2:s fryst
 ### FLOW-LOG-01 — renderad verifiering återupptagen, 2026-10-22
 
 Renderer/Chromium är nu tillgängliga för isolerad RN Web-kontroll. Public/review-render: 13/13 vardera. Kalenderns datumtext är centrerad och ikonen minst 20,4 px åt höger vid 360 px; kalenderdagmål mäter 44,56×44 px och `Lägg till händelse` har 32 px scrollbottenmarginal vid 360×844 med Fler öppet. Gråskalevyn skiljer Kiss- och Vattenikonerna åt. Full Panel 5 är fortsatt partiell: `Översikt` väntar på en fungerande Panel 8/Insikter-route, så §14 punkt 16–17 är `Nej`. Oberoende QA/Reviewer, live RLS och native kontroller är öppna/NOT TESTABLE. Se [FLOW-LOG-01](../design/evidence/flow-log-01/VERIFICATION.md).
+
+
+### FLOW-DEVELOPMENT-01 — panel 2 lokal checkpoint stängd, 2026-10-22
+
+Frozen Reviewer PASS efter oberoende QA-recheck. Slutlig syntetisk render: public 45/45; review 61/63, där de två −4 pt Home-clearanceavvikelserna vid 375/430 px är ägaraccepterade och utanför Panel 2. Panel 2:s route-/fas-/scrollkontroller passerar. Tasken stängs som lokal, partiell checkpoint; sakgranskade och publicerade milstolpskällor saknas fortsatt. Live Supabase/RLS och native iOS är NOT TESTABLE. QA-inspekterade sparade renderresultat men körde inte om testsvit eller rendering. Se [verifiering](../design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/development/VERIFICATION.md) och [arbetsrapport](../tasks/dev/rapport.md).

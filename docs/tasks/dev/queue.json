@@ -7630,7 +7630,7 @@
       "depends_on": [
         "UX-KNOWLEDGE-CACHE-01"
       ],
-      "status": "blocked",
+      "status": "ready",
       "history": [
         {
           "from": "planned",
@@ -7649,9 +7649,21 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Pause after the committed local UI/render checkpoint. Full panel-7 §14 acceptance and custom-checklist icon parity remain open; Development route work also shares KnowledgeScreen.tsx. Resume Knowledge after the higher-priority panel-2 slice; keep panel 7 partial."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Erik 2026-10-22 authorizes resuming Panel 7 after its prior local checkpoint; Panel 3 is owner-reported complete with internal and external QA. Panel 7 remains partial until its open §14 items receive fresh verification."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Existing exact plan v3 remains in force; recorded Architect APPROVE, Critic PROCEED, Security APPROVE. Owner explicitly unblocks Panel 7; no data/schema scope change."
         }
       ],
-      "next_step": "Pause after the committed local UI/render checkpoint. Full panel-7 §14 acceptance and custom-checklist icon parity remain open; Development route work also shares KnowledgeScreen.tsx. Resume Knowledge after the higher-priority panel-2 slice; keep panel 7 partial.",
+      "next_step": "Existing exact plan v3 remains in force; recorded Architect APPROVE, Critic PROCEED, Security APPROVE. Owner explicitly unblocks Panel 7; no data/schema scope change.",
       "priority": "P2",
       "panels": [
         "7"
@@ -7709,7 +7721,7 @@
       "depends_on": [
         "VISION-R02-HEM-01"
       ],
-      "status": "review",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -7854,9 +7866,15 @@
           "to": "review",
           "actor": "qa",
           "evidence": "Independent QA recheck PASS 2026-10-22 after restoring the verifier 16 pt threshold and correcting historical journal status. QA inspected the final public 45/45 and review 61/63 results/screenshots; both review failures are the owner-accepted Home-only -4 pt overlap at 375/430, while all Panel 2 checks pass. Queue/report/journal/VERIFICATION agree; diff check and queue validation pass. Recheck did not rerun the full test suite or renders."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS 2026-10-22 on final reviewed snapshot. Public 45/45; review 61/63, with only the two owner-accepted out-of-scope Home clearance findings. Panel 2 remains a partial local checkpoint pending reviewed published milestone sources; native/live RLS not testable. MASTER-LOG and report/journal record the actual verdict and limits."
         }
       ],
-      "next_step": "Frozen independent Reviewer re-reviews the updated verifier, final 45/45 and 61/63 results, owner-authorized Home exception, Panel 2 evidence, and queue/report/journal consistency. If PASS, commit and push this partial checkpoint, then unblock Panel 3.",
+      "next_step": "Frozen Reviewer PASS 2026-10-22 on final reviewed snapshot. Public 45/45; review 61/63, with only the two owner-accepted out-of-scope Home clearance findings. Panel 2 remains a partial local checkpoint pending reviewed published milestone sources; native/live RLS not testable. MASTER-LOG and report/journal record the actual verdict and limits.",
       "priority": "P1",
       "panels": [
         "Utveckling"
