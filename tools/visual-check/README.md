@@ -2,7 +2,7 @@
 
 Den här isolerade provytan renderar produktionskomponenterna via React Native Web med syntetiska uppgifter. Den ingår inte i appens routes eller Codemagic-bundle. `app.tsx` håller testdata i minnet. `native.jsx` ersätter PDF/delning, typsnittsladdning och safe-area med testimplementationer. Ionicons använder projektets riktiga font och glyfer. Inga konton eller nätdata används. I R02-2 v10 är review-bannern ett separat element ovanför den 844 pt höga app-viewporten; total sidvy är därför 876 pt. Bannerhöjden räknas inte som apphöjd.
 
-Installera verktygen separat så att appens låsfil förblir oförändrad:
+Buildverktyget föredrar React Native Webs `.web`-moduler före native entrypoints, i linje med Metro, så plattformsspecifika paket som `react-native-svg` kan renderas i samma harness. Installera själva renderverktygen separat:
 
 ```sh
 npm install --prefix /tmp/tassla-ui-tools --no-package-lock react-native-web@0.21.2 react-dom@19.2.3 esbuild@0.25.12

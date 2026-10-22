@@ -43,20 +43,13 @@ export type DailyProgressSelection<T extends Pick<HomeDailyActivity, 'completed'
 
 export type DailyProgressRingFill = {
   fraction: number;
-  completeSegments: number;
-  partialSegment: number;
 };
 
-/** Keeps the ring fill monotonic and exposes the final partial segment. */
-export function dailyProgressRingFill(completed: number, total: number, segmentCount = 120): DailyProgressRingFill {
-  if (!Number.isFinite(completed) || !Number.isInteger(total) || total <= 0
-    || !Number.isInteger(segmentCount) || segmentCount <= 0) {
-    return { fraction: 0, completeSegments: 0, partialSegment: 0 };
-  }
+/** Returns a bounded fraction for the single vector stroke used by the progress ring. */
+export function dailyProgressRingFill(completed: number, total: number): DailyProgressRingFill {
+  if (!Number.isFinite(completed) || !Number.isInteger(total) || total <= 0) return { fraction: 0 };
   const fraction = Math.max(0, Math.min(1, completed / total));
-  const segments = fraction * segmentCount;
-  const completeSegments = Math.floor(segments);
-  return { fraction, completeSegments, partialSegment: segments - completeSegments };
+  return { fraction };
 }
 
 /** Selects the single scope-current daily result shared by Home and Daily Progress. */

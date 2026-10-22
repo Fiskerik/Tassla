@@ -326,13 +326,20 @@ def verify_progress_views(browser) -> None:
         ring = page.get_by_role('progressbar', name='2 av 5 dagsuppgifter klara', exact=True)
         expect(ring).to_be_visible()
         box = ring.bounding_box()
-        segment_count = page.get_by_test_id('daily-progress-ring-segment').count()
+        ring_stroke_count = page.get_by_test_id('daily-progress-ring-progress').count()
+        training_status = page.get_by_test_id('daily-training-status-checkbox')
+        training_status_box = training_status.bounding_box()
         expect(page.get_by_text('2 av 5 klara', exact=True)).to_be_visible()
         expect(page.get_by_text('Dagens lista är klar', exact=True)).to_have_count(0)
         record(f'Progress uses a continuous 40% ring and shared 2/5 list at {width}px',
                box is not None and abs(box['width'] - 248) <= 1 and abs(box['height'] - 248) <= 1
-               and segment_count == 48 and page.get_by_text('Kissa', exact=True).is_visible(),
-               {'ring': box, 'segments': segment_count})
+               and ring_stroke_count == 1 and page.get_by_text('Kissa', exact=True).is_visible(),
+               {'ring': box, 'vector_strokes': ring_stroke_count})
+        record(f'Environment-training status is a round 24pt checkbox at {width}px',
+               training_status_box is not None and abs(training_status_box['width'] - 24) <= 1
+               and abs(training_status_box['height'] - 24) <= 1
+               and training_status.evaluate('(element) => parseFloat(getComputedStyle(element).borderRadius) >= element.getBoundingClientRect().width / 2'),
+               {'checkbox': training_status_box})
         record(f'Progress does not invent completion timestamps at {width}px',
                page.get_by_text('07:12', exact=True).count() == 0 and page.get_by_text('08:45', exact=True).count() == 0)
         overflow = page.evaluate('document.documentElement.scrollWidth <= innerWidth')
@@ -348,8 +355,12 @@ def verify_progress_views(browser) -> None:
     expect(ring).to_be_visible()
     expect(page.get_by_test_id('daily-progress-complete-note')).to_be_visible()
     expect(page.get_by_text('5 aktiviteter markerade som klara idag.', exact=True)).to_be_visible()
-    record('100% ring closes and the factual completion note appears only when complete',
-           page.get_by_test_id('daily-progress-ring-segment').count() == 120)
+    training_check = page.get_by_test_id('daily-training-status-checkmark')
+    expect(page.get_by_text('Miljöträning – nya ljud', exact=True)).to_be_visible()
+    expect(training_check).to_have_count(1)
+    record('100% vector ring closes and the factual completion note appears only when complete',
+           page.get_by_test_id('daily-progress-ring-progress').count() == 1
+           and training_check.is_visible())
     page.screenshot(path=str(OUT / 'progress-complete-375.png'), full_page=True)
     page.get_by_test_id('daily-progress-complete-note').scroll_into_view_if_needed()
     page.screenshot(path=str(OUT / 'progress-complete-bottom-375.png'), full_page=True)

@@ -69,8 +69,8 @@ function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, icon, sh
     <MotionPressable accessibilityRole="button" accessibilityLabel={rowLabel} onPress={onOpen}
       style={({ pressed }) => [styles.homeTrainingRow, pressed && styles.pressed]}>
       <View accessibilityElementsHidden style={styles.homeTrainingStatusCell}>
-        <View style={[styles.homeTrainingStatus, completed && styles.homeTrainingStatusChecked]}>
-          {completed ? <Ionicons name="checkmark" size={tokens.size.iconSm} color={tokens.colors.onPrimary} /> : null}
+        <View testID="daily-training-status-checkbox" style={[styles.homeTrainingStatus, completed && styles.homeTrainingStatusChecked]}>
+          {completed ? <Ionicons testID="daily-training-status-checkmark" name="checkmark" size={tokens.size.iconSm + tokens.spacing.xs} color={tokens.colors.onPrimary} /> : null}
         </View>
       </View>
       <View style={styles.homeCopy}>
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   homeCheckbox: { width: tokens.size.homeCheckbox, height: tokens.size.homeCheckbox, borderWidth: 2, borderColor: tokens.colors.home.textMuted, borderRadius: tokens.spacing.xs, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card },
   homeCheckboxChecked: { borderColor: tokens.colors.home.greenStrong, backgroundColor: tokens.colors.home.greenStrong },
   homeTrainingStatusCell: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
-  homeTrainingStatus: { width: tokens.size.homeCheckbox - tokens.spacing.xs, height: tokens.size.homeCheckbox - tokens.spacing.xs, borderWidth: 2, borderColor: tokens.colors.home.textMuted, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card },
+  homeTrainingStatus: { width: tokens.size.homeCheckbox + tokens.spacing.xs, height: tokens.size.homeCheckbox + tokens.spacing.xs, borderWidth: 2, borderColor: tokens.colors.home.textMuted, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card },
   homeTrainingStatusChecked: { borderColor: tokens.colors.home.greenStrong, backgroundColor: tokens.colors.home.greenStrong },
   homeCopy: { flex: 1, minWidth: 0, gap: tokens.spacing.xs / 2 },
   homeLabel: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '500', flexShrink: 1 },

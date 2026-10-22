@@ -14,25 +14,22 @@ resolution.deregister();
 
 const screen = await readFile(new URL('../src/features/home/DailyProgressScreen.tsx', import.meta.url), 'utf8');
 
-test('progress ring fills monotonically through the half-way point and closes cleanly', () => {
+test('vector ring fill uses a monotonic, exact fraction through completion', () => {
   const cases = [
-    [0, 5, 0, 0, 0],
-    [1, 100, 0.01, 1, 0.2],
-    [49, 100, 0.49, 58, 0.8],
-    [50, 100, 0.5, 60, 0],
-    [51, 100, 0.51, 61, 0.2],
-    [99, 100, 0.99, 118, 0.8],
-    [100, 100, 1, 120, 0],
+    [0, 5, 0],
+    [1, 100, 0.01],
+    [49, 100, 0.49],
+    [50, 100, 0.5],
+    [51, 100, 0.51],
+    [99, 100, 0.99],
+    [100, 100, 1],
   ];
   let previous = 0;
-  for (const [completed, total, fraction, completeSegments, partialSegment] of cases) {
+  for (const [completed, total, fraction] of cases) {
     const fill = dailyProgressRingFill(completed, total);
     assert.equal(fill.fraction, fraction, `${completed}/${total} fraction`);
-    assert.equal(fill.completeSegments, completeSegments, `${completed}/${total} complete segments`);
-    assert.ok(Math.abs(fill.partialSegment - partialSegment) < 1e-9, `${completed}/${total} partial segment`);
-    const progress = fill.completeSegments + fill.partialSegment;
-    assert.ok(progress >= previous, `${completed}/${total} cannot move backwards`);
-    previous = progress;
+    assert.ok(fill.fraction >= previous, `${completed}/${total} cannot move backwards`);
+    previous = fill.fraction;
   }
 });
 
@@ -41,9 +38,9 @@ test('invalid ring inputs remain empty rather than producing NaN layout values',
     dailyProgressRingFill(0, 0),
     dailyProgressRingFill(2, -1),
     dailyProgressRingFill(Number.NaN, 5),
-    dailyProgressRingFill(2, 5, 0),
+    dailyProgressRingFill(Number.POSITIVE_INFINITY, 5),
   ]) {
-    assert.deepEqual(fill, { fraction: 0, completeSegments: 0, partialSegment: 0 });
+    assert.deepEqual(fill, { fraction: 0 });
   }
 });
 
@@ -52,9 +49,14 @@ test('ring and full list render from the same complete daily selector', () => {
   assert.match(screen, /const readyWithActivities = progress\.coverage === 'complete'/);
   assert.match(screen, /<ProgressRing completed=\{progress\.completedCount\} total=\{progress\.totalCount\}/);
   assert.match(screen, /progress\.activities\.map\(/);
-  assert.match(screen, /dailyProgressRingFill\(completed, total, segmentCount\)/);
-  assert.match(screen, /testID="daily-progress-ring-segment"/);
-  assert.doesNotMatch(screen, /revealY|ringHalfClip|Math\.cos\(fraction/);
+  assert.match(screen, /dailyProgressRingFill\(completed, total\)/);
+  assert.match(screen, /<Svg accessible={false}/);
+  assert.match(screen, /strokeDasharray={`\$\{circumference \* fill\.fraction\} \$\{circumference\}`\}/);
+  assert.match(screen, /strokeDashoffset=\{0\}/);
+  assert.match(screen, /strokeLinecap=\{fill\.fraction === 1 \? 'butt' : 'round'\}/);
+  assert.match(screen, /LinearGradient id="daily-progress-ring-gradient"/);
+  assert.match(screen, /testID="daily-progress-ring-progress"/);
+  assert.doesNotMatch(screen, /daily-progress-ring-segment|segmentCount|ringHalfClip/);
 });
 
 test('loading, unknown, partial, error and empty states never present a 0/0 ring', () => {

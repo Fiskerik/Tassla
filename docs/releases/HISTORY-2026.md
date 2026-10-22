@@ -632,3 +632,13 @@ Fyra filter och Kommande är implementerade i den nya branchen `2026-10-22-check
 A03:s dedikerade public/review RN Web-verifiering gav 10/10 och 19/19. `pnpm check` 65/65, public iOS JS-bundle 1 460 moduler, `git diff --check` och `python -X utf8 tools/dev_flow.py validate` PASS. Skärmbilder/resultat: [A03](../design/evidence/flow-home-checklist-filters-2026-10-20/a03/VERIFICATION.md). Detta är lokal avgränsad UI-verifiering; oberoende QA/Reviewer och full panel-4-§14-closeout är öppna.
 
 NOT TESTABLE: live Supabase/RLS, A02-migrationens apply och äldre klientruntime, native VoiceOver/Dynamic Type/gester och TestFlight. Ingen databasoperation kördes. Erik hade tidigare bekräftat manuella tester 1–4 som PASS; de kördes inte om. Separat Home-review-fixture visade 4 pt initial-fit-överlappning i syntetisk review-vy; den ligger utanför A03. Checkpointcommit `25bde34` (`feat: add upcoming checklist filters and source routes`) pushad till `origin/2026-10-22-checklist-kommande-navigation`.
+
+## FLOW-LOG-01 — renderad kalender-/snabbvals-slice, 2026-10-22
+
+Den befintliga kalendervyn återverifierades när lokal RN Web-renderer och Chromium fanns tillgängliga. Public/review gav 13/13 vardera, inklusive 360/375/430 px, 375×667, kalenderns markör-/tom-/laddnings-/fel/retry, datumval, framtidsdagsspärr, gråskala och 140 %-CSS-textproxy. Renderat dagmål: 44,56×44 px; fri bottenmarginal vid scrollslut: 32 px.
+
+Full Panel 5-acceptans är fortsatt partiell: `Översikt`-fliken kräver den fungerande Panel 8/Insikter-destinationen; §14 punkt 16–17 är `Nej`. Oberoende QA/Reviewer, live RLS och native iOS kontroller återstår/är NOT TESTABLE. [Render och §14](../design/evidence/flow-log-01/VERIFICATION.md).
+
+### UI-korrigering — Logga och Dagens framsteg, 2026-10-22
+
+Loggas kalenderikon har nu minst 20,4 px avstånd från centrerad datumtext vid 360 px; public/review-rendering 13/13 vardera vid 360/375/430. Panel 3 använder en slät sammanhängande `react-native-svg`-ring med subtil grön toning, och Miljöträning har en synlig 24 pt bock i en 24 pt cirkel. Panel-specifik progress-rendering 2/2 public och 15/15 review. `CI=1 pnpm check` PASS: 665/666 tester (1 skip), typechecks och ESLint. Public iOS export PASS, 1 577 JS-moduler. Ny iOS-appbuild krävs före test av SVG:n i native; panel-3 oberoende QA/Reviewer återstår.

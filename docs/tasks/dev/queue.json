@@ -7439,7 +7439,12 @@
         "docs/tasks/dev/rapport.md",
         "docs/tasks/dev/FLOW-LOG-01.md",
         "docs/decisions/MASTER-LOG.md",
-        "docs/releases/HISTORY-2026.md"
+        "docs/releases/HISTORY-2026.md",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-log.py",
+        "tests/log-screen-policy.test.mjs",
+        "tools/visual-check/build.cjs",
+        "tools/visual-check/README.md"
       ],
       "acceptance": [
         "Date control opens Swedish Monday-first calendar; previous month works, next month disabled in current month, future days disabled, selection updates Log history and closes calendar.",
@@ -7516,9 +7521,15 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "QA package verdict: code/test PASS, but explicit responsive render matrix, grayscale proof and AppScreen bottom-gap evidence are NOT TESTABLE because no renderer/browser is installed; design-rules §14 prevents visual PASS. Security APPROVE static; live RLS/native separately NOT TESTABLE. Preserve checkpoint and continue next independent package; revisit when approved render capability is available."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Renderer capability restored. Focused Logga calendar/quick-action slice passes coordinator RN Web public 13/13 and review 13/13, 44.56x44 px calendar day at 360 px, and 32 px AppScreen bottom clearance. Full Panel 5 remains blocked because §14 points 16-17 are NO until Overview routes to Panel 8 and independent QA/Reviewer complete; proceed to other independent panels."
         }
       ],
-      "next_step": "Blocked only on required rendered UI matrix/grayscale/AppScreen gap and §14 evidence because no approved renderer is installed. Push the local code/test checkpoint, continue the next independent approved package, and resume visual acceptance when rendering is available.",
+      "next_step": "Renderer capability restored. Focused Logga calendar/quick-action slice passes coordinator RN Web public 13/13 and review 13/13, 44.56x44 px calendar day at 360 px, and 32 px AppScreen bottom clearance. Full Panel 5 remains blocked because §14 points 16-17 are NO until Overview routes to Panel 8 and independent QA/Reviewer complete; proceed to other independent panels. The new date-icon spacing is locally verified; no log behavior or data source changed.",
       "priority": "P2",
       "panels": [
         "5"
@@ -7527,13 +7538,17 @@
       "checkpoint": "Panel 5 funktionellt regressionsprov; hänvisa till tidigare design- och editor-checkpoints.",
       "test_evidence": [
         "Synthetic PostgREST tests verify dog-scoped occurred_at-only query, local half-open bounds, exact microsecond cursor, equal timestamp boundary, error/abort, mutation during traversal and fresh traversal after a change before cursor.",
-        "Calendar model and source policy tests verify Monday-first dates, DST/month bounds, accessibility/state source, 44 pt target arithmetic, request guards and mutation refresh wiring; component-level scope race remains not rendered.",
-        "Contrast calculations from current tokens pass for Pee, Water, Accident and timeline text. Grayscale actual-size comparison, 140% rendered text and AppScreen bottom-gap matrix remain NOT TESTABLE.",
-        "Live two-owner RLS/anon-denial probe and native Dynamic Type/VoiceOver/physical target/safe-area/reduced-motion are NOT TESTABLE in the current environment.",
-        "Focused tests 16/16, pnpm check 599/599, public pnpm bundle:ios 1,449 modules, git diff --check and python -X utf8 tools/dev_flow.py validate pass."
+        "Calendar model and source policy tests verify Monday-first dates, DST/month bounds, accessibility/state source, 44 pt target arithmetic, request guards and mutation refresh wiring; component-level scope race remains not independently QA-reviewed.",
+        "Coordinator RN Web render: public 13/13 and review 13/13. Covers 360/375/430 px, 375x667, 140% CSS text proxy, grayscale, marker/empty/loading/error+retry calendar states, previous month, future-day disabling and date selection/return.",
+        "Rendered date target is 44.56x44 px at 360 px. AppScreen action-to-tablist clearance is 32 px at 360x844 after scroll bottom with Fler open.",
+        "Kiss and Water icon shapes remain distinct in rendered grayscale and retain labels. Token contrast values from prior check: Pee 5.38:1, Water 4.97:1, Accident 6.15:1, timeline text 11.95:1.",
+        "Live two-owner RLS/anon-denial probe and native Dynamic Type/VoiceOver/physical safe-area/reduced-motion are NOT TESTABLE. Full-screen §14 points 16-17 are NO because the Overview/Insights destination remains pending Panel 8.",
+        "Focused tests 16/16, prior pnpm check 599/599, public pnpm bundle:ios 1,449 modules; current public/review visual verifier builds and passes 13/13 each; git diff --check, python -m py_compile and python -X utf8 tools/dev_flow.py validate PASS.",
+        "After the owner UI correction, public/review rendering still passes 13/13 each; the date remains centered and the calendar glyph has 20.4/27.9/55.4 px spacing at 360/375/430 px.",
+        "Current branch `pnpm check` passes 665/666 tests (1 skip), public iOS export passes at 1,577 modules, and the updated calendar icon spacing is rendered and measured at 360/375/430 px."
       ],
-      "implementation_state": "v5 implemented; correction 1 verified by local tests; package visual acceptance remains blocked on render evidence",
-      "evidence_status": "QA code/test PASS (16/16, pnpm check 599/599, bundle 1,449); QA overall NOT PASS pending render/§14. Security final APPROVE static; live RLS/native NOT TESTABLE."
+      "implementation_state": "v5 product/data code and correction 1 remain as previously checkpointed. Coordinator added an isolated RN Web fixture/verifier and current public/review evidence; no product source/schema/auth changes in this recheck. Calendar slice renders cleanly; Panel 5 is partial pending Overview destination, independent QA and Reviewer.",
+      "evidence_status": "Coordinator render 13/13 public and 13/13 review, with 44.56x44 px date targets and 32 px action clearance. Not independent QA. Full-panel §14 points 16-17 remain NO pending Panel 8. Static Security APPROVE remains recorded; live RLS/native NOT TESTABLE."
     },
     {
       "id": "FLOW-TRAINING-01",
@@ -7876,7 +7891,13 @@
         "docs/design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/progress",
         "docs/tasks/dev/rapport.md",
         "docs/tasks/dev/queue.json",
-        "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md"
+        "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md",
+        "package.json",
+        "pnpm-lock.yaml",
+        "src/components/ui/DailyActivityItem.tsx",
+        "tests/daily-activity-ui.test.mjs",
+        "tools/visual-check/build.cjs",
+        "tools/visual-check/README.md"
       ],
       "acceptance": [
         "Use `daily-progress-hero-puppy-terrier.jpg` as the distinct Panel 3 portrait; do not reuse Home or Development hero art.",
@@ -7913,16 +7934,16 @@
           "evidence": "Panel 3 source changes are present but its dependency FLOW-DEVELOPMENT-01 has not completed its checkpoint; this task also shares active write paths with Development. Panel 3 test/render/§14 evidence is not available, and no tests were run. Keep it blocked until Development is checkpointed and the Progress verification is completed."
         }
       ],
-      "next_step": "Panel 3 implementation and local verification were completed under Erik’s explicit instruction to continue the remaining panels while the Panel 2 frozen Reviewer re-review is pending. The formal status remains blocked at the approved dependency gate. After FLOW-DEVELOPMENT-01 Reviewer PASS, transition this task through planned/ready/implementing, then obtain independent panel-3 QA and frozen Reviewer review. Keep the panel partial until a real weekly-goal source or revised MVP contract exists.",
+      "next_step": "Panel 3 implementation and local verification were completed under Erik’s explicit instruction to continue the remaining panels while the Panel 2 frozen Reviewer re-review is pending. The formal status remains blocked at the approved dependency gate. After FLOW-DEVELOPMENT-01 Reviewer PASS, transition this task through planned/ready/implementing, then obtain independent panel-3 QA and frozen Reviewer review. Keep the panel partial until a real weekly-goal source or revised MVP contract exists. Owner’s new visual requirement supersedes v8’s no-SVG ring implementation detail; reconcile the package/renderer change in the next independent plan/review update.",
       "priority": "P1",
       "panels": [
         "Dagens framsteg"
       ],
       "risk_class": "M",
       "checkpoint": "Checkpoint 3: partial Daily Progress route with truthful source-derived counts.",
-      "test_evidence": "`pnpm check` PASS: app/edge TypeScript, ESLint and 68/68 Node test files; focused daily-progress/model/routes suites PASS 3/3; public iOS content guard/export PASS (1,465 modules); public RN Web 2/2 and review RN Web 13/13 PASS. Review covers 375/430 pt, 40%/100% ring, empty/loading/error/unknown/partial, short viewport, 140% text proxy and no horizontal overflow. The pure ring tests cover 0/1/49/50/51/99/100% and invalid inputs. `git diff --check` PASS. These are implementation-run local checks, not independent QA or Reviewer approval. Live weekly-goal source, Supabase/RLS, native VoiceOver/Dynamic Type, account/dog scope on device and signed build remain NOT TESTABLE; full panel remains partial.",
-      "implementation_state": "Panel 3 source is updated: monotonic 120-segment ring, 248/12pt ring tokens, shared daily selector/list, truthful complete-only note, distinct empty/loading/error/unknown/partial states, unique Standardbild and existing routine/training actions. Implementation and local tests/renders are recorded in progress/VERIFICATION.md. Formal queue status is blocked until the Panel 2 dependency checkpoint is reviewed; independent QA/Reviewer for Panel 3 remain pending.",
-      "evidence_status": "Implementation/local verification PASS; formal dependency gate, independent QA and Reviewer pending; weekly-goal data unavailable"
+      "test_evidence": "Current `CI=1 pnpm check` PASS: app/edge TypeScript, ESLint, 665/666 tests (1 skip). Public iOS content guard/export PASS, 1,577 JS modules. Focused progress, daily-activity UI, route, and Logga calendar policy tests PASS. Panel-specific public RN Web 2/2 and review 15/15 PASS; review checks one continuous vector ring at 40% and 100%, 24pt round Environment Training status at 375/430, empty/loading/error/unknown/partial, short viewport, 140% text proxy and no overflow. Log calendar spacing separately passes public/review 13/13 with a centered date and 20.4/27.9/55.4 px icon gap at 360/375/430. Native SVG runtime needs a new iOS app build; independent QA/Reviewer, plan reconciliation, panel-2 dependency and weekly-goal source remain open.",
+      "implementation_state": "Owner visual correction complete: SVG vector progress ring, 24 pt round Environment Training status, and verified calendar icon spacing. Local panel-specific rendering and checks pass. Plan v8 no-SVG implementation detail is superseded by the owner correction and needs reconciliation during independent panel review.",
+      "evidence_status": "Coordinator local verification PASS; panel 2 dependency, independent QA/Reviewer, weekly-goal source and native/live checks remain open."
     },
     {
       "id": "FLOW-INSIGHTS-01",

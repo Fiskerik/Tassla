@@ -1,5 +1,6 @@
 import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { AppBar, Button, Card, DailyActivityItem, Skeleton } from '../../components/ui';
 import { MessageCard } from '../../components/AppPrimitives';
 import type { DailyRoutineDay } from './daily-activity-data';
@@ -111,25 +112,24 @@ function ProgressRing({ completed, total, dogName }: { completed: number; total:
   const diameter = tokens.size.homeProgressRingDiameter;
   const stroke = tokens.size.homeProgressRingStroke;
   const radius = (diameter - stroke) / 2;
-  const segmentCount = 120;
-  const fill = dailyProgressRingFill(completed, total, segmentCount);
-  const segmentArc = Math.PI * 2 * radius / segmentCount;
-  const visibleSegments = fill.completeSegments + (fill.partialSegment > 0 ? 1 : 0);
+  const center = diameter / 2;
+  const circumference = Math.PI * 2 * radius;
+  const fill = dailyProgressRingFill(completed, total);
   return <View accessibilityRole="progressbar" accessibilityLabel={`${completed} av ${total} dagsuppgifter klara`}
     accessibilityValue={{ min: 0, max: total, now: completed }} style={[styles.ring, { width: diameter, height: diameter }]}>
-    <View accessible={false} style={[styles.ringTrack, { width: diameter, height: diameter, borderRadius: diameter / 2, borderWidth: stroke }]} />
-    {Array.from({ length: visibleSegments }, (_, index) => {
-      const segmentFraction = index < fill.completeSegments ? 1 : fill.partialSegment;
-      const length = segmentArc * segmentFraction + (index < fill.completeSegments ? 2 : 0);
-      const centerDistance = index * segmentArc + segmentArc * segmentFraction / 2;
-      const angle = -Math.PI / 2 + centerDistance / radius;
-      const centerX = diameter / 2 + radius * Math.cos(angle);
-      const centerY = diameter / 2 + radius * Math.sin(angle);
-      const rotation = `${(angle + Math.PI / 2) * 180 / Math.PI}deg`;
-      return <View key={index} accessible={false} testID="daily-progress-ring-segment" style={[styles.ringSegment, {
-        width: length, height: stroke, left: centerX - length / 2, top: centerY - stroke / 2, transform: [{ rotate: rotation }],
-      }]} />;
-    })}
+    <Svg accessible={false} importantForAccessibility="no-hide-descendants" pointerEvents="none" width={diameter} height={diameter} viewBox={`0 0 ${diameter} ${diameter}`} style={styles.ringSvg}>
+      <Defs>
+        <LinearGradient id="daily-progress-ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0%" stopColor={tokens.colors.home.greenStrong} />
+          <Stop offset="100%" stopColor={tokens.colors.home.greenFill} />
+        </LinearGradient>
+      </Defs>
+      <Circle cx={center} cy={center} r={radius} fill="none" stroke={tokens.colors.home.progressTrack} strokeWidth={stroke} />
+      {fill.fraction > 0 ? <Circle testID="daily-progress-ring-progress" accessible={false} cx={center} cy={center} r={radius}
+        fill="none" stroke="url(#daily-progress-ring-gradient)" strokeWidth={stroke}
+        strokeDasharray={`${circumference * fill.fraction} ${circumference}`} strokeDashoffset={0}
+        strokeLinecap={fill.fraction === 1 ? 'butt' : 'round'} transform={`rotate(-90 ${center} ${center})`} /> : null}
+    </Svg>
     <View accessible={false} style={[styles.ringContent, { width: diameter, height: diameter }]}>
       <View style={styles.ringPortrait}>
         <Image source={require('../../../assets/images/daily-progress-hero-puppy-terrier.jpg')} style={styles.ringPhoto} resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
@@ -146,8 +146,7 @@ const styles = StyleSheet.create({
   dateHeading: { ...tokens.typography.caption, color: tokens.colors.home.textMuted, textAlign: 'center', textTransform: 'capitalize' },
   heroCard: { minHeight: tokens.size.homeProgressRingDiameter + tokens.spacing.md, alignItems: 'center', justifyContent: 'center', paddingVertical: tokens.spacing.xs },
   ring: { position: 'relative', alignItems: 'center', justifyContent: 'center' },
-  ringTrack: { position: 'absolute', borderColor: tokens.colors.home.progressTrack },
-  ringSegment: { position: 'absolute', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.greenFill },
+  ringSvg: { position: 'absolute' },
   ringContent: { position: 'absolute', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs / 2 },
   ringPortrait: { position: 'relative', width: tokens.size.homeProgressRingDiameter * 0.45, height: tokens.size.homeProgressRingDiameter * 0.45, marginBottom: tokens.spacing.xs / 2 },
   ringPhoto: { width: '100%', height: '100%', borderRadius: tokens.radius.full },

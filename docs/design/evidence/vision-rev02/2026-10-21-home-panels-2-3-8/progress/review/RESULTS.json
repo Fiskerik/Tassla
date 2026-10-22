@@ -12,7 +12,17 @@
         "width": 248,
         "height": 248
       },
-      "segments": 48
+      "vector_strokes": 1
+    },
+    {
+      "check": "Environment-training status is a round 24pt checkbox at 375px",
+      "result": "PASS",
+      "checkbox": {
+        "x": 47,
+        "y": 724,
+        "width": 24,
+        "height": 24
+      }
     },
     {
       "check": "Progress does not invent completion timestamps at 375px",
@@ -32,7 +42,17 @@
         "width": 248,
         "height": 248
       },
-      "segments": 48
+      "vector_strokes": 1
+    },
+    {
+      "check": "Environment-training status is a round 24pt checkbox at 430px",
+      "result": "PASS",
+      "checkbox": {
+        "x": 47,
+        "y": 724,
+        "width": 24,
+        "height": 24
+      }
     },
     {
       "check": "Progress does not invent completion timestamps at 430px",
@@ -44,7 +64,7 @@
       "page_errors": []
     },
     {
-      "check": "100% ring closes and the factual completion note appears only when complete",
+      "check": "100% vector ring closes and the factual completion note appears only when complete",
       "result": "PASS"
     },
     {
