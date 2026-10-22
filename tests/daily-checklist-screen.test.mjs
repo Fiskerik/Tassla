@@ -27,12 +27,14 @@ test('Checklist count and progress use confirmed, non-skipped activity state onl
 });
 
 test('Checklist separates routine tap, longpress edit and checkbox actions', () => {
-  assert.match(screen, /function openManager\(routineId: string \| null = null, editFocusedRoutine = false\)/);
+  assert.match(screen, /function openManager\(routineId: string \| null = null, editFocusedRoutine = false, routineItemId: string \| null = null\)/);
   assert.match(screen, /onOpen=\{item\.kind === 'training'[\s\S]*?openManager\(routineDay\?\.routine_id \?\? null\)/);
-  assert.match(screen, /onLongPress=\{item\.kind === 'routine' && routineDay\?\.routine_id[\s\S]*?openManager\(routineDay\.routine_id, true\)/);
-  assert.match(screen, /accessibilityHint=\{item\.kind === 'routine' && routineDay\?\.routine_id \? 'Håll inne på rutinen för att redigera\.'/);
+  assert.match(screen, /onLongPress=\{item\.kind === 'routine' && routineDay\?\.routine_id[\s\S]*?openManager\(routineDay\.routine_id, true, item\.routineItemId \?\? null\)/);
+  assert.match(screen, /accessibilityHint=\{item\.kind === 'routine' && routineDay\?\.routine_id \? 'Håll inne på en rutinpunkt för att öppna redigeringen\.'/);
   assert.match(screen, /editFocusedRoutineOnOpen=\{editFocusedRoutineOnOpen\}/);
-  assert.match(screen, /Håll inne på rutinen för att redigera\./);
+  assert.match(screen, /focusRoutineItemId=\{focusRoutineItemId\}/);
+  assert.match(screen, /onClose=\{closeManager\}/);
+  assert.match(screen, /Håll inne på en rutinpunkt för att öppna redigeringen\./);
 });
 
 test('Checklist local date label is calendar-based and does not shift across device timezones', () => {

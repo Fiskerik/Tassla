@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { DailyActivityItem } from '../../components/ui/DailyActivityItem';
 import { IconChip } from '../../components/ui/IconChip';
+import { ThemedIcon } from '../../components/ui/ThemedIcon';
 import { MotionPressable } from '../../components/ui/Motion';
 import { Tabs } from '../../components/ui/Tabs';
 import { MessageCard } from '../../components/AppPrimitives';
@@ -13,6 +14,7 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { tokens } from '../../theme/tokens';
 import type { DailyRoutine, DailyRoutineChecklistItem, DailyRoutineCreateInput, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineRepeatValues, DailyTrainingSelection } from './daily-activity-data';
 import type { ChecklistFilter, HomeDailyActivity } from './daily-activity-model';
+import { dailyRoutineChecklistIconTone } from './daily-routine-checklist-icons';
 import type { HomeDailyTrainingOption } from './HomeScreen';
 import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
 
@@ -57,6 +59,7 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
 }) {
   const [managerVisible, setManagerVisible] = useState(openManagerInitially);
   const [focusRoutineId, setFocusRoutineId] = useState<string | null>(null);
+  const [focusRoutineItemId, setFocusRoutineItemId] = useState<string | null>(null);
   const [editFocusedRoutineOnOpen, setEditFocusedRoutineOnOpen] = useState(false);
   const showingToday = filter === 'Idag';
   const visibleState = showingToday ? state : rangeState;
@@ -69,10 +72,18 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
   const dateLabel = checklistDateLabel(dateKey);
   const retry = showingToday ? onRetry : onRetryRange;
 
-  function openManager(routineId: string | null = null, editFocusedRoutine = false) {
+  function openManager(routineId: string | null = null, editFocusedRoutine = false, routineItemId: string | null = null) {
     setFocusRoutineId(routineId);
+    setFocusRoutineItemId(routineItemId);
     setEditFocusedRoutineOnOpen(editFocusedRoutine);
     setManagerVisible(true);
+  }
+
+  function closeManager() {
+    setManagerVisible(false);
+    setFocusRoutineId(null);
+    setFocusRoutineItemId(null);
+    setEditFocusedRoutineOnOpen(false);
   }
 
   return <View testID="daily-checklist-screen" style={styles.page}>
@@ -113,7 +124,7 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
         <View style={[styles.progressFill, { width: (Math.round(completedCount / activities.length * 100) + '%') as import('react-native').DimensionValue }]} />
       </View>
       {activities.some((activity) => activity.kind === 'routine')
-        ? <Text style={styles.longPressHint}>Håll inne på rutinen för att redigera.</Text>
+        ? <Text style={styles.longPressHint}>Håll inne på en rutinpunkt för att öppna redigeringen.</Text>
         : null}
       <View style={styles.rows}>
         {activities.map((item) => {
@@ -122,8 +133,9 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
           const itemMutation = Boolean(itemMutationKey && mutationKey === itemMutationKey);
           const readbackError = itemMutation && mutationMessage.startsWith('Ändringen sparades, men dagens lista');
           return <DailyActivityItem key={item.id} variant="home" kind={item.kind} label={item.label} routineLabel={item.routineLabel}
+            icon={item.icon} showRoutineIcon={item.kind === 'routine'}
             accessibilityLabel={item.kind === 'routine' ? `Rutin ${item.routineLabel ?? ''}, punkt ${item.label}` : `Träningsuppgift: ${item.label}`}
-            accessibilityHint={item.kind === 'routine' && routineDay?.routine_id ? 'Håll inne på rutinen för att redigera.' : undefined}
+            accessibilityHint={item.kind === 'routine' && routineDay?.routine_id ? 'Håll inne på en rutinpunkt för att öppna redigeringen.' : undefined}
             completed={item.completed} pending={itemMutation && mutationBusy}
             statusMessage={itemMutation ? mutationMessage : ''} statusError={itemMutation && mutationError}
             onToggle={routineDay ? () => item.routineItemId && onSetRoutineCompletion?.(routineDay, item.routineItemId, !item.completed) : undefined}
@@ -131,7 +143,7 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
               ? () => onOpenTrainingStep?.(item.programId!, item.stepId!, 'checklist')
               : () => openManager(routineDay?.routine_id ?? null)}
             onLongPress={item.kind === 'routine' && routineDay?.routine_id
-              ? () => openManager(routineDay.routine_id, true)
+              ? () => openManager(routineDay.routine_id, true, item.routineItemId ?? null)
               : undefined}
             onRetry={itemMutation ? (onRetryMutation ?? (readbackError ? onRetry : undefined)) : undefined} />;
         })}
@@ -150,8 +162,8 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
       </View>
     </Card> : null}
 
-    <DailyActivityManagerSheet key={`${dateKey}:${focusRoutineId ?? 'all'}:${managerVisible}:${editFocusedRoutineOnOpen}`}
-      visible={managerVisible} onClose={() => { setManagerVisible(false); setEditFocusedRoutineOnOpen(false); }} focusRoutineId={focusRoutineId}
+    <DailyActivityManagerSheet key={`${dateKey}:${focusRoutineId ?? 'all'}:${focusRoutineItemId ?? 'all-items'}:${managerVisible}:${editFocusedRoutineOnOpen}`}
+      visible={managerVisible} onClose={closeManager} focusRoutineId={focusRoutineId} focusRoutineItemId={focusRoutineItemId}
       editFocusedRoutineOnOpen={editFocusedRoutineOnOpen}
       activities={activities} routines={routines} routineDaySkips={routineDaySkips} trainingOptions={trainingOptions}
       busy={mutationBusy} mutationMessage={mutationMessage} mutationError={mutationError} onRetryMutation={onRetryMutation}
@@ -208,8 +220,9 @@ function ChecklistActivityRow({ item, first, accessibilityLabel, completed, pend
 function ActivitySourceIcon({ item }: { item: HomeDailyActivity }) {
   if (item.kind === 'training') return <IconChip category="training" size="medium" />;
   if (item.healthType === 'vaccination') return <IconChip category="vaccination" size="medium" />;
+  const icon = item.icon ?? 'list-outline';
   return <View accessibilityRole="image" accessibilityLabel="Rutin" style={styles.routineIcon}>
-    <Ionicons name="list-outline" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
+    <ThemedIcon name={icon} tone={dailyRoutineChecklistIconTone(icon)} size="small" testID={`checklist-icon-${item.id}`} />
   </View>;
 }
 
@@ -275,7 +288,7 @@ const styles = StyleSheet.create({
   checkboxTarget: { width: tokens.size.touchMin, minHeight: 64, alignItems: 'center', justifyContent: 'center' },
   checkbox: { width: tokens.size.homeCheckbox, height: tokens.size.homeCheckbox, borderWidth: 1, borderColor: tokens.colors.home.textMuted, borderRadius: tokens.spacing.xs, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card },
   checkboxChecked: { borderColor: tokens.colors.home.greenStrong, backgroundColor: tokens.colors.home.greenStrong },
-  routineIcon: { width: tokens.size.chipMd, minHeight: tokens.size.chipMd, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.card },
+  routineIcon: { width: tokens.size.chipMd, minHeight: tokens.size.chipMd, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full },
   rowContent: { flex: 1, minWidth: 0, minHeight: 64, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm, paddingRight: tokens.spacing.xs },
   copy: { flex: 1, minWidth: 0, gap: tokens.spacing.xs / 2 },
   rowTitle: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '500', flexShrink: 1 },

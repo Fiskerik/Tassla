@@ -32,7 +32,11 @@ Reproducerbara React Native Web-renderingar finns i [tools/visual-check](../../.
 
 I veckoupprepning visas `Må, Ti, On, To, Fr, Lö, Sö` i en horisontell rad. Fullständiga veckodagsnamn exponeras för hjälpmedelsteknik och raden kan bläddras vid smal skärm eller större text; varje knapp behåller minst 44 pt träffyta. Rutinens pennknapp är ikon-only visuellt men behåller namnbundet tillgänglighetsnamn.
 
-I `DailyActivityManagerSheet` staplas rutinens dagsval och radering när fönstret är smalare än 360 pt eller `fontScale` minst 1.25; vid större utrymme kan de ligga sida vid sida och radbrytas. Ändringen påverkar bara presentationen, inte rutinutkastets sparning, avbryt, readback eller hundscope.
+I `DailyActivityManagerSheet` visas lägg till/ta bort från Hemskärmen och radera rutin som två separata ikonknappar med minst 44 pt träffyta. Borttagning från dagen och radering av rutinen kräver varsin bekräftelse; tillgänglighetsnamnen behåller hela handlingstexten.
+
+Rutinens checklistepunkter kan få en valbar ikon i samma skapa-/redigeraflöde. En ikonknapp öppnar en tillgänglig grid med 20 symboler; en explicit vald ikon markeras både med kant och bock. Long-press på dagens rutinpunkt öppnar samma editor med rätt punkt och grid fokuserade. Vanligt radtryck och completion-checkboxen behåller sina separata handlingar.
+
+Valet sparas som validerad metadata i rutinens JSON-checklista och följer med framtida dagskopior; redan sparade kopior behåller sitt befintliga innehåll. Checklistor visar den sparade ikonen, en entydig textmatch eller neutral listikon. Fallbacken är endast för visning och skrivs inte tillbaka. Hemkortets rader fortsätter vara kompakta utan punktikoner. Ikonfältet accepteras endast av den versionshanterade SQL-valideringen och klientens exakta readback-kontroll. Migrationen är inte applicerad; production icon-skrivningar blockeras tills gamla klienter inte längre kan läsa icon-bärande data eller en separat granskad kompatibilitetslösning har verifierats.
 
 ## Utvecklingens panel
 

@@ -7,6 +7,9 @@ const model = await readFile(new URL('../src/features/home/daily-activity-model.
 const item = await readFile(new URL('../src/components/ui/DailyActivityItem.tsx', import.meta.url), 'utf8');
 const manager = await readFile(new URL('../src/features/home/DailyActivityManagerSheet.tsx', import.meta.url), 'utf8');
 const workspace = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
+const dailyChecklist = await readFile(new URL('../src/features/home/DailyChecklistScreen.tsx', import.meta.url), 'utf8');
+const routineIcons = await readFile(new URL('../src/features/home/daily-routine-checklist-icons.ts', import.meta.url), 'utf8');
+const iconMigration = await readFile(new URL('../supabase/migrations/202610220001_daily_routine_checklist_icons.sql', import.meta.url), 'utf8');
 
 test('Home offers one permanent checklist entry while keeping its compact summary to five rows', () => {
   assert.match(home, /selectDailyProgress\(dailyActivities, dailyState === 'hidden' \? 'unknown' : dailyState\)/);
@@ -43,6 +46,8 @@ test('routine and training rows expose separate accessible actions and truthful 
   assert.match(item, /onRetry/);
   const homeVariant = item.slice(item.indexOf('function HomeDailyActivityItem'), item.indexOf('const styles'));
   assert.doesNotMatch(homeVariant, /<IconChip|list-outline|school-outline/);
+  assert.match(homeVariant, /showRoutineIcon && icon/);
+  assert.match(dailyChecklist, /showRoutineIcon=\{item\.kind === 'routine'\}/);
   assert.match(homeVariant, /homeTrainingStatusCell/);
   assert.match(homeVariant, /homeTrainingStatusChecked/);
   assert.match(item, /homeTrainingStatus:[^{]*\{[^}]*borderRadius: tokens\.radius\.full/);
@@ -55,7 +60,7 @@ test('routine and training rows expose separate accessible actions and truthful 
   assert.match(manager, /onDeleteRoutine/);
   assert.match(manager, /<BottomSheet/);
   assert.match(manager, /editFocusedRoutineOnOpen/);
-  assert.match(manager, /startEdit\(focusedRoutine\)/);
+  assert.match(manager, /startEdit\(focusedRoutine, focusRoutineItemId\)/);
   assert.match(manager, /type RoutineDraft/);
   assert.match(manager, /function startCreate\(/);
 });
@@ -74,6 +79,30 @@ test('routine home and delete actions are icon-only and confirm before removal',
   assert.match(manager, /iconOnlyButton: \{ width: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin/);
 });
 
+test('routine checklist icons are selectable, saved in the model, and shown on Checklistor', () => {
+  assert.match(manager, /function ChecklistIconButton/);
+  assert.match(manager, /function ChecklistIconOptions/);
+  assert.match(manager, /DAILY_ROUTINE_CHECKLIST_ICONS\.map\(\(icon\)/);
+  const picker = manager.slice(manager.indexOf('function ChecklistIconOptions'), manager.indexOf('function RepeatRuleControls'));
+  assert.match(picker, /accessibilityRole="radiogroup" accessibilityLabel=/);
+  assert.doesNotMatch(picker, /<Text/);
+  assert.match(picker, /styles\.iconChoiceSelected/);
+  assert.match(picker, /name="checkmark-circle"/);
+  assert.match(manager, /accessibilityRole="radio" accessibilityLabel=\{DAILY_ROUTINE_CHECKLIST_ICON_LABELS\[icon\]\}/);
+  assert.match(manager, /sameChecklist[\s\S]*?item\.icon === right\[index\]\?\.icon/);
+  assert.match(manager, /dailyRoutineChecklistDisplayIcon\(item\)/);
+  assert.match(manager, /setIconPickerItemId\(focusItemId && checklist\.some\(\(item\) => item\.id === focusItemId\) \? focusItemId : null\)/);
+  assert.match(manager, /startEdit\(focusedRoutine, focusRoutineItemId\)/);
+  assert.match(dailyChecklist, /routineLabel=\{item\.routineLabel\}[\s\S]*?icon=\{item\.icon\} showRoutineIcon=\{item\.kind === 'routine'\}/);
+  assert.match(dailyChecklist, /const icon = item\.icon \?\? 'list-outline';/);
+  assert.match(routineIcons, /'water-outline'/);
+  assert.match(iconMigration, /create or replace function private\.valid_daily_routine_checklist/);
+  assert.match(iconMigration, /v_item ->> 'icon' not in/);
+  assert.match(iconMigration, /'water-outline'/);
+  const homeRoutineRow = home.slice(home.indexOf('return <DailyActivityItem key={item.id} variant="home" kind={item.kind}'), home.indexOf('onRetry={itemMutation'));
+  assert.doesNotMatch(homeRoutineRow, /icon=\{item\.icon\}/, 'the compact Home rows remain icon-free');
+});
+
 test('training row presents the step title and keeps full program title in detail data', () => {
   assert.match(model, /label: step\.title/);
   assert.match(model, /programTitle: program\.title/);
@@ -89,9 +118,9 @@ test('full checklist owns all daily rows and never renders zero-of-zero progress
   assert.match(screen, /completedCount\} av \{activities\.length\} klara/);
   assert.match(screen, /testID="daily-checklist-progress"/);
   assert.match(screen, /title="Checklistor"/);
-  assert.match(screen, /Håll inne på rutinen för att redigera\./);
-  assert.match(screen, /accessibilityHint=\{item\.kind === 'routine'[\s\S]*?Håll inne på rutinen för att redigera\./);
-  assert.match(screen, /onLongPress=\{item\.kind === 'routine'[\s\S]*?openManager\(routineDay\.routine_id, true\)/);
+  assert.match(screen, /Håll inne på en rutinpunkt för att öppna redigeringen\./);
+  assert.match(screen, /accessibilityHint=\{item\.kind === 'routine'[\s\S]*?Håll inne på en rutinpunkt för att öppna redigeringen\./);
+  assert.match(screen, /onLongPress=\{item\.kind === 'routine'[\s\S]*?openManager\(routineDay\.routine_id, true, item\.routineItemId \?\? null\)/);
   assert.match(screen, /Inga aktiviteter idag/);
   assert.doesNotMatch(screen, /0 av 0/);
 });

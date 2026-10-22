@@ -6547,19 +6547,21 @@
         "Verify legacy direct DELETE of a scheduled routine selection remains absent to the old client and prevents ensure from recreating it; legacy INSERT restores the frozen skipped snapshot, including NULL weekday-array compatibility",
         "Owner A cannot read or mutate owner B routine/template/day/skip snapshots; triggers reject forged snapshots, invalid schedule values, invalid zones and stale revision",
         "Retry after uncertain writes does not duplicate routine templates, day rows or completion state; delete/cascade and existing 30-day purge cover free-text day and skip snapshots",
-        "Call legacy and v2 create/replace RPCs plus ensure and skip through PostgREST; verify PUBLIC/anon denial, owner success, other-owner denial and private-schema isolation without using production"
+        "Call legacy and v2 create/replace RPCs plus ensure and skip through PostgREST; verify PUBLIC/anon denial, owner success, other-owner denial and private-schema isolation without using production",
+        "Verify 202610220001_daily_routine_checklist_icons: old {id,label} and new {id,label,icon} payloads, exact TS/SQL 20-icon allowlist parity, unknown/null/extra-key rejection, icon create/replace/readback, and unchanged existing day/skip snapshots."
       ],
       "checks": [
         "Use synthetic data with two authenticated owners in a disposable development database",
         "Apply reviewed migration transactionally; probe TS/SQL weekday parity, daily/interval recurrence, date-zone, month-end, anchor retry, legacy delete/restore, skip/re-add, ABA retry, snapshot, RPC grants, RLS, CAS/readback, cascade and purge behavior",
-        "Record outputs without real owner data; do not use production"
+        "Record outputs without real owner data; do not use production",
+        "Apply the reviewed icon-validator migration only in the approved disposable development database; probe owner success, other-owner denial, legacy payload compatibility and frozen historical snapshots. Never use production."
       ],
       "depends_on": [
         "HOME-ROUTINE-CHECKLIST-01"
       ],
       "status": "planned",
       "history": [],
-      "next_step": "Release verification only, separate from local weekday implementation and HOME UI. Schedule after the v2.1 migration and both legacy/v2 RPCs receive local review, and an approved disposable development Supabase project is available; no database action is part of local UX-FIX or HOME implementation."
+      "next_step": "Release verification only, separate from local weekday implementation and HOME UI. Schedule after the v2.1 migration and both legacy/v2 RPCs receive local review, and an approved disposable development Supabase project is available; no database action is part of local UX-FIX or HOME implementation. Include the reviewed routine-checklist icon validator migration and persistence/readback probes before any real-build icon test."
     },
     {
       "id": "UX-FIX-BASELINE-WINDOWS-01",
@@ -7256,7 +7258,7 @@
       "id": "FLOW-HOME-CHECKLIST-FILTERS-01",
       "title": "Hem: Denna vecka, Alla och Kommande i Checklistan",
       "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 4; docs/design/vision-rev02-screen-contracts.md panel 4",
-      "plan": "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md v2 + visual addendum A01 — Product APPROVE, Architect APPROVE WITH CONDITIONS (2026-10-21), Critic PROCEED, Security APPROVE (2026-10-20)",
+      "plan": "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md v2 + A01 + A02 v5 visual tone amendment; Architect APPROVE, Critic PROCEED (2026-10-22)",
       "write_paths": [
         "src/features/home/DailyChecklistScreen.tsx",
         "src/components/ui/Tabs.tsx",
@@ -7280,7 +7282,20 @@
         "docs/tasks/dev/rapport.md",
         "docs/releases/HISTORY-2026.md",
         "docs/decisions/MASTER-LOG.md",
-        "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md"
+        "docs/plans/FLOW-HOME-CHECKLIST-FILTERS-01-ux-spec.md",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/features/home/daily-routine-checklist-icons.ts",
+        "supabase/migrations/202610220001_daily_routine_checklist_icons.sql",
+        "tests/daily-activity-data.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/daily-checklist-screen.test.mjs",
+        "tests/daily-routine-checklist-icons.test.mjs",
+        "docs/design/evidence/flow-home-checklist-filters-2026-10-20/",
+        "src/components/README.md",
+        "src/components/ui/index.ts",
+        "src/components/ui/ThemedIcon.tsx",
+        "tools/visual-check/build.cjs",
+        "tools/visual-check/verify-checklist-icons.py"
       ],
       "acceptance": [
         "Denna vecka är aktiv ISO-måndag–söndag i samma lokala datum-/hund-/kontoscope; visa endast sparade dagsförekomster med frysta snapshots, aldrig härledda missade dagar",
@@ -7290,7 +7305,10 @@
         "Filtersegment visas först när kompletta urval, paginering, local-date/DST/repeat-regler och distinct empty/loading/partial/error states fungerar; delvis läst data markeras aldrig som komplett",
         "Panel 4 fungerar från Hem → Idag/Denna vecka/Alla/Kommande → korrekt hantering/källa → tillbaka; ring/count/rows och RLS-scope är sanningsenliga",
         "Renderad public/review-evidens jämför hela panel 4 mot rev02 med §14 punkterna 1–18, stora textlägen och tydligt statusbesked för live backend/native",
-        "Checklistans tre segment vid 375×844 och 430×844 delar innehållsbredden; valt segment använder befintliga home-green/onPrimary-token och har aria-selected true/false. Endast Checklistan opt-in:ar denna ton; övriga Tabs-konsumenter behåller utseendet."
+        "Checklistans tre segment vid 375×844 och 430×844 delar innehållsbredden; valt segment använder befintliga home-green/onPrimary-token och har aria-selected true/false. Endast Checklistan opt-in:ar denna ton; övriga Tabs-konsumenter behåller utseendet.",
+        "A02: each routine point can store one of the same 20 validated Ionicons; the icon-only grid is accessible and Home remains free of per-point icons.",
+        "A02: Checklist rows use the saved icon or a deterministic read-only legacy fallback; long-press focuses the matching routine point and opens its picker, separate from checkbox and ordinary row press.",
+        "A02: icon persists through existing owner-scoped create/replace RPC and exact readback; snapshots remain frozen. The forward migration only expands the JSON validator and is not applied to a database."
       ],
       "checks": [
         "node --experimental-strip-types --test tests/daily-activity-range.test.mjs tests/daily-checklist-filters.test.mjs tests/daily-activity-model.test.mjs",
@@ -7298,7 +7316,8 @@
         "pnpm bundle:ios",
         "git diff --check",
         "python -X utf8 tools/dev_flow.py validate",
-        "Rendera och verifiera kompletta public/review filter- och planned-lägen; live Supabase/RLS där urvalet kräver ny range-fråga"
+        "Rendera och verifiera kompletta public/review filter- och planned-lägen; live Supabase/RLS där urvalet kräver ny range-fråga",
+        "A02 focused icon validator/data/model/UI tests, installed Ionicons glyph verification, fresh public/review Checklist renders, pnpm check, pnpm bundle:ios, git diff --check, and python -X utf8 tools/dev_flow.py validate; no SQL/database execution"
       ],
       "depends_on": [
         "FLOW-HOME-CHECKLIST-01"
@@ -7340,9 +7359,33 @@
           "to": "implementing",
           "actor": "implementer",
           "evidence": "Merge repair started on 2026-10-22-fix-main-checklist-build from 500a25f; restoring filter UI/workspace integration while preserving panel 2/3 changes."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Erik requested recovery of per-routine checklist icons after the merge and confirmed manual tests 1–4 pass. Existing v2/A01 scope does not include icon persistence or its validator migration; the partial icon draft is frozen while A02 and exact write paths receive Architect/Critic/Security review. No database operation."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "A02 v4: recorded exact legacy fallback mapping, Critic v3 PROCEED, Security v3 CLEAR with stronger old-client read-access gate; awaiting renewed Architect review. No DB operation."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE A02 v4; Critic PROCEED v4; Security CLEAR v4 with production old-client read-access gate. Reviews recorded in A02 amendment/task journal. No DB operations."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Starting approved A02 v4 icon restore on 2026-10-22-fix-main-checklist-build; manual tests 1–4 remain closed. Database migration is source-only and will not be applied."
         }
       ],
-      "next_step": "Fortsätt enligt plan v2/A01: exponera Kommande först med kompletta sju-dagarsdata och korrekta read-only destinations-/returflöden; därefter route/lifecycle-tester, public/review-§14 och oberoende acceptans.",
+      "next_step": "Continue the approved panel-4 journey: implement Kommande from existing read-only sources, wire exact source navigation and return-state restoration, then complete the public/review §14 matrix for the full panel. A02 per-point icon selection and both icon-only confirmation actions are locally verified and must remain intact. Keep migration apply/runtime and the old-client read-access gate in HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01; no production icon writes before that separate gate. Erik-confirmed manual tests 1–4 remain closed.",
       "priority": "P1",
       "panels": [
         "4"
@@ -7350,10 +7393,14 @@
       "risk_class": "H",
       "checkpoint": "Full panel 4 filter- och Kommande-resa efter accepterad Idag-slice; framtida planer är skrivskyddade och ingår aldrig som utförd progress.",
       "test_evidence": [
-        "Monday/Sunday/year/DST/repeat boundaries, pagination completeness, 30-day retention, empty/partial/error, routine/training scope, Planerad health link, §14 image matrix, runtime RLS boundary"
+        "Merge-restored Idag/Denna vecka/Alla read states and saved-range loading/partial/error/empty were browser-verified; no historical completion progress.",
+        "A02 public/review renders at 375x844, 430x844 and 375x667: exact-point long-press, 20 named 44x44 options, save/readback, frozen day state, and confirm/cancel for both icon actions; no browser errors.",
+        "Tone-map and contrast verification: only clear semantic matches use existing category tokens; generic icons remain neutral; minimum measured icon contrast 4.97:1.",
+        "pnpm check 65/65; public pnpm bundle:ios 1,460 modules; git diff --check; python -X utf8 tools/dev_flow.py validate; SQL/TS allowlist and installed glyph checks PASS.",
+        "Open: Kommande and source navigation/return, complete panel-4 §14 renders, live Supabase/RLS, migration apply, old-client runtime and native acceptance."
       ],
-      "implementation_state": "Återställt merge-regressionen för filter-UI och dataanslutning Idag/Denna vecka/Alla från c562bdf; tasken är fortsatt ofärdig eftersom Kommande, källnavigation och full panelacceptans återstår.",
-      "evidence_status": "PASS: pnpm check (64/64), public iOS export (1,458 moduler), riktad browserkontroll av Idag/Denna vecka/Alla och loading/partial/error/empty utan browserfel. NOT TESTABLE: live Supabase/RLS, native VoiceOver/Dynamic Type/gestures och TestFlight."
+      "implementation_state": "Merge recovery restored filter UI/data integration for Idag/Denna vecka/Alla. A02 v5 restores per-point selectable checklist icons, exact-point long-press editing, compact icon-only routine actions with separate confirmation popups, deterministic fallback, and token-based varied icon surfaces. Home stays icon-free. Public/review visual evidence, 65/65 full checks, 1,460-module public iOS bundle, independent QA PASS and frozen Reviewer PASS are recorded in the A02 verification report. Full panel remains implementing: Kommande, source navigation/return and full §14 acceptance are open. Production rollout remains gated on migration/runtime verification and preventing old clients from reading icon-bearing data. Erik-confirmed manual tests 1–4 remain closed.",
+      "evidence_status": "A02 v5 local PASS: public/review browser verification at 375x844, 430x844 and 375x667; 20 accessible icon choices with 44x44 targets; exact routine-point edit and save/readback; Home icon-free; day snapshot unchanged; both icon-only confirmation actions support cancel/confirm; tone-map uses existing tokens with minimum measured contrast 4.97:1; no browser errors. pnpm check 65/65, public iOS bundle 1,460 modules, git diff --check, dev_flow validate, SQL/TS allowlist and glyph checks PASS. UX Critic PROCEED, independent QA PASS, frozen Reviewer PASS. Erik reports manual tests 1–4 PASS; not rerun. NOT TESTABLE: native Alert/VoiceOver/Dynamic Type/physical gesture, live Supabase/RLS, migration apply, old-client runtime and TestFlight. Full panel 4 remains open."
     },
     {
       "id": "FLOW-LOG-01",

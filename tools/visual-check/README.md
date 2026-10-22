@@ -78,3 +78,15 @@ The Knowledge review fixture exposes `window.__know02UnmountRoute`, `__know02Rem
 ## FLOW-HOME-CHECKLIST-01
 
 `TASSLA_UI_CHROMIUM` can point to Playwright Chromium on Windows or another host without `/usr/bin/chromium`; when unset, the verifier uses the documented Linux path. Run the public and review bundles separately with `TASSLA_UI_SCOPE=home`, `TASSLA_UI_BASE_URL` set to the served bundle, and `TASSLA_UI_EVIDENCE` set to the matching evidence folder. The checklist cases cover 0/1/5/7 rows, 375/430 px, 375×667, 140% text, loading/error, return from a lower training row with confirmed count and preserved scroll position, leave/reopen at the top, and dog-scope invalidation/reopen at the top (`checklistScopeReset=true`). All data is synthetic; browser rendering does not verify live RLS, native VoiceOver/Dynamic Type, or a physical device.
+
+### A02 — rutinpunkternas valbara ikoner
+
+`verify-checklist-icons.py` använder den aktuella Checklistan och syntetiska rutinmallar. Den provar långtryck till rätt rutinpunkt, alla 20 tillgängligt namngivna 44×44-ikoner vid 375×844, 430×844 och 375×667, sparat val/readback, skapande av en rutin med vald ikon, oförändrad status på dagens frysta checklistrad samt båda ikonknapparnas separata bekräftelsetexter och bekräftade/avbrutna handlingar. Kör public och review var för sig:
+
+```sh
+TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/a02/public node tools/visual-check/build.cjs
+python -m http.server 4173 --bind 127.0.0.1 --directory /tmp/tassla-preview/a02/public
+TASSLA_UI_BASE_URL=http://127.0.0.1:4173 TASSLA_UI_EVIDENCE=docs/design/evidence/flow-home-checklist-filters-2026-10-20/a02/public python tools/visual-check/verify-checklist-icons.py
+```
+
+Bygg review separat i `/tmp/tassla-preview/a02/review`, servera den på en annan port och kör samma verifierare med `TASSLA_UI_REVIEW=true` och evidenskatalogen `.../a02/review`. Bilderna visar syntetiskt React Native Web; de bekräftar inte native Alert/VoiceOver/gestures, Supabase/RLS, migrationsutrullning eller TestFlight. Den framåtriktade SQL-migrationen körs inte av denna kontroll.

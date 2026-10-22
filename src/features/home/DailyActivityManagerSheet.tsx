@@ -3,8 +3,10 @@ import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-nati
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Crypto from 'expo-crypto';
 import { BottomSheet, Button } from '../../components/ui';
+import { ThemedIcon } from '../../components/ui/ThemedIcon';
 import { MotionPressable } from '../../components/ui/Motion';
 import { tokens } from '../../theme/tokens';
+import { DAILY_ROUTINE_CHECKLIST_ICONS, DAILY_ROUTINE_CHECKLIST_ICON_LABELS, dailyRoutineChecklistDisplayIcon, dailyRoutineChecklistIconTone, isDailyRoutineChecklistIcon, type DailyRoutineChecklistIcon } from './daily-routine-checklist-icons';
 import type { DailyRoutine, DailyRoutineChecklistItem, DailyRoutineCreateInput, DailyRoutineDay, DailyRoutineDaySkip, DailyRoutineRepeatValues, DailyTrainingSelection } from './daily-activity-data';
 import { dailyRoutineRepeatSummary, isoWeekdayForDateKey, type HomeDailyActivity } from './daily-activity-model';
 import type { HomeDailyTrainingOption } from './HomeScreen';
@@ -39,7 +41,8 @@ function cleanChecklist(items: readonly DailyRoutineChecklistItem[]) {
 }
 
 function sameChecklist(left: readonly DailyRoutineChecklistItem[], right: readonly DailyRoutineChecklistItem[]) {
-  return left.length === right.length && left.every((item, index) => item.id === right[index]?.id && item.label === right[index]?.label);
+  return left.length === right.length && left.every((item, index) => item.id === right[index]?.id
+    && item.label === right[index]?.label && item.icon === right[index]?.icon);
 }
 
 function isValidDateKey(value: string) {
@@ -77,7 +80,8 @@ function routineDraftIsValid(draft: RoutineDraft) {
   const weekdaysValid = draft.repeat.repeat_unit !== 'week' || (draft.repeat.repeat_weekdays === null
     ? isValidDateKey(draft.anchorDate) : draft.repeat.repeat_weekdays.length > 0);
   return label.length > 0 && Array.from(label).length <= 160 && checklist.length >= 1 && checklist.length <= 50
-    && checklist.every((item) => item.label.length > 0 && Array.from(item.label).length <= 160) && weekdaysValid;
+    && checklist.every((item) => item.label.length > 0 && Array.from(item.label).length <= 160
+      && (!item.icon || isDailyRoutineChecklistIcon(item.icon))) && weekdaysValid;
 }
 
 function routineDraftHasReadback(draft: RoutineDraft, routines: readonly DailyRoutine[]) {
@@ -91,13 +95,14 @@ function routineDraftHasReadback(draft: RoutineDraft, routines: readonly DailyRo
   return draft.mode === 'create' ? matchesDraft : routine.checklist_revision > (draft.baseRevision ?? routine.checklist_revision) && matchesDraft;
 }
 
-export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, focusRoutineId, editFocusedRoutineOnOpen = false, activities, routines, routineDaySkips, trainingOptions,
+export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, focusRoutineId, focusRoutineItemId, editFocusedRoutineOnOpen = false, activities, routines, routineDaySkips, trainingOptions,
   busy, mutationMessage, mutationError, onRetryMutation, onCreateRoutine, onUpdateRoutine, onDeleteRoutine,
   onAddRoutineToDay, onRemoveRoutineFromDay, onAddTrainingToDay, onRemoveTrainingFromDay, onGoTraining }: {
   visible: boolean;
   dailyScopeKey?: string;
   onClose: () => void;
   focusRoutineId?: string | null;
+  focusRoutineItemId?: string | null;
   editFocusedRoutineOnOpen?: boolean;
   activities: readonly HomeDailyActivity[];
   routines: readonly DailyRoutine[];
@@ -117,6 +122,7 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   onGoTraining: () => void;
 }) {
   const [draft, setDraft] = useState<RoutineDraft | null>(null);
+  const [iconPickerItemId, setIconPickerItemId] = useState<string | null>(null);
   const [savingDraft, setSavingDraft] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [showDiscardConfirmation, setShowDiscardConfirmation] = useState(false);
@@ -160,14 +166,16 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   function startCreate() {
     const firstItem = { id: Crypto.randomUUID(), label: '' };
     const anchorDate = localDateKeyToday();
+    setIconPickerItemId(null);
     setDraft({ mode: 'create', submissionId: Crypto.randomUUID(), routineId: null, baseRevision: null,
       initialLabel: '', initialChecklist: [firstItem], initialRepeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null }, anchorDate, newAnchorDate: anchorDate,
       label: '', checklist: [firstItem], repeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null } });
   }
 
-  const startEdit = useCallback((routine: DailyRoutine) => {
+  const startEdit = useCallback((routine: DailyRoutine, focusItemId?: string | null) => {
     if (selectionLocked) return;
     const checklist = copyChecklist(routine.checklist);
+    setIconPickerItemId(focusItemId && checklist.some((item) => item.id === focusItemId) ? focusItemId : null);
     const repeat = { repeat_unit: routine.repeat_unit, repeat_interval: routine.repeat_interval, repeat_weekdays: routine.repeat_weekdays };
     const newAnchorDate = localDateKeyToday();
     setDraft({ mode: 'edit', submissionId: Crypto.randomUUID(), routineId: routine.id, baseRevision: routine.checklist_revision,
@@ -176,13 +184,18 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   }, [selectionLocked]);
 
   useEffect(() => {
-    if (!visible || !editFocusedRoutineOnOpen || !focusedRoutine || autoEditStarted.current) return;
+    if (!visible || !editFocusedRoutineOnOpen || !focusedRoutine || selectionLocked || autoEditStarted.current) return;
     autoEditStarted.current = true;
-    startEdit(focusedRoutine);
-  }, [visible, editFocusedRoutineOnOpen, focusedRoutine, startEdit]);
+    startEdit(focusedRoutine, focusRoutineItemId);
+  }, [visible, editFocusedRoutineOnOpen, focusedRoutine, focusRoutineItemId, selectionLocked, startEdit]);
 
   function updateDraft(patch: Partial<Pick<RoutineDraft, 'label' | 'checklist' | 'repeat'>>) {
     setDraft((current) => current ? { ...current, ...patch } : current);
+  }
+
+  function selectChecklistIcon(itemId: string, icon: DailyRoutineChecklistIcon) {
+    setDraft((current) => current ? { ...current, checklist: current.checklist.map((item) => item.id === itemId ? { ...item, icon } : item) } : current);
+    setIconPickerItemId(null);
   }
 
   async function saveDraft() {
@@ -237,11 +250,14 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
       </View>
       {helpOpen ? <Text style={styles.helpText}>Startar idag. Veckor följer valda veckodagar och månader datumet. Upprepade rutiner kan hoppas över idag. Malländringar gäller nästa gång; engångsrutiner tas bort från dagen.</Text> : null}
       {creating && activeDraft ? <CreateRoutineForm draft={activeDraft} disabled={unresolvedMutation || savingDraft || showDiscardConfirmation}
-        onChange={updateDraft} onCancel={() => requestLeave(() => setDraft(null))} onSave={() => { void saveDraft(); }} /> : null}
+        iconPickerItemId={iconPickerItemId} onToggleIconPicker={(itemId) => setIconPickerItemId((current) => current === itemId ? null : itemId)}
+        onSelectChecklistIcon={selectChecklistIcon} onChange={updateDraft} onCancel={() => requestLeave(() => setDraft(null))} onSave={() => { void saveDraft(); }} /> : null}
       {routines.length > 0 ? <View style={styles.routineList}>
         {routines.map((routine, index) => <RoutineTemplateRow key={`${dailyScopeKey ?? ''}:${visible}:${focusRoutineId ?? 'all'}:${routine.id}`}
           routine={routine} selectedDay={selectedRoutines.get(routine.id) ?? null} skippedDay={skippedRoutines.get(routine.id) ?? null}
           draft={activeDraft?.mode === 'edit' && activeDraft.routineId === routine.id ? activeDraft : null}
+          iconPickerItemId={iconPickerItemId} onToggleIconPicker={(itemId) => setIconPickerItemId((current) => current === itemId ? null : itemId)}
+          onSelectChecklistIcon={selectChecklistIcon}
           disabled={selectionLocked} fieldsDisabled={unresolvedMutation || savingDraft || showDiscardConfirmation}
           highlighted={routine.id === focusRoutineId} isLast={index === routines.length - 1}
           onStartEdit={() => startEdit(routine)} onChangeDraft={updateDraft}
@@ -282,9 +298,12 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   </BottomSheet>;
 }
 
-function CreateRoutineForm({ draft, disabled, onChange, onCancel, onSave }: {
+function CreateRoutineForm({ draft, disabled, iconPickerItemId, onToggleIconPicker, onSelectChecklistIcon, onChange, onCancel, onSave }: {
   draft: RoutineDraft;
   disabled: boolean;
+  iconPickerItemId: string | null;
+  onToggleIconPicker: (itemId: string) => void;
+  onSelectChecklistIcon: (itemId: string, icon: DailyRoutineChecklistIcon) => void;
   onChange: (patch: Partial<Pick<RoutineDraft, 'label' | 'checklist' | 'repeat'>>) => void;
   onCancel: () => void;
   onSave: () => void;
@@ -296,12 +315,17 @@ function CreateRoutineForm({ draft, disabled, onChange, onCancel, onSave }: {
     <TextInput accessibilityLabel="Namn på rutin" placeholder="Namn på rutin" value={draft.label} onChangeText={(label) => onChange({ label })}
       editable={editable} maxLength={160} returnKeyType="done" style={styles.input} />
     <Text style={styles.sectionTitle} accessibilityRole="header">Checklista</Text>
-    {draft.checklist.map((item, index) => <View key={item.id} style={styles.createItemRow}>
-      <TextInput accessibilityLabel={`Checklistepunkt ${index + 1}`} placeholder={`Punkt ${index + 1}`} value={item.label}
-        onChangeText={(value) => onChange({ checklist: draft.checklist.map((entry) => entry.id === item.id ? { ...entry, label: value } : entry) })}
-        editable={editable} maxLength={160} returnKeyType="done" style={[styles.input, styles.itemInput]} />
-      <IconOnlyButton icon="remove-outline" accessibilityLabel={`Ta bort checklistepunkt ${index + 1}`}
-        disabled={disabled || draft.checklist.length <= 1} onPress={() => onChange({ checklist: draft.checklist.filter((entry) => entry.id !== item.id) })} />
+    {draft.checklist.map((item, index) => <View key={item.id} style={styles.checklistEditorGroup}>
+      <View style={styles.createItemRow}>
+        <TextInput accessibilityLabel={`Checklistepunkt ${index + 1}`} placeholder={`Punkt ${index + 1}`} value={item.label}
+          onChangeText={(value) => onChange({ checklist: draft.checklist.map((entry) => entry.id === item.id ? { ...entry, label: value } : entry) })}
+          editable={editable} maxLength={160} returnKeyType="done" style={[styles.input, styles.itemInput]} />
+        <ChecklistIconButton item={item} index={index} disabled={disabled} open={iconPickerItemId === item.id}
+          onPress={() => onToggleIconPicker(item.id)} />
+        <IconOnlyButton icon="remove-outline" accessibilityLabel={`Ta bort checklistepunkt ${index + 1}`}
+          disabled={disabled || draft.checklist.length <= 1} onPress={() => onChange({ checklist: draft.checklist.filter((entry) => entry.id !== item.id) })} />
+      </View>
+      {iconPickerItemId === item.id ? <ChecklistIconOptions item={item} index={index} disabled={disabled} onSelect={(icon) => onSelectChecklistIcon(item.id, icon)} /> : null}
     </View>)}
     {draft.checklist.length >= 50 ? <Text style={styles.muted}>En rutin kan ha högst 50 punkter.</Text> : <IconOnlyButton icon="add-outline" accessibilityLabel="Lägg till checklistepunkt sist"
       disabled={disabled} onPress={() => { const item = { id: Crypto.randomUUID(), label: '' }; onChange({ checklist: [...draft.checklist, item] }); }} />}
@@ -310,6 +334,51 @@ function CreateRoutineForm({ draft, disabled, onChange, onCancel, onSave }: {
     <View style={styles.formActions}>
       <Button variant="primary" label="Spara rutin" accessibilityLabel="Spara rutin" disabled={!valid || !routineDraftIsDirty(draft) || disabled} onPress={onSave} />
       <Button variant="tertiary" label="Avbryt" accessibilityLabel="Avbryt skapa rutin" disabled={disabled} onPress={onCancel} />
+    </View>
+  </View>;
+}
+
+function ChecklistIconButton({ item, index, disabled, open, onPress }: {
+  item: DailyRoutineChecklistItem;
+  index: number;
+  disabled: boolean;
+  open: boolean;
+  onPress: () => void;
+}) {
+  const icon = dailyRoutineChecklistDisplayIcon(item);
+  const iconLabel = icon === 'list-outline' ? 'Allmän lista' : DAILY_ROUTINE_CHECKLIST_ICON_LABELS[icon];
+  return <MotionPressable accessibilityRole="button" accessibilityLabel={`Välj ikon för ${item.label || `checklistepunkt ${index + 1}`}. Aktuell ikon: ${iconLabel}`}
+    accessibilityState={{ expanded: open, disabled }} aria-expanded={open} disabled={disabled} onPress={onPress}
+    style={({ pressed }) => [styles.checklistIconButton, open && styles.choiceButtonSelected, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
+    <View style={styles.checklistIconButtonContents} accessibilityElementsHidden>
+      <ThemedIcon name={icon} tone={dailyRoutineChecklistIconTone(icon)} size="small" surface={false}
+        testID={`routine-icon-picker-trigger-${item.id}`} />
+      <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={tokens.spacing.sm} color={tokens.colors.textSecondary} />
+    </View>
+  </MotionPressable>;
+}
+
+function ChecklistIconOptions({ item, index, disabled, onSelect }: {
+  item: DailyRoutineChecklistItem;
+  index: number;
+  disabled: boolean;
+  onSelect: (icon: DailyRoutineChecklistIcon) => void;
+}) {
+  const label = item.label || `checklistepunkt ${index + 1}`;
+  return <View accessibilityRole="radiogroup" accessibilityLabel={`Välj ikon för ${label}`} style={styles.iconPicker}>
+    <View style={styles.iconChoices}>
+      {DAILY_ROUTINE_CHECKLIST_ICONS.map((icon) => {
+        const selected = item.icon === icon;
+        return <MotionPressable key={icon} accessibilityRole="radio" accessibilityLabel={DAILY_ROUTINE_CHECKLIST_ICON_LABELS[icon]}
+          accessibilityState={{ selected, disabled }} aria-checked={selected} disabled={disabled} onPress={() => onSelect(icon)}
+          style={({ pressed }) => [styles.iconChoice, selected && styles.iconChoiceSelected, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
+          <View style={styles.iconChoiceContents} accessibilityElementsHidden>
+            <ThemedIcon name={icon} tone={dailyRoutineChecklistIconTone(icon)} size="small" surface={false}
+              testID={`routine-icon-choice-icon-${icon}`} />
+            {selected ? <Ionicons name="checkmark-circle" size={tokens.spacing.md} color={tokens.colors.primary} style={styles.iconChoiceCheckmark} /> : null}
+          </View>
+        </MotionPressable>;
+      })}
     </View>
   </View>;
 }
@@ -385,12 +454,16 @@ function ChoiceButton({ label, selected, disabled, onPress }: { label: string; s
   </MotionPressable>;
 }
 
-function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled, fieldsDisabled, highlighted, isLast,
+function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, iconPickerItemId, onToggleIconPicker, onSelectChecklistIcon,
+  disabled, fieldsDisabled, highlighted, isLast,
   onStartEdit, onChangeDraft, onCancelEdit, onSave, onDelete, onAdd, onRemove }: {
   routine: DailyRoutine;
   selectedDay: DailyRoutineDay | null;
   skippedDay: DailyRoutineDaySkip | null;
   draft: RoutineDraft | null;
+  iconPickerItemId: string | null;
+  onToggleIconPicker: (itemId: string) => void;
+  onSelectChecklistIcon: (itemId: string, icon: DailyRoutineChecklistIcon) => void;
   disabled: boolean;
   fieldsDisabled: boolean;
   highlighted: boolean;
@@ -416,16 +489,24 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
         disabled={disabled} onPress={onStartEdit} /> : null}
     </View>
     <Text style={styles.listHeading} accessibilityRole="header">Checklista</Text>
-    {(value?.checklist ?? routine.checklist).map((item, index) => <View key={item.id} style={styles.editItemRow}>
-      {editing && value ? <TextInput accessibilityLabel={`Checklistepunkt ${index + 1}`} value={item.label}
-        onChangeText={(label) => onChangeDraft({ checklist: value.checklist.map((entry) => entry.id === item.id ? { ...entry, label } : entry) })}
-        editable={!fieldsDisabled} maxLength={160} returnKeyType="done" style={[styles.input, styles.itemInput]} />
-        : <View style={styles.itemRow}>
-          <View style={styles.bullet} accessibilityElementsHidden><Ionicons name="ellipse" size={tokens.spacing.xs} color={tokens.colors.primary} /></View>
+    {(value?.checklist ?? routine.checklist).map((item, index) => <View key={item.id} style={styles.checklistEditorGroup}>
+      <View style={styles.editItemRow}>
+        {editing && value ? <>
+          <TextInput accessibilityLabel={`Checklistepunkt ${index + 1}`} value={item.label}
+            onChangeText={(label) => onChangeDraft({ checklist: value.checklist.map((entry) => entry.id === item.id ? { ...entry, label } : entry) })}
+            editable={!fieldsDisabled} maxLength={160} returnKeyType="done" style={[styles.input, styles.itemInput]} />
+          <ChecklistIconButton item={item} index={index} disabled={fieldsDisabled} open={iconPickerItemId === item.id}
+            onPress={() => onToggleIconPicker(item.id)} />
+          <IconOnlyButton icon="remove-outline" accessibilityLabel={`Ta bort checklistepunkt ${index + 1}: ${item.label || 'utan namn'}`}
+            disabled={fieldsDisabled || value.checklist.length <= 1} onPress={() => onChangeDraft({ checklist: value.checklist.filter((entry) => entry.id !== item.id) })} />
+        </> : <View style={styles.itemRow}>
+          <ThemedIcon name={dailyRoutineChecklistDisplayIcon(item)} tone={dailyRoutineChecklistIconTone(dailyRoutineChecklistDisplayIcon(item))}
+            size="small" testID={`routine-template-icon-${item.id}`} />
           <Text style={styles.itemLabel}>{item.label}</Text>
         </View>}
-      {editing && value ? <IconOnlyButton icon="remove-outline" accessibilityLabel={`Ta bort checklistepunkt ${index + 1}: ${item.label || 'utan namn'}`}
-        disabled={fieldsDisabled || value.checklist.length <= 1} onPress={() => onChangeDraft({ checklist: value.checklist.filter((entry) => entry.id !== item.id) })} /> : null}
+      </View>
+      {editing && value && iconPickerItemId === item.id
+        ? <ChecklistIconOptions item={item} index={index} disabled={fieldsDisabled} onSelect={(icon) => onSelectChecklistIcon(item.id, icon)} /> : null}
     </View>)}
     {editing && value ? <>
       {value.checklist.length >= 50 ? <Text style={styles.muted}>Rutinen har högsta tillåtna antal, 50 punkter.</Text> : <IconOnlyButton icon="add-outline"
@@ -505,7 +586,8 @@ const styles = StyleSheet.create({
   formActions: { gap: tokens.spacing.xs },
   input: { minHeight: tokens.size.touchMin, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, paddingHorizontal: tokens.spacing.sm, color: tokens.colors.textPrimary, backgroundColor: tokens.colors.surface },
   itemInput: { flex: 1 },
-  createItemRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: tokens.spacing.xs },
+  createItemRow: { flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', gap: tokens.spacing.xs },
+  checklistEditorGroup: { gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs, borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border },
   routineList: { overflow: 'hidden', borderRadius: tokens.radius.md, backgroundColor: tokens.colors.home.card },
   routineGroup: { gap: tokens.spacing.xs, padding: tokens.spacing.md },
   routineGroupSeparator: { borderBottomWidth: tokens.size.stroke, borderBottomColor: tokens.colors.border },
@@ -514,10 +596,17 @@ const styles = StyleSheet.create({
   routineName: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 },
   routineNameInput: { flex: 1 },
   listHeading: { ...tokens.typography.caption, color: tokens.colors.textSecondary, fontWeight: '700', paddingTop: tokens.spacing.xs },
-  itemRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border },
-  editItemRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border },
-  bullet: { width: tokens.size.touchMin / 2, alignItems: 'center' },
+  itemRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs },
+  editItemRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs },
   itemLabel: { ...tokens.typography.caption, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 },
+  checklistIconButton: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },
+  checklistIconButtonContents: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs / 2 },
+  iconPicker: { padding: tokens.spacing.sm, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },
+  iconChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
+  iconChoice: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },
+  iconChoiceSelected: { borderWidth: 2, borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
+  iconChoiceContents: { width: '100%', minHeight: tokens.size.touchMin - tokens.size.stroke * 2, alignItems: 'center', justifyContent: 'center' },
+  iconChoiceCheckmark: { position: 'absolute', top: 1, right: 1, backgroundColor: tokens.colors.selectedSurface },
   itemActions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
   inlineEditor: { gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs },
   routineActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: tokens.spacing.xs, paddingTop: tokens.spacing.xs },

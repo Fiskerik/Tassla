@@ -1,11 +1,13 @@
 import type { HistoricalTrainingSource, PublishedTrainingProgram, PublishedTrainingStep } from '../../data/workspace-data';
 import type { DailyActivityRangeSnapshot, DailyActivitySnapshot, DailyRoutine, DailyRoutineDay, DailyRoutineDaySkip, DailyTrainingSelection } from './daily-activity-data';
+import { dailyRoutineChecklistDisplayIcon, type DailyRoutineChecklistDisplayIcon } from './daily-routine-checklist-icons';
 
 export type HomeDailyActivity = {
   id: string;
   label: string;
   routineLabel?: string;
   routineItemId?: string;
+  icon?: DailyRoutineChecklistDisplayIcon;
   kind: 'routine' | 'training';
   completed: boolean;
   routineDay?: DailyRoutineDay;
@@ -197,6 +199,7 @@ export function deriveHomeDailyActivities(
     for (const item of row.checklist_snapshot) activities.push({
       id: `routine:${row.id}:${item.id}`,
       label: item.label,
+      icon: dailyRoutineChecklistDisplayIcon(item),
       routineLabel: row.routine_label_snapshot,
       routineItemId: item.id,
       kind: 'routine',
@@ -241,7 +244,7 @@ export function deriveSavedRangeActivities(
   const result: HomeDailyActivity[] = [];
   for (const row of snapshot.routineDays) {
     if (row.dog_id !== dogId || row.date_key < from || row.date_key > to) continue;
-    for (const item of row.checklist_snapshot) result.push({ id: `routine:${row.id}:${item.id}`, label: item.label,
+    for (const item of row.checklist_snapshot) result.push({ id: `routine:${row.id}:${item.id}`, label: item.label, icon: dailyRoutineChecklistDisplayIcon(item),
       routineLabel: row.routine_label_snapshot, routineItemId: item.id, kind: 'routine',
       completed: row.completed_item_ids.includes(item.id), routineDay: row, dateKey: row.date_key });
   }

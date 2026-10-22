@@ -1,6 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { localDateKeyAt, isValidDateKey, isTrainingCompletionForDay, nextSelectableTrainingStep, trainingProgressStamp, deriveHomeDailyActivities, deriveSavedRangeActivities, checklistFilterRange, addCalendarDays, projectUpcomingRoutineDates, selectDailyProgress } from '../src/features/home/daily-activity-model.ts';
+import { registerHooks } from 'node:module';
+
+const resolution = registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier.startsWith('.') && !/\.[a-z0-9]+$/i.test(specifier)) return nextResolve(`${specifier}.ts`, context);
+    return nextResolve(specifier);
+  },
+});
+const model = await import('../src/features/home/daily-activity-model.ts');
+resolution.deregister();
+
+const { localDateKeyAt, isValidDateKey, isTrainingCompletionForDay, nextSelectableTrainingStep, trainingProgressStamp,
+  deriveHomeDailyActivities, deriveSavedRangeActivities, checklistFilterRange, addCalendarDays, projectUpcomingRoutineDates, selectDailyProgress } = model;
 
 test('daily progress selector shares complete counts and keeps incomplete coverage explicit', () => {
   const activities = [{ completed: true }, { completed: false }, { completed: true }];
@@ -77,7 +89,7 @@ test('daily activities count owner marks and exact saved training source while e
     id: 'routine-1',
     dog_id: 'dog-a',
     label: 'Kvällsrutin',
-    checklist: [{ id: 'routine-item-1', label: 'Kissa' }, { id: 'routine-item-2', label: 'Fyll på vatten' }],
+    checklist: [{ id: 'routine-item-1', label: 'Kissa' }, { id: 'routine-item-2', label: 'Fyll på vatten', icon: 'water-outline' }],
     checklist_revision: 1,
     legacy_single_item: false,
     repeat_unit: null,
@@ -110,6 +122,12 @@ test('daily activities count owner marks and exact saved training source while e
   assert.deepEqual(deriveHomeDailyActivities(snapshot, [], 'dog-a', '2026-10-12').map(({ label, completed }) => [label, completed]), [
     ['Kissa', true], ['Fyll på vatten', false],
   ]);
+  const dailyRows = deriveHomeDailyActivities(snapshot, [], 'dog-a', '2026-10-12');
+  assert.equal(dailyRows[0].icon, 'list-outline', 'an ambiguous legacy item gets the neutral icon');
+  assert.equal(dailyRows[1].icon, 'water-outline');
+  const savedRows = deriveSavedRangeActivities({ ...snapshot, completeSources: [], failedSources: [] }, new Map(), 'dog-a', '2026-10-12', '2026-10-12');
+  assert.equal(savedRows[0].icon, 'list-outline');
+  assert.equal(savedRows[1].icon, 'water-outline');
   assert.deepEqual(deriveHomeDailyActivities(snapshot, [activeProgram], 'dog-b', '2026-10-12'), []);
   assert.deepEqual(deriveHomeDailyActivities(snapshot, [activeProgram], 'dog-a', '2026-10-13'), []);
 });

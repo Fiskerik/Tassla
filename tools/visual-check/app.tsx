@@ -10,6 +10,7 @@ import type {HomeDailyFixtureItem} from '../../src/features/home/HomeScreen';
 import type {ChecklistFilter,HomeDailyActivity} from '../../src/features/home/daily-activity-model';
 import type {DailyRoutine,DailyRoutineChecklistItem,DailyRoutineCreateInput,DailyRoutineDay,DailyRoutineDaySkip,DailyRoutineRepeatValues} from '../../src/features/home/daily-activity-data';
 import {isRoutineDueOnDate,isoWeekdayForDateKey} from '../../src/features/home/daily-activity-model';
+import {dailyRoutineChecklistDisplayIcon} from '../../src/features/home/daily-routine-checklist-icons';
 import {LogScreen} from '../../src/features/puppy-log/LogScreen';
 import type {AccidentKind,AccidentLogIntent,LogEvent,LogEventChanges,LogEventType} from '../../src/features/puppy-log/log-model';
 import {ComponentGalleryScreen} from '../../src/components/ui/ComponentGalleryScreen';
@@ -68,9 +69,9 @@ const homeReviewFixture:HomeDailyFixtureItem[]=[
  {id:'walk-paws',label:'Torka tassar',detail:'Promenad',category:'walk',completed:true,destination:'log',routineId:'routine-walk',routineLabel:'Promenad'},
  {id:'handling',label:'Miljöträning – nya ljud',detail:'Vecka 11 · Trygghet och vardag',category:'training',completed:false,destination:'training',kind:'training'},
 ];
-const routineMorningItems:DailyRoutineChecklistItem[]=[{id:'00000000-0000-4000-8000-000000000001',label:'Kissa'},{id:'00000000-0000-4000-8000-000000000002',label:'Fyll på vatten'}];
-const routineWalkItems:DailyRoutineChecklistItem[]=[{id:'00000000-0000-4000-8000-000000000003',label:'Ta på sele'},{id:'00000000-0000-4000-8000-000000000004',label:'Gå en kort runda'},{id:'00000000-0000-4000-8000-000000000005',label:'Torka tassar'}];
-const routineEveningItems:DailyRoutineChecklistItem[]=[{id:'00000000-0000-4000-8000-000000000006',label:'Borsta tänderna'},{id:'00000000-0000-4000-8000-000000000007',label:'Förbered kvällsmat'}];
+const routineMorningItems:DailyRoutineChecklistItem[]=[{id:'00000000-0000-4000-8000-000000000001',label:'Kissa',icon:'paw'},{id:'00000000-0000-4000-8000-000000000002',label:'Fyll på vatten',icon:'water-outline'}];
+const routineWalkItems:DailyRoutineChecklistItem[]=[{id:'00000000-0000-4000-8000-000000000003',label:'Ta på sele'},{id:'00000000-0000-4000-8000-000000000004',label:'Gå en kort runda',icon:'walk-outline'},{id:'00000000-0000-4000-8000-000000000005',label:'Torka tassar',icon:'paw'}];
+const routineEveningItems:DailyRoutineChecklistItem[]=[{id:'00000000-0000-4000-8000-000000000006',label:'Borsta tänderna',icon:'brush-outline'},{id:'00000000-0000-4000-8000-000000000007',label:'Förbered kvällsmat',icon:'restaurant-outline'}];
 const reviewRoutines:DailyRoutine[]=[
  {id:'routine-morning',dog_id:dog.id,label:'Morgonrutin',checklist:routineMorningItems,checklist_revision:1,legacy_single_item:false,repeat_unit:'day',repeat_interval:1,repeat_weekdays:null,repeat_anchor_date:today},
  {id:'routine-walk',dog_id:dog.id,label:'Promenad',checklist:routineWalkItems,checklist_revision:1,legacy_single_item:false,repeat_unit:'week',repeat_interval:1,repeat_weekdays:[1,5],repeat_anchor_date:today},
@@ -82,7 +83,7 @@ const reviewRoutineDays:DailyRoutineDay[]=[
 ];
 function fixtureDailyActivities(routines:DailyRoutine[],days:DailyRoutineDay[]):HomeDailyActivity[]{
  const routineRows=days.filter(day=>routines.some(routine=>routine.id===day.routine_id&&routine.dog_id===dog.id)).flatMap(day=>day.checklist_snapshot.map(item=>({
-  id:`routine:${day.id}:${item.id}`,label:item.label,routineLabel:day.routine_label_snapshot,routineItemId:item.id,kind:'routine' as const,
+  id:`routine:${day.id}:${item.id}`,label:item.label,icon:dailyRoutineChecklistDisplayIcon(item),routineLabel:day.routine_label_snapshot,routineItemId:item.id,kind:'routine' as const,
   completed:day.completed_item_ids.includes(item.id),routineDay:day,
  })));
  return [...routineRows,{id:'training:day-step',label:'Miljöträning – nya ljud',kind:'training',completed:false,programTitle:'Vecka 11',trainingSelection:{id:'selection-1',dog_id:dog.id,program_version_id:'review-version-11',step_id:'step-2',date_key:today,time_zone:'Europe/Stockholm'}}];
@@ -198,11 +199,11 @@ function App(){
  const fixtureChecklistActivities=checklistCandidates.slice(0,checklistCount);
  const visualTraining=trainingChecklistActivities[0];
  const checklistVisualActivities:HomeDailyActivity[]=[
-  {id:'visual-morning-walk',label:'Morgonrast',routineLabel:'Morgonrast',kind:'routine',completed:true,dateKey:today},
+  {id:'visual-morning-walk',label:'Morgonrast',icon:'walk-outline',routineLabel:'Morgonrast',kind:'routine',completed:true,dateKey:today},
   ...(visualTraining?[{...visualTraining,id:'visual-training-sit',label:'Träna sitt',completed:true,dateKey:today}]:[]),
-  {id:'visual-environment',label:'Miljöträning ute',routineLabel:'Miljöträning ute',kind:'routine',completed:false,dateKey:today},
-  {id:'visual-vaccination',label:'Kontrollera vaccinationsplan',routineLabel:'Kontrollera vaccinationsplan',kind:'routine',completed:false,healthType:'vaccination',dateKey:today},
-  {id:'visual-evening',label:'Kvällsrutin',routineLabel:'Kvällsrutin',kind:'routine',completed:false,dateKey:today},
+  {id:'visual-environment',label:'Miljöträning ute',icon:'fitness-outline',routineLabel:'Miljöträning ute',kind:'routine',completed:false,dateKey:today},
+  {id:'visual-vaccination',label:'Kontrollera vaccinationsplan',icon:'bandage-outline',routineLabel:'Kontrollera vaccinationsplan',kind:'routine',completed:false,healthType:'vaccination',dateKey:today},
+  {id:'visual-evening',label:'Kvällsrutin',icon:'moon-outline',routineLabel:'Kvällsrutin',kind:'routine',completed:false,dateKey:today},
  ];
  const checklistActivities=checklistVisual?checklistVisualActivities:fixtureChecklistActivities;
  const checklistRangeActivities:HomeDailyActivity[]=params.get('checklistRangeEmpty')==='true'?[]:checklistVisual?[

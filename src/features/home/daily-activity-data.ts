@@ -1,13 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { withRequestDeadline, type WriteOutcome } from '../../data/workspace-data';
 import { isRoutineDueOnDate, isValidDateKey, isValidIanaTimeZone } from './daily-activity-model';
+import { isDailyRoutineChecklistIcon, type DailyRoutineChecklistIcon } from './daily-routine-checklist-icons';
 
 const REQUEST_TIMEOUT_MS = 12_000;
 const DAILY_ROUTINE_COLUMNS = 'id,dog_id,label,checklist,checklist_revision,legacy_single_item,repeat_unit,repeat_interval,repeat_weekdays,repeat_anchor_date';
 const DAILY_ROUTINE_DAY_COLUMNS = 'id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence,routine_revision_snapshot,routine_day_revision,last_state_mutation_id';
 const DAILY_ROUTINE_DAY_SKIP_COLUMNS = 'day_id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence,routine_revision_snapshot,routine_day_revision,last_state_mutation_id';
 
-export type DailyRoutineChecklistItem = { id: string; label: string };
+export type DailyRoutineChecklistItem = { id: string; label: string; icon?: DailyRoutineChecklistIcon };
 export type DailyRoutineRepeatUnit = 'day' | 'week' | 'month';
 export type DailyRoutine = {
   id: string;
@@ -564,9 +565,11 @@ function isValidRoutineChecklist(value: unknown): value is DailyRoutineChecklist
   return value.every((item) => {
     if (!item || typeof item !== 'object') return false;
     const row = item as Record<string, unknown>;
-    if (Object.keys(row).sort().join(',') !== 'id,label' || !isCanonicalUuid(row.id)
+    const shape = Object.keys(row).sort().join(',');
+    if (!['id,label', 'icon,id,label'].includes(shape) || !isCanonicalUuid(row.id)
       || typeof row.label !== 'string' || row.label.trim() !== row.label
       || Array.from(row.label).length < 1 || Array.from(row.label).length > 160 || seen.has(row.id)) return false;
+    if (Object.hasOwn(row, 'icon') && !isDailyRoutineChecklistIcon(row.icon)) return false;
     seen.add(row.id);
     return true;
   });
@@ -703,7 +706,8 @@ function sameRoutineOccurrence(left: DailyRoutineDay | DailyRoutineDaySkip, righ
 }
 
 function sameChecklist(left: readonly DailyRoutineChecklistItem[], right: readonly DailyRoutineChecklistItem[]): boolean {
-  return left.length === right.length && left.every((item, index) => item.id === right[index]?.id && item.label === right[index]?.label);
+  return left.length === right.length && left.every((item, index) => item.id === right[index]?.id && item.label === right[index]?.label
+    && item.icon === right[index]?.icon);
 }
 
 function sameStringArray(left: readonly string[], right: readonly string[]): boolean {

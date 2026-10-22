@@ -25,6 +25,7 @@ export { QuickLogTile } from './QuickLogTile';
 export { SectionHeader } from './SectionHeader';
 export { StatusBadge } from './StatusBadge';
 export { SupportScreenHeader, type SupportAccent } from './SupportScreenHeader';
+export { ThemedIcon, type ThemedIconTone } from './ThemedIcon';
 export { Skeleton } from './Skeleton';
 export { Tabs, type TabsVariant } from './Tabs';
 export { Toast } from './Toast';
