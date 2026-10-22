@@ -25,6 +25,7 @@ import {
   fetchPlannedHealthById,
   fetchHomeContent,
   fetchTrainingWorkspace,
+  fetchExactHistoricalTrainingSources,
   isValidHealthWeightDate,
   isValidHealthWeightKg,
   isValidHealthHistoryDate,
@@ -58,6 +59,7 @@ import {
   type PlannedHealthRecord,
   type PlannedHealthType,
   type PublishedTrainingProgram,
+  type HistoricalTrainingSource,
   type PausedTrainingProgress,
   type WriteOutcome,
 } from '../../data/workspace-data';
@@ -67,11 +69,13 @@ import {
   createDailyRoutine,
   deleteDailyRoutine,
   fetchDailyActivitySnapshot,
+  fetchDailyActivityRangeSnapshot,
   removeRoutineFromDay,
   removeTrainingSelection,
   replaceDailyRoutine,
   setRoutineDayCompletion,
   type DailyActivitySnapshot,
+  type DailyActivityRangeSnapshot,
   type DailyRoutineCreateInput,
   type DailyRoutineDayDraft,
   type DailyTrainingSelection,
@@ -173,6 +177,7 @@ type LogReadFlight = { scope: string; generation: number; controller: AbortContr
 type LogPaginationFlight = { scope: string; generation: number; controller: AbortController };
 type TrainingWorkspaceSnapshot = Awaited<ReturnType<typeof fetchTrainingWorkspace>>;
 type WorkspaceResourceFlight<T> = { scope: string; generation: number; controller: AbortController; promise: Promise<T> };
+type ChecklistRangeView = { scope: string; status: 'loading' | 'ready' | 'partial' | 'error'; activities: HomeDailyActivity[]; failedSources: string[]; unresolvedCount: number };
 
 export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog], onSelectDog, onAddDog, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened, initialPage = 'home', onInitialPageOpened }: {
   client: SupabaseClient;
@@ -188,6 +193,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
   const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>(() => ({ page: initialPage, previousPage: 'home' }));
+  const [checklistFilter, setChecklistFilter] = useState<ChecklistFilter>('Idag');
   const [homeTrainingFocus, setHomeTrainingFocus] = useState<HomeTrainingFocus | null>(null);
   const [homeChecklistScope, setHomeChecklistScope] = useState<{ selectionKey: string; dailyLifetime: string; openManagerOnEntry: boolean } | null>(null);
   const [deviceTimeZone, setDeviceTimeZone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -223,6 +229,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [developmentFocus, setDevelopmentFocus] = useState<{ selectionKey: string } | null>(null);
   const [knowledgeDetailOpen, setKnowledgeDetailOpen] = useState(false);
   const navigateMainTab = useCallback((destination: ProductPage) => {
+    if (page === 'checklist' || page === 'home-training-detail') setChecklistFilter('Idag');
     const enteringKnowledge = page !== 'knowledge' && destination === 'knowledge';
     const leavingKnowledge = page === 'knowledge' && destination !== 'knowledge';
     if (enteringKnowledge || leavingKnowledge) {
@@ -312,6 +319,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [dailySnapshotLifetime, setDailySnapshotLifetime] = useState('');
   const [dailyState, setDailyState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [dailyStateLifetime, setDailyStateLifetime] = useState('');
+  const [checklistRangeView, setChecklistRangeView] = useState<ChecklistRangeView | null>(null);
+  const [checklistRangeRetry, setChecklistRangeRetry] = useState(0);
   const [dailyRefreshing, setDailyRefreshing] = useState(false);
   const [dailyRefreshError, setDailyRefreshError] = useState(false);
   const [dailyClock, setDailyClock] = useState(() => new Date());
@@ -336,6 +345,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const profileMutationInFlight = useRef(false);
   const trainingMutationLease = useRef<TrainingMutationLease | null>(null);
   const dailyGeneration = useRef(0);
+  const checklistRangeGeneration = useRef(0);
+  const checklistRangeFlight = useRef<{ scope: string; controller: AbortController } | null>(null);
   const dailyMutationInFlight = useRef(false);
   const trainingSnapshotRef = useRef<{ scope: string; value: TrainingWorkspaceSnapshot; updatedAt: number } | null>(null);
   const trainingReadFlight = useRef<WorkspaceResourceFlight<TrainingWorkspaceSnapshot> | null>(null);
@@ -380,7 +391,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (page === 'home' && analyticsConsent === true) void analyticsService.track('home_viewed');
   }, [analyticsConsent, analyticsService, page]);
   useEffect(() => {
-    if (page !== 'home' && page !== 'training') return undefined;
+    if (page !== 'home' && page !== 'checklist' && page !== 'training') return undefined;
     const refreshClock = () => setDailyClock(new Date());
     const interval = setInterval(refreshClock, 30_000);
     const subscription = AppState.addEventListener('change', (state) => { if (state === 'active') refreshClock(); });
@@ -454,6 +465,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const validDailyTimeZone = isValidIanaTimeZone(dailyTimeZone);
   const dailyDateKey = validDailyTimeZone ? localDateKeyAt(dailyClock, dailyTimeZone) : null;
   const currentDailyLifetime = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${currentSelectionKey}:${dailyDateKey ?? 'invalid-date'}:${dailyTimeZone}:${reviewContentEnabled ? 'review' : 'public'}`;
+  const checklistRange = useMemo(() => checklistFilter === 'Idag' || !dailyDateKey ? null : checklistFilterRange(checklistFilter, dailyDateKey), [checklistFilter, dailyDateKey]);
+  const currentChecklistRangeScope = currentDailyLifetime + ':' + checklistFilter + ':'
+    + (checklistRange ? checklistRange.from + ':' + checklistRange.to : 'invalid-range');
   const dailyLifetime = useRef('');
   const checklistMemory = useRef<{ scope: string; state: PendingChecklistMemory } | null>(null);
   const [checklistMemoryView, setChecklistMemoryView] = useState<{ scope: string; state: PendingChecklistMemory } | null>(null);
@@ -503,6 +517,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       dailyReadFlight.current?.controller.abort();
       dailyReadFlight.current = null;
       dailySnapshotRef.current = null;
+      checklistRangeGeneration.current += 1;
+      checklistRangeFlight.current?.controller.abort();
+      checklistRangeFlight.current = null;
+      setChecklistRangeView(null);
+      // A new dog, account, local day or time zone starts the checklist at its default view.
+      setChecklistFilter('Idag');
       trainingMutationLease.current = null;
       setBusyStepKey(null);
       setHomeTrainingFocus(null);
@@ -1126,6 +1146,73 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     });
     return () => subscription.remove();
   }, [page, reloadDailyActivity]);
+
+  useEffect(() => {
+    if (page !== 'checklist' || checklistFilter === 'Idag') {
+      checklistRangeFlight.current?.controller.abort();
+      checklistRangeFlight.current = null;
+      return undefined;
+    }
+
+    const scope = currentChecklistRangeScope;
+    const range = checklistRange;
+    const filter = checklistFilter;
+    if (!range || !dailyDateKey || !validDailyTimeZone) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Invalid date scopes must be surfaced rather than shown as empty.
+      setChecklistRangeView({ scope, status: 'error', activities: [], failedSources: ['range'], unresolvedCount: 0 });
+      return undefined;
+    }
+
+    const generation = ++checklistRangeGeneration.current;
+    const controller = new AbortController();
+    checklistRangeFlight.current = { scope, controller };
+    setChecklistRangeView({ scope, status: 'loading', activities: [], failedSources: [], unresolvedCount: 0 });
+    const isCurrent = () => mounted.current && !controller.signal.aborted && !accountDeletionInvalidated.current
+      && checklistRangeGeneration.current === generation && dailyLifetime.current === currentDailyLifetime
+      && page === 'checklist' && checklistFilter === filter && currentChecklistRangeScope === scope;
+
+    void (async () => {
+      try {
+        const snapshot: DailyActivityRangeSnapshot = await fetchDailyActivityRangeSnapshot(
+          client, dog.id, range.from, range.to, false, controller.signal,
+        );
+        if (!isCurrent()) return;
+
+        let sources: ReadonlyMap<string, HistoricalTrainingSource> = new Map();
+        let unresolvedCount = 0;
+        let trainingSourceFailed = false;
+        if (snapshot.completeSources.includes('trainingSelections') && snapshot.trainingSelections.length > 0) {
+          try {
+            const result = await fetchExactHistoricalTrainingSources(client, dog.id, snapshot.trainingSelections.map((row) => ({
+              programVersionId: row.program_version_id,
+              stepId: row.step_id,
+            })), controller.signal);
+            sources = result.sources;
+            unresolvedCount = result.unresolvedKeys.length;
+          } catch {
+            if (!isCurrent()) return;
+            trainingSourceFailed = true;
+          }
+        }
+        if (!isCurrent()) return;
+
+        const failedSources = [...snapshot.failedSources];
+        if (trainingSourceFailed) failedSources.push('trainingSources');
+        const status = checklistRangeReadStatus(snapshot.completeSources, failedSources, unresolvedCount);
+        const activities = status === 'error' ? [] : deriveSavedRangeActivities(snapshot, sources, dog.id, range.from, range.to);
+        setChecklistRangeView({ scope, status, activities, failedSources, unresolvedCount });
+      } catch {
+        if (isCurrent()) setChecklistRangeView({ scope, status: 'error', activities: [], failedSources: ['range'], unresolvedCount: 0 });
+      } finally {
+        if (checklistRangeFlight.current?.controller === controller) checklistRangeFlight.current = null;
+      }
+    })();
+
+    return () => {
+      controller.abort();
+      if (checklistRangeFlight.current?.controller === controller) checklistRangeFlight.current = null;
+    };
+  }, [checklistFilter, checklistRange, checklistRangeRetry, client, currentChecklistRangeScope, currentDailyLifetime, dailyDateKey, dog.id, page, validDailyTimeZone]);
 
   const visibleContent = contentSelectionKey === currentSelectionKey ? content : [];
   const visibleContentState = contentSelectionKey === currentSelectionKey ? contentState : 'loading';
@@ -2416,6 +2503,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
       serverConfirmed = true;
       accountDeletionInvalidated.current = true;
+      checklistRangeGeneration.current += 1;
+      checklistRangeFlight.current?.controller.abort();
+      checklistRangeFlight.current = null;
+      setChecklistRangeView(null);
+      setChecklistFilter('Idag');
       trainingMutationLease.current = null;
       setBusyStepKey(null);
       setHomeTrainingFocus(null);
