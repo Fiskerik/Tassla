@@ -43,6 +43,13 @@ def development_url(*, guides_state: str | None = None, age_scenario: str | None
     return f"{BASE}/?{'&'.join(query)}"
 
 
+def progress_url(*, state: str = 'ready', completed: int | None = None) -> str:
+    query = [f'screen=progress', f'homeScenario={state}']
+    if completed is not None:
+        query.append(f'progressCount={completed}')
+    return f"{BASE}/?{'&'.join(query)}"
+
+
 def visible_destinations(page) -> list[dict[str, object]]:
     tiles = []
     for name in ('Öppna Logga', 'Öppna Träna', 'Öppna Kunskap'):
@@ -288,6 +295,133 @@ def verify_development_states(browser) -> None:
            {'content': target_box, 'bottom_nav': bottom_nav})
     page.screenshot(path=str(OUT / 'development-text-140-bottom-375.png'))
     page.close()
+
+
+def verify_progress_views(browser) -> None:
+    if not REVIEW:
+        page = browser.new_page(viewport={'width': 375, 'height': 844})
+        page.goto(progress_url(), wait_until='networkidle')
+        expect(page.get_by_test_id('daily-progress-screen')).to_be_visible()
+        expect(page.get_by_text('Inga aktiviteter idag', exact=True)).to_be_visible()
+        expect(page.get_by_role('progressbar')).to_have_count(0)
+        primary = page.get_by_role('button', name='Hantera dagens aktiviteter', exact=True)
+        expect(primary).to_be_visible()
+        record('Public empty Progress shows no 0/0 ring and one primary action',
+               primary.count() == 1 and page.get_by_text('0 av 0', exact=True).count() == 0)
+        page.screenshot(path=str(OUT / 'progress-empty-375.png'), full_page=True)
+        primary.click()
+        expect(page.get_by_test_id('daily-checklist-screen')).to_be_visible()
+        expect(page.get_by_role('dialog')).to_be_visible()
+        record('Empty Progress action opens the existing activity manager', True)
+        page.close()
+        return
+
+    for width in (375, 430):
+        page = browser.new_page(viewport={'width': width, 'height': 844 + 32})
+        page_errors: list[str] = []
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.goto(progress_url(completed=2), wait_until='networkidle')
+        expect(page.get_by_test_id('daily-progress-screen')).to_be_visible()
+        expect(page.get_by_role('heading', name='Dagens aktiviteter', exact=True)).to_be_visible()
+        ring = page.get_by_role('progressbar', name='2 av 5 dagsuppgifter klara', exact=True)
+        expect(ring).to_be_visible()
+        box = ring.bounding_box()
+        segment_count = page.get_by_test_id('daily-progress-ring-segment').count()
+        expect(page.get_by_text('2 av 5 klara', exact=True)).to_be_visible()
+        expect(page.get_by_text('Dagens lista är klar', exact=True)).to_have_count(0)
+        record(f'Progress uses a continuous 40% ring and shared 2/5 list at {width}px',
+               box is not None and abs(box['width'] - 248) <= 1 and abs(box['height'] - 248) <= 1
+               and segment_count == 48 and page.get_by_text('Kissa', exact=True).is_visible(),
+               {'ring': box, 'segments': segment_count})
+        record(f'Progress does not invent completion timestamps at {width}px',
+               page.get_by_text('07:12', exact=True).count() == 0 and page.get_by_text('08:45', exact=True).count() == 0)
+        overflow = page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+        record(f'Progress fits without horizontal overflow or browser errors at {width}px', overflow and not page_errors,
+               {'page_errors': page_errors})
+        if width == 375:
+            page.screenshot(path=str(OUT / 'progress-375.png'), full_page=True)
+        page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 876})
+    page.goto(progress_url(completed=5), wait_until='networkidle')
+    ring = page.get_by_role('progressbar', name='5 av 5 dagsuppgifter klara', exact=True)
+    expect(ring).to_be_visible()
+    expect(page.get_by_test_id('daily-progress-complete-note')).to_be_visible()
+    expect(page.get_by_text('5 aktiviteter markerade som klara idag.', exact=True)).to_be_visible()
+    record('100% ring closes and the factual completion note appears only when complete',
+           page.get_by_test_id('daily-progress-ring-segment').count() == 120)
+    page.screenshot(path=str(OUT / 'progress-complete-375.png'), full_page=True)
+    page.get_by_test_id('daily-progress-complete-note').scroll_into_view_if_needed()
+    page.screenshot(path=str(OUT / 'progress-complete-bottom-375.png'), full_page=True)
+    page.close()
+
+    for state, message in (
+        ('loading', 'Laddar innehåll'),
+        ('error', 'Dagens framsteg kunde inte hämtas. Inget antal visas förrän aktiviteterna har lästs in.'),
+        ('unknown', 'Dagens aktiviteter är inte tillgängliga ännu. Inget antal visas.'),
+        ('partial', 'Dagens sammanställning är inte komplett ännu. Inget antal visas.'),
+    ):
+        page = browser.new_page(viewport={'width': 375, 'height': 876})
+        page.goto(progress_url(state=state), wait_until='networkidle')
+        if state == 'loading':
+            expect(page.get_by_role('progressbar', name='Laddar innehåll')).to_have_count(2)
+        else:
+            expect(page.get_by_text(message, exact=True)).to_be_visible()
+        expect(page.get_by_role('progressbar', name='0 av 0 dagsuppgifter klara')).to_have_count(0)
+        if state == 'error':
+            retry = page.get_by_role('button', name='Hämta dagens framsteg igen', exact=True)
+            expect(retry).to_be_visible()
+            page.screenshot(path=str(OUT / 'progress-error-375.png'), full_page=True)
+        if state == 'loading':
+            page.screenshot(path=str(OUT / 'progress-loading-375.png'), full_page=True)
+        record(f'Progress {state} state is distinct and never shows a 0/0 ring', True)
+        page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 699})
+    page.goto(progress_url(completed=2), wait_until='networkidle')
+    expect(page.get_by_test_id('review-app-viewport')).to_be_visible()
+    content = page.get_by_role('button', name='Öppna hela dagens checklista', exact=True)
+    content.scroll_into_view_if_needed()
+    nav = page.get_by_role('tablist', name='Huvudmeny').bounding_box()
+    action = content.bounding_box()
+    record('Progress remains naturally scrollable at the short viewport with its action above navigation',
+           action is not None and nav is not None and action['y'] + action['height'] <= nav['y']
+           and page.evaluate('document.documentElement.scrollWidth <= innerWidth'),
+           {'action': action, 'nav': nav})
+    page.screenshot(path=str(OUT / 'progress-short-375.png'), full_page=True)
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 876})
+    page.goto(progress_url(completed=5), wait_until='networkidle')
+    page.evaluate("""() => document.querySelectorAll('[dir="auto"]').forEach((element) => {
+      const style = getComputedStyle(element);
+      element.style.fontSize = `${parseFloat(style.fontSize) * 1.4}px`;
+      element.style.lineHeight = `${parseFloat(style.lineHeight) * 1.4}px`;
+    })""")
+    complete_note = page.get_by_test_id('daily-progress-complete-note')
+    complete_note.scroll_into_view_if_needed()
+    nav = page.get_by_role('tablist', name='Huvudmeny').bounding_box()
+    note = complete_note.bounding_box()
+    record('Progress completion content remains reachable at the 140% text proxy',
+           page.evaluate('document.documentElement.scrollWidth <= innerWidth') and note is not None and nav is not None
+           and note['y'] + note['height'] <= nav['y'], {'note': note, 'nav': nav})
+    page.screenshot(path=str(OUT / 'progress-text-140-bottom-375.png'))
+    page.close()
+
+
+if os.environ.get('TASSLA_UI_PANEL') == 'progress':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_progress_views(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'progress', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
 
 
 with sync_playwright() as playwright:

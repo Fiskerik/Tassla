@@ -41,6 +41,24 @@ export type DailyProgressSelection<T extends Pick<HomeDailyActivity, 'completed'
   coverage: DailyProgressCoverage;
 };
 
+export type DailyProgressRingFill = {
+  fraction: number;
+  completeSegments: number;
+  partialSegment: number;
+};
+
+/** Keeps the ring fill monotonic and exposes the final partial segment. */
+export function dailyProgressRingFill(completed: number, total: number, segmentCount = 120): DailyProgressRingFill {
+  if (!Number.isFinite(completed) || !Number.isInteger(total) || total <= 0
+    || !Number.isInteger(segmentCount) || segmentCount <= 0) {
+    return { fraction: 0, completeSegments: 0, partialSegment: 0 };
+  }
+  const fraction = Math.max(0, Math.min(1, completed / total));
+  const segments = fraction * segmentCount;
+  const completeSegments = Math.floor(segments);
+  return { fraction, completeSegments, partialSegment: segments - completeSegments };
+}
+
 /** Selects the single scope-current daily result shared by Home and Daily Progress. */
 export function selectDailyProgress<T extends Pick<HomeDailyActivity, 'completed'>>(
   activities: readonly T[],

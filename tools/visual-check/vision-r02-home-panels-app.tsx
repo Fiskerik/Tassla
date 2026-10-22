@@ -144,9 +144,15 @@ function makeActivities(dateKey: string, dogId: string, count: number): HomeDail
   });
 }
 
+const requestedProgressCount = params.get('progressCount');
+const initialProgressCount = requestedProgressCount !== null && /^\d+$/.test(requestedProgressCount)
+  ? Math.max(0, Math.min(rows.length, Number(requestedProgressCount))) : null;
+const initialCompletion = initialProgressCount === null ? {}
+  : Object.fromEntries(rows.map((activity, index) => [activity.id, index < initialProgressCount]));
+
 function VisualCheckApp() {
   const [scrollScopeRevision, setScrollScopeRevision] = useState('base');
-  const [completion, setCompletion] = useState<Record<string, boolean>>({});
+  const [completion, setCompletion] = useState<Record<string, boolean>>(initialCompletion);
   const [mutationFlow, setMutationFlow] = useState<'idle' | 'pending' | 'confirmed'>('idle');
   const [navigation, setNavigation] = useState(() => {
     const initialScreen = params.get('screen');
@@ -186,6 +192,7 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
       <Text style={{ ...tokens.typography.caption, color: tokens.colors.home.text }}>{navigation === 'home'
         ? 'Syntetiskt granskningsläge · AI-genererad standardbild'
         : navigation === 'development' || navigation === 'knowledge' ? 'Syntetiskt granskningsläge · ålder och guide'
+          : navigation === 'progress' ? 'Syntetiskt granskningsläge · dagsprogress'
           : 'Syntetiskt granskningsläge · checklistdata'}</Text>
     </View> : null}
     <View testID="review-app-viewport" style={{ flex: 1, minHeight: 0 }}>

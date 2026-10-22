@@ -7913,16 +7913,16 @@
           "evidence": "Panel 3 source changes are present but its dependency FLOW-DEVELOPMENT-01 has not completed its checkpoint; this task also shares active write paths with Development. Panel 3 test/render/§14 evidence is not available, and no tests were run. Keep it blocked until Development is checkpointed and the Progress verification is completed."
         }
       ],
-      "next_step": "Återuppta efter att FLOW-DEVELOPMENT-01 har en godkänd checkpoint. Skapa och kör tests/daily-progress-screen.test.mjs samt panel-3-specifika kontroller; därefter verifiera riktiga public/review-renderingar med §14, källgemensam ring/lista och saknat veckomål. Panel 3 förblir partiell tills veckomålskälla finns.",
+      "next_step": "Panel 3 implementation and local verification were completed under Erik’s explicit instruction to continue the remaining panels while the Panel 2 frozen Reviewer re-review is pending. The formal status remains blocked at the approved dependency gate. After FLOW-DEVELOPMENT-01 Reviewer PASS, transition this task through planned/ready/implementing, then obtain independent panel-3 QA and frozen Reviewer review. Keep the panel partial until a real weekly-goal source or revised MVP contract exists.",
       "priority": "P1",
       "panels": [
         "Dagens framsteg"
       ],
       "risk_class": "M",
       "checkpoint": "Checkpoint 3: partial Daily Progress route with truthful source-derived counts.",
-      "test_evidence": "`pnpm check` PASS (63/63); daily activity and checklist regression suites are included. The specifically planned tests/daily-progress-screen.test.mjs is absent, so the panel-specific route, ring and visual behavior remain unproven. Rendered route/crop/§14 evidence remains absent and actual app screenshot is NOT TESTABLE. Weekly-goal source is unavailable, so full panel remains partial.",
-      "implementation_state": "Source implementation present; dependency checkpoint, QA and visual acceptance pending.",
-      "evidence_status": "blocked — check PASS, dependency checkpoint and route/render/§14 evidence pending"
+      "test_evidence": "`pnpm check` PASS: app/edge TypeScript, ESLint and 68/68 Node test files; focused daily-progress/model/routes suites PASS 3/3; public iOS content guard/export PASS (1,465 modules); public RN Web 2/2 and review RN Web 13/13 PASS. Review covers 375/430 pt, 40%/100% ring, empty/loading/error/unknown/partial, short viewport, 140% text proxy and no horizontal overflow. The pure ring tests cover 0/1/49/50/51/99/100% and invalid inputs. `git diff --check` PASS. These are implementation-run local checks, not independent QA or Reviewer approval. Live weekly-goal source, Supabase/RLS, native VoiceOver/Dynamic Type, account/dog scope on device and signed build remain NOT TESTABLE; full panel remains partial.",
+      "implementation_state": "Panel 3 source is updated: monotonic 120-segment ring, 248/12pt ring tokens, shared daily selector/list, truthful complete-only note, distinct empty/loading/error/unknown/partial states, unique Standardbild and existing routine/training actions. Implementation and local tests/renders are recorded in progress/VERIFICATION.md. Formal queue status is blocked until the Panel 2 dependency checkpoint is reviewed; independent QA/Reviewer for Panel 3 remain pending.",
+      "evidence_status": "Implementation/local verification PASS; formal dependency gate, independent QA and Reviewer pending; weekly-goal data unavailable"
     },
     {
       "id": "FLOW-INSIGHTS-01",

@@ -199,3 +199,9 @@ Erik vill att Kunskapens checklistor delar mer av Hemmets ikon- och radgrammatik
 ### Rättelse — A03 och panel 4, 2026-10-22
 
 Erik har efter den lokala A03-checkpointen bekräftat att `202610220001_daily_routine_checklist_icons.sql` är migrerad, extern QA för A03 är klar och manuella iOS-tester passerade. FLOW-HOME-CHECKLIST-FILTERS-01 stängs enligt ägarens rapport. Sessionen gjorde ingen ny live Supabase/RLS- eller enhetskontroll; se [taskunderlaget](../tasks/dev/FLOW-HOME-CHECKLIST-FILTERS-01.md).
+
+### FLOW-PROGRESS-01 — ringbåge och sanningsenligt dagsläge, 2026-10-22
+
+Panel 3 behåller MVP-kontraktets datakälla: samma `selectDailyProgress` används för ring och full lista. Den tidigare halvringslösningen gick tillbaka mot noll vid 50 %, så ringen byggdes om med 120 överlappande View-segment och en partiell sista bit; den geometrin är testad vid 0/1/49/50/51/99/100 % och ogiltig input. Ingen dependency eller schemaändring tillkom. Tid visas inte eftersom rutinpunkternas completion-tider saknas; veckomål utelämnas tills dess population/period/källa har beslutats. Fullklar-sammanfattningen visas endast när hela dagsurvalet är markerat.
+
+Erik bad uttryckligen att de övriga panelerna fortsätter medan panel 2:s frysta Reviewer-re-review hanteras. Därför gjordes panel-3-implementationen och lokala test/renderkontroller nu; dess formella köstatus förblir `blocked` tills panel-2-checkpointen passerar Reviewer. Panel 3 väntar dessutom på oberoende QA/Reviewer och ett verkligt veckomål för full acceptans. Se [panel-3-verifiering](../design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/progress/VERIFICATION.md).
