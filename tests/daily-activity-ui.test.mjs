@@ -60,6 +60,20 @@ test('routine and training rows expose separate accessible actions and truthful 
   assert.match(manager, /function startCreate\(/);
 });
 
+test('routine home and delete actions are icon-only and confirm before removal', () => {
+  const routineRow = manager.slice(manager.indexOf('function RoutineTemplateRow'), manager.indexOf('function ActionButton'));
+  const actions = routineRow.slice(routineRow.indexOf('<View style={styles.routineActions}>'));
+  assert.match(actions, /<IconOnlyButton icon=\{selected \? 'remove-outline' : 'add-outline'\}/);
+  assert.match(actions, /accessibilityLabel=\{`\$\{selected \? 'Ta bort' : skippedDay \? 'Lägg tillbaka' : 'Lägg till'\} rutinen/);
+  assert.match(actions, /Alert\.alert\('Ta bort från Hemskärmen\?'/);
+  assert.match(actions, /\{ text: 'Avbryt', style: 'cancel' \}, \{ text: 'Ta bort', onPress: onRemove \}/);
+  assert.match(actions, /<IconOnlyButton icon="trash-outline" accessibilityLabel=\{`Ta bort rutin/);
+  assert.match(actions, /Alert\.alert\('Ta bort rutin\?'/);
+  assert.match(actions, /style: 'destructive', onPress: \(\) => \{ void onDelete\(\); \}/);
+  assert.doesNotMatch(actions, /<ActionButton|<Text/);
+  assert.match(manager, /iconOnlyButton: \{ width: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin/);
+});
+
 test('training row presents the step title and keeps full program title in detail data', () => {
   assert.match(model, /label: step\.title/);
   assert.match(model, /programTitle: program\.title/);

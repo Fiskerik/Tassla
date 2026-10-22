@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Crypto from 'expo-crypto';
 import { BottomSheet, Button } from '../../components/ui';
@@ -403,8 +403,6 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
   onAdd: () => void;
   onRemove: () => void;
 }) {
-  const { width, fontScale } = useWindowDimensions();
-  const stackRoutineActions = width < 360 || fontScale >= 1.25;
   const editing = draft?.mode === 'edit' && draft.routineId === routine.id;
   const value = editing ? draft : null;
   const selected = selectedDay !== null;
@@ -445,48 +443,48 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, disabled,
     </> : <View style={styles.scheduleSummaryRow}>
       <Text style={styles.repeatSummary}>{dailyRoutineRepeatSummary(routine)}</Text>
     </View>}
-    <View style={[styles.routineActions, stackRoutineActions && styles.routineActionsStacked]}>
-      <ActionButton icon={selected ? 'remove-outline' : 'add-outline'} label={selected ? 'Ta bort från Hemskärmen' : 'Lägg till på Hemskärmen'}
+    <View style={styles.routineActions}>
+      <IconOnlyButton icon={selected ? 'remove-outline' : 'add-outline'}
         accessibilityLabel={`${selected ? 'Ta bort' : skippedDay ? 'Lägg tillbaka' : 'Lägg till'} rutinen ${routine.label} ${selected ? 'från' : 'på'} Hemskärmen`}
-        disabled={disabled} onPress={selected ? onRemove : onAdd} dayAction responsiveRow stacked={stackRoutineActions} />
-      <ActionButton icon="trash-outline" label="Ta bort rutin" accessibilityLabel={`Ta bort rutin ${routine.label}`}
-        disabled={disabled} danger responsiveRow stacked={stackRoutineActions} onPress={() => Alert.alert('Ta bort rutin?', `Rutinen ”${routine.label}” och alla dess dagskopior och sparade överhoppningar tas bort.`, [
+        disabled={disabled} tone="day" onPress={selected ? () => Alert.alert('Ta bort från Hemskärmen?', `”${routine.label}” tas bort från dagens lista. Rutinen finns kvar och kan läggas till igen.`, [
+          { text: 'Avbryt', style: 'cancel' }, { text: 'Ta bort', onPress: onRemove },
+        ]) : onAdd} />
+      <IconOnlyButton icon="trash-outline" accessibilityLabel={`Ta bort rutin ${routine.label}`}
+        disabled={disabled} tone="danger" onPress={() => Alert.alert('Ta bort rutin?', `Rutinen ”${routine.label}” och alla dess dagskopior och sparade överhoppningar tas bort.`, [
           { text: 'Avbryt', style: 'cancel' }, { text: 'Ta bort rutin', style: 'destructive', onPress: () => { void onDelete(); } },
         ])} />
     </View>
   </View>;
 }
 
-function ActionButton({ icon, label, accessibilityLabel, disabled = false, onPress, dayAction = false, danger = false, quiet = false, responsiveRow = false, stacked = false }: {
+function ActionButton({ icon, label, accessibilityLabel, disabled = false, onPress, danger = false }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   accessibilityLabel: string;
   disabled?: boolean;
   onPress: () => void;
-  dayAction?: boolean;
   danger?: boolean;
-  quiet?: boolean;
-  responsiveRow?: boolean;
-  stacked?: boolean;
 }) {
   return <MotionPressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} accessibilityState={{ disabled }}
-    disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.actionButton, dayAction && styles.actionButtonDay,
-      responsiveRow && styles.routineActionButton, stacked && styles.routineActionButtonStacked,
-      danger && styles.actionButtonDanger, quiet && styles.actionButtonQuiet, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
+    disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.actionButton,
+      danger && styles.actionButtonDanger, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
     <Ionicons name={icon} size={tokens.size.iconSm} color={danger ? tokens.colors.danger : tokens.colors.primary} accessibilityElementsHidden />
-    <Text style={[styles.actionButtonText, dayAction && styles.actionButtonDayText, danger && styles.actionButtonDangerText]}>{label}</Text>
+    <Text style={[styles.actionButtonText, danger && styles.actionButtonDangerText]}>{label}</Text>
   </MotionPressable>;
 }
 
-function IconOnlyButton({ icon, accessibilityLabel, disabled = false, onPress }: {
+function IconOnlyButton({ icon, accessibilityLabel, disabled = false, tone = 'default', onPress }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   accessibilityLabel: string;
   disabled?: boolean;
+  tone?: 'default' | 'day' | 'danger';
   onPress: () => void;
 }) {
   return <MotionPressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} accessibilityState={{ disabled }}
-    disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.iconOnlyButton, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
-    <Ionicons name={icon} size={tokens.size.iconMd} color={tokens.colors.primary} accessibilityElementsHidden />
+    disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.iconOnlyButton,
+      tone !== 'default' && styles.routineIconAction, tone === 'day' && styles.routineIconActionDay,
+      tone === 'danger' && styles.routineIconActionDanger, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
+    <Ionicons name={icon} size={tokens.size.iconMd} color={tone === 'danger' ? tokens.colors.danger : tokens.colors.primary} accessibilityElementsHidden />
   </MotionPressable>;
 }
 
@@ -522,10 +520,10 @@ const styles = StyleSheet.create({
   itemLabel: { ...tokens.typography.caption, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 },
   itemActions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
   inlineEditor: { gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs },
-  routineActions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch', gap: tokens.spacing.xs, paddingTop: tokens.spacing.xs },
-  routineActionsStacked: { flexDirection: 'column' },
-  routineActionButton: { flex: 1, flexBasis: '45%', minWidth: tokens.size.touchMin },
-  routineActionButtonStacked: { flex: 0, flexBasis: 'auto', alignSelf: 'stretch' },
+  routineActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: tokens.spacing.xs, paddingTop: tokens.spacing.xs },
+  routineIconAction: { borderWidth: tokens.size.stroke, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },
+  routineIconActionDay: { borderColor: tokens.colors.selectedSurface, backgroundColor: tokens.colors.selectedSurface },
+  routineIconActionDanger: { borderColor: tokens.colors.danger },
   scheduleSummaryRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, paddingTop: tokens.spacing.xs },
   repeatSummary: { ...tokens.typography.caption, color: tokens.colors.textSecondary, flex: 1 },
   scheduleEdit: { gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs },
@@ -542,11 +540,8 @@ const styles = StyleSheet.create({
   intervalValue: { ...tokens.typography.label, color: tokens.colors.textPrimary, minWidth: 40, textAlign: 'center' },
   iconOnlyButton: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.sm },
   actionButton: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.sm, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
-  actionButtonDay: { flex: 2, borderColor: tokens.colors.selectedSurface, backgroundColor: tokens.colors.selectedSurface },
   actionButtonDanger: { borderColor: tokens.colors.danger, backgroundColor: tokens.colors.surface },
-  actionButtonQuiet: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto', borderColor: 'transparent', backgroundColor: 'transparent', paddingHorizontal: tokens.spacing.xs },
   actionButtonText: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700', flexShrink: 1, textAlign: 'center' },
-  actionButtonDayText: { color: tokens.colors.primary },
   actionButtonDangerText: { color: tokens.colors.danger },
   disabled: { opacity: 0.5 },
   pressed: { backgroundColor: tokens.colors.selectedSurface },
