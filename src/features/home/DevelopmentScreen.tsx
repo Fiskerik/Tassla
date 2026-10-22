@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AppBar, Button, Skeleton } from '../../components/ui';
@@ -27,7 +27,7 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
   return <View style={styles.page} testID="development-screen">
     <AppBar mode="Back" title={`${dogName}s utveckling`} actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" />
 
-    <View style={styles.hero}>
+    <View style={styles.hero} testID="development-hero">
       <Image source={require('../../../assets/images/development-hero-puppy-black-tan-forest-wide.jpg')} style={styles.heroImage} resizeMode="cover"
         accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
       <View style={styles.imageBadge}><Text style={styles.imageBadgeText}>Standardbild</Text></View>
@@ -85,6 +85,7 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
 }
 
 function AgeArc({ progress, currentAge, stage }: { progress: number; currentAge: string; stage: 'VALP' | 'UNGHUND' }) {
+  const [ageLabelVisible, setAgeLabelVisible] = useState(true);
   const diameter = tokens.size.developmentAgeArcDiameter;
   const radius = diameter / 2;
   const markerSize = tokens.size.developmentAgeArcStroke + 10;
@@ -93,9 +94,15 @@ function AgeArc({ progress, currentAge, stage }: { progress: number; currentAge:
   const markerY = Math.max(markerSize / 2, Math.min(radius - markerSize / 2, radius * (1 - Math.sin(progress * Math.PI))));
   const bubbleLeft = Math.max(0, Math.min(diameter - bubbleWidth, markerX - bubbleWidth / 2));
   const bubbleTop = markerY < tokens.size.chipMd + tokens.spacing.xs ? markerY + tokens.spacing.md : markerY - tokens.size.chipMd - tokens.spacing.xs;
+  const bubbleHitWidth = bubbleWidth + 16;
+  const bubbleButtonLeft = Math.max(0, Math.min(diameter - bubbleHitWidth, bubbleLeft - 8));
+  const bubbleButtonTop = Math.max(0, Math.min(diameter / 2 - tokens.size.touchMin, bubbleTop - 6));
+  const markerHitSize = tokens.size.touchMin;
+  const markerButtonLeft = markerX - markerHitSize / 2;
+  const markerButtonTop = markerY - markerHitSize / 2;
+  const phaseName = formatStage(stage);
   return <View style={styles.arcBlock}>
-    <View accessible accessibilityRole="summary" accessibilityLabel={`Kronologisk ålder ${currentAge}. Fas: ${formatStage(stage)}. Åldersresan går från 0 till 24 månader.`}
-      style={styles.arcAccessible}>
+    <View style={styles.arcAccessible}>
       <View style={styles.arcClip}>
         <View style={styles.arcTrack} />
         {[0.25, 0.5, 0.75].map((tick) => {
@@ -103,10 +110,21 @@ function AgeArc({ progress, currentAge, stage }: { progress: number; currentAge:
           const top = Math.max(3, radius * (1 - Math.sin(tick * Math.PI)));
           return <View key={tick} style={[styles.arcTick, { left: left - 3, top: top - 3 }]} />;
         })}
-        <View style={[styles.arcCurrent, { width: markerSize, height: markerSize, borderRadius: markerSize / 2,
-          left: markerX - markerSize / 2, top: markerY - markerSize / 2 }]} />
+        {ageLabelVisible ? <View style={[styles.arcCurrent, { width: markerSize, height: markerSize, borderRadius: markerSize / 2,
+          left: markerX - markerSize / 2, top: markerY - markerSize / 2 }]} /> : null}
       </View>
-      <View style={[styles.ageBubble, { left: bubbleLeft, top: bubbleTop }]}><Text style={styles.ageBubbleText}>{currentAge}</Text></View>
+      {ageLabelVisible ? <MotionPressable testID="development-age-pill" accessibilityRole="button"
+        accessibilityLabel={`Dölj åldersmarkeringen ${currentAge}. Fas ${phaseName}.`}
+        accessibilityHint="Döljer åldersetiketten. Tryck sedan på markören för att visa den igen."
+        onPress={() => setAgeLabelVisible(false)} style={[styles.ageBubbleTouch, { width: bubbleHitWidth, height: tokens.size.touchMin,
+          left: bubbleButtonLeft, top: bubbleButtonTop }]}>
+        <View style={styles.ageBubble}><Text style={styles.ageBubbleText}>{currentAge}</Text></View>
+      </MotionPressable> : <MotionPressable testID="development-age-marker-toggle" accessibilityRole="button"
+        accessibilityLabel={`Visa åldersmarkeringen ${currentAge}. Fas ${phaseName}.`}
+        onPress={() => setAgeLabelVisible(true)} style={[styles.markerToggle, { width: markerHitSize, height: markerHitSize,
+          borderRadius: markerHitSize / 2, left: markerButtonLeft, top: markerButtonTop }]}>
+        <View style={[styles.markerToggleDot, { width: markerSize, height: markerSize, borderRadius: markerSize / 2 }]} />
+      </MotionPressable>}
     </View>
     <View style={styles.phaseLegend}>
       <View style={styles.phaseLegendGroup}><View style={[styles.phaseLegendDot, styles.puppyLegendDot]} /><Text style={styles.phaseLegendText}>Valp</Text><Text style={styles.phaseRange}>0–6 mån</Text></View>
@@ -180,15 +198,18 @@ const styles = StyleSheet.create({
   arcTrack: { position: 'absolute', top: 0, left: 0, width: tokens.size.developmentAgeArcDiameter, height: tokens.size.developmentAgeArcDiameter, borderRadius: tokens.size.developmentAgeArcDiameter / 2, borderWidth: tokens.size.developmentAgeArcStroke, borderColor: tokens.colors.home.progressTrack },
   arcTick: { position: 'absolute', width: 6, height: 6, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.borderStrong },
   arcCurrent: { position: 'absolute', borderWidth: 2, borderColor: tokens.colors.home.card, backgroundColor: tokens.colors.home.greenStrong },
-  ageBubble: { position: 'absolute', width: tokens.size.developmentAgeMarkerWidth, minHeight: tokens.size.chipMd, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.greenStrong },
+  ageBubbleTouch: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
+  ageBubble: { width: tokens.size.developmentAgeMarkerWidth, minHeight: tokens.size.chipMd, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.greenStrong },
+  markerToggle: { position: 'absolute', alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card, borderWidth: 1, borderColor: tokens.colors.home.greenStrong },
+  markerToggleDot: { borderWidth: 2, borderColor: tokens.colors.home.card, backgroundColor: tokens.colors.home.greenStrong },
   ageBubbleText: { ...tokens.typography.smallCaption, fontWeight: '700', color: tokens.colors.onPrimary },
-  phaseLegend: { width: tokens.size.developmentAgeArcDiameter, flexDirection: 'row', justifyContent: 'space-between' },
-  phaseLegendGroup: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs },
+  phaseLegend: { width: tokens.size.developmentAgeArcDiameter + tokens.spacing.xxl, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', columnGap: tokens.spacing.md, rowGap: tokens.spacing.xs },
+  phaseLegendGroup: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', flexShrink: 1, gap: tokens.spacing.xs },
   phaseLegendDot: { width: 8, height: 8, borderRadius: tokens.radius.full },
   puppyLegendDot: { backgroundColor: tokens.colors.category.walk.fg },
   adolescentLegendDot: { backgroundColor: tokens.colors.home.greenStrong },
-  phaseLegendText: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700' },
-  phaseRange: { ...tokens.typography.smallCaption, color: tokens.colors.home.textMuted },
+  phaseLegendText: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700', flexShrink: 1 },
+  phaseRange: { ...tokens.typography.smallCaption, color: tokens.colors.home.textMuted, flexShrink: 1 },
   matureAge: { minHeight: tokens.size.touchMin, alignItems: 'center', flexDirection: 'row', gap: tokens.spacing.md, paddingHorizontal: tokens.spacing.md },
   matureAgeLabel: { ...tokens.typography.eyebrow, color: tokens.colors.home.textMuted },
   matureAgeValue: { ...tokens.typography.heading, color: tokens.colors.home.text },

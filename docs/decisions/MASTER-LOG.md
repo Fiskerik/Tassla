@@ -194,3 +194,8 @@ Detta stänger inte hela panel 4: Kommande, källnavigation/retur och full §14-
 Panel-4:s fyra filter, read-only Kommande, exakta historiska träningskällor och retur med bibehållet filter/scroll är lokalt implementerade på `2026-10-22-checklist-kommande-navigation`. Riktad syntetisk RN Web-kontroll PASS: public 10/10, review 19/19. Check-hook: 642 passerade, 1 skip av 643 testfall. Commit `25bde34` pushad till `origin/2026-10-22-checklist-kommande-navigation`. Full panelacceptans, oberoende A03-review och live RLS är fortfarande öppna; native accessibility är NOT TESTABLE.
 
 Erik vill att Kunskapens checklistor delar mer av Hemmets ikon- och radgrammatik. Fortsatt beslut: harmonisera presentation och återkoppling där de passar, men bevara skillnaden mellan publicerade fasuppgifter/egna fas-punkter och ägarens återanvändbara återfallsrutiner. Kunskapens egna punkter saknar sparat ikonfält; beständigt val kräver separat datakontrakt och granskning. A03 ändrar inte Kunskap. Skärmens generella `Kontrollera den föregående ändringen`-status bevisar inte saknad tabell: ikonändringen kräver en ännu icke-applicerad validator-migration i den befintliga rutindatakällan, inte en ny tabell.
+
+
+### Rättelse — A03 och panel 4, 2026-10-22
+
+Erik har efter den lokala A03-checkpointen bekräftat att `202610220001_daily_routine_checklist_icons.sql` är migrerad, extern QA för A03 är klar och manuella iOS-tester passerade. FLOW-HOME-CHECKLIST-FILTERS-01 stängs enligt ägarens rapport. Sessionen gjorde ingen ny live Supabase/RLS- eller enhetskontroll; se [taskunderlaget](../tasks/dev/FLOW-HOME-CHECKLIST-FILTERS-01.md).
