@@ -10508,7 +10508,7 @@
       "depends_on": [
         "UI-R02-01A"
       ],
-      "status": "qa",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -10527,9 +10527,15 @@
           "to": "qa",
           "actor": "implementer",
           "evidence": "Lokal implementation klar på 2026-10-23-ui-01-profil. Public/review RN Web 9/9 vardera; pnpm check PASS (TypeScript, edge TypeScript, ESLint, 75/75); public pnpm bundle:ios PASS (1 583 JS-moduler); git diff --check, Python py_compile och dev_flow validate PASS. Markerar endast redo för oberoende QA: QA, Security final och Reviewer återstår. Native back/accessibility, SecureStore efter processomstart och live Supabase/RLS är inte provade."
+        },
+        {
+          "from": "qa",
+          "to": "done",
+          "actor": "coordinator",
+          "evidence": "Owner-confirmed approved and reviewed on 2026-10-23; closure relies on Erik’s report. No separate QA/Security/Reviewer artifact or new test run was supplied in this session. Existing implementation evidence and its explicit limitations remain in docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/VERIFICATION.md."
         }
       ],
-      "next_step": "Lokal implementation klar på 2026-10-23-ui-01-profil. Public/review RN Web 9/9 vardera; pnpm check PASS (TypeScript, edge TypeScript, ESLint, 75/75); public pnpm bundle:ios PASS (1 583 JS-moduler); git diff --check, Python py_compile och dev_flow validate PASS. Markerar endast redo för oberoende QA: QA, Security final och Reviewer återstår. Native back/accessibility, SecureStore efter processomstart och live Supabase/RLS är inte provade.",
+      "next_step": "Closed on owner confirmation 2026-10-23. Continue with UI-R02-02 Checklistor; keep SecureStore process-restart and signed/TestFlight build as separately unverified evidence.",
       "priority": "P1",
       "panels": [
         "Hundprofil",
@@ -10537,9 +10543,9 @@
       ],
       "risk_class": "H",
       "checkpoint": "UI-R02-01 checkpoint 2: content-first profile, shared existing dog switcher, compact optional details, and safe dirty-route exit; no profile data/model changes.",
-      "test_evidence": "Implementer local checkpoint: pnpm check PASS (TypeScript, edge TypeScript, ESLint, 75/75 tests); public pnpm bundle:ios PASS (1,583 JS modules); public/review RN Web 9/9 each; git diff --check, Python py_compile and python -X utf8 tools/dev_flow.py validate PASS. Synthetic screenshots and §14 evidence under docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/. Independent QA, Security final and Reviewer remain pending; native/runtime checks not claimed.",
-      "implementation_state": "UI-R02-01B v6 is implemented on 2026-10-23-ui-01-profil and locally validated. Includes compact create/edit profile, shared dog switcher, date picker, scoped route exit, Android back guard, and session-bound Add Dog recovery snapshot with request-ID match. No schema/API/auth changes. Native back/accessibility, SecureStore process restart and live Supabase/RLS remain unverified.",
-      "evidence_status": "Plan v6 Architect APPROVE, UX Critic PASS, Security pre-review APPROVE. Local render/build/check evidence recorded. Queue is qa; independent QA, Security final review and Reviewer must record actual verdicts before done."
+      "test_evidence": "Implementer local checkpoint: pnpm check PASS (TypeScript, edge TypeScript, ESLint, 75/75 tests); public pnpm bundle:ios PASS (1,583 JS modules); public/review RN Web 9/9 each; git diff --check, Python py_compile and python -X utf8 tools/dev_flow.py validate PASS. Synthetic screenshots and §14 evidence under docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/. Independent QA, Security final and Reviewer remain pending; native/runtime checks not claimed. Owner confirmed QA/review completion on 2026-10-23; detailed verdict artifacts were not supplied in this session, so no separate role results are asserted.",
+      "implementation_state": "UI-R02-01B v6 is implemented on 2026-10-23-ui-01-profil and locally validated. Includes compact create/edit profile, shared dog switcher, date picker, scoped route exit, Android back guard, and session-bound Add Dog recovery snapshot with request-ID match. No schema/API/auth changes. Native back/accessibility, SecureStore process restart and live Supabase/RLS remain unverified. Owner confirmed the package is already approved and reviewed on 2026-10-23; closure recorded on that basis.",
+      "evidence_status": "Owner confirmed approved/reviewed on 2026-10-23. Prior local render/check/export evidence remains attributed to implementer. No new independent test run; process-restart SecureStore and signed/TestFlight build remain unverified."
     }
   ]
 }
