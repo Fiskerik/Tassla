@@ -63,6 +63,22 @@ def image_fixture_url(screen: str) -> str:
     return f'{BASE}/?screen={screen}&imageFixture={screen}'
 
 
+def development_url(*, guides_state: str | None = None, age_scenario: str | None = None) -> str:
+    query = ['screen=development']
+    if guides_state:
+        query.append(f'developmentGuidesState={guides_state}')
+    if age_scenario:
+        query.append(f'ageScenario={age_scenario}')
+    return f"{BASE}/?{'&'.join(query)}"
+
+
+def progress_url(*, state: str = 'ready', completed: int | None = None) -> str:
+    query = [f'screen=progress', f'homeScenario={state}']
+    if completed is not None:
+        query.append(f'progressCount={completed}')
+    return f"{BASE}/?{'&'.join(query)}"
+
+
 def visible_destinations(page) -> list[dict[str, object]]:
     tiles = []
     for name in ('Öppna Logga', 'Öppna Träna', 'Öppna Kunskap'):

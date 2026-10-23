@@ -1,7 +1,7 @@
 # FLOW-HOME-CHECKLIST-FILTERS-01 — status och granskningsunderlag
 
 Datum: 2026-10-22
-Status: A03 är `blocked` i väntan på oberoende QA/Reviewer och fullständig panel-4-§14-granskning. Den lokala checkpointen `25bde34` är fryst; Erik har godkänt att avgränsade följdarbeten byggs medan dessa separata grindar löses. A02:s ikonval per rutinpunkt och kompakta ikonhandlingar har QA- och Reviewer-PASS. Live Supabase/RLS, A02-migrationens apply/äldre klienters runtime och native VoiceOver/Dynamic Type är NOT TESTABLE.
+Status: A03 och panel-4-granskningen är klara enligt Eriks ägaruppdatering 2026-10-22: ikonmigrationen är migrerad, extern QA godkänd och manuella iOS-tester passerade. Uppgiften stängs på ägarrapport; ingen ny live DB- eller enhetskontroll gjordes i denna session. A04:s separata sparåterhämtning följer eget QA-/Reviewer-spår.
 
 ## Omfattning
 
@@ -92,13 +92,13 @@ Detta stänger endast A02:s lokala ikon-/handlingsslice. Hela panel-4-tasken fö
 - `pnpm check` PASS (app-/edge-TypeScript, ESLint; 642 passerade, 1 skip av 643 testfall); offentlig `pnpm bundle:ios` PASS (1 460 moduler); `git diff --check` och `python -X utf8 tools/dev_flow.py validate` PASS. Eriks manuella tester 1–4 är redan bekräftade och kördes inte om.
 - A03-renders är syntetisk React Native Web. De bevisar inte live Supabase/RLS, applicerad A02-migration, äldre klienters läsbeteende, native VoiceOver/Dynamic Type/gest eller TestFlight. 140 % text är ett CSS-layoutprov.
 - En separat bred Home-review-kontroll visade en befintlig 4 pt-överlappning mellan destinationskorten och bottenmenyn i review-fixturens initialvy; public Home-fixturen passerade. Den ändrades inte i denna panel-4-uppgift och behöver en egen Home-korrigering.
-- A03 har ännu inte oberoende QA/Reviewer-PASS. A02:s tidigare oberoende godkännanden gäller bara ikon- och rutinhandlingsslicen.
+- Vid den frysta lokala checkpointen saknades extern QA/Reviewer-evidens i arbetskatalogen; A02:s tidigare oberoende godkännanden gällde bara ikon- och rutinhandlingsslicen. Eriks senare ägaruppdatering nedan stänger A03.
 
 ### Ägarönskemål om checklistor i Kunskap
 
 Erik vill att checklistor i Kunskap och Hem ska kännas och fungera på samma eller liknande sätt. Beslut för fortsatt UX: återanvänd ikonfamilj, radvisuell grammatik och tydliga bekräftelsemönster där de passar, men behåll deras olika innebörd. Hemrutiner är ägarens återanvändbara/återkommande rutiner; Kunskap visar publicerade fasuppgifter och ägarens egna punkter i en viss fas. Kunskapsflödet är därför inte omgjort i A03. Där finns inget explicit ikonfält på egna punkter; beständig ikonväljare där behöver ett separat granskat datakontrakt/migrationssteg, inte en gissning om en saknad tabell. Detta är en dokumenterad uppföljning, inte implementerad funktion.
 
-Nästa arbete för A03 är oberoende QA/Reviewer och full panel-4-§14-avslutning; dess queue-status är `blocked` medan Erik låter separata, avgränsade uppgifter fortsätta. HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01 krävs fortfarande för live create/replace/readback/RLS; ingen databasoperation har utförts. Ikon-/radgrammatiken i Kunskap går vidare i FLOW-KNOWLEDGE-01 efter A04:s checkpoint.
+Vid checkpointen återstod extern QA och full panel-4-§14-avslutning. Erik bekräftade senare att A03-granskningen är klar. HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01 är en separat verifiering och har inte körts i denna session. Ikon-/radgrammatiken i Kunskap fortsätter under FLOW-KNOWLEDGE-01.
 
 A03 checkpointcommit `25bde34` (`feat: add upcoming checklist filters and source routes`) är pushad till `origin/2026-10-22-checklist-kommande-navigation`.
 
@@ -106,7 +106,7 @@ A03 checkpointcommit `25bde34` (`feat: add upcoming checklist filters and source
 
 Erik rapporterade att rutinens text/checklista och punktikoner inte gick att ändra och spara efter sin databasändring; redigeraren blev låst med en generell status. Kodspåret visade att `runDailyMutation` sparade både definitivt `failed` och osäkert `unknown` som en pending retry. Managerbladet låser formuläret när felstatus och retry finns, vilket gjorde att ett definitivt avslag krävde samma oförändrade försök i stället för rättning. Detta bevisar inte att live-tabell, RLS eller migration saknas; dessa är inte tillgängliga för verifiering här.
 
-Plan [A04 save recovery v7](../../plans/FLOW-HOME-CHECKLIST-FILTERS-01-save-recovery-v7.md) fick Architect **APPROVE**, Critic **PROCEED**, Security **PASS** och oberoende A04 QA **PASS**. A03 ligger kvar fryst vid `25bde34` och har separat blockerad status medan denna skrivåterhämtning har eget kö-id `HOME-ROUTINE-SAVE-RECOVERY-01`.
+Plan [A04 save recovery v7](../../plans/FLOW-HOME-CHECKLIST-FILTERS-01-save-recovery-v7.md) fick Architect **APPROVE**, Critic **PROCEED**, Security **PASS** och oberoende A04 QA **PASS**. A03 ligger kvar fryst vid `25bde34`; Erik har sedan bekräftat extern QA och slutförande. Denna sparåterhämtning har eget kö-id `HOME-ROUTINE-SAVE-RECOVERY-01`.
 
 Implementerat lokalt:
 
@@ -117,6 +117,11 @@ Implementerat lokalt:
 
 Riktade tester: `daily-activity-data.test.mjs` **11/11 PASS**, `daily-activity-ui.test.mjs` **12/12 PASS**. Full `pnpm check` **PASS** (65 testfiler), iOS-export **PASS**, `git diff --check` och `python -X utf8 tools/dev_flow.py validate` **PASS**. Syntetisk RN Web-verifiering passerade **9/9 public och 9/9 review**: failed vid 375/430 px, unknown/exakt retry vid 375 px, conflict/read-only/uttrycklig ersättning vid 375/430 px samt ny sparning mot senaste syntetiska revision. Se [A04-verifiering](../design/evidence/flow-home-checklist-filters-2026-10-20/a04/VERIFICATION.md).
 
-Ingen schemaändring, migration, RPC, grant, RLS-ändring eller databasoperation ingår. Backendorsaken till det faktiska misslyckade sparandet är inte fastställd; live Supabase/RLS, målmiljöns migrationsstatus, äldre klienters runtime och native VoiceOver/Dynamic Type är NOT TESTABLE. A03:s oberoende QA/Reviewer och full panel-4 §14-granskning förblir öppna; Home-reviewns 4 px syntetiska överlappning är separat och utanför A04.
+Ingen schemaändring, migration, RPC, grant, RLS-ändring eller databasoperation ingår i A04. Erik rapporterar att ikondatabasens migration är applicerad och att manuella iOS-tester passerade; backendorsaken till det tidigare misslyckade sparandet har inte härledts från live loggar. A03:s QA/§14-grind stängdes efter ägaruppdateringen. Home-reviewns 4 px syntetiska överlappning är separat och utanför A04.
 
 Panel 7 fortsätter separat enligt godkända [FLOW-KNOWLEDGE-01 v3](../../plans/FLOW-KNOWLEDGE-01-ux-spec-v3.md). Den använder tre nya ämnesspecifika guidebilder. Lokal rendering och paketkontroller har passerat, men full panel-7-acceptans är fortfarande öppen. Den äldre `FLOW-PANELS-6-7-IMAGE-DIVERSITY`-checkpointen hålls separat.
+
+
+### Ägaruppdatering — A03 och panel 4, 2026-10-22
+
+Erik bekräftar att `202610220001_daily_routine_checklist_icons.sql` är migrerad, att A03 är granskad av extern QA och klar samt att de manuella iOS-testerna passerade. Köposten stängs enligt ägarens rapport. Denna session verifierade inte själv den live databasen, migrationshistoriken eller enheten; de lokala A03-resultaten från den frysta checkpointen behålls som tidigare evidens.
