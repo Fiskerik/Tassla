@@ -340,6 +340,56 @@ test('the actual status-check handler reconciles a saved insert with a read and 
   assert.equal(harness.state.pendingHealthMutation.current.size, 0);
 });
 
+test('confirmed readback of minimized insert, update and delete clears only its scoped recovery and unlocks Add', async () => {
+  for (const kind of ['insert', 'update', 'delete']) {
+    const harness = createHealthHandlerHarness({
+      insertHealthWeight: async (...args) => { harness.calls.insert.push(args); return { status: 'unknown' }; },
+      updateHealthWeight: async (...args) => { harness.calls.update.push(args); return { status: 'unknown' }; },
+      deleteHealthWeight: async (...args) => { harness.calls.delete.push(args); return { status: 'unknown' }; },
+      fetchHealthWeightById: async () => kind === 'delete' ? null : savedWeight,
+    });
+    harness.state.healthWeightRows.current = kind === 'insert' ? [] : [{ ...savedWeight, weight_kg: 11 }];
+    harness.state.weightEditorRecovery = { ...harness.editorScope, value: { id: kind === 'insert' ? null : weightId, date: today(), weight: '12,345' } };
+    const originalDraft = harness.state.weightEditorRecovery;
+    const result = kind === 'delete'
+      ? await harness.handlers.removeHealthWeight(weightId)
+      : await harness.handlers.saveHealthWeight(kind === 'insert' ? null : weightId, today(), 12.345);
+    assert.equal(result, false, kind);
+    assert.equal(harness.state.healthPending, true, kind);
+    assert.equal(harness.state.weightEditorRecovery, originalDraft, `${kind} retains the minimized draft until confirmation`);
+    await harness.handlers.retryHealthMutation();
+    assert.equal(harness.state.weightEditorRecovery, null, `${kind} confirmed readback releases recovery`);
+    assert.equal(harness.state.healthPending, false, kind);
+    assert.equal(harness.state.healthBusy, false, kind);
+    assert.equal(harness.state.healthMessageError, false, kind);
+    assert.equal(harness.calls[kind].length, 1, `${kind} is not issued a second time`);
+    assert.deepEqual(harness.state.rows, kind === 'delete' ? [] : [savedWeight]);
+  }
+});
+
+test('confirmed weight cleanup preserves other scopes and objects and ignores unmounted or old lifetime responses', async () => {
+  for (const change of [
+    { ownerId: 'other-owner' }, { accountGeneration: 2 }, { selectionKey: 'other-selection' },
+    { dogId: 'other-dog' }, { lifetime: 'old-lifetime' }, { value: { id: 'other-weight', date: today(), weight: '11' } },
+  ]) {
+    const harness = createHealthHandlerHarness();
+    const draft = { ...harness.editorScope, value: { id: weightId, date: today(), weight: '11' }, ...change };
+    harness.state.weightEditorRecovery = draft;
+    await harness.handlers.markHealthMutationSaved({ kind: 'delete', id: weightId, lifetime: harness.editorScope.lifetime }, null);
+    assert.equal(harness.state.weightEditorRecovery, draft);
+  }
+  for (const stale of ['lifetime', 'unmounted']) {
+    const harness = createHealthHandlerHarness();
+    const draft = { ...harness.editorScope, value: { id: weightId, date: today(), weight: '11' } };
+    harness.state.weightEditorRecovery = draft;
+    if (stale === 'lifetime') harness.state.lifetime.current = 'new-lifetime';
+    else harness.state.mounted.current = false;
+    await harness.handlers.markHealthMutationSaved({ kind: 'delete', id: weightId, lifetime: harness.editorScope.lifetime }, null);
+    assert.equal(harness.state.weightEditorRecovery, draft);
+    assert.equal(harness.state.healthMessage, '');
+  }
+});
+
 function localClient(handler) {
   const requests = [];
   const client = createClient(baseUrl, 'synthetic-publishable-key', {
@@ -363,7 +413,9 @@ function localClient(handler) {
 
 function createHealthHandlerHarness(overrides = {}) {
   const lifetime = `${dogId}:user-1`;
+  const editorScope = { ownerId: 'user-1', accountGeneration: 1, selectionKey: `${dogId}:selection`, dogId, lifetime };
   const state = {
+    weightEditorRecovery: null,
     healthPending: false,
     rows: [],
     healthBusy: false,
@@ -388,6 +440,7 @@ function createHealthHandlerHarness(overrides = {}) {
     healthMutationInFlight: state.healthMutationInFlight,
     healthWeightRows: state.healthWeightRows,
     healthWeightLifetime: state.lifetime,
+    currentWeightEditorScope: editorScope,
     isValidHealthWeightDate: workspaceData.isValidHealthWeightDate,
     isValidHealthWeightKg: workspaceData.isValidHealthWeightKg,
     insertHealthWeight: async (...args) => {
@@ -408,11 +461,13 @@ function createHealthHandlerHarness(overrides = {}) {
     setHealthMessage(value) { state.healthMessage = value; },
     setHealthMessageError(value) { state.healthMessageError = value; },
     setHealthWeights(value) { state.rows = value; },
+    setWeightEditorRecovery(update) { state.weightEditorRecovery = update(state.weightEditorRecovery); },
     reloadHealthWeights: async () => {},
   };
   Object.assign(dependencies, overrides);
 
   const functionSource = [
+    extractFunction(workspaceSource, 'editorScopeMatches'),
     extractFunction(workspaceSource, 'runHealthMutation'),
     extractFunction(workspaceSource, 'markHealthMutationSaved'),
     extractFunction(workspaceSource, 'saveHealthWeight'),
@@ -428,9 +483,9 @@ function createHealthHandlerHarness(overrides = {}) {
   assert.equal(error, undefined, error && ts.flattenDiagnosticMessageText(error.messageText, '\n'));
   const buildHandlers = new Function(
     ...Object.keys(dependencies),
-    `${compiled.outputText}\nreturn { runHealthMutation, saveHealthWeight, removeHealthWeight, retryHealthMutation };`,
+    `${compiled.outputText}\nreturn { runHealthMutation, markHealthMutationSaved, saveHealthWeight, removeHealthWeight, retryHealthMutation };`,
   );
-  return { handlers: buildHandlers(...Object.values(dependencies)), calls, state };
+  return { handlers: buildHandlers(...Object.values(dependencies)), calls, state, editorScope };
 }
 
 function extractFunction(source, name) {

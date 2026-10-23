@@ -81,4 +81,20 @@ Efter v3-review: Architect `APPROVE`, Critic `PASS`, Security `APPROVE` och queu
 
 ## Skills och beslut
 
+### Avgränsad QA-korrigering 2026-10-23
+
+QA:s två övergångsbilder tas om efter 450 ms stabilisering. Hälsaverifieraren provar dessutom exakt plan från Översikt/Veterinär, faktisk icke-noll scrollretur och tom create efter tidigare planfokus. Den första interaktiva körningen gav 8/8 per public/review men visade att sidans stora förklaringsytor skjuter Ändra utanför den användbara första vyn.
+
+Korrigeringen ligger inom befintlig `PlannedHealthScreen.tsx`: Back → kompakt titelrad med 44 pt infoikon → kort synlig status ”Planerad – inte genomförd” → exakt fokuserad plan → generell påminnelsestatus och övrig sida. Befintlig förklaring samlas i samma InfoModal. Verkliga loading/missing/pending/conflict-fall behåller prioritet. Inga route-, data-, callback-, mutations- eller adapterändringar.
+
+Architect: CHANGES med ovanstående ordningskrav, därefter uttryckligt godkänd korrigering utan ny bred review. UX Critic: PROCEED. Ny render använder realistisk icke-tom `reminderSummary`, kontrollerar hela Ändra-ytan innanför scrollviewporten vid 375×667 och 140 % text, infoinnehåll och återgång. Oberoende QA/Reviewer återstår efter korrigeringen.
+
 Följda: `tassla-consumer-ux`, `mobile-ios-design`, `docs/design-rules.md`, `docs/dev/ui-and-code-standards.md`. Inom befintligt mandat väljs en BottomSheet per editor, ett bekräftat soptunneflöde och in-memory route-state. Nya ändamål, fält, retention, analytics, notifiering eller medicinska påståenden ingår inte.
+
+### Reviewer-korrigering: viktåterhämtning
+
+Reviewer BLOCK: efter unknown viktändring och minimering lämnade bekräftad readback en dold recovery som låste Lägg till vikt. Architect APPROVE: markHealthMutationSaved rensar bara matchande full scope/lifetime och draft-ID (null för insert, exakt ID för update/delete), efter mounted/lifetime-guard. Fel scope, annat objekt och gammal lifetime lämnas orört. Health-origin rensar även gammalt Checklist-origin-fokus symmetriskt. Faktiska handler-tester samt browserresan unknown delete → minimera → readback → tillgänglig Lägg till vikt krävs, därefter ny QA/Reviewer/Security. Inga adapter-, callback- eller dataändringar.
+
+### Slutlig lokal checkpoint
+
+QA PASS efter återhämtningskorrigeringen; Reviewer PASS (tidigare blockerare löst) och Security APPROVE för fryst källa. Full pnpm check: 76/76, Hälsa public/review: 9/9 vardera, direkt offentlig iOS JS-export och content guard PASS. Handler-tester kör verkliga transpilierade workspace-funktioner; browserns återhämtningsresa använder syntetiska callbacks med verklig WeightScreen. Full Panel 5, live databas och native/signerad build är separata och stängs inte av denna lokala checkpoint. Efter durable commit fortsätter UI-R02-04.

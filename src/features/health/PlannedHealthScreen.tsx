@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { AccessibilityInfo, findNodeHandle, Image, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { DatePickerField, InfoModal, MessageCard, PageHeading, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
+import { DatePickerField, InfoModal, MessageCard, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
 import { BottomSheet, Button, Dialog } from '../../components/ui';
 import { Toast } from '../../components/ui/Toast';
 import { IconChip } from '../../components/ui/IconChip';
@@ -97,6 +97,7 @@ export function PlannedHealthScreen({
   const blocked = busy || pending;
   const editingRecord = records.find((record) => record.id === editingId) ?? null;
   const focusedHealthRecord = healthFocusActive && healthFocusPlanId ? records.find((record) => record.id === healthFocusPlanId) ?? null : null;
+  const showFocusedHealthFirst = Boolean(loadState === 'ready' && focusedHealthRecord && !pending && !statusError && !conflict);
   const healthFocusMissing = healthFocusActive && healthFocusPlanId !== null && healthFocusPlanId !== undefined && loadState === 'ready' && !focusedHealthRecord;
   const recovery = selectPlannedHealthRecovery({ conflict: Boolean(conflict), pending, statusError, loadError: loadState === 'error' });
   const recordsForView = !healthFocusActive && checklistFocusState === 'ready' && checklistFocusRecord
@@ -314,29 +315,22 @@ export function PlannedHealthScreen({
       <Ionicons name="chevron-back" size={tokens.size.iconMd} color={tokens.colors.textPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
       <Text style={styles.backLabel}>{backLabel}</Text>
     </Pressable>
-    <PageHeading title="Planerade hälsohändelser" description="Egna planer för vaccinationer och veterinärbesök." />
-    <View style={styles.heroCard}>
-      <View style={styles.heroIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        <Ionicons name="calendar-outline" size={tokens.size.iconMd} color={tokens.colors.support.plannedHealth.fg} />
-      </View>
-      <View style={styles.heroCopy}>
-        <Text style={styles.description}>Planerad – inte genomförd.</Text>
-      </View>
-    </View>
-    <View style={styles.infoRow}>
-      <Text style={styles.infoHint}>Information om planerna</Text>
+    <View style={styles.pageHeading}>
+      <Text accessibilityRole="header" style={styles.pageTitle}>Planerade hälsohändelser</Text>
       <Pressable ref={infoButtonRef} accessibilityRole="button" accessibilityLabel="Visa information om planerade hälsohändelser" onPress={() => {
         dispatchFeedback({ type: 'info-opened' });
         setInfoVisible(true);
       }} style={styles.infoButton}>
-        <Ionicons name="information-circle-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-        <Text style={styles.infoButtonText}>Läs information</Text>
+        <Ionicons name="information-circle-outline" size={tokens.size.iconMd} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
       </Pressable>
     </View>
+    <Text style={styles.pageCaption}>Planerad – inte genomförd.</Text>
     <InfoModal visible={infoVisible} title="Om planerade hälsohändelser" onClose={closeInfo} onDismiss={finishInfoDismissal}>
+      <Text style={styles.infoBody}>Egna planer för vaccinationer och veterinärbesök.</Text>
       <Text style={styles.infoBody}>Planerna är ägarregistrerade och är inte en verifierad journal eller vårdrekommendation. Genomförda händelser läggs separat i hälsans historik.</Text>
       <Text style={styles.infoBody}>Datum som passerat ligger kvar som planerade tills du själv ändrar eller tar bort dem. Lokala påminnelser är frivilliga och styrs även av enhetens tillstånd.</Text>
     </InfoModal>
+    {showFocusedHealthFirst && focusedHealthRecord ? renderRecord(focusedHealthRecord, 'health') : null}
     {reminderSummary ? <MessageCard>{reminderSummary}</MessageCard> : null}
     {checklistFocusState === 'loading' ? <MessageCard>Hämtar den valda planen från Checklistan…</MessageCard> : null}
     {checklistFocusState === 'missing' ? <MessageCard tone="error">Planen finns inte längre. Listan har uppdaterats.</MessageCard> : null}
@@ -361,7 +355,7 @@ export function PlannedHealthScreen({
 
     {healthFocusMissing ? <MessageCard tone="error">Den valda planen finns inte längre. Gå tillbaka till Hälsa och välj en aktuell plan.</MessageCard> : null}
     {loadState === 'ready' && !healthFocusActive && focusedChecklistRecord ? renderRecord(focusedChecklistRecord, 'checklist') : null}
-    {loadState === 'ready' && focusedHealthRecord ? renderRecord(focusedHealthRecord, 'health') : null}
+    {loadState === 'ready' && focusedHealthRecord && !showFocusedHealthFirst ? renderRecord(focusedHealthRecord, 'health') : null}
 
     {loadState === 'ready' && <>
       {busy && <MessageCard>Sparar och kontrollerar ändringen…</MessageCard>}
@@ -457,16 +451,12 @@ const styles = StyleSheet.create({
   backAction: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: tokens.spacing.xs, marginLeft: -tokens.spacing.sm, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.md },
   backLabel: { ...tokens.typography.caption, color: tokens.colors.textPrimary, fontWeight: '700' },
   actionPressed: { backgroundColor: tokens.colors.selectedSurface },
-  heroCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.support.plannedHealth.bg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
-  heroIcon: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.surface, alignItems: 'center', justifyContent: 'center' },
-  heroCopy: { flex: 1 },
-  description: { ...tokens.typography.body, color: tokens.colors.textSecondary },
-  infoRow: { marginTop: tokens.spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: tokens.spacing.sm },
-  infoHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption },
+  pageHeading: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm },
+  pageTitle: { flex: 1, minWidth: 0, color: tokens.colors.textPrimary, ...tokens.typography.heading },
+  pageCaption: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
   focusMessage: { gap: tokens.spacing.xs },
   sourceContext: { color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '700', marginBottom: tokens.spacing.sm },
-  infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },
-  infoButtonText: { color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '700' },
+  infoButton: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full },
   infoBody: { color: tokens.colors.textPrimary, ...tokens.typography.body, marginBottom: tokens.spacing.md },
   editor: { gap: tokens.spacing.md },
   recovery: { gap: tokens.spacing.xs, marginTop: tokens.spacing.sm },

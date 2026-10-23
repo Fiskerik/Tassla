@@ -10711,7 +10711,7 @@
       "depends_on": [
         "UI-R02-02"
       ],
-      "status": "qa",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -10730,9 +10730,87 @@
           "to": "qa",
           "actor": "implementer",
           "evidence": "Implementation and local verification checkpoint complete on 2026-10-23. Public/review RN Web: Logg 13/13 each and Hälsa forms 6/6 each; pnpm check 75/75, public iOS JS export 1,585 modules, release content guard, diff check, queue validate and verifier py_compile PASS. Independent QA/Reviewer and full Panel 5 §14 are next; no live Supabase/RLS or native/TestFlight re-run is claimed."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "QA found no functional/code test failure (focused 8/8, app/edge typecheck, lint, 75/75 tests, iOS export/content guard and diff check passed), but two 375x667 health dialog screenshots were captured during fade-in. Re-capture after stable dialog opacity, rerun affected verifier, then QA recheck before Reviewer. Chromium was not rerunnable in QA sandbox."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Resume bounded QA correction: stable dialog captures and real exact-plan roundtrip. Compact planned-health heading and focused-card priority follow Architect conditional approval and Critic PROCEED recorded in task."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect approved bounded compact-header/focused-card correction with record before generic reminder status; Critic PROCEED. Saved in UI-R02-03 task."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement approved QA correction within existing PlannedHealthScreen and visual verifier/harness scope."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Bounded QA correction complete: pnpm check PASS76/76; focused8/8; health public/review8/8 with stable dialogs, exact plan, real nonzero scroll return, empty create and full44pt edit within scroll viewport at375x667/140percent with actual reminder copy. Independent QA recheck underway."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS bounded UI03: focused8/8, pnpm check76/76, stable health verifier8/8 public/review rerun with exact plan, scroll return, empty create and full44pt action at140percent. Reviewer/Security frozen-diff review next; native/live/fullPanel5 separate."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer BLOCK: confirmed minimized unknown weight recovery leaves stale draft and Add disabled. Root will correct exact scoped recovery cleanup, rerun handler/UI tests and request QA/review."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Bounded recovery correction is existing v3 scope; Architect APPROVE saved in task, no data or adapter change."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact mounted lifetime fullscope objectID cleanup in markHealthMutationSaved and symmetric Health-origin focus clear."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement reviewer recovery correction with actual handler and browser regression checks before re-review."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Reviewer recovery correction implemented with Architect/Security APPROVE. Actual handler regression tests PASS; pnpm check76/76 and health9/9 public/review PASS incl unknown delete minimize readback Add unlocked. Independent QA recheck now; native/live separate."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA recovery correction PASS: actual handler tests2/2, health9/9 public/review rerun incl minimized unknown delete readback unlocks Add; fullrootcheck76/76. SecuritydeltaAPPROVE. Reviewer recheck next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS after correction: fullscope/lifetime/objectID recovery cleanup resolves dead end, actual handler tests and QA9/9 per mode corroborate; Security APPROVE. pnpm check76/76, direct public iOS export/content guard PASS. Local checkpoint only; fullPanel5/native/live separate."
         }
       ],
-      "next_step": "Independent QA reviews the frozen implementation and saved evidence, followed by Reviewer. Full Panel 5 §14 and any newly required native/live checks remain explicit gates. Continue actionplan package 04 on its own branch, stacked on 03 if it has not yet been integrated.",
+      "next_step": "Reviewer PASS after correction: fullscope/lifetime/objectID recovery cleanup resolves dead end, actual handler tests and QA9/9 per mode corroborate; Security APPROVE. pnpm check76/76, direct public iOS export/content guard PASS. Local checkpoint only; fullPanel5/native/live separate.",
       "priority": "P1",
       "panels": [
         "Logga",

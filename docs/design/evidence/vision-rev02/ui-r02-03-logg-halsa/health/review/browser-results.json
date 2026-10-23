@@ -12,8 +12,11 @@
     "Performed history retains its draft after multiline Return and protects dirty close at 375×667",
     "Weight decimal editor keeps Save reachable at 375×667 and 140% text (56.0px / 56.0px)",
     "Weight editor renders at 375×844 and 430×844",
+    "Unknown weight deletion can be minimized and confirmed by status readback; Add becomes available with a fresh empty form",
     "Planned health uses a fixed save footer and keeps the exact edit sheet open when deletion is cancelled",
-    "Planned health form renders at 375×844 and 430×844"
+    "Planned health form renders at 375×844 and 430×844",
+    "Health opens the exact named plan and returns to Veterinär at the same nonzero scroll position",
+    "Create after focused edit starts empty; Overview opens a different exact plan and restores its own tab; full edit action fits at 140% with reminder status present"
   ],
   "limitations": [
     "Does not verify native iOS keyboard/VoiceOver/Dynamic Type",

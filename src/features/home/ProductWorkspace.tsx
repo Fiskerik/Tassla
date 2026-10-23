@@ -2183,7 +2183,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }
 
   async function markHealthMutationSaved(mutation: PendingHealthMutation, value: HealthWeightRecord | null): Promise<void> {
-    if (healthWeightLifetime.current !== mutation.lifetime) return;
+    if (!mounted.current || healthWeightLifetime.current !== mutation.lifetime) return;
+    const recoveryObjectId = mutation.kind === 'insert' ? null : mutation.id;
+    setWeightEditorRecovery((current) => editorScopeMatches(current, currentWeightEditorScope)
+      && current?.value.id === recoveryObjectId ? null : current);
     pendingHealthMutation.current.delete(mutation.lifetime);
     setHealthPending(false);
     const mutationId = mutation.kind === 'insert' ? mutation.operation.id : mutation.id;
@@ -2847,6 +2850,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   function openPlannedHealthFromHealth(planId: string, returnTab: HealthTab) {
     if (accountDeletionInvalidated.current || !plannedHealthRows.current.some((row) => row.id === planId && row.dog_id === dog.id)) return;
+    setPlannedHealthChecklistFocus(null);
     setActiveHealthTab(returnTab);
     setPlannedHealthHealthFocus({ selectionKey: currentSelectionKey, lifetime: currentPlannedHealthLifetime, planId, returnTab, returnScrollKey: 'health-flow' });
     setPage('planned-health');
@@ -2854,6 +2858,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   function createPlannedHealthFromHealth(returnTab: HealthTab) {
     if (accountDeletionInvalidated.current) return;
+    setPlannedHealthChecklistFocus(null);
     setActiveHealthTab(returnTab);
     setPlannedHealthHealthFocus({ selectionKey: currentSelectionKey, lifetime: currentPlannedHealthLifetime, planId: null, returnTab, returnScrollKey: 'health-flow' });
     setPage('planned-health');
