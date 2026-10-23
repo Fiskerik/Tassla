@@ -10223,7 +10223,7 @@
         "Render Knowledge and Training at the planned viewports; inspect crops/controls and record §14"
       ],
       "depends_on": [],
-      "status": "qa",
+      "status": "blocked",
       "history": [
         {
           "from": "planned",
@@ -10236,9 +10236,15 @@
           "to": "qa",
           "actor": "implementer",
           "evidence": "Rendered actual KnowledgeScreen and PublishedTrainingScreen with production HomeScreen route fixture. Public empty-state render 2/2 and review render 16/16 PASS. Knowledge has three distinct ID/version-bound photos at 200/132 pt crops, Home opens the exact guide/step, and Training continuation shows the Corgi at 88×88 pt. The current HomeScreen uses a text-only Just nu card and does not mount the older HomeCarousel; the v1 HomeCarousel-photo assertion is superseded to preserve the current target. §14 and captures are saved under docs/design/evidence/vision-r02/2026-10-21-panels-6-7-image-diversity/. Full panel, native and published-data acceptance remain separate."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Sequenced behind UI-R02-02 because this checklist checkpoint updates the shared home/knowledge module READMEs also named in this task's write set. The saved image implementation and its existing component renders remain intact; resume its independent review during UI-R02-04 integration, where the image work is explicitly scoped. No image work is discarded."
         }
       ],
-      "next_step": "Independent review of the saved implementation and §14 evidence; full panel acceptance, native accessibility and live published-content/RLS remain separate.",
+      "next_step": "Sequenced behind UI-R02-02 because this checklist checkpoint updates the shared home/knowledge module READMEs also named in this task's write set. The saved image implementation and its existing component renders remain intact; resume its independent review during UI-R02-04 integration, where the image work is explicitly scoped. No image work is discarded.",
       "priority": "P2",
       "panels": [
         "6",
@@ -10546,6 +10552,103 @@
       "test_evidence": "Implementer local checkpoint: pnpm check PASS (TypeScript, edge TypeScript, ESLint, 75/75 tests); public pnpm bundle:ios PASS (1,583 JS modules); public/review RN Web 9/9 each; git diff --check, Python py_compile and python -X utf8 tools/dev_flow.py validate PASS. Synthetic screenshots and §14 evidence under docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/. Independent QA, Security final and Reviewer remain pending; native/runtime checks not claimed. Owner confirmed QA/review completion on 2026-10-23; detailed verdict artifacts were not supplied in this session, so no separate role results are asserted.",
       "implementation_state": "UI-R02-01B v6 is implemented on 2026-10-23-ui-01-profil and locally validated. Includes compact create/edit profile, shared dog switcher, date picker, scoped route exit, Android back guard, and session-bound Add Dog recovery snapshot with request-ID match. No schema/API/auth changes. Native back/accessibility, SecureStore process restart and live Supabase/RLS remain unverified. Owner confirmed the package is already approved and reviewed on 2026-10-23; closure recorded on that basis.",
       "evidence_status": "Owner confirmed approved/reviewed on 2026-10-23. Prior local render/check/export evidence remains attributed to implementer. No new independent test run; process-restart SecureStore and signed/TestFlight build remain unverified."
+    },
+    {
+      "id": "UI-R02-02",
+      "title": "Checklistor: gemensamma ikoner och kompakt redigering",
+      "mvp_requirement": "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md §4; GAP G02–G07, G14, G16; vision_rev02 panels 4 and 7.",
+      "plan": "docs/tasks/dev/UI-R02-02-CHECKLISTOR.md v1; UX: docs/plans/UI-R02-02-checklistor-ux-spec.md",
+      "write_paths": [
+        "src/features/checklists/checklist-icons.ts",
+        "src/features/checklists/ChecklistIconPicker.tsx",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/daily-routine-checklist-icons.ts",
+        "src/features/home/README.md",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/checklist-data.ts",
+        "src/features/knowledge/checklist-intent.ts",
+        "src/features/knowledge/checklist-model.ts",
+        "src/features/knowledge/README.md",
+        "src/components/ui/Button.tsx",
+        "src/components/ui/ChecklistItem.tsx",
+        "src/components/ui/Dialog.tsx",
+        "src/components/ui/Field.tsx",
+        "supabase/migrations/202610230001_checklist_custom_item_icons.sql",
+        "supabase/tests/checklist-custom-item-icons.sql",
+        "tests/checklist-data.test.mjs",
+        "tests/checklist-ui.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tools/visual-check/README.md",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify-checklist-icons.py",
+        "tools/visual-check/verify-checklist-custom-icons.py",
+        "docs/design/evidence/vision-rev02/ui-r02-02-checklists/",
+        "docs/plans/UI-R02-02-checklistor-ux-spec.md",
+        "docs/tasks/dev/UI-R02-02-CHECKLISTOR.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md"
+      ],
+      "acceptance": [
+        "Routines and custom phase checklist points use the same 20-icon model, picker, labels, selected state and semantic tone.",
+        "Custom point icon is chosen before first save and survives exact readback/reopen/edit/retry/conflict; legacy null remains valid and completion-only update preserves icon.",
+        "Editing uses one Save footer and compact contextual actions; delete and dirty close have explicit confirmation and failed/unknown intent retains the draft.",
+        "Opening a routine focuses that routine; a named compact action opens manage-all/create; unrelated training choices are absent from focused routine mode.",
+        "Public/review synthetic UI controls reach 44pt target size and remain usable at 375x667, 375x844, 430x844 and large-text proxy; no panel-wide §14 acceptance is claimed from component renders.",
+        "SQL migration preserves nullable legacy rows and applies an icon allowlist with narrow grants. Live migration/RLS is a separate verification gate."
+      ],
+      "checks": [
+        "pnpm check",
+        "CI=1 TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false node tools/check-content-release.cjs",
+        "CI=1 __UNSAFE_EXPO_HOME_DIRECTORY=/tmp/tassla-expo-home TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false node node_modules/expo/bin/cli export --platform ios --output-dir dist/ios",
+        "Public/review checklist icon verifiers and task-specific Knowledge verifier",
+        "git diff --check",
+        "python -m py_compile tools/visual-check/verify-checklist-custom-icons.py tools/visual-check/verify-checklist-icons.py",
+        "python -X utf8 tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-R02-01B"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik explicitly ordered the remaining packages 02→03→04 after closing 01B. Exact scope and write paths recorded in the dated package plan; no pre-16-October UI proposal was restored."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation checkpoint locally verified 2026-10-23: pnpm check PASS (75/75), iOS public export PASS (1,585 JS modules), content guard PASS, routine renders 15/15 public and review, Knowledge task verifier 7/7, diff check and Python compile PASS. Independent Architect/Critic, QA, Security and Reviewer verdicts plus live migration are not yet recorded."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende QA accepterar lokal implementation-checkpoint: pnpm check 75/75, rutinrender 16/16 public+review, riktat Kunskapsflöde 7/7, public iOS JS-export/content guard PASS. verify-know02.py är NOT TESTABLE på föråldrad route före assertion och lämnad oförändrad; ej produktfel. Live migration/RLS, panel-§14 och native kvarstår."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Oberoende Reviewer PASS på fryst implementation efter korrigeringar; Architect APPROVE, Critic PASS, Security statisk APPROVE finns dokumenterade. Lokalt QA-kriterium klart; live migration/RLS, full panel 4/7 §14 och native/TestFlight är separata öppna gates, inte påstådda PASS."
+        }
+      ],
+      "next_step": "Oberoende Reviewer PASS på fryst implementation efter korrigeringar; Architect APPROVE, Critic PASS, Security statisk APPROVE finns dokumenterade. Lokalt QA-kriterium klart; live migration/RLS, full panel 4/7 §14 och native/TestFlight är separata öppna gates, inte påstådda PASS.",
+      "priority": "P1",
+      "panels": [
+        "Hem",
+        "Kunskap"
+      ],
+      "risk_class": "H",
+      "checkpoint": "UI-R02-02 local implementation checkpoint; icon persistence, focused routine and compact editor delivered, with QA/review and live migration gates open.",
+      "test_evidence": "Independent QA accepted the local implementation checkpoint. pnpm check PASS (app/edge typecheck, lint, 75/75 tests); public/review routine verifier 16/16 each; targeted Knowledge icon/save/readback/dirty-close/delete verifier 7/7 at 375x667, 375x844, 430x844 and 140% CSS text proxy; public iOS Expo JS export PASS (1,585 modules); content guard, diff check, verifier py_compile and queue validation PASS. Older broad verify-know02.py is NOT TESTABLE: it waits for a Checklistor tab absent from its current fixture before any assertion; left unchanged and not treated as product failure. Live migration/RLS, full panels 4/7 §14 and native/TestFlight remain unverified.",
+      "implementation_state": "Shared 20-icon model/picker implemented for routines and custom Knowledge checklist points. Custom icon flows through draft, write/readback, retry/conflict and UI; completion-only writes preserve it. Compact edit form has one save footer, icon actions and explicit confirmations. Focused routine mode separates manage-all/create. Independent local QA, Architect, Critic, Security and Reviewer verdicts are recorded. This is a local implementation checkpoint; migration runtime, full panel 4/7 acceptance and native evidence are separate open gates.",
+      "evidence_status": "Local implementation QA accepted; Architect APPROVE, Critic PASS, Security APPROVE (static), Reviewer PASS. The stale broad Knowledge verifier is NOT TESTABLE and was not modified; current targeted verifier passes 7/7. The 202610230001 migration and SQL probe were not applied/run against real Supabase/PostgreSQL in this session. Live RLS/readback, panel-wide §14 and native/TestFlight remain OPEN."
     }
   ]
 }

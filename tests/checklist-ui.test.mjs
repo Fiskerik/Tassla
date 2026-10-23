@@ -10,6 +10,8 @@ hook.deregister();
 const screen = await readFile(new URL('../src/features/knowledge/PuppyChecklistScreen.tsx', import.meta.url), 'utf8');
 const knowledge = await readFile(new URL('../src/features/knowledge/KnowledgeScreen.tsx', import.meta.url), 'utf8');
 const checklistItem = await readFile(new URL('../src/components/ui/ChecklistItem.tsx', import.meta.url), 'utf8');
+const picker = await readFile(new URL('../src/features/checklists/ChecklistIconPicker.tsx', import.meta.url), 'utf8');
+const iconModel = await readFile(new URL('../src/features/checklists/checklist-icons.ts', import.meta.url), 'utf8');
 
 test('checklist review content is gated before any account read or write', () => {
   assert.match(screen, /if \(reviewEnabled && active\) void load\(templateId\);\s*else setState\('ready'\)/);
@@ -35,13 +37,16 @@ test('every review template point has a verified Ionicons glyph and custom or un
   for (const icon of Object.values(iconByKey)) assert.ok(Object.hasOwn(ioniconGlyphs, icon), `${icon} exists in @expo/vector-icons 15.0.2`);
 
   assert.match(screen, /CHECKLIST_ITEM_ICONS\[item\.key\] \?\? 'list-outline'/);
-  assert.match(screen, /leadingIcon="list-outline"/);
+  assert.match(screen, /leadingIcon=\{item\.icon \?\? 'list-outline'\}/);
+  assert.match(screen, /leadingIconTone=\{checklistIconTone\(item\.icon \?\? 'list-outline'\)\}/);
+  assert.match(picker, /accessibilityRole="radio" accessibilityLabel=\{CHECKLIST_ICON_LABELS\[icon\]\}/);
+  assert.match(iconModel, /export const CHECKLIST_ICONS = \[/);
   assert.match(checklistItem, /leadingIcon\?: ChecklistIcon/);
-  assert.match(checklistItem, /\{leadingIcon \? <Ionicons name=\{leadingIcon\}/);
+  assert.match(checklistItem, /\{leadingIcon \? leadingIconTone \? <ThemedIcon name=\{leadingIcon\}/);
 });
 
 test('navigation invalidates and aborts the current read/write before changing checklist view', () => {
-  const invalidation = screen.indexOf('function leaveChecklist');
+  const invalidation = screen.indexOf('function leaveChecklistNow');
   assert.ok(invalidation >= 0);
   assert.ok(screen.indexOf('invalidateCurrentView();', invalidation) < screen.indexOf('setTemplateId(null)', invalidation));
   assert.match(screen, /writeControllerRef\.current\?\.abort\(\)/);
@@ -59,19 +64,19 @@ test('screen feedback reflects only confirmed state and review drafts identify t
 });
 
 test('pending status reconciliation classifies exact postimages before replay', () => {
-  const previous = { id: '33333333-3333-4333-8333-333333333333', dogId: 'dog-a', templateId: 'review-v1:before-homecoming', title: 'Old', completed: false };
+  const previous = { id: '33333333-3333-4333-8333-333333333333', dogId: 'dog-a', templateId: 'review-v1:before-homecoming', title: 'Old', completed: false, icon: null };
   const updated = { ...previous, title: 'New', completed: true };
   const state = (customItems = [], progress = [], preference = null) => ({ customItems, progress, preference });
   assert.equal(classifyPendingChecklistOperation({ kind: 'preference', context: 'first_days' }, state([], [], 'first_days')), 'saved');
   assert.equal(classifyPendingChecklistOperation({ kind: 'preference', context: 'first_days' }, state([], [], 'by_age')), 'retry');
   assert.equal(classifyPendingChecklistOperation({ kind: 'preset', templateId: previous.templateId, itemKey: 'safe-space', completed: true }, state([], [{ dogId: 'dog-a', templateId: previous.templateId, itemKey: 'safe-space' }])), 'saved');
   assert.equal(classifyPendingChecklistOperation({ kind: 'preset', templateId: previous.templateId, itemKey: 'safe-space', completed: true }, state()), 'retry');
-  const add = { kind: 'add', templateId: previous.templateId, id: previous.id, title: 'New' };
+  const add = { kind: 'add', templateId: previous.templateId, id: previous.id, title: 'New', icon: null };
   const added = { ...previous, title: 'New' };
   assert.equal(classifyPendingChecklistOperation(add, state([added])), 'saved');
   assert.equal(classifyPendingChecklistOperation(add, state()), 'retry');
   assert.equal(classifyPendingChecklistOperation(add, state([{ ...added, title: 'Other' }])), 'conflict');
-  const update = { kind: 'update', previous, changes: { title: 'New', completed: true } };
+  const update = { kind: 'update', previous, changes: { title: 'New', completed: true, icon: null } };
   assert.equal(classifyPendingChecklistOperation(update, state([updated])), 'saved');
   assert.equal(classifyPendingChecklistOperation(update, state([previous])), 'retry');
   assert.equal(classifyPendingChecklistOperation(update, state([{ ...previous, title: 'Remote edit' }])), 'conflict');
@@ -84,14 +89,14 @@ test('pending status reconciliation classifies exact postimages before replay', 
 test('unmount persists the frozen intent and normalized form draft for scoped remount recovery', async () => {
   assert.match(screen, /pendingChangeRef\.current\?\.\(freezePendingChecklistMemory\(writeIntent\.current, formRef\.current\)\)/);
   assert.match(screen, /pendingState\?\.uncertain \? 'Det gick inte att kontrollera om ändringen sparades\.'/);
-  assert.match(screen, /changes: \{ title: normalizedTitle, completed: form\.completed \}/);
-  assert.match(screen, /id: form\.requestId, title: normalizedTitle/);
+  assert.match(screen, /changes: \{ title: normalizedTitle, completed: form\.completed, icon: form\.icon \}/);
+  assert.match(screen, /id: form\.requestId, title: normalizedTitle, icon: form\.icon/);
   assert.match(screen, /customItems\.some\(\(item\) => item\.id === result\.value\.id\)/);
   assert.match(screen, /classifyPendingChecklistOperation\(operation, \{ \.\.\.loaded, preference: loaded\.preference\?\.context \?\? null \}\)/);
   const scopeA = checklistMemoryScope('owner-a', 4, 'dog-a');
   const scopeB = checklistMemoryScope('owner-a', 4, 'dog-b');
-  const operation = { kind: 'add', templateId: 'review-v1:before-homecoming', id: '33333333-3333-4333-8333-333333333333', title: 'Normaliserad titel' };
-  const draft = { id: null, requestId: operation.id, title: ' Normaliserad titel ', completed: false };
+  const operation = { kind: 'add', templateId: 'review-v1:before-homecoming', id: '33333333-3333-4333-8333-333333333333', title: 'Normaliserad titel', icon: 'water-outline' };
+  const draft = { id: null, requestId: operation.id, title: ' Normaliserad titel ', completed: false, icon: 'water-outline' };
   const snapshot = freezePendingChecklistMemory(operation, draft);
   operation.title = 'Changed after request';
   draft.requestId = 'changed';

@@ -1,0 +1,22 @@
+{
+  "passes": [
+    "checklist-routine-icon-walk-outline uses the walk token treatment with 5.38:1 icon contrast",
+    "checklist-routine-icon-fitness-outline uses the training token treatment with 5.56:1 icon contrast",
+    "checklist-routine-icon-bandage-outline uses the vaccination token treatment with 6.15:1 icon contrast",
+    "checklist-routine-icon-moon-outline uses the sleep token treatment with 5.19:1 icon contrast",
+    "checklist-routine-icon-paw uses the neutral token treatment with 5.49:1 icon contrast",
+    "checklist-routine-icon-water-outline uses the water token treatment with 4.97:1 icon contrast",
+    "checklist-routine-icon-walk-outline uses the walk token treatment with 5.38:1 icon contrast",
+    "Long-press opens Kissa icon picker at 375x844; all 20 choices are reachable while scrolling and have 44px targets",
+    "routine-icon-choice-icon-water-outline uses the water token treatment with 5.85:1 icon contrast",
+    "routine-template-icon-00000000-0000-4000-8000-000000000001 uses the water token treatment with 4.97:1 icon contrast",
+    "Chosen icon survives save and exact readback; dirty close can continue editing or discard without changing the saved icon",
+    "Both icon-only routine actions show distinct confirmations, cancel safely, and perform the confirmed change",
+    "Long-press opens Kissa icon picker at 430x844; all 20 choices are reachable while scrolling and have 44px targets",
+    "Long-press opens Kissa icon picker at 375x667; all 20 choices are reachable while scrolling and have 44px targets",
+    "The same 20-icon picker works while creating a routine and the new routine appears after save",
+    "Checklist icon and routine action render has no browser errors"
+  ],
+  "pageErrors": [],
+  "scope": "A02 checklist icons and routine action confirmations; synthetic React Native Web fixture, not native/database certification"
+}

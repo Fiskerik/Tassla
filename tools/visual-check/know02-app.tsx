@@ -43,7 +43,7 @@ function makeClient() {
   let failDetailRead = initialState === 'detail-error';
   const tables: Record<string, Record<string, unknown>[]> = {
     dog_checklist_progress: initialState === 'empty' || initialState === 'zero' ? [] : initialState === 'complete' ? completedPresetRows : [completedPresetRows[0]],
-    dog_checklist_custom_items: initialState === 'empty' ? [] : [{ id: CUSTOM_ID, dog_id: DOG_ID, template_id: FIRST_DAYS, title: 'Boka valpkurs', completed: initialState === 'complete' }],
+    dog_checklist_custom_items: initialState === 'empty' ? [] : [{ id: CUSTOM_ID, dog_id: DOG_ID, template_id: FIRST_DAYS, title: 'Boka valpkurs', completed: initialState === 'complete', icon: null }],
     dog_checklist_preferences: initialState === 'empty' ? [] : [{ dog_id: DOG_ID, context: 'first_days' }],
   };
   let failNextRead = initialState === 'error';
@@ -119,6 +119,7 @@ function makeClient() {
     const chain = {
       select() { selected = true; return chain; },
       eq(key: string, value: unknown) { filters[key] = value; return chain; },
+      is(key: string, value: unknown) { filters[key] = value; return chain; },
       match(values: Record<string, unknown>) { filters = { ...filters, ...values }; return chain; },
       order() { return chain; },
       abortSignal() { return chain; },

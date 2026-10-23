@@ -92,14 +92,26 @@ TASSLA_UI_PANEL=breed-picker TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127
 
 RN Web-fixturen bekräftar inte fysisk tangentbordshantering, native VoiceOver/Dynamic Type, verklig `breeds`-katalog eller Supabase/RLS. `aria-checked` kontrolleras i webbrenderingen; native-radio semantics kräver separat iOS-verifiering.
 
-KNOW-02 har en separat entry/output och skriver till `docs/design/KNOW-02/evidence/`:
+KNOW-02 har en separat entry/output och skriver normalt till `docs/design/KNOW-02/evidence/`. Nyare paket ska ange en task-specifik `TASSLA_UI_EVIDENCE`-katalog så historisk evidens inte skrivs över:
 
 ```sh
 TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_ENTRY=tools/visual-check/know02-app.tsx TASSLA_UI_OUTPUT=/tmp/tassla-preview/site/know02 TASSLA_UI_REVIEW=true node tools/visual-check/build.cjs
-python tools/visual-check/verify-know02.py
+TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-02-checklists/knowledge python tools/visual-check/verify-know02.py
 ```
 
 Browserklockan låses till 2026-10-11 kl. 15 UTC för reproducerbara loggtider. `?screen=log&mutation=failed` respektive `unsure` provar återhämtning utan backend. `?state=empty|loading|error` provar lästillstånd.
+
+### UI-R02-02 — egna faschecklistepunkter
+
+`verify-checklist-custom-icons.py` provar Kunskap → Checklistor i den syntetiska review-fixturen: ikonens 20 radioalternativ, 44 pt målytor, ingen horisontell overflow, nåbar Spara-footer på 375×667 / 375×844 / 430×844, ny ikon med readback, dirty-stängning och textad raderingsbekräftelse. Den här smalare kontrollen skriver separat evidens i `docs/design/evidence/vision-rev02/ui-r02-02-checklists/knowledge/` och lämnar äldre KNOW-02-material orört.
+
+```sh
+TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_ENTRY=tools/visual-check/know02-app.tsx TASSLA_UI_OUTPUT=/tmp/tassla-preview/ui-r02-02/know02 TASSLA_UI_REVIEW=true node tools/visual-check/build.cjs
+python -m http.server 4273 --bind 127.0.0.1 --directory /tmp/tassla-preview/ui-r02-02
+TASSLA_UI_BASE_URL=http://127.0.0.1:4273/know02/ TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-02-checklists/knowledge python tools/visual-check/verify-checklist-custom-icons.py
+```
+
+Synthetic browser evidence verifies the UI contract and mock row updates, not the new SQL migration, live RLS, native VoiceOver/Dynamic Type or TestFlight.
 
 React Native Web-harnessen registrerar RN `Alert`-alternativen och kan anropa en vald callback via `window.__tasslaAlertActions`; detta verifierar menyvalens kopplade åtgärder, inte native Alert-visning, tangentbords-/VoiceOver-beteende, native PDF eller databas/RLS. Harnessen verifierar inte animationers native bildfrekvens. 140 % text är ett layoutprov, inte fullständig Dynamic Type-verifiering.
 

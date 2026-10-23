@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { CHECKLIST_TEMPLATES } from './checklist-content';
+import { isChecklistIcon, type ChecklistIcon } from '../checklists/checklist-icons';
 import { CHECKLIST_VERSION, isChecklistContext, normalizeCustomChecklistTitle, type ChecklistContext, type ChecklistCustomItem, type ChecklistPreference, type ChecklistProgress, type ChecklistWriteOutcome } from './checklist-model';
 
 const deadlineMs = 12_000;
@@ -16,17 +17,20 @@ function validProgress(row: Row, dogId: string, templateId: string): row is Row 
   const template = CHECKLIST_TEMPLATES.find((entry) => entry.id === templateId);
   return row.dog_id === dogId && row.template_id === templateId && typeof row.item_key === 'string' && Boolean(template?.items.some((item) => item.key === row.item_key));
 }
-function validCustom(row: Row, dogId: string, templateId: string): row is Row & { id: string; dog_id: string; template_id: string; title: string; completed: boolean } {
-  return row.dog_id === dogId && row.template_id === templateId && typeof row.id === 'string' && uuidPattern.test(row.id) && typeof row.title === 'string' && normalizeCustomChecklistTitle(row.title) === row.title && typeof row.completed === 'boolean';
+function validCustom(row: Row, dogId: string, templateId: string): row is Row & { id: string; dog_id: string; template_id: string; title: string; completed: boolean; icon: ChecklistIcon | null } {
+  return row.dog_id === dogId && row.template_id === templateId && typeof row.id === 'string' && uuidPattern.test(row.id)
+    && typeof row.title === 'string' && normalizeCustomChecklistTitle(row.title) === row.title && typeof row.completed === 'boolean'
+    && (row.icon === null || isChecklistIcon(row.icon));
 }
-function custom(row: { id: string; dog_id: string; template_id: string; title: string; completed: boolean }): ChecklistCustomItem {
-  return { id: row.id, dogId: row.dog_id, templateId: row.template_id, title: row.title, completed: row.completed };
+function custom(row: { id: string; dog_id: string; template_id: string; title: string; completed: boolean; icon: ChecklistIcon | null }): ChecklistCustomItem {
+  return { id: row.id, dogId: row.dog_id, templateId: row.template_id, title: row.title, completed: row.completed, icon: row.icon };
 }
 function exactProgress(row: Row | null, dogId: string, templateId: string, itemKey: string): boolean {
   return row !== null && validProgress(row, dogId, templateId) && row.item_key === itemKey;
 }
-function exactCustom(row: Row | null, expected: { id: string; dog_id: string; template_id: string; title: string; completed: boolean }): boolean {
-  return row !== null && validCustom(row, expected.dog_id, expected.template_id) && row.id === expected.id && row.title === expected.title && row.completed === expected.completed;
+function exactCustom(row: Row | null, expected: { id: string; dog_id: string; template_id: string; title: string; completed: boolean; icon: ChecklistIcon | null }): boolean {
+  return row !== null && validCustom(row, expected.dog_id, expected.template_id) && row.id === expected.id
+    && row.title === expected.title && row.completed === expected.completed && row.icon === expected.icon;
 }
 
 export async function fetchChecklistState(client: SupabaseClient, dogId: string, templateId: string, signal?: AbortSignal) {
@@ -35,7 +39,7 @@ export async function fetchChecklistState(client: SupabaseClient, dogId: string,
   return request(async (abortSignal) => {
     const [progressResult, customResult, preferenceResult] = await Promise.all([
       client.from('dog_checklist_progress').select('dog_id,template_id,item_key').eq('dog_id', dogId).eq('template_id', templateId).abortSignal(abortSignal),
-      client.from('dog_checklist_custom_items').select('id,dog_id,template_id,title,completed').eq('dog_id', dogId).eq('template_id', templateId).order('id').abortSignal(abortSignal),
+      client.from('dog_checklist_custom_items').select('id,dog_id,template_id,title,completed,icon').eq('dog_id', dogId).eq('template_id', templateId).order('id').abortSignal(abortSignal),
       client.from('dog_checklist_preferences').select('dog_id,context').eq('dog_id', dogId).abortSignal(abortSignal).maybeSingle(),
     ]);
     if (progressResult.error || customResult.error || preferenceResult.error) throw new Error('Could not load checklist');
@@ -219,34 +223,38 @@ export async function setChecklistPreference(client: SupabaseClient, dogId: stri
   }, signal);
 }
 
-export async function addChecklistCustomItem(client: SupabaseClient, dogId: string, templateId: string, id: string, rawTitle: string, signal?: AbortSignal): Promise<ChecklistWriteOutcome<ChecklistCustomItem>> {
+export async function addChecklistCustomItem(client: SupabaseClient, dogId: string, templateId: string, id: string, rawTitle: string, icon: ChecklistIcon | null = null, signal?: AbortSignal): Promise<ChecklistWriteOutcome<ChecklistCustomItem>> {
   const title = normalizeCustomChecklistTitle(rawTitle);
-  if (!title || !uuidPattern.test(id) || !CHECKLIST_TEMPLATES.some((entry) => entry.id === templateId)) return { status: 'failed' };
-  const expected = { id, dog_id: dogId, template_id: templateId, title, completed: false };
+  if (!title || !uuidPattern.test(id) || (icon !== null && !isChecklistIcon(icon)) || !CHECKLIST_TEMPLATES.some((entry) => entry.id === templateId)) return { status: 'failed' };
+  const expected = { id, dog_id: dogId, template_id: templateId, title, completed: false, icon };
   return request(async (abortSignal) => {
     try {
       const result = await client.from('dog_checklist_custom_items').insert(expected).abortSignal(abortSignal);
       if (!result.error) {
-        const read = await client.from('dog_checklist_custom_items').select('id,dog_id,template_id,title,completed').eq('dog_id', dogId).eq('id', id).abortSignal(abortSignal).maybeSingle();
+        const read = await client.from('dog_checklist_custom_items').select('id,dog_id,template_id,title,completed,icon').eq('dog_id', dogId).eq('id', id).abortSignal(abortSignal).maybeSingle();
         return read.error ? { status: 'unknown' } : exactCustom(read.data as Row | null, expected) ? { status: 'saved', value: custom(expected) } : { status: 'failed' };
       }
-      const read = await client.from('dog_checklist_custom_items').select('id,dog_id,template_id,title,completed').eq('dog_id', dogId).eq('id', id).abortSignal(abortSignal).maybeSingle();
+      const read = await client.from('dog_checklist_custom_items').select('id,dog_id,template_id,title,completed,icon').eq('dog_id', dogId).eq('id', id).abortSignal(abortSignal).maybeSingle();
       return read.error ? { status: 'unknown' } : exactCustom(read.data as Row | null, expected) ? { status: 'saved', value: custom(expected) } : { status: 'failed' };
     } catch { return { status: 'unknown' }; }
   }, signal);
 }
 
-export async function updateChecklistCustomItem(client: SupabaseClient, previous: ChecklistCustomItem, changes: Pick<ChecklistCustomItem, 'title' | 'completed'>, signal?: AbortSignal): Promise<ChecklistWriteOutcome<ChecklistCustomItem>> {
+export async function updateChecklistCustomItem(client: SupabaseClient, previous: ChecklistCustomItem, changes: Pick<ChecklistCustomItem, 'title' | 'completed'> & { icon?: ChecklistIcon | null }, signal?: AbortSignal): Promise<ChecklistWriteOutcome<ChecklistCustomItem>> {
   const title = normalizeCustomChecklistTitle(changes.title);
-  if (!title || !uuidPattern.test(previous.id) || !CHECKLIST_TEMPLATES.some((entry) => entry.id === previous.templateId)) return { status: 'failed' };
-  const expected = { id: previous.id, dog_id: previous.dogId, template_id: previous.templateId, title, completed: changes.completed };
-  const preimage = { id: previous.id, dog_id: previous.dogId, template_id: previous.templateId, title: previous.title, completed: previous.completed };
+  const icon = changes.icon === undefined ? previous.icon : changes.icon;
+  if (!title || !uuidPattern.test(previous.id) || (icon !== null && !isChecklistIcon(icon)) || !CHECKLIST_TEMPLATES.some((entry) => entry.id === previous.templateId)) return { status: 'failed' };
+  const expected = { id: previous.id, dog_id: previous.dogId, template_id: previous.templateId, title, completed: changes.completed, icon };
+  const preimage = { id: previous.id, dog_id: previous.dogId, template_id: previous.templateId, title: previous.title, completed: previous.completed, icon: previous.icon };
+  const payload = { title, completed: changes.completed, ...(changes.icon === undefined ? {} : { icon }) };
   return request(async (abortSignal) => {
     try {
-      const result = await client.from('dog_checklist_custom_items').update({ title, completed: changes.completed }).eq('dog_id', previous.dogId).eq('id', previous.id).eq('template_id', previous.templateId).eq('title', previous.title).eq('completed', previous.completed).select('id,dog_id,template_id,title,completed').abortSignal(abortSignal).maybeSingle();
+      let update = client.from('dog_checklist_custom_items').update(payload).eq('dog_id', previous.dogId).eq('id', previous.id).eq('template_id', previous.templateId).eq('title', previous.title).eq('completed', previous.completed);
+      update = previous.icon === null ? update.is('icon', null) : update.eq('icon', previous.icon);
+      const result = await update.select('id,dog_id,template_id,title,completed,icon').abortSignal(abortSignal).maybeSingle();
       if (result.data && exactCustom(result.data as Row, expected)) return { status: 'saved', value: custom(expected) };
       if (result.error) {
-        const read = await client.from('dog_checklist_custom_items').select('id,dog_id,template_id,title,completed').eq('dog_id', previous.dogId).eq('id', previous.id).abortSignal(abortSignal).maybeSingle();
+        const read = await client.from('dog_checklist_custom_items').select('id,dog_id,template_id,title,completed,icon').eq('dog_id', previous.dogId).eq('id', previous.id).abortSignal(abortSignal).maybeSingle();
         if (read.error) return { status: 'unknown' };
         if (exactCustom(read.data as Row | null, expected)) return { status: 'saved', value: custom(expected) };
         if (read.data === null) return { status: 'conflict' };
@@ -262,13 +270,15 @@ export async function deleteChecklistCustomItem(client: SupabaseClient, previous
   if (!uuidPattern.test(previous.id)) return { status: 'failed' };
   return request(async (abortSignal) => {
     try {
-      const result = await client.from('dog_checklist_custom_items').delete().eq('dog_id', previous.dogId).eq('id', previous.id).eq('template_id', previous.templateId).eq('title', previous.title).eq('completed', previous.completed).select('id').abortSignal(abortSignal).maybeSingle();
+      let deletion = client.from('dog_checklist_custom_items').delete().eq('dog_id', previous.dogId).eq('id', previous.id).eq('template_id', previous.templateId).eq('title', previous.title).eq('completed', previous.completed);
+      deletion = previous.icon === null ? deletion.is('icon', null) : deletion.eq('icon', previous.icon);
+      const result = await deletion.select('id').abortSignal(abortSignal).maybeSingle();
       if (result.data?.id === previous.id) return { status: 'saved', value: null };
-      const read = await client.from('dog_checklist_custom_items').select('id,dog_id,template_id,title,completed').eq('dog_id', previous.dogId).eq('id', previous.id).abortSignal(abortSignal).maybeSingle();
+      const read = await client.from('dog_checklist_custom_items').select('id,dog_id,template_id,title,completed,icon').eq('dog_id', previous.dogId).eq('id', previous.id).abortSignal(abortSignal).maybeSingle();
       if (read.error) return { status: 'unknown' };
       if (read.data === null) return { status: 'saved', value: null };
       const row = read.data as Row;
-      return row.template_id === previous.templateId && row.title === previous.title && row.completed === previous.completed
+      return row.template_id === previous.templateId && row.title === previous.title && row.completed === previous.completed && row.icon === previous.icon
         ? { status: result.error ? 'failed' : 'conflict' }
         : { status: 'conflict' };
     } catch { return { status: 'unknown' }; }

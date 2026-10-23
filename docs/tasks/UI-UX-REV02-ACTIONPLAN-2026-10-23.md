@@ -2,7 +2,7 @@
 
 Datum: 2026-10-23. Beställare: Erik. Genomförande: Luna/implementer, med koordinator och riskbaserad granskning enligt projektets arbetsflöde.
 
-**Status: paket 01 stängt enligt ägarbekräftelse; 02–04 genomförs.** UI-R02-01A (sökbar rasväljare) är stängd som lokal UI-/valideringscheckpoint efter Architect APPROVE, Critic PASS, oberoende QA PASS (13/13 public och review) och Reviewer PASS. Commit `786dd11e0b9955959caaeb0fa161291bc558ef96` finns på `2026-10-23-ui-01-profil`. UI-R02-01B:s lokala implementation är verifierad och ägaren bekräftade 2026-10-23 att punkten redan är godkänd och granskad. Separata externa verdicts har inte bifogats i denna session; ingen ny oberoende körning påstås. Därefter följer paket 02–04 enligt ordningen nedan.
+**Status 2026-10-23: 01 stängt; 02 lokal implementation-checkpoint stängd efter oberoende QA/Reviewer, med separat live-migrations- och full panelgrind öppen; 03–04 återstår.** UI-R02-01A är stängd som lokal UI-/valideringscheckpoint efter Architect APPROVE, Critic PASS, QA PASS (13/13 public och review) och Reviewer PASS. Commit `786dd11e0b9955959caaeb0fa161291bc558ef96` finns på `2026-10-23-ui-01-profil`. UI-R02-01B är stängd på Eriks uttryckliga besked att punkten redan är godkänd och granskad; separata protokoll bifogades inte här.
 
 Detta är **den aktuella paketordningen** för fynden i [GAP-analysen 2026-10-23](../GAP-UI-UX-rev02-2026-10-23.md). Den ersätter paketordningen i GAP-analysens tidigare avsnitt 8 och [planen från 18 oktober](../plans/UI-UX-NEXT-PACKAGES-2026-10-18.md). GAP-analysen behåller belägg, skärmbilder, kodankare och G01–G19; de kopieras inte till en ny konkurrerande fellista.
 
@@ -101,6 +101,14 @@ Ansvar: koordinator. Spårning: **G18**. Detta är en förberedelse inom första
 - Hem behåller sin pil, kompakta ikonfria rader och tre genvägar; panel 3:s godkända ring/status ändras inte av en global komponentdefault.
 
 **Spårning:** G02/G03/G05/G06/G07/G14; checklistornas delar av G04/G11/G12/G13/G16. **Den egna punktens ikonpersistens räknas inte klar förrän den nya migrationens riktiga integration är verifierad.** Oberoende UI-delar kan ändå checkpointas; live-migration körs inte automatiskt.
+
+### Lokal implementation-checkpoint — 2026-10-23
+
+Den gemensamma 20-symbolsmodellen och väljaren används nu av rutinredigering och egna Kunskapspunkter. Egen punktens ikon går genom formulärutkast, skrivning, readback, retry/conflict och presentation; completion-toggle lämnar ikonfältet ifred. Punktformuläret har en Spara-footer, kompakta ikonhandlingar, textad deletebekräftelse och dirty-close-bekräftelse. Rutinhallens vanliga öppning visar vald rutin; en namngiven ikonhandling öppnar hantering av alla/skapa, och fokuserat läge döljer träningsval.
+
+Lokalt: `pnpm check` PASS (app/edge typecheck, lint, 75/75 tester; oberoende QA-runda PASS); riktad rutinrender 16/16 i public och review, inklusive 20 scrollbara ikonval med 44 px målyta vid 375×667, 375×844 och 430×844; Kunskapens syntetiska ikon-/spara-/stäng-/radera-prov 7/7 vid 375×667, 375×844 och 430×844, inklusive 140 % textproxy; public iOS JS-export PASS (1 585 moduler), release content guard PASS. Bevis finns i [UI-R02-02](../design/evidence/vision-rev02/ui-r02-02-checklists/README.md).
+
+Architect, Critic, Security och Reviewer har godkänt sina respektive statiska/UX-granskningar av paketet. Oberoende QA godkände den lokala implementation-checkpointen och körde `pnpm check` 75/75. Den äldre breda `verify-know02.py` stannade före första assertionen på en föråldrad flik/route; den är NOT TESTABLE, lämnad oförändrad och ersätts för justerad resa av riktat 7/7-prov. Detta är inte full panel 4/7-godkännande. Migration `202610230001_checklist_custom_item_icons.sql` och SQL-prob applicerades/kördes inte mot en riktig databas i denna session; live RLS/readback och native/TestFlight kvarstår. Ingen faktisk skrivning till Supabase gjordes. 03 startar efter att denna lokala checkpoint är committad.
 
 ## 5. UI-R02-03 — Samma formulär i Logg och Hälsa
 

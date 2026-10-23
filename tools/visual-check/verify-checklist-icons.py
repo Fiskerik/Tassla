@@ -15,9 +15,9 @@ results = []
 errors = []
 
 repo = Path(__file__).resolve().parents[2]
-icon_source = (repo / 'src/features/home/daily-routine-checklist-icons.ts').read_text()
+icon_source = (repo / 'src/features/checklists/checklist-icons.ts').read_text()
 token_source = (repo / 'src/theme/tokens.ts').read_text()
-tone_body = re.search(r'const DAILY_ROUTINE_CHECKLIST_ICON_TONES[^=]*=\s*\{([\s\S]*?)\n\};', icon_source)
+tone_body = re.search(r'export const CHECKLIST_ICON_TONES[^=]*=\s*\{([\s\S]*?)\n\};', icon_source)
 primitive_body = re.search(r'const primitives\s*=\s*\{([\s\S]*?)\}\s+as const;', token_source)
 category_body = re.search(r'export const categoryColors\s*=\s*\{([\s\S]*?)\}\s+as const;', token_source)
 vision_body = re.search(r'const visionRev02Colors\s*=\s*\{([\s\S]*?)\}\s+as const;', token_source)
@@ -95,10 +95,16 @@ with sync_playwright() as playwright:
         icon.scroll_into_view_if_needed()
         expect(icon).to_be_visible()
         actual = icon.evaluate("""(element) => {
-            const inheritedColor = getComputedStyle(element).color;
-            const glyphColor = [...element.querySelectorAll('*')].map((node) => getComputedStyle(node).color)
+            const iconView = element.getAttribute('role') === 'radio'
+                ? [...element.querySelectorAll('*')].find((node) => {
+                    const style = getComputedStyle(node);
+                    return style.display === 'flex' && style.width === '28px' && style.height === '28px';
+                }) ?? element
+                : element;
+            const inheritedColor = getComputedStyle(iconView).color;
+            const glyphColor = [...iconView.querySelectorAll('*')].map((node) => getComputedStyle(node).color)
                 .find((color) => color !== inheritedColor) ?? inheritedColor;
-            let backgroundNode = element.parentElement;
+            let backgroundNode = iconView.parentElement;
             let parentBackground = getComputedStyle(backgroundNode).backgroundColor;
             while (backgroundNode && (parentBackground === 'rgba(0, 0, 0, 0)' || parentBackground === 'transparent')) {
                 backgroundNode = backgroundNode.parentElement;
@@ -106,7 +112,7 @@ with sync_playwright() as playwright:
             }
             return {
                 foreground: glyphColor,
-                background: getComputedStyle(element).backgroundColor,
+                background: getComputedStyle(iconView).backgroundColor,
                 parentBackground,
             };
         }""")
@@ -149,14 +155,22 @@ with sync_playwright() as playwright:
         radios = picker.get_by_role('radio')
         expect(radios).to_have_count(20)
         expect(page.get_by_text('Välj ikon', exact=False)).to_have_count(0)
+        page.screenshot(path=str(out / f'checklist-icon-picker-{width}x{height}.png'))
         for index in range(20):
-            bounds = radios.nth(index).bounding_box()
+            choice = radios.nth(index)
+            choice.scroll_into_view_if_needed()
+            expect(choice).to_be_visible()
+            bounds = choice.bounding_box()
             assert bounds is not None and round(bounds['width']) >= 44 and round(bounds['height']) >= 44, \
                 f'icon target below 44px at {width}x{height}: {bounds}'
+            viewport = page.evaluate('({ width: innerWidth, height: innerHeight })')
+            assert bounds['x'] >= 0 and bounds['x'] + bounds['width'] <= viewport['width'], \
+                f'icon choice is clipped horizontally at {width}x{height}: {bounds}'
+            assert bounds['y'] >= 0 and bounds['y'] + bounds['height'] <= viewport['height'], \
+                f'icon choice is outside the visible picker area at {width}x{height}: {bounds}'
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), \
             f'icon picker overflows horizontally at {width}x{height}'
-        page.screenshot(path=str(out / f'checklist-icon-picker-{width}x{height}.png'))
-        passed(f'Long-press opens Kissa icon picker at {width}x{height}; all 20 choices have accessible names and 44px targets')
+        passed(f'Long-press opens Kissa icon picker at {width}x{height}; all 20 choices are reachable while scrolling and have 44px targets')
 
         if width == 375 and height == 844:
             check_icon_style('routine-icon-choice-icon-water-outline', 'water', surface=False)
@@ -182,14 +196,33 @@ with sync_playwright() as playwright:
             saved_picker = page.get_by_role('radiogroup', name='Välj ikon för Kissa', exact=True)
             saved_vatten = saved_picker.get_by_role('radio', name='Vatten', exact=True)
             expect(saved_vatten).to_have_attribute('aria-checked', 'true')
-            saved_vatten.click()
-            page.get_by_role('button', name='Avbryt ändring av Morgonrutin', exact=True).click()
-            page.get_by_role('button', name='Klar', exact=True).click()
+            saved_picker.get_by_role('radio', name='Sol', exact=True).click()
+            page.get_by_role('button', name='Stäng', exact=True).last.click()
+            discard_dialog = page.get_by_role('alert', name='Kasta ändringar?', exact=True)
+            expect(discard_dialog).to_be_visible()
+            expect(discard_dialog.get_by_text('Dina osparade ändringar försvinner.', exact=True)).to_be_visible()
+            discard_dialog.get_by_role('button', name='Fortsätt redigera', exact=True).click()
+            expect(page.get_by_role('textbox', name='Namn på rutin Morgonrutin')).to_be_visible()
+            page.get_by_role('button', name='Stäng', exact=True).last.click()
+            discard_dialog = page.get_by_role('alert', name='Kasta ändringar?', exact=True)
+            expect(discard_dialog).to_be_visible()
+            discard_dialog.get_by_role('button', name='Kasta', exact=True).click()
+            expect(page.get_by_role('button', name='Hantera rutiner och aktiviteter', exact=True)).to_be_visible()
             expect(page.get_by_role('checkbox', name=re.compile(r'Rutin Morgonrutin, punkt Kissa, inte klar'))).to_have_attribute('aria-checked', 'false')
             page.screenshot(path=str(out / 'checklist-icon-saved-template-375x844.png'))
-            passed('Chosen icon survives save and exact readback; editing it leaves today’s frozen checkbox state unchanged')
+            page.get_by_role('button', name='Hantera rutiner och aktiviteter', exact=True).click()
+            page.get_by_role('button', name='Redigera rutin Morgonrutin', exact=True).click()
+            persisted_picker_trigger = page.get_by_role('button', name='Välj ikon för Kissa. Aktuell ikon: Vatten', exact=True)
+            expect(persisted_picker_trigger).to_be_visible()
+            persisted_picker_trigger.click()
+            persisted_picker = page.get_by_role('radiogroup', name='Välj ikon för Kissa', exact=True)
+            expect(persisted_picker.get_by_role('radio', name='Vatten', exact=True)).to_have_attribute('aria-checked', 'true')
+            persisted_picker.get_by_role('radio', name='Vatten', exact=True).click()
+            page.get_by_role('button', name='Stäng', exact=True).last.click()
+            passed('Chosen icon survives save and exact readback; dirty close can continue editing or discard without changing the saved icon')
 
             # Both compact icon actions present their own explanatory confirmation before mutation.
+            open_checklist(375, 844)
             page.get_by_role('button', name='Öppna Rutin Morgonrutin, punkt Kissa', exact=True).click()
             home_remove = page.get_by_role('button', name='Ta bort rutinen Morgonrutin från Hemskärmen', exact=True)
             delete_routine = page.get_by_role('button', name='Ta bort rutin Morgonrutin', exact=True)
@@ -227,7 +260,12 @@ with sync_playwright() as playwright:
 
     open_checklist(375, 844)
     page.get_by_role('button', name='Öppna Rutin Morgonrutin, punkt Kissa', exact=True).click()
+    expect(page.get_by_text('Valda träningssteg', exact=True)).to_have_count(0)
+    expect(page.get_by_role('button', name='Skapa en ny rutin', exact=True)).to_have_count(0)
+    page.get_by_role('button', name='Klar', exact=True).click()
+    page.get_by_role('button', name='Hantera rutiner och aktiviteter', exact=True).click()
     page.get_by_role('button', name='Skapa en ny rutin', exact=True).click()
+    expect(page.get_by_role('button', name='Avbryt skapa rutin', exact=True)).to_have_count(0)
     page.get_by_role('textbox', name='Namn på rutin', exact=True).fill('Kvällsvila')
     page.get_by_role('textbox', name='Checklistepunkt 1', exact=True).fill('Ta en paus')
     page.get_by_role('button', name='Välj ikon för Ta en paus. Aktuell ikon: Allmän lista', exact=True).click()
