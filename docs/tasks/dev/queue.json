@@ -10649,6 +10649,89 @@
       "test_evidence": "Independent QA accepted the local implementation checkpoint. pnpm check PASS (app/edge typecheck, lint, 75/75 tests); public/review routine verifier 16/16 each; targeted Knowledge icon/save/readback/dirty-close/delete verifier 7/7 at 375x667, 375x844, 430x844 and 140% CSS text proxy; public iOS Expo JS export PASS (1,585 modules); content guard, diff check, verifier py_compile and queue validation PASS. Older broad verify-know02.py is NOT TESTABLE: it waits for a Checklistor tab absent from its current fixture before any assertion; left unchanged and not treated as product failure. Live migration/RLS, full panels 4/7 §14 and native/TestFlight remain unverified.",
       "implementation_state": "Shared 20-icon model/picker implemented for routines and custom Knowledge checklist points. Custom icon flows through draft, write/readback, retry/conflict and UI; completion-only writes preserve it. Compact edit form has one save footer, icon actions and explicit confirmations. Focused routine mode separates manage-all/create. Independent local QA, Architect, Critic, Security and Reviewer verdicts are recorded. This is a local implementation checkpoint; migration runtime, full panel 4/7 acceptance and native evidence are separate open gates.",
       "evidence_status": "Local implementation QA accepted; Architect APPROVE, Critic PASS, Security APPROVE (static), Reviewer PASS. The stale broad Knowledge verifier is NOT TESTABLE and was not modified; current targeted verifier passes 7/7. The 202610230001 migration and SQL probe were not applied/run against real Supabase/PostgreSQL in this session. Live RLS/readback, panel-wide §14 and native/TestFlight remain OPEN."
+    },
+    {
+      "id": "UI-R02-03",
+      "title": "Logg och Hälsa: kompakta och tydliga formulär",
+      "mvp_requirement": "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md §5; GAP G04/G06/G09/G10/G11/G13/G16/G19; vision_rev02 Panel 5 och stödresan Hälsa.",
+      "plan": "docs/tasks/dev/UI-R02-03-LOGG-HALSA.md v3; UX: docs/plans/UI-R02-03-logg-halsa-ux-spec.md v3",
+      "write_paths": [
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/README.md",
+        "src/features/health/HealthScreen.tsx",
+        "src/features/health/HealthHistoryScreen.tsx",
+        "src/features/health/WeightScreen.tsx",
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/features/health/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/main-navigation.ts",
+        "tests/log-screen-policy.test.mjs",
+        "tests/health-history.test.mjs",
+        "tests/health-weight.test.mjs",
+        "tests/planned-health.test.mjs",
+        "tests/main-navigation.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-log.py",
+        "tools/visual-check/verify-health-edit-forms.py",
+        "tools/visual-check/README.md",
+        "docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/",
+        "docs/tasks/dev/UI-R02-03-LOGG-HALSA.md",
+        "docs/plans/UI-R02-03-logg-halsa-ux-spec.md",
+        "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Logg edit har en fast primär Spara-footer; X/back skyddar dirty utkast och soptunnan öppnar en namngiven bekräftelse. Etttrycks-snabbval, dubblettskydd, datum/tid, undo och failed/unknown recovery består.",
+        "Utförd hälsa, vikt och planerad hälsa använder samma kompakta rubrik-/fält-/footer-/ikonhandling-familj; fälten, validering och planerat/genomfört-semantik förblir oförändrade.",
+        "Bekräftat sparresultat skiljs från failed, pending, unknown och konflikt; fel behåller formdata. Vid pending/unknown/conflict kan sheetet minimeras efter att aktiv write lämnat busy; recovery row visas högt på ägarsidan, överlever navigation bort/tillbaka inom samma scope och öppnar samma in-memory draft/intent igen.",
+        "Tryck på namngiven Hälsa-plan skickar exakt plan-ID, fokuserar posten och bevarar flik/scroll vid retur; Checklistor A03 → Kommande → rätt plan → retur är oförändrad.",
+        "Vikt och planerad Hälsa använder befintlig BottomSheet editor över listan; utförd Hälsa behåller sitt sheet. Alla editors har fast Spara-footer utan konkurrerande inline-formulär.",
+        "Recovery snapshot scope-keyas med owner/accountGeneration, selectionKey, dog/lifetime, editor kind och object ID. Scope switch, sen async response, upprepade recovery actions och unmount cleanup får aldrig visa eller mutera annan scope.",
+        "Hälsa-planfokus är separat från Checklistor och scope/lifetime-bound med exakt plan-ID eller explicit null, returflik och scroll. Missing/error visar inte en annan plan som fallback.",
+        "Radera bekräftas för exakt objekt-ID och befintlig mutation/scope/readback (preimage där kontraktet redan har det). Pending/unknown/conflict bevarar intent och formulär vid minimize/reopen. Planinteraktion skapar eller ändrar aldrig utförd dog_events-historik.",
+        "Keyboard acceptans täcker decimal-pad till Spara, multiline Return, och X/Spara vid 375x667 och 140% textproxy; native körning redovisas separat.",
+        "Public/review render av ändrade resor vid 375×667, 375×844, 430×844 samt 140% textproxy; tillämplig §14 bedöms med skärmbilder. Full Panel 5-acceptans skiljs från lokal formulärcheckpoint.",
+        "Ingen ändring av schema, datamodell, hälsodatans ändamål, auth/RLS, RPC, notifieringskontrakt eller dependencies."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/log-screen-policy.test.mjs tests/health-history.test.mjs tests/health-weight.test.mjs tests/planned-health.test.mjs tests/main-navigation.test.mjs",
+        "pnpm check",
+        "CI=1 TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false node tools/check-content-release.cjs",
+        "CI=1 __UNSAFE_EXPO_HOME_DIRECTORY=/tmp/tassla-expo-home TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false node node_modules/expo/bin/cli export --platform ios --output-dir dist/ios",
+        "Public/review RN Web verify-flow-log.py and verify-health-edit-forms.py using current visual-check server",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-R02-02"
+      ],
+      "status": "implementing",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v3; UX Critic PASS plan v3; Security APPROVE plan v3. Scoped in-memory recovery/minimize, exact health-plan route, BottomSheet editor and existing write contracts recorded in docs/tasks/dev/UI-R02-03-LOGG-HALSA.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start work under approved plan v3 on new package branch. Scope limited to UI-R02-03 write_paths; preserve existing data adapters, plan/history separation, A03 and other reviewed flows."
+        }
+      ],
+      "next_step": "Create and push 2026-10-23-ui-03-logg-halsa with the approved plan checkpoint; then implement Logg editor first, preserving quick log/calendar/undo and existing scoped mutation contracts.",
+      "priority": "P1",
+      "panels": [
+        "Logga",
+        "Hälsa"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Plan v3 approved: Architect APPROVE, UX Critic PASS, Security APPROVE. Queue implementing; no application-code changes started. Next save a plan-only branch checkpoint, then begin Logg editor slice.",
+      "test_evidence": "Plan-doc validation PASS: python -X utf8 tools/dev_flow.py validate; git diff --check. Product tests not started. Prior Logg calendar spacing and owner-reported weight/keyboard behavior are existing evidence only; this task will rerun focused regressions."
     }
   ]
 }

@@ -2,7 +2,7 @@
 
 Datum: 2026-10-23. Beställare: Erik. Genomförande: Luna/implementer, med koordinator och riskbaserad granskning enligt projektets arbetsflöde.
 
-**Status 2026-10-23: 01 stängt; 02 lokal implementation-checkpoint stängd efter oberoende QA/Reviewer, med separat live-migrations- och full panelgrind öppen; 03–04 återstår.** UI-R02-01A är stängd som lokal UI-/valideringscheckpoint efter Architect APPROVE, Critic PASS, QA PASS (13/13 public och review) och Reviewer PASS. Commit `786dd11e0b9955959caaeb0fa161291bc558ef96` finns på `2026-10-23-ui-01-profil`. UI-R02-01B är stängd på Eriks uttryckliga besked att punkten redan är godkänd och granskad; separata protokoll bifogades inte här.
+**Status 2026-10-23: 01 stängt; 02 lokal implementation-checkpoint stängd efter oberoende QA/Reviewer, med separat live-migrations- och full panelgrind öppen; 03 plan v3 godkänd och implementation startar på egen branch; 04 återstår.** UI-R02-01A är stängd som lokal UI-/valideringscheckpoint efter Architect APPROVE, Critic PASS, QA PASS (13/13 public och review) och Reviewer PASS. Commit `786dd11e0b9955959caaeb0fa161291bc558ef96` finns på `2026-10-23-ui-01-profil`. UI-R02-01B är stängd på Eriks uttryckliga besked att punkten redan är godkänd och granskad; separata protokoll bifogades inte här.
 
 Detta är **den aktuella paketordningen** för fynden i [GAP-analysen 2026-10-23](../GAP-UI-UX-rev02-2026-10-23.md). Den ersätter paketordningen i GAP-analysens tidigare avsnitt 8 och [planen från 18 oktober](../plans/UI-UX-NEXT-PACKAGES-2026-10-18.md). GAP-analysen behåller belägg, skärmbilder, kodankare och G01–G19; de kopieras inte till en ny konkurrerande fellista.
 
@@ -111,6 +111,8 @@ Lokalt: `pnpm check` PASS (app/edge typecheck, lint, 75/75 tester; oberoende QA-
 Architect, Critic, Security och Reviewer har godkänt sina respektive statiska/UX-granskningar av paketet. Oberoende QA godkände den lokala implementation-checkpointen och körde `pnpm check` 75/75. Den äldre breda `verify-know02.py` stannade före första assertionen på en föråldrad flik/route; den är NOT TESTABLE, lämnad oförändrad och ersätts för justerad resa av riktat 7/7-prov. Detta är inte full panel 4/7-godkännande. Migration `202610230001_checklist_custom_item_icons.sql` och SQL-prob applicerades/kördes inte mot en riktig databas i denna session; live RLS/readback och native/TestFlight kvarstår. Ingen faktisk skrivning till Supabase gjordes. 03 startar efter att denna lokala checkpoint är committad.
 
 ## 5. UI-R02-03 — Samma formulär i Logg och Hälsa
+
+**Planstatus 2026-10-23:** Plan v1 fick CHANGES från Architect/Security och PROCEED WITH CHANGES från UX Critic. Architect/Security godkände v2; v3 lägger till minimera/återöppna efter unknown/conflict och Architectens vikt-delete-faktakorrigering. Architect v3 **APPROVE**, UX Critic **PASS**, Security **APPROVE**. Task v3 övergick till `implementing`; plan checkpoint pushas till `2026-10-23-ui-03-logg-halsa` före första kodändringen. Se [task v3](../tasks/dev/UI-R02-03-LOGG-HALSA.md) för exakt UI-, route-, delete-, recovery- och keyboard-kontrakt.
 
 **Användarresultat:** öppna en post, ändra fälten och spara; vid borttagning används en tydlig soptunna/bekräftelse. En namngiven hälsoplan öppnar samma plan oavsett ingång.
 
