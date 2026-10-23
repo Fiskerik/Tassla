@@ -5,7 +5,7 @@ import { AppScreen, MessageCard, PageHeading, PrimaryButton } from '../../compon
 import { fetchOwnedDogs, type OwnedDog } from '../../data/app-data';
 import { DEV_PREVIEW_ENABLED } from '../account/preview-policy';
 import { SignInScreen } from '../account/SignInScreen';
-import { ProfileScreen } from '../onboarding/ProfileScreen';
+import { ProfileScreen, type DogCreationRecoverySnapshot } from '../onboarding/ProfileScreen';
 import { DevelopmentPreview } from './DevelopmentPreview';
 import { ProductWorkspace } from './ProductWorkspace';
 import { useAuth } from '../account/AuthProvider';
@@ -53,6 +53,7 @@ function DogWorkspace({ client, ownerId, accountGeneration, isCurrentAccount }: 
   const [attempt, setAttempt] = useState(0);
   const [addingDog, setAddingDog] = useState(false);
   const [addEntryPoint, setAddEntryPoint] = useState<'home' | 'settings'>('home');
+  const [pendingAddRecoverySnapshot, setPendingAddRecoverySnapshot] = useState<DogCreationRecoverySnapshot | null>(null);
   const [openDogSwitcherOnReturn, setOpenDogSwitcherOnReturn] = useState(false);
   const [openDogProfileOnReturn, setOpenDogProfileOnReturn] = useState(false);
 
@@ -76,6 +77,7 @@ function DogWorkspace({ client, ownerId, accountGeneration, isCurrentAccount }: 
       : [...current, created]);
     setActiveDogId(created.id);
     setAddingDog(false);
+    setPendingAddRecoverySnapshot(null);
     setOpenDogSwitcherOnReturn(false);
     setOpenDogProfileOnReturn(addEntryPoint === 'settings');
     setState('ready');
@@ -85,14 +87,21 @@ function DogWorkspace({ client, ownerId, accountGeneration, isCurrentAccount }: 
   }
 
   function startAddingDog(entryPoint: 'home' | 'settings' = 'home') {
-    setAddEntryPoint(entryPoint);
+    const restoredEntryPoint = pendingAddRecoverySnapshot?.ownerId === ownerId
+      && pendingAddRecoverySnapshot.accountGeneration === accountGeneration
+      ? pendingAddRecoverySnapshot.entryPoint : entryPoint;
+    setAddEntryPoint(restoredEntryPoint);
     setAddingDog(true);
   }
 
-  async function cancelAddingDog() {
+  async function cancelAddingDog(result: { kind: 'discard' } | { kind: 'resume'; snapshot: DogCreationRecoverySnapshot }) {
+    const returnEntryPoint = result.kind === 'resume' ? result.snapshot.entryPoint : addEntryPoint;
+    if (result.kind === 'resume') setPendingAddRecoverySnapshot(result.snapshot);
+    else setPendingAddRecoverySnapshot(null);
     setAddingDog(false);
-    setOpenDogSwitcherOnReturn(addEntryPoint === 'home');
-    setOpenDogProfileOnReturn(addEntryPoint === 'settings');
+    setAddEntryPoint(returnEntryPoint);
+    setOpenDogSwitcherOnReturn(returnEntryPoint === 'home');
+    setOpenDogProfileOnReturn(returnEntryPoint === 'settings');
     setState('loading');
     try {
       const loadedDogs = await fetchOwnedDogs(client);
@@ -119,6 +128,8 @@ function DogWorkspace({ client, ownerId, accountGeneration, isCurrentAccount }: 
     key={`${ownerId}:${addingDog ? 'add' : 'initial'}`}
     client={client} ownerId={ownerId} accountGeneration={accountGeneration} isCurrentAccount={isCurrentAccount}
     mode={dogs.length > 0 ? 'add' : 'initial'} onCreated={acceptCreatedDog}
+    entryPoint={addEntryPoint} recoverySnapshot={pendingAddRecoverySnapshot}
+    onClearRecoverySnapshot={() => setPendingAddRecoverySnapshot(null)}
     onCancel={dogs.length > 0 ? cancelAddingDog : undefined}
   />;
   const activeDog = dogs.find((dog) => dog.id === activeDogId) ?? dogs[0];

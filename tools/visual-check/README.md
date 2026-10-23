@@ -164,3 +164,23 @@ Välj andra lediga loopback-portar om dessa är upptagna. Resultat och skärmbil
 Bygg `tools/visual-check/app.tsx` separat för public/review och servera respektive output. Kör `tools/visual-check/verify-flow-training.py` med `TASSLA_UI_BASE_URL`, `TASSLA_UI_REVIEW` och `TASSLA_UI_EVIDENCE`. Syntetiska fixture-program märks i visningsläget; inga konton eller backenddata läses.
 
 Verifieraren täcker 375×844, 430×844, 375×667, två olika 4:3 standardbilder, fortsättkort, alla tre tabbar, exakt öppnad övning, okänd ålder med sparad progress, ingen matchande rekommendation med väg till Alla övningar, pausad äldre version, läsfel med fungerande retry, slutfört program, lång svensk text och 140 %-proxy utan horisontell overflow. Bevisen sparas i `docs/design/evidence/flow-training-01/{public,review}/`. RN Web täcker inte native VoiceOver/Dynamic Type, live content/RLS eller iOS-buildens native beteende.
+
+## UI-R02-01B — kompakt profil och säkert avslut
+
+Samma verkliga `ProfileScreen` och `EditDogProfileScreen` renderas i public/review. Harnessen mäter fält före valfri kennelinformation vid 375×667, 375×844 och 430×844; provar aktiv hundrad, gemensam hundväljarsheet och hundval, scope-bundet utkast, enda informationsingång, kollapsat kennelvärde, explicit öppning, kennelns fel/retry och 140 %-textproxy. Reviewbanner står utanför appens viewport och syntetiska hund-/kenneldata används. Resultat/skärmbilder sparas i `docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/{public,review}/`.
+
+Bygg separata public/review-bundlar:
+
+```sh
+TASSLA_UI_ENTRY=tools/visual-check/vision-r02-home-panels-app.tsx TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/profile-density/public TASSLA_UI_REVIEW=false node tools/visual-check/build.cjs
+TASSLA_UI_ENTRY=tools/visual-check/vision-r02-home-panels-app.tsx TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/profile-density/review TASSLA_UI_REVIEW=true node tools/visual-check/build.cjs
+```
+
+Servera dem på två lediga localhost-portar och kör samma verifierare var för sig:
+
+```sh
+TASSLA_UI_PANEL=profile-density TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:5291 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/public python tools/visual-check/verify-vision-r02-home-panels.py
+TASSLA_UI_PANEL=profile-density TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:5292 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/review python tools/visual-check/verify-vision-r02-home-panels.py
+```
+
+Detta är lokal RN Web-/syntetisk QA, inte native iOS, verklig SecureStore, live Supabase/RLS, fysisk VoiceOver/Dynamic Type eller oberoende QA-bevis. Profil är en stödyta utan egen rev02-panel; screenshoten stänger inte visuell acceptans för en panel.

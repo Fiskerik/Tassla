@@ -1119,3 +1119,11 @@ Samma publika iOS-bundle/export som ovan passerade med 1 581 JavaScript-moduler.
 ### UI-R02-01A — checkpoint stängd, 2026-10-23
 
 Sökbar rasväljare i skapa/ändra är committad som `786dd11e0b9955959caaeb0fa161291bc558ef96` på `2026-10-23-ui-01-profil`. Commit-hooken körde `pnpm check` och passerade app-/edge-typecheck, ESLint samt samtliga tester. Oberoende QA och Reviewer PASS; syntetisk RN Web public/review 13/13 vardera och review-iOS JS-bundle PASS. Queue `UI-R02-01A` är stängd för den lokala UI-/validerings-slicen. Faktisk create-persistens, produktionskatalog, picker-specifik native VoiceOver/Dynamic Type samt live Supabase/RLS är inte verifierade och förblir separata luckor. Nästa checkpoint inom profilpaketet är UI-R02-01B: profilens täthet och avslutning.
+
+### UI-R02-01B — lokal implementation och render, 2026-10-23
+
+Profilen visar nu redigerbara fält före hjälpinformation och valfri kennelkoppling, använder samma datumväljare i skapa/ändra och den befintliga hundbytaren i ändraflödet. Header, flikar, Android back, hundbyte och Add Dog-entry går via scope-bunden avslutningspolicy. Add Dog-återhämtning bevaras i samma appsession och återställs endast efter matchning av ägare, kontogeneration och säkert request-ID; discard rensar inte secure request-/referral-lagring och ingen automatisk retry tillkommer. Kennelns felväg förblir synlig. Dialogens `cancelLabel` är additivt med befintligt standardvärde.
+
+Public och syntetisk review-render av de verkliga profilkomponenterna passerade 9/9 vardera, inklusive 375×667, 375×844, 430×844 och 140 % webtextproxy. Slutlig `pnpm check` passerade app-/edge-TypeScript, ESLint och 75/75 tester. Public `pnpm bundle:ios` exporterade 1 583 moduler. `git diff --check`, Python-kompilering av verifieraren och kövalidering passerade före commit.
+
+Detta är implementerarens lokala checkpoint. Oberoende QA, Security final review och Reviewer är inte gjorda och checkpointen ska stå i `qa`. Native Android/iOS back, VoiceOver/Dynamic Type, processomstarts-SecureStore och live Supabase/RLS är inte verifierade. Profilen saknar en egen panel i `vision_rev02.jpg`, så ingen full panelmatchning hävdas. Evidens: [01B §14/render](../../design/evidence/vision-rev02/ui-r02-01b-profile-density/VERIFICATION.md) och [implementationsplan](UI-R02-01B-PROFILE-DENSITY-AND-EXIT.md).

@@ -10454,8 +10454,92 @@
       "risk_class": "M",
       "checkpoint": "UI-R02-01 checkpoint 1: one searchable picker shared by profile creation and edit; full profile density and close behavior remain later checkpoints.",
       "test_evidence": "Independent QA PASS: pnpm check (TypeScript, edge TypeScript, ESLint, 74/74); review-channel iOS export via __UNSAFE_EXPO_HOME_DIRECTORY=/tmp/tassla-expo-home/.expo EXPO_TELEMETRY_DISABLED=1 TASSLA_BUILD_CHANNEL=review EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=true pnpm bundle:ios; public/review RN Web 13/13 each; Python py_compile; git diff --check; python -X utf8 tools/dev_flow.py validate. Saved RESULTS.json/screenshots under docs/design/evidence/vision-rev02/ui-r02-01a-breed-picker/{public,review}. Native VoiceOver/Dynamic Type for this control, real create persistence, production catalogue completeness and live Supabase/RLS not reverified.",
-      "implementation_state": "Shared searchable breed picker implemented and independently QA-passed on 2026-10-23-ui-01-profil; awaiting independent Reviewer before durable commit and closeout.",
-      "evidence_status": "Architect APPROVE, Critic PASS, implementation QA PASS; independent Reviewer pending."
+      "implementation_state": "Local UI/validation checkpoint implemented, QA/reviewer approved, committed as 786dd11e0b9955959caaeb0fa161291bc558ef96 and pushed on 2026-10-23-ui-01-profil. Native picker semantics, real create persistence, production catalog completeness and live Supabase/RLS remain separate unverified evidence.",
+      "evidence_status": "Architect APPROVE, Critic PASS, independent QA PASS, independent Reviewer PASS; implementation commit pushed. Explicit local-only scope and remaining evidence documented in the task plan."
+    },
+    {
+      "id": "UI-R02-01B",
+      "title": "Hundprofil: fält först, kompakt hundval och trygg avslutning",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md stödflöde Hundprofil; docs/design/vision-rev02-screen-contracts.md panel 1 visual rules; docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md §3; GAP-UI-UX-rev02-2026-10-23.md G03/G06/G08/G10/G13/G16.",
+      "plan": "docs/tasks/dev/UI-R02-01B-PROFILE-DENSITY-AND-EXIT.md v6",
+      "write_paths": [
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/onboarding/ProfileScreenHeader.tsx",
+        "src/features/onboarding/profile-exit.ts",
+        "src/features/home/AppFlow.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/components/ui/Dialog.tsx",
+        "src/features/onboarding/README.md",
+        "tests/profile-screen-policy.test.mjs",
+        "tests/profile-edit.test.mjs",
+        "tests/profile-exit.test.mjs",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "tools/visual-check/README.md",
+        "docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/",
+        "docs/tasks/dev/UI-R02-01B-PROFILE-DENSITY-AND-EXIT.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md"
+      ],
+      "acceptance": [
+        "Editable profile fields appear before long introductions, inline dog lists and optional kennel details; active dog selection reuses DogProfileSwitcherSheet.",
+        "Create/edit use DatePickerField and preserve manual date, validation, identity and save/readback behavior.",
+        "Profile has one compact information entry. Optional kennel is visibly opt-in, collapsed by default, and errors/retry/unknown remain reachable; QR prefill never implies consent.",
+        "A typed owner/accountGeneration/dog-scoped exit snapshot reports local dirtiness synchronously; parent ignores stale snapshots and reads current mutation refs.",
+        "requestProfileExit guards header, bottom nav, Android BackHandler, dog switching and edit-profile Add Dog entry. Clean exits immediately; dirty local fields confirm; profile/attribution busy, pending or conflict blocks synchronously. iOS swipe dismissal stays out of scope.",
+        "Dirty dog switch and Add Dog entry share a destination-specific confirmation; cancel leaves route/draft intact, confirm invokes only the requested existing callback.",
+        "Add mode dirty cancel confirms local discard; busy blocks. Non-busy recovery returns to the correct entry surface and resumes exact form + full recovery UI context in the same session. A supplied snapshot takes precedence over generic ID→unknown only after its request ID matches SecureStore; mismatch keeps stale resolved actions unavailable. No automatic retry/write; request ID/referral state remain intact.",
+        "Initial-mode Android back is synchronously consumed during both dog create and the asynchronous SecureStore request-ID recovery read; when both settle, it confirms before leaving if dirty/recovering. Copy says form data may not survive restart and only promises a secure request ID if a request had already been sent; no secure request/referral state is cleared.",
+        "Volatile Add Dog snapshot is owner/accountGeneration scoped and cleared on explicit discard, successful resolution, explicit start-another/new-request action, and scope change. It restores resolvedShouldClearReferral (false for existingProfile, true for sourceUnconfirmed) and original addEntryPoint; tests retain each state’s original actions and referral cleanup semantics. Cache cleanup alone never mutates secure storage.",
+        "Discard never saves/retries/accepts current/starts another/clears or replays intents or storage. Pending profile intents remain available when returning.",
+        "Public and synthetic review render actual profile create/edit/kennel/switcher states on short and standard viewports with large-text proxy; §14 states no exact profile-panel match."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/profile-screen-policy.test.mjs tests/profile-edit.test.mjs tests/profile-exit.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "Render actual ProfileScreen/EditDogProfileScreen in public/review at 375x667, 375x844 and 430x844; inspect §14 and save evidence."
+      ],
+      "depends_on": [
+        "UI-R02-01A"
+      ],
+      "status": "qa",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact UI-R02-01B plan v6 APPROVE: Architect APPROVE, UX Critic PASS, Security APPROVE. Verdicts recorded in the plan. Scope includes profile density, scoped dirty-exit guards, Android BackHandler, Add Dog recovery snapshot lifecycle; no data/API change."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Starting approved UI-R02-01B v6 on 2026-10-23-ui-01-profil. Pre-change pnpm check PASS (typecheck, edge typecheck, lint, 74/74); git diff --check and dev_flow validate PASS. Proceed with approved UI-only write paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Lokal implementation klar på 2026-10-23-ui-01-profil. Public/review RN Web 9/9 vardera; pnpm check PASS (TypeScript, edge TypeScript, ESLint, 75/75); public pnpm bundle:ios PASS (1 583 JS-moduler); git diff --check, Python py_compile och dev_flow validate PASS. Markerar endast redo för oberoende QA: QA, Security final och Reviewer återstår. Native back/accessibility, SecureStore efter processomstart och live Supabase/RLS är inte provade."
+        }
+      ],
+      "next_step": "Lokal implementation klar på 2026-10-23-ui-01-profil. Public/review RN Web 9/9 vardera; pnpm check PASS (TypeScript, edge TypeScript, ESLint, 75/75); public pnpm bundle:ios PASS (1 583 JS-moduler); git diff --check, Python py_compile och dev_flow validate PASS. Markerar endast redo för oberoende QA: QA, Security final och Reviewer återstår. Native back/accessibility, SecureStore efter processomstart och live Supabase/RLS är inte provade.",
+      "priority": "P1",
+      "panels": [
+        "Hundprofil",
+        "Onboarding"
+      ],
+      "risk_class": "H",
+      "checkpoint": "UI-R02-01 checkpoint 2: content-first profile, shared existing dog switcher, compact optional details, and safe dirty-route exit; no profile data/model changes.",
+      "test_evidence": "Implementer local checkpoint: pnpm check PASS (TypeScript, edge TypeScript, ESLint, 75/75 tests); public pnpm bundle:ios PASS (1,583 JS modules); public/review RN Web 9/9 each; git diff --check, Python py_compile and python -X utf8 tools/dev_flow.py validate PASS. Synthetic screenshots and §14 evidence under docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/. Independent QA, Security final and Reviewer remain pending; native/runtime checks not claimed.",
+      "implementation_state": "UI-R02-01B v6 is implemented on 2026-10-23-ui-01-profil and locally validated. Includes compact create/edit profile, shared dog switcher, date picker, scoped route exit, Android back guard, and session-bound Add Dog recovery snapshot with request-ID match. No schema/API/auth changes. Native back/accessibility, SecureStore process restart and live Supabase/RLS remain unverified.",
+      "evidence_status": "Plan v6 Architect APPROVE, UX Critic PASS, Security pre-review APPROVE. Local render/build/check evidence recorded. Queue is qa; independent QA, Security final review and Reviewer must record actual verdicts before done."
     }
   ]
 }

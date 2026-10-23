@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Alert, AppState } from 'react-native';
+import { Alert, AppState, BackHandler } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
 import * as ExpoCrypto from 'expo-crypto';
@@ -120,9 +120,10 @@ import { DailyProgressScreen } from './DailyProgressScreen';
 import { DailyChecklistScreen } from './DailyChecklistScreen';
 import { checklistFilterRange, checklistRangeReadStatus, deriveHomeDailyActivities, deriveSavedRangeActivities, deriveUpcomingActivities, isRoutineDueOnDate, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep, type ChecklistFilter, type HomeDailyActivity } from './daily-activity-model';
 import { activeMainTabDestination, isMainTabDestination, logViewScrollKeys, mainTabTransitionDirection, nextMainTabDestination, productRouteScrollKeys, profileInsightsOriginMatches, type InsightsOrigin } from './main-navigation';
-import { AppBar, BottomNav, MainSwipeNavigation } from '../../components/ui';
+import { AppBar, BottomNav, Dialog, MainSwipeNavigation } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
 import { tokens } from '../../theme/tokens';
+import { decideProfileExit, profileExitScopeKey, type ProfileExitBlockReason, type ProfileExitScope, type ProfileExitSnapshot } from '../onboarding/profile-exit';
 import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
 import { insightsRequestIsCurrent, parseDogEventInsights, type InsightsPeriod, type InsightsRequestScope } from '../puppy-log/insights-model';
 import type { InsightsLoadState } from '../puppy-log/InsightsScreen';
@@ -206,6 +207,25 @@ type WorkspaceResourceFlight<T> = { scope: string; generation: number; controlle
 type ChecklistRangeView = { scope: string; status: 'loading' | 'ready' | 'partial' | 'error'; activities: HomeDailyActivity[]; failedSources: string[]; unresolvedCount: number; routines?: DailyRoutine[] };
 type HistoricalTrainingDetailView = { scope: string; status: 'loading' | 'ready' | 'partial' | 'unavailable'; detail: HistoricalTrainingStepDetail | null };
 type UpcomingRoutineLookup = { status: 'ready'; routine: DailyRoutine } | { status: 'missing' } | { status: 'error' };
+type ProfileExitDestination = { kind: 'return' } | { kind: 'tab'; page: ProductPage } | { kind: 'switchDog'; dogId: string } | { kind: 'addDog' };
+type ProfileExitDialogState = { destination: ProfileExitDestination };
+
+function profileExitDestinationLabel(destination: ProfileExitDestination, returnPage: 'more' | 'training', dogs: readonly OwnedDog[]): string {
+  if (destination.kind === 'return') return returnPage === 'training' ? 'Träning' : 'Mer';
+  if (destination.kind === 'addDog') return 'Lägg till hund';
+  if (destination.kind === 'switchDog') return dogs.find((dog) => dog.id === destination.dogId)?.name ?? 'en annan hund';
+  const labels: Partial<Record<ProductPage, string>> = { home: 'Hem', log: 'Logg', training: 'Träning', more: 'Mer', knowledge: 'Kunskap', development: 'Utveckling' };
+  return labels[destination.page] ?? 'nästa vy';
+}
+
+function profileExitPrompt(destination: ProfileExitDestination, returnPage: 'more' | 'training', dogs: readonly OwnedDog[]) {
+  const target = profileExitDestinationLabel(destination, returnPage, dogs);
+  const title = destination.kind === 'switchDog' ? `Byta till ${target}?`
+    : destination.kind === 'addDog' ? 'Lägga till hund?'
+      : destination.kind === 'return' ? `Lämna hundprofilen till ${target}?`
+        : `Byta till ${target}?`;
+  return { title, body: `Hundprofilens ändringar är inte sparade. ${target} öppnas och de här lokala ändringarna kastas. Sparade uppgifter påverkas inte.` };
+}
 
 export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog], onSelectDog, onAddDog, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened, initialPage = 'home', onInitialPageOpened }: {
   client: SupabaseClient;
@@ -252,10 +272,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       : { page: nextPage, previousPage: current.page });
   }, []);
   const [profileReturnPage, setProfileReturnPage] = useState<'more' | 'training'>('more');
+  const requestProfileExitRef = useRef<(destination: ProfileExitDestination) => void>(() => undefined);
+  const [profileExitDialog, setProfileExitDialog] = useState<ProfileExitDialogState | null>(null);
+  const profileExitSnapshot = useRef<ProfileExitSnapshot | null>(null);
   function returnFromProfile() {
-    const destination = profileReturnPage;
-    setProfileReturnPage('more');
-    setPage(destination);
+    requestProfileExitRef.current({ kind: 'return' });
   }
   const [breeds, setBreeds] = useState<BreedOption[]>([]);
   useEffect(() => {
@@ -269,7 +290,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [knowledgeFocus, setKnowledgeFocus] = useState<{ selectionKey: string; contentId: string | null; returnPage: 'home' | 'more' | 'training' | 'development' } | null>(null);
   const [developmentFocus, setDevelopmentFocus] = useState<{ selectionKey: string } | null>(null);
   const [knowledgeDetailOpen, setKnowledgeDetailOpen] = useState(false);
-  const navigateMainTab = useCallback((destination: ProductPage) => {
+  const navigateMainTabNow = useCallback((destination: ProductPage) => {
     if (destination === 'log' && page === 'log') {
       setInsightsOrigin(null);
       setLogView('today');
@@ -288,6 +309,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (destination === 'log') setLogView('today');
     setPage(destination);
   }, [page, setPage]);
+  const navigateMainTab = useCallback((destination: ProductPage) => {
+    if (page === 'profile') {
+      requestProfileExitRef.current({ kind: 'tab', page: destination });
+      return;
+    }
+    navigateMainTabNow(destination);
+  }, [navigateMainTabNow, page]);
   const handleMainSwipe = useCallback((direction: 'left' | 'right') => {
     const destination = nextMainTabDestination(page, direction);
     if (destination) navigateMainTab(destination);
@@ -398,6 +426,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const plannedHealthFlightToken = useRef<object | null>(null);
   const pendingProfileMutation = useRef<PendingProfileMutation | null>(null);
   const profileMutationInFlight = useRef(false);
+  const attributionMutationInFlight = useRef(false);
   const trainingMutationLease = useRef<TrainingMutationLease | null>(null);
   const dailyGeneration = useRef(0);
   const checklistRangeGeneration = useRef(0);
@@ -1644,8 +1673,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }
 
   async function retryDogAttribution() {
-    if (attributionBusy) return;
+    if (attributionBusy || attributionMutationInFlight.current) return;
     const lifetime = profileLifetime.current;
+    attributionMutationInFlight.current = true;
     setAttributionBusy(true);
     setAttributionState('loading');
     setAttributionMessage('');
@@ -1668,19 +1698,22 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         }
       }
     } finally {
+      attributionMutationInFlight.current = false;
       if (mounted.current && profileLifetime.current === lifetime) setAttributionBusy(false);
     }
   }
 
   async function saveDogAttribution(code: string | null): Promise<boolean> {
-    if (attributionBusy || !mounted.current) return false;
+    if (attributionBusy || attributionMutationInFlight.current || !mounted.current) return false;
+    const lifetime = profileLifetime.current;
+    attributionMutationInFlight.current = true;
     setAttributionBusy(true);
     setAttributionMessage('');
     setAttributionMessageError(false);
     let outcome: DogAttributionWriteOutcome;
     try {
       outcome = await updateOwnedDogAttribution(client, dog.id, code);
-      if (!mounted.current) return false;
+      if (!mounted.current || profileLifetime.current !== lifetime) return false;
       if (outcome.status === 'saved') {
         setAttributionWriteUnresolved(false);
         setDogAttribution(outcome.value);
@@ -1695,15 +1728,50 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setAttributionMessageError(true);
       return false;
     } catch {
-      if (mounted.current) {
+      if (mounted.current && profileLifetime.current === lifetime) {
         setAttributionWriteUnresolved(true);
         setAttributionMessage('Kennelkopplingen kunde inte sparas. Kontrollera anslutningen och försök igen.');
         setAttributionMessageError(true);
       }
       return false;
     } finally {
-      if (mounted.current) setAttributionBusy(false);
+      attributionMutationInFlight.current = false;
+      if (mounted.current && profileLifetime.current === lifetime) setAttributionBusy(false);
     }
+  }
+
+  const currentProfileExitScope: ProfileExitScope = {
+    ownerId: session?.user.id ?? '',
+    accountGeneration,
+    dogId: dog.id,
+  };
+
+  function commitProfileExit(destination: ProfileExitDestination) {
+    setProfileExitDialog(null);
+    if (destination.kind === 'return') {
+      const returnPage = profileReturnPage;
+      setProfileReturnPage('more');
+      navigateMainTabNow(returnPage);
+    } else if (destination.kind === 'tab') {
+      navigateMainTabNow(destination.page);
+    } else if (destination.kind === 'switchDog') {
+      onSelectDog?.(destination.dogId);
+    } else {
+      onAddDog?.('settings');
+    }
+  }
+
+  function requestProfileExit(destination: ProfileExitDestination, announceBlock = true) {
+    const decision = decideProfileExit(profileExitSnapshot.current, currentProfileExitScope, {
+      profileBusy: profileBusy || profileMutationInFlight.current,
+      profilePending: profilePending || Boolean(pendingProfileMutation.current),
+      profileConflict: Boolean(profileConflict),
+      attributionBusy: attributionBusy || attributionMutationInFlight.current,
+      attributionUnresolved: attributionWriteUnresolved,
+    });
+    if (decision.kind === 'allow') commitProfileExit(destination);
+    else if (decision.kind === 'confirm-discard') setProfileExitDialog({ destination });
+    else if (announceBlock) Alert.alert('Stanna på hundprofilen', profileExitBlockedMessage(decision.reason), [{ text: 'Stanna kvar' }]);
   }
 
   async function retryProfileStatus() {
@@ -3060,6 +3128,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     return signedOut;
   }
 
+  function confirmProfileExit() {
+    const pendingExit = profileExitDialog;
+    if (pendingExit) commitProfileExit(pendingExit.destination);
+  }
+
   async function handleSignOut() {
     if (signOutInFlight.current) return;
     const ownerId = session?.user.id;
@@ -3088,6 +3161,20 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       { text: 'Bekräfta', style: 'destructive', onPress: () => { void handleSignOut(); } },
     ]);
   }
+
+  useLayoutEffect(() => {
+    requestProfileExitRef.current = requestProfileExit;
+    if (page !== 'profile') profileExitSnapshot.current = null;
+  });
+
+  useEffect(() => {
+    if (page !== 'profile') return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      requestProfileExitRef.current({ kind: 'return' });
+      return true;
+    });
+    return () => subscription.remove();
+  }, [page]);
 
   if (!fontsLoaded && !fontError) return <AppScreen><MessageCard>Laddar Tasslas ikoner…</MessageCard></AppScreen>;
   if (fontError) return <AppScreen><MessageCard tone="error">Ikonerna kunde inte laddas. Starta om appen och försök igen.</MessageCard></AppScreen>;
@@ -3131,6 +3218,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const routeScroll = visiblePage === 'planned-health' && visiblePlannedHealthChecklistFocus
     ? { scrollKey: 'planned-health-checklist-source', preserveScrollKey: 'home-checklist-flow' }
     : defaultRouteScroll;
+  const pendingProfileExitPrompt = profileExitDialog
+    ? profileExitPrompt(profileExitDialog.destination, profileReturnPage, ownedDogs) : null;
   const activeTabPage = visiblePage === 'knowledge' && knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'development'
     ? 'development' : visiblePage;
   return <AppScreen scrollKey={routeScroll.scrollKey} preserveScrollKey={routeScroll.preserveScrollKey} scrollMemoryScope={`${currentSelectionKey}:${currentDailyLifetime}`}
@@ -3138,6 +3227,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     refreshing={page === 'home' || page === 'progress' ? dailyRefreshing : page === 'log' && logView === 'today' ? logRefreshing : page === 'log' && logView === 'overview' ? insightsState.status === 'loading' : false}
     onRefresh={page === 'home' || page === 'progress' ? () => { void reloadDailyActivity(true, false); } : page === 'log' && logView === 'today' ? () => { void reloadEvents('refresh'); } : page === 'log' && logView === 'overview' ? refreshInsights : undefined}
     refreshAccessibilityLabel={page === 'log' && logView === 'overview' ? 'Uppdatera insikter' : page === 'log' ? 'Uppdatera loggen' : 'Uppdatera Hem'}>
+    <Dialog visible={Boolean(profileExitDialog)} title={pendingProfileExitPrompt?.title ?? 'Lämna hundprofilen?'}
+      confirmLabel="Kasta ändringar" cancelLabel="Fortsätt redigera" confirmVariant="destructive"
+      onRequestClose={() => setProfileExitDialog(null)} onConfirm={confirmProfileExit}>
+      <MessageCard>{pendingProfileExitPrompt?.body ?? 'Hundprofilens ändringar är inte sparade.'}</MessageCard>
+    </Dialog>
     {showDailyRecoveryBanner ? <>
       <MessageCard tone={dailyRecoveryBannerError ? 'error' : 'neutral'}>{dailyRecoveryBannerMessage}</MessageCard>
       {pendingDailyWriteForOwner?.phase === 'unknown' ? <PrimaryButton title={dailyMutationIsBusy ? 'Kontrollerar ändringen…' : 'Kontrollera samma ändring igen'}
@@ -3535,8 +3629,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       client={client} dog={dog} busy={profileBusy} pending={profilePending} statusMessage={profileMessage}
       statusError={profileMessageError} conflict={profileConflict ?? undefined}
       backLabel={profileReturnPage === 'training' ? 'Tillbaka till Träning' : 'Tillbaka till Mer'}
-      ownedDogs={ownedDogs} activeDogId={dog.id} onSelectDog={onSelectDog}
-      onAddDog={() => onAddDog?.('settings')}
+      ownedDogs={ownedDogs} activeDogId={dog.id} exitScope={currentProfileExitScope}
+      onExitStateChange={(snapshot) => {
+        if (profileExitScopeKey(snapshot.scope) === profileExitScopeKey(currentProfileExitScope)) profileExitSnapshot.current = snapshot;
+      }}
+      onSelectDog={(dogId) => requestProfileExitRef.current({ kind: 'switchDog', dogId })}
+      onAddDog={() => requestProfileExitRef.current({ kind: 'addDog' })}
       attribution={dogAttribution} attributionState={attributionState} attributionBusy={attributionBusy}
       attributionWriteUnresolved={attributionWriteUnresolved}
       attributionMessage={attributionMessage} attributionMessageError={attributionMessageError}
@@ -3555,6 +3653,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
 function navigationDirection(previous: ProductPage, current: ProductPage): 'forward' | 'backward' {
   return mainTabTransitionDirection(previous, current);
+}
+
+function profileExitBlockedMessage(reason: ProfileExitBlockReason): string {
+  if (reason === 'profileBusy' || reason === 'attributionBusy') return 'En ändring sparas eller kontrolleras fortfarande. Vänta tills resultatet visas innan du lämnar profilen.';
+  if (reason === 'profilePending') return 'Profiländringen väntar på en säker kontroll. Kontrollera den på profilsidan innan du fortsätter.';
+  if (reason === 'profileConflict') return 'Profilen har ändrats någon annanstans. Granska den aktuella versionen på profilsidan innan du fortsätter.';
+  if (reason === 'attributionUnresolved') return 'Kennelkopplingen behöver kontrolleras på profilsidan innan du fortsätter.';
+  return 'Profilens aktuella ändringar läses in. Vänta ett ögonblick och försök igen.';
 }
 
 function reminderStatusSummary(result: ReminderReconcileResult | null, preferences: NotificationPreferences, permission: 'unknown' | 'granted' | 'denied'): string {

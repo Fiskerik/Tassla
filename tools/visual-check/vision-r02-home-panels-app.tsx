@@ -37,6 +37,7 @@ const reviewMode = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
 const imageFixture = params.get('imageFixture') ?? '';
 const profileBreedScenario = params.get('breedScenario') ?? '';
 const profileCreateFixture = params.get('screen') === 'profile-create';
+const profileAttributionScenario = params.get('profileAttribution') ?? 'empty';
 const requestedBreedCount = Number(params.get('breedCount') ?? '24');
 const profileBreedCount = Number.isSafeInteger(requestedBreedCount) && requestedBreedCount > 0
   ? Math.min(40, requestedBreedCount) : 24;
@@ -52,6 +53,8 @@ const dog: OwnedDog = {
   age_display_unit: 'weeks',
 };
 const profileDog: OwnedDog = profileBreedScenario === 'legacy' ? { ...dog, breed_id: 'retired-test-breed' } : dog;
+const secondProfileDog: OwnedDog = { ...dog, id: '00000000-0000-4000-8000-000000000022', name: 'Milo', breed_id: 'beagle', birth_date: dateOffset(today, -38) };
+const syntheticProfileAttribution = profileAttributionScenario === 'connected' ? { code: 'LUNA2026', name: 'Solgläntans kennel' } : null;
 const syntheticBreedOptions = [
   { id: 'golden', name: 'Golden retriever' },
   { id: 'unknown', name: 'Okänd ras' },
@@ -473,10 +476,17 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
           /> : navigation === 'profile' ? <EditDogProfileScreen
             client={syntheticProfileClient}
             dog={profileDog}
-            attribution={null}
-            attributionState="ready"
-            ownedDogs={[profileDog]}
+            attribution={syntheticProfileAttribution}
+            attributionState={profileAttributionScenario === 'error' ? 'error' : profileAttributionScenario === 'loading' ? 'loading' : 'ready'}
+            attributionWriteUnresolved={params.get('profileAttributionUnresolved') === 'true'}
+            attributionMessage={params.get('profileAttributionUnresolved') === 'true' ? 'Kontrollera kenneländringen igen.' : ''}
+            attributionMessageError={params.get('profileAttributionUnresolved') === 'true'}
+            ownedDogs={[profileDog, secondProfileDog]}
             activeDogId={profileDog.id}
+            exitScope={{ ownerId: 'synthetic-owner', accountGeneration: 1, dogId: profileDog.id }}
+            onExitStateChange={(snapshot) => { window.__profileExitSnapshot = snapshot; }}
+            onSelectDog={(dogId) => { window.__profileDogSwitchTarget = dogId; }}
+            onAddDog={() => { window.__profileAddDogCalls = (window.__profileAddDogCalls ?? 0) + 1; }}
             onBack={() => setNavigation('more')}
             onSave={async (changes) => {
               window.__profileSaveCalls = (window.__profileSaveCalls ?? 0) + 1;
@@ -584,6 +594,9 @@ declare global {
     __profileSaveCalls?: number;
     __profileSavedBreedId?: string;
     __profileCreateCalls?: number;
+    __profileDogSwitchTarget?: string;
+    __profileAddDogCalls?: number;
+    __profileExitSnapshot?: { profileDirty: boolean; kennelDirty: boolean };
   }
 }
 

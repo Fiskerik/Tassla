@@ -2,7 +2,7 @@
 
 Datum: 2026-10-23. Beställare: Erik. Genomförande: Luna/implementer, med koordinator och riskbaserad granskning enligt projektets arbetsflöde.
 
-**Status: genomförande pågår.** UI-R02-01A (sökbar rasväljare) är stängd som lokal UI-/valideringscheckpoint efter Architect APPROVE, Critic PASS, oberoende QA PASS (13/13 public och review) och Reviewer PASS. Implementationen finns i commit `786dd11e0b9955959caaeb0fa161291bc558ef96` på `2026-10-23-ui-01-profil`. Nästa steg är UI-R02-01B (profilens täthet och avslutning); paketen 02–04 återstår. Native/live-kontroller redovisas separat och är inte godkända av den lokala QA:n.
+**Status: genomförande pågår.** UI-R02-01A (sökbar rasväljare) är stängd som lokal UI-/valideringscheckpoint efter Architect APPROVE, Critic PASS, oberoende QA PASS (13/13 public och review) och Reviewer PASS. Commit `786dd11e0b9955959caaeb0fa161291bc558ef96` finns på `2026-10-23-ui-01-profil`. UI-R02-01B (profilens täthet och avslutning) är lokalt implementerad och render-/policykontrollerad; oberoende QA, Security final och Reviewer återstår innan checkpointen stängs. Därefter följer paket 02–04 enligt ordningen nedan. Native/live-kontroller redovisas separat.
 
 Detta är **den aktuella paketordningen** för fynden i [GAP-analysen 2026-10-23](../GAP-UI-UX-rev02-2026-10-23.md). Den ersätter paketordningen i GAP-analysens tidigare avsnitt 8 och [planen från 18 oktober](../plans/UI-UX-NEXT-PACKAGES-2026-10-18.md). GAP-analysen behåller belägg, skärmbilder, kodankare och G01–G19; de kopieras inte till en ny konkurrerande fellista.
 
@@ -38,6 +38,8 @@ Ansvar: koordinator. Spårning: **G18**. Detta är en förberedelse inom första
 ## 3. UI-R02-01 — Profil som fungerar på liten skärm
 
 **Användarresultat:** öppna Profil, hitta ett fält, välj ras med sökning och spara utan att först scrolla igenom alla raser eller flera introduktionskort. Samma väljare används när hunden skapas och ändras.
+
+**Status 2026-10-23:** 01A är lokalt stängd enligt ovan. 01B:s kompakta skapa-/ändraflöde, datumfält, frivilliga kennelavsnitt och säkra utgångar är implementerade; public/review-render 9/9 vardera, `pnpm check` 75/75 och offentlig iOS-export 1 583 moduler passerade. Oberoende QA, Security final och Reviewer saknas fortfarande. Exakt bevis och gränser finns i [01B-verifieringen](../design/evidence/vision-rev02/ui-r02-01b-profile-density/VERIFICATION.md).
 
 ### Omfång och interna checkpoints
 

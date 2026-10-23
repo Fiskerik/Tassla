@@ -584,6 +584,95 @@ def verify_breed_picker(browser) -> None:
     page.screenshot(path=str(OUT / 'breed-picker-retry-success-375.png'), full_page=True)
     page.close()
 
+
+def verify_profile_density(browser) -> None:
+    for width, height in ((375, 667), (375, 844), (430, 844)):
+        page = browser.new_page(viewport={'width': width, 'height': height + (32 if REVIEW else 0)})
+        page_errors: list[str] = []
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.goto(BASE + '/?screen=profile-create', wait_until='networkidle')
+        expect(page.get_by_role('heading', name='Hundens profil', exact=True)).to_be_visible()
+        name = page.get_by_role('textbox', name='Hundens namn', exact=True)
+        breed = page.get_by_test_id('breed-picker-trigger')
+        birth_date = page.get_by_role('textbox', name='Födelsedatum, år-månad-dag', exact=True)
+        expect(name).to_be_visible()
+        expect(breed).to_be_visible()
+        expect(birth_date).to_be_visible()
+        create_heading = page.get_by_role('heading', name='Hundens uppgifter', exact=True).bounding_box()
+        name_box = name.bounding_box()
+        kennel_entry = page.get_by_text('Kennelkod', exact=False).first.bounding_box()
+        record(f'Profile create presents essential fields before optional kennel details at {width}×{height}',
+               create_heading is not None and name_box is not None and kennel_entry is not None
+               and create_heading['y'] < name_box['y'] < kennel_entry['y']
+               and page.evaluate('document.documentElement.scrollWidth <= innerWidth') and not page_errors,
+               {'heading': create_heading, 'name': name_box, 'kennel': kennel_entry, 'page_errors': page_errors})
+        expect(page.get_by_text('Valfritt', exact=True)).to_be_visible()
+        if REVIEW:
+            expect(page.get_by_text('Syntetiskt granskningsläge · profilskapande', exact=True)).to_be_visible()
+        page.screenshot(path=str(OUT / f'profile-create-{width}x{height}.png'), full_page=True)
+        page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 667 + (32 if REVIEW else 0)})
+    page_errors = []
+    page.on('pageerror', lambda error: page_errors.append(str(error)))
+    page.goto(profile_url(), wait_until='networkidle')
+    active_dog = page.get_by_role('button', name='Byt hund. Aktiv hund: Luna', exact=True)
+    form_heading = page.get_by_role('heading', name='Hundens uppgifter', exact=True)
+    expect(active_dog).to_be_visible()
+    expect(form_heading).to_be_visible()
+    dog_y = active_dog.bounding_box()['y']
+    form_y = form_heading.bounding_box()['y']
+    name = page.get_by_role('textbox', name='Hundens namn', exact=True)
+    name.fill('Luna utkast')
+    page.wait_for_function('window.__profileExitSnapshot?.profileDirty === true')
+    page.screenshot(path=str(OUT / 'profile-edit-375x667.png'), full_page=True)
+    record('Edit profile shows a compact active dog before the main form and reports dirtiness',
+           dog_y < form_y and not page_errors,
+           {'active_dog_y': dog_y, 'form_y': form_y, 'page_errors': page_errors})
+
+    active_dog.click()
+    expect(page.get_by_role('heading', name='Välj hund', exact=True)).to_be_visible()
+    milo = page.get_by_role('radio', name='Milo', exact=False)
+    expect(milo).to_be_visible()
+    expect(page.get_by_role('button', name='Lägg till hund', exact=True)).to_be_visible()
+    milo.click()
+    record('The profile reuses the shared dog switcher',
+           page.evaluate("window.__profileDogSwitchTarget === '00000000-0000-4000-8000-000000000022'")
+           and page.evaluate('window.__profileAddDogCalls ?? 0') == 0)
+    page.get_by_role('button', name='Stäng', exact=True).last.click()
+
+    page.get_by_role('button', name='Om hundens profil', exact=True).click()
+    expect(page.get_by_role('heading', name='Om hundens profil', exact=True)).to_be_visible()
+    page.get_by_role('button', name='Stäng information', exact=True).click()
+    record('Profile help is available through one compact information entry', not page_errors, {'page_errors': page_errors})
+    page.evaluate("""() => document.querySelectorAll('[dir="auto"]').forEach((element) => {
+      const style = getComputedStyle(element);
+      element.style.fontSize = (parseFloat(style.fontSize) * 1.4) + 'px';
+      element.style.lineHeight = (parseFloat(style.lineHeight) * 1.4) + 'px';
+    })""")
+    record('Profile edit has no horizontal overflow with the 140% text proxy', page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+    page.screenshot(path=str(OUT / 'profile-edit-text-140-375x667.png'), full_page=True)
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(BASE + '/?screen=profile&profileAttribution=connected', wait_until='networkidle')
+    expect(page.get_by_text('Kopplad till Solgläntans kennel', exact=True)).to_be_visible()
+    expect(page.get_by_role('textbox', name='Kennelkod, valfri', exact=True)).to_have_count(0)
+    page.get_by_text('Kopplad till Solgläntans kennel', exact=True).click()
+    expect(page.get_by_role('textbox', name='Kennelkod, valfri', exact=True)).to_be_visible()
+    expect(page.get_by_text('Koppla en kennel om du vill. Det påverkar inte hundprofilen.', exact=True)).to_be_visible()
+    record('A saved kennel connection stays collapsed until the owner opens it explicitly', True)
+    page.screenshot(path=str(OUT / 'profile-kennel-expanded-375x844.png'), full_page=True)
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(BASE + '/?screen=profile&profileAttribution=error', wait_until='networkidle')
+    expect(page.get_by_text('Kennelkopplingen kunde inte hämtas. Du kan försöka igen utan att ändra hundprofilen.', exact=True)).to_be_visible()
+    expect(page.get_by_role('button', name='Försök hämta kennelkopplingen igen', exact=True)).to_be_visible()
+    record('Kennel load errors expand the section and retain their retry action', True)
+    page.screenshot(path=str(OUT / 'profile-kennel-error-375x844.png'), full_page=True)
+    page.close()
+
 def verify_image_diversity(browser) -> None:
     if not REVIEW:
         for width in (375, 430):
@@ -886,6 +975,21 @@ if os.environ.get('TASSLA_UI_PANEL') == 'breed-picker':
         verify_breed_picker(browser)
         browser.close()
     report = {'mode': 'review' if REVIEW else 'public', 'panel': 'breed-picker', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
+if os.environ.get('TASSLA_UI_PANEL') == 'profile-density':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_profile_density(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'profile-density', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
     (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
     raise SystemExit(1 if failures else 0)

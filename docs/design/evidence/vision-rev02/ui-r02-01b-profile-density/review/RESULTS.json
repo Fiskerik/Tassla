@@ -1,0 +1,105 @@
+{
+  "mode": "review",
+  "panel": "profile-density",
+  "evidence_dir": "docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/review",
+  "results": [
+    {
+      "check": "Profile create presents essential fields before optional kennel details at 375×667",
+      "result": "PASS",
+      "heading": {
+        "x": 41,
+        "y": 129,
+        "width": 293,
+        "height": 28
+      },
+      "name": {
+        "x": 41,
+        "y": 194,
+        "width": 293,
+        "height": 56
+      },
+      "kennel": {
+        "x": 37,
+        "y": 509,
+        "width": 269,
+        "height": 24
+      },
+      "page_errors": []
+    },
+    {
+      "check": "Profile create presents essential fields before optional kennel details at 375×844",
+      "result": "PASS",
+      "heading": {
+        "x": 41,
+        "y": 129,
+        "width": 293,
+        "height": 28
+      },
+      "name": {
+        "x": 41,
+        "y": 194,
+        "width": 293,
+        "height": 56
+      },
+      "kennel": {
+        "x": 37,
+        "y": 509,
+        "width": 269,
+        "height": 24
+      },
+      "page_errors": []
+    },
+    {
+      "check": "Profile create presents essential fields before optional kennel details at 430×844",
+      "result": "PASS",
+      "heading": {
+        "x": 41,
+        "y": 129,
+        "width": 348,
+        "height": 28
+      },
+      "name": {
+        "x": 41,
+        "y": 194,
+        "width": 348,
+        "height": 56
+      },
+      "kennel": {
+        "x": 37,
+        "y": 509,
+        "width": 324,
+        "height": 24
+      },
+      "page_errors": []
+    },
+    {
+      "check": "Edit profile shows a compact active dog before the main form and reports dirtiness",
+      "result": "PASS",
+      "active_dog_y": 148,
+      "form_y": 245,
+      "page_errors": []
+    },
+    {
+      "check": "The profile reuses the shared dog switcher",
+      "result": "PASS"
+    },
+    {
+      "check": "Profile help is available through one compact information entry",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Profile edit has no horizontal overflow with the 140% text proxy",
+      "result": "PASS"
+    },
+    {
+      "check": "A saved kennel connection stays collapsed until the owner opens it explicitly",
+      "result": "PASS"
+    },
+    {
+      "check": "Kennel load errors expand the section and retain their retry action",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}
