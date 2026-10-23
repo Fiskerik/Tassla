@@ -1,7 +1,7 @@
 # UI-R02-01A — gemensam sökbar rasväljare
 
 Datum: 2026-10-23
-Status: **ready — plan v2 godkänd av Architect och Critic; implementation startar efter baslinjeintegrering**
+Status: **QA PASS + oberoende Reviewer PASS — implementation-commit återstår**
 Paket: [UI-UX-REV02-ACTIONPLAN-2026-10-23.md](../UI-UX-REV02-ACTIONPLAN-2026-10-23.md), UI-R02-01 checkpoint 1
 Fynd: GAP G01, med datakonsekvensen i G08
 Panel/stödresa: Hundprofil, skapa hund och redigera hund
@@ -89,5 +89,12 @@ Inga andra paketfiler öppnas för ändring utan ny planreview. `ProductWorkspac
 - V1 Critic: `PASS` för den ursprungliga avgränsningen; den reviewn ersätts av v2-reviewn.
 - V2 Architect: `APPROVE`. Citat: “The opt-in `BottomSheet` scroll path keeps `FlatList` out of the existing `ScrollView`, and the plan preserves default sheet behavior. The branch plan starts from the current remote tip, preserves the three local commits and audit files, names the known visual-check conflict, and requires a pre-change check.” Architect bekräftade också att fetched `BreedOption` med ID `unknown` fungerar utan ny modell/API och att både UI-guard och datavalidering behöver testas.
 - V2 Critic: `PASS`. Citat: “when search returns no matches, it offers the existing `unknown` catalog row as ‘Okänd ras.’ It uses the fetched row’s real ID, and shows no choice if that row is absent. The new-dog form still has no default selection.” Critic bekräftade att båda lagren bevarar endast oförändrat saknat ID och stoppar andra okända ID före skrivning.
-- v2 är godkänd. Planens ursprungliga UI-/datascope består; implementation börjar efter baslinjeintegrering och pre-change `pnpm check`.
+- v2 är godkänd. Planens ursprungliga UI-/datascope består.
+- Implementationsbas: `2026-10-23-ui-01-profil@fd6892dabc58ec9d3f3fad7b9923e61190043ea2`, skapad från GitHub-panelgrenen `90d0d704c610ade7946557bf5f3b75a9310ff63e` och sammanförd med de tre lokala commitsen. Känd konflikt i Home-panelverifieraren löstes genom att behålla den enda uppsättningen `development_url`/`progress_url`; den andra sidan hade dubblerade hjälpfunktioner. SHA-manifestet verifierades 30/30 direkt efter integreringen.
+- Pre-change-grind PASS: `pnpm check` (TypeScript, edge TypeScript, ESLint och 74/74 tester), `git diff --check`, `python -X utf8 tools/dev_flow.py validate` och `py_compile` av den sammanförda verifieraren.
 - Ägarens uttryckliga UI-prioritering: lång inline-raslista ska bli en sökbar rullista. Actionplan D4 säger att UI kan använda befintlig katalog innan full export/Mix är klar.
+- Implementation QA: oberoende QA PASS. `pnpm check` PASS (TypeScript, edge TypeScript, ESLint och 74/74); review-kanalens `pnpm bundle:ios` PASS. Public och review RN Web verifiering: **13/13 PASS var**. `python -m py_compile tools/visual-check/verify-vision-r02-home-panels.py`, `git diff --check` och `python -X utf8 tools/dev_flow.py validate` PASS. QA provade dessutom create-knappens disabled/enabled-beteende före/efter rasval.
+- Visuell evidens och JSON-resultat finns i [public](../../design/evidence/vision-rev02/ui-r02-01a-breed-picker/public/) och [review](../../design/evidence/vision-rev02/ui-r02-01a-breed-picker/review/). Reviewfixturen är märkt som syntetisk. Den täcker båda produktionsskärmarna, sök, avbryt, valt/ovalda radiosemantik, scroll, no-match/`unknown`, retry, legacy-ID, kort/lång viewport och 140 %-textproxy.
+- Avgränsade ej verifierade bevis: native VoiceOver/Dynamic Type för den nya väljaren, verklig create-persistens, produktionskatalogens fullständighet och live Supabase/RLS. RN Web/mocked callbacks är inte bevis för dessa. Ingen ändring av schema, RPC, RLS eller villkorad skrivning gjordes.
+- Oberoende Reviewer: **PASS**. Granskade fetched-ID:n, no-default, `unknown`, avbryt, lokal sökning, enkel scrollägare, BottomSheet-default, både legacy-ID-guards, validerings/readback-tester och RN 0.86.3:s `aria-checked`-stöd. Ingen blockerande finding.
+- Nästa steg: skapa implementationens commit, spara exakt commit/branchstatus, stäng checkpoint 01A och fortsätt med UI-R02-01B (profilens täthet/avslutning) enligt actionplanen.

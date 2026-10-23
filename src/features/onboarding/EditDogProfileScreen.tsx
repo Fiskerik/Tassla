@@ -20,6 +20,7 @@ import { automaticDogAge, localDate } from './dog';
 import { tokens } from '../../theme/tokens';
 import { ProfileScreenHeader } from './ProfileScreenHeader';
 import { profileInsightsDisabledReason } from '../home/main-navigation';
+import { BreedPickerField } from './BreedPickerField';
 
 export function EditDogProfileScreen({
   client,
@@ -129,7 +130,9 @@ export function EditDogProfileScreen({
       setFormError('Ange ett namn med 1–80 tecken.');
       return;
     }
-    if (breedState !== 'ready' || !breeds.some((breed) => breed.id === breedId)) {
+    const selectedBreedExists = breeds.some((breed) => breed.id === breedId);
+    const mayKeepMissingSavedBreed = breedId === dog.breed_id && !breeds.some((breed) => breed.id === dog.breed_id);
+    if (breedState !== 'ready' || (!selectedBreedExists && !mayKeepMissingSavedBreed)) {
       setFormError('Välj en ras från listan.');
       return;
     }
@@ -160,8 +163,10 @@ export function EditDogProfileScreen({
   }
 
   const today = localDate();
-  const currentBreed = breeds.find((breed) => breed.id === dog.breed_id)?.name ?? dog.breed_id;
-  const conflictBreed = conflict ? breeds.find((breed) => breed.id === conflict.breed_id)?.name ?? conflict.breed_id : '';
+  const conflictBreed = conflict ? breeds.find((breed) => breed.id === conflict.breed_id)?.name ?? 'Ras saknas i listan' : '';
+  const selectedBreedExists = breeds.some((breed) => breed.id === breedId);
+  const mayKeepMissingSavedBreed = breedId === dog.breed_id && !breeds.some((breed) => breed.id === dog.breed_id);
+  const canSaveBreed = breedState === 'ready' && (selectedBreedExists || mayKeepMissingSavedBreed);
   const draftDiffers = name.trim() !== dog.name || breedId !== dog.breed_id || birthDate.trim() !== dog.birth_date
     || ageDisplayUnit !== dog.age_display_unit;
   const kennelDraftDiffers = kennelCode.trim() !== (attribution?.code ?? '');
@@ -258,24 +263,15 @@ export function EditDogProfileScreen({
           onChangeText={setName} onSubmitEditing={() => Keyboard.dismiss()} placeholder="Till exempel Nala"
           placeholderTextColor={tokens.colors.textSecondary} returnKeyType="done" style={styles.input} value={name} />
       </View>
-      <Text style={styles.label}>Ras</Text>
-      {breedState === 'loading' && <MessageCard>Hämtar raslistan…</MessageCard>}
-      {breedState === 'error' && <>
-        <MessageCard tone="error">Raslistan kunde inte hämtas. Profilen är kvar och inget har sparats.</MessageCard>
-        <PrimaryButton title="Hämta raslistan igen" disabled={busy} onPress={() => { setBreedState('loading'); setBreedAttempt((attempt) => attempt + 1); }} />
-      </>}
-      {breedState === 'ready' && <View accessibilityRole="radiogroup" accessibilityLabel="Välj hundras" style={styles.breedList}>
-        {breeds.map((breed) => {
-          const selected = breed.id === breedId;
-          return <Pressable key={breed.id} accessibilityRole="radio" accessibilityLabel={breed.name}
-            accessibilityState={{ selected, disabled: blocked }} disabled={blocked} onPress={() => setBreedId(breed.id)}
-            style={({ pressed }) => [styles.breedOption, selected && styles.breedSelected, pressed && !blocked && styles.breedPressed]}>
-            <Text style={[styles.breedText, selected && styles.breedTextSelected]}>{breed.name}</Text>
-            {selected && <Ionicons name="checkmark-circle" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />}
-          </Pressable>;
-        })}
-        {!breeds.some((breed) => breed.id === dog.breed_id) && <MessageCard>Nuvarande ras ({currentBreed}) finns inte i listan. Välj en ras om du vill ändra profilen.</MessageCard>}
-      </View>}
+      <BreedPickerField
+        label="Ras"
+        value={breedId}
+        breeds={breeds}
+        state={breedState}
+        disabled={blocked}
+        onChange={(breed) => setBreedId(breed.id)}
+        onRetry={() => { setBreedState('loading'); setBreedAttempt((attempt) => attempt + 1); }}
+      />
       <DatePickerField label="Födelsedatum" disabled={blocked} onChangeText={setBirthDate} value={birthDate} />
       <View style={styles.ageUnitField}>
         <Text style={styles.label}>Visa ålder som</Text>
@@ -292,7 +288,7 @@ export function EditDogProfileScreen({
       </View>
       {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
       <PrimaryButton title={busy ? 'Sparar…' : statusError && !pending ? 'Försök igen' : 'Spara profil'}
-        disabled={blocked || breedState !== 'ready'} onPress={() => { void save(); }} />
+        disabled={blocked || !canSaveBreed} onPress={() => { void save(); }} />
       <Toast visible={toastVisible} tone="success" confirmed message={toastMessage ?? undefined} autoDismissMs={2500} onAutoDismiss={() => setToastVisible(false)} onExitComplete={() => setToastMessage(null)} />
     </View>
     <View style={styles.attributionCard}>
@@ -366,12 +362,7 @@ const styles = StyleSheet.create({
   field: { marginBottom: tokens.spacing.md },
   label: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.sm },
   input: { minHeight: tokens.size.buttonHeight, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body },
-  breedList: { gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg },
-  breedOption: { minHeight: tokens.size.touchMin, borderRadius: tokens.radius.md, paddingHorizontal: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  breedSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   breedPressed: { opacity: 0.75 },
-  breedText: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1, minWidth: 0 },
-  breedTextSelected: { color: tokens.colors.primary, fontWeight: '700' },
   ageUnitField: { marginTop: tokens.spacing.md, marginBottom: tokens.spacing.md },
   ageUnitOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm },
   ageUnitOption: { minHeight: tokens.size.touchMin, minWidth: tokens.size.touchMin * 2, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.full, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },

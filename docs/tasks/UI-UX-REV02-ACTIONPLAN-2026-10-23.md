@@ -2,7 +2,7 @@
 
 Datum: 2026-10-23. Beställare: Erik. Genomförande: Luna/implementer, med koordinator och riskbaserad granskning enligt projektets arbetsflöde.
 
-**Status: planeringsunderlag; implementation har inte påbörjats genom denna plan.** Paketens exakta delplaner behöver verklig planreview enligt [utvecklingsflödet](../dev/workflow.md). Detta dokument är inget Architect-, QA- eller Reviewer-PASS och ändrar inga köposter till `done`.
+**Status: genomförande pågår.** UI-R02-01A (sökbar rasväljare) har Architect APPROVE, Critic PASS, oberoende QA PASS (13/13 public och review) och oberoende Reviewer PASS på `2026-10-23-ui-01-profil`; implementation-commit/checkpoint återstår. UI-R02-01B och paketen 02–04 återstår. Native/live-kontroller redovisas separat och är inte godkända av denna lokala QA.
 
 Detta är **den aktuella paketordningen** för fynden i [GAP-analysen 2026-10-23](../GAP-UI-UX-rev02-2026-10-23.md). Den ersätter paketordningen i GAP-analysens tidigare avsnitt 8 och [planen från 18 oktober](../plans/UI-UX-NEXT-PACKAGES-2026-10-18.md). GAP-analysen behåller belägg, skärmbilder, kodankare och G01–G19; de kopieras inte till en ny konkurrerande fellista.
 

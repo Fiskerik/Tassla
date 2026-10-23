@@ -5,6 +5,7 @@ import { AppScreen } from '../../src/components/AppPrimitives';
 import { BottomNav } from '../../src/components/ui';
 import { HomeScreen } from '../../src/features/home/HomeScreen';
 import { EditDogProfileScreen } from '../../src/features/onboarding/EditDogProfileScreen';
+import { ProfileScreen } from '../../src/features/onboarding/ProfileScreen';
 import { LogScreen } from '../../src/features/puppy-log/LogScreen';
 import { DailyChecklistScreen } from '../../src/features/home/DailyChecklistScreen';
 import { DailyProgressScreen } from '../../src/features/home/DailyProgressScreen';
@@ -34,6 +35,11 @@ const ageScenario = params.get('ageScenario') ?? 'normal';
 const dailyMutationScenario = params.get('dailyMutation') ?? '';
 const reviewMode = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
 const imageFixture = params.get('imageFixture') ?? '';
+const profileBreedScenario = params.get('breedScenario') ?? '';
+const profileCreateFixture = params.get('screen') === 'profile-create';
+const requestedBreedCount = Number(params.get('breedCount') ?? '24');
+const profileBreedCount = Number.isSafeInteger(requestedBreedCount) && requestedBreedCount > 0
+  ? Math.min(40, requestedBreedCount) : 24;
 const today = localDate();
 const insightsScenario = params.get('insightsState') ?? (reviewMode ? 'ready' : 'empty');
 const insightsTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
@@ -45,6 +51,17 @@ const dog: OwnedDog = {
     : ageScenario === 'future' ? dateOffset(today, 30) : dateOffset(today, -77),
   age_display_unit: 'weeks',
 };
+const profileDog: OwnedDog = profileBreedScenario === 'legacy' ? { ...dog, breed_id: 'retired-test-breed' } : dog;
+const syntheticBreedOptions = [
+  { id: 'golden', name: 'Golden retriever' },
+  { id: 'unknown', name: 'Okänd ras' },
+  { id: 'beagle', name: 'Beagle' },
+  { id: 'long-label', name: 'Svensk långhårig sällskapshundsras med extra långt namn' },
+  ...Array.from({ length: 36 }, (_, index) => ({
+    id: `synthetic-${String(index + 1).padStart(2, '0')}`,
+    name: `Syntetisk ras ${String(index + 1).padStart(2, '0')}`,
+  })),
+].slice(0, profileBreedCount);
 const content: HomeContent[] = [{
   id: 'review-content-version',
   contentId: 'review-content',
@@ -218,9 +235,14 @@ const syntheticProfileClient = {
   from: (table: string) => ({
     select: () => ({
       order: () => ({
-        abortSignal: async () => table === 'breeds'
-          ? { data: [{ id: 'golden', name: 'Golden retriever' }], error: null }
-          : { data: null, error: new Error('Unexpected synthetic table') },
+        abortSignal: async () => {
+          if (table !== 'breeds') return { data: null, error: new Error('Unexpected synthetic table') };
+          window.__breedFetchCalls = (window.__breedFetchCalls ?? 0) + 1;
+          if (profileBreedScenario === 'retry' && window.__breedFetchCalls === 1) {
+            return { data: null, error: new Error('Synthetic first request failure') };
+          }
+          return { data: syntheticBreedOptions, error: null };
+        },
       }),
     }),
   }),
@@ -315,6 +337,23 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
   const insightsLoadState: InsightsLoadState = insightsScenario === 'loading' ? { status: 'loading' }
     : insightsScenario === 'error' ? { status: 'error' }
       : { status: 'ready', data: insightsFixture(insightsPeriod) };
+
+  if (profileCreateFixture) {
+    return <View style={{ flex: 1, minHeight: 0 }}>
+      {reviewMode ? <View testID="review-banner" style={{ height: 32, minHeight: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card }}>
+        <Text style={{ ...tokens.typography.caption, color: tokens.colors.home.text }}>Syntetiskt granskningsläge · profilskapande</Text>
+      </View> : null}
+      <View style={{ flex: 1, minHeight: 0 }}>
+        <ProfileScreen
+          client={syntheticProfileClient}
+          ownerId="00000000-0000-4000-8000-000000000099"
+          accountGeneration={1}
+          isCurrentAccount={() => true}
+          onCreated={() => { window.__profileCreateCalls = (window.__profileCreateCalls ?? 0) + 1; }}
+        />
+      </View>
+    </View>;
+  }
 
   return <View style={{ flex: 1, minHeight: 0 }}>
     {reviewMode ? <View testID="review-banner" style={{ height: 32, minHeight: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card }}>
@@ -433,13 +472,17 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
             onOpenKnowledge={() => setNavigation('knowledge')}
           /> : navigation === 'profile' ? <EditDogProfileScreen
             client={syntheticProfileClient}
-            dog={dog}
+            dog={profileDog}
             attribution={null}
             attributionState="ready"
-            ownedDogs={[dog]}
-            activeDogId={dog.id}
+            ownedDogs={[profileDog]}
+            activeDogId={profileDog.id}
             onBack={() => setNavigation('more')}
-            onSave={async () => true}
+            onSave={async (changes) => {
+              window.__profileSaveCalls = (window.__profileSaveCalls ?? 0) + 1;
+              window.__profileSavedBreedId = changes.breed_id;
+              return true;
+            }}
             onSaveAttribution={async () => true}
             onRetryStatus={() => {}}
             onAcceptCurrent={() => {}}
@@ -537,6 +580,10 @@ declare global {
     __homePanelsChangeScrollScope?: (revision: string) => void;
     __developmentGuideRetryCalls?: number;
     __insightsRefreshCalls?: number;
+    __breedFetchCalls?: number;
+    __profileSaveCalls?: number;
+    __profileSavedBreedId?: string;
+    __profileCreateCalls?: number;
   }
 }
 

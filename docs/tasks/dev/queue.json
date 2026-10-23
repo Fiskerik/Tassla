@@ -8073,7 +8073,7 @@
       "depends_on": [
         "FLOW-INSIGHTS-01A"
       ],
-      "status": "qa",
+      "status": "blocked",
       "history": [
         {
           "from": "planned",
@@ -8092,9 +8092,15 @@
           "to": "qa",
           "actor": "implementer",
           "evidence": "FLOW-INSIGHTS local checkpoint 4b is implemented. `pnpm check` PASS (74/74 tests), focused Insights model/route tests PASS, public/review RN Web 7/7 and 11/11 PASS, and profile entry/draft gate/return are in the saved renders. The SQL probe file is present but NOT RUN because psql/Supabase CLI are unavailable; no migration or live RPC/RLS request was made. See insights/VERIFICATION.md."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Park this separate H-risk task: its saved SQL probe and new RPC owner/RLS verification are required, but this session has no psql/pg_isready executable or Supabase database connector. This does not invalidate the owner-reported general Supabase/RLS pass and does not block the independent profile UI slice. Resume only when the specific RPC can be verified against the intended database."
         }
       ],
-      "next_step": "Independent review of the local code/evidence and run the saved SQL probe in a Postgres-capable environment. Apply the migration and verify the new RPC under the project's live owner/RLS gates before production acceptance.",
+      "next_step": "Park this separate H-risk task: its saved SQL probe and new RPC owner/RLS verification are required, but this session has no psql/pg_isready executable or Supabase database connector. This does not invalidate the owner-reported general Supabase/RLS pass and does not block the independent profile UI slice. Resume only when the specific RPC can be verified against the intended database.",
       "priority": "P1",
       "panels": [
         "Insikter"
@@ -10382,7 +10388,7 @@
         "tests/app-data.test.mjs",
         "tools/visual-check/vision-r02-home-panels-app.tsx",
         "tools/visual-check/verify-vision-r02-home-panels.py",
-        "docs/design/evidence/ui-r02-01a-breed-picker",
+        "docs/design/evidence/vision-rev02/ui-r02-01a-breed-picker",
         "docs/tasks/dev/UI-R02-01A-BREED-PICKER.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
@@ -10407,25 +10413,43 @@
       "depends_on": [
         "VISION-R02-4E"
       ],
-      "status": "ready",
+      "status": "review",
       "history": [
         {
           "from": "planned",
           "to": "ready",
           "actor": "architect",
           "evidence": "Exact plan v2 reviewed: Architect APPROVE and Critic PASS. Plan includes one shared local searchable BreedOption picker, the previously approved fetched catalog row with ID unknown as the no-results choice, no auto-selection on create, and regressions for both the edit-screen save guard and narrow updateOwnedDog legacy-ID preservation. Implementation waits for reviewed branch integration and a pre-change pnpm check."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Exact plan v2 Architect APPROVE and Critic PASS. The source task is integrated with the latest remote panel branch on 2026-10-23-ui-01-profil; all 30 audit/plan hashes verify. Pre-change pnpm check PASS (typecheck, edge typecheck, lint, 74/74 tests); git diff --check and dev_flow validate PASS. Begin the approved shared breed-picker UI and its narrow legacy-ID guard fix."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Independent QA PASS completed for scoped local UI/data-validation slice. Public and review RN Web 13/13 each; pnpm check 74/74; review-channel pnpm bundle:ios; git diff --check; verifier py_compile; queue validate. Native VoiceOver/Dynamic Type for this control, real create persistence, live catalog and Supabase/RLS not reverified."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA returned PASS on the final source/evidence diff: 13/13 public and 13/13 review; pnpm check 74/74; review-channel iOS export; queue/static checks pass. Native VoiceOver/Dynamic Type for this picker, real create persistence, production catalogue and live Supabase/RLS are explicitly outstanding separate evidence."
         }
       ],
-      "next_step": "Integrate the current remote branch without losing local commits or audit files, then run the pre-change pnpm check before source edits.",
+      "next_step": "Independent QA returned PASS on the final source/evidence diff: 13/13 public and 13/13 review; pnpm check 74/74; review-channel iOS export; queue/static checks pass. Native VoiceOver/Dynamic Type for this picker, real create persistence, production catalogue and live Supabase/RLS are explicitly outstanding separate evidence.",
       "priority": "P1",
       "panels": [
         "1"
       ],
       "risk_class": "M",
       "checkpoint": "UI-R02-01 checkpoint 1: one searchable picker shared by profile creation and edit; full profile density and close behavior remain later checkpoints.",
-      "test_evidence": "Pending implementation; approved plan v2 requires focused profile/data tests, pnpm check, iOS export, synthetic picker renders, §14, diff and queue validation. Native and live database are reported separately.",
-      "implementation_state": "Not started. Architect APPROVE and Critic PASS for exact plan v2; integration and pre-change baseline remain.",
-      "evidence_status": "plan approved; implementation evidence not run"
+      "test_evidence": "Independent QA PASS: pnpm check (TypeScript, edge TypeScript, ESLint, 74/74); review-channel iOS export via __UNSAFE_EXPO_HOME_DIRECTORY=/tmp/tassla-expo-home/.expo EXPO_TELEMETRY_DISABLED=1 TASSLA_BUILD_CHANNEL=review EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=true pnpm bundle:ios; public/review RN Web 13/13 each; Python py_compile; git diff --check; python -X utf8 tools/dev_flow.py validate. Saved RESULTS.json/screenshots under docs/design/evidence/vision-rev02/ui-r02-01a-breed-picker/{public,review}. Native VoiceOver/Dynamic Type for this control, real create persistence, production catalogue completeness and live Supabase/RLS not reverified.",
+      "implementation_state": "Shared searchable breed picker implemented and independently QA-passed on 2026-10-23-ui-01-profil; awaiting independent Reviewer before durable commit and closeout.",
+      "evidence_status": "Architect APPROVE, Critic PASS, implementation QA PASS; independent Reviewer pending."
     }
   ]
 }

@@ -79,6 +79,19 @@ TASSLA_UI_PANEL=image-diversity TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://
 
 RN Web och syntetiska callbacks verifierar inte native VoiceOver/Dynamic Type, live Supabase/RLS, migrering i målmiljön eller full panel-§14-acceptans.
 
+### UI-R02-01A — gemensam rasväljare i skapa/redigera profil
+
+Verifieraren renderar produktionsskärmarna `ProfileScreen` (`?screen=profile-create`) och `EditDogProfileScreen` (`?screen=profile`) med en lokal syntetisk raskatalog. Den provar att skapa saknar förvalt ras, att stängning bevarar nuvarande värde, sökning utan nätverksanrop per tecken, listscrollning, tomt resultat med befintlig `unknown`-post, fel och retry, gammalt ID som saknas, lång etikett, 375×667/375×844/430×844 samt 140 % textproxy. Reviewläget visar en banner för syntetiskt innehåll. Utdata och JSON finns i `docs/design/evidence/vision-rev02/ui-r02-01a-breed-picker/{public,review}/`.
+
+Bygg public/review separat med samma entry som Panel 2–8 ovan; kör sedan:
+
+```sh
+TASSLA_UI_PANEL=breed-picker TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:5211 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-01a-breed-picker/public python tools/visual-check/verify-vision-r02-home-panels.py
+TASSLA_UI_PANEL=breed-picker TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:5206 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-01a-breed-picker/review python tools/visual-check/verify-vision-r02-home-panels.py
+```
+
+RN Web-fixturen bekräftar inte fysisk tangentbordshantering, native VoiceOver/Dynamic Type, verklig `breeds`-katalog eller Supabase/RLS. `aria-checked` kontrolleras i webbrenderingen; native-radio semantics kräver separat iOS-verifiering.
+
 KNOW-02 har en separat entry/output och skriver till `docs/design/KNOW-02/evidence/`:
 
 ```sh

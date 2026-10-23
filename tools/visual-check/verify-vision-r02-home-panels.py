@@ -51,8 +51,14 @@ def progress_url(*, state: str = 'ready', completed: int | None = None) -> str:
     return f"{BASE}/?{'&'.join(query)}"
 
 
-def profile_url() -> str:
-    return f'{BASE}/?screen=profile'
+def profile_url(*, breed_count: int = 24, breed_scenario: str | None = None) -> str:
+    scenario = f'&breedScenario={breed_scenario}' if breed_scenario else ''
+    return f'{BASE}/?screen=profile&breedCount={breed_count}{scenario}'
+
+
+def profile_create_url(*, breed_count: int = 24, breed_scenario: str | None = None) -> str:
+    scenario = f'&breedScenario={breed_scenario}' if breed_scenario else ''
+    return f'{BASE}/?screen=profile-create&breedCount={breed_count}{scenario}'
 
 
 def insights_url(*, state: str = 'ready', period: str = 'week', origin: str = 'profile') -> str:
@@ -421,6 +427,163 @@ def verify_insights_views(browser) -> None:
     page.close()
 
 
+def verify_breed_picker(browser) -> None:
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page_errors: list[str] = []
+    page.on('pageerror', lambda error: page_errors.append(str(error)))
+    page.goto(profile_url(breed_count=24), wait_until='networkidle')
+    trigger = page.get_by_test_id('breed-picker-trigger')
+    expect(trigger).to_be_visible()
+    expect(trigger).to_have_accessible_name('Ras: Golden retriever')
+    name = page.get_by_role('textbox', name='Hundens namn', exact=True)
+    name.fill('Luna utkast')
+    page.screenshot(path=str(OUT / 'breed-picker-profile-collapsed-375.png'), full_page=True)
+
+    trigger.click()
+    expect(page.get_by_text('Välj ras', exact=True)).to_be_visible()
+    expect(page.get_by_test_id('breed-option-golden')).to_have_attribute('aria-checked', 'true')
+    expect(page.get_by_test_id('breed-option-beagle')).to_have_attribute('aria-checked', 'false')
+    record('The open edit picker exposes selected and unselected radio states', True)
+    page.get_by_role('button', name='Stäng', exact=True).last.click()
+    expect(trigger).to_have_accessible_name('Ras: Golden retriever')
+    record('Closing the picker without choosing keeps the previous breed', True)
+
+    trigger.click()
+    search = page.get_by_role('textbox', name='Sök hundras', exact=True)
+    expect(search).to_be_visible()
+    search.fill('sYnTeTiSk RaS 12')
+    match = page.get_by_test_id('breed-option-synthetic-12')
+    expect(match).to_be_visible()
+    rendered_options = page.locator('[data-testid^="breed-option-"]').count()
+    calls_after_typing = page.evaluate('window.__breedFetchCalls')
+    record('Breed search filters the fetched options case-insensitively with no request per keystroke',
+           rendered_options == 1 and calls_after_typing == 1,
+           {'rendered_options': rendered_options, 'fetch_calls': calls_after_typing})
+    page.screenshot(path=str(OUT / 'breed-picker-filtered-375.png'), full_page=True)
+
+    page.get_by_role('button', name='Rensa sökning', exact=True).click()
+    list_view = page.get_by_test_id('breed-options-list')
+    list_metrics = list_view.evaluate("""element => ({
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
+      overflowY: getComputedStyle(element).overflowY
+    })""")
+    record('Breed picker owns one scrollable list for the 24-option fixture',
+           list_metrics['scrollHeight'] > list_metrics['clientHeight'] and list_metrics['overflowY'] in ('auto', 'scroll'),
+           list_metrics)
+    list_view.evaluate("""element => {
+      element.scrollTop = element.scrollHeight;
+      element.dispatchEvent(new Event('scroll', { bubbles: true }));
+    }""")
+    expect(page.get_by_test_id('breed-option-synthetic-20')).to_be_visible()
+
+    search.fill('rasnamn-som-inte-finns')
+    expect(page.get_by_text('Ingen ras hittades', exact=True)).to_be_visible()
+    unknown_action = page.get_by_role('button', name='Välj Okänd ras', exact=True)
+    expect(unknown_action).to_be_visible()
+    unknown_box = unknown_action.bounding_box()
+    record('No-match state offers the real Okänd ras action with a 44pt target',
+           unknown_box is not None and unknown_box['width'] >= 44 and unknown_box['height'] >= 44,
+           {'box': unknown_box})
+    page.screenshot(path=str(OUT / 'breed-picker-no-match-375.png'), full_page=True)
+    unknown_action.click()
+    expect(page.get_by_text('Välj ras', exact=True)).to_have_count(0)
+    expect(trigger).to_have_accessible_name('Ras: Okänd ras')
+    expect(name).to_have_value('Luna utkast')
+    record('Selecting Okänd ras closes the sheet and preserves other profile fields',
+           page.evaluate('window.__breedFetchCalls === 1') and not page_errors,
+           {'fetch_calls': page.evaluate('window.__breedFetchCalls'), 'page_errors': page_errors})
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 667 + (32 if REVIEW else 0)})
+    page.goto(profile_url(breed_count=24), wait_until='networkidle')
+    page.get_by_test_id('breed-picker-trigger').click()
+    search = page.get_by_role('textbox', name='Sök hundras', exact=True)
+    search.fill('långhårig')
+    long_row = page.get_by_test_id('breed-option-long-label')
+    expect(long_row).to_be_visible()
+    long_row_box = long_row.bounding_box()
+    record('Long Swedish breed names wrap inside a large selectable row on a short screen',
+           long_row_box is not None and long_row_box['height'] >= 44
+           and page.evaluate('document.documentElement.scrollWidth <= innerWidth'),
+           {'row': long_row_box})
+    page.screenshot(path=str(OUT / 'breed-picker-long-label-375x667.png'), full_page=True)
+    page.evaluate("""() => document.querySelectorAll('[dir="auto"]').forEach(element => {
+      const style = getComputedStyle(element);
+      element.style.fontSize = `${parseFloat(style.fontSize) * 1.4}px`;
+      element.style.lineHeight = `${parseFloat(style.lineHeight) * 1.4}px`;
+    })""")
+    search.scroll_into_view_if_needed()
+    large_text_fits = page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    record('Search and long breed row have no horizontal overflow with the 140% text proxy', large_text_fits)
+    page.screenshot(path=str(OUT / 'breed-picker-text-140-375x667.png'), full_page=True)
+    page.close()
+
+    page = browser.new_page(viewport={'width': 430, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(profile_url(breed_count=40), wait_until='networkidle')
+    trigger = page.get_by_test_id('breed-picker-trigger')
+    trigger.click()
+    search = page.get_by_role('textbox', name='Sök hundras', exact=True)
+    input_box = search.bounding_box()
+    page.screenshot(path=str(OUT / 'breed-picker-open-40-430.png'), full_page=True)
+    record('Search control remains a full-size target with 40 options at 430pt',
+           input_box is not None and input_box['height'] >= 44,
+           {'box': input_box})
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(profile_url(breed_count=1, breed_scenario='legacy'), wait_until='networkidle')
+    trigger = page.get_by_test_id('breed-picker-trigger')
+    expect(trigger).to_have_accessible_name('Ras: Ras saknas i listan')
+    expect(page.get_by_text('retired-test-breed', exact=True)).to_have_count(0)
+    page.get_by_role('textbox', name='Hundens namn', exact=True).fill('Luna bevarad ras')
+    page.get_by_role('button', name='Spara profil', exact=True).click()
+    page.wait_for_function('window.__profileSaveCalls === 1')
+    legacy_save_id = page.evaluate('window.__profileSavedBreedId')
+    record('Saving other profile fields keeps an unchanged missing legacy breed ID', legacy_save_id == 'retired-test-breed',
+           {'saved_breed_id': legacy_save_id})
+
+    trigger.click()
+    search = page.get_by_role('textbox', name='Sök hundras', exact=True)
+    search.fill('ingen-sådan-ras')
+    expect(page.get_by_text('Ingen ras hittades', exact=True)).to_be_visible()
+    expect(page.get_by_role('button', name='Välj Okänd ras', exact=True)).to_have_count(0)
+    page.screenshot(path=str(OUT / 'breed-picker-legacy-no-unknown-option-375.png'), full_page=True)
+    record('Missing catalog row does not synthesize an Okänd ras option', True)
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(profile_create_url(), wait_until='networkidle')
+    if REVIEW:
+        expect(page.get_by_text('Syntetiskt granskningsläge · profilskapande', exact=True)).to_be_visible()
+    trigger = page.get_by_test_id('breed-picker-trigger')
+    expect(trigger).to_have_accessible_name('Ras: Välj ras')
+    page.screenshot(path=str(OUT / 'breed-picker-create-collapsed-375.png'), full_page=True)
+    trigger.click()
+    expect(page.locator('[data-testid^="breed-option-"][aria-checked="true"]')).to_have_count(0)
+    page.get_by_role('button', name='Stäng', exact=True).last.click()
+    expect(trigger).to_have_accessible_name('Ras: Välj ras')
+    trigger.click()
+    page.get_by_test_id('breed-option-synthetic-03').click()
+    expect(page.get_by_text('Välj ras', exact=True)).to_have_count(0)
+    expect(trigger).to_have_accessible_name('Ras: Syntetisk ras 03')
+    expect(page.get_by_role('textbox', name='Hundens namn', exact=True)).to_have_value('')
+    page.screenshot(path=str(OUT / 'breed-picker-create-selected-375.png'), full_page=True)
+    record('Create flow starts with no preselected breed, keeps empty state on cancel and stores the chosen option',
+           page.evaluate('window.__breedFetchCalls === 1'))
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(profile_create_url(breed_count=24, breed_scenario='retry'), wait_until='networkidle')
+    expect(page.get_by_text('Raslistan kunde inte hämtas. Kontrollera anslutningen och försök igen.', exact=True)).to_be_visible()
+    page.get_by_role('button', name='Hämta raslistan igen', exact=True).click()
+    page.wait_for_function('window.__breedFetchCalls === 2')
+    expect(page.get_by_test_id('breed-picker-trigger')).to_be_visible()
+    record('Create flow recovers from a breed-fetch error using one explicit retry',
+           page.evaluate('window.__breedFetchCalls === 2'))
+    page.screenshot(path=str(OUT / 'breed-picker-retry-success-375.png'), full_page=True)
+    page.close()
+
 def verify_image_diversity(browser) -> None:
     if not REVIEW:
         for width in (375, 430):
@@ -708,6 +871,21 @@ if os.environ.get('TASSLA_UI_PANEL') == 'insights':
         verify_insights_views(browser)
         browser.close()
     report = {'mode': 'review' if REVIEW else 'public', 'panel': 'insights', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
+if os.environ.get('TASSLA_UI_PANEL') == 'breed-picker':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_breed_picker(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'breed-picker', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
     (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
     raise SystemExit(1 if failures else 0)

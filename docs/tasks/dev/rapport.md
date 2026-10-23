@@ -1,5 +1,21 @@
 # FOUNDATION — leveransrapport 2026-10-04
 
+## UI-R02-01A — profilens gemensamma rasväljare, QA-checkpoint 2026-10-23
+
+Utgår från [GAP-analysen](../../GAP-UI-UX-rev02-2026-10-23.md) och [actionplanen](../UI-UX-REV02-ACTIONPLAN-2026-10-23.md). Den exakta delplanen v2 fick Architect **APPROVE** och Critic **PASS**. Den bevarar det tidigare godkända direktvalet `Okänd ras` från den verkliga katalogposten `unknown`, inget auto-val vid skapande och en smal bevaring av ett gammalt ras-ID som saknas i dagens katalog.
+
+Arbetsgren `2026-10-23-ui-01-profil` utgår från GitHub-panelgrenen `90d0d704c610ade7946557bf5f3b9bf6b165c7ee` och sammanför lokala commits, bland annat dokumentationscheckpoint `ddf93b0`; integrationscommit är `fd6892dabc58ec9d3f3fad7b9923e61190043ea2`. Den enda kända konflikten var i Home-panelverifieraren: en sida hade dubblerat `development_url` och `progress_url`. Jag behöll versionen med en enda uppsättning; `py_compile` passerade. Pre-branch SHA-manifestet matchade samtliga 30 listade audit-/planfiler efter integration.
+
+Implementationen är klar och tasken är `qa`. `BreedPickerField` delas mellan `ProfileScreen` och `EditDogProfileScreen`, filtrerar inlästa raser lokalt i sin enda `FlatList`, öppnar utan ett valt ras-ID vid skapande, och använder det befintliga `unknown`-rasobjektet endast om katalogen innehåller det. `BottomSheet` behåller sin gamla `ScrollView` som standard; bara rasväljaren begär child-owned scroll. Väljarrader exponerar både native selected state och webbrenderingens checked state. Ett gammalt ras-ID som saknas i dagens katalog går att behålla när andra fält ändras; nytt okänt ID stoppas både i skärmens guard och `updateOwnedDog`.
+
+Oberoende QA **PASS**. Slutlig `pnpm check`: TypeScript, edge TypeScript, ESLint och 74/74 tester. Review-kanalens `pnpm bundle:ios` exporterade iOS bundle. Separat verifierare: public 13/13, review 13/13; innehåller create/edit, tomt startval, avbryt, val, lokalt sök, en listscroll, 44 pt okänd-ras-val, retry efter syntetiskt hämtningsfel, 24/40 rader, långt svenskt namn, 375×667/375×844/430×844, 140 %-textproxy, äldre ras-ID och radio `aria-checked`. QA provade också att create-knappen är avstängd tills ras valts. `python -m py_compile tools/visual-check/verify-vision-r02-home-panels.py`, `git diff --check` och `python -X utf8 tools/dev_flow.py validate` passerade. Public/review-resultat och skärmbilder sparas under `docs/design/evidence/vision-rev02/ui-r02-01a-breed-picker/`.
+
+Separat: `FLOW-INSIGHTS-01` är parkerad som `blocked` eftersom dess specifika nya RPC fortfarande kräver sparat SQL-prov och owner/RLS-verifiering, men miljön saknar `psql`/`pg_isready` och Supabase-databasconnector. Det ändrar inte Eriks rapporterade generella Supabase/RLS-pass och blockerar inte profilens fristående UI-slice.
+
+Oberoende Reviewer **PASS** efter QA. Granskaren bekräftade att `aria-checked` stöds i installerad RN 0.86.3, att BottomSheet behåller defaultscrollning, samt att båda legacy-ID-guards och testerna följer avgränsningen. Inga blockerande findings.
+
+Kvar att verifiera separat: native VoiceOver/Dynamic Type just för denna nya kontroll, verklig create-persistens, produktionskatalogens fullständighet och live Supabase/RLS. QA använde syntetiska katalog/data och callbacks; detta är inget live- eller telefonbevis. Nästa steg är implementation-commit/push och separat checkpoint för UI-R02-01B (profilens täthet/avslutning).
+
 ## DOG-PROFILE — Wikidata-källval och plan v4, 2026-10-13
 
 Erik har beställt sökbar raskatalog, Mix-delraser, Hem-identitet `Namn | Ras` och valbar åldersvisning i veckor, månader och år. Han valde Wikidatas strukturerade data under CC0. Plan v4 låser katalogurvalet till Wikidata `dog breed (Q39367)` och dess underklasser, med svensk etikett och engelsk fallback. Exakt SPARQL-fråga och licenskällor finns i `docs/plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md`.
