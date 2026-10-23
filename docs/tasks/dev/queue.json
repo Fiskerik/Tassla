@@ -10638,7 +10638,7 @@
           "evidence": "Oberoende Reviewer PASS på fryst implementation efter korrigeringar; Architect APPROVE, Critic PASS, Security statisk APPROVE finns dokumenterade. Lokalt QA-kriterium klart; live migration/RLS, full panel 4/7 §14 och native/TestFlight är separata öppna gates, inte påstådda PASS."
         }
       ],
-      "next_step": "Oberoende Reviewer PASS på fryst implementation efter korrigeringar; Architect APPROVE, Critic PASS, Security statisk APPROVE finns dokumenterade. Lokalt QA-kriterium klart; live migration/RLS, full panel 4/7 §14 och native/TestFlight är separata öppna gates, inte påstådda PASS.",
+      "next_step": "Implementation checkpoint 3973ffe is pushed to origin/2026-10-23-ui-02-checklistor. Keep migration/RLS/readback and full panel 4/7 §14 open; resume saved FLOW-PANELS-6-7-IMAGE-DIVERSITY review during UI-R02-04.",
       "priority": "P1",
       "panels": [
         "Hem",

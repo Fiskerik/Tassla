@@ -642,3 +642,10 @@ Full Panel 5-acceptans är fortsatt partiell: `Översikt`-fliken kräver den fun
 ### UI-korrigering — Logga och Dagens framsteg, 2026-10-22
 
 Loggas kalenderikon har nu minst 20,4 px avstånd från centrerad datumtext vid 360 px; public/review-rendering 13/13 vardera vid 360/375/430. Panel 3 använder en slät sammanhängande `react-native-svg`-ring med subtil grön toning, och Miljöträning har en synlig 24 pt bock i en 24 pt cirkel. Panel-specifik progress-rendering 2/2 public och 15/15 review. `CI=1 pnpm check` PASS: 665/666 tester (1 skip), typechecks och ESLint. Public iOS export PASS, 1 577 JS-moduler. Ny iOS-appbuild krävs före test av SVG:n i native; panel-3 oberoende QA/Reviewer återstår.
+
+
+## UI-R02-02 — gemensamma checklistikoner och kompakt redigering, 2026-10-23
+
+Rutin- och Kunskapspunkter använder samma 20-symbolsval; egen punktens ikon går genom skrivning/readback och redigeringsflöde. Editorerna har en Spara-footer och bekräftad ikonbaserad radering. Oberoende QA och Reviewer PASS för den lokala kodcheckpointen; public/review rutinrender 16/16 vardera, Kunskap 7/7, `pnpm check` 75/75 och public iOS JS-export 1 585 moduler PASS. Implementationscommit `3973ffe` är pushad till `origin/2026-10-23-ui-02-checklistor`; push-hooken körde full check med 704 PASS, 0 FAIL, 1 skip av 705 tester.
+
+Öppet: migration `202610230001_checklist_custom_item_icons.sql`/SQL-prob mot riktig databas, live RLS/readback, full panel 4/7 §14 och native/TestFlight. Den äldre breda Knowledge-verifieraren väntar på en route som saknas i sin fixtur och är NOT TESTABLE; den lämnades oförändrad och ersätts för den ändrade resan av det riktade provet. [Evidens](../design/evidence/vision-rev02/ui-r02-02-checklists/README.md).
