@@ -10413,7 +10413,7 @@
       "depends_on": [
         "VISION-R02-4E"
       ],
-      "status": "review",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -10438,9 +10438,15 @@
           "to": "review",
           "actor": "qa",
           "evidence": "Independent QA returned PASS on the final source/evidence diff: 13/13 public and 13/13 review; pnpm check 74/74; review-channel iOS export; queue/static checks pass. Native VoiceOver/Dynamic Type for this picker, real create persistence, production catalogue and live Supabase/RLS are explicitly outstanding separate evidence."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Oberoende Reviewer PASS; implementationcommit 786dd11e0b9955959caaeb0fa161291bc558ef96 på 2026-10-23-ui-01-profil. 01A stängs som lokal UI/valideringsslic; 01B startar efter dokumenterad checkpoint. Native/live-gränser kvarstår enligt taskplan."
         }
       ],
-      "next_step": "Independent QA returned PASS on the final source/evidence diff: 13/13 public and 13/13 review; pnpm check 74/74; review-channel iOS export; queue/static checks pass. Native VoiceOver/Dynamic Type for this picker, real create persistence, production catalogue and live Supabase/RLS are explicitly outstanding separate evidence.",
+      "next_step": "Oberoende Reviewer PASS; implementationcommit 786dd11e0b9955959caaeb0fa161291bc558ef96 på 2026-10-23-ui-01-profil. 01A stängs som lokal UI/valideringsslic; 01B startar efter dokumenterad checkpoint. Native/live-gränser kvarstår enligt taskplan.",
       "priority": "P1",
       "panels": [
         "1"

@@ -1115,3 +1115,7 @@ Kunskapens tre reviewguider visar tre distinkta ID/version-bundna foton; feature
 Granskningen av aktiva routes fann att den gamla `HomeCarousel` inte monteras i produktens Hem-route. Målbildens faktiska textbaserade `Just nu`-kort behålls; verifieringen kontrollerar att det öppnar exakt guide/steg och hävdar ingen synlig Home-fotobild. Det är dokumenterat som en implementeringsjustering i planens tillägg. Denna bildcheckpoint slutför inte hela Panel 6/7 och ersätter inte native accessibility, live innehåll/RLS eller oberoende review.
 
 Samma publika iOS-bundle/export som ovan passerade med 1 581 JavaScript-moduler. Bildcheckpointen verifierar lokal komponentrendering; den fullständiga native-/innehållsgrinden och oberoende review återstår.
+
+### UI-R02-01A — checkpoint stängd, 2026-10-23
+
+Sökbar rasväljare i skapa/ändra är committad som `786dd11e0b9955959caaeb0fa161291bc558ef96` på `2026-10-23-ui-01-profil`. Commit-hooken körde `pnpm check` och passerade app-/edge-typecheck, ESLint samt samtliga tester. Oberoende QA och Reviewer PASS; syntetisk RN Web public/review 13/13 vardera och review-iOS JS-bundle PASS. Queue `UI-R02-01A` är stängd för den lokala UI-/validerings-slicen. Faktisk create-persistens, produktionskatalog, picker-specifik native VoiceOver/Dynamic Type samt live Supabase/RLS är inte verifierade och förblir separata luckor. Nästa checkpoint inom profilpaketet är UI-R02-01B: profilens täthet och avslutning.
