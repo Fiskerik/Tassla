@@ -1,0 +1,19 @@
+{
+  "review_fixture": true,
+  "passed": [
+    "default 375×844: two distinct recommendations, one confirmed continuation, no invented duration",
+    "default 430×844",
+    "short viewport 375×667; content remains scrollable",
+    "long localized program title remains fully visible at 375 px",
+    "tab switching and recommendation open the exact next exercise",
+    "unknown age hides recommendations while saved progress remains reachable",
+    "no matching recommendations shows an honest empty state and reaches all exercises",
+    "paused older-version progress stays visible without a contradictory empty state",
+    "unavailable paused versions are grouped without exposing internal IDs",
+    "read error retry clears the truthful error state",
+    "completed progress remains in Mina without a continuation action",
+    "140% browser text proxy has no horizontal overflow",
+    "no browser runtime errors"
+  ],
+  "failed": []
+}

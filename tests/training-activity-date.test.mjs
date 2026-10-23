@@ -37,6 +37,7 @@ test('workspace saved progress projects into the selected local activity day wit
   try {
     const workspace = await workspaceData.fetchTrainingWorkspace(client, dog, 10);
     const program = workspace.programs[0];
+    assert.equal(program.currentAgeBreedMatch, true);
     assert.deepEqual(program.completedStepIds, [stepId]);
     assert.deepEqual(program.completedAtByStepId, { [stepId]: completionAt });
     const stamp = activityModel.trainingProgressStamp(dog.id, program, stepId);

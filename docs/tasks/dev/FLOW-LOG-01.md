@@ -1,8 +1,8 @@
 # FLOW-LOG-01 — gransknings- och checkpointjournal
 
-Datum: 2026-10-20
+Datum: 2026-10-22
 Plan: docs/plans/FLOW-LOG-01-calendar-ux-plan.md v5
-Plan v5 godkänd av Architect och UX Critic. Kodcheckpointens samlade UI-acceptans är blockerad på renderad evidens.
+Plan v5 godkänd av Architect och UX Critic. Renderad kalender-/snabbvals-slice är nu dokumenterad; full Panel 5-acceptans är öppen på §14 punkt 16–17 och oberoende QA/Reviewer.
 
 ## Granskningar av plan v4 och v5
 
@@ -49,3 +49,17 @@ Nästa steg efter första handoff: QA identifierade 44 pt- och testluckor. Korri
 - Commit `b03eaeb` (`feat(log): add month calendar and date markers`) pushad till `origin/codex/tassla-ui-ux-bundle-2026-10-18` efter godkända commit- och pre-push-hookar.
 - Hookarnas typecheck, edge typecheck, ESLint och testsvit passerade (599/599). Checkpointen bevarar kod/test-verifierat arbete; full QA-acceptans är fortsatt blockerad av visuell §14-evidens och live/native-prov.
 - Fortsätt nästa oberoende paket. Återuppta FLOW-LOG-01:s render-/§14-del när godkänd renderingsförmåga finns tillgänglig.
+
+## RN Web-rendering återupptagen — 2026-10-22
+
+- Använde Tasslas `tassla-consumer-ux` och `mobile-ios-design` skills samt `docs/design-rules.md` och Panel 5 i `vision-rev02-screen-contracts.md`. Renderer/Chromium installerades endast under `/tmp`; appens dependencies/lockfil ändrades inte.
+- Utökade isolerade `tools/visual-check/app.tsx` med syntetisk Vattenrad och kalenderfixtures; lade till `tools/visual-check/verify-flow-log.py`. Ingen produktkod/data-/auth-/schemaändring i denna renderingstillgång.
+- Public och review gav vardera 13/13 kontroller: snabbval vid 360/375/430 px; kalender med markörer, tom månad, laddning, fel/retry; föregående månad; framtidsdag spärrad; markerad dag uppdaterar vald dag och stänger arket; 140 %-textproxy, gråskala och 375×667 utan horisontell overflow.
+- Kalenderdag uppmätt 44,56×44 px vid 360 px. Vid 360×844 med Fler öppet uppmättes 32 px mellan primära `Lägg till händelse` och tablistens överkant.
+- Visuell gråskalejämförelse visar skilda Kiss-/Vattenformer och synliga kategorietiketter. Färgfördelningen visar amber Kiss, blå Vatten, brun Bajs, varm Mat och lila Sömn.
+- Jämförelsen mot `vision_rev02.jpg` gör kvarstående panelgap konkret: `Översikt`-segmentet saknas tills Panel 8/Insikter har en riktig destination. Screen contract tillåter befintliga snabbval för att bevara entrycksregistrering och säger att Översikt öppnar Insikter när byggt; ingen död flik lades till. §14 punkterna 16–17 är därför `Nej` för full panel.
+- Live RLS/anon-denial, native VoiceOver/Dynamic Type/reduced motion/safe area och signerad build är fortfarande NOT TESTABLE. Denna verifiering är implementerarkontroll, inte oberoende QA. Full Panel 5-acceptans och Reviewer återstår.
+
+## Kalenderikonens mellanrum — 2026-10-22
+
+Ägarens bildfeedback genomförd: kalenderikonen står nu tydligare till höger om det centrerade datumet. Public/review-kontrollen mäter 20,4 px mellanrum vid 360 px, 27,9 px vid 375 px och 55,4 px vid 430 px; 44 pt datumkontroll och alla tidigare 13/13-scenarier passerar. Denna UI-ändring påverkar inte Logga-datakällan, sparning eller kalenderns scope-/retrybeteende.

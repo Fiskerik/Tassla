@@ -41,6 +41,17 @@ export type DailyProgressSelection<T extends Pick<HomeDailyActivity, 'completed'
   coverage: DailyProgressCoverage;
 };
 
+export type DailyProgressRingFill = {
+  fraction: number;
+};
+
+/** Returns a bounded fraction for the single vector stroke used by the progress ring. */
+export function dailyProgressRingFill(completed: number, total: number): DailyProgressRingFill {
+  if (!Number.isFinite(completed) || !Number.isInteger(total) || total <= 0) return { fraction: 0 };
+  const fraction = Math.max(0, Math.min(1, completed / total));
+  return { fraction };
+}
+
 /** Selects the single scope-current daily result shared by Home and Daily Progress. */
 export function selectDailyProgress<T extends Pick<HomeDailyActivity, 'completed'>>(
   activities: readonly T[],

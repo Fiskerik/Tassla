@@ -5,6 +5,7 @@ export interface OverviewProgram {
   readonly id: string;
   readonly steps: readonly { readonly id: string }[];
   readonly completedStepIds: readonly string[];
+  readonly currentAgeBreedMatch?: boolean;
 }
 
 export type ProgramStatus = 'in_progress' | 'not_started' | 'empty' | 'complete';
@@ -39,6 +40,17 @@ export function sortPrograms<T extends OverviewProgram>(programs: readonly T[]):
     .map((program, index) => ({ program, index, rank: rank[programStatus(program)] }))
     .sort((a, b) => a.rank - b.rank || a.index - b.index)
     .map((entry) => entry.program);
+}
+
+/** Current age/breed-matched programs with a real next exercise, in stable recommendation order. */
+export function recommendedPrograms<T extends OverviewProgram>(programs: readonly T[]): T[] {
+  return sortPrograms(programs.filter((program) => program.currentAgeBreedMatch === true
+    && program.steps.length > 0 && programStatus(program) === 'not_started'));
+}
+
+/** Mina means programs with at least one valid, confirmed step in this exact version. */
+export function programsWithProgress<T extends OverviewProgram>(programs: readonly T[]): T[] {
+  return sortPrograms(programs.filter((program) => completedCount(program) > 0));
 }
 
 /** A zero-step program is never complete, and an empty program list has no completion state. */

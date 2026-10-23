@@ -1,0 +1,16 @@
+{
+  "mode": "public",
+  "panel": "progress",
+  "evidence_dir": "docs/design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/progress/public",
+  "results": [
+    {
+      "check": "Public empty Progress shows no 0/0 ring and one primary action",
+      "result": "PASS"
+    },
+    {
+      "check": "Empty Progress action opens the existing activity manager",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}

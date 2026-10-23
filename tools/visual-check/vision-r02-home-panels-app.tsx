@@ -22,6 +22,10 @@ import { tokens } from '../../src/theme/tokens';
 
 const params = new URLSearchParams(location.search);
 const scenario = params.get('homeScenario') ?? 'ready';
+const requestedDevelopmentGuidesState = params.get('developmentGuidesState');
+const developmentGuidesState = requestedDevelopmentGuidesState === 'loading' || requestedDevelopmentGuidesState === 'error'
+  ? requestedDevelopmentGuidesState : 'ready';
+const ageScenario = params.get('ageScenario') ?? 'normal';
 const dailyMutationScenario = params.get('dailyMutation') ?? '';
 const reviewMode = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
 const today = localDate();
@@ -29,7 +33,8 @@ const dog: OwnedDog = {
   id: '00000000-0000-4000-8000-000000000021',
   name: 'Luna',
   breed_id: 'golden',
-  birth_date: dateOffset(today, -77),
+  birth_date: ageScenario === 'missing' ? null : ageScenario === 'invalid' ? '2026-02-30'
+    : ageScenario === 'future' ? dateOffset(today, 30) : dateOffset(today, -77),
   age_display_unit: 'weeks',
 };
 const content: HomeContent[] = [{
@@ -139,10 +144,20 @@ function makeActivities(dateKey: string, dogId: string, count: number): HomeDail
   });
 }
 
+const requestedProgressCount = params.get('progressCount');
+const initialProgressCount = requestedProgressCount !== null && /^\d+$/.test(requestedProgressCount)
+  ? Math.max(0, Math.min(rows.length, Number(requestedProgressCount))) : null;
+const initialCompletion = initialProgressCount === null ? {}
+  : Object.fromEntries(rows.map((activity, index) => [activity.id, index < initialProgressCount]));
+
 function VisualCheckApp() {
-  const [completion, setCompletion] = useState<Record<string, boolean>>({});
+  const [scrollScopeRevision, setScrollScopeRevision] = useState('base');
+  const [completion, setCompletion] = useState<Record<string, boolean>>(initialCompletion);
   const [mutationFlow, setMutationFlow] = useState<'idle' | 'pending' | 'confirmed'>('idle');
-  const [navigation, setNavigation] = useState(() => params.get('screen') === 'checklist' ? 'checklist' : 'home');
+  const [navigation, setNavigation] = useState(() => {
+    const initialScreen = params.get('screen');
+    return initialScreen === 'checklist' || initialScreen === 'progress' || initialScreen === 'development' ? initialScreen : 'home';
+  });
   const [checklistFilter, setChecklistFilter] = useState<ChecklistFilter>(() => {
     const requested = params.get('checklistFilter');
     return requested === 'Denna vecka' || requested === 'Alla' || requested === 'Kommande' ? requested : 'Idag';
@@ -150,6 +165,7 @@ function VisualCheckApp() {
   const [focusedPlanId, setFocusedPlanId] = useState<string | null>(null);
   const [developmentGuideId, setDevelopmentGuideId] = useState<string | null>(null);
   const [openChecklistManager, setOpenChecklistManager] = useState(false);
+  window.__homePanelsChangeScrollScope = (revision: string) => setScrollScopeRevision(revision);
   const dailyState = scenario === 'loading' ? 'loading'
     : scenario === 'error' ? 'error'
       : scenario === 'unknown' ? 'hidden'
@@ -174,13 +190,16 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
   return <View style={{ flex: 1, minHeight: 0 }}>
     {reviewMode ? <View testID="review-banner" style={{ height: 32, minHeight: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card }}>
       <Text style={{ ...tokens.typography.caption, color: tokens.colors.home.text }}>{navigation === 'home'
-        ? 'Syntetiskt granskningsläge · AI-genererad standardbild' : 'Syntetiskt granskningsläge · checklistdata'}</Text>
+        ? 'Syntetiskt granskningsläge · AI-genererad standardbild'
+        : navigation === 'development' || navigation === 'knowledge' ? 'Syntetiskt granskningsläge · ålder och guide'
+          : navigation === 'progress' ? 'Syntetiskt granskningsläge · dagsprogress'
+          : 'Syntetiskt granskningsläge · checklistdata'}</Text>
     </View> : null}
     <View testID="review-app-viewport" style={{ flex: 1, minHeight: 0 }}>
       <View style={{ flex: 1, minHeight: 0, paddingTop: 44 }}>
         <AppScreen {...(navigation === 'knowledge'
           ? productRouteScrollKeys(navigation, 'development') : routeScroll)}
-          scrollMemoryScope={`visual-check:${dog.id}:${dog.birth_date}`}
+          scrollMemoryScope={`visual-check:owner-generation:account-generation:dog:${dog.id}:breed:${dog.breed_id}:birth-date:${dog.birth_date}:age:${77}:context:${reviewMode ? 'review' : 'public'}:${scrollScopeRevision}`}
           footer={<View style={{ paddingBottom: 34 }}><BottomNav active={activeMainTabDestination(navigation === 'knowledge' ? 'development' : routePage)} onChange={(destination) => { setDevelopmentGuideId(null); setNavigation(destination); }} /></View>}>
           {navigation === 'home' ? <HomeScreen
             dog={dog}
@@ -244,11 +263,11 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
             dogName={dog.name}
             birthDate={dog.birth_date}
             today={today}
-            guides={developmentGuides}
-            guidesState="ready"
+            guides={reviewMode ? developmentGuides : []}
+            guidesState={developmentGuidesState}
             onBack={() => { setDevelopmentGuideId(null); setNavigation('home'); }}
             onOpenGuide={(id) => { setDevelopmentGuideId(id); setNavigation('knowledge'); }}
-            onRetryGuides={() => {}}
+            onRetryGuides={() => { window.__developmentGuideRetryCalls = (window.__developmentGuideRetryCalls ?? 0) + 1; }}
           /> : navigation === 'knowledge' ? <KnowledgeScreen
             onBack={() => { setDevelopmentGuideId(null); setNavigation('development'); }}
             returnToDevelopment
@@ -329,7 +348,12 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
 }
 
 declare global {
-  interface Window { __homePanelsOpened?: string; __routineToggleCalls?: number }
+  interface Window {
+    __homePanelsOpened?: string;
+    __routineToggleCalls?: number;
+    __homePanelsChangeScrollScope?: (revision: string) => void;
+    __developmentGuideRetryCalls?: number;
+  }
 }
 
 createRoot(document.getElementById('root')!).render(<VisualCheckApp />);
