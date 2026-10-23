@@ -6,6 +6,22 @@ Datum: 2026-10-23. Beställare: Erik. Genomförande: Luna/implementer, med koord
 
 Detta är **den aktuella paketordningen** för fynden i [GAP-analysen 2026-10-23](../GAP-UI-UX-rev02-2026-10-23.md). Den ersätter paketordningen i GAP-analysens tidigare avsnitt 8 och [planen från 18 oktober](../plans/UI-UX-NEXT-PACKAGES-2026-10-18.md). GAP-analysen behåller belägg, skärmbilder, kodankare och G01–G19; de kopieras inte till en ny konkurrerande fellista.
 
+## Källgräns och granskning av äldre tasks — rättelse 2026-10-23
+
+Eriks instruktion: **förslag från före 16 oktober får inte återinföras över nyare UI eller funktion.** Denna regel gäller också om en äldre task fortfarande står som `done`, `blocked` eller dependency i kön. Äldre dokument finns kvar som historik; de är inte en order att återställa skärmar, beteenden eller scope.
+
+Aktuell UI-auktoritet är rev02-bilden, aktuella design-/skärmkontrakt i den mån de stämmer med senare beslut, GAP:en och denna actionplan daterade 23 oktober, samt uttryckliga ägarbeslut efter 16 oktober. Före-16-oktober-taskar får användas för att förstå bakgrund eller skydda ett redan befintligt data-/säkerhetskontrakt, men aldrig som egen grund för ny UI eller ny funktion. Vid konflikt gäller det senaste ägarbeslutet och verifierad nyare implementation. Även planer efter 16 oktober är underordnade denna actionplan när de beskriver en äldre paketordning.
+
+| Äldre arbete granskat | Bedömning för dagens arbete |
+|---|---|
+| `VISION-R02-4E`, `DOG-PROFILE-AGE-DISPLAY` och `DOG-PROFILE-BREED-MIX` — profilplaner från 13 oktober | Historik, inte aktiv UI-spec. Den sökbara rasväljaren är självständigt beställd och verifierad i GAP:en/01A den 23 oktober. Bevara fungerande ras-ID:n och befintlig ålderspreferens; bygg inte om dem. Full katalogimport, Mix-fält och gamla layoutförslag ingår inte i paketen 01–04. Ålderspreferensens eventuella separata runtime-/migrationsstatus stängs inte av denna UI-plan. |
+| `CHECKLIST-UI-LUNA-DETAIL`, `...OVERVIEW`, `...CUSTOM` — 13–14 oktober | Avslutade historiska checkpoints. Bevara deras fungerande checklist-/progress-/routebeteenden; återimplementera inte deras vyer. G02/G14 i den nya GAP:en beskriver de specifika kvarstående ikon- och radproblemen som ska lösas nu. |
+| `MULTI-DOG-PROFILE-01` / `MULTI-DOG-01` — 18 oktober | Separat äldre, blockerad runtime-/settingsresa. Aktuella 01A/01B är nya UI-checkpoints och ersätter inte dess ouppfyllda runtimeacceptans. Återanvänd fungerande kod; importera inte dess gamla sidlayout eller duplicera hundbyte/tillägg. |
+| `FLOW-HOME-CHECKLIST-FILTERS-01`, `FLOW-KNOWLEDGE-01` — 20–22 oktober, samt UI-R02-01A — 23 oktober | Nyare levererat arbete som ska bevaras. A03/panel 4, checklistmigrationen och Knowledge-bildarbetet rapporteras klara; 01A är stängd med QA/Reviewer. Nya paket rättar bara GAP:ar som kvarstår efter detta arbete. 01B:s externa QA, Security final och Reviewer är fortfarande öppna. |
+| `UI-UX-NEXT-PACKAGES-2026-10-18` och `UI-ACTIONS-ROWS` | Äldre paketordning/beslut; den senare actionplanen styr. Återanvänd verifierat beteende, men följ 23-oktober-planens knapp-, modal- och scopebeslut. |
+
+**Ändringsskydd:** denna rättelse klassar källor och begränsar framtida scope; den återställer inte kod och ogiltigförklarar inte nyare QA. Befintlig kod ändras bara för ett belagt gap i G01–G19 eller en konkret regression. En exkluderad äldre funktion kan tas upp igen endast med aktuell källa, ny GAP-bedömning och en ny daterad taskplan.
+
 ## 1. Mål och prioritering
 
 Ägaren ska kunna välja hund/ras, skapa och ändra checklistor, registrera vardagen och hitta relevant innehåll med samma begripliga kontroller. Skärmytan ska användas till innehållet. Knapprader, upprepade introduktioner och dubbla modalrubriker ska inte dominera.
@@ -57,7 +73,7 @@ Ansvar: koordinator. Spårning: **G18**. Detta är en förberedelse inom första
 - X/back och hundbyte hanterar rent/ändrat/pending/unknown korrekt; sena svar från tidigare hund ignoreras. Avslutningskontraktet dokumenteras för nästa paket.
 - Befintlig ålderspreferens, kennelkoppling och profil-/passdata fungerar. Ingen ny foto-/lagringsfunktion eller katalogimport krävs för UI-checkpointen.
 
-**Spårning:** primärt G01/G08; gemensam bas för G03/G06; profilens delar av G10/G11/G12/G13/G16. Full raskatalog och Mix har eget kvarstående databeroende i avsnitt 8; det hindrar inte väljaren.
+**Spårning:** primärt G01/G08; gemensam bas för G03/G06; profilens delar av G10/G11/G12/G13/G16. Den befintliga katalogen räcker för denna UI-leverans. Full katalogimport och Mix är uttryckligen utanför aktuell plan och blockerar inte väljaren.
 
 ## 4. UI-R02-02 — Checklistor med samma redigeringsupplevelse
 
@@ -130,7 +146,7 @@ Ansvar: koordinator. Spårning: **G18**. Detta är en förberedelse inom första
 
 | Familj | Etableras i | Återanvänds i | Bindande regel |
 |---|---|---|---|
-| Rasväljare | 01 | Skapa/ändra profil; kommande Mix kan använda samma familj | Stängt fält + sökbar modal, stabilt värde, en lista |
+| Rasväljare | 01 | Skapa/ändra profil | Stängt fält + sökbar modal, stabilt värde, en lista. Ingen Mix-utökning i denna plan. |
 | Formulärheader/footer och korta handlingar | 01; utökas med checklistbehov i 02 | 03 och 04 | Opt-in varianter; en primär Spara-rad, minst 44 pt träffyta, text får växa |
 | Avslutning och utkast | Kontrakt och profil i 01 | Checklistor 02, Logg/Hälsa 03, berörda stödresor 04 | Samma handler för de faktiska stängvägarna inom formuläret; pending/unknown skyddas |
 | Ikonmodell/picker och checklistans rad | 02 | Rutiner och egna faschecklistepunkter | En ikonuppsättning; samma presentation, olika verkliga progress-/upprepningsregler |
@@ -154,7 +170,7 @@ Dessa punkter är relevanta kvarstående leveranser, inte skäl att behålla nuv
 | **D1 — Ny ikonmetadata för egna faschecklistepunkter** | Implementer tar fram migration + kompatibilitet + grant/readback-prov; relevant Architect/Security granskar. Faktisk DB-körning/prov samordnas separat. | 02. Hindrar att sparad ikon rapporteras klar i aktuell miljö, inte oberoende kompakt UI. Rutinernas redan migrerade ikonkolumner räcker inte. |
 | **D2 — Ny Insikter-läsning** | Återanvänd branchens `202610220002_dog_event_insights_read.sql` och riktade prob efter färsk basjämförelse; verifiera miljön och nya rättigheter. | 04. Befintligt generellt Supabase/RLS-godkännande ersätter inte prov av denna nya RPC. Compliance för 01A frågas inte om igen. |
 | **D3 — Publicerade faschecklistor/FAQ** | Innehållsansvarig/Dog Expert granskar relevanta råd; implementer kopplar en riktig versionsmärkt publik katalog. Dokumentera hur review-progress/egna punkter bevaras utan tyst ID-/versionsbyte. | G17, 04. Krävs innan de publika resorna räknas levererade. Reviewflagga/märkning kringgås inte. UI-pariteten i 02 kan bli klar före innehållet. |
-| **D4 — Full raskatalog och Mix** | Ta fram spårbar Wikidata CC0-snapshot enligt [profilplanen](../plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md), verifiera stabila ID:n/etiketter och lås Mix-kontraktets migrations-/rättighetsdel. Äldre formulering att även picker-UI måste invänta exporten ersätts av G01. | 01 återanvänder befintliga alternativ direkt. Full katalog/Mix förblir öppet som tidigare beställd dataleverans; hitta inte på alternativ och byt inte ut sparade ras-ID:n. Befintlig ålderspreferens bevaras. |
+| **Äldre förslag — full raskatalog och Mix (ej del av planen)** | Äldre profilplan från 13 oktober; ingen aktuell källa eller ägarbeställning efter 16 oktober för att börja katalogimport/Mix i dessa paket. | Inte ett aktivt beroende, inte en blockerare och ingen skrivuppgift för 01–04. Bevara sparade ras-ID:n och befintlig ålderspreferens. Återuppta bara efter ny aktuell GAP-bedömning och daterad taskplan. |
 | **D5 — Innehålls-/intervallunderlag för full referens** | Stäm av publicerade milstolpskällor för Utveckling samt sömnens intervallkontrakt mot faktiskt godkänt scope och data. Dokumentera exakt vad som finns/saknas; bygg bara från giltiga källor. | 04:s slutmatris skiljer fungerande åldersvy/01A-översikt från full milstolps-/sömnleverans. Äldre önskemål om veckomål öppnar inte om ägarens godkända panel 3. |
 
 Ingen UI-checkpoint publicerar innehåll, kör live-migration eller skapar en signerad release automatiskt. Om något av ovanstående saknas fortsätter nästa oberoende resa, medan det berörda slutkravet står öppet med ansvar och nästa steg.
@@ -189,7 +205,7 @@ Huvudpaket ansvarar för att fyndet stängs; konsumentpaket behöver visa att de
 
 | Fynd | Huvudansvar | Konsumenter / avgränsning |
 |---|---|---|
-| G01 Rasväljare | 01 | Befintlig katalog först; D4 för full katalog/Mix |
+| G01 Rasväljare | 01 | Skapa/ändra med befintliga katalogposter; ingen katalogimport eller Mix i denna plan |
 | G02 Egen punkts ikon | 02 | D1 ingår i funktionsacceptansen |
 | G03 För stor handlingsyta | 02 | Basvarianter i 01; Logg/Hälsa 03, resterande 04 |
 | G04 Edit/delete/reset | 03 | Checklistmönster i 02, Tränings reset i 04 |
@@ -211,6 +227,6 @@ Huvudpaket ansvarar för att fyndet stängs; konsumentpaket behöver visa att de
 
 ## 11. Startinstruktion till Luna
 
-Gör den korta basavstämningen och börja med **UI-R02-01, checkpoint 1: välj och spara ras**. Läs G01/G08 och profilkontrakten; skriv den exakta delplanen med verkliga API:er och skrivfiler. Leverera samma sökbara väljare i skapa/ändra och kontrollera hela resan. Fortsätt inom paketet med profilens täthet och avslutning. Spara checkpoint innan nästa resa.
+Gör den korta basavstämningen och börja med **UI-R02-01, checkpoint 1: välj och spara ras**. Läs G01/G08, denna källgräns och aktuell kod; skriv den exakta delplanen med verkliga API:er och skrivfiler. Leverera samma sökbara väljare i skapa/ändra och kontrollera hela resan. Fortsätt inom paketet med profilens täthet och avslutning. Äldre profilplaner är historik, inte kompletterande UI-krav. Spara checkpoint innan nästa resa.
 
 Därefter följer 02 → 03 → 04 enligt denna plan. Prioritera de största synliga avvikelserna och fungerande resor. Återanvänd bekräftad kod och aktuella gemensamma komponenter. Gamla planer ger historik och bevarade dataskydd; rev01, föråldrade knappregler och gamla köstatusar är inte aktuell bygginstruktion. Favoriter, offlinekö, widgets, generiska nya filter och en helt ny navigator ingår inte i dessa paket.

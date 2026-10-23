@@ -12,7 +12,7 @@ Detta är UI-R02-paketets andra och sista profildel efter [01A](UI-R02-01A-BREED
 
 - Primär referens: `vision_rev02.jpg`; profil är en stödyta utan egen rev02-panel. Följ därför panelernas varma canvas, ljusa rundade grupper, kompakta rubriker, profilaccent, tydlig navigation och korta kontextuella handlingar enligt `docs/design-rules.md` §0–4/14 och `docs/design/vision-rev02-screen-contracts.md`.
 - Aktuellt fynd: [GAP-analysen G03/G06/G08/G10/G13/G16](../GAP-UI-UX-rev02-2026-10-23.md). Profilens exakta nuvarande kod/render kontrollerades efter 01A-committen; tidigare skärmbilder används endast som namngivna GAP-förebevis, inte som godkänd implementation.
-- Aktiv profilgrund: [R02-4E-profilkontraktet](../../plans/VISION-REV02-R02-4E-PROFILE-UX-SPEC.md), sökbara rasväljaren i 01A och actionplanen i `docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md` §3. Äldre 4E-begränsningar ersätter inte den senare godkända actionplanen.
+- Aktiv kravkälla: GAP-analysen och actionplanen daterade 2026-10-23, aktuell kod samt den stängda 01A-checkpointen. Äldre profilplaner från före 16 oktober används inte som tilläggskrav eller visuell instruktion; befintliga data-/ägarskapsregler bevaras enligt aktuell kod och MVP-kontrakt.
 - Relevanta skills: `tassla-consumer-ux` och `mobile-ios-design`; utseendet styrs fortsatt av Tasslas designregler och verkliga befintliga React Native-/Expo-komponenter.
 
 | Referens eller krav | Aktuellt problem | Avsedd ändring | Visuell/funktionell acceptans |
