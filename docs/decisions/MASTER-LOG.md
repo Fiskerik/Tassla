@@ -1,5 +1,11 @@
 # Tassla — samlat besluts- och leveransregister
 
+## Aktuellt granskningsunderlag 2026-10-23
+
+[GAP-UI-UX-rev02-2026-10-23.md](../GAP-UI-UX-rev02-2026-10-23.md) är den aktuella UI-/UX-avstämningen för Luna: GitHub main `eea0984`, arbetsbranch `90d0d70`, 19 konkreta gap, gemensamma komponentfamiljer och spårning av äldre/invaliderade planer. Underlaget innehåller en inventering av 133 källfiler och 14 syntetiska RN Web-bilder. Det är en granskning/implementationsbeställning, inte nya genomförda paket, nya QA-PASS eller ett nytt live/native-prov. Ägarbekräftad panel 3, A03, ikonmigration och generell native/RLS-status återöppnas inte av historiska poster.
+
+På Eriks efterföljande beställning av större sammanhängande arbetspaket styr [actionplanen 2026-10-23](../tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md) den nya ordningen: **UI-R02-01 Profil → 02 Checklistor → 03 Logg/Hälsa → 04 panelhelheten med Kunskap/Träning/Insikter**. Den ersätter GAP-analysens tidigare paketindelning och planen från 18 oktober. Alla 19 fynd har ansvar och acceptans; befintlig branchkod återanvänds. Status är planeringsunderlag, inte formellt planreviewgodkänd implementation eller nya `done`-poster.
+
 Status: kanonisk sammanfattning för produkt-, design- och utvecklingsagenter. Baslinje för branchuppdateringen: codex/ux-rethink-2026-10-15 @ 2e230be44c1bdd74e74173064fdce5e60e7e9dbc. Senast sammanställd 2026-10-22.
 
 Läs denna fil först när ett beslut eller tidigare paket efterfrågas. Läs sedan bara den länkade detaljplanen för uppgiften. Vid konflikt gäller senaste uttryckliga ägarbeslutet och den aktuella posten här. De numrerade beslutsfilerna behålls som historiska underlag; de är inte separata, uppdaterade styrkällor. Detaljerade testresultat finns i respektive task- och releaseunderlag.

@@ -10364,6 +10364,68 @@
       "test_evidence": "Focused UI/data tests 12/12 and 11/11 PASS; pnpm check PASS (65 test files); public/review React Native Web save-recovery verifier 9/9 each; public pnpm bundle:ios content guard PASS (1,465 modules), git diff --check and python -X utf8 tools/dev_flow.py validate PASS. A04 Architect APPROVE, Critic PROCEED, Security PASS and independent QA PASS. Live Supabase/RLS/native remain NOT TESTABLE.",
       "implementation_state": "A04 implementation and owner/dog/lifetime recovery are complete locally. Definitive failure retains and unlocks draft; unknown keeps exact retry; verified conflict is persisted before refresh and requires explicit replacement. Rendered evidence under docs/design/evidence/flow-home-checklist-filters-2026-10-20/a04. Queue status advances to qa; broader A03/panel-4 acceptance remains separate.",
       "evidence_status": "local implementation checks pass; awaiting workflow QA/review checkpoint; live backend and native gates remain open"
+    },
+    {
+      "id": "UI-R02-01A",
+      "title": "Profil: gemensam sökbar rasväljare för skapa och ändra",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 1; docs/design/vision-rev02-screen-contracts.md panel 1; docs/plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md §2–3.",
+      "plan": "docs/tasks/dev/UI-R02-01A-BREED-PICKER.md v2",
+      "write_paths": [
+        "src/features/onboarding/BreedPickerField.tsx",
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/components/ui/BottomSheet.tsx",
+        "src/data/app-data.ts",
+        "src/features/onboarding/README.md",
+        "tests/profile-screen-policy.test.mjs",
+        "tests/profile-edit.test.mjs",
+        "tests/app-data.test.mjs",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "docs/design/evidence/ui-r02-01a-breed-picker",
+        "docs/tasks/dev/UI-R02-01A-BREED-PICKER.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Create and edit use one accessible searchable picker backed by fetched BreedOption rows; create has no automatic breed selection.",
+        "Search is local, the list scrolls without nesting FlatList inside BottomSheet ScrollView, and selection/cancel/retry preserve the form draft.",
+        "The no-match state offers the fetched `unknown` row as Okänd ras only if that row exists; it never synthesizes a breed ID.",
+        "An existing breed missing from the fetched catalog is shown without exposing its internal ID and may remain unchanged while other fields are saved.",
+        "Both EditDogProfileScreen save guard and updateOwnedDog reject changed unknown IDs and allow only the unchanged previous missing ID; account/dog scope, conditional write and readback are preserved.",
+        "Synthetic renders cover short and long lists, no match, long Swedish label, narrow viewport and large-text proxy; fixtures are labeled synthetic."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/profile-screen-policy.test.mjs tests/profile-edit.test.mjs tests/app-data.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "Render public/review profile picker states at 375×844, 430×844 and 375×667; inspect §14 and save captures."
+      ],
+      "depends_on": [
+        "VISION-R02-4E"
+      ],
+      "status": "ready",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact plan v2 reviewed: Architect APPROVE and Critic PASS. Plan includes one shared local searchable BreedOption picker, the previously approved fetched catalog row with ID unknown as the no-results choice, no auto-selection on create, and regressions for both the edit-screen save guard and narrow updateOwnedDog legacy-ID preservation. Implementation waits for reviewed branch integration and a pre-change pnpm check."
+        }
+      ],
+      "next_step": "Integrate the current remote branch without losing local commits or audit files, then run the pre-change pnpm check before source edits.",
+      "priority": "P1",
+      "panels": [
+        "1"
+      ],
+      "risk_class": "M",
+      "checkpoint": "UI-R02-01 checkpoint 1: one searchable picker shared by profile creation and edit; full profile density and close behavior remain later checkpoints.",
+      "test_evidence": "Pending implementation; approved plan v2 requires focused profile/data tests, pnpm check, iOS export, synthetic picker renders, §14, diff and queue validation. Native and live database are reported separately.",
+      "implementation_state": "Not started. Architect APPROVE and Critic PASS for exact plan v2; integration and pre-change baseline remain.",
+      "evidence_status": "plan approved; implementation evidence not run"
     }
   ]
 }

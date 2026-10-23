@@ -1,0 +1,1155 @@
+{
+  "baseline": "eea0984aba44ef17707e7d583b3f9bf6b165c7ee",
+  "method": "React Native Web using the real screen components, synthetic fixtures and native API shims. No live Supabase, RLS or native iOS verification.",
+  "captures": [
+    {
+      "image": "synthetic-main-profile-24-breeds-375.png",
+      "url": "http://127.0.0.1:4267/app/?screen=profile-edit",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "note": "24 synthetic options demonstrate the inline-list geometry; this is not the live breed catalogue.",
+      "buttons": [
+        {
+          "label": "Tillbaka till Mer",
+          "text": "",
+          "x": 24,
+          "y": 54,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Öppna kalender för Födelsedatum",
+          "text": "",
+          "x": 289,
+          "y": 2013,
+          "width": 44,
+          "height": 52,
+          "inViewport": false
+        },
+        {
+          "label": "Spara profil",
+          "text": "Spara profil",
+          "x": 41,
+          "y": 2192,
+          "width": 293,
+          "height": 56,
+          "inViewport": false
+        },
+        {
+          "label": "Spara kennelkoppling",
+          "text": "Spara kennelkoppling",
+          "x": 41,
+          "y": 2490,
+          "width": 293,
+          "height": 56,
+          "inViewport": false
+        },
+        {
+          "label": "Avbryt",
+          "text": "Avbryt",
+          "x": 24,
+          "y": 2563,
+          "width": 327,
+          "height": 56,
+          "inViewport": false
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "image": "synthetic-main-profile-below-breeds-375.png",
+      "url": "http://127.0.0.1:4267/app/?screen=profile-edit",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "note": "",
+      "buttons": [
+        {
+          "label": "Tillbaka till Mer",
+          "text": "",
+          "x": 24,
+          "y": -1571,
+          "width": 44,
+          "height": 44,
+          "inViewport": false
+        },
+        {
+          "label": "Öppna kalender för Födelsedatum",
+          "text": "",
+          "x": 289,
+          "y": 388,
+          "width": 44,
+          "height": 52,
+          "inViewport": true
+        },
+        {
+          "label": "Spara profil",
+          "text": "Spara profil",
+          "x": 41,
+          "y": 567,
+          "width": 293,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Spara kennelkoppling",
+          "text": "Spara kennelkoppling",
+          "x": 41,
+          "y": 865,
+          "width": 293,
+          "height": 56,
+          "inViewport": false
+        },
+        {
+          "label": "Avbryt",
+          "text": "Avbryt",
+          "x": 24,
+          "y": 938,
+          "width": 327,
+          "height": 56,
+          "inViewport": false
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "image": "synthetic-main-checklist-add-375.png",
+      "url": "http://127.0.0.1:4267/knowledge/?state=ready",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "note": "",
+      "buttons": [
+        {
+          "label": "Tillbaka",
+          "text": "",
+          "x": 24,
+          "y": 10,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Läs mer om tillfälliga exempel",
+          "text": "Läs mer",
+          "x": 32,
+          "y": 116,
+          "width": 311,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Ändra Boka valpkurs",
+          "text": "",
+          "x": 290,
+          "y": 496,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Fortsätt med egen punkt",
+          "text": "Fortsätt med egen punkt",
+          "x": 41,
+          "y": 540,
+          "width": 293,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Stäng",
+          "text": "",
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 500,
+          "inViewport": true
+        },
+        {
+          "label": "Stäng",
+          "text": "",
+          "x": 315,
+          "y": 516,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Spara egen punkt",
+          "text": "Spara",
+          "x": 16,
+          "y": 692,
+          "width": 343,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Avbryt ändring av egen punkt",
+          "text": "Avbryt",
+          "x": 16,
+          "y": 760,
+          "width": 343,
+          "height": 56,
+          "inViewport": true
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "image": "synthetic-main-checklist-edit-375-844.png",
+      "url": "http://127.0.0.1:4267/knowledge/?state=ready",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "note": "",
+      "buttons": [
+        {
+          "label": "Tillbaka",
+          "text": "",
+          "x": 24,
+          "y": 10,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Läs mer om tillfälliga exempel",
+          "text": "Läs mer",
+          "x": 32,
+          "y": 116,
+          "width": 311,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Ändra Boka valpkurs",
+          "text": "",
+          "x": 290,
+          "y": 496,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Fortsätt redigera egen punkt",
+          "text": "Fortsätt redigera punkt",
+          "x": 41,
+          "y": 540,
+          "width": 293,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Stäng",
+          "text": "",
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 364,
+          "inViewport": true
+        },
+        {
+          "label": "Stäng",
+          "text": "",
+          "x": 315,
+          "y": 380,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Markera punkten som klar",
+          "text": "Markera som klar",
+          "x": 16,
+          "y": 556,
+          "width": 343,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Spara egen punkt",
+          "text": "Spara",
+          "x": 16,
+          "y": 624,
+          "width": 343,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Radera egen punkt",
+          "text": "Radera punkt",
+          "x": 16,
+          "y": 692,
+          "width": 343,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Avbryt ändring av egen punkt",
+          "text": "Avbryt",
+          "x": 16,
+          "y": 760,
+          "width": 343,
+          "height": 56,
+          "inViewport": true
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "image": "synthetic-main-checklist-edit-375-667.png",
+      "url": "http://127.0.0.1:4267/knowledge/?state=ready",
+      "viewport": {
+        "width": 375,
+        "height": 667
+      },
+      "note": "",
+      "buttons": [
+        {
+          "label": "Tillbaka",
+          "text": "",
+          "x": 24,
+          "y": 10,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Läs mer om tillfälliga exempel",
+          "text": "Läs mer",
+          "x": 32,
+          "y": 116,
+          "width": 311,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Ändra Boka valpkurs",
+          "text": "",
+          "x": 290,
+          "y": 496,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Fortsätt redigera egen punkt",
+          "text": "Fortsätt redigera punkt",
+          "x": 41,
+          "y": 540,
+          "width": 293,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Stäng",
+          "text": "",
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 187,
+          "inViewport": true
+        },
+        {
+          "label": "Stäng",
+          "text": "",
+          "x": 315,
+          "y": 203,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Markera punkten som klar",
+          "text": "Markera som klar",
+          "x": 16,
+          "y": 379,
+          "width": 343,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Spara egen punkt",
+          "text": "Spara",
+          "x": 16,
+          "y": 447,
+          "width": 343,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Radera egen punkt",
+          "text": "Radera punkt",
+          "x": 16,
+          "y": 515,
+          "width": 343,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Avbryt ändring av egen punkt",
+          "text": "Avbryt",
+          "x": 16,
+          "y": 583,
+          "width": 343,
+          "height": 56,
+          "inViewport": true
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "image": "synthetic-main-checklist-edit-430.png",
+      "url": "http://127.0.0.1:4267/knowledge/?state=ready",
+      "viewport": {
+        "width": 430,
+        "height": 844
+      },
+      "note": "",
+      "buttons": [
+        {
+          "label": "Tillbaka",
+          "text": "",
+          "x": 24,
+          "y": 10,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Läs mer om tillfälliga exempel",
+          "text": "Läs mer",
+          "x": 32,
+          "y": 116,
+          "width": 366,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Ändra Boka valpkurs",
+          "text": "",
+          "x": 345,
+          "y": 496,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Fortsätt redigera egen punkt",
+          "text": "Fortsätt redigera punkt",
+          "x": 41,
+          "y": 540,
+          "width": 348,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Stäng",
+          "text": "",
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 364,
+          "inViewport": true
+        },
+        {
+          "label": "Stäng",
+          "text": "",
+          "x": 370,
+          "y": 380,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Markera punkten som klar",
+          "text": "Markera som klar",
+          "x": 16,
+          "y": 556,
+          "width": 398,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Spara egen punkt",
+          "text": "Spara",
+          "x": 16,
+          "y": 624,
+          "width": 398,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Radera egen punkt",
+          "text": "Radera punkt",
+          "x": 16,
+          "y": 692,
+          "width": 398,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Avbryt ändring av egen punkt",
+          "text": "Avbryt",
+          "x": 16,
+          "y": 760,
+          "width": 398,
+          "height": 56,
+          "inViewport": true
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "image": "synthetic-main-log-edit-375.png",
+      "url": "http://127.0.0.1:4267/app/?screen=log",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "note": "",
+      "buttons": [
+        {
+          "label": "Visa föregående dag",
+          "text": "",
+          "x": 28,
+          "y": 94,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Valt datum Idag · 23 oktober. Öppna kalender",
+          "text": "Idag · 23 oktober\n",
+          "x": 80,
+          "y": 94,
+          "width": 215,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Visa nästa dag",
+          "text": "",
+          "x": 303,
+          "y": 94,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Logga kiss",
+          "text": "Kiss",
+          "x": 24,
+          "y": 208,
+          "width": 159.5,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Logga bajs",
+          "text": "Bajs",
+          "x": 191.5,
+          "y": 208,
+          "width": 159.5,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Logga mat",
+          "text": "\nMat",
+          "x": 24,
+          "y": 272,
+          "width": 159.5,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Logga sömn",
+          "text": "\nSömn",
+          "x": 191.5,
+          "y": 272,
+          "width": 159.5,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Visa fler loggtyper",
+          "text": "\nFler",
+          "x": 24,
+          "y": 340,
+          "width": 327,
+          "height": 54,
+          "inViewport": true
+        },
+        {
+          "label": "Sömn 06:50, tryck för att ändra",
+          "text": "06:50\n\nSömn\n",
+          "x": 24,
+          "y": 458,
+          "width": 327,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Promenad 07:15, 20 minuter, tryck för att ändra",
+          "text": "07:15\n\nPromenad\n20 minuter\n",
+          "x": 24,
+          "y": 519,
+          "width": 327,
+          "height": 60,
+          "inViewport": true
+        },
+        {
+          "label": "Bajs 08:20, tryck för att ändra",
+          "text": "08:20\nBajs\n",
+          "x": 24,
+          "y": 584,
+          "width": 327,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Kiss 10:30, tryck för att ändra",
+          "text": "10:30\nKiss\n",
+          "x": 24,
+          "y": 645,
+          "width": 327,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Mat 12:05, Åt allt, tryck för att ändra",
+          "text": "12:05\n\nMat\nÅt allt\n",
+          "x": 24,
+          "y": 706,
+          "width": 327,
+          "height": 60,
+          "inViewport": true
+        },
+        {
+          "label": "Lägg till händelse",
+          "text": "\nLägg till händelse",
+          "x": 24,
+          "y": 770,
+          "width": 327,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Stäng",
+          "text": "",
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 84.40625,
+          "inViewport": true
+        },
+        {
+          "label": "Stäng",
+          "text": "",
+          "x": 315,
+          "y": 100.40625,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Händelsetyp: Mat",
+          "text": "\n",
+          "x": 16,
+          "y": 196.40625,
+          "width": 66,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Öppna kalender för Datum",
+          "text": "",
+          "x": 151,
+          "y": 278.40625,
+          "width": 44,
+          "height": 52,
+          "inViewport": true
+        },
+        {
+          "label": "Öppna tidsväljare för Tid",
+          "text": "",
+          "x": 454,
+          "y": 278.40625,
+          "width": 44,
+          "height": 52,
+          "inViewport": true
+        },
+        {
+          "label": "Radera händelse",
+          "text": "Radera",
+          "x": 16,
+          "y": 505.40625,
+          "width": 169.5,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Avbryt ändring",
+          "text": "Avbryt",
+          "x": 189.5,
+          "y": 505.40625,
+          "width": 169.5,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Spara ändring",
+          "text": "Spara ändring",
+          "x": 16,
+          "y": 772,
+          "width": 343,
+          "height": 56,
+          "inViewport": true
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "image": "synthetic-main-health-edit-375.png",
+      "url": "http://127.0.0.1:4267/app/?screen=health",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "note": "",
+      "buttons": [
+        {
+          "label": "Uppföljning, Planerad 22 okt. 2026",
+          "text": "\nUppföljning\nPlanerad 22 okt. 2026\n",
+          "x": 24,
+          "y": 308,
+          "width": 327,
+          "height": 68,
+          "inViewport": true
+        },
+        {
+          "label": "Vaccination valp 2, 10:30, Om 12 dagar · 4 nov. 2026",
+          "text": "\n10:30\nVaccination valp 2\nOm 12 dagar · 4 nov. 2026\n",
+          "x": 24,
+          "y": 432,
+          "width": 327,
+          "height": 68,
+          "inViewport": true
+        },
+        {
+          "label": "Vaccination, 14:20, 28 sep. 2026 · Vaccination valp 1, Genomförd",
+          "text": "\n14:20\nVaccination\n28 sep. 2026 · Vaccination valp 1\n\n",
+          "x": 24,
+          "y": 556,
+          "width": 327,
+          "height": 88,
+          "inViewport": true
+        },
+        {
+          "label": "Veterinärbesök, 12 sep. 2026 · Första besöket, Genomförd",
+          "text": "\nVeterinärbesök\n12 sep. 2026 · Första besöket\n\n",
+          "x": 24,
+          "y": 648,
+          "width": 327,
+          "height": 68,
+          "inViewport": true
+        },
+        {
+          "label": "5,2 kg, 7 okt. 2026",
+          "text": "\n5,2 kg\n7 okt. 2026\n",
+          "x": 24,
+          "y": 772,
+          "width": 327,
+          "height": 68,
+          "inViewport": true
+        },
+        {
+          "label": "Lägg till hälsohändelse",
+          "text": "Lägg till händelse",
+          "x": 24,
+          "y": 864,
+          "width": 327,
+          "height": 56,
+          "inViewport": false
+        },
+        {
+          "label": "Stäng",
+          "text": "",
+          "x": 0,
+          "y": 0,
+          "width": 375,
+          "height": 84.40625,
+          "inViewport": true
+        },
+        {
+          "label": "Stäng",
+          "text": "",
+          "x": 315,
+          "y": 100.40625,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Visa information om hälsans historik",
+          "text": "\nLäs information",
+          "x": 213.984375,
+          "y": 192.40625,
+          "width": 145.015625,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Öppna kalender för Datum",
+          "text": "",
+          "x": 297,
+          "y": 403.40625,
+          "width": 44,
+          "height": 52,
+          "inViewport": true
+        },
+        {
+          "label": "Öppna tidsväljare för Tid (valfri)",
+          "text": "",
+          "x": 297,
+          "y": 500.40625,
+          "width": 44,
+          "height": 52,
+          "inViewport": true
+        },
+        {
+          "label": "Spara rättning",
+          "text": "Spara rättning",
+          "x": 33,
+          "y": 763.40625,
+          "width": 309,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Avbryt rättning",
+          "text": "Avbryt rättning",
+          "x": 33,
+          "y": 819.40625,
+          "width": 309,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Radera händelse",
+          "text": "Radera händelse",
+          "x": 16,
+          "y": 892.40625,
+          "width": 343,
+          "height": 56,
+          "inViewport": false
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "image": "synthetic-main-reminders-375.png",
+      "url": "http://127.0.0.1:4267/app/?screen=reminders&state=training",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "note": "",
+      "buttons": [
+        {
+          "label": "Tillbaka till Mer",
+          "text": "",
+          "x": 24,
+          "y": 54,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Visa information om lokala påminnelser",
+          "text": "\nLäs information",
+          "x": 201.984375,
+          "y": 242,
+          "width": 149.015625,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Öppna tidsväljare för Träningspåminnelse, lokal tid",
+          "text": "",
+          "x": 291,
+          "y": 689,
+          "width": 44,
+          "height": 52,
+          "inViewport": true
+        },
+        {
+          "label": "Spara val",
+          "text": "Spara val",
+          "x": 41,
+          "y": 768,
+          "width": 293,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Tillåt påminnelser på telefonen",
+          "text": "Tillåt påminnelser på telefonen",
+          "x": 41,
+          "y": 910,
+          "width": 293,
+          "height": 56,
+          "inViewport": false
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "image": "synthetic-main-knowledge-unassigned-375.png",
+      "url": "http://127.0.0.1:4267/app/?screen=knowledge",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "note": "Legacy synthetic IDs intentionally exercise the text-only image fallback. This image does not prove that published guides lack photos.",
+      "buttons": [
+        {
+          "label": "Läs En trygg start hemma",
+          "text": "En trygg start hemma\nSå skapar du lugn, rutin och trygghet de första veckorna.\n1 min läsning",
+          "x": 24,
+          "y": 184,
+          "width": 327,
+          "height": 130,
+          "inViewport": true
+        },
+        {
+          "label": "Läs Hantera din valp",
+          "text": "Hantera din valp\n1 min läsning",
+          "x": 24,
+          "y": 322,
+          "width": 327,
+          "height": 66,
+          "inViewport": true
+        },
+        {
+          "label": "Öppna Checklistor",
+          "text": "\nChecklistor\nFör valpens olika faser",
+          "x": 24,
+          "y": 468,
+          "width": 327,
+          "height": 102,
+          "inViewport": true
+        },
+        {
+          "label": "Öppna Vanliga frågor",
+          "text": "\nVanliga frågor\nSvar efter var ni är just nu",
+          "x": 24,
+          "y": 578,
+          "width": 327,
+          "height": 102,
+          "inViewport": true
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "image": "synthetic-main-knowledge-assigned-375.png",
+      "url": "http://127.0.0.1:4267/app/?screen=knowledge&knowledgeImages=assigned",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "note": "Three synthetic guides use existing content-ID/version photo assignments; this is a composition example, not a published-content read.",
+      "buttons": [
+        {
+          "label": "Läs En trygg start hemma",
+          "text": "En trygg start hemma\nSå skapar du lugn, rutin och trygghet de första veckorna.\n1 min läsning",
+          "x": 24,
+          "y": 184,
+          "width": 327,
+          "height": 306,
+          "inViewport": true
+        },
+        {
+          "label": "Läs Hantera din valp",
+          "text": "Hantera din valp\n1 min läsning",
+          "x": 24,
+          "y": 498,
+          "width": 157.5,
+          "height": 162,
+          "inViewport": true
+        },
+        {
+          "label": "Läs Inför veterinärbesöket",
+          "text": "Inför veterinärbesöket\n1 min läsning",
+          "x": 193.5,
+          "y": 498,
+          "width": 157.5,
+          "height": 162,
+          "inViewport": true
+        },
+        {
+          "label": "Öppna Checklistor",
+          "text": "\nChecklistor\nFör valpens olika faser",
+          "x": 24,
+          "y": 740,
+          "width": 327,
+          "height": 102,
+          "inViewport": true
+        },
+        {
+          "label": "Öppna Vanliga frågor",
+          "text": "\nVanliga frågor\nSvar efter var ni är just nu",
+          "x": 24,
+          "y": 850,
+          "width": 327,
+          "height": 102,
+          "inViewport": false
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "image": "synthetic-main-knowledge-assigned-430.png",
+      "url": "http://127.0.0.1:4267/app/?screen=knowledge&knowledgeImages=assigned",
+      "viewport": {
+        "width": 430,
+        "height": 844
+      },
+      "note": "",
+      "buttons": [
+        {
+          "label": "Läs En trygg start hemma",
+          "text": "En trygg start hemma\nSå skapar du lugn, rutin och trygghet de första veckorna.\n1 min läsning",
+          "x": 24,
+          "y": 184,
+          "width": 382,
+          "height": 286,
+          "inViewport": true
+        },
+        {
+          "label": "Läs Hantera din valp",
+          "text": "Hantera din valp\n1 min läsning",
+          "x": 24,
+          "y": 478,
+          "width": 185,
+          "height": 162,
+          "inViewport": true
+        },
+        {
+          "label": "Läs Inför veterinärbesöket",
+          "text": "Inför veterinärbesöket\n1 min läsning",
+          "x": 221,
+          "y": 478,
+          "width": 185,
+          "height": 162,
+          "inViewport": true
+        },
+        {
+          "label": "Öppna Checklistor",
+          "text": "\nChecklistor\nFör valpens olika faser",
+          "x": 24,
+          "y": 720,
+          "width": 382,
+          "height": 102,
+          "inViewport": true
+        },
+        {
+          "label": "Öppna Vanliga frågor",
+          "text": "\nVanliga frågor\nSvar efter var ni är just nu",
+          "x": 24,
+          "y": 830,
+          "width": 382,
+          "height": 102,
+          "inViewport": true
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "image": "synthetic-main-training-375.png",
+      "url": "http://127.0.0.1:4267/app/?screen=training",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "note": "",
+      "buttons": [
+        {
+          "label": "Visa alla träningsövningar",
+          "text": "Visa alla",
+          "x": 287.203125,
+          "y": 244,
+          "width": 63.796875,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Öppna nästa övning Utforska i egen takt i Trygg start hemma",
+          "text": "Standardbild\nTrygg start hemma\nUtforska i egen takt\nLåt valpen nosa på en lugn plats och belöna frivilligt lugn.",
+          "x": 24,
+          "y": 300,
+          "width": 157.5,
+          "height": 280.625,
+          "inViewport": true
+        },
+        {
+          "label": "Öppna nästa övning Säg namnet en gång i Kontakt och namn",
+          "text": "Standardbild\nKontakt och namn\nSäg namnet en gång\nNär valpen vänder sig mot dig, markera och belöna lugnt.",
+          "x": 193.5,
+          "y": 300,
+          "width": 157.5,
+          "height": 280.625,
+          "inViewport": true
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "image": "synthetic-main-passport-375.png",
+      "url": "http://127.0.0.1:4267/app/?screen=passport",
+      "viewport": {
+        "width": 375,
+        "height": 844
+      },
+      "note": "",
+      "buttons": [
+        {
+          "label": "Tillbaka till Mer",
+          "text": "",
+          "x": 307,
+          "y": 54,
+          "width": 44,
+          "height": 44,
+          "inViewport": true
+        },
+        {
+          "label": "Välj avsnitt att dela",
+          "text": "Välj vad som delas",
+          "x": 24,
+          "y": 666,
+          "width": 327,
+          "height": 56,
+          "inViewport": true
+        },
+        {
+          "label": "Dela som PDF",
+          "text": "Dela som PDF",
+          "x": 24,
+          "y": 730,
+          "width": 327,
+          "height": 56,
+          "inViewport": true
+        }
+      ],
+      "pageErrors": []
+    }
+  ]
+}

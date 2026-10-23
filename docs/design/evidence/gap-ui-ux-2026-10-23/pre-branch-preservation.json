@@ -1,0 +1,132 @@
+{
+  "purpose": "Preserve the pre-branch GAP audit and action-plan work unchanged while integrating the current GitHub branch.",
+  "created_at_utc": "2026-10-23T11:19:05.878209+00:00",
+  "local_branch": "2026-10-22-panel7-insights-profile",
+  "local_head": "3aeb6c9e77654d4437bcafe0ecc6c55f5efd59c2",
+  "github_branch": "2026-10-22-panel7-insights-profile",
+  "github_branch_head": "90d0d704c610ade7946557bf5f3b75a9310ff63e",
+  "github_main_head": "eea0984aba44ef17707e7d583b3f9bf6b165c7ee",
+  "files": [
+    {
+      "path": "docs/GAP_analys_Tassla 2026-10-16.md",
+      "sha256": "bb900d61344e19fe196cca5c1f937dc49ed0e290e8654642a92529315db3a4f6"
+    },
+    {
+      "path": "docs/decisions/MASTER-LOG.md",
+      "sha256": "d0fdc73e75935ec48bc6935d0ee63c2176f73f57728be742a3e8a592b9e55497"
+    },
+    {
+      "path": "docs/design/UI-ACTION-INVENTORY-2026-10-18.md",
+      "sha256": "3d62ec377799dfa25b1cdaa73d9ca36148292e68bc8c8b1e3bb8ebc36b0e0fc3"
+    },
+    {
+      "path": "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+      "sha256": "2c8a5193c42ab49ceed1f108b0c22f0f64689bce9f6179fba104084c9ccda27d"
+    },
+    {
+      "path": "docs/GAP-UI-UX-rev02-2026-10-23.md",
+      "sha256": "84609cce2e1a2dd5f19feef82b211193e5d6342f49d6669804e14fad8f8db78e"
+    },
+    {
+      "path": "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md",
+      "sha256": "caa734e0fc933bff73486c6830026c857ffccd048d0d2f6f51b3a5a7e295bb09"
+    },
+    {
+      "path": "docs/tasks/dev/UI-R02-01A-BREED-PICKER.md",
+      "sha256": "f7835e853358f618482afb3ef37a4b11c914e02b3af1200580e2c5df817dd0e1"
+    },
+    {
+      "path": "docs/tasks/dev/queue.json",
+      "sha256": "29a17dfa059bbe8ac6651dcd4be8eca250098c7f4fccd61c6ab930d46be50967"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/README.md",
+      "sha256": "126468db0b6ab08f9fe3e3e4a4dce7cb37df1960670abf74f9fb9769f7ef06e9"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/baseline.json",
+      "sha256": "e48dd22573c5691fbbb3cf7e122b619ffd3e899603a9a5cf3baed002782b6bfc"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/capture-metrics.json",
+      "sha256": "8f15bb5874ea2684d37b4a9e1c605394ea7a876a35422beb064390a6753c7336"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/capture-ui.py",
+      "sha256": "32e0781425db8e5f4e6ecf897b60240be7ef25dd32b31a0ac9034b4dd32069a1"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/contact-actions.png",
+      "sha256": "010e747c3451369e03be4b8c4956bebe999baa2e9c1514397e3510810d4ace4d"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/contact-screens.png",
+      "sha256": "474c5b1dddc288a150b898bb5fbd76ff060d6531fcd0c5246b4aefedfb52ca8b"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/prepare-fixtures.py",
+      "sha256": "647ea5f9ead0a50b24ef13778f7a9ab1ad2f0ba7d4c181a2020252bdf2caee46"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/synthetic-main-checklist-add-375.png",
+      "sha256": "8d98a268cb9ad7a7e19665513b001b31b8912eccff23f49839ac5a8d2fa5c66f"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/synthetic-main-checklist-edit-375-667.png",
+      "sha256": "5534a0be3e3f13b6569152f0d3b13f140730f074684ea1d1c61a27cfffea2153"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/synthetic-main-checklist-edit-375-844.png",
+      "sha256": "b81f1cae6e90ec8747c8108b566e41fdd88640dc87963df8c82e08d4a8839890"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/synthetic-main-checklist-edit-430.png",
+      "sha256": "4c58a4ceb74544b7e353368133346d5813264abd23f428b538c29f0af3d12d12"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/synthetic-main-health-edit-375.png",
+      "sha256": "67559891f1dfd5a5dae27d191fa2a6ad385e3f03e01573085b9116ba306185a5"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/synthetic-main-knowledge-assigned-375.png",
+      "sha256": "ffcd8e73d2414e6529146fde0d51bef761b26b70db75c3194a7a9d43273175fc"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/synthetic-main-knowledge-assigned-430.png",
+      "sha256": "fee87ee557bf986bb983c5f41b0b2c1316a5bf8bbd59db1a8f03f002892d3c54"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/synthetic-main-knowledge-unassigned-375.png",
+      "sha256": "45b2a1aaae0ffca0cb6125e9a9b74597074e6d10ec6d7c4ee19c27b359d6e57b"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/synthetic-main-log-edit-375.png",
+      "sha256": "a3496af8627ab19cd266ec2467dca8683febec8aa27ef7cc2e2bbbcddf787617"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/synthetic-main-passport-375.png",
+      "sha256": "20717f58ccd431c1a62d1e4ea687f6497f6854e9c19d71eac5d9bf558d7cc8f4"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/synthetic-main-profile-24-breeds-375.png",
+      "sha256": "3753022d0a18f06346ea709107d8bb495d2285782fe116b2d3fd960fd95981ef"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/synthetic-main-profile-below-breeds-375.png",
+      "sha256": "389c7b0a9989f939a07f501aa59bed1915f0e7a88893eb42537b96aaafa0b467"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/synthetic-main-reminders-375.png",
+      "sha256": "73ebfcfdff8425a904ef73718b281420862b4c1aa6ce708ee47100c621697337"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/synthetic-main-training-375.png",
+      "sha256": "13c5c7a3b7517353ae19e016500be806054cade48591e908c58dc9f4c255c2e7"
+    },
+    {
+      "path": "docs/design/evidence/gap-ui-ux-2026-10-23/ui-actions-main-eea0984.csv",
+      "sha256": "5d53ff42529b951f975c4c3441a670ee52f4a434d7799d230b1f9a2d95dce070"
+    }
+  ],
+  "note": "This manifest intentionally does not hash itself. Verify every listed file after branch integration."
+}
