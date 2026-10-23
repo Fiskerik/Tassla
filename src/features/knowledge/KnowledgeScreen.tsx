@@ -118,8 +118,11 @@ export function KnowledgeScreen({
       {image ? <Image source={image} style={featured ? styles.featuredImage : styles.smallImage} resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}
       <View style={featured ? styles.cardCopy : styles.smallCardCopy}>
         <Text style={featured ? styles.guideTitle : styles.smallGuideTitle} numberOfLines={featured ? undefined : 3}>{item.title}</Text>
-        {featured ? <Text style={styles.sourceText} numberOfLines={2}>{getGuidePreviewText(item.body)}</Text> : null}
-        <Text style={styles.readTime}>{readingMinutes(item.body)} min läsning</Text>
+        {featured ? <Text style={styles.sourceText} numberOfLines={1}>{getGuidePreviewText(item.body)}</Text> : null}
+        <View style={styles.metadataRow}>
+          <Text style={styles.metadataPill}>{readingMinutes(item.body)} min</Text>
+          <Text style={styles.metadataPill}>{item.contentType === 'guide' ? 'Guide' : 'Artikel'}</Text>
+        </View>
       </View>
     </MotionPressable>;
   }
@@ -145,7 +148,7 @@ export function KnowledgeScreen({
             accessibilityHint={`Sök bland guider för ${dogLabel}.`}
             value={searchQuery}
             onChangeText={(value) => setGuideViewState((current) => ({ ...current, scopeKey: searchScopeKey, value }))}
-            placeholder="Sök i guider"
+            placeholder={`Sök bland guider för ${dogLabel}`}
             returnKeyType="search"
             style={styles.searchInput}
           />
@@ -153,7 +156,6 @@ export function KnowledgeScreen({
             {iconsLoaded ? <Ionicons name="close-circle" size={tokens.size.iconMd} color={tokens.colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : <Text style={styles.clearSearchText}>Rensa</Text>}
           </MotionPressable> : null}
         </View>
-        <Text style={styles.searchHelp}>Sök bland guider för {dogLabel}.</Text>
       </View> : null}
 
       {reviewEnabled && showGuideScreen ? <Text style={styles.reviewNotice}>Tillfälligt exempel – innehållet är inte sakgranskat.</Text> : null}
@@ -216,12 +218,12 @@ export function KnowledgeScreen({
       {tab === 'För dig' && !selectedItem ? <View style={styles.shortcuts}>
         <SectionHeader title="Fler i Kunskap" />
         <View style={styles.categoryLinks}>
-          <Card onPress={() => changeTab('Checklistor')} accessibilityLabel="Öppna Checklistor">
-            <View style={styles.categoryLink}><IconChip category="training" /><View style={styles.categoryCopy}><Text style={styles.guideTitle}>Checklistor</Text><Text style={styles.sourceText}>För valpens olika faser</Text></View></View>
-          </Card>
-          <Card onPress={() => changeTab('FAQ')} accessibilityLabel="Öppna Vanliga frågor">
-            <View style={styles.categoryLink}><IconChip category="sleep" /><View style={styles.categoryCopy}><Text style={styles.guideTitle}>Vanliga frågor</Text><Text style={styles.sourceText}>Svar efter var ni är just nu</Text></View></View>
-          </Card>
+          <View style={styles.categoryCard}><Card onPress={() => changeTab('Checklistor')} accessibilityLabel="Öppna Checklistor">
+            <View style={styles.categoryLink}><IconChip category="training" /><Text style={styles.categoryTitle}>Checklistor</Text></View>
+          </Card></View>
+          <View style={styles.categoryCard}><Card onPress={() => changeTab('FAQ')} accessibilityLabel="Öppna Vanliga frågor">
+            <View style={styles.categoryLink}><IconChip category="sleep" /><Text style={styles.categoryTitle}>Vanliga frågor</Text></View>
+          </Card></View>
         </View>
       </View> : null}
 
@@ -245,24 +247,26 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, minWidth: 0, minHeight: tokens.size.touchMin, ...tokens.typography.body, color: tokens.colors.textPrimary, paddingVertical: 0 },
   clearSearch: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
   clearSearchText: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
-  searchHelp: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   searchEmpty: { gap: tokens.spacing.xs },
   searchCount: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   pageTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
   reviewNotice: { ...tokens.typography.caption, color: tokens.colors.warning, backgroundColor: tokens.colors.warningSurface, borderRadius: tokens.radius.md, padding: tokens.spacing.sm },
   shortcuts: { gap: tokens.spacing.xs, marginTop: tokens.spacing.sm },
-  categoryLinks: { gap: tokens.spacing.sm },
-  categoryLink: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md },
+  categoryLinks: { flexDirection: 'row', gap: tokens.spacing.sm },
+  categoryCard: { flex: 1, minWidth: 0 },
+  categoryLink: { flexDirection: 'column', alignItems: 'center', gap: tokens.spacing.xs },
+  categoryTitle: { alignSelf: 'stretch', textAlign: 'center', ...tokens.typography.label, color: tokens.colors.textPrimary },
   categoryCopy: { flex: 1, minWidth: 0, paddingVertical: tokens.spacing.sm, gap: tokens.spacing.xs },
   featured: { backgroundColor: tokens.colors.home.card, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, overflow: 'hidden' },
-  featuredImage: { width: '100%', height: 176 },
-  cardCopy: { padding: tokens.spacing.md, gap: tokens.spacing.sm },
+  featuredImage: { width: '100%', height: 200 },
+  cardCopy: { paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.sm, gap: tokens.spacing.sm },
   smallCardCopy: { flex: 1, padding: tokens.spacing.sm, gap: tokens.spacing.xs },
-  readTime: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  metadataRow: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
+  metadataPill: { ...tokens.typography.caption, color: tokens.colors.textSecondary, backgroundColor: tokens.colors.background, borderRadius: tokens.radius.full, paddingHorizontal: tokens.spacing.sm, paddingVertical: tokens.spacing.xs },
   articleGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.md },
   smallCard: { flexGrow: 1, flexBasis: '45%', backgroundColor: tokens.colors.home.card, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, overflow: 'hidden' },
-  smallImage: { width: '100%', height: 72 },
-  guideList: { gap: tokens.spacing.sm },
+  smallImage: { width: '100%', height: 132 },
+  guideList: { gap: tokens.spacing.xs },
   guideTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
   smallGuideTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
   articleCard: { alignSelf: 'stretch', borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding },

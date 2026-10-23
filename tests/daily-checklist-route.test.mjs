@@ -36,7 +36,7 @@ test('Training focus is bound to the selected version and step, returns to its s
 });
 
 test('Checklist preserves its offset through training and planned-health source routes', () => {
-  assert.match(workspace, /const defaultRouteScroll = productRouteScrollKeys\(visiblePage/);
+  assert.match(workspace, /const defaultRouteScroll = visiblePage === 'log' \? logViewScrollKeys\(logView\) : productRouteScrollKeys\(visiblePage/);
   assert.match(workspace, /visiblePage === 'planned-health' && visiblePlannedHealthChecklistFocus[\s\S]*?preserveScrollKey: 'home-checklist-flow'/);
   assert.match(workspace, /<AppScreen scrollKey=\{routeScroll\.scrollKey\} preserveScrollKey=\{routeScroll\.preserveScrollKey\} scrollMemoryScope=/);
   assert.match(navigation, /if \(page === 'checklist'\) return \{ scrollKey: 'home-checklist-flow', preserveScrollKey: 'home-checklist-flow' \}/);

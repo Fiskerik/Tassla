@@ -11,6 +11,8 @@ const toast = readFileSync('src/components/ui/Toast.tsx', 'utf8');
 test('quick log uses the approved page heading, date navigator, two column grid and more tile', () => {
   assert.match(screen, /<Text accessibilityRole="header" style=\{styles\.pageTitle\}>Logga<\/Text>/);
   assert.match(screen, /<View style=\{styles\.dateNavigator\}>/);
+  assert.match(screen, /dateCalendarIconWrap: \{ position: 'absolute', right: -tokens\.spacing\.lg,[^}]*width: tokens\.size\.touchMin/);
+  assert.match(screen, /dateLabelButton: \{[^}]*justifyContent: 'center', position: 'relative'/);
   assert.match(screen, /accessibilityLabel="Visa föregående dag"/);
   assert.match(screen, /DEFAULT_QUICK_LOG_LAYOUT/);
   assert.match(screen, /layout\.primary/);

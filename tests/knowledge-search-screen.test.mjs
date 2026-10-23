@@ -25,8 +25,20 @@ test('active dog is named in search copy and query state is scoped by session an
   assert.match(screen, /guideSearchScopeKey\(sessionKey, dogId\)/);
   assert.match(screen, /guideSearchValueForScope\(guideViewState, searchScopeKey\)/);
   assert.match(screen, /accessibilityLabel=\{`Sök i guider för \$\{dogLabel\}`\}/);
-  assert.match(screen, /Sök bland guider för \{dogLabel\}/);
+  assert.match(screen, /placeholder=\{`Sök bland guider för \$\{dogLabel\}`\}/);
+  assert.doesNotMatch(screen, /searchHelp/);
   assert.match(workspace, /dogName=\{dog\.name\}/);
+});
+
+test('guide metadata comes from published fields and secondary destinations stay compact and labeled', async () => {
+  const screen = await readFile(screenPath, 'utf8');
+  assert.match(screen, /readingMinutes\(item\.body\)/);
+  assert.match(screen, /item\.contentType === 'guide' \? 'Guide' : 'Artikel'/);
+  assert.match(screen, /featuredImage: \{ width: '100%', height: 200 \}/);
+  assert.match(screen, /smallImage: \{ width: '100%', height: 132 \}/);
+  assert.match(screen, /accessibilityLabel="Öppna Checklistor"/);
+  assert.match(screen, /accessibilityLabel="Öppna Vanliga frågor"/);
+  assert.match(screen, /categoryLink: \{ flexDirection: 'column', alignItems: 'center'/);
 });
 
 test('scope changes clear the prior query and expanded guide view', async () => {
@@ -66,7 +78,9 @@ test('published guide versions use the six explicit images and unknown items hav
   assert.ok(nullableLookup);
   assert.match(nullableLookup[0], /KNOWLEDGE_IMAGE_BY_GUIDE_VERSION\.get/);
   assert.match(nullableLookup[0], /return null/);
-  assert.doesNotMatch(nullableLookup[0], /EDITORIAL_IMAGES|REVIEW_IMAGE_BY_GUIDE_VERSION|hash/);
+  assert.match(nullableLookup[0], /const reviewIndex = REVIEW_IMAGE_BY_GUIDE_VERSION\.get\(identity\)/);
+  assert.match(nullableLookup[0], /reviewIndex === undefined \? KNOWLEDGE_IMAGE_BY_GUIDE_VERSION\.get\(identity\) \?\? null : EDITORIAL_IMAGES\[reviewIndex\]/);
+  assert.doesNotMatch(nullableLookup[0], /hash/);
   for (const identity of [
     'review-v1:training:trygg-start:1',
     'review-v1:training:kontakt:1',

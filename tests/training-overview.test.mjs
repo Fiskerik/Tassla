@@ -5,7 +5,7 @@ import path from 'node:path';
 
 const o = await import('../src/features/training/training-overview.ts');
 const screen = readFileSync(path.join(process.cwd(), 'src/features/training/PublishedTrainingScreen.tsx'), 'utf8');
-const prog = (id, steps, done = []) => ({ id, steps: steps.map((s) => ({ id: s })), completedStepIds: done });
+const prog = (id, steps, done = [], currentAgeBreedMatch = false) => ({ id, steps: steps.map((s) => ({ id: s })), completedStepIds: done, currentAgeBreedMatch });
 
 test('program status follows only current-version completed steps and ignores unknown or duplicate ids', () => {
   assert.equal(o.programStatus(prog('p', ['a', 'b'])), 'not_started');
@@ -23,6 +23,16 @@ test('programs sort in progress first, then not started, then complete, keeping 
   assert.deepEqual(o.sortPrograms(list).map((p) => p.id), ['going1', 'going2', 'new1', 'new2', 'done']);
   assert.deepEqual(list.map((p) => p.id), ['done', 'new1', 'going1', 'new2', 'going2'], 'input is not mutated');
   assert.deepEqual(o.sortPrograms([prog('done', ['a'], ['a']), prog('empty', []), prog('new', ['a'])]).map((p) => p.id), ['new', 'empty', 'done']);
+});
+
+test('recommendations contain only exact age/breed-selected versions with a real next exercise', () => {
+  const list = [prog('resumable-old-version', ['a', 'b'], ['a'], false), prog('current', ['a', 'b'], [], true), prog('complete', ['a'], ['a'], true), prog('empty', [], [], true)];
+  assert.deepEqual(o.recommendedPrograms(list), [list[1]], 'completed, empty, and resumable-but-not-current versions are omitted');
+});
+
+test('Mina contains only versions with valid confirmed progress', () => {
+  const list = [prog('new', ['a']), prog('mine', ['a', 'b'], ['a']), prog('stale', ['a'], ['old-version-id']), prog('complete', ['a'], ['a'])];
+  assert.deepEqual(o.programsWithProgress(list).map((program) => program.id), ['mine', 'complete']);
 });
 
 test('all-complete requires at least one step and every listed program to have completed steps', () => {
@@ -69,15 +79,22 @@ test('exercise counts and progress labels use correct Swedish singular, plural, 
   assert.equal(o.exerciseProgressLabel(prog('empty', [])), 'Inga övningar');
 });
 
-test('the screen no longer has the three overlapping tabs and uses one vocabulary', () => {
-  assert.doesNotMatch(screen, /Alla övningar'|Rekommenderat|<Tabs|HeroCard|programCards/);
+test('the screen presents the three target views with distinct, honest source semantics', () => {
+  assert.match(screen, /Rekommenderat/);
+  assert.match(screen, /Alla övningar/);
+  assert.match(screen, /Mina/);
+  assert.match(screen, /currentAgeBreedMatch/);
+  assert.match(screen, /Fortsätt där ni var/);
+  assert.match(screen, /Standardbild/);
+  assert.doesNotMatch(screen, /5 min|10 min|Grundträning|Socialisering/,
+    'the workspace has no reviewed duration or topic metadata');
   assert.doesNotMatch(screen, /steg klara|steg markerade/, 'steps are called exercises in the interface');
-  assert.match(screen, /Nästa övning/);
-  assert.match(screen, /Era program/);
+  assert.match(screen, /Alla övningar/);
+  assert.match(screen, /Mina program/);
   assert.match(screen, /label="Öva nu"/);
   assert.match(screen, /Nästa övning: \$\{step\.title\}/, 'the current action has an explicit accessible status');
   assert.match(screen, /Kommande övning: \$\{step\.title\}/, 'upcoming rows have an explicit accessible status');
-  assert.match(screen, /Alla övningar är genomförda/);
+  assert.match(screen, /Ni har gått igenom allt just nu/);
   assert.match(screen, /Inga övningar tillgängliga ännu/);
 });
 
@@ -94,7 +111,14 @@ test('every program and exercise is reachable: overview opens a program, a progr
   assert.match(screen, /onPress=\{\(\) => setOpenProgramId\(program\.id\)\}/);
   assert.match(screen, /<AppBar mode="Back" title=\{openProgram\.title\} onAction=\{\(\) => setOpenProgramId\(null\)\}/);
   assert.match(screen, /label="Om programmet och källor"/);
-  assert.equal(screen.match(/setSelection\(\{ programId: program\.id, stepId: step\.id \}\)/g)?.length, 2, 'current card and every other row open the exercise');
+  assert.equal(screen.match(/setSelection\(\{ programId: program\.id, stepId: step\.id \}\)/g)?.length, 3,
+    'recommendation card, current exercise card, and upcoming rows open their exact exercise');
+});
+
+test('recommendation card opens its exact next exercise and full list remains separately reachable', () => {
+  assert.match(screen, /setSelection\(\{ programId: program\.id, stepId: step\.id \}\)/);
+  assert.match(screen, /setSelectedView\('all'\)/);
+  assert.match(screen, /nextExercise\?\.kind === 'continue'/);
 });
 
 test('progress is only reset from inside a program, behind the existing confirmation', () => {

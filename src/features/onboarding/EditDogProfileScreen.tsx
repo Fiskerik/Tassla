@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image, Keyboard, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -19,6 +19,7 @@ import { normalizeKennelCode } from '../../onboarding-referral/referral-secure-s
 import { automaticDogAge, localDate } from './dog';
 import { tokens } from '../../theme/tokens';
 import { ProfileScreenHeader } from './ProfileScreenHeader';
+import { profileInsightsDisabledReason } from '../home/main-navigation';
 
 export function EditDogProfileScreen({
   client,
@@ -31,6 +32,7 @@ export function EditDogProfileScreen({
   attribution = null,
   attributionState = 'loading',
   attributionBusy = false,
+  attributionWriteUnresolved = false,
   attributionMessage = '',
   attributionMessageError = false,
   backLabel = 'Tillbaka till Mer',
@@ -44,6 +46,7 @@ export function EditDogProfileScreen({
   activeDogId = dog.id,
   onSelectDog,
   onAddDog,
+  onOpenInsights,
 }: {
   client: SupabaseClient;
   dog: OwnedDog;
@@ -51,6 +54,7 @@ export function EditDogProfileScreen({
   activeDogId?: string;
   onSelectDog?: (dogId: string) => void;
   onAddDog?: () => void;
+  onOpenInsights?: (canOpen: boolean) => void;
   busy?: boolean;
   pending?: boolean;
   statusMessage?: string;
@@ -59,6 +63,7 @@ export function EditDogProfileScreen({
   attribution?: OwnedDogAttribution | null;
   attributionState?: 'loading' | 'ready' | 'error';
   attributionBusy?: boolean;
+  attributionWriteUnresolved?: boolean;
   attributionMessage?: string;
   attributionMessageError?: boolean;
   backLabel?: string;
@@ -80,6 +85,7 @@ export function EditDogProfileScreen({
   const [ageDisplayUnit, setAgeDisplayUnit] = useState<AgeDisplayUnit>(dog.age_display_unit);
   const [formError, setFormError] = useState('');
   const [kennelCode, setKennelCode] = useState(attribution?.code ?? '');
+  const savedAttributionCode = useRef(attribution?.code ?? '');
   const [attributionFormError, setAttributionFormError] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
@@ -89,8 +95,11 @@ export function EditDogProfileScreen({
 
   useEffect(() => {
     // The profile read is asynchronous; mirror a completed read into the local field.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (attributionState === 'ready') setKennelCode(attribution?.code ?? '');
+    if (attributionState === 'ready') {
+      const savedCode = attribution?.code ?? '';
+      setKennelCode((current) => current === savedAttributionCode.current ? savedCode : current);
+      savedAttributionCode.current = savedCode;
+    }
   }, [attribution?.code, attributionState]);
 
   useEffect(() => {
@@ -155,7 +164,19 @@ export function EditDogProfileScreen({
   const conflictBreed = conflict ? breeds.find((breed) => breed.id === conflict.breed_id)?.name ?? conflict.breed_id : '';
   const draftDiffers = name.trim() !== dog.name || breedId !== dog.breed_id || birthDate.trim() !== dog.birth_date
     || ageDisplayUnit !== dog.age_display_unit;
-  const dogManagementBlocked = blocked || draftDiffers || kennelCode.trim() !== (attribution?.code ?? '');
+  const kennelDraftDiffers = kennelCode.trim() !== (attribution?.code ?? '');
+  const dogManagementBlocked = blocked || draftDiffers || kennelDraftDiffers;
+  const insightsDisabledReason = profileInsightsDisabledReason({
+    dogProfileDirty: draftDiffers,
+    kennelDraftDirty: kennelDraftDiffers,
+    profileBusy: busy,
+    profilePending: pending,
+    profileConflict: Boolean(conflict),
+    attributionBusy,
+    attributionWriteUnresolved,
+    attributionReady: attributionState === 'ready',
+  });
+  const canOpenInsights = insightsDisabledReason === null;
   const showStatusMessage = Boolean(statusMessage) && (statusError || pending || busy);
 
   return <View>
@@ -199,6 +220,23 @@ export function EditDogProfileScreen({
         ? <Text style={styles.dogProfileHint}>Spara eller återställ profiländringarna innan du byter hund eller lägger till en ny.</Text> : null}
       {onAddDog ? <Button variant="secondary" label="Lägg till hund" accessibilityLabel="Lägg till hundprofil"
         disabled={dogManagementBlocked} onPress={onAddDog} /> : null}
+    </View>
+    <View style={styles.insightsCard}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Insikter"
+        accessibilityHint="Visar hundens loggade händelser över tid"
+        accessibilityState={{ disabled: !canOpenInsights }} disabled={!canOpenInsights}
+        onPress={() => onOpenInsights?.(canOpenInsights)}
+        style={({ pressed }) => [styles.insightsAction, !canOpenInsights && styles.insightsActionDisabled, pressed && canOpenInsights && styles.dogProfilePressed]}>
+        <View style={styles.insightsIcon} accessible={false} importantForAccessibility="no-hide-descendants">
+          <Ionicons name="bar-chart-outline" size={tokens.size.iconMd} color={tokens.colors.primary} />
+        </View>
+        <View style={styles.insightsCopy}>
+          <Text style={styles.insightsTitle}>Insikter</Text>
+          <Text style={styles.insightsDescription}>Se registreringar över tid.</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={canOpenInsights ? tokens.colors.textSecondary : tokens.colors.borderStrong} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+      </Pressable>
+      {insightsDisabledReason ? <Text style={styles.insightsDisabledReason}>{insightsDisabledReason}</Text> : null}
     </View>
     {showStatusMessage ? <MessageCard tone={statusError ? 'error' : 'neutral'}>{statusMessage}</MessageCard> : null}
     {draftDiffers && !pending && !busy ? <MessageCard tone="neutral">Ändringarna är inte sparade.</MessageCard> : null}
@@ -272,6 +310,9 @@ export function EditDogProfileScreen({
           placeholderTextColor={tokens.colors.textSecondary} style={styles.input} value={kennelCode} />
         {attributionFormError ? <MessageCard tone="error">{attributionFormError}</MessageCard> : null}
         {attributionMessage ? <MessageCard tone={attributionMessageError ? 'error' : 'neutral'}>{attributionMessage}</MessageCard> : null}
+        {attributionWriteUnresolved ? <Button variant="secondary" label={attributionBusy ? 'Kontrollerar…' : 'Kontrollera kenneländringen igen'}
+          accessibilityLabel="Kontrollera kenneländringen igen" loading={attributionBusy} disabled={attributionBusy}
+          onPress={onRetryAttribution ?? (() => undefined)} /> : null}
         <Button variant="secondary" label={attributionBusy ? 'Sparar…' : attribution ? (kennelCode.trim() ? 'Spara kennelkoppling' : 'Ta bort kennelkoppling') : 'Spara kennelkoppling'} accessibilityLabel="Spara kennelkoppling" loading={attributionBusy}
           disabled={attributionBusy || !onSaveAttribution || kennelCode.trim() === (attribution?.code ?? '')} onPress={() => { void saveAttribution(); }} />
       </>}
@@ -296,6 +337,14 @@ const styles = StyleSheet.create({
   profileNoteText: { ...tokens.typography.caption, flex: 1, color: tokens.colors.textPrimary },
   dogProfilesCard: { marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, gap: tokens.spacing.sm },
   dogProfilesList: { borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.md, overflow: 'hidden', backgroundColor: tokens.colors.surface },
+  insightsCard: { marginTop: tokens.spacing.md, padding: tokens.spacing.md, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, gap: tokens.spacing.sm },
+  insightsAction: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md },
+  insightsIcon: { width: tokens.size.chipLg, height: tokens.size.chipLg, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.md, backgroundColor: tokens.colors.support.profile.bg },
+  insightsCopy: { flex: 1, minWidth: 0, gap: tokens.spacing.xs },
+  insightsTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  insightsDescription: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  insightsActionDisabled: { opacity: 0.62 },
+  insightsDisabledReason: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   dogProfileRow: { minHeight: tokens.size.touchMin + tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.sm },
   dogProfileSelected: { backgroundColor: tokens.colors.selectedSurface },
   dogProfilePressed: { opacity: 0.78 },

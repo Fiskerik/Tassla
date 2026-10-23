@@ -39,16 +39,16 @@ test('unknown Training age opens the existing profile editor and returns only af
 });
 
 test('a successful age-filtered empty Training selection opens Knowledge with a Training return action', () => {
-  assert.ok(training.includes('ageWeeks !== null && onOpenKnowledge ? <Button variant="tertiary" label="Öppna Kunskap"'));
+  assert.ok(training.includes('ageMatchedPrograms.length > 0 ? <View'));
+  assert.ok(training.includes('<Button variant="tertiary" label="Öppna Kunskap"'));
   assert.ok(workspace.includes("returnPage: 'training'"));
   assert.ok(workspace.includes("returnToTraining={knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'training'}"));
   assert.ok(knowledge.includes('actionLabel="Tillbaka till Träning" onAction={onBack}'));
 });
 
 test('Training errors stay retryable and review examples are injected only after a successful empty read', () => {
-  assert.ok(training.includes('visiblePrograms.length === 0 ? error'));
-  assert.match(training, /visiblePrograms\.length === 0 \? error\s+\? ageWeeks === null \? <View style=\{styles\.ageHint\}>/);
-  assert.ok(training.includes('Fler program kommer när de är färdiga att använda.'));
+  assert.ok(training.includes('<Toast visible={Boolean(error) && !selectedProgram} tone="error" message={error || undefined} onRetry={onRetry} />'));
+  assert.ok(training.includes('Inga övningar tillgängliga ännu'));
   const fallback = workspace.indexOf('reviewContentEnabled && result.programs.length === 0');
   const readError = workspace.indexOf('}).catch((error: unknown) =>', fallback);
   assert.ok(fallback >= 0 && readError > fallback);

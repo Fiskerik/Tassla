@@ -1,8 +1,10 @@
 import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { AppBar, Button, Card, DailyActivityItem, Skeleton } from '../../components/ui';
 import { MessageCard } from '../../components/AppPrimitives';
 import type { DailyRoutineDay } from './daily-activity-data';
-import { selectDailyProgress, type DailyProgressSourceState, type HomeDailyActivity } from './daily-activity-model';
+import { dailyProgressRingFill, selectDailyProgress, type DailyProgressSourceState, type HomeDailyActivity } from './daily-activity-model';
 import { checklistDateLabel } from './DailyChecklistScreen';
 import { tokens } from '../../theme/tokens';
 
@@ -63,6 +65,13 @@ export function DailyProgressScreen({ dogName, dateKey, state, activities, refre
           })}
         </View>
       </Card>
+      {progress.completedCount === progress.totalCount ? <View testID="daily-progress-complete-note" style={styles.completeNote}>
+        <View style={styles.completeNoteIcon}><Ionicons name="sparkles-outline" size={tokens.size.iconMd} color={tokens.colors.warning} accessibilityElementsHidden /></View>
+        <View style={styles.completeNoteCopy}>
+          <Text style={styles.completeNoteTitle} accessibilityRole="header">Dagens lista är klar</Text>
+          <Text style={styles.completeNoteText}>{progress.totalCount} {progress.totalCount === 1 ? 'aktivitet markerad' : 'aktiviteter markerade'} som klara idag.</Text>
+        </View>
+      </View> : null}
       <Button variant="tertiary" label="Öppna Checklistor" accessibilityLabel="Öppna hela dagens checklista" onPress={onOpenChecklist} />
     </> : null}
 
@@ -103,22 +112,24 @@ function ProgressRing({ completed, total, dogName }: { completed: number; total:
   const diameter = tokens.size.homeProgressRingDiameter;
   const stroke = tokens.size.homeProgressRingStroke;
   const radius = (diameter - stroke) / 2;
-  const fraction = Math.max(0, Math.min(1, completed / total));
-  const revealY = diameter / 2 * (1 - Math.cos(fraction * Math.PI * 2));
-  const endAngle = fraction * Math.PI * 2 - Math.PI / 2;
-  const capX = diameter / 2 + radius * Math.cos(endAngle);
-  const capY = diameter / 2 + radius * Math.sin(endAngle);
+  const center = diameter / 2;
+  const circumference = Math.PI * 2 * radius;
+  const fill = dailyProgressRingFill(completed, total);
   return <View accessibilityRole="progressbar" accessibilityLabel={`${completed} av ${total} dagsuppgifter klara`}
     accessibilityValue={{ min: 0, max: total, now: completed }} style={[styles.ring, { width: diameter, height: diameter }]}>
-    <View accessible={false} style={[styles.ringTrack, { width: diameter, height: diameter, borderRadius: diameter / 2, borderWidth: stroke }]} />
-    {fraction > 0 ? <View accessible={false} style={[styles.ringHalfClip, { left: diameter / 2, width: diameter / 2, height: fraction <= 0.5 ? revealY : diameter }]}>
-      <View style={[styles.ringOutline, { width: diameter, height: diameter, left: -diameter / 2, borderRadius: diameter / 2, borderWidth: stroke }]} />
-    </View> : null}
-    {fraction > 0.5 ? <View accessible={false} style={[styles.ringHalfClip, { left: 0, top: revealY, width: diameter / 2, height: diameter - revealY }]}>
-      <View style={[styles.ringOutline, { width: diameter, height: diameter, left: 0, top: -revealY, borderRadius: diameter / 2, borderWidth: stroke }]} />
-    </View> : null}
-    <View accessible={false} style={[styles.ringMask, { width: diameter - stroke * 2, height: diameter - stroke * 2, left: stroke, top: stroke, borderRadius: diameter / 2 }]} />
-    {fraction > 0 && fraction < 1 ? <View accessible={false} style={[styles.ringCap, { width: stroke, height: stroke, left: capX - stroke / 2, top: capY - stroke / 2, borderRadius: stroke / 2 }]} /> : null}
+    <Svg accessible={false} importantForAccessibility="no-hide-descendants" pointerEvents="none" width={diameter} height={diameter} viewBox={`0 0 ${diameter} ${diameter}`} style={styles.ringSvg}>
+      <Defs>
+        <LinearGradient id="daily-progress-ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0%" stopColor={tokens.colors.home.greenStrong} />
+          <Stop offset="100%" stopColor={tokens.colors.home.greenFill} />
+        </LinearGradient>
+      </Defs>
+      <Circle cx={center} cy={center} r={radius} fill="none" stroke={tokens.colors.home.progressTrack} strokeWidth={stroke} />
+      {fill.fraction > 0 ? <Circle testID="daily-progress-ring-progress" accessible={false} cx={center} cy={center} r={radius}
+        fill="none" stroke="url(#daily-progress-ring-gradient)" strokeWidth={stroke}
+        strokeDasharray={`${circumference * fill.fraction} ${circumference}`} strokeDashoffset={0}
+        strokeLinecap={fill.fraction === 1 ? 'butt' : 'round'} transform={`rotate(-90 ${center} ${center})`} /> : null}
+    </Svg>
     <View accessible={false} style={[styles.ringContent, { width: diameter, height: diameter }]}>
       <View style={styles.ringPortrait}>
         <Image source={require('../../../assets/images/daily-progress-hero-puppy-terrier.jpg')} style={styles.ringPhoto} resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
@@ -133,13 +144,9 @@ function ProgressRing({ completed, total, dogName }: { completed: number; total:
 const styles = StyleSheet.create({
   page: { gap: tokens.spacing.md, paddingBottom: tokens.spacing.xl, marginHorizontal: -tokens.layout.pageInset, paddingHorizontal: tokens.layout.pageInset, backgroundColor: tokens.colors.home.canvas },
   dateHeading: { ...tokens.typography.caption, color: tokens.colors.home.textMuted, textAlign: 'center', textTransform: 'capitalize' },
-  heroCard: { minHeight: tokens.size.homeProgressRingDiameter + tokens.spacing.lg, alignItems: 'center', justifyContent: 'center', paddingVertical: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.home.card },
+  heroCard: { minHeight: tokens.size.homeProgressRingDiameter + tokens.spacing.md, alignItems: 'center', justifyContent: 'center', paddingVertical: tokens.spacing.xs },
   ring: { position: 'relative', alignItems: 'center', justifyContent: 'center' },
-  ringTrack: { position: 'absolute', borderColor: tokens.colors.home.progressTrack },
-  ringHalfClip: { position: 'absolute', top: 0, overflow: 'hidden' },
-  ringOutline: { position: 'absolute', borderColor: tokens.colors.home.greenFill, backgroundColor: 'transparent' },
-  ringCap: { position: 'absolute', backgroundColor: tokens.colors.home.greenFill },
-  ringMask: { position: 'absolute', backgroundColor: tokens.colors.home.card },
+  ringSvg: { position: 'absolute' },
   ringContent: { position: 'absolute', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs / 2 },
   ringPortrait: { position: 'relative', width: tokens.size.homeProgressRingDiameter * 0.45, height: tokens.size.homeProgressRingDiameter * 0.45, marginBottom: tokens.spacing.xs / 2 },
   ringPhoto: { width: '100%', height: '100%', borderRadius: tokens.radius.full },
@@ -150,6 +157,11 @@ const styles = StyleSheet.create({
   sectionTitle: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },
   sectionCount: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
   activityList: { gap: 0 },
+  completeNote: { minHeight: tokens.size.touchMin + tokens.spacing.md, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, padding: tokens.spacing.md, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.warningSurface },
+  completeNoteIcon: { width: tokens.size.chipLg, height: tokens.size.chipLg, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.md, backgroundColor: tokens.colors.home.card },
+  completeNoteCopy: { flex: 1, gap: tokens.spacing.xs / 2 },
+  completeNoteTitle: { ...tokens.typography.label, color: tokens.colors.home.text },
+  completeNoteText: { ...tokens.typography.caption, color: tokens.colors.warning },
   loadingState: { gap: tokens.spacing.md },
   loadingImage: { height: tokens.size.developmentHeroHeight * 0.62, borderRadius: tokens.radius.lg, overflow: 'hidden' },
   loadingImagePhoto: { width: '100%', height: '100%' },
