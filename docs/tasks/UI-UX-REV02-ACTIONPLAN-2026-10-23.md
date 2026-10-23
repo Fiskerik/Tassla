@@ -2,7 +2,7 @@
 
 Datum: 2026-10-23. Beställare: Erik. Genomförande: Luna/implementer, med koordinator och riskbaserad granskning enligt projektets arbetsflöde.
 
-**Status 2026-10-23: 01 stängt; 02 lokal implementation-checkpoint stängd efter oberoende QA/Reviewer, med separat live-migrations- och full panelgrind öppen; 03 plan v3 godkänd och implementation startar på egen branch; 04 återstår.** UI-R02-01A är stängd som lokal UI-/valideringscheckpoint efter Architect APPROVE, Critic PASS, QA PASS (13/13 public och review) och Reviewer PASS. Commit `786dd11e0b9955959caaeb0fa161291bc558ef96` finns på `2026-10-23-ui-01-profil`. UI-R02-01B är stängd på Eriks uttryckliga besked att punkten redan är godkänd och granskad; separata protokoll bifogades inte här.
+**Senast uppdaterad 2026-10-23: 01 stängt på ägarens respektive checkpointbesked; 02 lokal implementation-checkpoint stängd efter oberoende QA/Reviewer, med separat live-migration och full panelgrind öppen; 03 implementation och lokal public/review-verifiering klar, oberoende QA/Reviewer väntar; 04 är nästa paket.** UI-R02-01A är stängd som lokal UI-/valideringscheckpoint efter Architect APPROVE, Critic PASS, QA PASS (13/13 public och review) och Reviewer PASS. Commit `786dd11e0b9955959caaeb0fa161291bc558ef96` finns på `2026-10-23-ui-01-profil`. UI-R02-01B är stängd på Eriks uttryckliga besked att punkten redan är godkänd och granskad; separata protokoll bifogades inte här.
 
 Detta är **den aktuella paketordningen** för fynden i [GAP-analysen 2026-10-23](../GAP-UI-UX-rev02-2026-10-23.md). Den ersätter paketordningen i GAP-analysens tidigare avsnitt 8 och [planen från 18 oktober](../plans/UI-UX-NEXT-PACKAGES-2026-10-18.md). GAP-analysen behåller belägg, skärmbilder, kodankare och G01–G19; de kopieras inte till en ny konkurrerande fellista.
 
@@ -112,7 +112,7 @@ Architect, Critic, Security och Reviewer har godkänt sina respektive statiska/U
 
 ## 5. UI-R02-03 — Samma formulär i Logg och Hälsa
 
-**Planstatus 2026-10-23:** Plan v1 fick CHANGES från Architect/Security och PROCEED WITH CHANGES från UX Critic. Architect/Security godkände v2; v3 lägger till minimera/återöppna efter unknown/conflict och Architectens vikt-delete-faktakorrigering. Architect v3 **APPROVE**, UX Critic **PASS**, Security **APPROVE**. Task v3 övergick till `implementing`; plan checkpoint pushas till `2026-10-23-ui-03-logg-halsa` före första kodändringen. Se [task v3](../tasks/dev/UI-R02-03-LOGG-HALSA.md) för exakt UI-, route-, delete-, recovery- och keyboard-kontrakt.
+**Status 2026-10-23:** Plan v1 fick CHANGES från Architect/Security och PROCEED WITH CHANGES från UX Critic. Architect/Security godkände v2; v3 lägger till minimera/återöppna efter unknown/conflict och Architectens vikt-delete-faktakorrigering. Architect v3 **APPROVE**, UX Critic **PASS**, Security **APPROVE**. Implementation följer plan v3; riktade public/review RN Web-prov passerar. Queue är `qa` i väntan på oberoende QA/Reviewer. Se [task v3](../tasks/dev/UI-R02-03-LOGG-HALSA.md) för exakt UI-, route-, delete-, recovery- och keyboard-kontrakt och [implementationsevidens](../design/evidence/vision-rev02/ui-r02-03-logg-halsa/).
 
 **Användarresultat:** öppna en post, ändra fälten och spara; vid borttagning används en tydlig soptunna/bekräftelse. En namngiven hälsoplan öppnar samma plan oavsett ingång.
 

@@ -539,7 +539,9 @@ test('Home excludes planned events from daily tasks; Health keeps the separate p
 test('planned health is linked from the health workspace and remains a separate screen/contract', async () => {
   assert.match(healthScreenSource, /onOpenPlannedHealth/);
   assert.match(healthScreenSource, /Planera en händelse/);
-  assert.match(healthScreenSource, /props.onOpenPlannedHealth\?\.\(\)/);
+  assert.match(healthScreenSource, /const openPlan = \(planId: string\) => onOpenPlannedHealth\?\.\(planId, tab\)/);
+  assert.match(workspaceSource, /function openPlannedHealthFromHealth\(planId: string, returnTab: HealthTab\)/);
+  assert.match(workspaceSource, /planId, returnTab, returnScrollKey: 'health-flow'/);
   assert.match(workspaceSource, /<PlannedHealthScreen/);
   assert.match(workspaceSource, /fetchHealthHistory\(client, dog\.id/);
   assert.match(workspaceSource, /fetchPlannedHealth\(client, dog\.id/);

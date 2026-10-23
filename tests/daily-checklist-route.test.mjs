@@ -50,12 +50,12 @@ test('Checklist preserves its offset through training and planned-health source 
   assert.match(primitives, /preservedOffsets\.current\.set\(scrollKey, Math\.max\(0, event\.nativeEvent\.contentOffset\.y\)\)/);
   assert.match(training, /actionLabel=\{focusStep\.returnPage === 'checklist' \? 'Tillbaka till Checklistan'/);
   assert.match(workspace, /setPage\(focus\?\.returnPage \?\? 'home'\)/);
-  assert.match(workspace, /backLabel=\{visiblePlannedHealthChecklistFocus \? 'Checklistan' : 'Hälsa'\}/);
+  assert.match(workspace, /backLabel=\{visiblePlannedHealthHealthFocus \? 'Hälsa' : visiblePlannedHealthChecklistFocus \? 'Checklistan' : 'Hälsa'\}/);
   assert.match(workspace, /setChecklistRangeRetry\(\(value\) => value \+ 1\);[\s\S]*setPage\('checklist'\)/);
-  assert.match(plannedHealth, /const focusedChecklistRecord = checklistFocusState === 'ready' \? checklistFocusRecord : null/);
-  assert.match(plannedHealth, /loadState === 'ready' && focusedChecklistRecord \? renderRecord\(focusedChecklistRecord, true\) : null/);
-  assert.match(plannedHealth, /function renderRecord\(record: PlannedHealthRecord, openedFromChecklist = false\)/);
-  assert.ok(plannedHealth.indexOf('renderRecord(focusedChecklistRecord, true)') < plannedHealth.indexOf('style={styles.formCard}'));
+  assert.match(plannedHealth, /const focusedChecklistRecord = !healthFocusActive && checklistFocusState === 'ready' \? checklistFocusRecord : null/);
+  assert.match(plannedHealth, /loadState === 'ready' && !healthFocusActive && focusedChecklistRecord \? renderRecord\(focusedChecklistRecord, 'checklist'\) : null/);
+  assert.match(plannedHealth, /function renderRecord\(record: PlannedHealthRecord, source: 'checklist' \| 'health' \| null = null\)/);
+  assert.match(plannedHealth, /source === 'checklist' \? 'Checklistan' : 'Hälsa'/);
   assert.match(plannedHealth, /remainingRecords\.map\(\(record\) => renderRecord\(record\)\)/);
 });
 

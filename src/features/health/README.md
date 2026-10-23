@@ -24,3 +24,9 @@ Planerade planer visar `due_time` som händelsetid, oberoende av notifieringsval
 ## Responsiv tillgänglighet — 2b.2, 2026-10-19
 
 Viktens Spara rättning/Avbryt staplas vid smal vy eller större text. Informationsraden för utförda hälsohändelser staplas vid samma brytpunkt, och dess befintliga BottomSheet använder keyboard-aware-läget. Datumfältets text får krympa intill den fasta kalenderknappen; tidsfältets layout är oförändrad. Mutationer, fältvärden, validering, hundscope och återhämtning ändras inte. Verifiera lokalt med node --experimental-strip-types --test tests/health-weight.test.mjs tests/health-history.test.mjs tests/planned-health.test.mjs tests/planned-health-feedback.test.mjs; kör pnpm check och pnpm bundle:ios för repoets fulla lokala kontroller. Syntetisk stor-text-render ersätter inte native Dynamic Type, VoiceOver/TalkBack eller OS-tangentbord.
+
+## UI-R02-03 — kompakta hälsoredigerare och exakt planretur
+
+Utförda händelser, vikt och plan redigeras i ett BottomSheet med en rubrik och fast Spara-footer; bakomliggande listor/statusar ligger kvar på sidan. Radera öppnar först en objektnamngiven dialog. Dirty-utkast skyddas vid stängning och workspace återställer samma formulär efter minimering inom oförändrat konto-/hund-/lifetime-scope. Hälsa skickar valt plan-ID plus returflik/scroll; det separata A03-flödet från Checklistor behåller sin egen planhämtning och retur.
+
+Syntetisk public/review RN Web-verifiering och captures finns i `docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/health/`. De visar inte live Supabase/RLS, migrationer, native tangentbord/hjälpmedel eller full Panel 5 §14. Dessa grindar rapporteras separat.

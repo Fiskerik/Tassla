@@ -106,8 +106,10 @@ import { localDate } from '../onboarding/dog';
 import { calendarMarkerScopeKey } from '../puppy-log/log-calendar-model';
 import { acquireTrainingMutationLease, homeAgeInWeeks, ownsTrainingMutationLease, releaseTrainingMutationLease, type TrainingMutationLease } from './home-today';
 import { canStartDailyMutation, clearDailyMutationForLifetimeChange, dailyMutationBlocksAccountDeletion, dailyMutationForOwner, dailyMutationStore, recoverDailyMutation, resolvedDailyMutation, routineConflictAfterWrite, routineDraftStore, type PendingDailyMutation } from './daily-activity-recovery';
-import { HealthScreen } from '../health/HealthScreen';
-import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
+import { HealthScreen, type HealthTab } from '../health/HealthScreen';
+import { PlannedHealthScreen, type PlannedHealthEditorDraft } from '../health/PlannedHealthScreen';
+import type { HealthHistoryDraft } from '../health/HealthHistoryScreen';
+import type { WeightEditorDraft } from '../health/WeightScreen';
 import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
 import { DogProfileScreen } from '../onboarding/DogProfileScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
@@ -124,7 +126,7 @@ import { AppBar, BottomNav, Dialog, MainSwipeNavigation } from '../../components
 import { ScreenTransition } from '../../components/ui/Motion';
 import { tokens } from '../../theme/tokens';
 import { decideProfileExit, profileExitScopeKey, type ProfileExitBlockReason, type ProfileExitScope, type ProfileExitSnapshot } from '../onboarding/profile-exit';
-import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
+import { LogScreen, type LogEditorRecovery, type QuickLogMutationView } from '../puppy-log/LogScreen';
 import { insightsRequestIsCurrent, parseDogEventInsights, type InsightsPeriod, type InsightsRequestScope } from '../puppy-log/insights-model';
 import type { InsightsLoadState } from '../puppy-log/InsightsScreen';
 import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isCanonicalAccidentKinds, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type AccidentKind, type AccidentLogIntent, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
@@ -147,14 +149,21 @@ const reviewContentEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === '
 
 type ProductPage = 'home' | 'development' | 'progress' | 'checklist' | 'home-training-detail' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings' | 'account-settings' | 'beta-info';
 type HomeTrainingFocus = { selectionKey: string; dailyLifetime: string; programId: string; stepId: string; returnPage: 'home' | 'checklist' | 'progress'; readOnly?: boolean; dateKey?: string; completed?: boolean };
+type WorkspaceEditorScope = { ownerId: string; accountGeneration: number; selectionKey: string; dogId: string; lifetime: string };
+type ScopedEditorRecovery<T> = WorkspaceEditorScope & { value: T };
+type PlannedHealthHealthFocus = { selectionKey: string; lifetime: string; planId: string | null; returnTab: HealthTab; returnScrollKey: 'health-flow' };
+function editorScopeMatches(scope: WorkspaceEditorScope | null, candidate: WorkspaceEditorScope): boolean {
+  return Boolean(scope && scope.ownerId === candidate.ownerId && scope.accountGeneration === candidate.accountGeneration
+    && scope.selectionKey === candidate.selectionKey && scope.dogId === candidate.dogId && scope.lifetime === candidate.lifetime);
+}
 type PendingLogMutation =
   | { kind: 'insert'; operation: DogEventOperation; lifetime: string }
   | { kind: 'update'; mutationId: string; id: string; type: LogEventType; occurredAt: string; changes: DogEventChanges; lifetime: string }
   | { kind: 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; lifetime: string };
 type PendingHealthMutation =
-  | { kind: 'insert'; operation: HealthWeightOperation }
-  | { kind: 'update'; id: string; previous: HealthWeightRecord; changes: HealthWeightChanges }
-  | { kind: 'delete'; id: string; previous: HealthWeightRecord };
+  | { kind: 'insert'; operation: HealthWeightOperation; lifetime: string }
+  | { kind: 'update'; id: string; previous: HealthWeightRecord; changes: HealthWeightChanges; lifetime: string }
+  | { kind: 'delete'; id: string; previous: HealthWeightRecord; lifetime: string };
 type PendingHealthHistoryMutation =
   | { kind: 'insert'; operation: HealthHistoryOperation; lifetime: string }
   | { kind: 'update'; id: string; eventType: HealthHistoryType; previous: HealthHistoryRecord; changes: HealthHistoryChanges; lifetime: string }
@@ -256,6 +265,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [plannedHealthChecklistFocus, setPlannedHealthChecklistFocus] = useState<{ selectionKey: string; dailyLifetime: string; planId: string } | null>(null);
   const [plannedHealthChecklistRecord, setPlannedHealthChecklistRecord] = useState<{ scope: string; status: 'loading' | 'ready' | 'error' | 'missing'; record: PlannedHealthRecord | null } | null>(null);
   const [plannedHealthChecklistRetry, setPlannedHealthChecklistRetry] = useState(0);
+  const [plannedHealthHealthFocus, setPlannedHealthHealthFocus] = useState<PlannedHealthHealthFocus | null>(null);
+  const [activeHealthTab, setActiveHealthTab] = useState<HealthTab>('Översikt');
+  const [logEditorRecovery, setLogEditorRecovery] = useState<ScopedEditorRecovery<LogEditorRecovery> | null>(null);
+  const [healthHistoryEditorRecovery, setHealthHistoryEditorRecovery] = useState<ScopedEditorRecovery<HealthHistoryDraft> | null>(null);
+  const [weightEditorRecovery, setWeightEditorRecovery] = useState<ScopedEditorRecovery<WeightEditorDraft> | null>(null);
+  const [plannedHealthEditorRecovery, setPlannedHealthEditorRecovery] = useState<ScopedEditorRecovery<PlannedHealthEditorDraft> | null>(null);
   const [homeChecklistScope, setHomeChecklistScope] = useState<{ selectionKey: string; dailyLifetime: string; openManagerOnEntry: boolean } | null>(null);
   const [deviceTimeZone, setDeviceTimeZone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
   const initialPageConsumed = useRef(false);
@@ -334,6 +349,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [logBusy, setLogBusy] = useState(false);
   const [quickLogMutation, setQuickLogMutation] = useState<QuickLogMutationView | null>(null);
   const [healthWeights, setHealthWeights] = useState<HealthWeightRecord[]>([]);
+  const [healthWeightDataLifetime, setHealthWeightDataLifetime] = useState('');
   const healthWeightRows = useRef<HealthWeightRecord[]>([]);
   const [healthState, setHealthState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [healthBusy, setHealthBusy] = useState(false);
@@ -413,7 +429,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const signOutInFlight = useRef(false);
   const pendingLogMutation = useRef<PendingLogMutation | null>(null);
   const logMutationFlight = useRef<LogMutationFlight | null>(null);
-  const pendingHealthMutation = useRef<PendingHealthMutation | null>(null);
+  const pendingHealthMutation = useRef(new Map<string, PendingHealthMutation>());
   const healthMutationInFlight = useRef(false);
   const pendingHealthHistoryMutation = useRef<PendingHealthHistoryMutation | null>(null);
   const healthHistoryMutationInFlight = useRef(false);
@@ -482,6 +498,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [logView, page]);
   const currentHealthHistoryLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const currentLogLifetime = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${dog.id}`;
+  const currentHealthWeightLifetime = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${dog.id}`;
+  const healthWeightLifetime = useRef('');
+  const previousHealthWeightLifetime = useRef('');
   const healthHistoryLifetime = useRef('');
   const logLifetime = useRef('');
   const previousHealthHistoryLifetime = useRef('');
@@ -493,6 +512,22 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   useLayoutEffect(() => {
     healthHistoryLifetime.current = currentHealthHistoryLifetime;
   }, [currentHealthHistoryLifetime]);
+  useLayoutEffect(() => {
+    const previous = previousHealthWeightLifetime.current;
+    healthWeightLifetime.current = currentHealthWeightLifetime;
+    if (previous && previous !== currentHealthWeightLifetime) {
+      healthWeightRows.current = [];
+      setHealthWeights([]);
+      setHealthWeightDataLifetime('');
+      setHealthState('loading');
+      setHealthBusy(false);
+      const pendingForCurrent = pendingHealthMutation.current.get(currentHealthWeightLifetime);
+      setHealthPending(Boolean(pendingForCurrent));
+      setHealthMessage(pendingForCurrent ? 'Viktändringen väntar på kontroll. Kontrollera samma ändring innan du gör en ny.' : '');
+      setHealthMessageError(Boolean(pendingForCurrent));
+    }
+    previousHealthWeightLifetime.current = currentHealthWeightLifetime;
+  }, [currentHealthWeightLifetime]);
   useLayoutEffect(() => {
     const previous = previousLogLifetime.current;
     logLifetime.current = currentLogLifetime;
@@ -544,6 +579,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   // An unknown date has no age-based content selection and must not crash Home.
   const age = homeAgeInWeeks(dog.birth_date, homeToday);
   const currentSelectionKey = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${dog.id}:${dog.breed_id}:${dog.birth_date}:${age ?? 'unknown-age'}:${reviewContentEnabled ? 'review' : 'public'}`;
+  const editorScopeIdentity = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${currentSelectionKey}:${dog.id}`;
+  const editorScopeIdentityRef = useRef(editorScopeIdentity);
+  useLayoutEffect(() => {
+    if (editorScopeIdentityRef.current !== editorScopeIdentity) {
+      setLogEditorRecovery(null);
+      setHealthHistoryEditorRecovery(null);
+      setWeightEditorRecovery(null);
+      setPlannedHealthEditorRecovery(null);
+      setPlannedHealthHealthFocus(null);
+    }
+    editorScopeIdentityRef.current = editorScopeIdentity;
+  }, [editorScopeIdentity]);
   const validInsightsTimeZone = isValidIanaTimeZone(deviceTimeZone);
   const insightsTimeZone = validInsightsTimeZone ? deviceTimeZone : 'UTC';
   const insightsLocalDateAnchor = validInsightsTimeZone ? localDateKeyAt(dailyClock, deviceTimeZone) : localDate();
@@ -557,6 +604,49 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     () => dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null,
   );
   const currentDailyLifetime = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${currentSelectionKey}:${dailyDateKey ?? 'invalid-date'}:${dailyTimeZone}:${reviewContentEnabled ? 'review' : 'public'}`;
+  const currentEditorScope = useMemo(() => ({ ownerId: session?.user.id ?? 'signed-out', accountGeneration, selectionKey: currentSelectionKey, dogId: dog.id }), [accountGeneration, currentSelectionKey, dog.id, session?.user.id]);
+  const currentLogEditorScope = { ...currentEditorScope, lifetime: currentLogLifetime };
+  const currentHealthEditorScope = { ...currentEditorScope, lifetime: currentHealthHistoryLifetime };
+  const currentWeightEditorScope = { ...currentEditorScope, lifetime: currentHealthWeightLifetime };
+  const currentPlannedHealthEditorScope = { ...currentEditorScope, lifetime: currentPlannedHealthLifetime };
+  const onLogEditorRecoveryChange = useCallback((value: LogEditorRecovery | null) => {
+    const scope = { ownerId: session?.user.id ?? 'signed-out', accountGeneration, selectionKey: currentSelectionKey, dogId: dog.id, lifetime: currentLogLifetime };
+    setLogEditorRecovery((current) => {
+      if (editorScopeIdentityRef.current !== editorScopeIdentity) return current;
+      if (!value) return editorScopeMatches(current, scope) ? null : current;
+      return { ...scope, value };
+    });
+  }, [accountGeneration, currentLogLifetime, currentSelectionKey, dog.id, editorScopeIdentity, session?.user.id]);
+  const onHealthHistoryEditorRecoveryChange = useCallback((value: HealthHistoryDraft | null) => {
+    const scope = { ownerId: session?.user.id ?? 'signed-out', accountGeneration, selectionKey: currentSelectionKey, dogId: dog.id, lifetime: currentHealthHistoryLifetime };
+    setHealthHistoryEditorRecovery((current) => {
+      if (editorScopeIdentityRef.current !== editorScopeIdentity) return current;
+      if (!value) return editorScopeMatches(current, scope) ? null : current;
+      return { ...scope, value };
+    });
+  }, [accountGeneration, currentHealthHistoryLifetime, currentSelectionKey, dog.id, editorScopeIdentity, session?.user.id]);
+  const onWeightEditorRecoveryChange = useCallback((value: WeightEditorDraft | null) => {
+    const scope = { ownerId: session?.user.id ?? 'signed-out', accountGeneration, selectionKey: currentSelectionKey, dogId: dog.id, lifetime: currentHealthWeightLifetime };
+    setWeightEditorRecovery((current) => {
+      if (editorScopeIdentityRef.current !== editorScopeIdentity) return current;
+      if (!value) return editorScopeMatches(current, scope) ? null : current;
+      return { ...scope, value };
+    });
+  }, [accountGeneration, currentHealthWeightLifetime, currentSelectionKey, dog.id, editorScopeIdentity, session?.user.id]);
+  const onPlannedHealthEditorRecoveryChange = useCallback((value: PlannedHealthEditorDraft | null) => {
+    const scope = { ownerId: session?.user.id ?? 'signed-out', accountGeneration, selectionKey: currentSelectionKey, dogId: dog.id, lifetime: currentPlannedHealthLifetime };
+    setPlannedHealthEditorRecovery((current) => {
+      if (editorScopeIdentityRef.current !== editorScopeIdentity) return current;
+      if (!value) return editorScopeMatches(current, scope) ? null : current;
+      return { ...scope, value };
+    });
+  }, [accountGeneration, currentPlannedHealthLifetime, currentSelectionKey, dog.id, editorScopeIdentity, session?.user.id]);
+  const visibleLogEditorRecovery = editorScopeMatches(logEditorRecovery, currentLogEditorScope) ? logEditorRecovery?.value ?? null : null;
+  const visibleHealthHistoryEditorRecovery = editorScopeMatches(healthHistoryEditorRecovery, currentHealthEditorScope) ? healthHistoryEditorRecovery?.value ?? null : null;
+  const visibleWeightEditorRecovery = editorScopeMatches(weightEditorRecovery, currentWeightEditorScope) ? weightEditorRecovery?.value ?? null : null;
+  const visiblePlannedHealthEditorRecovery = editorScopeMatches(plannedHealthEditorRecovery, currentPlannedHealthEditorScope) ? plannedHealthEditorRecovery?.value ?? null : null;
+  const visiblePlannedHealthHealthFocus = plannedHealthHealthFocus?.selectionKey === currentSelectionKey
+    && plannedHealthHealthFocus.lifetime === currentPlannedHealthLifetime ? plannedHealthHealthFocus : null;
   // The editor owns keystroke state locally. Read recovery only when this workspace renders
   // (for example when returning to a dog) so every draft keystroke does not rerender the shell.
   const routineRecovery = routineDraftStore.get(currentDailyOwnerScope, dog.id, currentDailyLifetime);
@@ -864,13 +954,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     return request;
   }, []);
 
-  const reloadHealthWeights = useCallback(async (signal?: AbortSignal) => {
+  const reloadHealthWeights = useCallback(async (lifetime = currentHealthWeightLifetime, signal?: AbortSignal) => {
     const rows = await serializeHealthRead(() => fetchHealthWeights(client, dog.id, undefined, signal));
-    if (!mounted.current || signal?.aborted) return;
+    if (!mounted.current || signal?.aborted || healthWeightLifetime.current !== lifetime) return;
     healthWeightRows.current = rows;
     setHealthWeights(rows);
+    setHealthWeightDataLifetime(lifetime);
     setHealthState('ready');
-  }, [client, dog.id, serializeHealthRead]);
+  }, [client, currentHealthWeightLifetime, dog.id, serializeHealthRead]);
 
   const serializeHealthHistoryRead = useCallback(<T,>(read: () => Promise<T>): Promise<T> => {
     const request = healthHistoryReadQueue.current.catch(() => undefined).then(read);
@@ -1261,13 +1352,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setPlannedHealthMessageError(false);
     }
     const controller = new AbortController();
+    const weightLifetime = currentHealthWeightLifetime;
     void serializeHealthRead(() => fetchHealthWeights(client, dog.id, undefined, controller.signal)).then((rows) => {
-      if (controller.signal.aborted || !mounted.current) return;
+      if (controller.signal.aborted || !mounted.current || healthWeightLifetime.current !== weightLifetime) return;
       healthWeightRows.current = rows;
       setHealthWeights(rows);
+      setHealthWeightDataLifetime(weightLifetime);
       setHealthState('ready');
     }).catch(() => {
-      if (!controller.signal.aborted && mounted.current) setHealthState('error');
+      if (!controller.signal.aborted && mounted.current && healthWeightLifetime.current === weightLifetime) setHealthState('error');
     });
     const historyLifetime = healthHistoryLifetime.current;
     void serializeHealthHistoryRead(() => fetchHealthHistory(client, dog.id, undefined, controller.signal)).then((rows) => {
@@ -1305,7 +1398,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       trainingReadFlight.current?.controller.abort();
       dailyReadFlight.current?.controller.abort();
     };
-  }, [client, currentHealthHistoryLifetime, currentLogLifetime, currentPlannedHealthLifetime, currentProfileLifetime, dog.id, serializeHealthRead, serializeHealthHistoryRead, serializePlannedHealthRead]);
+  }, [client, currentHealthHistoryLifetime, currentHealthWeightLifetime, currentLogLifetime, currentPlannedHealthLifetime, currentProfileLifetime, dog.id, serializeHealthRead, serializeHealthHistoryRead, serializePlannedHealthRead]);
 
   useEffect(() => {
     if (page !== 'log' || logView !== 'today') return undefined;
@@ -1549,6 +1642,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [client, currentDailyLifetime, currentPlannedHealthLifetime, currentSelectionKey, dog.id, page, plannedHealthChecklistFocus, plannedHealthChecklistRetry, reloadPlannedHealth, serializePlannedHealthRead]);
 
   const visibleContent = contentSelectionKey === currentSelectionKey ? content : [];
+  const visibleHealthWeights = healthWeightDataLifetime === currentHealthWeightLifetime ? healthWeights : [];
+  const visibleHealthState = healthWeightDataLifetime === currentHealthWeightLifetime ? healthState : 'loading';
+  const visibleHealthPending = healthPending;
   const visibleContentState = contentSelectionKey === currentSelectionKey ? contentState : 'loading';
   const visibleTrainingState = trainingSelectionKey === currentSelectionKey ? trainingState : 'loading';
   const dailyStateForView = dailyStateLifetime === currentDailyLifetime ? dailyState : 'loading';
@@ -2087,7 +2183,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }
 
   async function markHealthMutationSaved(mutation: PendingHealthMutation, value: HealthWeightRecord | null): Promise<void> {
-    pendingHealthMutation.current = null;
+    if (healthWeightLifetime.current !== mutation.lifetime) return;
+    pendingHealthMutation.current.delete(mutation.lifetime);
     setHealthPending(false);
     const mutationId = mutation.kind === 'insert' ? mutation.operation.id : mutation.id;
     const previous = healthWeightRows.current;
@@ -2102,19 +2199,21 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     setHealthMessage('Ändringen är sparad.');
     setHealthMessageError(false);
     try {
-      await reloadHealthWeights();
+      await reloadHealthWeights(mutation.lifetime);
     } catch {
-      if (mounted.current) setHealthMessage('Ändringen är sparad, men vikthistoriken kunde inte uppdateras.');
+      if (mounted.current && healthWeightLifetime.current === mutation.lifetime) setHealthMessage('Ändringen är sparad, men vikthistoriken kunde inte uppdateras.');
     }
   }
 
   async function runHealthMutation(mutation: PendingHealthMutation, retry = false): Promise<boolean> {
+    if (mutation.lifetime !== currentHealthWeightLifetime || healthWeightLifetime.current !== mutation.lifetime) return false;
     if (healthMutationInFlight.current) return false;
-    if (pendingHealthMutation.current && !retry) {
+    if (pendingHealthMutation.current.has(mutation.lifetime) && !retry) {
       setHealthMessage('Kontrollera den föregående ändringens status innan du gör en ny.');
       setHealthMessageError(true);
       return false;
     }
+    pendingHealthMutation.current.set(mutation.lifetime, mutation);
     healthMutationInFlight.current = true;
     setHealthBusy(true);
     setHealthMessage('');
@@ -2127,58 +2226,61 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       if (!mounted.current) return false;
       if (outcome.status === 'saved') {
         await markHealthMutationSaved(mutation, outcome.value);
-        return true;
+        return healthWeightLifetime.current === mutation.lifetime;
       }
       if (outcome.status === 'unknown') {
-        pendingHealthMutation.current = mutation;
+        pendingHealthMutation.current.set(mutation.lifetime, mutation);
+        if (healthWeightLifetime.current !== mutation.lifetime) return false;
         setHealthPending(true);
         setHealthMessage('Vi kunde inte kontrollera om viktändringen sparades. Kontrollera samma ändring innan du försöker igen.');
         setHealthMessageError(true);
         return false;
       }
-      pendingHealthMutation.current = null;
+      if (healthWeightLifetime.current !== mutation.lifetime) return false;
+      pendingHealthMutation.current.delete(mutation.lifetime);
       setHealthPending(false);
       setHealthMessage('Ändringen kunde inte sparas. Kontrollera anslutningen och försök igen.');
       setHealthMessageError(true);
       return false;
     } catch {
       if (!mounted.current) return false;
-      pendingHealthMutation.current = mutation;
+      pendingHealthMutation.current.set(mutation.lifetime, mutation);
+      if (healthWeightLifetime.current !== mutation.lifetime) return false;
       setHealthPending(true);
       setHealthMessage('Vi kunde inte kontrollera om viktändringen sparades. Kontrollera samma ändring innan du försöker igen.');
       setHealthMessageError(true);
       return false;
     } finally {
       healthMutationInFlight.current = false;
-      if (mounted.current) setHealthBusy(false);
+      if (mounted.current && healthWeightLifetime.current === mutation.lifetime) setHealthBusy(false);
     }
   }
 
   async function saveHealthWeight(id: string | null, occurredOn: string, weightKg: number): Promise<boolean> {
-    if (healthMutationInFlight.current || pendingHealthMutation.current || healthState !== 'ready') return false;
+    if (healthMutationInFlight.current || pendingHealthMutation.current.has(currentHealthWeightLifetime) || healthState !== 'ready' || healthWeightDataLifetime !== currentHealthWeightLifetime) return false;
     if (!isValidHealthWeightDate(occurredOn) || !isValidHealthWeightKg(weightKg)) return false;
     let mutation: PendingHealthMutation;
     if (id === null) {
-      mutation = { kind: 'insert', operation: { id: ExpoCrypto.randomUUID(), dog_id: dog.id, occurred_on: occurredOn, weight_kg: weightKg } };
+      mutation = { kind: 'insert', operation: { id: ExpoCrypto.randomUUID(), dog_id: dog.id, occurred_on: occurredOn, weight_kg: weightKg }, lifetime: currentHealthWeightLifetime };
     } else {
       const previous = healthWeightRows.current.find((row) => row.id === id);
       if (!previous) return false;
-      mutation = { kind: 'update', id, previous, changes: { occurred_on: occurredOn, weight_kg: weightKg } };
+      mutation = { kind: 'update', id, previous, changes: { occurred_on: occurredOn, weight_kg: weightKg }, lifetime: currentHealthWeightLifetime };
     }
     return runHealthMutation(mutation);
   }
 
   async function removeHealthWeight(id: string): Promise<boolean> {
-    if (healthMutationInFlight.current || pendingHealthMutation.current || healthState !== 'ready') return false;
+    if (healthMutationInFlight.current || pendingHealthMutation.current.has(currentHealthWeightLifetime) || healthState !== 'ready' || healthWeightDataLifetime !== currentHealthWeightLifetime) return false;
     const previous = healthWeightRows.current.find((row) => row.id === id);
     if (!previous) return false;
-    const mutation: PendingHealthMutation = { kind: 'delete', id, previous };
+    const mutation: PendingHealthMutation = { kind: 'delete', id, previous, lifetime: currentHealthWeightLifetime };
     return runHealthMutation(mutation);
   }
 
   async function retryHealthMutation() {
     if (healthMutationInFlight.current) return;
-    const mutation = pendingHealthMutation.current;
+    const mutation = pendingHealthMutation.current.get(currentHealthWeightLifetime);
     if (mutation) {
       healthMutationInFlight.current = true;
       setHealthBusy(true);
@@ -2188,7 +2290,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       try {
         const id = mutation.kind === 'insert' ? mutation.operation.id : mutation.id;
         const current = await fetchHealthWeightById(client, dog.id, id);
-        if (!mounted.current) return;
+        if (!mounted.current || healthWeightLifetime.current !== mutation.lifetime) return;
         if (mutation.kind === 'insert') {
           if (current && sameHealthWeight(current, mutation.operation)) await markHealthMutationSaved(mutation, current);
           else if (!current) retrySameOperation = true;
@@ -2201,17 +2303,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         } else if (!current) await markHealthMutationSaved(mutation, null);
         else if (sameHealthWeight(current, mutation.previous)) retrySameOperation = true;
         else setHealthMessage('Posten har ändrats sedan försöket. Kontrollera historiken innan du försöker igen.');
-        if (!retrySameOperation && pendingHealthMutation.current) setHealthMessageError(true);
+        if (!retrySameOperation && pendingHealthMutation.current.has(mutation.lifetime)) setHealthMessageError(true);
       } catch {
-        if (mounted.current) {
+        if (mounted.current && healthWeightLifetime.current === mutation.lifetime) {
           setHealthMessage('Vi kunde inte kontrollera om viktändringen sparades. Försök igen när anslutningen fungerar.');
           setHealthMessageError(true);
         }
       } finally {
         healthMutationInFlight.current = false;
-        if (mounted.current) setHealthBusy(false);
+        if (mounted.current && healthWeightLifetime.current === mutation.lifetime) setHealthBusy(false);
       }
-      if (retrySameOperation && mounted.current) await runHealthMutation(mutation, true);
+      if (retrySameOperation && mounted.current && healthWeightLifetime.current === mutation.lifetime) await runHealthMutation(mutation, true);
       return;
     }
     setHealthState('loading');
@@ -2738,7 +2840,22 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     const activityIsCurrent = checklistRangeView?.scope === currentChecklistRangeScope && checklistRangeView.activities.some((item) =>
       item.planned && item.healthPlanId === planId);
     if (page !== 'checklist' || checklistFilter !== 'Kommande' || !activityIsCurrent || accountDeletionInvalidated.current) return;
+    setPlannedHealthHealthFocus(null);
     setPlannedHealthChecklistFocus({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, planId });
+    setPage('planned-health');
+  }
+
+  function openPlannedHealthFromHealth(planId: string, returnTab: HealthTab) {
+    if (accountDeletionInvalidated.current || !plannedHealthRows.current.some((row) => row.id === planId && row.dog_id === dog.id)) return;
+    setActiveHealthTab(returnTab);
+    setPlannedHealthHealthFocus({ selectionKey: currentSelectionKey, lifetime: currentPlannedHealthLifetime, planId, returnTab, returnScrollKey: 'health-flow' });
+    setPage('planned-health');
+  }
+
+  function createPlannedHealthFromHealth(returnTab: HealthTab) {
+    if (accountDeletionInvalidated.current) return;
+    setActiveHealthTab(returnTab);
+    setPlannedHealthHealthFocus({ selectionKey: currentSelectionKey, lifetime: currentPlannedHealthLifetime, planId: null, returnTab, returnScrollKey: 'health-flow' });
     setPage('planned-health');
   }
 
@@ -2979,7 +3096,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (!ownerId || !capturedSession.access_token || accountDeleteInFlight.current || accountDeleteBusy) return { status: 'unavailable' };
     const isCurrent = () => mounted.current && isCurrentAccount(ownerId, generation);
     if (!isCurrent()) return { status: 'unavailable' };
-    const unresolvedWrite = pendingLogMutation.current || pendingHealthMutation.current
+    const unresolvedWrite = pendingLogMutation.current || pendingHealthMutation.current.size > 0
       || pendingHealthHistoryMutation.current || pendingPlannedHealthMutation.current
       || pendingProfileMutation.current || logMutationFlight.current || healthMutationInFlight.current
       || healthHistoryMutationInFlight.current || plannedHealthMutationInFlight.current
@@ -3215,8 +3332,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const defaultRouteScroll = visiblePage === 'log' ? logViewScrollKeys(logView) : productRouteScrollKeys(visiblePage,
     knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : undefined,
     visibleHomeTrainingFocus?.returnPage);
-  const routeScroll = visiblePage === 'planned-health' && visiblePlannedHealthChecklistFocus
-    ? { scrollKey: 'planned-health-checklist-source', preserveScrollKey: 'home-checklist-flow' }
+  const routeScroll = visiblePage === 'planned-health' && visiblePlannedHealthHealthFocus
+    ? { scrollKey: 'planned-health-health-source', preserveScrollKey: visiblePlannedHealthHealthFocus.returnScrollKey }
+    : visiblePage === 'planned-health' && visiblePlannedHealthChecklistFocus
+      ? { scrollKey: 'planned-health-checklist-source', preserveScrollKey: 'home-checklist-flow' }
     : defaultRouteScroll;
   const pendingProfileExitPrompt = profileExitDialog
     ? profileExitPrompt(profileExitDialog.destination, profileReturnPage, ownedDogs) : null;
@@ -3415,6 +3534,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     />;
     if (page === 'log') return <LogScreen events={displayEvents} onAdd={addEvent}
       onUpdate={updateEvent} onDelete={(id) => deleteEvent(id)} mode="cloud"
+      editorRecovery={visibleLogEditorRecovery} onEditorRecoveryChange={onLogEditorRecoveryChange}
       calendarMarkerMonth={calendarDataMonth} calendarMarkers={calendarDataIsCurrent ? logCalendarData.markers : []}
       calendarStatus={calendarDataIsCurrent ? logCalendarData.status : 'loading'}
       onLoadCalendarMonth={(month) => { void loadLogCalendarMarkers(month); }} onCancelCalendarRead={cancelLogCalendarRead}
@@ -3525,15 +3645,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       }}
     />;
     if (page === 'health') return <HealthScreen
+      activeTab={activeHealthTab}
+      onActiveTabChange={setActiveHealthTab}
       plannedRecords={plannedHealth}
       plannedLoadState={plannedHealthState}
       onRetryPlannedHealth={() => { void retryPlannedHealth(); }}
       onBack={() => setPage('more')}
-      records={healthWeights}
-      loadState={healthState}
+      records={visibleHealthWeights}
+      loadState={visibleHealthState}
       busy={healthBusy}
-      blocked={healthBusy || healthPending}
-      pendingStatus={healthPending}
+      blocked={healthBusy || visibleHealthPending}
+      pendingStatus={visibleHealthPending}
       statusMessage={healthMessage}
       statusError={healthMessageError}
       onRetry={() => { void retryHealthMutation(); }}
@@ -3551,20 +3673,30 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onResolveHistoryConflict={resolveHealthHistoryConflict}
       onSaveHistory={saveHealthHistory}
       onDeleteHistory={removeHealthHistory}
-      onOpenPlannedHealth={() => setPage('planned-health')}
+      onOpenPlannedHealth={openPlannedHealthFromHealth}
+      onCreatePlannedHealth={createPlannedHealthFromHealth}
+      historyEditorRecovery={visibleHealthHistoryEditorRecovery}
+      onHistoryEditorRecoveryChange={onHealthHistoryEditorRecoveryChange}
+      weightEditorRecovery={visibleWeightEditorRecovery}
+      onWeightEditorRecoveryChange={onWeightEditorRecoveryChange}
     />;
     if (page === 'planned-health') return <PlannedHealthScreen
       onBack={() => {
-        if (!visiblePlannedHealthChecklistFocus) { setPage('health'); return; }
-        setPlannedHealthChecklistFocus(null);
-        setChecklistRangeRetry((value) => value + 1);
-        void reloadPlannedHealth(currentPlannedHealthLifetime).catch(() => undefined);
-        setPage('checklist');
+        if (visiblePlannedHealthHealthFocus) {
+          setActiveHealthTab(visiblePlannedHealthHealthFocus.returnTab);
+          setPlannedHealthHealthFocus(null);
+          setPage('health');
+        } else if (visiblePlannedHealthChecklistFocus) {
+          setPlannedHealthChecklistFocus(null);
+          setChecklistRangeRetry((value) => value + 1);
+          void reloadPlannedHealth(currentPlannedHealthLifetime).catch(() => undefined);
+          setPage('checklist');
+        } else setPage('health');
       }}
-      backLabel={visiblePlannedHealthChecklistFocus ? 'Checklistan' : 'Hälsa'}
+      backLabel={visiblePlannedHealthHealthFocus ? 'Hälsa' : visiblePlannedHealthChecklistFocus ? 'Checklistan' : 'Hälsa'}
       records={plannedHealth}
-      checklistFocusState={visiblePlannedHealthChecklistFocus ? visiblePlannedHealthChecklistRecord?.status ?? 'loading' : 'idle'}
-      checklistFocusRecord={visiblePlannedHealthChecklistFocus && visiblePlannedHealthChecklistRecord?.status === 'ready'
+      checklistFocusState={!visiblePlannedHealthHealthFocus && visiblePlannedHealthChecklistFocus ? visiblePlannedHealthChecklistRecord?.status ?? 'loading' : 'idle'}
+      checklistFocusRecord={!visiblePlannedHealthHealthFocus && visiblePlannedHealthChecklistFocus && visiblePlannedHealthChecklistRecord?.status === 'ready'
         ? visiblePlannedHealthChecklistRecord.record : null}
       onRetryChecklistFocus={() => setPlannedHealthChecklistRetry((value) => value + 1)}
       loadState={plannedHealthState}
@@ -3578,6 +3710,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onResolveConflict={() => { void resolvePlannedHealthConflict(); }}
       onSave={savePlannedHealth}
       onDelete={removePlannedHealth}
+      healthFocusActive={Boolean(visiblePlannedHealthHealthFocus)}
+      healthFocusPlanId={visiblePlannedHealthHealthFocus?.planId}
+      editorRecovery={visiblePlannedHealthEditorRecovery}
+      onEditorRecoveryChange={onPlannedHealthEditorRecoveryChange}
     />;
     if (page === 'knowledge') return <KnowledgeScreen
       onBack={() => setPage(knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : 'more')}
@@ -3611,8 +3747,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       dog={dog}
       lifetime={currentProfileLifetime}
       isLifetimeCurrent={isPassportLifetimeCurrent}
-      weights={healthWeights}
-      weightLoadState={healthState}
+      weights={visibleHealthWeights}
+      weightLoadState={visibleHealthState}
       weightBusy={healthBusy}
       weightPending={healthPending}
       onRetryWeights={() => { void retryHealthMutation(); }}

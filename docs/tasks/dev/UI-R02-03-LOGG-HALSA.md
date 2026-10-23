@@ -1,6 +1,6 @@
 # UI-R02-03 — Logg och Hälsa: kompakta och tydliga formulär
 
-Datum: 2026-10-23. Plan v3. Branch: `2026-10-23-ui-03-logg-halsa` (plan checkpoint ska pushas här före kod). Mandat: Eriks uttryckliga beställning att fortsätta actionplanen i ordningen 02 → 03 → 04. UI-R02-02 (`3973ffe`, följd av dokumentcheckpoint `4f91364`) är pushat på `2026-10-23-ui-02-checklistor`. Aktuell referens är `vision_rev02.jpg`, panel 5 Logga och den aktuella stödresan Hälsa. Äldre UI/kod från före 16 oktober används inte.
+Datum: 2026-10-23. Plan v3. Branch: `2026-10-23-ui-03-logg-halsa`. Mandat: Eriks uttryckliga beställning att fortsätta actionplanen i ordningen 02 → 03 → 04. UI-R02-02 (`3973ffe`, följd av dokumentcheckpoint `4f91364`) är pushat på `2026-10-23-ui-02-checklistor`. Aktuell referens är `vision_rev02.jpg`, panel 5 Logga och den aktuella stödresan Hälsa. Äldre UI/kod från före 16 oktober används inte.
 
 UX-spec: [UI-R02-03-logg-halsa-ux-spec.md](../../plans/UI-R02-03-logg-halsa-ux-spec.md). Actionplan §5; GAP G04/G06/G09/G10/G11/G13/G16/G19.
 
@@ -46,7 +46,7 @@ Rätta en logg- eller hälsopost utan en vägg av knappar, nå Spara med tangent
 
 Ingen schema-/adapter-/RLS-/RPC-/eventmodell-/notifierings-/datainsamlingsändring, ingen ny hälsotext/rådgivning och inga dependencies. Bevara datumregler (utfört/vikt ej framtida; plan tillåter framtid), immutable historiktyp där befintligt kontrakt kräver det, befintligt CAS/readback/request-ID/confirmed-vs-unknown, separata planerade/utförda tabeller samt A03, 01B och Panel 8-beteende. `FLOW-LOG-01` och `FLOW-INSIGHTS-01` är parkerade; den här tasken återupptar inte deras bredare scope.
 
-Tillåtna skrivytor är de i queue `UI-R02-03`: de fyra skärmarna Logg/Hälsa, `ProductWorkspace.tsx`, `main-navigation.ts`, fem listade tester, befintlig visual-check harness plus den planerade hälsaverifieraren/evidensmappen, modulguider samt task/UX/actionplan/queue/rapport/master-log/release history. Ingen annan kod/data-surface utan ny review.
+Tillåtna skrivytor är de i queue `UI-R02-03`: de fyra skärmarna Logg/Hälsa, `ProductWorkspace.tsx`, `main-navigation.ts`, de fem riktade testerna samt befintliga regressionskontroller för Checklistor→plan, feedback och kontextuella radhandlingar, befintlig visual-check harness plus den planerade hälsaverifieraren/evidensmappen, modulguider samt task/UX/actionplan/queue/rapport/master-log/release history. De tre tillagda testfilerna uppdateras endast från inaktuella källmönster till det aktuella godkända UI-/routekontraktet; ingen äldre UI-komposition återinförs. Ingen annan kod/data-surface utan ny review.
 
 ## Planreview (plan v1 → v3)
 
@@ -62,6 +62,22 @@ Tillåtna skrivytor är de i queue `UI-R02-03`: de fyra skärmarna Logg/Hälsa, 
 - Inga reviewblockerare återstår. Queue kan gå vidare till `ready` och därefter `implementing`; plan v3 är fryst.
 
 Efter v3-review: Architect `APPROVE`, Critic `PASS`, Security `APPROVE` och queue-övergång `planned → ready → implementing` är uppfyllda. Alla implementationer måste följa ovanstående scope/draft ownership; en ny ändring av godkänt scope kräver förnyad review.
+
+## Implementationscheckpoint — 2026-10-23
+
+**Status:** kod- och lokal renderkontroll klar; skickad till oberoende QA/Reviewer. Det här är inte ett påstående om extern QA eller full §14-panelacceptans.
+
+- Loggredigering har en fast Spara-footer, kontextuell soptunna med namngiven bekräftelse och dirty-close-skydd. Fel behåller formulärvärden; pending/unknown kan minimeras och återöppnas via samma scope-bundna återhämtningsflöde.
+- Utförd hälsa, vikt och plan använder samma BottomSheet-editormönster ovanpå respektive sida. Viktsidan behåller historiklistan/statusen. Radering kräver bekräftelse; viktens befintliga exakt-scope/readback-kontrakt är oförändrat.
+- Hälsa → namngiven plan skickar exakt plan-ID och returflik/scroll. Create är ett uttryckligt tomt create-flöde; saknat fokus-ID får ingen fallback. Checklistors A03 planhämtning/retur är lämnad oförändrad.
+- Workspace äger utkast/recovery över route-unmount och nycklar presentationen på ägare, kontogeneration, hund/urval och datalivstid. Schemamodell, adapter, RPC/RLS och persistensformat har inte ändrats.
+- Public/review Loggverifiering: 13/13 vardera. Kalenderavstånd: 20,4/27,9/55,4 px vid 360/375/430 px; vald dagruta 44,56×44 px; 32 px bottenmarginal vid 360×844; gråskala och 140 %-proxy utan horisontell overflow.
+- Public/review Hälsaformulärverifiering: 6/6 vardera; vikt Spara och planens fasta footer nås vid 375×667, 375×844 och 430×844, inklusive 140 %-textproxy. Evidens ligger i `docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/{log,health}/{public,review}/`.
+- Riktade testfall, full `pnpm check`, public iOS JavaScript-export/content guard, `git diff --check` och `python -X utf8 tools/dev_flow.py validate` ska vara uppdaterade efter slutlig commit och listas med exakt resultat i rapport/releasehistorik.
+
+**Öppna grindar:** ingen ny live Supabase/RLS/migrationskontroll; ingen native tangentbords-/VoiceOver/Dynamic Type-omkörning; ingen installerad/TestFlight-build. Eriks tidigare generella godkännanden står kvar enligt actionplanens avgränsning och ersätts inte av den syntetiska RN Web-fixturen. Full Panel 5 §14 och oberoende QA/Reviewer är separata grindar.
+
+**Första nästa steg:** oberoende QA granskar fryst implementationsdiff och sparad public/review-evidens. UI-R02-04 kan planeras separat på en egen branch; om 03 ännu inte är integrerat dokumenteras 04 som staplat ovanpå denna branch.
 
 ## Skills och beslut
 

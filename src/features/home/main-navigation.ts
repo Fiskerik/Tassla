@@ -67,6 +67,8 @@ export function productRouteScrollKeys(page: string, knowledgeReturnPage?: strin
   if (page === 'checklist') return { scrollKey: 'home-checklist-flow', preserveScrollKey: 'home-checklist-flow' };
   if (page === 'home-training-detail' && trainingReturnPage === 'progress') return { scrollKey: 'home-progress-training-detail', preserveScrollKey: 'home-progress-flow' };
   if (page === 'home-training-detail') return { scrollKey: page, preserveScrollKey: 'home-checklist-flow' };
+  if (page === 'health') return { scrollKey: 'health-flow', preserveScrollKey: 'health-flow' };
+  if (page === 'planned-health') return { scrollKey: 'planned-health', preserveScrollKey: 'planned-health' };
   if (page === 'knowledge' && knowledgeReturnPage === 'development') {
     return { scrollKey: 'home-development-guide-detail', preserveScrollKey: 'home-development-flow' };
   }

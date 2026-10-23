@@ -113,6 +113,21 @@ TASSLA_UI_BASE_URL=http://127.0.0.1:4273/know02/ TASSLA_UI_EVIDENCE=docs/design/
 
 Synthetic browser evidence verifies the UI contract and mock row updates, not the new SQL migration, live RLS, native VoiceOver/Dynamic Type or TestFlight.
 
+### UI-R02-03 — Logg och Hälsa: editorflöden
+
+`verify-flow-log.py` kontrollerar den aktiva LogScreen i public/review: snabbval, Fler, kalenderavstånd och markerings-/tom-/laddnings-/felstatus, 360/375/430 px, 375×667 och 140 % CSS-textproxy. `verify-health-edit-forms.py` kontrollerar utförd hälsa, vikt samt plan create/edit: fast Spara-footer, dirty close, multiline Return, viktens decimalfält, raderingsavbryt och korta/fullängdsbredder. Båda använder samma produktionskomponenter men syntetiska callbacks/data. De verifierar inte live Supabase/RLS, native tangentbord, VoiceOver/Dynamic Type eller full Panel 5 §14-acceptans.
+
+Bygg produktionskomponentfixturen separat för public/review, servera respektive katalog och kör:
+
+```sh
+TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:4183 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/log/public python tools/visual-check/verify-flow-log.py
+TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:4184 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/log/review python tools/visual-check/verify-flow-log.py
+TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:4183 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/health/public python tools/visual-check/verify-health-edit-forms.py
+TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:4184 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/health/review python tools/visual-check/verify-health-edit-forms.py
+```
+
+Appens viewports är 375×667, 375×844 och 430×844. Review-fixturens banner ligger utanför appytan och ökar bildens totala höjd. Capturekatalogerna innehåller JSON-resultat och skärmbilder; UI-/QA-checkpoints får inte beskrivas som en native eller live-backend verifiering.
+
 React Native Web-harnessen registrerar RN `Alert`-alternativen och kan anropa en vald callback via `window.__tasslaAlertActions`; detta verifierar menyvalens kopplade åtgärder, inte native Alert-visning, tangentbords-/VoiceOver-beteende, native PDF eller databas/RLS. Harnessen verifierar inte animationers native bildfrekvens. 140 % text är ett layoutprov, inte fullständig Dynamic Type-verifiering.
 
 ## Historical Training continuation checkpoint — 2026-10-15 (superseded)

@@ -1,0 +1,22 @@
+{
+  "environment": "synthetic React Native Web",
+  "mode": "review",
+  "viewportCases": [
+    "375x667",
+    "375x844",
+    "430x844",
+    "140% text proxy"
+  ],
+  "results": [
+    "Performed health edit uses one sheet and keeps its named save action visible at 375×844",
+    "Performed history retains its draft after multiline Return and protects dirty close at 375×667",
+    "Weight decimal editor keeps Save reachable at 375×667 and 140% text (56.0px / 56.0px)",
+    "Weight editor renders at 375×844 and 430×844",
+    "Planned health uses a fixed save footer and keeps the exact edit sheet open when deletion is cancelled",
+    "Planned health form renders at 375×844 and 430×844"
+  ],
+  "limitations": [
+    "Does not verify native iOS keyboard/VoiceOver/Dynamic Type",
+    "Does not verify live Supabase/RLS or migration runtime"
+  ]
+}

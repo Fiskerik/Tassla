@@ -19,12 +19,13 @@ const workspaceSource = await readFile(new URL('../src/features/home/ProductWork
 const historyScreenSource = await readFile(new URL('../src/features/health/HealthHistoryScreen.tsx', import.meta.url), 'utf8');
 const healthScreenSource = await readFile(new URL('../src/features/health/HealthScreen.tsx', import.meta.url), 'utf8');
 
-test('health history info row stacks for narrow or enlarged layouts and its editor sheet is keyboard aware', () => {
-  assert.match(historyScreenSource, /const stackInfoRow = width < 360 \|\| fontScale >= 1\.25/);
-  assert.match(historyScreenSource, /styles\.infoRowStacked/);
-  assert.match(historyScreenSource, /accessibilityLabel="Visa information om hälsans historik"/);
-  assert.match(healthScreenSource, /keyboardAware=\{sheet === 'history'\}/);
-  assert.match(healthScreenSource, /if \(!blocked\) setSheet\(null\)/);
+test('performed health history uses one keyboard-aware sheet with a fixed save action', () => {
+  assert.match(healthScreenSource, /<BottomSheet visible=\{sheet === 'history'\}[^>]*keyboardAware/);
+  assert.match(healthScreenSource, /footer=\{<Button label=\{editorState\.saving \? 'Sparar…' : editingId \? 'Spara ändring' : 'Spara händelse'\}/);
+  assert.match(healthScreenSource, /function closeHistorySheet\(\)[\s\S]*?if \(editorState\.dirty\) \{ setDiscardVisible\(true\); return; \}/);
+  assert.match(historyScreenSource, /<Button variant="icon" label="Radera" iconName="trash-outline"/);
+  assert.match(historyScreenSource, /<Dialog visible=\{Boolean\(deleteTarget\)\} title="Radera hälsohändelse\?"/);
+  assert.doesNotMatch(historyScreenSource, /<PrimaryButton title="Avbryt"/);
 });
 
 const baseUrl = 'https://local-test.supabase.invalid';
@@ -501,10 +502,11 @@ test('actual workspace handler suppresses a pending mutation result after its li
   assert.equal(harness.state.pendingMutation.current, null);
 });
 
-test('health history editor remounts on saved-record snapshot changes and resets on conflict resolution', async () => {
+test('health history recovery reopens the same editor draft without coupling it to mutable rows', async () => {
   const healthScreenSource = await readFile(new URL('../src/features/health/HealthScreen.tsx', import.meta.url), 'utf8');
-  assert.match(healthScreenSource, /const historyEditorKey = JSON.stringify\(\[editingId, type, props.historyRecords/);
-  assert.match(healthScreenSource, /<HealthHistoryScreen key=\{historyEditorKey\}/);
+  assert.match(healthScreenSource, /const recoveryMatches = restoringRecovery && Boolean\(historyRecovery && historyRecovery\.id === editingId\)/);
+  assert.match(healthScreenSource, /<HealthHistoryScreen key=\{`\$\{editingId \?\? 'new'\}:\$\{historyRecovery\?\.id \?\? ''\}`\}/);
+  assert.match(healthScreenSource, /function openHistoryRecovery\(\)[\s\S]*?setEditorState\(\{ canSave: false, saving: false, dirty: false \}\)/);
   assert.match(historyScreenSource, /function resolveConflict\(\) \{\s*resetForm\(\);\s*onResolveConflict\?\.\(\);\s*\}/);
   assert.match(historyScreenSource, /onResolveConflict\?\.\(\)/);
   assert.match(historyScreenSource, /title="Använd aktuell historik och börja om"/);

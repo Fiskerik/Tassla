@@ -45,7 +45,7 @@ test('delete snapshot replaces its source row and exits only after a token-match
   assert.match(screen, /events\.filter\(\(event\) => event\.id !== deleteSnapshot\.event\.id\), deleteSnapshot\.event/);
   assert.match(screen, /setDeleteSnapshot\(\{ token, event, phase: 'pending' \}\)/);
   assert.match(screen, /if \(saved === true\)[\s\S]*?phase: 'exiting'/);
-  assert.match(screen, /if \(saved !== false\)[\s\S]*?setEditingId\(null\)/);
+  assert.match(screen, /if \(saved !== false && editingId === event\.id\) setEditingId\(null\)/);
   assert.match(screen, /current\?\.token === token \? null : current/);
   assert.match(screen, /accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none"/);
   assert.match(screen, /if \(reduceMotion\) \{ onFinished\(token\); return; \}/);
@@ -55,18 +55,22 @@ test('delete snapshot replaces its source row and exits only after a token-match
 
 test('quick log hides sparse patterns and keeps edit/delete inside the row editor', () => {
   assert.match(screen, /summarizePottyPatterns\(events\)\.filter\(\(item\) => item\.count >= 2\)/);
-  assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); editorSubmitRef\.current = null; setEditorActionState\(\{ canSave: false, saving: false \}\); setEditingId\(event\.id\); \}\}/);
-  assert.match(screen, /<Button variant="destructive" label="Radera"/);
+  assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); editorSubmitRef\.current = null; setEditorActionState\(\{ canSave: false, saving: false, dirty: false \}\); setEditingId\(event\.id\); setEditorMinimized\(false\); \}\}/);
+  assert.match(screen, /<Button variant="icon" label="Radera" iconName="trash-outline"/);
+  assert.match(screen, /<Dialog visible=\{Boolean\(deleteTarget\)\} title="Radera loggpost\?"/);
   assert.doesNotMatch(screen, /SPARAD|ActionFeedbackModal/);
 });
 
 test('legacy row editing and deletion remain reachable from workspace and preview', () => {
-  assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); editorSubmitRef\.current = null; setEditorActionState\(\{ canSave: false, saving: false \}\); setEditingId\(event\.id\); \}\}/);
+  assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); editorSubmitRef\.current = null; setEditorActionState\(\{ canSave: false, saving: false, dirty: false \}\); setEditingId\(event\.id\); setEditorMinimized\(false\); \}\}/);
   assert.match(screen, /function LogEventEditor/);
   assert.match(screen, /onUpdate\?:/);
   assert.match(screen, /onDelete\?:/);
   assert.match(workspace, /onUpdate=\{updateEvent\} onDelete=\{\(id\) => deleteEvent\(id\)\}/);
   assert.match(screen, /LOG_ENTRY_TYPES\.map/);
+  assert.match(screen, /<BottomSheet visible title="Ändra händelse" keyboardAware footer=\{/);
+  assert.match(screen, /const closeEditor = useCallback\(\(\) => \{[\s\S]*?if \(editorActionState\.dirty\) \{ setDiscardEditorVisible\(true\); return; \}/);
+  assert.match(screen, /<Dialog visible=\{discardEditorVisible\} title="Kasta ändringen\?"/);
   assert.match(screen, /DatePickerField/);
   assert.match(screen, /TimePickerField/);
   assert.match(screen, /Anteckning \(valfri\)/);
@@ -100,7 +104,7 @@ test('quick add labels, rapid-tap guard, retry propagation and Swedish decimal f
   assert.match(workspace, /onRetry=\{retryLogMutation\}/);
   assert.match(workspace, /const logLifetime = useRef\(''\)/);
   assert.match(workspace, /const isCurrent = \(\) => isLogMutationLifetimeCurrent\(lifetime, logLifetime\.current, mounted\.current\)/);
-  assert.match(screen, /label="Avbryt"[\s\S]*?disabled=\{saving \|\| disabled\}/);
+  assert.match(screen, /label="Avbryt"[\s\S]*?disabled=\{accidentDraft\.submitting\}/);
   assert.match(screen, /DatePickerField label="Datum" disabled=\{disabled\}/);
   assert.match(screen, /TimePickerField label="Tid" disabled=\{disabled\}/);
   assert.match(workspace, /setQuickLogMutation\(toQuickLogMutationView\(mutation, 'pending'\)\);[\s\S]*?checkInsertRetryOperation/);

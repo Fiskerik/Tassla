@@ -39,6 +39,12 @@ I molnläge äger `ProductWorkspace` request-lifetime och konto/hund/månad/tids
 
 Riktad lokal verifiering: `node --experimental-strip-types --test tests/log-calendar-model.test.mjs tests/workspace-log-calendar.test.mjs tests/log-calendar-policy.test.mjs`, `pnpm check` och publik iOS JS-bundle. Live RLS, native VoiceOver/TalkBack, fysisk tryckyta, Dynamic Type och skärmbildsmatris kräver separata miljö-/QA-prov och får inte härledas från lokala tester.
 
+## UI-R02-03 — redigering och återhämtning
+
+Loggredigeraren använder en fast Spara-footer och en kontextuell soptunna som först öppnar en namngiven bekräftelsedialog. Ändringar jämförs med postens verkliga startvärden; X/backdrop/back/svep följer samma dirty-close-policy. Ett misslyckat sparförsök lämnar utkastet redigerbart. Vid okänt/pågående utfall kan sheetet minimeras och samma utkast öppnas från Logg efter återkomst inom oförändrat konto-/hundscope. Befintligt snabbval, kalender, lokalt datum och undo-kontrakt är bevarade.
+
+Lokal public/review verifiering och skärmbilder finns i `docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/log/`. RN Web-resultat är inte native-tangentbord, VoiceOver/Dynamic Type, live RLS eller full Panel 5 §14-acceptans.
+
 ## Översikt och Insikter
 
 `LogScreen` behåller `Idag` och `Översikt` som två vyer inom samma Logga-route. Översikten hämtar bara vald period med `fetchDogEventInsights` och den privata read-only-RPC:n `dog_event_insights`; den läser inte Loggas paginerade råhistorik. Standardperioden är vecka. Periodbyte, aktiv app, lokal loggmutation och explicit uppdatering avbryter/invaliderar föregående flight och hämtar bara den aktuella perioden. En typad parser avvisar svar som avviker från exakt SQL-shape, datum-/zon- eller bucketkontrakt.

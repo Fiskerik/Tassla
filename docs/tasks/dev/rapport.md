@@ -1143,3 +1143,11 @@ Migration `202610230001_checklist_custom_item_icons.sql` och SQL-prob finns, men
 ### UI-R02-03 — plan v3, 2026-10-23
 
 02 implementation `3973ffe` och release/queue closeout `4f91364` är pushade till `origin/2026-10-23-ui-02-checklistor`. Plan v1 fick Architect **CHANGES**, UX Critic **PROCEED WITH CHANGES**, Security **CHANGES**. Architect/Security godkände v2; v3 lägger till minimize/reopen efter unknown/conflict och viktens exakta scope/readback-delete. Architect v3 **APPROVE**, UX Critic **PASS**, Security **APPROVE**. V3 kräver scope-keyad in-memory recovery ovanför conditionally-mounted screens, rå draft preservation, owner/accountGeneration/dog/lifetime fencing och switch-away/back stöd; ingen adapter/dataändring. Tasken är `implementing`; plan checkpoint pushas först till `2026-10-23-ui-03-logg-halsa`. Inga produktkodändringar för 03 har startat. Ägarens tidigare vikt-/tangentbordsprov och generella accessibility/Supabase-besked återges inte som nya verifieringar.
+
+### UI-R02-03 — implementation-checkpoint, 2026-10-23
+
+Loggredigering, utförd hälsa, vikt och plan använder nu en sammanhållen BottomSheet-form med fast Spara-footer, dirty-close-skydd och ikonbaserad radering med textad objektsbekräftelse. ProduktWorkspace bevarar editorutkast/recovery över avmontering inom matchande konto-/hund-/datalivstid; Hälsa öppnar exakt vald plan och återvänder till rätt flik/scroll. A03:s checklist-origin är fortsatt separat. Schemamodell, adapter, SQL/RPC/RLS och mutationskontrakt är oförändrade.
+
+Riktad public/review RN Web: Logg 13/13 vardera; Hälsaformulär 6/6 vardera vid 375×667, 375×844, 430×844 och 140 % textproxy. `pnpm check` PASS (app/edge TypeScript, ESLint, 75/75 tester). Public iOS JS-export PASS, 1 585 moduler; public content guard, `git diff --check`, queue validate och verifierarens `py_compile` PASS. Skärmbilder och JSON finns under [03 public/review-evidens](../../design/evidence/vision-rev02/ui-r02-03-logg-halsa/).
+
+Oberoende QA/Reviewer och full Panel 5 §14 är nästa grind. Live Supabase/RLS, migration, native tangentbord/VoiceOver/Dynamic Type och signerad/TestFlight-build har inte verifierats i denna körning. Eriks tidigare generella plattformsbesked gäller enligt actionplanen men räknas inte som nya panelprov.

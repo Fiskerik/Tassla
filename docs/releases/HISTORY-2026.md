@@ -649,3 +649,11 @@ Loggas kalenderikon har nu minst 20,4 px avstånd från centrerad datumtext vid 
 Rutin- och Kunskapspunkter använder samma 20-symbolsval; egen punktens ikon går genom skrivning/readback och redigeringsflöde. Editorerna har en Spara-footer och bekräftad ikonbaserad radering. Oberoende QA och Reviewer PASS för den lokala kodcheckpointen; public/review rutinrender 16/16 vardera, Kunskap 7/7, `pnpm check` 75/75 och public iOS JS-export 1 585 moduler PASS. Implementationscommit `3973ffe` är pushad till `origin/2026-10-23-ui-02-checklistor`; push-hooken körde full check med 704 PASS, 0 FAIL, 1 skip av 705 tester.
 
 Öppet: migration `202610230001_checklist_custom_item_icons.sql`/SQL-prob mot riktig databas, live RLS/readback, full panel 4/7 §14 och native/TestFlight. Den äldre breda Knowledge-verifieraren väntar på en route som saknas i sin fixtur och är NOT TESTABLE; den lämnades oförändrad och ersätts för den ändrade resan av det riktade provet. [Evidens](../design/evidence/vision-rev02/ui-r02-02-checklists/README.md).
+
+## UI-R02-03 — Logg och Hälsa, implementation-checkpoint, 2026-10-23
+
+Logg, utförd hälsa, vikt och plan redigeras i kompakta BottomSheets med en fast Spara-footer, dirty-close-skydd och ikonbaserad radering med objektspecifik bekräftelse. Hälsa bevarar exakt plan-ID, returflik och scroll. Recovery-utkast hålls i workspace inom konto-/hund-/lifetime-scope; befintlig datamodell, adapter och mutationskontrakt är oförändrade.
+
+Public/review RN Web-kontroller PASS: Logg 13/13 och Hälsaformulär 6/6 vardera. `pnpm check` PASS (75/75 tester); public iOS JS-export PASS (1 585 moduler), public release content guard, kö- och diff-validering PASS. RN Web-evidens: [UI-R02-03](../design/evidence/vision-rev02/ui-r02-03-logg-halsa/).
+
+Detta är lokal implementationsevidens. Oberoende QA/Reviewer, full Panel 5 §14, live Supabase/RLS, native keyboard/accessibility och signerad/TestFlight-build återstår eller har inte körts i denna session.

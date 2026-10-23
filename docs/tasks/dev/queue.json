@@ -10670,6 +10670,9 @@
         "tests/health-weight.test.mjs",
         "tests/planned-health.test.mjs",
         "tests/main-navigation.test.mjs",
+        "tests/daily-checklist-route.test.mjs",
+        "tests/planned-health-feedback.test.mjs",
+        "tests/ui-actions-rows.test.mjs",
         "tools/visual-check/app.tsx",
         "tools/visual-check/verify-flow-log.py",
         "tools/visual-check/verify-health-edit-forms.py",
@@ -10697,7 +10700,7 @@
         "Ingen ändring av schema, datamodell, hälsodatans ändamål, auth/RLS, RPC, notifieringskontrakt eller dependencies."
       ],
       "checks": [
-        "node --experimental-strip-types --test tests/log-screen-policy.test.mjs tests/health-history.test.mjs tests/health-weight.test.mjs tests/planned-health.test.mjs tests/main-navigation.test.mjs",
+        "node --experimental-strip-types --test tests/log-screen-policy.test.mjs tests/health-history.test.mjs tests/health-weight.test.mjs tests/planned-health.test.mjs tests/main-navigation.test.mjs tests/daily-checklist-route.test.mjs tests/planned-health-feedback.test.mjs tests/ui-actions-rows.test.mjs",
         "pnpm check",
         "CI=1 TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false node tools/check-content-release.cjs",
         "CI=1 __UNSAFE_EXPO_HOME_DIRECTORY=/tmp/tassla-expo-home TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false node node_modules/expo/bin/cli export --platform ios --output-dir dist/ios",
@@ -10708,7 +10711,7 @@
       "depends_on": [
         "UI-R02-02"
       ],
-      "status": "implementing",
+      "status": "qa",
       "history": [
         {
           "from": "planned",
@@ -10721,17 +10724,25 @@
           "to": "implementing",
           "actor": "implementer",
           "evidence": "Start work under approved plan v3 on new package branch. Scope limited to UI-R02-03 write_paths; preserve existing data adapters, plan/history separation, A03 and other reviewed flows."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation and local verification checkpoint complete on 2026-10-23. Public/review RN Web: Logg 13/13 each and Hälsa forms 6/6 each; pnpm check 75/75, public iOS JS export 1,585 modules, release content guard, diff check, queue validate and verifier py_compile PASS. Independent QA/Reviewer and full Panel 5 §14 are next; no live Supabase/RLS or native/TestFlight re-run is claimed."
         }
       ],
-      "next_step": "Create and push 2026-10-23-ui-03-logg-halsa with the approved plan checkpoint; then implement Logg editor first, preserving quick log/calendar/undo and existing scoped mutation contracts.",
+      "next_step": "Independent QA reviews the frozen implementation and saved evidence, followed by Reviewer. Full Panel 5 §14 and any newly required native/live checks remain explicit gates. Continue actionplan package 04 on its own branch, stacked on 03 if it has not yet been integrated.",
       "priority": "P1",
       "panels": [
         "Logga",
         "Hälsa"
       ],
       "risk_class": "H",
-      "checkpoint": "Plan v3 approved: Architect APPROVE, UX Critic PASS, Security APPROVE. Queue implementing; no application-code changes started. Next save a plan-only branch checkpoint, then begin Logg editor slice.",
-      "test_evidence": "Plan-doc validation PASS: python -X utf8 tools/dev_flow.py validate; git diff --check. Product tests not started. Prior Logg calendar spacing and owner-reported weight/keyboard behavior are existing evidence only; this task will rerun focused regressions."
+      "checkpoint": "Implementation complete; local public/review renders and automated checks PASS. Independent QA/Reviewer and full Panel 5 §14 remain open.",
+      "test_evidence": "Public/review: Logg 13/13 each; health forms 6/6 each. pnpm check PASS (75/75), public iOS JS export PASS (1,585 modules), public content guard, git diff --check, queue validation and verifier py_compile PASS. Evidence: docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/{log,health}/{public,review}/. No live Supabase/RLS or native/TestFlight test was run.",
+      "implementation_state": "Logg, utförd hälsa, vikt, planned health editors and scoped exact-plan return implemented. No schema, adapter, RPC, RLS or mutation-contract changes.",
+      "evidence_status": "Local public/review RN Web and package checks PASS; synthetic fixtures only. Native, live backend and full-panel gates remain unverified."
     }
   ]
 }

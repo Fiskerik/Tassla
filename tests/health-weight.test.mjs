@@ -34,15 +34,15 @@ test('date input shrinks while the calendar target and time field keep their exi
   assert.match(primitivesSource, /pickerButton: \{[^}]*width: tokens\.size\.touchMin, minWidth: tokens\.size\.touchMin, minHeight: 52/s);
 });
 
-test('weight edit actions stack at narrow width or large text without changing action labels', () => {
-  assert.match(weightScreenSource, /const stackEditActions = width < 360 \|\| fontScale >= 1\.25/);
-  assert.match(weightScreenSource, /styles\.actionsStacked/);
-  assert.match(weightScreenSource, /actionsStacked: \{ flexDirection: 'column', alignItems: 'stretch'/);
-  assert.match(weightScreenSource, /actionItemStacked: \{ flexGrow: 0, flexShrink: 0, flexBasis: 'auto', width: '100%' \}/);
-  assert.match(weightScreenSource, /title=\{isBusy \? 'Sparar…' : 'Spara rättning'\}/);
-  assert.match(weightScreenSource, /<QuietButton title="Avbryt"/);
-  assert.match(weightScreenSource, /label="Radera vikt"/);
-  assert.match(weightScreenSource, /deleteAction: \{ marginTop: tokens\.spacing\.xs \}/);
+test('weight add and edit share a keyboard-aware sheet with one save footer and confirmed deletion', () => {
+  assert.match(weightScreenSource, /<BottomSheet visible=\{sheetVisible && draft !== null\}[^>]*keyboardAware/);
+  assert.match(weightScreenSource, /footer=\{<Button label=\{saving \|\| busy \? 'Sparar…' : draft\?\.id \? 'Spara ändring' : 'Spara vikt'/);
+  assert.match(weightScreenSource, /<DatePickerField label="Datum"/);
+  assert.match(weightScreenSource, /keyboardType="decimal-pad"/);
+  assert.match(weightScreenSource, /<Button variant="icon" label="Radera vikt" iconName="trash-outline"/);
+  assert.match(weightScreenSource, /<Dialog visible=\{Boolean\(deleteTarget\)\} title="Radera viktpost\?"/);
+  assert.match(weightScreenSource, /Viktposten finns inte längre\. Den återställs inte som en ny vikt\./);
+  assert.match(weightScreenSource, /<Toast visible=\{savedToastVisible\} tone="success" confirmed/);
 });
 
 test('weight date and kg validators enforce calendar, future and database boundaries', () => {
@@ -299,7 +299,7 @@ test('the actual workspace save handler starts once, suppresses a same-tick dupl
   deferred.resolve({ status: 'saved', value: savedWeight });
   assert.equal(await first, true);
   assert.deepEqual(harness.state.rows, [savedWeight]);
-  assert.equal(harness.state.pendingHealthMutation.current, null);
+  assert.equal(harness.state.pendingHealthMutation.current.size, 0);
 });
 
 test('the actual workspace save handler blocks a new write after an unknown outcome', async () => {
@@ -312,7 +312,7 @@ test('the actual workspace save handler blocks a new write after an unknown outc
 
   assert.equal(await harness.handlers.saveHealthWeight(null, today(), 12.345), false);
   assert.equal(harness.state.healthPending, true);
-  assert.equal(harness.state.pendingHealthMutation.current?.operation.id, weightId);
+  assert.equal(harness.state.pendingHealthMutation.current.get(harness.state.lifetime.current)?.operation.id, weightId);
   assert.equal(await harness.handlers.saveHealthWeight(null, today(), 13), false);
   assert.equal(harness.calls.insert.length, 1);
 });
@@ -337,7 +337,7 @@ test('the actual status-check handler reconciles a saved insert with a read and 
   assert.deepEqual(reads[0].slice(1), [dogId, weightId]);
   assert.equal(harness.calls.insert.length, 1, 'a matching row resolves without replaying the insert');
   assert.deepEqual(harness.state.rows, [savedWeight]);
-  assert.equal(harness.state.pendingHealthMutation.current, null);
+  assert.equal(harness.state.pendingHealthMutation.current.size, 0);
 });
 
 function localClient(handler) {
@@ -362,15 +362,17 @@ function localClient(handler) {
 }
 
 function createHealthHandlerHarness(overrides = {}) {
+  const lifetime = `${dogId}:user-1`;
   const state = {
     healthPending: false,
     rows: [],
     healthBusy: false,
     healthMessage: '',
     healthMessageError: false,
-    pendingHealthMutation: { current: null },
+    pendingHealthMutation: { current: new Map() },
     healthMutationInFlight: { current: false },
     healthWeightRows: { current: [] },
+    lifetime: { current: lifetime },
     mounted: { current: true },
   };
   const calls = { insert: [], update: [], delete: [] };
@@ -379,10 +381,13 @@ function createHealthHandlerHarness(overrides = {}) {
     client: {},
     dog: { id: dogId },
     healthState: 'ready',
+    currentHealthWeightLifetime: lifetime,
+    healthWeightDataLifetime: lifetime,
     mounted: state.mounted,
     pendingHealthMutation: state.pendingHealthMutation,
     healthMutationInFlight: state.healthMutationInFlight,
     healthWeightRows: state.healthWeightRows,
+    healthWeightLifetime: state.lifetime,
     isValidHealthWeightDate: workspaceData.isValidHealthWeightDate,
     isValidHealthWeightKg: workspaceData.isValidHealthWeightKg,
     insertHealthWeight: async (...args) => {
