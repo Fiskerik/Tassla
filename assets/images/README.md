@@ -62,12 +62,12 @@ Fyra fotorealistiska, dekorativa bilder genererades 2026-10-21 med ChatGPT `imag
 
 | Appfil | Motiv-/promptspårning | Källa → appasset | Roll och crop | Tillgänglighet / avsedd återanvändning |
 |---|---|---|---|---|
-| `knowledge-featured-puppy-lagotto-forest.jpg` | Fotorealistisk lagotto på nordisk skogsstig, mjukt dagsljus, luftig grön/beige miljö | `exec-c0aaccd7-8d52-4944-a650-6160064fcd9f.png`, 1536×1024, 2,604,029 B → 1536×1024 JPEG, 311,460 B | Kunskaps hero, befintlig höjd 200 pt med `cover`; naturligt horisontellt utsnitt | Dekorativ, VoiceOver/TalkBack ignorerar bilden. Samma guide behåller samma bild i HomeCarousel. |
-| `knowledge-card-puppy-sheltie-window.jpg` | Fotorealistisk sheltievalp vid solbelyst fönster, varm skandinavisk hemmiljö | `exec-5a2a21b3-d1a8-4997-af40-852b15cfeba8.png`, 1536×1024, 2,265,793 B → 1536×1024 JPEG, 235,973 B | Kunskapens mindre bildkort, nuvarande 132 pt bildhöjd och responsiv bredd med `cover` | Dekorativ, VoiceOver/TalkBack ignorerar bilden. Stabil guide-ID-/versionsmappning. |
-| `knowledge-card-puppy-cocker-coast.jpg` | Fotorealistisk brun cocker spaniel på nordisk kuststig, hav och ljung i bakgrunden | `exec-856c7906-2f8b-40a6-b411-5c2a9f3a2f58.png`, 1536×1024, 2,683,164 B → 1536×1024 JPEG, 316,271 B | Kunskapens mindre bildkort, nuvarande 132 pt bildhöjd och responsiv bredd med `cover` | Dekorativ, VoiceOver/TalkBack ignorerar bilden. Stabil guide-ID-/versionsmappning. |
+| `knowledge-featured-puppy-lagotto-forest.jpg` | Fotorealistisk lagotto på nordisk skogsstig, mjukt dagsljus, luftig grön/beige miljö | `exec-c0aaccd7-8d52-4944-a650-6160064fcd9f.png`, 1536×1024, 2,604,029 B → 1536×1024 JPEG, 311,460 B | Kunskaps hero, aktuell höjd 136 pt med `cover`; naturligt horisontellt utsnitt | Dekorativ, VoiceOver/TalkBack ignorerar bilden. Samma guide behåller samma bild i HomeCarousel. |
+| `knowledge-card-puppy-sheltie-window.jpg` | Fotorealistisk sheltievalp vid solbelyst fönster, varm skandinavisk hemmiljö | `exec-5a2a21b3-d1a8-4997-af40-852b15cfeba8.png`, 1536×1024, 2,265,793 B → 1536×1024 JPEG, 235,973 B | Kunskapens mindre bildkort, 44 pt bildhöjd och responsiv bredd med `cover` | Dekorativ, VoiceOver/TalkBack ignorerar bilden. Stabil guide-ID-/versionsmappning. |
+| `knowledge-card-puppy-cocker-coast.jpg` | Fotorealistisk brun cocker spaniel på nordisk kuststig, hav och ljung i bakgrunden | `exec-856c7906-2f8b-40a6-b411-5c2a9f3a2f58.png`, 1536×1024, 2,683,164 B → 1536×1024 JPEG, 316,271 B | Kunskapens mindre bildkort, 44 pt bildhöjd och responsiv bredd med `cover` | Dekorativ, VoiceOver/TalkBack ignorerar bilden. Stabil guide-ID-/versionsmappning. |
 | `training-next-step-puppy-corgi-home.jpg` | Nära fotorealistiskt corgiporträtt på neutral träningsmatta i lugnt hem; tydliga ögon och öron i litet utsnitt | `exec-302611d4-5547-491a-983a-f7d8ac5bb58c.png`, 1254×1254, 2,318,108 B → 1254×1254 JPEG, 242,738 B | Träningens nästa-övning-miniatyr 88×88 pt (`tokens.size.trainingImage`) och HomeCarousel-bilden för samma nästa träningssteg; `cover` | Dekorativ, VoiceOver/TalkBack ignorerar bilden. Delas endast mellan samma träningssteg i Träning och dess HomeCarousel-genväg. |
 
-Alla JPEG-filer konverterades från angivna original med `magick <source.png> -strip -quality 86 <asset.jpg>`. Samlad storlek är 1,106,442 B; varje fil understiger 350 KB och summan 1.4 MB. Metadata tas bort. Bildkällorna är AI-genererade och ska inte märkas som personliga hundfoton, utbildningsbevis eller hälsopåståenden. Motiven är bedömda separat; faktisk React Native `cover`-rendering i appen kvarstår **NOT TESTABLE** tills fungerande renderer finns.
+Alla JPEG-filer konverterades från angivna original med `magick <source.png> -strip -quality 86 <asset.jpg>`. Samlad storlek är 1,106,442 B; varje fil understiger 350 KB och summan 1.4 MB. Metadata tas bort. Bildkällorna är AI-genererade och ska inte märkas som personliga hundfoton, utbildningsbevis eller hälsopåståenden. `KnowledgeScreen` har nu fångats i lokal React Native Web med nuvarande `cover`-crop; native iOS/Android-rendering och full appbild-/retinaprov är fortsatt **NOT TESTABLE**.
 
 ## FLOW-KNOWLEDGE-01: tre nya dekorativa guidefoton
 
@@ -76,7 +76,7 @@ Skapade 2026-10-22 med ChatGPT `image_gen`. Inga uppladdade referensbilder eller
 ### `knowledge-guide-handling.jpg`
 
 - Källa: `/workspace/generated_images/exec-f11935e6-b74d-4db1-a7a9-54cf05ffdf33.png`, 1536×1024 px, 2,308,501 B.
-- Appasset: 1536×1024 px, 240,918 B; beskärning centreras med `cover`. I hero på 430 pt beskärs över-/underkant i 382×200 pt-fönster; i mindre kort beskärs sidorna i 185×132 pt-fönster. Hunden och den frivilliga, lugna kontakten förblir synliga i båda beskärningsproven.
+- Appasset: 1536×1024 px, 240,918 B; beskärning centreras med `cover`. Nuvarande `KnowledgeScreen` visar bilden i ett 136 pt högt hero eller i en 44 pt hög mindre kortbild; bredden följer den responsiva kortlayouten.
 - Roll: guide om varsam hantering hemma.
 - VoiceOver/TalkBack: bilden är dekorativ och döljs med `accessibilityElementsHidden`; kortets namn kommer från guideversionens titel.
 - Exakt genereringsprompt:
@@ -86,7 +86,7 @@ Skapade 2026-10-22 med ChatGPT `image_gen`. Inga uppladdade referensbilder eller
 ### `knowledge-guide-weight.jpg`
 
 - Källa: `/workspace/generated_images/exec-13175f6d-a9b6-4e15-99aa-4544de00b772.png`, 1536×1024 px, 2,169,977 B.
-- Appasset: 1536×1024 px, 217,433 B; centered `cover` in the 382×200 pt hero and 185×132 pt small-card windows. All four paws and the full relaxed stance remain visible in both 430 pt crop previews.
+- Appasset: 1536×1024 px, 217,433 B; centered `cover` in the current 136 pt hero or 44 pt small-card image, with responsive card width.
 - Roll: guide about a dog's weight history. No scale or body-condition result is shown.
 - VoiceOver/TalkBack: the image is decorative and döljs with `accessibilityElementsHidden`; kortets namn kommer från guideversionens titel.
 - Exakt genereringsprompt:
@@ -96,7 +96,7 @@ Skapade 2026-10-22 med ChatGPT `image_gen`. Inga uppladdade referensbilder eller
 ### `knowledge-guide-vet.jpg`
 
 - Källa: `/workspace/generated_images/exec-4860066e-f395-4ba2-8808-d7cbe66d0ee1.png`, 1536×1024 px, 2,304,474 B.
-- Appasset: 1536×1024 px, 230,041 B; centered `cover` in the 382×200 pt hero and 185×132 pt small-card windows. The dog and calm greeting contact remain visible in both 430 pt crop previews.
+- Appasset: 1536×1024 px, 230,041 B; centered `cover` in the current 136 pt hero or 44 pt small-card image, with responsive card width.
 - Roll: guide about health records and veterinary contact. No examination or treatment is depicted.
 - VoiceOver/TalkBack: the image is decorative and döljs with `accessibilityElementsHidden`; kortets namn kommer från guideversionens titel.
 - Exakt genereringsprompt:

@@ -1,5 +1,7 @@
 # Knappinventering 2026-10-18
 
+> **HISTORISK INVENTERING, 2026-10-23.** Använd [aktuell råinventering från main eea0984](evidence/gap-ui-ux-2026-10-23/ui-actions-main-eea0984.csv) och [den manuella UI-/UX-bedömningen](../GAP-UI-UX-rev02-2026-10-23.md) för fortsatt implementation. Den äldre heuristiken nedan, särskilt generell textstandard för Radera-ingångar, ersätter inte Eriks senare krav på kontextuella ikonknappar med textad bekräftelse.
+
 Reproduceras med `node tools/inventory-ui-actions.cjs`. Läser samtliga 121 JS/TS/TSX-filer i app/ och src/, med 0 parserfel. 416 actionkodplatser. Kodplatser är varken unika knappar eller bevis på aktiverade skärmar: dynamiska listor och delade renderers räknas var för sig. Uttryck skrivs som källkod och måste följas till anropet. CSV innehåller full callback, state och style-ankare utan trunkering.
 
 - Delad komponent: 48 kodplatser.

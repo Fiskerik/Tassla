@@ -54,6 +54,31 @@ TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:4173 TASSLA_UI_EVIDEN
 
 Bygg review i en separat katalog och kör en separat server för samma verifierare med `TASSLA_UI_REVIEW=true` och evidencekatalogen `.../home/review`. Reviewbilder är syntetisk UI-evidens. De verifierar inte native Dynamic Type/VoiceOver, live ägardata, Supabase/RLS eller betaacceptans.
 
+### FLOW-INSIGHTS-01 — panel 8 och ingång från Hundprofil
+
+Samma harness kan öppna den faktiska `EditDogProfileScreen` och produktions-`LogScreen`/`InsightsScreen`. Public bygger tomma loggar; review bygger tydligt syntetiska antal och gles historik. URL-parametrarna `screen=profile`, `screen=insights&origin=profile`, `insightsState=loading|error|empty|ready` och `insightsPeriod=week|month|since_first_log` väljer vyn. Verifieraren provar profilens utkastsspärr, den gemensamma periodvyn, explicit retur till profilen, Idag/Översikt-retention, loading/error/empty, månadsglapp, senaste månaden, kort viewport och 140 % textproxy. Detta är RN Web- och syntetisk evidens. Den bekräftar inte live-RPC/RLS, migration i målmiljö, native VoiceOver/Dynamic Type eller sömnintervall.
+
+```sh
+TASSLA_UI_REVIEW=false TASSLA_UI_ENTRY=tools/visual-check/vision-r02-home-panels-app.tsx TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/panel7-insights/public node tools/visual-check/build.cjs
+python -m http.server 5203 --bind 127.0.0.1 --directory /tmp/tassla-preview/panel7-insights/public
+TASSLA_UI_PANEL=insights TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:5203 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/insights/public python tools/visual-check/verify-vision-r02-home-panels.py
+```
+
+Bygg en andra separat bundle med `TASSLA_UI_REVIEW=true`, servera på port 5204 och kör verifieraren med samma miljöflagga samt `.../insights/review` som evidence-katalog. Inspektera sparade vyer och registrera §14 i `insights/VERIFICATION.md`.
+
+### FLOW-PANELS-6-7 — bildvariation i aktiva Kunskap- och Träning-vyer
+
+Samma produktionsskärmar kan öppnas med `?screen=knowledge&imageFixture=knowledge` respektive `?screen=training&imageFixture=training`. Publicläge visar det ärliga tomläget; review innehåller tre tydligt märkta guidebilder och en syntetisk fortsättningsövning. Verifieraren mäter ID/version-bundna motiv, 200/132 pt Knowledge-bilder, Training-kortets 88×88 pt-bild, faktisk Home-navigering till rätt guide/steg, 375/430 px, 375×667 och 140 % CSS-textproxy. Hemmets aktiva `Just nu`-kort är textbaserat; den fristående gamla `HomeCarousel` är inte monterad och används inte som visuell evidens.
+
+Bygg public/review-var för sig med harness-kommandona ovan. Kör separat verifiering mot respektive server:
+
+```sh
+TASSLA_UI_PANEL=image-diversity TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:5203 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-r02/2026-10-21-panels-6-7-image-diversity/public python tools/visual-check/verify-vision-r02-home-panels.py
+TASSLA_UI_PANEL=image-diversity TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:5204 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-r02/2026-10-21-panels-6-7-image-diversity/review python tools/visual-check/verify-vision-r02-home-panels.py
+```
+
+RN Web och syntetiska callbacks verifierar inte native VoiceOver/Dynamic Type, live Supabase/RLS, migrering i målmiljön eller full panel-§14-acceptans.
+
 KNOW-02 har en separat entry/output och skriver till `docs/design/KNOW-02/evidence/`:
 
 ```sh

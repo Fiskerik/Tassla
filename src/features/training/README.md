@@ -8,7 +8,7 @@
 
 `Rekommenderat` shows only age/breed-matched, unstarted programs with a real next step. Each entire card opens that exact step. `Visa alla` opens the full currently available program list. `Mina` contains programs with at least one confirmed completion in the displayed version and labels paused older versions separately. Unknown age removes age-based recommendations but keeps saved progress reachable.
 
-The data contains no duration or subject taxonomy, so the UI does not fabricate time/category chips. Two distinct generated photos are decorative standard images and carry the visible `Standardbild` badge. The continuation card reuses its existing Home image because both entry points open the same exercise.
+The data contains no duration or subject taxonomy, so the UI does not fabricate time/category chips. Two distinct generated photos are decorative standard images and carry the visible `Standardbild` badge. The continuation card uses a third, distinct Corgi photo in a square 88×88 pt crop. Home's current `Just nu` recommendation is text-only; it opens the same next exercise and does not show that photo.
 
 An exercise is saved with its published version ID and step ID through insert/readback. Only the first incomplete step can be marked. A confirmed step may be unmarked separately; the exact dog/version/step is deleted and re-read before Home updates. Failed or unknown writes do not appear as confirmed progress. Reset remains a separate confirmation. The interface describes the owner’s mark, not a verified skill.
 

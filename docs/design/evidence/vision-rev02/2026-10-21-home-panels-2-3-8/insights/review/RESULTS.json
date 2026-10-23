@@ -1,0 +1,68 @@
+{
+  "mode": "review",
+  "panel": "insights",
+  "evidence_dir": "docs/design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/insights/review",
+  "results": [
+    {
+      "check": "All-history timeline opens at its current month at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Sparse history explains each omitted month interval at 375px",
+      "result": "PASS",
+      "accessible_gap_columns": 6
+    },
+    {
+      "check": "Profile-origin return can be explicitly cleared from the selected Logg tab at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Profile entry, draft gate, shared overview periods and scoped return work at 375px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "All-history timeline opens at its current month at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Sparse history explains each omitted month interval at 430px",
+      "result": "PASS",
+      "accessible_gap_columns": 6
+    },
+    {
+      "check": "Profile-origin return can be explicitly cleared from the selected Logg tab at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Profile entry, draft gate, shared overview periods and scoped return work at 430px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Insights error state offers the supplied retry action",
+      "result": "PASS"
+    },
+    {
+      "check": "Insights remains scrollable above the fixed menu at 375×667",
+      "result": "PASS",
+      "chart_title": {
+        "x": 41,
+        "y": 327,
+        "width": 293,
+        "height": 28
+      },
+      "bottom_nav": {
+        "x": 0,
+        "y": 606,
+        "width": 375,
+        "height": 59
+      }
+    },
+    {
+      "check": "Insights has no horizontal page overflow with the 140% text layout proxy",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}
