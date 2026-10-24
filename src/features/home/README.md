@@ -65,3 +65,5 @@ Hemmets rutinmallar och Kunskapens publicerade faschecklistor/egna punkter är o
 
 
 2026-10-24: Ägarbeställd presentationsstädning tar bort reviewrutor och Standardbild-badges på Hem/Utveckling/Framsteg/preview. Tillfälliga markeringar ersätts inte av tomma ytor. Bilder förblir generiska/dekorativa enligt manifest; namn, data, tillgängliga handlingar och fel/sparstatus är oförändrade. Ny evidens: `docs/design/evidence/vision-rev02/ui-copy-cleanup-2026-10-24/`.
+
+Hem visar den senast uppdaterade, hundscope:ade träningsresans sparade steg och två separata antal: loggade pass och delmål som ägaren uttryckligen bekräftat. Kortet länkar till exakt programversion när dess publicerade steg fortfarande går att läsa; saknad eller partiell data visas inte som sparade antal, och indragna instruktioner återanvänds inte. Detta är en separat registrering från dagens aktivitetslista och dess äldre `training_progress`-markeringar.

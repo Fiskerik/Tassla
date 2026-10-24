@@ -11104,6 +11104,102 @@
       ],
       "test_evidence": "Fullcheck77/77, publiciOS1585, main14/14each,panels5/5each,UI04clean5/5each,interactions18/19. IndependentQA5/5both+8/8focused,ReviewerPASS,SecurityAPPROVE. Currentownerpresentationoverride documented.",
       "implementation_commit": "0fb505e"
+    },
+        {
+      "id": "TRAINING-PROGRESSION-01",
+      "title": "Träning: träningspass och ägarbedömd färdighet",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md § Panel 6 — Träning; docs/mvp.md — träningsprogression",
+      "plan": "docs/tasks/Training-progression-mvp.md v4",
+      "write_paths": [
+        "docs/tasks/Training-progression-mvp.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "src/data/workspace-data.ts",
+        "src/data/README.md",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/training-progression.ts",
+        "src/features/training/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/README.md",
+        "supabase/migrations/202610240001_training_progression.sql",
+        "supabase/tests/training-progression.sql",
+        "tests/workspace-data.test.mjs",
+        "tests/training-progression-model.test.mjs",
+        "tests/training-progression-ui.test.mjs",
+        "tests/training-progression-data.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-training.py",
+        "tools/visual-check/README.md",
+        "docs/design/evidence/training-progression-mvp"
+      ],
+      "acceptance": [
+        "En unik resa per hund/programversion återanvänds vid upprepad/samtidig start; serverauktoriserade sessions/milestones/receipts är versions- och hundscope:ade, idempotenta och kaskaderar vid dog/account-borttagning. Replay verifierar aktuell ägare och returnerar bara sparat resultat även efter avpublicering. training_progress, dagslistor och historiska rader ändras inte/backfillas.",
+        "Ägaren kan starta/återuppta, logga pass med fast återkoppling, separat bekräfta stegets kriterium och uttryckligen fortsätta, upprepa, backa eller pausa; inga automatiska färdighets-/progressionsbeslut.",
+        "Hem visar senast uppdaterade resans aktiva steg samt separata räknare: sparade passhändelser och unika ägarbekräftade steg i samma resa/version. Unknown/partiell data räknas inte.",
+        "Operation-ID återanvänds vid unknown; samma payload inklusive replay efter avpublicering är idempotent efter aktuell ägarkontroll, ändrad payload avvisas och inga indragna instruktioner returneras. Samtidiga startanrop/sena svar/scopebyte blandar inte state.",
+        "Public/review-render och §14-check på 375×667, 375×844, 430×844 och stor text; inga regressionsfel i godkänd panel-6-komposition.",
+        "Alla paths inom write_paths; oberoende QA och Reviewer PASS; exakta resultat samt kvarvarande NOT TESTABLE sparas."
+      ],
+      "checks": [
+        "Fokuserade modell-, data-, SQL- och UI-tester",
+        "pnpm check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check",
+        "Verklig SQL/PLpgSQL-kontraktstest i isolerad lokal runtime; ingen live migration",
+        "python -X utf8 tools/visual-check/verify-flow-training.py"
+      ],
+      "depends_on": [
+        "UX-TRAINING-UNMARK-01"
+      ],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v4; Architect APPROVE, Critic PROCEED, Security APPROVE; current read-only reviews completed; no implementation before this transition."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Single writer is main session; implementing approved v4 vertical journey on codex/agent-workflow-stabilization."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation checkpoint: pnpm check PASS (80/80 tests), local PGlite PASS (21 migrations plus SQL contract test), public/review RN Web PASS (23/23 each), dev_flow validate and diff check PASS. Evidence stored under docs/design/evidence/training-progression-mvp; no live Supabase/native run."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent QA re-check PASS for the single-primary saved-session CTA and authorized write paths; aggregate QA remains BLOCK. Local full check 80/80, public/review renders 23/23 each, PGlite 21 migrations plus SQL fixture, flow validation and diff check PASS. NOT TESTABLE: independent concurrent DB sessions, live Supabase/PostgREST/JWT/RLS, native iOS/VoiceOver/Dynamic Type. §14 panel/contrast evidence is documented as PARTIAL in docs/design/evidence/training-progression-mvp/visual-review.md. Reviewer not started because aggregate QA did not PASS; no live migration or release."
+        }
+      ],
+      "next_step": "Provide an authorized development environment with independent database sessions and real Supabase/PostgREST/JWT/RLS, then run native iOS VoiceOver/Dynamic Type and complete any remaining §14 checks. QA must re-run on the frozen diff; only QA PASS proceeds to Reviewer. No code or release action is pending locally.",
+      "priority": "P2",
+      "panels": [
+        "6"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Local v4 implementation on codex/agent-workflow-stabilization. Latest pnpm check 80/80, PGlite 21 migrations plus SQL contract fixture, public/review RN Web 23/23 each, dev_flow validation, diff check, and Security re-review APPROVE. Independent QA re-check PASS for single-primary CTA and authorized paths; aggregate status BLOCK pending NOT TESTABLE live/concurrent/native checks and PARTIAL §14 visual acceptance. No commit, live migration, or distribution. Evidence: docs/design/evidence/training-progression-mvp/.",
+      "test_evidence": [
+        "PASS — pnpm check: app TypeScript, edge TypeScript, ESLint and 80/80 Node test files.",
+        "PASS — focused training progression/data/model/UI and existing workspace contract tests; fetch pagination includes 45 saved sessions over 40+5 rows with timestamp+ID ordering.",
+        "PASS — PGlite 0.3.14 loads all 21 migrations and executes supabase/tests/training-progression.sql: grants/RLS scope, replay/payload conflict, withdrawal, dog/account cascades, legacy training_progress unchanged.",
+        "PASS — tools/visual-check/verify-flow-training.py: 23/23 public and 23/23 review; no browser page errors, 375x667/375x844/430x844, 140% text proxy; evidence includes screenshots and RESULTS.json.",
+        "PASS — python -X utf8 tools/dev_flow.py validate; git diff --check.",
+        "Security re-review APPROVE after FOR SHARE version-row lock; no personal-data scope expansion.",
+        "NOT TESTABLE — live Supabase/PostgREST/JWT/RLS, simultaneous start over independent database sessions, native VoiceOver/Dynamic Type/iOS and TestFlight; these acceptance checks remain open.",
+        "QA re-check PASS for final single-primary CTA and write-path scope; aggregate acceptance BLOCK. §14 manual panel/contrast review and item-level results: docs/design/evidence/training-progression-mvp/visual-review.md; overall visual likeness PARTIAL."
+      ],
+      "related_tasks": [
+        "FLOW-TRAINING-01"
+      ]
     }
   ]
 }

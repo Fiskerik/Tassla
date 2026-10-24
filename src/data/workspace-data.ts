@@ -4,6 +4,18 @@ import { isCanonicalAccidentKinds, LOG_EVENT_TYPES, type AccidentKind, type LogE
 import { dedupeLocalDateMarkers, localMonthRange } from '../features/puppy-log/log-calendar-model';
 import type { HomeContent, OwnedDog } from './app-data';
 import type { InsightsPeriod } from '../features/puppy-log/insights-model';
+import {
+  emptyTrainingProgression,
+  isTrainingProgressionResult,
+  operationAppliedToWorkspace,
+  operationAppearsInReadback,
+  type TrainingProgressionAction,
+  type TrainingJourney,
+  type TrainingMilestone,
+  type TrainingProgressionResult,
+  type TrainingProgressionWorkspace,
+  type TrainingSession,
+} from '../features/training/training-progression';
 
 export const WORKSPACE_PAGE_SIZE = 40;
 const DEFAULT_REQUEST_TIMEOUT_MS = 12_000;
@@ -1143,15 +1155,21 @@ export async function fetchTrainingWorkspace(
   ageWeeks: number | null,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   parentSignal?: AbortSignal,
-): Promise<{ programs: PublishedTrainingProgram[]; paused: PausedTrainingProgress[] }> {
-  const [versions, progress] = await Promise.all([
+): Promise<{ programs: PublishedTrainingProgram[]; paused: PausedTrainingProgress[]; progression: TrainingProgressionWorkspace; progressionState: 'ready' | 'error' }> {
+  const [versions, progress, progressionResult] = await Promise.all([
     fetchPublishedContentVersions(client, timeoutMs, parentSignal),
     fetchTrainingProgress(client, dog.id, timeoutMs, parentSignal),
+    fetchTrainingProgressionWorkspace(client, dog.id, timeoutMs, parentSignal)
+      .then((workspace) => ({ workspace, status: 'ready' as const }))
+      .catch(() => ({ workspace: emptyTrainingProgression(), status: 'error' as const })),
   ]);
+  const { workspace: progression, status: progressionState } = progressionResult;
   const publishedPrograms = versions.filter((row) => row.content_items.content_type === 'training_program');
   const inProgressVersionIds = new Set(progress.map((item) => item.program_version_id));
-  const resumable = publishedPrograms.filter((row) => inProgressVersionIds.has(row.id)
-    && (row.content_breed_targets.length === 0 || row.content_breed_targets.some((target) => target.breed_id === dog.breed_id)));
+  const journeyVersionIds = new Set(progression.journeys.map((journey) => journey.program_version_id));
+  const resumable = publishedPrograms.filter((row) => journeyVersionIds.has(row.id)
+    || inProgressVersionIds.has(row.id)
+      && (row.content_breed_targets.length === 0 || row.content_breed_targets.some((target) => target.breed_id === dog.breed_id)));
   const current = ageWeeks === null ? [] : selectContent(publishedPrograms.map((row) => ({
     id: row.id,
     contentId: row.content_id,
@@ -1198,11 +1216,124 @@ export async function fetchTrainingWorkspace(
   }
   return {
     programs,
+    progression,
+    progressionState,
     paused: [...pausedByVersion].map(([versionId, completed]) => {
       const published = publishedPrograms.find((row) => row.id === versionId);
       return { versionId, title: published?.title ?? null, versionNumber: published?.version ?? null, completedCount: completed.size };
     }),
   };
+}
+
+export async function fetchTrainingProgressionWorkspace(
+  client: SupabaseClient,
+  dogId: string,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  parentSignal?: AbortSignal,
+): Promise<TrainingProgressionWorkspace> {
+  return withRequestDeadline(async (signal) => {
+    const loadProgressionPages = async <T extends { id: string; dog_id: string }>(
+      fetchPage: (offset: number) => PromiseLike<{ data: unknown; error: unknown }>,
+      isRow: (value: unknown) => value is T,
+      orderColumn: 'created_at' | 'performed_at' | 'confirmed_at',
+      errorMessage: string,
+    ): Promise<T[]> => {
+      const rows: T[] = [];
+      const ids = new Set<string>();
+      let previousTimestamp: string | null = null;
+      let previousId: string | null = null;
+      for (let offset = 0; ; offset += WORKSPACE_PAGE_SIZE) {
+        const page = await fetchPage(offset);
+        if (page.error || !Array.isArray(page.data) || !page.data.every(isRow)) throw new Error(errorMessage);
+        if (page.data.some((row) => row.dog_id !== dogId)) throw new Error('Training progression response contained another dog scope');
+        for (const row of page.data) {
+          const timestamp = (row as Record<string, unknown>)[orderColumn];
+          if (ids.has(row.id) || typeof timestamp !== 'string' || !Number.isFinite(Date.parse(timestamp))
+            || previousTimestamp !== null && (timestamp < previousTimestamp || timestamp === previousTimestamp && row.id <= previousId!)) {
+            throw new Error('Training progression page order was invalid');
+          }
+          ids.add(row.id);
+          previousTimestamp = timestamp;
+          previousId = row.id;
+          rows.push(row);
+        }
+        if (page.data.length < WORKSPACE_PAGE_SIZE) return rows;
+      }
+    };
+    const [journeys, sessions, milestones] = await Promise.all([
+      loadProgressionPages<TrainingJourney>(
+        (offset) => client.from('training_journeys')
+          .select('id,dog_id,program_version_id,active_step_id,state,last_operation_id,created_at,updated_at')
+          .eq('dog_id', dogId).order('created_at', { ascending: true }).order('id', { ascending: true })
+          .range(offset, offset + WORKSPACE_PAGE_SIZE - 1).abortSignal(signal),
+        isTrainingJourneyRow, 'created_at', 'Could not load training journeys',
+      ),
+      loadProgressionPages<TrainingSession>(
+        (offset) => client.from('training_sessions')
+          .select('id,journey_id,dog_id,program_version_id,step_id,operation_id,feedback,performed_at')
+          .eq('dog_id', dogId).order('performed_at', { ascending: true }).order('id', { ascending: true })
+          .range(offset, offset + WORKSPACE_PAGE_SIZE - 1).abortSignal(signal),
+        isTrainingSessionRow, 'performed_at', 'Could not load training sessions',
+      ),
+      loadProgressionPages<TrainingMilestone>(
+        (offset) => client.from('training_milestones')
+          .select('id,journey_id,dog_id,program_version_id,step_id,confirmation_operation_id,confirmed_at')
+          .eq('dog_id', dogId).order('confirmed_at', { ascending: true }).order('id', { ascending: true })
+          .range(offset, offset + WORKSPACE_PAGE_SIZE - 1).abortSignal(signal),
+        isTrainingMilestoneRow, 'confirmed_at', 'Could not load training milestones',
+      ),
+    ]);
+    return {
+      journeys,
+      sessions,
+      milestones,
+    };
+  }, timeoutMs, parentSignal);
+}
+
+export async function applyTrainingProgressionOperation(
+  client: SupabaseClient,
+  dogId: string,
+  operationId: string,
+  action: TrainingProgressionAction,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<WriteOutcome<{ workspace: TrainingProgressionWorkspace; result: TrainingProgressionResult | null }>> {
+  let failure: unknown = null;
+  let result: TrainingProgressionResult | null = null;
+  try {
+    const response = await withRequestDeadline(async (signal) => await client.rpc('apply_training_operation', {
+      p_dog_id: dogId,
+      p_program_version_id: action.programVersionId,
+      p_operation_id: operationId,
+      p_action: action.kind,
+      p_step_id: 'stepId' in action ? action.stepId : null,
+      p_feedback: action.kind === 'record_session' ? action.feedback : null,
+    }).abortSignal(signal), timeoutMs);
+    if (!response.error && isTrainingProgressionResult(response.data)
+      && response.data.operation_id === operationId
+      && response.data.dog_id === dogId
+      && response.data.program_version_id === action.programVersionId
+      && response.data.action === action.kind) {
+      result = response.data;
+    } else {
+      failure = response.error ?? new Error('Training operation response did not match the request');
+    }
+  } catch (error) {
+    failure = error;
+  }
+
+  try {
+    const workspace = await fetchTrainingProgressionWorkspace(client, dogId, timeoutMs);
+    if (result && operationAppearsInReadback(workspace, result)) return { status: 'saved', value: { workspace, result } };
+    if (operationAppliedToWorkspace(workspace, dogId, action, operationId)) return { status: 'saved', value: { workspace, result } };
+    return isDefiniteClientRejection(failure) ? { status: 'failed' } : { status: 'unknown' };
+  } catch {
+    return { status: 'unknown' };
+  }
+}
+
+export function emptyTrainingProgressionWorkspace(): TrainingProgressionWorkspace {
+  return emptyTrainingProgression();
 }
 
 export async function insertTrainingProgress(
@@ -1417,6 +1548,36 @@ function isProgressRow(value: unknown): value is ProgressRow {
   const row = value as Record<string, unknown>;
   return typeof row.dog_id === 'string' && typeof row.program_version_id === 'string'
     && typeof row.step_id === 'string' && typeof row.completed_at === 'string';
+}
+
+function isTrainingJourneyRow(value: unknown): value is TrainingJourney {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return typeof row.id === 'string' && typeof row.dog_id === 'string'
+    && typeof row.program_version_id === 'string' && typeof row.active_step_id === 'string'
+    && (row.state === 'active' || row.state === 'paused' || row.state === 'maintenance')
+    && typeof row.last_operation_id === 'string'
+    && typeof row.created_at === 'string' && Number.isFinite(Date.parse(row.created_at))
+    && typeof row.updated_at === 'string' && Number.isFinite(Date.parse(row.updated_at));
+}
+
+function isTrainingSessionRow(value: unknown): value is TrainingSession {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return typeof row.id === 'string' && typeof row.journey_id === 'string' && typeof row.dog_id === 'string'
+    && typeof row.program_version_id === 'string' && typeof row.step_id === 'string'
+    && typeof row.operation_id === 'string'
+    && (row.feedback === 'worked_as_planned' || row.feedback === 'practice_more' || row.feedback === 'paused_early')
+    && typeof row.performed_at === 'string' && Number.isFinite(Date.parse(row.performed_at));
+}
+
+function isTrainingMilestoneRow(value: unknown): value is TrainingMilestone {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return typeof row.id === 'string' && typeof row.journey_id === 'string' && typeof row.dog_id === 'string'
+    && typeof row.program_version_id === 'string' && typeof row.step_id === 'string'
+    && typeof row.confirmation_operation_id === 'string'
+    && typeof row.confirmed_at === 'string' && Number.isFinite(Date.parse(row.confirmed_at));
 }
 
 function isTrainingStepRow(value: unknown): value is TrainingStepRow {

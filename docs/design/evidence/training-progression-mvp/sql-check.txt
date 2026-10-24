@@ -1,0 +1,30 @@
+Date: 2026-10-24
+Runtime: @electric-sql/pglite 0.3.14 installed temporarily under /tmp/tassla-sql-tools; no project dependency or lockfile change.
+Auth setup: synthetic auth.users table and auth.uid() JWT-claim stub; roles anon, authenticated, service_role.
+Scope: all 21 repository migrations loaded in lexical order, then supabase/tests/training-progression.sql executed in its rollback transaction. The fixture tests owner/account and dog-only deletion cascades; fresh operations on withdrawn versions are rejected while receipt replay remains limited to the saved result. The publication check now holds a FOR SHARE row lock before new writes.
+Final rerun after the lock and dog-cascade test changes: PASS 21 migrations loaded; PASS SQL fixture. Read-only Security re-review: APPROVE; independent concurrent-session behavior remains untested.
+
+PASS migration 202610040001_foundation.sql
+PASS migration 202610060001_planned_health.sql
+PASS migration 202610060002_plan_reminders.sql
+PASS migration 202610080001_beta_metrics.sql
+PASS migration 202610080002_owned_dog_attribution_readback.sql
+PASS migration 202610090001_quick_log_types.sql
+PASS migration 202610090002_kennel_profile_link.sql
+PASS migration 202610100001_health_history_time.sql
+PASS migration 202610110001_planned_health_event_time.sql
+PASS migration 202610110002_puppy_checklists.sql
+PASS migration 202610130001_daily_activities.sql
+PASS migration 202610130002_dog_age_display_unit.sql
+PASS migration 202610140001_accident_kinds.sql
+PASS migration 202610140002_routine_checklists.sql
+PASS migration 202610150001_routine_repeat_weekdays.sql
+PASS migration 202610180001_multi_dog_profiles.sql
+PASS migration 202610180002_content_ai_origin.sql
+PASS migration 202610220001_daily_routine_checklist_icons.sql
+PASS migration 202610220002_dog_event_insights_read.sql
+PASS migration 202610230001_checklist_custom_item_icons.sql
+PASS migration 202610240001_training_progression.sql
+PASS supabase/tests/training-progression.sql (21 migrations loaded)
+
+This is local PostgreSQL/PLpgSQL execution in PGlite with a synthetic auth stub. It does not prove live Supabase/PostgREST behavior, real JWT/RLS wiring, or concurrent requests over independent database connections. Sequential duplicate starts are tested; simultaneous requests over independent connections remain NOT TESTABLE here.

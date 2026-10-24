@@ -29,6 +29,8 @@ import {
   fetchHomeContent,
   fetchTrainingWorkspace,
   fetchExactHistoricalTrainingSources,
+  applyTrainingProgressionOperation,
+  emptyTrainingProgressionWorkspace,
   isValidHealthWeightDate,
   isValidHealthWeightKg,
   isValidHealthHistoryDate,
@@ -64,9 +66,14 @@ import {
   type PublishedTrainingProgram,
   type HistoricalTrainingSource,
   type HistoricalTrainingStepDetail,
-  type PausedTrainingProgress,
   type WriteOutcome,
 } from '../../data/workspace-data';
+import {
+  latestHomeTrainingSummary,
+  sameTrainingProgressionAction,
+  type PendingTrainingProgression,
+  type TrainingProgressionAction,
+} from '../training/training-progression';
 import {
   addRoutineToDay,
   addTrainingSelection,
@@ -404,11 +411,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [attributionWriteUnresolved, setAttributionWriteUnresolved] = useState(false);
   const [attributionMessage, setAttributionMessage] = useState('');
   const [attributionMessageError, setAttributionMessageError] = useState(false);
-  const [training, setTraining] = useState<{ programs: PublishedTrainingProgram[]; paused: PausedTrainingProgress[] }>({ programs: [], paused: [] });
+  const [training, setTraining] = useState<TrainingWorkspaceSnapshot>({ programs: [], paused: [], progression: emptyTrainingProgressionWorkspace(), progressionState: 'error' });
   const [trainingState, setTrainingState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [trainingSelectionKey, setTrainingSelectionKey] = useState<string | null>(null);
   const [trainingError, setTrainingError] = useState('');
   const [busyStepKey, setBusyStepKey] = useState<string | null>(null);
+  const [pendingTrainingProgressions, setPendingTrainingProgressions] = useState<Record<string, PendingTrainingProgression>>({});
+  const [trainingProgramFocus, setTrainingProgramFocus] = useState<string | null>(null);
   const [dailySnapshot, setDailySnapshot] = useState<DailyActivitySnapshot | null>(null);
   const [dailyTrainingSnapshot, setDailyTrainingSnapshot] = useState<TrainingWorkspaceSnapshot | null>(null);
   const [dailySnapshotLifetime, setDailySnapshotLifetime] = useState('');
@@ -579,6 +588,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   // An unknown date has no age-based content selection and must not crash Home.
   const age = homeAgeInWeeks(dog.birth_date, homeToday);
   const currentSelectionKey = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${dog.id}:${dog.breed_id}:${dog.birth_date}:${age ?? 'unknown-age'}:${reviewContentEnabled ? 'review' : 'public'}`;
+  const currentTrainingOwnerDogScope = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${dog.id}`;
   const editorScopeIdentity = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${currentSelectionKey}:${dog.id}`;
   const editorScopeIdentityRef = useRef(editorScopeIdentity);
   useLayoutEffect(() => {
@@ -770,7 +780,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       trainingMutationLease.current = null;
       setBusyStepKey(null);
       trainingSnapshotRef.current = null;
-      setTraining({ programs: [], paused: [] });
+      setTraining({ programs: [], paused: [], progression: emptyTrainingProgressionWorkspace(), progressionState: 'error' });
       setTrainingSelectionKey(null);
       setTrainingState('loading');
       setTrainingError('');
@@ -1072,7 +1082,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     let promise: Promise<TrainingWorkspaceSnapshot>;
     promise = fetchTrainingWorkspace(client, dog, age, undefined, controller.signal).then((result) => {
       const visibleResult = reviewContentEnabled && result.programs.length === 0
-        ? { programs: [...REVIEW_TRAINING_PROGRAMS], paused: [] } : result;
+        ? { ...result, programs: [...REVIEW_TRAINING_PROGRAMS], paused: [] } : result;
       if (!mounted.current || controller.signal.aborted || trainingGeneration.current !== generation
         || currentSelectionKeyRef.current !== scope) return visibleResult;
       if (deferCommit) return visibleResult;
@@ -1095,7 +1105,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
           setTrainingState('ready');
           setTrainingError('Programmen kunde inte uppdateras. Du ser senast hämtade program.');
         } else {
-          setTraining({ programs: [], paused: [] });
+          setTraining({ programs: [], paused: [], progression: emptyTrainingProgressionWorkspace(), progressionState: 'error' });
           setTrainingSelectionKey(scope);
           setTrainingState('error');
           setTrainingError('Publicerat träningsinnehåll kunde inte hämtas. Inga exempelprogram visas.');
@@ -1701,6 +1711,19 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const calendarDataMonth = calendarDataIsCurrent ? logCalendarData.key.slice(calendarKeyPrefix.length) : '';
   const nextProgram = training.programs.find((program) => program.steps.some((step) => !program.completedStepIds.includes(step.id)));
   const nextStep = nextProgram?.steps.find((step) => !nextProgram.completedStepIds.includes(step.id));
+  const trainingProgressionSummary = training.progressionState === 'ready'
+    ? latestHomeTrainingSummary(training.progression, training.programs) : null;
+  const progressionPendingPrefix = `${currentTrainingOwnerDogScope}:`;
+  const progressionPendingByVersion = Object.fromEntries(Object.entries(pendingTrainingProgressions)
+    .filter(([key]) => key.startsWith(progressionPendingPrefix))
+    .map(([key, value]) => [key.slice(progressionPendingPrefix.length), value]));
+  const latestJourneyPending = trainingProgressionSummary
+    ? progressionPendingByVersion[trainingProgressionSummary.journey.program_version_id] ?? null
+    : null;
+  const unresolvedProgressionPending = Object.values(progressionPendingByVersion)
+    .filter((pending) => pending.status === 'unknown')
+    .sort((left, right) => left.action.programVersionId.localeCompare(right.action.programVersionId))[0] ?? null;
+  const homeProgressionPending = latestJourneyPending ?? unresolvedProgressionPending;
 
   async function markProfileSaved(value: OwnedDog, lifetime: string): Promise<boolean> {
     if (!mounted.current || profileLifetime.current !== lifetime || value.id !== dog.id) return false;
@@ -2885,6 +2908,61 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (ownsLock && mounted.current && currentSelectionKeyRef.current === lease.scope && !accountDeletionInvalidated.current) setBusyStepKey(null);
   }
 
+  async function applyProgressionAction(action: TrainingProgressionAction): Promise<'saved' | 'failed' | 'unknown'> {
+    if (accountDeletionInvalidated.current) return 'failed';
+    const ownerDogScope = currentTrainingOwnerDogScope;
+    const pendingKey = `${ownerDogScope}:${action.programVersionId}`;
+    const existing = pendingTrainingProgressions[pendingKey];
+    if (existing?.status === 'pending') return 'unknown';
+    if (existing?.status === 'unknown' && !sameTrainingProgressionAction(existing.action, action)) return 'unknown';
+    const operationId = existing?.status === 'unknown' ? existing.operationId : ExpoCrypto.randomUUID();
+    const lease = beginTrainingMutation(`journey:${action.programVersionId}`, currentSelectionKey);
+    if (!lease || !isTrainingMutationCurrent(lease)) return 'failed';
+    setPendingTrainingProgressions((current) => ({
+      ...current,
+      [pendingKey]: { action, operationId, status: 'pending' },
+    }));
+    try {
+      const outcome = await applyTrainingProgressionOperation(client, dog.id, operationId, action);
+      if (outcome.status === 'saved') {
+        setPendingTrainingProgressions((current) => {
+          const next = { ...current };
+          delete next[pendingKey];
+          return next;
+        });
+        if (isTrainingMutationCurrent(lease) && currentTrainingOwnerDogScope === ownerDogScope) {
+          try {
+            await reloadTraining({ force: true, supersede: true, publishToDaily: true });
+          } catch {
+            setTrainingError('Ändringen sparades, men den uppdaterade träningsresan kunde inte hämtas. Försök igen.');
+          }
+        }
+        return 'saved';
+      }
+      if (outcome.status === 'unknown') {
+        setPendingTrainingProgressions((current) => ({
+          ...current,
+          [pendingKey]: { action, operationId, status: 'unknown' },
+        }));
+        return 'unknown';
+      }
+      setPendingTrainingProgressions((current) => {
+        const next = { ...current };
+        delete next[pendingKey];
+        return next;
+      });
+      return 'failed';
+    } finally {
+      finishTrainingMutation(lease);
+    }
+  }
+
+  function retryProgressionOperation(programVersionId: string): Promise<'saved' | 'failed' | 'unknown'> {
+    const pending = pendingTrainingProgressions[`${currentTrainingOwnerDogScope}:${programVersionId}`];
+    if (!pending || pending.status !== 'unknown') return Promise.resolve('failed');
+    return applyProgressionAction(pending.action);
+  }
+
   async function completeStep(program: PublishedTrainingProgram, stepId: string): Promise<{ programId: string; stepId: string } | false> {
     const key = `${program.id}:${stepId}`;
     const lease = beginTrainingMutation(key, currentSelectionKey);
@@ -3456,6 +3534,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       planState={plannedHealthState}
       nextStep={visibleTrainingState === 'ready' ? nextStep?.title : undefined}
       trainingState={visibleTrainingState}
+      trainingProgression={trainingProgressionSummary}
+      trainingProgressionState={training.progressionState}
+      pendingProgression={homeProgressionPending}
+      onOpenTrainingJourney={(programVersionId) => {
+        setTrainingProgramFocus(programVersionId);
+        navigateMainTab('training');
+      }}
+      onRetryProgression={(programVersionId) => { void retryProgressionOperation(programVersionId); }}
+      onRetryTrainingProgressionRead={() => { void retryTraining(); }}
       reviewTrainingStep={hasReviewTraining}
       content={visibleGuideContent}
       contentState={visibleContentState}
@@ -3561,6 +3648,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       {visibleTrainingState === 'ready' && <PublishedTrainingScreen ageWeeks={age} programs={training.programs} paused={training.paused}
         reviewMode={reviewContentEnabled && training.programs.some((program) => program.id.startsWith('review-v1:training:'))}
         busyStepKey={busyStepKey} error={trainingError} onCompleteStep={completeStep} onUnmarkStep={unmarkStep}
+        progression={training.progression} progressionState={training.progressionState}
+        pendingProgressions={progressionPendingByVersion} onApplyProgression={applyProgressionAction}
+        onRetryProgression={retryProgressionOperation} initialProgramId={trainingProgramFocus}
+        onInitialProgramFocusApplied={() => setTrainingProgramFocus(null)}
         onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
         onRetry={() => { void retryTraining(); }}
         onAddBirthDate={() => { setProfileReturnPage('training'); setPage('profile'); }}

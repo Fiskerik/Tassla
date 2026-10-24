@@ -12,6 +12,8 @@ The data contains no duration or subject taxonomy, so the UI does not fabricate 
 
 An exercise is saved with its published version ID and step ID through insert/readback. Only the first incomplete step can be marked. A confirmed step may be unmarked separately; the exact dog/version/step is deleted and re-read before Home updates. Failed or unknown writes do not appear as confirmed progress. The three views use shared accessible `Tabs`. In a program detail, reset is a 44 pt icon action that opens a named confirmation dialog bound to the exact current program; cancel does nothing, and confirmation calls the existing reset path once. The dialog does not promise an atomic reset. The interface describes the owner’s mark, not a verified skill.
 
+The separate progression journey in a program detail is bound to one dog and one published version. A logged session uses one of three fixed feedback choices; a milestone requires a separate owner action after at least one saved session. Only the owner’s explicit `Fortsätt` action changes the saved step. Repeat, back, pause and maintenance preserve sessions and confirmed milestones. Unknown writes can be checked with the same operation ID. These counts remain separate from the older activity marks and Home’s daily list.
+
 `TrainingScreen.tsx` and `training-model.ts` are local preview fixtures only. They are not production references. Review fixtures are memory-only; a real fetch error never falls back to examples. A real published-content read and RLS verification need a development Supabase environment.
 
 ## Verification
