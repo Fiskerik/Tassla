@@ -66,7 +66,7 @@ Sex ytterligare Markdown-artiklar under [`artiklar/`](artiklar/README.md) står 
 
 Den äldre `mvp-content-review-v1.md` beskriver förhandsgranskning; `mvp-content-approval-v1.md` gäller ägarens senare godkännande av exakt de tio bundleversionerna, inte FAQ:er eller faschecklistor.
 
-Ägarens migrationsbesked är rapporterat, inte oberoende verifierat. Schema-migration, bundle-import och separat publiceringsskript är skilda åtgärder; faktiskt innehåll i Supabase och dess aktuella `status` är **inte verifierat här**. Versionerings-, innehållsgransknings- och progresskontraktet planeras i [D3-delplanen](../plans/UI-UX-ANVANDARPLAN-2026-10-24.md#knowledge-d3-catalog-plan-01--d3-kontrakt-före-implementation-v5); granskningsflaggan är inte publicering.
+Erik godkände D3-plan v5:s schema-/mappingförslag den 2026-10-24; [implementationstask v5](../plans/UI-UX-ANVANDARPLAN-2026-10-24.md#knowledge-d3-catalog-schema-01--schema-och-stabil-fasidentitet-v5) har Architect APPROVE, Security PASS, Critic PROCEED, oberoende QA PASS och Reviewer PASS. Catalog-, foundation-, icon-, puppy-checklist- och training-progression-proberna passerar i disposable PostgreSQL 16; träningsfixturen publicerar nu v1 och v2 sekventiellt och behåller replay-testet för indragen v1. Den lokala schema-only tasken är stängd och commit/push är branch-checkpointen. Schema-migration, bundle-import och separat publiceringsskript är skilda åtgärder; faktiskt innehåll i Supabase och dess aktuella `status` är **inte verifierat här**. Nuvarande task skapar inga content versions och omfattar ingen import/publicering eller live migration; granskningsflaggan är inte publicering.
 
 ## AI-ursprungsmärkning och publicering
 

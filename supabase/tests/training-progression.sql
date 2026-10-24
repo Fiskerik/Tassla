@@ -24,7 +24,7 @@ insert into public.training_steps(id,program_version_id,step_key,position,title,
   ('51000000-0000-4000-8000-000000000003','41000000-0000-4000-8000-000000000002','one',1,'Other version step','Synthetic only.');
 update public.content_versions set status='published', reviewed_at=clock_timestamp(),
   review_reference='synthetic training-progression probe', published_at=clock_timestamp()
-where id in ('41000000-0000-4000-8000-000000000001','41000000-0000-4000-8000-000000000002');
+where id='41000000-0000-4000-8000-000000000001';
 insert into public.training_progress(dog_id,program_version_id,step_id) values
   ('21000000-0000-4000-8000-000000000001','41000000-0000-4000-8000-000000000001','51000000-0000-4000-8000-000000000001');
 
@@ -159,6 +159,13 @@ begin
   end if;
 end $$;
 
+reset role;
+update public.content_versions set status='withdrawn'
+where id='41000000-0000-4000-8000-000000000001';
+update public.content_versions set status='published', reviewed_at=clock_timestamp(),
+  review_reference='synthetic training-progression probe', published_at=clock_timestamp()
+where id='41000000-0000-4000-8000-000000000002';
+set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"11000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 do $$ declare started jsonb; begin
   started := public.apply_training_operation(
@@ -193,8 +200,6 @@ do $$ begin
 end $$;
 
 reset role;
-update public.content_versions set status='withdrawn'
-where id='41000000-0000-4000-8000-000000000001';
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"11000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 do $$ declare replay jsonb; begin
