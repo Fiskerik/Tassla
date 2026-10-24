@@ -1,0 +1,551 @@
+{
+  "mode": "public",
+  "evidence_dir": "docs/design/evidence/home-first-day-2026-10-24/legacy-home-public",
+  "results": [
+    {
+      "check": "Home checklist action is a chevron-only touch target at 375px",
+      "result": "PASS",
+      "control": {
+        "x": 294,
+        "y": 323,
+        "width": 44,
+        "height": 44
+      },
+      "chevron": {
+        "x": 308,
+        "y": 336,
+        "width": 16,
+        "height": 18
+      }
+    },
+    {
+      "check": "Home header contains no checklist or manager text action at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Home actions meet the 44pt touch target at 375px",
+      "result": "PASS",
+      "targets": [
+        {
+          "name": "Checklistor chevron",
+          "box": {
+            "x": 294,
+            "y": 323,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "name": "Logga",
+          "box": {
+            "x": 24,
+            "y": 468,
+            "width": 103.65625,
+            "height": 86
+          }
+        },
+        {
+          "name": "Träna",
+          "box": {
+            "x": 135.65625,
+            "y": 468,
+            "width": 103.671875,
+            "height": 86
+          }
+        },
+        {
+          "name": "Kunskap",
+          "box": {
+            "x": 247.328125,
+            "y": 468,
+            "width": 103.671875,
+            "height": 86
+          }
+        }
+      ]
+    },
+    {
+      "check": "initial Home and three destinations at 375x844 (public)",
+      "result": "PASS",
+      "app_viewport": {
+        "x": 0,
+        "y": 0,
+        "width": 375,
+        "height": 844
+      },
+      "nav": {
+        "x": 0,
+        "y": 751,
+        "width": 375,
+        "height": 59
+      },
+      "destination_tiles": [
+        {
+          "name": "Öppna Logga",
+          "box": {
+            "x": 24,
+            "y": 468,
+            "width": 103.65625,
+            "height": 86
+          }
+        },
+        {
+          "name": "Öppna Träna",
+          "box": {
+            "x": 135.65625,
+            "y": 468,
+            "width": 103.671875,
+            "height": 86
+          }
+        },
+        {
+          "name": "Öppna Kunskap",
+          "box": {
+            "x": 247.328125,
+            "y": 468,
+            "width": 103.671875,
+            "height": 86
+          }
+        }
+      ],
+      "clearance_pt": 197,
+      "minimum_clearance_pt": 16
+    },
+    {
+      "check": "no horizontal overflow or browser error at 375px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "public empty day has no 0/0 progress at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "chevron opens Checklistor route at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "140% text does not overflow horizontally at 375px",
+      "result": "PASS",
+      "destination_tiles": [
+        {
+          "name": "Öppna Logga",
+          "box": {
+            "x": 24,
+            "y": 633.578125,
+            "width": 103.65625,
+            "height": 112.40625
+          }
+        },
+        {
+          "name": "Öppna Träna",
+          "box": {
+            "x": 135.65625,
+            "y": 633.578125,
+            "width": 103.671875,
+            "height": 112.40625
+          }
+        },
+        {
+          "name": "Öppna Kunskap",
+          "box": {
+            "x": 247.328125,
+            "y": 633.578125,
+            "width": 103.671875,
+            "height": 112.40625
+          }
+        }
+      ]
+    },
+    {
+      "check": "Home checklist action is a chevron-only touch target at 430px",
+      "result": "PASS",
+      "control": {
+        "x": 349,
+        "y": 323,
+        "width": 44,
+        "height": 44
+      },
+      "chevron": {
+        "x": 363,
+        "y": 336,
+        "width": 16,
+        "height": 18
+      }
+    },
+    {
+      "check": "Home header contains no checklist or manager text action at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Home actions meet the 44pt touch target at 430px",
+      "result": "PASS",
+      "targets": [
+        {
+          "name": "Checklistor chevron",
+          "box": {
+            "x": 349,
+            "y": 323,
+            "width": 44,
+            "height": 44
+          }
+        },
+        {
+          "name": "Logga",
+          "box": {
+            "x": 24,
+            "y": 448,
+            "width": 122,
+            "height": 86
+          }
+        },
+        {
+          "name": "Träna",
+          "box": {
+            "x": 154,
+            "y": 448,
+            "width": 122,
+            "height": 86
+          }
+        },
+        {
+          "name": "Kunskap",
+          "box": {
+            "x": 284,
+            "y": 448,
+            "width": 122,
+            "height": 86
+          }
+        }
+      ]
+    },
+    {
+      "check": "initial Home and three destinations at 430x844 (public)",
+      "result": "PASS",
+      "app_viewport": {
+        "x": 0,
+        "y": 0,
+        "width": 430,
+        "height": 844
+      },
+      "nav": {
+        "x": 0,
+        "y": 751,
+        "width": 430,
+        "height": 59
+      },
+      "destination_tiles": [
+        {
+          "name": "Öppna Logga",
+          "box": {
+            "x": 24,
+            "y": 448,
+            "width": 122,
+            "height": 86
+          }
+        },
+        {
+          "name": "Öppna Träna",
+          "box": {
+            "x": 154,
+            "y": 448,
+            "width": 122,
+            "height": 86
+          }
+        },
+        {
+          "name": "Öppna Kunskap",
+          "box": {
+            "x": 284,
+            "y": 448,
+            "width": 122,
+            "height": 86
+          }
+        }
+      ],
+      "clearance_pt": 217,
+      "minimum_clearance_pt": 16
+    },
+    {
+      "check": "no horizontal overflow or browser error at 430px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "public empty day has no 0/0 progress at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "chevron opens Checklistor route at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "140% text does not overflow horizontally at 430px",
+      "result": "PASS",
+      "destination_tiles": [
+        {
+          "name": "Öppna Logga",
+          "box": {
+            "x": 24,
+            "y": 598.390625,
+            "width": 122,
+            "height": 112.40625
+          }
+        },
+        {
+          "name": "Öppna Träna",
+          "box": {
+            "x": 154,
+            "y": 598.390625,
+            "width": 122,
+            "height": 112.40625
+          }
+        },
+        {
+          "name": "Öppna Kunskap",
+          "box": {
+            "x": 284,
+            "y": 598.390625,
+            "width": 122,
+            "height": 112.40625
+          }
+        }
+      ]
+    },
+    {
+      "check": "Development age pill has a 44pt touch target at 375px",
+      "result": "PASS",
+      "box": {
+        "x": 67.5,
+        "y": 340,
+        "width": 128,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development phase labels have breathing room at 375px",
+      "result": "PASS",
+      "gap_pt": 61.703125,
+      "puppy_range": {
+        "x": 96.296875,
+        "y": 425,
+        "width": 46.703125,
+        "height": 16
+      },
+      "adolescent_label": {
+        "x": 204.703125,
+        "y": 423,
+        "width": 61.421875,
+        "height": 20
+      }
+    },
+    {
+      "check": "Development age marker stays discoverable as a 44pt toggle at 375px",
+      "result": "PASS",
+      "box": {
+        "x": 54.5,
+        "y": 360,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development age pill toggles off and back on from the marker at 375px",
+      "result": "PASS",
+      "initial_pill": {
+        "x": 67.5,
+        "y": 340,
+        "width": 128,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development hero retains its large unique generic image at 375px",
+      "result": "PASS",
+      "image_box": {
+        "x": 24,
+        "y": 128,
+        "width": 327,
+        "height": 320
+      }
+    },
+    {
+      "check": "Public Development empty-guide state returns to Home at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Development render has no browser errors or horizontal overflow at 375px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Development age pill has a 44pt touch target at 430px",
+      "result": "PASS",
+      "box": {
+        "x": 95,
+        "y": 340,
+        "width": 128,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development phase labels have breathing room at 430px",
+      "result": "PASS",
+      "gap_pt": 61.703125,
+      "puppy_range": {
+        "x": 123.796875,
+        "y": 425,
+        "width": 46.703125,
+        "height": 16
+      },
+      "adolescent_label": {
+        "x": 232.203125,
+        "y": 423,
+        "width": 61.421875,
+        "height": 20
+      }
+    },
+    {
+      "check": "Development age marker stays discoverable as a 44pt toggle at 430px",
+      "result": "PASS",
+      "box": {
+        "x": 82,
+        "y": 360,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development age pill toggles off and back on from the marker at 430px",
+      "result": "PASS",
+      "initial_pill": {
+        "x": 95,
+        "y": 340,
+        "width": 128,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development hero retains its large unique generic image at 430px",
+      "result": "PASS",
+      "image_box": {
+        "x": 24,
+        "y": 128,
+        "width": 382,
+        "height": 320
+      }
+    },
+    {
+      "check": "Public Development empty-guide state returns to Home at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Development render has no browser errors or horizontal overflow at 430px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Development guide loading state renders distinctly",
+      "result": "PASS"
+    },
+    {
+      "check": "Development guide retry invokes the supplied retry action",
+      "result": "PASS"
+    },
+    {
+      "check": "Development guide error state renders distinctly",
+      "result": "PASS"
+    },
+    {
+      "check": "Development missing birth date uses the neutral unknown-age state",
+      "result": "PASS"
+    },
+    {
+      "check": "Development invalid birth date uses the neutral unknown-age state",
+      "result": "PASS"
+    },
+    {
+      "check": "Development future birth date uses the neutral unknown-age state",
+      "result": "PASS"
+    },
+    {
+      "check": "Profile-origin return can be explicitly cleared from the selected Logg tab at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Profile entry, draft gate, shared overview periods and scoped return work at 375px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Profile-origin return can be explicitly cleared from the selected Logg tab at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Profile entry, draft gate, shared overview periods and scoped return work at 430px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Insights error state offers the supplied retry action",
+      "result": "PASS"
+    },
+    {
+      "check": "Insights remains scrollable above the fixed menu at 375×667",
+      "result": "PASS",
+      "chart_title": {
+        "x": 41,
+        "y": 295,
+        "width": 293,
+        "height": 28
+      },
+      "bottom_nav": {
+        "x": 0,
+        "y": 574,
+        "width": 375,
+        "height": 59
+      }
+    },
+    {
+      "check": "Insights has no horizontal page overflow with the 140% text layout proxy",
+      "result": "PASS"
+    },
+    {
+      "check": "loading state keeps one checklist control",
+      "result": "PASS"
+    },
+    {
+      "check": "empty daily source does not show 0/0",
+      "result": "PASS"
+    },
+    {
+      "check": "empty state keeps one checklist control",
+      "result": "PASS"
+    },
+    {
+      "check": "error state keeps one checklist control",
+      "result": "PASS"
+    },
+    {
+      "check": "unknown daily source does not show 0/0",
+      "result": "PASS"
+    },
+    {
+      "check": "unknown state keeps one checklist control",
+      "result": "PASS"
+    },
+    {
+      "check": "partial daily source does not show 0/0",
+      "result": "PASS"
+    },
+    {
+      "check": "partial state keeps one checklist control",
+      "result": "PASS"
+    },
+    {
+      "check": "375x667 Home scroll reaches the last destination above the menu",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}

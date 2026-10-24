@@ -11105,7 +11105,101 @@
       "test_evidence": "Fullcheck77/77, publiciOS1585, main14/14each,panels5/5each,UI04clean5/5each,interactions18/19. IndependentQA5/5both+8/8focused,ReviewerPASS,SecurityAPPROVE. Currentownerpresentationoverride documented.",
       "implementation_commit": "0fb505e"
     },
+    {
+      "id": "HOME-FIRST-DAY-01",
+      "title": "Hem: skapa och slutföra dagens första rutin",
+      "mvp_requirement": "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md §1 — En bra första dag och en användbar Hemvy",
+      "plan": "docs/tasks/dev/HOME-FIRST-DAY-01.md v3 (Architect APPROVE and UX Critic PROCEED recorded)",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/daily-activity-data.ts",
+        "src/features/home/daily-activity-recovery.ts",
+        "src/features/home/README.md",
+        "tests/daily-activity-data.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/home-first-day.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "docs/design/evidence/home-first-day-2026-10-24",
+        "docs/tasks/dev/HOME-FIRST-DAY-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Befintlig tomdagsresa öppnar rutinhall och skapar en engångsrutin med två punkter.",
+        "Bekräftat skapande och dagsrad-readback gör aktiviteten synlig direkt, exakt en gång, i Hem, Checklistor och Framsteg.",
+        "Failed/unknown dagsrad bevarar sanningsenlig status, samma retry-operation och rätt hund-/dagsscope.",
+        "En bock ger samma 1/2 i Hem, Checklistor och Framsteg; dagbyte återanvänder inte engångsrutinens gamla bock som dagens.",
+        "Home-chevron- och rev02-visuell kontrakt bevaras; färsk render och designregelchecklista §14 finns som evidens.",
+        "Faktiska kontroller passerar och samtliga ändrade sökvägar ryms i write_paths."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/home-first-day.test.mjs tests/daily-activity-data.test.mjs tests/daily-activity-ui.test.mjs",
+        "python -X utf8 tools/visual-check/verify-vision-r02-home-panels.py",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-COPY-CLEANUP-2026-10-24"
+      ],
+      "status": "review",
+      "next_step": "Create the hook-verified implementation commit on this branch. Then record its SHA in the task, report, and Master Log and complete the review-to-done closeout.",
+      "risk_class": "M",
+      "history": [
         {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v2: Architect APPROVE and UX Critic PROCEED recorded in docs/tasks/dev/HOME-FIRST-DAY-01.md; exact scope/retry clarified, implementation may start within write_paths."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin approved plan v2 on branch codex/agent-workflow-stabilization at base 8dded250; write owner Codex; preserve Home chevron and data contracts."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "implementer",
+          "evidence": "QA/Reviewer v2 BLOCK: scope-change behavior test and §14 render evidence missing; Reviewer also required stage-specific day-selection recovery feedback and production-shared orchestration. Implementation paused for plan v3."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Revised task to plan v3 within first-day scope; declared shared data/recovery helper paths and behavioral fixture parity. Fresh Architect APPROVE and UX Critic PROCEED recorded in HOME-FIRST-DAY-01.md before resuming."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v3; UX Critic PROCEED recorded in HOME-FIRST-DAY-01.md. Exact task/write paths and recovery semantics reviewed."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume approved plan v3 on codex/agent-workflow-stabilization; implementer remains sole writer and QA/Reviewer are read-only."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Plan v3 implementation and docs complete. pnpm check 81/81, iOS export 1586 modules, targeted tests 3/3, first-day public RN Web 7/7, legacy Home public 52/52, Progress 2/2, review 72/74 with documented pre-existing −4 pt Home margin assertions; py_compile, diff-check and queue validation pass. Fresh VERIFICATION.md/§14 saved. Live Supabase/native NOT TESTABLE. Independent QA requested on final v3 diff."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS for v3 code, behavioral tests, rendered evidence, exact write paths, and documentation after Master-Log closeout recheck. §14.16 existing full-panel mismatch remains disclosed and is non-blocking for this layout-preserving slice. Next: frozen independent Reviewer on final diff."
+        }
+      ]
+    },
+    {
       "id": "TRAINING-PROGRESSION-01",
       "title": "Träning: träningspass och ägarbedömd färdighet",
       "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md § Panel 6 — Träning; docs/mvp.md — träningsprogression",

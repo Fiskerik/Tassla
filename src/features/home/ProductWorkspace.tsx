@@ -77,7 +77,9 @@ import {
 import {
   addRoutineToDay,
   addTrainingSelection,
+  createRoutineAndSelectForToday,
   createDailyRoutine,
+  dailyRoutineCreationScopeMatches,
   deleteDailyRoutine,
   fetchDailyActivitySnapshot,
   fetchDailyActivityRangeSnapshot,
@@ -112,7 +114,7 @@ import {
 import { localDate } from '../onboarding/dog';
 import { calendarMarkerScopeKey } from '../puppy-log/log-calendar-model';
 import { acquireTrainingMutationLease, homeAgeInWeeks, ownsTrainingMutationLease, releaseTrainingMutationLease, type TrainingMutationLease } from './home-today';
-import { canStartDailyMutation, clearDailyMutationForLifetimeChange, dailyMutationBlocksAccountDeletion, dailyMutationForOwner, dailyMutationStore, recoverDailyMutation, resolvedDailyMutation, routineConflictAfterWrite, routineDraftStore, type PendingDailyMutation } from './daily-activity-recovery';
+import { canStartDailyMutation, clearDailyMutationForLifetimeChange, createdRoutineDaySelectionRecoveryCopy, dailyMutationBlocksAccountDeletion, dailyMutationForOwner, dailyMutationStore, recoverDailyMutation, resolvedDailyMutation, routineConflictAfterWrite, routineDraftStore, type DailyMutationRecoveryCopy, type PendingDailyMutation } from './daily-activity-recovery';
 import { HealthScreen, type HealthTab } from '../health/HealthScreen';
 import { PlannedHealthScreen, type PlannedHealthEditorDraft } from '../health/PlannedHealthScreen';
 import type { HealthHistoryDraft } from '../health/HealthHistoryScreen';
@@ -3068,10 +3070,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     }
   }
 
-  async function runDailyMutation<T>(key: string, operation: () => Promise<WriteOutcome<T>>, retry?: boolean, retryPending?: PendingDailyMutation): Promise<WriteOutcome<T> | undefined>;
-  async function runDailyMutation(key: string, operation: () => Promise<DailyRoutineWriteResult>, retry?: boolean, retryPending?: PendingDailyMutation): Promise<DailyRoutineWriteResult | undefined>;
-  async function runDailyMutation(key: string, operation: () => Promise<WriteOutcome<unknown> | DailyRoutineWriteResult>, retry?: boolean, retryPending?: PendingDailyMutation): Promise<WriteOutcome<unknown> | DailyRoutineWriteResult | undefined>;
-  async function runDailyMutation<T>(key: string, operation: () => Promise<WriteOutcome<T> | { status: 'conflict'; value: DailyRoutine }>, retry = false, retryPending?: PendingDailyMutation): Promise<WriteOutcome<T> | { status: 'conflict'; value: DailyRoutine } | undefined> {
+  async function runDailyMutation<T>(key: string, operation: () => Promise<WriteOutcome<T>>, retry?: boolean, retryPending?: PendingDailyMutation, recoveryCopy?: DailyMutationRecoveryCopy): Promise<WriteOutcome<T> | undefined>;
+  async function runDailyMutation(key: string, operation: () => Promise<DailyRoutineWriteResult>, retry?: boolean, retryPending?: PendingDailyMutation, recoveryCopy?: DailyMutationRecoveryCopy): Promise<DailyRoutineWriteResult | undefined>;
+  async function runDailyMutation(key: string, operation: () => Promise<WriteOutcome<unknown> | DailyRoutineWriteResult>, retry?: boolean, retryPending?: PendingDailyMutation, recoveryCopy?: DailyMutationRecoveryCopy): Promise<WriteOutcome<unknown> | DailyRoutineWriteResult | undefined>;
+  async function runDailyMutation<T>(key: string, operation: () => Promise<WriteOutcome<T> | { status: 'conflict'; value: DailyRoutine }>, retry = false, retryPending?: PendingDailyMutation, recoveryCopy?: DailyMutationRecoveryCopy): Promise<WriteOutcome<T> | { status: 'conflict'; value: DailyRoutine } | undefined> {
     const retryablePending = retryPending && retryPending.phase !== 'resolved' ? retryPending : undefined;
     const ownerScope = retryablePending?.ownerScope ?? currentDailyOwnerScope;
     const dailyMutationOwnerGeneration = dailyMutationStore.ownerGeneration(ownerScope);
@@ -3092,8 +3094,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     dailyMutationInFlight.current = true;
     setDailyBusyKey(key);
     setDailyMessageKey(key);
-    const origin = retryablePending ?? { dogId: dog.id, dogName: dog.name, actionLabel: dailyMutationActionLabel(key) };
-    const inFlightMutation = { ownerScope, ...origin, lifetime, key, run: operation, phase: 'in-flight' as const };
+    const mutationRecoveryCopy = retryablePending?.recoveryCopy ?? recoveryCopy;
+    const origin = retryablePending ?? { dogId: dog.id, dogName: dog.name, actionLabel: dailyMutationActionLabel(key), recoveryCopy: mutationRecoveryCopy };
+    const inFlightMutation = { ownerScope, ...origin, recoveryCopy: mutationRecoveryCopy, lifetime, key, run: operation, phase: 'in-flight' as const };
     updatePendingDailyWrite(ownerScope, inFlightMutation, dailyMutationOwnerGeneration);
     if (!retry || (pending && pending.phase !== 'resolved' && shouldClearDailyMutationFeedback(pending.lifetime, lifetime))) {
       setDailyMessage('');
@@ -3107,7 +3110,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       outcome = { status: 'unknown' };
     }
     const recovery = recoverDailyMutation(outcome.status, ownerScope, lifetime, key, operation,
-      { dogId: origin.dogId, dogName: origin.dogName, actionLabel: origin.actionLabel });
+      { dogId: origin.dogId, dogName: origin.dogName, actionLabel: origin.actionLabel, recoveryCopy: mutationRecoveryCopy }, mutationRecoveryCopy);
     if (outcome.status === 'conflict' && key.startsWith('update-routine:') && outcome.value.dog_id === origin.dogId) {
       const draftRecovery = routineDraftStore.get(ownerScope, origin.dogId, lifetime);
       const draft = draftRecovery?.draft;
@@ -3160,6 +3163,29 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     dailyMutationInFlight.current = false;
     if (mounted.current) setDailyBusyKey(null);
     return outcome;
+  }
+
+  async function createRoutineForToday(input: DailyRoutineCreateInput): Promise<{ status: 'saved' | 'failed' | 'unknown' } | undefined> {
+    const routine = { ...input, dog_id: dog.id, checklist: input.checklist.map((item) => ({ ...item })) };
+    const capturedScope = { ownerScope: currentDailyOwnerScope, selectionKey: currentSelectionKey, lifetime: currentDailyLifetime };
+    const result = await createRoutineAndSelectForToday({
+      routine,
+      dateKey: dailyDateKey,
+      timeZone: dailyTimeZone,
+      createId: () => ExpoCrypto.randomUUID(),
+      isScopeCurrent: () => mounted.current && !accountDeletionInvalidated.current && dailyRoutineCreationScopeMatches(capturedScope, {
+        ownerScope: currentDailyOwnerScopeRef.current,
+        selectionKey: currentSelectionKeyRef.current,
+        lifetime: dailyLifetime.current,
+      }),
+      createRoutine: (draft) => runDailyMutation(`create-routine:${routine.id}`, () => createDailyRoutine(client, draft, dailyTimeZone)),
+      selectRoutineDay: (day, mutationId) => runDailyMutation(`select-routine:${routine.id}`,
+        () => addRoutineToDay(client, day, null, mutationId), false, undefined, createdRoutineDaySelectionRecoveryCopy),
+    });
+    if (result.template?.status !== 'saved') {
+      return result.template ? { status: result.template.status === 'unknown' ? 'unknown' : 'failed' } : undefined;
+    }
+    return { status: 'saved' };
   }
 
   function retryDailyMutation() {
@@ -3400,10 +3426,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const dailyRecoveryBannerMessage = pendingDailyWriteForOwner
     ? pendingDailyWriteForOwner.phase === 'resolved'
       ? pendingDailyWriteForOwner.notice.message
-      : pendingDailyWriteForOwner.phase === 'in-flight'
+        : pendingDailyWriteForOwner.phase === 'in-flight'
         ? `${pendingDailyWriteForOwner.actionLabel} för ${pendingDailyWriteForOwner.dogName} behandlas fortfarande. Vänta tills resultatet är känt.`
         : dailyBusyKey ? `${pendingDailyWriteForOwner.actionLabel} för ${pendingDailyWriteForOwner.dogName} kontrolleras fortfarande.`
-          : `Vi kunde inte bekräfta om ${pendingDailyWriteForOwner.actionLabel.toLowerCase()} för ${pendingDailyWriteForOwner.dogName} sparades. Kontrollera samma ändring innan du fortsätter.`
+          : dailyMessage || `Vi kunde inte bekräfta om ${pendingDailyWriteForOwner.actionLabel.toLowerCase()} för ${pendingDailyWriteForOwner.dogName} sparades. Kontrollera samma ändring innan du fortsätter.`
     : dailyMessage;
   const dailyRecoveryBannerError = pendingDailyWriteForOwner?.phase === 'resolved'
     ? pendingDailyWriteForOwner.notice.error
@@ -3486,8 +3512,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       routines={dailySnapshotForView?.routines ?? []} routineDaySkips={dailySnapshotForView?.routineDaySkips ?? []}
       trainingOptions={dailyTrainingOptions}
       onCreateRoutine={(input: DailyRoutineCreateInput) => {
-        const row = { ...input, dog_id: dog.id };
-        return runDailyMutation(`create-routine:${row.id}`, () => createDailyRoutine(client, row, dailyTimeZone));
+        return createRoutineForToday(input);
       }}
       onUpdateRoutine={async (routine, label, checklist, repeat) => {
         const result = await runDailyMutation(`update-routine:${routine.id}`,
@@ -3570,8 +3595,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onOpenChecklist={openHomeChecklist}
       onOpenTrainingStep={openHomeTrainingStep}
       onCreateRoutine={(input: DailyRoutineCreateInput) => {
-        const row = { ...input, dog_id: dog.id };
-        return runDailyMutation(`create-routine:${row.id}`, () => createDailyRoutine(client, row, dailyTimeZone));
+        return createRoutineForToday(input);
       }}
       onUpdateRoutine={(routine, label, checklist, repeat) => {
         return runDailyMutation(`update-routine:${routine.id}`, () => replaceDailyRoutine(client, routine, label, checklist, repeat, dailyTimeZone));

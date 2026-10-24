@@ -6,6 +6,7 @@ import {BottomNav,Button} from '../../src/components/ui';
 import {ScreenTransition} from '../../src/components/ui/Motion';
 import {HomeScreen} from '../../src/features/home/HomeScreen';
 import {DailyChecklistScreen} from '../../src/features/home/DailyChecklistScreen';
+import {DailyProgressScreen} from '../../src/features/home/DailyProgressScreen';
 import type {HomeDailyFixtureItem} from '../../src/features/home/HomeScreen';
 import type {ChecklistFilter,HomeDailyActivity} from '../../src/features/home/daily-activity-model';
 import type {DailyRoutine,DailyRoutineChecklistItem,DailyRoutineCreateInput,DailyRoutineDay,DailyRoutineDaySkip,DailyRoutineRepeatValues} from '../../src/features/home/daily-activity-data';
@@ -34,6 +35,8 @@ import {SignInScreenView} from '../../src/features/account/SignInScreenView';
 import {AuthCallbackView} from '../../src/features/account/AuthCallbackView';
 import {ProfileScreen} from '../../src/features/onboarding/ProfileScreen';
 import {tokens} from '../../src/theme/tokens';
+import {createRoutineAndSelectForToday} from '../../src/features/home/daily-activity-data';
+import {createdRoutineDaySelectionRecoveryCopy} from '../../src/features/home/daily-activity-recovery';
 import {MainSwipeNavigation} from '../../src/components/ui/MainSwipeNavigation';
 import {isMainTabDestination,nextMainTabDestination} from '../../src/features/home/main-navigation';
 import {workspaceSnapshotReadDecision} from '../../src/data/workspace-data';
@@ -85,12 +88,13 @@ const reviewRoutineDays:DailyRoutineDay[]=[
  {id:'day-morning',dog_id:dog.id,routine_id:'routine-morning',date_key:today,time_zone:'Europe/Stockholm',routine_label_snapshot:'Morgonrutin',checklist_snapshot:routineMorningItems,completed_item_ids:[routineMorningItems[1].id],completed_at:null,is_recurring_occurrence:true,routine_revision_snapshot:1,routine_day_revision:1,last_state_mutation_id:null},
  {id:'day-walk',dog_id:dog.id,routine_id:'routine-walk',date_key:today,time_zone:'Europe/Stockholm',routine_label_snapshot:'Promenad',checklist_snapshot:routineWalkItems,completed_item_ids:[routineWalkItems[0].id,routineWalkItems[2].id],completed_at:null,is_recurring_occurrence:true,routine_revision_snapshot:1,routine_day_revision:1,last_state_mutation_id:null},
 ];
-function fixtureDailyActivities(routines:DailyRoutine[],days:DailyRoutineDay[]):HomeDailyActivity[]{
- const routineRows=days.filter(day=>routines.some(routine=>routine.id===day.routine_id&&routine.dog_id===dog.id)).flatMap(day=>day.checklist_snapshot.map(item=>({
+function fixtureDailyActivities(routines:DailyRoutine[],days:DailyRoutineDay[],dateKey=today,includeTraining=true):HomeDailyActivity[]{
+ const routineRows=days.filter(day=>day.date_key===dateKey&&routines.some(routine=>routine.id===day.routine_id&&routine.dog_id===dog.id)).flatMap(day=>day.checklist_snapshot.map(item=>({
   id:`routine:${day.id}:${item.id}`,label:item.label,icon:dailyRoutineChecklistDisplayIcon(item),routineLabel:day.routine_label_snapshot,routineItemId:item.id,kind:'routine' as const,
   completed:day.completed_item_ids.includes(item.id),routineDay:day,
  })));
- return [...routineRows,{id:'training:day-step',label:'Miljöträning – nya ljud',kind:'training',completed:false,programTitle:'Vecka 11',trainingSelection:{id:'selection-1',dog_id:dog.id,program_version_id:'review-version-11',step_id:'step-2',date_key:today,time_zone:'Europe/Stockholm'}}];
+ const trainingRows=includeTraining?[{id:'training:day-step',label:'Miljöträning – nya ljud',kind:'training' as const,completed:false,programTitle:'Vecka 11',trainingSelection:{id:'selection-1',dog_id:dog.id,program_version_id:'review-version-11',step_id:'step-2',date_key:dateKey,time_zone:'Europe/Stockholm'}}]:[];
+ return [...routineRows,...trainingRows];
 }
 const reviewTrainingOptions=[{programId:'review-program',versionId:'review-version-11',stepId:'step-3',programTitle:'Vecka 11',stepTitle:'Miljöträning ute'}];
 const initialEvents:LogEvent[]=homeDenseFixture.events;
@@ -201,7 +205,8 @@ function WorkspaceRetentionFixture({review}:{review:boolean}){
  </View>;
 }
 function App(){
- const params=new URLSearchParams(location.search);const state=params.get('state')||'ready';const logScenario=params.get('logScenario')||'ready';const calendarScenario=params.get('calendarScenario')||'loading';const usesSplitLogFixture=['split-day','split-day-error'].includes(logScenario);const reviewFixtureEnabled=process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT==='true';
+ const params=new URLSearchParams(location.search);const state=params.get('state')||'ready';const firstDayMode=params.get('firstDay')==='true';const logScenario=params.get('logScenario')||'ready';const calendarScenario=params.get('calendarScenario')||'loading';const usesSplitLogFixture=['split-day','split-day-error'].includes(logScenario);const reviewFixtureEnabled=process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT==='true';
+ const [fixtureDate,setFixtureDate]=useState(today);
  const [page,setPage]=useState(new URLSearchParams(location.search).get('screen')||'home');const [knowledgeDetailOpen,setKnowledgeDetailOpen]=useState(false);const [focusedChecklistStep,setFocusedChecklistStep]=useState<{programId:string;stepId:string}|null>(null);const [checklistFilter,setChecklistFilter]=useState<ChecklistFilter>(()=>{const requested=params.get('checklistFilter');return requested==='Denna vecka'||requested==='Alla'||requested==='Kommande'?requested:'Idag';});
  const [fixtureScopeChanged,setFixtureScopeChanged]=useState(false);const fixtureDog=fixtureScopeChanged?{...dog,id:'fixture-dog-b',name:'Milo'}:dog;
  const workspaceState=params.get('workspaceState')||'';
@@ -225,26 +230,29 @@ function App(){
  const [trainingProgramFocus,setTrainingProgramFocus]=useState<string|null>(null);
  const [progressionReadState,setProgressionReadState]=useState<'ready'|'error'>(()=>params.get('progressionRead')==='error'?'error':'ready');
  const pausedTraining:PausedTrainingProgress[]=trainingScenario==='paused'?[{versionId:'fixture-training:previous-version',title:'Vardagsro och hantering',versionNumber:1,completedCount:2}]:trainingScenario==='paused-unavailable'?[{versionId:'fixture-training:unavailable-version',title:null,versionNumber:null,completedCount:2}]:[];
- const [checklistTrainingSelections]=useState(()=>trainingPrograms.flatMap(program=>{
+ const [checklistTrainingSelections]=useState(()=>firstDayMode?[]:trainingPrograms.flatMap(program=>{
   const step=program.steps.find(candidate=>!program.completedStepIds.includes(candidate.id));
   return step?[{programId:program.id,stepId:step.id}]:[];
  }).slice(0,2));
  const [trainingBusyStepKey,setTrainingBusyStepKey]=useState<string|null>(null);
  const [trainingError,setTrainingError]=useState(()=>params.get('trainingError')==='retryable'||state==='error'?'Programmet kunde inte hämtas':'');
- const [fixtureRoutines,setFixtureRoutines]=useState<DailyRoutine[]>(reviewRoutines);
- const [fixtureRoutineDays,setFixtureRoutineDays]=useState<DailyRoutineDay[]>(reviewRoutineDays);
+ const [fixtureRoutines,setFixtureRoutines]=useState<DailyRoutine[]>(firstDayMode?[]:reviewRoutines);
+ const [fixtureRoutineDays,setFixtureRoutineDays]=useState<DailyRoutineDay[]>(firstDayMode?[]:reviewRoutineDays);
  const [fixtureRoutineSkips,setFixtureRoutineSkips]=useState<DailyRoutineDaySkip[]>([]);
  const retryRoutineMutation=useRef<(()=>void)|null>(null);
+ const firstDayDayRetry=useRef<(()=>void)|null>(null);
+ const firstDayUnknownUsed=useRef(false);
+ const firstDayMutationCounts=useRef({createCalls:0,dayAddCalls:0,routineId:'',dayRowId:'',mutationId:'',dateKey:''});
  const conflictReturned=useRef(false);
  function addLogFixture(type:LogEventType,intent?:AccidentLogIntent){if(type==='accident'&&!intent)return;const event:LogEvent={id:intent?.id??crypto.randomUUID(),dogId:dog.id,type,occurredAt:intent?.occurredAt??new Date().toISOString(),note:null,origin:'local-test',accidentKinds:intent?.accidentKinds??null};const status=logScenario==='accident-failed'?'failed':logScenario==='accident-unsure'?'unsure':'saved';if(status==='saved')setLogEvents(rows=>[event,...rows]);setMutation({kind:'add',id:event.id,mutationId:event.id,type:event.type,occurredAt:event.occurredAt,accidentKinds:event.accidentKinds,status});}
  function retryLogFixture(){if(mutation?.kind==='update'&&pendingLogUpdate){setLogEvents(rows=>rows.map(row=>row.id===pendingLogUpdate.id?{...row,...pendingLogUpdate.changes}:row));setMutation({...mutation,type:pendingLogUpdate.changes.type,occurredAt:pendingLogUpdate.changes.occurredAt,accidentKinds:pendingLogUpdate.changes.accidentKinds,status:'saved'});setPendingLogUpdate(null);return true;}if(mutation?.kind!=='add')return true;const event:LogEvent={id:mutation.id,dogId:dog.id,type:mutation.type,occurredAt:mutation.occurredAt,note:null,origin:'local-test',accidentKinds:mutation.accidentKinds??null};setLogEvents(rows=>rows.some(row=>row.id===event.id)?rows:[event,...rows]);setMutation({...mutation,status:'saved'});return true;}
  function loadMoreLog(){if(logLoadingMore||!logHasMore)return;setLogLoadingMore(true);setLogLoadMoreError(false);window.setTimeout(()=>{setLogLoadingMore(false);if(logScenario==='split-day-error'&&logLoadAttempt===0){setLogLoadAttempt(1);setLogLoadMoreError(true);return;}setLogEvents(rows=>[...rows,...logSplitContinuation.filter(next=>!rows.some(row=>row.id===next.id))]);setLogHasMore(false);},650);}
  const scenarioStep=homeScenario==='review-training'?process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT==='true'?homeDenseFixture.trainingStep:undefined:homeScenario==='ready'?homeDenseFixture.trainingStep:undefined;
  const empty=state==='empty';const records=empty?[]:history;
- const main=['home','log','training','knowledge'].includes(page)?page:['checklist','home-training-detail','workspace-retention'].includes(page)?'home':'more';
+ const main=['home','log','training','knowledge'].includes(page)?page:['checklist','progress','home-training-detail','workspace-retention'].includes(page)?'home':'more';
  const navigateMainTab=(destination)=>{const enteringKnowledge=page!=='knowledge'&&destination==='knowledge';const leavingKnowledge=page==='knowledge'&&destination!=='knowledge';if(enteringKnowledge||leavingKnowledge){setFocused(null);setKnowledgeDetailOpen(false);}setPage(destination);};
  const go=(p)=>{const destination=p==='profile'?'passport':p==='notification-settings'?'more':p==='planned-health'?'planned':p;if(isMainTabDestination(destination))navigateMainTab(destination);else setPage(destination);};
- const fixtureActivities=fixtureDailyActivities(fixtureRoutines,fixtureRoutineDays);
+ const fixtureActivities=fixtureDailyActivities(fixtureRoutines,fixtureRoutineDays,fixtureDate,!firstDayMode);
  const routineChecklistActivities=fixtureActivities.filter(activity=>activity.kind==='routine');
  const trainingChecklistActivities=checklistTrainingSelections.flatMap(selection=>{
   const program=trainingPrograms.find(candidate=>candidate.id===selection.programId);
@@ -273,7 +281,40 @@ function App(){
  ]:fixtureChecklistActivities.map((item,index)=>({...item,id:'fixture-history-'+index,dateKey:shiftFixtureDate(today,-(index<2?1:index+1))}));
  const requestedChecklistRangeState=params.get('checklistRangeState')||'ready';
  const checklistRangeState=requestedChecklistRangeState==='loading'||requestedChecklistRangeState==='partial'||requestedChecklistRangeState==='error'?requestedChecklistRangeState:'ready';
- async function createRoutineFixture(input:DailyRoutineCreateInput){const routine:DailyRoutine={...input,dog_id:dog.id,checklist_revision:1,legacy_single_item:false,repeat_anchor_date:input.repeat_unit?today:null};setFixtureRoutines(rows=>[routine,...rows]);return {status:'saved' as const};}
+ async function createRoutineFixture(input:DailyRoutineCreateInput){const routine:DailyRoutine={...input,dog_id:dog.id,checklist_revision:1,legacy_single_item:false,repeat_anchor_date:input.repeat_unit?fixtureDate:null};setFixtureRoutines(rows=>[routine,...rows]);return {status:'saved' as const,value:routine};}
+ function publishFirstDayCounts(){Object.assign(window,{__homeFirstDayMutationCounts:{...firstDayMutationCounts.current}});}
+ function addRoutineFixture(routine:DailyRoutine,dateKey=fixtureDate,dayId=crypto.randomUUID()){
+  if(fixtureRoutineDays.some(row=>row.routine_id===routine.id&&row.date_key===dateKey))return;
+  const skipped=fixtureRoutineSkips.find(row=>row.routine_id===routine.id&&row.date_key===dateKey);
+  if(skipped){const {day_id,...snapshot}=skipped;setFixtureRoutineDays(rows=>[{...snapshot,id:day_id,routine_day_revision:snapshot.routine_day_revision+1},...rows]);setFixtureRoutineSkips(rows=>rows.filter(row=>row.day_id!==day_id));return;}
+  setFixtureRoutineDays(rows=>[{id:dayId,dog_id:dog.id,routine_id:routine.id,date_key:dateKey,time_zone:'Europe/Stockholm',routine_label_snapshot:routine.label,checklist_snapshot:routine.checklist,completed_item_ids:[],completed_at:null,is_recurring_occurrence:isRoutineDueOnDate(routine,dateKey),routine_revision_snapshot:routine.checklist_revision,routine_day_revision:1,last_state_mutation_id:null},...rows]);
+ }
+ async function addFirstDayRoutineToToday(routine:DailyRoutine,dateKey:string,dayRowId:string,mutationId:string){
+  firstDayMutationCounts.current.dayAddCalls+=1;publishFirstDayCounts();
+  const configuredOutcome=params.get('firstDayAdd');
+  if(configuredOutcome==='unknown'&&!firstDayUnknownUsed.current){
+   firstDayUnknownUsed.current=true;setDailyMutationMode('day-add-unknown');
+   firstDayDayRetry.current=()=>{firstDayDayRetry.current=null;void addFirstDayRoutineToToday(routine,dateKey,dayRowId,mutationId);};
+   return {status:'unknown' as const};
+  }
+  if(configuredOutcome==='failed'){setDailyMutationMode('day-add-failed');return {status:'failed' as const};}
+  addRoutineFixture(routine,dateKey,dayRowId);setDailyMutationMode('');
+  return {status:'saved' as const,value:{id:dayRowId,dog_id:routine.dog_id,routine_id:routine.id,date_key:dateKey,time_zone:'Europe/Stockholm',routine_label_snapshot:routine.label,checklist_snapshot:routine.checklist,completed_item_ids:[],completed_at:null,is_recurring_occurrence:false,routine_revision_snapshot:routine.checklist_revision,routine_day_revision:1,last_state_mutation_id:null}};
+ }
+ async function createRoutineForTodayFixture(input:DailyRoutineCreateInput){
+  firstDayMutationCounts.current.createCalls+=1;
+  firstDayMutationCounts.current.routineId=input.id;
+  const routine:DailyRoutine={...input,dog_id:dog.id,checklist_revision:1,legacy_single_item:false,repeat_anchor_date:input.repeat_unit?fixtureDate:null};
+  const capturedDate=fixtureDate;const capturedDog=dog.id;
+  const result=await createRoutineAndSelectForToday({routine,dateKey:capturedDate,timeZone:'Europe/Stockholm',createId:()=>crypto.randomUUID(),
+   isScopeCurrent:()=>firstDayMode&&fixtureDate===capturedDate&&dog.id===capturedDog,
+   createRoutine:()=>createRoutineFixture(input),
+   selectRoutineDay:(day,mutationId)=>{
+    firstDayMutationCounts.current.dayRowId=day.id;firstDayMutationCounts.current.mutationId=mutationId;firstDayMutationCounts.current.dateKey=day.date_key;publishFirstDayCounts();
+    return addFirstDayRoutineToToday(routine,day.date_key,day.id,mutationId);
+   }});
+  return result.template?.status==='saved'?{status:'saved' as const}:result.template?.status==='unknown'?{status:'unknown' as const}:result.template?{status:'failed' as const}:undefined;
+ }
  function saveRoutineFixture(routine:DailyRoutine,label:string,checklist:DailyRoutineChecklistItem[],repeat:DailyRoutineRepeatValues){const legacyDay=routine.repeat_anchor_date?isoWeekdayForDateKey(routine.repeat_anchor_date):null;const currentWeekdays=routine.repeat_weekdays??(legacyDay?[legacyDay]:[]);const desiredWeekdays=repeat.repeat_weekdays??(legacyDay?[legacyDay]:[]);const sameWeekdays=JSON.stringify(currentWeekdays)===JSON.stringify(desiredWeekdays);const sameRule=routine.repeat_unit===repeat.repeat_unit&&routine.repeat_interval===repeat.repeat_interval&&(routine.repeat_unit!=='week'||sameWeekdays);const weekdays=routine.repeat_unit==='week'&&repeat.repeat_unit==='week'&&routine.repeat_weekdays===null&&repeat.repeat_weekdays?.length===1&&repeat.repeat_weekdays[0]===legacyDay?null:repeat.repeat_weekdays;setFixtureRoutines(rows=>rows.map(row=>row.id===routine.id?{...row,label,checklist,...repeat,repeat_weekdays:weekdays,repeat_anchor_date:sameRule?row.repeat_anchor_date:repeat.repeat_unit?today:null,checklist_revision:row.checklist_revision+1,legacy_single_item:false}:row));}
  async function updateRoutineFixture(routine:DailyRoutine,label:string,checklist:DailyRoutineChecklistItem[],repeat:DailyRoutineRepeatValues){
   const simulatedFailure=params.get('routineMutation');
@@ -310,12 +351,15 @@ function App(){
  function retryProgressionFixture(versionId:string):Promise<'saved'|'failed'|'unknown'>{
   const pending=pendingProgressions[versionId];return pending?.status==='unknown'?applyProgressionFixture(pending.action):Promise.resolve('failed');
  }
- function retryDailyFixtureMutation(){if(retryRoutineMutation.current){retryRoutineMutation.current();return;}setDailyMutationMode('');}
+ function retryDailyFixtureMutation(){if(firstDayDayRetry.current){firstDayDayRetry.current();return;}if(retryRoutineMutation.current){retryRoutineMutation.current();return;}setDailyMutationMode('');}
  async function deleteRoutineFixture(routine:DailyRoutine){setFixtureRoutines(rows=>rows.filter(row=>row.id!==routine.id));setFixtureRoutineDays(rows=>rows.filter(row=>row.routine_id!==routine.id));return {status:'saved' as const};}
- function addRoutineFixture(routine:DailyRoutine){if(fixtureRoutineDays.some(row=>row.routine_id===routine.id&&row.date_key===today))return;const skipped=fixtureRoutineSkips.find(row=>row.routine_id===routine.id&&row.date_key===today);if(skipped){const {day_id,...snapshot}=skipped;setFixtureRoutineDays(rows=>[{...snapshot,id:day_id,routine_day_revision:snapshot.routine_day_revision+1,last_state_mutation_id:crypto.randomUUID()},...rows]);setFixtureRoutineSkips(rows=>rows.filter(row=>row.day_id!==day_id));return;}setFixtureRoutineDays(rows=>[{id:crypto.randomUUID(),dog_id:dog.id,routine_id:routine.id,date_key:today,time_zone:'Europe/Stockholm',routine_label_snapshot:routine.label,checklist_snapshot:routine.checklist,completed_item_ids:[],completed_at:null,is_recurring_occurrence:isRoutineDueOnDate(routine,today),routine_revision_snapshot:routine.checklist_revision,routine_day_revision:1,last_state_mutation_id:null},...rows]);}
  function removeRoutineFixture(row:DailyRoutineDay){const routine=fixtureRoutines.find(item=>item.id===row.routine_id);if(routine&&(row.is_recurring_occurrence||isRoutineDueOnDate(routine,row.date_key))){const {id,...snapshot}=row;setFixtureRoutineSkips(rows=>[...rows.filter(item=>item.routine_id!==row.routine_id||item.date_key!==row.date_key),{...snapshot,day_id:id,routine_day_revision:row.routine_day_revision+1,last_state_mutation_id:crypto.randomUUID()}]);}setFixtureRoutineDays(rows=>rows.filter(item=>item.id!==row.id));}
  function setRoutineItemFixture(row:DailyRoutineDay,itemId:string,completed:boolean){setFixtureRoutineDays(rows=>rows.map(item=>{if(item.id!==row.id)return item;const ids=item.checklist_snapshot.map(checklistItem=>checklistItem.id).filter(id=>id===itemId?completed:item.completed_item_ids.includes(id));return {...item,completed_item_ids:ids,completed_at:ids.length===item.checklist_snapshot.length?new Date().toISOString():null,routine_day_revision:item.routine_day_revision+1,last_state_mutation_id:crypto.randomUUID()};}));}
- const visibleRoutineActivities=reviewFixtureEnabled&&state==='ready'&&['ready','product-daily'].includes(homeScenario)?fixtureActivities:[];
+ const visibleRoutineActivities=firstDayMode?fixtureActivities:reviewFixtureEnabled&&state==='ready'&&['ready','product-daily'].includes(homeScenario)?fixtureActivities:[];
+ const firstDayHasActivity=firstDayMode&&fixtureRoutineDays.some(row=>row.date_key===fixtureDate);
+ const firstDayMutationMessage=dailyMutationMode==='day-add-failed'?createdRoutineDaySelectionRecoveryCopy.failedMessage:dailyMutationMode==='day-add-unknown'?createdRoutineDaySelectionRecoveryCopy.unknownMessage:dailyMutationMode==='failed'?'Ändringen sparades inte. Försök igen.':dailyMutationMode==='unknown'?'Vi kunde inte bekräfta om ändringen sparades. Ingen ny bock visas. Kontrollera samma ändring innan du fortsätter.':dailyMutationMode==='readback'?'Ändringen sparades, men dagens lista kunde inte hämtas. Status räknas först efter en ny avläsning.':'';
+ const firstDayMutationError=['failed','unknown','readback','day-add-failed','day-add-unknown'].includes(dailyMutationMode);
+ Object.assign(window,{__homeFirstDayMode:firstDayMode,__homeFirstDayMutationCounts:{...firstDayMutationCounts.current},__homeFirstDayDate:fixtureDate,__homeFirstDayAdvance:()=>setFixtureDate((date)=>shiftFixtureDate(date,1))});
  return <View style={styles.shell}>
  <View style={styles.appViewport} testID="review-app-viewport">
  {['sign-in','profile-create','auth-callback'].includes(page)?<>
@@ -324,7 +368,7 @@ function App(){
  {page==='auth-callback'?<AuthCallbackView mode={params.get('callbackScenario')==='error'?'error':params.get('callbackScenario')==='preview'?'preview':'pending'} pendingMessage={params.get('callbackScenario')==='returned'?'Vi slutför inloggningen…':'Vänta medan länken öppnas…'} onReturn={()=>go('home')}/>:null}
  </>:<AppScreen scrollKey={page==='checklist'?'checklist-flow':page==='health'?'health-flow':page==='planned'&&healthFocus?'planned-health-health-source':page} preserveScrollKey={page==='checklist'||page==='home-training-detail'?'checklist-flow':page==='health'||(page==='planned'&&healthFocus)?'health-flow':undefined} footer={<BottomNav active={main} onChange={go}/>}><MainSwipeNavigation enabled={isMainTabDestination(page)&&!(page==='knowledge'&&knowledgeDetailOpen)} onSwipe={direction=>{const destination=nextMainTabDestination(page,direction);if(destination)navigateMainTab(destination);}}><ScreenTransition transitionKey={page}>
  {page==='workspace-retention'?<WorkspaceRetentionFixture review={reviewFixtureEnabled}/>:null}
- {page==='home'?<HomeScreen today={today} dog={fixtureScopeChanged?fixtureDog:homeScenario==='stale-selection'?{...dog,id:'new-dog',name:'Milo'}:dog} breed={fixtureBreed}
+ {page==='home'?<HomeScreen today={fixtureDate} dog={fixtureScopeChanged?fixtureDog:homeScenario==='stale-selection'?{...dog,id:'new-dog',name:'Milo'}:dog} breed={fixtureBreed}
   events={empty?[]:events} healthHistory={records} healthHistoryState={historyError?'error':state==='loading'?'loading':'ready'}
   plans={empty?[]:[...plans,homeDenseFixture.plan]} content={empty||homeScenario==='review-training'?[]:content} contentState={state==='empty'?'ready':state}
   logState={state==='empty'?'ready':state} planState={state==='empty'?'ready':state} trainingState={homeScenario==='loading'?'loading':homeScenario==='error'?'error':'ready'}
@@ -333,25 +377,31 @@ function App(){
   onRetryProgression={retryProgressionFixture} onRetryTrainingProgressionRead={()=>setProgressionReadState('ready')}
   nextStep={scenarioStep} reviewTrainingStep={homeScenario==='review-training'&&reviewFixtureEnabled}
   dailyFixture={reviewFixtureEnabled&&homeScenario==='ready'&&state==='ready'?homeReviewFixture:undefined}
-  dailyState={state==='error'?'error':state==='loading'?'loading':'ready'} dailyRefreshing={workspaceState==='refreshing'} dailyRefreshError={workspaceState==='refresh-error'} dailyDateKey={today} dailyScopeKey={`fixture:${fixtureDog.id}:${today}`}
-  dailyActivities={visibleRoutineActivities} routineTemplates={reviewFixtureEnabled&&state==='ready'?fixtureRoutines:[]} routineDaySkips={reviewFixtureEnabled&&state==='ready'?fixtureRoutineSkips:[]}
+  dailyState={state==='error'?'error':state==='loading'?'loading':'ready'} dailyRefreshing={workspaceState==='refreshing'} dailyRefreshError={workspaceState==='refresh-error'} dailyDateKey={fixtureDate} dailyScopeKey={`fixture:${fixtureDog.id}:${fixtureDate}`}
+  dailyActivities={visibleRoutineActivities} routineTemplates={firstDayMode?fixtureRoutines:reviewFixtureEnabled&&state==='ready'?fixtureRoutines:[]} routineDaySkips={firstDayMode?fixtureRoutineSkips:reviewFixtureEnabled&&state==='ready'?fixtureRoutineSkips:[]}
   dailyTrainingOptions={reviewFixtureEnabled&&state==='ready'&&['ready','product-daily'].includes(homeScenario)?reviewTrainingOptions:[]}
   dailyMutationBusy={dailyMutationMode==='pending'} dailyMutationKey={dailyMutationMode?'complete-routine:day-morning:00000000-0000-4000-8000-000000000001':''}
-  dailyMutationMessage={dailyMutationMode==='failed'?'Ändringen sparades inte. Försök igen.':dailyMutationMode==='unknown'?'Vi kunde inte bekräfta om ändringen sparades. Ingen ny bock visas. Kontrollera samma ändring innan du fortsätter.':dailyMutationMode==='readback'?'Ändringen sparades, men dagens lista kunde inte hämtas. Status räknas först efter en ny avläsning.':''}
-  dailyMutationError={['failed','unknown','readback'].includes(dailyMutationMode)} onRetryDaily={()=>setDailyMutationMode('')} onRetryDailyMutation={dailyMutationMode==='unknown'?retryDailyFixtureMutation:undefined}
-  onCreateRoutine={createRoutineFixture} onUpdateRoutine={updateRoutineFixture} onDeleteRoutine={deleteRoutineFixture}
+  dailyMutationMessage={firstDayMutationMessage}
+  dailyMutationError={firstDayMutationError} onRetryDaily={()=>setDailyMutationMode('')} onRetryDailyMutation={['unknown','day-add-unknown'].includes(dailyMutationMode)?retryDailyFixtureMutation:undefined}
+  onCreateRoutine={firstDayMode?createRoutineForTodayFixture:createRoutineFixture} onUpdateRoutine={updateRoutineFixture} onDeleteRoutine={deleteRoutineFixture}
   onAddRoutineToDay={addRoutineFixture} onRemoveRoutineFromDay={removeRoutineFixture} onSetRoutineCompletion={setRoutineItemFixture}
   onAddTrainingToDay={()=>{}} onRemoveTrainingFromDay={()=>{}} onGo={go}
-  onOpenContent={id=>{setFocused(id);setKnowledgeDetailOpen(false);setPage('knowledge')}} onRetryContent={()=>{}} onOpenChecklist={()=>{setChecklistFilter('Idag');setPage('checklist')}}/>:null}
- {page==='checklist'?<DailyChecklistScreen dateKey={today} state={state==='loading'?'loading':state==='error'?'error':'ready'}
-  activities={state==='empty'?[]:checklistActivities} refreshing={workspaceState==='refreshing'} refreshError={workspaceState==='refresh-error'}
+  onOpenContent={id=>{setFocused(id);setKnowledgeDetailOpen(false);setPage('knowledge')}} onRetryContent={()=>{}} onOpenChecklist={()=>{setChecklistFilter('Idag');setPage('checklist')}}
+  onOpenProgress={()=>setPage('progress')}/>:null}
+ {page==='progress'?<DailyProgressScreen dogName={dog.name} dateKey={fixtureDate} state="ready" activities={visibleRoutineActivities}
+  refreshing={false} refreshError={false} mutationBusy={false} mutationKey="" mutationMessage={firstDayMutationMessage} mutationError={firstDayMutationError}
+  onBack={()=>setPage('home')} onRetry={()=>{}} onRetryMutation={['unknown','day-add-unknown'].includes(dailyMutationMode)?retryDailyFixtureMutation:undefined}
+  onManage={()=>{setChecklistFilter('Idag');setPage('checklist')}} onOpenChecklist={()=>{setChecklistFilter('Idag');setPage('checklist')}} onOpenTrainingStep={()=>go('training')}
+  onSetRoutineCompletion={setRoutineItemFixture}/>:null}
+ {page==='checklist'?<DailyChecklistScreen dateKey={fixtureDate} state={state==='loading'?'loading':state==='error'?'error':'ready'}
+  activities={state==='empty'&&!firstDayHasActivity?[]:checklistActivities} refreshing={workspaceState==='refreshing'} refreshError={workspaceState==='refresh-error'}
   filter={checklistFilter} onChangeFilter={setChecklistFilter} rangeState={checklistRangeState} rangeActivities={checklistRangeActivities}
   onRetryRange={()=>{}}
   mutationBusy={dailyMutationMode==='pending'} mutationKey={dailyMutationMode?'complete-routine:day-morning:00000000-0000-4000-8000-000000000001':''}
-  mutationMessage={dailyMutationMode==='failed'?'Ändringen sparades inte. Försök igen.':dailyMutationMode==='unknown'?'Vi kunde inte bekräfta om ändringen sparades. Ingen ny bock visas. Kontrollera samma ändring innan du fortsätter.':dailyMutationMode==='readback'?'Ändringen sparades, men dagens lista kunde inte hämtas. Status räknas först efter en ny avläsning.':''}
-  mutationError={['failed','unknown','readback'].includes(dailyMutationMode)} onBack={()=>setPage('home')} onRetry={()=>setDailyMutationMode('')} onRetryMutation={dailyMutationMode==='unknown'?retryDailyFixtureMutation:undefined}
+  mutationMessage={firstDayMutationMessage}
+  mutationError={firstDayMutationError} onBack={()=>setPage('home')} onRetry={()=>setDailyMutationMode('')} onRetryMutation={['unknown','day-add-unknown'].includes(dailyMutationMode)?retryDailyFixtureMutation:undefined}
   onOpenTrainingStep={(programId,stepId)=>{setFocusedChecklistStep({programId,stepId});setPage('home-training-detail')}} onSetRoutineCompletion={setRoutineItemFixture}
-  routines={fixtureRoutines} routineDaySkips={fixtureRoutineSkips} trainingOptions={reviewTrainingOptions} onCreateRoutine={createRoutineFixture} onUpdateRoutine={updateRoutineFixture} onDeleteRoutine={deleteRoutineFixture}
+  routines={fixtureRoutines} routineDaySkips={fixtureRoutineSkips} trainingOptions={firstDayMode?[]:reviewTrainingOptions} onCreateRoutine={firstDayMode?createRoutineForTodayFixture:createRoutineFixture} onUpdateRoutine={updateRoutineFixture} onDeleteRoutine={deleteRoutineFixture}
   onAddRoutineToDay={addRoutineFixture} onRemoveRoutineFromDay={removeRoutineFixture} onAddTrainingToDay={()=>{}} onRemoveTrainingFromDay={()=>{}} onGoTraining={()=>go('training')}/>:null}
  {page==='checklist'&&params.get('checklistScopeReset')==='true'?<View style={{padding:16}}><Button label="Byt hund i testfixture" accessibilityLabel="Byt hund i testfixture" onPress={()=>{setFixtureScopeChanged(true);setChecklistFilter('Idag');setPage('home')}}/></View>:null}
  {page==='log'?<LogScreen mode="cloud" persistLayout={false} events={state==='empty'?[]:logEvents} mutation={mutation} loading={state==='loading'} loadError={state==='error'} onReload={()=>{}} loadMoreError={logLoadMoreError} onLoadMore={loadMoreLog} hasMore={state==='empty'?false:logHasMore} loadingMore={logLoadingMore} calendarMarkerMonth={calendarScenario==='loading-month'?'':today.slice(0,7)} calendarMarkers={calendarScenario==='markers'?[today,shiftFixtureDate(today,-1),shiftFixtureDate(today,-5)]:[]} calendarStatus={calendarScenario==='loading'?'loading':calendarScenario==='error'?'error':'ready'} onLoadCalendarMonth={()=>{}} onAdd={addLogFixture} onRetry={retryLogFixture} onCancel={()=>{setMutation(null);setPendingLogUpdate(null);}} onUpdate={(id,changes)=>{if(failNextLogUpdate){setFailNextLogUpdate(false);setPendingLogUpdate({id,changes});setMutation({kind:'update',id,mutationId:id,type:changes.type,occurredAt:changes.occurredAt,accidentKinds:changes.accidentKinds,status:params.get('editScenario')==='unsure'?'unsure':'failed'});return false;}setLogEvents(rows=>rows.map(e=>e.id===id?{...e,...changes}:e));return true;}} onDelete={id=>setLogEvents(rows=>rows.filter(e=>e.id!==id))} onUndo={id=>{setLogEvents(rows=>rows.filter(e=>e.id!==id));setMutation(null);}}/>:null}

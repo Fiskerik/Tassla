@@ -260,6 +260,113 @@ test('daily training retry reconciles the existing logical key when its stable U
   } finally { await client.auth.dispose(); }
 });
 
+test('adding a new routine to today confirms the exact dog, routine, day and checklist snapshot', async () => {
+  const dayDraft = {
+    id: routineDay.id,
+    dog_id: dogId,
+    routine_id: routine.id,
+    date_key: dateKey,
+    time_zone: 'Europe/Stockholm',
+    routine_label_snapshot: routine.label,
+    checklist_snapshot: checklist,
+  };
+  const mutationId = '88888888-8888-4888-8888-888888888888';
+  const { client, requests } = localClient(({ method, url, body }) => {
+    assert.equal(method, 'POST');
+    assert.equal(url.pathname, '/rest/v1/dog_daily_routine_days');
+    assert.equal(url.searchParams.get('select'), 'id,dog_id,routine_id,date_key,time_zone,routine_label_snapshot,checklist_snapshot,completed_item_ids,completed_at,is_recurring_occurrence,routine_revision_snapshot,routine_day_revision,last_state_mutation_id');
+    assert.deepEqual(body, { id: dayDraft.id, dog_id: dogId, routine_id: routine.id, date_key: dateKey, time_zone: 'Europe/Stockholm' });
+    return jsonResponse(routineDay);
+  });
+  try {
+    assert.deepEqual(await data.addRoutineToDay(client, dayDraft, null, mutationId), { status: 'saved', value: routineDay });
+    assert.equal(requests.length, 1);
+  } finally { await client.auth.dispose(); }
+
+  const { client: failedClient } = localClient(({ method }) => method === 'POST'
+    ? jsonResponse({ code: '42501', message: 'selection denied' }, 403)
+    : jsonResponse([]));
+  try {
+    assert.deepEqual(await data.addRoutineToDay(failedClient, dayDraft, null, mutationId), { status: 'failed' });
+  } finally { await failedClient.auth.dispose(); }
+
+  const { client: unknownClient } = localClient(({ method }) => {
+    if (method === 'POST') throw new TypeError('connection lost during selection');
+    return jsonResponse([]);
+  });
+  try {
+    assert.deepEqual(await data.addRoutineToDay(unknownClient, dayDraft, null, mutationId), { status: 'unknown' });
+  } finally { await unknownClient.auth.dispose(); }
+});
+
+test('the production routine/day orchestrator performs two ordered writes and preserves their separate outcomes', async () => {
+  const savedRoutine = { ...routine, repeat_anchor_date: null };
+  const ids = [routineDay.id, '88888888-8888-4888-8888-888888888888'];
+  const calls = [];
+  const result = await data.createRoutineAndSelectForToday({
+    routine: { ...routineDraft, dog_id: dogId },
+    dateKey,
+    timeZone: 'Europe/Stockholm',
+    createId: () => ids.shift(),
+    isScopeCurrent: () => true,
+    createRoutine: async (draft) => {
+      calls.push('create');
+      assert.deepEqual(draft, { ...routineDraft, dog_id: dogId });
+      return { status: 'saved', value: savedRoutine };
+    },
+    selectRoutineDay: async (day, mutationId) => {
+      calls.push('select');
+      assert.deepEqual(day, {
+        id: routineDay.id, dog_id: dogId, routine_id: routine.id, date_key: dateKey,
+        time_zone: 'Europe/Stockholm', routine_label_snapshot: routine.label, checklist_snapshot: checklist,
+      });
+      assert.equal(mutationId, '88888888-8888-4888-8888-888888888888');
+      return { status: 'saved', value: routineDay };
+    },
+  });
+  assert.deepEqual(calls, ['create', 'select']);
+  assert.equal(result.template.status, 'saved');
+  assert.equal(result.daySelection.status, 'saved');
+  assert.equal(result.selection, 'attempted');
+
+  for (const status of ['failed', 'unknown']) {
+    const partial = await data.createRoutineAndSelectForToday({
+      routine: { ...routineDraft, dog_id: dogId }, dateKey, timeZone: 'Europe/Stockholm',
+      createId: () => routineDay.id, isScopeCurrent: () => true,
+      createRoutine: async () => ({ status: 'saved', value: savedRoutine }),
+      selectRoutineDay: async () => ({ status }),
+    });
+    assert.equal(partial.template.status, 'saved', 'the routine template stays confirmed independently');
+    assert.equal(partial.daySelection.status, status);
+  }
+});
+
+test('routine/day orchestration stops before selection when the captured owner, dog or day scope changes', async () => {
+  const capturedScope = { ownerScope: 'owner-a', selectionKey: 'owner-a:dog-a', lifetime: 'owner-a:dog-a:2026-10-13' };
+  const currentScope = { ...capturedScope };
+  const savedRoutine = { ...routine, repeat_anchor_date: null };
+  let selectionCalls = 0;
+  const result = await data.createRoutineAndSelectForToday({
+    routine: { ...routineDraft, dog_id: dogId }, dateKey, timeZone: 'Europe/Stockholm',
+    createId: () => routineDay.id,
+    isScopeCurrent: () => data.dailyRoutineCreationScopeMatches(capturedScope, currentScope),
+    createRoutine: async () => {
+      currentScope.selectionKey = 'owner-a:dog-b';
+      return { status: 'saved', value: savedRoutine };
+    },
+    selectRoutineDay: async () => { selectionCalls += 1; return { status: 'saved', value: routineDay }; },
+  });
+  assert.equal(result.template.status, 'saved');
+  assert.equal(result.selection, 'scope-changed');
+  assert.equal(result.daySelection, undefined);
+  assert.equal(selectionCalls, 0);
+
+  for (const changedKey of ['ownerScope', 'selectionKey', 'lifetime']) {
+    const nextScope = { ...capturedScope, [changedKey]: `changed-${changedKey}` };
+    assert.equal(data.dailyRoutineCreationScopeMatches(capturedScope, nextScope), false, `${changedKey} is part of the captured scope`);
+  }
+});
+
 test('routine completion becomes checked only from a server-confirmed timestamp', async () => {
   const itemId = checklist[0].id;
   const saved = { ...routineDay, completed_item_ids: [itemId], completed_at: '2026-10-13T08:15:00.000Z', routine_day_revision: 2 };

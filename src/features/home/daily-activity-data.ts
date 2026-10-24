@@ -70,6 +70,46 @@ export type DailyActivitySnapshot = {
   trainingSelections: DailyTrainingSelection[];
 };
 
+export type DailyRoutineCreationScope = { ownerScope: string; selectionKey: string; lifetime: string };
+export function dailyRoutineCreationScopeMatches(captured: DailyRoutineCreationScope, current: DailyRoutineCreationScope): boolean {
+  return captured.ownerScope === current.ownerScope && captured.selectionKey === current.selectionKey && captured.lifetime === current.lifetime;
+}
+
+export type DailyRoutineTodayCreateResult = {
+  template: DailyRoutineWriteResult | undefined;
+  daySelection: WriteOutcome<DailyRoutineDay | DailyRoutineDaySkip> | undefined;
+  selection: 'not-needed' | 'scope-changed' | 'attempted';
+};
+export async function createRoutineAndSelectForToday(input: {
+  routine: DailyRoutineDraft;
+  dateKey: string | null;
+  timeZone: string;
+  createId: () => string;
+  isScopeCurrent: () => boolean;
+  createRoutine: (routine: DailyRoutineDraft) => Promise<DailyRoutineWriteResult | undefined>;
+  selectRoutineDay: (day: DailyRoutineDayDraft, mutationId: string) => Promise<WriteOutcome<DailyRoutineDay | DailyRoutineDaySkip> | undefined>;
+}): Promise<DailyRoutineTodayCreateResult> {
+  const routine = { ...input.routine, checklist: input.routine.checklist.map((item) => ({ ...item })) };
+  const template = await input.createRoutine(routine);
+  if (template?.status !== 'saved' || routine.repeat_unit !== null || !input.dateKey) {
+    return { template, daySelection: undefined, selection: 'not-needed' };
+  }
+  if (!input.isScopeCurrent()) return { template, daySelection: undefined, selection: 'scope-changed' };
+
+  const day: DailyRoutineDayDraft = {
+    id: input.createId(),
+    dog_id: template.value.dog_id,
+    routine_id: template.value.id,
+    date_key: input.dateKey,
+    time_zone: input.timeZone,
+    routine_label_snapshot: template.value.label,
+    checklist_snapshot: template.value.checklist.map((item) => ({ ...item })),
+  };
+  const mutationId = input.createId();
+  const daySelection = await input.selectRoutineDay(day, mutationId);
+  return { template, daySelection, selection: 'attempted' };
+}
+
 export type DailyActivityRangeSnapshot = {
   routines: DailyRoutine[];
   routineDays: DailyRoutineDay[];

@@ -275,6 +275,29 @@ test('daily recovery transitions preserve the routine draft and exact unknown op
   assert.equal(routineDrafts.get(ownerScope, 'dog-1', lifetime).draft.submissionId, 'submission-2', 'a late refresh cannot overwrite the replacement draft');
 });
 
+test('saved routine templates keep day-selection failure copy and exact retry metadata', () => {
+  const copy = recovery.createdRoutineDaySelectionRecoveryCopy;
+  const ownerScope = 'account-1';
+  const lifetime = 'account-1:dog-1:2026-10-24';
+  const operation = async () => ({ status: 'unknown' });
+  const origin = { dogId: 'dog-1', dogName: 'Luna', actionLabel: 'Lägga till rutin på Hemskärmen' };
+
+  const failed = recovery.recoverDailyMutation('failed', ownerScope, lifetime, 'select-routine:routine-1', operation, origin, copy);
+  assert.equal(failed.message, copy.failedMessage);
+  assert.equal(failed.error, true);
+
+  const unknown = recovery.recoverDailyMutation('unknown', ownerScope, lifetime, 'select-routine:routine-1', operation, origin, copy);
+  assert.equal(unknown.message, copy.unknownMessage);
+  assert.strictEqual(unknown.pendingRetry.run, operation);
+  assert.strictEqual(unknown.pendingRetry.recoveryCopy, copy);
+
+  const retried = recovery.recoverDailyMutation('unknown', ownerScope, lifetime, unknown.pendingRetry.key,
+    unknown.pendingRetry.run, unknown.pendingRetry, unknown.pendingRetry.recoveryCopy);
+  assert.equal(retried.message, copy.unknownMessage);
+  assert.strictEqual(retried.pendingRetry.run, operation);
+  assert.strictEqual(retried.pendingRetry.recoveryCopy, copy);
+});
+
 test('daily recovery clears write locks only after a definitive result and guards account deletion', () => {
   const operation = async () => ({ status: 'failed' });
   const ownerScope = 'account-1';

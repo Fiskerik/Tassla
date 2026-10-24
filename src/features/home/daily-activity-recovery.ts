@@ -7,6 +7,11 @@ import type {
 import type { WriteOutcome } from '../../data/workspace-data';
 
 export type DailyMutationOperation = () => Promise<WriteOutcome<unknown> | DailyRoutineWriteResult>;
+export type DailyMutationRecoveryCopy = { failedMessage: string; unknownMessage: string };
+export const createdRoutineDaySelectionRecoveryCopy: DailyMutationRecoveryCopy = {
+  failedMessage: 'Rutinen sparades, men den kunde inte läggas till på den valda dagen. Öppna Checklistor och lägg till den från rutinhallen.',
+  unknownMessage: 'Rutinen sparades, men vi kunde inte bekräfta om den lades till på den valda dagen. Kontrollera samma ändring innan du fortsätter.',
+};
 type ActiveDailyMutation = {
   ownerScope: string;
   dogId: string;
@@ -15,6 +20,7 @@ type ActiveDailyMutation = {
   key: string;
   run: DailyMutationOperation;
   actionLabel: string;
+  recoveryCopy?: DailyMutationRecoveryCopy;
   phase: 'in-flight' | 'unknown';
 };
 type ResolvedDailyMutation = {
@@ -70,17 +76,18 @@ export function recoverDailyMutation(
   lifetime: string,
   key: string,
   operation: DailyMutationOperation,
-  origin: { dogId: string; dogName: string; actionLabel: string } = { dogId: '', dogName: '', actionLabel: 'ändringen' },
+  origin: { dogId: string; dogName: string; actionLabel: string; recoveryCopy?: DailyMutationRecoveryCopy } = { dogId: '', dogName: '', actionLabel: 'ändringen' },
+  recoveryCopy: DailyMutationRecoveryCopy | undefined = origin.recoveryCopy,
 ): DailyMutationRecovery {
   switch (status) {
     case 'saved':
       return { pendingRetry: null, message: '', error: false, reload: true };
     case 'failed':
-      return { pendingRetry: null, message: 'Ändringen sparades inte. Försök igen.', error: true, reload: false };
+      return { pendingRetry: null, message: recoveryCopy?.failedMessage ?? 'Ändringen sparades inte. Försök igen.', error: true, reload: false };
     case 'unknown':
       return {
-        pendingRetry: { ownerScope, ...origin, lifetime, key, run: operation, phase: 'unknown' },
-        message: 'Vi kunde inte bekräfta om ändringen sparades. Ingen ny bock visas. Kontrollera samma ändring innan du fortsätter.',
+        pendingRetry: { ownerScope, ...origin, recoveryCopy, lifetime, key, run: operation, phase: 'unknown' },
+        message: recoveryCopy?.unknownMessage ?? 'Vi kunde inte bekräfta om ändringen sparades. Ingen ny bock visas. Kontrollera samma ändring innan du fortsätter.',
         error: true,
         reload: false,
       };
@@ -93,12 +100,13 @@ export function dailyMutationNoticeForStaleOutcome(
   status: DailyMutationOutcomeStatus,
   dogName: string,
   actionLabel: string,
+  recoveryCopy?: DailyMutationRecoveryCopy,
 ): { message: string; error: boolean } | null {
   switch (status) {
     case 'saved':
       return { message: `${actionLabel} för ${dogName} sparades i den tidigare vyn.`, error: false };
     case 'failed':
-      return { message: `${actionLabel} för ${dogName} sparades inte. Öppna Checklistor igen och gör om ändringen.`, error: true };
+      return { message: recoveryCopy?.failedMessage ?? `${actionLabel} för ${dogName} sparades inte. Öppna Checklistor igen och gör om ändringen.`, error: true };
     case 'conflict':
       return { message: `${actionLabel} för ${dogName} krockade med en nyare version. Öppna Checklistor igen för att läsa in den senaste versionen.`, error: true };
     case 'unknown':
@@ -214,7 +222,7 @@ export function resolvedDailyMutation(
   mutation: ActiveDailyMutation,
   status: Exclude<DailyMutationOutcomeStatus, 'unknown'>,
 ): ResolvedDailyMutation | null {
-  const notice = dailyMutationNoticeForStaleOutcome(status, mutation.dogName || 'den tidigare valda hunden', mutation.actionLabel);
+  const notice = dailyMutationNoticeForStaleOutcome(status, mutation.dogName || 'den tidigare valda hunden', mutation.actionLabel, mutation.recoveryCopy);
   return notice ? { ownerScope: mutation.ownerScope, phase: 'resolved', notice } : null;
 }
 
