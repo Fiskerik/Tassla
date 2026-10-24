@@ -1,6 +1,6 @@
 # HOME-FIRST-DAY-01 — skapa och slutföra dagens första rutin
 
-Status: `review` — v3 är implementerad, lokalt verifierad samt oberoende QA- och Reviewer-godkänd; commit/queue-closeout återstår.
+Status: `done` — v3 är lokalt verifierad, QA/Reviewer-godkänd och köstängd på implementation-checkpoint `a6f352d9264889e5ad7b9c0addbc853d4d17a01b`; push till `origin` återstår.
 
 ## Uppgiftskontrakt
 
@@ -95,4 +95,6 @@ Live Supabase/RLS, native VoiceOver/Dynamic Type och signerad build redovisas se
 - §14 och färsk jämförelse finns i evidenskatalogen. Layouten ändrades inte enligt mandatet; befintlig avvikelse för full Home-panelmatch mot rev02 markeras öppet som Nej. Live Supabase/RLS/readback, signerad build och native VoiceOver/Dynamic Type/reducerad rörelse är NOT TESTABLE.
 - QA checkpoint 2: PASS för kod, beteende, tester, render/evidens, write-path-scope och dokumentation. QA bekräftade att den öppna §14.16-panelavvikelsen inte blockerar denna avgränsade, layoutbevarande task; den är inte full rev02-panelacceptans.
 - Reviewer checkpoint 2: PASS på slutlig v3-diff efter QA; inga kvarvarande blockerande kod-, kontrakts-, test-, scope- eller dokumentationsfynd. Reviewern verifierade även att live Supabase/RLS/native begränsningar anges korrekt.
-- Nästa steg: skapa hook-verifierad implementation-checkpoint på branch, därefter registrera commit-ID och slutföra `review → done`-closeout. Tasken stängs inte innan kövalidering och commit/push.
+- Hook-verifierad implementation-checkpoint: commit `a6f352d9264889e5ad7b9c0addbc853d4d17a01b` (`fix: create routines on the current day`); pre-commit `pnpm check` PASS.
+- Köövergång `review → done`: Reviewer PASS registrerad med implementation commit `a6f352d9264889e5ad7b9c0addbc853d4d17a01b` och faktiska kontroller. Tasken är stängd som lokal checkpoint.
+- Nästa steg: pusha branchen och kontrollera remote-head. Därefter följer actionplanens paket 2 med inventering av faktisk publik kontra draft/review-täckning; ingen publikering eller D1-migration antas.

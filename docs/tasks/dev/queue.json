@@ -11145,8 +11145,8 @@
       "depends_on": [
         "UI-COPY-CLEANUP-2026-10-24"
       ],
-      "status": "review",
-      "next_step": "Create the hook-verified implementation commit on this branch. Then record its SHA in the task, report, and Master Log and complete the review-to-done closeout.",
+      "status": "done",
+      "next_step": "Push the reviewed branch to origin and verify the remote head. Then begin actionplan package 2 with an inventory of public versus draft/review Knowledge coverage; do not assume publishing or D1 migration.",
       "risk_class": "M",
       "history": [
         {
@@ -11196,6 +11196,12 @@
           "to": "review",
           "actor": "qa",
           "evidence": "Independent QA PASS for v3 code, behavioral tests, rendered evidence, exact write paths, and documentation after Master-Log closeout recheck. §14.16 existing full-panel mismatch remains disclosed and is non-blocking for this layout-preserving slice. Next: frozen independent Reviewer on final diff."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent QA PASS after documentation closeout; frozen Reviewer PASS; hook-verified implementation commit a6f352d9264889e5ad7b9c0addbc853d4d17a01b records the reviewed diff and its pre-commit pnpm check PASS. First-day RN Web 7/7, pnpm check 81/81, iOS export 1586 modules, exact write paths, diff-check and prior queue validation PASS. Full Home/rev02 point 16 mismatch remains disclosed and non-blocking for this layout-preserving slice; live Supabase/native remain NOT TESTABLE. Task complete as local checkpoint; push branch after documentation closeout."
         }
       ]
     },
