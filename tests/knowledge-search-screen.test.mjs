@@ -34,8 +34,8 @@ test('guide metadata comes from published fields and secondary destinations stay
   const screen = await readFile(screenPath, 'utf8');
   assert.match(screen, /readingMinutes\(item\.body\)/);
   assert.match(screen, /item\.contentType === 'guide' \? 'Guide' : 'Artikel'/);
-  assert.match(screen, /featuredImage: \{ width: '100%', height: 200 \}/);
-  assert.match(screen, /smallImage: \{ width: '100%', height: 132 \}/);
+  assert.match(screen, /featuredImage: \{ width: '100%', aspectRatio: 16 \/ 9 \}/);
+  assert.match(screen, /smallImage: \{ width: '100%', aspectRatio: 4 \/ 3 \}/);
   assert.match(screen, /accessibilityLabel="Öppna Checklistor"/);
   assert.match(screen, /accessibilityLabel="Öppna Vanliga frågor"/);
   assert.match(screen, /categoryLink: \{ flexDirection: 'column', alignItems: 'center'/);

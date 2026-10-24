@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { Button } from '../../components/ui';
 import { tokens } from '../../theme/tokens';
 import type { Dog } from '../onboarding/dog';
 import { automaticDogAge, localDate } from '../onboarding/dog';
@@ -38,10 +39,9 @@ export function PreviewHomeScreen({
         </View>
       </View>
       <Text style={styles.sectionTitle} accessibilityRole="header">Idag för {dog.name}</Text>
-      <MessageCard>Inget publicerat innehåll visas i det lokala testläget.</MessageCard>
       <PrimaryButton title="Öppna Vardagslogg" onPress={onOpenLog} />
       <View style={styles.trainingShortcut}>
-        <Text style={styles.shortcutEyebrow}>TRÄNING · LOKALT TESTLÄGE</Text>
+        <Text style={styles.shortcutEyebrow}>TRÄNING</Text>
         {trainingShortcut ? (
           <>
             <Text style={styles.shortcutTitle}>{trainingShortcut.programTitle}</Text>
@@ -57,7 +57,7 @@ export function PreviewHomeScreen({
           </>
         )}
       </View>
-      <QuietButton title="Redigera hundprofil" onPress={onEditProfile} />
+      <Button variant="icon" iconName="create-outline" label="Redigera hundprofil" accessibilityLabel={`Redigera ${dog.name}s hundprofil`} onPress={onEditProfile} />
     </View>
   );
 }

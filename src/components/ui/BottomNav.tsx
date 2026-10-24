@@ -1,27 +1,25 @@
 import { MotionPressable } from './Motion';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { tokens } from '../../theme/tokens';
 
 export type BottomNavDestination = 'home' | 'log' | 'training' | 'knowledge' | 'more';
-type Item = { key: BottomNavDestination; label: string; icon: React.ComponentProps<typeof Ionicons>['name']; activeIcon: React.ComponentProps<typeof Ionicons>['name']; largeTextFlex: number };
+type Item = { key: BottomNavDestination; label: string; icon: React.ComponentProps<typeof Ionicons>['name']; activeIcon: React.ComponentProps<typeof Ionicons>['name']; labelFlex: number };
 const items: Item[] = [
-  { key: 'home', label: 'Hem', icon: 'home-outline', activeIcon: 'home', largeTextFlex: 0.8667 },
-  { key: 'log', label: 'Logg', icon: 'create-outline', activeIcon: 'create', largeTextFlex: 0.8667 },
-  { key: 'training', label: 'Träning', icon: 'school-outline', activeIcon: 'school', largeTextFlex: 1.2 },
-  { key: 'knowledge', label: 'Kunskap', icon: 'book-outline', activeIcon: 'book', largeTextFlex: 1.2 },
-  { key: 'more', label: 'Mer', icon: 'grid-outline', activeIcon: 'grid', largeTextFlex: 0.8667 },
+  { key: 'home', label: 'Hem', icon: 'home-outline', activeIcon: 'home', labelFlex: 0.8333 },
+  { key: 'log', label: 'Logg', icon: 'create-outline', activeIcon: 'create', labelFlex: 0.8333 },
+  { key: 'training', label: 'Träning', icon: 'school-outline', activeIcon: 'school', labelFlex: 1.2 },
+  { key: 'knowledge', label: 'Kunskap', icon: 'book-outline', activeIcon: 'book', labelFlex: 1.3 },
+  { key: 'more', label: 'Mer', icon: 'grid-outline', activeIcon: 'grid', labelFlex: 0.8333 },
 ];
 
 export function BottomNav({ active = 'home', onChange }: { active?: BottomNavDestination; onChange: (destination: BottomNavDestination) => void }) {
-  const { fontScale } = useWindowDimensions();
-  const largeText = fontScale >= 1.3;
   return <View accessibilityRole="tablist" accessibilityLabel="Huvudmeny" style={styles.nav}>
     {items.map((item) => {
       const selected = item.key === active;
-      return <MotionPressable key={item.key} accessibilityRole="tab" accessibilityLabel={item.label} accessibilityState={{ selected }} aria-selected={selected} onPress={() => onChange(item.key)} style={({ pressed }) => [styles.item, largeText && { flex: item.largeTextFlex }, pressed && styles.pressed]}>
+      return <MotionPressable key={item.key} accessibilityRole="tab" accessibilityLabel={item.label} accessibilityState={{ selected }} aria-selected={selected} onPress={() => onChange(item.key)} style={({ pressed }) => [styles.item, { flex: item.labelFlex }, pressed && styles.pressed]}>
         <Ionicons name={selected ? item.activeIcon : item.icon} size={tokens.size.iconMd} color={selected ? tokens.colors.primary : tokens.colors.textSecondary} />
-        <Text style={[styles.label, selected && styles.selectedLabel]}>{item.label}</Text>
+        <Text testID={`main-nav-label-${item.key}`} numberOfLines={1} maxFontSizeMultiplier={1.4} style={[styles.label, selected && styles.selectedLabel]}>{item.label}</Text>
       </MotionPressable>;
     })}
   </View>;

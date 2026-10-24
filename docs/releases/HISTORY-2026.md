@@ -657,3 +657,8 @@ Logg, utförd hälsa, vikt och plan redigeras i kompakta BottomSheets med en fas
 Public/review RN Web-kontroller PASS: Logg 13/13 och Hälsaformulär 6/6 vardera. `pnpm check` PASS (75/75 tester); public iOS JS-export PASS (1 585 moduler), public release content guard, kö- och diff-validering PASS. RN Web-evidens: [UI-R02-03](../design/evidence/vision-rev02/ui-r02-03-logg-halsa/).
 
 Detta är lokal implementationsevidens. Oberoende QA/Reviewer, full Panel 5 §14, live Supabase/RLS, native keyboard/accessibility och signerad/TestFlight-build återstår eller har inte körts i denna session.
+
+
+## UI-R02-03 / UI-R02-04 — GAP-planen 23 oktober, leveransförberedd 24 oktober
+
+UI03: `13f48bf` pushad till `2026-10-23-ui-03-logg-halsa`, lokal QA/Reviewer/Security klar. UI04:s samlade kod ligger på `2026-10-23-ui-04-panelhelhet` ovanpå 01–03. Lokalt v7-godkännande: QA PASS, Reviewer PASS, Security APPROVE; fullcheck76/76 och offentlig iOS JS-export1585 PASS. Kunskap/Träning/Insikter/Påminnelser samordnade, knapp-/menytillägg och två verkliga modal/resetregressioner rättade. G01–G19 och kvarvarande D1/D2/D3/D5 samt telefonlista finns i actionplanens §12 och paketets VERIFICATION.md. Ingen ny signerad build eller mainmerge gjord av denna checkpoint. Commit/pushreferens fylls efter faktisk Git-operation.

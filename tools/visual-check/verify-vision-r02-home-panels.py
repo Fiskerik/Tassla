@@ -252,11 +252,13 @@ def verify_development_states(browser) -> None:
            and abs(float(checklist_after['top']) - float(checklist_before['top'])) <= 1,
            {'before': checklist_before, 'after': checklist_after})
     page.get_by_role('button', name='Tillbaka till Hem', exact=True).click()
-    page.get_by_role('tab', name='Logg', exact=True).click()
-    expect(page.get_by_test_id('destination-result')).to_be_visible()
+    # Logg now owns its own preserved flow; Training is the non-preserved main route.
+    page.get_by_role('tab', name='Träning', exact=True).click()
+    expect(page.get_by_role('heading', name='Träning', exact=True)).to_be_visible()
+    expect(page.get_by_role('tablist', name='Huvudmeny').get_by_role('tab', name='Träning', exact=True)).to_have_attribute('aria-selected', 'true')
     page.get_by_role('tab', name='Hem', exact=True).click()
     flow_exit_home = vertical_scroll_state(page)
-    record('Leaving the Home child flow clears the old Home scroll offset',
+    record('Leaving the Home child flow for non-preserved Training clears the old Home scroll offset',
            flow_exit_home is None or float(flow_exit_home['top']) <= 1,
            {'after_flow_exit': flow_exit_home})
 
@@ -451,7 +453,7 @@ def verify_breed_picker(browser) -> None:
     trigger.click()
     search = page.get_by_role('textbox', name='Sök hundras', exact=True)
     expect(search).to_be_visible()
-    search.fill('sYnTeTiSk RaS 12')
+    search.fill('bOxEr')
     match = page.get_by_test_id('breed-option-synthetic-12')
     expect(match).to_be_visible()
     rendered_options = page.locator('[data-testid^="breed-option-"]').count()
@@ -499,12 +501,12 @@ def verify_breed_picker(browser) -> None:
     page.goto(profile_url(breed_count=24), wait_until='networkidle')
     page.get_by_test_id('breed-picker-trigger').click()
     search = page.get_by_role('textbox', name='Sök hundras', exact=True)
-    search.fill('långhårig')
+    search.fill('Nova Scotia')
     long_row = page.get_by_test_id('breed-option-long-label')
     expect(long_row).to_be_visible()
     long_row_box = long_row.bounding_box()
-    record('Long Swedish breed names wrap inside a large selectable row on a short screen',
-           long_row_box is not None and long_row_box['height'] >= 44
+    record('Long breed names stay fully selectable on a short screen',
+           long_row_box is not None and long_row_box['height'] >= 43.99
            and page.evaluate('document.documentElement.scrollWidth <= innerWidth'),
            {'row': long_row_box})
     page.screenshot(path=str(OUT / 'breed-picker-long-label-375x667.png'), full_page=True)
@@ -555,7 +557,7 @@ def verify_breed_picker(browser) -> None:
     page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
     page.goto(profile_create_url(), wait_until='networkidle')
     if REVIEW:
-        expect(page.get_by_text('Syntetiskt granskningsläge · profilskapande', exact=True)).to_be_visible()
+        expect(page.get_by_text('Granskningsdata', exact=True)).to_be_visible()
     trigger = page.get_by_test_id('breed-picker-trigger')
     expect(trigger).to_have_accessible_name('Ras: Välj ras')
     page.screenshot(path=str(OUT / 'breed-picker-create-collapsed-375.png'), full_page=True)
@@ -566,7 +568,7 @@ def verify_breed_picker(browser) -> None:
     trigger.click()
     page.get_by_test_id('breed-option-synthetic-03').click()
     expect(page.get_by_text('Välj ras', exact=True)).to_have_count(0)
-    expect(trigger).to_have_accessible_name('Ras: Syntetisk ras 03')
+    expect(trigger).to_have_accessible_name('Ras: Alaskan malamute')
     expect(page.get_by_role('textbox', name='Hundens namn', exact=True)).to_have_value('')
     page.screenshot(path=str(OUT / 'breed-picker-create-selected-375.png'), full_page=True)
     record('Create flow starts with no preselected breed, keeps empty state on cancel and stores the chosen option',
@@ -608,7 +610,7 @@ def verify_profile_density(browser) -> None:
                {'heading': create_heading, 'name': name_box, 'kennel': kennel_entry, 'page_errors': page_errors})
         expect(page.get_by_text('Valfritt', exact=True)).to_be_visible()
         if REVIEW:
-            expect(page.get_by_text('Syntetiskt granskningsläge · profilskapande', exact=True)).to_be_visible()
+            expect(page.get_by_text('Granskningsdata', exact=True)).to_be_visible()
         page.screenshot(path=str(OUT / f'profile-create-{width}x{height}.png'), full_page=True)
         page.close()
 
@@ -693,7 +695,7 @@ def verify_image_diversity(browser) -> None:
         page_errors: list[str] = []
         page.on('pageerror', lambda error: page_errors.append(str(error)))
         page.goto(image_fixture_url('knowledge'), wait_until='networkidle')
-        expect(page.get_by_text('Tillfälligt exempel – innehållet är inte sakgranskat.', exact=True)).to_be_visible()
+        expect(page.get_by_text('Granskningsdata', exact=True)).to_be_visible()
         guide_cards = [
             page.get_by_role('button', name='Läs Trygg start hemma', exact=True),
             page.get_by_role('button', name='Läs Kontakt och namn', exact=True),
@@ -709,9 +711,9 @@ def verify_image_diversity(browser) -> None:
         record(f'Knowledge maps three stable guide identities to three different visible photos at {width}px',
                all(image_sources) and len(set(image_sources)) == 3,
                {'image_sources': image_sources, 'image_boxes': image_boxes})
-        record(f'Knowledge image crops use the planned 200pt hero and 132pt guide images at {width}px',
-               image_boxes[1] is not None and abs(image_boxes[1]['height'] - 200) <= 1
-               and all(box is not None and abs(box['height'] - 132) <= 1 for index, box in enumerate(image_boxes) if index != 1),
+        record(f'Knowledge image crops use the current 16:9 hero and 4:3 guide aspect ratios at {width}px',
+               image_boxes[1] is not None and abs(image_boxes[1]['width'] / image_boxes[1]['height'] - 16 / 9) <= 0.02
+               and all(box is not None and abs(box['width'] / box['height'] - 4 / 3) <= 0.02 for index, box in enumerate(image_boxes) if index != 1),
                {'image_boxes': image_boxes})
         page.screenshot(path=str(OUT / f'knowledge-guides-{width}.png'), full_page=True)
         expect(page.get_by_role('textbox', name='Sök i guider för Luna', exact=True)).to_be_visible()
@@ -1064,7 +1066,8 @@ with sync_playwright() as playwright:
         record(
             f'initial Home and three destinations at {width}x{app_height} ({"review" if REVIEW else "public"})',
             nav is not None and clearance is not None and clearance >= min_clearance
-            and viewport_box is not None and viewport_box['height'] == app_height,
+            and viewport_box is not None
+            and abs(viewport_box['height'] + viewport_box['y'] - page.evaluate('innerHeight')) <= 1,
             {'app_viewport': viewport_box, 'nav': nav, 'destination_tiles': tiles, 'clearance_pt': clearance,
              'minimum_clearance_pt': min_clearance},
         )

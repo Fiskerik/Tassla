@@ -41,7 +41,7 @@ test('log editor exposes a selected category icon trigger and icon/name radio ch
   assert.match(editor, /<Button variant="icon" label="Radera" iconName="trash-outline"/);
   assert.match(editor, /onDraftChange\(draft\)/);
   assert.match(log, /<BottomSheet visible title="Ändra händelse" keyboardAware footer=\{/);
-  assert.match(log, /<Dialog visible=\{Boolean\(deleteTarget\)\} title="Radera loggpost\?"/);
+  assert.match(log, /\{deleteTarget \? <Dialog visible title="Radera loggpost\?"/);
   assert.doesNotMatch(editor, /label="Avbryt"/);
 });
 

@@ -15,7 +15,7 @@ test('only confirmed success receives the decorative green check and compact suc
   assert.doesNotMatch(toast, /<Animated\.View accessibilityRole=\{exposed \? 'alert'/);
 });
 test('success keeps undo and errors keep retry and cancel semantics', () => {
-  assert.match(toast, /displayContent\.tone === 'success' && displayContent\.onUndo[\s\S]*?label: 'Ångra',[\s\S]*?accessibilityLabel: `Ångra: \$\{displayContent\.message\}`,[\s\S]*?iconName: 'return-up-back-outline'/);
+  assert.match(toast, /displayContent\.tone === 'success' && displayContent\.onUndo[\s\S]*?label: 'Ångra',[\s\S]*?accessibilityLabel: `Ångra: \$\{displayContent\.message\}`,[\s\S]*?iconName: 'arrow-undo-outline'/);
   assert.match(toast, /displayContent\.tone === 'error' \|\| displayContent\.tone === 'uncertain'\)[\s\S]*?label: 'Försök igen',[\s\S]*?iconName: undefined/);
   assert.match(toast, /variant=\{action\.iconName \? 'icon' : 'tertiary'\} label=\{action\.label\} accessibilityLabel=\{action\.accessibilityLabel\}/);
   assert.match(toast, /displayContent\.tone === 'error' && displayContent\.onCancel \? <Button variant="secondary" label="Avbryt"/);

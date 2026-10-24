@@ -56,7 +56,8 @@ test('navigation invalidates and aborts the current read/write before changing c
 
 test('screen feedback reflects only confirmed state and review drafts identify themselves', () => {
   assert.match(screen, /if \(result\.status === 'saved'\)/);
-  assert.match(screen, /Exemplen tas bort eller skrivs om före lansering\./);
+  assert.match(screen, /Checklistornas innehåll granskas före publicering\./);
+  assert.doesNotMatch(screen, /Exemplen tas bort eller skrivs om före lansering\./);
   assert.match(screen, /label="Kontrollera"/);
   assert.ok(screen.includes('label={`${done} av ${total} genomförda`}'));
   assert.match(screen, /label=\{form \? form\.id \? 'Fortsätt redigera punkt' : 'Fortsätt med egen punkt' : 'Lägg till egen punkt'\}/);

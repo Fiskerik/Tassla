@@ -313,7 +313,7 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
           <Text style={styles.body}>{item.label}</Text>
           {item.programTitle ? <Text style={styles.muted}>{item.programTitle}</Text> : null}
         </View>
-        <Button variant="tertiary" label="Ta bort idag" accessibilityLabel={`Ta bort ${item.label} från idag`} disabled={selectionLocked}
+        <Button variant="icon" iconName="remove-outline" label="Ta bort idag" accessibilityLabel={`Ta bort ${item.label} från idag`} disabled={selectionLocked}
           onPress={() => item.trainingSelection && onRemoveTrainingFromDay?.(item.trainingSelection)} />
       </View>)}
       <Button variant="tertiary" label="Öppna Träning" accessibilityLabel="Öppna Träning" disabled={unresolvedMutation || showDiscardConfirmation} onPress={goToTraining} />
@@ -362,7 +362,7 @@ function CreateRoutineForm({ draft, disabled, iconPickerItemId, onToggleIconPick
         <ChecklistIconPickerTrigger value={item.icon ?? null} label={item.label || `checklistepunkt ${index + 1}`}
           expanded={iconPickerItemId === item.id} disabled={disabled} testIDPrefix="routine" itemKey={item.id}
           onToggle={() => onToggleIconPicker(item.id)} />
-        <IconOnlyButton icon="remove-outline" accessibilityLabel={`Ta bort checklistepunkt ${index + 1}`}
+        <IconOnlyButton icon="trash-outline" accessibilityLabel={`Ta bort checklistepunkt ${index + 1}`}
           disabled={disabled || draft.checklist.length <= 1} onPress={() => onChange({ checklist: draft.checklist.filter((entry) => entry.id !== item.id) })} />
       </View>
       <ChecklistIconPickerChoices value={item.icon ?? null} label={item.label || `checklistepunkt ${index + 1}`}
@@ -494,7 +494,7 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, iconPicke
           <ChecklistIconPickerTrigger value={item.icon ?? null} label={item.label || `checklistepunkt ${index + 1}`}
             expanded={iconPickerItemId === item.id} disabled={fieldsDisabled} testIDPrefix="routine" itemKey={item.id}
             onToggle={() => onToggleIconPicker(item.id)} />
-          <IconOnlyButton icon="remove-outline" accessibilityLabel={`Ta bort checklistepunkt ${index + 1}: ${item.label || 'utan namn'}`}
+          <IconOnlyButton icon="trash-outline" accessibilityLabel={`Ta bort checklistepunkt ${index + 1}: ${item.label || 'utan namn'}`}
             disabled={fieldsDisabled || value.checklist.length <= 1} onPress={() => onChangeDraft({ checklist: value.checklist.filter((entry) => entry.id !== item.id) })} />
         </> : <View style={styles.itemRow}>
           <ThemedIcon name={dailyRoutineChecklistDisplayIcon(item)} tone={dailyRoutineChecklistIconTone(dailyRoutineChecklistDisplayIcon(item))}
@@ -523,11 +523,11 @@ function RoutineTemplateRow({ routine, selectedDay, skippedDay, draft, iconPicke
     {!hideDayActions ? <View style={styles.routineActions}>
       <IconOnlyButton icon={selected ? 'remove-outline' : 'add-outline'}
         accessibilityLabel={`${selected ? 'Ta bort' : skippedDay ? 'Lägg tillbaka' : 'Lägg till'} rutinen ${routine.label} ${selected ? 'från' : 'på'} Hemskärmen`}
-        disabled={disabled} tone="day" onPress={selected ? () => Alert.alert('Ta bort från Hemskärmen?', `”${routine.label}” tas bort från dagens lista. Rutinen finns kvar och kan läggas till igen.`, [
+        disabled={disabled} onPress={selected ? () => Alert.alert('Ta bort från Hemskärmen?', `”${routine.label}” tas bort från dagens lista. Rutinen finns kvar och kan läggas till igen.`, [
           { text: 'Avbryt', style: 'cancel' }, { text: 'Ta bort', onPress: onRemove },
         ]) : onAdd} />
       <IconOnlyButton icon="trash-outline" accessibilityLabel={`Ta bort rutin ${routine.label}`}
-        disabled={disabled} tone="danger" onPress={() => Alert.alert('Ta bort rutin?', `Rutinen ”${routine.label}” och alla dess dagskopior och sparade överhoppningar tas bort.`, [
+        disabled={disabled} onPress={() => Alert.alert('Ta bort rutin?', `Rutinen ”${routine.label}” och alla dess dagskopior och sparade överhoppningar tas bort.`, [
           { text: 'Avbryt', style: 'cancel' }, { text: 'Ta bort rutin', style: 'destructive', onPress: () => { void onDelete(); } },
         ])} />
     </View> : null}
@@ -548,19 +548,13 @@ function ActionButton({ icon, label, accessibilityLabel, disabled = false, onPre
   </MotionPressable>;
 }
 
-function IconOnlyButton({ icon, accessibilityLabel, disabled = false, tone = 'default', onPress }: {
+function IconOnlyButton({ icon, accessibilityLabel, disabled = false, onPress }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   accessibilityLabel: string;
   disabled?: boolean;
-  tone?: 'default' | 'day' | 'danger';
   onPress: () => void;
 }) {
-  return <MotionPressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} accessibilityState={{ disabled }}
-    disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.iconOnlyButton,
-      tone !== 'default' && styles.routineIconAction, tone === 'day' && styles.routineIconActionDay,
-      tone === 'danger' && styles.routineIconActionDanger, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
-    <Ionicons name={icon} size={tokens.size.iconMd} color={tone === 'danger' ? tokens.colors.danger : tokens.colors.primary} accessibilityElementsHidden />
-  </MotionPressable>;
+  return <Button variant="icon" iconName={icon} label={accessibilityLabel} accessibilityLabel={accessibilityLabel} disabled={disabled} onPress={onPress} />;
 }
 
 const styles = StyleSheet.create({

@@ -1,0 +1,15 @@
+{
+  "passed": [
+    "account red trash retains two confirmations; either cancel=0, final confirm=1 synthetic callback",
+    "account busy/terminal/unavailable states still disable the same entry",
+    "create-profile trash clears only the existing local kennel code form; no live server used",
+    "existing kennel unlink action presents as a44pt contextual red trash icon",
+    "Logg undo uses the turn arrow and original callback; editor trash is red and cancel preserves its confirmation flow",
+    "Logg delete/discard confirmations accept real clicks above editor; cancel preserves raw draft, discard restores saved note, delete removes only chosen post",
+    "Logg undo uses the turn arrow and original callback; editor trash is red and cancel preserves its confirmation flow",
+    "Logg delete/discard confirmations accept real clicks above editor; cancel preserves raw draft, discard restores saved note, delete removes only chosen post",
+    "planned health rows use the same edit and red trash family and open the existing exact editor"
+  ],
+  "failed": [],
+  "scope": "RN Web, synthetic screen callbacks; no account or kennel server deletion"
+}

@@ -7,16 +7,14 @@ const workspace = await readFile(new URL('../src/data/workspace-data.ts', import
 const model = await readFile(new URL('../src/features/training/training-overview.ts', import.meta.url), 'utf8');
 
 test('Training tabs expose selected state and have their own rendered destinations', () => {
-  for (const [id, title] of [['recommended', 'Rekommenderat'], ['all', 'Alla övningar'], ['mine', 'Mina']]) {
-    assert.match(screen, new RegExp(`\\['${id}', '${title}'\\]`));
-  }
-  assert.match(screen, /testID=\{`training-tab-\$\{key\}`\}/);
+  assert.match(screen, /<Tabs items=\{\['Rekommenderat', 'Alla övningar', 'Mina'\]\}/);
+  assert.match(screen, /accessibilityLabel="Träningsvyer"/);
+  assert.match(screen, /if \(label === 'Rekommenderat'\) setSelectedView\('recommended'\)/);
+  assert.match(screen, /else if \(label === 'Alla övningar'\) setSelectedView\('all'\)/);
+  assert.match(screen, /else if \(label === 'Mina'\) setSelectedView\('mine'\)/);
   assert.match(screen, /testID="training-recommended-view"/);
   assert.match(screen, /testID="training-all-view"/);
   assert.match(screen, /testID="training-mine-view"/);
-  assert.match(screen, /accessibilityRole="tablist"/);
-  assert.match(screen, /accessibilityRole="tab"/);
-  assert.match(screen, /aria-selected=\{selectedView === key\}/);
 });
 
 test('a recommendation is tied to the exact published age-and-breed-selected version', () => {

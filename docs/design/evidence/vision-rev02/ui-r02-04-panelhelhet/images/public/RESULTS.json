@@ -1,0 +1,16 @@
+{
+  "mode": "public",
+  "panel": "image-diversity",
+  "evidence_dir": "docs/design/evidence/vision-rev02/ui-r02-04-panelhelhet/images/public",
+  "results": [
+    {
+      "check": "Public Knowledge and Training use honest empty content at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Public Knowledge and Training use honest empty content at 430px",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}

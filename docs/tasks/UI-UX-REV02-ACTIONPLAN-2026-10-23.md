@@ -2,7 +2,9 @@
 
 Datum: 2026-10-23. Beställare: Erik. Genomförande: Luna/implementer, med koordinator och riskbaserad granskning enligt projektets arbetsflöde.
 
-**Senast uppdaterad 2026-10-23: 01 stängt på ägarens respektive checkpointbesked; 02 lokal implementation-checkpoint stängd efter oberoende QA/Reviewer, med separat live-migration och full panelgrind öppen; 03 implementation och lokal public/review-verifiering klar, oberoende QA/Reviewer väntar; 04 är nästa paket.** UI-R02-01A är stängd som lokal UI-/valideringscheckpoint efter Architect APPROVE, Critic PASS, QA PASS (13/13 public och review) och Reviewer PASS. Commit `786dd11e0b9955959caaeb0fa161291bc558ef96` finns på `2026-10-23-ui-01-profil`. UI-R02-01B är stängd på Eriks uttryckliga besked att punkten redan är godkänd och granskad; separata protokoll bifogades inte här.
+**Senast uppdaterad 2026-10-24:** 01 är stängt enligt respektive granskning/ägarbesked; 02 är lokalt QA/Reviewer/Security-stängt på `4f91364`; 03 är lokalt QA/Reviewer/Security-stängt och pushat på `13f48bf`; 04 v7 är implementerat och lokalt QA/Reviewer/Security-godkänt. **Huvudmålet är G01–G19 nedan.** Meny-/ikonbeställningen och bildåterkopplingen är tillägg inom 04. D1/D2/D3/D5 och signerad build/ny riktad telefonrunda redovisas separat. 01B, A03 och panel 3 återöppnas inte över ägarens senare godkännanden.
+
+UI-R02-01A har Architect APPROVE, Critic PASS, QA PASS och Reviewer PASS. Paketbrancherna är staplade; den samlade byggbranchen är `2026-10-23-ui-04-panelhelhet`. Senast hämtade GitHub main är fortsatt `eea0984`; branchkod betyder inte att ändringarna automatiskt finns i main eller TestFlight.
 
 Detta är **den aktuella paketordningen** för fynden i [GAP-analysen 2026-10-23](../GAP-UI-UX-rev02-2026-10-23.md). Den ersätter paketordningen i GAP-analysens tidigare avsnitt 8 och [planen från 18 oktober](../plans/UI-UX-NEXT-PACKAGES-2026-10-18.md). GAP-analysen behåller belägg, skärmbilder, kodankare och G01–G19; de kopieras inte till en ny konkurrerande fellista.
 
@@ -112,7 +114,7 @@ Architect, Critic, Security och Reviewer har godkänt sina respektive statiska/U
 
 ## 5. UI-R02-03 — Samma formulär i Logg och Hälsa
 
-**Status 2026-10-23:** Plan v1 fick CHANGES från Architect/Security och PROCEED WITH CHANGES från UX Critic. Architect/Security godkände v2; v3 lägger till minimera/återöppna efter unknown/conflict och Architectens vikt-delete-faktakorrigering. Architect v3 **APPROVE**, UX Critic **PASS**, Security **APPROVE**. Implementation följer plan v3; riktade public/review RN Web-prov passerar. Queue är `qa` i väntan på oberoende QA/Reviewer. Se [task v3](../tasks/dev/UI-R02-03-LOGG-HALSA.md) för exakt UI-, route-, delete-, recovery- och keyboard-kontrakt och [implementationsevidens](../design/evidence/vision-rev02/ui-r02-03-logg-halsa/).
+**Status uppdaterad 2026-10-24:** 03 är stängd som lokal checkpoint efter oberoende QA PASS, Reviewer PASS och Security APPROVE. Korrigering `13f48bf` är pushad på `2026-10-23-ui-03-logg-halsa`: exakt plan/retur och matchande vikt-readback låser upp Add utan att rensa andra drafts. 04:s integrerade slutrunda rättar dessutom Loggens modalägande med samma handlers. Full panel-/live-/ny telefonacceptans är separata. Se [task v3](../tasks/dev/UI-R02-03-LOGG-HALSA.md).
 
 **Användarresultat:** öppna en post, ändra fälten och spara; vid borttagning används en tydlig soptunna/bekräftelse. En namngiven hälsoplan öppnar samma plan oavsett ingång.
 
@@ -135,6 +137,8 @@ Architect, Critic, Security och Reviewer har godkänt sina respektive statiska/U
 **Spårning:** G04/G09/G10/G19; alla berörda konsumenter av G03/G06/G07/G11/G12/G13/G16. Hälsodatans riktade granskning kvarstår även när ändringen främst syns i UI.
 
 ## 6. UI-R02-04 — Kunskap, Träning och Insikter i en sammanhängande app
+
+**Status uppdaterad 2026-10-24:** v7 lokalt implementerad och oberoende granskad: QA PASS, Reviewer PASS, Security APPROVE. UI04 public/review 18/18 respektive 19/19, actions 9/9 vardera, full check 76/76 och offentlig iOS-export PASS. [Samlad verifiering och telefonlista](../design/evidence/vision-rev02/ui-r02-04-panelhelhet/VERIFICATION.md). Detta stänger det avgränsade UI-paketet, inte D1/D2/D3/D5 eller hela åttapanelsleveransen.
 
 **Användarresultat:** tydlig bildhierarki och begripliga symboler, enhetliga flikar och stödvyer samt fungerande Insikter från Hundprofil och Logg. Inga ingångar leder till en annan sorts vy än användaren valt.
 
@@ -244,3 +248,32 @@ Huvudpaket ansvarar för att fyndet stängs; konsumentpaket behöver visa att de
 Gör den korta basavstämningen och börja med **UI-R02-01, checkpoint 1: välj och spara ras**. Läs G01/G08, denna källgräns och aktuell kod; skriv den exakta delplanen med verkliga API:er och skrivfiler. Leverera samma sökbara väljare i skapa/ändra och kontrollera hela resan. Fortsätt inom paketet med profilens täthet och avslutning. Äldre profilplaner är historik, inte kompletterande UI-krav. Spara checkpoint innan nästa resa.
 
 Därefter följer 02 → 03 → 04 enligt denna plan. Prioritera de största synliga avvikelserna och fungerande resor. Återanvänd bekräftad kod och aktuella gemensamma komponenter. Gamla planer ger historik och bevarade dataskydd; rev01, föråldrade knappregler och gamla köstatusar är inte aktuell bygginstruktion. Favoriter, offlinekö, widgets, generiska nya filter och en helt ny navigator ingår inte i dessa paket.
+
+
+## 12. Slutavstämning G01–G19 — 2026-10-24
+
+Detta uppdaterar status för den befintliga GAP-listan. Ursprungliga fynd, före-bilder och kodbelägg i GAP-analysen är historik; de är inte en beställning att återställa äldre kod. Ingen ny konkurrerande lista eller omnumrering införs.
+
+| GAP | Senaste lokala resultat | Återstående relevant del |
+|---|---|---|
+| G01 Rasväljare | Löst i 01A: samma sökbara rullbara väljare i skapa/ändra, verkliga ras-ID:n, ingen lång inline-lista. | Kontrollera i buildbranchen; full raskatalog/Mix är inte beställt. |
+| G02 Egen punkts ikon | Implementerat i 02: gemensamma 20 ikoner direkt vid skapa/ändra, transport och readback bevarar ikon. | D1 live-migration/readback krävs för miljöacceptans. |
+| G03 Knappväggar | Lokalt löst i berörda 01–04-editorer: en Spara-footer, kompakta kontextikoner. | Ny telefonrunda med tangentbord/stor text för ändrade vyer. |
+| G04 Edit/delete/reset | Lokalt löst i 02–04. Gemensam röd trash, editruta, Ångra-pil; textad bekräftelse. Två verkliga modal/stale-fel rättade i v7. | Native omprov av nya modalresor i build. |
+| G05 Fokuserad rutin | Löst i 02: vald rutin visas; separat Hantera/skapa och inga träningsval i fokuserad edit. | Bevara A03:s senare ägargodkännande. |
+| G06 Avslutning/utkast | Implementerat och lokalt provat i 01–03; v7 Logg Avbryt behåller exakt rå multiline-draft. | Riktad native X/back/swipe med tangentbord, inget nytt allmänt accessibility-stopp. |
+| G07 Återhämtning | Kompakt ikon-/förklaringsmönster i berörda editorer, failed/unknown/conflict och exakt intent består. | Livefel/readback skiljs från syntetiska tester; inga nya backendhandlers. |
+| G08 Profilens täthet | Klar i 01B enligt ägarens godkännande; aktiv hund/fält tidigt, valfri kennel hopfälld. | Ingen gammal profilspec återinförs. |
+| G09 Hälsans modalram | Löst i 03: en sheet, sammanhållna fält, nåbar Spara för vikt/utfört/planerat. | Ny build/telefonkontroll av berörda editorer. |
+| G10 Datum-/tidsfamilj | Samma befintliga DatePickerField/TimePickerField där syftet är lika; skapa-/ändra-profil samordnad. | Syftets datumgränser och Loggs prickkalender kvar; ingen ny tidszonsmodell. |
+| G11 Val/flikar/checkbox | 04 samordnar Träning/FAQ/Insikter via Tabs, Påminnelser kompakta val; checklistans 2×2-filter bevaras. | Native kontroll av nya kontroller; inga dekorativa filter. |
+| G12 Detaljheader/info | Kompakt guide/FAQ/checklistheader och en informationsingång i berörda stödvyer. | Inga nya fullpanelanspråk från enbart headerfix. |
+| G13 Upprepad copy | Profil/hälsa komprimerade; Påminnelser förklaring bakom(i); placeholder-/layoutfyllnad borttagen ur aktuella vyer. | Kort ärlig review-/standardbildmärkning och nödvändiga fel/källor behålls. |
+| G14 Checklistans grammatik | 02 ger samma ikon-/titel-/Spara-mönster från båda ingångarna; dags- och fasprogress förblir separata. | D1 samt D3 för publikt Kunskapsinnehåll. |
+| G15 Kunskaps bilder/symboler | Lokalt löst i 04: stor bild + mindre bildkort, skilda bilder, versionsidentitet, FAQ/lista. | D3. Okänd guideversion har ärlig textfallback. |
+| G16 Språk/namn | Berörda handlingar har korta visuella symboler och fulla svenska kontextnamn; navnamn enradiga. | Telefonkontroll av ändrade knappar. |
+| **G17 Publik FAQ/faslista** | **ÖPPEN innehållsleverans.** Sökning/läsning/retur och tom-/reviewgränser fungerar; inget osakgranskat innehåll exponeras. | D3: granska/publicera versionsmärkt katalog med bevarad progress/egna punkter. |
+| G18 Status/källor | Uppdaterat mot faktiska brancher, commits och granskningar; denna tabell och paketets verifiering är aktuell status. | Main/TestFlight är inte automatiskt uppdaterade av branchpush. D1/D2/D3/D5 hålls synliga. |
+| G19 Exakt hälsoplan | Löst i 03: två olika exakta planer, rätt källflik/retur och icke-noll-scroll; riktade tester. | Ny telefonrunda på samlad build; plan blir aldrig utförd händelse via layout. |
+
+**Kvar efter UI-paketen:** D1 (nya egna punkt-ikoner), D2 (specifik Insikter-RPC), D3/G17 (publicerat granskat FAQ-/fasinnehåll), D5 (milstolpskällor/sömnintervall), signerad build och riktade telefonprov. Den tidigare separat accepterade Home-fixturmarginalen har inte återbeställts som blockerare. Äldre full raskatalog/Mix, veckomål, widgets/offline/favoriter är fortsatt inte order i denna plan.

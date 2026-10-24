@@ -1,0 +1,86 @@
+{
+  "mode": "review",
+  "panel": "breed-picker",
+  "evidence_dir": "docs/design/evidence/vision-rev02/ui-r02-04-panelhelhet/breed/review",
+  "results": [
+    {
+      "check": "The open edit picker exposes selected and unselected radio states",
+      "result": "PASS"
+    },
+    {
+      "check": "Closing the picker without choosing keeps the previous breed",
+      "result": "PASS"
+    },
+    {
+      "check": "Breed search filters the fetched options case-insensitively with no request per keystroke",
+      "result": "PASS",
+      "rendered_options": 1,
+      "fetch_calls": 1
+    },
+    {
+      "check": "Breed picker owns one scrollable list for the 24-option fixture",
+      "result": "PASS",
+      "clientHeight": 630,
+      "scrollHeight": 1091,
+      "overflowY": "auto"
+    },
+    {
+      "check": "No-match state offers the real Okänd ras action with a 44pt target",
+      "result": "PASS",
+      "box": {
+        "x": 28,
+        "y": 544.796875,
+        "width": 319,
+        "height": 56
+      }
+    },
+    {
+      "check": "Selecting Okänd ras closes the sheet and preserves other profile fields",
+      "result": "PASS",
+      "fetch_calls": 1,
+      "page_errors": []
+    },
+    {
+      "check": "Long breed names stay fully selectable on a short screen",
+      "result": "PASS",
+      "row": {
+        "x": 16,
+        "y": 471.97076416015625,
+        "width": 343,
+        "height": 44
+      }
+    },
+    {
+      "check": "Search and long breed row have no horizontal overflow with the 140% text proxy",
+      "result": "PASS"
+    },
+    {
+      "check": "Search control remains a full-size target with 40 options at 430pt",
+      "result": "PASS",
+      "box": {
+        "x": 57,
+        "y": 721.508544921875,
+        "width": 356,
+        "height": 56
+      }
+    },
+    {
+      "check": "Saving other profile fields keeps an unchanged missing legacy breed ID",
+      "result": "PASS",
+      "saved_breed_id": "retired-test-breed"
+    },
+    {
+      "check": "Missing catalog row does not synthesize an Okänd ras option",
+      "result": "PASS"
+    },
+    {
+      "check": "Create flow starts with no preselected breed, keeps empty state on cancel and stores the chosen option",
+      "result": "PASS"
+    },
+    {
+      "check": "Create flow recovers from a breed-fetch error using one explicit retry",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BackHandler, Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AppScreen, DatePickerField, FormField, InfoModal, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
-import { Dialog } from '../../components/ui';
+import { Button, Dialog } from '../../components/ui';
 import { createDog, fetchBreeds, fetchOwnedDogById, ownedDogAttributionMatches, type BreedOption, type OwnedDog } from '../../data/app-data';
 import { clearSecurePendingReferral, normalizeKennelCode, readSecurePendingReferral } from '../../onboarding-referral/referral-secure-storage';
 import { clearDogCreationRequest, getOrCreateDogCreationRequestId, readDogCreationRequestId } from './dog-creation-storage';
@@ -386,9 +386,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
             <View style={[styles.checkbox, sourceSelected && styles.checkboxSelected]}>{sourceSelected && <Text style={styles.checkboxMark}>✓</Text>}</View>
             <Text style={styles.sourceChoiceText}>Koppla koden till min profil</Text>
           </Pressable>
-          {kennelCode ? <Pressable accessibilityRole="button" accessibilityLabel="Ta bort kennelkälla" disabled={busy} onPress={() => { setKennelCode(''); setSourceSelected(false); markEdited(); void clearSecurePendingReferral().catch(() => undefined); }} style={styles.removeCode}>
-            <Ionicons name="trash-outline" size={tokens.size.iconSm} color={tokens.colors.danger} /><Text style={styles.removeCodeText}>Ta bort kod</Text>
-          </Pressable> : null}
+          {kennelCode ? <Button variant="icon" iconName="trash-outline" label="Ta bort kod" accessibilityLabel="Ta bort kennelkod" disabled={busy} onPress={() => { setKennelCode(''); setSourceSelected(false); markEdited(); void clearSecurePendingReferral().catch(() => undefined); }} /> : null}
         </View> : null}
       </View>
       {sourceSelected && !normalizeKennelCode(kennelCode) && <MessageCard tone="error">Skriv en giltig kennelkod eller ta bort kennelkälla.</MessageCard>}
@@ -472,8 +470,6 @@ const styles = StyleSheet.create({
   checkboxSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.primary },
   checkboxMark: { ...tokens.typography.label, color: tokens.colors.onPrimary },
   sourceChoiceText: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1, minWidth: 0, flexShrink: 1 },
-  removeCode: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, alignSelf: 'flex-start' },
-  removeCodeText: { ...tokens.typography.label, color: tokens.colors.danger },
   infoEntry: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, marginBottom: tokens.spacing.xs },
   infoEntryText: { ...tokens.typography.caption, color: tokens.colors.primary },
   infoBody: { ...tokens.typography.body, color: tokens.colors.textPrimary },

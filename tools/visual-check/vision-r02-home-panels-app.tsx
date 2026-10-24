@@ -59,10 +59,10 @@ const syntheticBreedOptions = [
   { id: 'golden', name: 'Golden retriever' },
   { id: 'unknown', name: 'Okänd ras' },
   { id: 'beagle', name: 'Beagle' },
-  { id: 'long-label', name: 'Svensk långhårig sällskapshundsras med extra långt namn' },
+  { id: 'long-label', name: 'Nova Scotia duck tolling retriever' },
   ...Array.from({ length: 36 }, (_, index) => ({
     id: `synthetic-${String(index + 1).padStart(2, '0')}`,
-    name: `Syntetisk ras ${String(index + 1).padStart(2, '0')}`,
+    name: ['Afghanhund', 'Akita', 'Alaskan malamute', 'Australian shepherd', 'Basenji', 'Basset hound', 'Bearded collie', 'Berner sennenhund', 'Bichon frisé', 'Border collie', 'Bostonterrier', 'Boxer', 'Bullterrier', 'Cavalier king charles spaniel', 'Chihuahua', 'Chinese crested dog', 'Cocker spaniel', 'Dalmatiner', 'Dobermann', 'Engelsk bulldogg', 'Finsk lapphund', 'Fransk bulldogg', 'Grand danois', 'Havanese', 'Irish softcoated wheaten terrier', 'Jack russell terrier', 'Labrador retriever', 'Malteser', 'Newfoundlandshund', 'Papillon', 'Pudel', 'Rhodesian ridgeback', 'Samojedhund', 'Schäfer', 'Shetland sheepdog', 'Whippet'][index],
   })),
 ].slice(0, profileBreedCount);
 const content: HomeContent[] = [{
@@ -86,14 +86,14 @@ const developmentGuides: HomeContent[] = [{
   isAiGenerated: false,
 }];
 const knowledgeReviewGuides: HomeContent[] = [
-  { id: 'review-v1:training:trygg-start', contentId: 'review-v1:training:trygg-start', version: 1, title: 'Trygg start hemma', body: 'Korta övningar för en lugn start. Anpassa tempot efter valpen.', contentType: 'guide', sources: ['Syntetisk visningsfixture.'], isAiGenerated: false },
-  { id: 'review-v1:training:kontakt', contentId: 'review-v1:training:kontakt', version: 1, title: 'Kontakt och namn', body: 'Lekfulla kontaktövningar i en miljö där valpen kan lyckas.', contentType: 'guide', sources: ['Syntetisk visningsfixture.'], isAiGenerated: false },
-  { id: 'review-v1:training:vardagsro', contentId: 'review-v1:training:vardagsro', version: 1, title: 'Vardagsro och hantering', body: 'Frivilliga, korta steg med pauser. Avsluta medan valpen fortfarande är trygg.', contentType: 'guide', sources: ['Syntetisk visningsfixture.'], isAiGenerated: false },
+  { id: 'review-v1:training:trygg-start', contentId: 'review-v1:training:trygg-start', version: 1, title: 'Trygg start hemma', body: 'Korta övningar för en lugn start. Anpassa tempot efter valpen.', contentType: 'guide', sources: [], isAiGenerated: false },
+  { id: 'review-v1:training:kontakt', contentId: 'review-v1:training:kontakt', version: 1, title: 'Kontakt och namn', body: 'Lekfulla kontaktövningar i en miljö där valpen kan lyckas.', contentType: 'guide', sources: [], isAiGenerated: false },
+  { id: 'review-v1:training:vardagsro', contentId: 'review-v1:training:vardagsro', version: 1, title: 'Vardagsro och hantering', body: 'Frivilliga, korta steg med pauser. Avsluta medan valpen fortfarande är trygg.', contentType: 'guide', sources: [], isAiGenerated: false },
 ];
 const imageTrainingFixture: PublishedTrainingProgram = {
   id: 'review-v1:training:trygg-start', content_id: 'review-v1:training:trygg-start', version: 1,
   title: 'Trygg start hemma', body: 'Korta övningar för en lugn start. Anpassa tempot efter valpen.',
-  sources: ['Syntetisk visningsfixture.'], is_ai_generated: false,
+  sources: [], is_ai_generated: false,
   steps: [
     { id: 'review-v1:training:trygg-start:one', position: 1, title: 'Utforska i egen takt', instruction: 'Låt valpen nosa på en lugn plats och belöna frivilligt lugn.' },
     { id: 'review-v1:training:trygg-start:two', position: 2, title: 'Vila nära', instruction: 'Öva en kort stund på att slå sig till ro med familjen i närheten.' },
@@ -104,7 +104,7 @@ const imageTrainingFixture: PublishedTrainingProgram = {
 const imageTrainingNewProgram: PublishedTrainingProgram = {
   id: 'review-v1:training:kontakt', content_id: 'review-v1:training:kontakt', version: 1,
   title: 'Kontakt och namn', body: 'Lekfulla kontaktövningar i en miljö där valpen kan lyckas.',
-  sources: ['Syntetisk visningsfixture.'], is_ai_generated: false,
+  sources: [], is_ai_generated: false,
   steps: [{ id: 'review-v1:training:kontakt:one', position: 1, title: 'Säg namnet en gång', instruction: 'När valpen vänder sig mot dig, markera och belöna lugnt.' }],
   completedStepIds: [], completedAtByStepId: {},
 };
@@ -128,7 +128,7 @@ const routineTemplates: DailyRoutine[] = [...new Map(rows.flatMap((activity) => 
 }))].map(([, routine]) => routine);
 const plannedHealthFixture: PlannedHealthRecord = {
   id: 'review-health-plan', dog_id: dog.id, event_type: 'vaccination', due_on: dateOffset(today, 2), due_time: null,
-  description: 'Syntetisk framtida plan för visuell granskning.', created_at: today, reminder_enabled: false, reminder_minutes: null,
+  description: 'Vaccination', created_at: today, reminder_enabled: false, reminder_minutes: null,
 };
 const upcomingActivities = deriveUpcomingActivities(
   routineTemplates, [plannedHealthFixture], dog.id, dateOffset(today, 1), dateOffset(today, 7),
@@ -139,14 +139,14 @@ const historicalActivities: HomeDailyActivity[] = [
 ];
 const historicalTrainingProgram: PublishedTrainingProgram = {
   id: 'review-program', content_id: 'review-training', version: 1, title: 'Trygg vardagsstart',
-  body: 'Syntetiskt träningsinnehåll för visuell granskning.', sources: ['Syntetisk UI-fixture.'], is_ai_generated: false,
-  steps: [{ id: 'review-step', position: 0, title: 'Miljöträning – nya ljud', instruction: 'Syntetisk historisk instruktion för att kontrollera läsbarhet.' }],
+  body: '', sources: [], is_ai_generated: false,
+  steps: [{ id: 'review-step', position: 0, title: 'Miljöträning – nya ljud', instruction: '' }],
   completedStepIds: ['review-step'], completedAtByStepId: { 'review-step': `${dateOffset(today, -3)}T10:00:00.000Z` },
 };
 const historicalTrainingDetail: HistoricalTrainingStepDetail = {
   programVersionId: 'review-program', programTitle: 'Trygg vardagsstart', stepId: 'review-step',
-  stepTitle: 'Miljöträning – nya ljud', instruction: 'Syntetisk historisk instruktion för att kontrollera läsbarhet.',
-  sources: ['Syntetisk UI-fixture.'], isAiGenerated: false,
+  stepTitle: 'Miljöträning – nya ljud', instruction: '',
+  sources: [], isAiGenerated: false,
 };
 const firstRoutine = rows[0]?.routineDay;
 const firstRoutineItemId = rows[0]?.routineItemId;
@@ -343,8 +343,8 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
 
   if (profileCreateFixture) {
     return <View style={{ flex: 1, minHeight: 0 }}>
-      {reviewMode ? <View testID="review-banner" style={{ height: 32, minHeight: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card }}>
-        <Text style={{ ...tokens.typography.caption, color: tokens.colors.home.text }}>Syntetiskt granskningsläge · profilskapande</Text>
+      {true ? <View testID="review-banner" style={{ height: tokens.spacing.xl, minHeight: tokens.spacing.xl, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card }}>
+        <Text style={{ ...tokens.typography.caption, color: tokens.colors.home.text }}>Granskningsdata</Text>
       </View> : null}
       <View style={{ flex: 1, minHeight: 0 }}>
         <ProfileScreen
@@ -359,16 +359,16 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
   }
 
   return <View style={{ flex: 1, minHeight: 0 }}>
-    {reviewMode ? <View testID="review-banner" style={{ height: 32, minHeight: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card }}>
+    {!reviewMode || !['knowledge', 'training'].includes(navigation) ? <View testID="review-banner" style={{ height: tokens.spacing.xl, minHeight: tokens.spacing.xl, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card }}>
       <Text style={{ ...tokens.typography.caption, color: tokens.colors.home.text }}>{navigation === 'home'
-        ? 'Syntetiskt granskningsläge · AI-genererad standardbild'
-        : navigation === 'development' || navigation === 'knowledge' ? 'Syntetiskt granskningsläge · ålder och guide'
-          : navigation === 'progress' ? 'Syntetiskt granskningsläge · dagsprogress'
-            : navigation === 'profile' ? 'Syntetiskt granskningsläge · hundprofil'
-              : navigation === 'insights' || navigation === 'log' ? 'Syntetiskt granskningsläge · insikter'
-                : navigation === 'training' ? 'Syntetiskt granskningsläge · träning'
-                  : navigation === 'knowledge' ? 'Syntetiskt granskningsläge · kunskap'
-          : 'Syntetiskt granskningsläge · checklistdata'}</Text>
+        ? 'Granskningsdata'
+        : navigation === 'development' || navigation === 'knowledge' ? 'Granskningsdata'
+          : navigation === 'progress' ? 'Granskningsdata'
+            : navigation === 'profile' ? 'Granskningsdata'
+              : navigation === 'insights' || navigation === 'log' ? 'Granskningsdata'
+                : navigation === 'training' ? 'Granskningsdata'
+                  : navigation === 'knowledge' ? 'Granskningsdata'
+          : 'Granskningsdata'}</Text>
     </View> : null}
     <View testID="review-app-viewport" style={{ flex: 1, minHeight: 0 }}>
       <View style={{ flex: 1, minHeight: 0, paddingTop: 44 }}>

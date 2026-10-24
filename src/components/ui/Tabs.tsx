@@ -4,13 +4,13 @@ import { HorizontalGestureRegion } from './MainSwipeNavigation';
 import { tokens } from '../../theme/tokens';
 export type TabsVariant = 'underline' | 'rev02-segmented';
 export type TabsActiveTone = 'default' | 'home';
-export function Tabs({ items, active, onChange, variant = 'underline', activeTone = 'default' }: { items: readonly string[]; active: string; onChange: (item: string) => void; variant?: TabsVariant; activeTone?: TabsActiveTone }) {
+export function Tabs({ items, active, onChange, variant = 'underline', activeTone = 'default', accessibilityLabel = 'Avsnitt' }: { items: readonly string[]; active: string; onChange: (item: string) => void; variant?: TabsVariant; activeTone?: TabsActiveTone; accessibilityLabel?: string }) {
   const segmented = variant === 'rev02-segmented';
   const homeSegmented = segmented && activeTone === 'home';
   const { width, fontScale } = useWindowDimensions();
   const homeGrid = homeSegmented && items.length >= 4 && (width < 480 || fontScale >= 1.25);
   return <HorizontalGestureRegion><ScrollView style={[styles.scroll, segmented && styles.segmentedScroll, homeSegmented && styles.homeSegmentedScroll, homeGrid && styles.homeGridScroll]}
-    horizontal={!homeGrid} showsHorizontalScrollIndicator={false} accessibilityRole="tablist" accessibilityLabel="Avsnitt"
+    horizontal={!homeGrid} showsHorizontalScrollIndicator={false} accessibilityRole="tablist" accessibilityLabel={accessibilityLabel}
     contentContainerStyle={[styles.tabs, segmented && styles.segmentedTabs, homeSegmented && styles.homeSegmentedTabs, homeGrid && styles.homeGridTabs]}>
     {items.map((item) => {
       const selected = item === active;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { InfoModal, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { SupportScreenHeader } from '../../components/ui';
@@ -21,8 +21,6 @@ export function NotificationSettingsScreen({
   onSave: (preferences: NotificationPreferences) => Promise<boolean>;
   onRequestPermission: () => Promise<'granted' | 'denied' | 'unknown'>;
 }) {
-  const { width, fontScale } = useWindowDimensions();
-  const stackInfoRow = width < 360 || fontScale >= 1.25;
   const [enabled, setEnabled] = useState(preferences.enabled);
   const [trainingEnabled, setTrainingEnabled] = useState(preferences.trainingEnabled);
   const [trainingTime, setTrainingTime] = useState(formatTime(preferences.trainingMinutes));
@@ -83,33 +81,26 @@ export function NotificationSettingsScreen({
         <Ionicons name="notifications-outline" size={tokens.size.iconMd} color={tokens.colors.support.reminders.fg} />
       </View>
       <View style={styles.heroCopy}>
-        <Text style={styles.intro}>Välj om Tassla ska schemalägga lokala påminnelser på den här enheten.</Text>
+        <Text style={styles.intro}>Lokala påminnelser</Text>
       </View>
-    </View>
-    <View style={[styles.infoRow, stackInfoRow && styles.infoRowStacked]}>
-      <Text style={styles.infoHint}>Om lokala påminnelser</Text>
-      <Pressable accessibilityRole="button" accessibilityLabel="Visa information om lokala påminnelser" onPress={() => setInfoVisible(true)} style={styles.infoButton}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Visa information om lokala påminnelser" onPress={() => setInfoVisible(true)} style={({ pressed }) => [styles.infoButton, pressed && styles.pressed]}>
         <Ionicons name="information-circle-outline" size={tokens.size.iconMd} color={tokens.colors.support.reminders.fg} />
-        <Text style={styles.infoButtonText}>Läs information</Text>
       </Pressable>
     </View>
     <InfoModal visible={infoVisible} title="Om lokala påminnelser" onClose={() => setInfoVisible(false)}>
-      <Text style={styles.infoBody}>Påminnelser är av från början. Enhetens tillstånd och ditt val här är separata.</Text>
-      <Text style={styles.infoBody}>Låsskärmen visar bara en generell text. Påminnelser är inte en bekräftelse på leverans.</Text>
+      <Text style={styles.infoBody}>Tasslas påminnelser är av från början. Dina val här styr vilka lokala påminnelser appen schemalägger.</Text>
+      <Text style={styles.infoBody}>Träningspåminnelsen använder tiden du väljer och uppdateras när Tassla öppnas.</Text>
+      <Text style={styles.infoBody}>Telefonens tillåtelse styr separat om notiser får visas. Låsskärmen visar bara en generell text.</Text>
     </InfoModal>
 
     <View style={styles.settingsCard}>
     <Text style={styles.sectionTitle} accessibilityRole="header">Dina val</Text>
     <Choice selected={enabled} disabled={busy} label="Tillåt Tasslas påminnelser på den här enheten"
-      detail="Avbokar Tasslas egna påminnelser när du stänger av. Dina planval sparas."
+      accessibilityHint={enabled ? 'Stänger av Tasslas lokala påminnelser på den här enheten. Dina planval sparas.' : 'Slår på Tasslas lokala påminnelser på den här enheten.'}
       onPress={() => setEnabled((value) => !value)} />
+    <View style={styles.choiceDivider} />
     <Choice selected={trainingEnabled} disabled={busy} label="Lägg till en frivillig träningspåminnelse"
-      detail={enabled
-        ? 'En lokal träningspåminnelse i taget. Nästa tid uppdateras när Tassla öppnas.'
-        : trainingEnabled
-          ? 'Tasslas påminnelser är av. Tryck för att ta bort träningsvalet.'
-          : 'Tryck för att slå på Tasslas påminnelser och lägga till träningspåminnelsen.'}
-      accessibilityHint={!enabled && !trainingEnabled ? 'Slår på Tasslas påminnelser på den här enheten och väljer träningspåminnelse.' : undefined}
+      accessibilityHint={!enabled && !trainingEnabled ? 'Slår på Tasslas påminnelser på den här enheten och väljer träningspåminnelse.' : trainingEnabled ? 'Tar bort träningspåminnelsen från dina val.' : 'Väljer en lokal träningspåminnelse.'}
       onPress={() => {
         if (!enabled && !trainingEnabled) setEnabled(true);
         setTrainingEnabled((value) => !value);
@@ -138,8 +129,8 @@ export function NotificationSettingsScreen({
   </View>;
 }
 
-function Choice({ selected, disabled, label, detail, accessibilityHint, onPress }: {
-  selected: boolean; disabled: boolean; label: string; detail: string; accessibilityHint?: string; onPress: () => void;
+function Choice({ selected, disabled, label, accessibilityHint, onPress }: {
+  selected: boolean; disabled: boolean; label: string; accessibilityHint?: string; onPress: () => void;
 }) {
   return <Pressable accessibilityRole="checkbox" accessibilityLabel={label} accessibilityHint={accessibilityHint}
     accessibilityState={{ checked: selected, disabled }} disabled={disabled}
@@ -147,7 +138,7 @@ function Choice({ selected, disabled, label, detail, accessibilityHint, onPress 
     <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
       {selected && <Ionicons name="checkmark" size={tokens.size.iconSm} color={tokens.colors.onPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />}
     </View>
-    <View style={styles.choiceCopy}><Text style={styles.choiceTitle}>{label}</Text><Text style={styles.choiceDetail}>{detail}</Text></View>
+    <View style={styles.choiceCopy}><Text style={styles.choiceTitle}>{label}</Text></View>
   </Pressable>;
 }
 function formatTime(minutes: number): string {
@@ -161,24 +152,20 @@ function parseTime(value: string): number | null {
 }
 const styles = StyleSheet.create({
   intro: { ...tokens.typography.body, color: tokens.colors.textSecondary },
-  infoRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginTop: tokens.spacing.md, marginBottom: tokens.spacing.xs },
-  infoRowStacked: { flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start' },
-  infoHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary, flexShrink: 1 },
-  infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },
-  infoButtonText: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700', flexShrink: 1 },
+  infoButton: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.surface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
+  pressed: { opacity: 0.75 },
   infoBody: { ...tokens.typography.body, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
   hero: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.spacing.sm, padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.support.reminders.bg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   icon: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.surface, alignItems: 'center', justifyContent: 'center' },
   heroCopy: { flex: 1 },
-  settingsCard: { marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, gap: tokens.spacing.sm },
+  settingsCard: { marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, gap: tokens.spacing.xs },
   permissionCard: { marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.home.card, gap: tokens.spacing.sm },
   sectionTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.xs },
-  choice: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.layout.listGap, paddingHorizontal: tokens.layout.cardPadding, paddingVertical: tokens.spacing.md, marginTop: tokens.layout.listGap, borderWidth: tokens.size.stroke, borderColor: tokens.colors.borderStrong, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface },
-  choiceSelected: { backgroundColor: tokens.colors.support.reminders.bg, borderColor: tokens.colors.support.reminders.fg },
-  pressed: { opacity: 0.9 },
+  choice: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingHorizontal: 0, paddingVertical: tokens.spacing.xs },
+  choiceSelected: { backgroundColor: tokens.colors.transparent },
+  choiceDivider: { height: tokens.size.stroke, backgroundColor: tokens.colors.border, marginLeft: tokens.size.iconMd + tokens.spacing.sm },
   checkbox: { width: tokens.size.iconMd, height: tokens.size.iconMd, borderRadius: tokens.radius.sm, borderWidth: tokens.size.stroke, borderColor: tokens.colors.borderStrong, backgroundColor: tokens.colors.surface, alignItems: 'center', justifyContent: 'center' },
   checkboxSelected: { backgroundColor: tokens.colors.support.reminders.fg, borderColor: tokens.colors.support.reminders.fg },
-  choiceCopy: { flex: 1 },
+  choiceCopy: { flex: 1, justifyContent: 'center', minHeight: tokens.size.touchMin },
   choiceTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
-  choiceDetail: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.layout.headingGap },
 });

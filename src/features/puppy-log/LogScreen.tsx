@@ -448,6 +448,12 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         <Toast visible={mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} onCancel={() => { firstUseTip.dismiss(); onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
         <Toast visible={mutation?.status === 'unsure'} tone="uncertain" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} />
         <LogEventEditor key={editingEvent.id} event={editingEvent} initialDraft={recoveryForEditor?.draft} disabled={editLocked} onDraftChange={saveEditorDraft} onSave={(changes) => { firstUseTip.dismiss(); return saveEdit(editingEvent, changes); }} onSaved={() => { setEditingId(null); setEditorMinimized(false); onEditorRecoveryChange?.(null); }} onDelete={() => { firstUseTip.dismiss(); askToDelete(editingEvent); }} submitRef={editorSubmitRef} onActionStateChange={updateEditorActionState} />
+        {deleteTarget ? <Dialog visible title="Radera loggpost?" compactActions onRequestClose={() => setDeleteTarget(null)} onConfirm={confirmDelete}>
+          <MessageCard>{deleteTarget ? `${LOG_EVENT_LABELS[deleteTarget.type]} · ${localDateTimeParts(deleteTarget.occurredAt).date} tas bort ${mode === 'cloud' ? 'från hundens logg' : 'från den tillfälliga förhandsvisningen'}.` : ''}</MessageCard>
+        </Dialog> : null}
+        {discardEditorVisible ? <Dialog visible title="Kasta ändringen?" confirmLabel="Kasta ändring" compactActions onRequestClose={() => setDiscardEditorVisible(false)} onConfirm={discardEditor}>
+          <MessageCard>Ändringen är inte sparad. Dina tidigare loggposter påverkas inte.</MessageCard>
+        </Dialog> : null}
       </BottomSheet> : null}
       {editorRecovery && mutation?.id === editorRecovery.eventId && mutation.status !== 'saved' ? <View style={styles.recoveryCard}>
         <MessageCard tone={mutation.status === 'failed' ? 'error' : 'neutral'}>{mutation.status === 'failed' ? 'Ändringen kunde inte sparas. Utkastet finns kvar.' : 'Ändringen väntar på kontroll. Samma utkast finns kvar.'}</MessageCard>
@@ -456,12 +462,6 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
           <Button variant="icon" label="Öppna ändringen" accessibilityLabel="Öppna samma loggändring" iconName="create-outline" onPress={() => { setEditingId(editorRecovery.eventId); setEditorMinimized(false); }} />
         </View>
       </View> : null}
-      <Dialog visible={Boolean(deleteTarget)} title="Radera loggpost?" compactActions onRequestClose={() => setDeleteTarget(null)} onConfirm={confirmDelete}>
-        <MessageCard>{deleteTarget ? `${LOG_EVENT_LABELS[deleteTarget.type]} · ${localDateTimeParts(deleteTarget.occurredAt).date} tas bort ${mode === 'cloud' ? 'från hundens logg' : 'från den tillfälliga förhandsvisningen'}.` : ''}</MessageCard>
-      </Dialog>
-      <Dialog visible={discardEditorVisible} title="Kasta ändringen?" confirmLabel="Kasta ändring" compactActions onRequestClose={() => setDiscardEditorVisible(false)} onConfirm={discardEditor}>
-        <MessageCard>Ändringen är inte sparad. Dina tidigare loggposter påverkas inte.</MessageCard>
-      </Dialog>
 
       <SectionHeader title={selectedDate === todayDate ? 'Dagens logg' : 'Händelser'} />
       {timelineItems.map((item, index) => {
@@ -472,7 +472,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         const event = item.event;
           const rowPending = mutation?.id === event.id && mutation.status === 'pending';
           const deleting = deleteSnapshot?.event.id === event.id;
-          const detail = [event.note, rowPending ? 'Sparar…' : null, event.origin === 'example' ? 'Exempel' : mode === 'preview' ? 'Testpost' : null].filter(Boolean).join(' · ');
+          const detail = [event.note, rowPending ? 'Sparar…' : null].filter(Boolean).join(' · ');
           const parts = localDateTimeParts(event.occurredAt);
           if (deleting && deleteSnapshot.phase === 'exiting') return <DeleteExitRow key={event.id} token={deleteSnapshot.token} event={event} reduceMotion={reduceMotion} onFinished={onDeleteAnimationEnd} />;
           const row = <ListRow variant="log-timeline" showDivider={index < timelineItems.length - 1} title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}${event.note ? `, ${event.note}` : ''}${deleting ? ', raderar' : rowPending ? ', sparar' : ''}${deleting ? '' : ', tryck för att ändra'}`} accessibilityState={deleting && deleteSnapshot.phase === 'pending' ? { busy: true, disabled: true } : undefined} category={event.type} accidentKinds={event.accidentKinds} time={parts.time} detail={deleting ? 'Raderar…' : detail || undefined} onPress={deleting ? undefined : () => { firstUseTip.dismiss(); editorSubmitRef.current = null; setEditorActionState({ canSave: false, saving: false, dirty: false }); setEditingId(event.id); setEditorMinimized(false); }} disabled={deleting || busy || Boolean(mutation && mutation.status !== 'saved')} />;

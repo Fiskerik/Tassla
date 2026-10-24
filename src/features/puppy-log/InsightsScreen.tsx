@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, Text, View, Pressable, ActivityIndicator } from 'react-native';
 import { useCallback, useEffect, useRef } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Card } from '../../components/ui';
+import { Card, Tabs } from '../../components/ui';
 import { MessageCard, PrimaryButton } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
 import {
@@ -70,16 +70,9 @@ export function InsightsScreen({
     </View>
     <Text style={styles.subtitle}>Registreringar över tid med {dogName}.</Text>
 
-    <View style={styles.periodControl} accessibilityRole="tablist" accessibilityLabel="Period för insikter">
-      {PERIOD_OPTIONS.map((option) => {
-        const selected = option.key === period;
-        return <Pressable key={option.key} accessibilityRole="tab" accessibilityLabel={option.label}
-          accessibilityState={{ selected }} aria-selected={selected} onPress={() => onPeriodChange(option.key)}
-          style={({ pressed }) => [styles.periodOption, selected && styles.periodSelected, pressed && styles.pressed]}>
-          <Text style={[styles.periodLabel, selected && styles.periodLabelSelected]}>{option.label}</Text>
-        </Pressable>;
-      })}
-    </View>
+    <Tabs items={PERIOD_OPTIONS.map((option) => option.label)} active={PERIOD_OPTIONS.find((option) => option.key === period)?.label ?? PERIOD_OPTIONS[0].label}
+      accessibilityLabel="Period för insikter" variant="rev02-segmented"
+      onChange={(label) => { const selected = PERIOD_OPTIONS.find((option) => option.label === label); if (selected) onPeriodChange(selected.key); }} />
 
     {state.status === 'loading' ? <Card accessibilityLabel="Hämtar insikter">
       <View style={styles.loadingState}><ActivityIndicator color={tokens.colors.primary} /><Text style={styles.body}>Hämtar registreringar…</Text></View>
@@ -249,11 +242,6 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.72 },
   disabled: { opacity: 0.6 },
   subtitle: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginTop: -tokens.spacing.sm },
-  periodControl: { flexDirection: 'row', alignItems: 'stretch', borderRadius: tokens.radius.full, padding: tokens.spacing.xs, backgroundColor: tokens.colors.training.segmentedSurface },
-  periodOption: { minWidth: 0, minHeight: tokens.size.touchMin, flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.xs, paddingVertical: tokens.spacing.xs, borderRadius: tokens.radius.full },
-  periodSelected: { backgroundColor: tokens.colors.surface },
-  periodLabel: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'center' },
-  periodLabelSelected: { color: tokens.colors.primary, fontWeight: '700' },
   periodSummary: { gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.xs },
   rangeLabel: { ...tokens.typography.label, color: tokens.colors.textPrimary },
   coverageLabel: { ...tokens.typography.caption, color: tokens.colors.textSecondary },

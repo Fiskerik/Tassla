@@ -59,7 +59,7 @@ test('recommended timeout uses positive finite values and a five-second fallback
 });
 
 test('saved plans use compact contextual edit and delete controls with named confirmation', () => {
-  assert.match(screenSource, /<Button variant="secondary" compact label="Ändra"/);
+  assert.match(screenSource, /<Button variant="icon" iconName="create-outline" label="Ändra"/);
   assert.match(screenSource, /<Button variant="icon" label="Radera" iconName="trash-outline"/);
   assert.match(screenSource, /accessibilityLabel=\{`Radera \$\{typeLabel\(record\.event_type\)\.toLocaleLowerCase\('sv-SE'\)\} \$\{record\.due_on\}`\}/);
   assert.match(screenSource, /onRequestClose=\{\(\) => setDeleteTarget\(null\)\}/);

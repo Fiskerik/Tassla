@@ -323,7 +323,7 @@ export function EditDogProfileScreen({
           {attributionWriteUnresolved ? <Button variant="secondary" label={attributionBusy ? 'Kontrollerar…' : 'Kontrollera kenneländringen igen'}
             accessibilityLabel="Kontrollera kenneländringen igen" loading={attributionBusy} disabled={attributionBusy}
             onPress={onRetryAttribution ?? (() => undefined)} /> : null}
-          <Button variant="secondary" label={attributionBusy ? 'Sparar…' : attribution ? (kennelCode.trim() ? 'Spara kennelkoppling' : 'Ta bort kennelkoppling') : 'Spara kennelkoppling'} accessibilityLabel="Spara kennelkoppling" loading={attributionBusy}
+          <Button variant={attribution && !kennelCode.trim() ? 'icon' : 'secondary'} iconName="trash-outline" label={attributionBusy ? 'Sparar…' : attribution ? (kennelCode.trim() ? 'Spara kennelkoppling' : 'Ta bort kennelkoppling') : 'Spara kennelkoppling'} accessibilityLabel={attribution && !kennelCode.trim() ? `Ta bort kennelkoppling till ${attribution.name}` : 'Spara kennelkoppling'} loading={attributionBusy}
             disabled={attributionBusy || !onSaveAttribution || kennelCode.trim() === (attribution?.code ?? '')} onPress={() => { void saveAttribution(); }} />
         </>}
       </View> : null}

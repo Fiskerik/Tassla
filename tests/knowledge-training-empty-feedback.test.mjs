@@ -18,9 +18,10 @@ test('Knowledge distinguishes no published guides from a search with no matches 
   assert.ok(knowledge.includes("Card onPress={() => changeTab('FAQ')} accessibilityLabel=\"Öppna Vanliga frågor\""));
 });
 
-test('FAQ and Checklistor return to the guide view through their existing back actions', () => {
-  assert.ok(knowledge.includes("tab === 'FAQ' ? <AppBar mode=\"Back\" title=\"Kunskap\" actionLabel=\"Tillbaka till guider\" onAction={() => changeTab('För dig')}"));
-  assert.ok(knowledge.includes("tab === 'Checklistor' && !checklistDetailOpen ? <AppBar mode=\"Back\" title=\"Kunskap\" actionLabel=\"Tillbaka till guider\" onAction={() => changeTab('För dig')}"));
+test('FAQ and Checklistor return to the guide view through their compact back actions', () => {
+  assert.match(knowledge, /tab === 'FAQ' \? <AppBar[^\n]+variant="compact"/);
+  assert.match(knowledge, /tab === 'Checklistor' && !checklistDetailOpen \? <AppBar[^\n]+variant="compact"/);
+  assert.match(knowledge, /actionLabel="Tillbaka till guider" onAction=\{\(\) => changeTab\('För dig'\)\}/);
   assert.ok(knowledge.includes("onBack={() => changeTab('För dig')}"));
   assert.ok(knowledge.includes("tab === 'För dig' && !selectedItem ? <View style={styles.shortcuts}>"));
 });

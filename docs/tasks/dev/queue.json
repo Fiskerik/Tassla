@@ -10821,6 +10821,185 @@
       "test_evidence": "Public/review: Logg 13/13 each; health forms 6/6 each. pnpm check PASS (75/75), public iOS JS export PASS (1,585 modules), public content guard, git diff --check, queue validation and verifier py_compile PASS. Evidence: docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/{log,health}/{public,review}/. No live Supabase/RLS or native/TestFlight test was run.",
       "implementation_state": "Logg, utförd hälsa, vikt, planned health editors and scoped exact-plan return implemented. No schema, adapter, RPC, RLS or mutation-contract changes.",
       "evidence_status": "Local public/review RN Web and package checks PASS; synthetic fixtures only. Native, live backend and full-panel gates remain unverified."
+    },
+    {
+      "id": "UI-R02-04",
+      "title": "Kunskap, Träning och Insikter i en sammanhängande app",
+      "mvp_requirement": "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md §6; GAP G03/G04/G06/G07/G11/G12/G13/G15/G16/G17/G18; vision_rev02 panel 6–8 och berörda stödresor.",
+      "plan": "docs/tasks/dev/UI-R02-04-PANELHELHET.md v7; UX: docs/plans/UI-R02-04-panelhelhet-ux-spec.md v7",
+      "write_paths": [
+        "src/components/ui/Tabs.tsx",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/FAQScreen.tsx",
+        "src/features/knowledge/README.md",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "src/features/notifications/README.md",
+        "src/features/notifications/NotificationSettingsScreen.tsx",
+        "src/features/puppy-log/InsightsScreen.tsx",
+        "tests/ui-r02-04-panelhelhet.test.mjs",
+        "tests/training-overview.test.mjs",
+        "tests/knowledge-training-empty-feedback.test.mjs",
+        "tools/visual-check/verify-flow-training.py",
+        "tools/visual-check/verify-ui-r02-04.py",
+        "tools/visual-check/build.cjs",
+        "tools/visual-check/ui-r02-04-app.tsx",
+        "docs/tasks/dev/UI-R02-04-PANELHELHET.md",
+        "docs/plans/UI-R02-04-panelhelhet-ux-spec.md",
+        "docs/design/evidence/vision-rev02/ui-r02-04-panelhelhet",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/HomeCarousel.tsx",
+        "src/features/home/README.md",
+        "src/features/home/DevelopmentPreview.tsx",
+        "src/features/home/PreviewHomeScreen.tsx",
+        "src/features/home/PreviewProfileScreen.tsx",
+        "src/features/account/AuthCallbackView.tsx",
+        "src/components/ui/ComponentGalleryScreen.tsx",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/editorial-image-assignment.ts",
+        "src/features/knowledge/review-content.ts",
+        "tests/checklist-ui.test.mjs",
+        "tests/content-delivery.test.mjs",
+        "tests/knowledge-search-screen.test.mjs",
+        "tests/notifications.test.mjs",
+        "tests/review-training.test.mjs",
+        "tests/training-screen-policy.test.mjs",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "src/features/training/TrainingScreen.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "tools/visual-check/app.tsx",
+        "src/components/ui/BottomNav.tsx",
+        "src/components/ui/Button.tsx",
+        "src/components/ui/Toast.tsx",
+        "src/components/ui/ActionMenu.tsx",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/account/AccountSettingsScreen.tsx",
+        "tests/ui-actions-rows.test.mjs",
+        "tests/account-delete.test.mjs",
+        "tests/profile-screen-policy.test.mjs",
+        "tests/planned-health-feedback.test.mjs",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/components/README.md",
+        "tests/toast-compact-policy.test.mjs",
+        "tests/home-vision.test.mjs",
+        "tools/visual-check/verify-know02.py",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/verify-checklist-filters.py",
+        "tools/visual-check/verify-routine-save-recovery.py",
+        "tools/visual-check/verify-ui-r02-04-actions.py",
+        "tests/log-screen-policy.test.mjs",
+        "src/features/puppy-log/README.md",
+        "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md",
+        "docs/GAP-UI-UX-rev02-2026-10-23.md",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Delade Tabs har meningsfullt valfritt accessibilityLabel och används av Training, FAQ-context och Insights-period utan att ändra deras underliggande urval.",
+        "Knowledge visar semantiska checklista/FAQ-symboler och kompakt AppBar med korrekta returer; guidebilder/ID och public/review-gates bevaras.",
+        "Training reset ersätter bara presentationen av befintlig Alert med namngiven ikon/dialog. Exakt valt program-ID/objekt binds till dialogen; stale dialog stängs och single-flight låser synkront. Public confirm anropar befintlig onResetProgram(program) exakt en gång; review reset använder enbart lokal resetReviewTrainingProgram. Cancel/close anropar inget. Ingen ny handler, bredare scope eller atomisk reset utlovas.",
+        "Påminnelser visar en informationsingång och kompakt grupperade checkboxval. Toggle ändrar endast lokalt draft före explicit save; Save anropar enbart onSave och OS-knappen enbart onRequestPermission. App-/OS-status separeras och träningsvalets befintliga huvudvalssemantik består.",
+        "Insikters nuvarande period-/scopekontrakt och befintliga profil-/Logg-returer provas. Migration supabase/migrations/202610220002_dog_event_insights_read.sql och supabase/tests/dog-event-insights-read.sql granskas; endast syntetisk disposable dev-prob med stop-on-error/rollback kan ge RPC/RLS PASS. SQL ändras inte. Saknad miljö betyder NOT TESTABLE.",
+        "Renderad UI-/interaktionskontroll av ändrade vyer vid 375×844, 430×844, 375×667 och 140% CSS-textproxy; §14-delmål får bildbevis och explicit Ja/Nej/NOT TESTABLE. Slutmatrisen stämmer av alla 8 panelers befintliga evidens, med ägarbekräftad A03 på panel 4 och UI-R02-03 lokal QA/Reviewer stängd i 13f48bf; full panel 5 separat.",
+        "Relevanta befintliga och nya tester samt pnpm check, iOS JS-export, public content guard, diff-check och kövalidering passerar före commit/push.",
+        "Oberoende QA och Reviewer granskar fryst implementation; paketet påstår inte full Panel 6–8, publicerat Kunskapsinnehåll, live RLS/RPC, native accessibility eller signerad build utan respektive bevis.",
+        "Security frozen-diff review verifierar exakt reset callback/scope, stale-dialog/single-flight, att toggle inte skriver, och separata save-/permission callbacks. Ingen diff i ProductWorkspace, workspace-data, notification service, SQL/RPC, RLS eller auth.",
+        "Ägarens screenshotjusteringar: rekommendationskort är lika höga även med lång titel utan klippning; programetiketten har både lägre textstorlek och lättare vikt än övningsrubriken och kontrolleras vid normal och 140% text; Kunskap visar bildkort utan upprepad teasertext; Påminnelsernas förklaring öppnas från en enda informationsikon.",
+        "Synlig utfyllnad städas i aktiva appförhandsvisningar och aktuella renderfixturer för alla paneler. Inga exempelhundar, syntetiska rasnamn, layouttestfraser, fejkade källor eller långa tekniska fixturebanderoller visas. Fylld syntetisk person-/hundfixture märks en gång per vy `Granskningsdata` eller `Förhandsvisning · exempeldata`; sanningsenliga och kompakta content-statusar, verkliga fel/tomlägen och funktionella inputledtrådar bevaras; ingen tränings-/hälsorådgivning eller data-/route-logik ändras.",
+        "Owner v6: five full BottomNav names remain one line without clipping at320/375/430 normal+140percent; native navlabels max1.4 only, content unchanged. Delete entry red trash-outline, edit create-outline, undo arrow-undo-outline everywhere in included callers; confirmations, scopes, callbacks and account safeguards unchanged. Native above140percent recorded separately.",
+        "All migrated icon-only delete/edit/undo triggers have full contextual accessible names, correct roles, busy/disabled preserved and44x44minimum. Account confirms before samecallback; ProfileScreen clears local draft code and existing pending referral in SecureStore without removing a server link; EditDogProfileScreen existing saveAttribution unchanged, Toastundo samecallback once. Focused source/handler and rendered trigger coverage required."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/ui-r02-04-panelhelhet.test.mjs tests/training-screen-policy.test.mjs tests/knowledge-search-screen.test.mjs tests/insights-model.test.mjs tests/insights-period-read.test.mjs tests/insights-scope.test.mjs tests/log-insights-route.test.mjs tests/profile-insights-route.test.mjs tests/notifications.test.mjs",
+        "pnpm check",
+        "CI=1 TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false node tools/check-content-release.cjs",
+        "CI=1 __UNSAFE_EXPO_HOME_DIRECTORY=/tmp/tassla-expo-home TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false node node_modules/expo/bin/cli export --platform ios --output-dir dist/ios",
+        "Public/review render and interaction verification for Knowledge, Training, Insights and Reminders using current visual-check production components",
+        "Review/check SQL migration supabase/migrations/202610220002_dog_event_insights_read.sql and run supabase/tests/dog-event-insights-read.sql in a suitable synthetic development database; otherwise mark live RPC/RLS NOT TESTABLE.",
+        "python -X utf8 tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-R02-03"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v3 godkänd av Architect och Security; UX Critic v2 PROCEED gäller oförändrat UI-scope. Risk H och Security-villkoren ingår i acceptans."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Påbörjar godkänd UI-R02-04 v3 på 2026-10-23-ui-04-panelhelhet, staplad ovanpå 81e87bc. UI-R02-03 QA/Reviewer fortsätter separat på sin frysta branch och skrivytorna är disjunkta."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Ägarens bildfeedback 2026-10-23 utökade UI-R02-04 till plan v5: lika träningskort med långa rubriker, bildbaserad Knowledge utan teasertext, kompakt påminnelseinfo och global synlig placeholderstädning i aktiva preview-/renderfixturer. Ny Architect/Critic-planreview krävs innan den utökade delen färdigställs. Tidigare sparade UI04-resultat: 14/14 public och 15/15 review; oberoende QA granskade captures och resultat men kunde inte starta om Chromium."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Blockerad: UI-R02-03 fryst implementation 81e87bc behöver oberoende QA/Reviewer före copy-only ändringar i LogScreen och delad harness; plan v5 är utökad och inväntar reviderad Architect/Critic-review. ProductWorkspace är borttagen ur scope. Återuppta som planned först efter dessa underlag."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "UI03 dependency13f48bf QA Reviewer Security PASS and pushed. V6 Architect APPROVE; Critic PROCEED WITH CHANGES on now corrected current document statuses; no material UX objection."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v6 exact nav action icon scope, full accessible labels and distinct frozen account/kennel callbacks. Critic document-status conditions applied."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Complete v6 shared nav and icon actions plus approved copy cleanup and card hierarchy, then independent QA Reviewer Security of frozen diff."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "V7 implementerad inom Architect APPROVE/Critic PROCEED; pnpm check76/76, public iOS1585, UI04render18/19, actions9/9vardera, Training14/14, Logg13/13, Health9/9. Kända separata Home-marginalavvikelser och D1/D2/D3/D5 i verifieringen."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS frozenv7: own public18/18, review19/19, actions9/9both, focusedNode8/8, real modal clicks/rawdraft/exactdelete and resetrestore checks. INDEPENDENT-QA.json + VERIFICATION.md. Native/live/fullpanels remain separate."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS frozenv7 after actual APIs/glyphs/handlers, screenshots vs rev02 and fresh UI18/19/actions9/9both, check76/76/export1585. Independent QA PASS and Security APPROVE saved in VERIFICATION/INDEPENDENT-QA. Local UI checkpoint only; known separate Home4pt and D1/D2/D3/D5/native/build remain explicit."
+        }
+      ],
+      "next_step": "Commit/pushUI04branch above13f48bf; build this cumulativebranch and run manualphone checklist. FollowonlyremainingcurrentGAPdependencies D1/D2/D3/G17/D5; no pre16OctUIrestoration.",
+      "priority": "P1",
+      "panels": [
+        "6",
+        "7",
+        "8"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Rev02-aligned UI family integration for Knowledge, Training, Insights and reminder support flow; no data/RPC changes.",
+      "test_evidence": "Frystv7: pnpmcheckPASS app/edgeTS/lint76/76, publiciOSexport1585/contentguardPASS. UI04public18/18review19/19/actions9/9both independentlyrerunQA; Training14/14,Logg13/13,Health9/9both; breed13/13,profile9/9both; image2/2public16/16review; progress2/2public15/15review. Bredpanel52/52public72/74review with exactly2prioracceptedHome4ptmarginfailures recorded. VERIFICATION.md and INDEPENDENT-QA.json.",
+      "implementation_state": "V7lokalcheckpointklar2026-10-24: GAPUIintegration, uniformicons/nav, compactinfo/copy, measuredtrainingcards/Knowledgeimages; Logg modalownership and staleTrainingresetcorrected. ArchitectAPPROVE,CriticPROCEED,SecurityAPPROVE,independentQAPASS,ReviewerPASS. NoProductWorkspace/data/service/SQL/auth changes in04.",
+      "evidence_status": "Freshsavedpublic/reviewcaptures and independentQAresults. D1/D2/D3/D5,knownseparateHomeclearance,native/signedbuild remain explicit; owneracceptedA03/panel3/generalVO/DynamicType/Supabase/RLS/Compliance preserved."
     }
   ]
 }

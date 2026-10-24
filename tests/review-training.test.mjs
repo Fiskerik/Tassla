@@ -40,7 +40,7 @@ test('review-mode handler returns before cloud progression callback and labels t
   const cloudCall = screen.indexOf('() => onCompleteStep(selectedProgram, selectedStep.id)');
   assert.ok(localBranch >= 0 && cloudCall >= 0);
   assert.match(screen, /completeTrainingStepForMode\(/);
-  assert.match(screen, /Markeringar i dessa övningsutkast sparas under den här visningen/);
+  assert.match(screen, /Granskningsdata · sparas lokalt/);
   const workspace = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
   assert.match(workspace, /reviewMode=\{reviewContentEnabled && training\.programs\.some\(\(program\) => program\.id\.startsWith\('review-v1:training:'\)\)\}/);
   assert.match(workspace, /Publicerat träningsinnehåll kunde inte hämtas\. Inga exempelprogram visas\./);

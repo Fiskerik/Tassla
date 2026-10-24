@@ -178,7 +178,7 @@ export function DevelopmentPreview() {
     <AppScreen key={screen} footer={<PreviewTabBar active={activeTab} onSelect={setScreen} />}>
       <Animated.View style={{ opacity: pageOpacity }}>
         <View style={styles.previewTag}>
-          <Text style={styles.previewTagText}>LOKALT TESTLÄGE · SYNTETISKA UPPGIFTER</Text>
+          <Text style={styles.previewTagText}>Granskningsdata</Text>
         </View>
         {page}
       </Animated.View>
@@ -267,14 +267,14 @@ function createSyntheticDog(): Dog {
   const day = String(birthDate.getDate()).padStart(2, '0');
   return {
     id: 'synthetic-dog-1',
-    name: 'Exempelhund',
+    name: 'Luna',
     breedId: 'example',
     birthDate: `${year}-${month}-${day}`,
   };
 }
 
 const styles = StyleSheet.create({
-  previewTag: { alignSelf: 'flex-start', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.selectedSurface, paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.sm, marginTop: tokens.spacing.lg },
+  previewTag: { alignSelf: 'flex-start', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.selectedSurface, paddingHorizontal: tokens.spacing.sm, paddingVertical: tokens.spacing.xs, marginTop: tokens.spacing.sm },
   previewTagText: { ...tokens.typography.label, color: tokens.colors.primary, fontSize: tokens.typography.caption.fontSize, lineHeight: tokens.typography.caption.lineHeight, letterSpacing: 0.4 },
   heading: { marginTop: tokens.spacing.xl, marginBottom: tokens.spacing.lg },
   headingTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary },

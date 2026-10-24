@@ -25,9 +25,8 @@ export function PreviewProfileScreen({
   return (
     <View style={styles.screen}>
       <AppBar mode="Back" title="Hundprofil" actionLabel="Tillbaka hem" onAction={onCancel} />
-      <Text style={styles.description}>Ändra uppgifterna för att granska namn och ålder på Hem.</Text>
       <View style={styles.fields}>
-        <FormField label="Hundens namn" onChangeText={setName} placeholder="Exempelhund" value={name} />
+        <FormField label="Hundens namn" placeholder="" onChangeText={setName} value={name} />
         <FormField
           autoCapitalize="none"
           autoComplete="off"
@@ -54,7 +53,6 @@ export function PreviewProfileScreen({
           {!validBirthDate ? 'Ange ett giltigt datum i formatet ÅÅÅÅ-MM-DD som inte ligger i framtiden.' : ''}
         </MessageCard>
       )}
-      <MessageCard>Det här är syntetiska uppgifter. Ändringar finns bara i minnet och försvinner när appen stängs.</MessageCard>
       <PrimaryButton
         title="Visa Hem"
         disabled={!validName || !validBirthDate}
@@ -72,7 +70,6 @@ const AGE_DISPLAY_OPTIONS: readonly { value: AgeDisplayUnit; label: string }[] =
 
 const styles = StyleSheet.create({
   screen: { gap: tokens.spacing.md },
-  description: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   fields: { gap: tokens.spacing.sm },
   label: { ...tokens.typography.label, color: tokens.colors.textPrimary },
   ageOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm },

@@ -303,7 +303,7 @@ export function PlannedHealthScreen({
       {record.description ? <Text style={styles.recordNote}>{record.description}</Text> : null}
       {reminderText ? <Text style={styles.reminderRow}>{reminderText}</Text> : null}
       <View style={styles.recordActions}>
-        <Button variant="secondary" compact label="Ändra" accessibilityLabel={`Ändra ${typeLabel(record.event_type)} ${record.due_on}`} disabled={blocked} onPress={() => edit(record)} />
+        <Button variant="icon" iconName="create-outline" label="Ändra" accessibilityLabel={`Ändra ${typeLabel(record.event_type)} ${record.due_on}`} disabled={blocked} onPress={() => edit(record)} />
         <Button variant="icon" label="Radera" iconName="trash-outline" accessibilityLabel={`Radera ${typeLabel(record.event_type).toLocaleLowerCase('sv-SE')} ${record.due_on}`} disabled={blocked} onPress={() => confirmDelete(record)} />
       </View>
     </View>;

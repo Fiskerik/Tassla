@@ -106,7 +106,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
     ? content.find((item) => item.contentType !== 'training_program')
     : undefined;
   const preview = relevantContent ? previewText(relevantContent.body) : '';
-  const pageLabel = dailyFixture ? 'Hem. Syntetiskt granskningsläge.' : 'Hem';
+  const pageLabel = dailyFixture ? 'Hem. Granskningsdata.' : 'Hem';
   const dailyProgress = selectDailyProgress(dailyActivities, dailyState === 'hidden' ? 'unknown' : dailyState);
   const fixtureProgress = dailyFixture
     ? selectDailyProgress(dailyFixture.map((item) => ({ ...item, completed: reviewCompletion[item.id] ?? item.completed })), 'ready')
@@ -173,7 +173,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
         {!relevantContent && contentState === 'ready' && trainingState === 'error' ? <Text style={styles.body}>Träningen kunde inte hämtas just nu. Öppna Träna för att försöka igen.</Text> : null}
         {!relevantContent && contentState === 'ready' && trainingState === 'ready' && nextStep ? <>
           <Text numberOfLines={2} style={styles.body}>{nextStep}</Text>
-          {reviewTrainingStep ? <Text style={styles.exampleLabel}>Tillfälligt exempel – innehållet är inte sakgranskat</Text> : null}
+          {reviewTrainingStep ? <Text style={styles.reviewLabel}>Granskningsinnehåll</Text> : null}
         </> : null}
         {!relevantContent && contentState === 'ready' && trainingState === 'ready' && !nextStep ? <Text style={styles.body}>Inget nytt innehåll att visa just nu.</Text> : null}
         {contentState === 'error' ? <Button variant="tertiary" label="Hämta guider igen" accessibilityLabel="Hämta guider igen" onPress={onRetryContent} /> : null}
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
   cardHeadingRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   cardHeading: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },
   body: { ...tokens.typography.caption, color: tokens.colors.home.text, flexShrink: 1 },
-  exampleLabel: { ...tokens.typography.caption, color: tokens.colors.warning },
+  reviewLabel: { ...tokens.typography.smallCaption, color: tokens.colors.textSecondary },
   dailyCardContent: { gap: tokens.spacing.xs },
   dailyHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs / 2 },
   dailyTitle: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },

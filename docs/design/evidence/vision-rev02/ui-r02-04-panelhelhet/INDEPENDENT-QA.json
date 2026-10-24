@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-24",
+  "verdict": "PASS",
+  "scope": "Independent local RN Web QA of frozen UI04v7; no native/live certification",
+  "runs": {
+    "panels-public": {
+      "passed": 18,
+      "failed": 0
+    },
+    "panels-review": {
+      "passed": 19,
+      "failed": 0
+    },
+    "actions-public": {
+      "passed": 9,
+      "failed": 0
+    },
+    "actions-review": {
+      "passed": 9,
+      "failed": 0
+    }
+  },
+  "source_sha256": {
+    "src/features/puppy-log/LogScreen.tsx": "8d5a5a10cb7bff895bb18b4ac4c9f49c9767ce1beb50991c5e059ebd8716cfa1",
+    "src/features/training/PublishedTrainingScreen.tsx": "50de73fba3b68b5ade76df1043e23f4b1fce5cde09d9f025c370f2efe77abe1f"
+  }
+}
