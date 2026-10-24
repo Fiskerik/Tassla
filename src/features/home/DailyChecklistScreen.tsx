@@ -178,6 +178,11 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
         <Text accessibilityRole="header" accessibilityLabel={'Idag, ' + dateLabel} style={styles.cardHeading}>Idag</Text>
         <Text style={styles.count}>{completedCount} av {activities.length} klara</Text>
         {refreshing ? <ActivityIndicator accessibilityRole="progressbar" accessibilityLabel="Dagens checklista uppdateras" size="small" color={tokens.colors.textSecondary} /> : null}
+        <MotionPressable accessibilityRole="button" accessibilityLabel="Hantera rutiner och aktiviteter" onPress={() => openManager()}
+          style={({ pressed }) => [styles.manageAction, pressed && styles.pressed]}>
+          <Ionicons name="settings-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
+          <Text style={styles.manageActionLabel}>Hantera</Text>
+        </MotionPressable>
       </View>
       <View testID="daily-checklist-progress" accessibilityRole="progressbar"
         accessibilityLabel={completedCount + ' av ' + activities.length + ' dagsuppgifter klara'}
@@ -360,6 +365,9 @@ const styles = StyleSheet.create({
   summary: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, marginBottom: tokens.spacing.sm },
   cardHeading: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700', flex: 1 },
   count: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700', flexShrink: 0 },
+  manageAction: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs / 2, paddingHorizontal: tokens.spacing.xs, borderRadius: tokens.radius.sm },
+  manageActionLabel: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
+  pressed: { backgroundColor: tokens.colors.selectedSurface },
   progressTrack: { height: tokens.size.progress, borderRadius: tokens.radius.full, overflow: 'hidden', backgroundColor: tokens.colors.home.progressTrack, marginBottom: tokens.spacing.sm },
   progressFill: { height: '100%', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.greenFill },
   activityList: { gap: 0 },
@@ -377,7 +385,6 @@ const styles = StyleSheet.create({
   dateGroupHeading: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700', paddingTop: tokens.spacing.sm, paddingBottom: tokens.spacing.xs },
   laterDateGroup: { borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, marginTop: tokens.spacing.sm },
   errorText: { color: tokens.colors.danger },
-  pressed: { backgroundColor: tokens.colors.selectedSurface },
   disabled: { opacity: 0.65 },
   rows: { gap: 0 },
   longPressHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary },

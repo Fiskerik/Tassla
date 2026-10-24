@@ -1,0 +1,120 @@
+{
+  "mode": "review",
+  "panel": "progress",
+  "evidence_dir": "docs/design/evidence/vision-rev02/ui-r02-04-panelhelhet/progress/review",
+  "results": [
+    {
+      "check": "Progress uses a continuous 40% ring and shared 2/5 list at 375px",
+      "result": "PASS",
+      "ring": {
+        "x": 63.5,
+        "y": 190,
+        "width": 248,
+        "height": 248
+      },
+      "vector_strokes": 1
+    },
+    {
+      "check": "Environment-training status is a round 28pt checkbox at 375px",
+      "result": "PASS",
+      "checkbox": {
+        "x": 45,
+        "y": 714,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "check": "Progress does not invent completion timestamps at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Progress fits without horizontal overflow or browser errors at 375px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Progress uses a continuous 40% ring and shared 2/5 list at 430px",
+      "result": "PASS",
+      "ring": {
+        "x": 91,
+        "y": 190,
+        "width": 248,
+        "height": 248
+      },
+      "vector_strokes": 1
+    },
+    {
+      "check": "Environment-training status is a round 28pt checkbox at 430px",
+      "result": "PASS",
+      "checkbox": {
+        "x": 45,
+        "y": 714,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "check": "Progress does not invent completion timestamps at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Progress fits without horizontal overflow or browser errors at 430px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "100% vector ring closes and the factual completion note appears only when complete",
+      "result": "PASS"
+    },
+    {
+      "check": "Progress loading state is distinct and never shows a 0/0 ring",
+      "result": "PASS"
+    },
+    {
+      "check": "Progress error state is distinct and never shows a 0/0 ring",
+      "result": "PASS"
+    },
+    {
+      "check": "Progress unknown state is distinct and never shows a 0/0 ring",
+      "result": "PASS"
+    },
+    {
+      "check": "Progress partial state is distinct and never shows a 0/0 ring",
+      "result": "PASS"
+    },
+    {
+      "check": "Progress remains naturally scrollable at the short viewport with its action above navigation",
+      "result": "PASS",
+      "action": {
+        "x": 24,
+        "y": 494,
+        "width": 327,
+        "height": 56
+      },
+      "nav": {
+        "x": 0,
+        "y": 606,
+        "width": 375,
+        "height": 59
+      }
+    },
+    {
+      "check": "Progress completion content remains reachable at the 140% text proxy",
+      "result": "PASS",
+      "note": {
+        "x": 24,
+        "y": 525,
+        "width": 327,
+        "height": 115.59375
+      },
+      "nav": {
+        "x": 0,
+        "y": 764.59375,
+        "width": 375,
+        "height": 77.40625
+      }
+    }
+  ],
+  "failures": []
+}

@@ -7630,7 +7630,7 @@
       "depends_on": [
         "UX-KNOWLEDGE-CACHE-01"
       ],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -7649,18 +7649,54 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Pause after the committed local UI/render checkpoint. Full panel-7 §14 acceptance and custom-checklist icon parity remain open; Development route work also shares KnowledgeScreen.tsx. Resume Knowledge after the higher-priority panel-2 slice; keep panel 7 partial."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Erik 2026-10-22 authorizes resuming Panel 7 after its prior local checkpoint; Panel 3 is owner-reported complete with internal and external QA. Panel 7 remains partial until its open §14 items receive fresh verification."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Existing exact plan v3 remains in force; recorded Architect APPROVE, Critic PROCEED, Security APPROVE. Owner explicitly unblocks Panel 7; no data/schema scope change."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume the approved Panel 7 v3 local UI slice after FLOW-DEVELOPMENT-01 reached its reviewed partial checkpoint and committed closeout. Scope remains current published guides, existing checklist read/write paths and local UI/render evidence; no schema/RPC/RLS/data-use changes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation stable. Focused tests 3/3 files, full Node suite 69/69, app/edge TypeScript, ESLint, content guard and Expo iOS export 1579 modules pass. Fresh public/review browser evidence 15/15 and 14/14, pageErrors=0; viewport/interaction matrix passes. §14 and owner-approved limitations recorded; independent QA requested."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende QA PASS på korrigerad diff: verifierade 136/44 pt, aktuella 3/3 fokuserade filer och 69/69 helsuite, rapport-/köstatus, diffcheck och kövalidering. Sparade public/review-captures och browserresultat granskades; Chromium kunde inte startas i QA-sandboxen, så 15/15 och 14/14 ommättes inte. Nästa steg: fryst Reviewer granskar exakt denna snapshot."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS on the final corrected snapshot. Reviewer confirmed queue/report/verification QA PASS status agrees; asset README distinguishes captured RN Web cover crops from unverified native/full-app image behavior; saved captures and explicit partial/native/live limitations are consistent. No code blocker or new review issue. Next step: commit this partial local UI checkpoint, then continue the independently scoped Insights flow."
         }
       ],
-      "next_step": "Pause after the committed local UI/render checkpoint. Full panel-7 §14 acceptance and custom-checklist icon parity remain open; Development route work also shares KnowledgeScreen.tsx. Resume Knowledge after the higher-priority panel-2 slice; keep panel 7 partial.",
+      "next_step": "Frozen Reviewer PASS on the final corrected snapshot. Reviewer confirmed queue/report/verification QA PASS status agrees; asset README distinguishes captured RN Web cover crops from unverified native/full-app image behavior; saved captures and explicit partial/native/live limitations are consistent. No code blocker or new review issue. Next step: commit this partial local UI checkpoint, then continue the independently scoped Insights flow.",
       "priority": "P2",
       "panels": [
         "7"
       ],
       "risk_class": "H",
       "checkpoint": "Panel 7 guideupptäckt → källmärkt artikel → FAQ/faschecklista → retur, med public/review-gränser och checklistornas skilda semantik bevarade.",
-      "test_evidence": "Plan v3 Architect APPROVE, Critic PROCEED, Security APPROVE. Focused Knowledge/content-delivery/checklist checks 6/6 files PASS; pnpm check PASS (65 test files); public/review RN Web checks 15/15 and 14/14 with pageErrors=0. Public/review builds and local evidence completed. See docs/design/evidence/flow-knowledge-01/VERIFICATION.md.",
-      "implementation_state": "Knowledge UI, tests, three topic-specific guide assets and local public/review renders are implemented. Shared checklist row/icon grammar was aligned; published items have explicit editorial glyphs while owner-added Knowledge items remain neutral because dog_checklist_custom_items has no icon field. No schema change was made. §14 records open visual composition, deletion, native and persistence cases; full panel-7 acceptance remains open.",
-      "evidence_status": "partial — local behavior/render checks pass; full panel-7 §14 and visual acceptance remain open"
+      "test_evidence": "Plan v3 Architect APPROVE, Critic PROCEED, Security APPROVE. Latest focused Knowledge/checklist/empty-feedback suite: 3/3 files PASS; full pnpm check: 69/69 tests, app/edge TypeScript and ESLint PASS. Public content guard and direct Expo iOS export PASS (1,579 modules). Saved RN Web results: public 15/15, review 14/14, pageErrors=0. Independent QA PASS on corrected docs and saved captures/results; Chromium could not relaunch under QA sandbox socket restrictions, so browser counts were inspected, not rerun. Frozen Reviewer PASS on the final corrected snapshot. See docs/design/evidence/flow-knowledge-01/VERIFICATION.md.",
+      "implementation_state": "Compact Panel 7 guide hierarchy, facts-only metadata, visible scoped search and compact FAQ/Checklistor cards implemented; current public/review captures regenerated.",
+      "evidence_status": "Implementation checks and saved browser evidence pass. Independent QA PASS on the corrected 136/44 pt image documentation, current 3/3 + 69/69 results, queue/report consistency, and captured flows. Frozen Reviewer PASS on the final corrected snapshot. QA inspected saved captures/results because Chromium could not relaunch under its sandbox. Native/live RLS and full visual match remain open."
     },
     {
       "id": "FLOW-DEVELOPMENT-01",
@@ -7709,7 +7745,7 @@
       "depends_on": [
         "VISION-R02-HEM-01"
       ],
-      "status": "review",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -7854,9 +7890,15 @@
           "to": "review",
           "actor": "qa",
           "evidence": "Independent QA recheck PASS 2026-10-22 after restoring the verifier 16 pt threshold and correcting historical journal status. QA inspected the final public 45/45 and review 61/63 results/screenshots; both review failures are the owner-accepted Home-only -4 pt overlap at 375/430, while all Panel 2 checks pass. Queue/report/journal/VERIFICATION agree; diff check and queue validation pass. Recheck did not rerun the full test suite or renders."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS 2026-10-22 on final reviewed snapshot. Public 45/45; review 61/63, with only the two owner-accepted out-of-scope Home clearance findings. Panel 2 remains a partial local checkpoint pending reviewed published milestone sources; native/live RLS not testable. MASTER-LOG and report/journal record the actual verdict and limits."
         }
       ],
-      "next_step": "Frozen independent Reviewer re-reviews the updated verifier, final 45/45 and 61/63 results, owner-authorized Home exception, Panel 2 evidence, and queue/report/journal consistency. If PASS, commit and push this partial checkpoint, then unblock Panel 3.",
+      "next_step": "Frozen Reviewer PASS 2026-10-22 on final reviewed snapshot. Public 45/45; review 61/63, with only the two owner-accepted out-of-scope Home clearance findings. Panel 2 remains a partial local checkpoint pending reviewed published milestone sources; native/live RLS not testable. MASTER-LOG and report/journal record the actual verdict and limits.",
       "priority": "P1",
       "panels": [
         "Utveckling"
@@ -7871,7 +7913,7 @@
       "id": "FLOW-PROGRESS-01",
       "title": "Dagens framsteg/panel 3 med samma källhärledda dagsprogress som Hem",
       "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 3; docs/design/vision-rev02-screen-contracts.md panel 3.",
-      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v8.md; docs/plans/FLOW-PANELS-2-3-image-optimization-v5.md",
+      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v9.md; docs/plans/FLOW-PANELS-2-3-image-optimization-v5.md",
       "write_paths": [
         "assets/images/README.md",
         "assets/images/daily-progress-hero-puppy-terrier.jpg",
@@ -7919,7 +7961,7 @@
       "depends_on": [
         "FLOW-DEVELOPMENT-01"
       ],
-      "status": "blocked",
+      "status": "done",
       "history": [
         {
           "from": "planned",
@@ -7932,32 +7974,69 @@
           "to": "blocked",
           "actor": "coordinator",
           "evidence": "Panel 3 source changes are present but its dependency FLOW-DEVELOPMENT-01 has not completed its checkpoint; this task also shares active write paths with Development. Panel 3 test/render/§14 evidence is not available, and no tests were run. Keep it blocked until Development is checkpointed and the Progress verification is completed."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Panel 2 checkpoint is done; panel 3 current implementation, saved public/review evidence, user-reported QA/iOS result, and amended plan v9 are reconciled. Proceed to frozen QA of the bounded local UI slice; full panel remains partial."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE for plan amendment v9; SVG ring override and 28x28 status control plus owner-reported QA boundaries are explicit. Full-panel data gap remains partial."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementation already exists and has saved local checks/render evidence. This transition records the docs/status closeout slice before independent QA; no app code changed in this docs reconciliation."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "P3 docs/status reconciliation complete. Saved implementation/check/render results and owner-reported internal/external QA documented; 4a inventory exact fields added. Independent read-only QA PASS; no tests or renderer were rerun for docs-only changes."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent read-only QA PASS after resolving queue state, 28x28 measurement, current vs historical renders, owner-report boundaries, and exact 4a inventory. Frozen Reviewer requested next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS on the corrected exact journal/report/queue/evidence snapshot. Historical blocked/no-QA/24pt entries are clearly superseded; current QA status, 28x28 measurement, owner-reported internal/external/iOS results, and remaining partial panel sources agree. P3 local UI checkpoint formally closes; proceed to finish 4a record. Full panel and live RLS remain separate."
         }
       ],
-      "next_step": "Panel 3 implementation and local verification were completed under Erik’s explicit instruction to continue the remaining panels while the Panel 2 frozen Reviewer re-review is pending. The formal status remains blocked at the approved dependency gate. After FLOW-DEVELOPMENT-01 Reviewer PASS, transition this task through planned/ready/implementing, then obtain independent panel-3 QA and frozen Reviewer review. Keep the panel partial until a real weekly-goal source or revised MVP contract exists. Owner’s new visual requirement supersedes v8’s no-SVG ring implementation detail; reconcile the package/renderer change in the next independent plan/review update.",
+      "next_step": "Frozen Reviewer PASS on the corrected exact journal/report/queue/evidence snapshot. Historical blocked/no-QA/24pt entries are clearly superseded; current QA status, 28x28 measurement, owner-reported internal/external/iOS results, and remaining partial panel sources agree. P3 local UI checkpoint formally closes; proceed to finish 4a record. Full panel and live RLS remain separate.",
       "priority": "P1",
       "panels": [
         "Dagens framsteg"
       ],
       "risk_class": "M",
       "checkpoint": "Checkpoint 3: partial Daily Progress route with truthful source-derived counts.",
-      "test_evidence": "Current `CI=1 pnpm check` PASS: app/edge TypeScript, ESLint, 665/666 tests (1 skip). Public iOS content guard/export PASS, 1,577 JS modules. Focused progress, daily-activity UI, route, and Logga calendar policy tests PASS. Panel-specific public RN Web 2/2 and review 15/15 PASS; review checks one continuous vector ring at 40% and 100%, 24pt round Environment Training status at 375/430, empty/loading/error/unknown/partial, short viewport, 140% text proxy and no overflow. Log calendar spacing separately passes public/review 13/13 with a centered date and 20.4/27.9/55.4 px icon gap at 360/375/430. Native SVG runtime needs a new iOS app build; independent QA/Reviewer, plan reconciliation, panel-2 dependency and weekly-goal source remain open.",
-      "implementation_state": "Owner visual correction complete: SVG vector progress ring, 24 pt round Environment Training status, and verified calendar icon spacing. Local panel-specific rendering and checks pass. Plan v8 no-SVG implementation detail is superseded by the owner correction and needs reconciliation during independent panel review.",
-      "evidence_status": "Coordinator local verification PASS; panel 2 dependency, independent QA/Reviewer, weekly-goal source and native/live checks remain open."
+      "test_evidence": "Sparad lokal körning: CI=1 pnpm check PASS (665/666, 1 skip), fokuserade tester PASS, iOS content guard/export PASS (1 577 moduler), public 2/2 och review 15/15; aktuell statusruta är 28×28 pt. Erik rapporterar intern/extern QA och manuella iOS-prov som godkända. Separat extern rapport saknas i repot och denna session gjorde inte om dessa prov. Erik har tidigare sagt generellt att VoiceOver/Dynamic Type och Supabase/RLS fungerar; det är inte panel-3-specifik eller ny RPC-liveverifiering. Oberoende read-only dokument-/evidens-QA PASS efter statusrättning; den granskade sparade renderer/testevidens utan att köra om tester eller browser.",
+      "implementation_state": "Lokal UI-/funktionsimplementation klar; owner reports internal/external QA and manual iOS pass. Current captures show continuous SVG ring and 28×28 pt status control. Full panel remains partial pending a verified weekly-goal source and routine completion times.",
+      "evidence_status": "Ägarrapporterad intern/extern QA och iOS-pass, sparade local checks/renderresultat samt oberoende dokument-/evidens-QA PASS. Frozen Reviewer re-review PASS på korrigerad journal/report/queue/evidence. Live RLS för nya RPC och panelens källdataluckor kvarstår."
     },
     {
       "id": "FLOW-INSIGHTS-01",
       "title": "Insikter/panel 8: owner-scoped period aggregates and log overview",
-      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 8; docs/design/vision-rev02-screen-contracts.md panel 8; checkpoint 4b of approved v8 plan.",
-      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v8.md",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 8; docs/design/vision-rev02-screen-contracts.md panel 8; checkpoint 4b of approved v8 contract as amended by v9 profile entry/return.",
+      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v9.md (amendment); docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v8.md (data contract)",
       "write_paths": [
         "src/features/puppy-log/InsightsScreen.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
         "src/features/puppy-log/insights-model.ts",
         "src/features/puppy-log/LogScreen.tsx",
         "src/features/home/ProductWorkspace.tsx",
         "src/features/home/main-navigation.ts",
         "src/data/workspace-data.ts",
-        "supabase/migrations/202610210001_dog_event_insights_read.sql",
+        "supabase/migrations/202610220002_dog_event_insights_read.sql",
         "supabase/tests/dog-event-insights-read.sql",
         "src/features/puppy-log/README.md",
         "tests/insights-model.test.mjs",
@@ -7969,7 +8048,8 @@
         "docs/design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/insights",
         "docs/tasks/dev/rapport.md",
         "docs/tasks/dev/queue.json",
-        "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md"
+        "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md",
+        "tests/profile-insights-route.test.mjs"
       ],
       "acceptance": [
         "Checkpoint 4a has an approved Compliance review before this task becomes ready.",
@@ -7978,7 +8058,8 @@
         "Only the exact minimized JSON contract leaves SQL; client validates exact shape/nullability/types/order and fails closed.",
         "Accessible chart explains sparse month gaps, zero-valued months, current incomplete period, unclassified accidents and period-empty actions; every period can reach Logga while preserving selection.",
         "Telemetry/error reporting excludes RPC params/responses, account/owner/dog IDs, timezone, count payloads and raw errors.",
-        "Local UI/data-contract checkpoint does not claim live owner/RLS acceptance; sleep interval visualization remains open."
+        "Local UI/data-contract checkpoint does not claim live owner/RLS acceptance; sleep interval visualization remains open.",
+        "The actual editable EditDogProfileScreen exposes one gated Insikter entry; profile-origin and Logga-origin converge on the same view, with the scoped return flow and no discarded drafts."
       ],
       "checks": [
         "Focused tests and static SQL probe listed in v8 §4",
@@ -7992,18 +8073,43 @@
       "depends_on": [
         "FLOW-INSIGHTS-01A"
       ],
-      "status": "planned",
-      "history": [],
-      "next_step": "Do not start before checkpoint 4a has both Compliance approval and queue/report evidence.",
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Checkpoint 4a is done. Exact plan v9 has Architect APPROVE, UX Critic PROCEED, and Security APPROVE; it adds the approved Dog Profile entry without changing v8 data/privacy scope."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin local checkpoint 4b after FLOW-PROGRESS-01 and FLOW-INSIGHTS-01A are done. Implement one owner-scoped aggregate view shared by Logga → Översikt and Hundprofil, with scope guards, draft gate, privacy copy, and no live backend deployment."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "FLOW-INSIGHTS local checkpoint 4b is implemented. `pnpm check` PASS (74/74 tests), focused Insights model/route tests PASS, public/review RN Web 7/7 and 11/11 PASS, and profile entry/draft gate/return are in the saved renders. The SQL probe file is present but NOT RUN because psql/Supabase CLI are unavailable; no migration or live RPC/RLS request was made. See insights/VERIFICATION.md."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Park this separate H-risk task: its saved SQL probe and new RPC owner/RLS verification are required, but this session has no psql/pg_isready executable or Supabase database connector. This does not invalidate the owner-reported general Supabase/RLS pass and does not block the independent profile UI slice. Resume only when the specific RPC can be verified against the intended database."
+        }
+      ],
+      "next_step": "Park this separate H-risk task: its saved SQL probe and new RPC owner/RLS verification are required, but this session has no psql/pg_isready executable or Supabase database connector. This does not invalidate the owner-reported general Supabase/RLS pass and does not block the independent profile UI slice. Resume only when the specific RPC can be verified against the intended database.",
       "priority": "P1",
       "panels": [
         "Insikter"
       ],
       "risk_class": "H",
       "checkpoint": "Checkpoint 4b: local Insights UI/datacontract implementation after approved 4a gate.",
-      "test_evidence": "Not run for the v8 package. Awaiting its own checkpoint evidence and independent review.",
-      "implementation_state": "föreslagen; ingen kod i denna diff",
-      "evidence_status": "not_run — required evidence listed in test_evidence"
+      "test_evidence": "`pnpm check` PASS (74/74 tests); focused Insights model/period/scope/Logga/Profile route tests PASS; public/review browser render 7/7 and 11/11 PASS at 375/430, 375×667 and 140% CSS text proxy. Public iOS bundle/export PASS: `TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false EXPO_NO_TELEMETRY=1 pnpm bundle:ios` (1,581 JavaScript modules; export only, not an installed-device test). SQL probe NOT RUN (no psql/Supabase CLI); migration not applied; live RPC/RLS not verified. Details and §14: docs/design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/insights/VERIFICATION.md.",
+      "implementation_state": "Local shared Insights UI, Dog Profile entry/return and minimized RPC/client contract implemented; live database acceptance remains open.",
+      "evidence_status": "local implementation/render evidence PASS; SQL probe and live RPC/RLS are NOT TESTABLE in this environment"
     },
     {
       "id": "MULTI-DOG-HOME-01",
@@ -10016,7 +10122,7 @@
       "id": "FLOW-INSIGHTS-01A",
       "title": "Insikter/panel 8: datainventering och beta-information före kod",
       "mvp_requirement": "docs/dev/beta-data-lifecycle.md; docs/privacy/beta-information.md; v8 checkpoint 4a.",
-      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v8.md",
+      "plan": "docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v9.md (amendment); docs/plans/VISION-R02-HEM-2-3-8-2026-10-21-v8.md (data contract)",
       "write_paths": [
         "docs/dev/beta-data-lifecycle.md",
         "docs/privacy/beta-information.md",
@@ -10045,10 +10151,43 @@
       ],
       "risk_class": "H",
       "checkpoint": "Checkpoint 4a: documentation-only data inventory gate before Insights implementation.",
-      "test_evidence": "Not run. Awaiting the documented checkpoint evidence and independent review.",
-      "status": "planned",
-      "history": [],
-      "next_step": "Do not add migration, RPC, client or UI files until Compliance has reviewed and approved the finished documents."
+      "test_evidence": "Owner-reported Compliance approval for FLOW-INSIGHTS-01A; inventory and privacy copy updated on 2026-10-22 for the exact v8 contract and v9 Dog Profile entry. Independent read-only documentation QA PASS covered both lifecycle and beta-information documents; frozen Reviewer PASS closed checkpoint 4a. A separate Compliance transcript is not present in this checkout. No Insights code was part of this documentation checkpoint.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v9 Architect APPROVE and Erik-reported Compliance approval are recorded. The 4a lifecycle inventory and beta information are updated for the exact v8 scope and v9 profile entry; independent read-only doc QA PASS covered both. Frozen Reviewer review remains pending, and FLOW-PROGRESS-01 must close before implementation or 4b."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Panel 3 frozen Reviewer PASS and dependency is done. Execute the already-completed checkpoint-4a documentation record: owner-reported Compliance approval, lifecycle/beta inventory updates, and independent doc QA PASS; no Insights code is part of 4a."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "4a documents and approval record are complete; independent documentation QA PASS covers lifecycle and beta-information; diffcheck and queue validation PASS. No SQL/client/UI or live backend checks."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Frozen Reviewer PASS on the exact 4a inventory/privacy copy and synchronized journal/report/queue. Compliance approval remains labeled owner-reported with no fabricated transcript; 4b has not yet started."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS closes documentation-only checkpoint 4a. Erik-reported Compliance approval and independent QA of both lifecycle/beta-information docs are recorded. Proceed to 4b; this does not claim live RLS or server behavior."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS closes documentation-only checkpoint 4a. Erik-reported Compliance approval and independent QA of both lifecycle/beta-information docs are recorded. Proceed to 4b; this does not claim live RLS or server behavior.",
+      "implementation_state": "Documentation-only checkpoint complete and plan-approved; owner-reported Compliance approval, independent documentation QA PASS, and frozen Reviewer PASS are recorded without fabricating a transcript. 4b may proceed.",
+      "evidence_status": "Checkpoint 4a is closed; 4b implementation may begin. No live RLS/backend behavior is claimed."
     },
     {
       "id": "FLOW-PANELS-6-7-IMAGE-DIVERSITY",
@@ -10068,14 +10207,12 @@
         "src/features/home/README.md",
         "src/features/training/PublishedTrainingScreen.tsx",
         "src/features/training/README.md",
-        "docs/design/evidence/vision-rev02/2026-10-21-panels-6-7-image-diversity",
-        "docs/tasks/dev/rapport.md",
-        "docs/tasks/dev/queue.json",
-        "docs/tasks/dev/VISION-R02-HEM-2-3-8-2026-10-21.md"
+        "docs/plans/FLOW-PANELS-6-7-image-diversity-v1.md",
+        "docs/design/evidence/vision-rev02/2026-10-21-panels-6-7-image-diversity"
       ],
       "acceptance": [
-        "Three Knowledge review guides map stably and distinctly to the Lagotto, Sheltie and Cocker photos by content ID/version; Home opens the same guide image.",
-        "The Home Training recommendation and Training next-exercise card use the Corgi photo for the same step, with existing destination and progress behavior.",
+        "Three Knowledge review guides map stably and distinctly to the Lagotto, Sheltie and Cocker photos by content ID/version; the active Home text recommendation opens the exact guide ID. The inactive HomeCarousel is not counted as product UI.",
+        "The active Home text recommendation and Training continuation card use the same next exercise and existing progress behavior; the Training card uses the Corgi photo.",
         "Real Knowledge and Training renders at 375×844, 430×844, 375×667 and 140% text preserve legible image crops, controls and bottom navigation; §14 is recorded.",
         "AI image provenance, decorative accessibility and asset byte limits are recorded; no test or panel PASS is claimed without evidence."
       ],
@@ -10092,10 +10229,22 @@
           "from": "planned",
           "to": "blocked",
           "actor": "coordinator",
-          "evidence": "The four JPEGs and source image assignment/UI links are implemented, and provenance records five generated motifs with the Dachshund crop intentionally unused. Architect APPROVE and Critic PROCEED for exact image plan v1. Byte/dimension/metadata source checks are recorded. App-component renders and §14 remain NOT TESTABLE, so panel-level acceptance stays blocked."
+          "evidence": "The four JPEGs and source image assignment/UI links are implemented, and provenance records five generated motifs with the Dachshund crop intentionally unused. Architect APPROVE and Critic PROCEED for exact image plan v1. Byte/dimension/metadata source checks are recorded. App-component renders and §14 were not yet available."
+        },
+        {
+          "from": "blocked",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Rendered actual KnowledgeScreen and PublishedTrainingScreen with production HomeScreen route fixture. Public empty-state render 2/2 and review render 16/16 PASS. Knowledge has three distinct ID/version-bound photos at 200/132 pt crops, Home opens the exact guide/step, and Training continuation shows the Corgi at 88×88 pt. The current HomeScreen uses a text-only Just nu card and does not mount the older HomeCarousel; the v1 HomeCarousel-photo assertion is superseded to preserve the current target. §14 and captures are saved under docs/design/evidence/vision-r02/2026-10-21-panels-6-7-image-diversity/. Full panel, native and published-data acceptance remain separate."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Sequenced behind UI-R02-02 because this checklist checkpoint updates the shared home/knowledge module READMEs also named in this task's write set. The saved image implementation and its existing component renders remain intact; resume its independent review during UI-R02-04 integration, where the image work is explicitly scoped. No image work is discarded."
         }
       ],
-      "next_step": "Render actual Knowledge and Training components at the planned viewports, inspect crop/control/navigation behavior and record §14; run required project checks before closeout. Until then keep panel-level visual acceptance NOT TESTABLE.",
+      "next_step": "Sequenced behind UI-R02-02 because this checklist checkpoint updates the shared home/knowledge module READMEs also named in this task's write set. The saved image implementation and its existing component renders remain intact; resume its independent review during UI-R02-04 integration, where the image work is explicitly scoped. No image work is discarded.",
       "priority": "P2",
       "panels": [
         "6",
@@ -10103,9 +10252,9 @@
       ],
       "risk_class": "L",
       "checkpoint": "Distinct editorial image assignment for the current Knowledge and Training surfaces; this does not complete either panel.",
-      "test_evidence": "`pnpm check` PASS (typecheck, edge typecheck, ESLint, tests 63/63); no image-specific crop/render test exists. Four deployed JPEGs total 1,106,442 B, q86, stripped metadata, dimensions preserved and each under 350 KB. Source mapping is ID/version-stable; app component crops and interactions NOT TESTABLE. Public content guard PASS; direct offline Expo iOS export PASS (1,458 modules); wrapper registry fetch failed with sandbox EPERM.",
-      "implementation_state": "Images and source mappings implemented; app rendering and panel acceptance pending.",
-      "evidence_status": "blocked — required actual component render and §14 absent; pnpm check passed"
+      "test_evidence": "`pnpm check` PASS (74/74 tests); public iOS bundle/export PASS: `TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false EXPO_NO_TELEMETRY=1 pnpm bundle:ios` (1,581 JavaScript modules; export only, not an installed-device test). Image render: public 2/2 and review 16/16 PASS, including 375×844, 430×844, 375×667 and 140% CSS text proxy; page errors are empty for checked guide/training flows. Four deployed JPEGs total 1,106,442 B, q86, metadata-stripped, dimensions preserved, each under 350 KB. §14 and captures: docs/design/evidence/vision-r02/2026-10-21-panels-6-7-image-diversity/VERIFICATION.md. HomeCarousel is not mounted; Home's actual text route is verified, and no Home photo is claimed.",
+      "implementation_state": "Local image UI and production-component renders complete; independent review and full Panel 6/7 acceptance remain separate.",
+      "evidence_status": "local component render and §14 checkpoint PASS; native and full panel gates remain open"
     },
     {
       "id": "HOME-ROUTINE-SAVE-RECOVERY-01",
@@ -10227,6 +10376,631 @@
       "test_evidence": "Focused UI/data tests 12/12 and 11/11 PASS; pnpm check PASS (65 test files); public/review React Native Web save-recovery verifier 9/9 each; public pnpm bundle:ios content guard PASS (1,465 modules), git diff --check and python -X utf8 tools/dev_flow.py validate PASS. A04 Architect APPROVE, Critic PROCEED, Security PASS and independent QA PASS. Live Supabase/RLS/native remain NOT TESTABLE.",
       "implementation_state": "A04 implementation and owner/dog/lifetime recovery are complete locally. Definitive failure retains and unlocks draft; unknown keeps exact retry; verified conflict is persisted before refresh and requires explicit replacement. Rendered evidence under docs/design/evidence/flow-home-checklist-filters-2026-10-20/a04. Queue status advances to qa; broader A03/panel-4 acceptance remains separate.",
       "evidence_status": "local implementation checks pass; awaiting workflow QA/review checkpoint; live backend and native gates remain open"
+    },
+    {
+      "id": "UI-R02-01A",
+      "title": "Profil: gemensam sökbar rasväljare för skapa och ändra",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md panel 1; docs/design/vision-rev02-screen-contracts.md panel 1; docs/plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md §2–3.",
+      "plan": "docs/tasks/dev/UI-R02-01A-BREED-PICKER.md v2",
+      "write_paths": [
+        "src/features/onboarding/BreedPickerField.tsx",
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/components/ui/BottomSheet.tsx",
+        "src/data/app-data.ts",
+        "src/features/onboarding/README.md",
+        "tests/profile-screen-policy.test.mjs",
+        "tests/profile-edit.test.mjs",
+        "tests/app-data.test.mjs",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "docs/design/evidence/vision-rev02/ui-r02-01a-breed-picker",
+        "docs/tasks/dev/UI-R02-01A-BREED-PICKER.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Create and edit use one accessible searchable picker backed by fetched BreedOption rows; create has no automatic breed selection.",
+        "Search is local, the list scrolls without nesting FlatList inside BottomSheet ScrollView, and selection/cancel/retry preserve the form draft.",
+        "The no-match state offers the fetched `unknown` row as Okänd ras only if that row exists; it never synthesizes a breed ID.",
+        "An existing breed missing from the fetched catalog is shown without exposing its internal ID and may remain unchanged while other fields are saved.",
+        "Both EditDogProfileScreen save guard and updateOwnedDog reject changed unknown IDs and allow only the unchanged previous missing ID; account/dog scope, conditional write and readback are preserved.",
+        "Synthetic renders cover short and long lists, no match, long Swedish label, narrow viewport and large-text proxy; fixtures are labeled synthetic."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/profile-screen-policy.test.mjs tests/profile-edit.test.mjs tests/app-data.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "Render public/review profile picker states at 375×844, 430×844 and 375×667; inspect §14 and save captures."
+      ],
+      "depends_on": [
+        "VISION-R02-4E"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact plan v2 reviewed: Architect APPROVE and Critic PASS. Plan includes one shared local searchable BreedOption picker, the previously approved fetched catalog row with ID unknown as the no-results choice, no auto-selection on create, and regressions for both the edit-screen save guard and narrow updateOwnedDog legacy-ID preservation. Implementation waits for reviewed branch integration and a pre-change pnpm check."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Exact plan v2 Architect APPROVE and Critic PASS. The source task is integrated with the latest remote panel branch on 2026-10-23-ui-01-profil; all 30 audit/plan hashes verify. Pre-change pnpm check PASS (typecheck, edge typecheck, lint, 74/74 tests); git diff --check and dev_flow validate PASS. Begin the approved shared breed-picker UI and its narrow legacy-ID guard fix."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Independent QA PASS completed for scoped local UI/data-validation slice. Public and review RN Web 13/13 each; pnpm check 74/74; review-channel pnpm bundle:ios; git diff --check; verifier py_compile; queue validate. Native VoiceOver/Dynamic Type for this control, real create persistence, live catalog and Supabase/RLS not reverified."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA returned PASS on the final source/evidence diff: 13/13 public and 13/13 review; pnpm check 74/74; review-channel iOS export; queue/static checks pass. Native VoiceOver/Dynamic Type for this picker, real create persistence, production catalogue and live Supabase/RLS are explicitly outstanding separate evidence."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Oberoende Reviewer PASS; implementationcommit 786dd11e0b9955959caaeb0fa161291bc558ef96 på 2026-10-23-ui-01-profil. 01A stängs som lokal UI/valideringsslic; 01B startar efter dokumenterad checkpoint. Native/live-gränser kvarstår enligt taskplan."
+        }
+      ],
+      "next_step": "Oberoende Reviewer PASS; implementationcommit 786dd11e0b9955959caaeb0fa161291bc558ef96 på 2026-10-23-ui-01-profil. 01A stängs som lokal UI/valideringsslic; 01B startar efter dokumenterad checkpoint. Native/live-gränser kvarstår enligt taskplan.",
+      "priority": "P1",
+      "panels": [
+        "1"
+      ],
+      "risk_class": "M",
+      "checkpoint": "UI-R02-01 checkpoint 1: one searchable picker shared by profile creation and edit; full profile density and close behavior remain later checkpoints.",
+      "test_evidence": "Independent QA PASS: pnpm check (TypeScript, edge TypeScript, ESLint, 74/74); review-channel iOS export via __UNSAFE_EXPO_HOME_DIRECTORY=/tmp/tassla-expo-home/.expo EXPO_TELEMETRY_DISABLED=1 TASSLA_BUILD_CHANNEL=review EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=true pnpm bundle:ios; public/review RN Web 13/13 each; Python py_compile; git diff --check; python -X utf8 tools/dev_flow.py validate. Saved RESULTS.json/screenshots under docs/design/evidence/vision-rev02/ui-r02-01a-breed-picker/{public,review}. Native VoiceOver/Dynamic Type for this control, real create persistence, production catalogue completeness and live Supabase/RLS not reverified.",
+      "implementation_state": "Local UI/validation checkpoint implemented, QA/reviewer approved, committed as 786dd11e0b9955959caaeb0fa161291bc558ef96 and pushed on 2026-10-23-ui-01-profil. Native picker semantics, real create persistence, production catalog completeness and live Supabase/RLS remain separate unverified evidence.",
+      "evidence_status": "Architect APPROVE, Critic PASS, independent QA PASS, independent Reviewer PASS; implementation commit pushed. Explicit local-only scope and remaining evidence documented in the task plan."
+    },
+    {
+      "id": "UI-R02-01B",
+      "title": "Hundprofil: fält först, kompakt hundval och trygg avslutning",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md stödflöde Hundprofil; docs/design/vision-rev02-screen-contracts.md panel 1 visual rules; docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md §3; GAP-UI-UX-rev02-2026-10-23.md G03/G06/G08/G10/G13/G16.",
+      "plan": "docs/tasks/dev/UI-R02-01B-PROFILE-DENSITY-AND-EXIT.md v6",
+      "write_paths": [
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/onboarding/ProfileScreenHeader.tsx",
+        "src/features/onboarding/profile-exit.ts",
+        "src/features/home/AppFlow.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/components/ui/Dialog.tsx",
+        "src/features/onboarding/README.md",
+        "tests/profile-screen-policy.test.mjs",
+        "tests/profile-edit.test.mjs",
+        "tests/profile-exit.test.mjs",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "tools/visual-check/README.md",
+        "docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/",
+        "docs/tasks/dev/UI-R02-01B-PROFILE-DENSITY-AND-EXIT.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md"
+      ],
+      "acceptance": [
+        "Editable profile fields appear before long introductions, inline dog lists and optional kennel details; active dog selection reuses DogProfileSwitcherSheet.",
+        "Create/edit use DatePickerField and preserve manual date, validation, identity and save/readback behavior.",
+        "Profile has one compact information entry. Optional kennel is visibly opt-in, collapsed by default, and errors/retry/unknown remain reachable; QR prefill never implies consent.",
+        "A typed owner/accountGeneration/dog-scoped exit snapshot reports local dirtiness synchronously; parent ignores stale snapshots and reads current mutation refs.",
+        "requestProfileExit guards header, bottom nav, Android BackHandler, dog switching and edit-profile Add Dog entry. Clean exits immediately; dirty local fields confirm; profile/attribution busy, pending or conflict blocks synchronously. iOS swipe dismissal stays out of scope.",
+        "Dirty dog switch and Add Dog entry share a destination-specific confirmation; cancel leaves route/draft intact, confirm invokes only the requested existing callback.",
+        "Add mode dirty cancel confirms local discard; busy blocks. Non-busy recovery returns to the correct entry surface and resumes exact form + full recovery UI context in the same session. A supplied snapshot takes precedence over generic ID→unknown only after its request ID matches SecureStore; mismatch keeps stale resolved actions unavailable. No automatic retry/write; request ID/referral state remain intact.",
+        "Initial-mode Android back is synchronously consumed during both dog create and the asynchronous SecureStore request-ID recovery read; when both settle, it confirms before leaving if dirty/recovering. Copy says form data may not survive restart and only promises a secure request ID if a request had already been sent; no secure request/referral state is cleared.",
+        "Volatile Add Dog snapshot is owner/accountGeneration scoped and cleared on explicit discard, successful resolution, explicit start-another/new-request action, and scope change. It restores resolvedShouldClearReferral (false for existingProfile, true for sourceUnconfirmed) and original addEntryPoint; tests retain each state’s original actions and referral cleanup semantics. Cache cleanup alone never mutates secure storage.",
+        "Discard never saves/retries/accepts current/starts another/clears or replays intents or storage. Pending profile intents remain available when returning.",
+        "Public and synthetic review render actual profile create/edit/kennel/switcher states on short and standard viewports with large-text proxy; §14 states no exact profile-panel match."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/profile-screen-policy.test.mjs tests/profile-edit.test.mjs tests/profile-exit.test.mjs",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "Render actual ProfileScreen/EditDogProfileScreen in public/review at 375x667, 375x844 and 430x844; inspect §14 and save evidence."
+      ],
+      "depends_on": [
+        "UI-R02-01A"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Exact UI-R02-01B plan v6 APPROVE: Architect APPROVE, UX Critic PASS, Security APPROVE. Verdicts recorded in the plan. Scope includes profile density, scoped dirty-exit guards, Android BackHandler, Add Dog recovery snapshot lifecycle; no data/API change."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Starting approved UI-R02-01B v6 on 2026-10-23-ui-01-profil. Pre-change pnpm check PASS (typecheck, edge typecheck, lint, 74/74); git diff --check and dev_flow validate PASS. Proceed with approved UI-only write paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Lokal implementation klar på 2026-10-23-ui-01-profil. Public/review RN Web 9/9 vardera; pnpm check PASS (TypeScript, edge TypeScript, ESLint, 75/75); public pnpm bundle:ios PASS (1 583 JS-moduler); git diff --check, Python py_compile och dev_flow validate PASS. Markerar endast redo för oberoende QA: QA, Security final och Reviewer återstår. Native back/accessibility, SecureStore efter processomstart och live Supabase/RLS är inte provade."
+        },
+        {
+          "from": "qa",
+          "to": "done",
+          "actor": "coordinator",
+          "evidence": "Owner-confirmed approved and reviewed on 2026-10-23; closure relies on Erik’s report. No separate QA/Security/Reviewer artifact or new test run was supplied in this session. Existing implementation evidence and its explicit limitations remain in docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/VERIFICATION.md."
+        }
+      ],
+      "next_step": "Closed on owner confirmation 2026-10-23. Continue with UI-R02-02 Checklistor; keep SecureStore process-restart and signed/TestFlight build as separately unverified evidence.",
+      "priority": "P1",
+      "panels": [
+        "Hundprofil",
+        "Onboarding"
+      ],
+      "risk_class": "H",
+      "checkpoint": "UI-R02-01 checkpoint 2: content-first profile, shared existing dog switcher, compact optional details, and safe dirty-route exit; no profile data/model changes.",
+      "test_evidence": "Implementer local checkpoint: pnpm check PASS (TypeScript, edge TypeScript, ESLint, 75/75 tests); public pnpm bundle:ios PASS (1,583 JS modules); public/review RN Web 9/9 each; git diff --check, Python py_compile and python -X utf8 tools/dev_flow.py validate PASS. Synthetic screenshots and §14 evidence under docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/. Independent QA, Security final and Reviewer remain pending; native/runtime checks not claimed. Owner confirmed QA/review completion on 2026-10-23; detailed verdict artifacts were not supplied in this session, so no separate role results are asserted.",
+      "implementation_state": "UI-R02-01B v6 is implemented on 2026-10-23-ui-01-profil and locally validated. Includes compact create/edit profile, shared dog switcher, date picker, scoped route exit, Android back guard, and session-bound Add Dog recovery snapshot with request-ID match. No schema/API/auth changes. Native back/accessibility, SecureStore process restart and live Supabase/RLS remain unverified. Owner confirmed the package is already approved and reviewed on 2026-10-23; closure recorded on that basis.",
+      "evidence_status": "Owner confirmed approved/reviewed on 2026-10-23. Prior local render/check/export evidence remains attributed to implementer. No new independent test run; process-restart SecureStore and signed/TestFlight build remain unverified."
+    },
+    {
+      "id": "UI-R02-02",
+      "title": "Checklistor: gemensamma ikoner och kompakt redigering",
+      "mvp_requirement": "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md §4; GAP G02–G07, G14, G16; vision_rev02 panels 4 and 7.",
+      "plan": "docs/tasks/dev/UI-R02-02-CHECKLISTOR.md v1; UX: docs/plans/UI-R02-02-checklistor-ux-spec.md",
+      "write_paths": [
+        "src/features/checklists/checklist-icons.ts",
+        "src/features/checklists/ChecklistIconPicker.tsx",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/daily-routine-checklist-icons.ts",
+        "src/features/home/README.md",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/checklist-data.ts",
+        "src/features/knowledge/checklist-intent.ts",
+        "src/features/knowledge/checklist-model.ts",
+        "src/features/knowledge/README.md",
+        "src/components/ui/Button.tsx",
+        "src/components/ui/ChecklistItem.tsx",
+        "src/components/ui/Dialog.tsx",
+        "src/components/ui/Field.tsx",
+        "supabase/migrations/202610230001_checklist_custom_item_icons.sql",
+        "supabase/tests/checklist-custom-item-icons.sql",
+        "tests/checklist-data.test.mjs",
+        "tests/checklist-ui.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tools/visual-check/README.md",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify-checklist-icons.py",
+        "tools/visual-check/verify-checklist-custom-icons.py",
+        "docs/design/evidence/vision-rev02/ui-r02-02-checklists/",
+        "docs/plans/UI-R02-02-checklistor-ux-spec.md",
+        "docs/tasks/dev/UI-R02-02-CHECKLISTOR.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md"
+      ],
+      "acceptance": [
+        "Routines and custom phase checklist points use the same 20-icon model, picker, labels, selected state and semantic tone.",
+        "Custom point icon is chosen before first save and survives exact readback/reopen/edit/retry/conflict; legacy null remains valid and completion-only update preserves icon.",
+        "Editing uses one Save footer and compact contextual actions; delete and dirty close have explicit confirmation and failed/unknown intent retains the draft.",
+        "Opening a routine focuses that routine; a named compact action opens manage-all/create; unrelated training choices are absent from focused routine mode.",
+        "Public/review synthetic UI controls reach 44pt target size and remain usable at 375x667, 375x844, 430x844 and large-text proxy; no panel-wide §14 acceptance is claimed from component renders.",
+        "SQL migration preserves nullable legacy rows and applies an icon allowlist with narrow grants. Live migration/RLS is a separate verification gate."
+      ],
+      "checks": [
+        "pnpm check",
+        "CI=1 TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false node tools/check-content-release.cjs",
+        "CI=1 __UNSAFE_EXPO_HOME_DIRECTORY=/tmp/tassla-expo-home TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false node node_modules/expo/bin/cli export --platform ios --output-dir dist/ios",
+        "Public/review checklist icon verifiers and task-specific Knowledge verifier",
+        "git diff --check",
+        "python -m py_compile tools/visual-check/verify-checklist-custom-icons.py tools/visual-check/verify-checklist-icons.py",
+        "python -X utf8 tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-R02-01B"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Erik explicitly ordered the remaining packages 02→03→04 after closing 01B. Exact scope and write paths recorded in the dated package plan; no pre-16-October UI proposal was restored."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation checkpoint locally verified 2026-10-23: pnpm check PASS (75/75), iOS public export PASS (1,585 JS modules), content guard PASS, routine renders 15/15 public and review, Knowledge task verifier 7/7, diff check and Python compile PASS. Independent Architect/Critic, QA, Security and Reviewer verdicts plus live migration are not yet recorded."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende QA accepterar lokal implementation-checkpoint: pnpm check 75/75, rutinrender 16/16 public+review, riktat Kunskapsflöde 7/7, public iOS JS-export/content guard PASS. verify-know02.py är NOT TESTABLE på föråldrad route före assertion och lämnad oförändrad; ej produktfel. Live migration/RLS, panel-§14 och native kvarstår."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Oberoende Reviewer PASS på fryst implementation efter korrigeringar; Architect APPROVE, Critic PASS, Security statisk APPROVE finns dokumenterade. Lokalt QA-kriterium klart; live migration/RLS, full panel 4/7 §14 och native/TestFlight är separata öppna gates, inte påstådda PASS."
+        }
+      ],
+      "next_step": "Implementation checkpoint 3973ffe is pushed to origin/2026-10-23-ui-02-checklistor. Keep migration/RLS/readback and full panel 4/7 §14 open; resume saved FLOW-PANELS-6-7-IMAGE-DIVERSITY review during UI-R02-04.",
+      "priority": "P1",
+      "panels": [
+        "Hem",
+        "Kunskap"
+      ],
+      "risk_class": "H",
+      "checkpoint": "UI-R02-02 local implementation checkpoint; icon persistence, focused routine and compact editor delivered, with QA/review and live migration gates open.",
+      "test_evidence": "Independent QA accepted the local implementation checkpoint. pnpm check PASS (app/edge typecheck, lint, 75/75 tests); public/review routine verifier 16/16 each; targeted Knowledge icon/save/readback/dirty-close/delete verifier 7/7 at 375x667, 375x844, 430x844 and 140% CSS text proxy; public iOS Expo JS export PASS (1,585 modules); content guard, diff check, verifier py_compile and queue validation PASS. Older broad verify-know02.py is NOT TESTABLE: it waits for a Checklistor tab absent from its current fixture before any assertion; left unchanged and not treated as product failure. Live migration/RLS, full panels 4/7 §14 and native/TestFlight remain unverified.",
+      "implementation_state": "Shared 20-icon model/picker implemented for routines and custom Knowledge checklist points. Custom icon flows through draft, write/readback, retry/conflict and UI; completion-only writes preserve it. Compact edit form has one save footer, icon actions and explicit confirmations. Focused routine mode separates manage-all/create. Independent local QA, Architect, Critic, Security and Reviewer verdicts are recorded. This is a local implementation checkpoint; migration runtime, full panel 4/7 acceptance and native evidence are separate open gates.",
+      "evidence_status": "Local implementation QA accepted; Architect APPROVE, Critic PASS, Security APPROVE (static), Reviewer PASS. The stale broad Knowledge verifier is NOT TESTABLE and was not modified; current targeted verifier passes 7/7. The 202610230001 migration and SQL probe were not applied/run against real Supabase/PostgreSQL in this session. Live RLS/readback, panel-wide §14 and native/TestFlight remain OPEN."
+    },
+    {
+      "id": "UI-R02-03",
+      "title": "Logg och Hälsa: kompakta och tydliga formulär",
+      "mvp_requirement": "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md §5; GAP G04/G06/G09/G10/G11/G13/G16/G19; vision_rev02 Panel 5 och stödresan Hälsa.",
+      "plan": "docs/tasks/dev/UI-R02-03-LOGG-HALSA.md v3; UX: docs/plans/UI-R02-03-logg-halsa-ux-spec.md v3",
+      "write_paths": [
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/README.md",
+        "src/features/health/HealthScreen.tsx",
+        "src/features/health/HealthHistoryScreen.tsx",
+        "src/features/health/WeightScreen.tsx",
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/features/health/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/main-navigation.ts",
+        "tests/log-screen-policy.test.mjs",
+        "tests/health-history.test.mjs",
+        "tests/health-weight.test.mjs",
+        "tests/planned-health.test.mjs",
+        "tests/main-navigation.test.mjs",
+        "tests/daily-checklist-route.test.mjs",
+        "tests/planned-health-feedback.test.mjs",
+        "tests/ui-actions-rows.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-log.py",
+        "tools/visual-check/verify-health-edit-forms.py",
+        "tools/visual-check/README.md",
+        "docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/",
+        "docs/tasks/dev/UI-R02-03-LOGG-HALSA.md",
+        "docs/plans/UI-R02-03-logg-halsa-ux-spec.md",
+        "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Logg edit har en fast primär Spara-footer; X/back skyddar dirty utkast och soptunnan öppnar en namngiven bekräftelse. Etttrycks-snabbval, dubblettskydd, datum/tid, undo och failed/unknown recovery består.",
+        "Utförd hälsa, vikt och planerad hälsa använder samma kompakta rubrik-/fält-/footer-/ikonhandling-familj; fälten, validering och planerat/genomfört-semantik förblir oförändrade.",
+        "Bekräftat sparresultat skiljs från failed, pending, unknown och konflikt; fel behåller formdata. Vid pending/unknown/conflict kan sheetet minimeras efter att aktiv write lämnat busy; recovery row visas högt på ägarsidan, överlever navigation bort/tillbaka inom samma scope och öppnar samma in-memory draft/intent igen.",
+        "Tryck på namngiven Hälsa-plan skickar exakt plan-ID, fokuserar posten och bevarar flik/scroll vid retur; Checklistor A03 → Kommande → rätt plan → retur är oförändrad.",
+        "Vikt och planerad Hälsa använder befintlig BottomSheet editor över listan; utförd Hälsa behåller sitt sheet. Alla editors har fast Spara-footer utan konkurrerande inline-formulär.",
+        "Recovery snapshot scope-keyas med owner/accountGeneration, selectionKey, dog/lifetime, editor kind och object ID. Scope switch, sen async response, upprepade recovery actions och unmount cleanup får aldrig visa eller mutera annan scope.",
+        "Hälsa-planfokus är separat från Checklistor och scope/lifetime-bound med exakt plan-ID eller explicit null, returflik och scroll. Missing/error visar inte en annan plan som fallback.",
+        "Radera bekräftas för exakt objekt-ID och befintlig mutation/scope/readback (preimage där kontraktet redan har det). Pending/unknown/conflict bevarar intent och formulär vid minimize/reopen. Planinteraktion skapar eller ändrar aldrig utförd dog_events-historik.",
+        "Keyboard acceptans täcker decimal-pad till Spara, multiline Return, och X/Spara vid 375x667 och 140% textproxy; native körning redovisas separat.",
+        "Public/review render av ändrade resor vid 375×667, 375×844, 430×844 samt 140% textproxy; tillämplig §14 bedöms med skärmbilder. Full Panel 5-acceptans skiljs från lokal formulärcheckpoint.",
+        "Ingen ändring av schema, datamodell, hälsodatans ändamål, auth/RLS, RPC, notifieringskontrakt eller dependencies."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/log-screen-policy.test.mjs tests/health-history.test.mjs tests/health-weight.test.mjs tests/planned-health.test.mjs tests/main-navigation.test.mjs tests/daily-checklist-route.test.mjs tests/planned-health-feedback.test.mjs tests/ui-actions-rows.test.mjs",
+        "pnpm check",
+        "CI=1 TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false node tools/check-content-release.cjs",
+        "CI=1 __UNSAFE_EXPO_HOME_DIRECTORY=/tmp/tassla-expo-home TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false node node_modules/expo/bin/cli export --platform ios --output-dir dist/ios",
+        "Public/review RN Web verify-flow-log.py and verify-health-edit-forms.py using current visual-check server",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-R02-02"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v3; UX Critic PASS plan v3; Security APPROVE plan v3. Scoped in-memory recovery/minimize, exact health-plan route, BottomSheet editor and existing write contracts recorded in docs/tasks/dev/UI-R02-03-LOGG-HALSA.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start work under approved plan v3 on new package branch. Scope limited to UI-R02-03 write_paths; preserve existing data adapters, plan/history separation, A03 and other reviewed flows."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation and local verification checkpoint complete on 2026-10-23. Public/review RN Web: Logg 13/13 each and Hälsa forms 6/6 each; pnpm check 75/75, public iOS JS export 1,585 modules, release content guard, diff check, queue validate and verifier py_compile PASS. Independent QA/Reviewer and full Panel 5 §14 are next; no live Supabase/RLS or native/TestFlight re-run is claimed."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "QA found no functional/code test failure (focused 8/8, app/edge typecheck, lint, 75/75 tests, iOS export/content guard and diff check passed), but two 375x667 health dialog screenshots were captured during fade-in. Re-capture after stable dialog opacity, rerun affected verifier, then QA recheck before Reviewer. Chromium was not rerunnable in QA sandbox."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Resume bounded QA correction: stable dialog captures and real exact-plan roundtrip. Compact planned-health heading and focused-card priority follow Architect conditional approval and Critic PROCEED recorded in task."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect approved bounded compact-header/focused-card correction with record before generic reminder status; Critic PROCEED. Saved in UI-R02-03 task."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement approved QA correction within existing PlannedHealthScreen and visual verifier/harness scope."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Bounded QA correction complete: pnpm check PASS76/76; focused8/8; health public/review8/8 with stable dialogs, exact plan, real nonzero scroll return, empty create and full44pt edit within scroll viewport at375x667/140percent with actual reminder copy. Independent QA recheck underway."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS bounded UI03: focused8/8, pnpm check76/76, stable health verifier8/8 public/review rerun with exact plan, scroll return, empty create and full44pt action at140percent. Reviewer/Security frozen-diff review next; native/live/fullPanel5 separate."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Reviewer BLOCK: confirmed minimized unknown weight recovery leaves stale draft and Add disabled. Root will correct exact scoped recovery cleanup, rerun handler/UI tests and request QA/review."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Bounded recovery correction is existing v3 scope; Architect APPROVE saved in task, no data or adapter change."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE exact mounted lifetime fullscope objectID cleanup in markHealthMutationSaved and symmetric Health-origin focus clear."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement reviewer recovery correction with actual handler and browser regression checks before re-review."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Reviewer recovery correction implemented with Architect/Security APPROVE. Actual handler regression tests PASS; pnpm check76/76 and health9/9 public/review PASS incl unknown delete minimize readback Add unlocked. Independent QA recheck now; native/live separate."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA recovery correction PASS: actual handler tests2/2, health9/9 public/review rerun incl minimized unknown delete readback unlocks Add; fullrootcheck76/76. SecuritydeltaAPPROVE. Reviewer recheck next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS after correction: fullscope/lifetime/objectID recovery cleanup resolves dead end, actual handler tests and QA9/9 per mode corroborate; Security APPROVE. pnpm check76/76, direct public iOS export/content guard PASS. Local checkpoint only; fullPanel5/native/live separate."
+        }
+      ],
+      "next_step": "Reviewer PASS after correction: fullscope/lifetime/objectID recovery cleanup resolves dead end, actual handler tests and QA9/9 per mode corroborate; Security APPROVE. pnpm check76/76, direct public iOS export/content guard PASS. Local checkpoint only; fullPanel5/native/live separate.",
+      "priority": "P1",
+      "panels": [
+        "Logga",
+        "Hälsa"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Implementation complete; local public/review renders and automated checks PASS. Independent QA/Reviewer and full Panel 5 §14 remain open.",
+      "test_evidence": "Public/review: Logg 13/13 each; health forms 6/6 each. pnpm check PASS (75/75), public iOS JS export PASS (1,585 modules), public content guard, git diff --check, queue validation and verifier py_compile PASS. Evidence: docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/{log,health}/{public,review}/. No live Supabase/RLS or native/TestFlight test was run.",
+      "implementation_state": "Logg, utförd hälsa, vikt, planned health editors and scoped exact-plan return implemented. No schema, adapter, RPC, RLS or mutation-contract changes.",
+      "evidence_status": "Local public/review RN Web and package checks PASS; synthetic fixtures only. Native, live backend and full-panel gates remain unverified."
+    },
+    {
+      "id": "UI-R02-04",
+      "title": "Kunskap, Träning och Insikter i en sammanhängande app",
+      "mvp_requirement": "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md §6; GAP G03/G04/G06/G07/G11/G12/G13/G15/G16/G17/G18; vision_rev02 panel 6–8 och berörda stödresor.",
+      "plan": "docs/tasks/dev/UI-R02-04-PANELHELHET.md v7; UX: docs/plans/UI-R02-04-panelhelhet-ux-spec.md v7",
+      "write_paths": [
+        "src/components/ui/Tabs.tsx",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/FAQScreen.tsx",
+        "src/features/knowledge/README.md",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "src/features/notifications/README.md",
+        "src/features/notifications/NotificationSettingsScreen.tsx",
+        "src/features/puppy-log/InsightsScreen.tsx",
+        "tests/ui-r02-04-panelhelhet.test.mjs",
+        "tests/training-overview.test.mjs",
+        "tests/knowledge-training-empty-feedback.test.mjs",
+        "tools/visual-check/verify-flow-training.py",
+        "tools/visual-check/verify-ui-r02-04.py",
+        "tools/visual-check/build.cjs",
+        "tools/visual-check/ui-r02-04-app.tsx",
+        "docs/tasks/dev/UI-R02-04-PANELHELHET.md",
+        "docs/plans/UI-R02-04-panelhelhet-ux-spec.md",
+        "docs/design/evidence/vision-rev02/ui-r02-04-panelhelhet",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/HomeCarousel.tsx",
+        "src/features/home/README.md",
+        "src/features/home/DevelopmentPreview.tsx",
+        "src/features/home/PreviewHomeScreen.tsx",
+        "src/features/home/PreviewProfileScreen.tsx",
+        "src/features/account/AuthCallbackView.tsx",
+        "src/components/ui/ComponentGalleryScreen.tsx",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/editorial-image-assignment.ts",
+        "src/features/knowledge/review-content.ts",
+        "tests/checklist-ui.test.mjs",
+        "tests/content-delivery.test.mjs",
+        "tests/knowledge-search-screen.test.mjs",
+        "tests/notifications.test.mjs",
+        "tests/review-training.test.mjs",
+        "tests/training-screen-policy.test.mjs",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "src/features/training/TrainingScreen.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "tools/visual-check/app.tsx",
+        "src/components/ui/BottomNav.tsx",
+        "src/components/ui/Button.tsx",
+        "src/components/ui/Toast.tsx",
+        "src/components/ui/ActionMenu.tsx",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/account/AccountSettingsScreen.tsx",
+        "tests/ui-actions-rows.test.mjs",
+        "tests/account-delete.test.mjs",
+        "tests/profile-screen-policy.test.mjs",
+        "tests/planned-health-feedback.test.mjs",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/components/README.md",
+        "tests/toast-compact-policy.test.mjs",
+        "tests/home-vision.test.mjs",
+        "tools/visual-check/verify-know02.py",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/verify-checklist-filters.py",
+        "tools/visual-check/verify-routine-save-recovery.py",
+        "tools/visual-check/verify-ui-r02-04-actions.py",
+        "tests/log-screen-policy.test.mjs",
+        "src/features/puppy-log/README.md",
+        "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md",
+        "docs/GAP-UI-UX-rev02-2026-10-23.md",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Delade Tabs har meningsfullt valfritt accessibilityLabel och används av Training, FAQ-context och Insights-period utan att ändra deras underliggande urval.",
+        "Knowledge visar semantiska checklista/FAQ-symboler och kompakt AppBar med korrekta returer; guidebilder/ID och public/review-gates bevaras.",
+        "Training reset ersätter bara presentationen av befintlig Alert med namngiven ikon/dialog. Exakt valt program-ID/objekt binds till dialogen; stale dialog stängs och single-flight låser synkront. Public confirm anropar befintlig onResetProgram(program) exakt en gång; review reset använder enbart lokal resetReviewTrainingProgram. Cancel/close anropar inget. Ingen ny handler, bredare scope eller atomisk reset utlovas.",
+        "Påminnelser visar en informationsingång och kompakt grupperade checkboxval. Toggle ändrar endast lokalt draft före explicit save; Save anropar enbart onSave och OS-knappen enbart onRequestPermission. App-/OS-status separeras och träningsvalets befintliga huvudvalssemantik består.",
+        "Insikters nuvarande period-/scopekontrakt och befintliga profil-/Logg-returer provas. Migration supabase/migrations/202610220002_dog_event_insights_read.sql och supabase/tests/dog-event-insights-read.sql granskas; endast syntetisk disposable dev-prob med stop-on-error/rollback kan ge RPC/RLS PASS. SQL ändras inte. Saknad miljö betyder NOT TESTABLE.",
+        "Renderad UI-/interaktionskontroll av ändrade vyer vid 375×844, 430×844, 375×667 och 140% CSS-textproxy; §14-delmål får bildbevis och explicit Ja/Nej/NOT TESTABLE. Slutmatrisen stämmer av alla 8 panelers befintliga evidens, med ägarbekräftad A03 på panel 4 och UI-R02-03 lokal QA/Reviewer stängd i 13f48bf; full panel 5 separat.",
+        "Relevanta befintliga och nya tester samt pnpm check, iOS JS-export, public content guard, diff-check och kövalidering passerar före commit/push.",
+        "Oberoende QA och Reviewer granskar fryst implementation; paketet påstår inte full Panel 6–8, publicerat Kunskapsinnehåll, live RLS/RPC, native accessibility eller signerad build utan respektive bevis.",
+        "Security frozen-diff review verifierar exakt reset callback/scope, stale-dialog/single-flight, att toggle inte skriver, och separata save-/permission callbacks. Ingen diff i ProductWorkspace, workspace-data, notification service, SQL/RPC, RLS eller auth.",
+        "Ägarens screenshotjusteringar: rekommendationskort är lika höga även med lång titel utan klippning; programetiketten har både lägre textstorlek och lättare vikt än övningsrubriken och kontrolleras vid normal och 140% text; Kunskap visar bildkort utan upprepad teasertext; Påminnelsernas förklaring öppnas från en enda informationsikon.",
+        "Synlig utfyllnad städas i aktiva appförhandsvisningar och aktuella renderfixturer för alla paneler. Inga exempelhundar, syntetiska rasnamn, layouttestfraser, fejkade källor eller långa tekniska fixturebanderoller visas. Fylld syntetisk person-/hundfixture märks en gång per vy `Granskningsdata` eller `Förhandsvisning · exempeldata`; sanningsenliga och kompakta content-statusar, verkliga fel/tomlägen och funktionella inputledtrådar bevaras; ingen tränings-/hälsorådgivning eller data-/route-logik ändras.",
+        "Owner v6: five full BottomNav names remain one line without clipping at320/375/430 normal+140percent; native navlabels max1.4 only, content unchanged. Delete entry red trash-outline, edit create-outline, undo arrow-undo-outline everywhere in included callers; confirmations, scopes, callbacks and account safeguards unchanged. Native above140percent recorded separately.",
+        "All migrated icon-only delete/edit/undo triggers have full contextual accessible names, correct roles, busy/disabled preserved and44x44minimum. Account confirms before samecallback; ProfileScreen clears local draft code and existing pending referral in SecureStore without removing a server link; EditDogProfileScreen existing saveAttribution unchanged, Toastundo samecallback once. Focused source/handler and rendered trigger coverage required."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/ui-r02-04-panelhelhet.test.mjs tests/training-screen-policy.test.mjs tests/knowledge-search-screen.test.mjs tests/insights-model.test.mjs tests/insights-period-read.test.mjs tests/insights-scope.test.mjs tests/log-insights-route.test.mjs tests/profile-insights-route.test.mjs tests/notifications.test.mjs",
+        "pnpm check",
+        "CI=1 TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false node tools/check-content-release.cjs",
+        "CI=1 __UNSAFE_EXPO_HOME_DIRECTORY=/tmp/tassla-expo-home TASSLA_BUILD_CHANNEL=public EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=false node node_modules/expo/bin/cli export --platform ios --output-dir dist/ios",
+        "Public/review render and interaction verification for Knowledge, Training, Insights and Reminders using current visual-check production components",
+        "Review/check SQL migration supabase/migrations/202610220002_dog_event_insights_read.sql and run supabase/tests/dog-event-insights-read.sql in a suitable synthetic development database; otherwise mark live RPC/RLS NOT TESTABLE.",
+        "python -X utf8 tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-R02-03"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v3 godkänd av Architect och Security; UX Critic v2 PROCEED gäller oförändrat UI-scope. Risk H och Security-villkoren ingår i acceptans."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Påbörjar godkänd UI-R02-04 v3 på 2026-10-23-ui-04-panelhelhet, staplad ovanpå 81e87bc. UI-R02-03 QA/Reviewer fortsätter separat på sin frysta branch och skrivytorna är disjunkta."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Ägarens bildfeedback 2026-10-23 utökade UI-R02-04 till plan v5: lika träningskort med långa rubriker, bildbaserad Knowledge utan teasertext, kompakt påminnelseinfo och global synlig placeholderstädning i aktiva preview-/renderfixturer. Ny Architect/Critic-planreview krävs innan den utökade delen färdigställs. Tidigare sparade UI04-resultat: 14/14 public och 15/15 review; oberoende QA granskade captures och resultat men kunde inte starta om Chromium."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Blockerad: UI-R02-03 fryst implementation 81e87bc behöver oberoende QA/Reviewer före copy-only ändringar i LogScreen och delad harness; plan v5 är utökad och inväntar reviderad Architect/Critic-review. ProductWorkspace är borttagen ur scope. Återuppta som planned först efter dessa underlag."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "UI03 dependency13f48bf QA Reviewer Security PASS and pushed. V6 Architect APPROVE; Critic PROCEED WITH CHANGES on now corrected current document statuses; no material UX objection."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v6 exact nav action icon scope, full accessible labels and distinct frozen account/kennel callbacks. Critic document-status conditions applied."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Complete v6 shared nav and icon actions plus approved copy cleanup and card hierarchy, then independent QA Reviewer Security of frozen diff."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "V7 implementerad inom Architect APPROVE/Critic PROCEED; pnpm check76/76, public iOS1585, UI04render18/19, actions9/9vardera, Training14/14, Logg13/13, Health9/9. Kända separata Home-marginalavvikelser och D1/D2/D3/D5 i verifieringen."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS frozenv7: own public18/18, review19/19, actions9/9both, focusedNode8/8, real modal clicks/rawdraft/exactdelete and resetrestore checks. INDEPENDENT-QA.json + VERIFICATION.md. Native/live/fullpanels remain separate."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer PASS frozenv7 after actual APIs/glyphs/handlers, screenshots vs rev02 and fresh UI18/19/actions9/9both, check76/76/export1585. Independent QA PASS and Security APPROVE saved in VERIFICATION/INDEPENDENT-QA. Local UI checkpoint only; known separate Home4pt and D1/D2/D3/D5/native/build remain explicit."
+        }
+      ],
+      "next_step": "Kodcommitfe1c834 pushad till origin/2026-10-23-ui-04-panelhelhet2026-10-24. Bygg samladebranchen01–04 och kör manualphone checklist i VERIFICATION.md. Aktuella restpunkterD1/D2/D3/G17/D5; prioracceptedHome4ptseparate. Inga äldre UI-förslag återinförs.",
+      "priority": "P1",
+      "panels": [
+        "6",
+        "7",
+        "8"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Rev02-aligned UI family integration for Knowledge, Training, Insights and reminder support flow; no data/RPC changes.",
+      "test_evidence": "Frystv7: pnpmcheckPASS app/edgeTS/lint76/76, publiciOSexport1585/contentguardPASS. UI04public18/18review19/19/actions9/9both independentlyrerunQA; Training14/14,Logg13/13,Health9/9both; breed13/13,profile9/9both; image2/2public16/16review; progress2/2public15/15review. Bredpanel52/52public72/74review with exactly2prioracceptedHome4ptmarginfailures recorded. VERIFICATION.md and INDEPENDENT-QA.json.",
+      "implementation_state": "V7lokalcheckpointklar2026-10-24: GAPUIintegration, uniformicons/nav, compactinfo/copy, measuredtrainingcards/Knowledgeimages; Logg modalownership and staleTrainingresetcorrected. ArchitectAPPROVE,CriticPROCEED,SecurityAPPROVE,independentQAPASS,ReviewerPASS. NoProductWorkspace/data/service/SQL/auth changes in04.",
+      "evidence_status": "Freshsavedpublic/reviewcaptures and independentQAresults. D1/D2/D3/D5,knownseparateHomeclearance,native/signedbuild remain explicit; owneracceptedA03/panel3/generalVO/DynamicType/Supabase/RLS/Compliance preserved.",
+      "implementation_commit": "fe1c834f9ff99c6ba19ab9e269406195d3ae7b0e"
     }
   ]
 }

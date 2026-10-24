@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { registerHooks } from 'node:module';
+import { readFile } from 'node:fs/promises';
 import { createClient } from '@supabase/supabase-js';
 const hook = registerHooks({ resolve(specifier, context, nextResolve) { return specifier.startsWith('.') && !/\.[a-z0-9]+$/i.test(specifier) ? nextResolve(`${specifier}.ts`, context) : nextResolve(specifier); } });
 const data = await import('../src/features/knowledge/checklist-data.ts');
@@ -10,6 +11,8 @@ const otherDogId = '99999999-9999-4999-8999-999999999999';
 const templateId = 'review-v1:before-homecoming';
 const customId = '33333333-3333-4333-8333-333333333333';
 const baseUrl = 'https://local-checklists.supabase.invalid';
+const iconMigration = await readFile(new URL('../supabase/migrations/202610230001_checklist_custom_item_icons.sql', import.meta.url), 'utf8');
+const iconProbe = await readFile(new URL('../supabase/tests/checklist-custom-item-icons.sql', import.meta.url), 'utf8');
 
 function localClient(handler) {
   const requests = [];
@@ -24,7 +27,7 @@ function localClient(handler) {
 }
 const json = (value, status = 200) => Response.json(value, { status });
 const progressRow = (dog = dogId) => ({ dog_id: dog, template_id: templateId, item_key: 'safe-space' });
-const customRow = (values = {}) => ({ id: customId, dog_id: dogId, template_id: templateId, title: 'Extra vila', completed: false, ...values });
+const customRow = (values = {}) => ({ id: customId, dog_id: dogId, template_id: templateId, title: 'Extra vila', completed: false, icon: null, ...values });
 
 test('standard checkbox is idempotent and confirms exact dog/template/item after upsert', async () => {
   let stored = null;
@@ -43,6 +46,20 @@ test('standard checkbox is idempotent and confirms exact dog/template/item after
   } finally { await client.auth.dispose(); }
 });
 
+test('custom item icon migration matches the shared 20-icon allowlist and has an owner probe', async () => {
+  const hook = registerHooks({ resolve(specifier, context, nextResolve) { return specifier.startsWith('.') && !/\.[a-z0-9]+$/i.test(specifier) ? nextResolve(`${specifier}.ts`, context) : nextResolve(specifier); } });
+  const icons = await import('../src/features/checklists/checklist-icons.ts');
+  hook.deregister();
+  const match = iconMigration.match(/icon is null or icon in \(([\s\S]*?)\n\s*\)\n\s*\);/);
+  assert.ok(match, 'nullable column has a CHECK allowlist');
+  assert.deepEqual([...match[1].matchAll(/'([^']+)'/g)].map(([, icon]) => icon), [...icons.CHECKLIST_ICONS]);
+  assert.match(iconMigration, /grant insert \(id, dog_id, template_id, title, completed, icon\).*to authenticated/s);
+  assert.match(iconMigration, /grant update \(title, completed, icon\).*to authenticated/s);
+  assert.match(iconProbe, /legacy update changed persisted icon/);
+  assert.match(iconProbe, /second owner changed another dog icon/);
+  assert.match(iconProbe, /invalid icon value was accepted/);
+});
+
 test('lost custom insert response keeps UUID and exact readback can confirm it', async () => {
   let stored = null;
   const { client, requests } = localClient((request) => {
@@ -52,9 +69,10 @@ test('lost custom insert response keeps UUID and exact readback can confirm it',
     return json(stored ? [stored] : []);
   });
   try {
-    const result = await data.addChecklistCustomItem(client, dogId, templateId, customId, '  Extra vila  ');
-    assert.deepEqual(result, { status: 'saved', value: { id: customId, dogId, templateId, title: 'Extra vila', completed: false } });
+    const result = await data.addChecklistCustomItem(client, dogId, templateId, customId, '  Extra vila  ', 'water-outline');
+    assert.deepEqual(result, { status: 'saved', value: { id: customId, dogId, templateId, title: 'Extra vila', completed: false, icon: 'water-outline' } });
     assert.equal(requests[0].body.id, customId);
+    assert.equal(requests[0].body.icon, 'water-outline');
     assert.equal(requests[1].url.searchParams.get('dog_id'), `eq.${dogId}`);
   } finally { await client.auth.dispose(); }
 });
@@ -80,7 +98,7 @@ test('custom delete replay confirms absence after the first delete response is l
     return json(stored ? [stored] : []);
   });
   try {
-    assert.deepEqual(await data.deleteChecklistCustomItem(client, { id: customId, dogId, templateId, title: 'Extra vila', completed: false }), { status: 'saved', value: null });
+    assert.deepEqual(await data.deleteChecklistCustomItem(client, { id: customId, dogId, templateId, title: 'Extra vila', completed: false, icon: null }), { status: 'saved', value: null });
     assert.equal(deleted, true);
     assert.equal(requests[0].url.searchParams.get('title'), 'eq.Extra vila');
     assert.equal(requests[1].method, 'GET');
@@ -97,7 +115,7 @@ test('custom edits use old-value CAS and preserve an explicit conflict', async (
     return json([]);
   });
   try {
-    const result = await data.updateChecklistCustomItem(client, { id: customId, dogId, templateId, title: 'Extra vila', completed: false }, { title: 'Nytt namn', completed: true });
+    const result = await data.updateChecklistCustomItem(client, { id: customId, dogId, templateId, title: 'Extra vila', completed: false, icon: null }, { title: 'Nytt namn', completed: true });
     assert.deepEqual(result, { status: 'conflict' });
     assert.equal(requests.length, 1);
   } finally { await client.auth.dispose(); }
@@ -113,7 +131,7 @@ test('rejected custom edit with an unchanged exact preimage is retryable, not a 
     return json([previous]);
   });
   try {
-    const result = await data.updateChecklistCustomItem(client, { id: customId, dogId, templateId, title: previous.title, completed: previous.completed }, { title: 'Nytt namn', completed: true });
+    const result = await data.updateChecklistCustomItem(client, { id: customId, dogId, templateId, title: previous.title, completed: previous.completed, icon: previous.icon }, { title: 'Nytt namn', completed: true });
     assert.deepEqual(result, { status: 'failed' });
     assert.equal(requests.length, 2);
     assert.equal(requests[0].method, 'PATCH');
@@ -126,7 +144,7 @@ test('rejected custom edit with unreadable preimage remains unknown', async () =
     ? json({ message: 'write rejected' }, 400)
     : json({ message: 'readback unavailable' }, 400));
   try {
-    const result = await data.updateChecklistCustomItem(client, { id: customId, dogId, templateId, title: 'Extra vila', completed: false }, { title: 'Nytt namn', completed: true });
+    const result = await data.updateChecklistCustomItem(client, { id: customId, dogId, templateId, title: 'Extra vila', completed: false, icon: null }, { title: 'Nytt namn', completed: true });
     assert.deepEqual(result, { status: 'unknown' });
     assert.deepEqual(requests.map((request) => request.method), ['PATCH', 'GET']);
   } finally { await client.auth.dispose(); }
@@ -137,7 +155,7 @@ test('rejected custom edit whose target disappeared is a conflict', async () => 
     ? json({ message: 'write target disappeared' }, 400)
     : json([]));
   try {
-    const result = await data.updateChecklistCustomItem(client, { id: customId, dogId, templateId, title: 'Extra vila', completed: false }, { title: 'Nytt namn', completed: true });
+    const result = await data.updateChecklistCustomItem(client, { id: customId, dogId, templateId, title: 'Extra vila', completed: false, icon: null }, { title: 'Nytt namn', completed: true });
     assert.deepEqual(result, { status: 'conflict' });
     assert.deepEqual(requests.map((request) => request.method), ['PATCH', 'GET']);
   } finally { await client.auth.dispose(); }
@@ -148,8 +166,8 @@ test('rejected custom edit with exact postimage is confirmed saved', async () =>
     ? json({ message: 'write response failed' }, 400)
     : json([customRow({ title: 'Nytt namn', completed: true })]));
   try {
-    const result = await data.updateChecklistCustomItem(client, { id: customId, dogId, templateId, title: 'Extra vila', completed: false }, { title: 'Nytt namn', completed: true });
-    assert.deepEqual(result, { status: 'saved', value: { id: customId, dogId, templateId, title: 'Nytt namn', completed: true } });
+    const result = await data.updateChecklistCustomItem(client, { id: customId, dogId, templateId, title: 'Extra vila', completed: false, icon: null }, { title: 'Nytt namn', completed: true });
+    assert.deepEqual(result, { status: 'saved', value: { id: customId, dogId, templateId, title: 'Nytt namn', completed: true, icon: null } });
     assert.deepEqual(requests.map((request) => request.method), ['PATCH', 'GET']);
   } finally { await client.auth.dispose(); }
 });
@@ -159,10 +177,51 @@ test('rejected custom edit with a divergent readback is a conflict', async () =>
     ? json({ message: 'write response failed' }, 400)
     : json([customRow({ title: 'Ändrad på annan enhet', completed: false })]));
   try {
-    const result = await data.updateChecklistCustomItem(client, { id: customId, dogId, templateId, title: 'Extra vila', completed: false }, { title: 'Nytt namn', completed: true });
+    const result = await data.updateChecklistCustomItem(client, { id: customId, dogId, templateId, title: 'Extra vila', completed: false, icon: null }, { title: 'Nytt namn', completed: true });
     assert.deepEqual(result, { status: 'conflict' });
     assert.deepEqual(requests.map((request) => request.method), ['PATCH', 'GET']);
   } finally { await client.auth.dispose(); }
+});
+
+test('selected icon updates use icon-aware CAS and return the exact saved value', async () => {
+  const previous = customRow({ icon: 'water-outline' });
+  const updated = { ...previous, icon: 'walk-outline' };
+  const { client, requests } = localClient((request) => {
+    if (request.method === 'PATCH') { assert.equal(request.url.searchParams.get('icon'), 'eq.water-outline'); assert.deepEqual(request.body, { title: previous.title, completed: false, icon: 'walk-outline' }); return json([updated]); }
+    return json([updated]);
+  });
+  try {
+    assert.deepEqual(await data.updateChecklistCustomItem(client, { id: customId, dogId, templateId, title: previous.title, completed: false, icon: 'water-outline' }, { title: previous.title, completed: false, icon: 'walk-outline' }), {
+      status: 'saved', value: { id: customId, dogId, templateId, title: previous.title, completed: false, icon: 'walk-outline' },
+    });
+    assert.equal(requests.length, 1);
+  } finally { await client.auth.dispose(); }
+});
+
+test('completion-only update preserves a saved icon and omits it from the patch body', async () => {
+  const previous = customRow({ icon: 'water-outline' });
+  const updated = { ...previous, completed: true };
+  const { client, requests } = localClient((request) => {
+    assert.equal(request.url.searchParams.get('icon'), 'eq.water-outline');
+    if (request.method === 'PATCH') { assert.deepEqual(request.body, { title: previous.title, completed: true }); return json([updated]); }
+    return json([updated]);
+  });
+  try {
+    assert.deepEqual(await data.updateChecklistCustomItem(client, { id: customId, dogId, templateId, title: previous.title, completed: false, icon: previous.icon }, { title: previous.title, completed: true }), {
+      status: 'saved', value: { id: customId, dogId, templateId, title: previous.title, completed: true, icon: 'water-outline' },
+    });
+    assert.equal(requests.length, 1);
+  } finally { await client.auth.dispose(); }
+});
+
+test('icon reads accept null legacy values and reject unknown persisted values', async () => {
+  const legacy = localClient((request) => request.url.pathname.endsWith('dog_checklist_custom_items') ? json([customRow({ icon: null })]) : json([]));
+  const invalid = localClient((request) => request.url.pathname.endsWith('dog_checklist_custom_items') ? json([customRow({ icon: 'not-an-ionicon' })]) : json([]));
+  try {
+    const loaded = await data.fetchChecklistState(legacy.client, dogId, templateId);
+    assert.equal(loaded.customItems[0].icon, null);
+    await assert.rejects(data.fetchChecklistState(invalid.client, dogId, templateId), /database contract/);
+  } finally { await legacy.client.auth.dispose(); await invalid.client.auth.dispose(); }
 });
 
 test('invalid server rows and pre-aborted sessions never enter checklist state', async () => {

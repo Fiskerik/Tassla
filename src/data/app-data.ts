@@ -127,8 +127,11 @@ export async function updateOwnedDog(
   knownBreeds: readonly BreedOption[],
 ): Promise<DogProfileWriteOutcome> {
   const name = normalizeDogProfileName(changes.name);
+  const selectedBreedExists = knownBreeds.some((breed) => breed.id === changes.breed_id);
+  const mayKeepMissingSavedBreed = changes.breed_id === previous.breed_id
+    && !knownBreeds.some((breed) => breed.id === previous.breed_id);
   if (previous.id !== dogId || !name || !isValidDogBirthDate(changes.birth_date)
-    || !knownBreeds.some((breed) => breed.id === changes.breed_id)
+    || (!selectedBreedExists && !mayKeepMissingSavedBreed)
     || !isAgeDisplayUnit(changes.age_display_unit)) {
     return { status: 'failed' };
   }

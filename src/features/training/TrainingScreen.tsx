@@ -37,7 +37,7 @@ export function TrainingScreen({
   return (
     <View>
       <PageHeading title="Träning" description="Små steg som bygger på frivillighet och belöning." />
-      <View style={styles.previewLabel}><Text style={styles.previewLabelText}>TESTINNEHÅLL · LOKAL FÖRHANDSVISNING</Text></View>
+      <View style={styles.previewLabel}><Text style={styles.previewLabelText}>Granskningsinnehåll</Text></View>
       <MessageCard>{TRAINING_NOTICE}</MessageCard>
       {TRAINING_PROGRAMS.map((program) => {
         const isOpen = openProgramId === program.id;

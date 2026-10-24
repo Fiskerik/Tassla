@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ExpoCrypto from 'expo-crypto';
-import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, Animated, Easing, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { BottomSheet, Button, Card, CheckboxCard, Dialog, FirstUseTip, HorizontalGestureRegion, IconChip, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast, useFirstUseTip } from '../../components/ui';
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
@@ -11,11 +11,15 @@ import { loadQuickLogLayout, saveQuickLogLayout } from './quick-log-layout-stora
 import { DEFAULT_QUICK_LOG_LAYOUT, moveQuickLogType, type QuickLogLayout, type QuickLogLayoutType } from './quick-log-layout';
 import { LogDateCalendar } from './LogDateCalendar';
 import { localMonthKey } from './log-calendar-model';
+import { InsightsScreen, type InsightsLoadState } from './InsightsScreen';
+import type { InsightsPeriod } from './insights-model';
 
 export type QuickLogMutationView = { kind: 'add' | 'update' | 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; accidentKinds?: readonly AccidentKind[] | null; status: 'pending' | 'failed' | 'unsure' | 'saved' };
-type EditorActionState = { canSave: boolean; saving: boolean };
+export type LogEventEditorDraft = { type: LogEventType; accidentKinds: AccidentKind[]; preserveLegacyUnknownAccident: boolean; date: string; time: string; note: string };
+export type LogEditorRecovery = { eventId: string; draft: LogEventEditorDraft };
+type EditorActionState = { canSave: boolean; saving: boolean; dirty: boolean };
 
-export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, refreshError = false, onReload, mutation, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore, calendarMarkerMonth = '', calendarMarkers = [], calendarStatus = 'ready', onLoadCalendarMonth, onCancelCalendarRead }: {
+export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, refreshError = false, onReload, mutation, editorRecovery, onEditorRecoveryChange, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore, calendarMarkerMonth = '', calendarMarkers = [], calendarStatus = 'ready', onLoadCalendarMonth, onCancelCalendarRead, view = 'today', onViewChange, profileOrigin = false, onReturnToProfile, insightsPeriod = 'week', onInsightsPeriodChange, insightsState, onRefreshInsights, dogName = 'hunden' }: {
   events: readonly LogEvent[];
   onAdd: (type: LogEventType, intent?: AccidentLogIntent) => void;
   onUpdate?: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
@@ -29,6 +33,8 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   refreshError?: boolean;
   onReload?: () => void;
   mutation?: QuickLogMutationView | null;
+  editorRecovery?: LogEditorRecovery | null;
+  onEditorRecoveryChange?: (recovery: LogEditorRecovery | null) => void;
   loadMoreError?: boolean;
   onRetry?: () => boolean | void | Promise<boolean | void>;
   onCancel?: () => void;
@@ -41,6 +47,15 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   calendarStatus?: 'loading' | 'ready' | 'error';
   onLoadCalendarMonth?: (month: string) => void;
   onCancelCalendarRead?: () => void;
+  view?: 'today' | 'overview';
+  onViewChange?: (view: 'today' | 'overview') => void;
+  profileOrigin?: boolean;
+  onReturnToProfile?: () => void;
+  insightsPeriod?: InsightsPeriod;
+  onInsightsPeriodChange?: (period: InsightsPeriod) => void;
+  insightsState?: InsightsLoadState;
+  onRefreshInsights?: () => void;
+  dogName?: string;
 }) {
   const [moreVisible, setMoreVisible] = useState(false);
   const [addEventVisible, setAddEventVisible] = useState(false);
@@ -50,10 +65,13 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const accidentSubmitLocked = useRef(false);
   const lastSubmitAt = useRef<number | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editorActionState, setEditorActionState] = useState<EditorActionState>({ canSave: false, saving: false });
+  const [editorMinimized, setEditorMinimized] = useState(false);
+  const [discardEditorVisible, setDiscardEditorVisible] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<LogEvent | null>(null);
+  const [editorActionState, setEditorActionState] = useState<EditorActionState>({ canSave: false, saving: false, dirty: false });
   const editorSubmitRef = useRef<(() => Promise<void>) | null>(null);
   const updateEditorActionState = useCallback((state: EditorActionState) => {
-    setEditorActionState((current) => current.canSave === state.canSave && current.saving === state.saving ? current : state);
+    setEditorActionState((current) => current.canSave === state.canSave && current.saving === state.saving && current.dirty === state.dirty ? current : state);
   }, []);
   const [dismissedMutationKey, setDismissedMutationKey] = useState<string | null>(null);
   const [layout, setLayout] = useState<QuickLogLayout>(DEFAULT_QUICK_LOG_LAYOUT);
@@ -94,6 +112,26 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const patterns = useMemo(() => summarizePottyPatterns(events).filter((item) => item.count >= 2), [events]);
   const editingEvent = events.find((event) => event.id === editingId) ?? null;
   const editLocked = busy || Boolean(editingEvent && mutation?.id === editingEvent.id && mutation.status !== 'saved');
+  const recoveryForEditor = editorRecovery?.eventId === editingId ? editorRecovery : null;
+  const unresolvedEditorMutation = Boolean(recoveryForEditor && mutation?.id === recoveryForEditor.eventId && (mutation.status === 'pending' || mutation.status === 'unsure'));
+  const closeEditor = useCallback(() => {
+    if (!editingEvent || editorActionState.saving) return;
+    if (unresolvedEditorMutation) { setEditorMinimized(true); return; }
+    if (busy) return;
+    if (editorActionState.dirty) { setDiscardEditorVisible(true); return; }
+    setEditingId(null);
+    setEditorMinimized(false);
+    onEditorRecoveryChange?.(null);
+  }, [busy, editingEvent, editorActionState.dirty, editorActionState.saving, onEditorRecoveryChange, unresolvedEditorMutation]);
+  const discardEditor = useCallback(() => {
+    setDiscardEditorVisible(false);
+    setEditingId(null);
+    setEditorMinimized(false);
+    onEditorRecoveryChange?.(null);
+  }, [onEditorRecoveryChange]);
+  const saveEditorDraft = useCallback((draft: LogEventEditorDraft) => {
+    if (editingEvent) onEditorRecoveryChange?.({ eventId: editingEvent.id, draft });
+  }, [editingEvent, onEditorRecoveryChange]);
   const onDeleteAnimationEnd = useCallback((token: number) => {
     setDeleteSnapshot((current) => current?.token === token ? null : current);
   }, []);
@@ -287,30 +325,51 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
 
   async function retryMutation() {
     const saved = await onRetry?.();
-    if (saved && mutation && mutation.kind !== 'add' && mutation.kind !== 'undo') setEditingId(null);
+    if (saved && mutation && mutation.kind !== 'add' && mutation.kind !== 'undo') {
+      setEditingId(null);
+      setEditorMinimized(false);
+      onEditorRecoveryChange?.(null);
+    }
   }
 
   function askToDelete(event: LogEvent) {
-    Alert.alert('Radera loggpost?', mode === 'cloud' ? 'Posten tas bort från hundens logg.' : 'Posten tas bort från den här tillfälliga förhandsvisningen.', [
-      { text: 'Avbryt', style: 'cancel' },
-      { text: 'Radera', style: 'destructive', onPress: () => {
-        if (!onDelete) return;
-        const token = ++deleteToken.current;
-        setDeleteSnapshot({ token, event, phase: 'pending' });
-        void Promise.resolve(onDelete(event.id)).then((saved) => {
-          if (deleteToken.current !== token) return;
-          if (saved === true) {
-            setDeleteSnapshot((current) => current?.token === token ? { ...current, phase: 'exiting' } : current);
-            setEditingId(null);
-          } else {
-            setDeleteSnapshot((current) => current?.token === token ? null : current);
-            if (saved !== false) setEditingId(null);
-          }
-        }).catch(() => {
-          if (deleteToken.current === token) setDeleteSnapshot((current) => current?.token === token ? null : current);
-        });
-      } },
-    ]);
+    setDeleteTarget(event);
+  }
+
+  function confirmDelete() {
+    const event = deleteTarget;
+    setDeleteTarget(null);
+    if (!event || !onDelete) return;
+    const token = ++deleteToken.current;
+    setDeleteSnapshot({ token, event, phase: 'pending' });
+    void Promise.resolve(onDelete(event.id)).then((saved) => {
+      if (deleteToken.current !== token) return;
+      if (saved === true) {
+        setDeleteSnapshot((current) => current?.token === token ? { ...current, phase: 'exiting' } : current);
+        if (editingId === event.id) {
+          setEditingId(null);
+          setEditorMinimized(false);
+          onEditorRecoveryChange?.(null);
+        }
+      } else {
+        setDeleteSnapshot((current) => current?.token === token ? null : current);
+        if (saved !== false && editingId === event.id) setEditingId(null);
+      }
+    }).catch(() => {
+      if (deleteToken.current === token) setDeleteSnapshot((current) => current?.token === token ? null : current);
+    });
+  }
+
+  if (view === 'overview' && insightsState) {
+    return <View style={styles.screen}>
+      <Text accessibilityRole="header" style={styles.pageTitle}>Logga</Text>
+      <LogViewTabs view={view} onChange={(next) => onViewChange?.(next)} />
+      <InsightsScreen period={insightsPeriod} onPeriodChange={(period) => onInsightsPeriodChange?.(period)}
+        state={insightsState} onRefresh={() => onRefreshInsights?.()}
+        onOpenLog={() => { setSelectedDate(localDate()); onViewChange?.('today'); }}
+        onBack={profileOrigin ? () => onReturnToProfile?.() : () => onViewChange?.('today')}
+        backLabel={profileOrigin ? 'Tillbaka till Hundprofil' : 'Tillbaka till Logga'} dogName={dogName} />
+    </View>;
   }
 
   const successMutationKey = mutation?.status === 'saved' ? `${mutation.kind}:${mutation.mutationId}` : '';
@@ -319,6 +378,8 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     onAutoDismiss={() => setDismissedMutationKey(successMutationKey)} />;
   return <View style={styles.screen}>
     <Text accessibilityRole="header" style={styles.pageTitle}>Logga</Text>
+    <LogViewTabs view={view} onChange={(next) => onViewChange?.(next)} />
+    {profileOrigin ? <Button variant="tertiary" label="Tillbaka till Hundprofil" accessibilityLabel="Tillbaka till Hundprofil" onPress={() => onReturnToProfile?.()} /> : null}
     {firstUseTip.visible ? <FirstUseTip text="Tryck på Fler för fler loggtyper." onDismiss={firstUseTip.dismiss} /> : null}
     <Toast visible={loadMoreError} tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore ? () => { firstUseTip.dismiss(); return onLoadMore(); } : undefined} />
     <Toast visible={!editingEvent && mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} onCancel={() => { firstUseTip.dismiss(); onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
@@ -383,11 +444,24 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
           <View style={styles.accidentAction}><Button label="Spara olycka" accessibilityLabel={accidentDraft.submitting ? 'Sparar olycka' : 'Spara olycka'} disabled={accidentDraft.kinds.length === 0 || accidentDraft.submitting || disabled} loading={accidentDraft.submitting && !duplicate} onPress={submitAccidentDraft} /></View>
         </View>
       </BottomSheet> : null}
-      {editingEvent ? <BottomSheet visible title="Ändra händelse" keyboardAware footer={<Button label={editorActionState.saving ? 'Sparar…' : 'Spara ändring'} accessibilityLabel={editorActionState.saving ? 'Sparar ändring' : 'Spara ändring'} loading={editorActionState.saving} disabled={!editorActionState.canSave || editLocked} onPress={() => { firstUseTip.dismiss(); void editorSubmitRef.current?.(); }} />} onRequestClose={() => { if (!editLocked && !editorActionState.saving) setEditingId(null); }}>
+      {editingEvent && !editorMinimized ? <BottomSheet visible title="Ändra händelse" keyboardAware footer={<Button label={editorActionState.saving ? 'Sparar…' : 'Spara ändring'} accessibilityLabel={editorActionState.saving ? 'Sparar ändring' : 'Spara ändring'} loading={editorActionState.saving} disabled={!editorActionState.canSave || editLocked} onPress={() => { firstUseTip.dismiss(); void editorSubmitRef.current?.(); }} />} onRequestClose={closeEditor}>
         <Toast visible={mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} onCancel={() => { firstUseTip.dismiss(); onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
         <Toast visible={mutation?.status === 'unsure'} tone="uncertain" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} />
-        <LogEventEditor key={editingEvent.id} event={editingEvent} disabled={editLocked} onSave={(changes) => { firstUseTip.dismiss(); return saveEdit(editingEvent, changes); }} onSaved={() => setEditingId(null)} onCancel={() => { firstUseTip.dismiss(); setEditingId(null); }} onDelete={() => { firstUseTip.dismiss(); askToDelete(editingEvent); }} submitRef={editorSubmitRef} onActionStateChange={updateEditorActionState} />
+        <LogEventEditor key={editingEvent.id} event={editingEvent} initialDraft={recoveryForEditor?.draft} disabled={editLocked} onDraftChange={saveEditorDraft} onSave={(changes) => { firstUseTip.dismiss(); return saveEdit(editingEvent, changes); }} onSaved={() => { setEditingId(null); setEditorMinimized(false); onEditorRecoveryChange?.(null); }} onDelete={() => { firstUseTip.dismiss(); askToDelete(editingEvent); }} submitRef={editorSubmitRef} onActionStateChange={updateEditorActionState} />
+        {deleteTarget ? <Dialog visible title="Radera loggpost?" compactActions onRequestClose={() => setDeleteTarget(null)} onConfirm={confirmDelete}>
+          <MessageCard>{deleteTarget ? `${LOG_EVENT_LABELS[deleteTarget.type]} · ${localDateTimeParts(deleteTarget.occurredAt).date} tas bort ${mode === 'cloud' ? 'från hundens logg' : 'från den tillfälliga förhandsvisningen'}.` : ''}</MessageCard>
+        </Dialog> : null}
+        {discardEditorVisible ? <Dialog visible title="Kasta ändringen?" confirmLabel="Kasta ändring" compactActions onRequestClose={() => setDiscardEditorVisible(false)} onConfirm={discardEditor}>
+          <MessageCard>Ändringen är inte sparad. Dina tidigare loggposter påverkas inte.</MessageCard>
+        </Dialog> : null}
       </BottomSheet> : null}
+      {editorRecovery && mutation?.id === editorRecovery.eventId && mutation.status !== 'saved' ? <View style={styles.recoveryCard}>
+        <MessageCard tone={mutation.status === 'failed' ? 'error' : 'neutral'}>{mutation.status === 'failed' ? 'Ändringen kunde inte sparas. Utkastet finns kvar.' : 'Ändringen väntar på kontroll. Samma utkast finns kvar.'}</MessageCard>
+        <View style={styles.recoveryActions}>
+          {mutation.status === 'pending' || mutation.status === 'unsure' ? <Button variant="icon" label="Kontrollera sparstatus" accessibilityLabel="Kontrollera samma loggändring" iconName="refresh-outline" disabled={busy} onPress={() => { void retryMutation(); }} /> : null}
+          <Button variant="icon" label="Öppna ändringen" accessibilityLabel="Öppna samma loggändring" iconName="create-outline" onPress={() => { setEditingId(editorRecovery.eventId); setEditorMinimized(false); }} />
+        </View>
+      </View> : null}
 
       <SectionHeader title={selectedDate === todayDate ? 'Dagens logg' : 'Händelser'} />
       {timelineItems.map((item, index) => {
@@ -398,10 +472,10 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         const event = item.event;
           const rowPending = mutation?.id === event.id && mutation.status === 'pending';
           const deleting = deleteSnapshot?.event.id === event.id;
-          const detail = [event.note, rowPending ? 'Sparar…' : null, event.origin === 'example' ? 'Exempel' : mode === 'preview' ? 'Testpost' : null].filter(Boolean).join(' · ');
+          const detail = [event.note, rowPending ? 'Sparar…' : null].filter(Boolean).join(' · ');
           const parts = localDateTimeParts(event.occurredAt);
           if (deleting && deleteSnapshot.phase === 'exiting') return <DeleteExitRow key={event.id} token={deleteSnapshot.token} event={event} reduceMotion={reduceMotion} onFinished={onDeleteAnimationEnd} />;
-          const row = <ListRow variant="log-timeline" showDivider={index < timelineItems.length - 1} title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}${event.note ? `, ${event.note}` : ''}${deleting ? ', raderar' : rowPending ? ', sparar' : ''}${deleting ? '' : ', tryck för att ändra'}`} accessibilityState={deleting && deleteSnapshot.phase === 'pending' ? { busy: true, disabled: true } : undefined} category={event.type} accidentKinds={event.accidentKinds} time={parts.time} detail={deleting ? 'Raderar…' : detail || undefined} onPress={deleting ? undefined : () => { firstUseTip.dismiss(); editorSubmitRef.current = null; setEditorActionState({ canSave: false, saving: false }); setEditingId(event.id); }} disabled={deleting || busy || Boolean(mutation && mutation.status !== 'saved')} />;
+          const row = <ListRow variant="log-timeline" showDivider={index < timelineItems.length - 1} title={LOG_EVENT_LABELS[event.type]} accessibilityLabel={`${LOG_EVENT_LABELS[event.type]} ${parts.time}${event.note ? `, ${event.note}` : ''}${deleting ? ', raderar' : rowPending ? ', sparar' : ''}${deleting ? '' : ', tryck för att ändra'}`} accessibilityState={deleting && deleteSnapshot.phase === 'pending' ? { busy: true, disabled: true } : undefined} category={event.type} accidentKinds={event.accidentKinds} time={parts.time} detail={deleting ? 'Raderar…' : detail || undefined} onPress={deleting ? undefined : () => { firstUseTip.dismiss(); editorSubmitRef.current = null; setEditorActionState({ canSave: false, saving: false, dirty: false }); setEditingId(event.id); setEditorMinimized(false); }} disabled={deleting || busy || Boolean(mutation && mutation.status !== 'saved')} />;
           const entryTarget = entryAnimationTarget?.eventId === event.id ? entryAnimationTarget : null;
           if (entryTarget) return <LogEntryTransition key={event.id} transitionKey={consumedEntryAnimationKey === entryTarget.key ? undefined : entryTarget.key} reduceMotion={reduceMotion} onAnimationStart={consumeEntryAnimation}>{row}</LogEntryTransition>;
           return <View key={event.id}>{row}</View>;
@@ -466,6 +540,19 @@ function LogEntryTransition({ children, transitionKey, reduceMotion, onAnimation
   return <Animated.View style={{ opacity: progress, transform: [{ translateY: translation }] }}>{children}</Animated.View>;
 }
 
+function LogViewTabs({ view, onChange }: { view: 'today' | 'overview'; onChange: (view: 'today' | 'overview') => void }) {
+  return <View style={styles.viewTabs} accessibilityRole="tablist" accessibilityLabel="Loggvy">
+    {([['today', 'Idag'], ['overview', 'Översikt']] as const).map(([key, label]) => {
+      const selected = view === key;
+      return <Pressable key={key} accessibilityRole="tab" accessibilityLabel={label}
+        accessibilityState={{ selected }} aria-selected={selected} onPress={() => onChange(key)}
+        style={({ pressed }) => [styles.viewTab, selected && styles.viewTabSelected, pressed && styles.pressed]}>
+        <Text style={[styles.viewTabLabel, selected && styles.viewTabLabelSelected]}>{label}</Text>
+      </Pressable>;
+    })}
+  </View>;
+}
+
 function DeleteExitRow({ token, event, reduceMotion, onFinished }: { token: number; event: LogEvent; reduceMotion: boolean; onFinished: (token: number) => void }) {
   const [progress] = useState(() => new Animated.Value(0));
   useEffect(() => {
@@ -480,26 +567,35 @@ function DeleteExitRow({ token, event, reduceMotion, onFinished }: { token: numb
   </Animated.View>;
 }
 
-function LogEventEditor({ event, disabled, onSave, onSaved, onCancel, onDelete, submitRef, onActionStateChange }: {
+function LogEventEditor({ event, initialDraft, disabled, onSave, onSaved, onDelete, onDraftChange, submitRef, onActionStateChange }: {
   event: LogEvent;
+  initialDraft?: LogEventEditorDraft;
   disabled: boolean;
   onSave: (changes: LogEventChanges) => boolean | Promise<boolean>;
   onSaved: () => void;
-  onCancel: () => void;
   onDelete: () => void;
+  onDraftChange: (draft: LogEventEditorDraft) => void;
   submitRef: MutableRefObject<(() => Promise<void>) | null>;
   onActionStateChange: (state: EditorActionState) => void;
 }) {
   const initial = localDateTimeParts(event.occurredAt);
-  const [type, setType] = useState(event.type);
+  const [baseline] = useState<LogEventEditorDraft>(() => ({
+    type: event.type,
+    accidentKinds: [...(event.accidentKinds ?? [])],
+    preserveLegacyUnknownAccident: event.type === 'accident' && event.accidentKinds === null,
+    date: initial.date,
+    time: initial.time,
+    note: event.note ?? '',
+  }));
+  const [type, setType] = useState(initialDraft?.type ?? baseline.type);
   const [typePickerOpen, setTypePickerOpen] = useState(false);
-  const [accidentKinds, setAccidentKinds] = useState<AccidentKind[]>(event.accidentKinds ?? []);
+  const [accidentKinds, setAccidentKinds] = useState<AccidentKind[]>(() => [...(initialDraft?.accidentKinds ?? baseline.accidentKinds)]);
   const [preserveLegacyUnknownAccident, setPreserveLegacyUnknownAccident] = useState(
-    event.type === 'accident' && event.accidentKinds === null,
+    initialDraft?.preserveLegacyUnknownAccident ?? baseline.preserveLegacyUnknownAccident,
   );
-  const [date, setDate] = useState(initial.date);
-  const [time, setTime] = useState(initial.time);
-  const [note, setNote] = useState(event.note ?? '');
+  const [date, setDate] = useState(initialDraft?.date ?? baseline.date);
+  const [time, setTime] = useState(initialDraft?.time ?? baseline.time);
+  const [note, setNote] = useState(initialDraft?.note ?? baseline.note);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const timestamp = parseLocalDateTime(date, time, new Date());
@@ -508,6 +604,15 @@ function LogEventEditor({ event, disabled, onSave, onSaved, onCancel, onDelete, 
     && preserveLegacyUnknownAccident && accidentKinds.length === 0;
   const accidentKindsValid = type !== 'accident' || isCanonicalAccidentKinds(accidentKinds) || legacyUnknownAccident;
   const valid = Boolean(timestamp) && noteLength <= 500 && accidentKindsValid;
+  const draft = useMemo<LogEventEditorDraft>(() => ({
+    type,
+    accidentKinds: [...accidentKinds],
+    preserveLegacyUnknownAccident,
+    date,
+    time,
+    note,
+  }), [accidentKinds, date, note, preserveLegacyUnknownAccident, time, type]);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(baseline);
 
   function changeType(nextType: LogEventType) {
     if (nextType === type) return;
@@ -533,8 +638,11 @@ function LogEventEditor({ event, disabled, onSave, onSaved, onCancel, onDelete, 
     return () => { if (submitRef.current === save) submitRef.current = null; };
   }, [save, submitRef]);
   useEffect(() => {
-    onActionStateChange({ canSave: valid && !disabled && !saving, saving });
-  }, [disabled, onActionStateChange, saving, valid]);
+    onActionStateChange({ canSave: valid && !disabled && !saving, saving, dirty });
+  }, [disabled, onActionStateChange, saving, valid, dirty]);
+  useEffect(() => {
+    onDraftChange(draft);
+  }, [draft, onDraftChange]);
 
   return <View style={styles.editor}>
 
@@ -586,9 +694,8 @@ function LogEventEditor({ event, disabled, onSave, onSaved, onCancel, onDelete, 
     </View>
     {error ? <MessageCard tone="error">{error}</MessageCard> : null}
     {!valid && !error ? <MessageCard tone="error">Kontrollera datum, tid och anteckning.</MessageCard> : null}
-    <View style={styles.editorSecondaryActions}>
-      <View style={styles.editorSecondaryAction}><Button variant="destructive" label="Radera" accessibilityLabel="Radera händelse" disabled={disabled || saving} onPress={onDelete} /></View>
-      <View style={styles.editorSecondaryAction}><Button variant="secondary" label="Avbryt" accessibilityLabel="Avbryt ändring" disabled={saving || disabled} onPress={onCancel} /></View>
+    <View style={styles.editorDeleteAction}>
+      <Button variant="icon" label="Radera" iconName="trash-outline" accessibilityLabel={`Radera ${LOG_EVENT_LABELS[event.type].toLocaleLowerCase('sv-SE')} från loggen`} disabled={disabled || saving} onPress={onDelete} />
     </View>
   </View>;
 }
@@ -618,6 +725,11 @@ function formatSelectedDate(dateKey: string, today: string): string {
 
 const styles = StyleSheet.create({
   screen: { gap: tokens.spacing.xs }, pageTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.xs },
+  viewTabs: { flexDirection: 'row', minHeight: tokens.size.buttonHeight, padding: tokens.spacing.xs, gap: tokens.spacing.xs, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.training.segmentedSurface },
+  viewTab: { minHeight: tokens.size.touchMin, flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.full },
+  viewTabSelected: { backgroundColor: tokens.colors.surface },
+  viewTabLabel: { ...tokens.typography.label, color: tokens.colors.textSecondary },
+  viewTabLabelSelected: { color: tokens.colors.primary },
   accidentTypeGroup: { gap: tokens.spacing.sm },
   accidentHelp: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   accidentValidation: { ...tokens.typography.caption, color: tokens.colors.danger },
@@ -649,8 +761,9 @@ const styles = StyleSheet.create({
   noteGroup: { gap: tokens.spacing.xs },
   noteInput: { minHeight: tokens.size.touchMin + tokens.spacing.xl + tokens.spacing.sm, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body, padding: tokens.spacing.md, textAlignVertical: 'top' },
   characterCount: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'right' }, tooManyCharacters: { color: tokens.colors.danger },
-  editorSecondaryActions: { flexDirection: 'row', gap: tokens.spacing.xs },
-  editorSecondaryAction: { flex: 1 },
+  recoveryCard: { gap: tokens.spacing.xs, marginTop: tokens.spacing.xs },
+  recoveryActions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm },
+  editorDeleteAction: { alignItems: 'flex-end' },
   layoutEditor: { gap: tokens.spacing.sm, width: '100%' },
   layoutTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
   layoutBody: { ...tokens.typography.caption, color: tokens.colors.textSecondary },

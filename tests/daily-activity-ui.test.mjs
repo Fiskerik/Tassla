@@ -16,6 +16,8 @@ const home = await readFile(new URL('../src/features/home/HomeScreen.tsx', impor
 const model = await readFile(new URL('../src/features/home/daily-activity-model.ts', import.meta.url), 'utf8');
 const item = await readFile(new URL('../src/components/ui/DailyActivityItem.tsx', import.meta.url), 'utf8');
 const manager = await readFile(new URL('../src/features/home/DailyActivityManagerSheet.tsx', import.meta.url), 'utf8');
+const iconPicker = await readFile(new URL('../src/features/checklists/ChecklistIconPicker.tsx', import.meta.url), 'utf8');
+const checklistIconModel = await readFile(new URL('../src/features/checklists/checklist-icons.ts', import.meta.url), 'utf8');
 const workspace = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
 const appFlow = await readFile(new URL('../src/features/home/AppFlow.tsx', import.meta.url), 'utf8');
 const dailyData = await readFile(new URL('../src/features/home/daily-activity-data.ts', import.meta.url), 'utf8');
@@ -96,15 +98,14 @@ test('routine home and delete actions are icon-only and confirm before removal',
 });
 
 test('routine checklist icons are selectable, saved in the model, and shown on Checklistor', () => {
-  assert.match(manager, /function ChecklistIconButton/);
-  assert.match(manager, /function ChecklistIconOptions/);
-  assert.match(manager, /DAILY_ROUTINE_CHECKLIST_ICONS\.map\(\(icon\)/);
-  const picker = manager.slice(manager.indexOf('function ChecklistIconOptions'), manager.indexOf('function RepeatRuleControls'));
-  assert.match(picker, /accessibilityRole="radiogroup" accessibilityLabel=/);
-  assert.doesNotMatch(picker, /<Text/);
-  assert.match(picker, /styles\.iconChoiceSelected/);
-  assert.match(picker, /name="checkmark-circle"/);
-  assert.match(manager, /accessibilityRole="radio" accessibilityLabel=\{DAILY_ROUTINE_CHECKLIST_ICON_LABELS\[icon\]\}/);
+  assert.match(manager, /<ChecklistIconPickerTrigger value=\{item\.icon \?\? null\}/);
+  assert.match(manager, /<ChecklistIconPickerChoices value=\{item\.icon \?\? null\}/);
+  assert.match(iconPicker, /accessibilityRole="radiogroup" accessibilityLabel=/);
+  assert.doesNotMatch(iconPicker, /<Text/);
+  assert.match(iconPicker, /styles\.choiceSelected/);
+  assert.match(iconPicker, /name="checkmark-circle"/);
+  assert.match(iconPicker, /accessibilityRole="radio" accessibilityLabel=\{CHECKLIST_ICON_LABELS\[icon\]\}/);
+  assert.match(checklistIconModel, /export const CHECKLIST_ICONS = \[/);
   assert.match(manager, /sameChecklist[\s\S]*?item\.icon === right\[index\]\?\.icon/);
   assert.match(manager, /dailyRoutineChecklistDisplayIcon\(item\)/);
   assert.match(manager, /setIconPickerItemId\(focusItemId && checklist\.some\(\(item\) => item\.id === focusItemId\) \? focusItemId : null\)/);
@@ -117,6 +118,20 @@ test('routine checklist icons are selectable, saved in the model, and shown on C
   assert.match(iconMigration, /'water-outline'/);
   const homeRoutineRow = home.slice(home.indexOf('return <DailyActivityItem key={item.id} variant="home" kind={item.kind}'), home.indexOf('onRetry={itemMutation'));
   assert.doesNotMatch(homeRoutineRow, /icon=\{item\.icon\}/, 'the compact Home rows remain icon-free');
+});
+
+test('opening a routine focuses its own editor and keeps manage-all as a named compact action', () => {
+  assert.match(manager, /const focusedRoutineOnly = Boolean\(focusRoutineId\)/);
+  assert.match(manager, /const visibleRoutines = upcomingRoutineOnly \|\| focusedRoutineOnly \? routines\.filter\(\(routine\) => routine\.id === focusRoutineId\) : routines/);
+  assert.match(manager, /!upcomingRoutineOnly && !focusedRoutineOnly \? <View style=\{styles\.section\}>/);
+  assert.match(dailyChecklist, /accessibilityLabel="Hantera rutiner och aktiviteter" onPress=\{\(\) => openManager\(\)\}/);
+  assert.match(dailyChecklist, /manageActionLabel\}>Hantera<\/Text>/);
+  assert.match(manager, /<Dialog visible=\{showDiscardConfirmation\} title="Kasta ändringar\?"/);
+  assert.doesNotMatch(manager, /ChecklistIconPickerTrigger[\s\S]{0,300}popover/);
+  const createForm = manager.slice(manager.indexOf('function CreateRoutineForm'), manager.indexOf('function RepeatRuleControls'));
+  assert.doesNotMatch(createForm, /label="Avbryt"/);
+  const editForm = manager.slice(manager.indexOf('function RoutineTemplateRow'), manager.indexOf('function ActionButton'));
+  assert.doesNotMatch(editForm, /label="Avbryt"/);
 });
 
 test('routine write failures unlock the editor while unknown writes retain exact retry and conflicts require explicit replacement', () => {

@@ -1,13 +1,16 @@
 import type { ChecklistContext, ChecklistCustomItem, ChecklistProgress } from './checklist-model';
+import type { ChecklistIcon } from '../checklists/checklist-icons';
+
+type ChecklistCustomChanges = Pick<ChecklistCustomItem, 'title' | 'completed'> & { icon?: ChecklistIcon | null };
 
 export type PendingChecklistOperation =
   | { kind: 'preset'; templateId: string; itemKey: string; completed: boolean }
   | { kind: 'preference'; context: ChecklistContext }
-  | { kind: 'add'; templateId: string; id: string; title: string }
-  | { kind: 'update'; previous: ChecklistCustomItem; changes: Pick<ChecklistCustomItem, 'title' | 'completed'> }
+  | { kind: 'add'; templateId: string; id: string; title: string; icon: ChecklistIcon | null }
+  | { kind: 'update'; previous: ChecklistCustomItem; changes: ChecklistCustomChanges }
   | { kind: 'delete'; previous: ChecklistCustomItem };
 
-export type PendingChecklistMemory = { operation: PendingChecklistOperation; draft: { id: string | null; requestId: string; title: string; completed: boolean } | null; uncertain: boolean };
+export type PendingChecklistMemory = { operation: PendingChecklistOperation; draft: { id: string | null; requestId: string; title: string; completed: boolean; icon: ChecklistIcon | null } | null; uncertain: boolean };
 export type LoadedChecklistIntentState = { preference?: ChecklistContext | null; progress: readonly ChecklistProgress[]; customItems: readonly ChecklistCustomItem[] };
 export type PendingChecklistDecision = 'saved' | 'retry' | 'conflict';
 export type ScopedChecklistMemory = { scope: string; state: PendingChecklistMemory };
@@ -37,18 +40,21 @@ export function classifyPendingChecklistOperation(operation: PendingChecklistOpe
   if (operation.kind === 'add') {
     const item = loaded.customItems.find((row) => row.id === operation.id);
     if (!item) return 'retry';
-    return item.templateId === operation.templateId && item.title === operation.title && !item.completed ? 'saved' : 'conflict';
+    return item.templateId === operation.templateId && item.title === operation.title && item.icon === operation.icon && !item.completed ? 'saved' : 'conflict';
   }
   const item = loaded.customItems.find((row) => row.id === operation.previous.id);
   if (operation.kind === 'delete') {
     if (!item) return 'saved';
     return sameCustom(item, operation.previous) ? 'retry' : 'conflict';
   }
-  if (item && item.templateId === operation.previous.templateId && item.title === operation.changes.title && item.completed === operation.changes.completed) return 'saved';
+  const expectedIcon = operation.changes.icon === undefined ? operation.previous.icon : operation.changes.icon;
+  if (item && item.templateId === operation.previous.templateId && item.title === operation.changes.title
+    && item.completed === operation.changes.completed && item.icon === expectedIcon) return 'saved';
   if (item && sameCustom(item, operation.previous)) return 'retry';
   return 'conflict';
 }
 
 function sameCustom(left: ChecklistCustomItem, right: ChecklistCustomItem) {
-  return left.id === right.id && left.dogId === right.dogId && left.templateId === right.templateId && left.title === right.title && left.completed === right.completed;
+  return left.id === right.id && left.dogId === right.dogId && left.templateId === right.templateId
+    && left.title === right.title && left.completed === right.completed && left.icon === right.icon;
 }

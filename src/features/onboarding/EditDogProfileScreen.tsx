@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Image, Keyboard, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { DatePickerField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { DatePickerField, InfoModal, MessageCard, PrimaryButton } from '../../components/AppPrimitives';
 import { Button } from '../../components/ui';
 import { Toast } from '../../components/ui/Toast';
 import {
@@ -16,9 +16,12 @@ import {
   type OwnedDogProfileChanges,
 } from '../../data/app-data';
 import { normalizeKennelCode } from '../../onboarding-referral/referral-secure-storage';
-import { automaticDogAge, localDate } from './dog';
 import { tokens } from '../../theme/tokens';
 import { ProfileScreenHeader } from './ProfileScreenHeader';
+import { profileInsightsDisabledReason } from '../home/main-navigation';
+import { BreedPickerField } from './BreedPickerField';
+import { DogProfileSwitcherSheet } from '../home/DogProfileSwitcherSheet';
+import type { ProfileExitScope, ProfileExitSnapshot } from './profile-exit';
 
 export function EditDogProfileScreen({
   client,
@@ -31,6 +34,7 @@ export function EditDogProfileScreen({
   attribution = null,
   attributionState = 'loading',
   attributionBusy = false,
+  attributionWriteUnresolved = false,
   attributionMessage = '',
   attributionMessageError = false,
   backLabel = 'Tillbaka till Mer',
@@ -42,15 +46,21 @@ export function EditDogProfileScreen({
   onAcceptCurrent,
   ownedDogs = [dog],
   activeDogId = dog.id,
+  exitScope,
+  onExitStateChange,
   onSelectDog,
   onAddDog,
+  onOpenInsights,
 }: {
   client: SupabaseClient;
   dog: OwnedDog;
   ownedDogs?: readonly OwnedDog[];
   activeDogId?: string;
+  exitScope?: ProfileExitScope;
+  onExitStateChange?: (snapshot: ProfileExitSnapshot) => void;
   onSelectDog?: (dogId: string) => void;
   onAddDog?: () => void;
+  onOpenInsights?: (canOpen: boolean) => void;
   busy?: boolean;
   pending?: boolean;
   statusMessage?: string;
@@ -59,6 +69,7 @@ export function EditDogProfileScreen({
   attribution?: OwnedDogAttribution | null;
   attributionState?: 'loading' | 'ready' | 'error';
   attributionBusy?: boolean;
+  attributionWriteUnresolved?: boolean;
   attributionMessage?: string;
   attributionMessageError?: boolean;
   backLabel?: string;
@@ -69,8 +80,6 @@ export function EditDogProfileScreen({
   onRetryStatus: () => void;
   onAcceptCurrent: () => void;
 }) {
-  const { width, fontScale } = useWindowDimensions();
-  const stackProfileLayout = width < 360 || fontScale >= 1.25;
   const [breeds, setBreeds] = useState<BreedOption[]>([]);
   const [breedState, setBreedState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [breedAttempt, setBreedAttempt] = useState(0);
@@ -80,17 +89,24 @@ export function EditDogProfileScreen({
   const [ageDisplayUnit, setAgeDisplayUnit] = useState<AgeDisplayUnit>(dog.age_display_unit);
   const [formError, setFormError] = useState('');
   const [kennelCode, setKennelCode] = useState(attribution?.code ?? '');
+  const savedAttributionCode = useRef(attribution?.code ?? '');
   const [attributionFormError, setAttributionFormError] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
+  const [dogSwitcherVisible, setDogSwitcherVisible] = useState(false);
+  const [infoVisible, setInfoVisible] = useState(false);
+  const [attributionExpanded, setAttributionExpanded] = useState(false);
   const confirmedMessage = statusMessage === 'Hundprofilen är sparad.' && !statusError && !pending && !busy
     ? statusMessage : null;
   const blocked = busy || pending;
 
   useEffect(() => {
     // The profile read is asynchronous; mirror a completed read into the local field.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (attributionState === 'ready') setKennelCode(attribution?.code ?? '');
+    if (attributionState === 'ready') {
+      const savedCode = attribution?.code ?? '';
+      setKennelCode((current) => current === savedAttributionCode.current ? savedCode : current);
+      savedAttributionCode.current = savedCode;
+    }
   }, [attribution?.code, attributionState]);
 
   useEffect(() => {
@@ -120,7 +136,9 @@ export function EditDogProfileScreen({
       setFormError('Ange ett namn med 1–80 tecken.');
       return;
     }
-    if (breedState !== 'ready' || !breeds.some((breed) => breed.id === breedId)) {
+    const selectedBreedExists = breeds.some((breed) => breed.id === breedId);
+    const mayKeepMissingSavedBreed = breedId === dog.breed_id && !breeds.some((breed) => breed.id === dog.breed_id);
+    if (breedState !== 'ready' || (!selectedBreedExists && !mayKeepMissingSavedBreed)) {
       setFormError('Välj en ras från listan.');
       return;
     }
@@ -150,56 +168,53 @@ export function EditDogProfileScreen({
     await onSaveAttribution(normalized);
   }
 
-  const today = localDate();
-  const currentBreed = breeds.find((breed) => breed.id === dog.breed_id)?.name ?? dog.breed_id;
-  const conflictBreed = conflict ? breeds.find((breed) => breed.id === conflict.breed_id)?.name ?? conflict.breed_id : '';
+  const conflictBreed = conflict ? breeds.find((breed) => breed.id === conflict.breed_id)?.name ?? 'Ras saknas i listan' : '';
+  const selectedBreedExists = breeds.some((breed) => breed.id === breedId);
+  const mayKeepMissingSavedBreed = breedId === dog.breed_id && !breeds.some((breed) => breed.id === dog.breed_id);
+  const canSaveBreed = breedState === 'ready' && (selectedBreedExists || mayKeepMissingSavedBreed);
   const draftDiffers = name.trim() !== dog.name || breedId !== dog.breed_id || birthDate.trim() !== dog.birth_date
     || ageDisplayUnit !== dog.age_display_unit;
-  const dogManagementBlocked = blocked || draftDiffers || kennelCode.trim() !== (attribution?.code ?? '');
+  const kennelDraftDiffers = kennelCode.trim() !== (attribution?.code ?? '');
+  const dogManagementBlocked = blocked || Boolean(conflict) || attributionBusy || attributionWriteUnresolved;
+  const showAttributionDetails = attributionExpanded || attributionState === 'error' || attributionBusy || attributionWriteUnresolved;
+  const insightsDisabledReason = profileInsightsDisabledReason({
+    dogProfileDirty: draftDiffers,
+    kennelDraftDirty: kennelDraftDiffers,
+    profileBusy: busy,
+    profilePending: pending,
+    profileConflict: Boolean(conflict),
+    attributionBusy,
+    attributionWriteUnresolved,
+    attributionReady: attributionState === 'ready',
+  });
+  const canOpenInsights = insightsDisabledReason === null;
   const showStatusMessage = Boolean(statusMessage) && (statusError || pending || busy);
+
+  const reportExitState = useCallback((profileDirty = draftDiffers, kennelDirty = kennelDraftDiffers) => {
+    if (!exitScope) return;
+    onExitStateChange?.({ scope: exitScope, profileDirty, kennelDirty });
+  }, [draftDiffers, exitScope, kennelDraftDiffers, onExitStateChange]);
+
+  useLayoutEffect(() => {
+    reportExitState();
+  }, [reportExitState]);
 
   return <View>
     <ProfileScreenHeader onBack={onBack} backLabel={backLabel} disabled={busy} />
-    <View style={[styles.heroCard, stackProfileLayout && styles.heroCardStacked]}>
-      <View style={styles.heroCopy}>
-        <Text style={styles.intro}>Håll namn, ras och födelsedatum uppdaterade för innehåll som passar er.</Text>
+    <Pressable accessibilityRole="button" accessibilityLabel={`Byt hund. Aktiv hund: ${dog.name}`}
+      accessibilityState={{ disabled: dogManagementBlocked || !onSelectDog, expanded: dogSwitcherVisible }}
+      disabled={dogManagementBlocked || !onSelectDog} onPress={() => setDogSwitcherVisible(true)}
+      style={({ pressed }) => [styles.activeDogRow, pressed && !dogManagementBlocked && styles.dogProfilePressed]}>
+      <View style={styles.dogProfileAvatar} accessible={false} importantForAccessibility="no-hide-descendants">
+        <Ionicons name="paw" size={tokens.size.iconSm} color={tokens.colors.primary} />
       </View>
-      <Image source={require('../../../assets/images/dog-resting.png')} style={styles.heroImage}
-        accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-    </View>
-    <View style={styles.profileNote}>
-      <Ionicons name="paw-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-      <Text style={styles.profileNoteText}>Hundens historik och träningssteg följer med när du rättar profilen.</Text>
-    </View>
-    <View style={styles.dogProfilesCard}>
-      <Text style={styles.formTitle} accessibilityRole="header">Hundprofiler</Text>
-      <Text style={styles.attributionBody}>Välj vilken hund Tassla ska visa information och innehåll för.</Text>
-      <View accessibilityRole="radiogroup" accessibilityLabel="Hundprofiler" style={styles.dogProfilesList}>
-        {ownedDogs.map((ownedDog) => {
-          const selected = ownedDog.id === activeDogId;
-          const age = automaticDogAge(ownedDog.birth_date, today);
-          return <Pressable key={ownedDog.id} accessibilityRole="radio"
-            accessibilityLabel={`${ownedDog.name}, ${age?.label ?? 'ålder saknas'}${selected ? ', aktiv hund' : ''}`}
-            accessibilityState={{ selected, disabled: dogManagementBlocked || !onSelectDog }} disabled={dogManagementBlocked || !onSelectDog}
-            onPress={() => onSelectDog?.(ownedDog.id)}
-            style={({ pressed }) => [styles.dogProfileRow, selected && styles.dogProfileSelected, pressed && !dogManagementBlocked && styles.dogProfilePressed]}>
-            <View style={styles.dogProfileAvatar} accessible={false} importantForAccessibility="no-hide-descendants">
-              <Ionicons name="paw" size={tokens.size.iconSm} color={tokens.colors.primary} />
-            </View>
-            <View style={styles.dogProfileCopy}>
-              <Text style={styles.dogProfileName}>{ownedDog.name}</Text>
-              <Text style={styles.dogProfileAge}>{age?.label ?? 'Ålder saknas'}</Text>
-              {selected && stackProfileLayout ? <Text style={styles.dogProfileActive}>Aktiv</Text> : null}
-            </View>
-            {selected && !stackProfileLayout ? <Text style={styles.dogProfileActive}>Aktiv</Text> : null}
-          </Pressable>;
-        })}
+      <View style={styles.activeDogCopy}>
+        <Text style={styles.activeDogLabel}>Aktiv hund</Text>
+        <Text style={styles.dogProfileName}>{dog.name}</Text>
       </View>
-      {draftDiffers || kennelCode.trim() !== (attribution?.code ?? '')
-        ? <Text style={styles.dogProfileHint}>Spara eller återställ profiländringarna innan du byter hund eller lägger till en ny.</Text> : null}
-      {onAddDog ? <Button variant="secondary" label="Lägg till hund" accessibilityLabel="Lägg till hundprofil"
-        disabled={dogManagementBlocked} onPress={onAddDog} /> : null}
-    </View>
+      <Text style={styles.activeDogChange}>Byt</Text>
+      <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+    </Pressable>
     {showStatusMessage ? <MessageCard tone={statusError ? 'error' : 'neutral'}>{statusMessage}</MessageCard> : null}
     {draftDiffers && !pending && !busy ? <MessageCard tone="neutral">Ändringarna är inte sparade.</MessageCard> : null}
     {pending && <>
@@ -217,35 +232,38 @@ export function EditDogProfileScreen({
       <View style={styles.field}>
         <Text style={styles.label}>Hundens namn</Text>
         <TextInput accessibilityLabel="Hundens namn" autoCapitalize="words" editable={!blocked}
-          onChangeText={setName} onSubmitEditing={() => Keyboard.dismiss()} placeholder="Till exempel Nala"
+          onChangeText={(value) => {
+            setName(value);
+            reportExitState(value.trim() !== dog.name || breedId !== dog.breed_id || birthDate.trim() !== dog.birth_date || ageDisplayUnit !== dog.age_display_unit, kennelDraftDiffers);
+          }} onSubmitEditing={() => Keyboard.dismiss()} placeholder="Till exempel Nala"
           placeholderTextColor={tokens.colors.textSecondary} returnKeyType="done" style={styles.input} value={name} />
       </View>
-      <Text style={styles.label}>Ras</Text>
-      {breedState === 'loading' && <MessageCard>Hämtar raslistan…</MessageCard>}
-      {breedState === 'error' && <>
-        <MessageCard tone="error">Raslistan kunde inte hämtas. Profilen är kvar och inget har sparats.</MessageCard>
-        <PrimaryButton title="Hämta raslistan igen" disabled={busy} onPress={() => { setBreedState('loading'); setBreedAttempt((attempt) => attempt + 1); }} />
-      </>}
-      {breedState === 'ready' && <View accessibilityRole="radiogroup" accessibilityLabel="Välj hundras" style={styles.breedList}>
-        {breeds.map((breed) => {
-          const selected = breed.id === breedId;
-          return <Pressable key={breed.id} accessibilityRole="radio" accessibilityLabel={breed.name}
-            accessibilityState={{ selected, disabled: blocked }} disabled={blocked} onPress={() => setBreedId(breed.id)}
-            style={({ pressed }) => [styles.breedOption, selected && styles.breedSelected, pressed && !blocked && styles.breedPressed]}>
-            <Text style={[styles.breedText, selected && styles.breedTextSelected]}>{breed.name}</Text>
-            {selected && <Ionicons name="checkmark-circle" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />}
-          </Pressable>;
-        })}
-        {!breeds.some((breed) => breed.id === dog.breed_id) && <MessageCard>Nuvarande ras ({currentBreed}) finns inte i listan. Välj en ras om du vill ändra profilen.</MessageCard>}
-      </View>}
-      <DatePickerField label="Födelsedatum" disabled={blocked} onChangeText={setBirthDate} value={birthDate} />
+      <BreedPickerField
+        label="Ras"
+        value={breedId}
+        breeds={breeds}
+        state={breedState}
+        disabled={blocked}
+        onChange={(breed) => {
+          setBreedId(breed.id);
+          reportExitState(name.trim() !== dog.name || breed.id !== dog.breed_id || birthDate.trim() !== dog.birth_date || ageDisplayUnit !== dog.age_display_unit, kennelDraftDiffers);
+        }}
+        onRetry={() => { setBreedState('loading'); setBreedAttempt((attempt) => attempt + 1); }}
+      />
+      <DatePickerField label="Födelsedatum" disabled={blocked} onChangeText={(value) => {
+        setBirthDate(value);
+        reportExitState(name.trim() !== dog.name || breedId !== dog.breed_id || value.trim() !== dog.birth_date || ageDisplayUnit !== dog.age_display_unit, kennelDraftDiffers);
+      }} value={birthDate} />
       <View style={styles.ageUnitField}>
         <Text style={styles.label}>Visa ålder som</Text>
         <View accessibilityRole="radiogroup" accessibilityLabel="Visa ålder som" style={styles.ageUnitOptions}>
           {AGE_DISPLAY_OPTIONS.map((option) => {
             const selected = option.value === ageDisplayUnit;
             return <Pressable key={option.value} accessibilityRole="radio" accessibilityLabel={option.label}
-              accessibilityState={{ selected, disabled: blocked }} disabled={blocked} onPress={() => setAgeDisplayUnit(option.value)}
+              accessibilityState={{ selected, disabled: blocked }} disabled={blocked} onPress={() => {
+                setAgeDisplayUnit(option.value);
+                reportExitState(name.trim() !== dog.name || breedId !== dog.breed_id || birthDate.trim() !== dog.birth_date || option.value !== dog.age_display_unit, kennelDraftDiffers);
+              }}
               style={({ pressed }) => [styles.ageUnitOption, selected && styles.ageUnitSelected, pressed && !blocked && styles.breedPressed]}>
               <Text style={[styles.ageUnitText, selected && styles.ageUnitTextSelected]}>{option.label}</Text>
             </Pressable>;
@@ -254,29 +272,74 @@ export function EditDogProfileScreen({
       </View>
       {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
       <PrimaryButton title={busy ? 'Sparar…' : statusError && !pending ? 'Försök igen' : 'Spara profil'}
-        disabled={blocked || breedState !== 'ready'} onPress={() => { void save(); }} />
+        disabled={blocked || !canSaveBreed} onPress={() => { void save(); }} />
       <Toast visible={toastVisible} tone="success" confirmed message={toastMessage ?? undefined} autoDismissMs={2500} onAutoDismiss={() => setToastVisible(false)} onExitComplete={() => setToastMessage(null)} />
     </View>
-    <View style={styles.attributionCard}>
-      <Text style={styles.formTitle} accessibilityRole="header">Kennelkoppling (valfri)</Text>
-      <Text style={styles.attributionBody}>Du kan koppla en kennel nu eller senare. Det påverkar inte din hundprofil.</Text>
-      {attributionState === 'loading' && <MessageCard>Hämtar kennelkopplingen…</MessageCard>}
-      {attributionState === 'error' && <>
-        <MessageCard tone="error">Kennelkopplingen kunde inte hämtas. Du kan försöka igen utan att ändra hundprofilen.</MessageCard>
-        <Button variant="secondary" label="Försök igen" accessibilityLabel="Försök hämta kennelkopplingen igen" disabled={attributionBusy} onPress={onRetryAttribution ?? (() => undefined)} />
-      </>}
-      {attributionState === 'ready' && <>
-        {attribution ? <Text style={styles.attributionConnected}>Kopplad till {attribution.name}.</Text> : null}
-        <TextInput accessibilityLabel="Kennelkod, valfri" autoCapitalize="characters" editable={!attributionBusy}
-          onChangeText={(value) => { setKennelCode(value.toUpperCase()); setAttributionFormError(''); }} placeholder="Till exempel ABC123"
-          placeholderTextColor={tokens.colors.textSecondary} style={styles.input} value={kennelCode} />
-        {attributionFormError ? <MessageCard tone="error">{attributionFormError}</MessageCard> : null}
-        {attributionMessage ? <MessageCard tone={attributionMessageError ? 'error' : 'neutral'}>{attributionMessage}</MessageCard> : null}
-        <Button variant="secondary" label={attributionBusy ? 'Sparar…' : attribution ? (kennelCode.trim() ? 'Spara kennelkoppling' : 'Ta bort kennelkoppling') : 'Spara kennelkoppling'} accessibilityLabel="Spara kennelkoppling" loading={attributionBusy}
-          disabled={attributionBusy || !onSaveAttribution || kennelCode.trim() === (attribution?.code ?? '')} onPress={() => { void saveAttribution(); }} />
-      </>}
+    <View style={styles.insightsCard}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Insikter"
+        accessibilityHint="Visar hundens loggade händelser över tid"
+        accessibilityState={{ disabled: !canOpenInsights }} disabled={!canOpenInsights}
+        onPress={() => onOpenInsights?.(canOpenInsights)}
+        style={({ pressed }) => [styles.insightsAction, !canOpenInsights && styles.insightsActionDisabled, pressed && canOpenInsights && styles.dogProfilePressed]}>
+        <View style={styles.insightsIcon} accessible={false} importantForAccessibility="no-hide-descendants">
+          <Ionicons name="bar-chart-outline" size={tokens.size.iconMd} color={tokens.colors.primary} />
+        </View>
+        <View style={styles.insightsCopy}>
+          <Text style={styles.insightsTitle}>Insikter</Text>
+          <Text style={styles.insightsDescription}>Se registreringar över tid.</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={canOpenInsights ? tokens.colors.textSecondary : tokens.colors.borderStrong} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+      </Pressable>
+      {insightsDisabledReason ? <Text style={styles.insightsDisabledReason}>{insightsDisabledReason}</Text> : null}
     </View>
-    <QuietButton title="Avbryt" disabled={busy} onPress={onBack} />
+    <View style={styles.attributionCard}>
+      <Pressable accessibilityRole="button" accessibilityState={{ expanded: showAttributionDetails }} onPress={() => setAttributionExpanded((expanded) => !expanded)} style={styles.attributionHeader}>
+        <View style={styles.attributionHeading}>
+          <Text style={styles.attributionTitle}>Kennelkoppling <Text style={styles.attributionOptional}>· valfri</Text></Text>
+          <Text style={styles.attributionSummary}>{attributionState === 'loading' ? 'Hämtar status…'
+            : attributionState === 'error' ? 'Status kunde inte hämtas'
+              : attribution ? `Kopplad till ${attribution.name}` : 'Ingen kennel kopplad'}</Text>
+        </View>
+        <Ionicons name={showAttributionDetails ? 'chevron-up' : 'chevron-down'} size={tokens.size.iconSm} color={tokens.colors.textSecondary} />
+      </Pressable>
+      {showAttributionDetails ? <View style={styles.attributionDetails}>
+        {attributionState === 'loading' && <MessageCard>Hämtar kennelkopplingen…</MessageCard>}
+        {attributionState === 'error' && <>
+          <MessageCard tone="error">Kennelkopplingen kunde inte hämtas. Du kan försöka igen utan att ändra hundprofilen.</MessageCard>
+          <Button variant="secondary" label="Försök igen" accessibilityLabel="Försök hämta kennelkopplingen igen" disabled={attributionBusy} onPress={onRetryAttribution ?? (() => undefined)} />
+        </>}
+        {attributionState === 'ready' && <>
+          <Text style={styles.attributionBody}>Koppla en kennel om du vill. Det påverkar inte hundprofilen.</Text>
+          <TextInput accessibilityLabel="Kennelkod, valfri" autoCapitalize="characters" editable={!attributionBusy}
+            onChangeText={(value) => {
+              const nextCode = value.toUpperCase();
+              setKennelCode(nextCode);
+              setAttributionFormError('');
+              reportExitState(draftDiffers, nextCode.trim() !== (attribution?.code ?? ''));
+            }} placeholder="Till exempel ABC123"
+            placeholderTextColor={tokens.colors.textSecondary} style={styles.input} value={kennelCode} />
+          {attributionFormError ? <MessageCard tone="error">{attributionFormError}</MessageCard> : null}
+          {attributionMessage ? <MessageCard tone={attributionMessageError ? 'error' : 'neutral'}>{attributionMessage}</MessageCard> : null}
+          {attributionWriteUnresolved ? <Button variant="secondary" label={attributionBusy ? 'Kontrollerar…' : 'Kontrollera kenneländringen igen'}
+            accessibilityLabel="Kontrollera kenneländringen igen" loading={attributionBusy} disabled={attributionBusy}
+            onPress={onRetryAttribution ?? (() => undefined)} /> : null}
+          <Button variant={attribution && !kennelCode.trim() ? 'icon' : 'secondary'} iconName="trash-outline" label={attributionBusy ? 'Sparar…' : attribution ? (kennelCode.trim() ? 'Spara kennelkoppling' : 'Ta bort kennelkoppling') : 'Spara kennelkoppling'} accessibilityLabel={attribution && !kennelCode.trim() ? `Ta bort kennelkoppling till ${attribution.name}` : 'Spara kennelkoppling'} loading={attributionBusy}
+            disabled={attributionBusy || !onSaveAttribution || kennelCode.trim() === (attribution?.code ?? '')} onPress={() => { void saveAttribution(); }} />
+        </>}
+      </View> : null}
+    </View>
+    <Pressable accessibilityRole="button" accessibilityLabel="Om hundens profil" onPress={() => setInfoVisible(true)} style={styles.infoEntry}>
+      <Ionicons name="information-circle-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />
+      <Text style={styles.infoEntryText}>Om hundens profil</Text>
+    </Pressable>
+    <InfoModal visible={infoVisible} title="Om hundens profil" onClose={() => setInfoVisible(false)}>
+      <Text style={styles.infoBody}>Hundens historik och träningssteg följer med när du rättar profilen. Namn, ras och födelsedatum hjälper Tassla att visa innehåll som passar er.</Text>
+    </InfoModal>
+    <DogProfileSwitcherSheet visible={dogSwitcherVisible} dogs={ownedDogs} activeDogId={activeDogId}
+      onRequestClose={() => setDogSwitcherVisible(false)} onSelectDog={(dogId) => {
+        if (dogId === activeDogId) setDogSwitcherVisible(false);
+        else onSelectDog?.(dogId);
+      }} onAddDog={() => onAddDog?.()} />
   </View>;
 }
 
@@ -287,46 +350,46 @@ const AGE_DISPLAY_OPTIONS: readonly { value: AgeDisplayUnit; label: string }[] =
 ];
 
 const styles = StyleSheet.create({
-  intro: { ...tokens.typography.body, color: tokens.colors.textSecondary },
-  heroCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.selectedSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
-  heroCopy: { flex: 1, minWidth: 0 },
-  heroCardStacked: { flexDirection: 'column', alignItems: 'flex-start' },
-  heroImage: { width: tokens.size.chipLg + tokens.spacing.md, height: tokens.size.chipLg + tokens.spacing.md, borderRadius: tokens.radius.full },
-  profileNote: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, padding: tokens.spacing.md, marginTop: tokens.spacing.md, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.support.profile.bg },
-  profileNoteText: { ...tokens.typography.caption, flex: 1, color: tokens.colors.textPrimary },
-  dogProfilesCard: { marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, gap: tokens.spacing.sm },
-  dogProfilesList: { borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.md, overflow: 'hidden', backgroundColor: tokens.colors.surface },
-  dogProfileRow: { minHeight: tokens.size.touchMin + tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.sm },
-  dogProfileSelected: { backgroundColor: tokens.colors.selectedSurface },
+  activeDogRow: { minHeight: tokens.size.touchMin + tokens.spacing.md, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, paddingHorizontal: tokens.spacing.md, marginBottom: tokens.spacing.sm, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  activeDogCopy: { flex: 1, minWidth: 0, gap: tokens.spacing.xs },
+  activeDogLabel: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  activeDogChange: { ...tokens.typography.label, color: tokens.colors.primary },
+  insightsCard: { marginTop: tokens.spacing.md, padding: tokens.spacing.md, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, gap: tokens.spacing.sm },
+  insightsAction: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md },
+  insightsIcon: { width: tokens.size.chipLg, height: tokens.size.chipLg, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.md, backgroundColor: tokens.colors.support.profile.bg },
+  insightsCopy: { flex: 1, minWidth: 0, gap: tokens.spacing.xs },
+  insightsTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  insightsDescription: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  insightsActionDisabled: { opacity: 0.62 },
+  insightsDisabledReason: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   dogProfilePressed: { opacity: 0.78 },
   dogProfileAvatar: { width: tokens.size.chipMd, height: tokens.size.chipMd, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.support.profile.bg },
-  dogProfileCopy: { flex: 1, minWidth: 0 },
   dogProfileName: { ...tokens.typography.label, color: tokens.colors.textPrimary, flexShrink: 1 },
-  dogProfileAge: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
-  dogProfileActive: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
-  dogProfileHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   conflictCard: { marginTop: tokens.spacing.md, padding: tokens.spacing.md, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.warning, backgroundColor: tokens.colors.warningSurface },
   conflictTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
   conflictText: { ...tokens.typography.body, color: tokens.colors.textPrimary, fontWeight: '700', marginTop: tokens.spacing.sm },
   conflictBody: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginVertical: tokens.spacing.sm },
   formCard: { marginTop: tokens.spacing.lg, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
-  attributionCard: { marginTop: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, gap: tokens.spacing.sm },
+  attributionCard: { marginTop: tokens.spacing.md, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
+  attributionHeader: { minHeight: tokens.size.touchMin + tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.md },
+  attributionHeading: { flex: 1, minWidth: 0, gap: tokens.spacing.xs },
+  attributionTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  attributionOptional: { color: tokens.colors.textSecondary, fontWeight: '400' },
+  attributionSummary: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  attributionDetails: { paddingBottom: tokens.spacing.md, gap: tokens.spacing.sm },
   formTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
   attributionBody: { ...tokens.typography.body, color: tokens.colors.textSecondary },
-  attributionConnected: { ...tokens.typography.caption, color: tokens.colors.textPrimary },
   field: { marginBottom: tokens.spacing.md },
   label: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.sm },
   input: { minHeight: tokens.size.buttonHeight, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, color: tokens.colors.textPrimary, ...tokens.typography.body },
-  breedList: { gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg },
-  breedOption: { minHeight: tokens.size.touchMin, borderRadius: tokens.radius.md, paddingHorizontal: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  breedSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   breedPressed: { opacity: 0.75 },
-  breedText: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1, minWidth: 0 },
-  breedTextSelected: { color: tokens.colors.primary, fontWeight: '700' },
   ageUnitField: { marginTop: tokens.spacing.md, marginBottom: tokens.spacing.md },
   ageUnitOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm },
   ageUnitOption: { minHeight: tokens.size.touchMin, minWidth: tokens.size.touchMin * 2, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.full, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   ageUnitSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   ageUnitText: { ...tokens.typography.body, color: tokens.colors.textPrimary },
   ageUnitTextSelected: { color: tokens.colors.primary, fontWeight: '700' },
+  infoEntry: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, marginTop: tokens.spacing.md },
+  infoEntryText: { ...tokens.typography.caption, color: tokens.colors.primary },
+  infoBody: { ...tokens.typography.body, color: tokens.colors.textPrimary },
 });

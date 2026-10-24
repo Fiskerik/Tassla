@@ -278,7 +278,7 @@ with sync_playwright() as p:
    passed('Routine detail sheet and same-row pending/error/unknown recovery')
   open('home','&homeScenario=review-training')
   review_step=page.get_by_text('Hantering av tassar',exact=True)
-  review_marker=page.get_by_text(re.compile(r'Tillfälligt exempel – innehållet är inte sakgranskat'))
+  review_marker=page.get_by_text('Granskningsdata')
   if review_mode:
    expect(review_step).to_be_visible();expect(review_marker).to_be_visible();page.screenshot(path=str(out/'home-review-training-375.png'))
   else:
@@ -474,12 +474,12 @@ with sync_playwright() as p:
   page.screenshot(path=str(out/f'home-{scenario}-375-text-140.png'))
  page.goto(f'{ui_base}?screen=home&homeScenario=review-training');page.wait_for_timeout(350)
  review_step=page.get_by_text('Hantering av tassar',exact=True)
- training_example=page.get_by_text(re.compile(r'(?:.* · )?Tillfälligt exempel – innehållet är inte sakgranskat$'))
+ training_example=page.get_by_text('Granskningsinnehåll')
  if review_mode:
   expect(review_step).to_be_visible();expect(training_example).to_be_visible()
   page.screenshot(path=str(out/'home-review-training-375.png'))
-  page.get_by_role('button',name=re.compile('Hantering av tassar.*Tillfälligt exempel')).click()
-  expect(page.get_by_text('Syntetiskt granskningsprogram',exact=True)).to_be_visible()
+  page.get_by_role('button',name=re.compile('Hantering av tassar')).click()
+  expect(page.get_by_text('Trygg hantering i vardagen',exact=True)).to_be_visible()
  else:
   expect(review_step).to_have_count(0);expect(training_example).to_have_count(0)
   page.screenshot(path=str(out/'home-review-training-absent-375.png'))

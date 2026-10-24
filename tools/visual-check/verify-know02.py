@@ -276,10 +276,10 @@ with sync_playwright() as p:
             check('Vanliga frågor' in page.locator('body').inner_text(), '140% FAQ tab opens the FAQ view')
             page.goto(f'{BASE}?screen=knowledge')
             page.evaluate("""() => { const scroller=[...document.querySelectorAll('*')].find(el => getComputedStyle(el).overflowY === 'auto' && el.scrollHeight > el.clientHeight); if(scroller) scroller.scrollTop=scroller.scrollHeight; }""")
-            disclaimer = page.get_by_text('Tillfälligt exempel – innehållet är inte sakgranskat.')
+            disclaimer = page.get_by_text('Granskningsdata')
             preview_bounds = disclaimer.evaluate("""el => { const r=el.getBoundingClientRect(); const s=el; let parent=s.parentElement; while(parent && getComputedStyle(parent).overflowY!=='auto') parent=parent.parentElement; const v=parent.getBoundingClientRect(); return {top:r.top,bottom:r.bottom,height:r.height,scroll:s.scrollHeight,viewportTop:v.top,viewportBottom:v.bottom}; }""")
             check(preview_bounds['height'] >= preview_bounds['scroll'] - 1 and preview_bounds['top'] >= preview_bounds['viewportTop'] - 1 and preview_bounds['bottom'] <= preview_bounds['viewportBottom'] + 1,
-                  'Guide preview disclaimer is fully readable after scrolling past the viewport edge at 140%')
+                  'Guide review status is fully readable after scrolling past the viewport edge at 140%')
             page.screenshot(path=str(OUT / 'knowledge-review-preview-140-scroll-375.png'))
 
     check(not PAGE_ERRORS, 'No browser page errors in rendered flows')

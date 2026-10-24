@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Crypto from 'expo-crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { AppBar, BottomSheet, Button, Card, ChecklistItem, Field, Progress, SectionHeader, Toast } from '../../components/ui';
+import { AppBar, BottomSheet, Button, Card, ChecklistItem, Dialog, Field, Progress, SectionHeader, Toast } from '../../components/ui';
+import { ChecklistIconPicker } from '../checklists/ChecklistIconPicker';
+import { checklistIconTone, type ChecklistIcon } from '../checklists/checklist-icons';
 import { CHECKLIST_TEMPLATES } from './checklist-content';
 import { addChecklistCustomItem, cacheChecklistOverview, cacheChecklistPreference, cacheChecklistTemplateState, checklistOverviewSnapshot, checklistTemplateSnapshot, deleteChecklistCustomItem, fetchChecklistOverview, fetchChecklistState, setChecklistItem, setChecklistPreference, updateChecklistCustomItem } from './checklist-data';
 import { checklistPercent, chooseChecklistPhase, normalizeCustomChecklistTitle, type ChecklistContext, type ChecklistCustomItem, type ChecklistTemplate } from './checklist-model';
@@ -37,8 +39,10 @@ const CHECKLIST_ITEM_ICONS: Record<string, ComponentProps<typeof Ionicons>['name
   play: 'tennisball-outline',
 };
 function sameCustom(left: ChecklistCustomItem, right: ChecklistCustomItem) {
-  return left.id === right.id && left.dogId === right.dogId && left.templateId === right.templateId && left.title === right.title && left.completed === right.completed;
+  return left.id === right.id && left.dogId === right.dogId && left.templateId === right.templateId && left.title === right.title && left.completed === right.completed && left.icon === right.icon;
 }
+
+type CustomChecklistForm = { id: string | null; requestId: string; title: string; completed: boolean; icon: ChecklistIcon | null };
 
 export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBack, registerInvalidate, active = true, pendingState = null, onPendingStateChange, onDetailChange }: { client: SupabaseClient; dogId: string; ageWeeks: number | null; cacheScope: string; onBack: () => void; registerInvalidate?: (invalidate: (() => void) | null) => void; active?: boolean; pendingState?: PendingChecklistMemory | null; onPendingStateChange?: (state: PendingChecklistMemory | null) => void; onDetailChange?: (open: boolean) => void }) {
   const reviewEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
@@ -60,9 +64,13 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
   const [savingRowKey, setSavingRowKey] = useState<string | null>(null);
   const [formSheetOpen, setFormSheetOpen] = useState(Boolean(pendingState?.uncertain && pendingState?.draft));
   const [failedFormAction, setFailedFormAction] = useState<'save' | 'delete' | null>(null);
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
+  const [discardFormOpen, setDiscardFormOpen] = useState(false);
+  const [discardTarget, setDiscardTarget] = useState<'sheet' | 'checklist'>('sheet');
+  const [deleteTarget, setDeleteTarget] = useState<ChecklistCustomItem | null>(null);
   const [message, setMessage] = useState(pendingState?.uncertain ? 'Det gick inte att kontrollera om ändringen sparades.' : '');
   const [messageTone, setMessageTone] = useState<'success' | 'error' | 'uncertain'>(pendingState?.uncertain ? 'uncertain' : 'error');
-  const [form, setForm] = useState<{ id: string | null; requestId: string; title: string; completed: boolean } | null>(pendingState?.draft ?? null);
+  const [form, setForm] = useState<CustomChecklistForm | null>(pendingState?.draft ?? null);
   const formRef = useRef(form);
   const pendingChangeRef = useRef(onPendingStateChange);
   useEffect(() => { formRef.current = form; }, [form]);
@@ -121,7 +129,8 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
     setFormError('');
     setFailedFormAction(null);
     setMessage('');
-    setForm({ id: null, requestId: Crypto.randomUUID(), title: '', completed: false });
+    setForm({ id: null, requestId: Crypto.randomUUID(), title: '', completed: false, icon: null });
+    setIconPickerOpen(false);
     setFormSheetOpen(true);
   }
 
@@ -130,13 +139,56 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
     setFormError('');
     setFailedFormAction(null);
     setMessage('');
-    setForm({ id: item.id, requestId: item.id, title: item.title, completed: item.completed });
+    setForm({ id: item.id, requestId: item.id, title: item.title, completed: item.completed, icon: item.icon });
+    setIconPickerOpen(false);
     setFormSheetOpen(true);
   }
 
-  function closeFormSheet() {
-    if (busy) return;
+  function formIsDirty() {
+    if (!form) return false;
+    if (!form.id) return Boolean(form.title.trim() || form.icon || form.completed);
+    const original = customItems.find((item) => item.id === form.id);
+    return !original || form.title !== original.title || form.completed !== original.completed || form.icon !== original.icon;
+  }
+
+  function leaveChecklistNow() {
+    invalidateCurrentView();
+    if (templateId) { setTemplateId(null); setForm(null); if (!uncertain) setMessage(''); }
+    else onBack();
+  }
+
+  function requestFormClose(target: 'sheet' | 'checklist' = 'sheet') {
+    if (busy || uncertain) return;
+    if (formIsDirty()) {
+      setDiscardTarget(target);
+      setDiscardFormOpen(true);
+      return;
+    }
+    setForm(null);
     setFormSheetOpen(false);
+    setIconPickerOpen(false);
+    if (target === 'checklist') leaveChecklistNow();
+  }
+
+  function closeFormSheet() {
+    requestFormClose('sheet');
+  }
+
+  function confirmDiscardForm() {
+    const target = discardTarget;
+    setDiscardFormOpen(false);
+    setForm(null);
+    setFormSheetOpen(false);
+    setIconPickerOpen(false);
+    setFormError('');
+    setFailedFormAction(null);
+    if (!uncertain) setMessage('');
+    if (target === 'checklist') leaveChecklistNow();
+  }
+
+  function leaveChecklist() {
+    if (formSheetOpen && form) { requestFormClose('checklist'); return; }
+    leaveChecklistNow();
   }
 
   const load = useCallback(async (selectedId: string | null, withSpinner = true, forceRefresh = false): Promise<boolean> => {
@@ -222,12 +274,6 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
   const recommended = ageWeeks === null ? null : chooseChecklistPhase(ageWeeks, context);
   const percentage = checklistPercent(done, total);
   const allItemsComplete = state === 'ready' && total > 0 && done === total;
-  function leaveChecklist() {
-    invalidateCurrentView();
-    if (templateId) { setTemplateId(null); setForm(null); if (!uncertain) setMessage(''); }
-    else onBack();
-  }
-
   function openTemplate(template: ChecklistTemplate) {
     invalidateCurrentView();
     const cached = checklistTemplateSnapshot(cacheScope, template.id);
@@ -316,8 +362,8 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
     const controller = new AbortController(); writeControllerRef.current = controller;
     const normalizedTitle = normalizeCustomChecklistTitle(form.title)!;
     const operation: PendingChecklistOperation = form.id
-      ? { kind: 'update', previous: customItems.find((item) => item.id === form.id)!, changes: { title: normalizedTitle, completed: form.completed } }
-      : { kind: 'add', templateId: activeTemplate.id, id: form.requestId, title: normalizedTitle };
+      ? { kind: 'update', previous: customItems.find((item) => item.id === form.id)!, changes: { title: normalizedTitle, completed: form.completed, icon: form.icon } }
+      : { kind: 'add', templateId: activeTemplate.id, id: form.requestId, title: normalizedTitle, icon: form.icon };
     rememberWrite(operation);
     setFailedFormAction(null);
     setPendingOperation(operation);
@@ -326,13 +372,13 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
       if (form.id) {
         const previous = customItems.find((item) => item.id === form.id);
         if (!previous) { resolveWrite(); setMessage('Punkten saknas. Läs in listan igen.'); setMessageTone('error'); return; }
-        const result = await updateChecklistCustomItem(client, previous, { title: normalizedTitle, completed: form.completed }, controller.signal);
+        const result = await updateChecklistCustomItem(client, previous, { title: normalizedTitle, completed: form.completed, icon: form.icon }, controller.signal);
         if (scope !== generation.current || controller.signal.aborted) return;
         if (result.status === 'saved') { resolveWrite(); const nextItems = customItems.map((item) => item.id === result.value.id ? result.value : item); setCustomItems(nextItems); storeTemplateSnapshot(activeTemplate.id, progress, nextItems); setSummaries((current) => ({ ...current, [activeTemplate.id]: { done: done + Number(result.value.completed) - Number(previous.completed), total } })); setForm(null); setFormSheetOpen(false); setMessage('Sparat'); setMessageTone('success'); }
         else if (result.status === 'conflict') { resolveWrite(); setMessage('Punkten har ändrats. Läs in listan igen.'); setMessageTone('error'); }
         else { if (result.status === 'unknown') markUnknown(operation); else { resolveWrite(); setFailedFormAction('save'); } setMessage(result.status === 'unknown' ? 'Det gick inte att kontrollera om ändringen sparades.' : 'Kunde inte spara. Försök igen.'); setMessageTone(result.status === 'unknown' ? 'uncertain' : 'error'); }
       } else {
-        const result = await addChecklistCustomItem(client, dogId, activeTemplate.id, form.requestId, form.title, controller.signal);
+        const result = await addChecklistCustomItem(client, dogId, activeTemplate.id, form.requestId, form.title, form.icon, controller.signal);
         if (scope !== generation.current || controller.signal.aborted) return;
         if (result.status === 'saved') { resolveWrite(); const nextItems = customItems.some((item) => item.id === result.value.id) ? customItems : [...customItems, result.value]; setCustomItems(nextItems); storeTemplateSnapshot(activeTemplate.id, progress, nextItems); setSummaries((current) => ({ ...current, [activeTemplate.id]: { done, total: total + 1 } })); setForm(null); setFormSheetOpen(false); setMessage('Sparat'); setMessageTone('success'); }
         else { if (result.status === 'unknown') markUnknown(operation); else { resolveWrite(); setFailedFormAction('save'); } setMessage(result.status === 'unknown' ? 'Det gick inte att kontrollera om ändringen sparades.' : 'Kunde inte spara. Försök igen.'); setMessageTone(result.status === 'unknown' ? 'uncertain' : 'error'); }
@@ -427,7 +473,7 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
           } else { setForm((value) => value?.requestId === operation.id ? null : value); setFormSheetOpen(false); finish('Punkten har ändrats. Läs in listan igen.', 'error'); }
           return;
         }
-        const result = await addChecklistCustomItem(client, dogId, operation.templateId, operation.id, operation.title, controller.signal);
+        const result = await addChecklistCustomItem(client, dogId, operation.templateId, operation.id, operation.title, operation.icon, controller.signal);
         if (!current()) return;
         if (result.status === 'saved') {
           const refreshedItems = loaded.customItems.some((item) => item.id === result.value.id) ? loaded.customItems : [...loaded.customItems, result.value];
@@ -512,14 +558,14 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
           <Text style={styles.contextTitle}>{state === 'ready' ? contextSummary : state === 'error' ? 'Valet kunde inte hämtas' : 'Läser in ert val…'}</Text>
           <Text style={styles.contextHint}>{preferencePending ? 'Sparar nytt val…' : unknownAgeDefault ? 'Lägg till hundens födelsedatum för ett åldersförslag, eller välj en fas själv.' : state !== 'ready' ? 'Checklistorna visas när valet har lästs in.' : preferenceSaved ? 'Sparat val' : 'Förslag utifrån hundens ålder'}</Text>
         </View>
-        <Button variant="tertiary" label="Ändra" accessibilityLabel="Ändra checklistornas fas" disabled={busy || state !== 'ready' || uncertain} onPress={() => setContextSheetOpen(true)} />
+        <Button variant="icon" iconName="create-outline" label="Ändra" accessibilityLabel="Ändra checklistornas fas" disabled={busy || state !== 'ready' || uncertain} onPress={() => setContextSheetOpen(true)} />
       </View>
       {state === 'error' ? <View style={styles.contextStatus}><Text style={styles.contextStatusText}>Val och framsteg kunde inte hämtas.</Text><Button variant="secondary" label="Försök igen" accessibilityLabel="Försök hämta checklistorna igen" onPress={retry} /></View> : null}
       {failedContext ? <View style={styles.contextStatus}><Text style={styles.contextStatusText}>Det nya valet kunde inte sparas. Ditt tidigare läge gäller fortfarande.</Text><Button variant="secondary" label="Försök igen" accessibilityLabel="Försök spara samma fasval igen" onPress={retry} /></View> : null}
       {preferenceUncertain ? <View style={styles.contextStatus}><Text style={styles.contextStatusText}>{message || 'Det gick inte att kontrollera om valet sparades.'} Ditt tidigare läge visas tills kontrollen är klar.</Text><Button variant="secondary" label="Kontrollera" accessibilityLabel="Kontrollera om fasvalet sparades" onPress={retry} /></View> : null}
       <View style={styles.reviewInfoOverview}>
-        <Button variant="tertiary" label={reviewInfoOpen ? 'Dölj information' : 'Läs mer'} accessibilityLabel="Läs mer om tillfälliga exempel" onPress={() => setReviewInfoOpen((open) => !open)} />
-        {reviewInfoOpen ? <Text style={styles.meta}>Exemplen tas bort eller skrivs om före lansering.</Text> : null}
+        <Button variant="tertiary" label={reviewInfoOpen ? 'Dölj information' : 'Läs mer'} accessibilityLabel="Visa information om checklistorna" onPress={() => setReviewInfoOpen((open) => !open)} />
+        {reviewInfoOpen ? <Text style={styles.meta}>Checklistornas innehåll granskas före publicering.</Text> : null}
       </View>
       {state === 'ready' && recommendedTemplate ? <>
         <SectionHeader title="För er just nu" />
@@ -533,8 +579,8 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
     </> : <>
       <Text style={styles.body}>{activeTemplate.intro}</Text>
       <View style={styles.reviewInfoDetail}>
-        <Button variant="tertiary" label={reviewInfoOpen ? 'Dölj information' : 'Läs mer'} accessibilityLabel="Läs mer om tillfälliga exempel" onPress={() => setReviewInfoOpen((open) => !open)} />
-        {reviewInfoOpen ? <Text style={styles.meta}>Exemplen tas bort eller skrivs om före lansering.</Text> : null}
+        <Button variant="tertiary" label={reviewInfoOpen ? 'Dölj information' : 'Läs mer'} accessibilityLabel="Visa information om checklistorna" onPress={() => setReviewInfoOpen((open) => !open)} />
+        {reviewInfoOpen ? <Text style={styles.meta}>Checklistornas innehåll granskas före publicering.</Text> : null}
       </View>
       <Card accessibilityLabel={`Framsteg för ${activeTemplate.title}`}>
         {state === 'ready' ? <>
@@ -547,7 +593,7 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
             </View>)}
             {customItems.length > 0 ? <SectionHeader title="Egna punkter" /> : null}
             {customItems.length === 0 ? <Text style={styles.meta}>Lägg till något som passar er.</Text> : customItems.map((item, index) => <View key={item.id} style={[styles.groupedRow, styles.customRow, index < customItems.length - 1 && styles.dividedRow]}>
-              <ChecklistItem variant="grouped" label={item.title} checked={item.completed} leadingIcon="list-outline" disabled={busy || uncertain} pending={savingRowKey === `custom:${item.id}`} onPress={() => { void toggleCustom(item); }} />
+              <ChecklistItem variant="grouped" label={item.title} checked={item.completed} leadingIcon={item.icon ?? 'list-outline'} leadingIconTone={checklistIconTone(item.icon ?? 'list-outline')} disabled={busy || uncertain} pending={savingRowKey === `custom:${item.id}`} onPress={() => { void toggleCustom(item); }} />
               <Button variant="icon" label="Ändra" iconName="create-outline" accessibilityLabel={`Ändra ${item.title}`} disabled={busy || uncertain} onPress={() => openEditForm(item)} />
             </View>)}
             <Button label={form ? form.id ? 'Fortsätt redigera punkt' : 'Fortsätt med egen punkt' : 'Lägg till egen punkt'} accessibilityLabel={form ? form.id ? 'Fortsätt redigera egen punkt' : 'Fortsätt med egen punkt' : 'Lägg till egen punkt'} variant="tertiary" disabled={busy || (uncertain && !form)} onPress={openAddForm} />
@@ -568,18 +614,33 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
         </View>;
       })}
     </BottomSheet>
-    <BottomSheet visible={Boolean(form && formSheetOpen)} title={form?.id ? 'Ändra egen punkt' : 'Ny egen punkt'} onRequestClose={closeFormSheet}>
+    <BottomSheet visible={Boolean(form && formSheetOpen)} title={form?.id ? 'Ändra egen punkt' : 'Ny egen punkt'} onRequestClose={closeFormSheet} keyboardAware
+      footer={form ? <Button label="Spara" accessibilityLabel="Spara egen punkt" loading={busy} disabled={busy || state !== 'ready' || uncertain} onPress={() => { void saveCustom(); }} /> : null}>
       {form ? <>
       {uncertain && message ? <View style={styles.formStatus}><Text style={styles.contextStatusText}>{message} Ditt utkast och samma sparåtgärd finns kvar.</Text><Button variant="secondary" label={busy ? 'Kontrollerar…' : 'Kontrollera'} accessibilityLabel="Kontrollera om ändringen sparades" disabled={busy} onPress={retry} /></View> : null}
       {busy && pendingOperation && ['add', 'update', 'delete'].includes(pendingOperation.kind) ? <Text accessibilityLiveRegion="polite" style={styles.contextPending}>{pendingOperation.kind === 'delete' ? 'Tar bort punkten…' : 'Sparar punkten…'}</Text> : null}
       {!uncertain && messageTone === 'error' && message ? <Toast visible tone="error" message={message} onRetry={retry} /> : null}
-      <Field label="Punkt" value={form.title} onChangeText={(title) => { setForm((current) => current ? { ...current, title } : current); setFormError(''); }} error={formError} help={formError ? undefined : 'Högst 160 tecken.'} state={busy || uncertain || failedFormAction === 'delete' ? 'disabled' : 'default'} />
-      {form.id ? <Button variant="secondary" label={form.completed ? 'Markera som inte klar' : 'Markera som klar'} accessibilityLabel={form.completed ? 'Markera punkten som inte klar' : 'Markera punkten som klar'} disabled={busy || uncertain || failedFormAction === 'delete'} onPress={() => setForm((current) => current ? { ...current, completed: !current.completed } : current)} /> : null}
-      <Button label="Spara" accessibilityLabel="Spara egen punkt" loading={busy} disabled={busy || state !== 'ready' || uncertain} onPress={() => { void saveCustom(); }} />
-      {form.id ? <Button variant="destructive" label="Radera punkt" accessibilityLabel="Radera egen punkt" disabled={busy || uncertain || state !== 'ready'} onPress={() => Alert.alert('Radera punkten?', 'Den egna punkten tas bort från checklistan.', [{ text: 'Avbryt', style: 'cancel' }, { text: 'Radera', style: 'destructive', onPress: () => { const item = customItems.find((row) => row.id === form.id); if (item) void removeCustom(item); } }])} /> : null}
-      <Button variant="tertiary" label="Avbryt" accessibilityLabel="Avbryt ändring av egen punkt" disabled={busy || uncertain} onPress={() => { setForm(null); setFormSheetOpen(false); setFormError(''); setFailedFormAction(null); setMessage(''); }} />
+      <View style={styles.formFieldRow}>
+        <Field containerStyle={styles.formTitleField} label="Punkt" value={form.title} onChangeText={(title) => { setForm((current) => current ? { ...current, title } : current); setFormError(''); }} error={formError} help={formError ? undefined : 'Högst 160 tecken.'} state={busy || uncertain || failedFormAction === 'delete' ? 'disabled' : 'default'} />
+        <ChecklistIconPicker value={form.icon} label={form.title || 'egen punkt'} expanded={iconPickerOpen} popover
+          disabled={busy || uncertain || failedFormAction === 'delete'} testIDPrefix="knowledge-checklist" itemKey={form.id ?? 'new'}
+          onToggle={() => setIconPickerOpen((open) => !open)} onSelect={(icon) => { setForm((current) => current ? { ...current, icon } : current); setIconPickerOpen(false); }} />
+      </View>
+      {form.id ? <View style={styles.formIconActions}>
+        <Button variant="icon" iconName={form.completed ? 'checkbox' : 'square-outline'} label="Klar" accessibilityLabel={form.completed ? 'Markera punkten som inte klar' : 'Markera punkten som klar'} disabled={busy || uncertain || failedFormAction === 'delete'} onPress={() => setForm((current) => current ? { ...current, completed: !current.completed } : current)} />
+        <View style={styles.formActionSpacer} />
+        <Button variant="icon" iconName="trash-outline" label="Radera" accessibilityLabel={`Radera ${form.title}`} disabled={busy || uncertain || state !== 'ready'} onPress={() => { const item = customItems.find((row) => row.id === form.id); if (item) setDeleteTarget(item); }} />
+      </View> : null}
       </> : null}
     </BottomSheet>
+    <Dialog visible={discardFormOpen} title="Kasta ändringar?" onRequestClose={() => setDiscardFormOpen(false)} onConfirm={confirmDiscardForm}
+      confirmLabel="Kasta" cancelLabel="Fortsätt redigera" compactActions>
+      <Text style={styles.body}>Dina ändringar på {form?.title.trim() ? `”${form.title.trim()}”` : 'punkten'} sparas inte.</Text>
+    </Dialog>
+    <Dialog visible={Boolean(deleteTarget)} title="Radera punkten?" onRequestClose={() => setDeleteTarget(null)} onConfirm={() => { const item = deleteTarget; setDeleteTarget(null); if (item) void removeCustom(item); }}
+      confirmLabel="Radera" cancelLabel="Avbryt" compactActions>
+      <Text style={styles.body}>{deleteTarget ? `”${deleteTarget.title}” tas bort från checklistan.` : ''}</Text>
+    </Dialog>
   </View>;
 }
 
@@ -609,5 +670,9 @@ const styles = StyleSheet.create({
   dividedRow: { borderBottomWidth: tokens.size.stroke, borderBottomColor: tokens.colors.border },
   completeLabel: { ...tokens.typography.label, color: tokens.colors.success, marginTop: tokens.spacing.sm },
   customRow: { gap: tokens.spacing.xs },
+  formFieldRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
+  formTitleField: { flex: 1, minWidth: 0 },
+  formIconActions: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
+  formActionSpacer: { flex: 1 },
   uncertain: { gap: tokens.spacing.sm, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.md, padding: tokens.spacing.md, marginVertical: tokens.spacing.sm },
 });

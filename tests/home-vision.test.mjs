@@ -58,10 +58,10 @@ test('public and review Home share a generic portrait and expose the dog switche
   assert.match(harness, /reviewFixtureEnabled&&homeScenario==='ready'&&state==='ready'\?homeReviewFixture:undefined/);
   assert.match(harness, /testID="review-banner"/);
   assert.match(harness, /testID="review-app-viewport"/);
-  assert.match(harness, /AI-GENERERAD STANDARDBILD/);
-  assert.match(harness, /Syntetiskt granskningsläge\. AI-genererad standardbild\./);
+  assert.match(harness, /Granskningsdata/);
+  assert.doesNotMatch(harness, /Syntetiskt granskningsläge\. AI-genererad standardbild\./);
   assert.match(harness, /appViewport:\{flex:1,minHeight:0\}/);
-  assert.match(harness, /height:tokens\.spacing\.xxl,minHeight:tokens\.spacing\.xxl/);
+  assert.match(harness, /minHeight:tokens\.spacing\.xl/);
   assert.match(panelsHarness, /<DailyChecklistScreen/);
   assert.match(panelsHarness, /setNavigation\('checklist'\)/);
   assert.match(panelsHarness, /__routineToggleCalls/);

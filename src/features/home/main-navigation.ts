@@ -20,6 +20,46 @@ export function activeMainTabDestination(page: string): BottomNavDestination {
 
 export type ProductRouteScrollKeys = { scrollKey: string; preserveScrollKey?: string };
 
+export type ProfileInsightsOrigin = {
+  kind: 'profile';
+  selectionKey: string;
+  accountGeneration: number;
+  dogId: string;
+  profileReturnPage: 'more' | 'training';
+};
+
+export type InsightsOrigin = { kind: 'log' } | ProfileInsightsOrigin;
+
+export function logViewScrollKeys(view: 'today' | 'overview'): ProductRouteScrollKeys {
+  return view === 'overview'
+    ? { scrollKey: 'log-insights-flow', preserveScrollKey: 'log' }
+    : { scrollKey: 'log', preserveScrollKey: 'log' };
+}
+
+export function profileInsightsOriginMatches(origin: InsightsOrigin | null, selectionKey: string, accountGeneration: number, dogId: string): origin is ProfileInsightsOrigin {
+  return origin?.kind === 'profile'
+    && origin.selectionKey === selectionKey
+    && origin.accountGeneration === accountGeneration
+    && origin.dogId === dogId;
+}
+
+export function profileInsightsDisabledReason(input: {
+  dogProfileDirty: boolean;
+  kennelDraftDirty: boolean;
+  profileBusy: boolean;
+  profilePending: boolean;
+  profileConflict: boolean;
+  attributionBusy: boolean;
+  attributionWriteUnresolved: boolean;
+  attributionReady: boolean;
+}): string | null {
+  if (input.dogProfileDirty) return 'Spara eller ändra tillbaka profiluppgifterna för att öppna Insikter.';
+  if (input.profileBusy || input.profilePending || input.profileConflict) return 'Kontrollera profiländringen innan du öppnar Insikter.';
+  if (input.kennelDraftDirty || input.attributionBusy || input.attributionWriteUnresolved) return 'Kontrollera kenneländringen innan du öppnar Insikter.';
+  if (!input.attributionReady) return 'Kontrollera kennelkopplingen innan du öppnar Insikter.';
+  return null;
+}
+
 export function productRouteScrollKeys(page: string, knowledgeReturnPage?: string, trainingReturnPage?: string): ProductRouteScrollKeys {
   if (page === 'home') return { scrollKey: 'home-detail-flow', preserveScrollKey: 'home-detail-flow' };
   if (page === 'development') return { scrollKey: 'home-development-flow', preserveScrollKey: 'home-development-flow' };
@@ -27,6 +67,8 @@ export function productRouteScrollKeys(page: string, knowledgeReturnPage?: strin
   if (page === 'checklist') return { scrollKey: 'home-checklist-flow', preserveScrollKey: 'home-checklist-flow' };
   if (page === 'home-training-detail' && trainingReturnPage === 'progress') return { scrollKey: 'home-progress-training-detail', preserveScrollKey: 'home-progress-flow' };
   if (page === 'home-training-detail') return { scrollKey: page, preserveScrollKey: 'home-checklist-flow' };
+  if (page === 'health') return { scrollKey: 'health-flow', preserveScrollKey: 'health-flow' };
+  if (page === 'planned-health') return { scrollKey: 'planned-health', preserveScrollKey: 'planned-health' };
   if (page === 'knowledge' && knowledgeReturnPage === 'development') {
     return { scrollKey: 'home-development-guide-detail', preserveScrollKey: 'home-development-flow' };
   }

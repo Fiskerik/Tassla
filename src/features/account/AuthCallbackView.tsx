@@ -9,12 +9,12 @@ export function AuthCallbackView({ mode, pendingMessage, onReturn }: {
   onReturn: () => void;
 }) {
   if (mode === 'preview') return <AppScreen>
-    <PageHeading title="Inloggning ingår inte i testläget" description="Gå tillbaka till den lokala förhandsvisningen av Hem och exempelprofilen." />
+    <PageHeading title="Förhandsvisning" description="Inloggning är inte tillgänglig här." />
     <View style={styles.statusCard}>
       <View style={[styles.statusIcon, styles.infoIcon]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
         <Ionicons name="information-circle-outline" size={tokens.size.iconMd} color={tokens.colors.support.account.fg} />
       </View>
-      <Text style={styles.pendingText}>Ingen inloggning öppnas i det här testläget.</Text>
+      <Text style={styles.pendingText}>Granskningsdata · sparas lokalt</Text>
     </View>
     <PrimaryButton title="Till Hem" onPress={onReturn} />
   </AppScreen>;

@@ -1,3 +1,5 @@
+import type { ChecklistIcon } from '../checklists/checklist-icons';
+
 export const CHECKLIST_VERSION = 'review-v1';
 export const CHECKLIST_CONTEXTS = ['before_homecoming', 'first_days', 'by_age'] as const;
 export type ChecklistContext = typeof CHECKLIST_CONTEXTS[number];
@@ -7,7 +9,7 @@ export interface ChecklistTemplate {
   id: string; phase: 'before_homecoming' | 'first_days' | '8_12_weeks' | '3_6_months' | '6_12_months' | 'over_1_year';
   title: string; intro: string; minAgeWeeks: number; maxAgeWeeks: number | null; items: readonly ChecklistItem[];
 }
-export interface ChecklistCustomItem { id: string; dogId: string; templateId: string; title: string; completed: boolean; }
+export interface ChecklistCustomItem { id: string; dogId: string; templateId: string; title: string; completed: boolean; icon: ChecklistIcon | null; }
 export interface ChecklistProgress { dogId: string; templateId: string; itemKey: string; }
 export interface ChecklistPreference { dogId: string; context: ChecklistContext; }
 export type ChecklistWriteOutcome<T> = { status: 'saved'; value: T } | { status: 'failed' | 'unknown' | 'conflict' };

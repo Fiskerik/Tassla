@@ -98,19 +98,20 @@ test('the screen presents the three target views with distinct, honest source se
   assert.match(screen, /Inga övningar tillgängliga ännu/);
 });
 
-test('safety-critical behavior is untouched: sheet, guarded completion, confirmed toasts, reset and review text', () => {
+test('safety-critical behavior remains guarded: sheet, ordered completion, reset and review text', () => {
   assert.match(screen, /<BottomSheet visible=\{Boolean\(selectedProgram\)\}/);
   assert.match(screen, /disabled=\{Boolean\(busyStepKey\) \|\| nextStep\?\.id !== selectedStep\.id\}/, 'only the next step can be marked');
   assert.match(screen, /Börja med \{nextStep\?\.title\} innan du markerar den här övningen/);
-  assert.match(screen, /Alert\.alert\('Börja om\?'/);
-  assert.match(screen, /Markeringar i dessa övningsutkast sparas under den här visningen/);
+  assert.match(screen, /<Dialog visible=\{Boolean\(resetTarget && resetTargetIsCurrent\)\}/, 'reset confirmation is only visible for the current program version');
+  assert.match(screen, /onRequestClose=\{\(\) => setResetTarget\(null\)\} onConfirm=\{confirmReset\}/, 'close and confirm remain separate actions');
+  assert.match(screen, /Granskningsdata · sparas lokalt/);
   assert.match(screen, /if \(pending\.current \|\| busyStepKey/);
 });
 
 test('every program and exercise is reachable: overview opens a program, a program opens each exercise, sources stay available', () => {
   assert.match(screen, /onPress=\{\(\) => setOpenProgramId\(program\.id\)\}/);
-  assert.match(screen, /<AppBar mode="Back" title=\{openProgram\.title\} onAction=\{\(\) => setOpenProgramId\(null\)\}/);
-  assert.match(screen, /label="Om programmet och källor"/);
+  assert.match(screen, /<AppBar mode="Back" title=\{openProgram\.title\} onAction=\{\(\) => \{ setResetTarget\(null\); setOpenProgramId\(null\); \}\}/);
+  assert.match(screen, /accessibilityLabel=\{`Läs om \$\{openProgram\.title\} och dess källor`\}/);
   assert.equal(screen.match(/setSelection\(\{ programId: program\.id, stepId: step\.id \}\)/g)?.length, 3,
     'recommendation card, current exercise card, and upcoming rows open their exact exercise');
 });
@@ -122,9 +123,20 @@ test('recommendation card opens its exact next exercise and full list remains se
 });
 
 test('progress is only reset from inside a program, behind the existing confirmation', () => {
-  assert.equal(screen.match(/label="Börja om"/g)?.length, 1);
-  assert.match(screen, /completedCount\(openProgram\) > 0 \? <Button variant="destructive" label="Börja om"/);
-  assert.match(screen, /if \(completedCount\(program\) === 0\) return;/, 'a stale-only progress list cannot expose reset confirmation');
+  assert.equal(screen.match(/confirmLabel="Börja om"/g)?.length, 1);
+  assert.match(screen, /completedCount\(openProgram\) > 0 \? <Pressable accessibilityRole="button" accessibilityLabel=\{`Börja om med \$\{openProgram\.title\}`\}/);
+  assert.match(screen, /onPress=\{\(\) => openResetConfirmation\(openProgram\)\}/);
+  assert.match(screen, /<Dialog visible=\{Boolean\(resetTarget && resetTargetIsCurrent\)\} title=\{resetTarget \? `Börja om med \$\{resetTarget\.program\.title\}\?` : 'Börja om\?'\}/);
+  assert.match(screen, /confirmLabel="Börja om" confirmVariant="destructive" cancelLabel="Avbryt" compactActions/);
+  assert.match(screen, /programResetFingerprint\(current\) !== target\.fingerprint/,
+    'confirmation becomes stale if the selected program or its progress changes');
+  assert.match(screen, /completedAtByStepId: program\.completedAtByStepId/,
+    'unmarking and re-marking the same step invalidates a stale reset confirmation');
+  assert.match(screen, /content_id: program\.content_id, version: program\.version/,
+    'a replaced published version invalidates a stale reset confirmation');
+  assert.match(screen, /onResetProgram\(target\.program\)/, 'public mode uses the existing program-scoped handler');
+  assert.match(screen, /resetReviewTrainingProgram\(value, target\.program\.id\)/, 'review mode only changes local review progress');
+  assert.match(screen, /if \(completedCount\(program\) === 0 \|\| busyStepKey \|\| resetFlight\.current\) return;/, 'empty/stale progress and an active reset cannot open another confirmation');
   assert.match(screen, /completedCount\(program\) \/ program\.steps\.length \* 100/);
   assert.match(screen, /label=\{exerciseProgressLabel\(openProgram\)\}/, 'a zero-step program does not show a misleading 0 of 0 progress label');
   assert.match(screen, /Övningarna visas här när de är färdiga/);

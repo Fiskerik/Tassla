@@ -1,0 +1,24 @@
+{
+  "review_fixture": false,
+  "passed": [
+    "knowledge: 375×844, 430×844, 375×667 and 140% CSS text proxy; no horizontal overflow",
+    "training: 375×844, 430×844, 375×667 and 140% CSS text proxy; no horizontal overflow",
+    "reminders: 375×844, 430×844, 375×667 and 140% CSS text proxy; no horizontal overflow",
+    "insights: 375×844, 430×844, 375×667 and 140% CSS text proxy; no horizontal overflow",
+    "all five navigation names fit one line without truncation at 320/375/430 and direct 140% text; every target >=44",
+    "short and long training titles retain equal card dimensions, full text and smaller/lighter program labels at normal/direct140% text",
+    "FAQ shared context tabs retain public empty/review-gated content boundary and compact header",
+    "Checklistor returns to the guide destination through its compact back action",
+    "guide detail keeps its source content and compact back bar",
+    "reset cancel closes dialog without changing selected program progress",
+    "reset confirmation applies to one selected public/review program",
+    "program removal hides its stale confirmation without invoking reset",
+    "restoring the identical removed program never revives its old reset confirmation",
+    "version change/restore and focused-step return both permanently close stale reset without callbacks",
+    "reminder draft, app save and OS permission callbacks remain separate; information appears once",
+    "failed reminder save retains the current draft and does not invoke OS permission",
+    "Insights shared period tabs expose selected state and preserve existing period choices",
+    "no browser runtime errors"
+  ],
+  "failed": []
+}

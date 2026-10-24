@@ -39,7 +39,7 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
   const [activeNav, setActiveNav] = useState<BottomNavDestination>('home');
   return <View style={styles.page}>
     <AppBar mode="Back" title="Komponentgalleri" onAction={onBack} />
-    <Text style={styles.note}>Visuell provyta · Exempeltexter och lokala tillstånd. Håll in en knapp för tryckläget.</Text>
+    <Text style={styles.note}>Håll in en knapp för att se tryckläget.</Text>
     <SectionHeader title="Knappar" />
     {(['primary', 'secondary', 'tertiary', 'icon', 'destructive'] as const).map((variant) => <View key={variant} style={styles.group}>
       <Text style={styles.caption}>{variant}</Text>
@@ -57,7 +57,7 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
     <ListRow title="Promenad" meta="Idag · 20 min" category="walk" onPress={() => undefined} />
     <ListRow title="Träningssteg" meta="Genomfört" category="training" complete onPress={() => undefined} />
     <ListRow title="Vila" category="sleep" disabled onPress={() => undefined} />
-    <Card accessibilityLabel="Lugnt exempelkort"><Text style={styles.body}>Ett lugnt kort med innehållsstyrd höjd.</Text></Card>
+    <Card accessibilityLabel="Innehållskort"><Text style={styles.body}>Ett lugnt kort med innehållsstyrd höjd.</Text></Card>
     <Card variant="home" accessibilityLabel="Varmt Hem-kort"><Text style={styles.body}>Opt-in yta för Hem enligt rev02.</Text></Card>
     <Card onPress={() => undefined} accessibilityLabel="Öppna kort"><Text style={styles.body}>Tryckbart kort</Text></Card>
     <Card selected accessibilityLabel="Valt kort"><Text style={styles.body}>Valt kort</Text></Card>

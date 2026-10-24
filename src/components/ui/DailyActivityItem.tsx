@@ -46,12 +46,11 @@ export function DailyActivityItem(props: DailyActivityItemProps) {
     </View>
     {onOpen ? <MotionPressable accessibilityRole="button" accessibilityLabel={`Visa detaljer: ${label}`}
       onPress={onOpen} style={({ pressed }) => [styles.openButton, pressed && styles.pressed]}>
-      <Text style={styles.openLabel}>Visa</Text>
       <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
     </MotionPressable> : null}
     {onRemove ? <MotionPressable accessibilityRole="button" accessibilityLabel={`Ta bort från idag: ${label}`}
       onPress={onRemove} style={({ pressed }) => [styles.removeButton, pressed && styles.pressed]}>
-      <Text style={styles.openLabel}>Ta bort</Text>
+      <Ionicons name="remove-outline" size={tokens.size.iconMd} color={tokens.colors.primary} accessibilityElementsHidden />
     </MotionPressable> : null}
   </View>;
 }

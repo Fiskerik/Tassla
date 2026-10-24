@@ -1,5 +1,11 @@
 # Tassla — samlat besluts- och leveransregister
 
+## Aktuellt granskningsunderlag 2026-10-23
+
+[GAP-UI-UX-rev02-2026-10-23.md](../GAP-UI-UX-rev02-2026-10-23.md) är den aktuella UI-/UX-avstämningen för Luna: GitHub main `eea0984`, arbetsbranch `90d0d70`, 19 konkreta gap, gemensamma komponentfamiljer och spårning av äldre/invaliderade planer. Underlaget innehåller en inventering av 133 källfiler och 14 syntetiska RN Web-bilder. Det är en granskning/implementationsbeställning, inte nya genomförda paket, nya QA-PASS eller ett nytt live/native-prov. Ägarbekräftad panel 3, A03, ikonmigration och generell native/RLS-status återöppnas inte av historiska poster.
+
+På Eriks efterföljande beställning av större sammanhängande arbetspaket styr [actionplanen 2026-10-23](../tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md) den nya ordningen: **UI-R02-01 Profil → 02 Checklistor → 03 Logg/Hälsa → 04 panelhelheten med Kunskap/Träning/Insikter**. Den ersätter GAP-analysens tidigare paketindelning och planen från 18 oktober. Alla 19 fynd har ansvar och acceptans; befintlig branchkod återanvänds. Status är planeringsunderlag, inte formellt planreviewgodkänd implementation eller nya `done`-poster.
+
 Status: kanonisk sammanfattning för produkt-, design- och utvecklingsagenter. Baslinje för branchuppdateringen: codex/ux-rethink-2026-10-15 @ 2e230be44c1bdd74e74173064fdce5e60e7e9dbc. Senast sammanställd 2026-10-22.
 
 Läs denna fil först när ett beslut eller tidigare paket efterfrågas. Läs sedan bara den länkade detaljplanen för uppgiften. Vid konflikt gäller senaste uttryckliga ägarbeslutet och den aktuella posten här. De numrerade beslutsfilerna behålls som historiska underlag; de är inte separata, uppdaterade styrkällor. Detaljerade testresultat finns i respektive task- och releaseunderlag.
@@ -193,6 +199,10 @@ Detta stänger inte hela panel 4: Kommande, källnavigation/retur och full §14-
 
 Panel-4:s fyra filter, read-only Kommande, exakta historiska träningskällor och retur med bibehållet filter/scroll är lokalt implementerade på `2026-10-22-checklist-kommande-navigation`. Riktad syntetisk RN Web-kontroll PASS: public 10/10, review 19/19. Check-hook: 642 passerade, 1 skip av 643 testfall. Commit `25bde34` pushad till `origin/2026-10-22-checklist-kommande-navigation`. Full panelacceptans, oberoende A03-review och live RLS är fortfarande öppna; native accessibility är NOT TESTABLE.
 
+### FLOW-KNOWLEDGE-01 — Panel 7 lokal UI-checkpoint, 2026-10-22
+
+Kompakt guideyta (136/44 pt), hundnamn i sökfältet och två separata ikon-/textgenvägar till FAQ och Checklistor. Ingen taxonomi, rangordning, rekommendation eller ny datahantering har lagts till. Fokuserade tester 3/3, full check 69/69, public content guard och Expo iOS-export 1 579 moduler passerar. Sparade RN Web-kontroller: public 15/15, review 14/14, `pageErrors=0`; oberoende QA PASS och frozen Reviewer PASS. QA kunde inte starta om Chromium och granskade sparade captures/resultat i stället. Checkpointen är partiell: full §14-match, native accessibility/safe area, live data/RLS samt checklistans browser-delete/failure/unknown-vyer återstår. Se [verifiering](../design/evidence/flow-knowledge-01/VERIFICATION.md) och [rapport](../tasks/dev/rapport.md).
+
 Erik vill att Kunskapens checklistor delar mer av Hemmets ikon- och radgrammatik. Fortsatt beslut: harmonisera presentation och återkoppling där de passar, men bevara skillnaden mellan publicerade fasuppgifter/egna fas-punkter och ägarens återanvändbara återfallsrutiner. Kunskapens egna punkter saknar sparat ikonfält; beständigt val kräver separat datakontrakt och granskning. A03 ändrar inte Kunskap. Skärmens generella `Kontrollera den föregående ändringen`-status bevisar inte saknad tabell: ikonändringen kräver en ännu icke-applicerad validator-migration i den befintliga rutindatakällan, inte en ny tabell.
 
 
@@ -209,3 +219,38 @@ Erik bad uttryckligen att de övriga panelerna fortsätter medan panel 2:s fryst
 ### FLOW-LOG-01 — renderad verifiering återupptagen, 2026-10-22
 
 Renderer/Chromium är nu tillgängliga för isolerad RN Web-kontroll. Public/review-render: 13/13 vardera. Kalenderns datumtext är centrerad och ikonen minst 20,4 px åt höger vid 360 px; kalenderdagmål mäter 44,56×44 px och `Lägg till händelse` har 32 px scrollbottenmarginal vid 360×844 med Fler öppet. Gråskalevyn skiljer Kiss- och Vattenikonerna åt. Full Panel 5 är fortsatt partiell: `Översikt` väntar på en fungerande Panel 8/Insikter-route, så §14 punkt 16–17 är `Nej`. Oberoende QA/Reviewer, live RLS och native kontroller är öppna/NOT TESTABLE. Se [FLOW-LOG-01](../design/evidence/flow-log-01/VERIFICATION.md).
+
+
+### FLOW-DEVELOPMENT-01 — panel 2 lokal checkpoint stängd, 2026-10-22
+
+Frozen Reviewer PASS efter oberoende QA-recheck. Slutlig syntetisk render: public 45/45; review 61/63, där de två −4 pt Home-clearanceavvikelserna vid 375/430 px är ägaraccepterade och utanför Panel 2. Panel 2:s route-/fas-/scrollkontroller passerar. Tasken stängs som lokal, partiell checkpoint; sakgranskade och publicerade milstolpskällor saknas fortsatt. Live Supabase/RLS och native iOS är NOT TESTABLE. QA-inspekterade sparade renderresultat men körde inte om testsvit eller rendering. Se [verifiering](../design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/development/VERIFICATION.md) och [arbetsrapport](../tasks/dev/rapport.md).
+
+### UI-R02-01A — profilens sökbara rasväljare, QA/Reviewer PASS 2026-10-23
+
+Plan v2 har Architect **APPROVE**, Critic **PASS**, oberoende QA **PASS** och oberoende Reviewer **PASS** för den lokala UI-/validerings-slicen. Skapa och redigera använder samma sökbara rasväljare med lokal filtrering, en enda scrollägare, explicita radio-valstates, direktval av befintlig `unknown`-rad, inget förval vid skapande samt en begränsad bevaring av oförändrat äldre ras-ID. Checkpointen är commit `786dd11e0b9955959caaeb0fa161291bc558ef96` på `2026-10-23-ui-01-profil`.
+
+Verifiering: `pnpm check` PASS (74/74), review-channel `pnpm bundle:ios` PASS, RN Web public **13/13** och review **13/13**, `git diff --check`, Python `py_compile` av verifieraren och `python -X utf8 tools/dev_flow.py validate` PASS. Reviewer bekräftade RN 0.86.3:s `aria-checked`-mappning och inga blockerande fel. Resultat och skärmbilder finns i [public](../design/evidence/vision-rev02/ui-r02-01a-breed-picker/public/) och [review](../design/evidence/vision-rev02/ui-r02-01a-breed-picker/review/).
+
+Kvar som separat evidens: ny kontrolls native VoiceOver/Dynamic Type, verklig create-persistens, full produktionskatalog och live Supabase/RLS har inte verifierats här. RN Web-fixturen använder syntetiska raser och callbacks. `FLOW-INSIGHTS-01` är fortsatt parkerad som **blocked** på den specifika nya RPC:ns SQL-prov och owner/RLS-verifiering; det motsäger inte ägarens tidigare generella Supabase/RLS-besked och blockerar inte rasväljaren. Exakt implementation-commit förs in när committen är skapad. Se [taskplanen](../tasks/dev/UI-R02-01A-BREED-PICKER.md) och [rapporten](../tasks/dev/rapport.md).
+
+### UI-R02-01B — lokal profil-layout och avslutning, 2026-10-23
+
+Implementerarens lokala checkpoint följer actionplanen daterad 2026-10-23. Skapa/ändra prioriterar profilfälten, använder den gemensamma datumväljaren, ersätter den permanenta hundlistan med befintlig hundbytare och håller frivillig kennelkoppling kompakt. Profilens route-/flik-/Android-back/hundbyte/Add Dog-utgångar använder en scope-bunden dirty-policy. Safe resume återställer Add Dog-utkast och recovery actions endast efter SecureStore request-ID-matchning; discard rensar inte secure request eller referral state och inget skickas automatiskt.
+
+Lokal public/review-render PASS 9/9 vardera; `pnpm check` PASS (75/75); public iOS JavaScript-export PASS (1 583 moduler). Erik bekräftade 2026-10-23 att 01B redan är godkänd och granskad; checkpointen stängs på ägarens rapport. Separata oberoende protokoll lämnades inte i denna session och ingen ny QA-/Security-/Reviewer-körning påstås. Ägaren har tidigare bekräftat generell VoiceOver/Dynamic Type och Supabase/RLS. Den lokala evidensen ovan kvarstår som implementerarens tidigare resultat; SecureStore efter processomstart och signerad/TestFlight-build verifierades inte i den dokumenterade körningen. Profilen är en stödyta utan egen rev02-panel; full panelmatchning hävdas inte. Se [01B-verifieringen](../design/evidence/vision-rev02/ui-r02-01b-profile-density/VERIFICATION.md), [rapporten](../tasks/dev/rapport.md) och [taskplanen](../tasks/dev/UI-R02-01B-PROFILE-DENSITY-AND-EXIT.md). Nästa actionplanpaket är UI-R02-02 (Checklistor); ikonmetadata för egna faschecklistepunkter kräver separat migration-/readback-/granskning enligt D1.
+
+### UI-R02-02 — gemensam checklist-ikon och kompakt redigering, 2026-10-23
+
+**Beslut/utfall:** den befintliga 20-valsliste-modellen delas nu mellan rutinhantering och egna faschecklistepunkter. Egna punkters ikon lagras via ny nullable `icon`-kolumn, allowlist och begränsade grants i `202610230001_checklist_custom_item_icons.sql`; completion-only updates lämnar ikonen orörd. Formuläret använder en primär Spara-footer, ikonbaserade status-/raderingsåtgärder och uttryckliga textbekräftelser. Rutinhallens vanliga rad öppnar vald rutin; separat synlig `Hantera`-ingång öppnar hantering av alla/skapa. Rutinernas 20 ikonval ligger i rullflödet under vald punkt, inte ovanpå nästa fält eller spara-åtgärd.
+
+Lokal verifiering: `pnpm check` PASS, 75/75 tester (implementerare och oberoende QA); rutin UI 16/16 public och review; Knowledge interaction 7/7 med 140 % textproxy; public Expo iOS-export med 1 585 moduler; content release guard, diff check och Python-kompilering PASS. Architect APPROVE, Critic PASS, Security APPROVE och Reviewer PASS. Syntetisk RN Web-evidens finns i `docs/design/evidence/vision-rev02/ui-r02-02-checklists/`.
+
+**Begränsningar:** migrationen finns men applicering och SQL-prob mot riktig Supabase/PostgreSQL verifierades inte i denna session; live RLS/readback och native/TestFlight återstår. Full panel-4/7 §14 är inte godkänd av komponentbevisen. Den äldre breda `verify-know02.py` är NOT TESTABLE mot aktuell fixtur (föråldrad route före första assertion), lämnad oförändrad och ersatt här av det riktade Kunskapsprovet. QA och Reviewer godkände den lokala checkpointen; tasken är stängd för denna kodslicen, inte för runtime- eller fullpanelbevis. `FLOW-PANELS-6-7-IMAGE-DIVERSITY` är tillfälligt blockerat för att undvika överlappande README-skrivytor och återupptas i paket 04. Status och nästa steg i `docs/tasks/dev/queue.json`. Detta implementerar aktuell 23-oktober-actionplan och återinför inga förslag före 16 oktober.
+
+### UI-R02-03 — Logg och Hälsa, implementation-checkpoint 2026-10-23
+
+Edit för logg, utförd hälsohändelse, vikt och plan använder en gemensam BottomSheet-form med fast Spara-footer, ikonbaserad radering och textad objektsbekräftelse. Dirty drafts skyddas; minimerad pending/unknown-recovery återöppnar samma värden inom konto-/hund-/lifetime-scope. Hälsa skickar exakt plan-ID och returflik/scroll. Checklistors A03 source-route behålls separat. Inga data-/adapter-/migration-/RPC-ändringar ingår.
+
+Lokal public/review RN Web PASS: Logg 13/13 och Hälsaformulär 6/6 i vardera läge. Full `pnpm check` 75/75, public iOS JavaScript-export 1 585 moduler, content guard, diff-check, kövalidering och verifierarens py_compile PASS. Evidens finns i `docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/`.
+
+Queue är `qa`; oberoende QA/Reviewer och full Panel 5 §14 återstår. Live Supabase/RLS, native keyboard/accessibility och signerad/TestFlight-build har inte körts. Dessa begränsningar är separata från Eriks tidigare generella plattformsbekräftelser.

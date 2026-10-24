@@ -19,3 +19,13 @@ Kontouppgifter, hundprofil (inklusive vald åldersvisningsenhet i Slice A:s loka
 - Granska texten mot den slutliga appen och backend innan informationen visas som komplett.
 
 Ingen uppgift om juridisk efterlevnad, EU-lagring, avtal eller genomförd radering bekräftas genom detta utkast. Underlag och tidigare granskning finns i docs/tasks/dev/beta-account.md.
+
+## Insikter — planerad privat loggöversikt
+
+Insikter är en planerad funktion för att visa dig sammanräknade antal från din hunds befintliga loggar per vald vecka, månad eller sedan första loggen. Du kan öppna samma vy från Logga → Översikt eller Hundprofil. Profilgenvägen ändrar inte vilka uppgifter som används eller vem som får se dem. Vyn är privat för den inloggade ägare som har åtkomst till hundens loggar. Den bedömer inte hundens hälsa eller beteende och visar inte hur fullständigt du har registrerat verkliga händelser.
+
+Översikten beräknas vid läsning från loggarnas händelsetyp, tidpunkt och eventuell olycksklassificering. Den visar lokala datum och antal för kiss, bajs, oklassificerade olyckor, sömn och vakenhet. En olycka räknas som kiss eller bajs endast när du uttryckligen valt den typen; annars visas den separat som oklassificerad. Loggtext, vikt, varaktighet, hälsouppgifter och exakta händelsetider visas inte i aggregatet. Resultatet hålls tillfälligt i skärmens minne för vald hund och period. Ett separat aggregat sparas inte, det exporteras inte separat och det delas inte med andra, används för profilering eller skickas till analysverktyg.
+
+Du rättar eller tar bort enskilda uppgifter i loggen. En begäran om kopia utgår från de underliggande maskinläsbara loggposterna; Insikter räknas från dessa poster och skapar därför inget separat lagrat aggregat att lämna ut. Hund- och kontoradering följer appens befintliga raderingsflöde. Den redan angivna gallringen av betakonton och hunddata 30 dagar efter avslutad beta gäller fortsatt; Insikter inför ingen ny lagringstid. Hantering av leverantörsbackuper och driftloggar beskrivs i de öppna punkterna ovan.
+
+Denna beskrivning gäller den planerade funktionen och ska stämmas av mot den färdiga appen och backend före beta. Erik rapporterar Compliance-godkännande för FLOW-INSIGHTS-01A; den separata granskningstranskriptionen finns inte i denna checkout. Funktionen, backend-RPC:n och live-åtkomstkontrollerna är inte driftsatta eller verifierade genom denna dokumentuppdatering.

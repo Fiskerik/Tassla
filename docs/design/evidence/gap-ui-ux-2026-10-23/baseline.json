@@ -1,0 +1,582 @@
+{
+  "date": "2026-10-23",
+  "timezone": "Europe/Stockholm",
+  "main_commit": "eea0984aba44ef17707e7d583b3f9bf6b165c7ee",
+  "main_tree": "95931982ff0c23c33ecee3ed922500c49065434f",
+  "working_branch": "2026-10-22-panel7-insights-profile",
+  "working_branch_commit": "90d0d704c610ade7946557bf5f3b75a9310ff63e",
+  "branch_ahead_by": 2,
+  "branch_behind_by": 0,
+  "branch_changed_files": [
+    "src/data/workspace-data.ts",
+    "src/features/home/ProductWorkspace.tsx",
+    "src/features/home/main-navigation.ts",
+    "src/features/knowledge/KnowledgeScreen.tsx",
+    "src/features/knowledge/editorial-image-assignment.ts",
+    "src/features/onboarding/EditDogProfileScreen.tsx",
+    "src/features/puppy-log/InsightsScreen.tsx",
+    "src/features/puppy-log/LogScreen.tsx",
+    "src/features/puppy-log/insights-model.ts",
+    "src/features/training/PublishedTrainingScreen.tsx",
+    "supabase/migrations/202610220002_dog_event_insights_read.sql",
+    "supabase/tests/dog-event-insights-read.sql",
+    "tests/daily-checklist-route.test.mjs",
+    "tests/insights-model.test.mjs",
+    "tests/insights-period-read.test.mjs",
+    "tests/insights-scope.test.mjs",
+    "tests/knowledge-search-screen.test.mjs",
+    "tests/log-insights-route.test.mjs",
+    "tests/main-refresh.test.mjs",
+    "tests/profile-insights-route.test.mjs",
+    "tools/visual-check/verify-vision-r02-home-panels.py",
+    "tools/visual-check/vision-r02-home-panels-app.tsx"
+  ],
+  "inventory": {
+    "parsed_files": 133,
+    "parse_errors": 0,
+    "action_sites": 484,
+    "app_sites": 371,
+    "shared_sites": 48,
+    "preview_sites": 65
+  },
+  "source_manifest": [
+    {
+      "path": "app/_layout.tsx",
+      "sha": "97f1659f5aa6647ea070c685844aa8a3071d734a"
+    },
+    {
+      "path": "app/auth/callback.tsx",
+      "sha": "87c3f7dda966938d8312f24919cb2257d53726f6"
+    },
+    {
+      "path": "app/index.tsx",
+      "sha": "6c6e1e7e3ee58f74dbf81aa15d97bb15d2f2ace8"
+    },
+    {
+      "path": "src/analytics/analytics-model.ts",
+      "sha": "3e94b70acd6ce3fb1067caa1dd870be48c1c6b65"
+    },
+    {
+      "path": "src/analytics/analytics-service.ts",
+      "sha": "ebf3a5c4f28ec9845b2f44a9dc94b8290180c9c4"
+    },
+    {
+      "path": "src/components/AppPrimitives.tsx",
+      "sha": "e9b95af1846b8ab79ed81e26de4923dc204c2742"
+    },
+    {
+      "path": "src/components/calendar-month.ts",
+      "sha": "ec5bce0ea56b53becb4401a871999b8e89040989"
+    },
+    {
+      "path": "src/components/ui/ActionMenu.tsx",
+      "sha": "c09eb6406ebfc4ae18d419ab32e0e0d8cdd45e37"
+    },
+    {
+      "path": "src/components/ui/AppBar.tsx",
+      "sha": "d8cd8f68f887976668feb23e0d6310b5b463ef7e"
+    },
+    {
+      "path": "src/components/ui/BottomNav.tsx",
+      "sha": "6a5acc2da470e2cc6bc3f472437f11fcccc9c34e"
+    },
+    {
+      "path": "src/components/ui/BottomSheet.tsx",
+      "sha": "436e66ee143ed6ec685a4bb1e7427fce966bcd29"
+    },
+    {
+      "path": "src/components/ui/Button.tsx",
+      "sha": "957c539d524e883e2d79164a2adc1c7ba2e7b39d"
+    },
+    {
+      "path": "src/components/ui/Card.tsx",
+      "sha": "dbd84952a4ce83a82c0fec0f7f0c0e9766559198"
+    },
+    {
+      "path": "src/components/ui/CheckboxCard.tsx",
+      "sha": "6fcce18abf730dffc96f2e5e2c713afc30e54dd2"
+    },
+    {
+      "path": "src/components/ui/ChecklistItem.tsx",
+      "sha": "b2d43cfbaa570a17725a6379d7621fd6c3707566"
+    },
+    {
+      "path": "src/components/ui/ComponentGalleryScreen.tsx",
+      "sha": "185e140f9f517b1af67d250eba98921c71da13f3"
+    },
+    {
+      "path": "src/components/ui/DailyActivityItem.tsx",
+      "sha": "f3398ba128c583b8b82c06f90f6435e4cdf265e8"
+    },
+    {
+      "path": "src/components/ui/DestinationTile.tsx",
+      "sha": "8dc04e1955a3ff3033482a28e667fad040c3426e"
+    },
+    {
+      "path": "src/components/ui/Dialog.tsx",
+      "sha": "87765523441f5ffd10f46eb82f088c773e6ed2ac"
+    },
+    {
+      "path": "src/components/ui/DogCard.tsx",
+      "sha": "682d65fd0b063ed64a134abb6f8e9ee77b37036e"
+    },
+    {
+      "path": "src/components/ui/DogMascot.tsx",
+      "sha": "27f6d984076f8265770ea536c7546a0d2e3c2fd9"
+    },
+    {
+      "path": "src/components/ui/EmptyState.tsx",
+      "sha": "ea4c59f5a2c0dd55cefb336907ff0c482b1d55eb"
+    },
+    {
+      "path": "src/components/ui/Field.tsx",
+      "sha": "9ed3223e1ccbeb5d6c6356627764179f028a2b36"
+    },
+    {
+      "path": "src/components/ui/FirstUseTip.tsx",
+      "sha": "bc82645d52137018938b8c4c1ca5b4c3ae3628bc"
+    },
+    {
+      "path": "src/components/ui/HeroCard.tsx",
+      "sha": "0c2d3966071edbe06e4100c374c6e04d3f558d26"
+    },
+    {
+      "path": "src/components/ui/IconChip.tsx",
+      "sha": "be3a34c40a5eb9de22a90216c40e5f8635a9c375"
+    },
+    {
+      "path": "src/components/ui/InfoBanner.tsx",
+      "sha": "29d69a9bc6603b6b3fac277189cf3597952490ff"
+    },
+    {
+      "path": "src/components/ui/ListRow.tsx",
+      "sha": "700ccde205919c4eaabc4e3c890767698bc0627b"
+    },
+    {
+      "path": "src/components/ui/MainSwipeNavigation.tsx",
+      "sha": "056d7cdd8dd784c768ba6752590652db475ec0ec"
+    },
+    {
+      "path": "src/components/ui/Motion.tsx",
+      "sha": "fdfe2da74a26e3fb1dcf65f1ccffbd4ac2f36970"
+    },
+    {
+      "path": "src/components/ui/PhotoPlaceholder.tsx",
+      "sha": "9fb956f161a6681759cde5886abeebf2d5b9384c"
+    },
+    {
+      "path": "src/components/ui/PillIcon.tsx",
+      "sha": "a0c86f38b02be370c0f414c7a4f81be64c444f01"
+    },
+    {
+      "path": "src/components/ui/PoopIcon.tsx",
+      "sha": "e40a320e1a6c59e16eb4ca4ff2c4d0286392aa3f"
+    },
+    {
+      "path": "src/components/ui/Progress.tsx",
+      "sha": "76d0795d3d8b14b2ff4d831d3c9102fa9b4f1493"
+    },
+    {
+      "path": "src/components/ui/QuickLogTile.tsx",
+      "sha": "a8c43a74f5d2812be5754ab7cd84a662579a0d85"
+    },
+    {
+      "path": "src/components/ui/SectionHeader.tsx",
+      "sha": "c5239e7438aa1fa8c53650f531be74ee67c9c8fb"
+    },
+    {
+      "path": "src/components/ui/Skeleton.tsx",
+      "sha": "cab04478a14e7ce4004cdf25850308fec150d809"
+    },
+    {
+      "path": "src/components/ui/StatusBadge.tsx",
+      "sha": "d70896f72faf4e5f220f8261459c7ace1566f900"
+    },
+    {
+      "path": "src/components/ui/SupportScreenHeader.tsx",
+      "sha": "2df8508d22eab6e6684f009788fb75760d4b04b8"
+    },
+    {
+      "path": "src/components/ui/Tabs.tsx",
+      "sha": "f496280835c6decfb0a629833af9c2901f12f1e8"
+    },
+    {
+      "path": "src/components/ui/ThemedIcon.tsx",
+      "sha": "471b916d2b6343f7f417c1bc4c69a3c7a2c06b5b"
+    },
+    {
+      "path": "src/components/ui/Toast.tsx",
+      "sha": "a0d1ebe56158089f256d48834ccf5b859b95e939"
+    },
+    {
+      "path": "src/components/ui/index.ts",
+      "sha": "6b94e822e74daa83b61c0a7ac307f67d32219eeb"
+    },
+    {
+      "path": "src/components/ui/main-swipe-rules.ts",
+      "sha": "0aa5edf6438b4d1bb4375f3f42685dbe7be9d1b7"
+    },
+    {
+      "path": "src/components/ui/sheet-dismiss.ts",
+      "sha": "48a6fe361cb6314d8565107495e3d40c14caa6a3"
+    },
+    {
+      "path": "src/components/ui/sheet-drag.ts",
+      "sha": "ef56f4028d58dda98d7fb8f4a37a21f5c0914009"
+    },
+    {
+      "path": "src/content/select-content.ts",
+      "sha": "00d3f1ebcaf50b3b11f214883bc00073fbf3be09"
+    },
+    {
+      "path": "src/data/app-data.ts",
+      "sha": "83b6c1f54cf1ebc41174dbe0d01ae4be473ae689"
+    },
+    {
+      "path": "src/data/auth-callback.ts",
+      "sha": "f97de9ae53159014a8326df586e89372dae6b7a7"
+    },
+    {
+      "path": "src/data/chunked-storage.ts",
+      "sha": "9936f63e4aec681e8a2832bf05ff87a423548c2a"
+    },
+    {
+      "path": "src/data/contracts.ts",
+      "sha": "c91fe627698cc007c6a7ff4e3d0e98c3609377db"
+    },
+    {
+      "path": "src/data/expo-pkce-crypto.ts",
+      "sha": "700440b042b6cd6eb5d01db18ead18ad922ea0ae"
+    },
+    {
+      "path": "src/data/pkce-crypto.ts",
+      "sha": "f4d5e2e592a38b4ff80ae5f3773d18a573c117b0"
+    },
+    {
+      "path": "src/data/secure-session-storage.ts",
+      "sha": "ca3a69e8faf81d40d566393a34c6dc0a66d02016"
+    },
+    {
+      "path": "src/data/supabase.ts",
+      "sha": "abb62784cef49580c04cd4f458ef1fad7140c960"
+    },
+    {
+      "path": "src/data/workspace-data.ts",
+      "sha": "7b1d49515f05798921ff6ad1913225e3bef5a308"
+    },
+    {
+      "path": "src/features/account/AccountSettingsScreen.tsx",
+      "sha": "8bd6be89f0416ff8c66d8ce4acdeadbc8eb1b3b7"
+    },
+    {
+      "path": "src/features/account/AuthCallbackScreen.tsx",
+      "sha": "25d8ab29a58521daca86536fce1c35e12c94ab2b"
+    },
+    {
+      "path": "src/features/account/AuthCallbackView.tsx",
+      "sha": "a9081ac96d455c41bda386813381fac48aed2f9b"
+    },
+    {
+      "path": "src/features/account/AuthProvider.tsx",
+      "sha": "4f918da572b19389b65298303545f9a958a74ad8"
+    },
+    {
+      "path": "src/features/account/BetaInfoScreen.tsx",
+      "sha": "c3c7c4ef0cb503f6e82914323f4e2f75856ad1df"
+    },
+    {
+      "path": "src/features/account/SignInScreen.tsx",
+      "sha": "801e3664ca4252be8070510630ce9bdeb31466f4"
+    },
+    {
+      "path": "src/features/account/SignInScreenView.tsx",
+      "sha": "4c3413cf7d1a63f6286a038c3605e77b69214fe5"
+    },
+    {
+      "path": "src/features/account/account-delete.ts",
+      "sha": "01cec7a83c99b75e5dd345d0e1151930c55e05e9"
+    },
+    {
+      "path": "src/features/account/preview-policy.ts",
+      "sha": "9c0127296edf2d919cfee6cebef85aac62923129"
+    },
+    {
+      "path": "src/features/health/HealthHistoryScreen.tsx",
+      "sha": "ddf43b437abe3132176ab030379795be157075e8"
+    },
+    {
+      "path": "src/features/health/HealthScreen.tsx",
+      "sha": "351f7cf5d74c572d2e6de8d60c77643d8492c0aa"
+    },
+    {
+      "path": "src/features/health/PlannedHealthScreen.tsx",
+      "sha": "3dd6f2d8014f5d93839f5bf02d1d0b344ea475b7"
+    },
+    {
+      "path": "src/features/health/WeightScreen.tsx",
+      "sha": "24dcdc69d983ec26d5a8db45943f2f909057fb15"
+    },
+    {
+      "path": "src/features/health/planned-health-feedback.ts",
+      "sha": "549ebf3502f8a8c02d502f8928fe7eadcb780a0f"
+    },
+    {
+      "path": "src/features/health/planned-health-time.ts",
+      "sha": "b73729176b887c0502d39b81bd9e213ab4f2ff8f"
+    },
+    {
+      "path": "src/features/home/AppFlow.tsx",
+      "sha": "7a402269f4617d068138995e2a132d248ea02e9a"
+    },
+    {
+      "path": "src/features/home/DailyActivityManagerSheet.tsx",
+      "sha": "6507d5e0d34329c62b5e2833c46953e3c622fdbb"
+    },
+    {
+      "path": "src/features/home/DailyChecklistScreen.tsx",
+      "sha": "66db8fecaf6d37eadfd75c4af7bfccc179f7724c"
+    },
+    {
+      "path": "src/features/home/DailyProgressScreen.tsx",
+      "sha": "dd3d02adc6ea41d9596cf117353eafa54cb815f8"
+    },
+    {
+      "path": "src/features/home/DevelopmentPreview.tsx",
+      "sha": "d584c2494c5aafd7c8c60d6838b8890af8725e24"
+    },
+    {
+      "path": "src/features/home/DevelopmentScreen.tsx",
+      "sha": "61e9ad2378a259f0329a79622a6fbf7928c6d1e9"
+    },
+    {
+      "path": "src/features/home/DogProfileSwitcherSheet.tsx",
+      "sha": "72c58f7780efd880fd2142f720b6ba237506e3eb"
+    },
+    {
+      "path": "src/features/home/HomeCarousel.tsx",
+      "sha": "c08f63e2a5e171b3facaf36326074acc45534436"
+    },
+    {
+      "path": "src/features/home/HomeScreen.tsx",
+      "sha": "0b3a9cb58ec91754f7e02ed37c430ee2f04bed9d"
+    },
+    {
+      "path": "src/features/home/PreviewHomeScreen.tsx",
+      "sha": "a3686a7fbcc002674d9cd6e6a3c59605400969c1"
+    },
+    {
+      "path": "src/features/home/PreviewProfileScreen.tsx",
+      "sha": "812022cac645583d5ca198ac041120e95ad17b82"
+    },
+    {
+      "path": "src/features/home/ProductWorkspace.tsx",
+      "sha": "296d86af6fcadda06e8b717f7bb585f59e8d3fb6"
+    },
+    {
+      "path": "src/features/home/daily-activity-data.ts",
+      "sha": "8431c8a2a0a7e6bdb540ac3d0b43d8cafb79d9c1"
+    },
+    {
+      "path": "src/features/home/daily-activity-model.ts",
+      "sha": "509b824bf7daf7ea7aeae98a333bba138cee26ca"
+    },
+    {
+      "path": "src/features/home/daily-activity-recovery.ts",
+      "sha": "be93e2e366aea68ea0db69e514d6ac387dbb20ab"
+    },
+    {
+      "path": "src/features/home/daily-routine-checklist-icons.ts",
+      "sha": "299fb10d04456e41cfbb00b15ddd44139d9ba314"
+    },
+    {
+      "path": "src/features/home/home-greeting.ts",
+      "sha": "83b7569725fdbb3c83936e8c177753f59c1f9fba"
+    },
+    {
+      "path": "src/features/home/home-timeline.ts",
+      "sha": "7911ba47cf850fc54f1824319846459aa3494547"
+    },
+    {
+      "path": "src/features/home/home-today.ts",
+      "sha": "8e83355c4aae1097a88804be4d8063d317f80fbc"
+    },
+    {
+      "path": "src/features/home/main-navigation.ts",
+      "sha": "95e9a5be21b7472a9e88423d1cc9aceed6d2d81d"
+    },
+    {
+      "path": "src/features/knowledge/DraftContentPreview.tsx",
+      "sha": "074e0600c7d8bd12b9d17ab968a6957545d28275"
+    },
+    {
+      "path": "src/features/knowledge/FAQScreen.tsx",
+      "sha": "498ae615afc23bf7c6b83c83cadf0f633e93a377"
+    },
+    {
+      "path": "src/features/knowledge/KnowledgeScreen.tsx",
+      "sha": "f596d2ea89758c07474f30dac0bea4285b05a432"
+    },
+    {
+      "path": "src/features/knowledge/PuppyChecklistScreen.tsx",
+      "sha": "bd13f045b8f6c32a4d36ae1dd0eb2fc7005ad799"
+    },
+    {
+      "path": "src/features/knowledge/checklist-content.ts",
+      "sha": "0da024cf38ca6cb2e9063e0f8ef9a758fea4cf96"
+    },
+    {
+      "path": "src/features/knowledge/checklist-data.ts",
+      "sha": "2bd6c06c9078376ebd90f06b7fd39d62939765f4"
+    },
+    {
+      "path": "src/features/knowledge/checklist-intent.ts",
+      "sha": "542106d9675225ba700b7f0dccf2d78ff0669488"
+    },
+    {
+      "path": "src/features/knowledge/checklist-model.ts",
+      "sha": "4e914471d6d73f26f17c52f6e26b85012a9466b0"
+    },
+    {
+      "path": "src/features/knowledge/editorial-image-assignment.ts",
+      "sha": "e3f3598e5d8f10cf17b4d033cd25b2b978d14c7a"
+    },
+    {
+      "path": "src/features/knowledge/guide-body.ts",
+      "sha": "156a4184fbd97f9d87234648b20a8d01c2b8cd1d"
+    },
+    {
+      "path": "src/features/knowledge/guide-search.ts",
+      "sha": "0043aeb236f510fbce6952ac0ce93b0841c2671c"
+    },
+    {
+      "path": "src/features/knowledge/review-content.ts",
+      "sha": "54694e6b2152c2951716c98a46972cff9ecfc13e"
+    },
+    {
+      "path": "src/features/knowledge/source-links.ts",
+      "sha": "1c615a6b08389d60a41cba47fcb8e209069f28e6"
+    },
+    {
+      "path": "src/features/more/MoreScreen.tsx",
+      "sha": "253870dabeda550cc2e4becb58fbb08b7f3b0ea1"
+    },
+    {
+      "path": "src/features/notifications/NotificationSettingsScreen.tsx",
+      "sha": "ea8269aef576cefa3bf8a98937d8837c2f621633"
+    },
+    {
+      "path": "src/features/onboarding/DogProfileScreen.tsx",
+      "sha": "2d3a0e00f4096fe53e3bd56616439468b6f83fcf"
+    },
+    {
+      "path": "src/features/onboarding/EditDogProfileScreen.tsx",
+      "sha": "505afd19d03c180b24e33a7b78d9f142688307a0"
+    },
+    {
+      "path": "src/features/onboarding/ProfileScreen.tsx",
+      "sha": "6b712bfe207d9971aaca4630a9aa44892296d107"
+    },
+    {
+      "path": "src/features/onboarding/ProfileScreenHeader.tsx",
+      "sha": "976446a1b90ded4ff338652bedcc94c9f2750fae"
+    },
+    {
+      "path": "src/features/onboarding/dog-creation-storage.ts",
+      "sha": "e874611ecfde8cd1c4b609ee04e70343c09347c9"
+    },
+    {
+      "path": "src/features/onboarding/dog.ts",
+      "sha": "1431aebea8d9ed1b6f64aef645e31487ca9b1994"
+    },
+    {
+      "path": "src/features/passport/PassportScreen.tsx",
+      "sha": "f5b89787e8de6aea01503226394e1fc835f50d67"
+    },
+    {
+      "path": "src/features/passport/passport-export.ts",
+      "sha": "7482ea8a25f0db29910c380397e433170833473e"
+    },
+    {
+      "path": "src/features/passport/passport-model.ts",
+      "sha": "66512aee3673c7e07bd54534ae8389967f1ed453"
+    },
+    {
+      "path": "src/features/puppy-log/LogDateCalendar.tsx",
+      "sha": "33c60c38824b32d3e5e65d1cd6985ce608231f86"
+    },
+    {
+      "path": "src/features/puppy-log/LogScreen.tsx",
+      "sha": "3f1144bc247c0f0d80d485dd99bcad3ffa5530ab"
+    },
+    {
+      "path": "src/features/puppy-log/log-calendar-model.ts",
+      "sha": "9332e8c34920dd1450f0d677ad680ae336685252"
+    },
+    {
+      "path": "src/features/puppy-log/log-model.ts",
+      "sha": "bdc5fbafed1e6c526007dbb1a708160fec798915"
+    },
+    {
+      "path": "src/features/puppy-log/quick-log-layout-storage.ts",
+      "sha": "08c72c6a2c62dfa734b5b93f565e8c0072b9001e"
+    },
+    {
+      "path": "src/features/puppy-log/quick-log-layout.ts",
+      "sha": "3226ef415cff1b0789fbe3e35dafbcdb3176e9ef"
+    },
+    {
+      "path": "src/features/training/PublishedTrainingScreen.tsx",
+      "sha": "bc4bec68ca5e6c51231b4ab98793f7f781ab6f7b"
+    },
+    {
+      "path": "src/features/training/TrainingScreen.tsx",
+      "sha": "f4a796b71c2f4a5b32e1b311b55812735b36bb85"
+    },
+    {
+      "path": "src/features/training/review-training-state.ts",
+      "sha": "648457cce011904aa6ab838258b05118dddfd958"
+    },
+    {
+      "path": "src/features/training/training-model.ts",
+      "sha": "650a136b3fe983116aac44c940b28b246f3474ee"
+    },
+    {
+      "path": "src/features/training/training-overview.ts",
+      "sha": "787897380f58a5cd3202d3e855242fa7dab43982"
+    },
+    {
+      "path": "src/notifications/notification-model.ts",
+      "sha": "0d6e7b507a95a61a1b2557816301533e139b2f31"
+    },
+    {
+      "path": "src/notifications/notification-service.ts",
+      "sha": "095174f612ee1c376a4b8437a3dad9da40bbd523"
+    },
+    {
+      "path": "src/notifications/notification-storage.ts",
+      "sha": "1095a543bca0d1731c13e0cd9404289b2f2c5ef3"
+    },
+    {
+      "path": "src/onboarding-referral/referral-model.ts",
+      "sha": "5930946c426b3ba01ae5c35781f5a4d1b41732ab"
+    },
+    {
+      "path": "src/onboarding-referral/referral-secure-storage.ts",
+      "sha": "891a58573e711cb09df35546134288f7f48c3fe7"
+    },
+    {
+      "path": "src/onboarding-referral/referral-storage.ts",
+      "sha": "650e4ce42090e29d2d6cd27edf3a6dc846880d6b"
+    },
+    {
+      "path": "src/theme/tokens.ts",
+      "sha": "ca607709b5dc0727c5523d836370b0b02304d21e"
+    }
+  ],
+  "limits": [
+    "Static source inspection and synthetic React Native Web captures.",
+    "No live Supabase/RLS or migration executed.",
+    "No new native iOS, VoiceOver or Dynamic Type run.",
+    "No application test-suite or signed-build execution."
+  ]
+}

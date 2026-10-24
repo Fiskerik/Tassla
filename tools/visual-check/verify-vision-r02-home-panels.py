@@ -29,9 +29,10 @@ def record(name: str, passed: bool, details: dict[str, object] | None = None) ->
         print(f'PASS {name}')
 
 
-def home_url(scenario: str = 'ready', daily_mutation: str | None = None) -> str:
+def home_url(scenario: str = 'ready', daily_mutation: str | None = None, *, image_fixture: str | None = None) -> str:
     mutation = f'&dailyMutation={daily_mutation}' if daily_mutation else ''
-    return f'{BASE}/?screen=home&homeScenario={scenario}{mutation}'
+    images = f'&imageFixture={image_fixture}' if image_fixture else ''
+    return f'{BASE}/?screen=home&homeScenario={scenario}{mutation}{images}'
 
 
 def development_url(*, guides_state: str | None = None, age_scenario: str | None = None) -> str:
@@ -48,6 +49,24 @@ def progress_url(*, state: str = 'ready', completed: int | None = None) -> str:
     if completed is not None:
         query.append(f'progressCount={completed}')
     return f"{BASE}/?{'&'.join(query)}"
+
+
+def profile_url(*, breed_count: int = 24, breed_scenario: str | None = None) -> str:
+    scenario = f'&breedScenario={breed_scenario}' if breed_scenario else ''
+    return f'{BASE}/?screen=profile&breedCount={breed_count}{scenario}'
+
+
+def profile_create_url(*, breed_count: int = 24, breed_scenario: str | None = None) -> str:
+    scenario = f'&breedScenario={breed_scenario}' if breed_scenario else ''
+    return f'{BASE}/?screen=profile-create&breedCount={breed_count}{scenario}'
+
+
+def insights_url(*, state: str = 'ready', period: str = 'week', origin: str = 'profile') -> str:
+    return f'{BASE}/?screen=insights&origin={origin}&insightsPeriod={period}&insightsState={state}'
+
+
+def image_fixture_url(screen: str) -> str:
+    return f'{BASE}/?screen={screen}&imageFixture={screen}'
 
 
 def visible_destinations(page) -> list[dict[str, object]]:
@@ -233,11 +252,13 @@ def verify_development_states(browser) -> None:
            and abs(float(checklist_after['top']) - float(checklist_before['top'])) <= 1,
            {'before': checklist_before, 'after': checklist_after})
     page.get_by_role('button', name='Tillbaka till Hem', exact=True).click()
-    page.get_by_role('tab', name='Logg', exact=True).click()
-    expect(page.get_by_test_id('destination-result')).to_be_visible()
+    # Logg now owns its own preserved flow; Training is the non-preserved main route.
+    page.get_by_role('tab', name='Träning', exact=True).click()
+    expect(page.get_by_role('heading', name='Träning', exact=True)).to_be_visible()
+    expect(page.get_by_role('tablist', name='Huvudmeny').get_by_role('tab', name='Träning', exact=True)).to_have_attribute('aria-selected', 'true')
     page.get_by_role('tab', name='Hem', exact=True).click()
     flow_exit_home = vertical_scroll_state(page)
-    record('Leaving the Home child flow clears the old Home scroll offset',
+    record('Leaving the Home child flow for non-preserved Training clears the old Home scroll offset',
            flow_exit_home is None or float(flow_exit_home['top']) <= 1,
            {'after_flow_exit': flow_exit_home})
 
@@ -295,6 +316,502 @@ def verify_development_states(browser) -> None:
            {'content': target_box, 'bottom_nav': bottom_nav})
     page.screenshot(path=str(OUT / 'development-text-140-bottom-375.png'))
     page.close()
+
+
+def verify_insights_views(browser) -> None:
+    for width in (375, 430):
+        page = browser.new_page(viewport={'width': width, 'height': 844 + (32 if REVIEW else 0)})
+        page_errors: list[str] = []
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.goto(profile_url(), wait_until='networkidle')
+        entry = page.get_by_role('button', name='Insikter', exact=True)
+        expect(entry).to_be_visible()
+        expect(entry).to_be_enabled()
+        page.screenshot(path=str(OUT / f'profile-insights-entry-{width}.png'), full_page=True)
+
+        # The actual edit form owns this action. A dirty profile draft keeps it visible but blocks navigation.
+        name = page.get_by_role('textbox', name='Hundens namn', exact=True)
+        name.fill('Luna prov')
+        expect(entry).to_be_disabled()
+        expect(page.get_by_text('Spara eller ändra tillbaka profiluppgifterna för att öppna Insikter.', exact=True)).to_be_visible()
+        name.fill('Luna')
+        expect(entry).to_be_enabled()
+        entry.click()
+        expect(page.get_by_role('tablist', name='Loggvy')).to_be_visible()
+        expect(page.get_by_role('tab', name='Översikt', exact=True)).to_have_attribute('aria-selected', 'true')
+        return_button = page.get_by_role('button', name='Tillbaka till Hundprofil', exact=True)
+        expect(return_button).to_be_visible()
+        expect(page.get_by_text('Registreringar över tid med Luna.', exact=True)).to_be_visible()
+        if REVIEW:
+            expect(page.get_by_text('Kiss ·', exact=False)).to_be_visible()
+            expect(page.get_by_text('Bajs ·', exact=False)).to_be_visible()
+        else:
+            expect(page.get_by_text('Inga kiss-, bajs- eller olycksmarkeringar i perioden.', exact=True)).to_be_visible()
+        page.screenshot(path=str(OUT / f'insights-week-profile-{width}.png'), full_page=True)
+
+        page.get_by_role('tab', name='Månad', exact=True).click()
+        expect(page.get_by_role('tab', name='Månad', exact=True)).to_have_attribute('aria-selected', 'true')
+        page.screenshot(path=str(OUT / f'insights-month-profile-{width}.png'), full_page=True)
+        page.get_by_role('tab', name='Sedan första loggen', exact=True).click()
+        expect(page.get_by_role('tab', name='Sedan första loggen', exact=True)).to_have_attribute('aria-selected', 'true')
+        if REVIEW:
+            latest_marker = page.get_by_text('Pågår', exact=True).first
+            expect(latest_marker).to_be_visible()
+            record(f'All-history timeline opens at its current month at {width}px', True)
+            other_marker = page.get_by_text('Andra', exact=True)
+            other_marker.scroll_into_view_if_needed()
+            expect(other_marker).to_be_visible()
+            page.screenshot(path=str(OUT / f'insights-history-sparse-{width}.png'), full_page=True)
+            gap_count = page.locator('[aria-label*="månader utan registreringar"]').count()
+            record(f'Sparse history explains each omitted month interval at {width}px', gap_count > 0, {'accessible_gap_columns': gap_count})
+            expect(page.get_by_text('Från första registreringen', exact=False)).to_be_visible()
+        else:
+            expect(page.get_by_text('Du har inga registreringar ännu', exact=True)).to_be_visible()
+            log_button = page.get_by_role('button', name='Logga', exact=True)
+            expect(log_button).to_be_visible()
+            log_button.click()
+            expect(page.get_by_role('tab', name='Idag', exact=True)).to_have_attribute('aria-selected', 'true')
+            expect(page.get_by_role('button', name='Tillbaka till Hundprofil', exact=True)).to_be_visible()
+            page.get_by_role('tab', name='Översikt', exact=True).click()
+        page.screenshot(path=str(OUT / f'insights-history-profile-{width}.png'), full_page=True)
+
+        # Idag keeps the profile return action until the main Logg tab is explicitly selected.
+        page.get_by_role('tab', name='Idag', exact=True).click()
+        expect(page.get_by_role('button', name='Tillbaka till Hundprofil', exact=True)).to_be_visible()
+        page.get_by_role('tab', name='Översikt', exact=True).click()
+        page.get_by_role('button', name='Tillbaka till Hundprofil', exact=True).click()
+        expect(page.get_by_role('button', name='Insikter', exact=True)).to_be_visible()
+        page.get_by_role('button', name='Insikter', exact=True).click()
+        page.get_by_role('tab', name='Logg', exact=True).click()
+        expect(page.get_by_role('tab', name='Idag', exact=True)).to_have_attribute('aria-selected', 'true')
+        expect(page.get_by_role('button', name='Tillbaka till Hundprofil', exact=True)).to_have_count(0)
+        record(f'Profile-origin return can be explicitly cleared from the selected Logg tab at {width}px', True)
+        record(f'Profile entry, draft gate, shared overview periods and scoped return work at {width}px', not page_errors,
+               {'page_errors': page_errors})
+        page.close()
+
+    # Distinct loading/error/empty copy and an actionable retry, using the same production LogScreen.
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(insights_url(state='loading'), wait_until='networkidle')
+    expect(page.get_by_text('Hämtar registreringar…', exact=True)).to_be_visible()
+    page.screenshot(path=str(OUT / 'insights-loading-375.png'), full_page=True)
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(insights_url(state='error'), wait_until='networkidle')
+    expect(page.get_by_text('Insikterna kunde inte hämtas', exact=True)).to_be_visible()
+    retry = page.get_by_role('button', name='Försök igen', exact=True)
+    expect(retry).to_be_visible()
+    retry.click()
+    record('Insights error state offers the supplied retry action', page.evaluate('window.__insightsRefreshCalls === 1'))
+    page.screenshot(path=str(OUT / 'insights-error-375.png'), full_page=True)
+    page.close()
+
+    # 375×667 and a 140% web text proxy check the chart/footer fit and scroll path.
+    page = browser.new_page(viewport={'width': 375, 'height': 667 + (32 if REVIEW else 0)})
+    page.goto(insights_url(), wait_until='networkidle')
+    page.get_by_text('Sömnmarkeringar', exact=True).scroll_into_view_if_needed()
+    chart_title = page.get_by_text('Sömnmarkeringar', exact=True).bounding_box()
+    bottom_nav = page.get_by_role('tablist', name='Huvudmeny').bounding_box()
+    record('Insights remains scrollable above the fixed menu at 375×667',
+           chart_title is not None and bottom_nav is not None and chart_title['y'] + chart_title['height'] <= bottom_nav['y'],
+           {'chart_title': chart_title, 'bottom_nav': bottom_nav})
+    page.screenshot(path=str(OUT / 'insights-short-viewport-375.png'), full_page=True)
+    page.evaluate("""() => document.querySelectorAll('[dir="auto"]').forEach((element) => {
+      const style = getComputedStyle(element);
+      element.style.fontSize = `${parseFloat(style.fontSize) * 1.4}px`;
+      element.style.lineHeight = `${parseFloat(style.lineHeight) * 1.4}px`;
+    })""")
+    page.get_by_text('Sömnmarkeringar', exact=True).scroll_into_view_if_needed()
+    large_text_fits = page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    record('Insights has no horizontal page overflow with the 140% text layout proxy', large_text_fits)
+    page.screenshot(path=str(OUT / 'insights-text-140-375.png'), full_page=True)
+    page.close()
+
+
+def verify_breed_picker(browser) -> None:
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page_errors: list[str] = []
+    page.on('pageerror', lambda error: page_errors.append(str(error)))
+    page.goto(profile_url(breed_count=24), wait_until='networkidle')
+    trigger = page.get_by_test_id('breed-picker-trigger')
+    expect(trigger).to_be_visible()
+    expect(trigger).to_have_accessible_name('Ras: Golden retriever')
+    name = page.get_by_role('textbox', name='Hundens namn', exact=True)
+    name.fill('Luna utkast')
+    page.screenshot(path=str(OUT / 'breed-picker-profile-collapsed-375.png'), full_page=True)
+
+    trigger.click()
+    expect(page.get_by_text('Välj ras', exact=True)).to_be_visible()
+    expect(page.get_by_test_id('breed-option-golden')).to_have_attribute('aria-checked', 'true')
+    expect(page.get_by_test_id('breed-option-beagle')).to_have_attribute('aria-checked', 'false')
+    record('The open edit picker exposes selected and unselected radio states', True)
+    page.get_by_role('button', name='Stäng', exact=True).last.click()
+    expect(trigger).to_have_accessible_name('Ras: Golden retriever')
+    record('Closing the picker without choosing keeps the previous breed', True)
+
+    trigger.click()
+    search = page.get_by_role('textbox', name='Sök hundras', exact=True)
+    expect(search).to_be_visible()
+    search.fill('bOxEr')
+    match = page.get_by_test_id('breed-option-synthetic-12')
+    expect(match).to_be_visible()
+    rendered_options = page.locator('[data-testid^="breed-option-"]').count()
+    calls_after_typing = page.evaluate('window.__breedFetchCalls')
+    record('Breed search filters the fetched options case-insensitively with no request per keystroke',
+           rendered_options == 1 and calls_after_typing == 1,
+           {'rendered_options': rendered_options, 'fetch_calls': calls_after_typing})
+    page.screenshot(path=str(OUT / 'breed-picker-filtered-375.png'), full_page=True)
+
+    page.get_by_role('button', name='Rensa sökning', exact=True).click()
+    list_view = page.get_by_test_id('breed-options-list')
+    list_metrics = list_view.evaluate("""element => ({
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
+      overflowY: getComputedStyle(element).overflowY
+    })""")
+    record('Breed picker owns one scrollable list for the 24-option fixture',
+           list_metrics['scrollHeight'] > list_metrics['clientHeight'] and list_metrics['overflowY'] in ('auto', 'scroll'),
+           list_metrics)
+    list_view.evaluate("""element => {
+      element.scrollTop = element.scrollHeight;
+      element.dispatchEvent(new Event('scroll', { bubbles: true }));
+    }""")
+    expect(page.get_by_test_id('breed-option-synthetic-20')).to_be_visible()
+
+    search.fill('rasnamn-som-inte-finns')
+    expect(page.get_by_text('Ingen ras hittades', exact=True)).to_be_visible()
+    unknown_action = page.get_by_role('button', name='Välj Okänd ras', exact=True)
+    expect(unknown_action).to_be_visible()
+    unknown_box = unknown_action.bounding_box()
+    record('No-match state offers the real Okänd ras action with a 44pt target',
+           unknown_box is not None and unknown_box['width'] >= 44 and unknown_box['height'] >= 44,
+           {'box': unknown_box})
+    page.screenshot(path=str(OUT / 'breed-picker-no-match-375.png'), full_page=True)
+    unknown_action.click()
+    expect(page.get_by_text('Välj ras', exact=True)).to_have_count(0)
+    expect(trigger).to_have_accessible_name('Ras: Okänd ras')
+    expect(name).to_have_value('Luna utkast')
+    record('Selecting Okänd ras closes the sheet and preserves other profile fields',
+           page.evaluate('window.__breedFetchCalls === 1') and not page_errors,
+           {'fetch_calls': page.evaluate('window.__breedFetchCalls'), 'page_errors': page_errors})
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 667 + (32 if REVIEW else 0)})
+    page.goto(profile_url(breed_count=24), wait_until='networkidle')
+    page.get_by_test_id('breed-picker-trigger').click()
+    search = page.get_by_role('textbox', name='Sök hundras', exact=True)
+    search.fill('Nova Scotia')
+    long_row = page.get_by_test_id('breed-option-long-label')
+    expect(long_row).to_be_visible()
+    long_row_box = long_row.bounding_box()
+    record('Long breed names stay fully selectable on a short screen',
+           long_row_box is not None and long_row_box['height'] >= 43.99
+           and page.evaluate('document.documentElement.scrollWidth <= innerWidth'),
+           {'row': long_row_box})
+    page.screenshot(path=str(OUT / 'breed-picker-long-label-375x667.png'), full_page=True)
+    page.evaluate("""() => document.querySelectorAll('[dir="auto"]').forEach(element => {
+      const style = getComputedStyle(element);
+      element.style.fontSize = `${parseFloat(style.fontSize) * 1.4}px`;
+      element.style.lineHeight = `${parseFloat(style.lineHeight) * 1.4}px`;
+    })""")
+    search.scroll_into_view_if_needed()
+    large_text_fits = page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    record('Search and long breed row have no horizontal overflow with the 140% text proxy', large_text_fits)
+    page.screenshot(path=str(OUT / 'breed-picker-text-140-375x667.png'), full_page=True)
+    page.close()
+
+    page = browser.new_page(viewport={'width': 430, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(profile_url(breed_count=40), wait_until='networkidle')
+    trigger = page.get_by_test_id('breed-picker-trigger')
+    trigger.click()
+    search = page.get_by_role('textbox', name='Sök hundras', exact=True)
+    input_box = search.bounding_box()
+    page.screenshot(path=str(OUT / 'breed-picker-open-40-430.png'), full_page=True)
+    record('Search control remains a full-size target with 40 options at 430pt',
+           input_box is not None and input_box['height'] >= 44,
+           {'box': input_box})
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(profile_url(breed_count=1, breed_scenario='legacy'), wait_until='networkidle')
+    trigger = page.get_by_test_id('breed-picker-trigger')
+    expect(trigger).to_have_accessible_name('Ras: Ras saknas i listan')
+    expect(page.get_by_text('retired-test-breed', exact=True)).to_have_count(0)
+    page.get_by_role('textbox', name='Hundens namn', exact=True).fill('Luna bevarad ras')
+    page.get_by_role('button', name='Spara profil', exact=True).click()
+    page.wait_for_function('window.__profileSaveCalls === 1')
+    legacy_save_id = page.evaluate('window.__profileSavedBreedId')
+    record('Saving other profile fields keeps an unchanged missing legacy breed ID', legacy_save_id == 'retired-test-breed',
+           {'saved_breed_id': legacy_save_id})
+
+    trigger.click()
+    search = page.get_by_role('textbox', name='Sök hundras', exact=True)
+    search.fill('ingen-sådan-ras')
+    expect(page.get_by_text('Ingen ras hittades', exact=True)).to_be_visible()
+    expect(page.get_by_role('button', name='Välj Okänd ras', exact=True)).to_have_count(0)
+    page.screenshot(path=str(OUT / 'breed-picker-legacy-no-unknown-option-375.png'), full_page=True)
+    record('Missing catalog row does not synthesize an Okänd ras option', True)
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(profile_create_url(), wait_until='networkidle')
+    if REVIEW:
+        expect(page.get_by_text('Granskningsdata', exact=True)).to_be_visible()
+    trigger = page.get_by_test_id('breed-picker-trigger')
+    expect(trigger).to_have_accessible_name('Ras: Välj ras')
+    page.screenshot(path=str(OUT / 'breed-picker-create-collapsed-375.png'), full_page=True)
+    trigger.click()
+    expect(page.locator('[data-testid^="breed-option-"][aria-checked="true"]')).to_have_count(0)
+    page.get_by_role('button', name='Stäng', exact=True).last.click()
+    expect(trigger).to_have_accessible_name('Ras: Välj ras')
+    trigger.click()
+    page.get_by_test_id('breed-option-synthetic-03').click()
+    expect(page.get_by_text('Välj ras', exact=True)).to_have_count(0)
+    expect(trigger).to_have_accessible_name('Ras: Alaskan malamute')
+    expect(page.get_by_role('textbox', name='Hundens namn', exact=True)).to_have_value('')
+    page.screenshot(path=str(OUT / 'breed-picker-create-selected-375.png'), full_page=True)
+    record('Create flow starts with no preselected breed, keeps empty state on cancel and stores the chosen option',
+           page.evaluate('window.__breedFetchCalls === 1'))
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(profile_create_url(breed_count=24, breed_scenario='retry'), wait_until='networkidle')
+    expect(page.get_by_text('Raslistan kunde inte hämtas. Kontrollera anslutningen och försök igen.', exact=True)).to_be_visible()
+    page.get_by_role('button', name='Hämta raslistan igen', exact=True).click()
+    page.wait_for_function('window.__breedFetchCalls === 2')
+    expect(page.get_by_test_id('breed-picker-trigger')).to_be_visible()
+    record('Create flow recovers from a breed-fetch error using one explicit retry',
+           page.evaluate('window.__breedFetchCalls === 2'))
+    page.screenshot(path=str(OUT / 'breed-picker-retry-success-375.png'), full_page=True)
+    page.close()
+
+
+def verify_profile_density(browser) -> None:
+    for width, height in ((375, 667), (375, 844), (430, 844)):
+        page = browser.new_page(viewport={'width': width, 'height': height + (32 if REVIEW else 0)})
+        page_errors: list[str] = []
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.goto(BASE + '/?screen=profile-create', wait_until='networkidle')
+        expect(page.get_by_role('heading', name='Hundens profil', exact=True)).to_be_visible()
+        name = page.get_by_role('textbox', name='Hundens namn', exact=True)
+        breed = page.get_by_test_id('breed-picker-trigger')
+        birth_date = page.get_by_role('textbox', name='Födelsedatum, år-månad-dag', exact=True)
+        expect(name).to_be_visible()
+        expect(breed).to_be_visible()
+        expect(birth_date).to_be_visible()
+        create_heading = page.get_by_role('heading', name='Hundens uppgifter', exact=True).bounding_box()
+        name_box = name.bounding_box()
+        kennel_entry = page.get_by_text('Kennelkod', exact=False).first.bounding_box()
+        record(f'Profile create presents essential fields before optional kennel details at {width}×{height}',
+               create_heading is not None and name_box is not None and kennel_entry is not None
+               and create_heading['y'] < name_box['y'] < kennel_entry['y']
+               and page.evaluate('document.documentElement.scrollWidth <= innerWidth') and not page_errors,
+               {'heading': create_heading, 'name': name_box, 'kennel': kennel_entry, 'page_errors': page_errors})
+        expect(page.get_by_text('Valfritt', exact=True)).to_be_visible()
+        if REVIEW:
+            expect(page.get_by_text('Granskningsdata', exact=True)).to_be_visible()
+        page.screenshot(path=str(OUT / f'profile-create-{width}x{height}.png'), full_page=True)
+        page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 667 + (32 if REVIEW else 0)})
+    page_errors = []
+    page.on('pageerror', lambda error: page_errors.append(str(error)))
+    page.goto(profile_url(), wait_until='networkidle')
+    active_dog = page.get_by_role('button', name='Byt hund. Aktiv hund: Luna', exact=True)
+    form_heading = page.get_by_role('heading', name='Hundens uppgifter', exact=True)
+    expect(active_dog).to_be_visible()
+    expect(form_heading).to_be_visible()
+    dog_y = active_dog.bounding_box()['y']
+    form_y = form_heading.bounding_box()['y']
+    name = page.get_by_role('textbox', name='Hundens namn', exact=True)
+    name.fill('Luna utkast')
+    page.wait_for_function('window.__profileExitSnapshot?.profileDirty === true')
+    page.screenshot(path=str(OUT / 'profile-edit-375x667.png'), full_page=True)
+    record('Edit profile shows a compact active dog before the main form and reports dirtiness',
+           dog_y < form_y and not page_errors,
+           {'active_dog_y': dog_y, 'form_y': form_y, 'page_errors': page_errors})
+
+    active_dog.click()
+    expect(page.get_by_role('heading', name='Välj hund', exact=True)).to_be_visible()
+    milo = page.get_by_role('radio', name='Milo', exact=False)
+    expect(milo).to_be_visible()
+    expect(page.get_by_role('button', name='Lägg till hund', exact=True)).to_be_visible()
+    milo.click()
+    record('The profile reuses the shared dog switcher',
+           page.evaluate("window.__profileDogSwitchTarget === '00000000-0000-4000-8000-000000000022'")
+           and page.evaluate('window.__profileAddDogCalls ?? 0') == 0)
+    page.get_by_role('button', name='Stäng', exact=True).last.click()
+
+    page.get_by_role('button', name='Om hundens profil', exact=True).click()
+    expect(page.get_by_role('heading', name='Om hundens profil', exact=True)).to_be_visible()
+    page.get_by_role('button', name='Stäng information', exact=True).click()
+    record('Profile help is available through one compact information entry', not page_errors, {'page_errors': page_errors})
+    page.evaluate("""() => document.querySelectorAll('[dir="auto"]').forEach((element) => {
+      const style = getComputedStyle(element);
+      element.style.fontSize = (parseFloat(style.fontSize) * 1.4) + 'px';
+      element.style.lineHeight = (parseFloat(style.lineHeight) * 1.4) + 'px';
+    })""")
+    record('Profile edit has no horizontal overflow with the 140% text proxy', page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+    page.screenshot(path=str(OUT / 'profile-edit-text-140-375x667.png'), full_page=True)
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(BASE + '/?screen=profile&profileAttribution=connected', wait_until='networkidle')
+    expect(page.get_by_text('Kopplad till Solgläntans kennel', exact=True)).to_be_visible()
+    expect(page.get_by_role('textbox', name='Kennelkod, valfri', exact=True)).to_have_count(0)
+    page.get_by_text('Kopplad till Solgläntans kennel', exact=True).click()
+    expect(page.get_by_role('textbox', name='Kennelkod, valfri', exact=True)).to_be_visible()
+    expect(page.get_by_text('Koppla en kennel om du vill. Det påverkar inte hundprofilen.', exact=True)).to_be_visible()
+    record('A saved kennel connection stays collapsed until the owner opens it explicitly', True)
+    page.screenshot(path=str(OUT / 'profile-kennel-expanded-375x844.png'), full_page=True)
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page.goto(BASE + '/?screen=profile&profileAttribution=error', wait_until='networkidle')
+    expect(page.get_by_text('Kennelkopplingen kunde inte hämtas. Du kan försöka igen utan att ändra hundprofilen.', exact=True)).to_be_visible()
+    expect(page.get_by_role('button', name='Försök hämta kennelkopplingen igen', exact=True)).to_be_visible()
+    record('Kennel load errors expand the section and retain their retry action', True)
+    page.screenshot(path=str(OUT / 'profile-kennel-error-375x844.png'), full_page=True)
+    page.close()
+
+def verify_image_diversity(browser) -> None:
+    if not REVIEW:
+        for width in (375, 430):
+            page = browser.new_page(viewport={'width': width, 'height': 844})
+            page.goto(image_fixture_url('knowledge'), wait_until='networkidle')
+            expect(page.get_by_text('Inga guider är publicerade för Luna ännu.', exact=True)).to_be_visible()
+            page.screenshot(path=str(OUT / f'knowledge-empty-{width}.png'), full_page=True)
+            page.goto(image_fixture_url('training'), wait_until='networkidle')
+            expect(page.get_by_text('Inga övningar tillgängliga ännu', exact=True)).to_be_visible()
+            record(f'Public Knowledge and Training use honest empty content at {width}px',
+                   page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+            page.screenshot(path=str(OUT / f'training-empty-{width}.png'), full_page=True)
+            page.close()
+        return
+
+    for width in (375, 430):
+        page = browser.new_page(viewport={'width': width, 'height': 844 + 32})
+        page_errors: list[str] = []
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.goto(image_fixture_url('knowledge'), wait_until='networkidle')
+        expect(page.get_by_text('Granskningsdata', exact=True)).to_be_visible()
+        guide_cards = [
+            page.get_by_role('button', name='Läs Trygg start hemma', exact=True),
+            page.get_by_role('button', name='Läs Kontakt och namn', exact=True),
+            page.get_by_role('button', name='Läs Vardagsro och hantering', exact=True),
+        ]
+        image_sources: list[str | None] = []
+        image_boxes = []
+        for guide in guide_cards:
+            expect(guide).to_be_visible()
+            image = guide.locator('img').first
+            image_sources.append(image.get_attribute('src'))
+            image_boxes.append(image.bounding_box())
+        record(f'Knowledge maps three stable guide identities to three different visible photos at {width}px',
+               all(image_sources) and len(set(image_sources)) == 3,
+               {'image_sources': image_sources, 'image_boxes': image_boxes})
+        record(f'Knowledge image crops use the current 16:9 hero and 4:3 guide aspect ratios at {width}px',
+               image_boxes[1] is not None and abs(image_boxes[1]['width'] / image_boxes[1]['height'] - 16 / 9) <= 0.02
+               and all(box is not None and abs(box['width'] / box['height'] - 4 / 3) <= 0.02 for index, box in enumerate(image_boxes) if index != 1),
+               {'image_boxes': image_boxes})
+        page.screenshot(path=str(OUT / f'knowledge-guides-{width}.png'), full_page=True)
+        expect(page.get_by_role('textbox', name='Sök i guider för Luna', exact=True)).to_be_visible()
+        expect(page.get_by_role('tablist', name='Huvudmeny').get_by_role('tab', name='Kunskap', exact=True)).to_be_visible()
+        record(f'Knowledge guide search and the selected bottom destination remain visible at {width}px',
+               not page_errors and page.evaluate('document.documentElement.scrollWidth <= innerWidth'),
+               {'page_errors': page_errors})
+        page.close()
+
+    # Home opens the exact stable guide identity used by Knowledge's image manifest.
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + 32})
+    page_errors: list[str] = []
+    page.on('pageerror', lambda error: page_errors.append(str(error)))
+    page.goto(home_url(image_fixture='knowledge'), wait_until='networkidle')
+    home_knowledge = page.get_by_role('button', name='Just nu med Luna, 11 veckor: Trygg start hemma', exact=True)
+    home_knowledge.scroll_into_view_if_needed()
+    page.screenshot(path=str(OUT / 'home-knowledge-card-375.png'), full_page=True)
+    home_knowledge.click()
+    expect(page.get_by_role('heading', name='Trygg start hemma', exact=True)).to_be_visible()
+    record('Home knowledge recommendation opens its exact guide identity',
+           page.evaluate("window.__homePanelsOpened === 'content:review-v1:training:trygg-start'") and not page_errors,
+           {'page_errors': page_errors})
+    page.close()
+
+    # Home's current exercise recommendation opens the exact Training continuation card.
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + 32})
+    page_errors = []
+    page.on('pageerror', lambda error: page_errors.append(str(error)))
+    page.goto(home_url(image_fixture='training'), wait_until='networkidle')
+    home_training = page.get_by_role('button', name='Just nu med Luna, 11 veckor: Vila nära', exact=True)
+    home_training.scroll_into_view_if_needed()
+    page.screenshot(path=str(OUT / 'home-training-card-375.png'), full_page=True)
+    home_training.click()
+    expect(page.get_by_role('heading', name='Träning', exact=True)).to_be_visible()
+    continue_card = page.get_by_role('button', name='Fortsätt Trygg start hemma, nästa övning Vila nära, 1 av 2 övningar klara', exact=True)
+    continue_card.scroll_into_view_if_needed()
+    training_image = continue_card.locator('img').first
+    training_source = training_image.get_attribute('src')
+    training_box = training_image.bounding_box()
+    page.screenshot(path=str(OUT / 'training-continuation-375.png'), full_page=True)
+    record('Training continuation uses the Corgi photo and planned 88pt crop',
+           training_box is not None
+           and abs(training_box['width'] - 88) <= 1 and abs(training_box['height'] - 88) <= 1,
+           {'training_source': training_source, 'training_image': training_box})
+    record('Home recommendation and Training continuation use the same next-exercise title',
+           'Vila nära' in continue_card.inner_text())
+    continue_card.click()
+    expect(page.get_by_role('dialog')).to_be_visible()
+    expect(page.get_by_role('dialog').get_by_text('Vila nära', exact=True)).to_be_visible()
+    expect(page.get_by_role('button', name='Markera övningen som genomförd', exact=True)).to_be_visible()
+    record('Training continuation still opens the same in-progress exercise', not page_errors, {'page_errors': page_errors})
+    page.close()
+
+    for width in (375, 430):
+        page = browser.new_page(viewport={'width': width, 'height': 844 + 32})
+        page_errors = []
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.goto(image_fixture_url('training'), wait_until='networkidle')
+        expect(page.get_by_role('heading', name='Träning', exact=True)).to_be_visible()
+        continuation = page.get_by_role('button', name='Fortsätt Trygg start hemma, nästa övning Vila nära, 1 av 2 övningar klara', exact=True)
+        continuation.scroll_into_view_if_needed()
+        image_box = continuation.locator('img').first.bounding_box()
+        nav_box = page.get_by_role('tablist', name='Huvudmeny').bounding_box()
+        record(f'Training continuation has a square 88pt image and clear navigation at {width}px',
+               image_box is not None and abs(image_box['width'] - 88) <= 1
+               and abs(image_box['height'] - 88) <= 1
+               and nav_box is not None and image_box['y'] + image_box['height'] <= nav_box['y'] and not page_errors,
+               {'image': image_box, 'bottom_nav': nav_box, 'page_errors': page_errors})
+        page.screenshot(path=str(OUT / f'training-overview-{width}.png'), full_page=True)
+        page.close()
+
+    # Short device and large-text layout proxy keep the large photographs scrollable above navigation.
+    for screen in ('knowledge', 'training'):
+        page = browser.new_page(viewport={'width': 375, 'height': 667 + 32})
+        page.goto(image_fixture_url(screen), wait_until='networkidle')
+        if screen == 'knowledge':
+            page.get_by_role('button', name='Läs Vardagsro och hantering', exact=True).scroll_into_view_if_needed()
+            target = page.get_by_role('button', name='Läs Vardagsro och hantering', exact=True).locator('img').first
+        else:
+            continuation = page.get_by_role('button', name='Fortsätt Trygg start hemma, nästa övning Vila nära, 1 av 2 övningar klara', exact=True)
+            continuation.scroll_into_view_if_needed()
+            target = continuation.locator('img').first
+        image_box = target.bounding_box()
+        nav_box = page.get_by_role('tablist', name='Huvudmeny').bounding_box()
+        record(f'{screen.title()} crop is reachable without covering the bottom menu at 375×667',
+               image_box is not None and nav_box is not None and image_box['y'] + image_box['height'] <= nav_box['y'],
+               {'image': image_box, 'bottom_nav': nav_box})
+        page.screenshot(path=str(OUT / f'{screen}-short-375.png'), full_page=True)
+        page.evaluate("""() => document.querySelectorAll('[dir="auto"]').forEach((element) => {
+          const style = getComputedStyle(element);
+          element.style.fontSize = `${parseFloat(style.fontSize) * 1.4}px`;
+          element.style.lineHeight = `${parseFloat(style.lineHeight) * 1.4}px`;
+        })""")
+        page.wait_for_timeout(80)
+        record(f'{screen.title()} has no horizontal overflow with 140% text proxy',
+               page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+        page.screenshot(path=str(OUT / f'{screen}-text-140-375.png'), full_page=True)
+        page.close()
 
 
 def verify_progress_views(browser) -> None:
@@ -435,6 +952,66 @@ if os.environ.get('TASSLA_UI_PANEL') == 'progress':
     raise SystemExit(1 if failures else 0)
 
 
+if os.environ.get('TASSLA_UI_PANEL') == 'insights':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_insights_views(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'insights', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
+if os.environ.get('TASSLA_UI_PANEL') == 'breed-picker':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_breed_picker(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'breed-picker', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
+if os.environ.get('TASSLA_UI_PANEL') == 'profile-density':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_profile_density(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'profile-density', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
+if os.environ.get('TASSLA_UI_PANEL') == 'image-diversity':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_image_diversity(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'image-diversity', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
 with sync_playwright() as playwright:
     browser = playwright.chromium.launch(
         headless=True,
@@ -489,7 +1066,8 @@ with sync_playwright() as playwright:
         record(
             f'initial Home and three destinations at {width}x{app_height} ({"review" if REVIEW else "public"})',
             nav is not None and clearance is not None and clearance >= min_clearance
-            and viewport_box is not None and viewport_box['height'] == app_height,
+            and viewport_box is not None
+            and abs(viewport_box['height'] + viewport_box['y'] - page.evaluate('innerHeight')) <= 1,
             {'app_viewport': viewport_box, 'nav': nav, 'destination_tiles': tiles, 'clearance_pt': clearance,
              'minimum_clearance_pt': min_clearance},
         )
@@ -564,6 +1142,7 @@ with sync_playwright() as playwright:
 
     verify_development_views(browser)
     verify_development_states(browser)
+    verify_insights_views(browser)
 
     # Loading, empty, error, unknown and partial source states keep the full-list control visible.
     for scenario, message in (

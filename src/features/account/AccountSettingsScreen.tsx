@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Linking, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { MessageCard, QuietButton } from '../../components/AppPrimitives';
-import { SupportScreenHeader } from '../../components/ui';
+import { Button, SupportScreenHeader } from '../../components/ui';
 import { tokens } from '../../theme/tokens';
 import { readAccountDeletionMarker, type AccountDeleteResult } from './account-delete';
 
@@ -131,19 +131,12 @@ export function AccountSettingsScreen({
     {signOutFailed && status === 'confirmed' && <MessageCard tone="error">Kontot är raderat, men utloggningen på den här enheten misslyckades.</MessageCard>}
     {signOutFailed && status !== 'confirmed' && <MessageCard tone="error">Utloggningen på den här enheten misslyckades. Vi kunde inte bekräfta om kontot raderades.</MessageCard>}
 
-    <DestructiveButton title={busy ? 'Raderar konto…' : 'Radera konto'}
+    <Button variant="icon" iconName="trash-outline" label="Radera konto" accessibilityLabel={busy ? 'Raderar konto…' : 'Radera konto'} loading={busy}
       disabled={busy || !markerReady || markerState !== 'clear' || terminal || status === 'unavailable'} onPress={confirmDeletion} />
     {(status === 'confirmed' || localCleanupFailed || signOutFailed || status === 'unknown' || markerState !== 'clear' || status === 'unavailable')
       && <QuietButton title="Logga ut på den här enheten" disabled={busy} onPress={() => { void onSignOutLocally(); }} />}
     </View>
   </View>;
-}
-
-function DestructiveButton({ title, onPress, disabled }: { title: string; onPress: () => void; disabled: boolean }) {
-  return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress}
-    style={({ pressed }) => [styles.deleteButton, disabled && styles.deleteDisabled, pressed && !disabled && styles.pressed]}>
-    <Text style={styles.deleteText}>{title}</Text>
-  </Pressable>;
 }
 
 const styles = StyleSheet.create({
@@ -162,8 +155,5 @@ const styles = StyleSheet.create({
   metricsToggleRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm },
   metricsLabel: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1 },
   metricsStatus: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
-  deleteButton: { minHeight: tokens.size.buttonHeight, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.lg, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.danger, backgroundColor: tokens.colors.surface, marginTop: tokens.spacing.md },
-  deleteDisabled: { opacity: 0.5 },
-  deleteText: { ...tokens.typography.label, color: tokens.colors.danger },
   pressed: { opacity: 0.78 },
 });

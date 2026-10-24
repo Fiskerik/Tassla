@@ -62,7 +62,7 @@ with sync_playwright() as playwright:
         page.goto(checklist_url('Idag'), wait_until='networkidle')
         expect(page.get_by_test_id('daily-checklist-screen')).to_be_visible()
         if REVIEW:
-            expect(page.get_by_test_id('review-banner')).to_contain_text('Syntetiskt granskningsläge · checklistdata')
+            expect(page.get_by_test_id('review-banner')).to_contain_text('Granskningsläge · checklistdata')
             expect(page.get_by_text('Kissa', exact=True)).to_be_visible()
         else:
             expect(page.get_by_text('Inga aktiviteter idag', exact=True)).to_be_visible()

@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { Alert, Keyboard, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState, type MutableRefObject } from 'react';
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { DatePickerField, InfoModal, MessageCard, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
+import { DatePickerField, MessageCard, PrimaryButton, TimePickerField } from '../../components/AppPrimitives';
 import { Toast } from '../../components/ui/Toast';
 import {
   isValidHealthHistoryDate,
@@ -12,9 +12,11 @@ import {
 } from '../../data/workspace-data';
 import { localDate } from '../onboarding/dog';
 import { tokens } from '../../theme/tokens';
-import { Button } from '../../components/ui';
+import { Button, Dialog } from '../../components/ui';
 
 type LoadState = 'loading' | 'ready' | 'error';
+export type HealthHistoryDraft = { id: string | null; type: HealthHistoryType; date: string; time: string; note: string };
+export type HealthHistoryEditorState = { canSave: boolean; saving: boolean; dirty: boolean };
 
 export function HealthHistoryScreen({
   records,
@@ -30,6 +32,11 @@ export function HealthHistoryScreen({
   onResolveConflict,
   onSave,
   onDelete,
+  initialDraft,
+  onDraftChange,
+  onActionStateChange,
+  submitRef,
+  onSaved,
 }: {
   records?: readonly HealthHistoryRecord[];
   initialEditingId?: string | null;
@@ -44,16 +51,26 @@ export function HealthHistoryScreen({
   onResolveConflict?: () => void;
   onSave?: (id: string | null, type: HealthHistoryType, date: string, time: string | null, note: string) => Promise<boolean>;
   onDelete?: (id: string) => Promise<boolean>;
+  initialDraft?: HealthHistoryDraft;
+  onDraftChange?: (draft: HealthHistoryDraft) => void;
+  onActionStateChange?: (state: HealthHistoryEditorState) => void;
+  submitRef?: MutableRefObject<(() => Promise<void>) | null>;
+  onSaved?: () => void;
 }) {
-  const { width, fontScale } = useWindowDimensions();
-  const stackInfoRow = width < 360 || fontScale >= 1.25;
-  const [editingId, setEditingId] = useState<string | null>(initialEditingId);
-  const [type, setType] = useState<HealthHistoryType>(records?.find((row) => row.id === initialEditingId)?.event_type ?? initialType);
-  const [date, setDate] = useState(records?.find((row) => row.id === initialEditingId)?.occurred_on ?? localDate());
-  const [time, setTime] = useState(records?.find((row) => row.id === initialEditingId)?.occurred_time ?? '');
-  const [note, setNote] = useState(records?.find((row) => row.id === initialEditingId)?.description ?? '');
+  const initialRecord = records?.find((row) => row.id === initialEditingId) ?? null;
+  const baseline: HealthHistoryDraft = {
+    id: initialRecord?.id ?? null, type: initialRecord?.event_type ?? initialType,
+    date: initialRecord?.occurred_on ?? localDate(), time: initialRecord?.occurred_time ?? '', note: initialRecord?.description ?? '',
+  };
+  const [savedBaseline] = useState(() => baseline);
+  const [editingId, setEditingId] = useState<string | null>(initialDraft?.id ?? initialEditingId);
+  const [type, setType] = useState<HealthHistoryType>(initialDraft?.type ?? baseline.type);
+  const [date, setDate] = useState(initialDraft?.date ?? baseline.date);
+  const [time, setTime] = useState(initialDraft?.time ?? baseline.time);
+  const [note, setNote] = useState(initialDraft?.note ?? baseline.note);
   const [formError, setFormError] = useState('');
-  const [infoVisible, setInfoVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<HealthHistoryRecord | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
   const confirmedMessage = statusMessage.startsWith('Ändringen är sparad') && !statusError && !pending && !busy
@@ -62,6 +79,42 @@ export function HealthHistoryScreen({
   const rows = records ?? [];
   const blocked = busy || pending;
   const editingRecord = rows.find((row) => row.id === editingId) ?? null;
+  const draft = useMemo<HealthHistoryDraft>(() => ({ id: editingId, type, date, time, note }), [date, editingId, note, time, type]);
+  const occurredTime = time === '' ? null : time;
+  const normalizedNote = normalizeHealthHistoryDescription(note);
+  const canSave = isValidHealthHistoryDate(date) && isValidHealthHistoryTime(occurredTime) && normalizedNote !== undefined;
+  const dirty = JSON.stringify(draft) !== JSON.stringify(savedBaseline);
+
+  const resetForm = useCallback(() => {
+    setEditingId(null);
+    setType('vaccination');
+    setDate(localDate());
+    setTime('');
+    setNote('');
+    setFormError('');
+    setSaving(false);
+    Keyboard.dismiss();
+  }, []);
+
+  const save = useCallback(async () => {
+    setFormError('');
+    if (!isValidHealthHistoryDate(date)) {
+      setFormError('Ange ett giltigt datum som inte ligger i framtiden.');
+      return;
+    }
+    if (!isValidHealthHistoryTime(occurredTime)) {
+      setFormError('Ange en giltig tid då händelsen inträffade.');
+      return;
+    }
+    if (normalizedNote === undefined) {
+      setFormError('Anteckningen får innehålla högst 500 tecken.');
+      return;
+    }
+    setSaving(true);
+    try {
+      if (await onSave?.(editingId, type, date, occurredTime, normalizedNote ?? '')) { resetForm(); onSaved?.(); }
+    } finally { setSaving(false); }
+  }, [date, editingId, normalizedNote, occurredTime, onSave, onSaved, resetForm, type]);
 
   useEffect(() => {
     // The toast mirrors an external save-status prop and is intentionally reset here.
@@ -71,46 +124,23 @@ export function HealthHistoryScreen({
     setToastVisible(true);
   }, [confirmedMessage]);
 
+  useEffect(() => { onDraftChange?.(draft); }, [draft, onDraftChange]);
+  useEffect(() => { onActionStateChange?.({ canSave: canSave && !blocked && !saving, saving, dirty }); }, [blocked, canSave, dirty, onActionStateChange, saving]);
+  useEffect(() => {
+    if (!submitRef) return undefined;
+    submitRef.current = save;
+    return () => { if (submitRef.current === save) submitRef.current = null; };
+  }, [save, submitRef]);
+
   if (!available) return null;
 
-  function resetForm() {
-    setEditingId(null);
-    setType('vaccination');
-    setDate(localDate());
-    setTime('');
-    setNote('');
-    setFormError('');
-    Keyboard.dismiss();
-  }
-
-  async function save() {
-    setFormError('');
-    if (!isValidHealthHistoryDate(date)) {
-      setFormError('Ange ett giltigt datum som inte ligger i framtiden.');
-      return;
-    }
-    const occurredTime = time === '' ? null : time;
-    if (!isValidHealthHistoryTime(occurredTime)) {
-      setFormError('Ange en giltig tid då händelsen inträffade.');
-      return;
-    }
-    const normalized = normalizeHealthHistoryDescription(note);
-    if (normalized === undefined) {
-      setFormError('Anteckningen får innehålla högst 500 tecken.');
-      return;
-    }
-    if (await onSave?.(editingId, type, date, occurredTime, normalized ?? '')) resetForm();
-  }
-
   function confirmDelete(record: HealthHistoryRecord) {
-    Alert.alert('Radera händelse?', `${typeLabel(record.event_type)} tas bort från hundens historik.`, [
-      { text: 'Avbryt', style: 'cancel' },
-      { text: 'Radera', style: 'destructive', onPress: () => { void deleteRecord(record); } },
-    ]);
+    setDeleteTarget(record);
   }
 
   async function deleteRecord(record: HealthHistoryRecord) {
-    if (await onDelete?.(record.id) && editingId === record.id) resetForm();
+    setDeleteTarget(null);
+    if (await onDelete?.(record.id) && editingId === record.id) { resetForm(); onSaved?.(); }
   }
 
   function resolveConflict() {
@@ -120,18 +150,6 @@ export function HealthHistoryScreen({
 
   return (
     <View style={styles.section}>
-      <View style={[styles.infoRow, stackInfoRow && styles.infoRowStacked]}>
-        <Text style={styles.infoHint}>Om hälsans historik</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Visa information om hälsans historik" onPress={() => setInfoVisible(true)} style={styles.infoButton}>
-          <Ionicons name="information-circle-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />
-          <Text style={styles.infoButtonText}>Läs information</Text>
-        </Pressable>
-      </View>
-      <InfoModal visible={infoVisible} title="Om hälsans historik" onClose={() => setInfoVisible(false)}>
-        <Text style={styles.infoBody}>Uppgifterna är ägarregistrerade, inte en verifierad journal. Undvik personuppgifter i anteckningar.</Text>
-        <Text style={styles.infoBody}>Vi visar de senast hämtade händelserna. Äldre händelser kan saknas.</Text>
-      </InfoModal>
-
       {statusMessage && statusError ? <>
         <MessageCard tone="error">{statusMessage}</MessageCard>
         {(pending || statusError) && <PrimaryButton title={pending ? 'Kontrollera status' : 'Försök igen'} disabled={busy} onPress={() => onRetry?.()} />}
@@ -152,32 +170,35 @@ export function HealthHistoryScreen({
 
       {loadState === 'ready' && <>
         {busy && <MessageCard>Sparar och kontrollerar ändringen…</MessageCard>}
-        <View style={styles.formCard}>
-          <Text style={styles.formTitle} accessibilityRole="header">{editingRecord ? 'Rätta händelse' : 'Lägg till händelse'}</Text>
+        <View style={styles.formFields}>
           <View accessibilityRole="radiogroup" accessibilityLabel="Typ av händelse" style={styles.typeChoices}>
             <TypeChoice selected={type === 'vaccination'} disabled={blocked || editingRecord !== null} accent={tokens.colors.category.vaccination}
               icon="bandage-outline" label="Vaccination" onPress={() => setType('vaccination')} />
             <TypeChoice selected={type === 'vet_visit'} disabled={blocked || editingRecord !== null} accent={tokens.colors.category.veterinary}
               icon="medical-outline" label="Veterinärbesök" onPress={() => setType('vet_visit')} />
           </View>
-          <DatePickerField label="Datum" disabled={blocked} onChangeText={setDate} value={date} />
-          <TimePickerField label="Tid (valfri)" disabled={blocked} onChangeText={setTime} value={time} />
+          <DatePickerField label="Datum" disabled={blocked || saving} onChangeText={setDate} value={date} />
+          <TimePickerField label="Tid (valfri)" disabled={blocked || saving} onChangeText={setTime} value={time} />
           <Text style={styles.timeHint}>Välj när händelsen inträffade, eller lämna tomt.</Text>
           <View style={styles.field}>
             <Text style={styles.label}>Kort anteckning (frivillig)</Text>
-            <TextInput accessibilityLabel="Kort anteckning, högst 500 tecken" editable={!blocked} multiline
+            <TextInput accessibilityLabel="Kort anteckning, högst 500 tecken" editable={!blocked && !saving} multiline
               onChangeText={setNote} onSubmitEditing={() => Keyboard.dismiss()} placeholder="Till exempel: valpens första vaccination"
               placeholderTextColor={tokens.colors.textSecondary} returnKeyType="done" style={styles.noteInput} value={note} />
             <Text style={styles.characterHint}>{Array.from(note).length}/500 tecken</Text>
           </View>
           {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
-          <PrimaryButton title={busy ? 'Sparar…' : editingRecord ? 'Spara rättning' : 'Spara händelse'} disabled={blocked} onPress={() => { void save(); }} />
           <Toast visible={toastVisible} tone="success" confirmed message={toastMessage ?? undefined} autoDismissMs={2500} onAutoDismiss={() => setToastVisible(false)} onExitComplete={() => setToastMessage(null)} />
-          {editingRecord && <QuietButton title="Avbryt rättning" disabled={blocked} onPress={resetForm} />}
+          {editingRecord && <View style={styles.deleteAction}><Button variant="icon" label="Radera" iconName="trash-outline"
+            accessibilityLabel={`Radera ${typeLabel(editingRecord.event_type).toLocaleLowerCase('sv-SE')} från ${editingRecord.occurred_on}`}
+            disabled={blocked || saving} onPress={() => confirmDelete(editingRecord)} /></View>}
         </View>
 
-        {editingRecord && <Button variant="destructive" label="Radera händelse" accessibilityLabel="Radera händelse" disabled={blocked} onPress={() => confirmDelete(editingRecord)} />}
       </>}
+      <Dialog visible={Boolean(deleteTarget)} title="Radera hälsohändelse?" compactActions onRequestClose={() => setDeleteTarget(null)}
+        onConfirm={() => { if (deleteTarget) void deleteRecord(deleteTarget); }}>
+        <Text>{deleteTarget ? `${typeLabel(deleteTarget.event_type)} · ${deleteTarget.occurred_on} tas bort från hundens historik.` : ''}</Text>
+      </Dialog>
     </View>
   );
 }
@@ -198,14 +219,7 @@ function typeLabel(type: HealthHistoryType): string {
 
 const styles = StyleSheet.create({
   section: { marginTop: tokens.layout.sectionGap },
-  infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', columnGap: tokens.spacing.sm, rowGap: tokens.spacing.xs, marginTop: tokens.spacing.md, marginBottom: tokens.spacing.xs },
-  infoRowStacked: { flexDirection: 'column', alignItems: 'flex-start' },
-  infoHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption },
-  infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },
-  infoButtonText: { color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '700' },
-  infoBody: { color: tokens.colors.textPrimary, ...tokens.typography.body, marginBottom: tokens.spacing.md },
-  formCard: { marginTop: tokens.layout.sectionGap, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
-  formTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label, marginBottom: tokens.spacing.md },
+  formFields: { gap: tokens.spacing.md },
   typeChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg },
   typeChoice: { flexGrow: 1, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   typeChoicePressed: { opacity: 0.78 },
@@ -220,4 +234,5 @@ const styles = StyleSheet.create({
   conflictTitle: { color: tokens.colors.textPrimary, ...tokens.typography.label },
   conflictBody: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.md },
   recordNote: { color: tokens.colors.textPrimary, ...tokens.typography.caption, marginTop: tokens.spacing.sm },
+  deleteAction: { alignItems: 'flex-end' },
 });

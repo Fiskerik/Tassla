@@ -38,3 +38,20 @@ Datumknappen öppnar `LogDateCalendar` i befintlig `BottomSheet`. `log-calendar-
 I molnläge äger `ProductWorkspace` request-lifetime och konto/hund/månad/tidszons-scope. `fetchDogLogMonthMarkers` i `workspace-data.ts` använder befintlig autentiserad Supabase-klient och RLS, filtrerar aktiv hund och `LOG_EVENT_TYPES` och hämtar endast `occurred_at`. Månadens lokala start/slut är halvöppna ISO-gränser. Sidor sorteras fallande med id som stabil tie-breaker och fortsätter med strikt `occurred_at < cursor` på oförändrad rå tidsstämpel. Dagar dedupliceras först efter full traversal; fel eller abort ger ingen partiell resultatlista. Bekräftad lokal mutation och kalenderns öppning läser om markörerna. Snapshoten är eventual, inte en transaktionell databassnapshot.
 
 Riktad lokal verifiering: `node --experimental-strip-types --test tests/log-calendar-model.test.mjs tests/workspace-log-calendar.test.mjs tests/log-calendar-policy.test.mjs`, `pnpm check` och publik iOS JS-bundle. Live RLS, native VoiceOver/TalkBack, fysisk tryckyta, Dynamic Type och skärmbildsmatris kräver separata miljö-/QA-prov och får inte härledas från lokala tester.
+
+## UI-R02-03 — redigering och återhämtning
+
+Loggredigeraren använder en fast Spara-footer och en kontextuell soptunna som först öppnar en namngiven bekräftelsedialog. Ändringar jämförs med postens verkliga startvärden; X/backdrop/back/svep följer samma dirty-close-policy. Ett misslyckat sparförsök lämnar utkastet redigerbart. Vid okänt/pågående utfall kan sheetet minimeras och samma utkast öppnas från Logg efter återkomst inom oförändrat konto-/hundscope. Befintligt snabbval, kalender, lokalt datum och undo-kontrakt är bevarade.
+
+Lokal public/review verifiering och skärmbilder finns i `docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/log/`. RN Web-resultat är inte native-tangentbord, VoiceOver/Dynamic Type, live RLS eller full Panel 5 §14-acceptans.
+
+## Översikt och Insikter
+
+`LogScreen` behåller `Idag` och `Översikt` som två vyer inom samma Logga-route. Översikten hämtar bara vald period med `fetchDogEventInsights` och den privata read-only-RPC:n `dog_event_insights`; den läser inte Loggas paginerade råhistorik. Standardperioden är vecka. Periodbyte, aktiv app, lokal loggmutation och explicit uppdatering avbryter/invaliderar föregående flight och hämtar bara den aktuella perioden. En typad parser avvisar svar som avviker från exakt SQL-shape, datum-/zon- eller bucketkontrakt.
+
+`InsightsScreen` visar lokala Kiss/Bajs-antal och separata sömn-/vakenmarkeringar, utan att härleda sovtid eller intervall. Vecka och månad har en dag per observerad datum; all historik använder månadspunkter med synliga glappmarkörer, korta månads-/årstexter och automatisk start vid senaste månaden. Markörernas VoiceOver-etiketter anger antal och kalenderperiod för glappet. Hundprofilens redigerbara skärm öppnar samma vy men låser ingången medan profil- eller kenneländringar är osparade/oklara. Profilvägen bevarar hund och ursprunglig returvy; en aktiv Logg-flik går vidare till Idag och rensar profilreturen.
+
+RPC-definitionen finns i `supabase/migrations/202610220002_dog_event_insights_read.sql`; återkörbar rollback-probe med syntetiska rader finns i `supabase/tests/dog-event-insights-read.sql`. Kör fokuserat `node --experimental-strip-types --test tests/insights-model.test.mjs tests/insights-period-read.test.mjs tests/insights-scope.test.mjs tests/log-insights-route.test.mjs tests/profile-insights-route.test.mjs`. Lokala kontrakts-/RN-Web-renderingar verifierar inte att migrationen är tillämpad, live Supabase/RLS, tvåkontosnapshot eller native Dynamic Type/VoiceOver. Detta visar aldrig sömnintervall.
+
+
+UI-R02-04 v7: Logg-editorns delete- och discardbekräftelser monteras vid behov inuti dess BottomSheet. Dialogen har då rätt modalägare och ligger över redigeraren; Avbryt behåller samma editorinstans och rå draft. Radering/discard använder oförändrade handlers. Browserprovet klickar verkliga knappar utan force och provar bevarad text respektive endast vald syntetisk post.

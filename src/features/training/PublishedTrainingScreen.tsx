@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { AppBar, BottomSheet, Button, Card, ListRow, Progress, SectionHeader, Toast } from '../../components/ui';
+import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { AppBar, BottomSheet, Button, Card, Dialog, ListRow, Progress, SectionHeader, Tabs, Toast } from '../../components/ui';
 import type { HistoricalTrainingStepDetail, PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
 import { completeReviewTrainingStep, completeTrainingStepForMode, isReviewTrainingProgram, resetReviewTrainingProgram, unmarkReviewTrainingStep, unmarkTrainingStepForMode } from './review-training-state';
 import { tokens } from '../../theme/tokens';
@@ -22,12 +23,19 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   const [selectedView, setSelectedView] = useState<'recommended' | 'all' | 'mine'>('recommended');
   const [successMessage, setSuccessMessage] = useState('');
   const [reviewCompleted, setReviewCompleted] = useState<Record<string, string[]>>({});
+  const [resetTarget, setResetTarget] = useState<{ program: PublishedTrainingProgram; fingerprint: string } | null>(null);
+  const [recommendationCopyHeight, setRecommendationCopyHeight] = useState<{ key: string; height: number } | null>(null);
   const [animateCompleteTarget, setAnimateCompleteTarget] = useState<{ key: string; programId: string; stepId: string } | null>(null);
   const animationSequence = useRef(0);
+  const resetFlight = useRef<{ programId: string; sawBusy: boolean } | null>(null);
   const pending = useRef(false);
   const mounted = useRef(true);
   const visiblePrograms = reviewMode ? programs.map((program) => ({ ...program, currentAgeBreedMatch: true, completedStepIds: reviewCompleted[program.id] ?? program.completedStepIds })) : programs;
   const openProgram = visiblePrograms.find((program) => program.id === openProgramId) ?? null;
+  const currentResetProgram = resetTarget ? visiblePrograms.find((program) => program.id === resetTarget.program.id) : null;
+  const resetTargetIsCurrent = Boolean(resetTarget && !focusStep && currentResetProgram && openProgramId === resetTarget.program.id
+    && programResetFingerprint(currentResetProgram) === resetTarget.fingerprint);
+  if (resetTarget && !resetTargetIsCurrent) setResetTarget(null);
   const selectedProgram = visiblePrograms.find((program) => program.id === (focusStep?.programId ?? selection?.programId));
   const selectedStep = selectedProgram?.steps.find((step) => step.id === (focusStep?.stepId ?? selection?.stepId));
   const nextStep = selectedProgram?.steps.find((step) => !selectedProgram.completedStepIds.includes(step.id));
@@ -41,6 +49,23 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   const continuationStep = continuationProgram?.steps.find((step) => step.id === nextExercise?.stepId);
   const { width: viewportWidth, fontScale } = useWindowDimensions();
   const stackRecommendations = viewportWidth < 350 || fontScale > 1.2;
+  const recommendationLayoutKey = JSON.stringify({
+    width: viewportWidth,
+    fontScale,
+    items: ageMatchedPrograms.slice(0, 2).map((program) => {
+      const next = pickNextExercise([program]);
+      const step = next && program.steps.find((candidate) => candidate.id === next.stepId);
+      return [program.id, program.title, step?.id, step?.title];
+    }),
+  });
+  const currentRecommendationCopyHeight = recommendationCopyHeight?.key === recommendationLayoutKey ? recommendationCopyHeight.height : undefined;
+  function recordRecommendationCopyHeight(height: number) {
+    setRecommendationCopyHeight((current) => {
+      const nextHeight = Math.ceil(height);
+      if (current?.key === recommendationLayoutKey && nextHeight <= current.height + 1) return current;
+      return { key: recommendationLayoutKey, height: nextHeight };
+    });
+  }
   const consumeCompletionAnimation = useCallback((key: string) => {
     setAnimateCompleteTarget((current) => current?.key === key ? null : current);
   }, []);
@@ -49,6 +74,14 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     mounted.current = true;
     return () => { mounted.current = false; };
   }, []);
+
+  useEffect(() => {
+    const flight = resetFlight.current;
+    if (!flight) return;
+    if (busyStepKey === `${flight.programId}:reset`) { flight.sawBusy = true; return; }
+    const current = visiblePrograms.find((program) => program.id === flight.programId);
+    if (!busyStepKey && (flight.sawBusy || (current && completedCount(current) === 0) || Boolean(error))) resetFlight.current = null;
+  }, [busyStepKey, error, visiblePrograms]);
 
   async function complete() {
     if (pending.current || busyStepKey || !selectedProgram || !selectedStep) return;
@@ -114,14 +147,27 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     })}</View>;
   }
 
-  function reset(program: PublishedTrainingProgram) {
-    if (completedCount(program) === 0) return;
-    Alert.alert('Börja om?', `Dina markeringar i ”${program.title}” tas bort.`, [
-      { text: 'Avbryt', style: 'cancel' },
-      { text: 'Börja om', style: 'destructive', onPress: () => reviewMode && isReviewTrainingProgram(program.id)
-        ? setReviewCompleted((current) => resetReviewTrainingProgram(current, program.id))
-        : onResetProgram(program) },
-    ]);
+  function openResetConfirmation(program: PublishedTrainingProgram) {
+    if (completedCount(program) === 0 || busyStepKey || resetFlight.current) return;
+    setResetTarget({ program, fingerprint: programResetFingerprint(program) });
+  }
+
+  function confirmReset() {
+    const target = resetTarget;
+    if (!target || resetFlight.current || busyStepKey) return;
+    const current = visiblePrograms.find((program) => program.id === target.program.id);
+    if (openProgramId !== target.program.id || !current || programResetFingerprint(current) !== target.fingerprint || completedCount(current) === 0) {
+      setResetTarget(null);
+      return;
+    }
+    resetFlight.current = { programId: target.program.id, sawBusy: false };
+    setResetTarget(null);
+    if (reviewMode && isReviewTrainingProgram(target.program.id)) {
+      setReviewCompleted((value) => resetReviewTrainingProgram(value, target.program.id));
+      resetFlight.current = null;
+      return;
+    }
+    onResetProgram(target.program);
   }
 
   if (focusStep?.readOnly) return <View testID="historical-training-step-detail" style={styles.focusedPage}>
@@ -173,9 +219,9 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
 
   return <View>
     {openProgram
-      ? <AppBar mode="Back" title={openProgram.title} onAction={() => setOpenProgramId(null)} variant="compact" />
+      ? <AppBar mode="Back" title={openProgram.title} onAction={() => { setResetTarget(null); setOpenProgramId(null); }} variant="compact" />
       : <Text accessibilityRole="header" style={styles.screenTitle}>Träning</Text>}
-    {reviewMode ? <Text style={styles.note}>Tillfälligt exempel – innehållet är inte sakgranskat. Markeringar i dessa övningsutkast sparas under den här visningen.</Text> : null}
+    {reviewMode ? <Text style={styles.reviewStatus}>Granskningsdata · sparas lokalt</Text> : null}
     <Toast visible={Boolean(error) && !selectedProgram} tone="error" message={error || undefined} onRetry={onRetry} />
     <Toast visible={Boolean(successMessage) && !selectedProgram} tone="success" confirmed message={successMessage} autoDismissMs={2500} onAutoDismiss={() => setSuccessMessage('')} />
 
@@ -184,16 +230,24 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       {openProgram.steps.length === 0
         ? <View style={styles.emptyCard}><Text style={styles.emptyTitle}>Inga övningar tillgängliga ännu</Text><Text style={styles.body}>Övningarna visas här när de är färdiga.</Text></View>
         : stepRows(openProgram)}
-      <Button variant="tertiary" label="Om programmet och källor" accessibilityLabel={`Läs om ${openProgram.title} och dess källor`} onPress={() => setSelection({ programId: openProgram.id, stepId: '' })} />
-      {completedCount(openProgram) > 0 ? <Button variant="destructive" label="Börja om" accessibilityLabel={`Börja om med ${openProgram.title}`} disabled={Boolean(busyStepKey)} onPress={() => reset(openProgram)} /> : null}
+      <View style={styles.programActions}>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Läs om ${openProgram.title} och dess källor`} onPress={() => setSelection({ programId: openProgram.id, stepId: '' })} style={({ pressed }) => [styles.programInfoAction, pressed && styles.pressed]}>
+          <Ionicons name="information-circle-outline" size={tokens.size.iconSm} color={tokens.colors.training.accent} />
+          <Text style={styles.programInfoLabel}>Om programmet och källor</Text>
+        </Pressable>
+        {completedCount(openProgram) > 0 ? <Pressable accessibilityRole="button" accessibilityLabel={`Börja om med ${openProgram.title}`}
+          accessibilityHint="Öppnar en bekräftelse innan markeringarna tas bort."
+          accessibilityState={{ disabled: Boolean(busyStepKey) }}
+          disabled={Boolean(busyStepKey)} onPress={() => openResetConfirmation(openProgram)}
+          style={({ pressed }) => [styles.resetIconAction, busyStepKey && styles.disabledAction, pressed && !busyStepKey && styles.pressed]}>
+          <Ionicons name="refresh-outline" size={tokens.size.iconMd} color={tokens.colors.danger} />
+        </Pressable> : null}
+      </View>
     </> : <>
-      <View style={styles.viewTabs} accessibilityRole="tablist" testID="training-view-tabs">
-        {([
-          ['recommended', 'Rekommenderat'], ['all', 'Alla övningar'], ['mine', 'Mina'],
-        ] as const).map(([key, title]) => <Pressable key={key} accessibilityRole="tab" accessibilityState={{ selected: selectedView === key }} aria-selected={selectedView === key}
-          onPress={() => setSelectedView(key)} testID={`training-tab-${key}`} style={[styles.viewTab, selectedView === key && styles.viewTabSelected]}>
-          <Text style={[styles.viewTabText, selectedView === key && styles.viewTabTextSelected]}>{title}</Text>
-        </Pressable>)}
+      <View testID="training-view-tabs">
+        <Tabs items={['Rekommenderat', 'Alla övningar', 'Mina']} active={selectedView === 'recommended' ? 'Rekommenderat' : selectedView === 'all' ? 'Alla övningar' : 'Mina'}
+          accessibilityLabel="Träningsvyer" variant="rev02-segmented"
+          onChange={(label) => { if (label === 'Rekommenderat') setSelectedView('recommended'); else if (label === 'Alla övningar') setSelectedView('all'); else if (label === 'Mina') setSelectedView('mine'); }} />
       </View>
 
       {selectedView === 'recommended' ? <View style={styles.viewBody} testID="training-recommended-view">
@@ -223,10 +277,10 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
                     <Image source={source} style={styles.recommendationImage} resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
                     <View style={styles.standardBadge}><Text style={styles.standardBadgeText}>Standardbild</Text></View>
                   </View>
-                  <View style={styles.recommendationCopy}>
-                <Text style={styles.stepMeta} testID="training-recommendation-program-title">{program.title}</Text>
-                    <Text style={styles.recommendationTitle}>{step.title}</Text>
-                    <Text style={styles.body} numberOfLines={3}>{step.instruction}</Text>
+                  <View style={[styles.recommendationCopy, { minHeight: currentRecommendationCopyHeight }]}
+                    onLayout={(event) => recordRecommendationCopyHeight(event.nativeEvent.layout.height)}>
+                    <Text style={styles.recommendationProgramTitle} testID="training-recommendation-program-title">{program.title}</Text>
+                    <Text style={styles.recommendationTitle} testID="training-recommendation-step-title">{step.title}</Text>
                   </View>
                 </View>
               </Card>
@@ -300,7 +354,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
           const status = programStatus(program);
           const word = programStatusWord(status);
           const progressLabel = exerciseProgressLabel(program);
-          return <Card key={program.id} onPress={() => setOpenProgramId(program.id)} accessibilityLabel={`${program.title}, ${word}, ${progressLabel}. Öppna programmet`}>
+          return <Card key={program.id} onPress={() => { setResetTarget(null); setOpenProgramId(program.id); }} accessibilityLabel={`${program.title}, ${word}, ${progressLabel}. Öppna programmet`}>
             <View style={styles.programInner}>
               <View style={styles.programHeader}>
                 <Text style={styles.programTitle}>{program.title}</Text>
@@ -329,10 +383,21 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       <Toast visible={Boolean(successMessage) && Boolean(selectedProgram)} tone="success" confirmed message={successMessage || undefined} autoDismissMs={2500} onAutoDismiss={() => setSuccessMessage('')} />
       <Toast visible={Boolean(error) && Boolean(selectedProgram)} tone="error" message={error || undefined} onRetry={onRetry} />
     </BottomSheet>
+    <Dialog visible={Boolean(resetTarget && resetTargetIsCurrent)} title={resetTarget ? `Börja om med ${resetTarget.program.title}?` : 'Börja om?'}
+      onRequestClose={() => setResetTarget(null)} onConfirm={confirmReset} confirmLabel="Börja om" confirmVariant="destructive" cancelLabel="Avbryt" compactActions>
+      <Text style={styles.resetDialogBody}>Markeringarna i det här programmet tas bort. Du får ett meddelande om allt inte går att rensa.</Text>
+    </Dialog>
   </View>;
 }
 
 function percentage(program: PublishedTrainingProgram) { return program.steps.length ? completedCount(program) / program.steps.length * 100 : 0; }
+function programResetFingerprint(program: PublishedTrainingProgram) {
+  return JSON.stringify({ id: program.id, content_id: program.content_id, version: program.version, title: program.title,
+    body: program.body, sources: program.sources, completedStepIds: program.completedStepIds,
+    completedAtByStepId: program.completedAtByStepId,
+    steps: program.steps.map(({ id, position, title, instruction }) => ({ id, position, title, instruction })),
+    currentAgeBreedMatch: program.currentAgeBreedMatch, is_ai_generated: program.is_ai_generated });
+}
 function formatHistoricalDate(dateKey?: string): string {
   if (!dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return 'Sparad dag';
   const date = new Date(`${dateKey}T12:00:00.000Z`);
@@ -343,11 +408,14 @@ const styles = StyleSheet.create({
   focusedPage: { gap: tokens.spacing.md, paddingBottom: tokens.spacing.xl },
   focusedCard: { padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.training.continueSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   screenTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
-  viewTabs: { flexDirection: 'row', gap: tokens.spacing.xs, padding: tokens.spacing.xs, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.training.segmentedSurface, marginBottom: tokens.spacing.lg },
-  viewTab: { flex: 1, minWidth: 0, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.xs, borderRadius: tokens.radius.full },
-  viewTabSelected: { backgroundColor: tokens.colors.training.accent },
-  viewTabText: { ...tokens.typography.smallCaption, color: tokens.colors.textSecondary, fontWeight: '700', textAlign: 'center' },
-  viewTabTextSelected: { color: tokens.colors.onPrimary },
+  reviewStatus: { ...tokens.typography.smallCaption, color: tokens.colors.textSecondary, marginBottom: tokens.spacing.xs },
+  programActions: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, marginTop: tokens.spacing.xs },
+  programInfoAction: { flex: 1, minWidth: 0, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.xs, borderRadius: tokens.radius.md },
+  programInfoLabel: { ...tokens.typography.caption, color: tokens.colors.training.accent, fontWeight: '700', flexShrink: 1 },
+  resetIconAction: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
+  disabledAction: { opacity: 0.5 },
+  resetDialogBody: { ...tokens.typography.body, color: tokens.colors.textSecondary },
+  pressed: { opacity: 0.75 },
   viewBody: { gap: tokens.spacing.md },
   recommendationHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm },
   sectionTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, flexShrink: 1 },
@@ -362,12 +430,13 @@ const styles = StyleSheet.create({
   standardBadge: { position: 'absolute', top: tokens.spacing.xs, right: tokens.spacing.xs, backgroundColor: tokens.colors.surface, borderRadius: tokens.radius.full, paddingHorizontal: tokens.spacing.sm, paddingVertical: 2 },
   standardBadgeText: { ...tokens.typography.smallCaption, color: tokens.colors.textPrimary, fontWeight: '700' },
   recommendationCopy: { gap: tokens.spacing.xs },
+  recommendationProgramTitle: { ...tokens.typography.smallCaption, color: tokens.colors.textSecondary },
   recommendationTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
   continuationSection: { marginTop: tokens.spacing.md },
   continuationCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md },
   path: { gap: tokens.spacing.xs },
   currentStep: { padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface, borderWidth: tokens.size.stroke * 2, borderColor: tokens.colors.primary },
-  nextImage: { width: tokens.size.trainingContinueImageWidth, height: tokens.size.trainingContinueImageHeight, borderRadius: tokens.radius.md, flexShrink: 0 },
+  nextImage: { width: tokens.size.trainingImage, height: tokens.size.trainingImage, borderRadius: tokens.radius.md, flexShrink: 0 },
   nextCopy: { flex: 1, minWidth: 0, gap: tokens.spacing.sm },
   stepMeta: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   programList: { gap: tokens.spacing.md },

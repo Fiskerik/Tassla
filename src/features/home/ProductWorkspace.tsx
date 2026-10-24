@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Alert, AppState } from 'react-native';
+import { Alert, AppState, BackHandler } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
 import * as ExpoCrypto from 'expo-crypto';
@@ -14,6 +14,7 @@ import {
   deleteTrainingProgress,
   fetchDogEventById,
   fetchDogEvents,
+  fetchDogEventInsights,
   fetchDogLogMonthMarkers,
   fetchHealthWeightById,
   fetchHealthWeights,
@@ -105,8 +106,10 @@ import { localDate } from '../onboarding/dog';
 import { calendarMarkerScopeKey } from '../puppy-log/log-calendar-model';
 import { acquireTrainingMutationLease, homeAgeInWeeks, ownsTrainingMutationLease, releaseTrainingMutationLease, type TrainingMutationLease } from './home-today';
 import { canStartDailyMutation, clearDailyMutationForLifetimeChange, dailyMutationBlocksAccountDeletion, dailyMutationForOwner, dailyMutationStore, recoverDailyMutation, resolvedDailyMutation, routineConflictAfterWrite, routineDraftStore, type PendingDailyMutation } from './daily-activity-recovery';
-import { HealthScreen } from '../health/HealthScreen';
-import { PlannedHealthScreen } from '../health/PlannedHealthScreen';
+import { HealthScreen, type HealthTab } from '../health/HealthScreen';
+import { PlannedHealthScreen, type PlannedHealthEditorDraft } from '../health/PlannedHealthScreen';
+import type { HealthHistoryDraft } from '../health/HealthHistoryScreen';
+import type { WeightEditorDraft } from '../health/WeightScreen';
 import { EditDogProfileScreen } from '../onboarding/EditDogProfileScreen';
 import { DogProfileScreen } from '../onboarding/DogProfileScreen';
 import { KnowledgeScreen } from '../knowledge/KnowledgeScreen';
@@ -118,11 +121,14 @@ import { DevelopmentScreen } from './DevelopmentScreen';
 import { DailyProgressScreen } from './DailyProgressScreen';
 import { DailyChecklistScreen } from './DailyChecklistScreen';
 import { checklistFilterRange, checklistRangeReadStatus, deriveHomeDailyActivities, deriveSavedRangeActivities, deriveUpcomingActivities, isRoutineDueOnDate, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep, type ChecklistFilter, type HomeDailyActivity } from './daily-activity-model';
-import { activeMainTabDestination, isMainTabDestination, mainTabTransitionDirection, nextMainTabDestination, productRouteScrollKeys } from './main-navigation';
-import { AppBar, BottomNav, MainSwipeNavigation } from '../../components/ui';
+import { activeMainTabDestination, isMainTabDestination, logViewScrollKeys, mainTabTransitionDirection, nextMainTabDestination, productRouteScrollKeys, profileInsightsOriginMatches, type InsightsOrigin } from './main-navigation';
+import { AppBar, BottomNav, Dialog, MainSwipeNavigation } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
 import { tokens } from '../../theme/tokens';
-import { LogScreen, type QuickLogMutationView } from '../puppy-log/LogScreen';
+import { decideProfileExit, profileExitScopeKey, type ProfileExitBlockReason, type ProfileExitScope, type ProfileExitSnapshot } from '../onboarding/profile-exit';
+import { LogScreen, type LogEditorRecovery, type QuickLogMutationView } from '../puppy-log/LogScreen';
+import { insightsRequestIsCurrent, parseDogEventInsights, type InsightsPeriod, type InsightsRequestScope } from '../puppy-log/insights-model';
+import type { InsightsLoadState } from '../puppy-log/InsightsScreen';
 import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isCanonicalAccidentKinds, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type AccidentKind, type AccidentLogIntent, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
 import { PassportScreen } from '../passport/PassportScreen';
 import { PublishedTrainingScreen } from '../training/PublishedTrainingScreen';
@@ -143,14 +149,21 @@ const reviewContentEnabled = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === '
 
 type ProductPage = 'home' | 'development' | 'progress' | 'checklist' | 'home-training-detail' | 'log' | 'training' | 'more' | 'health' | 'planned-health' | 'knowledge' | 'passport' | 'profile' | 'notification-settings' | 'account-settings' | 'beta-info';
 type HomeTrainingFocus = { selectionKey: string; dailyLifetime: string; programId: string; stepId: string; returnPage: 'home' | 'checklist' | 'progress'; readOnly?: boolean; dateKey?: string; completed?: boolean };
+type WorkspaceEditorScope = { ownerId: string; accountGeneration: number; selectionKey: string; dogId: string; lifetime: string };
+type ScopedEditorRecovery<T> = WorkspaceEditorScope & { value: T };
+type PlannedHealthHealthFocus = { selectionKey: string; lifetime: string; planId: string | null; returnTab: HealthTab; returnScrollKey: 'health-flow' };
+function editorScopeMatches(scope: WorkspaceEditorScope | null, candidate: WorkspaceEditorScope): boolean {
+  return Boolean(scope && scope.ownerId === candidate.ownerId && scope.accountGeneration === candidate.accountGeneration
+    && scope.selectionKey === candidate.selectionKey && scope.dogId === candidate.dogId && scope.lifetime === candidate.lifetime);
+}
 type PendingLogMutation =
   | { kind: 'insert'; operation: DogEventOperation; lifetime: string }
   | { kind: 'update'; mutationId: string; id: string; type: LogEventType; occurredAt: string; changes: DogEventChanges; lifetime: string }
   | { kind: 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; lifetime: string };
 type PendingHealthMutation =
-  | { kind: 'insert'; operation: HealthWeightOperation }
-  | { kind: 'update'; id: string; previous: HealthWeightRecord; changes: HealthWeightChanges }
-  | { kind: 'delete'; id: string; previous: HealthWeightRecord };
+  | { kind: 'insert'; operation: HealthWeightOperation; lifetime: string }
+  | { kind: 'update'; id: string; previous: HealthWeightRecord; changes: HealthWeightChanges; lifetime: string }
+  | { kind: 'delete'; id: string; previous: HealthWeightRecord; lifetime: string };
 type PendingHealthHistoryMutation =
   | { kind: 'insert'; operation: HealthHistoryOperation; lifetime: string }
   | { kind: 'update'; id: string; eventType: HealthHistoryType; previous: HealthHistoryRecord; changes: HealthHistoryChanges; lifetime: string }
@@ -203,6 +216,25 @@ type WorkspaceResourceFlight<T> = { scope: string; generation: number; controlle
 type ChecklistRangeView = { scope: string; status: 'loading' | 'ready' | 'partial' | 'error'; activities: HomeDailyActivity[]; failedSources: string[]; unresolvedCount: number; routines?: DailyRoutine[] };
 type HistoricalTrainingDetailView = { scope: string; status: 'loading' | 'ready' | 'partial' | 'unavailable'; detail: HistoricalTrainingStepDetail | null };
 type UpcomingRoutineLookup = { status: 'ready'; routine: DailyRoutine } | { status: 'missing' } | { status: 'error' };
+type ProfileExitDestination = { kind: 'return' } | { kind: 'tab'; page: ProductPage } | { kind: 'switchDog'; dogId: string } | { kind: 'addDog' };
+type ProfileExitDialogState = { destination: ProfileExitDestination };
+
+function profileExitDestinationLabel(destination: ProfileExitDestination, returnPage: 'more' | 'training', dogs: readonly OwnedDog[]): string {
+  if (destination.kind === 'return') return returnPage === 'training' ? 'Träning' : 'Mer';
+  if (destination.kind === 'addDog') return 'Lägg till hund';
+  if (destination.kind === 'switchDog') return dogs.find((dog) => dog.id === destination.dogId)?.name ?? 'en annan hund';
+  const labels: Partial<Record<ProductPage, string>> = { home: 'Hem', log: 'Logg', training: 'Träning', more: 'Mer', knowledge: 'Kunskap', development: 'Utveckling' };
+  return labels[destination.page] ?? 'nästa vy';
+}
+
+function profileExitPrompt(destination: ProfileExitDestination, returnPage: 'more' | 'training', dogs: readonly OwnedDog[]) {
+  const target = profileExitDestinationLabel(destination, returnPage, dogs);
+  const title = destination.kind === 'switchDog' ? `Byta till ${target}?`
+    : destination.kind === 'addDog' ? 'Lägga till hund?'
+      : destination.kind === 'return' ? `Lämna hundprofilen till ${target}?`
+        : `Byta till ${target}?`;
+  return { title, body: `Hundprofilens ändringar är inte sparade. ${target} öppnas och de här lokala ändringarna kastas. Sparade uppgifter påverkas inte.` };
+}
 
 export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog], onSelectDog, onAddDog, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened, initialPage = 'home', onInitialPageOpened }: {
   client: SupabaseClient;
@@ -218,6 +250,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
   const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>(() => ({ page: initialPage, previousPage: 'home' }));
+  const [logView, setLogView] = useState<'today' | 'overview'>('today');
+  const [insightsPeriod, setInsightsPeriod] = useState<InsightsPeriod>('week');
+  const [insightsState, setInsightsState] = useState<InsightsLoadState>({ status: 'loading' });
+  const [insightsRefreshNonce, setInsightsRefreshNonce] = useState(0);
+  const [logMutationGeneration, setLogMutationGeneration] = useState(0);
+  const [insightsOrigin, setInsightsOrigin] = useState<InsightsOrigin | null>(null);
+  const insightsRequestGeneration = useRef(0);
+  const insightsFlight = useRef<{ scope: InsightsRequestScope; controller: AbortController } | null>(null);
   const [checklistFilter, setChecklistFilter] = useState<ChecklistFilter>('Idag');
   const [homeTrainingFocus, setHomeTrainingFocus] = useState<HomeTrainingFocus | null>(null);
   const [historicalTrainingDetailView, setHistoricalTrainingDetailView] = useState<HistoricalTrainingDetailView | null>(null);
@@ -225,6 +265,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [plannedHealthChecklistFocus, setPlannedHealthChecklistFocus] = useState<{ selectionKey: string; dailyLifetime: string; planId: string } | null>(null);
   const [plannedHealthChecklistRecord, setPlannedHealthChecklistRecord] = useState<{ scope: string; status: 'loading' | 'ready' | 'error' | 'missing'; record: PlannedHealthRecord | null } | null>(null);
   const [plannedHealthChecklistRetry, setPlannedHealthChecklistRetry] = useState(0);
+  const [plannedHealthHealthFocus, setPlannedHealthHealthFocus] = useState<PlannedHealthHealthFocus | null>(null);
+  const [activeHealthTab, setActiveHealthTab] = useState<HealthTab>('Översikt');
+  const [logEditorRecovery, setLogEditorRecovery] = useState<ScopedEditorRecovery<LogEditorRecovery> | null>(null);
+  const [healthHistoryEditorRecovery, setHealthHistoryEditorRecovery] = useState<ScopedEditorRecovery<HealthHistoryDraft> | null>(null);
+  const [weightEditorRecovery, setWeightEditorRecovery] = useState<ScopedEditorRecovery<WeightEditorDraft> | null>(null);
+  const [plannedHealthEditorRecovery, setPlannedHealthEditorRecovery] = useState<ScopedEditorRecovery<PlannedHealthEditorDraft> | null>(null);
   const [homeChecklistScope, setHomeChecklistScope] = useState<{ selectionKey: string; dailyLifetime: string; openManagerOnEntry: boolean } | null>(null);
   const [deviceTimeZone, setDeviceTimeZone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
   const initialPageConsumed = useRef(false);
@@ -241,10 +287,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       : { page: nextPage, previousPage: current.page });
   }, []);
   const [profileReturnPage, setProfileReturnPage] = useState<'more' | 'training'>('more');
+  const requestProfileExitRef = useRef<(destination: ProfileExitDestination) => void>(() => undefined);
+  const [profileExitDialog, setProfileExitDialog] = useState<ProfileExitDialogState | null>(null);
+  const profileExitSnapshot = useRef<ProfileExitSnapshot | null>(null);
   function returnFromProfile() {
-    const destination = profileReturnPage;
-    setProfileReturnPage('more');
-    setPage(destination);
+    requestProfileExitRef.current({ kind: 'return' });
   }
   const [breeds, setBreeds] = useState<BreedOption[]>([]);
   useEffect(() => {
@@ -258,7 +305,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [knowledgeFocus, setKnowledgeFocus] = useState<{ selectionKey: string; contentId: string | null; returnPage: 'home' | 'more' | 'training' | 'development' } | null>(null);
   const [developmentFocus, setDevelopmentFocus] = useState<{ selectionKey: string } | null>(null);
   const [knowledgeDetailOpen, setKnowledgeDetailOpen] = useState(false);
-  const navigateMainTab = useCallback((destination: ProductPage) => {
+  const navigateMainTabNow = useCallback((destination: ProductPage) => {
+    if (destination === 'log' && page === 'log') {
+      setInsightsOrigin(null);
+      setLogView('today');
+      return;
+    }
     if (page === 'checklist' || page === 'home-training-detail') setChecklistFilter('Idag');
     setPlannedHealthChecklistFocus(null);
     if (page === 'home-training-detail') setHomeTrainingFocus(null);
@@ -268,8 +320,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setKnowledgeFocus(null);
       setKnowledgeDetailOpen(false);
     }
+    setInsightsOrigin(null);
+    if (destination === 'log') setLogView('today');
     setPage(destination);
   }, [page, setPage]);
+  const navigateMainTab = useCallback((destination: ProductPage) => {
+    if (page === 'profile') {
+      requestProfileExitRef.current({ kind: 'tab', page: destination });
+      return;
+    }
+    navigateMainTabNow(destination);
+  }, [navigateMainTabNow, page]);
   const handleMainSwipe = useCallback((direction: 'left' | 'right') => {
     const destination = nextMainTabDestination(page, direction);
     if (destination) navigateMainTab(destination);
@@ -288,6 +349,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [logBusy, setLogBusy] = useState(false);
   const [quickLogMutation, setQuickLogMutation] = useState<QuickLogMutationView | null>(null);
   const [healthWeights, setHealthWeights] = useState<HealthWeightRecord[]>([]);
+  const [healthWeightDataLifetime, setHealthWeightDataLifetime] = useState('');
   const healthWeightRows = useRef<HealthWeightRecord[]>([]);
   const [healthState, setHealthState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [healthBusy, setHealthBusy] = useState(false);
@@ -339,6 +401,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [dogAttribution, setDogAttribution] = useState<OwnedDogAttribution | null>(null);
   const [attributionState, setAttributionState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [attributionBusy, setAttributionBusy] = useState(false);
+  const [attributionWriteUnresolved, setAttributionWriteUnresolved] = useState(false);
   const [attributionMessage, setAttributionMessage] = useState('');
   const [attributionMessageError, setAttributionMessageError] = useState(false);
   const [training, setTraining] = useState<{ programs: PublishedTrainingProgram[]; paused: PausedTrainingProgress[] }>({ programs: [], paused: [] });
@@ -366,7 +429,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const signOutInFlight = useRef(false);
   const pendingLogMutation = useRef<PendingLogMutation | null>(null);
   const logMutationFlight = useRef<LogMutationFlight | null>(null);
-  const pendingHealthMutation = useRef<PendingHealthMutation | null>(null);
+  const pendingHealthMutation = useRef(new Map<string, PendingHealthMutation>());
   const healthMutationInFlight = useRef(false);
   const pendingHealthHistoryMutation = useRef<PendingHealthHistoryMutation | null>(null);
   const healthHistoryMutationInFlight = useRef(false);
@@ -379,6 +442,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const plannedHealthFlightToken = useRef<object | null>(null);
   const pendingProfileMutation = useRef<PendingProfileMutation | null>(null);
   const profileMutationInFlight = useRef(false);
+  const attributionMutationInFlight = useRef(false);
   const trainingMutationLease = useRef<TrainingMutationLease | null>(null);
   const dailyGeneration = useRef(0);
   const checklistRangeGeneration = useRef(0);
@@ -426,14 +490,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (page === 'home' && analyticsConsent === true) void analyticsService.track('home_viewed');
   }, [analyticsConsent, analyticsService, page]);
   useEffect(() => {
-    if (page !== 'home' && page !== 'checklist' && page !== 'training') return undefined;
+    if (page !== 'home' && page !== 'checklist' && page !== 'training' && !(page === 'log' && logView === 'overview')) return undefined;
     const refreshClock = () => setDailyClock(new Date());
     const interval = setInterval(refreshClock, 30_000);
     const subscription = AppState.addEventListener('change', (state) => { if (state === 'active') refreshClock(); });
     return () => { clearInterval(interval); subscription.remove(); };
-  }, [page]);
+  }, [logView, page]);
   const currentHealthHistoryLifetime = `${dog.id}:${session?.user.id ?? ''}`;
   const currentLogLifetime = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${dog.id}`;
+  const currentHealthWeightLifetime = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${dog.id}`;
+  const healthWeightLifetime = useRef('');
+  const previousHealthWeightLifetime = useRef('');
   const healthHistoryLifetime = useRef('');
   const logLifetime = useRef('');
   const previousHealthHistoryLifetime = useRef('');
@@ -445,6 +512,22 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   useLayoutEffect(() => {
     healthHistoryLifetime.current = currentHealthHistoryLifetime;
   }, [currentHealthHistoryLifetime]);
+  useLayoutEffect(() => {
+    const previous = previousHealthWeightLifetime.current;
+    healthWeightLifetime.current = currentHealthWeightLifetime;
+    if (previous && previous !== currentHealthWeightLifetime) {
+      healthWeightRows.current = [];
+      setHealthWeights([]);
+      setHealthWeightDataLifetime('');
+      setHealthState('loading');
+      setHealthBusy(false);
+      const pendingForCurrent = pendingHealthMutation.current.get(currentHealthWeightLifetime);
+      setHealthPending(Boolean(pendingForCurrent));
+      setHealthMessage(pendingForCurrent ? 'Viktändringen väntar på kontroll. Kontrollera samma ändring innan du gör en ny.' : '');
+      setHealthMessageError(Boolean(pendingForCurrent));
+    }
+    previousHealthWeightLifetime.current = currentHealthWeightLifetime;
+  }, [currentHealthWeightLifetime]);
   useLayoutEffect(() => {
     const previous = previousLogLifetime.current;
     logLifetime.current = currentLogLifetime;
@@ -496,6 +579,21 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   // An unknown date has no age-based content selection and must not crash Home.
   const age = homeAgeInWeeks(dog.birth_date, homeToday);
   const currentSelectionKey = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${dog.id}:${dog.breed_id}:${dog.birth_date}:${age ?? 'unknown-age'}:${reviewContentEnabled ? 'review' : 'public'}`;
+  const editorScopeIdentity = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${currentSelectionKey}:${dog.id}`;
+  const editorScopeIdentityRef = useRef(editorScopeIdentity);
+  useLayoutEffect(() => {
+    if (editorScopeIdentityRef.current !== editorScopeIdentity) {
+      setLogEditorRecovery(null);
+      setHealthHistoryEditorRecovery(null);
+      setWeightEditorRecovery(null);
+      setPlannedHealthEditorRecovery(null);
+      setPlannedHealthHealthFocus(null);
+    }
+    editorScopeIdentityRef.current = editorScopeIdentity;
+  }, [editorScopeIdentity]);
+  const validInsightsTimeZone = isValidIanaTimeZone(deviceTimeZone);
+  const insightsTimeZone = validInsightsTimeZone ? deviceTimeZone : 'UTC';
+  const insightsLocalDateAnchor = validInsightsTimeZone ? localDateKeyAt(dailyClock, deviceTimeZone) : localDate();
   const dailyTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const validDailyTimeZone = isValidIanaTimeZone(dailyTimeZone);
   const dailyDateKey = validDailyTimeZone ? localDateKeyAt(dailyClock, dailyTimeZone) : null;
@@ -506,6 +604,49 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     () => dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null,
   );
   const currentDailyLifetime = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${currentSelectionKey}:${dailyDateKey ?? 'invalid-date'}:${dailyTimeZone}:${reviewContentEnabled ? 'review' : 'public'}`;
+  const currentEditorScope = useMemo(() => ({ ownerId: session?.user.id ?? 'signed-out', accountGeneration, selectionKey: currentSelectionKey, dogId: dog.id }), [accountGeneration, currentSelectionKey, dog.id, session?.user.id]);
+  const currentLogEditorScope = { ...currentEditorScope, lifetime: currentLogLifetime };
+  const currentHealthEditorScope = { ...currentEditorScope, lifetime: currentHealthHistoryLifetime };
+  const currentWeightEditorScope = { ...currentEditorScope, lifetime: currentHealthWeightLifetime };
+  const currentPlannedHealthEditorScope = { ...currentEditorScope, lifetime: currentPlannedHealthLifetime };
+  const onLogEditorRecoveryChange = useCallback((value: LogEditorRecovery | null) => {
+    const scope = { ownerId: session?.user.id ?? 'signed-out', accountGeneration, selectionKey: currentSelectionKey, dogId: dog.id, lifetime: currentLogLifetime };
+    setLogEditorRecovery((current) => {
+      if (editorScopeIdentityRef.current !== editorScopeIdentity) return current;
+      if (!value) return editorScopeMatches(current, scope) ? null : current;
+      return { ...scope, value };
+    });
+  }, [accountGeneration, currentLogLifetime, currentSelectionKey, dog.id, editorScopeIdentity, session?.user.id]);
+  const onHealthHistoryEditorRecoveryChange = useCallback((value: HealthHistoryDraft | null) => {
+    const scope = { ownerId: session?.user.id ?? 'signed-out', accountGeneration, selectionKey: currentSelectionKey, dogId: dog.id, lifetime: currentHealthHistoryLifetime };
+    setHealthHistoryEditorRecovery((current) => {
+      if (editorScopeIdentityRef.current !== editorScopeIdentity) return current;
+      if (!value) return editorScopeMatches(current, scope) ? null : current;
+      return { ...scope, value };
+    });
+  }, [accountGeneration, currentHealthHistoryLifetime, currentSelectionKey, dog.id, editorScopeIdentity, session?.user.id]);
+  const onWeightEditorRecoveryChange = useCallback((value: WeightEditorDraft | null) => {
+    const scope = { ownerId: session?.user.id ?? 'signed-out', accountGeneration, selectionKey: currentSelectionKey, dogId: dog.id, lifetime: currentHealthWeightLifetime };
+    setWeightEditorRecovery((current) => {
+      if (editorScopeIdentityRef.current !== editorScopeIdentity) return current;
+      if (!value) return editorScopeMatches(current, scope) ? null : current;
+      return { ...scope, value };
+    });
+  }, [accountGeneration, currentHealthWeightLifetime, currentSelectionKey, dog.id, editorScopeIdentity, session?.user.id]);
+  const onPlannedHealthEditorRecoveryChange = useCallback((value: PlannedHealthEditorDraft | null) => {
+    const scope = { ownerId: session?.user.id ?? 'signed-out', accountGeneration, selectionKey: currentSelectionKey, dogId: dog.id, lifetime: currentPlannedHealthLifetime };
+    setPlannedHealthEditorRecovery((current) => {
+      if (editorScopeIdentityRef.current !== editorScopeIdentity) return current;
+      if (!value) return editorScopeMatches(current, scope) ? null : current;
+      return { ...scope, value };
+    });
+  }, [accountGeneration, currentPlannedHealthLifetime, currentSelectionKey, dog.id, editorScopeIdentity, session?.user.id]);
+  const visibleLogEditorRecovery = editorScopeMatches(logEditorRecovery, currentLogEditorScope) ? logEditorRecovery?.value ?? null : null;
+  const visibleHealthHistoryEditorRecovery = editorScopeMatches(healthHistoryEditorRecovery, currentHealthEditorScope) ? healthHistoryEditorRecovery?.value ?? null : null;
+  const visibleWeightEditorRecovery = editorScopeMatches(weightEditorRecovery, currentWeightEditorScope) ? weightEditorRecovery?.value ?? null : null;
+  const visiblePlannedHealthEditorRecovery = editorScopeMatches(plannedHealthEditorRecovery, currentPlannedHealthEditorScope) ? plannedHealthEditorRecovery?.value ?? null : null;
+  const visiblePlannedHealthHealthFocus = plannedHealthHealthFocus?.selectionKey === currentSelectionKey
+    && plannedHealthHealthFocus.lifetime === currentPlannedHealthLifetime ? plannedHealthHealthFocus : null;
   // The editor owns keystroke state locally. Read recovery only when this workspace renders
   // (for example when returning to a dog) so every draft keystroke does not rerender the shell.
   const routineRecovery = routineDraftStore.get(currentDailyOwnerScope, dog.id, currentDailyLifetime);
@@ -518,6 +659,97 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [checklistMemoryView, setChecklistMemoryView] = useState<{ scope: string; state: PendingChecklistMemory } | null>(null);
   const currentChecklistMemoryScope = checklistMemoryScope(session?.user.id ?? null, accountGeneration, dog.id);
   const currentChecklistReadScope = checklistReadCacheScope(`${session?.user.id ?? 'signed-out'}:${accountGeneration}`, dog.id, reviewContentEnabled);
+
+  useLayoutEffect(() => {
+    const flight = insightsFlight.current;
+    if (flight && (flight.scope.ownerId !== (session?.user.id ?? '')
+      || flight.scope.accountGeneration !== accountGeneration || flight.scope.dogId !== dog.id)) {
+      insightsRequestGeneration.current += 1;
+      flight.controller.abort();
+      insightsFlight.current = null;
+    }
+    if (insightsOrigin?.kind === 'profile'
+      && !profileInsightsOriginMatches(insightsOrigin, currentSelectionKey, accountGeneration, dog.id)) {
+      // Clear a profile-origin route in the same commit as its dog/account scope changes.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setInsightsOrigin(null);
+      if (page === 'log') setLogView('today');
+    }
+  }, [accountGeneration, currentSelectionKey, dog.id, insightsOrigin, page, session?.user.id]);
+
+  const changeLogView = useCallback((next: 'today' | 'overview') => {
+    if (next === 'overview') {
+      if (!insightsOrigin || insightsOrigin.kind !== 'profile') setInsightsOrigin({ kind: 'log' });
+      insightsRequestGeneration.current += 1;
+      insightsFlight.current?.controller.abort();
+      insightsFlight.current = null;
+      setInsightsState({ status: 'loading' });
+      setLogView('overview');
+      return;
+    }
+    insightsRequestGeneration.current += 1;
+    insightsFlight.current?.controller.abort();
+    insightsFlight.current = null;
+    setInsightsState({ status: 'loading' });
+    setLogView('today');
+    if (insightsOrigin?.kind === 'log') setInsightsOrigin(null);
+  }, [insightsOrigin]);
+
+  const changeInsightsPeriod = useCallback((period: InsightsPeriod) => {
+    if (period === insightsPeriod) return;
+    insightsRequestGeneration.current += 1;
+    insightsFlight.current?.controller.abort();
+    insightsFlight.current = null;
+    setInsightsState({ status: 'loading' });
+    setInsightsPeriod(period);
+  }, [insightsPeriod]);
+
+  const refreshInsights = useCallback(() => {
+    insightsRequestGeneration.current += 1;
+    insightsFlight.current?.controller.abort();
+    insightsFlight.current = null;
+    setInsightsState({ status: 'loading' });
+    setInsightsRefreshNonce((value) => value + 1);
+  }, []);
+
+  const openInsightsFromProfile = useCallback((canOpen: boolean) => {
+    if (!canOpen || page !== 'profile' || profileBusy || profilePending || profileConflict
+      || attributionBusy || attributionWriteUnresolved) return;
+    setInsightsOrigin({
+      kind: 'profile', selectionKey: currentSelectionKey, accountGeneration,
+      dogId: dog.id, profileReturnPage,
+    });
+    insightsRequestGeneration.current += 1;
+    insightsFlight.current?.controller.abort();
+    insightsFlight.current = null;
+    setInsightsState({ status: 'loading' });
+    setLogView('overview');
+    setPage('log');
+  }, [accountGeneration, attributionBusy, attributionWriteUnresolved, currentSelectionKey, dog.id, page, profileBusy, profileConflict, profilePending, profileReturnPage, setPage]);
+
+  const returnToProfileFromInsights = useCallback(() => {
+    if (profileInsightsOriginMatches(insightsOrigin, currentSelectionKey, accountGeneration, dog.id)) {
+      setInsightsOrigin(null);
+      setPage('profile');
+    } else {
+      setInsightsOrigin(null);
+      setLogView('today');
+    }
+  }, [accountGeneration, currentSelectionKey, dog.id, insightsOrigin, setPage]);
+
+  const currentInsightsRequestScope = useMemo<Omit<InsightsRequestScope, 'requestGeneration' | 'flightId'>>(() => ({
+    ownerId: session?.user.id ?? '', accountGeneration, dogId: dog.id,
+    timezone: insightsTimeZone, period: insightsPeriod, localDateAnchor: insightsLocalDateAnchor ?? localDate(),
+    logMutationGeneration,
+  }), [accountGeneration, dog.id, insightsLocalDateAnchor, insightsPeriod, insightsTimeZone, logMutationGeneration, session?.user.id]);
+
+  const invalidateInsightsForLogMutation = useCallback(() => {
+    insightsRequestGeneration.current += 1;
+    insightsFlight.current?.controller.abort();
+    insightsFlight.current = null;
+    setInsightsState({ status: 'loading' });
+    setLogMutationGeneration((generation) => generation + 1);
+  }, []);
   useLayoutEffect(() => {
     keepChecklistReadCacheForScope(currentChecklistReadScope);
     checklistMemory.current = keepChecklistMemoryForScope(checklistMemory.current, currentChecklistMemoryScope);
@@ -722,13 +954,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     return request;
   }, []);
 
-  const reloadHealthWeights = useCallback(async (signal?: AbortSignal) => {
+  const reloadHealthWeights = useCallback(async (lifetime = currentHealthWeightLifetime, signal?: AbortSignal) => {
     const rows = await serializeHealthRead(() => fetchHealthWeights(client, dog.id, undefined, signal));
-    if (!mounted.current || signal?.aborted) return;
+    if (!mounted.current || signal?.aborted || healthWeightLifetime.current !== lifetime) return;
     healthWeightRows.current = rows;
     setHealthWeights(rows);
+    setHealthWeightDataLifetime(lifetime);
     setHealthState('ready');
-  }, [client, dog.id, serializeHealthRead]);
+  }, [client, currentHealthWeightLifetime, dog.id, serializeHealthRead]);
 
   const serializeHealthHistoryRead = useCallback(<T,>(read: () => Promise<T>): Promise<T> => {
     const request = healthHistoryReadQueue.current.catch(() => undefined).then(read);
@@ -1076,6 +1309,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setProfileMessage('');
       setProfileMessageError(false);
       setProfileConflict(null);
+      setAttributionWriteUnresolved(false);
     }
     // Hide the previous dog's kennel link while the next dog's attribution loads.
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -1118,14 +1352,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setPlannedHealthMessageError(false);
     }
     const controller = new AbortController();
-    void reloadEvents();
+    const weightLifetime = currentHealthWeightLifetime;
     void serializeHealthRead(() => fetchHealthWeights(client, dog.id, undefined, controller.signal)).then((rows) => {
-      if (controller.signal.aborted || !mounted.current) return;
+      if (controller.signal.aborted || !mounted.current || healthWeightLifetime.current !== weightLifetime) return;
       healthWeightRows.current = rows;
       setHealthWeights(rows);
+      setHealthWeightDataLifetime(weightLifetime);
       setHealthState('ready');
     }).catch(() => {
-      if (!controller.signal.aborted && mounted.current) setHealthState('error');
+      if (!controller.signal.aborted && mounted.current && healthWeightLifetime.current === weightLifetime) setHealthState('error');
     });
     const historyLifetime = healthHistoryLifetime.current;
     void serializeHealthHistoryRead(() => fetchHealthHistory(client, dog.id, undefined, controller.signal)).then((rows) => {
@@ -1163,7 +1398,57 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       trainingReadFlight.current?.controller.abort();
       dailyReadFlight.current?.controller.abort();
     };
-  }, [client, currentHealthHistoryLifetime, currentLogLifetime, currentPlannedHealthLifetime, currentProfileLifetime, dog.id, reloadEvents, serializeHealthRead, serializeHealthHistoryRead, serializePlannedHealthRead]);
+  }, [client, currentHealthHistoryLifetime, currentHealthWeightLifetime, currentLogLifetime, currentPlannedHealthLifetime, currentProfileLifetime, dog.id, serializeHealthRead, serializeHealthHistoryRead, serializePlannedHealthRead]);
+
+  useEffect(() => {
+    if (page !== 'log' || logView !== 'today') return undefined;
+    const timer = setTimeout(() => { void reloadEvents(); }, 0);
+    return () => clearTimeout(timer);
+  }, [currentLogLifetime, logView, page, reloadEvents]);
+
+  useEffect(() => {
+    if (page !== 'log' || logView !== 'overview') return undefined;
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refreshInsights();
+    });
+    return () => subscription.remove();
+  }, [logView, page, refreshInsights]);
+
+  useEffect(() => {
+    if (page !== 'log' || logView !== 'overview' || logBusy) return undefined;
+
+    const requestGeneration = ++insightsRequestGeneration.current;
+    const controller = new AbortController();
+    const scope: InsightsRequestScope = {
+      ...currentInsightsRequestScope,
+      requestGeneration,
+      flightId: ExpoCrypto.randomUUID(),
+    };
+    const flight = { scope, controller };
+    insightsFlight.current = flight;
+    // The selected period/scope must replace stale counts before the asynchronous read starts.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setInsightsState({ status: 'loading' });
+    const isCurrent = () => mounted.current && !controller.signal.aborted
+      && insightsRequestIsCurrent(insightsFlight.current?.scope ?? null, scope)
+      && logLifetime.current === currentLogLifetime
+      && currentSelectionKeyRef.current === currentSelectionKey;
+
+    if (!scope.ownerId || !validInsightsTimeZone) {
+      setInsightsState({ status: 'error' });
+    } else {
+      void fetchDogEventInsights(client, scope.dogId, scope.period, scope.timezone, controller.signal)
+        .then((raw) => parseDogEventInsights(raw, scope.period, scope.timezone))
+        .then((data) => { if (isCurrent()) setInsightsState({ status: 'ready', data }); })
+        .catch(() => { if (isCurrent()) setInsightsState({ status: 'error' }); });
+    }
+
+    return () => {
+      controller.abort();
+      if (insightsFlight.current === flight) insightsFlight.current = null;
+    };
+  }, [client, currentInsightsRequestScope, currentLogLifetime, currentSelectionKey, dog.id,
+    insightsRefreshNonce, logBusy, logView, page, validInsightsTimeZone]);
 
   useEffect(() => {
     const generation = ++contentGeneration.current;
@@ -1357,6 +1642,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [client, currentDailyLifetime, currentPlannedHealthLifetime, currentSelectionKey, dog.id, page, plannedHealthChecklistFocus, plannedHealthChecklistRetry, reloadPlannedHealth, serializePlannedHealthRead]);
 
   const visibleContent = contentSelectionKey === currentSelectionKey ? content : [];
+  const visibleHealthWeights = healthWeightDataLifetime === currentHealthWeightLifetime ? healthWeights : [];
+  const visibleHealthState = healthWeightDataLifetime === currentHealthWeightLifetime ? healthState : 'loading';
+  const visibleHealthPending = healthPending;
   const visibleContentState = contentSelectionKey === currentSelectionKey ? contentState : 'loading';
   const visibleTrainingState = trainingSelectionKey === currentSelectionKey ? trainingState : 'loading';
   const dailyStateForView = dailyStateLifetime === currentDailyLifetime ? dailyState : 'loading';
@@ -1481,49 +1769,105 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }
 
   async function retryDogAttribution() {
-    if (attributionBusy) return;
+    if (attributionBusy || attributionMutationInFlight.current) return;
+    const lifetime = profileLifetime.current;
+    attributionMutationInFlight.current = true;
+    setAttributionBusy(true);
     setAttributionState('loading');
     setAttributionMessage('');
     setAttributionMessageError(false);
     try {
       const value = await fetchOwnedDogAttribution(client, dog.id);
-      if (!mounted.current) return;
+      if (!mounted.current || profileLifetime.current !== lifetime) return;
       setDogAttribution(value);
       setAttributionState('ready');
+      if (attributionWriteUnresolved) {
+        setAttributionWriteUnresolved(false);
+        setAttributionMessage('Kennelkopplingen har kontrollerats mot det sparade värdet.');
+      }
     } catch {
-      if (mounted.current) setAttributionState('error');
+      if (mounted.current && profileLifetime.current === lifetime) {
+        setAttributionState('error');
+        if (attributionWriteUnresolved) {
+          setAttributionMessage('Vi kunde inte kontrollera om kenneländringen sparades. Försök läsa in den igen.');
+          setAttributionMessageError(true);
+        }
+      }
+    } finally {
+      attributionMutationInFlight.current = false;
+      if (mounted.current && profileLifetime.current === lifetime) setAttributionBusy(false);
     }
   }
 
   async function saveDogAttribution(code: string | null): Promise<boolean> {
-    if (attributionBusy || !mounted.current) return false;
+    if (attributionBusy || attributionMutationInFlight.current || !mounted.current) return false;
+    const lifetime = profileLifetime.current;
+    attributionMutationInFlight.current = true;
     setAttributionBusy(true);
     setAttributionMessage('');
     setAttributionMessageError(false);
     let outcome: DogAttributionWriteOutcome;
     try {
       outcome = await updateOwnedDogAttribution(client, dog.id, code);
-      if (!mounted.current) return false;
+      if (!mounted.current || profileLifetime.current !== lifetime) return false;
       if (outcome.status === 'saved') {
+        setAttributionWriteUnresolved(false);
         setDogAttribution(outcome.value);
         setAttributionState('ready');
         setAttributionMessage(outcome.value ? 'Kennelkopplingen är sparad.' : 'Kennelkopplingen är borttagen.');
         return true;
       }
+      setAttributionWriteUnresolved(outcome.status === 'unknown');
       setAttributionMessage(outcome.status === 'unknown'
         ? 'Vi kunde inte bekräfta kennelkopplingen. Kontrollera den innan du försöker igen.'
         : 'Kennelkoden kunde inte sparas. Kontrollera koden och försök igen.');
       setAttributionMessageError(true);
       return false;
     } catch {
-      if (mounted.current) {
+      if (mounted.current && profileLifetime.current === lifetime) {
+        setAttributionWriteUnresolved(true);
         setAttributionMessage('Kennelkopplingen kunde inte sparas. Kontrollera anslutningen och försök igen.');
         setAttributionMessageError(true);
       }
       return false;
     } finally {
-      if (mounted.current) setAttributionBusy(false);
+      attributionMutationInFlight.current = false;
+      if (mounted.current && profileLifetime.current === lifetime) setAttributionBusy(false);
     }
+  }
+
+  const currentProfileExitScope: ProfileExitScope = {
+    ownerId: session?.user.id ?? '',
+    accountGeneration,
+    dogId: dog.id,
+  };
+
+  function commitProfileExit(destination: ProfileExitDestination) {
+    setProfileExitDialog(null);
+    if (destination.kind === 'return') {
+      const returnPage = profileReturnPage;
+      setProfileReturnPage('more');
+      navigateMainTabNow(returnPage);
+    } else if (destination.kind === 'tab') {
+      navigateMainTabNow(destination.page);
+    } else if (destination.kind === 'switchDog') {
+      onSelectDog?.(destination.dogId);
+    } else {
+      onAddDog?.('settings');
+    }
+  }
+
+  function requestProfileExit(destination: ProfileExitDestination, announceBlock = true) {
+    const decision = decideProfileExit(profileExitSnapshot.current, currentProfileExitScope, {
+      profileBusy: profileBusy || profileMutationInFlight.current,
+      profilePending: profilePending || Boolean(pendingProfileMutation.current),
+      profileConflict: Boolean(profileConflict),
+      attributionBusy: attributionBusy || attributionMutationInFlight.current,
+      attributionUnresolved: attributionWriteUnresolved,
+    });
+    if (decision.kind === 'allow') commitProfileExit(destination);
+    else if (decision.kind === 'confirm-discard') setProfileExitDialog({ destination });
+    else if (announceBlock) Alert.alert('Stanna på hundprofilen', profileExitBlockedMessage(decision.reason), [{ text: 'Stanna kvar' }]);
   }
 
   async function retryProfileStatus() {
@@ -1645,6 +1989,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       if (!flight) return false;
       logMutationFlight.current = flight;
     }
+    invalidateInsightsForLogMutation();
     setLogBusy(true);
     setQuickLogMutation(toQuickLogMutationView(mutation, 'pending'));
     let outcome: WriteOutcome<DogEventRecord | null>;
@@ -1788,6 +2133,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       if (!flight) return false;
       const isCurrent = () => isLogMutationLifetimeCurrent(lifetime, logLifetime.current, mounted.current);
       logMutationFlight.current = flight;
+      invalidateInsightsForLogMutation();
       setLogBusy(true);
       setQuickLogMutation(toQuickLogMutationView(mutation, 'pending'));
       try {
@@ -1837,7 +2183,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }
 
   async function markHealthMutationSaved(mutation: PendingHealthMutation, value: HealthWeightRecord | null): Promise<void> {
-    pendingHealthMutation.current = null;
+    if (!mounted.current || healthWeightLifetime.current !== mutation.lifetime) return;
+    const recoveryObjectId = mutation.kind === 'insert' ? null : mutation.id;
+    setWeightEditorRecovery((current) => editorScopeMatches(current, currentWeightEditorScope)
+      && current?.value.id === recoveryObjectId ? null : current);
+    pendingHealthMutation.current.delete(mutation.lifetime);
     setHealthPending(false);
     const mutationId = mutation.kind === 'insert' ? mutation.operation.id : mutation.id;
     const previous = healthWeightRows.current;
@@ -1852,19 +2202,21 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     setHealthMessage('Ändringen är sparad.');
     setHealthMessageError(false);
     try {
-      await reloadHealthWeights();
+      await reloadHealthWeights(mutation.lifetime);
     } catch {
-      if (mounted.current) setHealthMessage('Ändringen är sparad, men vikthistoriken kunde inte uppdateras.');
+      if (mounted.current && healthWeightLifetime.current === mutation.lifetime) setHealthMessage('Ändringen är sparad, men vikthistoriken kunde inte uppdateras.');
     }
   }
 
   async function runHealthMutation(mutation: PendingHealthMutation, retry = false): Promise<boolean> {
+    if (mutation.lifetime !== currentHealthWeightLifetime || healthWeightLifetime.current !== mutation.lifetime) return false;
     if (healthMutationInFlight.current) return false;
-    if (pendingHealthMutation.current && !retry) {
+    if (pendingHealthMutation.current.has(mutation.lifetime) && !retry) {
       setHealthMessage('Kontrollera den föregående ändringens status innan du gör en ny.');
       setHealthMessageError(true);
       return false;
     }
+    pendingHealthMutation.current.set(mutation.lifetime, mutation);
     healthMutationInFlight.current = true;
     setHealthBusy(true);
     setHealthMessage('');
@@ -1877,58 +2229,61 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       if (!mounted.current) return false;
       if (outcome.status === 'saved') {
         await markHealthMutationSaved(mutation, outcome.value);
-        return true;
+        return healthWeightLifetime.current === mutation.lifetime;
       }
       if (outcome.status === 'unknown') {
-        pendingHealthMutation.current = mutation;
+        pendingHealthMutation.current.set(mutation.lifetime, mutation);
+        if (healthWeightLifetime.current !== mutation.lifetime) return false;
         setHealthPending(true);
         setHealthMessage('Vi kunde inte kontrollera om viktändringen sparades. Kontrollera samma ändring innan du försöker igen.');
         setHealthMessageError(true);
         return false;
       }
-      pendingHealthMutation.current = null;
+      if (healthWeightLifetime.current !== mutation.lifetime) return false;
+      pendingHealthMutation.current.delete(mutation.lifetime);
       setHealthPending(false);
       setHealthMessage('Ändringen kunde inte sparas. Kontrollera anslutningen och försök igen.');
       setHealthMessageError(true);
       return false;
     } catch {
       if (!mounted.current) return false;
-      pendingHealthMutation.current = mutation;
+      pendingHealthMutation.current.set(mutation.lifetime, mutation);
+      if (healthWeightLifetime.current !== mutation.lifetime) return false;
       setHealthPending(true);
       setHealthMessage('Vi kunde inte kontrollera om viktändringen sparades. Kontrollera samma ändring innan du försöker igen.');
       setHealthMessageError(true);
       return false;
     } finally {
       healthMutationInFlight.current = false;
-      if (mounted.current) setHealthBusy(false);
+      if (mounted.current && healthWeightLifetime.current === mutation.lifetime) setHealthBusy(false);
     }
   }
 
   async function saveHealthWeight(id: string | null, occurredOn: string, weightKg: number): Promise<boolean> {
-    if (healthMutationInFlight.current || pendingHealthMutation.current || healthState !== 'ready') return false;
+    if (healthMutationInFlight.current || pendingHealthMutation.current.has(currentHealthWeightLifetime) || healthState !== 'ready' || healthWeightDataLifetime !== currentHealthWeightLifetime) return false;
     if (!isValidHealthWeightDate(occurredOn) || !isValidHealthWeightKg(weightKg)) return false;
     let mutation: PendingHealthMutation;
     if (id === null) {
-      mutation = { kind: 'insert', operation: { id: ExpoCrypto.randomUUID(), dog_id: dog.id, occurred_on: occurredOn, weight_kg: weightKg } };
+      mutation = { kind: 'insert', operation: { id: ExpoCrypto.randomUUID(), dog_id: dog.id, occurred_on: occurredOn, weight_kg: weightKg }, lifetime: currentHealthWeightLifetime };
     } else {
       const previous = healthWeightRows.current.find((row) => row.id === id);
       if (!previous) return false;
-      mutation = { kind: 'update', id, previous, changes: { occurred_on: occurredOn, weight_kg: weightKg } };
+      mutation = { kind: 'update', id, previous, changes: { occurred_on: occurredOn, weight_kg: weightKg }, lifetime: currentHealthWeightLifetime };
     }
     return runHealthMutation(mutation);
   }
 
   async function removeHealthWeight(id: string): Promise<boolean> {
-    if (healthMutationInFlight.current || pendingHealthMutation.current || healthState !== 'ready') return false;
+    if (healthMutationInFlight.current || pendingHealthMutation.current.has(currentHealthWeightLifetime) || healthState !== 'ready' || healthWeightDataLifetime !== currentHealthWeightLifetime) return false;
     const previous = healthWeightRows.current.find((row) => row.id === id);
     if (!previous) return false;
-    const mutation: PendingHealthMutation = { kind: 'delete', id, previous };
+    const mutation: PendingHealthMutation = { kind: 'delete', id, previous, lifetime: currentHealthWeightLifetime };
     return runHealthMutation(mutation);
   }
 
   async function retryHealthMutation() {
     if (healthMutationInFlight.current) return;
-    const mutation = pendingHealthMutation.current;
+    const mutation = pendingHealthMutation.current.get(currentHealthWeightLifetime);
     if (mutation) {
       healthMutationInFlight.current = true;
       setHealthBusy(true);
@@ -1938,7 +2293,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       try {
         const id = mutation.kind === 'insert' ? mutation.operation.id : mutation.id;
         const current = await fetchHealthWeightById(client, dog.id, id);
-        if (!mounted.current) return;
+        if (!mounted.current || healthWeightLifetime.current !== mutation.lifetime) return;
         if (mutation.kind === 'insert') {
           if (current && sameHealthWeight(current, mutation.operation)) await markHealthMutationSaved(mutation, current);
           else if (!current) retrySameOperation = true;
@@ -1951,17 +2306,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         } else if (!current) await markHealthMutationSaved(mutation, null);
         else if (sameHealthWeight(current, mutation.previous)) retrySameOperation = true;
         else setHealthMessage('Posten har ändrats sedan försöket. Kontrollera historiken innan du försöker igen.');
-        if (!retrySameOperation && pendingHealthMutation.current) setHealthMessageError(true);
+        if (!retrySameOperation && pendingHealthMutation.current.has(mutation.lifetime)) setHealthMessageError(true);
       } catch {
-        if (mounted.current) {
+        if (mounted.current && healthWeightLifetime.current === mutation.lifetime) {
           setHealthMessage('Vi kunde inte kontrollera om viktändringen sparades. Försök igen när anslutningen fungerar.');
           setHealthMessageError(true);
         }
       } finally {
         healthMutationInFlight.current = false;
-        if (mounted.current) setHealthBusy(false);
+        if (mounted.current && healthWeightLifetime.current === mutation.lifetime) setHealthBusy(false);
       }
-      if (retrySameOperation && mounted.current) await runHealthMutation(mutation, true);
+      if (retrySameOperation && mounted.current && healthWeightLifetime.current === mutation.lifetime) await runHealthMutation(mutation, true);
       return;
     }
     setHealthState('loading');
@@ -2488,7 +2843,24 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     const activityIsCurrent = checklistRangeView?.scope === currentChecklistRangeScope && checklistRangeView.activities.some((item) =>
       item.planned && item.healthPlanId === planId);
     if (page !== 'checklist' || checklistFilter !== 'Kommande' || !activityIsCurrent || accountDeletionInvalidated.current) return;
+    setPlannedHealthHealthFocus(null);
     setPlannedHealthChecklistFocus({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, planId });
+    setPage('planned-health');
+  }
+
+  function openPlannedHealthFromHealth(planId: string, returnTab: HealthTab) {
+    if (accountDeletionInvalidated.current || !plannedHealthRows.current.some((row) => row.id === planId && row.dog_id === dog.id)) return;
+    setPlannedHealthChecklistFocus(null);
+    setActiveHealthTab(returnTab);
+    setPlannedHealthHealthFocus({ selectionKey: currentSelectionKey, lifetime: currentPlannedHealthLifetime, planId, returnTab, returnScrollKey: 'health-flow' });
+    setPage('planned-health');
+  }
+
+  function createPlannedHealthFromHealth(returnTab: HealthTab) {
+    if (accountDeletionInvalidated.current) return;
+    setPlannedHealthChecklistFocus(null);
+    setActiveHealthTab(returnTab);
+    setPlannedHealthHealthFocus({ selectionKey: currentSelectionKey, lifetime: currentPlannedHealthLifetime, planId: null, returnTab, returnScrollKey: 'health-flow' });
     setPage('planned-health');
   }
 
@@ -2729,7 +3101,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (!ownerId || !capturedSession.access_token || accountDeleteInFlight.current || accountDeleteBusy) return { status: 'unavailable' };
     const isCurrent = () => mounted.current && isCurrentAccount(ownerId, generation);
     if (!isCurrent()) return { status: 'unavailable' };
-    const unresolvedWrite = pendingLogMutation.current || pendingHealthMutation.current
+    const unresolvedWrite = pendingLogMutation.current || pendingHealthMutation.current.size > 0
       || pendingHealthHistoryMutation.current || pendingPlannedHealthMutation.current
       || pendingProfileMutation.current || logMutationFlight.current || healthMutationInFlight.current
       || healthHistoryMutationInFlight.current || plannedHealthMutationInFlight.current
@@ -2878,6 +3250,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     return signedOut;
   }
 
+  function confirmProfileExit() {
+    const pendingExit = profileExitDialog;
+    if (pendingExit) commitProfileExit(pendingExit.destination);
+  }
+
   async function handleSignOut() {
     if (signOutInFlight.current) return;
     const ownerId = session?.user.id;
@@ -2906,6 +3283,20 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       { text: 'Bekräfta', style: 'destructive', onPress: () => { void handleSignOut(); } },
     ]);
   }
+
+  useLayoutEffect(() => {
+    requestProfileExitRef.current = requestProfileExit;
+    if (page !== 'profile') profileExitSnapshot.current = null;
+  });
+
+  useEffect(() => {
+    if (page !== 'profile') return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      requestProfileExitRef.current({ kind: 'return' });
+      return true;
+    });
+    return () => subscription.remove();
+  }, [page]);
 
   if (!fontsLoaded && !fontError) return <AppScreen><MessageCard>Laddar Tasslas ikoner…</MessageCard></AppScreen>;
   if (fontError) return <AppScreen><MessageCard tone="error">Ikonerna kunde inte laddas. Starta om appen och försök igen.</MessageCard></AppScreen>;
@@ -2943,19 +3334,28 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const transitionDirection = navigationDirection(previousPage, page);
   const mainTabToMainTab = isMainTabDestination(previousPage) && isMainTabDestination(page);
   const transitionDistance = mainTabToMainTab ? tokens.motion.pageDistance : tokens.motion.distance;
-  const defaultRouteScroll = productRouteScrollKeys(visiblePage,
+  const defaultRouteScroll = visiblePage === 'log' ? logViewScrollKeys(logView) : productRouteScrollKeys(visiblePage,
     knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : undefined,
     visibleHomeTrainingFocus?.returnPage);
-  const routeScroll = visiblePage === 'planned-health' && visiblePlannedHealthChecklistFocus
-    ? { scrollKey: 'planned-health-checklist-source', preserveScrollKey: 'home-checklist-flow' }
+  const routeScroll = visiblePage === 'planned-health' && visiblePlannedHealthHealthFocus
+    ? { scrollKey: 'planned-health-health-source', preserveScrollKey: visiblePlannedHealthHealthFocus.returnScrollKey }
+    : visiblePage === 'planned-health' && visiblePlannedHealthChecklistFocus
+      ? { scrollKey: 'planned-health-checklist-source', preserveScrollKey: 'home-checklist-flow' }
     : defaultRouteScroll;
+  const pendingProfileExitPrompt = profileExitDialog
+    ? profileExitPrompt(profileExitDialog.destination, profileReturnPage, ownedDogs) : null;
   const activeTabPage = visiblePage === 'knowledge' && knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'development'
     ? 'development' : visiblePage;
   return <AppScreen scrollKey={routeScroll.scrollKey} preserveScrollKey={routeScroll.preserveScrollKey} scrollMemoryScope={`${currentSelectionKey}:${currentDailyLifetime}`}
     footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={activeMainTabDestination(activeTabPage)} onChange={navigateMainTab} />}
-    refreshing={page === 'home' || page === 'progress' ? dailyRefreshing : page === 'log' ? logRefreshing : false}
-    onRefresh={page === 'home' || page === 'progress' ? () => { void reloadDailyActivity(true, false); } : page === 'log' ? () => { void reloadEvents('refresh'); } : undefined}
-    refreshAccessibilityLabel={page === 'log' ? 'Uppdatera loggen' : 'Uppdatera Hem'}>
+    refreshing={page === 'home' || page === 'progress' ? dailyRefreshing : page === 'log' && logView === 'today' ? logRefreshing : page === 'log' && logView === 'overview' ? insightsState.status === 'loading' : false}
+    onRefresh={page === 'home' || page === 'progress' ? () => { void reloadDailyActivity(true, false); } : page === 'log' && logView === 'today' ? () => { void reloadEvents('refresh'); } : page === 'log' && logView === 'overview' ? refreshInsights : undefined}
+    refreshAccessibilityLabel={page === 'log' && logView === 'overview' ? 'Uppdatera insikter' : page === 'log' ? 'Uppdatera loggen' : 'Uppdatera Hem'}>
+    <Dialog visible={Boolean(profileExitDialog)} title={pendingProfileExitPrompt?.title ?? 'Lämna hundprofilen?'}
+      confirmLabel="Kasta ändringar" cancelLabel="Fortsätt redigera" confirmVariant="destructive"
+      onRequestClose={() => setProfileExitDialog(null)} onConfirm={confirmProfileExit}>
+      <MessageCard>{pendingProfileExitPrompt?.body ?? 'Hundprofilens ändringar är inte sparade.'}</MessageCard>
+    </Dialog>
     {showDailyRecoveryBanner ? <>
       <MessageCard tone={dailyRecoveryBannerError ? 'error' : 'neutral'}>{dailyRecoveryBannerMessage}</MessageCard>
       {pendingDailyWriteForOwner?.phase === 'unknown' ? <PrimaryButton title={dailyMutationIsBusy ? 'Kontrollerar ändringen…' : 'Kontrollera samma ändring igen'}
@@ -3139,6 +3539,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     />;
     if (page === 'log') return <LogScreen events={displayEvents} onAdd={addEvent}
       onUpdate={updateEvent} onDelete={(id) => deleteEvent(id)} mode="cloud"
+      editorRecovery={visibleLogEditorRecovery} onEditorRecoveryChange={onLogEditorRecoveryChange}
       calendarMarkerMonth={calendarDataMonth} calendarMarkers={calendarDataIsCurrent ? logCalendarData.markers : []}
       calendarStatus={calendarDataIsCurrent ? logCalendarData.status : 'loading'}
       onLoadCalendarMonth={(month) => { void loadLogCalendarMarkers(month); }} onCancelCalendarRead={cancelLogCalendarRead}
@@ -3146,7 +3547,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       loading={visibleLogState === 'loading'} loadError={visibleLogState === 'error'} refreshError={logRefreshError} onReload={() => { void retryEvents(); }}
       busy={logBusy} mutation={quickLogMutation} loadMoreError={loadMoreError} onRetry={retryLogMutation} onCancel={cancelLogMutation}
       onUndo={(id) => { void undoQuickLog(id); }} hasMore={hasMore} loadingMore={loadingMore}
-      onLoadMore={() => { void loadMoreEvents(); }} />;
+      onLoadMore={() => { void loadMoreEvents(); }} view={logView} onViewChange={changeLogView}
+      profileOrigin={profileInsightsOriginMatches(insightsOrigin, currentSelectionKey, accountGeneration, dog.id)}
+      onReturnToProfile={returnToProfileFromInsights} insightsPeriod={insightsPeriod} onInsightsPeriodChange={changeInsightsPeriod}
+      insightsState={insightsState} onRefreshInsights={refreshInsights} dogName={dog.name} />;
     if (page === 'training') return <>
       {visibleTrainingState === 'loading' && <PageHeading title="Träning" description="Hämtar publicerade program…" />}
       {visibleTrainingState === 'error' && <>
@@ -3246,15 +3650,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       }}
     />;
     if (page === 'health') return <HealthScreen
+      activeTab={activeHealthTab}
+      onActiveTabChange={setActiveHealthTab}
       plannedRecords={plannedHealth}
       plannedLoadState={plannedHealthState}
       onRetryPlannedHealth={() => { void retryPlannedHealth(); }}
       onBack={() => setPage('more')}
-      records={healthWeights}
-      loadState={healthState}
+      records={visibleHealthWeights}
+      loadState={visibleHealthState}
       busy={healthBusy}
-      blocked={healthBusy || healthPending}
-      pendingStatus={healthPending}
+      blocked={healthBusy || visibleHealthPending}
+      pendingStatus={visibleHealthPending}
       statusMessage={healthMessage}
       statusError={healthMessageError}
       onRetry={() => { void retryHealthMutation(); }}
@@ -3272,20 +3678,30 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onResolveHistoryConflict={resolveHealthHistoryConflict}
       onSaveHistory={saveHealthHistory}
       onDeleteHistory={removeHealthHistory}
-      onOpenPlannedHealth={() => setPage('planned-health')}
+      onOpenPlannedHealth={openPlannedHealthFromHealth}
+      onCreatePlannedHealth={createPlannedHealthFromHealth}
+      historyEditorRecovery={visibleHealthHistoryEditorRecovery}
+      onHistoryEditorRecoveryChange={onHealthHistoryEditorRecoveryChange}
+      weightEditorRecovery={visibleWeightEditorRecovery}
+      onWeightEditorRecoveryChange={onWeightEditorRecoveryChange}
     />;
     if (page === 'planned-health') return <PlannedHealthScreen
       onBack={() => {
-        if (!visiblePlannedHealthChecklistFocus) { setPage('health'); return; }
-        setPlannedHealthChecklistFocus(null);
-        setChecklistRangeRetry((value) => value + 1);
-        void reloadPlannedHealth(currentPlannedHealthLifetime).catch(() => undefined);
-        setPage('checklist');
+        if (visiblePlannedHealthHealthFocus) {
+          setActiveHealthTab(visiblePlannedHealthHealthFocus.returnTab);
+          setPlannedHealthHealthFocus(null);
+          setPage('health');
+        } else if (visiblePlannedHealthChecklistFocus) {
+          setPlannedHealthChecklistFocus(null);
+          setChecklistRangeRetry((value) => value + 1);
+          void reloadPlannedHealth(currentPlannedHealthLifetime).catch(() => undefined);
+          setPage('checklist');
+        } else setPage('health');
       }}
-      backLabel={visiblePlannedHealthChecklistFocus ? 'Checklistan' : 'Hälsa'}
+      backLabel={visiblePlannedHealthHealthFocus ? 'Hälsa' : visiblePlannedHealthChecklistFocus ? 'Checklistan' : 'Hälsa'}
       records={plannedHealth}
-      checklistFocusState={visiblePlannedHealthChecklistFocus ? visiblePlannedHealthChecklistRecord?.status ?? 'loading' : 'idle'}
-      checklistFocusRecord={visiblePlannedHealthChecklistFocus && visiblePlannedHealthChecklistRecord?.status === 'ready'
+      checklistFocusState={!visiblePlannedHealthHealthFocus && visiblePlannedHealthChecklistFocus ? visiblePlannedHealthChecklistRecord?.status ?? 'loading' : 'idle'}
+      checklistFocusRecord={!visiblePlannedHealthHealthFocus && visiblePlannedHealthChecklistFocus && visiblePlannedHealthChecklistRecord?.status === 'ready'
         ? visiblePlannedHealthChecklistRecord.record : null}
       onRetryChecklistFocus={() => setPlannedHealthChecklistRetry((value) => value + 1)}
       loadState={plannedHealthState}
@@ -3299,6 +3715,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onResolveConflict={() => { void resolvePlannedHealthConflict(); }}
       onSave={savePlannedHealth}
       onDelete={removePlannedHealth}
+      healthFocusActive={Boolean(visiblePlannedHealthHealthFocus)}
+      healthFocusPlanId={visiblePlannedHealthHealthFocus?.planId}
+      editorRecovery={visiblePlannedHealthEditorRecovery}
+      onEditorRecoveryChange={onPlannedHealthEditorRecoveryChange}
     />;
     if (page === 'knowledge') return <KnowledgeScreen
       onBack={() => setPage(knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : 'more')}
@@ -3332,8 +3752,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       dog={dog}
       lifetime={currentProfileLifetime}
       isLifetimeCurrent={isPassportLifetimeCurrent}
-      weights={healthWeights}
-      weightLoadState={healthState}
+      weights={visibleHealthWeights}
+      weightLoadState={visibleHealthState}
       weightBusy={healthBusy}
       weightPending={healthPending}
       onRetryWeights={() => { void retryHealthMutation(); }}
@@ -3350,9 +3770,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       client={client} dog={dog} busy={profileBusy} pending={profilePending} statusMessage={profileMessage}
       statusError={profileMessageError} conflict={profileConflict ?? undefined}
       backLabel={profileReturnPage === 'training' ? 'Tillbaka till Träning' : 'Tillbaka till Mer'}
-      ownedDogs={ownedDogs} activeDogId={dog.id} onSelectDog={onSelectDog}
-      onAddDog={() => onAddDog?.('settings')}
+      ownedDogs={ownedDogs} activeDogId={dog.id} exitScope={currentProfileExitScope}
+      onExitStateChange={(snapshot) => {
+        if (profileExitScopeKey(snapshot.scope) === profileExitScopeKey(currentProfileExitScope)) profileExitSnapshot.current = snapshot;
+      }}
+      onSelectDog={(dogId) => requestProfileExitRef.current({ kind: 'switchDog', dogId })}
+      onAddDog={() => requestProfileExitRef.current({ kind: 'addDog' })}
       attribution={dogAttribution} attributionState={attributionState} attributionBusy={attributionBusy}
+      attributionWriteUnresolved={attributionWriteUnresolved}
       attributionMessage={attributionMessage} attributionMessageError={attributionMessageError}
       onBack={returnFromProfile} onSave={async (changes, knownBreeds) => {
         const saved = await saveDogProfile(changes, knownBreeds);
@@ -3360,6 +3785,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         return saved;
       }}
       onSaveAttribution={saveDogAttribution} onRetryAttribution={() => { void retryDogAttribution(); }}
+      onOpenInsights={openInsightsFromProfile}
       onRetryStatus={() => { void retryProfileStatus(); }} onAcceptCurrent={() => { void acceptCurrentProfile(); }} />;
     return <DogProfileScreen dog={dog} breed={breeds.find((breed) => breed.id === dog.breed_id)?.name} onBack={returnFromProfile} />;
   }
@@ -3368,6 +3794,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
 function navigationDirection(previous: ProductPage, current: ProductPage): 'forward' | 'backward' {
   return mainTabTransitionDirection(previous, current);
+}
+
+function profileExitBlockedMessage(reason: ProfileExitBlockReason): string {
+  if (reason === 'profileBusy' || reason === 'attributionBusy') return 'En ändring sparas eller kontrolleras fortfarande. Vänta tills resultatet visas innan du lämnar profilen.';
+  if (reason === 'profilePending') return 'Profiländringen väntar på en säker kontroll. Kontrollera den på profilsidan innan du fortsätter.';
+  if (reason === 'profileConflict') return 'Profilen har ändrats någon annanstans. Granska den aktuella versionen på profilsidan innan du fortsätter.';
+  if (reason === 'attributionUnresolved') return 'Kennelkopplingen behöver kontrolleras på profilsidan innan du fortsätter.';
+  return 'Profilens aktuella ändringar läses in. Vänta ett ögonblick och försök igen.';
 }
 
 function reminderStatusSummary(result: ReminderReconcileResult | null, preferences: NotificationPreferences, permission: 'unknown' | 'granted' | 'denied'): string {

@@ -1,7 +1,8 @@
-import { useEffect, useReducer, useRef, useState } from 'react';
-import { AccessibilityInfo, Alert, findNodeHandle, Image, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { AccessibilityInfo, findNodeHandle, Image, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { DatePickerField, InfoModal, MessageCard, PageHeading, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
+import { DatePickerField, InfoModal, MessageCard, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
+import { BottomSheet, Button, Dialog } from '../../components/ui';
 import { Toast } from '../../components/ui/Toast';
 import { IconChip } from '../../components/ui/IconChip';
 import { tokens } from '../../theme/tokens';
@@ -23,6 +24,7 @@ import {
 import { parsePlannedHealthTime } from './planned-health-time';
 
 type LoadState = 'loading' | 'ready' | 'error';
+export type PlannedHealthEditorDraft = { id: string | null; type: PlannedHealthType; dueOn: string; dueTime: string; note: string; reminderEnabled: boolean; reminderTime: string };
 
 export function PlannedHealthScreen({
   onBack,
@@ -42,6 +44,10 @@ export function PlannedHealthScreen({
   onResolveConflict,
   onSave,
   onDelete,
+  healthFocusActive = false,
+  healthFocusPlanId,
+  onEditorRecoveryChange,
+  editorRecovery,
 }: {
   onBack: () => void;
   backLabel?: string;
@@ -60,6 +66,10 @@ export function PlannedHealthScreen({
   onResolveConflict: () => void;
   onSave: (id: string | null, type: PlannedHealthType, dueOn: string, note: string, reminderEnabled: boolean, reminderMinutes: number | null, dueTime: string | null) => Promise<boolean>;
   onDelete: (id: string) => Promise<boolean>;
+  healthFocusActive?: boolean;
+  healthFocusPlanId?: string | null;
+  onEditorRecoveryChange?: (draft: PlannedHealthEditorDraft | null) => void;
+  editorRecovery?: PlannedHealthEditorDraft | null;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [type, setType] = useState<PlannedHealthType>('vaccination');
@@ -69,6 +79,13 @@ export function PlannedHealthScreen({
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState('09:00');
   const [formError, setFormError] = useState('');
+  const [sheetVisible, setSheetVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [discardVisible, setDiscardVisible] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<PlannedHealthRecord | null>(null);
+  const [baseline, setBaseline] = useState<PlannedHealthEditorDraft | null>(null);
+  const submitRef = useRef<(() => Promise<void>) | null>(null);
+  const appliedCreateFocus = useRef<string | null>(null);
   const [infoVisible, setInfoVisible] = useState(false);
   const [feedbackState, dispatchFeedback] = useReducer(reducePlannedHealthFeedback, EMPTY_PLANNED_HEALTH_FEEDBACK);
   const [feedbackTimeout, setFeedbackTimeout] = useState(2500);
@@ -79,29 +96,24 @@ export function PlannedHealthScreen({
   const today = localDate();
   const blocked = busy || pending;
   const editingRecord = records.find((record) => record.id === editingId) ?? null;
+  const focusedHealthRecord = healthFocusActive && healthFocusPlanId ? records.find((record) => record.id === healthFocusPlanId) ?? null : null;
+  const showFocusedHealthFirst = Boolean(loadState === 'ready' && focusedHealthRecord && !pending && !statusError && !conflict);
+  const healthFocusMissing = healthFocusActive && healthFocusPlanId !== null && healthFocusPlanId !== undefined && loadState === 'ready' && !focusedHealthRecord;
   const recovery = selectPlannedHealthRecovery({ conflict: Boolean(conflict), pending, statusError, loadError: loadState === 'error' });
-  const recordsForView = checklistFocusState === 'ready' && checklistFocusRecord
+  const recordsForView = !healthFocusActive && checklistFocusState === 'ready' && checklistFocusRecord
     ? [checklistFocusRecord, ...records.filter((record) => record.id !== checklistFocusRecord.id)] : records;
-  const focusedChecklistRecord = checklistFocusState === 'ready' ? checklistFocusRecord : null;
-  const remainingRecords = focusedChecklistRecord
-    ? recordsForView.filter((record) => record.id !== focusedChecklistRecord.id) : recordsForView;
+  const focusedChecklistRecord = !healthFocusActive && checklistFocusState === 'ready' ? checklistFocusRecord : null;
+  const remainingRecords = recordsForView.filter((record) => record.id !== focusedChecklistRecord?.id && record.id !== focusedHealthRecord?.id);
+  const draft = useMemo<PlannedHealthEditorDraft>(() => ({ id: editingId, type, dueOn, dueTime, note, reminderEnabled, reminderTime }), [dueOn, dueTime, editingId, note, reminderEnabled, reminderTime, type]);
+  const dirty = Boolean(baseline && JSON.stringify(draft) !== JSON.stringify(baseline));
+  const validDueOn = isValidPlannedHealthDate(dueOn.trim(), today) || dueOn.trim() === editingRecord?.due_on;
+  const validNote = normalizePlannedHealthDescription(note) !== undefined;
+  const validReminderTime = !reminderEnabled || parsePlannedHealthTime(reminderTime) !== null;
+  const validEventTime = !dueTime.trim() || parsePlannedHealthTime(dueTime) !== null;
+  const canSave = validDueOn && validNote && validReminderTime && validEventTime;
 
-  useEffect(() => {
-    if (editingId === null || editingRecord !== null) return;
-    const timer = setTimeout(() => {
-      setEditingId(null);
-      setType('vaccination');
-      setDueOn(localDate());
-      setDueTime('');
-      setNote('');
-      setReminderEnabled(false);
-      setReminderTime('09:00');
-      setFormError('');
-      Keyboard.dismiss();
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [editingId, editingRecord]);
-
+  const updateDraft = useCallback((next: PlannedHealthEditorDraft) => onEditorRecoveryChange?.(next), [onEditorRecoveryChange]);
+  useEffect(() => { if (sheetVisible) updateDraft(draft); }, [draft, sheetVisible, updateDraft]);
   useEffect(() => {
     const normalized = statusMessage.trim() ? statusMessage : null;
     if (normalized === previousStatusMessage.current) return;
@@ -147,6 +159,7 @@ export function PlannedHealthScreen({
   }, [feedbackState.activeMessage, infoVisible]);
 
   function resetForm() {
+    setSheetVisible(false);
     setEditingId(null);
     setType('vaccination');
     setDueOn(localDate());
@@ -155,21 +168,59 @@ export function PlannedHealthScreen({
     setReminderEnabled(false);
     setReminderTime('09:00');
     setFormError('');
+    setBaseline(null);
+    setDiscardVisible(false);
+    setSaving(false);
+    onEditorRecoveryChange?.(null);
     Keyboard.dismiss();
   }
 
+  const openCreate = useCallback(() => {
+    const next: PlannedHealthEditorDraft = { id: null, type: 'vaccination', dueOn: localDate(), dueTime: '', note: '', reminderEnabled: false, reminderTime: '09:00' };
+    setEditingId(null); setType(next.type); setDueOn(next.dueOn); setDueTime(next.dueTime); setNote(next.note);
+    setReminderEnabled(next.reminderEnabled); setReminderTime(next.reminderTime); setBaseline(next); setFormError(''); setSheetVisible(true);
+  }, []);
+
+  useEffect(() => {
+    if (!healthFocusActive || healthFocusPlanId !== null || loadState !== 'ready') return;
+    const focusKey = `${healthFocusActive}:${healthFocusPlanId ?? 'new'}`;
+    if (appliedCreateFocus.current === focusKey) return;
+    appliedCreateFocus.current = focusKey;
+    openCreate();
+  }, [healthFocusActive, healthFocusPlanId, loadState, openCreate]);
+
   function edit(record: PlannedHealthRecord) {
+    const next: PlannedHealthEditorDraft = { id: record.id, type: record.event_type, dueOn: record.due_on, dueTime: record.due_time?.slice(0, 5) ?? '',
+      note: record.description ?? '', reminderEnabled: record.reminder_enabled, reminderTime: formatTime(record.reminder_minutes ?? 9 * 60) };
     setEditingId(record.id);
-    setType(record.event_type);
-    setDueOn(record.due_on);
-    setDueTime(record.due_time?.slice(0, 5) ?? '');
-    setNote(record.description ?? '');
-    setReminderEnabled(record.reminder_enabled);
-    setReminderTime(formatTime(record.reminder_minutes ?? 9 * 60));
+    setType(next.type); setDueOn(next.dueOn); setDueTime(next.dueTime); setNote(next.note);
+    setReminderEnabled(next.reminderEnabled); setReminderTime(next.reminderTime); setBaseline(next);
     setFormError('');
+    setSheetVisible(true);
+  }
+
+  function openRecovery() {
+    const recoveryRecord = editorRecovery?.id ? records.find((row) => row.id === editorRecovery.id) ?? null : null;
+    if (!editorRecovery || (editorRecovery.id && !recoveryRecord)) return;
+    const next = { ...editorRecovery };
+    const saved = recoveryRecord ? {
+      id: recoveryRecord.id, type: recoveryRecord.event_type, dueOn: recoveryRecord.due_on,
+      dueTime: recoveryRecord.due_time?.slice(0, 5) ?? '', note: recoveryRecord.description ?? '',
+      reminderEnabled: recoveryRecord.reminder_enabled, reminderTime: formatTime(recoveryRecord.reminder_minutes ?? 9 * 60),
+    } : { id: null, type: 'vaccination' as const, dueOn: today, dueTime: '', note: '', reminderEnabled: false, reminderTime: '09:00' };
+    setEditingId(next.id); setType(next.type); setDueOn(next.dueOn); setDueTime(next.dueTime); setNote(next.note);
+    setReminderEnabled(next.reminderEnabled); setReminderTime(next.reminderTime); setBaseline(saved); setFormError(''); setSheetVisible(true);
+  }
+
+  function requestClose() {
+    if (saving || busy) return;
+    if (pending || conflict) { setSheetVisible(false); return; }
+    if (dirty) { setDiscardVisible(true); return; }
+    resetForm();
   }
 
   async function save() {
+    if (blocked || saving) return;
     setFormError('');
     const normalizedDate = dueOn.trim();
     if (!isValidPlannedHealthDate(normalizedDate, today) && normalizedDate !== editingRecord?.due_on) {
@@ -191,18 +242,29 @@ export function PlannedHealthScreen({
       setFormError('Ange en giltig händelsetid mellan 00:00 och 23:59.');
       return;
     }
-    if (await onSave(editingId, type, normalizedDate, normalizedNote ?? '', reminderEnabled, reminderEnabled ? minutes : null, dueTime.trim() || null)) resetForm();
+    setSaving(true);
+    try {
+      if (await onSave(editingId, type, normalizedDate, normalizedNote ?? '', reminderEnabled, reminderEnabled ? minutes : null, dueTime.trim() || null)) resetForm();
+      else if (!pending && !statusError) setFormError('Planen kunde inte sparas. Dina uppgifter finns kvar.');
+    } finally { setSaving(false); }
   }
 
+  useEffect(() => {
+    const submit = async () => { await save(); };
+    submitRef.current = submit;
+    return () => { if (submitRef.current === submit) submitRef.current = null; };
+  });
+
   function confirmDelete(record: PlannedHealthRecord) {
-    Alert.alert('Ta bort plan?', `${typeLabel(record.event_type)} tas bort från listan över planerade hälsohändelser.`, [
-      { text: 'Avbryt', style: 'cancel' },
-      { text: 'Ta bort', style: 'destructive', onPress: () => { void deleteRecord(record); } },
-    ]);
+    setDeleteTarget(record);
   }
 
   async function deleteRecord(record: PlannedHealthRecord) {
-    if (await onDelete(record.id) && editingId === record.id) resetForm();
+    setDeleteTarget(null);
+    if (await onDelete(record.id)) {
+      if (editingId === record.id) resetForm();
+      if (editorRecovery?.id === record.id) onEditorRecoveryChange?.(null);
+    }
   }
 
   function acceptConflict() {
@@ -224,11 +286,11 @@ export function PlannedHealthScreen({
     restoreInfoFocus();
   }
 
-  function renderRecord(record: PlannedHealthRecord, openedFromChecklist = false) {
+  function renderRecord(record: PlannedHealthRecord, source: 'checklist' | 'health' | null = null) {
     const timing = record.due_on < today ? 'Passerat datum' : record.due_on === today ? 'Idag' : 'Kommande';
     const reminderText = reminderLabel(record.reminder_enabled, record.due_on, record.reminder_minutes);
     return <View key={record.id} style={styles.recordCard}>
-      {openedFromChecklist ? <Text accessibilityRole="text" style={styles.sourceContext}>Öppnad från Checklistan</Text> : null}
+      {source ? <Text accessibilityRole="text" style={styles.sourceContext}>Öppnad från {source === 'checklist' ? 'Checklistan' : 'Hälsa'}</Text> : null}
       <View style={styles.recordHeading}>
         <View style={styles.recordType}>
           <IconChip category={record.event_type === 'vaccination' ? 'vaccination' : 'veterinary'} />
@@ -240,15 +302,10 @@ export function PlannedHealthScreen({
       {record.due_time ? <Text style={styles.reminderRow}>Tid {record.due_time.slice(0, 5)}</Text> : null}
       {record.description ? <Text style={styles.recordNote}>{record.description}</Text> : null}
       {reminderText ? <Text style={styles.reminderRow}>{reminderText}</Text> : null}
-      <Pressable accessibilityRole="button" accessibilityLabel={`Åtgärder för ${typeLabel(record.event_type)} ${record.due_on}`}
-        accessibilityState={{ disabled: blocked }} disabled={blocked}
-        onPress={() => Alert.alert('Åtgärder', undefined, buildPlannedHealthActionButtons(
-          () => { if (!blocked) edit(record); },
-          () => { if (!blocked) confirmDelete(record); },
-        ))}
-        style={({ pressed }) => [styles.actionsButton, pressed && !blocked && styles.actionsButtonPressed]}>
-        <Ionicons name="ellipsis-horizontal" size={tokens.size.iconMd} color={blocked ? tokens.colors.textSecondary : tokens.colors.textPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-      </Pressable>
+      <View style={styles.recordActions}>
+        <Button variant="icon" iconName="create-outline" label="Ändra" accessibilityLabel={`Ändra ${typeLabel(record.event_type)} ${record.due_on}`} disabled={blocked} onPress={() => edit(record)} />
+        <Button variant="icon" label="Radera" iconName="trash-outline" accessibilityLabel={`Radera ${typeLabel(record.event_type).toLocaleLowerCase('sv-SE')} ${record.due_on}`} disabled={blocked} onPress={() => confirmDelete(record)} />
+      </View>
     </View>;
   }
 
@@ -258,29 +315,22 @@ export function PlannedHealthScreen({
       <Ionicons name="chevron-back" size={tokens.size.iconMd} color={tokens.colors.textPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
       <Text style={styles.backLabel}>{backLabel}</Text>
     </Pressable>
-    <PageHeading title="Planerade hälsohändelser" description="Egna planer för vaccinationer och veterinärbesök." />
-    <View style={styles.heroCard}>
-      <View style={styles.heroIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        <Ionicons name="calendar-outline" size={tokens.size.iconMd} color={tokens.colors.support.plannedHealth.fg} />
-      </View>
-      <View style={styles.heroCopy}>
-        <Text style={styles.description}>Planerad – inte genomförd.</Text>
-      </View>
-    </View>
-    <View style={styles.infoRow}>
-      <Text style={styles.infoHint}>Information om planerna</Text>
+    <View style={styles.pageHeading}>
+      <Text accessibilityRole="header" style={styles.pageTitle}>Planerade hälsohändelser</Text>
       <Pressable ref={infoButtonRef} accessibilityRole="button" accessibilityLabel="Visa information om planerade hälsohändelser" onPress={() => {
         dispatchFeedback({ type: 'info-opened' });
         setInfoVisible(true);
       }} style={styles.infoButton}>
-        <Ionicons name="information-circle-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-        <Text style={styles.infoButtonText}>Läs information</Text>
+        <Ionicons name="information-circle-outline" size={tokens.size.iconMd} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
       </Pressable>
     </View>
+    <Text style={styles.pageCaption}>Planerad – inte genomförd.</Text>
     <InfoModal visible={infoVisible} title="Om planerade hälsohändelser" onClose={closeInfo} onDismiss={finishInfoDismissal}>
+      <Text style={styles.infoBody}>Egna planer för vaccinationer och veterinärbesök.</Text>
       <Text style={styles.infoBody}>Planerna är ägarregistrerade och är inte en verifierad journal eller vårdrekommendation. Genomförda händelser läggs separat i hälsans historik.</Text>
       <Text style={styles.infoBody}>Datum som passerat ligger kvar som planerade tills du själv ändrar eller tar bort dem. Lokala påminnelser är frivilliga och styrs även av enhetens tillstånd.</Text>
     </InfoModal>
+    {showFocusedHealthFirst && focusedHealthRecord ? renderRecord(focusedHealthRecord, 'health') : null}
     {reminderSummary ? <MessageCard>{reminderSummary}</MessageCard> : null}
     {checklistFocusState === 'loading' ? <MessageCard>Hämtar den valda planen från Checklistan…</MessageCard> : null}
     {checklistFocusState === 'missing' ? <MessageCard tone="error">Planen finns inte längre. Listan har uppdaterats.</MessageCard> : null}
@@ -303,47 +353,20 @@ export function PlannedHealthScreen({
     {recovery === 'pending' && <PrimaryButton title="Kontrollera sparstatus" disabled={busy} onPress={onRetry} />}
     {recovery === 'error' && <PrimaryButton title="Försök igen" disabled={busy} onPress={onRetry} />}
 
-    {loadState === 'ready' && focusedChecklistRecord ? renderRecord(focusedChecklistRecord, true) : null}
+    {healthFocusMissing ? <MessageCard tone="error">Den valda planen finns inte längre. Gå tillbaka till Hälsa och välj en aktuell plan.</MessageCard> : null}
+    {loadState === 'ready' && !healthFocusActive && focusedChecklistRecord ? renderRecord(focusedChecklistRecord, 'checklist') : null}
+    {loadState === 'ready' && focusedHealthRecord && !showFocusedHealthFirst ? renderRecord(focusedHealthRecord, 'health') : null}
 
     {loadState === 'ready' && <>
       {busy && <MessageCard>Sparar och kontrollerar ändringen…</MessageCard>}
-      <View style={styles.formCard}>
-        <Text style={styles.formTitle} accessibilityRole="header">{editingRecord ? 'Rätta plan' : 'Lägg till plan'}</Text>
-        <View accessibilityRole="radiogroup" accessibilityLabel="Typ av planerad hälsohändelse" style={styles.typeChoices}>
-          <TypeChoice selected={type === 'vaccination'} disabled={blocked || editingRecord !== null} accent={tokens.colors.category.vaccination}
-            icon="bandage-outline" label="Vaccination" onPress={() => setType('vaccination')} />
-          <TypeChoice selected={type === 'vet_visit'} disabled={blocked || editingRecord !== null} accent={tokens.colors.category.veterinary}
-            icon="medical-outline" label="Veterinärbesök" onPress={() => setType('vet_visit')} />
+      <Button label="Planera en hälsohändelse" accessibilityLabel="Planera en hälsohändelse" disabled={blocked} onPress={openCreate} />
+      {editorRecovery && (pending || statusError || Boolean(conflict)) ? <View style={styles.recovery}>
+        <MessageCard tone={statusError || conflict ? 'error' : 'neutral'}>{pending ? 'Planen väntar på kontroll. Ditt utkast finns kvar.' : conflict ? 'Planen har ändrats. Ditt utkast finns kvar.' : 'Planen kunde inte sparas. Ditt utkast finns kvar.'}</MessageCard>
+        <View style={styles.recoveryActions}>
+          {pending && <Button variant="icon" label="Kontrollera sparstatus" accessibilityLabel="Kontrollera samma planändring" iconName="refresh-outline" disabled={busy} onPress={onRetry} />}
+          <Button variant="icon" label="Öppna planändring" accessibilityLabel="Öppna samma planändring" iconName="create-outline" onPress={openRecovery} />
         </View>
-        <DatePickerField label="Planerat datum" disabled={blocked} onChangeText={setDueOn} value={dueOn} />
-        <TimePickerField label="Tid (valfri)" disabled={blocked} onChangeText={setDueTime} value={dueTime} />
-        <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: reminderEnabled, disabled: blocked }} disabled={blocked}
-          onPress={() => setReminderEnabled((value) => !value)} style={styles.reminderChoice}>
-          <View style={[styles.reminderCheck, reminderEnabled && styles.reminderCheckSelected]}>
-            {reminderEnabled && <Ionicons name="checkmark" size={tokens.size.iconSm} color={tokens.colors.onPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />}
-          </View>
-          <View style={styles.reminderCopy}>
-            <Text style={styles.label}>Påminn mig lokalt</Text>
-            <Text style={styles.reminderHint}>Visas bara om både planvalet och enhetens Tassla-val tillåter det.</Text>
-          </View>
-        </Pressable>
-        {reminderEnabled && <TimePickerField label="Påminnelsetid, lokal tid" disabled={blocked} onChangeText={setReminderTime} value={reminderTime} />}
-        <View style={styles.field}>
-          <Text style={styles.label}>Kort anteckning (frivillig)</Text>
-          <TextInput accessibilityLabel="Kort anteckning, högst 500 tecken" editable={!blocked} multiline
-            onChangeText={setNote} onSubmitEditing={() => Keyboard.dismiss()} placeholder="Till exempel: boka årlig kontroll"
-            placeholderTextColor={tokens.colors.textSecondary} returnKeyType="done" style={styles.noteInput} value={note} />
-          <Text style={styles.characterHint}>{Array.from(note).length}/500 tecken</Text>
-        </View>
-        {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
-        <PrimaryButton title={busy ? 'Sparar…' : editingRecord ? 'Spara rättning' : 'Spara plan'} disabled={blocked} onPress={() => { void save(); }} />
-        <Toast visible={Boolean(feedbackState.activeMessage?.startsWith('Ändringen är sparad') && timedFeedbackMessage === feedbackState.activeMessage && !statusError && !pending && !busy && !infoVisible)}
-          tone="success" confirmed message={feedbackState.activeMessage ?? undefined} autoDismissMs={feedbackTimeout}
-          onAutoDismiss={() => { if (feedbackState.activeMessage) dispatchFeedback({ type: 'dismiss', message: feedbackState.activeMessage }); }} />
-        {editingRecord && <QuietButton title="Avbryt rättning" disabled={blocked} onPress={resetForm} />}
-      </View>
-
-      {remainingRecords.length > 0 ? <Text style={styles.listTitle} accessibilityRole="header">Sparade planer</Text> : null}
+      </View> : null}
       {records.length >= 40 && <MessageCard>{checklistFocusState === 'ready' && checklistFocusRecord
         ? 'Visar vald plan från Checklistan och upp till 40 närmaste planer.'
         : 'Visar de 40 närmaste planerna. Äldre planer kan saknas från listan.'}</MessageCard>}
@@ -355,8 +378,58 @@ export function PlannedHealthScreen({
           <Text style={styles.emptyBody}>Lägg till något som du själv vill komma ihåg.</Text>
         </View>
       </View>}
+      {remainingRecords.length > 0 ? <Text style={styles.listTitle} accessibilityRole="header">Sparade planer</Text> : null}
       {remainingRecords.map((record) => renderRecord(record))}
+      <Toast visible={Boolean(feedbackState.activeMessage?.startsWith('Ändringen är sparad') && timedFeedbackMessage === feedbackState.activeMessage && !statusError && !pending && !busy && !infoVisible)}
+        tone="success" confirmed message={feedbackState.activeMessage ?? undefined} autoDismissMs={feedbackTimeout}
+        onAutoDismiss={() => { if (feedbackState.activeMessage) dispatchFeedback({ type: 'dismiss', message: feedbackState.activeMessage }); }} />
     </>}
+    <BottomSheet visible={sheetVisible && loadState === 'ready'} title={editingRecord ? 'Ändra plan' : 'Planera en hälsohändelse'} keyboardAware
+      footer={<Button label={saving || busy ? 'Sparar…' : editingRecord ? 'Spara ändring' : 'Spara plan'} accessibilityLabel={saving || busy ? 'Sparar plan' : 'Spara plan'} loading={saving || busy}
+        disabled={!canSave || blocked || saving} onPress={() => { void submitRef.current?.(); }} />}
+      onRequestClose={requestClose}>
+      <View style={styles.editor}>
+        <View accessibilityRole="radiogroup" accessibilityLabel="Typ av planerad hälsohändelse" style={styles.typeChoices}>
+          <TypeChoice selected={type === 'vaccination'} disabled={blocked || editingRecord !== null || saving} accent={tokens.colors.category.vaccination}
+            icon="bandage-outline" label="Vaccination" onPress={() => setType('vaccination')} />
+          <TypeChoice selected={type === 'vet_visit'} disabled={blocked || editingRecord !== null || saving} accent={tokens.colors.category.veterinary}
+            icon="medical-outline" label="Veterinärbesök" onPress={() => setType('vet_visit')} />
+        </View>
+        <DatePickerField label="Planerat datum" disabled={blocked || saving} onChangeText={setDueOn} value={dueOn} />
+        <TimePickerField label="Tid (valfri)" disabled={blocked || saving} onChangeText={setDueTime} value={dueTime} />
+        <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: reminderEnabled, disabled: blocked || saving }} disabled={blocked || saving}
+          onPress={() => setReminderEnabled((value) => !value)} style={styles.reminderChoice}>
+          <View style={[styles.reminderCheck, reminderEnabled && styles.reminderCheckSelected]}>
+            {reminderEnabled && <Ionicons name="checkmark" size={tokens.size.iconSm} color={tokens.colors.onPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />}
+          </View>
+          <View style={styles.reminderCopy}>
+            <Text style={styles.label}>Påminn mig lokalt</Text>
+            <Text style={styles.reminderHint}>Visas bara om både planvalet och enhetens Tassla-val tillåter det.</Text>
+          </View>
+        </Pressable>
+        {reminderEnabled && <TimePickerField label="Påminnelsetid, lokal tid" disabled={blocked || saving} onChangeText={setReminderTime} value={reminderTime} />}
+        <View style={styles.field}>
+          <Text style={styles.label}>Kort anteckning (frivillig)</Text>
+          <TextInput accessibilityLabel="Kort anteckning, högst 500 tecken" editable={!blocked && !saving} multiline
+            onChangeText={setNote} onSubmitEditing={() => Keyboard.dismiss()} placeholder="Till exempel: boka årlig kontroll"
+            placeholderTextColor={tokens.colors.textSecondary} returnKeyType="done" style={styles.noteInput} value={note} />
+          <Text style={styles.characterHint}>{Array.from(note).length}/500 tecken</Text>
+        </View>
+        {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
+        {!canSave && !formError ? <MessageCard tone="error">Kontrollera datum, tid och anteckning.</MessageCard> : null}
+        {editingRecord && <View style={styles.deleteAction}><Button variant="icon" label="Radera plan" iconName="trash-outline"
+          accessibilityLabel={`Radera ${typeLabel(editingRecord.event_type).toLocaleLowerCase('sv-SE')} ${editingRecord.due_on}`}
+          disabled={blocked || saving} onPress={() => confirmDelete(editingRecord)} /></View>}
+      </View>
+    </BottomSheet>
+    <Dialog visible={discardVisible} title="Kasta ändringen?" confirmLabel="Kasta ändring" compactActions
+      onRequestClose={() => setDiscardVisible(false)} onConfirm={() => { setDiscardVisible(false); resetForm(); }}>
+      <MessageCard>Ändringen är inte sparad. Din tidigare plan påverkas inte.</MessageCard>
+    </Dialog>
+    <Dialog visible={Boolean(deleteTarget)} title="Ta bort plan?" confirmLabel="Ta bort" compactActions onRequestClose={() => setDeleteTarget(null)}
+      onConfirm={() => { if (deleteTarget) void deleteRecord(deleteTarget); }}>
+      <MessageCard>{deleteTarget ? `${typeLabel(deleteTarget.event_type)} · ${deleteTarget.due_on} tas bort från planerna.` : ''}</MessageCard>
+    </Dialog>
   </View>;
 }
 
@@ -378,19 +451,17 @@ const styles = StyleSheet.create({
   backAction: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: tokens.spacing.xs, marginLeft: -tokens.spacing.sm, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.md },
   backLabel: { ...tokens.typography.caption, color: tokens.colors.textPrimary, fontWeight: '700' },
   actionPressed: { backgroundColor: tokens.colors.selectedSurface },
-  heroCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.support.plannedHealth.bg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
-  heroIcon: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.surface, alignItems: 'center', justifyContent: 'center' },
-  heroCopy: { flex: 1 },
-  description: { ...tokens.typography.body, color: tokens.colors.textSecondary },
-  infoRow: { marginTop: tokens.spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: tokens.spacing.sm },
-  infoHint: { color: tokens.colors.textSecondary, ...tokens.typography.caption },
+  pageHeading: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm },
+  pageTitle: { flex: 1, minWidth: 0, color: tokens.colors.textPrimary, ...tokens.typography.heading },
+  pageCaption: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
   focusMessage: { gap: tokens.spacing.xs },
   sourceContext: { color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '700', marginBottom: tokens.spacing.sm },
-  infoButton: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm },
-  infoButtonText: { color: tokens.colors.primary, ...tokens.typography.caption, fontWeight: '700' },
+  infoButton: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full },
   infoBody: { color: tokens.colors.textPrimary, ...tokens.typography.body, marginBottom: tokens.spacing.md },
-  formCard: { marginTop: tokens.spacing.lg, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
-  formTitle: { color: tokens.colors.textPrimary, ...tokens.typography.heading, marginBottom: tokens.spacing.md },
+  editor: { gap: tokens.spacing.md },
+  recovery: { gap: tokens.spacing.xs, marginTop: tokens.spacing.sm },
+  recoveryActions: { flexDirection: 'row', gap: tokens.spacing.sm },
+  deleteAction: { alignItems: 'flex-end' },
   typeChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg },
   typeChoice: { flexGrow: 1, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   typeChoicePressed: { opacity: 0.78 },
@@ -425,8 +496,7 @@ const styles = StyleSheet.create({
   overdueLabel: { color: tokens.colors.warning },
   recordDate: { color: tokens.colors.textPrimary, ...tokens.typography.label, marginTop: tokens.spacing.sm },
   recordNote: { color: tokens.colors.textSecondary, ...tokens.typography.caption, marginTop: tokens.spacing.xs },
-  actionsButton: { width: tokens.size.touchMin, minWidth: tokens.size.touchMin, height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end', marginTop: tokens.spacing.xs, borderRadius: tokens.radius.full },
-  actionsButtonPressed: { backgroundColor: tokens.colors.selectedSurface },
+  recordActions: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm },
 });
 
 function formatTime(minutes: number): string {
@@ -440,12 +510,4 @@ function reminderLabel(enabled: boolean, dueOn: string, minutes: number | null):
   if (local.status === 'passed-time') return `${label} · påminnelsetiden har passerat`;
   if (local.status === 'unrepresentable') return `${label} · kan inte schemaläggas den här dagen`;
   return `${label} · schemaläggs bara om enhetens val tillåter det`;
-}
-
-function buildPlannedHealthActionButtons(onEdit: () => void, onDelete: () => void) {
-  return [
-    { text: 'Ändra', onPress: onEdit },
-    { text: 'Ta bort', style: 'destructive' as const, onPress: onDelete },
-    { text: 'Avbryt', style: 'cancel' as const },
-  ];
 }

@@ -11,6 +11,9 @@ const REVIEW_IMAGE_BY_GUIDE_VERSION = new Map<string, number>([
   ['review-v1:training:trygg-start:1', 0],
   ['review-v1:training:kontakt:1', 1],
   ['review-v1:training:vardagsro:1', 2],
+  ['fixture-guide:calm-start:1', 0],
+  ['fixture-guide:rest:1', 1],
+  ['fixture-guide:handling:1', 2],
 ]);
 
 const KNOWLEDGE_IMAGE_BY_GUIDE_VERSION = new Map<string, ImageSourcePropType>([
@@ -25,7 +28,9 @@ const KNOWLEDGE_IMAGE_BY_GUIDE_VERSION = new Map<string, ImageSourcePropType>([
 /** Returns only an explicitly assigned photo; unassigned guides stay text-only. */
 export function knowledgeImageForGuide(item: Pick<HomeContent, 'contentId' | 'version'>): ImageSourcePropType | null {
   if (!item.contentId || !Number.isSafeInteger(item.version) || item.version < 1) return null;
-  return KNOWLEDGE_IMAGE_BY_GUIDE_VERSION.get(`${item.contentId}:${item.version}`) ?? null;
+  const identity = `${item.contentId}:${item.version}`;
+  const reviewIndex = REVIEW_IMAGE_BY_GUIDE_VERSION.get(identity);
+  return reviewIndex === undefined ? KNOWLEDGE_IMAGE_BY_GUIDE_VERSION.get(identity) ?? null : EDITORIAL_IMAGES[reviewIndex];
 }
 
 /** Ger varje publicerad guide samma dekorativa bild oavsett sökning eller ordning. */

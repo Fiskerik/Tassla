@@ -21,7 +21,7 @@ test('routine edit is an accessible icon-only control and weekday targets stay o
 
 test('log editor exposes a selected category icon trigger and icon/name radio choices', () => {
   const editor = log.slice(log.indexOf('function LogEventEditor'), log.indexOf('function formatInterval'));
-  assert.match(editor, /const \[type, setType\] = useState\(event\.type\)/);
+  assert.match(editor, /const \[type, setType\] = useState\(initialDraft\?\.type \?\? baseline\.type\)/);
   assert.match(editor, /const \[typePickerOpen, setTypePickerOpen\] = useState\(false\)/);
   assert.match(editor, /accessibilityLabel=\{`Händelsetyp: \$\{LOG_EVENT_LABELS\[type\]\}`\}/);
   assert.match(editor, /accessibilityState=\{\{ disabled, expanded: typePickerOpen \}\} aria-expanded=\{typePickerOpen\}/);
@@ -38,8 +38,11 @@ test('log editor exposes a selected category icon trigger and icon/name radio ch
   assert.match(editor, /legacyUnknownAccident/);
   assert.match(editor, /<DatePickerField label="Datum"/);
   assert.match(editor, /<TimePickerField label="Tid"/);
-  assert.match(editor, /<Button variant="destructive" label="Radera"/);
-  assert.match(editor, /<Button variant="secondary" label="Avbryt"/);
+  assert.match(editor, /<Button variant="icon" label="Radera" iconName="trash-outline"/);
+  assert.match(editor, /onDraftChange\(draft\)/);
+  assert.match(log, /<BottomSheet visible title="Ändra händelse" keyboardAware footer=\{/);
+  assert.match(log, /\{deleteTarget \? <Dialog visible title="Radera loggpost\?"/);
+  assert.doesNotMatch(editor, /label="Avbryt"/);
 });
 
 test('checklist own-item edit uses the real shared icon-only button with its full label', () => {

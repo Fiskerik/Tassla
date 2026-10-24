@@ -1,65 +1,187 @@
-import { useEffect, useRef, useState } from 'react';
-import { Keyboard, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { BackHandler, Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { AppScreen, FormField, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { AppScreen, DatePickerField, FormField, InfoModal, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
+import { Button, Dialog } from '../../components/ui';
 import { createDog, fetchBreeds, fetchOwnedDogById, ownedDogAttributionMatches, type BreedOption, type OwnedDog } from '../../data/app-data';
 import { clearSecurePendingReferral, normalizeKennelCode, readSecurePendingReferral } from '../../onboarding-referral/referral-secure-storage';
 import { clearDogCreationRequest, getOrCreateDogCreationRequestId, readDogCreationRequestId } from './dog-creation-storage';
 import { tokens } from '../../theme/tokens';
 import { ageInWeeks, localDate } from './dog';
+import { BreedPickerField } from './BreedPickerField';
+import { profileRecoveryRequestMatches } from './profile-exit';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAccount, onCreated, mode = 'initial', onCancel }: {
+export type DogCreationSaveState = 'idle' | 'error' | 'unknown' | 'invalidCode' | 'existingProfile' | 'sourceUnconfirmed' | 'recoveryUnavailable' | 'cleanupError';
+export type DogCreationEntryPoint = 'home' | 'settings';
+export type DogCreationRecoverySnapshot = {
+  ownerId: string;
+  accountGeneration: number;
+  entryPoint: DogCreationEntryPoint;
+  draft: { name: string; breedId: string; birthDate: string; kennelCode: string; sourceSelected: boolean };
+  saveState: DogCreationSaveState;
+  resolvedDog: OwnedDog | null;
+  resolvedRequestId: string | null;
+  resolvedShouldClearReferral: boolean;
+  sourceCheckProblem: 'mismatch' | 'unavailable' | 'recovery' | null;
+};
+
+export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAccount, onCreated, mode = 'initial', onCancel,
+  entryPoint = 'home', recoverySnapshot, onClearRecoverySnapshot }: {
   client: SupabaseClient;
   ownerId: string;
   accountGeneration: number;
   isCurrentAccount(ownerId: string, generation: number): boolean;
   onCreated: (dog: OwnedDog) => void;
   mode?: 'initial' | 'add';
-  onCancel?: () => void;
+  entryPoint?: DogCreationEntryPoint;
+  recoverySnapshot?: DogCreationRecoverySnapshot | null;
+  onCancel?: (result: { kind: 'discard' } | { kind: 'resume'; snapshot: DogCreationRecoverySnapshot }) => void;
+  onClearRecoverySnapshot?: () => void;
 }) {
-  const { width, fontScale } = useWindowDimensions();
-  const stackIntro = width < 360 || fontScale >= 1.25;
+  const validRecoverySnapshot = recoverySnapshot?.ownerId === ownerId && recoverySnapshot.accountGeneration === accountGeneration
+    ? recoverySnapshot : null;
+  const initialDraft = validRecoverySnapshot?.draft ?? { name: '', breedId: '', birthDate: '', kennelCode: '', sourceSelected: false };
   const [breeds, setBreeds] = useState<BreedOption[]>([]);
   const [breedsState, setBreedsState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [breedAttempt, setBreedAttempt] = useState(0);
-  const [name, setName] = useState('');
-  const [breedId, setBreedId] = useState('');
-  const [birthDate, setBirthDate] = useState('');
+  const [name, setName] = useState(initialDraft.name);
+  const [breedId, setBreedId] = useState(initialDraft.breedId);
+  const [birthDate, setBirthDate] = useState(initialDraft.birthDate);
+  const [formBaseline, setFormBaseline] = useState(initialDraft);
   const [busy, setBusy] = useState(false);
-  const [saveState, setSaveState] = useState<'idle' | 'error' | 'unknown' | 'invalidCode' | 'existingProfile' | 'sourceUnconfirmed' | 'recoveryUnavailable' | 'cleanupError'>('idle');
-  const [resolvedDog, setResolvedDog] = useState<OwnedDog | null>(null);
-  const [resolvedRequestId, setResolvedRequestId] = useState<string | null>(null);
-  const [resolvedShouldClearReferral, setResolvedShouldClearReferral] = useState(true);
-  const [sourceCheckProblem, setSourceCheckProblem] = useState<'mismatch' | 'unavailable' | 'recovery' | null>(null);
-  const [kennelCode, setKennelCode] = useState('');
-  const [sourceSelected, setSourceSelected] = useState(false);
+  const [saveState, setSaveState] = useState<DogCreationSaveState>(validRecoverySnapshot?.saveState ?? 'idle');
+  const [resolvedDog, setResolvedDog] = useState<OwnedDog | null>(validRecoverySnapshot?.resolvedDog ?? null);
+  const [resolvedRequestId, setResolvedRequestId] = useState<string | null>(validRecoverySnapshot?.resolvedRequestId ?? null);
+  const [resolvedShouldClearReferral, setResolvedShouldClearReferral] = useState(validRecoverySnapshot?.resolvedShouldClearReferral ?? true);
+  const [sourceCheckProblem, setSourceCheckProblem] = useState<DogCreationRecoverySnapshot['sourceCheckProblem']>(validRecoverySnapshot?.sourceCheckProblem ?? null);
+  const [kennelCode, setKennelCode] = useState(initialDraft.kennelCode);
+  const [sourceSelected, setSourceSelected] = useState(initialDraft.sourceSelected);
+  const [sourceExpanded, setSourceExpanded] = useState(Boolean(initialDraft.sourceSelected));
+  const [recoveryChecking, setRecoveryChecking] = useState(true);
+  const [recoveryMismatch, setRecoveryMismatch] = useState(false);
+  const [cancelDialogVisible, setCancelDialogVisible] = useState(false);
+  const [initialExitDialogVisible, setInitialExitDialogVisible] = useState(false);
+  const [infoVisible, setInfoVisible] = useState(false);
+  const recoveryCheckInFlight = useRef(true);
   const operationInFlight = useRef(false);
+  const handleBackRef = useRef<() => boolean>(() => false);
+
+  const draftDirty = name !== formBaseline.name || breedId !== formBaseline.breedId || birthDate !== formBaseline.birthDate
+    || kennelCode !== formBaseline.kennelCode || sourceSelected !== formBaseline.sourceSelected;
+  const isRecoveryState = saveState === 'unknown' || saveState === 'sourceUnconfirmed' || saveState === 'existingProfile'
+    || saveState === 'cleanupError' || saveState === 'recoveryUnavailable';
+
+  function makeRecoverySnapshot(): DogCreationRecoverySnapshot {
+    return {
+      ownerId,
+      accountGeneration,
+      entryPoint: validRecoverySnapshot?.entryPoint ?? entryPoint,
+      draft: { name, breedId, birthDate, kennelCode, sourceSelected },
+      saveState,
+      resolvedDog,
+      resolvedRequestId,
+      resolvedShouldClearReferral,
+      sourceCheckProblem,
+    };
+  }
+
+  function leaveAddFlow(kind: 'discard' | 'resume') {
+    if (busy || operationInFlight.current || recoveryCheckInFlight.current) return;
+    if (kind === 'resume') onCancel?.({ kind: 'resume', snapshot: makeRecoverySnapshot() });
+    else {
+      onClearRecoverySnapshot?.();
+      onCancel?.({ kind: 'discard' });
+    }
+  }
+
+  function requestAddFlowExit() {
+    if (busy || operationInFlight.current || recoveryCheckInFlight.current) return;
+    if (isRecoveryState) {
+      leaveAddFlow('resume');
+    } else if (draftDirty) {
+      setCancelDialogVisible(true);
+    } else {
+      leaveAddFlow('discard');
+    }
+  }
+
+  useLayoutEffect(() => {
+    handleBackRef.current = () => {
+      if (recoveryCheckInFlight.current || operationInFlight.current || busy) return true;
+      if (mode === 'add') {
+        requestAddFlowExit();
+        return true;
+      }
+      if (draftDirty || isRecoveryState) {
+        setInitialExitDialogVisible(true);
+        return true;
+      }
+      return false;
+    };
+  });
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => handleBackRef.current());
+    return () => subscription.remove();
+  }, [mode]);
 
   useEffect(() => {
     let active = true;
     void readSecurePendingReferral().then((referral) => {
-      if (active && referral) setKennelCode(referral.code);
+      if (active && referral && !validRecoverySnapshot) {
+        setKennelCode(referral.code);
+        setFormBaseline((baseline) => ({ ...baseline, kennelCode: referral.code }));
+      }
     }).catch(() => undefined);
     return () => { active = false; };
-  }, []);
+  }, [validRecoverySnapshot]);
 
   useEffect(() => {
     let active = true;
+    recoveryCheckInFlight.current = true;
     void readDogCreationRequestId(ownerId).then((requestId) => {
-      if (active && requestId && isCurrentAccount(ownerId, accountGeneration)) setSaveState('unknown');
+      if (!active || !isCurrentAccount(ownerId, accountGeneration)) return;
+      if (validRecoverySnapshot) {
+        if (!profileRecoveryRequestMatches(validRecoverySnapshot, ownerId, accountGeneration, requestId)) {
+          setRecoveryMismatch(true);
+          setSaveState('recoveryUnavailable');
+          setResolvedDog(null);
+          setResolvedRequestId(null);
+          setSourceCheckProblem(null);
+          return;
+        }
+        // A matching in-memory snapshot owns the recovery variant and its actions.
+        // The secure-ID read only validates that context; it never retries a write.
+        return;
+      }
+      if (requestId) {
+        setResolvedRequestId(requestId);
+        setSaveState('unknown');
+      }
     }).catch(() => {
-      if (active && isCurrentAccount(ownerId, accountGeneration)) setSaveState('recoveryUnavailable');
+      if (!active || !isCurrentAccount(ownerId, accountGeneration)) return;
+      if (validRecoverySnapshot?.resolvedRequestId) {
+        setRecoveryMismatch(true);
+        setSaveState('recoveryUnavailable');
+        setResolvedDog(null);
+        setResolvedRequestId(null);
+        setSourceCheckProblem(null);
+      } else if (!validRecoverySnapshot) {
+        setSaveState('recoveryUnavailable');
+      }
+    }).finally(() => {
+      recoveryCheckInFlight.current = false;
+      if (active && isCurrentAccount(ownerId, accountGeneration)) setRecoveryChecking(false);
     });
-    return () => { active = false; };
-  }, [accountGeneration, isCurrentAccount, ownerId]);
+    return () => { active = false; recoveryCheckInFlight.current = false; };
+  }, [accountGeneration, isCurrentAccount, ownerId, validRecoverySnapshot]);
 
   useEffect(() => {
     let active = true;
     void fetchBreeds(client).then((options) => {
       if (!active || !isCurrentAccount(ownerId, accountGeneration)) return;
       setBreeds(options);
-      setBreedId((current) => current || options[0]?.id || '');
       setBreedsState('ready');
     }).catch(() => {
       if (active && isCurrentAccount(ownerId, accountGeneration)) setBreedsState('error');
@@ -178,6 +300,8 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
       setResolvedRequestId(null);
       setResolvedShouldClearReferral(true);
       setSaveState('idle');
+      setRecoveryMismatch(false);
+      onClearRecoverySnapshot?.();
     } catch {
       if (isCurrentAccount(ownerId, accountGeneration)) setSaveState('recoveryUnavailable');
     } finally {
@@ -190,85 +314,83 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
     setSaveState((current) => current === 'unknown' || current === 'sourceUnconfirmed' ? current : 'idle');
   }
 
+  const exitDialog = mode === 'add' ? cancelDialogVisible : initialExitDialogVisible;
+  const requestWasSent = Boolean(resolvedRequestId) || saveState === 'unknown' || saveState === 'sourceUnconfirmed'
+    || saveState === 'existingProfile' || saveState === 'cleanupError';
+
+  function dismissExitDialog() {
+    setCancelDialogVisible(false);
+    setInitialExitDialogVisible(false);
+  }
+
+  function confirmExitDialog() {
+    dismissExitDialog();
+    if (mode === 'add') leaveAddFlow('discard');
+    else BackHandler.exitApp();
+  }
+
+  function pressAddCancel() {
+    if (busy || operationInFlight.current || recoveryCheckInFlight.current) return;
+    requestAddFlowExit();
+  }
+
+  const requestRecoveryResume = isRecoveryState && mode === 'add' && !busy && !recoveryChecking;
+
+  const sourceNeedsAttention = sourceSelected || saveState === 'invalidCode' || saveState === 'sourceUnconfirmed';
+  const sourceSummary = sourceSelected ? 'Koppling vald' : kennelCode ? 'Kod inläst · inte kopplad' : 'Valfritt';
+  const showRestartWarning = requestWasSent;
+
   const canSubmit = name.trim().length > 0 && name.trim().length <= 80 && Boolean(breedId)
     && isValidBirthDate(birthDate) && (!sourceSelected || Boolean(normalizeKennelCode(kennelCode)));
 
   return (
     <AppScreen>
-      <View style={[styles.introCard, stackIntro && styles.introCardStacked]}>
-        <View style={styles.introIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          <Ionicons name="paw-outline" size={tokens.size.iconMd} color={tokens.colors.support.profile.fg} />
+      <View style={styles.screenHeader}>
+        <View style={styles.screenHeading}>
+          <Text accessibilityRole="header" style={styles.screenTitle}>{mode === 'add' ? 'Lägg till hund' : 'Hundens profil'}</Text>
+          <Text style={styles.screenSubtitle}>{mode === 'add' ? 'Uppgifterna går att ändra senare.' : 'Berätta det viktigaste om din hund.'}</Text>
         </View>
-        <View style={styles.introCopy}>
-          <Text accessibilityRole="header" style={styles.introTitle}>{mode === 'add' ? 'Lägg till en hund' : 'Berätta om din hund'}</Text>
-          <Text style={styles.introDescription}>{mode === 'add' ? 'Varje hund får en egen profil och innehåll utifrån sin ålder.' : 'Det hjälper oss att visa innehåll som passar just er.'}</Text>
-        </View>
+        {mode === 'add' && onCancel && !requestRecoveryResume ? <Pressable accessibilityRole="button" accessibilityLabel="Avbryt och gå tillbaka"
+          accessibilityState={{ disabled: busy || recoveryChecking }} disabled={busy || recoveryChecking} onPress={pressAddCancel} style={styles.headerAction}>
+          <Ionicons name="close" size={tokens.size.iconMd} color={tokens.colors.textPrimary} />
+        </Pressable> : null}
       </View>
       <View style={styles.profileCard}>
         <Text style={styles.sectionTitle} accessibilityRole="header">Hundens uppgifter</Text>
-      <FormField label="Hundens namn" onChangeText={(value) => { setName(value); markEdited(); }} onSubmitEditing={() => Keyboard.dismiss()} placeholder="Till exempel Nala" returnKeyType="done" value={name} />
-      <Text style={styles.label} accessibilityRole="header">Ras</Text>
-      {breedsState === 'loading' && <MessageCard>Hämtar raslistan…</MessageCard>}
-      {breedsState === 'error' && <>
-        <MessageCard tone="error">Raslistan gick inte att hämta. Kontrollera anslutningen och försök igen.</MessageCard>
-        <View style={styles.breedRetrySpacing}>
-          <PrimaryButton title="Försök igen" onPress={() => { setBreedsState('loading'); setBreedAttempt((count) => count + 1); }} />
-        </View>
-      </>}
-      {breedsState === 'ready' && (
-        <View accessibilityRole="radiogroup" accessibilityLabel="Välj hundras" style={styles.breedList}>
-          {breeds.map((breed) => {
-            const selected = breedId === breed.id;
-            return (
-              <Pressable
-                key={breed.id}
-                accessibilityRole="radio"
-                accessibilityLabel={breed.name}
-                accessibilityState={{ selected }}
-                onPress={() => { setBreedId(breed.id); markEdited(); }}
-                style={({ pressed }) => [styles.breedOption, selected && styles.breedSelected, pressed && styles.breedPressed]}
-              >
-                <Text style={[styles.breedText, selected && styles.breedTextSelected]}>{breed.name}</Text>
-                {selected && <Text style={styles.checkmark}>✓</Text>}
-              </Pressable>
-            );
-          })}
-        </View>
-      )}
-      <FormField
-        autoCapitalize="none"
-        autoComplete="off"
-        label="Födelsedatum"
-        onChangeText={(value) => { setBirthDate(value); markEdited(); }}
-        onSubmitEditing={() => Keyboard.dismiss()}
-        placeholder="ÅÅÅÅ-MM-DD"
-        returnKeyType="done"
-        value={birthDate}
+      <FormField label="Hundens namn" editable={!busy} onChangeText={(value) => { setName(value); markEdited(); }} onSubmitEditing={() => Keyboard.dismiss()} placeholder="Till exempel Nala" returnKeyType="done" value={name} />
+      <BreedPickerField
+        label="Ras"
+        value={breedId}
+        breeds={breeds}
+        state={breedsState}
+        disabled={busy}
+        onChange={(breed) => { setBreedId(breed.id); markEdited(); }}
+        onRetry={() => { setBreedsState('loading'); setBreedAttempt((count) => count + 1); }}
       />
+      <DatePickerField label="Födelsedatum" disabled={busy} onChangeText={(value) => { setBirthDate(value); markEdited(); }} value={birthDate} />
       </View>
       <View style={styles.sourceCard}>
-        <Text style={styles.sectionTitle} accessibilityRole="header">Kennelkod (valfritt)</Text>
-        <FormField
-          editable={!busy}
-          autoCapitalize="characters"
-          autoComplete="off"
-          label="Kennelkod"
-          onChangeText={(value) => { setKennelCode(value); markEdited(); }}
-          onSubmitEditing={() => Keyboard.dismiss()}
-          placeholder="Skriv koden från kennelns QR"
-          returnKeyType="done"
-          value={kennelCode}
-        />
-        <Text style={styles.sourceInfo}>Koden kopplar kennelkälla till din Tassla-profil för uppföljning. Kenneln får inte se dina uppgifter.</Text>
-        <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: sourceSelected, disabled: busy || !normalizeKennelCode(kennelCode) }} disabled={busy || !normalizeKennelCode(kennelCode)} onPress={() => { setSourceSelected((value) => !value); markEdited(); }} style={styles.sourceChoice}>
-          <View style={[styles.checkbox, sourceSelected && styles.checkboxSelected]}>{sourceSelected && <Text style={styles.checkboxMark}>✓</Text>}</View>
-          <Text style={styles.sourceChoiceText}>Jag vill koppla koden till min profil</Text>
+        <Pressable accessibilityRole="button" accessibilityState={{ expanded: sourceExpanded }} onPress={() => setSourceExpanded((expanded) => !expanded)} style={styles.sourceHeader}>
+          <View style={styles.sourceHeading}>
+            <Text style={styles.sourceTitle}>Kennelkod <Text style={styles.optionalLabel}>· valfritt</Text></Text>
+            <Text style={styles.sourceSummary}>{sourceSummary}</Text>
+          </View>
+          <Ionicons name={sourceExpanded ? 'chevron-up' : 'chevron-down'} size={tokens.size.iconSm} color={tokens.colors.textSecondary} />
         </Pressable>
-        <Pressable accessibilityRole="button" disabled={busy} onPress={() => { setKennelCode(''); setSourceSelected(false); markEdited(); void clearSecurePendingReferral().catch(() => undefined); }} style={styles.removeCode}>
-          <Text style={styles.removeCodeText}>Ta bort kennelkälla</Text>
-        </Pressable>
+        {sourceExpanded || sourceNeedsAttention ? <View style={styles.sourceDetails}>
+          <FormField editable={!busy} autoCapitalize="characters" autoComplete="off" label="Kennelkod"
+            onChangeText={(value) => { setKennelCode(value); markEdited(); }} onSubmitEditing={() => Keyboard.dismiss()}
+            placeholder="Skriv koden från kennelns QR" returnKeyType="done" value={kennelCode} />
+          <Text style={styles.sourceInfo}>En inläst kod kopplas först när du väljer det.</Text>
+          <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: sourceSelected, disabled: busy || !normalizeKennelCode(kennelCode) }} disabled={busy || !normalizeKennelCode(kennelCode)} onPress={() => { setSourceSelected((value) => !value); markEdited(); }} style={styles.sourceChoice}>
+            <View style={[styles.checkbox, sourceSelected && styles.checkboxSelected]}>{sourceSelected && <Text style={styles.checkboxMark}>✓</Text>}</View>
+            <Text style={styles.sourceChoiceText}>Koppla koden till min profil</Text>
+          </Pressable>
+          {kennelCode ? <Button variant="icon" iconName="trash-outline" label="Ta bort kod" accessibilityLabel="Ta bort kennelkod" disabled={busy} onPress={() => { setKennelCode(''); setSourceSelected(false); markEdited(); void clearSecurePendingReferral().catch(() => undefined); }} /> : null}
+        </View> : null}
       </View>
       {sourceSelected && !normalizeKennelCode(kennelCode) && <MessageCard tone="error">Skriv en giltig kennelkod eller ta bort kennelkälla.</MessageCard>}
+      {recoveryChecking && <MessageCard>Kontrollerar om ett tidigare försök behöver återställas…</MessageCard>}
       {saveState === 'invalidCode' && <MessageCard tone="error">Koden känns inte igen eller är inte aktiv. Rätta den eller ta bort kennelkälla och fortsätt utan.</MessageCard>}
       {saveState === 'existingProfile' && <MessageCard tone="neutral">En tidigare begäran skapade redan {resolvedDog?.name ?? 'en hundprofil'}. Välj om du vill öppna den eller uttryckligen börja med en annan hund.</MessageCard>}
       {saveState === 'sourceUnconfirmed' && <MessageCard tone="neutral">
@@ -281,19 +403,38 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
       </MessageCard>}
       {saveState === 'error' && <MessageCard tone="error">Profilen kunde inte sparas. Kontrollera uppgifterna och anslutningen innan du försöker igen.</MessageCard>}
       {saveState === 'unknown' && <MessageCard tone="neutral">Vi kunde inte bekräfta sparandet. Din säkra begäran finns kvar. Fyll i samma uppgifter och försök igen så kontrollerar vi just den hunden.</MessageCard>}
-      {saveState === 'recoveryUnavailable' && <MessageCard tone="error">Vi kan inte läsa eller spara den säkra återställningen just nu. Ingen ny hundregistrering skickades.</MessageCard>}
+      {saveState === 'recoveryUnavailable' && <MessageCard tone="error">{recoveryMismatch ? 'Återställningen matchar inte den säkra begäran. Öppna hundprofilen igen för att hämta aktuell status.' : 'Vi kunde inte kontrollera den säkra återställningen. Ingen ny begäran skickas innan kontrollen lyckas.'}</MessageCard>}
       {saveState === 'cleanupError' && <MessageCard tone="neutral">{resolvedDog?.name ?? 'Hundprofilen'} är sparad. Den lokala återställningsnyckeln kunde inte rensas ännu.</MessageCard>}
       {saveState === 'existingProfile' ? <>
-        <PrimaryButton title={busy ? 'Öppnar…' : `Öppna ${resolvedDog?.name ?? 'hundprofilen'}`} disabled={busy || !resolvedDog} onPress={() => { void openResolvedDog(); }} />
-        <QuietButton title={busy ? 'Vänta…' : 'Starta en ny hundprofil'} disabled={busy || !resolvedDog} onPress={() => { void startAnotherDog(); }} />
-      </> : saveState === 'cleanupError' ? <PrimaryButton title={busy ? 'Kontrollerar…' : `Fortsätt till ${resolvedDog?.name ?? 'hunden'}`} disabled={busy || !resolvedDog} onPress={() => { void openResolvedDog(); }} />
+        <PrimaryButton title={busy ? 'Öppnar…' : `Öppna ${resolvedDog?.name ?? 'hundprofilen'}`} disabled={busy || recoveryChecking || !resolvedDog} onPress={() => { void openResolvedDog(); }} />
+        <QuietButton title={busy ? 'Vänta…' : 'Starta en ny hundprofil'} disabled={busy || recoveryChecking || !resolvedDog} onPress={() => { void startAnotherDog(); }} />
+      </> : saveState === 'cleanupError' ? <PrimaryButton title={busy ? 'Kontrollerar…' : `Fortsätt till ${resolvedDog?.name ?? 'hunden'}`} disabled={busy || recoveryChecking || !resolvedDog} onPress={() => { void openResolvedDog(); }} />
         : saveState === 'sourceUnconfirmed' ? <>
-          <PrimaryButton title={busy ? 'Kontrollerar…' : 'Kontrollera igen med samma begäran'} disabled={!canSubmit || busy || breedsState !== 'ready'} onPress={() => { void createAndConfirm(); }} />
-          <QuietButton title={busy ? 'Vänta…' : `Öppna ${resolvedDog?.name ?? 'hunden'} utan bekräftad kennelkoppling`} disabled={busy || !resolvedDog || !resolvedRequestId} onPress={() => { void openResolvedDog(); }} />
+          <PrimaryButton title={busy ? 'Kontrollerar…' : 'Kontrollera igen med samma begäran'} disabled={!canSubmit || busy || recoveryChecking || breedsState !== 'ready'} onPress={() => { void createAndConfirm(); }} />
+          <QuietButton title={busy ? 'Vänta…' : `Öppna ${resolvedDog?.name ?? 'hunden'} utan bekräftad kennelkoppling`} disabled={busy || recoveryChecking || !resolvedDog || !resolvedRequestId} onPress={() => { void openResolvedDog(); }} />
         </>
-        : saveState === 'unknown' ? <PrimaryButton title={busy ? 'Kontrollerar…' : 'Försök igen med samma begäran'} disabled={!canSubmit || busy || breedsState !== 'ready'} onPress={() => { void createAndConfirm(); }} />
-          : <PrimaryButton title={busy ? 'Sparar…' : saveState === 'recoveryUnavailable' ? 'Försök igen' : mode === 'add' ? 'Lägg till hund' : 'Fortsätt'} disabled={!canSubmit || busy || breedsState !== 'ready'} onPress={() => { void createAndConfirm(); }} />}
-      {mode === 'add' && onCancel ? <QuietButton title="Avbryt" disabled={busy} onPress={onCancel} /> : null}
+        : saveState === 'unknown' ? <PrimaryButton title={busy ? 'Kontrollerar…' : 'Försök igen med samma begäran'} disabled={!canSubmit || busy || recoveryChecking || breedsState !== 'ready'} onPress={() => { void createAndConfirm(); }} />
+          : <PrimaryButton title={busy ? 'Sparar…' : saveState === 'recoveryUnavailable' ? 'Försök igen' : mode === 'add' ? 'Lägg till hund' : 'Fortsätt'} disabled={!canSubmit || busy || recoveryChecking || breedsState !== 'ready'} onPress={() => { void createAndConfirm(); }} />}
+      <Pressable accessibilityRole="button" accessibilityLabel="Om hundens uppgifter" onPress={() => setInfoVisible(true)} style={styles.infoEntry}>
+        <Ionicons name="information-circle-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />
+        <Text style={styles.infoEntryText}>Om hundens uppgifter</Text>
+      </Pressable>
+      {requestRecoveryResume && onCancel ? <QuietButton
+        title={requestRecoveryResume ? `Tillbaka till ${validRecoverySnapshot?.entryPoint === 'settings' || entryPoint === 'settings' ? 'Hundprofil' : 'Hem'}` : 'Avbryt'}
+        disabled={busy || recoveryChecking} onPress={() => leaveAddFlow('resume')} /> : null}
+      <InfoModal visible={infoVisible} title="Om hundens uppgifter" onClose={() => setInfoVisible(false)}>
+        <Text style={styles.infoBody}>Namn, ras och födelsedatum hjälper Tassla att visa åldersanpassat innehåll. Uppgifterna kan ändras senare.</Text>
+      </InfoModal>
+      <Dialog visible={exitDialog} title={mode === 'add' ? 'Kasta ändringarna?' : 'Lämna Tassla?'}
+        confirmLabel={mode === 'add' ? 'Kasta ändringar' : 'Lämna appen'} confirmVariant="destructive"
+        cancelLabel={mode === 'add' ? 'Fortsätt redigera' : 'Stanna kvar'}
+        onRequestClose={dismissExitDialog} onConfirm={confirmExitDialog}>
+        <Text style={styles.dialogCopy}>
+          {mode === 'add'
+            ? 'Det du har fyllt i här kastas. Hundprofilerna som redan sparats finns kvar.'
+            : `Du har uppgifter som inte är klara. ${showRestartWarning ? 'Efter ett sparförsök finns en säker begäran kvar, men fälten kan behöva fyllas i igen när du öppnar appen.' : 'Inget sparas förrän du fortsätter.'}`}
+        </Text>
+      </Dialog>
     </AppScreen>
   );
 }
@@ -309,30 +450,28 @@ function isValidBirthDate(value: string): boolean {
 }
 
 const styles = StyleSheet.create({
-  introCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.spacing.lg, marginBottom: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.support.profile.bg },
-  introIcon: { width: tokens.size.chipLg, minHeight: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.surface },
-  introCopy: { flex: 1, minWidth: 0 },
-  introCardStacked: { flexDirection: 'column', alignItems: 'flex-start' },
-  introTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
-  introDescription: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
+  screenHeader: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.md },
+  screenHeading: { flex: 1, minWidth: 0, gap: tokens.spacing.xs },
+  screenTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary },
+  screenSubtitle: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  headerAction: { width: tokens.size.touchMin, height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.support.profile.bg },
   profileCard: { marginBottom: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   sectionTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
-  label: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.sm, marginTop: tokens.spacing.xs },
-  breedList: { gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg },
-  breedRetrySpacing: { marginBottom: tokens.spacing.md },
-  breedOption: { minHeight: tokens.size.touchMin, borderRadius: tokens.radius.md, paddingHorizontal: tokens.spacing.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  breedSelected: { borderColor: tokens.colors.support.profile.fg, backgroundColor: tokens.colors.support.profile.bg },
-  breedPressed: { opacity: 0.72 },
-  breedText: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1, minWidth: 0 },
-  breedTextSelected: { color: tokens.colors.support.profile.fg, fontWeight: '700' },
-  checkmark: { ...tokens.typography.label, color: tokens.colors.support.profile.fg },
-  sourceCard: { borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, padding: tokens.spacing.md, marginTop: tokens.spacing.md, marginBottom: tokens.spacing.lg },
+  sourceCard: { borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, paddingHorizontal: tokens.spacing.md, marginTop: tokens.spacing.md, marginBottom: tokens.spacing.md },
+  sourceHeader: { minHeight: tokens.size.touchMin + tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.md },
+  sourceHeading: { flex: 1, minWidth: 0, gap: tokens.spacing.xs },
+  sourceTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  optionalLabel: { color: tokens.colors.textSecondary, fontWeight: '400' },
+  sourceSummary: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  sourceDetails: { paddingBottom: tokens.spacing.md, gap: tokens.spacing.xs },
   sourceInfo: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginBottom: tokens.spacing.md },
   sourceChoice: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   checkbox: { width: tokens.size.touchMin / 2, height: tokens.size.touchMin / 2, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, alignItems: 'center', justifyContent: 'center' },
   checkboxSelected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.primary },
   checkboxMark: { ...tokens.typography.label, color: tokens.colors.onPrimary },
   sourceChoiceText: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1, minWidth: 0, flexShrink: 1 },
-  removeCode: { minHeight: tokens.size.touchMin, justifyContent: 'center', alignSelf: 'flex-start' },
-  removeCodeText: { ...tokens.typography.label, color: tokens.colors.danger },
+  infoEntry: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, marginBottom: tokens.spacing.xs },
+  infoEntryText: { ...tokens.typography.caption, color: tokens.colors.primary },
+  infoBody: { ...tokens.typography.body, color: tokens.colors.textPrimary },
+  dialogCopy: { ...tokens.typography.body, color: tokens.colors.textSecondary },
 });

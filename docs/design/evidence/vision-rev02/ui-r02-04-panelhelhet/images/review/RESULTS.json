@@ -1,0 +1,223 @@
+{
+  "mode": "review",
+  "panel": "image-diversity",
+  "evidence_dir": "docs/design/evidence/vision-rev02/ui-r02-04-panelhelhet/images/review",
+  "results": [
+    {
+      "check": "Knowledge maps three stable guide identities to three different visible photos at 375px",
+      "result": "PASS",
+      "image_sources": [
+        "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+        "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+        "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg"
+      ],
+      "image_boxes": [
+        {
+          "x": 25,
+          "y": 469.8125,
+          "width": 155.5,
+          "height": 116.625
+        },
+        {
+          "x": 25,
+          "y": 205,
+          "width": 325,
+          "height": 182.8125
+        },
+        {
+          "x": 194.5,
+          "y": 469.8125,
+          "width": 155.5,
+          "height": 116.625
+        }
+      ]
+    },
+    {
+      "check": "Knowledge image crops use the current 16:9 hero and 4:3 guide aspect ratios at 375px",
+      "result": "PASS",
+      "image_boxes": [
+        {
+          "x": 25,
+          "y": 469.8125,
+          "width": 155.5,
+          "height": 116.625
+        },
+        {
+          "x": 25,
+          "y": 205,
+          "width": 325,
+          "height": 182.8125
+        },
+        {
+          "x": 194.5,
+          "y": 469.8125,
+          "width": 155.5,
+          "height": 116.625
+        }
+      ]
+    },
+    {
+      "check": "Knowledge guide search and the selected bottom destination remain visible at 375px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Knowledge maps three stable guide identities to three different visible photos at 430px",
+      "result": "PASS",
+      "image_sources": [
+        "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+        "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+        "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg"
+      ],
+      "image_boxes": [
+        {
+          "x": 25,
+          "y": 500.75,
+          "width": 183,
+          "height": 137.25
+        },
+        {
+          "x": 25,
+          "y": 205,
+          "width": 380,
+          "height": 213.75
+        },
+        {
+          "x": 222,
+          "y": 500.75,
+          "width": 183,
+          "height": 137.25
+        }
+      ]
+    },
+    {
+      "check": "Knowledge image crops use the current 16:9 hero and 4:3 guide aspect ratios at 430px",
+      "result": "PASS",
+      "image_boxes": [
+        {
+          "x": 25,
+          "y": 500.75,
+          "width": 183,
+          "height": 137.25
+        },
+        {
+          "x": 25,
+          "y": 205,
+          "width": 380,
+          "height": 213.75
+        },
+        {
+          "x": 222,
+          "y": 500.75,
+          "width": 183,
+          "height": 137.25
+        }
+      ]
+    },
+    {
+      "check": "Knowledge guide search and the selected bottom destination remain visible at 430px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Home knowledge recommendation opens its exact guide identity",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Training continuation uses the Corgi photo and planned 88pt crop",
+      "result": "PASS",
+      "training_source": "./training-next-step-puppy-corgi-home-6FI7SV6Y.jpg",
+      "training_image": {
+        "x": 37,
+        "y": 632.75,
+        "width": 88,
+        "height": 88
+      }
+    },
+    {
+      "check": "Home recommendation and Training continuation use the same next-exercise title",
+      "result": "PASS"
+    },
+    {
+      "check": "Training continuation still opens the same in-progress exercise",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Training continuation has a square 88pt image and clear navigation at 375px",
+      "result": "PASS",
+      "image": {
+        "x": 37,
+        "y": 632.75,
+        "width": 88,
+        "height": 88
+      },
+      "bottom_nav": {
+        "x": 0,
+        "y": 783,
+        "width": 375,
+        "height": 59
+      },
+      "page_errors": []
+    },
+    {
+      "check": "Training continuation has a square 88pt image and clear navigation at 430px",
+      "result": "PASS",
+      "image": {
+        "x": 37,
+        "y": 674,
+        "width": 88,
+        "height": 88
+      },
+      "bottom_nav": {
+        "x": 0,
+        "y": 783,
+        "width": 430,
+        "height": 59
+      },
+      "page_errors": []
+    },
+    {
+      "check": "Knowledge crop is reachable without covering the bottom menu at 375×667",
+      "result": "PASS",
+      "image": {
+        "x": 194.5,
+        "y": 393.8125,
+        "width": 155.5,
+        "height": 116.625
+      },
+      "bottom_nav": {
+        "x": 0,
+        "y": 606,
+        "width": 375,
+        "height": 59
+      }
+    },
+    {
+      "check": "Knowledge has no horizontal overflow with 140% text proxy",
+      "result": "PASS"
+    },
+    {
+      "check": "Training crop is reachable without covering the bottom menu at 375×667",
+      "result": "PASS",
+      "image": {
+        "x": 37,
+        "y": 468.75,
+        "width": 88,
+        "height": 88
+      },
+      "bottom_nav": {
+        "x": 0,
+        "y": 606,
+        "width": 375,
+        "height": 59
+      }
+    },
+    {
+      "check": "Training has no horizontal overflow with 140% text proxy",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}

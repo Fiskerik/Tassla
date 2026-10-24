@@ -58,20 +58,14 @@ test('recommended timeout uses positive finite values and a five-second fallback
   assert.equal(feedbackTimeoutMillis(0), 5000);
 });
 
-test('saved-plan action menu labels and dispatch callbacks match the confirmation flow', () => {
-  const buildButtons = compileFunctions(['buildPlannedHealthActionButtons']).buildPlannedHealthActionButtons;
-  const calls = [];
-  const buttons = buildButtons(() => calls.push('edit'), () => calls.push('delete'));
-  assert.deepEqual(buttons.map(({ text }) => text), ['Ändra', 'Ta bort', 'Avbryt']);
-  buttons[0].onPress();
-  buttons[1].onPress();
-  assert.deepEqual(calls, ['edit', 'delete']);
-  assert.equal(buttons[2].onPress, undefined, 'cancel closes the native alert without mutation');
-  assert.match(screenSource, /accessibilityLabel=\{`Åtgärder för \$\{typeLabel\(record\.event_type\)\} \$\{record\.due_on\}`\}/);
-  assert.match(screenSource, /accessibilityState=\{\{ disabled: blocked \}\} disabled=\{blocked\}/);
-  assert.match(screenSource, /Alert\.alert\('Åtgärder',[\s\S]*buildPlannedHealthActionButtons/);
-  assert.match(screenSource, /\(\) => \{ if \(!blocked\) confirmDelete\(record\); \}/);
-  assert.match(screenSource, /Alert\.alert\('Ta bort plan\?'/);
+test('saved plans use compact contextual edit and delete controls with named confirmation', () => {
+  assert.match(screenSource, /<Button variant="icon" iconName="create-outline" label="Ändra"/);
+  assert.match(screenSource, /<Button variant="icon" label="Radera" iconName="trash-outline"/);
+  assert.match(screenSource, /accessibilityLabel=\{`Radera \$\{typeLabel\(record\.event_type\)\.toLocaleLowerCase\('sv-SE'\)\} \$\{record\.due_on\}`\}/);
+  assert.match(screenSource, /onRequestClose=\{\(\) => setDeleteTarget\(null\)\}/);
+  assert.match(screenSource, /<Dialog visible=\{Boolean\(deleteTarget\)\} title="Ta bort plan\?" confirmLabel="Ta bort"/);
+  assert.match(screenSource, /onConfirm=\{\(\) => \{ if \(deleteTarget\) void deleteRecord\(deleteTarget\); \}\}/);
+  assert.match(screenSource, /\$\{typeLabel\(deleteTarget\.event_type\)\} · \$\{deleteTarget\.due_on\} tas bort från planerna\./);
 });
 
 test('reminder display omits an unset off reminder and labels any stored time explicitly', () => {
@@ -90,8 +84,8 @@ test('recovery priority and source render matrix expose exactly one action per s
   assert.equal(selectPlannedHealthRecovery({ conflict: false, pending: true, statusError: true, loadError: true }), 'pending');
   assert.equal(selectPlannedHealthRecovery({ conflict: false, pending: false, statusError: true, loadError: true }), 'error');
   assert.equal(selectPlannedHealthRecovery({ conflict: false, pending: false, statusError: false, loadError: false }), null);
-  assert.equal((screenSource.match(/title="Försök igen"/g) ?? []).length, 1);
-  assert.equal((screenSource.match(/title="Kontrollera sparstatus"/g) ?? []).length, 1);
+  assert.equal((screenSource.match(/recovery === 'pending'/g) ?? []).length, 1);
+  assert.equal((screenSource.match(/recovery === 'error'/g) ?? []).length, 1);
   assert.equal((screenSource.match(/recovery === 'conflict'/g) ?? []).length, 1);
   assert.match(screenSource, /loadState === 'error'/);
   assert.match(screenSource, /pending \|\| statusError/);
@@ -103,7 +97,8 @@ test('recovery priority and source render matrix expose exactly one action per s
   assert.match(screenSource, /normalized === previousStatusMessage\.current/);
   assert.match(screenSource, /dispatchFeedback\(\{ type: 'info-closed' \}\)/);
   assert.doesNotMatch(workspaceSource, /<PlannedHealthScreen\s+key=/);
-  assert.match(screenSource, /if \(editingId === null \|\| editingRecord !== null\) return;/);
+  assert.match(screenSource, /if \(!healthFocusActive \|\| healthFocusPlanId !== null \|\| loadState !== 'ready'\) return;/);
+  assert.match(screenSource, /if \(!editorRecovery \|\| \(editorRecovery\.id && !recoveryRecord\)\) return;/);
   assert.match(screenSource, /if \(await onSave[\s\S]*?\) resetForm\(\)/);
   assert.match(screenSource, /if \(await onDelete[\s\S]*?\) resetForm\(\)/);
   assert.match(screenSource, /function acceptConflict\(\)[\s\S]*?resetForm\(\)/);

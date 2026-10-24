@@ -1,0 +1,100 @@
+# UI-R02-03 — Logg och Hälsa: kompakta och tydliga formulär
+
+Datum: 2026-10-23. Plan v3. Branch: `2026-10-23-ui-03-logg-halsa`. Mandat: Eriks uttryckliga beställning att fortsätta actionplanen i ordningen 02 → 03 → 04. UI-R02-02 (`3973ffe`, följd av dokumentcheckpoint `4f91364`) är pushat på `2026-10-23-ui-02-checklistor`. Aktuell referens är `vision_rev02.jpg`, panel 5 Logga och den aktuella stödresan Hälsa. Äldre UI/kod från före 16 oktober används inte.
+
+UX-spec: [UI-R02-03-logg-halsa-ux-spec.md](../../plans/UI-R02-03-logg-halsa-ux-spec.md). Actionplan §5; GAP G04/G06/G09/G10/G11/G13/G16/G19.
+
+## Mål och risk
+
+Rätta en logg- eller hälsopost utan en vägg av knappar, nå Spara med tangentbordet öppet och förstå vad en borttagning gör. Öppna exakt vald hälsoplan och återvänd till samma flik och scrollposition. Behåll skilda betydelser och befintliga skriv-/återställningskontrakt. Risk **H** på grund av hälsodata, scope, radering och route-state. Planen ändrar inte datamodell, ändamål, RLS, RPC, fält eller skrivkontrakt.
+
+## Resor och konkret UI-kontrakt
+
+1. **Logg — ändra/radera.** Tidslinjeraden öppnar befintligt `BottomSheet` med en rubrik och fast Spara-footer. Ta bort fullstora formulärknapparna Avbryt/Radera. X/backdrop/swipe/Android-back går genom en gemensam close-handler: clean stänger, dirty frågar om utkastet ska kastas. Soptunnan öppnar objektnamngiven bekräftelse; mutationen sker först efter bekräftat Radera och använder exakt befintlig event-ID, hund/type-scope och snapshot/undo. Snabbval, Fler, kalender, lokal tid/dag, dublettskydd och undo förblir oförändrade.
+2. **Hälsa — utförd händelse.** Behåll befintligt sheet; ta bort inre formulärkort/dubbla rubriker och fullstora Avbryt/Radera-knappar. Samma fältfamilj och en fast Spara-footer. Historikradering startar först från objektspecifik dialog och använder befintlig villkorad mutation/preimage.
+3. **Hälsa — vikt.** Add/edit öppnas i samma befintliga `BottomSheet`-editor ovanpå viktsidan; endast formuläret flyttas till sheet, medan lista, status, återhämtning och sidans Back stannar på sidan. Ingen konkurrerande inline-editor. En fast Spara-footer; radering via ikon plus bekräftelse och befintlig exakt `dog_id + event_type + id`-gräns/återkontroll.
+4. **Hälsa — plan.** Add/edit öppnas i `BottomSheet` ovanpå plansidan; lista, tom-/fel-/statusvy stannar kvar på sidan. Fokuserad befintlig plan nämns i första meningsfulla viewporten med typ/namn, datum, status och tydlig Ändra-handling. Ingen tom create-form visas automatiskt när en befintlig plan är fokuserad. Create öppnas endast från **Planera en händelse/Ny plan**, med tomt formulär. Planradering använder dialogens exakt bekräftade plan-ID och befintlig preimage/CAS-mutation.
+5. **Dirty/återhämtning.** Varje editor rapporterar mot sina faktiska startvärden (inte `canSave`) om fälten ändrats och sin mutationstatus till ägarens sheet-close-handler. Samma handler gäller X, backdrop, swipe och Android modal-back. Clean stänger direkt; dirty öppnar discard-dialog. Ett aktivt skrivsteg (`busy`) får tillfälligt hindra stängning medan befintlig mutation körs. När utfallet är `pending/unknown` eller konflikt ska användaren kunna **minimera** sheetet till ägarsidan utan att avbryta, rensa eller duplicera mutation/intention. Ägarsidan visar då en återhämtningsrad med Kontrollera status/Granska och Öppna; den öppnar exakt samma editor med råa fältvärden, intent och tillhörande recovery-context kvar. Utkast ägs i en smal in-memory state i `ProductWorkspace` ovanför villkorligt monterade routes/editors; ingen generell draft manager, persistent UI-draft eller note-text i route state. Återhämtningssnapshot nycklas på `{owner/accountGeneration, selectionKey, dogId, relevant lifetime, editor kind, object ID}`. Den ska överleva navigering bort/tillbaka inom samma aktiva scope och vara single-flight. Konto-/hund-/scopebyte invalidierar dess presentation och får aldrig föra utkast/fokus till ny scope; befintlig pending intent förblir scopebunden enligt dess befintliga recovery-kontrakt och återanvänds inte. Late response, retry, mark-saved och cleanup måste kontrollera samma scope/lifetime innan de uppdaterar editor eller recovery row. Failed behåller formulärvärden och befintlig retry-väg. Close/minimize får aldrig skapa en andra mutation eller påstå lyckat resultat. Konfliktens befintliga resolve/retry väg finns kvar.
+6. **Radering.** Soptunnan öppnar endast dialog. Dialogen namnger posttyp och datum där det finns; Cancel ändrar inget och lämnar editorn/fokus kvar. Endast bekräftad knapp kör befintlig mutation med exakt objekt-ID och dess befintliga villkor: preimage/CAS där kontraktet har det, annars befintlig exakt scope/readback. Ingen optimistisk lokal listborttagning eller direkt ikonmutation. Vikt behåller `dog_id + event_type='weight' + id` samt readback; workspace-data/adapter ändras inte.
+7. **Keyboard.** Decimal-pad-vikt ska kunna avslutas och sparas utan att Spara täcks. Return i multiline-anteckning skapar ny rad och sparar/stänger inte. X och Spara ska nås vid 375×667 och 140 % textproxy. Verkligt native-resultat redovisas separat eller `NOT TESTABLE`.
+
+## Route- och datagräns: Hälsa → namngiven plan → Hälsa
+
+- Exportera en smal `HealthTab` för `Översikt | Vaccinationer | Veterinär | Vikt`. `ProductWorkspace` äger vald flik och skickar den till `HealthScreen`, eftersom sidan avmonteras när plansidan öppnas. Vikt-returens befintliga mål är Översikt; namngivna planer kan öppnas från Översikt/Vaccinationer/Veterinär.
+- Dela callbacks: `onOpenPlannedHealth(planId, returnTab)` för en namngiven rad och `onCreatePlannedHealth(returnTab)` för create. Create sätter explicit `planId: null` och rensar gammalt planfokus före navigation.
+- Checklistans `plannedHealthChecklistFocus` och dess fetch/retur lämnas orörda. Hälsa får separat in-memory focus-state med minst `{ selectionKey, plannedHealthLifetime, planId: string | null, returnTab, returnScrollKey }`; den innehåller aldrig note/text eller ett långlivat, oscopeat record-kopia. Scrollflödet: Hälsa `{scrollKey: 'health-flow', preserveScrollKey: 'health-flow'}`; Hälsa→plan `{scrollKey: 'planned-health-health-source', preserveScrollKey: 'health-flow'}`. Checklist-origin behåller nuvarande `planned-health-checklist-source` → `home-checklist-flow`.
+- Namngivet ID visas ur en aktuell `plannedHealthRows`-snapshot med matchande selection/lifetime; ingen ny fetch/datamodell krävs Hälsa-ingången för befintliga aktuella listposter. Checklist-origin behåller befintlig hundscopad `fetchPlannedHealthById(client, dog.id, planId)`.
+- Om Hälsa-post saknas efter reload visas missing/error för exakt ID eller återgång till Hälsa med begriplig status; aldrig första/närmaste plan som fallback. Konto/hundbyte, account invalidation, `plannedHealthLifetime`-byte och escape till huvudtab invaliderar fokus och avbryter olämplig läsning. Route-ID är aldrig auktorisering; alla data/mutationer förblir aktiva hundscopade.
+- Exakt plan A/B (även visuellt lika poster) öppnar rätt post och Ändra går till dess editor utan tyst create/prefill. Retur återställer ursprunglig flik och verklig icke-noll scroll. En sparad/raderad plan blir inte utförd historik: navigation/fokus anropar inte `saveHealthHistory`, skapar inte `dog_events` och markerar aldrig plan som genomförd.
+
+## Interna checkpoints
+
+1. Logg editor och radering; kör snabbval/kalender/undo-regression.
+2. Utförd hälsa och vikt editors, inklusive keyboard och recovery.
+3. Plan create/edit/focus/retur och exakt scoping; bekräfta A03 Checklistor→Kommande→exakt plan→Checklistor är byte-for-behavior unchanged.
+4. Public/review render och paketets slut-QA/Reviewer/Security på fryst diff.
+
+## Acceptans och kontroller
+
+- Alla fyra editorn (Logg, utförd händelse, vikt, plan) har konsekvent kompakt rubrik/fält/footer/action-familj; vikten och planen använder `BottomSheet`, utan att lägga formulär i BottomNav-footer eller införa global draft manager.
+- Clean/dirty X, backdrop, swipe, Android-back; save/delete confirm/cancel; failed/pending/unknown/conflict; minimera och öppna samma draft igen efter unknown/conflict; create efter tidigare planfokus; saknad plan; scope/lifetime-byte; sen async response; exakt plan A/B; ingen plan→history mutation. Täckt av riktade tester/verifierare.
+- Public/review RN Web-render vid 375×667, 375×844, 430×844 och 140 % textproxy. Full Panel 5 §14-acceptans redovisas separat; komponentrender är inte panelgodkännande.
+- Kör riktade tests, `pnpm check`, iOS JS export/content guard, visual verifiers, `git diff --check` och queue validation enligt köpost. Ingen live-/native-/TestFlight-pass hävdas utan faktisk körning.
+- Ägarens tidigare generella besked om Supabase/RLS och native VoiceOver/Dynamic Type är ägarrapporter, inte ny verifiering av dessa specifika resor. Om verklig native-körning saknas anges `NOT TESTABLE`.
+
+## Skyddat scope
+
+Ingen schema-/adapter-/RLS-/RPC-/eventmodell-/notifierings-/datainsamlingsändring, ingen ny hälsotext/rådgivning och inga dependencies. Bevara datumregler (utfört/vikt ej framtida; plan tillåter framtid), immutable historiktyp där befintligt kontrakt kräver det, befintligt CAS/readback/request-ID/confirmed-vs-unknown, separata planerade/utförda tabeller samt A03, 01B och Panel 8-beteende. `FLOW-LOG-01` och `FLOW-INSIGHTS-01` är parkerade; den här tasken återupptar inte deras bredare scope.
+
+Tillåtna skrivytor är de i queue `UI-R02-03`: de fyra skärmarna Logg/Hälsa, `ProductWorkspace.tsx`, `main-navigation.ts`, de fem riktade testerna samt befintliga regressionskontroller för Checklistor→plan, feedback och kontextuella radhandlingar, befintlig visual-check harness plus den planerade hälsaverifieraren/evidensmappen, modulguider samt task/UX/actionplan/queue/rapport/master-log/release history. De tre tillagda testfilerna uppdateras endast från inaktuella källmönster till det aktuella godkända UI-/routekontraktet; ingen äldre UI-komposition återinförs. Ingen annan kod/data-surface utan ny review.
+
+## Planreview (plan v1 → v3)
+
+- **Architect v1:** CHANGES. Krävde faktiska BottomSheet editors, dirty-state bridge, separata callbacks, flikstate i workspace, separat scoped health focus, explicita scrollnycklar, exakt missing/focus/create-beteende och en oförändrad checklistretur.
+- **UX Critic v1:** PROCEED WITH CHANGES. Krävde en entydig editor, synlig fokuserad plan med namn/datum/status/Ändra i första vyn samt konkret keyboard acceptance.
+- **Security v1:** CHANGES. Krävde scope/lifetime invalidation, create `planId: null`, missing/error utan fallback, bekräftelse bundet till exakt ID/preimage, pending/unknown exit-regler och tester som bevisar att plan aldrig blir utförd historik.
+- **Architect v2:** APPROVE; angav att viktens radering använder exakt scope + readback, inte preimage/CAS. Tasken är korrigerad till befintligt kontrakt och `workspace-data.ts` är uttryckligen utanför scope.
+- **Security v2:** APPROVE.
+- **UX Critic v2:** PROCEED WITH CHANGES; identifierade risk att unknown/conflict låser användaren i sheetet. Plan v3 låter användaren minimera när mutationen inte längre aktivt kör, behåller draft/intent i in-memory ägarstate och visar en återhämtningsrad som öppnar samma editor.
+- **Architect v3:** APPROVE; befintliga modal-/route-unmounts kräver recovery state ovanför skärmarna. Specifika krav är råa fältvärden, owner/accountGeneration/dog/lifetime/editor/ID scope key, weight late-response/lifetime fencing och switch-away/back inom samma scope. Viktadapter/datafil hålls oförändrade.
+- **UX Critic v3:** PASS.
+- **Security v3:** APPROVE; slutdiffen ska verifiera scope key, scopebyte, minimera/återöppna, sen async, upprepade actions och cleanup.
+- Inga reviewblockerare återstår. Queue kan gå vidare till `ready` och därefter `implementing`; plan v3 är fryst.
+
+Efter v3-review: Architect `APPROVE`, Critic `PASS`, Security `APPROVE` och queue-övergång `planned → ready → implementing` är uppfyllda. Alla implementationer måste följa ovanstående scope/draft ownership; en ny ändring av godkänt scope kräver förnyad review.
+
+## Implementationscheckpoint — 2026-10-23
+
+**Status:** kod- och lokal renderkontroll klar; skickad till oberoende QA/Reviewer. Det här är inte ett påstående om extern QA eller full §14-panelacceptans.
+
+- Loggredigering har en fast Spara-footer, kontextuell soptunna med namngiven bekräftelse och dirty-close-skydd. Fel behåller formulärvärden; pending/unknown kan minimeras och återöppnas via samma scope-bundna återhämtningsflöde.
+- Utförd hälsa, vikt och plan använder samma BottomSheet-editormönster ovanpå respektive sida. Viktsidan behåller historiklistan/statusen. Radering kräver bekräftelse; viktens befintliga exakt-scope/readback-kontrakt är oförändrat.
+- Hälsa → namngiven plan skickar exakt plan-ID och returflik/scroll. Create är ett uttryckligt tomt create-flöde; saknat fokus-ID får ingen fallback. Checklistors A03 planhämtning/retur är lämnad oförändrad.
+- Workspace äger utkast/recovery över route-unmount och nycklar presentationen på ägare, kontogeneration, hund/urval och datalivstid. Schemamodell, adapter, RPC/RLS och persistensformat har inte ändrats.
+- Public/review Loggverifiering: 13/13 vardera. Kalenderavstånd: 20,4/27,9/55,4 px vid 360/375/430 px; vald dagruta 44,56×44 px; 32 px bottenmarginal vid 360×844; gråskala och 140 %-proxy utan horisontell overflow.
+- Public/review Hälsaformulärverifiering: 6/6 vardera; vikt Spara och planens fasta footer nås vid 375×667, 375×844 och 430×844, inklusive 140 %-textproxy. Evidens ligger i `docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/{log,health}/{public,review}/`.
+- Riktade testfall, full `pnpm check`, public iOS JavaScript-export/content guard, `git diff --check` och `python -X utf8 tools/dev_flow.py validate` ska vara uppdaterade efter slutlig commit och listas med exakt resultat i rapport/releasehistorik.
+
+**Öppna grindar:** ingen ny live Supabase/RLS/migrationskontroll; ingen native tangentbords-/VoiceOver/Dynamic Type-omkörning; ingen installerad/TestFlight-build. Eriks tidigare generella godkännanden står kvar enligt actionplanens avgränsning och ersätts inte av den syntetiska RN Web-fixturen. Full Panel 5 §14 och oberoende QA/Reviewer är separata grindar.
+
+**Första nästa steg:** oberoende QA granskar fryst implementationsdiff och sparad public/review-evidens. UI-R02-04 kan planeras separat på en egen branch; om 03 ännu inte är integrerat dokumenteras 04 som staplat ovanpå denna branch.
+
+## Skills och beslut
+
+### Avgränsad QA-korrigering 2026-10-23
+
+QA:s två övergångsbilder tas om efter 450 ms stabilisering. Hälsaverifieraren provar dessutom exakt plan från Översikt/Veterinär, faktisk icke-noll scrollretur och tom create efter tidigare planfokus. Den första interaktiva körningen gav 8/8 per public/review men visade att sidans stora förklaringsytor skjuter Ändra utanför den användbara första vyn.
+
+Korrigeringen ligger inom befintlig `PlannedHealthScreen.tsx`: Back → kompakt titelrad med 44 pt infoikon → kort synlig status ”Planerad – inte genomförd” → exakt fokuserad plan → generell påminnelsestatus och övrig sida. Befintlig förklaring samlas i samma InfoModal. Verkliga loading/missing/pending/conflict-fall behåller prioritet. Inga route-, data-, callback-, mutations- eller adapterändringar.
+
+Architect: CHANGES med ovanstående ordningskrav, därefter uttryckligt godkänd korrigering utan ny bred review. UX Critic: PROCEED. Ny render använder realistisk icke-tom `reminderSummary`, kontrollerar hela Ändra-ytan innanför scrollviewporten vid 375×667 och 140 % text, infoinnehåll och återgång. Oberoende QA/Reviewer återstår efter korrigeringen.
+
+Följda: `tassla-consumer-ux`, `mobile-ios-design`, `docs/design-rules.md`, `docs/dev/ui-and-code-standards.md`. Inom befintligt mandat väljs en BottomSheet per editor, ett bekräftat soptunneflöde och in-memory route-state. Nya ändamål, fält, retention, analytics, notifiering eller medicinska påståenden ingår inte.
+
+### Reviewer-korrigering: viktåterhämtning
+
+Reviewer BLOCK: efter unknown viktändring och minimering lämnade bekräftad readback en dold recovery som låste Lägg till vikt. Architect APPROVE: markHealthMutationSaved rensar bara matchande full scope/lifetime och draft-ID (null för insert, exakt ID för update/delete), efter mounted/lifetime-guard. Fel scope, annat objekt och gammal lifetime lämnas orört. Health-origin rensar även gammalt Checklist-origin-fokus symmetriskt. Faktiska handler-tester samt browserresan unknown delete → minimera → readback → tillgänglig Lägg till vikt krävs, därefter ny QA/Reviewer/Security. Inga adapter-, callback- eller dataändringar.
+
+### Slutlig lokal checkpoint
+
+QA PASS efter återhämtningskorrigeringen; Reviewer PASS (tidigare blockerare löst) och Security APPROVE för fryst källa. Full pnpm check: 76/76, Hälsa public/review: 9/9 vardera, direkt offentlig iOS JS-export och content guard PASS. Handler-tester kör verkliga transpilierade workspace-funktioner; browserns återhämtningsresa använder syntetiska callbacks med verklig WeightScreen. Full Panel 5, live databas och native/signerad build är separata och stängs inte av denna lokala checkpoint. Efter durable commit fortsätter UI-R02-04.

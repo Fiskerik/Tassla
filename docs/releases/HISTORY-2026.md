@@ -642,3 +642,23 @@ Full Panel 5-acceptans är fortsatt partiell: `Översikt`-fliken kräver den fun
 ### UI-korrigering — Logga och Dagens framsteg, 2026-10-22
 
 Loggas kalenderikon har nu minst 20,4 px avstånd från centrerad datumtext vid 360 px; public/review-rendering 13/13 vardera vid 360/375/430. Panel 3 använder en slät sammanhängande `react-native-svg`-ring med subtil grön toning, och Miljöträning har en synlig 24 pt bock i en 24 pt cirkel. Panel-specifik progress-rendering 2/2 public och 15/15 review. `CI=1 pnpm check` PASS: 665/666 tester (1 skip), typechecks och ESLint. Public iOS export PASS, 1 577 JS-moduler. Ny iOS-appbuild krävs före test av SVG:n i native; panel-3 oberoende QA/Reviewer återstår.
+
+
+## UI-R02-02 — gemensamma checklistikoner och kompakt redigering, 2026-10-23
+
+Rutin- och Kunskapspunkter använder samma 20-symbolsval; egen punktens ikon går genom skrivning/readback och redigeringsflöde. Editorerna har en Spara-footer och bekräftad ikonbaserad radering. Oberoende QA och Reviewer PASS för den lokala kodcheckpointen; public/review rutinrender 16/16 vardera, Kunskap 7/7, `pnpm check` 75/75 och public iOS JS-export 1 585 moduler PASS. Implementationscommit `3973ffe` är pushad till `origin/2026-10-23-ui-02-checklistor`; push-hooken körde full check med 704 PASS, 0 FAIL, 1 skip av 705 tester.
+
+Öppet: migration `202610230001_checklist_custom_item_icons.sql`/SQL-prob mot riktig databas, live RLS/readback, full panel 4/7 §14 och native/TestFlight. Den äldre breda Knowledge-verifieraren väntar på en route som saknas i sin fixtur och är NOT TESTABLE; den lämnades oförändrad och ersätts för den ändrade resan av det riktade provet. [Evidens](../design/evidence/vision-rev02/ui-r02-02-checklists/README.md).
+
+## UI-R02-03 — Logg och Hälsa, implementation-checkpoint, 2026-10-23
+
+Logg, utförd hälsa, vikt och plan redigeras i kompakta BottomSheets med en fast Spara-footer, dirty-close-skydd och ikonbaserad radering med objektspecifik bekräftelse. Hälsa bevarar exakt plan-ID, returflik och scroll. Recovery-utkast hålls i workspace inom konto-/hund-/lifetime-scope; befintlig datamodell, adapter och mutationskontrakt är oförändrade.
+
+Public/review RN Web-kontroller PASS: Logg 13/13 och Hälsaformulär 6/6 vardera. `pnpm check` PASS (75/75 tester); public iOS JS-export PASS (1 585 moduler), public release content guard, kö- och diff-validering PASS. RN Web-evidens: [UI-R02-03](../design/evidence/vision-rev02/ui-r02-03-logg-halsa/).
+
+Detta är lokal implementationsevidens. Oberoende QA/Reviewer, full Panel 5 §14, live Supabase/RLS, native keyboard/accessibility och signerad/TestFlight-build återstår eller har inte körts i denna session.
+
+
+## UI-R02-03 / UI-R02-04 — GAP-planen 23 oktober, leveransförberedd 24 oktober
+
+UI03: `13f48bf` pushad till `2026-10-23-ui-03-logg-halsa`, lokal QA/Reviewer/Security klar. UI04:s samlade kod ligger på `2026-10-23-ui-04-panelhelhet` ovanpå 01–03. Lokalt v7-godkännande: QA PASS, Reviewer PASS, Security APPROVE; fullcheck76/76 och offentlig iOS JS-export1585 PASS. Kunskap/Träning/Insikter/Påminnelser samordnade, knapp-/menytillägg och två verkliga modal/resetregressioner rättade. G01–G19 och kvarvarande D1/D2/D3/D5 samt telefonlista finns i actionplanens §12 och paketets VERIFICATION.md. Ingen ny signerad build eller mainmerge gjord av denna checkpoint. Kodcommit `fe1c834f9ff99c6ba19ab9e269406195d3ae7b0e` pushad till `origin/2026-10-23-ui-04-panelhelhet` 2026-10-24; fulla commit-/push-checkar PASS.

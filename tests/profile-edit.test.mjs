@@ -77,6 +77,32 @@ test('invalid name, date, or unknown breed fails before the SDK request', async 
   } finally { await client.auth.dispose(); }
 });
 
+test('a profile update may preserve its unchanged breed id when that id is missing from the loaded catalog', async () => {
+  const previous = { ...profile, breed_id: 'retired-catalog-id' };
+  const desiredLegacy = { ...previous, name: 'Nala Rose', birth_date: '2026-02-15', age_display_unit: 'months' };
+  const { client, requests } = localClient(({ method, url, body }) => {
+    assert.equal(method, 'PATCH');
+    assert.equal(url.searchParams.get('id'), `eq.${dogId}`);
+    assert.equal(url.searchParams.get('breed_id'), 'eq.retired-catalog-id');
+    assert.deepEqual(body, { name: 'Nala Rose', breed_id: 'retired-catalog-id', birth_date: '2026-02-15', age_display_unit: 'months' });
+    return jsonResponse(desiredLegacy);
+  });
+  try {
+    const outcome = await appData.updateOwnedDog(client, dogId, previous, { ...changes, breed_id: previous.breed_id }, breeds);
+    assert.deepEqual(outcome, { status: 'saved', value: desiredLegacy });
+    assert.equal(requests.length, 1);
+  } finally { await client.auth.dispose(); }
+});
+
+test('a profile with a missing current breed cannot change to a different unknown id', async () => {
+  const previous = { ...profile, breed_id: 'retired-catalog-id' };
+  const { client, requests } = localClient(() => { throw new Error('validation must prevent a request'); });
+  try {
+    assert.deepEqual(await appData.updateOwnedDog(client, dogId, previous, { ...changes, breed_id: 'another-unknown-id' }, breeds), { status: 'failed' });
+    assert.equal(requests.length, 0);
+  } finally { await client.auth.dispose(); }
+});
+
 test('update filters the exact dog and all three captured preimage fields and sends only allowed values', async () => {
   const { client, requests } = localClient(({ method, url, body }) => {
     assert.equal(method, 'PATCH');

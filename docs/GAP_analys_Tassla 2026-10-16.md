@@ -1,5 +1,7 @@
 # Tassla – GAP-analys: MVP v2 mot GitHub
 
+> **HISTORISK — inte aktuell implementationslista, 2026-10-23.** Den här analysen gäller den angivna oktober-15-commiten och ett då föreslaget MVP v2. Aktuell rev02-granskning av UI, användarresor, knappar och modaler finns i [GAP-UI-UX-rev02-2026-10-23.md](GAP-UI-UX-rev02-2026-10-23.md). Äldre produktförslag blir inte godkända krav genom denna hänvisning. Ursprunglig analys bevaras nedan.
+
 **Datum för granskning:** 2026-10-15
 **Repository:** [Fiskerik/Tassla](https://github.com/Fiskerik/Tassla)
 **Granskad gren:** [`codex/life-periods-2026-10-15`](https://github.com/Fiskerik/Tassla/tree/codex/life-periods-2026-10-15)

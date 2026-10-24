@@ -1,0 +1,20 @@
+{
+  "passes": [
+    "Logga quick actions and Fler at 360px; calendar gap 20.4px and centered date",
+    "Logga quick actions and Fler at 375px; calendar gap 27.9px and centered date",
+    "Logga quick actions and Fler at 430px; calendar gap 55.4px and centered date",
+    "AppScreen scroll-bottom clearance with Fler open: 32.00px",
+    "140% text, grayscale and no horizontal overflow at 360x844",
+    "140% text, grayscale and no horizontal overflow at 375x844",
+    "140% text, grayscale and no horizontal overflow at 430x844",
+    "140% text, grayscale and no horizontal overflow at 375x667",
+    "Calendar markers state at 375px",
+    "Calendar empty state at 375px",
+    "Calendar loading state at 375px",
+    "Calendar error state at 375px",
+    "Rendered calendar day target at 360px: 44.56×44.00px"
+  ],
+  "pageErrors": [],
+  "reviewFixture": true,
+  "scope": "Production LogScreen in RN Web with synthetic data; not native, backend or RLS certification"
+}

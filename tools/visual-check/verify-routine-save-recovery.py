@@ -29,7 +29,7 @@ def open_editor(page, width: int, mode: str) -> None:
     page.goto(f'{BASE}/?screen=checklist&checklistCount=7&routineMutation={mode}')
     expect(page.get_by_test_id('daily-checklist-screen')).to_be_visible()
     if REVIEW:
-        expect(page.get_by_test_id('checklist-fixture-banner')).to_contain_text('Syntetiskt granskningsläge')
+        expect(page.get_by_test_id('checklist-fixture-banner')).to_contain_text('Granskningsläge')
     row = page.get_by_role('button', name='Öppna Rutin Morgonrutin, punkt Kissa', exact=True)
     row.scroll_into_view_if_needed()
     bounds = row.bounding_box()

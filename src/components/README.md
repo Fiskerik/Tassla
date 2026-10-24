@@ -43,3 +43,9 @@ Aktuella webbskärmbilder finns i `docs/design/UI-RESET`; native begränsningar 
 ## Uppdatering i AppScreen
 
 AppScreen kan ta emot en uppdateringscallback och ett refreshing-värde. Då skapas React Natives RefreshControl för dess ScrollView; utan callback visas ingen uppdateringsgest. ProductWorkspace kopplar in kontrollen bara på Hem och Logg och äger respektive laddningsstatus.
+
+## Gemensamma åtgärder och huvudmeny (UI-R02-04)
+
+`Button variant="icon"` ger 44×44 pt och kräver ett fullständigt `accessibilityLabel`. Radering använder `trash-outline`; den gemensamma knappen väljer automatiskt röd ikon och ram. Redigering använder `create-outline`, Ångra i `Toast` använder `arrow-undo-outline`. Bekräftelsedialoger behåller förklarande text och befintliga handlers. Minus betyder att ta bort från dagens urval, utan att radera rutinen.
+
+`BottomNav` visar fulla namn på en rad. Kolumnernas flex fördelar mer plats till Träning och Kunskap. Endast navigationsetiketterna begränsar textförstoring till 140 %, med fulla tillgängliga namn; sidinnehåll följer fortsatt systemets textstorlek. Browserkontrollen mäter verklig textbredd vid 320/375/430 pt och direkt 140 % text, inte bara zoom.

@@ -48,7 +48,7 @@ export function Toast({ visible, tone, message, onUndo, onRetry, onCancel, confi
   }
   const displayContent = visible ? currentContent : retainedContent;
   const action = displayContent.tone === 'success' && displayContent.onUndo
-    ? { label: 'Ångra', accessibilityLabel: `Ångra: ${displayContent.message}`, iconName: 'return-up-back-outline' as const, onPress: displayContent.onUndo, disabled: false }
+    ? { label: 'Ångra', accessibilityLabel: `Ångra: ${displayContent.message}`, iconName: 'arrow-undo-outline' as const, onPress: displayContent.onUndo, disabled: false }
     : (displayContent.tone === 'error' || displayContent.tone === 'uncertain')
       ? { label: 'Försök igen', accessibilityLabel: 'Försök igen', iconName: undefined, onPress: displayContent.onRetry ?? (() => undefined), disabled: !displayContent.onRetry }
       : undefined;

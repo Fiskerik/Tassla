@@ -54,14 +54,79 @@ TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:4173 TASSLA_UI_EVIDEN
 
 Bygg review i en separat katalog och kör en separat server för samma verifierare med `TASSLA_UI_REVIEW=true` och evidencekatalogen `.../home/review`. Reviewbilder är syntetisk UI-evidens. De verifierar inte native Dynamic Type/VoiceOver, live ägardata, Supabase/RLS eller betaacceptans.
 
-KNOW-02 har en separat entry/output och skriver till `docs/design/KNOW-02/evidence/`:
+### FLOW-INSIGHTS-01 — panel 8 och ingång från Hundprofil
+
+Samma harness kan öppna den faktiska `EditDogProfileScreen` och produktions-`LogScreen`/`InsightsScreen`. Public bygger tomma loggar; review bygger tydligt syntetiska antal och gles historik. URL-parametrarna `screen=profile`, `screen=insights&origin=profile`, `insightsState=loading|error|empty|ready` och `insightsPeriod=week|month|since_first_log` väljer vyn. Verifieraren provar profilens utkastsspärr, den gemensamma periodvyn, explicit retur till profilen, Idag/Översikt-retention, loading/error/empty, månadsglapp, senaste månaden, kort viewport och 140 % textproxy. Detta är RN Web- och syntetisk evidens. Den bekräftar inte live-RPC/RLS, migration i målmiljö, native VoiceOver/Dynamic Type eller sömnintervall.
+
+```sh
+TASSLA_UI_REVIEW=false TASSLA_UI_ENTRY=tools/visual-check/vision-r02-home-panels-app.tsx TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/panel7-insights/public node tools/visual-check/build.cjs
+python -m http.server 5203 --bind 127.0.0.1 --directory /tmp/tassla-preview/panel7-insights/public
+TASSLA_UI_PANEL=insights TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:5203 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/2026-10-21-home-panels-2-3-8/insights/public python tools/visual-check/verify-vision-r02-home-panels.py
+```
+
+Bygg en andra separat bundle med `TASSLA_UI_REVIEW=true`, servera på port 5204 och kör verifieraren med samma miljöflagga samt `.../insights/review` som evidence-katalog. Inspektera sparade vyer och registrera §14 i `insights/VERIFICATION.md`.
+
+### FLOW-PANELS-6-7 — bildvariation i aktiva Kunskap- och Träning-vyer
+
+Samma produktionsskärmar kan öppnas med `?screen=knowledge&imageFixture=knowledge` respektive `?screen=training&imageFixture=training`. Publicläge visar det ärliga tomläget; review innehåller tre tydligt märkta guidebilder och en syntetisk fortsättningsövning. Verifieraren mäter ID/version-bundna motiv, 200/132 pt Knowledge-bilder, Training-kortets 88×88 pt-bild, faktisk Home-navigering till rätt guide/steg, 375/430 px, 375×667 och 140 % CSS-textproxy. Hemmets aktiva `Just nu`-kort är textbaserat; den fristående gamla `HomeCarousel` är inte monterad och används inte som visuell evidens.
+
+Bygg public/review-var för sig med harness-kommandona ovan. Kör separat verifiering mot respektive server:
+
+```sh
+TASSLA_UI_PANEL=image-diversity TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:5203 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-r02/2026-10-21-panels-6-7-image-diversity/public python tools/visual-check/verify-vision-r02-home-panels.py
+TASSLA_UI_PANEL=image-diversity TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:5204 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-r02/2026-10-21-panels-6-7-image-diversity/review python tools/visual-check/verify-vision-r02-home-panels.py
+```
+
+RN Web och syntetiska callbacks verifierar inte native VoiceOver/Dynamic Type, live Supabase/RLS, migrering i målmiljön eller full panel-§14-acceptans.
+
+### UI-R02-01A — gemensam rasväljare i skapa/redigera profil
+
+Verifieraren renderar produktionsskärmarna `ProfileScreen` (`?screen=profile-create`) och `EditDogProfileScreen` (`?screen=profile`) med en lokal syntetisk raskatalog. Den provar att skapa saknar förvalt ras, att stängning bevarar nuvarande värde, sökning utan nätverksanrop per tecken, listscrollning, tomt resultat med befintlig `unknown`-post, fel och retry, gammalt ID som saknas, lång etikett, 375×667/375×844/430×844 samt 140 % textproxy. Reviewläget visar en banner för syntetiskt innehåll. Utdata och JSON finns i `docs/design/evidence/vision-rev02/ui-r02-01a-breed-picker/{public,review}/`.
+
+Bygg public/review separat med samma entry som Panel 2–8 ovan; kör sedan:
+
+```sh
+TASSLA_UI_PANEL=breed-picker TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:5211 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-01a-breed-picker/public python tools/visual-check/verify-vision-r02-home-panels.py
+TASSLA_UI_PANEL=breed-picker TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:5206 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-01a-breed-picker/review python tools/visual-check/verify-vision-r02-home-panels.py
+```
+
+RN Web-fixturen bekräftar inte fysisk tangentbordshantering, native VoiceOver/Dynamic Type, verklig `breeds`-katalog eller Supabase/RLS. `aria-checked` kontrolleras i webbrenderingen; native-radio semantics kräver separat iOS-verifiering.
+
+KNOW-02 har en separat entry/output och skriver normalt till `docs/design/KNOW-02/evidence/`. Nyare paket ska ange en task-specifik `TASSLA_UI_EVIDENCE`-katalog så historisk evidens inte skrivs över:
 
 ```sh
 TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_ENTRY=tools/visual-check/know02-app.tsx TASSLA_UI_OUTPUT=/tmp/tassla-preview/site/know02 TASSLA_UI_REVIEW=true node tools/visual-check/build.cjs
-python tools/visual-check/verify-know02.py
+TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-02-checklists/knowledge python tools/visual-check/verify-know02.py
 ```
 
 Browserklockan låses till 2026-10-11 kl. 15 UTC för reproducerbara loggtider. `?screen=log&mutation=failed` respektive `unsure` provar återhämtning utan backend. `?state=empty|loading|error` provar lästillstånd.
+
+### UI-R02-02 — egna faschecklistepunkter
+
+`verify-checklist-custom-icons.py` provar Kunskap → Checklistor i den syntetiska review-fixturen: ikonens 20 radioalternativ, 44 pt målytor, ingen horisontell overflow, nåbar Spara-footer på 375×667 / 375×844 / 430×844, ny ikon med readback, dirty-stängning och textad raderingsbekräftelse. Den här smalare kontrollen skriver separat evidens i `docs/design/evidence/vision-rev02/ui-r02-02-checklists/knowledge/` och lämnar äldre KNOW-02-material orört.
+
+```sh
+TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_ENTRY=tools/visual-check/know02-app.tsx TASSLA_UI_OUTPUT=/tmp/tassla-preview/ui-r02-02/know02 TASSLA_UI_REVIEW=true node tools/visual-check/build.cjs
+python -m http.server 4273 --bind 127.0.0.1 --directory /tmp/tassla-preview/ui-r02-02
+TASSLA_UI_BASE_URL=http://127.0.0.1:4273/know02/ TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-02-checklists/knowledge python tools/visual-check/verify-checklist-custom-icons.py
+```
+
+Synthetic browser evidence verifies the UI contract and mock row updates, not the new SQL migration, live RLS, native VoiceOver/Dynamic Type or TestFlight.
+
+### UI-R02-03 — Logg och Hälsa: editorflöden
+
+`verify-flow-log.py` kontrollerar den aktiva LogScreen i public/review: snabbval, Fler, kalenderavstånd och markerings-/tom-/laddnings-/felstatus, 360/375/430 px, 375×667 och 140 % CSS-textproxy. `verify-health-edit-forms.py` kontrollerar utförd hälsa, vikt samt plan create/edit: fast Spara-footer, dirty close, multiline Return, viktens decimalfält, raderingsavbryt och korta/fullängdsbredder. Båda använder samma produktionskomponenter men syntetiska callbacks/data. De verifierar inte live Supabase/RLS, native tangentbord, VoiceOver/Dynamic Type eller full Panel 5 §14-acceptans.
+
+Bygg produktionskomponentfixturen separat för public/review, servera respektive katalog och kör:
+
+```sh
+TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:4183 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/log/public python tools/visual-check/verify-flow-log.py
+TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:4184 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/log/review python tools/visual-check/verify-flow-log.py
+TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:4183 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/health/public python tools/visual-check/verify-health-edit-forms.py
+TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:4184 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-03-logg-halsa/health/review python tools/visual-check/verify-health-edit-forms.py
+```
+
+Appens viewports är 375×667, 375×844 och 430×844. Review-fixturens banner ligger utanför appytan och ökar bildens totala höjd. Capturekatalogerna innehåller JSON-resultat och skärmbilder; UI-/QA-checkpoints får inte beskrivas som en native eller live-backend verifiering.
 
 React Native Web-harnessen registrerar RN `Alert`-alternativen och kan anropa en vald callback via `window.__tasslaAlertActions`; detta verifierar menyvalens kopplade åtgärder, inte native Alert-visning, tangentbords-/VoiceOver-beteende, native PDF eller databas/RLS. Harnessen verifierar inte animationers native bildfrekvens. 140 % text är ett layoutprov, inte fullständig Dynamic Type-verifiering.
 
@@ -126,3 +191,23 @@ Välj andra lediga loopback-portar om dessa är upptagna. Resultat och skärmbil
 Bygg `tools/visual-check/app.tsx` separat för public/review och servera respektive output. Kör `tools/visual-check/verify-flow-training.py` med `TASSLA_UI_BASE_URL`, `TASSLA_UI_REVIEW` och `TASSLA_UI_EVIDENCE`. Syntetiska fixture-program märks i visningsläget; inga konton eller backenddata läses.
 
 Verifieraren täcker 375×844, 430×844, 375×667, två olika 4:3 standardbilder, fortsättkort, alla tre tabbar, exakt öppnad övning, okänd ålder med sparad progress, ingen matchande rekommendation med väg till Alla övningar, pausad äldre version, läsfel med fungerande retry, slutfört program, lång svensk text och 140 %-proxy utan horisontell overflow. Bevisen sparas i `docs/design/evidence/flow-training-01/{public,review}/`. RN Web täcker inte native VoiceOver/Dynamic Type, live content/RLS eller iOS-buildens native beteende.
+
+## UI-R02-01B — kompakt profil och säkert avslut
+
+Samma verkliga `ProfileScreen` och `EditDogProfileScreen` renderas i public/review. Harnessen mäter fält före valfri kennelinformation vid 375×667, 375×844 och 430×844; provar aktiv hundrad, gemensam hundväljarsheet och hundval, scope-bundet utkast, enda informationsingång, kollapsat kennelvärde, explicit öppning, kennelns fel/retry och 140 %-textproxy. Reviewbanner står utanför appens viewport och syntetiska hund-/kenneldata används. Resultat/skärmbilder sparas i `docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/{public,review}/`.
+
+Bygg separata public/review-bundlar:
+
+```sh
+TASSLA_UI_ENTRY=tools/visual-check/vision-r02-home-panels-app.tsx TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/profile-density/public TASSLA_UI_REVIEW=false node tools/visual-check/build.cjs
+TASSLA_UI_ENTRY=tools/visual-check/vision-r02-home-panels-app.tsx TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/profile-density/review TASSLA_UI_REVIEW=true node tools/visual-check/build.cjs
+```
+
+Servera dem på två lediga localhost-portar och kör samma verifierare var för sig:
+
+```sh
+TASSLA_UI_PANEL=profile-density TASSLA_UI_REVIEW=false TASSLA_UI_BASE_URL=http://127.0.0.1:5291 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/public python tools/visual-check/verify-vision-r02-home-panels.py
+TASSLA_UI_PANEL=profile-density TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:5292 TASSLA_UI_EVIDENCE=docs/design/evidence/vision-rev02/ui-r02-01b-profile-density/review python tools/visual-check/verify-vision-r02-home-panels.py
+```
+
+Detta är lokal RN Web-/syntetisk QA, inte native iOS, verklig SecureStore, live Supabase/RLS, fysisk VoiceOver/Dynamic Type eller oberoende QA-bevis. Profil är en stödyta utan egen rev02-panel; screenshoten stänger inte visuell acceptans för en panel.
