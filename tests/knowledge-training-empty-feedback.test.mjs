@@ -11,8 +11,8 @@ const [knowledge, training, workspace, profileEditor, profileHeader] = await Pro
 ]);
 
 test('Knowledge distinguishes no published guides from a search with no matches and keeps separate destinations', () => {
-  assert.ok(knowledge.includes("contentState === 'ready' && visibleItems.length === 0 && <MessageCard>"));
-  assert.ok(knowledge.includes('Inga guider är publicerade för {dogLabel} ännu.'));
+  assert.ok(knowledge.includes("contentState === 'ready' && displayedItems.length === 0 && !hasSearchQuery && <MessageCard>"));
+  assert.ok(knowledge.includes('Inga rekommenderade artiklar för'));
   assert.ok(knowledge.includes("visibleItems.length > 0 && hasSearchQuery && displayedItems.length === 0"));
   assert.ok(knowledge.includes("Card onPress={() => changeTab('Checklistor')} accessibilityLabel=\"Öppna Checklistor\""));
   assert.ok(knowledge.includes("Card onPress={() => changeTab('FAQ')} accessibilityLabel=\"Öppna Vanliga frågor\""));

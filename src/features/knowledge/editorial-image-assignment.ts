@@ -26,8 +26,12 @@ const KNOWLEDGE_IMAGE_BY_GUIDE_VERSION = new Map<string, ImageSourcePropType>([
 ]);
 
 /** Returns only an explicitly assigned photo; unassigned guides stay text-only. */
-export function knowledgeImageForGuide(item: Pick<HomeContent, 'contentId' | 'version'>): ImageSourcePropType | null {
+export function knowledgeImageForGuide(item: Pick<HomeContent, 'contentId' | 'version' | 'slug'>): ImageSourcePropType | null {
   if (!item.contentId || !Number.isSafeInteger(item.version) || item.version < 1) return null;
+  const articleImage = item.slug === 'forsta-dygnet-hemma' ? EDITORIAL_IMAGES[0]
+    : item.slug === 'rumsrenhet' ? EDITORIAL_IMAGES[2]
+      : item.slug === 'valpens-somn' ? EDITORIAL_IMAGES[1] : null;
+  if (articleImage) return articleImage;
   const identity = `${item.contentId}:${item.version}`;
   const reviewIndex = REVIEW_IMAGE_BY_GUIDE_VERSION.get(identity);
   return reviewIndex === undefined ? KNOWLEDGE_IMAGE_BY_GUIDE_VERSION.get(identity) ?? null : EDITORIAL_IMAGES[reviewIndex];

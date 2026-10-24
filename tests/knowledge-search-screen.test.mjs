@@ -12,20 +12,20 @@ test('Knowledge cards and search contain only already selected article and guide
   const workspace = await readFile(workspacePath, 'utf8');
   assert.match(screen, /items\s*\.filter\(\(item\) => item\.contentType === 'article' \|\| item\.contentType === 'guide'\)/);
   assert.match(screen, /\.sort\(compareGuideTitle\)/);
-  assert.match(screen, /const displayedItems = searchGuideItems\(visibleItems, searchQuery\)/);
+  assert.match(screen, /const candidates = showAllGuides \|\| hasSearchQuery \? visibleItems : recommendedItems/);
   assert.match(workspace, /items=\{visibleGuideContent\}/);
   assert.match(workspace, /onSelectContent=\{\(contentId\) => setKnowledgeFocus/);
   assert.doesNotMatch(screen, /fetch\(/);
   assert.doesNotMatch(screen, /from\(['"]content/);
 });
 
-test('active dog is named in search copy and query state is scoped by session and dog', async () => {
+test('library search copy covers all articles and query state is scoped by session and dog', async () => {
   const screen = await readFile(screenPath, 'utf8');
   const workspace = await readFile(workspacePath, 'utf8');
   assert.match(screen, /guideSearchScopeKey\(sessionKey, dogId\)/);
   assert.match(screen, /guideSearchValueForScope\(guideViewState, searchScopeKey\)/);
-  assert.match(screen, /accessibilityLabel=\{`Sök i guider för \$\{dogLabel\}`\}/);
-  assert.match(screen, /placeholder=\{`Sök bland guider för \$\{dogLabel\}`\}/);
+  assert.match(screen, /accessibilityLabel=\{`Sök bland alla artiklar`\}/);
+  assert.match(screen, /placeholder=\{`Sök bland alla artiklar`\}/);
   assert.doesNotMatch(screen, /searchHelp/);
   assert.match(workspace, /dogName=\{dog\.name\}/);
 });
@@ -53,13 +53,13 @@ test('Visa alla expands the same Swedish title-sorted view; search reaches every
   assert.match(screen, /localeCompare\(right\.title, 'sv-SE'\)/);
   assert.match(screen, /const cardItems = hasSearchQuery \|\| showAllGuides \? displayedItems : displayedItems\.slice\(0, 3\)/);
   assert.match(screen, /cardItems\.slice\(1\)\.map\(\(item\) => renderGuideCard\(item, false\)\)/);
-  assert.match(screen, /const hasMoreGuides = !hasSearchQuery && !showAllGuides && visibleItems\.length > 3/);
-  assert.match(screen, /title="Visa alla"/);
+  assert.match(screen, /const hasMoreGuides = !hasSearchQuery && !showAllGuides && recommendedItems\.length > 3/);
+  assert.match(screen, /title="Visa alla artiklar"/);
   assert.match(screen, /displayedItems\.length === 1 \? '1 träff' : `\$\{displayedItems\.length\} träffar`/);
   assert.doesNotMatch(screen, /REKOMMENDERAT FÖR ER|REKOMMENDERAD/);
 });
 
-test('published guide versions use the six explicit images and unknown items have no Knowledge image', async () => {
+test('published guide versions retain explicit images and library cards use an editorial fallback', async () => {
   const assignment = await readFile(imageAssignmentPath, 'utf8');
   const screen = await readFile(screenPath, 'utf8');
   const carousel = await readFile(homeCarouselPath, 'utf8');
@@ -88,7 +88,7 @@ test('published guide versions use the six explicit images and unknown items hav
   ]) assert.ok(assignment.includes(`'${identity}'`), `legacy HomeCarousel mapping retains ${identity}`);
   assert.match(assignment, /export function editorialImageForGuide[\s\S]*ImageSourcePropType/);
   assert.match(carousel, /editorialImageForGuide\(article\)/);
-  assert.match(screen, /const image = knowledgeImageForGuide\(item\)/);
+  assert.match(screen, /const image = knowledgeImageForGuide\(item\) \?\? editorialImageForGuide\(item\)/);
   assert.match(screen, /\{image \? <Image source=\{image\}[\s\S]*?: null\}/);
 });
 
@@ -101,8 +101,8 @@ test('loading, errors, no published guides and zero matches stay distinct; guide
   assert.match(screen, /function openArticle\(id: string\)/);
   assert.match(screen, /setOpenedId\(null\); onSelectContent\(null\)/);
   assert.doesNotMatch(screen, /function openArticle\([^)]*\)\s*\{[^}]*setGuideViewState/s);
-  assert.match(screen, /Inga guider är publicerade för \{dogLabel\} ännu/);
-  assert.match(screen, /Inga guider matchar/);
+  assert.match(screen, /Inga rekommenderade artiklar för/);
+  assert.match(screen, /Inga artiklar matchar/);
   assert.match(screen, /Rensa sökning/);
   assert.match(screen, /displayedItems\.length === 0/);
   assert.match(screen, /changeTab\('Checklistor'\)/);

@@ -1,3 +1,5 @@
+import { matchesArticleRules } from '../content/article-targeting';
+import { localDate } from '../features/onboarding/dog';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { selectContent } from '../content/select-content';
 import { isCanonicalAccidentKinds, LOG_EVENT_TYPES, type AccidentKind, type LogEventType } from '../features/puppy-log/log-model';
@@ -336,6 +338,7 @@ export interface PausedTrainingProgress {
 }
 
 interface PublishedVersionRow {
+  article_version_metadata?: { article_targeting_rules: unknown } | null;
   id: string;
   content_id: string;
   version: number;
@@ -1113,13 +1116,38 @@ export async function fetchPublishedContentVersions(
 ): Promise<PublishedVersionRow[]> {
   return withRequestDeadline(async (signal) => {
     const { data, error } = await client.from('content_versions')
-      .select('id,content_id,version,status,title,body,min_age_weeks,max_age_weeks,sources,is_ai_generated,content_items!inner(slug,content_type),content_breed_targets(breed_id)')
+      .select('id,content_id,version,status,title,body,min_age_weeks,max_age_weeks,sources,is_ai_generated,content_items!inner(slug,content_type),content_breed_targets(breed_id),article_version_metadata(article_targeting_rules(rule_key,min_age_weeks,max_age_weeks,event_kind,start_days,end_days))')
       .eq('status', 'published')
+      .setHeader('X-Client-Info', 'tassla-content/2')
       .abortSignal(signal);
     const rows: unknown = data;
     if (error || !Array.isArray(rows) || !rows.every(isPublishedVersionRow)) throw new Error('Could not load published content');
     return rows as PublishedVersionRow[];
   }, timeoutMs, parentSignal);
+}
+
+/** Complete published library with recommendation flags; filters never gate reading. */
+export async function fetchKnowledgeContent(
+  client: SupabaseClient, dog: OwnedDog, ageWeeks: number | null,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS, parentSignal?: AbortSignal,
+): Promise<HomeContent[]> {
+  const rows = await fetchPublishedContentVersions(client, timeoutMs, parentSignal);
+  const legacy = new Set(selectContent(rows.map((item) => ({
+    id: item.id, contentId: item.content_id, version: item.version, status: 'published' as const,
+    minAgeWeeks: item.min_age_weeks, maxAgeWeeks: item.max_age_weeks,
+    breedIds: item.content_breed_targets.map((target) => target.breed_id),
+  })), ageWeeks, dog.breed_id).map((item) => item.id));
+  return rows.flatMap((row) => {
+    const contentType = row.content_items.content_type;
+    if (row.content_items.slug === 'before-homecoming' || !isDisplayableContentType(contentType)) return [];
+    const metadata = row.article_version_metadata;
+    const breedMatches = row.content_breed_targets.length === 0 || row.content_breed_targets.some((target) => target.breed_id === dog.breed_id);
+    const recommended = metadata
+      ? contentType === 'article' && breedMatches && matchesArticleRules(metadata.article_targeting_rules, ageWeeks, dog.expected_homecoming_date ?? null, localDate())
+      : legacy.has(row.id);
+    return [{ id: row.id, contentId: row.content_id, version: row.version, title: row.title, body: row.body,
+      contentType, slug: row.content_items.slug, sources: row.sources, isAiGenerated: row.is_ai_generated, recommended }];
+  });
 }
 
 export async function fetchHomeContent(

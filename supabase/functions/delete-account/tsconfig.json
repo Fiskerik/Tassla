@@ -6,11 +6,21 @@
     "strict": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "lib": ["ES2022", "DOM"],
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
     "skipLibCheck": true,
     "paths": {
-      "npm:@supabase/supabase-js@2.117.2": ["../../../node_modules/@supabase/supabase-js"]
+      "npm:@supabase/supabase-js@2.117.2": [
+        "../../../node_modules/@supabase/supabase-js"
+      ]
     }
   },
-  "include": ["./handler.ts", "./index.ts"]
+  "include": [
+    "./handler.ts",
+    "./index.ts",
+    "../sync-drive-article/handler.ts",
+    "../sync-drive-article/index.ts"
+  ]
 }

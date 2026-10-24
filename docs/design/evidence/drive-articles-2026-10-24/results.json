@@ -1,0 +1,18 @@
+{
+  "results": [
+    "Nemo/male: library + personalized full article at 375",
+    "Nala/female: library + personalized full article at 375",
+    "Max/unset: library + personalized full article at 375",
+    "optional date/sex and clearing at 375; profile readback fixture",
+    "Nemo/male: library + personalized full article at 430",
+    "Nala/female: library + personalized full article at 430",
+    "Max/unset: library + personalized full article at 430",
+    "optional date/sex and clearing at 430; profile readback fixture",
+    "unassigned guide uses editorial images and shared reader style",
+    "library state loading",
+    "library state error",
+    "library state empty"
+  ],
+  "errors": [],
+  "limits": "synthetic React Native Web; no live Supabase, signed build or native accessibility proof"
+}

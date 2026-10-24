@@ -1,3 +1,4 @@
+import { personalizeArticle } from '../../content/article-targeting';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Alert, AppState, BackHandler } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -26,7 +27,7 @@ import {
   fetchPlannedHealthById,
   fetchPlannedHealthChecklistRange,
   fetchExactPublishedTrainingStep,
-  fetchHomeContent,
+  fetchKnowledgeContent,
   fetchTrainingWorkspace,
   fetchExactHistoricalTrainingSources,
   applyTrainingProgressionOperation,
@@ -589,7 +590,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const homeToday = localDate();
   // An unknown date has no age-based content selection and must not crash Home.
   const age = homeAgeInWeeks(dog.birth_date, homeToday);
-  const currentSelectionKey = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${dog.id}:${dog.breed_id}:${dog.birth_date}:${age ?? 'unknown-age'}:${reviewContentEnabled ? 'review' : 'public'}`;
+  const currentSelectionKey = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${dog.id}:${dog.breed_id}:${dog.birth_date}:${dog.expected_homecoming_date ?? ''}:${homeToday}:${age ?? 'unknown-age'}:${reviewContentEnabled ? 'review' : 'public'}`;
   const currentTrainingOwnerDogScope = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${dog.id}`;
   const editorScopeIdentity = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${currentSelectionKey}:${dog.id}`;
   const editorScopeIdentityRef = useRef(editorScopeIdentity);
@@ -1465,7 +1466,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   useEffect(() => {
     const generation = ++contentGeneration.current;
     const controller = new AbortController();
-    void fetchHomeContent(client, dog, age, undefined, controller.signal).then((items) => {
+    void fetchKnowledgeContent(client, dog, age, undefined, controller.signal).then((items) => {
       if (!mounted.current || controller.signal.aborted || contentGeneration.current !== generation || currentSelectionKeyRef.current !== currentSelectionKey) return;
       setContent(items);
       setContentSelectionKey(currentSelectionKey);
@@ -2785,7 +2786,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     setContentSelectionKey(null);
     setContentState('loading');
     try {
-      const items = await fetchHomeContent(client, dog, age);
+      const items = await fetchKnowledgeContent(client, dog, age);
       if (!mounted.current || contentGeneration.current !== generation || currentSelectionKeyRef.current !== selectionKey) return;
       setContent(items);
       setContentSelectionKey(currentSelectionKey);
@@ -3569,7 +3570,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onRetryProgression={(programVersionId) => { void retryProgressionOperation(programVersionId); }}
       onRetryTrainingProgressionRead={() => { void retryTraining(); }}
       reviewTrainingStep={hasReviewTraining}
-      content={visibleGuideContent}
+      content={visibleGuideContent.filter((item) => item.recommended !== false).map((item) => ({ ...item,
+        title: personalizeArticle(item.title, dog), body: personalizeArticle(item.body, dog) }))}
       contentState={visibleContentState}
       dailyState={dailyStateForView}
       dailyRefreshing={dailyRefreshing}
@@ -3840,6 +3842,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       returnToTraining={knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'training'}
       returnToDevelopment={knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'development'}
       items={visibleGuideContent}
+      dogSex={dog.sex}
       contentState={visibleContentState}
       focusedContentId={focusedKnowledgeContentId}
       onDetailChange={setKnowledgeDetailOpen}
@@ -3881,7 +3884,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       profilePending={profilePending}
       profileConflict={Boolean(profileConflict)}
     />;
-    if (onDogUpdated) return <EditDogProfileScreen key={`${dog.id}:${dog.name}:${dog.breed_id}:${dog.birth_date}:${dog.age_display_unit}`}
+    if (onDogUpdated) return <EditDogProfileScreen key={`${dog.id}:${dog.name}:${dog.breed_id}:${dog.birth_date}:${dog.age_display_unit}:${dog.expected_homecoming_date ?? ''}:${dog.sex ?? ''}`}
       client={client} dog={dog} busy={profileBusy} pending={profilePending} statusMessage={profileMessage}
       statusError={profileMessageError} conflict={profileConflict ?? undefined}
       backLabel={profileReturnPage === 'training' ? 'Tillbaka till Träning' : 'Tillbaka till Mer'}
@@ -3971,10 +3974,12 @@ function samePlannedHealthSnapshot(left: PlannedHealthRecord | null, right: Plan
 
 function sameOwnedDogProfile(
   current: OwnedDog,
-  expected: Pick<OwnedDog, 'name' | 'breed_id' | 'birth_date' | 'age_display_unit'>,
+  expected: Pick<OwnedDog, 'name' | 'breed_id' | 'birth_date' | 'age_display_unit' | 'expected_homecoming_date' | 'sex'>,
   id: string,
 ): boolean {
   return current.id === id && current.name === expected.name
     && current.breed_id === expected.breed_id && current.birth_date === expected.birth_date
-    && current.age_display_unit === expected.age_display_unit;
+    && current.age_display_unit === expected.age_display_unit
+    && (current.expected_homecoming_date ?? null) === (expected.expected_homecoming_date ?? null)
+    && (current.sex ?? null) === (expected.sex ?? null);
 }

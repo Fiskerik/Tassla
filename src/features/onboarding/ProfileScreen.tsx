@@ -1,3 +1,5 @@
+import { DogArticleProfileFields } from './DogArticleProfileFields';
+import { validCalendarDate, type DogSex } from '../../content/article-targeting';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BackHandler, Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -18,7 +20,7 @@ export type DogCreationRecoverySnapshot = {
   ownerId: string;
   accountGeneration: number;
   entryPoint: DogCreationEntryPoint;
-  draft: { name: string; breedId: string; birthDate: string; kennelCode: string; sourceSelected: boolean };
+  draft: { expectedHomecomingDate?: string; sex?: DogSex | null; name: string; breedId: string; birthDate: string; kennelCode: string; sourceSelected: boolean };
   saveState: DogCreationSaveState;
   resolvedDog: OwnedDog | null;
   resolvedRequestId: string | null;
@@ -48,6 +50,8 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   const [name, setName] = useState(initialDraft.name);
   const [breedId, setBreedId] = useState(initialDraft.breedId);
   const [birthDate, setBirthDate] = useState(initialDraft.birthDate);
+  const [expectedHomecomingDate, setExpectedHomecomingDate] = useState(initialDraft.expectedHomecomingDate ?? '');
+  const [sex, setSex] = useState<DogSex | null>(initialDraft.sex ?? null);
   const [formBaseline, setFormBaseline] = useState(initialDraft);
   const [busy, setBusy] = useState(false);
   const [saveState, setSaveState] = useState<DogCreationSaveState>(validRecoverySnapshot?.saveState ?? 'idle');
@@ -68,6 +72,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   const handleBackRef = useRef<() => boolean>(() => false);
 
   const draftDirty = name !== formBaseline.name || breedId !== formBaseline.breedId || birthDate !== formBaseline.birthDate
+    || expectedHomecomingDate !== (formBaseline.expectedHomecomingDate ?? '') || sex !== (formBaseline.sex ?? null)
     || kennelCode !== formBaseline.kennelCode || sourceSelected !== formBaseline.sourceSelected;
   const isRecoveryState = saveState === 'unknown' || saveState === 'sourceUnconfirmed' || saveState === 'existingProfile'
     || saveState === 'cleanupError' || saveState === 'recoveryUnavailable';
@@ -77,7 +82,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
       ownerId,
       accountGeneration,
       entryPoint: validRecoverySnapshot?.entryPoint ?? entryPoint,
-      draft: { name, breedId, birthDate, kennelCode, sourceSelected },
+      draft: { name, breedId, birthDate, kennelCode, sourceSelected, expectedHomecomingDate, sex },
       saveState,
       resolvedDog,
       resolvedRequestId,
@@ -210,7 +215,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
 
   async function createAndConfirm() {
     if (operationInFlight.current || !canSubmit) return;
-    const desired = { name: name.trim(), breedId, birthDate: birthDate.trim() };
+    const desired = { name: name.trim(), breedId, birthDate: birthDate.trim(), expectedHomecomingDate: expectedHomecomingDate.trim() || null, sex };
     const referralCode = sourceSelected ? normalizeKennelCode(kennelCode) : null;
     operationInFlight.current = true;
     setBusy(true);
@@ -242,7 +247,8 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
       try { dog = await fetchOwnedDogById(client, dogId); } catch { dog = null; }
       if (!isCurrentAccount(ownerId, accountGeneration)) return;
       if (!dog) { setSaveState('unknown'); return; }
-      if (dog.name !== desired.name || dog.breed_id !== desired.breedId || dog.birth_date !== desired.birthDate) {
+      if (dog.name !== desired.name || dog.breed_id !== desired.breedId || dog.birth_date !== desired.birthDate
+        || (dog.expected_homecoming_date ?? null) !== desired.expectedHomecomingDate || (dog.sex ?? null) !== desired.sex) {
         setResolvedDog(dog);
         setResolvedShouldClearReferral(false);
         setSaveState('existingProfile');
@@ -341,7 +347,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   const showRestartWarning = requestWasSent;
 
   const canSubmit = name.trim().length > 0 && name.trim().length <= 80 && Boolean(breedId)
-    && isValidBirthDate(birthDate) && (!sourceSelected || Boolean(normalizeKennelCode(kennelCode)));
+    && isValidBirthDate(birthDate) && (expectedHomecomingDate.trim() === '' || validCalendarDate(expectedHomecomingDate.trim())) && (!sourceSelected || Boolean(normalizeKennelCode(kennelCode)));
 
   return (
     <AppScreen>
@@ -368,6 +374,9 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
         onRetry={() => { setBreedsState('loading'); setBreedAttempt((count) => count + 1); }}
       />
       <DatePickerField label="Födelsedatum" disabled={busy} onChangeText={(value) => { setBirthDate(value); markEdited(); }} value={birthDate} />
+      <DogArticleProfileFields date={expectedHomecomingDate} sex={sex} disabled={busy}
+        onDate={(value) => { setExpectedHomecomingDate(value); markEdited(); }}
+        onSex={(value) => { setSex(value); markEdited(); }} />
       </View>
       <View style={styles.sourceCard}>
         <Pressable accessibilityRole="button" accessibilityState={{ expanded: sourceExpanded }} onPress={() => setSourceExpanded((expanded) => !expanded)} style={styles.sourceHeader}>

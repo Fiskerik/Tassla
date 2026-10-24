@@ -1,2 +1,7 @@
 [functions.delete-account]
 verify_jwt = true
+
+# A dedicated editorial sync token is checked by this handler. No user JWT or
+# database credential is accepted from the scheduled runner.
+[functions.sync-drive-article]
+verify_jwt = false
