@@ -667,3 +667,12 @@ UI03: `13f48bf` pushad till `2026-10-23-ui-03-logg-halsa`, lokal QA/Reviewer/Sec
 ## UI-COPY-CLEANUP — 2026-10-24
 
 Ägarbeställd borttagning av tillfälliga Test/Preview/granskningsrutor och Standardbild-badges på branch `2026-10-24-ui-copy-cleanup`, bas69251d2. Innehåll/gates/callbacks och verkliga fel/sparstatus bevaras. Lokal QA/Reviewer/Security PASS, check77/77, publiciosExport1585 och renhets-/interaktionsmatris PASS. Ingen signerad build/native/live-prov i detta paket. Samma branch innehåller den beställda konkreta nästa användarplanen, med Product/UX-underlag och Criticens beroenderättelse införd. Kod och användarplan är committade i `0fb505e` på `2026-10-24-ui-copy-cleanup`. Push verifieras i leveranssvaret; ingen mainmerge eller signerad build ingår.
+
+
+## DRIVE-ARTICLES-01 — artiklar från Drive och personligt tilltal, 2026-10-24
+
+Kodcommit `348530a332584d0dcec8f30296c88a05f3f9b0cf` på `codex/agent-workflow-stabilization`: importer för publiceringsklara DOCX/Google Docs, service-isolerad serverendpoint och versionssäkra publiceringskvitton; tre källtrogna artikelversioner i migrationsunderlag; fullständigt bibliotek och separata profilrekommendationer; frivilligt planerat hemkomstdatum/kön; lokalt namn-/pronomenstilltal; gemensam bild-, ingress-, rubrik- och tipslayout i Tasslas tema. Gamla klienter får inte det nya formatet. Ägarbeslut: sju dagar före till och med planerad hemkomst, originalen utan AI och datum kvar som redigerbar planeringsuppgift.
+
+Lokal leveransgranskning: Architect APPROVE, Critic PROCEED, Dog Expert PASS, Compliance APPROVE, Security PASS, oberoende QA PASS, Reviewer PASS. pnpm check82/82, Python6/6, fem PostgreSQL16-prober efter hela migrationskedjan, render12scenarier och public iOS-export PASS. [Kontrakt/evidens och driftinstruktion](../content/artiklar/README.md#drive-articles-01--implementation-2026-10-24).
+
+Öppet: applicera migration003/004 i Supabase, verifiera live-åtkomst/readback, driftsätt endpoint och konfigurera skyddad Drive/GitHub-miljö; faktisk synk och signerad/TestFlight-build är inte genomförda. Inga live-migrationer eller Drive-skrivningar gjordes i uppgiften. Artikeldata följer inte automatiskt med enbart genom nytt bygge.

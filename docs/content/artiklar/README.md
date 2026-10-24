@@ -164,7 +164,7 @@ Fryst oberoende Reviewer **PASS** utan fynd: enda repodiffen är denna guide, ma
 
 ## DRIVE-ARTICLES-01 — implementation 2026-10-24
 
-Status: implementing. Bas: `3581dac25f526ebc687fbffc0cf24e3b08d3a6d9`, samma arbetsbranch. Ägare: root (enda skrivare). Mandat: Erik beställer automatisk Drive-import och anpassning av de tre sakgranskade artiklarna för nästa bygge. Det tidigare beställda frivilliga förväntade hemkomstdatumet ingår. Publicering av dessa artiklar är beställd; faktisk liveaktivering kräver driftåtkomst som saknas i denna miljö.
+Status: done som lokal implementation; faktisk aktivering återstår. Bas: `3581dac25f526ebc687fbffc0cf24e3b08d3a6d9`, samma arbetsbranch. Ägare: root (enda skrivare). Mandat: Erik beställer automatisk Drive-import och anpassning av de tre sakgranskade artiklarna för nästa bygge. Det tidigare beställda frivilliga förväntade hemkomstdatumet ingår. Publicering av dessa artiklar är beställd; faktisk liveaktivering kräver driftåtkomst som saknas i denna miljö.
 
 Sekventiella delar: (1) versionsbunden artikelmetadata, transaktionell import, källtrogna apptexter och separat publiceringsmigration; (2) komplett bibliotek och rekommendationer i befintlig läsare; (3) frivilligt hemkomstdatum med idempotent registrering och profilens befintliga spar-/återläsningskontrakt; (4) schemalagd Drive-synk och driftinstruktion. Ingen ny dependency, vuxenomskrivning, faktisk hemkomst, sömnfunktion, delningsmodell, eller extern liveåtgärd ingår.
 
@@ -262,3 +262,6 @@ Referens: befintlig Kunskapskomposition i `vision_rev02.jpg`, panelkontraktet oc
 | 18 | Ja: aktiv hund styr tilltal och rekommendation; bilden är redaktionell och allas bibliotek förblir tillgängligt |
 
 Praktisk leveransgräns: lokal fungerande resa och lokal visuell form är verifierade. Produktionsdata, verklig autosynk, native tillgänglighet och signerad distribution är fortfarande separata öppna kontroller. Ett lyckat bygge ensamt publicerar inte migrationsdata eller skapar serverns Google-behörighet.
+
+
+Kodcheckpoint: `348530a332584d0dcec8f30296c88a05f3f9b0cf`. Avslutsregistreringen använder de befintliga skrivvägarna `docs/releases/HISTORY-2026.md` och `docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md`; inga nya plandokument skapas. Den gamla D3-statusmeningen om pågående schemaimplementation är korrigerad och artikelresan är länkad från paket 2. FAQ/faslistor och övriga D-beroenden stängs inte av artikelarbetet. Uppdaterad redigerbar Word-/PDF-mall finns i uppgiftsartefakterna; den visar de 20 huvudfälten, personliga platshållare och Tips/Viktigt-markörer. Det gamla filnamnet `forslag_v2` är bevarat för samma nedladdningslänk, men dokumentets titel och kontrakt är nu importformat 1.
