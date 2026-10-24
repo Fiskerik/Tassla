@@ -1190,6 +1190,16 @@ Faktiska kontroller efter v3: `pnpm check` PASS (TypeScript, edge TypeScript, ES
 
 Oberoende QA har omgranskat v3, verifierat riktade tester, scope, render/evidens och Master-Log-closeout och gav PASS. Första QA-closeout-BLOCK var endast frånvaro av Master-Log; efter rättning PASS:ade QA closeout. Frozen oberoende Reviewer har därefter granskat slutlig v3-diff och dokumentationen och gav PASS utan kvarvarande blockerande fynd. Implementation-checkpointen är commit `a6f352d9264889e5ad7b9c0addbc853d4d17a01b` (`fix: create routines on the current day`); dess pre-commit hook körde `pnpm check` PASS. Dokumentations-closeout commit `7245fdcb8602059c5085af0a6f212e693b79b6a7` pushades tillsammans med implementationen; `git ls-remote` bekräftade remote-head `7245fdc` vid push-verifieringen.
 
-Kön är `done` på lokal implementation-checkpoint `a6f352d9264889e5ad7b9c0addbc853d4d17a01b`; hooken körde full `pnpm check`. Branchens remote-push är verifierad. Nästa actionplanpaket är Knowledge-inventering av faktisk publik kontra draft/review-täckning; ingen publicering eller D1-migration antas.
+Kön är `done` på lokal implementation-checkpoint `a6f352d9264889e5ad7b9c0addbc853d4d17a01b`; hooken körde full `pnpm check`. Branchens remote-push är verifierad. Nästa actionplanpaket var Knowledge-inventering av faktisk publik kontra draft/review-täckning; den genomfördes som read-only-checkpoint nedan, utan publicering eller D1-migration.
 
 Inga live Supabase/RLS/RPC/readback-test, produktiondata, signerad iOS-build, native VoiceOver/TalkBack, Dynamic Type eller reducerad-rörelseprov gjordes. Ägarens migreringsuppgift registreras inte som en ny kontroll av denna körning.
+
+### Knowledge-public-täckningsinventering — read-only checkpoint, 2026-10-24
+
+Utgångspunkt: färsk `git fetch origin main` gav `main@0b0f99f8660a392971b5caab71c19334f771f495`; den är basförfader till arbetsbranchens `69a69d61608b7bd7185ec09c181c44101ac6197b`. Inga Knowledge-källfiler skiljer sig mellan dessa två revisioner; branchens befintliga Training Progression och HOME-FIRST-DAY-01 används som fortsatt integrationsbas.
+
+Repositoryinventeringen fann sex publiceringsmärkta artikelversioner som Knowledge-guidefiltret kan visa när DB-versionerna finns publicerade, ett publiceringsmärkt `checklist`-innehåll som inte är en faslista och filtreras bort där, samt tre publiceringsmärkta träningsprogram. FAQ har noll publicerade poster och fyra review-only-fixtureposter. Faslistor har noll publika versioner; sex review-v1-mallar/18 punkter ligger bakom reviewflaggan och progress/egna punkter använder mall-ID:n med versionsprefixet `review-v1`. Sex ytterligare Markdown-artiklar står som `draft` utanför den låsta bundle-importen. Full status, filankare och kontraktsrisk är noterade i `docs/content/README.md` och paket 2 i användarplanen.
+
+Detta checkpoint ändrade endast befintlig dokumentation. Inget innehåll publicerades, ingen Supabase-migration/import/readback utfördes och ingen kod ändrades. Ägarens besked om senaste migrationen kvarstår som rapporterat, inte oberoende verifierat. Nästa steg: ta fram en avgränsad D3-delplan för versionerad FAQ-/faslistakälla, expert-/mänsklig granskning och bevarande/migrering av existerande progress och egna punkter före implementation.
+
+Oberoende QA **PASS** verifierade antal, status, UI-filter, ID:n, åldersfönster och basrevision mot bundle, SQL och källkod. Oberoende Reviewer **PASS** på fryst dokumentdiff: scope, länkar, statusgränser och kö/rapport/plan/Master-Log är samstämmiga; inga fynd.

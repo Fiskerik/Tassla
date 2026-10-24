@@ -68,6 +68,8 @@ Starta med **paket 1**. Gör inventeringen för paket 2 tidigt så att brist på
 
 **Kodbas:** `KnowledgeScreen`, `FAQScreen`, `PuppyChecklistScreen`, aktuella innehållsadaptrar. **D3** är leveransberoendet; **D1** verifierar nya egna punkters ikonpersistens.
 
+**Täckningsinventering, read-only 2026-10-24:** Bundle v1 markerar sex artikelversioner och tre träningsprogram som `published`; Knowledge-guidefiltret kan visa artiklarna om motsvarande DB-versioner är publicerade. Live-status är okänd här. Den sjunde icke-programversionen är `environment-checklist` (`content_type=checklist`), inte en faschecklista och filtreras bort från guidevyn. FAQ saknar publicerad katalog; fyra review-exempel är flaggade. Faschecklistor saknar publik version: sex `review-v1`-mallar/18 punkter ligger bakom review-läget. Sex separata `draft`-artiklar finns som möjliga återanvändningskällor men är inte i bundle/importen. Exakta källor, UI-filter, ID-/progressrisk och live-Supabase-osäkerhet finns i [redaktionella innehållsstatusen](../content/README.md#aktuell-täckning-för-kunskap-och-träning--2026-10-24). Nästa steg är en snäv D3-delplan för katalog-/versionskontrakt och content-review; ingen publicering eller migration antas.
+
 ## 3. Träning som leder vidare
 
 **Resa:** träningsrad på Hem → exakt instruktion → markera genomförd → bekräftad återkoppling → Hem med rätt status → Träning visar nästa tillåtna steg.

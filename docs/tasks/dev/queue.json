@@ -11146,7 +11146,7 @@
         "UI-COPY-CLEANUP-2026-10-24"
       ],
       "status": "done",
-      "next_step": "Begin actionplan package 2 with an inventory of public versus draft/review Knowledge coverage; do not assume publishing or D1 migration.",
+      "next_step": "Knowledge coverage inventory completed read-only 2026-10-24; prepare a bounded D3 subplan for a versioned public FAQ/phase-checklist source, review gates, and preservation/migration of existing progress/custom items. No content publication or migration is assumed.",
       "risk_class": "M",
       "history": [
         {
