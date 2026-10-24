@@ -11333,7 +11333,7 @@
         "HOME-FIRST-DAY-01"
       ],
       "status": "done",
-      "next_step": "Uppföljning av plancheckpoint: Eriks schema-/mappinggodkännande är registrerat och KNOWLEDGE-D3-CATALOG-SCHEMA-01 v5 har passerat Architect/Security/Critic review, implementation, oberoende QA och Reviewer; commit/push av branch-checkpointen följer. Ingen live Supabase-åtgärd eller innehållspublicering antas.",
+      "next_step": "Uppföljning av plancheckpoint: Eriks schema-/mappinggodkännande är registrerat och KNOWLEDGE-D3-CATALOG-SCHEMA-01 v5 har passerat Architect/Security/Critic review, implementation, oberoende QA och Reviewer. Implementation commit 240362753b4deec30766b3c3b8226a6c40975748 är pushad. Eventuell framtida live Supabase-verifiering, content import/publicering eller appadapter kräver separat uppgift och avgränsning.",
       "priority": "P1",
       "panels": [
         "7"
@@ -11349,7 +11349,7 @@
           "evidence": "D3 plan v5 stängd som dokumentationscheckpoint efter Architect APPROVE, Security PASS, oberoende documentation QA PASS och Reviewer PASS. Sex ändrade dokumentpaths matchar write_paths; git diff --check, queue JSON och dev_flow validate PASS. Inget innehåll, kod, SQL eller Supabase ändrades/användes i checkpointen. Erik godkände senare schema-/mappingförslaget 2026-10-24; en separat implementationstask krävs fortfarande före framtida writes."
         }
       ],
-      "implementation_state": "Denna avslutade task var dokumentationsplanering endast och ändrade inga migrationer, seeds, imports, publiceringar eller appfiler. Den efterföljande separat godkända schema-tasken v5 är implementerad lokalt och stängd efter SQL-/projekttester, oberoende QA och Reviewer PASS. Commit/push följer; live migration/import/publicering förblir utanför och overifierat.",
+      "implementation_state": "Denna avslutade task var dokumentationsplanering endast och ändrade inga migrationer, seeds, imports, publiceringar eller appfiler. Den efterföljande separat godkända schema-tasken v5 är implementerad lokalt, stängd efter SQL-/projekttester och oberoende QA/Reviewer PASS, och implementation commit 240362753b4deec30766b3c3b8226a6c40975748 är pushad. Live migration/import/publicering förblir utanför och overifierat.",
       "evidence_status": "Källunderlaget finns i branch och dokumenterat i användarplanens §2. Live Supabase-status och faktisk publiceringsstatus är ej verifierade."
     },
     {
@@ -11390,14 +11390,14 @@
         "KNOWLEDGE-D3-CATALOG-PLAN-01"
       ],
       "status": "done",
-      "next_step": "Lokal schema-only task är stängd efter QA PASS och Reviewer PASS. Commit/push den godkända ändringsmängden till samma arbetsbranch; live Supabase migration/RLS/readback och framtida content import/publicering kräver separata verifierade steg.",
+      "next_step": "Tasken är stängd och implementation commit 240362753b4deec30766b3c3b8226a6c40975748 är pushad. Nästa actionplansteg som kräver innehållsimport/publicering, appadapter/UI eller live Supabase ska vara en separat uppgift med egna frysta write_paths och relevanta beslut/reviews.",
       "priority": "P1",
       "panels": [
         "7"
       ],
       "risk_class": "H",
-      "checkpoint": "v5 implementation, independent QA PASS and frozen Reviewer PASS; local task done. Branch codex/agent-workflow-stabilization from 4ba74d126b272d8ab821e9de3a416dae0d7046ff; origin/main 0b0f99f8660a392971b5caab71c19334f771f495 is an ancestor. All ten changed paths match v5 write_paths. Disposable PostgreSQL 16 migration sequence and five SQL probes PASS; pnpm check 81/81; dev_flow validate, JSON parse and diff check PASS. Commit/push branch checkpoint next. No live DB, content import or publication.",
-      "test_evidence": "PostgreSQL 16 disposable PASS: migrations foundation → puppy_checklists → custom_item_icons → training_progression → knowledge_catalog; SQL tests foundation.sql, puppy-checklists.sql, checklist-custom-item-icons.sql, knowledge-catalog.sql, training-progression.sql all PASS. Training progression fixture publishes one version per content item at a time and retains withdrawn-v1 receipt replay. pnpm check PASS (typecheck, edge typecheck, lint, 81/81 tests); python -X utf8 tools/dev_flow.py validate PASS; python -m json.tool docs/tasks/dev/queue.json PASS; git diff --check PASS. Architect APPROVE, Security PASS, Critic PROCEED, independent QA PASS, frozen Reviewer PASS. Live Supabase/RLS and target ACL defaults are not verified; no import/publication.",
+      "checkpoint": "v5 implementation, independent QA PASS and frozen Reviewer PASS; local task done and implementation commit 240362753b4deec30766b3c3b8226a6c40975748 pushed to origin/codex/agent-workflow-stabilization. Branch is based on 4ba74d126b272d8ab821e9de3a416dae0d7046ff; origin/main 0b0f99f8660a392971b5caab71c19334f771f495 is an ancestor. All ten changed paths match v5 write_paths. Disposable PostgreSQL 16 migration sequence and five SQL probes PASS; pnpm check 81/81; dev_flow validate, JSON parse and diff check PASS. No live DB, content import or publication.",
+      "test_evidence": "PostgreSQL 16 disposable PASS: migrations foundation → puppy_checklists → custom_item_icons → training_progression → knowledge_catalog; SQL tests foundation.sql, puppy-checklists.sql, checklist-custom-item-icons.sql, knowledge-catalog.sql, training-progression.sql all PASS. Training progression fixture publishes one version per content item at a time and retains withdrawn-v1 receipt replay. pnpm check PASS (typecheck, edge typecheck, lint, 81/81 tests); commit hook pnpm check PASS 81/81; push hook PASS 736/737 (1 skip). python -X utf8 tools/dev_flow.py validate PASS; python -m json.tool docs/tasks/dev/queue.json PASS; git diff --check PASS. Architect APPROVE, Security PASS, Critic PROCEED, independent QA PASS, frozen Reviewer PASS. Live Supabase/RLS and target ACL defaults are not verified; no import/publication.",
       "history": [
         {
           "from": "planned",
