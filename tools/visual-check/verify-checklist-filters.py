@@ -44,7 +44,7 @@ def tab_metrics(page) -> tuple[dict[str, object], list[dict[str, float] | None]]
 def screenshot_app(page, name: str) -> None:
     page.get_by_test_id('review-app-viewport').screenshot(path=str(OUT / name))
     if REVIEW:
-        page.screenshot(path=str(OUT / name.replace('.png', '-with-review-banner.png')), full_page=True)
+        page.screenshot(path=str(OUT / name.replace('.png', '-full-screen.png')), full_page=True)
 
 
 with sync_playwright() as playwright:
@@ -56,13 +56,13 @@ with sync_playwright() as playwright:
 
     for width in (375, 430):
         height = 844
-        page = browser.new_page(viewport={'width': width, 'height': height + (32 if REVIEW else 0)})
+        page = browser.new_page(viewport={'width': width, 'height': height + 0})
         page_errors: list[str] = []
         page.on('pageerror', lambda error: page_errors.append(str(error)))
         page.goto(checklist_url('Idag'), wait_until='networkidle')
         expect(page.get_by_test_id('daily-checklist-screen')).to_be_visible()
         if REVIEW:
-            expect(page.get_by_test_id('review-banner')).to_contain_text('Granskningsläge · checklistdata')
+            expect(page.get_by_test_id('review-banner')).to_have_count(0)
             expect(page.get_by_text('Kissa', exact=True)).to_be_visible()
         else:
             expect(page.get_by_text('Inga aktiviteter idag', exact=True)).to_be_visible()

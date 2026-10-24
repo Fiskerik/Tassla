@@ -1,0 +1,15 @@
+{
+  "environment": "synthetic RN Web fixture; no live/native certification",
+  "review_fixture": true,
+  "harness": "panels",
+  "passed": [
+    "home: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "development: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "progress: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "profile: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "insights: no temporary labels or page overflow at375/430, short667 and direct140% text"
+  ],
+  "failed": [],
+  "page_errors": [],
+  "generic_images": "Existing decorative generated dog assets; not owner dog photos"
+}

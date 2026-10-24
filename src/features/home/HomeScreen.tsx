@@ -106,7 +106,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
     ? content.find((item) => item.contentType !== 'training_program')
     : undefined;
   const preview = relevantContent ? previewText(relevantContent.body) : '';
-  const pageLabel = dailyFixture ? 'Hem. Granskningsdata.' : 'Hem';
+  const pageLabel = 'Hem';
   const dailyProgress = selectDailyProgress(dailyActivities, dailyState === 'hidden' ? 'unknown' : dailyState);
   const fixtureProgress = dailyFixture
     ? selectDailyProgress(dailyFixture.map((item) => ({ ...item, completed: reviewCompletion[item.id] ?? item.completed })), 'ready')
@@ -153,7 +153,6 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
           <Image source={require('../../../assets/images/home-dog-portrait-placeholder.png')}
             style={styles.dogImage} resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
         </View>
-        <Text accessible={false} testID="home-portrait-standard-label" style={styles.portraitLabel}>Standardbild</Text>
       </MotionPressable>
       {age ? <HomeAgeStrip key={`${dog.id}:${age.unit}`} birthDate={dog.birth_date} today={today} unit={age.unit} portraitFrame={portraitFrame} /> : null}
     </View>
@@ -173,7 +172,6 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
         {!relevantContent && contentState === 'ready' && trainingState === 'error' ? <Text style={styles.body}>Träningen kunde inte hämtas just nu. Öppna Träna för att försöka igen.</Text> : null}
         {!relevantContent && contentState === 'ready' && trainingState === 'ready' && nextStep ? <>
           <Text numberOfLines={2} style={styles.body}>{nextStep}</Text>
-          {reviewTrainingStep ? <Text style={styles.reviewLabel}>Granskningsinnehåll</Text> : null}
         </> : null}
         {!relevantContent && contentState === 'ready' && trainingState === 'ready' && !nextStep ? <Text style={styles.body}>Inget nytt innehåll att visa just nu.</Text> : null}
         {contentState === 'error' ? <Button variant="tertiary" label="Hämta guider igen" accessibilityLabel="Hämta guider igen" onPress={onRetryContent} /> : null}
@@ -413,7 +411,6 @@ const styles = StyleSheet.create({
   portraitPressed: { opacity: 0.84, transform: [{ scale: 0.98 }] },
   portraitPhotoClip: { width: portraitSize, height: portraitSize, overflow: 'hidden', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.canvas },
   dogImage: { width: portraitSize, height: portraitSize, transform: [{ scale: 1.08 }] },
-  portraitLabel: { position: 'absolute', top: tokens.spacing.sm, right: tokens.spacing.xs, borderRadius: tokens.radius.sm, paddingHorizontal: tokens.spacing.xs, paddingVertical: 2, backgroundColor: tokens.colors.home.card, color: tokens.colors.home.text, fontSize: tokens.typography.caption.fontSize - tokens.spacing.xs, lineHeight: tokens.typography.caption.fontSize, fontWeight: '700' },
   weekStrip: { position: 'relative', zIndex: 2, alignSelf: 'stretch', height: tokens.size.touchMin },
   weekItem: { position: 'relative', height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs / 2 },
   weekSeparator: { width: WEEK_GAP },
@@ -429,7 +426,6 @@ const styles = StyleSheet.create({
   cardHeadingRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   cardHeading: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },
   body: { ...tokens.typography.caption, color: tokens.colors.home.text, flexShrink: 1 },
-  reviewLabel: { ...tokens.typography.smallCaption, color: tokens.colors.textSecondary },
   dailyCardContent: { gap: tokens.spacing.xs },
   dailyHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs / 2 },
   dailyTitle: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },

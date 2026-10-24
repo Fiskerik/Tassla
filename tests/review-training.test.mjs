@@ -34,13 +34,13 @@ test('review completion does not invoke the cloud progression callback', async (
   assert.equal(localCalls, 1);
 });
 
-test('review-mode handler returns before cloud progression callback and labels temporary state', async () => {
+test('review-mode handler returns before cloud progression callback without a temporary display label', async () => {
   const screen = await readFile(new URL('../src/features/training/PublishedTrainingScreen.tsx', import.meta.url), 'utf8');
   const localBranch = screen.indexOf('completeTrainingStepForMode(');
   const cloudCall = screen.indexOf('() => onCompleteStep(selectedProgram, selectedStep.id)');
   assert.ok(localBranch >= 0 && cloudCall >= 0);
   assert.match(screen, /completeTrainingStepForMode\(/);
-  assert.match(screen, /Granskningsdata · sparas lokalt/);
+  assert.doesNotMatch(screen, /Granskningsdata|reviewStatus/);
   const workspace = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
   assert.match(workspace, /reviewMode=\{reviewContentEnabled && training\.programs\.some\(\(program\) => program\.id\.startsWith\('review-v1:training:'\)\)\}/);
   assert.match(workspace, /Publicerat träningsinnehåll kunde inte hämtas\. Inga exempelprogram visas\./);

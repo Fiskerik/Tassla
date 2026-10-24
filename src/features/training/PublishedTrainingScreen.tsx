@@ -221,7 +221,6 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     {openProgram
       ? <AppBar mode="Back" title={openProgram.title} onAction={() => { setResetTarget(null); setOpenProgramId(null); }} variant="compact" />
       : <Text accessibilityRole="header" style={styles.screenTitle}>Träning</Text>}
-    {reviewMode ? <Text style={styles.reviewStatus}>Granskningsdata · sparas lokalt</Text> : null}
     <Toast visible={Boolean(error) && !selectedProgram} tone="error" message={error || undefined} onRetry={onRetry} />
     <Toast visible={Boolean(successMessage) && !selectedProgram} tone="success" confirmed message={successMessage} autoDismissMs={2500} onAutoDismiss={() => setSuccessMessage('')} />
 
@@ -275,7 +274,6 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
                 <View style={styles.recommendationCard}>
                   <View style={styles.recommendationImageFrame}>
                     <Image source={source} style={styles.recommendationImage} resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
-                    <View style={styles.standardBadge}><Text style={styles.standardBadgeText}>Standardbild</Text></View>
                   </View>
                   <View style={[styles.recommendationCopy, { minHeight: currentRecommendationCopyHeight }]}
                     onLayout={(event) => recordRecommendationCopyHeight(event.nativeEvent.layout.height)}>
@@ -408,7 +406,6 @@ const styles = StyleSheet.create({
   focusedPage: { gap: tokens.spacing.md, paddingBottom: tokens.spacing.xl },
   focusedCard: { padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.training.continueSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   screenTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
-  reviewStatus: { ...tokens.typography.smallCaption, color: tokens.colors.textSecondary, marginBottom: tokens.spacing.xs },
   programActions: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, marginTop: tokens.spacing.xs },
   programInfoAction: { flex: 1, minWidth: 0, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.xs, borderRadius: tokens.radius.md },
   programInfoLabel: { ...tokens.typography.caption, color: tokens.colors.training.accent, fontWeight: '700', flexShrink: 1 },
@@ -427,8 +424,6 @@ const styles = StyleSheet.create({
   recommendationCard: { gap: tokens.spacing.sm },
   recommendationImageFrame: { width: '100%', aspectRatio: 4 / 3, borderRadius: tokens.radius.md, overflow: 'hidden', backgroundColor: tokens.colors.training.card },
   recommendationImage: { width: '100%', height: '100%' },
-  standardBadge: { position: 'absolute', top: tokens.spacing.xs, right: tokens.spacing.xs, backgroundColor: tokens.colors.surface, borderRadius: tokens.radius.full, paddingHorizontal: tokens.spacing.sm, paddingVertical: 2 },
-  standardBadgeText: { ...tokens.typography.smallCaption, color: tokens.colors.textPrimary, fontWeight: '700' },
   recommendationCopy: { gap: tokens.spacing.xs },
   recommendationProgramTitle: { ...tokens.typography.smallCaption, color: tokens.colors.textSecondary },
   recommendationTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },

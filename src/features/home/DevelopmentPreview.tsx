@@ -177,9 +177,6 @@ export function DevelopmentPreview() {
   return (
     <AppScreen key={screen} footer={<PreviewTabBar active={activeTab} onSelect={setScreen} />}>
       <Animated.View style={{ opacity: pageOpacity }}>
-        <View style={styles.previewTag}>
-          <Text style={styles.previewTagText}>Granskningsdata</Text>
-        </View>
         {page}
       </Animated.View>
     </AppScreen>
@@ -202,11 +199,11 @@ function MoreScreen({
   return (
     <View>
       <PreviewHeading title="Mer" description="Fler delar av Tassla." />
-      <PreviewMenuItem title="Hälsa" description="Visuell grund" onPress={onOpenHealth} />
-      <PreviewMenuItem title="Kunskap" description="Visuell grund" onPress={onOpenKnowledge} />
-      <PreviewMenuItem title="Tassla-pass" description="Visuell grund" onPress={onOpenPassport} />
-      {onOpenDrafts && <PreviewMenuItem title="Utkast för granskning" description="Endast utvecklarläge · ej publicerat" onPress={onOpenDrafts} />}
-      {onOpenComponentGallery && <PreviewMenuItem title="Komponentgalleri" description="Visuell provyta för UI-delar" onPress={onOpenComponentGallery} />}
+      <PreviewMenuItem title="Hälsa" onPress={onOpenHealth} />
+      <PreviewMenuItem title="Kunskap" onPress={onOpenKnowledge} />
+      <PreviewMenuItem title="Tassla-pass" onPress={onOpenPassport} />
+      {onOpenDrafts && <PreviewMenuItem title="Utkast för granskning" description="Textutkast" onPress={onOpenDrafts} />}
+      {onOpenComponentGallery && <PreviewMenuItem title="Komponentgalleri" description="UI-komponenter" onPress={onOpenComponentGallery} />}
     </View>
   );
 }
@@ -220,12 +217,12 @@ function PreviewHeading({ title, description }: { title: string; description: st
   );
 }
 
-function PreviewMenuItem({ title, description, onPress }: { title: string; description: string; onPress: () => void }) {
+function PreviewMenuItem({ title, description, onPress }: { title: string; description?: string; onPress: () => void }) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}>
       <View style={styles.menuCopy}>
         <Text style={styles.menuTitle}>{title}</Text>
-        <Text style={styles.menuDescription}>{description}</Text>
+        {description ? <Text style={styles.menuDescription}>{description}</Text> : null}
       </View>
       <Text style={styles.chevron} accessibilityElementsHidden>›</Text>
     </Pressable>
@@ -274,8 +271,6 @@ function createSyntheticDog(): Dog {
 }
 
 const styles = StyleSheet.create({
-  previewTag: { alignSelf: 'flex-start', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.selectedSurface, paddingHorizontal: tokens.spacing.sm, paddingVertical: tokens.spacing.xs, marginTop: tokens.spacing.sm },
-  previewTagText: { ...tokens.typography.label, color: tokens.colors.primary, fontSize: tokens.typography.caption.fontSize, lineHeight: tokens.typography.caption.lineHeight, letterSpacing: 0.4 },
   heading: { marginTop: tokens.spacing.xl, marginBottom: tokens.spacing.lg },
   headingTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary },
   headingDescription: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginTop: tokens.spacing.sm },

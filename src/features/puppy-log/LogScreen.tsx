@@ -449,7 +449,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         <Toast visible={mutation?.status === 'unsure'} tone="uncertain" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} />
         <LogEventEditor key={editingEvent.id} event={editingEvent} initialDraft={recoveryForEditor?.draft} disabled={editLocked} onDraftChange={saveEditorDraft} onSave={(changes) => { firstUseTip.dismiss(); return saveEdit(editingEvent, changes); }} onSaved={() => { setEditingId(null); setEditorMinimized(false); onEditorRecoveryChange?.(null); }} onDelete={() => { firstUseTip.dismiss(); askToDelete(editingEvent); }} submitRef={editorSubmitRef} onActionStateChange={updateEditorActionState} />
         {deleteTarget ? <Dialog visible title="Radera loggpost?" compactActions onRequestClose={() => setDeleteTarget(null)} onConfirm={confirmDelete}>
-          <MessageCard>{deleteTarget ? `${LOG_EVENT_LABELS[deleteTarget.type]} · ${localDateTimeParts(deleteTarget.occurredAt).date} tas bort ${mode === 'cloud' ? 'från hundens logg' : 'från den tillfälliga förhandsvisningen'}.` : ''}</MessageCard>
+          <MessageCard>{deleteTarget ? `${LOG_EVENT_LABELS[deleteTarget.type]} · ${localDateTimeParts(deleteTarget.occurredAt).date} tas bort.` : ''}</MessageCard>
         </Dialog> : null}
         {discardEditorVisible ? <Dialog visible title="Kasta ändringen?" confirmLabel="Kasta ändring" compactActions onRequestClose={() => setDiscardEditorVisible(false)} onConfirm={discardEditor}>
           <MessageCard>Ändringen är inte sparad. Dina tidigare loggposter påverkas inte.</MessageCard>

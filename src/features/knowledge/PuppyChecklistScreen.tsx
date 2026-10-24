@@ -54,7 +54,6 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
   const [summaries, setSummaries] = useState<Record<string, { done: number; total: number }>>(() => initialOverview?.summary ?? {});
   const [uncertain, setUncertain] = useState(pendingState?.uncertain ?? false);
   const [pendingOperation, setPendingOperation] = useState<PendingChecklistOperation | null>(pendingState?.operation ?? null);
-  const [reviewInfoOpen, setReviewInfoOpen] = useState(false);
   const [formError, setFormError] = useState('');
   const [context, setContext] = useState<ChecklistContext>(() => initialOverview?.preference?.context ?? 'by_age');
   const [preferenceSaved, setPreferenceSaved] = useState(() => initialOverview?.preference !== null && initialOverview?.preference !== undefined);
@@ -563,10 +562,6 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
       {state === 'error' ? <View style={styles.contextStatus}><Text style={styles.contextStatusText}>Val och framsteg kunde inte hämtas.</Text><Button variant="secondary" label="Försök igen" accessibilityLabel="Försök hämta checklistorna igen" onPress={retry} /></View> : null}
       {failedContext ? <View style={styles.contextStatus}><Text style={styles.contextStatusText}>Det nya valet kunde inte sparas. Ditt tidigare läge gäller fortfarande.</Text><Button variant="secondary" label="Försök igen" accessibilityLabel="Försök spara samma fasval igen" onPress={retry} /></View> : null}
       {preferenceUncertain ? <View style={styles.contextStatus}><Text style={styles.contextStatusText}>{message || 'Det gick inte att kontrollera om valet sparades.'} Ditt tidigare läge visas tills kontrollen är klar.</Text><Button variant="secondary" label="Kontrollera" accessibilityLabel="Kontrollera om fasvalet sparades" onPress={retry} /></View> : null}
-      <View style={styles.reviewInfoOverview}>
-        <Button variant="tertiary" label={reviewInfoOpen ? 'Dölj information' : 'Läs mer'} accessibilityLabel="Visa information om checklistorna" onPress={() => setReviewInfoOpen((open) => !open)} />
-        {reviewInfoOpen ? <Text style={styles.meta}>Checklistornas innehåll granskas före publicering.</Text> : null}
-      </View>
       {state === 'ready' && recommendedTemplate ? <>
         <SectionHeader title="För er just nu" />
         <View style={styles.templateList}>{renderTemplateCard(recommendedTemplate, true)}</View>
@@ -578,10 +573,6 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
       })}</View>
     </> : <>
       <Text style={styles.body}>{activeTemplate.intro}</Text>
-      <View style={styles.reviewInfoDetail}>
-        <Button variant="tertiary" label={reviewInfoOpen ? 'Dölj information' : 'Läs mer'} accessibilityLabel="Visa information om checklistorna" onPress={() => setReviewInfoOpen((open) => !open)} />
-        {reviewInfoOpen ? <Text style={styles.meta}>Checklistornas innehåll granskas före publicering.</Text> : null}
-      </View>
       <Card accessibilityLabel={`Framsteg för ${activeTemplate.title}`}>
         {state === 'ready' ? <>
           <Progress value={percentage} label={`${done} av ${total} genomförda`} />
@@ -662,8 +653,6 @@ const styles = StyleSheet.create({
   templateCopy: { flex: 1, minWidth: 0 },
   templateTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, flexShrink: 1 },
   templateIntro: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.sm },
-  reviewInfoOverview: { alignSelf: 'flex-start' },
-  reviewInfoDetail: { borderRadius: tokens.radius.md, backgroundColor: tokens.colors.destination.knowledge.surface, padding: tokens.spacing.sm, marginBottom: tokens.spacing.sm },
   meta: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginVertical: tokens.spacing.xs },
   groupedList: { marginTop: tokens.spacing.md },
   groupedRow: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center' },

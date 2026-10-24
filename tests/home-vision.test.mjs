@@ -43,7 +43,7 @@ test('public and review Home share a generic portrait and expose the dog switche
   assert.match(home, /accessibilityRole="button" accessibilityLabel=\{`Byt hund\. \$\{dog\.name\} är vald`\}/);
   assert.match(home, /accessibilityHint="Visar dina hundprofiler och möjligheten att lägga till en hund"/);
   assert.match(home, /<Image source=\{require\('\.\.\/\.\.\/\.\.\/assets\/images\/home-dog-portrait-placeholder\.png'\)\}[\s\S]*?accessible=\{false\}/);
-  assert.match(home, /<Text accessible=\{false\} testID="home-portrait-standard-label"[^>]*>Standardbild<\/Text>/);
+  assert.doesNotMatch(home, /home-portrait-standard-label|Standardbild|Granskningsdata/);
   assert.match(home, /homeAgeDecorationOpacity\(portraitFrame\.left, portraitFrame\.right, markerCenter\)/);
   assert.match(home, /const fadeStart = left - 16/);
   assert.match(home, /const z = \(markerCenter - fadeStart\) \/ \(right - fadeStart\)/);
@@ -56,12 +56,12 @@ test('public and review Home share a generic portrait and expose the dog switche
   assert.match(home, /rgba\(245, 240, 232, \$\{washOpacity\}\)/);
   assert.match(home, /dailyFixture\s*\?\s*<>\s*<ReviewDailyFixture/);
   assert.match(harness, /reviewFixtureEnabled&&homeScenario==='ready'&&state==='ready'\?homeReviewFixture:undefined/);
-  assert.match(harness, /testID="review-banner"/);
+  assert.doesNotMatch(harness, /testID="review-banner"/);
   assert.match(harness, /testID="review-app-viewport"/);
-  assert.match(harness, /Granskningsdata/);
+  assert.doesNotMatch(harness, /Granskningsdata/);
   assert.doesNotMatch(harness, /Syntetiskt granskningsläge\. AI-genererad standardbild\./);
   assert.match(harness, /appViewport:\{flex:1,minHeight:0\}/);
-  assert.match(harness, /minHeight:tokens\.spacing\.xl/);
+  assert.doesNotMatch(harness, /reviewBannerText|reviewLogBanner/);
   assert.match(panelsHarness, /<DailyChecklistScreen/);
   assert.match(panelsHarness, /setNavigation\('checklist'\)/);
   assert.match(panelsHarness, /__routineToggleCalls/);

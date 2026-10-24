@@ -85,7 +85,7 @@ test('the screen presents the three target views with distinct, honest source se
   assert.match(screen, /Mina/);
   assert.match(screen, /currentAgeBreedMatch/);
   assert.match(screen, /Fortsätt där ni var/);
-  assert.match(screen, /Standardbild/);
+  assert.doesNotMatch(screen, /Standardbild|standardBadge/);
   assert.doesNotMatch(screen, /5 min|10 min|Grundträning|Socialisering/,
     'the workspace has no reviewed duration or topic metadata');
   assert.doesNotMatch(screen, /steg klara|steg markerade/, 'steps are called exercises in the interface');
@@ -104,7 +104,7 @@ test('safety-critical behavior remains guarded: sheet, ordered completion, reset
   assert.match(screen, /Börja med \{nextStep\?\.title\} innan du markerar den här övningen/);
   assert.match(screen, /<Dialog visible=\{Boolean\(resetTarget && resetTargetIsCurrent\)\}/, 'reset confirmation is only visible for the current program version');
   assert.match(screen, /onRequestClose=\{\(\) => setResetTarget\(null\)\} onConfirm=\{confirmReset\}/, 'close and confirm remain separate actions');
-  assert.match(screen, /Granskningsdata · sparas lokalt/);
+  assert.doesNotMatch(screen, /Granskningsdata|reviewStatus/);
   assert.match(screen, /if \(pending\.current \|\| busyStepKey/);
 });
 

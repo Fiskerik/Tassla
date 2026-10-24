@@ -277,3 +277,10 @@ Detta uppdaterar status för den befintliga GAP-listan. Ursprungliga fynd, före
 | G19 Exakt hälsoplan | Löst i 03: två olika exakta planer, rätt källflik/retur och icke-noll-scroll; riktade tester. | Ny telefonrunda på samlad build; plan blir aldrig utförd händelse via layout. |
 
 **Kvar efter UI-paketen:** D1 (nya egna punkt-ikoner), D2 (specifik Insikter-RPC), D3/G17 (publicerat granskat FAQ-/fasinnehåll), D5 (milstolpskällor/sömnintervall), signerad build och riktade telefonprov. Den tidigare separat accepterade Home-fixturmarginalen har inte återbeställts som blockerare. Äldre full raskatalog/Mix, veckomål, widgets/offline/favoriter är fortsatt inte order i denna plan.
+
+
+## Nästa användarresa — ny beställning 2026-10-24
+
+Ägaren har beställt borttagning av tillfälliga test-/preview-/Standardbild-markeringar. Den beställningen ersätter UI04:s tidigare presentationskrav på synliga markeringar; data-/publiceringsgrindar och faktisk status består. Avgränsad uppföljning: `UI-COPY-CLEANUP-2026-10-24`.
+
+För det efterföljande arbetet gäller [användarplanen2026-10-24](../plans/UI-UX-ANVANDARPLAN-2026-10-24.md): första användbara dagen på Hem → användbar Kunskap → träningskedjan → Logg/Insikter → planering/pass → relevant Utveckling, med sammanhängande respons genom alla paket. Den är nästa prioritering och återbeställer inte redan lösta G01–G19-UI-fynd. Denna matris behåller leveranshistorik och D1/D2/D3/D5:s verifieringsgränser.

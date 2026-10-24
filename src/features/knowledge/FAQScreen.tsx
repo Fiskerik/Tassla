@@ -18,7 +18,6 @@ export function FAQScreen({ context, reviewEnabled }: { context: ChecklistContex
   const activeContext = contextTitles[selectedContext];
   return <View style={styles.container}>
     <SectionHeader title="Vanliga frågor" />
-    {reviewEnabled ? <Text style={styles.reviewNote}>Granskningsdata</Text> : null}
     <Tabs items={contexts.map((value) => contextTitles[value])} active={activeContext} accessibilityLabel="Sammanhang för vanliga frågor" variant="rev02-segmented"
       onChange={(label) => {
         const value = contexts.find((candidate) => contextTitles[candidate] === label);
@@ -44,6 +43,5 @@ const styles = StyleSheet.create({
   questionIcon: { width: tokens.size.chipMd, height: tokens.size.chipMd, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.destination.knowledge.surface, borderRadius: tokens.radius.full },
   question: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1 },
   answer: { ...tokens.typography.body, color: tokens.colors.textPrimary, marginTop: tokens.spacing.md },
-  reviewNote: { ...tokens.typography.smallCaption, color: tokens.colors.textSecondary },
   meta: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
 });

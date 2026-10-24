@@ -29,7 +29,7 @@ Ingen optimistisk grön sparstatus används. UUID, exakta återläsningar och vi
 
 ## Tillfälligt granskningsinnehåll
 
-`review-content.ts` innehåller granskningsinnehåll för FAQ och tre träningsprogram med motsvarande guider. Endast `EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=true` visar detta i utvecklings-/TestFlight-byggen, oberoende av `__DEV__`. Berörda vyer visar en kompakt status för granskningsinnehåll i stället för upprepade exempeltexter. False döljer katalogen och checklistans klient gör varken läs- eller skriv-anrop; `tools/visual-check/know02-app.tsx` räknar syntetiska checklistläsningar och skrivningar för den kontrollen. Hem använder samma checklist-/FAQ-destinations-ID:n som Kunskap. Verkliga innehållsfel ersätts inte med falsk lyckad läsning. Träningsutkast har separat lokal progression; se Tränings README och `docs/dev/review-content-builds.md`.
+`review-content.ts` innehåller granskningsinnehåll för FAQ och tre träningsprogram med motsvarande guider. Endast `EXPO_PUBLIC_TASSLA_REVIEW_CONTENT=true` visar detta i utvecklings-/TestFlight-byggen, oberoende av `__DEV__`. Efter ägarbeslut 2026-10-24 visas inga tillfälliga reviewrutor/statusetiketter. Granskningsdata och bildproveniens dokumenteras utanför användarvyn; innehållsgrindarna och separata lokala träningsprogressen är oförändrade. False döljer katalogen och checklistans klient gör varken läs- eller skriv-anrop; `tools/visual-check/know02-app.tsx` räknar syntetiska checklistläsningar och skrivningar för den kontrollen. Hem använder samma checklist-/FAQ-destinations-ID:n som Kunskap. Verkliga innehållsfel ersätts inte med falsk lyckad läsning. Träningsutkast har separat lokal progression; se Tränings README och `docs/dev/review-content-builds.md`.
 
 `DraftContentPreview.tsx` är fortfarande en separat kanonisk draft-granskningsvy som kräver både `__DEV__` och `EXPO_PUBLIC_TASSLA_DRAFT_PREVIEW=true`. Den ersätter inte detta signerade granskningsläge. Dekorativa innehållsbilder är inte hundens profilfoto. Råden kräver mänsklig sakgranskning inför publik release.
 
@@ -40,3 +40,6 @@ Kör `pnpm check` för typkontroll, lint och API-/intent-/innehållstester. `too
 ## Tomt läge och återvägar
 
 Checklistor och Vanliga frågor är fortsatt nåbara när guidurvalet är tomt eller sökningen saknar träffar. Båda destinationerna har en tydlig tillbakaåtgärd till Kunskaps guidvy; checklistdetaljen går först tillbaka till checklistöversikten. Om Kunskap öppnas från Träning visas Tillbaka till Träning i sidhuvudet. Söktomläget har en separat Rensa sökning-åtgärd. Review-träningsguider blir aldrig bildsatta via HomeCarousel-fallbacken i Knowledge och visas inte som publicerade data.
+
+
+Checklisteöversikt och detalj saknar den extra Läs mer-yta som bara förklarade granskningsstatus. FAQ-svar, checklistinnehåll, faktiska mutations-/läsfel och den separata Utkast-vyns säkerhetsvarning är kvar.

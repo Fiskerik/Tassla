@@ -11001,6 +11001,108 @@
       "implementation_state": "V7lokalcheckpointklar2026-10-24: GAPUIintegration, uniformicons/nav, compactinfo/copy, measuredtrainingcards/Knowledgeimages; Logg modalownership and staleTrainingresetcorrected. ArchitectAPPROVE,CriticPROCEED,SecurityAPPROVE,independentQAPASS,ReviewerPASS. NoProductWorkspace/data/service/SQL/auth changes in04.",
       "evidence_status": "Freshsavedpublic/reviewcaptures and independentQAresults. D1/D2/D3/D5,knownseparateHomeclearance,native/signedbuild remain explicit; owneracceptedA03/panel3/generalVO/DynamicType/Supabase/RLS/Compliance preserved.",
       "implementation_commit": "fe1c834f9ff99c6ba19ab9e269406195d3ae7b0e"
+    },
+    {
+      "id": "UI-COPY-CLEANUP-2026-10-24",
+      "title": "Ta bort tillfälliga test- och previewetiketter",
+      "mvp_requirement": "Aktuell ägarbeställning 2026-10-24; G13/G18 presentationsstädning efter UI-R02-04",
+      "plan": "docs/tasks/dev/UI-COPY-CLEANUP-2026-10-24.md",
+      "write_paths": [
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/DevelopmentScreen.tsx",
+        "src/features/home/DailyProgressScreen.tsx",
+        "src/features/home/DevelopmentPreview.tsx",
+        "src/features/home/README.md",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/TrainingScreen.tsx",
+        "src/features/training/README.md",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/FAQScreen.tsx",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/DraftContentPreview.tsx",
+        "src/features/knowledge/README.md",
+        "src/features/account/AuthCallbackView.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/passport/PassportScreen.tsx",
+        "tests/home-vision.test.mjs",
+        "tests/training-screen-policy.test.mjs",
+        "tests/training-overview.test.mjs",
+        "tests/review-training.test.mjs",
+        "tests/ui-r02-04-panelhelhet.test.mjs",
+        "tests/checklist-ui.test.mjs",
+        "tests/ui-copy-cleanup.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/ui-r02-04-app.tsx",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-ui-copy-cleanup.py",
+        "tools/visual-check/verify-ui-r02-04.py",
+        "tools/visual-check/verify-flow-training.py",
+        "tools/visual-check/verify-flow-log.py",
+        "tools/visual-check/verify-health-edit-forms.py",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "tools/visual-check/verify-routine-save-recovery.py",
+        "tools/visual-check/verify-checklist-filters.py",
+        "tools/visual-check/verify-know02.py",
+        "tools/visual-check/verify.py",
+        "docs/design-rules.md",
+        "docs/plans/HOME-REV02-visual-ux-spec.md",
+        "docs/tasks/dev/UI-COPY-CLEANUP-2026-10-24.md",
+        "docs/design/evidence/vision-rev02/ui-copy-cleanup-2026-10-24",
+        "docs/tasks/UI-UX-REV02-ACTIONPLAN-2026-10-23.md",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md"
+      ],
+      "acceptance": [
+        "Ta bort synliga tillfälliga banners/etiketter och tomma wrappers; FAQ och verklig fel/sparstatus kvar.",
+        "Public/review contentgrindar och callbacks/data är oförändrade; ingen publicering.",
+        "Färska renderbilder, kontroller/export och oberoende QA/Reviewer."
+      ],
+      "checks": [
+        "pnpm check",
+        "public iOS JS export",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-R02-04"
+      ],
+      "status": "done",
+      "next_step": "IndependentReviewerPASS,SecurityAPPROVE; actual APIs/callbacks/gates/copyandfreshscreenschecked. Localpresentationcheckpoint; futureUXplanreviewed,no featureimplementation.",
+      "risk_class": "L",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE, Critic PROCEED. Exact file inventory recorded, no handlers/data/flags changes. Current owner removal order supersedes visible temporary badges."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start bounded presentation cleanup on new branch2026-10-24-ui-copy-cleanup from69251d2; preserveFAQ/contentgates/realstatus."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Presentation implemented, check77/77/export1585; clean renders14/5/5each and interactions18/19; protecteddataflags unchanged."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "IndependentQA PASS ownUI04clean5/5both,8/8focused,visualnoemptywrappers; FAQ andgates/status remain. READMEfindingscorrected."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "IndependentReviewerPASS,SecurityAPPROVE; actual APIs/callbacks/gates/copyandfreshscreenschecked. Localpresentationcheckpoint; futureUXplanreviewed,no featureimplementation."
+        }
+      ],
+      "test_evidence": "Fullcheck77/77, publiciOS1585, main14/14each,panels5/5each,UI04clean5/5each,interactions18/19. IndependentQA5/5both+8/8focused,ReviewerPASS,SecurityAPPROVE. Currentownerpresentationoverride documented."
     }
   ]
 }

@@ -30,7 +30,6 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
     <View style={styles.hero} testID="development-hero">
       <Image source={require('../../../assets/images/development-hero-puppy-black-tan-forest-wide.jpg')} style={styles.heroImage} resizeMode="cover"
         accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
-      <View style={styles.imageBadge}><Text style={styles.imageBadgeText}>Standardbild</Text></View>
       <View style={styles.ageJourney}>
         {ageProgress !== null && age && age.stage !== 'VUXEN' ? <AgeArc progress={ageProgress} currentAge={age.label} stage={age.stage} />
           : age?.stage === 'VUXEN' ? <View style={styles.matureAge}>
@@ -180,8 +179,6 @@ const styles = StyleSheet.create({
   page: { gap: tokens.spacing.md, paddingBottom: tokens.spacing.xl, marginHorizontal: -tokens.layout.pageInset, paddingHorizontal: tokens.layout.pageInset, backgroundColor: tokens.colors.home.canvas },
   hero: { position: 'relative', alignSelf: 'stretch', height: tokens.size.developmentHeroHeight, borderRadius: tokens.radius.lg, overflow: 'hidden', backgroundColor: tokens.colors.home.progressTrack },
   heroImage: { width: '100%', height: '100%' },
-  imageBadge: { position: 'absolute', top: tokens.spacing.md, right: tokens.spacing.md, paddingHorizontal: tokens.spacing.sm, paddingVertical: tokens.spacing.xs, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.card },
-  imageBadgeText: { ...tokens.typography.smallCaption, fontWeight: '700', color: tokens.colors.home.text },
   ageJourney: { position: 'absolute', bottom: 0, left: 0, right: 0, minHeight: tokens.size.developmentAgeJourneyHeight, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.xs, backgroundColor: tokens.colors.home.heroOverlay },
   currentStage: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.spacing.md, paddingVertical: tokens.spacing.sm },
   currentStageIcon: { width: tokens.size.buttonHeight, height: tokens.size.buttonHeight, borderRadius: tokens.radius.md, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card },

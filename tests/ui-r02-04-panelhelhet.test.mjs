@@ -16,7 +16,7 @@ test('FAQ uses shared context tabs and keeps questions behind the review gate', 
   const faq = await source('src/features/knowledge/FAQScreen.tsx');
   assert.match(faq, /<Tabs[\s\S]*accessibilityLabel="Sammanhang för vanliga frågor"/);
   assert.match(faq, /reviewEnabled \? REVIEW_FAQ\.filter/);
-  assert.match(faq, /reviewEnabled \? <Text style=\{styles\.reviewNote\}>Granskningsdata/);
+  assert.doesNotMatch(faq, /Granskningsdata|reviewNote/);
   assert.doesNotMatch(faq, /Tillfälligt exempel|sakgranskat/);
   assert.match(faq, /setSelectedContext\(value\); setOpened\(null\)/);
   assert.doesNotMatch(faq, /<Button/);

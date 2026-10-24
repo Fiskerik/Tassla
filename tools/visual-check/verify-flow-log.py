@@ -24,7 +24,7 @@ def open_log(page, width, height=844, scenario="markers"):
     empty_state = "&state=empty" if scenario == "empty" else ""
     page.goto(f"{base_url}?screen=log&today=2026-10-11&calendarScenario={scenario}&logScenario=palette{empty_state}")
     page.wait_for_timeout(450)
-    banner = page.get_by_test_id("review-log-banner").bounding_box()
+    banner = page.get_by_test_id("review-log-banner").bounding_box() if page.get_by_test_id("review-log-banner").count() else None
     if banner:
         page.set_viewport_size({"width": width, "height": height + round(banner["height"])})
         page.wait_for_timeout(80)

@@ -110,7 +110,7 @@ with sync_playwright() as playwright:
     expect(page.get_by_role("tab", name="Efter ålder")).to_have_attribute("aria-selected", "true")
     if review:
         expect(page.get_by_text("När passar en valpkurs?", exact=True)).to_be_visible()
-        expect(page.get_by_text("Granskningsdata", exact=True)).to_be_visible()
+        expect(page.get_by_text("Granskningsdata", exact=False)).to_have_count(0)
         page.get_by_role("tab", name="Första dagarna hemma").click()
         expect(page.get_by_text("Hur kan första natten bli lugnare?", exact=True)).to_be_visible()
     else:
@@ -157,7 +157,7 @@ with sync_playwright() as playwright:
     assert len(image_sizes) == 2 and abs(image_sizes[0]["width"] - image_sizes[1]["width"]) <= 1 and abs(image_sizes[0]["height"] - image_sizes[1]["height"]) <= 1, "recommendation images must share dimensions"
     expect(page.get_by_text(re.compile("Syntetisk övning|layoutgranskning"), exact=False)).to_have_count(0)
     if review:
-        expect(page.get_by_text("Granskningsdata · sparas lokalt", exact=True)).to_be_visible()
+        expect(page.get_by_text("Granskningsdata", exact=False)).to_have_count(0)
     page.get_by_role("tab", name="Mina").click()
     program_name = "Kontakt och namn" if review else "Kontakt i vardagen"
     page.get_by_role("button", name=re.compile(program_name)).click()
