@@ -11146,7 +11146,7 @@
         "UI-COPY-CLEANUP-2026-10-24"
       ],
       "status": "done",
-      "next_step": "Knowledge coverage inventory completed read-only 2026-10-24; prepare a bounded D3 subplan for a versioned public FAQ/phase-checklist source, review gates, and preservation/migration of existing progress/custom items. No content publication or migration is assumed.",
+      "next_step": "Plan v5 has Architect APPROVE, Security PASS, independent documentation QA PASS and Reviewer PASS. The D3 planning checkpoint is done. Erik’s explicit schema/mapping decision is the next gate; if approved, create a separate Architect/Security-reviewed implementation task before any schema write.",
       "risk_class": "M",
       "history": [
         {
@@ -11300,6 +11300,57 @@
       "related_tasks": [
         "FLOW-TRAINING-01"
       ]
+    },
+    {
+      "id": "KNOWLEDGE-D3-CATALOG-PLAN-01",
+      "title": "Kunskap: välj versions- och progresskontrakt för publik FAQ och faslistor",
+      "mvp_requirement": "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md §2, D3 — publicerad FAQ/faschecklista med bevarad progress och egenpunkter",
+      "plan": "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md — KNOWLEDGE-D3-CATALOG-PLAN-01 v5 (Architect APPROVE, Security PASS, QA PASS, Reviewer PASS)",
+      "write_paths": [
+        "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md",
+        "docs/content/README.md",
+        "docs/tasks/dev/HOME-FIRST-DAY-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Architect granskar och godkänner konkret FAQ-/faslistemodell, version-/parentrelationer, identity-update guard och FK-policy i plan v5.",
+        "Review-v1-ID:n, alla 18 item keys, dog progress, egna punkter, nullable ikoner och tre kontexter bevaras; exakt mapping eller explicit blockering av överföring är dokumenterad.",
+        "Published-only read path, RLS/grants, klientskrivspärr, transactionell draft-import/publicering, withdrawal och test-/paritetsmatris är dokumenterade.",
+        "Security granskar konkret RLS/grants, context-/parentintegritet, item-key-FK, gammal-klientparitet och no-op progressmigration; Eriks uttryckliga godkännande krävs före schema writes.",
+        "Inget innehåll skapas eller publiceras, ingen kod eller SQL ändras och ingen Supabase-operation utförs i denna plancheckpoint."
+      ],
+      "checks": [
+        "Architect read-only review av schemaförslag v5",
+        "Security read-only re-review av schemaförslag v5 PASS",
+        "Independent documentation QA PASS",
+        "Independent Reviewer PASS",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "HOME-FIRST-DAY-01"
+      ],
+      "status": "done",
+      "next_step": "Erik beslutar om schema/mappingförslaget. Vid godkännande skapas separat implementations-task med frysta write paths och Architect/Security-review före schema write.",
+      "priority": "P1",
+      "panels": [
+        "7"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Dokumentationsbaserad D3-plan v5 på branch 6fec63e; main@0b0f99f är förfader. Befintliga plan-, content README-, Home task closeout-, queue-, rapport- och Master Log-paths är godkända skrivvägar för denna docs checkpoint.",
+      "test_evidence": "Plan v1 riktning: Architect APPROVE, Security PASS. Förslag v2: CHANGES från båda; v3/v4: Architect CHANGES, Security PASS. Plan v5: Architect APPROVE, Security PASS, oberoende docs QA PASS och Reviewer PASS. v5 innehåller identity-update guard för content_id/version efter checklist children och validering av parent children före publish. Queue JSON, dev_flow validate och git diff --check PASS. Inga produktändringar eller DB-operationer har gjorts.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "D3 plan v5 stängd som dokumentationscheckpoint efter Architect APPROVE, Security PASS, oberoende documentation QA PASS och Reviewer PASS. Sex ändrade dokumentpaths matchar write_paths; git diff --check, queue JSON och dev_flow validate PASS. Inget innehåll, kod, SQL eller Supabase ändrades/användes. Erik behöver separat besluta om schema/mapping innan implementations-task och framtida writes."
+        }
+      ],
+      "implementation_state": "Planering endast. Schemaförslaget har ännu inte godkänts av Erik; inga migrationer, seeds, imports, publiceringar eller appändringar får starta före beslut och separat implementationsgrind.",
+      "evidence_status": "Källunderlaget finns i branch och dokumenterat i användarplanens §2. Live Supabase-status och faktisk publiceringsstatus är ej verifierade."
     }
   ]
 }

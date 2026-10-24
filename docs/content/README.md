@@ -66,7 +66,7 @@ Sex ytterligare Markdown-artiklar under [`artiklar/`](artiklar/README.md) står 
 
 Den äldre `mvp-content-review-v1.md` beskriver förhandsgranskning; `mvp-content-approval-v1.md` gäller ägarens senare godkännande av exakt de tio bundleversionerna, inte FAQ:er eller faschecklistor.
 
-Ägarens migrationsbesked är rapporterat, inte oberoende verifierat. Schema-migration, bundle-import och separat publiceringsskript är skilda åtgärder; faktiskt innehåll i Supabase och dess aktuella `status` är **inte verifierat här**. Nästa Knowledge-plan ska specificera versionerad FAQ-/faslistakälla, innehållsgranskning och bevarande av progress/egna punkter; granskningsflaggan är inte publicering.
+Ägarens migrationsbesked är rapporterat, inte oberoende verifierat. Schema-migration, bundle-import och separat publiceringsskript är skilda åtgärder; faktiskt innehåll i Supabase och dess aktuella `status` är **inte verifierat här**. Versionerings-, innehållsgransknings- och progresskontraktet planeras i [D3-delplanen](../plans/UI-UX-ANVANDARPLAN-2026-10-24.md#knowledge-d3-catalog-plan-01--d3-kontrakt-före-implementation-v5); granskningsflaggan är inte publicering.
 
 ## AI-ursprungsmärkning och publicering
 
