@@ -11146,7 +11146,7 @@
         "UI-COPY-CLEANUP-2026-10-24"
       ],
       "status": "done",
-      "next_step": "Push the reviewed branch to origin and verify the remote head. Then begin actionplan package 2 with an inventory of public versus draft/review Knowledge coverage; do not assume publishing or D1 migration.",
+      "next_step": "Begin actionplan package 2 with an inventory of public versus draft/review Knowledge coverage; do not assume publishing or D1 migration.",
       "risk_class": "M",
       "history": [
         {

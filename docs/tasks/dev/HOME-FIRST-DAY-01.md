@@ -1,6 +1,6 @@
 # HOME-FIRST-DAY-01 — skapa och slutföra dagens första rutin
 
-Status: `done` — v3 är lokalt verifierad, QA/Reviewer-godkänd och köstängd på implementation-checkpoint `a6f352d9264889e5ad7b9c0addbc853d4d17a01b`; push till `origin` återstår.
+Status: `done` — v3 är lokalt verifierad, QA/Reviewer-godkänd och köstängd. Implementation `a6f352d9264889e5ad7b9c0addbc853d4d17a01b` samt dokumentations-closeout `7245fdcb8602059c5085af0a6f212e693b79b6a7` är pushade; `git ls-remote` bekräftade remote-head `7245fdc` vid push-verifieringen.
 
 ## Uppgiftskontrakt
 
@@ -96,5 +96,6 @@ Live Supabase/RLS, native VoiceOver/Dynamic Type och signerad build redovisas se
 - QA checkpoint 2: PASS för kod, beteende, tester, render/evidens, write-path-scope och dokumentation. QA bekräftade att den öppna §14.16-panelavvikelsen inte blockerar denna avgränsade, layoutbevarande task; den är inte full rev02-panelacceptans.
 - Reviewer checkpoint 2: PASS på slutlig v3-diff efter QA; inga kvarvarande blockerande kod-, kontrakts-, test-, scope- eller dokumentationsfynd. Reviewern verifierade även att live Supabase/RLS/native begränsningar anges korrekt.
 - Hook-verifierad implementation-checkpoint: commit `a6f352d9264889e5ad7b9c0addbc853d4d17a01b` (`fix: create routines on the current day`); pre-commit `pnpm check` PASS.
+- Hook-verifierad dokumentations-closeout: commit `7245fdcb8602059c5085af0a6f212e693b79b6a7` (`docs: close out first-day task checkpoint`) pushad tillsammans med implementationen. Push-hook `pnpm check` PASS (736 tester PASS, 1 skip).
 - Köövergång `review → done`: Reviewer PASS registrerad med implementation commit `a6f352d9264889e5ad7b9c0addbc853d4d17a01b` och faktiska kontroller. Tasken är stängd som lokal checkpoint.
-- Nästa steg: pusha branchen och kontrollera remote-head. Därefter följer actionplanens paket 2 med inventering av faktisk publik kontra draft/review-täckning; ingen publikering eller D1-migration antas.
+- Nästa steg: actionplanens paket 2 börjar med inventering av faktisk Knowledge-public kontra draft/review-täckning; ingen publicering eller D1-migration antas.
