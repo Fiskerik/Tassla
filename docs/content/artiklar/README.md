@@ -265,3 +265,25 @@ Praktisk leveransgräns: lokal fungerande resa och lokal visuell form är verifi
 
 
 Kodcheckpoint: `348530a332584d0dcec8f30296c88a05f3f9b0cf`. Avslutsregistreringen använder de befintliga skrivvägarna `docs/releases/HISTORY-2026.md` och `docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md`; inga nya plandokument skapas. Den gamla D3-statusmeningen om pågående schemaimplementation är korrigerad och artikelresan är länkad från paket 2. FAQ/faslistor och övriga D-beroenden stängs inte av artikelarbetet. Uppdaterad redigerbar Word-/PDF-mall finns i uppgiftsartefakterna; den visar de 20 huvudfälten, personliga platshållare och Tips/Viktigt-markörer. Det gamla filnamnet `forslag_v2` är bevarat för samma nedladdningslänk, men dokumentets titel och kontrakt är nu importformat 1.
+
+### DRIVE-ARTICLES-RENDER-FIX-01 — iOS-kortbilder och ägarens testlista, 2026-10-25
+
+Utgångspunkt: `ca85198fc98a7c6f77ce7138c6d66a6392b8ddf7` på samma branch. Ägaren rapporterade en TestFlight-render där bilderna i de två mindre Kunskapskorten fortsatte långt ned på skärmen och dolde kortens text. Ändringen är begränsad till bildlayouten i den befintliga Kunskapsskärmen, regressionsevidensen och denna guide. Den ändrar inte artikeldata, profilfält, navigering eller andra appvyer.
+
+Korrigeringen tar bort beroendet av bildens intrinsic-storlek i layouten: varje bild ligger absolut i en separat aspect-ratio-ram (4:3 i mindre kort, 16:9 i framhävt kort och läsvy), så dess naturliga pixeldimensioner inte deltar i kortets höjdlayout. Lokal webb-render verifierar bildförhållandet; faktisk iOS/TestFlight-render måste också bedömas på enhet.
+
+Skärmbilden i ägarens meddelande visar fortfarande äldre artikelposter. Ett nytt bygge hämtar inte självt ny Supabase-data: `202610240003_article_delivery.sql` och `202610240004_reviewed_drive_articles.sql` måste båda vara tillämpade i rätt miljö innan de tre artiklarna kan visas. Kontrollera också att bygget innehåller den aktuella branchen/committen.
+
+**Testa efter implementationens commit:**
+
+1. Kontrollera att Supabase-miljön har både migration `202610240003_article_delivery.sql` och `202610240004_reviewed_drive_articles.sql` tillämpade. Den första bygger schema/lässtöd; den andra publicerar de tre artiklarna.
+2. Skapa ett nytt iOS-bygge från committen för denna fix och kontrollera att TestFlight-buildens branch/commit är rätt.
+3. Öppna **Kunskap → Alla artiklar**. Kontrollera att **Första dygnet hemma**, **Rumsrenhet – så hjälper du valpen att lyckas** och **Hur mycket ska en valp sova?** finns.
+4. Kontrollera de två mindre korten på en smal iPhone: bilderna är liggande 4:3-beskärningar, korttitlar och lästidsrader börjar direkt under bilderna och inget bildfält fortsätter bakom bottenmenyn.
+5. Öppna **Första dygnet hemma** och kontrollera att hero-bilden är 16:9, ingressen har Tasslas lila yta och Tips/Viktigt-rutorna har läsbara etiketter och färger. Läs till slutet och gå tillbaka.
+6. Kontrollera tilltal med ett hundnamn och kön angivna och med `Inte angivet`; personliga platshållare får inte synas råa. Alla artiklar ska fortfarande gå att öppna även om de inte matchar profilen.
+7. Ändra textstorlek på telefonen och kontrollera att kort, hel artikel och bottennavigation går att läsa och rulla utan horisontell klippning.
+
+För varje senare commit i denna artikeluppgift ska en separat daterad **Testa efter commit**-lista läggas här innan den committas. Webbrender och lokala kontroller är teknisk evidens; ägarens telefonlista ovan får endast markeras PASS efter att den faktiskt körts på rätt bygge.
+
+Lokal verifiering inför commit: riktat Kunskapstest **7/7 PASS**; de befintliga 12 public/review-renderingsscenarierna passerar vid 375/430 px och verifierar dessutom bildförhållandet för båda småkorten, det framhävda kortet och läsvyn. Public iOS-JS-export passerar med 1 588 moduler. Se [renderresultat](../../design/evidence/article-card-render-fix-2026-10-25/results.json) och [Kunskapsbibliotek 375 px](../../design/evidence/article-card-render-fix-2026-10-25/library-Nala-375.png). Detta är syntetisk RN Web-evidens plus en lokal bundle-export. iOS-native/TestFlight, live Supabase och att dessa tre poster visas från den verkliga databasen är ännu NOT TESTABLE här.

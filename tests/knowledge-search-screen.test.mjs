@@ -34,8 +34,9 @@ test('guide metadata comes from published fields and secondary destinations stay
   const screen = await readFile(screenPath, 'utf8');
   assert.match(screen, /readingMinutes\(item\.body\)/);
   assert.match(screen, /item\.contentType === 'guide' \? 'Guide' : 'Artikel'/);
-  assert.match(screen, /featuredImage: \{ width: '100%', aspectRatio: 16 \/ 9 \}/);
-  assert.match(screen, /smallImage: \{ width: '100%', aspectRatio: 4 \/ 3 \}/);
+  assert.match(screen, /featuredImageFrame: \{ width: '100%', aspectRatio: 16 \/ 9, overflow: 'hidden'/);
+  assert.match(screen, /smallImageFrame: \{ width: '100%', aspectRatio: 4 \/ 3, overflow: 'hidden'/);
+  assert.match(screen, /style=\{StyleSheet\.absoluteFill\} resizeMode="cover"/);
   assert.match(screen, /accessibilityLabel="Öppna Checklistor"/);
   assert.match(screen, /accessibilityLabel="Öppna Vanliga frågor"/);
   assert.match(screen, /categoryLink: \{ flexDirection: 'column', alignItems: 'center'/);
@@ -89,7 +90,8 @@ test('published guide versions retain explicit images and library cards use an e
   assert.match(assignment, /export function editorialImageForGuide[\s\S]*ImageSourcePropType/);
   assert.match(carousel, /editorialImageForGuide\(article\)/);
   assert.match(screen, /const image = knowledgeImageForGuide\(item\) \?\? editorialImageForGuide\(item\)/);
-  assert.match(screen, /\{image \? <Image source=\{image\}[\s\S]*?: null\}/);
+  assert.match(screen, /\{image \? <View style=\{featured \? styles\.featuredImageFrame : styles\.smallImageFrame\}>[\s\S]*?<Image source=\{image\} style=\{StyleSheet\.absoluteFill\}[\s\S]*?<\/View> : null\}/);
+  assert.match(screen, /<View style=\{styles\.articleImageFrame\}>[\s\S]*?<Image source=\{knowledgeImageForGuide\(selectedItem\)[\s\S]*?StyleSheet\.absoluteFill/);
 });
 
 test('loading, errors, no published guides and zero matches stay distinct; guide detail keeps the loaded ID', async () => {

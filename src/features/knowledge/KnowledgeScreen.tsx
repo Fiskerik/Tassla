@@ -124,7 +124,9 @@ export function KnowledgeScreen({
       onPress={() => openArticle(item.id)}
       style={featured ? styles.featured : styles.smallCard}
     >
-      {image ? <Image source={image} style={featured ? styles.featuredImage : styles.smallImage} resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}
+      {image ? <View style={featured ? styles.featuredImageFrame : styles.smallImageFrame}>
+        <Image source={image} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+      </View> : null}
       <View style={featured ? styles.cardCopy : styles.smallCardCopy}>
         <Text style={featured ? styles.guideTitle : styles.smallGuideTitle} numberOfLines={featured ? undefined : 3}>{articleText(item.title)}</Text>
         <View style={styles.metadataRow}>
@@ -196,8 +198,10 @@ export function KnowledgeScreen({
       </View> : null}
 
       {selectedItem && contentState === 'ready' ? <View style={styles.articleCard}>
-        <Image source={knowledgeImageForGuide(selectedItem) ?? editorialImageForGuide(selectedItem)} style={styles.articleImage}
-          resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+        <View style={styles.articleImageFrame}>
+          <Image source={knowledgeImageForGuide(selectedItem) ?? editorialImageForGuide(selectedItem)} style={StyleSheet.absoluteFill}
+            resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+        </View>
         <View style={styles.articleCopy}>
         <Text style={styles.articleTitle} accessibilityRole="header">{articleText(selectedItem.title)}</Text>
         {selectedItem.isAiGenerated ? <Text style={styles.aiOriginLabel}>AI-genererat innehåll</Text> : null}
@@ -283,19 +287,19 @@ const styles = StyleSheet.create({
   categoryTitle: { alignSelf: 'stretch', textAlign: 'center', ...tokens.typography.label, color: tokens.colors.textPrimary },
   categoryCopy: { flex: 1, minWidth: 0, paddingVertical: tokens.spacing.sm, gap: tokens.spacing.xs },
   featured: { backgroundColor: tokens.colors.home.card, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, overflow: 'hidden' },
-  featuredImage: { width: '100%', aspectRatio: 16 / 9 },
+  featuredImageFrame: { width: '100%', aspectRatio: 16 / 9, overflow: 'hidden', backgroundColor: tokens.colors.destination.knowledge.surface },
   cardCopy: { paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.sm, gap: tokens.spacing.xs },
   smallCardCopy: { flex: 1, padding: tokens.spacing.sm, gap: tokens.spacing.xs },
   metadataRow: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
   metadataPill: { ...tokens.typography.caption, color: tokens.colors.textSecondary, backgroundColor: tokens.colors.background, borderRadius: tokens.radius.full, paddingHorizontal: tokens.spacing.sm, paddingVertical: tokens.spacing.xs },
   articleGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.md },
   smallCard: { flexGrow: 1, flexBasis: '45%', backgroundColor: tokens.colors.home.card, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, overflow: 'hidden' },
-  smallImage: { width: '100%', aspectRatio: 4 / 3 },
+  smallImageFrame: { width: '100%', aspectRatio: 4 / 3, overflow: 'hidden', backgroundColor: tokens.colors.destination.knowledge.surface },
   guideList: { gap: tokens.spacing.xs },
   guideTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
   smallGuideTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
   articleCard: { alignSelf: 'stretch', borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, overflow: 'hidden' },
-  articleImage: { width: '100%', aspectRatio: 16 / 9 },
+  articleImageFrame: { width: '100%', aspectRatio: 16 / 9, overflow: 'hidden', backgroundColor: tokens.colors.destination.knowledge.surface },
   articleCopy: { padding: tokens.layout.cardPadding },
   articleIntro: { backgroundColor: tokens.colors.destination.knowledge.surface, padding: tokens.spacing.md, borderRadius: tokens.radius.md },
   callout: { backgroundColor: tokens.colors.successSurface, padding: tokens.spacing.md, borderRadius: tokens.radius.md, marginTop: tokens.spacing.lg, gap: tokens.spacing.sm },
