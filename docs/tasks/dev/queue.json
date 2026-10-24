@@ -10988,7 +10988,7 @@
           "evidence": "Reviewer PASS frozenv7 after actual APIs/glyphs/handlers, screenshots vs rev02 and fresh UI18/19/actions9/9both, check76/76/export1585. Independent QA PASS and Security APPROVE saved in VERIFICATION/INDEPENDENT-QA. Local UI checkpoint only; known separate Home4pt and D1/D2/D3/D5/native/build remain explicit."
         }
       ],
-      "next_step": "Commit/pushUI04branch above13f48bf; build this cumulativebranch and run manualphone checklist. FollowonlyremainingcurrentGAPdependencies D1/D2/D3/G17/D5; no pre16OctUIrestoration.",
+      "next_step": "Kodcommitfe1c834 pushad till origin/2026-10-23-ui-04-panelhelhet2026-10-24. Bygg samladebranchen01–04 och kör manualphone checklist i VERIFICATION.md. Aktuella restpunkterD1/D2/D3/G17/D5; prioracceptedHome4ptseparate. Inga äldre UI-förslag återinförs.",
       "priority": "P1",
       "panels": [
         "6",
@@ -10999,7 +10999,8 @@
       "checkpoint": "Rev02-aligned UI family integration for Knowledge, Training, Insights and reminder support flow; no data/RPC changes.",
       "test_evidence": "Frystv7: pnpmcheckPASS app/edgeTS/lint76/76, publiciOSexport1585/contentguardPASS. UI04public18/18review19/19/actions9/9both independentlyrerunQA; Training14/14,Logg13/13,Health9/9both; breed13/13,profile9/9both; image2/2public16/16review; progress2/2public15/15review. Bredpanel52/52public72/74review with exactly2prioracceptedHome4ptmarginfailures recorded. VERIFICATION.md and INDEPENDENT-QA.json.",
       "implementation_state": "V7lokalcheckpointklar2026-10-24: GAPUIintegration, uniformicons/nav, compactinfo/copy, measuredtrainingcards/Knowledgeimages; Logg modalownership and staleTrainingresetcorrected. ArchitectAPPROVE,CriticPROCEED,SecurityAPPROVE,independentQAPASS,ReviewerPASS. NoProductWorkspace/data/service/SQL/auth changes in04.",
-      "evidence_status": "Freshsavedpublic/reviewcaptures and independentQAresults. D1/D2/D3/D5,knownseparateHomeclearance,native/signedbuild remain explicit; owneracceptedA03/panel3/generalVO/DynamicType/Supabase/RLS/Compliance preserved."
+      "evidence_status": "Freshsavedpublic/reviewcaptures and independentQAresults. D1/D2/D3/D5,knownseparateHomeclearance,native/signedbuild remain explicit; owneracceptedA03/panel3/generalVO/DynamicType/Supabase/RLS/Compliance preserved.",
+      "implementation_commit": "fe1c834f9ff99c6ba19ab9e269406195d3ae7b0e"
     }
   ]
 }

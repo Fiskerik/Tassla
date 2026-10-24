@@ -1,13 +1,13 @@
 # UI-R02-04 — Panelhelhet
 
-**Status:** v7 implementerad och lokalt QA/Reviewer/Security-godkänd 2026-10-24; commit/push förbereds
+**Status:** lokal v7-checkpoint klar och pushad 2026-10-24; QA/Reviewer/Security godkända
 **Planversion:** 7
 **Branch:** `2026-10-23-ui-04-panelhelhet`
 **Målbild:** aktuell `vision_rev02.jpg` och skärmkontrakten, inte äldre rev01- eller förslag före 16 oktober.
 
 ## Baslinje och beroenden
 
-- Lokal `origin/main`-bas: `eea0984aba44ef17707e7d583b3f9bf6b165c7ee`. GitHub fetch lyckades i den återupptagna miljön; origin/main är fortsatt denna SHA. Remote 01/02/03 verifierades med ls-remote; 04 är ännu inte pushad.
+- Lokal `origin/main`-bas: `eea0984aba44ef17707e7d583b3f9bf6b165c7ee`. GitHub fetch lyckades i den återupptagna miljön; origin/main är fortsatt denna SHA. Remote 01/02/03 verifierades med ls-remote. UI04-kodcommit `fe1c834` pushades 2026-10-24; denna branch innehåller 01–04.
 - Paket 01, 02 och 03 är staplade före denna branch. Paket 03:s implementation är `81e87bc`; dess oberoende QA/Reviewer och Security är nu godkända efter korrigeringscommit `13f48bf`. V6:s copy-only ändringar i Logg och den delade preview-fixturen får därmed starta efter planreview. Slutlig 04-QA/Reviewer ska sedan granska den integrerade Panel 5-copyn; full Panel 5 §14 förblir separat. UI-R02-04 är därför beroende av UI-R02-03 i kön.
 - FLOW-INSIGHTS-01A:s skärm, modell, RPC-adapter och profil-/Logg-returer finns redan i basen. Detta paket ändrar inte SQL, RPC, behörigheter, datamodell eller rutter.
 - FLOW-PANELS-6-7-IMAGE-DIVERSITY:s separata bildassets och bildtilldelning finns redan i basen. De ska jämföras på nytt i produktionskomponenterna; inga gamla assets kopieras eller ersätts utan ett konkret rev02-fel.
@@ -142,3 +142,5 @@ V7 planreview 2026-10-24: Architect **APPROVE**, UX Critic **PROCEED**. Arkitekt
 - Två verkliga slutrunde-fel rättade: Loggens delete/discard-modalägande och permanent invalidation av gammal resetbekräftelse. QA/Reviewer provade samma frysta kod. Samma callbacks och rå draft bevaras.
 - Den bredare panelrundan och G01–G19 redovisas i actionplanens slutavstämning samt [VERIFICATION](../../design/evidence/vision-rev02/ui-r02-04-panelhelhet/VERIFICATION.md). Tidigare v5/v6-väntestatusar ovan är historik. Inga äldre UI-förslag återinfördes.
 - Detta är lokal UI-checkpoint. D1/D2/D3/D5 och signerad build/ny telefonrunda står separat. Ägarens redan godkända A03/panel 3/VoiceOver/Dynamic Type/Supabase/RLS/Compliance kvarstår.
+
+Leveransreferens 2026-10-24: kodcommit `fe1c834f9ff99c6ba19ab9e269406195d3ae7b0e` är pushad till `origin/2026-10-23-ui-04-panelhelhet`. Git-commit-/push-hookarnas fulla check passerade. Separat dokumentationscloseout ändrar ingen produktkod; mainmerge/signerad build ingår inte.

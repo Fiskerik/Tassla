@@ -1,6 +1,6 @@
 # UI-R02-04 — GAP-slutrunda och lokal verifiering
 
-Uppdaterad **2026-10-24**. Actionplanen är fortsatt den från **2026-10-23**. Branch: `2026-10-23-ui-04-panelhelhet`. Fryst kodbas före detta paket: `13f48bf`. Aktuell visuell referens: [vision_rev02.jpg](../../../../../vision_rev02.jpg).
+Uppdaterad **2026-10-24**. Actionplanen är fortsatt den från **2026-10-23**. Branch: `2026-10-23-ui-04-panelhelhet`. Kodcommit: `fe1c834f9ff99c6ba19ab9e269406195d3ae7b0e`, pushad 2026-10-24. Bas före paketet: `13f48bf`. Aktuell visuell referens: [vision_rev02.jpg](../../../../../vision_rev02.jpg).
 
 Detta är verifiering av produktionens skärmkomponenter med syntetiska data i RN Web. Public/review anger byggflaggan, inte att fixtureinnehåll har publicerats eller hämtats från Supabase. Ingen ny live-data, native- eller signerad build-verifiering påstås.
 
@@ -111,7 +111,7 @@ UI04-bilder täcker 375×844, 430×844, 375×667 och 140 % CSS-proxy. Menyn mät
 Anteckna buildnummer och commit.
 
 1. **Profil:** öppna/stäng rasväljaren, sök en ras, välj och spara; kontrollera samma skapa/ändra-mönster. Kennelavsnittet kan vara hopfällt.
-2. **Checklistor:** skapa en egen punkt och välj ikon direkt. Ändra titel/ikon, spara och återöppna; prova både daglig rutin och egen punkt under Kunskap efter D1. X med osparad text ska erbjuda trygg avslutning, inte kasta tyst.
+2. **Checklistor:** skapa en egen punkt och välj ikon direkt. Ändra titel/ikon, spara och återöppna; prova daglig rutin och, om faslistan finns tillgänglig, egen punkt under Kunskap efter D1. Publik faslista förutsätter även D3. X med osparad text ska erbjuda trygg avslutning, inte kasta tyst.
 3. **Logg/Hälsa:** ändra en anteckning och tryck soptunnan. Bekräftelsen ska ligga över formuläret; Avbryt behåller text. Prova även X→Avbryt respektive kasta. Använd syntetisk post för slutlig radering. Öppna två olika hälsoplaner från respektive ingång och kontrollera rätt plan/retur.
 4. **Träning/Kunskap:** kontrollera jämna kort, fulla rubriker, mindre programetikett och olika bilder. Öppna/rör dig tillbaka. Prova reset Avbryt och bekräfta endast på testprogress.
 5. **Påminnelser:** (i) öppnar förklaringen. Ändra och spara appval; begär telefonbehörighet separat. Det ena ska inte automatiskt utföra det andra.

@@ -2,7 +2,7 @@
 
 Datum: 2026-10-23. Beställare: Erik. Genomförande: Luna/implementer, med koordinator och riskbaserad granskning enligt projektets arbetsflöde.
 
-**Senast uppdaterad 2026-10-24:** 01 är stängt enligt respektive granskning/ägarbesked; 02 är lokalt QA/Reviewer/Security-stängt på `4f91364`; 03 är lokalt QA/Reviewer/Security-stängt och pushat på `13f48bf`; 04 v7 är implementerat och lokalt QA/Reviewer/Security-godkänt. **Huvudmålet är G01–G19 nedan.** Meny-/ikonbeställningen och bildåterkopplingen är tillägg inom 04. D1/D2/D3/D5 och signerad build/ny riktad telefonrunda redovisas separat. 01B, A03 och panel 3 återöppnas inte över ägarens senare godkännanden.
+**Senast uppdaterad 2026-10-24:** 01 är stängt enligt respektive granskning/ägarbesked; 02 är lokalt QA/Reviewer/Security-stängt på `4f91364`; 03 är lokalt QA/Reviewer/Security-stängt och pushat på `13f48bf`; 04 v7 är lokalt QA/Reviewer/Security-godkänt och pushat som `fe1c834` på den samlade byggbranchen. **Huvudmålet är G01–G19 nedan.** Meny-/ikonbeställningen och bildåterkopplingen är tillägg inom 04. D1/D2/D3/D5 och signerad build/ny riktad telefonrunda redovisas separat. 01B, A03 och panel 3 återöppnas inte över ägarens senare godkännanden.
 
 UI-R02-01A har Architect APPROVE, Critic PASS, QA PASS och Reviewer PASS. Paketbrancherna är staplade; den samlade byggbranchen är `2026-10-23-ui-04-panelhelhet`. Senast hämtade GitHub main är fortsatt `eea0984`; branchkod betyder inte att ändringarna automatiskt finns i main eller TestFlight.
 
