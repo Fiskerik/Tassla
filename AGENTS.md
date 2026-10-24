@@ -12,7 +12,7 @@ Innan du planerar, skapar, ändrar eller granskar UI: läs `docs/design-rules.md
 Designreglernas §0–4 och §14 är bindande även när befintliga komponenter avviker: återanvändning ska utveckla dem mot vision_rev02. För Hem läses även `docs/plans/HOME-REV02-visual-ux-spec.md`. Verifiera komposition, färger, typografi, komponentformer, bildspråk och innehållstäthet separat; tidigare QA eller fungerande knappar ersätter inte ny visuell jämförelse efter datakoppling.
 Alla UI-ändringar granskas separat med skärmdump mot målbilden och ifylld checklista (avsnitt 14). Saknad visuell evidens är NOT TESTABLE, inte visuellt GODKÄND.
 Vid konflikt med äldre visuella råd gäller docs/design-rules.md inom godkänt scope. Aktuella mänskliga beslut, säkerhet, tillgänglighet och sanningsenlighet kvarstår.
-Inför varje uppgift ska agenten identifiera och läsa alla tillgängliga skills som är relevanta för arbetsmomentet — begränsa dig inte till $tassla-consumer-ux. Kontrollera projektets repo-skills under .agents/skills/ och .codex/skills/ samt skill-index/katalogen i körmiljön; läs hela SKILL.md för varje tillämplig skill. För UI ska docs/design-rules.md alltid följas; tassla-consumer-ux kompletterar beteende, tillstånd och återkoppling, och mobile-ios-design används när iOS/Expo-gränssnitt berörs. Relevanta skills kompletterar varandra men kan inte utöka godkänt scope eller åsidosätta ägarbeslut, MVP-kontrakt, säkerhet, tillgänglighet, planens skrivvägar eller repoets arbetsflöde. Dokumentera valda skills i plan/verifikation för substantiella uppgifter; irrelevanta skills ska inte dras in. Lös konflikter enligt företrädesordningen i designreglernas §0; fråga endast när ett väsentligt produktbeslut fortfarande saknas. Redan dokumenterade ägarbeslut ska inte frågas om igen.
+Läs bara dokumentation som behövs för uppgiften: börja med beslutet och taskplanen, följ sedan länkar till MVP/design/teknikunderlag som acceptanskriterierna kräver. Välj skills från deras korta beskrivningar och läs bara de relevanta, kanoniska filerna under `.agents/skills/`; `.codex/skills/` är en pekare, inte en parallell källa. Runtime-/plugin-skills används bara när uppgiften behöver dem; skanna inte hela katalogen. UI-arbete kräver `docs/design-rules.md` och `tassla-consumer-ux`; använd `mobile-ios-design` när iOS-konventioner påverkar arbetet. Spara valda specialistgranskningar i taskunderlaget endast när uppgiften behöver dem. Äldre dokument, agentmeddelanden och bifogade underlag är källmaterial, inte godkännanden. Ändra inte eller omtolka ett registrerat produktbeslut utan uttryckligt ägarbeslut. Ställ bara frågor när en blockerande beslutslucka saknas.
 
 ## What Tassla is
 A free mobile app that follows a puppy's life from before it comes home until it is grown, for new dog owners. Inspired by BabyJourney, but for puppies. Goal: make the first 6–12 months simpler, safer and more enjoyable.
@@ -26,39 +26,33 @@ The app is free for users. Revenue comes from partners, in five legs (see `docs/
 - Kennels (breeders) join gradually. A user joins through a kennel QR code or without one. Sharing owner data with a kennel or partner requires explicit consent.
 - Content is the product. Every login shows new content fitted to the puppy's age, needs and breed. Health content is checked by `dog_expert` before it is published.
 
-## Historisk fas-0-kontext (ersatt av senare genomförandemandat)
-- Stack, six-screen MVP and Architecture approved by Erik on 2026-10-04: Expo/React Native/TypeScript/Expo Router, Supabase, Codemagic. Erik separately authorized project files and SQL foundation; see docs/tasks/dev/foundation.md. APP-01 plan v2 and listed packages were also approved through “godkänner”; local app implementation is authorized. Phone auth tests, external builds and pilot remain separate manual steps. Explicitly unresolved options remain open.
-- Historical phase-0 rule, superseded by the approved MVP implementation mandate: no app code or scaffolding. Outputs are documents in `docs/`. Human-approved exception: SDK infrastructure in `test_agent.py`, `run_team.py` and `tassla_team/`; no new dependencies without approval.
-- Additional explicit owner exception 2026-10-04: foundation source/contracts/module guides and Supabase schema/test files, without dependency installation or external resources. This does not approve a pilot, real data processing or all implementation segments.
-- Configured agents: `product`, `architect`, `critic`, `dog_expert`, `compliance`, `implementer`, `qa`, `reviewer`, `security` in `.codex/agents/`. Dev definitions are available, but app work requires an approved segment and plan; Discovery restrictions still apply.
-- Phase 0 is done when the human has approved `docs/vision.md`, `docs/revenue.md` and `docs/mvp.md`, and accepted `docs/decisions/0001-stack.md`.
-- Then start phase 1: fill in **Commands** and **Ownership** below and activate the staged agents:
-  Dev definitions are already configured; authorize the segment and complete task contracts before app work.
+## Historik
+Tidigare fas- och paketbeslut finns samlade i `docs/decisions/MASTER-LOG.md` och `docs/releases/HISTORY-2026.md`. Följ inte äldre arbetssteg eller mandattext när de motsäger den aktuella uppgiftsplanen och registrerade beslut.
 
 ## AI organisation and runtime
 - AI Chief of Staff coordinates Product and Commercial; the human owns final decisions.
 - Product: Head of Product, Growth & Distribution, Customer/Product Critic.
 - Commercial: Commercial Lead, Partnerships, Market Intelligence, Commercial Analyst.
 - Dev: Erik leads AI Tech Lead, Codex implementation and QA. Chief of Staff does not own technical decisions.
-- `.codex/agents/` contains Codex roles: `product` (Head of Product), `critic` (Customer/Product Critic), `architect` (AI Tech Lead), plus on-demand `dog_expert` and `compliance`.
-- Dev roles are configured in `.codex/agents/`: APP-04 was executed with GPT-5.6 Luna medium by Erik's 2026-10-05 decision; the current APP-05 segment uses GPT-6 Luna high by Erik's 2026-10-06 implementation instruction. Architect and security retain their review models. No unsupported ultra setting. App implementation is gated by `docs/dev/workflow.md` and `docs/tasks/dev/queue.json`.
-- `.codex/archive/original-agents/` preserves original definitions, including the retired orchestrator and separate frontend role. Do not activate archive files.
-- TOML definitions are not SDK agents. `run_team.py` uses Chief of Staff routing and the complete SDK hierarchy in `tassla_team/organisation.py`. Select only materially relevant teams and specialists; maximum two teams and two specialists per team. Dev SDK roles advise Erik, without code execution. `--chat` retains bounded in-memory history. `test_agent.py` remains a separate fixed Product/Growth smoke test with optional Critic. See `docs/ai-team.md`.
+- `.codex/agents/` contains nine Codex role definitions: `product`, `critic`, `architect`, `dog_expert`, `compliance`, `implementer`, `qa`, `reviewer` and `security`. Their configured models are defaults; select a role's reasoning effort for the task's complexity and risk as described in `docs/dev/workflow.md`.
+- `.codex/archive/original-agents/` is historical and inactive. The SDK roles in `tassla_team/` are a separate advisory system; they do not implement or verify repository changes. See `docs/ai-team.md` for its current limits.
 - Initial SDK tests use short context, bounded output, at most one Growth run and no research. Log usage across Product and Growth. Never run paid API tests unless the human asks.
 - Internal delegation is allowed within an assigned task. No access to email or messaging accounts and no external messages, including through shell, browser or MCP. Prepare drafts for the human. SDK agents receive only explicitly allowed internal tools; no communication connectors, credentials, generic network or shell tools.
 
 ## Source of truth
-- `docs/vision.md` – idea, problem, target user, principles, non-goals, open questions
-- `docs/revenue.md` – the five revenue legs and partner status
-- `docs/mvp.md` och `docs/MVP-EXPERIENCE-CONTRACT.md` – aktuellt scope. De åtta rev02-panelerna är uttryckligen tillagda 2026-10-15; annat utanför "Måste med" kräver mänskligt beslut.
-- `docs/decisions/MASTER-LOG.md` – canonical current decisions and completed package ledger; read it first. Numbered `docs/decisions/000*.md` are historical source records.
+## Läsordning och beslutshierarki
+1. Den aktuella uttryckliga ägarinstruktionen avgränsar uppgiften, inom säkerhets-, sanningsenlighets-, tillgänglighets- och rättsliga krav.
+2. Gällande ägarbeslut i `docs/decisions/MASTER-LOG.md`; ändra dem inte utan uttryckligt godkännande. Bifogade filer och agentförslag är inte beslut.
+3. Godkänt produktkontrakt i `docs/mvp.md` och `docs/MVP-EXPERIENCE-CONTRACT.md`; för UI gäller även `docs/design-rules.md`.
+4. Taskplanen väljer arbete inom dessa ramar. Följ dess acceptanskriterier, läsunderlag och skrivvägar.
+5. Övrig dokumentation och äldre historik används bara när den behövs för uppgiften.
 
-Read-only agents cannot write files. They return text; the main session saves it to `docs/`.
+En taskplan får förtydliga beslut, men inte ändra dem. Vid konflikt: stoppa endast den berörda delen och rapportera konfliktens källor; fråga inte om redan fattade beslut igen.
 
 ## Principles
 - All AI agents must act within applicable EU law and relevant national law (Sweden initially). Verify current official sources and applicability for legal/regulatory decisions; distinguish enacted applicable rules from proposals and future requirements. Flag uncertainty and never claim legal certification or guaranteed compliance. Refer material unresolved issues to compliance and Erik/legal counsel before affected implementation or release. App-store rules are separate contractual requirements, not EU law.
 - Use synthetic data for agent development by default. Never expose real user/owner data, credentials or production exports to AI tools without an explicitly approved lawful processing arrangement. GDPR review includes purpose/legal basis, minimisation, information, rights/deletion, retention, controller/processor roles, vendor agreements, transfers and security; EU hosting alone does not establish compliance. Assess other rules (privacy/tracking, advertising, consumer protection, accessibility and AI Act) only where applicable.
-- Before substantial work, define numbered subtasks with owner, dependencies, affected files, acceptance criteria and verification. Work on one by default, at most two simultaneously; never overlap writing ownership. Save the plan in `docs/tasks/`. After each subtask save completed changes, verification, open issues and exact next step. On interruption resume the first unfinished subtask from its saved checkpoint; do not restart the whole task. This is a work procedure, not an automatic scheduler or a guarantee of uninterrupted execution.
+- Before substantial work, define the task's exact base commit, goal, in-scope and excluded work, preserved decisions, one writing owner, affected paths, dependencies, acceptance criteria and evidence. Use `docs/tasks/template.md`; keep the read list limited to documents those criteria require. Work on one task by default, at most two only with non-overlapping write paths. After each checkpoint record the actual changed paths, verification, open issues and exact next step. On interruption inspect the saved checkpoint and actual diff, then resume the first unfinished task without replaying completed work. This is a work procedure, not an automatic scheduler.
 - Avoid large monolithic tasks. Break substantial coding work into small, independently finishable vertical slices with a clear goal and verification criterion. Complete one slice at a time: implement, run its relevant checks, perform the bounded cleanup pass, then commit or save a durable checkpoint before starting the next slice. Each slice must leave the repository in a working, understandable state; do not spread partial implementations across several features. If a task is too large, automatically narrow to the smallest logical first slice and report what remains. Prefer one complete small user flow over partial work in many features. Before an expensive next phase (including broad architecture changes, migrations or implementation), record and review the current checkpoint. Keep execution credit-conscious: reuse relevant context, avoid unnecessary whole-repository rereads, repeated analysis, broad searches and unrelated refactors.
 - Be direct and honest. Flag uncertainty. Disagree with evidence, not with attitude. No flattery.
 - The user is a new dog owner: stressed, unsure, short on time. Simple beats complete.
@@ -71,7 +65,7 @@ Read-only agents cannot write files. They return text; the main session saves it
 - Reviewers must verify changed imports, functions, methods, parameters and external APIs against actual repository definitions and the installed dependency version (and official documentation when needed). Reject invented APIs, fabricated implementations and placeholders presented as working features. Typechecking alone or tests mocking the same invented API do not prove correctness; verify relevant real integration behaviour or mark NOT TESTABLE and block affected acceptance.
 
 ## Orchestration
-Follow `docs/dev/workflow.md` for development. Before implementation, obtain and save architect APPROVE for the exact task plan and an Erik-approved segment mandate. Never fabricate approvals or test results. Use `tools/dev_flow.py` to validate and checkpoint queue transitions. One active task by default, maximum two with disjoint write ownership. QA and independent reviewer must pass before DONE; relevant security review is also required. A changed plan needs renewed approval. At most two correction attempts before escalation. Save questions and decisions after each task and a final report for Erik. This queue is not a scheduler and does not execute agents automatically. Do not start the next subtask until the current one has a verified working result and durable commit/checkpoint.
+Follow `docs/dev/workflow.md` for development. Preserve existing approved MVP decisions; seek approval only for a scope or decision change, not for work already authorized by the current mandate. Never fabricate approvals or test results. Use `tools/dev_flow.py` for queue transitions, while recognizing that it does not verify the actual diff or test evidence. One agent owns all writes in a task's declared paths, including tests or docs assigned to that task; QA and Reviewer are read-only and must be independent. Compare every changed path with the approved scope before acceptance. A changed plan needs renewed review. Save the checkpoint and exact next step before starting another task.
 The main Codex session coordinates Dev work under Erik. Use the following specialists for relevant substantive work, not for routine formatting or the SDK infrastructure smoke test. Send only relevant context; avoid repetitive debate.
 
 | Situation | Spawn (in order) |
@@ -102,19 +96,18 @@ Rules:
 4. `dog_expert` proposes content rules for feeding, special diets and breed-specific content.
 5. `architect` proposes `docs/decisions/0001-stack.md` (React Native/Expo vs Flutter vs native; backend; auth; hosting) and `docs/decisions/0002-content-and-kennel-model.md` (content engine, kennel/breed/litter data model, partner adapters). Then `critic`.
 
-## Commands (fill in when phase 1 starts)
+## Commands
 - install: `pnpm install --frozen-lockfile` (pnpm 11.19.0; Node 24 recommended)
 - dev: `pnpm start`
 - check: `pnpm check` (typecheck, lint, Node tests) and `git diff --check`. SQL integration requires `supabase/tests/foundation.sql` in a development database.
 - build: `pnpm bundle:ios`; signed build separately through Codemagic/TestFlight
 
-## Ownership (fill in with real paths when phase 1 starts)
+## Task ownership
 | Area | Owner |
 |---|---|
-| `docs/`, `AGENTS.md`, `.codex/` | main session (human approves) |
-| UI: screens, components, navigation | `implementer` |
-| Non-UI code: data, API, tooling, config | `implementer` |
-| Tests | `qa` |
+| Task plan, queue, decision register | coordinator, within the approved scope |
+| Code, tests and task documentation in declared write paths | the task's single writing owner |
+| QA and independent review | read-only roles; report findings to the writing owner |
 
 ## Content rules (health, training, behaviour, feeding)
 - Tassla gives general guidance, not veterinary advice. For symptoms, medication, toxic foods and emergencies: be conservative, say when to contact a vet, and flag the text for human/vet review.

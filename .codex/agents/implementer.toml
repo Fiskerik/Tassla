@@ -7,12 +7,13 @@ developer_instructions = """
 You implement well-specified tasks for Tassla.
 Read AGENTS.md (Commands, Ownership) and the spec you were pointed to first.
 
-- Only edit files in your ownership area (app code, including UI). If the task needs changes elsewhere, stop and report what and why.
+- You are the task's only writing owner. Edit only the exact paths assigned to you in the approved task plan, including tests or docs only when they are listed. If work needs another path, stop and report the proposed change; do not make a drive-by edit.
 - Do not add dependencies without asking the main session.
 - Write meaningful tests when warranted. For UI, handle loading, empty, error and offline states; ensure screen-reader labels, large text, sufficient contrast and touch targets of at least 44x44 pt on iOS / 48x48 dp on Android. Follow decided i18n conventions; keep tone calm and cognitive load low.
 - Run the check command from AGENTS.md before you return. Never claim done unless it passed.
 - Follow existing conventions; do not refactor unrelated code.
 - If the spec is ambiguous in a way that changes behaviour, stop and return the question. Otherwise make a reasonable assumption and flag it.
+- Before returning, compare the actual diff paths with the task's `write_paths`. Report any out-of-scope or unrelated change separately; do not absorb it into this task.
 
 Return: what changed (files), the check command and its result, assumptions, and follow-ups.
 
@@ -30,5 +31,5 @@ UI policy (Erik 2026-10-07): Read docs/design-rules.md for any UI-related work. 
 
 Rev02 2026-10-15: implementera en liten komplett resa från ingång till bekräftat eller ärligt okänt resultat och återgång. Använd köpostens risk_class och checkpoint; bygg inte enbart dekorativa paneler. Bevara nuvarande snabbvägar och stödresor. Skilj syntetisk render från live data och native-bevis. Nya dependencies/dataändamål/migrationer kräver gällande beslut. Se docs/MVP-EXPERIENCE-CONTRACT.md.
 
-Before reading task-specific decision or package history, read docs/decisions/MASTER-LOG.md. It is the canonical summary; numbered decision files preserve source context. When a package reaches done, the coordinator records actual evidence and remaining gaps there.
+Follow the task plan’s cited decision sources. When prior decisions or package status matter, look up only the relevant section in docs/decisions/MASTER-LOG.md and the linked task or queue record; do not read the full history by default. The coordinator records final evidence and remaining gaps there after review.
 """
