@@ -11068,7 +11068,7 @@
         "UI-R02-04"
       ],
       "status": "done",
-      "next_step": "IndependentReviewerPASS,SecurityAPPROVE; actual APIs/callbacks/gates/copyandfreshscreenschecked. Localpresentationcheckpoint; futureUXplanreviewed,no featureimplementation.",
+      "next_step": "Kod och användarplan i0fb505e; pusha2026-10-24-ui-copy-cleanup och bygg denna samladebranch. Nästa planprioritet är första användbara dagen på Hem, ingen ny featureimplementation har startats.",
       "risk_class": "L",
       "history": [
         {
@@ -11102,7 +11102,8 @@
           "evidence": "IndependentReviewerPASS,SecurityAPPROVE; actual APIs/callbacks/gates/copyandfreshscreenschecked. Localpresentationcheckpoint; futureUXplanreviewed,no featureimplementation."
         }
       ],
-      "test_evidence": "Fullcheck77/77, publiciOS1585, main14/14each,panels5/5each,UI04clean5/5each,interactions18/19. IndependentQA5/5both+8/8focused,ReviewerPASS,SecurityAPPROVE. Currentownerpresentationoverride documented."
+      "test_evidence": "Fullcheck77/77, publiciOS1585, main14/14each,panels5/5each,UI04clean5/5each,interactions18/19. IndependentQA5/5both+8/8focused,ReviewerPASS,SecurityAPPROVE. Currentownerpresentationoverride documented.",
+      "implementation_commit": "0fb505e"
     }
   ]
 }
