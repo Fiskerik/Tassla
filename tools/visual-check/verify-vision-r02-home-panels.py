@@ -109,7 +109,7 @@ def set_vertical_scroll(page, offset: int) -> dict[str, object] | None:
 
 def verify_development_views(browser) -> None:
     for width, app_height in ((375, 844), (430, 844)):
-        page = browser.new_page(viewport={'width': width, 'height': app_height + (32 if REVIEW else 0)})
+        page = browser.new_page(viewport={'width': width, 'height': app_height + 0})
         page_errors: list[str] = []
         page.on('pageerror', lambda error: page_errors.append(str(error)))
         page.goto(home_url(), wait_until='networkidle')
@@ -118,7 +118,7 @@ def verify_development_views(browser) -> None:
         expect(page.get_by_text('11 veckor · Valp', exact=True)).to_be_visible()
         expect(page.get_by_text('Nästa milstolpar', exact=True)).to_be_visible()
         expect(page.get_by_text('Granskade milstolpar är inte tillgängliga ännu', exact=True)).to_be_visible()
-        expect(page.get_by_text('Standardbild', exact=True)).to_be_visible()
+        expect(page.get_by_text('Standardbild', exact=True)).to_have_count(0)
         age_pill = page.get_by_test_id('development-age-pill')
         age_pill_box = age_pill.bounding_box()
         record(f'Development age pill has a 44pt touch target at {width}px',
@@ -145,7 +145,7 @@ def verify_development_views(browser) -> None:
                {'initial_pill': age_pill_box})
         image = page.get_by_test_id('development-screen').locator('img').first.bounding_box()
         image_is_prominent = image is not None and image['height'] >= 260
-        record(f'Development hero uses its large unique Standardbild at {width}px', image_is_prominent, {'image_box': image})
+        record(f'Development hero retains its large unique generic image at {width}px', image_is_prominent, {'image_box': image})
         if REVIEW:
             guide = page.get_by_role('button', name='Öppna guide: Så bygger ni lugna rutiner', exact=True)
             expect(guide).to_be_visible()
@@ -172,7 +172,7 @@ def verify_development_views(browser) -> None:
 
 def verify_development_states(browser) -> None:
     for state in ('loading', 'error'):
-        page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+        page = browser.new_page(viewport={'width': 375, 'height': 844 + 0})
         page.goto(development_url(guides_state=state), wait_until='networkidle')
         if state == 'loading':
             expect(page.get_by_role('progressbar', name='Laddar innehåll')).to_have_count(2)
@@ -189,7 +189,7 @@ def verify_development_states(browser) -> None:
         record(f'Development guide {state} state renders distinctly', True)
 
     for scenario in ('missing', 'invalid', 'future'):
-        page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+        page = browser.new_page(viewport={'width': 375, 'height': 844 + 0})
         page.goto(development_url(age_scenario=scenario), wait_until='networkidle')
         expect(page.get_by_text('Ålder och fas', exact=True)).to_be_visible()
         expect(page.get_by_text('Åldersresan visas när ett giltigt födelsedatum finns.', exact=True)).to_be_visible()
@@ -320,7 +320,7 @@ def verify_development_states(browser) -> None:
 
 def verify_insights_views(browser) -> None:
     for width in (375, 430):
-        page = browser.new_page(viewport={'width': width, 'height': 844 + (32 if REVIEW else 0)})
+        page = browser.new_page(viewport={'width': width, 'height': 844 + 0})
         page_errors: list[str] = []
         page.on('pageerror', lambda error: page_errors.append(str(error)))
         page.goto(profile_url(), wait_until='networkidle')
@@ -391,13 +391,13 @@ def verify_insights_views(browser) -> None:
         page.close()
 
     # Distinct loading/error/empty copy and an actionable retry, using the same production LogScreen.
-    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + 0})
     page.goto(insights_url(state='loading'), wait_until='networkidle')
     expect(page.get_by_text('Hämtar registreringar…', exact=True)).to_be_visible()
     page.screenshot(path=str(OUT / 'insights-loading-375.png'), full_page=True)
     page.close()
 
-    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + 0})
     page.goto(insights_url(state='error'), wait_until='networkidle')
     expect(page.get_by_text('Insikterna kunde inte hämtas', exact=True)).to_be_visible()
     retry = page.get_by_role('button', name='Försök igen', exact=True)
@@ -408,7 +408,7 @@ def verify_insights_views(browser) -> None:
     page.close()
 
     # 375×667 and a 140% web text proxy check the chart/footer fit and scroll path.
-    page = browser.new_page(viewport={'width': 375, 'height': 667 + (32 if REVIEW else 0)})
+    page = browser.new_page(viewport={'width': 375, 'height': 667 + 0})
     page.goto(insights_url(), wait_until='networkidle')
     page.get_by_text('Sömnmarkeringar', exact=True).scroll_into_view_if_needed()
     chart_title = page.get_by_text('Sömnmarkeringar', exact=True).bounding_box()
@@ -430,7 +430,7 @@ def verify_insights_views(browser) -> None:
 
 
 def verify_breed_picker(browser) -> None:
-    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + 0})
     page_errors: list[str] = []
     page.on('pageerror', lambda error: page_errors.append(str(error)))
     page.goto(profile_url(breed_count=24), wait_until='networkidle')
@@ -497,7 +497,7 @@ def verify_breed_picker(browser) -> None:
            {'fetch_calls': page.evaluate('window.__breedFetchCalls'), 'page_errors': page_errors})
     page.close()
 
-    page = browser.new_page(viewport={'width': 375, 'height': 667 + (32 if REVIEW else 0)})
+    page = browser.new_page(viewport={'width': 375, 'height': 667 + 0})
     page.goto(profile_url(breed_count=24), wait_until='networkidle')
     page.get_by_test_id('breed-picker-trigger').click()
     search = page.get_by_role('textbox', name='Sök hundras', exact=True)
@@ -521,7 +521,7 @@ def verify_breed_picker(browser) -> None:
     page.screenshot(path=str(OUT / 'breed-picker-text-140-375x667.png'), full_page=True)
     page.close()
 
-    page = browser.new_page(viewport={'width': 430, 'height': 844 + (32 if REVIEW else 0)})
+    page = browser.new_page(viewport={'width': 430, 'height': 844 + 0})
     page.goto(profile_url(breed_count=40), wait_until='networkidle')
     trigger = page.get_by_test_id('breed-picker-trigger')
     trigger.click()
@@ -533,7 +533,7 @@ def verify_breed_picker(browser) -> None:
            {'box': input_box})
     page.close()
 
-    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + 0})
     page.goto(profile_url(breed_count=1, breed_scenario='legacy'), wait_until='networkidle')
     trigger = page.get_by_test_id('breed-picker-trigger')
     expect(trigger).to_have_accessible_name('Ras: Ras saknas i listan')
@@ -554,10 +554,10 @@ def verify_breed_picker(browser) -> None:
     record('Missing catalog row does not synthesize an Okänd ras option', True)
     page.close()
 
-    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + 0})
     page.goto(profile_create_url(), wait_until='networkidle')
     if REVIEW:
-        expect(page.get_by_text('Granskningsdata', exact=True)).to_be_visible()
+        expect(page.get_by_text('Granskningsdata', exact=True)).to_have_count(0)
     trigger = page.get_by_test_id('breed-picker-trigger')
     expect(trigger).to_have_accessible_name('Ras: Välj ras')
     page.screenshot(path=str(OUT / 'breed-picker-create-collapsed-375.png'), full_page=True)
@@ -575,7 +575,7 @@ def verify_breed_picker(browser) -> None:
            page.evaluate('window.__breedFetchCalls === 1'))
     page.close()
 
-    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + 0})
     page.goto(profile_create_url(breed_count=24, breed_scenario='retry'), wait_until='networkidle')
     expect(page.get_by_text('Raslistan kunde inte hämtas. Kontrollera anslutningen och försök igen.', exact=True)).to_be_visible()
     page.get_by_role('button', name='Hämta raslistan igen', exact=True).click()
@@ -589,7 +589,7 @@ def verify_breed_picker(browser) -> None:
 
 def verify_profile_density(browser) -> None:
     for width, height in ((375, 667), (375, 844), (430, 844)):
-        page = browser.new_page(viewport={'width': width, 'height': height + (32 if REVIEW else 0)})
+        page = browser.new_page(viewport={'width': width, 'height': height + 0})
         page_errors: list[str] = []
         page.on('pageerror', lambda error: page_errors.append(str(error)))
         page.goto(BASE + '/?screen=profile-create', wait_until='networkidle')
@@ -610,11 +610,11 @@ def verify_profile_density(browser) -> None:
                {'heading': create_heading, 'name': name_box, 'kennel': kennel_entry, 'page_errors': page_errors})
         expect(page.get_by_text('Valfritt', exact=True)).to_be_visible()
         if REVIEW:
-            expect(page.get_by_text('Granskningsdata', exact=True)).to_be_visible()
+            expect(page.get_by_text('Granskningsdata', exact=True)).to_have_count(0)
         page.screenshot(path=str(OUT / f'profile-create-{width}x{height}.png'), full_page=True)
         page.close()
 
-    page = browser.new_page(viewport={'width': 375, 'height': 667 + (32 if REVIEW else 0)})
+    page = browser.new_page(viewport={'width': 375, 'height': 667 + 0})
     page_errors = []
     page.on('pageerror', lambda error: page_errors.append(str(error)))
     page.goto(profile_url(), wait_until='networkidle')
@@ -656,7 +656,7 @@ def verify_profile_density(browser) -> None:
     page.screenshot(path=str(OUT / 'profile-edit-text-140-375x667.png'), full_page=True)
     page.close()
 
-    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + 0})
     page.goto(BASE + '/?screen=profile&profileAttribution=connected', wait_until='networkidle')
     expect(page.get_by_text('Kopplad till Solgläntans kennel', exact=True)).to_be_visible()
     expect(page.get_by_role('textbox', name='Kennelkod, valfri', exact=True)).to_have_count(0)
@@ -667,7 +667,7 @@ def verify_profile_density(browser) -> None:
     page.screenshot(path=str(OUT / 'profile-kennel-expanded-375x844.png'), full_page=True)
     page.close()
 
-    page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+    page = browser.new_page(viewport={'width': 375, 'height': 844 + 0})
     page.goto(BASE + '/?screen=profile&profileAttribution=error', wait_until='networkidle')
     expect(page.get_by_text('Kennelkopplingen kunde inte hämtas. Du kan försöka igen utan att ändra hundprofilen.', exact=True)).to_be_visible()
     expect(page.get_by_role('button', name='Försök hämta kennelkopplingen igen', exact=True)).to_be_visible()
@@ -691,11 +691,11 @@ def verify_image_diversity(browser) -> None:
         return
 
     for width in (375, 430):
-        page = browser.new_page(viewport={'width': width, 'height': 844 + 32})
+        page = browser.new_page(viewport={'width': width, 'height': 844})
         page_errors: list[str] = []
         page.on('pageerror', lambda error: page_errors.append(str(error)))
         page.goto(image_fixture_url('knowledge'), wait_until='networkidle')
-        expect(page.get_by_text('Granskningsdata', exact=True)).to_be_visible()
+        expect(page.get_by_text('Granskningsdata', exact=True)).to_have_count(0)
         guide_cards = [
             page.get_by_role('button', name='Läs Trygg start hemma', exact=True),
             page.get_by_role('button', name='Läs Kontakt och namn', exact=True),
@@ -724,7 +724,7 @@ def verify_image_diversity(browser) -> None:
         page.close()
 
     # Home opens the exact stable guide identity used by Knowledge's image manifest.
-    page = browser.new_page(viewport={'width': 375, 'height': 844 + 32})
+    page = browser.new_page(viewport={'width': 375, 'height': 844})
     page_errors: list[str] = []
     page.on('pageerror', lambda error: page_errors.append(str(error)))
     page.goto(home_url(image_fixture='knowledge'), wait_until='networkidle')
@@ -739,7 +739,7 @@ def verify_image_diversity(browser) -> None:
     page.close()
 
     # Home's current exercise recommendation opens the exact Training continuation card.
-    page = browser.new_page(viewport={'width': 375, 'height': 844 + 32})
+    page = browser.new_page(viewport={'width': 375, 'height': 844})
     page_errors = []
     page.on('pageerror', lambda error: page_errors.append(str(error)))
     page.goto(home_url(image_fixture='training'), wait_until='networkidle')
@@ -768,7 +768,7 @@ def verify_image_diversity(browser) -> None:
     page.close()
 
     for width in (375, 430):
-        page = browser.new_page(viewport={'width': width, 'height': 844 + 32})
+        page = browser.new_page(viewport={'width': width, 'height': 844})
         page_errors = []
         page.on('pageerror', lambda error: page_errors.append(str(error)))
         page.goto(image_fixture_url('training'), wait_until='networkidle')
@@ -787,7 +787,7 @@ def verify_image_diversity(browser) -> None:
 
     # Short device and large-text layout proxy keep the large photographs scrollable above navigation.
     for screen in ('knowledge', 'training'):
-        page = browser.new_page(viewport={'width': 375, 'height': 667 + 32})
+        page = browser.new_page(viewport={'width': 375, 'height': 667})
         page.goto(image_fixture_url(screen), wait_until='networkidle')
         if screen == 'knowledge':
             page.get_by_role('button', name='Läs Vardagsro och hantering', exact=True).scroll_into_view_if_needed()
@@ -834,7 +834,7 @@ def verify_progress_views(browser) -> None:
         return
 
     for width in (375, 430):
-        page = browser.new_page(viewport={'width': width, 'height': 844 + 32})
+        page = browser.new_page(viewport={'width': width, 'height': 844})
         page_errors: list[str] = []
         page.on('pageerror', lambda error: page_errors.append(str(error)))
         page.goto(progress_url(completed=2), wait_until='networkidle')
@@ -1019,7 +1019,7 @@ with sync_playwright() as playwright:
         args=['--no-sandbox'],
     )
     for width, app_height in ((375, 844), (430, 844)):
-        page = browser.new_page(viewport={'width': width, 'height': app_height + (32 if REVIEW else 0)})
+        page = browser.new_page(viewport={'width': width, 'height': app_height + 0})
         page_errors: list[str] = []
         page.on('pageerror', lambda error: page_errors.append(str(error)))
         page.goto(home_url(), wait_until='networkidle')
@@ -1073,7 +1073,7 @@ with sync_playwright() as playwright:
         )
         record(f'no horizontal overflow or browser error at {width}px', page.evaluate('document.documentElement.scrollWidth <= innerWidth') and not page_errors, {'page_errors': page_errors})
         if REVIEW:
-            expect(page.get_by_test_id('review-banner')).to_be_visible()
+            expect(page.get_by_test_id('review-banner')).to_have_count(0)
             expect(page.get_by_label('2 av 5 dagsuppgifter klara', exact=True)).to_be_visible()
             expect(page.get_by_role('button', name='Öppna Checklistor', exact=True)).to_be_visible()
         else:
@@ -1152,7 +1152,7 @@ with sync_playwright() as playwright:
         ('unknown', 'Dagens uppgifter är inte tillgängliga ännu.'),
         ('partial', 'Dagens uppgifter är inte tillgängliga ännu.'),
     ):
-        page = browser.new_page(viewport={'width': 375, 'height': 844 + (32 if REVIEW else 0)})
+        page = browser.new_page(viewport={'width': 375, 'height': 844 + 0})
         page.goto(home_url(scenario), wait_until='networkidle')
         expect(page.get_by_test_id('home-open-checklist')).to_be_visible()
         if message:
@@ -1215,7 +1215,7 @@ with sync_playwright() as playwright:
         page.close()
 
     # The shorter screen is reachable by scrolling; destinations remain above the fixed menu.
-    page = browser.new_page(viewport={'width': 375, 'height': 667 + (32 if REVIEW else 0)})
+    page = browser.new_page(viewport={'width': 375, 'height': 667 + 0})
     page.goto(home_url(), wait_until='networkidle')
     page.get_by_role('button', name='Öppna Kunskap', exact=True).scroll_into_view_if_needed()
     last_tile = page.get_by_role('button', name='Öppna Kunskap', exact=True).bounding_box()

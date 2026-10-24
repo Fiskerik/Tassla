@@ -24,7 +24,7 @@ def open_screen(page, screen, width, height, extra=""):
     page.set_viewport_size({"width": width, "height": height})
     page.goto(f"{base_url}?screen={screen}&today=2026-10-11{extra}")
     page.wait_for_timeout(300)
-    banner = page.get_by_test_id("health-fixture-banner").bounding_box()
+    banner = page.get_by_test_id("health-fixture-banner").bounding_box() if page.get_by_test_id("health-fixture-banner").count() else None
     if banner:
         page.set_viewport_size({"width": width, "height": height + round(banner["height"])})
         page.wait_for_timeout(80)

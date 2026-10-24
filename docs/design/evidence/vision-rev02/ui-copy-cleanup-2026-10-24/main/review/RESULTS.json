@@ -1,0 +1,24 @@
+{
+  "environment": "synthetic RN Web fixture; no live/native certification",
+  "review_fixture": true,
+  "harness": "main",
+  "passed": [
+    "home: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "checklist: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "log: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "training: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "knowledge: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "health: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "planned: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "passport: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "profile-edit: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "reminders: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "account: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "sign-in: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "profile-create: no temporary labels or page overflow at375/430, short667 and direct140% text",
+    "auth-callback: no temporary labels or page overflow at375/430, short667 and direct140% text"
+  ],
+  "failed": [],
+  "page_errors": [],
+  "generic_images": "Existing decorative generated dog assets; not owner dog photos"
+}

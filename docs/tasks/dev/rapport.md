@@ -1170,3 +1170,14 @@ Slutrundan fann och rättade två konkreta fel: Loggens bekräftelse bakom edito
 Actionplanens slutmatris stämmer av G01–G19 utan att återinföra gamla före16oktoberförslag. **G17/D3** är fortsatt faktisk publik innehållsleverans, inte dold av reviewbilder. **D1** är nya egna Kunskapspunkters ikonmigration, **D2** specifik InsikterRPC/RLSprob, **D5** milstolps-/sömnintervallunderlag. Ägarens senare godkända A03/rutinmigration/iOS/panel3 och generella VO/DynamicType/Supabase/RLS/Compliance står kvar; tidigare rapporterat rutinfel återöppnas inte över dem. Ny signerad build och riktad telefonrunda återstår.
 
 Bunden cleanup: gemensamma knappar och verifieringsfamiljer återanvänds; överflödiga tidigare ej committade bildresultat från samma UI04-scenarier tas bort. Ingen bred omstrukturering, dependency-, SQL-, auth-, data-/serviceändring eller äldre skärmåterställning. Kodcommit `fe1c834f9ff99c6ba19ab9e269406195d3ae7b0e` är pushad till `origin/2026-10-23-ui-04-panelhelhet` den 24 oktober. Commit-/push-hookarnas fulla check passerade. Dokumentationscloseout ändrar ingen produktkod.
+
+
+### UI-COPY-CLEANUP och ny användarplan — 2026-10-24
+
+På ägarens uttryckliga nya beställning tas tillfälliga Test/Preview/granskningsrutor och Standardbild-badges bort från användarvyer och aktuella renderharness. Tomma wrappers/styles och checklistans rena review-info-toggle tas bort. FAQ-/guide-/träningsinnehåll, flaggor/grindar, källor, verklig fel-/sparstatus och dedikerad utkast-säkerhet består. Auth-/PDF-/deletebeskrivningar kortas, callbacks/data/schema är oförändrade. Kanoniska regler/Home-spec/README uppdateras så att gamla badgekrav inte återinförs.
+
+Ny branch2026-10-24-ui-copy-cleanup från69251d2. ArchitectAPPROVE,CriticPROCEED,independentQAPASS,ReviewerPASS,SecurityAPPROVE. Fullcheck77/77/publicios1585/contentguardPASS; render14/14main,5/5panels,5/5UI04perläge; interaktion18/19. Evidens: ui-copy-cleanup-2026-10-24/VERIFICATION.md. Ingen ny native/live/signerad build påstås.
+
+Efterföljande ägarbeställning om en levande funktionell app besvaras i UI-UX-ANVANDARPLAN-2026-10-24.md. Product/UX gick igenom aktuell kod och Critic granskade ordning/acceptans. D1 placeras i paket2:s faslistor, inte paket1:s dagsrutiner. Sju ändamålsenliga paket beskriver nästa vardagsstart, innehåll, träning, logg/insikter, hälsa/pass, utveckling och genomgående respons. Det är planering; ingen ny datakatalog/publicering eller ny feature har byggts genom denna del.
+
+Leveranscheckpoint för städning och användarplan: `0fb505e`, branch `2026-10-24-ui-copy-cleanup`. Dokumentationscloseout ändrar ingen produktkod.

@@ -77,7 +77,6 @@ export function DailyProgressScreen({ dogName, dateKey, state, activities, refre
 
     {progress.coverage === 'loading' ? <View style={styles.loadingState}>
       <View style={styles.loadingImage}><Image source={require('../../../assets/images/daily-progress-hero-puppy-terrier.jpg')} style={styles.loadingImagePhoto} resizeMode="cover" accessibilityElementsHidden />
-        <Text style={styles.imageBadge}>Standardbild</Text>
       </View>
       <Skeleton shape="card" lines={3} />
       <Skeleton shape="row" lines={3} />
@@ -96,8 +95,7 @@ export function DailyProgressScreen({ dogName, dateKey, state, activities, refre
     {progress.coverage === 'empty' ? <View style={styles.emptyState}>
       <View style={styles.emptyPhoto}>
         <Image source={require('../../../assets/images/daily-progress-hero-puppy-terrier.jpg')} style={styles.emptyPhotoImage} resizeMode="cover"
-          accessible accessibilityLabel="Standardbild: strävhårig hund i varm hemmiljö" />
-        <Text style={styles.imageBadge}>Standardbild</Text>
+          accessible accessibilityLabel="Illustration av en strävhårig hund i varm hemmiljö" />
       </View>
       <View style={styles.emptyCopy}>
         <Text style={styles.emptyTitle} accessibilityRole="header">Inga aktiviteter idag</Text>
@@ -133,7 +131,6 @@ function ProgressRing({ completed, total, dogName }: { completed: number; total:
     <View accessible={false} style={[styles.ringContent, { width: diameter, height: diameter }]}>
       <View style={styles.ringPortrait}>
         <Image source={require('../../../assets/images/daily-progress-hero-puppy-terrier.jpg')} style={styles.ringPhoto} resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
-        <Text style={styles.ringPhotoBadge}>Standardbild</Text>
       </View>
       <Text style={styles.ringCount}>{completed} av {total}</Text>
       <Text style={styles.ringCaption}>klara idag med {dogName}</Text>
@@ -150,7 +147,6 @@ const styles = StyleSheet.create({
   ringContent: { position: 'absolute', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs / 2 },
   ringPortrait: { position: 'relative', width: tokens.size.homeProgressRingDiameter * 0.45, height: tokens.size.homeProgressRingDiameter * 0.45, marginBottom: tokens.spacing.xs / 2 },
   ringPhoto: { width: '100%', height: '100%', borderRadius: tokens.radius.full },
-  ringPhotoBadge: { position: 'absolute', top: tokens.spacing.xs, right: -tokens.spacing.xs, paddingHorizontal: tokens.spacing.xs, paddingVertical: 2, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.card, ...tokens.typography.smallCaption, fontWeight: '700', color: tokens.colors.home.text },
   ringCount: { ...tokens.typography.heading, color: tokens.colors.home.text },
   ringCaption: { ...tokens.typography.smallCaption, color: tokens.colors.home.textMuted },
   sectionHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
@@ -169,7 +165,6 @@ const styles = StyleSheet.create({
   emptyState: { gap: tokens.spacing.md, padding: tokens.spacing.md, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.home.card },
   emptyPhoto: { position: 'relative', height: tokens.size.developmentHeroHeight * 0.72, borderRadius: tokens.radius.md, overflow: 'hidden' },
   emptyPhotoImage: { width: '100%', height: '100%' },
-  imageBadge: { position: 'absolute', top: tokens.spacing.sm, right: tokens.spacing.sm, overflow: 'hidden', paddingHorizontal: tokens.spacing.sm, paddingVertical: tokens.spacing.xs, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.card, ...tokens.typography.smallCaption, fontWeight: '700', color: tokens.colors.home.text },
   emptyCopy: { gap: tokens.spacing.xs },
   emptyTitle: { ...tokens.typography.heading, color: tokens.colors.home.text },
   emptyBody: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },

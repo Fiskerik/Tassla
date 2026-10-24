@@ -35,13 +35,13 @@ with sync_playwright() as playwright:
     initial_scenario = "half" if review else "default"
     open_page(f"&trainingScenario={initial_scenario}")
     if review:
-        expect(page.get_by_text("Granskningsdata · sparas lokalt", exact=True)).to_be_visible()
+        expect(page.get_by_text("Granskningsdata", exact=False)).to_have_count(0)
         expect(page.get_by_text("Vardagsro och hantering", exact=True)).to_be_visible()
     expect(page.get_by_role("tab", name="Rekommenderat")).to_have_attribute("aria-selected", "true")
     expect(page.get_by_text("Passar just nu", exact=False)).to_be_visible()
     if not review:
         expect(page.get_by_text("Fortsätt där ni var", exact=True)).to_be_visible()
-    expect(page.get_by_text("Standardbild", exact=True)).to_have_count(2)
+    expect(page.get_by_text("Standardbild", exact=True)).to_have_count(0)
     expect(page.get_by_text("5 min", exact=False)).to_have_count(0)
     capture("default-375x844")
     results.append("default 375×844: two distinct recommendations, one confirmed continuation, no invented duration")

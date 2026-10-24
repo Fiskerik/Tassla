@@ -165,7 +165,7 @@ export function PassportScreen(props: PassportScreenProps) {
         </Pressable>
       </View>
 
-      {!props.client || !dog ? <MessageCard>Ingen hundinformation visas i den lokala förhandsvisningen. En PDF skapas inte här.</MessageCard> : <>
+      {!props.client || !dog ? <MessageCard>Hunduppgifter är inte tillgängliga. Ingen PDF kan skapas.</MessageCard> : <>
 
         {selection.profile && currentBreedState === 'loading' && <MessageCard>Hämtar rasnamnet till hundprofilen…</MessageCard>}
         {selection.profile && currentBreedState === 'error' && <>
@@ -182,7 +182,7 @@ export function PassportScreen(props: PassportScreenProps) {
 
         <View style={styles.previewCard}>
           {visibleSnapshot ? <SnapshotPreview snapshot={visibleSnapshot} /> : (
-          <Text style={styles.body}>{selectedAny ? 'Förhandsvisningen visas när valda uppgifter har hämtats och inga ändringar väntar på kontroll.' : 'Välj minst ett avsnitt för att se en förhandsvisning.'}</Text>
+          <Text style={styles.body}>{selectedAny ? 'Dokumentet visas när valda uppgifter har hämtats och inga ändringar väntar på kontroll.' : 'Välj minst ett avsnitt för att se dokumentet.'}</Text>
           )}
           {selection.healthHistory && history.length >= 50 && <Text style={styles.limitNotice}>Visar högst 50 av de senast hämtade händelserna. Äldre uppgifter kan saknas.</Text>}
           <Text style={styles.disclaimer}>Uppgifterna är registrerade av hundägaren. Tassla-pass är ingen officiell journal, legitimation eller vaccinationshandling.</Text>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { HomeContent } from '../../src/data/app-data';
 import type { PublishedTrainingProgram } from '../../src/data/workspace-data';
@@ -109,7 +109,6 @@ export default function UiR02Panel04App() {
   const active: 'home' | 'log' | 'training' | 'knowledge' | 'more' = page === 'training' ? 'training' : page === 'insights' ? 'log' : page === 'reminders' ? 'more' : 'knowledge';
 
   return <View style={styles.root}>
-    {!review || !['knowledge', 'training'].includes(page) ? <Text style={styles.fixtureStatus}>Granskningsdata</Text> : null}
     <View style={styles.viewport}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         {page === 'knowledge' ? <KnowledgeScreen items={visibleGuides} contentState="ready" focusedContentId={focusContentId}
@@ -145,7 +144,6 @@ export default function UiR02Panel04App() {
 }
 
 const styles = StyleSheet.create({
-  fixtureStatus: { ...tokens.typography.smallCaption, color: tokens.colors.textSecondary, paddingHorizontal: tokens.layout.pageInset, paddingTop: tokens.spacing.xs },
   root: { flex: 1, minHeight: '100%', backgroundColor: tokens.colors.home.background },
   viewport: { flex: 1, minHeight: 0 },
   scroll: { flex: 1 },

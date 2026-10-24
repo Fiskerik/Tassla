@@ -343,9 +343,6 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
 
   if (profileCreateFixture) {
     return <View style={{ flex: 1, minHeight: 0 }}>
-      {true ? <View testID="review-banner" style={{ height: tokens.spacing.xl, minHeight: tokens.spacing.xl, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card }}>
-        <Text style={{ ...tokens.typography.caption, color: tokens.colors.home.text }}>Granskningsdata</Text>
-      </View> : null}
       <View style={{ flex: 1, minHeight: 0 }}>
         <ProfileScreen
           client={syntheticProfileClient}
@@ -359,17 +356,6 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
   }
 
   return <View style={{ flex: 1, minHeight: 0 }}>
-    {!reviewMode || !['knowledge', 'training'].includes(navigation) ? <View testID="review-banner" style={{ height: tokens.spacing.xl, minHeight: tokens.spacing.xl, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card }}>
-      <Text style={{ ...tokens.typography.caption, color: tokens.colors.home.text }}>{navigation === 'home'
-        ? 'Granskningsdata'
-        : navigation === 'development' || navigation === 'knowledge' ? 'Granskningsdata'
-          : navigation === 'progress' ? 'Granskningsdata'
-            : navigation === 'profile' ? 'Granskningsdata'
-              : navigation === 'insights' || navigation === 'log' ? 'Granskningsdata'
-                : navigation === 'training' ? 'Granskningsdata'
-                  : navigation === 'knowledge' ? 'Granskningsdata'
-          : 'Granskningsdata'}</Text>
-    </View> : null}
     <View testID="review-app-viewport" style={{ flex: 1, minHeight: 0 }}>
       <View style={{ flex: 1, minHeight: 0, paddingTop: 44 }}>
         <AppScreen {...(navigation === 'knowledge'

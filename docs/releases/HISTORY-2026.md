@@ -662,3 +662,8 @@ Detta är lokal implementationsevidens. Oberoende QA/Reviewer, full Panel 5 §14
 ## UI-R02-03 / UI-R02-04 — GAP-planen 23 oktober, leveransförberedd 24 oktober
 
 UI03: `13f48bf` pushad till `2026-10-23-ui-03-logg-halsa`, lokal QA/Reviewer/Security klar. UI04:s samlade kod ligger på `2026-10-23-ui-04-panelhelhet` ovanpå 01–03. Lokalt v7-godkännande: QA PASS, Reviewer PASS, Security APPROVE; fullcheck76/76 och offentlig iOS JS-export1585 PASS. Kunskap/Träning/Insikter/Påminnelser samordnade, knapp-/menytillägg och två verkliga modal/resetregressioner rättade. G01–G19 och kvarvarande D1/D2/D3/D5 samt telefonlista finns i actionplanens §12 och paketets VERIFICATION.md. Ingen ny signerad build eller mainmerge gjord av denna checkpoint. Kodcommit `fe1c834f9ff99c6ba19ab9e269406195d3ae7b0e` pushad till `origin/2026-10-23-ui-04-panelhelhet` 2026-10-24; fulla commit-/push-checkar PASS.
+
+
+## UI-COPY-CLEANUP — 2026-10-24
+
+Ägarbeställd borttagning av tillfälliga Test/Preview/granskningsrutor och Standardbild-badges på branch `2026-10-24-ui-copy-cleanup`, bas69251d2. Innehåll/gates/callbacks och verkliga fel/sparstatus bevaras. Lokal QA/Reviewer/Security PASS, check77/77, publiciosExport1585 och renhets-/interaktionsmatris PASS. Ingen signerad build/native/live-prov i detta paket. Samma branch innehåller den beställda konkreta nästa användarplanen, med Product/UX-underlag och Criticens beroenderättelse införd. Kod och användarplan är committade i `0fb505e` på `2026-10-24-ui-copy-cleanup`. Push verifieras i leveranssvaret; ingen mainmerge eller signerad build ingår.

@@ -157,7 +157,6 @@ export function KnowledgeScreen({
         </View>
       </View> : null}
 
-      {reviewEnabled && showGuideScreen ? <Text style={styles.reviewNotice}>Granskningsdata</Text> : null}
       {showGuideScreen && contentState === 'loading' && <Skeleton shape="card" lines={4} />}
       {showGuideScreen && contentState === 'error' && <>
         <MessageCard tone="error">Guiderna kunde inte hämtas. Försök igen.</MessageCard>
@@ -250,7 +249,6 @@ const styles = StyleSheet.create({
   searchEmpty: { gap: tokens.spacing.xs },
   searchCount: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   pageTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
-  reviewNotice: { ...tokens.typography.caption, color: tokens.colors.warning, backgroundColor: tokens.colors.warningSurface, borderRadius: tokens.radius.md, padding: tokens.spacing.sm },
   shortcuts: { gap: tokens.spacing.xs, marginTop: tokens.spacing.sm },
   categoryLinks: { flexDirection: 'row', gap: tokens.spacing.sm },
   categoryCard: { flex: 1, minWidth: 0 },

@@ -36,7 +36,6 @@ export function DraftContentPreview({ onBack, enabled = DRAFT_PREVIEW_ENABLED }:
   if (!draftBundle || draftBundle.status !== 'draft') return null;
   return <ScrollView contentContainerStyle={styles.content}>
     <AppBar mode="Back" title="Innehållsutkast" actionLabel="Tillbaka till Mer" onAction={onBack} />
-    <Text style={styles.description}>Intern förhandsvisning av tränings- och hälsotexter som ännu inte är sakgranskade eller publicerade.</Text>
     <MessageCard tone="error">Utkast – ej granskat eller publicerat. Använd inte texten som vård- eller träningsråd före granskning.</MessageCard>
     {draftBundle.items.map((item) => {
       const version = item.versions[0];
@@ -53,7 +52,6 @@ export function DraftContentPreview({ onBack, enabled = DRAFT_PREVIEW_ENABLED }:
 
 const styles = StyleSheet.create({
   content: { padding: tokens.layout.pageInset, paddingBottom: tokens.spacing.xxl, gap: tokens.spacing.md },
-  description: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   card: {
     padding: tokens.layout.cardPadding,
     marginTop: tokens.spacing.xs,

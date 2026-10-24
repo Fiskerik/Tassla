@@ -37,8 +37,8 @@ test('paused older versions do not also show an empty-state claim', () => {
   assert.match(screen, /minePrograms\.length === 0 && paused\.length === 0/);
 });
 
-test('recommendation photos are visibly generic and unsupported metadata is absent', () => {
-  assert.match(screen, /Standardbild/);
+test('recommendation photos retain generic assets without temporary badges and unsupported metadata is absent', () => {
+  assert.doesNotMatch(screen, /Standardbild|standardBadge/);
   assert.match(screen, /training-hero-shiba-park\.jpg/);
   assert.match(screen, /training-recommendation-puppy-black-tan-park\.jpg/);
   assert.doesNotMatch(screen, /5 min|10 min|Grundträning|Socialisering/);

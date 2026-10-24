@@ -37,7 +37,6 @@ export function TrainingScreen({
   return (
     <View>
       <PageHeading title="Träning" description="Små steg som bygger på frivillighet och belöning." />
-      <View style={styles.previewLabel}><Text style={styles.previewLabelText}>Granskningsinnehåll</Text></View>
       <MessageCard>{TRAINING_NOTICE}</MessageCard>
       {TRAINING_PROGRAMS.map((program) => {
         const isOpen = openProgramId === program.id;
@@ -54,7 +53,7 @@ export function TrainingScreen({
               <View style={styles.progressTrack} accessibilityElementsHidden><View style={[styles.progressFill, { width: `${program.steps.length ? Math.min(100, completed.length / program.steps.length * 100) : 0}%` }]} /></View>
             </View>
             {completed.length === program.steps.length && (
-              <MessageCard>Alla steg är registrerade i testläget. Det säger inget om hundens färdighet. Läs stegen igen eller rensa programmets registreringar.</MessageCard>
+              <MessageCard>Alla steg är registrerade. Det säger inget om hundens färdighet. Läs stegen igen eller rensa programmets registreringar.</MessageCard>
             )}
             <QuietButton
               title={isOpen ? 'Dölj program' : completed.length ? 'Fortsätt eller läs igen' : 'Visa program'}
@@ -77,7 +76,7 @@ export function TrainingScreen({
                 })}
                 {waitingForContinue && (
                   <View>
-                    <MessageCard>Steget är registrerat i testläget. Registreringen visar inte att hunden behärskar beteendet.</MessageCard>
+                    <MessageCard>Steget är registrerat. Registreringen visar inte att hunden behärskar beteendet.</MessageCard>
                     <PrimaryButton title={nextStep ? 'Fortsätt till nästa steg' : 'Visa avslutatläge'} onPress={onContinue} />
                   </View>
                 )}
@@ -101,7 +100,7 @@ export function TrainingScreen({
 function confirmReset(program: TrainingProgram, onReset: (program: TrainingProgram) => void) {
   Alert.alert(
     'Rensa registrerade steg?',
-    `Registreringarna för ”${program.title}” tas bort från den här förhandsvisningen.`,
+    `Registreringarna för ”${program.title}” tas bort.`,
     [
       { text: 'Avbryt', style: 'cancel' },
       { text: 'Rensa', style: 'destructive', onPress: () => onReset(program) },
@@ -110,8 +109,6 @@ function confirmReset(program: TrainingProgram, onReset: (program: TrainingProgr
 }
 
 const styles = StyleSheet.create({
-  previewLabel: { alignSelf: 'flex-start', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.selectedSurface, paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.sm, marginBottom: tokens.spacing.md },
-  previewLabelText: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
   programCard: { alignSelf: 'stretch', borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding, marginTop: tokens.layout.sectionGap },
   audience: { ...tokens.typography.caption, color: tokens.colors.warning, backgroundColor: tokens.colors.warningSurface, overflow: 'hidden', alignSelf: 'flex-start', borderRadius: tokens.radius.sm, paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.sm, marginTop: tokens.spacing.md },
   body: { ...tokens.typography.body, color: tokens.colors.textSecondary, marginTop: tokens.spacing.sm },
