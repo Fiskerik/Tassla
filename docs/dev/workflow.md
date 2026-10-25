@@ -33,6 +33,16 @@ Exempel på checkpointövergång: `python tools/dev_flow.py transition TASK-ID r
 
 Kön kontrollerar övergångar, roller, beroenden, max två aktiva och överlappande skrivområden. Angivet actor/evidence är loggning, inte kryptografiskt bevis på oberoende granskning. Kön kontrollerar varken faktisk diff mot `write_paths`, acceptanskriterier, testresultat eller planversion. Koordinator och Reviewer måste kontrollera detta manuellt.
 
+## Visuell loop för ändrat utseende
+
+Koordinatorn samlar en kort panelbrief: scope/skrivvägar, relevant avsnitt i skärmkontraktet, referenspanel eller stödskärmens befintliga stilkontrakt, fixture, viewport, textskala och public/reviewläge. Bifoga en jämförelsebild från `python tools/visual-check/compare_panel.py --panel N --render <png>`. Briefen begränsar läsningen till berört underlag; den ersätter inte bindande designregler eller relevanta UX-skills.
+
+1. `ui_critic` öppnar bilden och ger en skrivskyddad BRIEF med högst sju rangordnade avvikelser. Koordinatorn sparar matrisen i taskunderlaget.
+2. Implementeraren renderar, öppnar jämförelsen och rättar synliga avvikelser inom scope: initial render plus högst två korrigeringsförsök, i linje med befintlig korrigeringsgräns. Spara bildvägar och resultat per försök; lämna kvarstående fel vidare när gränsen nås. Scope och tillgänglighet gäller även när referensen är kompakt.
+3. `ui_critic` får slutbild och tidigare matris för REVIEW. QA bedömer sedan beteende och visuell likhet i separata tabeller; Reviewer granskar oberoende. Synliga fel ger FAIL/Nej; saknad eller oöppnad bild ger NOT VIEWED och visuell NOT TESTABLE, aldrig PASS.
+
+Bildkritikern är rådgivande och ger inte visuellt godkänt. Stödskärmar bedöms mot sitt befintliga kontrakt, gemensamma tokens och närmaste referensmönster; saknade avgörande stilbeslut blir en kontraktsfråga. Föreslå inte ett nytt visuellt facit som om det vore beslutat. [Verktygets guide](../../tools/visual-check/README.md) beskriver skala och beskärningsbegränsningar.
+
 ## Beslut under natten
 Alla roller följer tillämplig EU- och svensk lagstiftning enligt AGENTS.md. Compliance är en gemensam specialist som rapporterar risker till Erik och koordinatorn, oberoende av Product/Commercial/Dev. Den används före nya eller ändrade persondataändamål, analys/spårning, AI-leverantörers dataåtkomst, juridiskt relevanta arkitekturval och före extern pilot/release. Security verifierar tekniska skydd; den ersätter inte Compliance. En väsentlig olöst juridisk fråga blockerar berörd uppgift tills Erik/jurist beslutat. Compliance behöver inte anropas för rent kosmetiska ändringar utan sådan påverkan. Spara källor, datum, tillämplighet, bedömning och öppna frågor i uppgiftens granskningsunderlag. Kön verifierar inte juridik automatiskt; koordinatorn ansvarar för denna granskningspunkt.
 Tillåtet: lokala, reversibla implementationdetaljer inom kontraktet. Dokumentera skäl och antaganden. Blockerande produktfrågor, nya dependencies, kostnader, scopeändring, nya persondataändamål, datadelning och destruktiva ändringar väntar på Erik om de inte redan uttryckligen godkänts. Fortsätt endast med en oberoende godkänd uppgift. Ingen extern kommunikation, publicering eller deployment utan explicit mandat.

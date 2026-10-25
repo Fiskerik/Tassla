@@ -34,7 +34,7 @@ Tidigare fas- och paketbeslut finns samlade i `docs/decisions/MASTER-LOG.md` och
 - Product: Head of Product, Growth & Distribution, Customer/Product Critic.
 - Commercial: Commercial Lead, Partnerships, Market Intelligence, Commercial Analyst.
 - Dev: Erik leads AI Tech Lead, Codex implementation and QA. Chief of Staff does not own technical decisions.
-- `.codex/agents/` contains nine Codex role definitions: `product`, `critic`, `architect`, `dog_expert`, `compliance`, `implementer`, `qa`, `reviewer` and `security`. Their configured models are defaults; select a role's reasoning effort for the task's complexity and risk as described in `docs/dev/workflow.md`.
+- `.codex/agents/` contains ten Codex role definitions: `product`, `critic`, `architect`, `dog_expert`, `compliance`, `implementer`, `qa`, `reviewer`, `security` and `ui_critic` (visual fidelity only). Their configured models are defaults; select a role's reasoning effort for the task's complexity and risk as described in `docs/dev/workflow.md`.
 - `.codex/archive/original-agents/` is historical and inactive. The SDK roles in `tassla_team/` are a separate advisory system; they do not implement or verify repository changes. See `docs/ai-team.md` for its current limits.
 - Initial SDK tests use short context, bounded output, at most one Growth run and no research. Log usage across Product and Growth. Never run paid API tests unless the human asks.
 - Internal delegation is allowed within an assigned task. No access to email or messaging accounts and no external messages, including through shell, browser or MCP. Prepare drafts for the human. SDK agents receive only explicitly allowed internal tools; no communication connectors, credentials, generic network or shell tools.
@@ -77,7 +77,8 @@ The main Codex session coordinates Dev work under Erik. Use the following specia
 | Partner, affiliate, sponsored or insurance feature; vet Q&A; data shared between owners, kennels and partners | `compliance`, then `critic` |
 | New/changed personal-data purpose, auth/data architecture, analytics/tracking, AI vendor/data use, applicable legal duty or EU pilot/release readiness | `compliance` before affected implementation; `security` for technical controls; unresolved material findings go to Erik |
 | A plan or spec is about to be accepted | `critic` (always) |
-| Phase 1: an implementation task is specified | `implementer` (including UI), then `qa`, then `reviewer` |
+| Phase 1: an implementation task is specified | `implementer` (appearance work: see the next row), then `qa`, then `reviewer` |
+| Phase 1: a task changes how a screen looks (including support screens) | `ui_critic` BRIEF on the current render against its reference panel (or the existing support-screen style contract), then `implementer`, then a new render and `ui_critic` REVIEW, then `qa`, then `reviewer` |
 | Phase 1: change touches auth, personal data, permissions, storage, networking or a third-party SDK | `security`, before merge |
 
 Rules:
@@ -88,6 +89,7 @@ Rules:
 5. Stop and ask the human before: adding a dependency, changing an accepted decision, going beyond `docs/mvp.md`, signing or assuming any partner deal, or anything that collects or shares personal data.
 6. Never say tests pass or work is done unless the `check` command below has actually been run and passed.
 7. `compliance` is not a lawyer. Anything it marks "needs a lawyer" goes to the human as an open decision; do not build around an assumed answer.
+8. `ui_critic` is advisory and read-only. It supplies evidence for `docs/design-rules.md` §14 point 16 but never grants "visuellt godkänt"; QA, reviewer and Erik keep that gate. The coordinator creates the composite image with `python tools/visual-check/compare_panel.py --panel N --render <png>` and passes its path. If the image cannot be viewed, the answer is NOT VIEWED, never inferred from code. The implementer may run the same script and look at the image itself for an initial render and up to two correction attempts before handing over to QA.
 
 ## Historiska första uppgifter (fas 0)
 1. The main session asks the human the open questions in `docs/vision.md` one at a time, starting with the fifth revenue leg, and writes the answers into `docs/`.
