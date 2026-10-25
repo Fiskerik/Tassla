@@ -3438,9 +3438,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const transitionDirection = navigationDirection(previousPage, page);
   const mainTabToMainTab = isMainTabDestination(previousPage) && isMainTabDestination(page);
   const transitionDistance = mainTabToMainTab ? tokens.motion.pageDistance : tokens.motion.distance;
+  const knowledgeRouteContentId = focusedKnowledgeContentId && visibleGuideContent.some((item) => item.id === focusedKnowledgeContentId)
+    ? focusedKnowledgeContentId : undefined;
   const defaultRouteScroll = visiblePage === 'log' ? logViewScrollKeys(logView) : productRouteScrollKeys(visiblePage,
     knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : undefined,
-    visibleHomeTrainingFocus?.returnPage);
+    visibleHomeTrainingFocus?.returnPage, knowledgeRouteContentId);
   const routeScroll = visiblePage === 'planned-health' && visiblePlannedHealthHealthFocus
     ? { scrollKey: 'planned-health-health-source', preserveScrollKey: visiblePlannedHealthHealthFocus.returnScrollKey }
     : visiblePage === 'planned-health' && visiblePlannedHealthChecklistFocus

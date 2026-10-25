@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Linking, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFonts } from 'expo-font';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { HomeContent } from '../../data/app-data';
@@ -74,6 +74,9 @@ export function KnowledgeScreen({
   const selectedItem = items.find((item) => item.id === openedId) ?? null;
   const selectedImage = selectedItem ? knowledgeImageForGuide(selectedItem) ?? editorialImageForGuide(selectedItem) : null;
   const selectedImageFocus = selectedItem && selectedImage ? knowledgeImageFocusForGuide(selectedItem, selectedImage) : null;
+  const relatedArticles = selectedItem
+    ? visibleRecommendedArticles(items).filter((item) => item.id !== selectedItem.id)
+    : [];
   const introductionIndex = selectedItem ? parseGuideBody(selectedItem.body).findIndex((block) => block.type === 'paragraph') : -1;
   const visibleItems = items
     .filter((item) => item.contentType === 'article' || item.contentType === 'guide')
@@ -134,8 +137,30 @@ export function KnowledgeScreen({
     </MotionPressable>;
   }
 
+  function renderRelatedArticle(item: HomeContent) {
+    const image = knowledgeImageForGuide(item) ?? editorialImageForGuide(item);
+    const imageFocus = knowledgeImageFocusForGuide(item, image);
+    return <MotionPressable
+      key={item.id}
+      accessibilityRole="button"
+      accessibilityLabel={`Läs ${item.title}`}
+      accessibilityHint="Öppnar artikeln högst upp i läsvyn."
+      onPress={() => openArticle(item.id)}
+      style={styles.relatedCard}
+    >
+      <View style={styles.relatedImageFrame}><KnowledgeImage source={image} focus={imageFocus} /></View>
+      <View style={styles.relatedCopy}>
+        <Text style={styles.relatedTitle} numberOfLines={3}>{item.title}</Text>
+        <View style={styles.metadataRow}>
+          <Text style={styles.metadataPill}>{readingMinutes(item.body)} min</Text>
+          <Text style={styles.metadataPill}>Artikel</Text>
+        </View>
+      </View>
+    </MotionPressable>;
+  }
+
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, selectedItem && styles.articleScreen]}>
       {selectedItem ? <AppBar mode="Back" title="Kunskap" variant="compact"
         actionLabel={returnToDevelopment ? 'Tillbaka till Utveckling' : 'Tillbaka till guider'}
         onAction={() => { setOpenedId(null); onSelectContent(null); if (returnToDevelopment) onBack(); }} /> : null}
@@ -194,10 +219,10 @@ export function KnowledgeScreen({
         {hasMoreGuides ? <QuietButton title="Visa alla artiklar" onPress={() => setGuideViewState((current) => ({ ...current, scopeKey: searchScopeKey, showAll: true }))} /> : null}
       </View> : null}
 
-      {selectedItem && contentState === 'ready' ? <View style={styles.articleCard}>
-        <View style={styles.articleImageFrame}>
-          {selectedImage && selectedImageFocus ? <KnowledgeImage source={selectedImage} focus={selectedImageFocus} /> : null}
-        </View>
+      {selectedItem && contentState === 'ready' ? <View testID="knowledge-article-reader" style={styles.article}>
+        {selectedImage && selectedImageFocus ? <View testID="knowledge-article-hero" style={styles.articleImageFrame}>
+          <KnowledgeImage source={selectedImage} focus={selectedImageFocus} />
+        </View> : null}
         <View style={styles.articleCopy}>
         <Text style={styles.articleTitle} accessibilityRole="header">{selectedItem.title}</Text>
         {selectedItem.isAiGenerated ? <Text style={styles.aiOriginLabel}>AI-genererat innehåll</Text> : null}
@@ -240,6 +265,22 @@ export function KnowledgeScreen({
         </View>
       </View> : null}
 
+      {selectedItem && contentState === 'ready' && relatedArticles.length > 0 ? <View style={styles.relatedSection}>
+        <Text accessibilityRole="header" style={styles.relatedHeading}>Fler artiklar för din hund</Text>
+        <ScrollView
+          accessibilityLabel="Fler relevanta artiklar för din hund"
+          contentContainerStyle={styles.relatedTrack}
+          directionalLockEnabled
+          horizontal
+          nestedScrollEnabled
+          showsHorizontalScrollIndicator={false}
+          style={styles.relatedScroll}
+          testID="knowledge-related-carousel"
+        >
+          {relatedArticles.map(renderRelatedArticle)}
+        </ScrollView>
+      </View> : null}
+
       {tab === 'För dig' && !selectedItem ? <View style={styles.shortcuts}>
         <SectionHeader title="Fler i Kunskap" />
         <View style={styles.categoryLinks}>
@@ -263,10 +304,15 @@ function compareGuideTitle(left: HomeContent, right: HomeContent) {
   return left.title.localeCompare(right.title, 'sv-SE') || left.id.localeCompare(right.id);
 }
 
+function visibleRecommendedArticles(items: readonly HomeContent[]) {
+  return items.filter((item) => item.contentType === 'article' && item.recommended === true).sort(compareGuideTitle);
+}
+
 function readingMinutes(body: string) { return Math.max(1, Math.ceil(body.split(/\s+/).length / 200)); }
 
 const styles = StyleSheet.create({
   screen: { gap: tokens.spacing.md },
+  articleScreen: { gap: tokens.spacing.xs },
   searchSection: { gap: tokens.spacing.xs },
   searchField: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.card },
   searchInput: { flex: 1, minWidth: 0, minHeight: tokens.size.touchMin, ...tokens.typography.body, color: tokens.colors.textPrimary, paddingVertical: 0 },
@@ -294,25 +340,33 @@ const styles = StyleSheet.create({
   guideList: { gap: tokens.spacing.xs },
   guideTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
   smallGuideTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
-  articleCard: { alignSelf: 'stretch', borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, overflow: 'hidden' },
-  articleImageFrame: { width: '100%', aspectRatio: 16 / 9, overflow: 'hidden', backgroundColor: tokens.colors.destination.knowledge.surface },
-  articleCopy: { padding: tokens.layout.cardPadding },
-  articleIntro: { backgroundColor: tokens.colors.destination.knowledge.surface, padding: tokens.spacing.md, borderRadius: tokens.radius.md },
-  callout: { backgroundColor: tokens.colors.successSurface, padding: tokens.spacing.md, borderRadius: tokens.radius.md, marginTop: tokens.spacing.lg, gap: tokens.spacing.sm },
-  importantCallout: { backgroundColor: tokens.colors.warningSurface },
+  article: { alignSelf: 'stretch' },
+  articleImageFrame: { alignSelf: 'stretch', aspectRatio: 16 / 9, marginTop: -tokens.spacing.md, marginHorizontal: -tokens.layout.pageInset, overflow: 'hidden', backgroundColor: tokens.colors.destination.knowledge.surface },
+  articleCopy: { paddingTop: tokens.spacing.md },
+  articleIntro: { fontWeight: '700', marginTop: tokens.spacing.md, textAlign: 'left' },
+  callout: { backgroundColor: 'transparent', borderLeftWidth: 3, borderLeftColor: tokens.colors.success, paddingVertical: tokens.spacing.sm, paddingLeft: tokens.spacing.md, marginTop: tokens.spacing.lg, gap: tokens.spacing.sm },
+  importantCallout: { borderLeftColor: tokens.colors.warning },
   calloutHeading: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   calloutLabel: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1 },
   calloutText: { ...tokens.typography.body, color: tokens.colors.textPrimary },
-  articleTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
+  articleTitle: { ...tokens.typography.title, color: tokens.colors.primary, textAlign: 'left' },
   aiOriginLabel: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
   articleBody: { marginTop: tokens.spacing.md },
-  bodyHeading: { ...tokens.typography.heading, color: tokens.colors.primary, marginTop: tokens.spacing.xl },
-  bodySubheading: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginTop: tokens.spacing.lg },
-  bodyParagraph: { ...tokens.typography.body, color: tokens.colors.textPrimary, marginTop: tokens.spacing.sm },
-  bodyList: { marginTop: tokens.spacing.sm },
+  bodyHeading: { ...tokens.typography.heading, color: tokens.colors.primary, marginTop: tokens.spacing.xl, textAlign: 'left' },
+  bodySubheading: { ...tokens.typography.label, color: tokens.colors.primary, marginTop: tokens.spacing.lg, textAlign: 'left' },
+  bodyParagraph: { ...tokens.typography.body, color: tokens.colors.textPrimary, marginTop: tokens.spacing.sm, textAlign: 'left' },
+  bodyList: { marginTop: tokens.spacing.sm, alignItems: 'flex-start' },
   bodyListItem: { ...tokens.typography.body, color: tokens.colors.textPrimary, marginTop: tokens.spacing.sm },
-  sourcesHeading: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginTop: tokens.spacing.xl, marginBottom: tokens.spacing.sm },
+  sourcesHeading: { ...tokens.typography.label, color: tokens.colors.primary, marginTop: tokens.spacing.xl, marginBottom: tokens.spacing.sm },
   sourceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.spacing.sm, borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, paddingVertical: tokens.spacing.md },
   sourceCopy: { flex: 1, gap: tokens.spacing.xs },
   sourceText: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  relatedSection: { marginTop: tokens.spacing.xl, gap: tokens.spacing.sm },
+  relatedHeading: { ...tokens.typography.heading, color: tokens.colors.primary, textAlign: 'left' },
+  relatedScroll: { marginHorizontal: -tokens.layout.pageInset },
+  relatedTrack: { paddingHorizontal: tokens.layout.pageInset, gap: tokens.spacing.md },
+  relatedCard: { width: 240, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface, overflow: 'hidden' },
+  relatedImageFrame: { width: '100%', aspectRatio: 4 / 3, overflow: 'hidden', backgroundColor: tokens.colors.destination.knowledge.surface },
+  relatedCopy: { gap: tokens.spacing.xs, padding: tokens.spacing.md },
+  relatedTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, textAlign: 'left' },
 });

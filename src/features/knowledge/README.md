@@ -2,6 +2,14 @@
 
 `KnowledgeScreen.tsx` har en vänsterställd Kunskapstitel, integrerad sökning, guidkort och två tydliga destinationer till Checklistor och FAQ. Inga ämnesfilter visas eftersom innehållsurvalet saknar ämnestaxonomi. Startsidan visar en större guide och högst två mindre kort; `Visa alla` öppnar återstående guider i samma vy. Kort, sökning och resultat använder endast redan laddade `article`-/`guide`-objekt, sorterade efter svensk titel. Checklistor och FAQ behåller sina egna vyer och återväg till guiderna.
 
+## Artikelläsare och relaterade artiklar
+
+Artiklar och guider öppnas med en tillgänglig redaktionell bild överst, en bred vänsterställd textkolumn och utan yttre artikelbox. Titeln och underrubriker använder Tasslas gröna token; första stycket är fet ingress och övrig brödtext är neutral. Fulltext och källor kommer från samma laddade version som kortet. `parseGuideBody` behåller rubriker, stycken, listor och Tips/Viktigt-semantik.
+
+Efter hela texten och källorna visas en horisontell lista med andra artiklar vars befintliga `recommended`-fält är exakt `true` för arbetsytans aktiva hund. Den öppnade versionen, guider, okända och ej matchande rekommendationer lämnas utanför. Om ingen annan match finns döljs listan. Kortet öppnar samma redan laddade innehålls-ID; det skapar inga innehålls- eller databasläsningar. `productRouteScrollKeys` ger varje detalj ett ID-bundet scrollnyckelvärde så öppning/byte börjar överst, samtidigt som Knowledge-bibliotekets position och söktext bevaras när läsaren stängs. Samma `scrollMemoryScope` gäller genom hela växlingen.
+
+Artikel-, guide- och träningscopy får inte personaliseras med hundnamn eller könade personliga pronomen. Hundens urval påverkar rekommendationerna, aldrig artikeltexten. Den permanenta redaktionella regeln står i [`docs/design-rules.md` §9](../../../docs/design-rules.md).
+
 `editorial-image-assignment.ts` mappar guidebilder med exakt innehålls-ID/version när en särskild bild finns. De tre review-guiderna använder skilda lagotto-, sheltie- och cockerbilder; sex publicerade guider har explicita bildposter. Övriga publicerade kort använder en stabil redaktionell bild baserad på versionsidentiteten. `KnowledgeImage` håller 3:2-källorna inom kortets 16:9- eller 4:3-yta med bildspecifik fokalpunkt och zoom, både i listkort och läsvy. Hemmets nuvarande `Just nu`-kort är textbaserat och öppnar samma guide-ID; den gamla `HomeCarousel` är inte monterad i produktens Hem-route och räknas därför inte som en synlig produktbild. Bildkällor, genereringsspårning och fokusmappning finns i `assets/images/README.md` och `editorial-image-assignment.ts`.
 
 Publicerade guider kommer från arbetsytans ålders-/rasurval i Supabase. Hem och Kunskap delar samma version-ID, innehåll och källista. Loading, fel med retry och tomt publicerat urval skiljs åt; guideflikarnas tillstånd visas inte ovanpå checklistor/FAQ. En guide visas i en separat läsvy. `guide-body.ts` tolkar rubriker, enkla listor och stycken till native text; rå HTML renderas inte. `source-links.ts` tillåter endast syntaktiskt giltiga HTTPS-länkar utan användaruppgifter, som öppnas efter användartryck med felåterkoppling.
@@ -35,7 +43,7 @@ Ingen optimistisk grön sparstatus används. UUID, exakta återläsningar och vi
 
 ## Verifiering
 
-Kör `pnpm check` för typkontroll, lint och API-/intent-/innehållstester. `tools/visual-check/know02-app.tsx` och `verify-know02.py` provar de aktuella skärmarna med syntetisk adapter, CRUD, okända resultat, remount/scope och stor text; evidens och begränsningar finns i `docs/design/KNOW-02/checklista.md`. Native presentation, VoiceOver/riktig Dynamic Type samt verklig SQL/RLS är separata verifieringar.
+Kör `pnpm check` för typkontroll, lint och API-/intent-/innehållstester. Artikelns lokala fixture byggs via `tools/visual-check/vision-r02-home-panels-app.tsx` och `verify-vision-r02-home-panels.py` med `TASSLA_UI_PANEL=article-reader`; den provar rekommendationsfilter, bildfokus/bredd, horisontell scroll, innehållsbyte och återställd listposition. `tools/visual-check/know02-app.tsx` och `verify-know02.py` provar checklistor/FAQ med syntetisk adapter, CRUD, okända resultat, remount/scope och stor text; evidens och begränsningar finns i `docs/design/KNOW-02/checklista.md`. Native presentation, VoiceOver/riktig Dynamic Type samt verklig SQL/RLS är separata verifieringar.
 
 ## Tomt läge och återvägar
 

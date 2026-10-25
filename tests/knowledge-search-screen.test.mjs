@@ -98,7 +98,20 @@ test('published guide versions retain explicit images and library cards use an e
   assert.match(screen, /const image = knowledgeImageForGuide\(item\) \?\? editorialImageForGuide\(item\)/);
   assert.match(screen, /const imageFocus = knowledgeImageFocusForGuide\(item, image\)/);
   assert.match(screen, /<KnowledgeImage source=\{image\} focus=\{imageFocus\} \/>/);
-  assert.match(screen, /<View style=\{styles\.articleImageFrame\}>[\s\S]*?<KnowledgeImage source=\{selectedImage\} focus=\{selectedImageFocus\}/);
+  assert.match(screen, /<View testID="knowledge-article-hero" style=\{styles\.articleImageFrame\}>[\s\S]*?<KnowledgeImage source=\{selectedImage\} focus=\{selectedImageFocus\}/);
+});
+
+test('article reader is unboxed and relates only other explicitly recommended article versions', async () => {
+  const screen = await readFile(screenPath, 'utf8');
+  assert.match(screen, /items\.filter\(\(item\) => item\.contentType === 'article' && item\.recommended === true\)/);
+  assert.match(screen, /visibleRecommendedArticles\(items\)\.filter\(\(item\) => item\.id !== selectedItem\.id\)/);
+  assert.match(screen, /<ScrollView[\s\S]*?horizontal[\s\S]*?nestedScrollEnabled[\s\S]*?testID="knowledge-related-carousel"/);
+  assert.match(screen, /accessibilityLabel="Fler relevanta artiklar för din hund"/);
+  assert.match(screen, /accessibilityLabel=\{`Läs \$\{item\.title\}`\}/);
+  assert.match(screen, /articleImageFrame: \{ alignSelf: 'stretch', aspectRatio: 16 \/ 9, marginTop: -tokens\.spacing\.md, marginHorizontal: -tokens\.layout\.pageInset/);
+  assert.match(screen, /articleIntro: \{ fontWeight: '700', marginTop: tokens\.spacing\.md, textAlign: 'left' \}/);
+  assert.match(screen, /bodySubheading: \{[\s\S]*?color: tokens\.colors\.primary[\s\S]*?textAlign: 'left'/);
+  assert.match(screen, /<View testID="knowledge-article-reader" style=\{styles\.article\}>/);
 });
 
 test('loading, errors, no published guides and zero matches stay distinct; guide detail keeps the loaded ID', async () => {

@@ -16,8 +16,14 @@ test('a Development guide keeps the Development parent and ordinary Knowledge st
   assert.deepEqual(productRouteScrollKeys('knowledge', 'development'), {
     scrollKey: 'home-development-guide-detail', preserveScrollKey: 'home-development-flow',
   });
-  assert.deepEqual(productRouteScrollKeys('knowledge'), { scrollKey: 'knowledge' });
-  assert.deepEqual(productRouteScrollKeys('knowledge', 'more'), { scrollKey: 'knowledge' });
+  assert.deepEqual(productRouteScrollKeys('knowledge'), { scrollKey: 'knowledge', preserveScrollKey: 'knowledge' });
+  assert.deepEqual(productRouteScrollKeys('knowledge', 'more'), { scrollKey: 'knowledge', preserveScrollKey: 'knowledge' });
+  assert.deepEqual(productRouteScrollKeys('knowledge', 'more', undefined, 'article-v1'), {
+    scrollKey: 'knowledge-article:article-v1', preserveScrollKey: 'knowledge',
+  });
+  assert.deepEqual(productRouteScrollKeys('knowledge', 'development', undefined, 'guide-v1'), {
+    scrollKey: 'knowledge-article:guide-v1', preserveScrollKey: 'home-development-flow',
+  });
 });
 
 test('Home child routes keep Home selected in the main navigation', () => {

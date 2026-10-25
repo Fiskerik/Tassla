@@ -74,6 +74,12 @@ def image_fixture_url(screen: str) -> str:
     return f'{BASE}/?screen={screen}&imageFixture={screen}'
 
 
+def article_reader_url(article_id: str | None = None, related_mode: str | None = None) -> str:
+    selected = f'&articleId={article_id}' if article_id else ''
+    related = f'&relatedMode={related_mode}' if related_mode else ''
+    return f'{BASE}/?screen=knowledge&imageFixture=article-reader{selected}{related}'
+
+
 def visible_destinations(page) -> list[dict[str, object]]:
     tiles = []
     for name in ('Öppna Logga', 'Öppna Träna', 'Öppna Kunskap'):
@@ -770,6 +776,8 @@ def verify_image_diversity(browser, *, include_home_and_training: bool = True) -
            {'page_errors': page_errors})
     page.close()
 
+
+
     # Home's current exercise recommendation opens the exact Training continuation card.
     page = browser.new_page(viewport={'width': 375, 'height': 844})
     page_errors = []
@@ -844,6 +852,143 @@ def verify_image_diversity(browser, *, include_home_and_training: bool = True) -
                page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
         page.screenshot(path=str(OUT / f'{screen}-text-140-375.png'), full_page=True)
         page.close()
+
+
+def verify_article_reader(browser) -> None:
+    if not REVIEW:
+        page = browser.new_page(viewport={'width': 375, 'height': 844})
+        page.goto(article_reader_url(), wait_until='networkidle')
+        expect(page.get_by_text('Inga rekommenderade artiklar för den valda hunden just nu. Du kan läsa alla publicerade artiklar.', exact=True)).to_be_visible()
+        record('Article-reader fixtures stay hidden outside explicit review mode', True)
+        page.close()
+        return
+
+    for width in (375, 430):
+        page = browser.new_page(viewport={'width': width, 'height': 844})
+        page_errors: list[str] = []
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.goto(article_reader_url('review-article:first-day:v1', 'none'), wait_until='networkidle')
+        expect(page.get_by_role('heading', name='Första dygnet hemma', exact=True)).to_be_visible()
+        expect(page.get_by_text('Fler artiklar för din hund', exact=True)).to_have_count(0)
+        record(f'Article reader hides an empty related-article carousel at {width}px', True)
+        page.close()
+
+        page = browser.new_page(viewport={'width': width, 'height': 844})
+        page_errors: list[str] = []
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.goto(article_reader_url(), wait_until='networkidle')
+        search = page.get_by_role('textbox', name='Sök bland alla artiklar', exact=True)
+        search.fill('En artikel utan hundmatchning')
+        unmatched = page.get_by_role('button', name='Läs En artikel utan hundmatchning', exact=True)
+        expect(unmatched).to_be_visible()
+        unmatched.click()
+        expect(page.get_by_role('heading', name='En artikel utan hundmatchning', exact=True)).to_be_visible()
+        expect(page.get_by_text('Fler artiklar för din hund', exact=True)).to_be_visible()
+        unmatched_related = page.get_by_test_id('knowledge-related-carousel')
+        unmatched_related.scroll_into_view_if_needed()
+        expect(page.get_by_role('button', name='Läs Första dygnet hemma', exact=True)).to_be_visible()
+        page.get_by_role('button', name='Tillbaka till guider', exact=True).click()
+        expect(search).to_have_value('En artikel utan hundmatchning')
+        record(f'Published-library search opens a non-recommended article and preserves search on Back at {width}px', not page_errors,
+               {'page_errors': page_errors})
+        search.fill('')
+        page.get_by_role('button', name='Alla artiklar', exact=True).click()
+
+        lower_article = page.get_by_role('button', name='Läs Rumsrenhet – så hjälper du valpen att lyckas', exact=True)
+        lower_article.scroll_into_view_if_needed()
+        library_position = vertical_scroll_state(page)
+        lower_article.click()
+        expect(page.get_by_role('heading', name='Rumsrenhet – så hjälper du valpen att lyckas', exact=True)).to_be_visible()
+        page.wait_for_timeout(100)
+        article_position = vertical_scroll_state(page)
+        hero = page.get_by_test_id('knowledge-article-hero')
+        hero_box = hero.bounding_box()
+        hero_frame_ratio = hero_box['width'] / hero_box['height'] if hero_box else 0
+        article_container = page.get_by_test_id('knowledge-article-reader')
+        container_style = article_container.evaluate("element => ({ border: getComputedStyle(element).borderWidth, background: getComputedStyle(element).backgroundColor })")
+        intro = page.get_by_text('En liten valp kan ännu inte hålla sig som en vuxen hund.', exact=False).first
+        intro_weight = intro.evaluate('element => getComputedStyle(element).fontWeight')
+        subheading = page.get_by_role('heading', name='När ska ni gå ut?', exact=True)
+        subheading_color = subheading.evaluate('element => getComputedStyle(element).color')
+        record(f'Article detail resets to top, uses an unboxed reader and full-width 16:9 hero at {width}px',
+               article_position is not None and article_position['top'] <= 2
+               and hero_box is not None and abs(hero_box['x']) <= 1 and abs(hero_box['width'] - width) <= 2
+               and abs(hero_frame_ratio - 16 / 9) <= 0.02
+               and container_style['border'] == '0px' and container_style['background'] in ('rgba(0, 0, 0, 0)', 'transparent'),
+               {'scroll': article_position, 'hero': hero_box, 'hero_ratio': hero_frame_ratio, 'container': container_style})
+        record(f'Article lead is bold and subhead uses Tassla green at {width}px',
+               intro_weight in ('700', '800', 'bold') and subheading_color not in ('rgb(0, 0, 0)', 'rgb(28, 48, 39)'))
+        page.screenshot(path=str(OUT / f'article-reader-top-{width}.png'), full_page=True)
+
+        set_vertical_scroll(page, 100000)
+        expect(page.get_by_text('Fler artiklar för din hund', exact=True)).to_be_visible()
+        carousel = page.get_by_test_id('knowledge-related-carousel')
+        carousel_metrics = carousel.evaluate("element => ({clientWidth: element.clientWidth, scrollWidth: element.scrollWidth, scrollLeft: element.scrollLeft})")
+        included = [
+            page.get_by_role('button', name='Läs Första dygnet hemma', exact=True).count() == 1,
+            page.get_by_role('button', name='Läs Hur mycket ska en valp sova?', exact=True).count() == 1,
+        ]
+        excluded = [
+            page.get_by_role('button', name='Läs Rumsrenhet – så hjälper du valpen att lyckas', exact=True).count() == 0,
+            page.get_by_role('button', name='Läs En artikel utan hundmatchning', exact=True).count() == 0,
+            page.get_by_role('button', name='Läs En artikel med okänd matchning', exact=True).count() == 0,
+            page.get_by_role('button', name='Läs Trygg start hemma', exact=True).count() == 0,
+        ]
+        carousel.evaluate('element => { element.scrollLeft = 120; element.dispatchEvent(new Event("scroll", { bubbles: true })); }')
+        page.wait_for_timeout(120)
+        carousel_metrics['scrolledLeft'] = carousel.evaluate('element => element.scrollLeft')
+        record(f'Related carousel includes only other explicitly recommended articles and can scroll horizontally at {width}px',
+               all(included) and all(excluded) and carousel_metrics['scrollWidth'] > carousel_metrics['clientWidth']
+               and carousel_metrics['scrolledLeft'] > 0,
+               {'metrics': carousel_metrics, 'included': included, 'excluded': excluded})
+        page.screenshot(path=str(OUT / f'article-reader-carousel-{width}.png'), full_page=True)
+
+        page.get_by_role('button', name='Läs Första dygnet hemma', exact=True).click()
+        expect(page.get_by_role('heading', name='Första dygnet hemma', exact=True)).to_be_visible()
+        page.wait_for_timeout(100)
+        switched_position = vertical_scroll_state(page)
+        page.get_by_role('button', name='Tillbaka till guider', exact=True).click()
+        expect(page.get_by_role('button', name='För dig', exact=True)).to_be_visible()
+        restored_position = vertical_scroll_state(page)
+        record(f'Switching carousel articles resets to top and Back restores the scrolled library position at {width}px',
+               switched_position is not None and switched_position['top'] <= 2
+               and library_position is not None and restored_position is not None
+               and abs(restored_position['top'] - library_position['top']) <= 5
+               and not page_errors,
+               {'source_library_scroll': library_position, 'switched_article_scroll': switched_position,
+                'restored_library_scroll': restored_position, 'page_errors': page_errors})
+        page.screenshot(path=str(OUT / f'article-reader-library-restored-{width}.png'), full_page=True)
+        page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 667})
+    page.goto(article_reader_url('review-article:first-day:v1'), wait_until='networkidle')
+    scaled_text_count = page.evaluate("""() => {
+      const text = [...document.querySelectorAll('[dir="auto"]')];
+      text.forEach((element) => {
+        const style = getComputedStyle(element);
+        const fontSize = parseFloat(style.fontSize);
+        const lineHeight = parseFloat(style.lineHeight);
+        if (Number.isFinite(fontSize)) element.style.fontSize = `${fontSize * 1.4}px`;
+        if (Number.isFinite(lineHeight)) element.style.lineHeight = `${lineHeight * 1.4}px`;
+      });
+      return text.length;
+    }""")
+    page.wait_for_timeout(100)
+    expect(page.get_by_role('heading', name='Första dygnet hemma', exact=True)).to_be_visible()
+    reader = page.get_by_test_id('knowledge-article-reader')
+    reader.scroll_into_view_if_needed()
+    set_vertical_scroll(page, 100000)
+    related = page.get_by_test_id('knowledge-related-carousel')
+    related.scroll_into_view_if_needed()
+    expect(page.get_by_text('Fler artiklar för din hund', exact=True)).to_be_visible()
+    overflow = page.evaluate('document.documentElement.scrollWidth > innerWidth + 1')
+    carousel_metrics = related.evaluate('element => ({ clientWidth: element.clientWidth, scrollWidth: element.scrollWidth })')
+    page.screenshot(path=str(OUT / 'article-reader-text-140-375x667.png'), full_page=True)
+    record('Article reader remains readable and horizontally contained with 140% text proxy at 375×667',
+           scaled_text_count > 0 and not overflow and carousel_metrics['clientWidth'] > 0
+           and carousel_metrics['scrollWidth'] > carousel_metrics['clientWidth'],
+           {'scaled_text_elements': scaled_text_count, 'document_overflow': overflow, 'carousel': carousel_metrics})
+    page.close()
 
 
 def verify_progress_views(browser) -> None:
@@ -1151,6 +1296,21 @@ if os.environ.get('TASSLA_UI_PANEL') == 'profile-density':
         verify_profile_density(browser)
         browser.close()
     report = {'mode': 'review' if REVIEW else 'public', 'panel': 'profile-density', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
+if os.environ.get('TASSLA_UI_PANEL') == 'article-reader':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_article_reader(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'article-reader', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
     (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
     raise SystemExit(1 if failures else 0)
