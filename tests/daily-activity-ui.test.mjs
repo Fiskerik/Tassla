@@ -22,6 +22,7 @@ const workspace = await readFile(new URL('../src/features/home/ProductWorkspace.
 const appFlow = await readFile(new URL('../src/features/home/AppFlow.tsx', import.meta.url), 'utf8');
 const dailyData = await readFile(new URL('../src/features/home/daily-activity-data.ts', import.meta.url), 'utf8');
 const dailyChecklist = await readFile(new URL('../src/features/home/DailyChecklistScreen.tsx', import.meta.url), 'utf8');
+const tabs = await readFile(new URL('../src/components/ui/Tabs.tsx', import.meta.url), 'utf8');
 const routineIcons = await readFile(new URL('../src/features/home/daily-routine-checklist-icons.ts', import.meta.url), 'utf8');
 const iconMigration = await readFile(new URL('../supabase/migrations/202610220001_daily_routine_checklist_icons.sql', import.meta.url), 'utf8');
 const recoverySource = await readFile(new URL('../src/features/home/daily-activity-recovery.ts', import.meta.url), 'utf8');
@@ -125,7 +126,18 @@ test('opening a routine focuses its own editor and keeps manage-all as a named c
   assert.match(manager, /const visibleRoutines = upcomingRoutineOnly \|\| focusedRoutineOnly \? routines\.filter\(\(routine\) => routine\.id === focusRoutineId\) : routines/);
   assert.match(manager, /!upcomingRoutineOnly && !focusedRoutineOnly \? <View style=\{styles\.section\}>/);
   assert.match(dailyChecklist, /accessibilityLabel="Hantera rutiner och aktiviteter" onPress=\{\(\) => openManager\(\)\}/);
-  assert.match(dailyChecklist, /manageActionLabel\}>Hantera<\/Text>/);
+  const manageActionStart = dailyChecklist.indexOf('accessibilityLabel="Hantera rutiner och aktiviteter"');
+  const manageActionEnd = dailyChecklist.indexOf('</MotionPressable>', manageActionStart);
+  assert.ok(manageActionStart >= 0 && manageActionEnd > manageActionStart, 'the gear action remains present');
+  assert.doesNotMatch(dailyChecklist.slice(manageActionStart, manageActionEnd), /<Text/, 'the compact gear action has no visible label');
+  assert.match(dailyChecklist, /manageAction: \{ minWidth: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin/);
+  assert.match(dailyChecklist, /<Tabs items=\{CHECKLIST_FILTERS\} active=\{filter\} variant="rev02-segmented" activeTone="home" scrollable accessibilityLabel="Filtrera checklistor"/);
+  assert.match(tabs, /const homeGrid = homeSegmented && !scrollable/);
+  assert.match(tabs, /scrollableTab: \{ flexGrow: 0, flexShrink: 0, flexBasis: 'auto', minWidth: tokens\.size\.touchMin/);
+  assert.match(tabs, /scrollableLabel: \{ \.\.\.tokens\.typography\.smallCaption \}/);
+  assert.match(tabs, /onContentSizeChange=\{scrollable \? \(\) => setScrollLayoutRevision/);
+  assert.match(workspace, /confirmLabel="Lämna utan att spara" cancelLabel="Fortsätt redigera"/);
+  assert.match(workspace, /Ändringarna i Hundprofilen är inte sparade\. Om du lämnar nu går de förlorade\./);
   assert.match(manager, /<Dialog visible=\{showDiscardConfirmation\} title="Kasta ändringar\?"/);
   assert.doesNotMatch(manager, /ChecklistIconPickerTrigger[\s\S]{0,300}popover/);
   const createForm = manager.slice(manager.indexOf('function CreateRoutineForm'), manager.indexOf('function RepeatRuleControls'));

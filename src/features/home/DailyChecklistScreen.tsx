@@ -137,7 +137,7 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
 
   return <View testID="daily-checklist-screen" style={styles.page}>
     <AppBar mode="Back" title="Checklistor" actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" />
-    <Tabs items={CHECKLIST_FILTERS} active={filter} variant="rev02-segmented" activeTone="home" onChange={(value) => {
+    <Tabs items={CHECKLIST_FILTERS} active={filter} variant="rev02-segmented" activeTone="home" scrollable accessibilityLabel="Filtrera checklistor" onChange={(value) => {
       if (isChecklistFilter(value)) {
         upcomingRoutineRequest.current += 1;
         setRoutineSourceLoadingId(null);
@@ -181,7 +181,6 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
         <MotionPressable accessibilityRole="button" accessibilityLabel="Hantera rutiner och aktiviteter" onPress={() => openManager()}
           style={({ pressed }) => [styles.manageAction, pressed && styles.pressed]}>
           <Ionicons name="settings-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
-          <Text style={styles.manageActionLabel}>Hantera</Text>
         </MotionPressable>
       </View>
       <View testID="daily-checklist-progress" accessibilityRole="progressbar"
@@ -366,7 +365,6 @@ const styles = StyleSheet.create({
   cardHeading: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700', flex: 1 },
   count: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700', flexShrink: 0 },
   manageAction: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs / 2, paddingHorizontal: tokens.spacing.xs, borderRadius: tokens.radius.sm },
-  manageActionLabel: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
   pressed: { backgroundColor: tokens.colors.selectedSurface },
   progressTrack: { height: tokens.size.progress, borderRadius: tokens.radius.full, overflow: 'hidden', backgroundColor: tokens.colors.home.progressTrack, marginBottom: tokens.spacing.sm },
   progressFill: { height: '100%', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.greenFill },

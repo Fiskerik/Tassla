@@ -243,7 +243,7 @@ function profileExitPrompt(destination: ProfileExitDestination, returnPage: 'mor
     : destination.kind === 'addDog' ? 'Lägga till hund?'
       : destination.kind === 'return' ? `Lämna hundprofilen till ${target}?`
         : `Byta till ${target}?`;
-  return { title, body: `Hundprofilens ändringar är inte sparade. ${target} öppnas och de här lokala ändringarna kastas. Sparade uppgifter påverkas inte.` };
+  return { title, body: 'Ändringarna i Hundprofilen är inte sparade. Om du lämnar nu går de förlorade. Uppgifter som redan har sparats påverkas inte.' };
 }
 
 export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog], onSelectDog, onAddDog, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened, initialPage = 'home', onInitialPageOpened }: {
@@ -3457,7 +3457,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     onRefresh={page === 'home' || page === 'progress' ? () => { void reloadDailyActivity(true, false); } : page === 'log' && logView === 'today' ? () => { void reloadEvents('refresh'); } : page === 'log' && logView === 'overview' ? refreshInsights : undefined}
     refreshAccessibilityLabel={page === 'log' && logView === 'overview' ? 'Uppdatera insikter' : page === 'log' ? 'Uppdatera loggen' : 'Uppdatera Hem'}>
     <Dialog visible={Boolean(profileExitDialog)} title={pendingProfileExitPrompt?.title ?? 'Lämna hundprofilen?'}
-      confirmLabel="Kasta ändringar" cancelLabel="Fortsätt redigera" confirmVariant="destructive"
+      confirmLabel="Lämna utan att spara" cancelLabel="Fortsätt redigera" confirmVariant="destructive"
       onRequestClose={() => setProfileExitDialog(null)} onConfirm={confirmProfileExit}>
       <MessageCard>{pendingProfileExitPrompt?.body ?? 'Hundprofilens ändringar är inte sparade.'}</MessageCard>
     </Dialog>

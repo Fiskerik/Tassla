@@ -680,7 +680,7 @@ def verify_profile_density(browser) -> None:
     page.screenshot(path=str(OUT / 'profile-kennel-error-375x844.png'), full_page=True)
     page.close()
 
-def verify_image_diversity(browser) -> None:
+def verify_image_diversity(browser, *, include_home_and_training: bool = True) -> None:
     if not REVIEW:
         for width in (375, 430):
             page = browser.new_page(viewport={'width': width, 'height': 844})
@@ -708,25 +708,52 @@ def verify_image_diversity(browser) -> None:
         ]
         image_sources: list[str | None] = []
         image_boxes = []
+        image_frame_boxes = []
         for guide in guide_cards:
             expect(guide).to_be_visible()
             image = guide.locator('img').first
             image_sources.append(image.get_attribute('src'))
             image_boxes.append(image.bounding_box())
+            image_frame_boxes.append(image.locator('xpath=../..').bounding_box())
         record(f'Knowledge maps three stable guide identities to three different visible photos at {width}px',
                all(image_sources) and len(set(image_sources)) == 3,
-               {'image_sources': image_sources, 'image_boxes': image_boxes})
+               {'image_sources': image_sources, 'image_boxes': image_boxes, 'image_frame_boxes': image_frame_boxes})
         record(f'Knowledge image crops use the current 16:9 hero and 4:3 guide aspect ratios at {width}px',
-               image_boxes[1] is not None and abs(image_boxes[1]['width'] / image_boxes[1]['height'] - 16 / 9) <= 0.02
-               and all(box is not None and abs(box['width'] / box['height'] - 4 / 3) <= 0.02 for index, box in enumerate(image_boxes) if index != 1),
-               {'image_boxes': image_boxes})
+               image_frame_boxes[1] is not None and abs(image_frame_boxes[1]['width'] / image_frame_boxes[1]['height'] - 16 / 9) <= 0.02
+               and all(box is not None and abs(box['width'] / box['height'] - 4 / 3) <= 0.02 for index, box in enumerate(image_frame_boxes) if index != 1),
+               {'image_frame_boxes': image_frame_boxes})
+        record(f'Knowledge focal crops cover their full image frames at {width}px',
+               all(image_box is not None and frame_box is not None
+                   and image_box['x'] <= frame_box['x'] + 1 and image_box['y'] <= frame_box['y'] + 1
+                   and image_box['x'] + image_box['width'] >= frame_box['x'] + frame_box['width'] - 1
+                   and image_box['y'] + image_box['height'] >= frame_box['y'] + frame_box['height'] - 1
+                   for image_box, frame_box in zip(image_boxes, image_frame_boxes)),
+               {'image_boxes': image_boxes, 'image_frame_boxes': image_frame_boxes})
         page.screenshot(path=str(OUT / f'knowledge-guides-{width}.png'), full_page=True)
-        expect(page.get_by_role('textbox', name='Sök i guider för Luna', exact=True)).to_be_visible()
+        expect(page.get_by_role('textbox', name='Sök bland alla artiklar', exact=True)).to_be_visible()
         expect(page.get_by_role('tablist', name='Huvudmeny').get_by_role('tab', name='Kunskap', exact=True)).to_be_visible()
         record(f'Knowledge guide search and the selected bottom destination remain visible at {width}px',
                not page_errors and page.evaluate('document.documentElement.scrollWidth <= innerWidth'),
                {'page_errors': page_errors})
+        guide_cards[0].click()
+        expect(page.get_by_role('heading', name='Trygg start hemma', exact=True)).to_be_visible()
+        article_image = page.locator('img').first
+        article_image_box = article_image.bounding_box()
+        article_frame_box = article_image.locator('xpath=../..').bounding_box()
+        record(f'Knowledge article image covers its 16:9 frame at {width}px',
+               article_image_box is not None and article_frame_box is not None
+               and abs(article_frame_box['width'] / article_frame_box['height'] - 16 / 9) <= 0.02
+               and article_image_box['x'] <= article_frame_box['x'] + 1
+               and article_image_box['x'] + article_image_box['width'] >= article_frame_box['x'] + article_frame_box['width'] - 1
+               and article_image_box['y'] <= article_frame_box['y'] + 1
+               and article_image_box['y'] + article_image_box['height'] >= article_frame_box['y'] + article_frame_box['height'] - 1
+               and not page_errors,
+               {'image_box': article_image_box, 'image_frame_box': article_frame_box, 'page_errors': page_errors})
+        page.screenshot(path=str(OUT / f'knowledge-article-{width}.png'), full_page=True)
         page.close()
+
+    if not include_home_and_training:
+        return
 
     # Home opens the exact stable guide identity used by Knowledge's image manifest.
     page = browser.new_page(viewport={'width': 375, 'height': 844})
@@ -1129,16 +1156,16 @@ if os.environ.get('TASSLA_UI_PANEL') == 'profile-density':
     raise SystemExit(1 if failures else 0)
 
 
-if os.environ.get('TASSLA_UI_PANEL') == 'image-diversity':
+if os.environ.get('TASSLA_UI_PANEL') in ('image-diversity', 'knowledge-images'):
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
             headless=True,
             executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
             args=['--no-sandbox'],
         )
-        verify_image_diversity(browser)
+        verify_image_diversity(browser, include_home_and_training=os.environ.get('TASSLA_UI_PANEL') == 'image-diversity')
         browser.close()
-    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'image-diversity', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': os.environ.get('TASSLA_UI_PANEL'), 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
     (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
     raise SystemExit(1 if failures else 0)

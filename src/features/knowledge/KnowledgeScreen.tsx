@@ -1,6 +1,6 @@
 import { personalizeArticle, type DogSex } from '../../content/article-targeting';
 import { useEffect, useRef, useState } from 'react';
-import { Image, Linking, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Linking, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFonts } from 'expo-font';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { HomeContent } from '../../data/app-data';
@@ -17,7 +17,8 @@ import { checklistReadCacheScope } from './checklist-data';
 import type { PendingChecklistMemory } from './checklist-intent';
 import { FAQScreen } from './FAQScreen';
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID } from './review-content';
-import { knowledgeImageForGuide, editorialImageForGuide } from './editorial-image-assignment';
+import { knowledgeImageForGuide, editorialImageForGuide, knowledgeImageFocusForGuide } from './editorial-image-assignment';
+import { KnowledgeImage } from './KnowledgeImage';
 
 type ContentState = 'loading' | 'ready' | 'error';
 type KnowledgeTab = 'För dig' | 'Checklistor' | 'FAQ';
@@ -78,6 +79,8 @@ export function KnowledgeScreen({
 
   const checklistInvalidate = useRef<(() => void) | null>(null);
   const selectedItem = items.find((item) => item.id === openedId) ?? null;
+  const selectedImage = selectedItem ? knowledgeImageForGuide(selectedItem) ?? editorialImageForGuide(selectedItem) : null;
+  const selectedImageFocus = selectedItem && selectedImage ? knowledgeImageFocusForGuide(selectedItem, selectedImage) : null;
   const introductionIndex = selectedItem ? parseGuideBody(selectedItem.body).findIndex((block) => block.type === 'paragraph') : -1;
   const visibleItems = items
     .filter((item) => item.contentType === 'article' || item.contentType === 'guide')
@@ -117,6 +120,7 @@ export function KnowledgeScreen({
 
   function renderGuideCard(item: HomeContent, featured: boolean) {
     const image = knowledgeImageForGuide(item) ?? editorialImageForGuide(item);
+    const imageFocus = knowledgeImageFocusForGuide(item, image);
     return <MotionPressable
       key={item.id}
       accessibilityRole="button"
@@ -125,7 +129,7 @@ export function KnowledgeScreen({
       style={featured ? styles.featured : styles.smallCard}
     >
       {image ? <View style={featured ? styles.featuredImageFrame : styles.smallImageFrame}>
-        <Image source={image} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+        <KnowledgeImage source={image} focus={imageFocus} />
       </View> : null}
       <View style={featured ? styles.cardCopy : styles.smallCardCopy}>
         <Text style={featured ? styles.guideTitle : styles.smallGuideTitle} numberOfLines={featured ? undefined : 3}>{articleText(item.title)}</Text>
@@ -199,8 +203,7 @@ export function KnowledgeScreen({
 
       {selectedItem && contentState === 'ready' ? <View style={styles.articleCard}>
         <View style={styles.articleImageFrame}>
-          <Image source={knowledgeImageForGuide(selectedItem) ?? editorialImageForGuide(selectedItem)} style={StyleSheet.absoluteFill}
-            resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+          {selectedImage && selectedImageFocus ? <KnowledgeImage source={selectedImage} focus={selectedImageFocus} /> : null}
         </View>
         <View style={styles.articleCopy}>
         <Text style={styles.articleTitle} accessibilityRole="header">{articleText(selectedItem.title)}</Text>

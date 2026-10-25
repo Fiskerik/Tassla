@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 const screenPath = new URL('../src/features/knowledge/KnowledgeScreen.tsx', import.meta.url);
 const workspacePath = new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url);
 const imageAssignmentPath = new URL('../src/features/knowledge/editorial-image-assignment.ts', import.meta.url);
+const imageComponentPath = new URL('../src/features/knowledge/KnowledgeImage.tsx', import.meta.url);
 const homeCarouselPath = new URL('../src/features/home/HomeCarousel.tsx', import.meta.url);
 
 test('Knowledge cards and search contain only already selected article and guide records', async () => {
@@ -32,11 +33,14 @@ test('library search copy covers all articles and query state is scoped by sessi
 
 test('guide metadata comes from published fields and secondary destinations stay compact and labeled', async () => {
   const screen = await readFile(screenPath, 'utf8');
+  const imageComponent = await readFile(imageComponentPath, 'utf8');
   assert.match(screen, /readingMinutes\(item\.body\)/);
   assert.match(screen, /item\.contentType === 'guide' \? 'Guide' : 'Artikel'/);
   assert.match(screen, /featuredImageFrame: \{ width: '100%', aspectRatio: 16 \/ 9, overflow: 'hidden'/);
   assert.match(screen, /smallImageFrame: \{ width: '100%', aspectRatio: 4 \/ 3, overflow: 'hidden'/);
-  assert.match(screen, /style=\{StyleSheet\.absoluteFill\} resizeMode="cover"/);
+  assert.match(screen, /<KnowledgeImage source=\{image\} focus=\{imageFocus\} \/>/);
+  assert.match(imageComponent, /knowledgeImageLayout\(frame\.width, frame\.height, focus\.aspectRatio, 1, focus\)/);
+  assert.match(imageComponent, /resizeMode=\{crop \? 'stretch' : 'cover'\}/);
   assert.match(screen, /accessibilityLabel="Öppna Checklistor"/);
   assert.match(screen, /accessibilityLabel="Öppna Vanliga frågor"/);
   assert.match(screen, /categoryLink: \{ flexDirection: 'column', alignItems: 'center'/);
@@ -88,10 +92,13 @@ test('published guide versions retain explicit images and library cards use an e
     'review-v1:training:vardagsro:1',
   ]) assert.ok(assignment.includes(`'${identity}'`), `legacy HomeCarousel mapping retains ${identity}`);
   assert.match(assignment, /export function editorialImageForGuide[\s\S]*ImageSourcePropType/);
+  assert.match(assignment, /GUIDE_IMAGE_FOCUS_BY_VERSION/);
+  assert.match(assignment, /export function knowledgeImageFocusForGuide/);
   assert.match(carousel, /editorialImageForGuide\(article\)/);
   assert.match(screen, /const image = knowledgeImageForGuide\(item\) \?\? editorialImageForGuide\(item\)/);
-  assert.match(screen, /\{image \? <View style=\{featured \? styles\.featuredImageFrame : styles\.smallImageFrame\}>[\s\S]*?<Image source=\{image\} style=\{StyleSheet\.absoluteFill\}[\s\S]*?<\/View> : null\}/);
-  assert.match(screen, /<View style=\{styles\.articleImageFrame\}>[\s\S]*?<Image source=\{knowledgeImageForGuide\(selectedItem\)[\s\S]*?StyleSheet\.absoluteFill/);
+  assert.match(screen, /const imageFocus = knowledgeImageFocusForGuide\(item, image\)/);
+  assert.match(screen, /<KnowledgeImage source=\{image\} focus=\{imageFocus\} \/>/);
+  assert.match(screen, /<View style=\{styles\.articleImageFrame\}>[\s\S]*?<KnowledgeImage source=\{selectedImage\} focus=\{selectedImageFocus\}/);
 });
 
 test('loading, errors, no published guides and zero matches stay distinct; guide detail keeps the loaded ID', async () => {
