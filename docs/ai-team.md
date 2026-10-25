@@ -23,7 +23,7 @@ Chief of Staff kan inhämta tekniskt underlag via AI Tech Lead, men är inte Eri
 
 Alla SDK-roller är rådgivande. Inga externa meddelande-, webb-, fil- eller shellverktyg finns. Market Intelligence arbetar med tillhandahållet underlag och markerar aktuella fakta utan källor som obekräftade. SDK-rollen Codex implementation är en rådgivare; verklig utveckling sker i Codex under Erik. QA får inte hävda att tester har körts.
 
-Codex-definitionerna i `.codex/agents/` är separata från SDK-agenterna. Där finns rollerna product, critic, architect, dog_expert, compliance, implementer, qa, reviewer och security. Historiska definitioner under `.codex/archive/` är inaktiva. Codex-rollerna arbetar i repoets taskflöde; varje task har en skrivägare och QA/reviewer är read-only.
+Codex-definitionerna i `.codex/agents/` är separata från SDK-agenterna. Där finns rollerna product, critic, architect, dog_expert, compliance, implementer, qa, reviewer, security och ui_critic. `ui_critic` bedömer enbart visuell likhet mot referenspanelen i `vision_rev02` utifrån en jämförelsebild från `tools/visual-check/compare_panel.py`; den är rådgivande, skriver ingen kod och ger inte visuellt godkänt. Historiska definitioner under `.codex/archive/` är inaktiva. Codex-rollerna arbetar i repoets taskflöde; varje task har en skrivägare och QA/reviewer är read-only.
 
 ## Selektivt urval och kostnadsgränser
 Chief of Staff väljer normalt ett relevant team, högst två per fråga. Varje team får noll till två relevanta specialister; ledaren kan svara utan specialister. Programmet avvisar okända roller, roller i fel team och dubbletter innan specialistkörning. Endast valda roller anropas; modellerna får inga verktyg för att starta fler agenter.

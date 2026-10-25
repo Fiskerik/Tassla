@@ -215,3 +215,23 @@ TASSLA_UI_PANEL=profile-density TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://
 ```
 
 Detta är lokal RN Web-/syntetisk QA, inte native iOS, verklig SecureStore, live Supabase/RLS, fysisk VoiceOver/Dynamic Type eller oberoende QA-bevis. Profil är en stödyta utan egen rev02-panel; screenshoten stänger inte visuell acceptans för en panel.
+
+## Jämförelsebild mot referenspanel (design-rules §14 punkt 16)
+
+`compare_panel.py` klipper en panel ur `vision_rev02` och lägger den bredvid en eller flera skärmdumpar i samma bredd, så att storlekar och innehållstäthet går att jämföra. Den behöver bara Pillow (redan tillgängligt i denna körmiljö; eventuell installation följer repots dependency-policy), gör inga nätverks- eller API-anrop och bedömer ingenting själv.
+
+```sh
+python tools/visual-check/compare_panel.py --list
+python tools/visual-check/compare_panel.py --panel 7 --render docs/design/evidence/article-card-render-fix-2026-10-25/library-Nemo-375.png
+python tools/visual-check/compare_panel.py --panel 1 --render före.png --render efter.png --label före --label efter
+python tools/visual-check/compare_panel.py --panel 1 --render home-default-375.png --trim-top 32
+python tools/visual-check/compare_panel.py --dump-panels docs/design/reference-panels
+```
+
+Panelnumren följer läsordning (övre raden 1–4, nedre 5–8) och motsvarar `docs/design/vision-rev02-screen-contracts.md`. Bilden sparas bredvid första renderingen som `compare-panel<N>-<namn>.png`, eller där `--out` pekar. Rosa linjer markerar var 10:e procent av respektive bilds höjd.
+
+Begränsningar: referensen har statusfält och telefonram, renderingen har inte det, så jämför ordning, proportioner och täthet och inte exakta pixlar. Jämför mot en 375-rendering (1:1); en 430-rendering skalas ner och ser därför mindre ut. `--trim-top 32` kan ta bort en 32 px reviewbanner om inbilden har en sådan; använd inte trim på en bild utan banner. Beskärningen är uppmätt på `vision_rev02.jpg` (1214×1295) och skalas om för en annan upplösning; ange `--box x0,y0,x1,y1` om arket har andra proportioner.
+
+Standardreferensen är `vision_rev02.jpg` (PNG används bara om JPG saknas); `--ref` väljer ett annat ark. Ogiltig bredd, trimning och beskärning avvisas. `--out` får inte skriva över referensen eller en rendering.
+
+Bilden är underlag till agenten `ui_critic` och till QA/reviewer. Den ersätter inte checklistan i §14 och ger inget visuellt godkännande.
