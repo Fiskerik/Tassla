@@ -23,7 +23,7 @@ Chief of Staff kan inhämta tekniskt underlag via AI Tech Lead, men är inte Eri
 
 Alla SDK-roller är rådgivande. Inga externa meddelande-, webb-, fil- eller shellverktyg finns. Market Intelligence arbetar med tillhandahållet underlag och markerar aktuella fakta utan källor som obekräftade. SDK-rollen Codex implementation är en rådgivare; verklig utveckling sker i Codex under Erik. QA får inte hävda att tester har körts.
 
-Codex-definitionerna i `.codex/agents/` är separata från SDK-agenterna. Vilande Dev-definitioner ligger i `.codex/agents-later/`, original i `.codex/archive/original-agents/`. Hundgranskning och compliance finns kvar som Codex-stöd vid behov och ersätts inte av Commercial.
+Codex-definitionerna i `.codex/agents/` är separata från SDK-agenterna. Där finns rollerna product, critic, architect, dog_expert, compliance, implementer, qa, reviewer och security. Historiska definitioner under `.codex/archive/` är inaktiva. Codex-rollerna arbetar i repoets taskflöde; varje task har en skrivägare och QA/reviewer är read-only.
 
 ## Selektivt urval och kostnadsgränser
 Chief of Staff väljer normalt ett relevant team, högst två per fråga. Varje team får noll till två relevanta specialister; ledaren kan svara utan specialister. Programmet avvisar okända roller, roller i fel team och dubbletter innan specialistkörning. Endast valda roller anropas; modellerna får inga verktyg för att starta fler agenter.
@@ -47,9 +47,9 @@ Testa produktprioritering, partnerersättning och QA var för sig. Kontrollera a
 ## Projektunderlag och modellöversikt
 `python run_team.py --roles` visar alla SDK- och Codex-roller med modell och reasoning-inställning utan API-anrop. SDK använder fortfarande samma `TASSLA_TEST_MODEL` för alla roller. Reasoning är inte explicit konfigurerat där; gpt-4.1-nano har ingen low/medium/high-inställning. Codex-definitionerna har individuella modell- och reasoning-inställningar.
 
-`python run_team.py --chat --project-context` skickar begränsade utdrag ur `docs/vision.md`, `docs/mvp.md` och `docs/revenue.md`. Läsning är endast tillåten för dessa fasta filer; `.env`, `.git` och övriga filer exponeras inte. Utdragen är högst 2000 tecken per dokument, alltså inte fullständig projektkunskap. Underlagets godkännandestatus antas inte. Först senare bör relevanta avsnitt väljas per roll; denna enkla version skickar samma begränsade basunderlag till de valda rollerna och ökar tokenkostnaden.
+`python run_team.py --chat --project-context` skickar begränsade utdrag ur `docs/vision.md`, `docs/mvp.md` och `docs/revenue.md`. Läsning är endast tillåten för dessa fasta filer; `.env`, `.git` och övriga filer exponeras inte. Utdragen är högst 2000 tecken per dokument och utelämnar bland annat `docs/decisions/MASTER-LOG.md`; SDK-kontexten är därför inte en besluts- eller fullständig projektkälla. Godkännandestatus antas inte. Använd detta flöde endast för avgränsad rådgivning; repositoryarbete följer taskplanen och läser relevanta beslut därifrån. Kontexten skickas gemensamt till valda SDK-roller, vilket kan medföra onödig tokenkostnad.
 
 Större arbeten delas upp enligt `docs/tasks/template.md` och AGENTS.md, med högst två samtidiga deluppgifter och sparade checkpoints. Detta förfarande garanterar inte att en avbruten körning automatiskt återstartas.
 
-## Codex-utvecklarflöde 2026-10-04
-Dev-definitionerna är nu tillgängliga i `.codex/agents/`, inte vilande. Implementation, QA och reviewer använder GPT-6 Luna high; Tech Lead och Security behåller sina granskningsmodeller. Faktisk appimplementation kräver fortfarande godkänt segment och plan. Se `docs/dev/workflow.md` och `tools/dev_flow.py`. SDK-teamets modellinställning är oförändrad och ger bara råd. Ingen nattlig automation har skapats.
+## Codex-utvecklarflöde
+`docs/dev/workflow.md` anger arbetsgång och modellval. `.codex/agents/*.toml` är rollernas aktuella modellstandarder; historiska APP-besked i äldre dokument ska inte användas för att åsidosätta dem. Välj högre modell/resonemang endast när komplexitet, tvetydighet eller risk motiverar det. SDK-teamets modellinställning är separat och rådgivande. Ingen nattlig automation har skapats.

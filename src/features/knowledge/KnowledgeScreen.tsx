@@ -1,3 +1,4 @@
+import { personalizeArticle, type DogSex } from '../../content/article-targeting';
 import { useEffect, useRef, useState } from 'react';
 import { Image, Linking, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFonts } from 'expo-font';
@@ -16,7 +17,7 @@ import { checklistReadCacheScope } from './checklist-data';
 import type { PendingChecklistMemory } from './checklist-intent';
 import { FAQScreen } from './FAQScreen';
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID } from './review-content';
-import { knowledgeImageForGuide } from './editorial-image-assignment';
+import { knowledgeImageForGuide, editorialImageForGuide } from './editorial-image-assignment';
 
 type ContentState = 'loading' | 'ready' | 'error';
 type KnowledgeTab = 'För dig' | 'Checklistor' | 'FAQ';
@@ -32,6 +33,7 @@ export function KnowledgeScreen({
   client,
   dogId = '',
   dogName = '',
+  dogSex = null,
   ageWeeks = 0,
   sessionKey = '',
   checklistPending = null,
@@ -51,6 +53,7 @@ export function KnowledgeScreen({
   client?: SupabaseClient;
   dogId?: string;
   dogName?: string;
+  dogSex?: DogSex | null;
   ageWeeks?: number | null;
   sessionKey?: string;
   checklistPending?: PendingChecklistMemory | null;
@@ -67,6 +70,7 @@ export function KnowledgeScreen({
   const searchQuery = guideSearchValueForScope(guideViewState, searchScopeKey);
   const hasSearchQuery = normalizeGuideSearchText(searchQuery) !== '';
   const showAllGuides = guideViewState.scopeKey === searchScopeKey && guideViewState.showAll;
+  const articleText = (value: string) => personalizeArticle(value, { name: dogName, sex: dogSex });
   const dogLabel = dogName.trim() || 'vald hund';
   if (guideViewState.scopeKey !== searchScopeKey) {
     setGuideViewState({ scopeKey: searchScopeKey, value: '', showAll: false });
@@ -74,12 +78,17 @@ export function KnowledgeScreen({
 
   const checklistInvalidate = useRef<(() => void) | null>(null);
   const selectedItem = items.find((item) => item.id === openedId) ?? null;
+  const introductionIndex = selectedItem ? parseGuideBody(selectedItem.body).findIndex((block) => block.type === 'paragraph') : -1;
   const visibleItems = items
     .filter((item) => item.contentType === 'article' || item.contentType === 'guide')
     .sort(compareGuideTitle);
-  const displayedItems = searchGuideItems(visibleItems, searchQuery);
+  const recommendedItems = visibleItems.filter((item) => item.recommended !== false);
+  const candidates = showAllGuides || hasSearchQuery ? visibleItems : recommendedItems;
+  const matchingIds = new Set(searchGuideItems(candidates.map((item) => ({ ...item,
+    title: articleText(item.title), body: articleText(item.body) })), searchQuery).map((item) => item.id));
+  const displayedItems = candidates.filter((item) => matchingIds.has(item.id));
   const cardItems = hasSearchQuery || showAllGuides ? displayedItems : displayedItems.slice(0, 3);
-  const hasMoreGuides = !hasSearchQuery && !showAllGuides && visibleItems.length > 3;
+  const hasMoreGuides = !hasSearchQuery && !showAllGuides && recommendedItems.length > 3;
   const detailOpen = Boolean(selectedItem) || (tab === 'Checklistor' && checklistDetailOpen);
   useEffect(() => { onDetailChange?.(detailOpen); }, [detailOpen, onDetailChange]);
   useEffect(() => () => { onDetailChange?.(false); }, [onDetailChange]);
@@ -107,17 +116,19 @@ export function KnowledgeScreen({
   const showGuideScreen = tab === 'För dig' || Boolean(selectedItem);
 
   function renderGuideCard(item: HomeContent, featured: boolean) {
-    const image = knowledgeImageForGuide(item);
+    const image = knowledgeImageForGuide(item) ?? editorialImageForGuide(item);
     return <MotionPressable
       key={item.id}
       accessibilityRole="button"
-      accessibilityLabel={`Läs ${item.title}`}
+      accessibilityLabel={`Läs ${articleText(item.title)}`}
       onPress={() => openArticle(item.id)}
       style={featured ? styles.featured : styles.smallCard}
     >
-      {image ? <Image source={image} style={featured ? styles.featuredImage : styles.smallImage} resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}
+      {image ? <View style={featured ? styles.featuredImageFrame : styles.smallImageFrame}>
+        <Image source={image} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+      </View> : null}
       <View style={featured ? styles.cardCopy : styles.smallCardCopy}>
-        <Text style={featured ? styles.guideTitle : styles.smallGuideTitle} numberOfLines={featured ? undefined : 3}>{item.title}</Text>
+        <Text style={featured ? styles.guideTitle : styles.smallGuideTitle} numberOfLines={featured ? undefined : 3}>{articleText(item.title)}</Text>
         <View style={styles.metadataRow}>
           <Text style={styles.metadataPill}>{readingMinutes(item.body)} min</Text>
           <Text style={styles.metadataPill}>{item.contentType === 'guide' ? 'Guide' : 'Artikel'}</Text>
@@ -143,11 +154,11 @@ export function KnowledgeScreen({
         <View style={styles.searchField}>
           {iconsLoaded ? <Ionicons name="search-outline" size={tokens.size.iconSm} color={tokens.colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}
           <TextInput
-            accessibilityLabel={`Sök i guider för ${dogLabel}`}
-            accessibilityHint={`Sök bland guider för ${dogLabel}.`}
+            accessibilityLabel={`Sök bland alla artiklar`}
+            accessibilityHint={`Sök bland alla publicerade artiklar.`}
             value={searchQuery}
             onChangeText={(value) => setGuideViewState((current) => ({ ...current, scopeKey: searchScopeKey, value }))}
-            placeholder={`Sök bland guider för ${dogLabel}`}
+            placeholder={`Sök bland alla artiklar`}
             returnKeyType="search"
             style={styles.searchInput}
           />
@@ -157,17 +168,21 @@ export function KnowledgeScreen({
         </View>
       </View> : null}
 
+      {tab === 'För dig' && !selectedItem && <QuietButton
+        title={showAllGuides ? 'För dig' : 'Alla artiklar'}
+        onPress={() => setGuideViewState((current) => ({ ...current, scopeKey: searchScopeKey, showAll: !showAllGuides }))} /> }
+
       {showGuideScreen && contentState === 'loading' && <Skeleton shape="card" lines={4} />}
       {showGuideScreen && contentState === 'error' && <>
         <MessageCard tone="error">Guiderna kunde inte hämtas. Försök igen.</MessageCard>
         <PrimaryButton title="Försök igen" onPress={onRetry} />
       </>}
-      {tab === 'För dig' && !selectedItem && contentState === 'ready' && visibleItems.length === 0 && <MessageCard>
-        Inga guider är publicerade för {dogLabel} ännu.
+      {tab === 'För dig' && !selectedItem && contentState === 'ready' && displayedItems.length === 0 && !hasSearchQuery && <MessageCard>
+        {showAllGuides ? 'Inga artiklar är publicerade ännu.' : `Inga rekommenderade artiklar för ${dogLabel} just nu. Du kan läsa alla publicerade artiklar.`}
       </MessageCard>}
       {tab === 'För dig' && !selectedItem && contentState === 'ready' && visibleItems.length > 0 && hasSearchQuery && displayedItems.length === 0
         ? <View style={styles.searchEmpty}>
-          <MessageCard>{`Inga guider matchar "${searchQuery.trim()}" för ${dogLabel}.`}</MessageCard>
+          <MessageCard>{`Inga artiklar matchar "${searchQuery.trim()}" i biblioteket.`}</MessageCard>
           <QuietButton title="Rensa sökning" onPress={clearSearch} />
         </View>
         : null}
@@ -179,11 +194,16 @@ export function KnowledgeScreen({
       {showGuideScreen && !selectedItem && contentState === 'ready' && visibleItems.length > 0 && displayedItems.length > 0 ? <View style={styles.guideList}>
         {cardItems[0] ? renderGuideCard(cardItems[0], true) : null}
         {cardItems.length > 1 ? <View style={styles.articleGrid}>{cardItems.slice(1).map((item) => renderGuideCard(item, false))}</View> : null}
-        {hasMoreGuides ? <QuietButton title="Visa alla" onPress={() => setGuideViewState((current) => ({ ...current, scopeKey: searchScopeKey, showAll: true }))} /> : null}
+        {hasMoreGuides ? <QuietButton title="Visa alla artiklar" onPress={() => setGuideViewState((current) => ({ ...current, scopeKey: searchScopeKey, showAll: true }))} /> : null}
       </View> : null}
 
       {selectedItem && contentState === 'ready' ? <View style={styles.articleCard}>
-        <Text style={styles.articleTitle} accessibilityRole="header">{selectedItem.title}</Text>
+        <View style={styles.articleImageFrame}>
+          <Image source={knowledgeImageForGuide(selectedItem) ?? editorialImageForGuide(selectedItem)} style={StyleSheet.absoluteFill}
+            resizeMode="cover" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+        </View>
+        <View style={styles.articleCopy}>
+        <Text style={styles.articleTitle} accessibilityRole="header">{articleText(selectedItem.title)}</Text>
         {selectedItem.isAiGenerated ? <Text style={styles.aiOriginLabel}>AI-genererat innehåll</Text> : null}
         <View style={styles.articleBody}>
           {parseGuideBody(selectedItem.body).map((block, index) => {
@@ -191,11 +211,20 @@ export function KnowledgeScreen({
               key={`${selectedItem.id}:heading:${index}`}
               accessibilityRole="header"
               style={block.level === 2 ? styles.bodyHeading : styles.bodySubheading}
-            >{block.text}</Text>;
-            if (block.type === 'list') return <View key={`${selectedItem.id}:list:${index}`} style={styles.bodyList}>
-              {block.items.map((item, itemIndex) => <Text key={`${selectedItem.id}:list:${index}:${itemIndex}`} style={styles.bodyListItem}>• {item}</Text>)}
+            >{articleText(block.text)}</Text>;
+            if (block.type === 'callout') return <View key={`${selectedItem.id}:callout:${index}`}
+              style={[styles.callout, block.tone === 'important' && styles.importantCallout]}>
+              <View style={styles.calloutHeading}>
+                {iconsLoaded ? <Ionicons name={block.tone === 'tip' ? 'bulb-outline' : 'alert-circle-outline'} size={tokens.size.iconMd}
+                  color={block.tone === 'tip' ? tokens.colors.primary : tokens.colors.warning} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}
+                <Text accessibilityRole="header" style={styles.calloutLabel}>{block.tone === 'tip' ? 'Tips i vardagen' : 'Viktigt'}</Text>
+              </View>
+              <Text style={styles.calloutText}>{articleText(block.text)}</Text>
             </View>;
-            return <Text key={`${selectedItem.id}:paragraph:${index}`} style={styles.bodyParagraph}>{block.text}</Text>;
+            if (block.type === 'list') return <View key={`${selectedItem.id}:list:${index}`} style={styles.bodyList}>
+              {block.items.map((item, itemIndex) => <Text key={`${selectedItem.id}:list:${index}:${itemIndex}`} style={styles.bodyListItem}>• {articleText(item)}</Text>)}
+            </View>;
+            return <Text key={`${selectedItem.id}:paragraph:${index}`} style={[styles.bodyParagraph, index === introductionIndex && styles.articleIntro]}>{articleText(block.text)}</Text>;
           })}
         </View>
         {selectedItem.sources.length > 0 ? <>
@@ -212,6 +241,7 @@ export function KnowledgeScreen({
         })}
         </> : null}
         {sourceMessage !== '' && <MessageCard>{sourceMessage}</MessageCard>}
+        </View>
       </View> : null}
 
       {tab === 'För dig' && !selectedItem ? <View style={styles.shortcuts}>
@@ -257,22 +287,30 @@ const styles = StyleSheet.create({
   categoryTitle: { alignSelf: 'stretch', textAlign: 'center', ...tokens.typography.label, color: tokens.colors.textPrimary },
   categoryCopy: { flex: 1, minWidth: 0, paddingVertical: tokens.spacing.sm, gap: tokens.spacing.xs },
   featured: { backgroundColor: tokens.colors.home.card, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, overflow: 'hidden' },
-  featuredImage: { width: '100%', aspectRatio: 16 / 9 },
+  featuredImageFrame: { width: '100%', aspectRatio: 16 / 9, overflow: 'hidden', backgroundColor: tokens.colors.destination.knowledge.surface },
   cardCopy: { paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.sm, gap: tokens.spacing.xs },
   smallCardCopy: { flex: 1, padding: tokens.spacing.sm, gap: tokens.spacing.xs },
   metadataRow: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
   metadataPill: { ...tokens.typography.caption, color: tokens.colors.textSecondary, backgroundColor: tokens.colors.background, borderRadius: tokens.radius.full, paddingHorizontal: tokens.spacing.sm, paddingVertical: tokens.spacing.xs },
   articleGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.md },
   smallCard: { flexGrow: 1, flexBasis: '45%', backgroundColor: tokens.colors.home.card, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, overflow: 'hidden' },
-  smallImage: { width: '100%', aspectRatio: 4 / 3 },
+  smallImageFrame: { width: '100%', aspectRatio: 4 / 3, overflow: 'hidden', backgroundColor: tokens.colors.destination.knowledge.surface },
   guideList: { gap: tokens.spacing.xs },
   guideTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
   smallGuideTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
-  articleCard: { alignSelf: 'stretch', borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, padding: tokens.layout.cardPadding },
+  articleCard: { alignSelf: 'stretch', borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface, overflow: 'hidden' },
+  articleImageFrame: { width: '100%', aspectRatio: 16 / 9, overflow: 'hidden', backgroundColor: tokens.colors.destination.knowledge.surface },
+  articleCopy: { padding: tokens.layout.cardPadding },
+  articleIntro: { backgroundColor: tokens.colors.destination.knowledge.surface, padding: tokens.spacing.md, borderRadius: tokens.radius.md },
+  callout: { backgroundColor: tokens.colors.successSurface, padding: tokens.spacing.md, borderRadius: tokens.radius.md, marginTop: tokens.spacing.lg, gap: tokens.spacing.sm },
+  importantCallout: { backgroundColor: tokens.colors.warningSurface },
+  calloutHeading: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
+  calloutLabel: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1 },
+  calloutText: { ...tokens.typography.body, color: tokens.colors.textPrimary },
   articleTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
   aiOriginLabel: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
   articleBody: { marginTop: tokens.spacing.md },
-  bodyHeading: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginTop: tokens.spacing.xl },
+  bodyHeading: { ...tokens.typography.heading, color: tokens.colors.primary, marginTop: tokens.spacing.xl },
   bodySubheading: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginTop: tokens.spacing.lg },
   bodyParagraph: { ...tokens.typography.body, color: tokens.colors.textPrimary, marginTop: tokens.spacing.sm },
   bodyList: { marginTop: tokens.spacing.sm },

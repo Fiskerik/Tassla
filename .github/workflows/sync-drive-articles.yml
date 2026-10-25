@@ -1,0 +1,30 @@
+name: Sync reviewed Drive articles
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '3-58/5 * * * *'
+permissions:
+  contents: read
+concurrency:
+  group: drive-article-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    if: vars.ARTICLE_SYNC_ENABLED == 'true' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: article-publishing
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Validate parser and publication fixture
+        run: python3 -m unittest discover -s tests -p test_drive_articles.py
+      - name: Sync publication-ready documents
+        env:
+          GOOGLE_DRIVE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_DRIVE_SERVICE_ACCOUNT }}
+          GOOGLE_DRIVE_ARTICLES_FOLDER_ID: ${{ vars.GOOGLE_DRIVE_ARTICLES_FOLDER_ID }}
+          ARTICLE_SYNC_URL: ${{ vars.ARTICLE_SYNC_URL }}
+          ARTICLE_SYNC_TOKEN: ${{ secrets.ARTICLE_SYNC_TOKEN }}
+          ARTICLE_SYNC_PROJECT_REF: ${{ secrets.ARTICLE_SYNC_PROJECT_REF }}
+        run: python3 tools/sync_drive_articles.py --sync

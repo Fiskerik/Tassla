@@ -1,7 +1,8 @@
 export type GuideBodyBlock =
   | { type: 'heading'; level: 2 | 3; text: string }
   | { type: 'paragraph'; text: string }
-  | { type: 'list'; items: string[] };
+  | { type: 'list'; items: string[] }
+  | { type: 'callout'; tone: 'tip' | 'important'; text: string };
 
 /** Parse the small Markdown subset used by content drafts into plain-text UI blocks. */
 export function parseGuideBody(body: string): GuideBodyBlock[] {
@@ -25,6 +26,13 @@ export function parseGuideBody(body: string): GuideBodyBlock[] {
     if (!line) {
       flushParagraph();
       flushList();
+      continue;
+    }
+
+    const callout = /^> (Tips|Viktigt):\s+(.+)$/.exec(line);
+    if (callout) {
+      flushParagraph(); flushList();
+      blocks.push({ type: 'callout', tone: callout[1] === 'Tips' ? 'tip' : 'important', text: callout[2].trim() });
       continue;
     }
 
@@ -57,7 +65,8 @@ export function getGuidePreviewText(body: string, maxCodePoints = 180): string {
   const blocks = parseGuideBody(body);
   const opening = blocks.find((block) => block.type === 'paragraph')
     ?? blocks.find((block) => block.type === 'list')
-    ?? blocks.find((block) => block.type === 'heading');
+    ?? blocks.find((block) => block.type === 'heading')
+    ?? blocks.find((block) => block.type === 'callout');
   const text = opening?.type === 'list' ? opening.items[0] : opening?.text;
   if (!text) return '';
   const characters = Array.from(text.trim());

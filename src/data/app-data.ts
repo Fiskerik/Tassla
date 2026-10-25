@@ -1,7 +1,10 @@
+import { validCalendarDate, type DogSex } from '../content/article-targeting';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { selectContent } from '../content/select-content';
 
 export interface OwnedDog {
+  expected_homecoming_date?: string | null;
+  sex?: DogSex | null;
   id: string;
   name: string;
   breed_id: string;
@@ -12,6 +15,8 @@ export interface OwnedDog {
 export type AgeDisplayUnit = 'weeks' | 'months' | 'years';
 
 export interface OwnedDogProfileChanges {
+  expected_homecoming_date?: string | null;
+  sex?: DogSex | null;
   name: string;
   breed_id: string;
   birth_date: string;
@@ -35,6 +40,8 @@ export interface BreedOption {
 export type DogProfileWriteOutcome = { status: 'saved'; value: OwnedDog } | { status: 'failed' | 'unknown' };
 
 export interface HomeContent {
+  slug?: string;
+  recommended?: boolean;
   /** Published content-version ID; stable for the selected version. */
   id: string;
   contentId: string;
@@ -67,7 +74,7 @@ export async function fetchOwnedDog(client: SupabaseClient): Promise<OwnedDog | 
   return withRequestDeadline(async (signal) => {
     const { data, error } = await client
       .from('dogs')
-      .select('id,name,breed_id,birth_date,age_display_unit')
+      .select('id,name,breed_id,birth_date,age_display_unit,expected_homecoming_date,sex')
       .abortSignal(signal)
       .maybeSingle();
     if (error) throw new Error('Could not load the dog profile');
@@ -80,7 +87,7 @@ export async function fetchOwnedDog(client: SupabaseClient): Promise<OwnedDog | 
 export async function fetchOwnedDogs(client: SupabaseClient): Promise<OwnedDog[]> {
   return withRequestDeadline(async (signal) => {
     const { data, error } = await client.from('dogs')
-      .select('id,name,breed_id,birth_date,age_display_unit')
+      .select('id,name,breed_id,birth_date,age_display_unit,expected_homecoming_date,sex')
       .order('created_at', { ascending: true })
       .order('id', { ascending: true })
       .abortSignal(signal);
@@ -93,7 +100,7 @@ export async function fetchOwnedDogs(client: SupabaseClient): Promise<OwnedDog[]
 export async function fetchOwnedDogById(client: SupabaseClient, dogId: string): Promise<OwnedDog | null> {
   return withRequestDeadline(async (signal) => {
     const { data, error } = await client.from('dogs')
-      .select('id,name,breed_id,birth_date,age_display_unit')
+      .select('id,name,breed_id,birth_date,age_display_unit,expected_homecoming_date,sex')
       .eq('id', dogId)
       .abortSignal(signal)
       .maybeSingle();
@@ -132,22 +139,30 @@ export async function updateOwnedDog(
     && !knownBreeds.some((breed) => breed.id === previous.breed_id);
   if (previous.id !== dogId || !name || !isValidDogBirthDate(changes.birth_date)
     || (!selectedBreedExists && !mayKeepMissingSavedBreed)
-    || !isAgeDisplayUnit(changes.age_display_unit)) {
+    || !isAgeDisplayUnit(changes.age_display_unit)
+    || (changes.expected_homecoming_date != null && !validCalendarDate(changes.expected_homecoming_date))
+    || (changes.sex != null && changes.sex !== 'male' && changes.sex !== 'female')) {
     return { status: 'failed' };
   }
-  const desired = { id: dogId, name, breed_id: changes.breed_id, birth_date: changes.birth_date, age_display_unit: changes.age_display_unit };
+  const fields = { name, breed_id: changes.breed_id, birth_date: changes.birth_date, age_display_unit: changes.age_display_unit,
+    expected_homecoming_date: changes.expected_homecoming_date ?? null, sex: changes.sex ?? null };
+  const desired = { id: dogId, ...fields };
   let failure: unknown = null;
   try {
-    const result = await withRequestDeadline(async (signal) => await client.from('dogs')
-      .update({ name, breed_id: changes.breed_id, birth_date: changes.birth_date, age_display_unit: changes.age_display_unit })
+    const result = await withRequestDeadline(async (signal) => {
+      let query = client.from('dogs')
+      .update(fields)
       .eq('id', dogId)
       .eq('name', previous.name)
       .eq('breed_id', previous.breed_id)
       .eq('birth_date', previous.birth_date)
-      .eq('age_display_unit', previous.age_display_unit)
-      .abortSignal(signal)
-      .select('id,name,breed_id,birth_date,age_display_unit')
-      .maybeSingle());
+      .eq('age_display_unit', previous.age_display_unit);
+      query = previous.expected_homecoming_date == null ? query.is('expected_homecoming_date', null) : query.eq('expected_homecoming_date', previous.expected_homecoming_date);
+      query = previous.sex == null ? query.is('sex', null) : query.eq('sex', previous.sex);
+      return await query.abortSignal(signal)
+      .select('id,name,breed_id,birth_date,age_display_unit,expected_homecoming_date,sex')
+      .maybeSingle();
+    });
     if (!result.error && isOwnedDog(result.data) && matchesDogProfile(result.data, desired)) {
       return { status: 'saved', value: result.data };
     }
@@ -179,17 +194,19 @@ export async function fetchBreeds(client: SupabaseClient): Promise<BreedOption[]
 
 export async function createDog(
   client: SupabaseClient,
-  input: { name: string; breedId: string; birthDate: string; kennelCode?: string | null },
+  input: { name: string; breedId: string; birthDate: string; kennelCode?: string | null; expectedHomecomingDate?: string | null; sex?: DogSex | null },
   requestId: string,
 ): Promise<string> {
   if (!isUuid(requestId)) throw new Error('Dog profile request could not be confirmed');
   return withRequestDeadline(async (signal) => {
-    const { data, error } = await client.rpc('create_dog_idempotent', {
+    const { data, error } = await client.rpc('create_dog_with_homecoming', {
       dog_name: input.name.trim(),
       dog_breed_id: input.breedId,
       dog_birth_date: input.birthDate,
       kennel_code: input.kennelCode?.trim().toUpperCase() || null,
       request_id: requestId,
+      expected_homecoming_date: input.expectedHomecomingDate ?? null,
+      dog_sex: input.sex ?? null,
     }).abortSignal(signal);
     if (error) {
       if (/invalid kennel code/i.test(error.message)) throw new Error('Invalid kennel code');
@@ -279,7 +296,9 @@ function isOwnedDog(value: unknown): value is OwnedDog {
     && typeof row.name === 'string' && normalizeDogProfileName(row.name) === row.name
     && typeof row.breed_id === 'string' && row.breed_id.length > 0
     && typeof row.birth_date === 'string' && isValidDogBirthDate(row.birth_date)
-    && isAgeDisplayUnit(row.age_display_unit);
+    && isAgeDisplayUnit(row.age_display_unit)
+    && (row.expected_homecoming_date == null || validCalendarDate(row.expected_homecoming_date))
+    && (row.sex == null || row.sex === 'male' || row.sex === 'female');
 }
 
 function isAgeDisplayUnit(value: unknown): value is AgeDisplayUnit {
@@ -289,7 +308,9 @@ function isAgeDisplayUnit(value: unknown): value is AgeDisplayUnit {
 function matchesDogProfile(current: OwnedDog, expected: OwnedDogProfileChanges & Pick<OwnedDog, 'id'>): boolean {
   return current.id === expected.id && current.name === expected.name
     && current.breed_id === expected.breed_id && current.birth_date === expected.birth_date
-    && current.age_display_unit === expected.age_display_unit;
+    && current.age_display_unit === expected.age_display_unit
+    && (current.expected_homecoming_date ?? null) === (expected.expected_homecoming_date ?? null)
+    && (current.sex ?? null) === (expected.sex ?? null);
 }
 
 function isDefiniteClientRejection(error: unknown): boolean {

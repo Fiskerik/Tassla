@@ -11104,6 +11104,380 @@
       ],
       "test_evidence": "Fullcheck77/77, publiciOS1585, main14/14each,panels5/5each,UI04clean5/5each,interactions18/19. IndependentQA5/5both+8/8focused,ReviewerPASS,SecurityAPPROVE. Currentownerpresentationoverride documented.",
       "implementation_commit": "0fb505e"
+    },
+    {
+      "id": "HOME-FIRST-DAY-01",
+      "title": "Hem: skapa och slutföra dagens första rutin",
+      "mvp_requirement": "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md §1 — En bra första dag och en användbar Hemvy",
+      "plan": "docs/tasks/dev/HOME-FIRST-DAY-01.md v3 (Architect APPROVE and UX Critic PROCEED recorded)",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/daily-activity-data.ts",
+        "src/features/home/daily-activity-recovery.ts",
+        "src/features/home/README.md",
+        "tests/daily-activity-data.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/home-first-day.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "docs/design/evidence/home-first-day-2026-10-24",
+        "docs/tasks/dev/HOME-FIRST-DAY-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Befintlig tomdagsresa öppnar rutinhall och skapar en engångsrutin med två punkter.",
+        "Bekräftat skapande och dagsrad-readback gör aktiviteten synlig direkt, exakt en gång, i Hem, Checklistor och Framsteg.",
+        "Failed/unknown dagsrad bevarar sanningsenlig status, samma retry-operation och rätt hund-/dagsscope.",
+        "En bock ger samma 1/2 i Hem, Checklistor och Framsteg; dagbyte återanvänder inte engångsrutinens gamla bock som dagens.",
+        "Home-chevron- och rev02-visuell kontrakt bevaras; färsk render och designregelchecklista §14 finns som evidens.",
+        "Faktiska kontroller passerar och samtliga ändrade sökvägar ryms i write_paths."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/home-first-day.test.mjs tests/daily-activity-data.test.mjs tests/daily-activity-ui.test.mjs",
+        "python -X utf8 tools/visual-check/verify-vision-r02-home-panels.py",
+        "pnpm check",
+        "pnpm bundle:ios",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-COPY-CLEANUP-2026-10-24"
+      ],
+      "status": "done",
+      "next_step": "Plan v5 has Architect APPROVE, Security PASS, independent documentation QA PASS and Reviewer PASS. The D3 planning checkpoint is done. Erik’s explicit schema/mapping decision is the next gate; if approved, create a separate Architect/Security-reviewed implementation task before any schema write.",
+      "risk_class": "M",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v2: Architect APPROVE and UX Critic PROCEED recorded in docs/tasks/dev/HOME-FIRST-DAY-01.md; exact scope/retry clarified, implementation may start within write_paths."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin approved plan v2 on branch codex/agent-workflow-stabilization at base 8dded250; write owner Codex; preserve Home chevron and data contracts."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "implementer",
+          "evidence": "QA/Reviewer v2 BLOCK: scope-change behavior test and §14 render evidence missing; Reviewer also required stage-specific day-selection recovery feedback and production-shared orchestration. Implementation paused for plan v3."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Revised task to plan v3 within first-day scope; declared shared data/recovery helper paths and behavioral fixture parity. Fresh Architect APPROVE and UX Critic PROCEED recorded in HOME-FIRST-DAY-01.md before resuming."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v3; UX Critic PROCEED recorded in HOME-FIRST-DAY-01.md. Exact task/write paths and recovery semantics reviewed."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume approved plan v3 on codex/agent-workflow-stabilization; implementer remains sole writer and QA/Reviewer are read-only."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Plan v3 implementation and docs complete. pnpm check 81/81, iOS export 1586 modules, targeted tests 3/3, first-day public RN Web 7/7, legacy Home public 52/52, Progress 2/2, review 72/74 with documented pre-existing −4 pt Home margin assertions; py_compile, diff-check and queue validation pass. Fresh VERIFICATION.md/§14 saved. Live Supabase/native NOT TESTABLE. Independent QA requested on final v3 diff."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS for v3 code, behavioral tests, rendered evidence, exact write paths, and documentation after Master-Log closeout recheck. §14.16 existing full-panel mismatch remains disclosed and is non-blocking for this layout-preserving slice. Next: frozen independent Reviewer on final diff."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent QA PASS after documentation closeout; frozen Reviewer PASS; hook-verified implementation commit a6f352d9264889e5ad7b9c0addbc853d4d17a01b records the reviewed diff and its pre-commit pnpm check PASS. First-day RN Web 7/7, pnpm check 81/81, iOS export 1586 modules, exact write paths, diff-check and prior queue validation PASS. Full Home/rev02 point 16 mismatch remains disclosed and non-blocking for this layout-preserving slice; live Supabase/native remain NOT TESTABLE. Task complete as local checkpoint; push branch after documentation closeout."
+        }
+      ]
+    },
+    {
+      "id": "TRAINING-PROGRESSION-01",
+      "title": "Träning: träningspass och ägarbedömd färdighet",
+      "mvp_requirement": "docs/MVP-EXPERIENCE-CONTRACT.md § Panel 6 — Träning; docs/mvp.md — träningsprogression",
+      "plan": "docs/tasks/Training-progression-mvp.md v4",
+      "write_paths": [
+        "docs/tasks/Training-progression-mvp.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "src/data/workspace-data.ts",
+        "src/data/README.md",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/training-progression.ts",
+        "src/features/training/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/README.md",
+        "supabase/migrations/202610240001_training_progression.sql",
+        "supabase/tests/training-progression.sql",
+        "tests/workspace-data.test.mjs",
+        "tests/training-progression-model.test.mjs",
+        "tests/training-progression-ui.test.mjs",
+        "tests/training-progression-data.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-training.py",
+        "tools/visual-check/README.md",
+        "docs/design/evidence/training-progression-mvp"
+      ],
+      "acceptance": [
+        "En unik resa per hund/programversion återanvänds vid upprepad/samtidig start; serverauktoriserade sessions/milestones/receipts är versions- och hundscope:ade, idempotenta och kaskaderar vid dog/account-borttagning. Replay verifierar aktuell ägare och returnerar bara sparat resultat även efter avpublicering. training_progress, dagslistor och historiska rader ändras inte/backfillas.",
+        "Ägaren kan starta/återuppta, logga pass med fast återkoppling, separat bekräfta stegets kriterium och uttryckligen fortsätta, upprepa, backa eller pausa; inga automatiska färdighets-/progressionsbeslut.",
+        "Hem visar senast uppdaterade resans aktiva steg samt separata räknare: sparade passhändelser och unika ägarbekräftade steg i samma resa/version. Unknown/partiell data räknas inte.",
+        "Operation-ID återanvänds vid unknown; samma payload inklusive replay efter avpublicering är idempotent efter aktuell ägarkontroll, ändrad payload avvisas och inga indragna instruktioner returneras. Samtidiga startanrop/sena svar/scopebyte blandar inte state.",
+        "Public/review-render och §14-check på 375×667, 375×844, 430×844 och stor text; inga regressionsfel i godkänd panel-6-komposition.",
+        "Alla paths inom write_paths; oberoende QA och Reviewer PASS; exakta resultat samt kvarvarande NOT TESTABLE sparas."
+      ],
+      "checks": [
+        "Fokuserade modell-, data-, SQL- och UI-tester",
+        "pnpm check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check",
+        "Verklig SQL/PLpgSQL-kontraktstest i isolerad lokal runtime; ingen live migration",
+        "python -X utf8 tools/visual-check/verify-flow-training.py"
+      ],
+      "depends_on": [
+        "UX-TRAINING-UNMARK-01"
+      ],
+      "status": "blocked",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v4; Architect APPROVE, Critic PROCEED, Security APPROVE; current read-only reviews completed; no implementation before this transition."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Single writer is main session; implementing approved v4 vertical journey on codex/agent-workflow-stabilization."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation checkpoint: pnpm check PASS (80/80 tests), local PGlite PASS (21 migrations plus SQL contract test), public/review RN Web PASS (23/23 each), dev_flow validate and diff check PASS. Evidence stored under docs/design/evidence/training-progression-mvp; no live Supabase/native run."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "qa",
+          "evidence": "Independent QA re-check PASS for the single-primary saved-session CTA and authorized write paths; aggregate QA remains BLOCK. Local full check 80/80, public/review renders 23/23 each, PGlite 21 migrations plus SQL fixture, flow validation and diff check PASS. NOT TESTABLE: independent concurrent DB sessions, live Supabase/PostgREST/JWT/RLS, native iOS/VoiceOver/Dynamic Type. §14 panel/contrast evidence is documented as PARTIAL in docs/design/evidence/training-progression-mvp/visual-review.md. Reviewer not started because aggregate QA did not PASS; no live migration or release."
+        }
+      ],
+      "next_step": "Provide an authorized development environment with independent database sessions and real Supabase/PostgREST/JWT/RLS, then run native iOS VoiceOver/Dynamic Type and complete any remaining §14 checks. QA must re-run on the frozen diff; only QA PASS proceeds to Reviewer. No code or release action is pending locally.",
+      "priority": "P2",
+      "panels": [
+        "6"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Local v4 implementation on codex/agent-workflow-stabilization. Latest pnpm check 80/80, PGlite 21 migrations plus SQL contract fixture, public/review RN Web 23/23 each, dev_flow validation, diff check, and Security re-review APPROVE. Independent QA re-check PASS for single-primary CTA and authorized paths; aggregate status BLOCK pending NOT TESTABLE live/concurrent/native checks and PARTIAL §14 visual acceptance. No commit, live migration, or distribution. Evidence: docs/design/evidence/training-progression-mvp/.",
+      "test_evidence": [
+        "PASS — pnpm check: app TypeScript, edge TypeScript, ESLint and 80/80 Node test files.",
+        "PASS — focused training progression/data/model/UI and existing workspace contract tests; fetch pagination includes 45 saved sessions over 40+5 rows with timestamp+ID ordering.",
+        "PASS — PGlite 0.3.14 loads all 21 migrations and executes supabase/tests/training-progression.sql: grants/RLS scope, replay/payload conflict, withdrawal, dog/account cascades, legacy training_progress unchanged.",
+        "PASS — tools/visual-check/verify-flow-training.py: 23/23 public and 23/23 review; no browser page errors, 375x667/375x844/430x844, 140% text proxy; evidence includes screenshots and RESULTS.json.",
+        "PASS — python -X utf8 tools/dev_flow.py validate; git diff --check.",
+        "Security re-review APPROVE after FOR SHARE version-row lock; no personal-data scope expansion.",
+        "NOT TESTABLE — live Supabase/PostgREST/JWT/RLS, simultaneous start over independent database sessions, native VoiceOver/Dynamic Type/iOS and TestFlight; these acceptance checks remain open.",
+        "QA re-check PASS for final single-primary CTA and write-path scope; aggregate acceptance BLOCK. §14 manual panel/contrast review and item-level results: docs/design/evidence/training-progression-mvp/visual-review.md; overall visual likeness PARTIAL."
+      ],
+      "related_tasks": [
+        "FLOW-TRAINING-01"
+      ]
+    },
+    {
+      "id": "KNOWLEDGE-D3-CATALOG-PLAN-01",
+      "title": "Kunskap: välj versions- och progresskontrakt för publik FAQ och faslistor",
+      "mvp_requirement": "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md §2, D3 — publicerad FAQ/faschecklista med bevarad progress och egenpunkter",
+      "plan": "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md — KNOWLEDGE-D3-CATALOG-PLAN-01 v5 (Architect APPROVE, Security PASS, QA PASS, Reviewer PASS)",
+      "write_paths": [
+        "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md",
+        "docs/content/README.md",
+        "docs/tasks/dev/HOME-FIRST-DAY-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Architect granskar och godkänner konkret FAQ-/faslistemodell, version-/parentrelationer, identity-update guard och FK-policy i plan v5.",
+        "Review-v1-ID:n, alla 18 item keys, dog progress, egna punkter, nullable ikoner och tre kontexter bevaras; exakt mapping eller explicit blockering av överföring är dokumenterad.",
+        "Published-only read path, RLS/grants, klientskrivspärr, transactionell draft-import/publicering, withdrawal och test-/paritetsmatris är dokumenterade.",
+        "Security granskar konkret RLS/grants, context-/parentintegritet, item-key-FK, gammal-klientparitet och no-op progressmigration; Eriks godkännande registreras före en separat implementationstask.",
+        "Inget innehåll skapas eller publiceras, ingen kod eller SQL ändras och ingen Supabase-operation utförs i denna plancheckpoint."
+      ],
+      "checks": [
+        "Architect read-only review av schemaförslag v5",
+        "Security read-only re-review av schemaförslag v5 PASS",
+        "Independent documentation QA PASS",
+        "Independent Reviewer PASS",
+        "git diff --check",
+        "python -X utf8 tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "HOME-FIRST-DAY-01"
+      ],
+      "status": "done",
+      "next_step": "Uppföljning av plancheckpoint: Eriks schema-/mappinggodkännande är registrerat och KNOWLEDGE-D3-CATALOG-SCHEMA-01 v5 har passerat Architect/Security/Critic review, implementation, oberoende QA och Reviewer. Implementation commit 240362753b4deec30766b3c3b8226a6c40975748 är pushad. Eventuell framtida live Supabase-verifiering, content import/publicering eller appadapter kräver separat uppgift och avgränsning.",
+      "priority": "P1",
+      "panels": [
+        "7"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Dokumentationsbaserad D3-plan v5 på branch 6fec63e; main@0b0f99f är förfader. Befintliga plan-, content README-, Home task closeout-, queue-, rapport- och Master Log-paths är godkända skrivvägar för denna docs checkpoint.",
+      "test_evidence": "Plan v1 riktning: Architect APPROVE, Security PASS. Förslag v2: CHANGES från båda; v3/v4: Architect CHANGES, Security PASS. Plan v5: Architect APPROVE, Security PASS, oberoende docs QA PASS och Reviewer PASS. v5 innehåller identity-update guard för content_id/version efter checklist children och validering av parent children före publish. Queue JSON, dev_flow validate och git diff --check PASS. Inga produktändringar eller DB-operationer har gjorts.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "D3 plan v5 stängd som dokumentationscheckpoint efter Architect APPROVE, Security PASS, oberoende documentation QA PASS och Reviewer PASS. Sex ändrade dokumentpaths matchar write_paths; git diff --check, queue JSON och dev_flow validate PASS. Inget innehåll, kod, SQL eller Supabase ändrades/användes i checkpointen. Erik godkände senare schema-/mappingförslaget 2026-10-24; en separat implementationstask krävs fortfarande före framtida writes."
+        }
+      ],
+      "implementation_state": "Denna avslutade task var dokumentationsplanering endast och ändrade inga migrationer, seeds, imports, publiceringar eller appfiler. Den efterföljande separat godkända schema-tasken v5 är implementerad lokalt, stängd efter SQL-/projekttester och oberoende QA/Reviewer PASS, och implementation commit 240362753b4deec30766b3c3b8226a6c40975748 är pushad. Live migration/import/publicering förblir utanför och overifierat.",
+      "evidence_status": "Källunderlaget finns i branch och dokumenterat i användarplanens §2. Live Supabase-status och faktisk publiceringsstatus är ej verifierade."
+    },
+    {
+      "id": "KNOWLEDGE-D3-CATALOG-SCHEMA-01",
+      "title": "Kunskap: katalogschema och stabil fasidentitet",
+      "mvp_requirement": "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md §2, D3 — godkänt schema-/mappingförslag v5; första schema-slicen",
+      "plan": "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md — KNOWLEDGE-D3-CATALOG-SCHEMA-01 v5",
+      "write_paths": [
+        "supabase/migrations/202610240002_knowledge_catalog.sql",
+        "supabase/tests/knowledge-catalog.sql",
+        "supabase/tests/puppy-checklists.sql",
+        "supabase/tests/training-progression.sql",
+        "docs/content/README.md",
+        "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md",
+        "docs/tasks/dev/HOME-FIRST-DAY-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Architect, Security och Critic godkänner samma implementationstaskversion före fortsatt kod; v4 fick Architect APPROVE/Security PASS/Critic PROCEED men en direkt berörd training-progression-probe behöver anpassas till regeln om högst en aktiv publicerad version per item, så v5 måste godkännas av alla tre innan implementationen återupptas.",
+        "Forward-only migration genomför safe duplicate-preflight och skapar katalogschema samt exakt sex godkända fas-rootitems/-mappingar utan automatisk ändring vid dubbletter.",
+        "Disposable PostgreSQL-probe verifierar sex context/slug-mappningar, 18 stabila item keys, constraints/triggers, draft/reviewed/published/withdrawn statusgrind och effektiv SELECT/INSERT/UPDATE/DELETE/TRUNCATE/REFERENCES/TRIGGER-ACL för anon/authenticated/service_role per katalogtabell. Authenticated får SELECT på checklist_templates med published-only RLS; syntetiska versions-/child-fixtures visar dold mapping före publicering och synlig efter publicering i rollbackad transaktion. Service_role ALL endast på content_items/content_versions, inga rättigheter på templates/key-registry/child; befintliga progress-, custom-item-, ikon- och preferensgrants ändras inte. Puppy-checklist-proben verifierar mapping-RLS. Training-progression-proben sekvenserar publicering/withdrawal så ingen content item har två aktiva versioner men behåller version-bound replay-testet.",
+        "Migreringen skapar inga FAQ-/fastexter, content versions eller checklist-child-rader och publicerar inget. Syntetiska SQL-fixtures rullas tillbaka; ingen import, klientadapter/UI, hunddataändring, live DB-operation eller ny dependency tillkommer.",
+        "Oberoende QA och Reviewer PASS; faktisk diff ryms i write_paths; körda kontroller, verifieringsluckor och nästa steg sparas i kö, rapport och MASTER-LOG."
+      ],
+      "checks": [
+        "Architect read-only re-review av KNOWLEDGE-D3-CATALOG-SCHEMA-01 v5",
+        "Security read-only re-review av exakt ACL-matris, RLS och en-aktiv-version index",
+        "Critic read-only review av scope mot godkända produktbeslut",
+        "Kör migration och supabase/tests/knowledge-catalog.sql i disposable PostgreSQL-runtime",
+        "Kör supabase/tests/foundation.sql, supabase/tests/puppy-checklists.sql, supabase/tests/checklist-custom-item-icons.sql och supabase/tests/training-progression.sql",
+        "pnpm check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "KNOWLEDGE-D3-CATALOG-PLAN-01"
+      ],
+      "status": "done",
+      "next_step": "Tasken är stängd och implementation commit 240362753b4deec30766b3c3b8226a6c40975748 är pushad. Nästa actionplansteg som kräver innehållsimport/publicering, appadapter/UI eller live Supabase ska vara en separat uppgift med egna frysta write_paths och relevanta beslut/reviews.",
+      "priority": "P1",
+      "panels": [
+        "7"
+      ],
+      "risk_class": "H",
+      "checkpoint": "v5 implementation, independent QA PASS and frozen Reviewer PASS; local task done and implementation commit 240362753b4deec30766b3c3b8226a6c40975748 pushed to origin/codex/agent-workflow-stabilization. Branch is based on 4ba74d126b272d8ab821e9de3a416dae0d7046ff; origin/main 0b0f99f8660a392971b5caab71c19334f771f495 is an ancestor. All ten changed paths match v5 write_paths. Disposable PostgreSQL 16 migration sequence and five SQL probes PASS; pnpm check 81/81; dev_flow validate, JSON parse and diff check PASS. No live DB, content import or publication.",
+      "test_evidence": "PostgreSQL 16 disposable PASS: migrations foundation → puppy_checklists → custom_item_icons → training_progression → knowledge_catalog; SQL tests foundation.sql, puppy-checklists.sql, checklist-custom-item-icons.sql, knowledge-catalog.sql, training-progression.sql all PASS. Training progression fixture publishes one version per content item at a time and retains withdrawn-v1 receipt replay. pnpm check PASS (typecheck, edge typecheck, lint, 81/81 tests); commit hook pnpm check PASS 81/81; push hook PASS 736/737 (1 skip). python -X utf8 tools/dev_flow.py validate PASS; python -m json.tool docs/tasks/dev/queue.json PASS; git diff --check PASS. Architect APPROVE, Security PASS, Critic PROCEED, independent QA PASS, frozen Reviewer PASS. Live Supabase/RLS and target ACL defaults are not verified; no import/publication.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Task v3 frozen: Architect APPROVE, Security PASS, Critic PROCEED on 2026-10-24; Erik approved schema/mapping. Exact write_paths and acceptance recorded; migration may begin."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Single writer is Codex coordinator. Begin approved schema-only slice on branch from 4ba74d1; no content import/publication/live DB or dog-data changes."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Disposable PostgreSQL: migration and new catalog probe PASS; foundation and icon probes PASS. Existing puppy-checklists.sql fails its stale assertion that authenticated has no checklist_templates SELECT, which conflicts with approved published-only mapping reads. Pause implementation, add that existing SQL test path to a v4 task plan, and re-review before further writes."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Replan v4 approved for review: Architect APPROVE, Security PASS, Critic PROCEED; adds the directly affected puppy-checklist SQL probe path and published-only read assertion."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Task v4 is frozen: Architect APPROVE, Security PASS, Critic PROCEED on 2026-10-24. Nine exact write_paths and acceptance are recorded; local code may resume."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume single-writer implementation within v4 write_paths. Correct the existing puppy-checklist SQL assertion, rerun PostgreSQL probes and acceptance; no live Supabase/content publication."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "v4 puppy-checklists SQL test correction passes. Additional disposable regression run found training-progression.sql fixture publishes two versions of the same content item simultaneously, conflicting with the approved partial unique index. Pause and add this directly affected SQL probe to v5 write_paths; serialize synthetic publish/withdraw fixture states before further writes."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "v5 implementation task approved read-only by Architect APPROVE, Security PASS, Critic PROCEED on 2026-10-24; direct training-progression SQL fixture path added before correction. Resume same bounded schema slice, no live database or content publication."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Task v5 read-only reviews complete 2026-10-24: Architect APPROVE, Security PASS, Critic PROCEED. Exact write paths include migration, catalog probe, puppy and training progression probes, plus checkpoint docs; no further code before frozen task."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume single-writer implementation on v5 approved write_paths. First correct the disposable training-progression SQL fixture to serialize synthetic version publication and preserve withdrawn-v1 replay; rerun all prescribed PostgreSQL probes, project checks and docs closeout. No live DB/content publication."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v5 implementation complete on its ten write_paths; disposable PostgreSQL 16 migration sequence and five direct SQL probes PASS, including sequential training-version fixture and withdrawn-v1 replay; pnpm check 81/81, queue validate, JSON parse and diff check PASS. No live DB or publication. Independent QA is next."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS on v5 final implementation: all ten changed paths match exact write_paths, SQL fixture/publication semantics and rollback boundaries verified, recorded PostgreSQL 16 probes and pnpm 81/81 accepted; queue/docs consistency corrected and rechecked. No live Supabase/ACL test. Frozen Reviewer is next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS with no findings after independent QA PASS. All ten changed paths match v5 write_paths; disposable PostgreSQL 16 migrations/probes and pnpm check 81/81 PASS; queue/docs consistency and no-live-DB boundary verified. Local schema-only task complete; commit and push checkpoint next."
+        }
+      ]
     }
   ]
 }

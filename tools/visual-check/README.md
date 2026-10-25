@@ -186,11 +186,15 @@ TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:45673 TASSLA_UI_EVIDEN
 
 Välj andra lediga loopback-portar om dessa är upptagna. Resultat och skärmbilder sparas i `docs/design/evidence/flow-home-checklist-filters-2026-10-20/a03/{public,review}/`. Körningen gav 10/10 public och 19/19 review-kontroller. Detta är avgränsad syntetisk RN Web-verifiering, inte full §14-granskning, oberoende QA/Reviewer, live Supabase/RLS, migrations-/äldre-klientruntime, native VoiceOver/Dynamic Type, fysiska gester eller TestFlight.
 
-## FLOW-TRAINING-01 — aktuell Panel 6-render
+## FLOW-TRAINING-01 — aktuell Panel 6-render och träningsprogression
 
 Bygg `tools/visual-check/app.tsx` separat för public/review och servera respektive output. Kör `tools/visual-check/verify-flow-training.py` med `TASSLA_UI_BASE_URL`, `TASSLA_UI_REVIEW` och `TASSLA_UI_EVIDENCE`. Syntetiska fixture-program märks i visningsläget; inga konton eller backenddata läses.
 
 Verifieraren täcker 375×844, 430×844, 375×667, två olika 4:3 standardbilder, fortsättkort, alla tre tabbar, exakt öppnad övning, okänd ålder med sparad progress, ingen matchande rekommendation med väg till Alla övningar, pausad äldre version, läsfel med fungerande retry, slutfört program, lång svensk text och 140 %-proxy utan horisontell overflow. Bevisen sparas i `docs/design/evidence/flow-training-01/{public,review}/`. RN Web täcker inte native VoiceOver/Dynamic Type, live content/RLS eller iOS-buildens native beteende.
+
+`TRAINING-PROGRESSION-01` utökar samma verifierare. Den provar en aktiv träningsresa med exakt ett aktivt steg, separata aktivitetsmarkeringar, pass och ägarbekräftade delmål, uttryckligt nästa/back/paus/underhåll, slutsteg, okänd skrivstatus med samma operation-ID, Hemmets versionsexakta fortsättning, saknad källa utan instruktioner och läsfel utan bekräftade mått. Public- och review-bundlar använder lokala syntetiska callbacks; de läser eller skriver inte Supabase. Review-harnessen stänger bara av skärmens review-skydd för dessa isolerade `progression=`-scenarier så att den lokala UI-resan kan provas; övriga review-fixtures behåller sitt skydd mot mutationsknappar.
+
+Spara resultat och skärmbilder under `docs/design/evidence/training-progression-mvp/{public,review}/`. Detta är RN Web med lokala fixtures, inte native VoiceOver/Dynamic Type, riktig Supabase/RLS, JWT, iOS-bygge eller TestFlight.
 
 ## UI-R02-01B — kompakt profil och säkert avslut
 

@@ -1,0 +1,42 @@
+{
+  "mode": "public",
+  "panel": "first-day",
+  "evidence_dir": "docs/design/evidence/home-first-day-2026-10-24",
+  "results": [
+    {
+      "check": "first-day empty Home retains the approved compact entry at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "first-day empty Home retains the approved compact entry at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "first-day fixture mode is active",
+      "result": "PASS"
+    },
+    {
+      "check": "first-day create callback ran once",
+      "result": "PASS",
+      "createCalls": 1,
+      "dayAddCalls": 1,
+      "routineId": "f75092f4-0df1-4577-86ea-aac2bb201b2c",
+      "dayRowId": "f1444850-f367-4794-9d31-0dfd45d7339b",
+      "mutationId": "f656330a-d115-447e-952f-5ff8b2741ddc",
+      "dateKey": "2026-10-24"
+    },
+    {
+      "check": "first-day routine appears once, completion agrees across Home/Checklistor/Framsteg, and the old day is absent next day",
+      "result": "PASS"
+    },
+    {
+      "check": "unknown day-add retry attaches the existing saved routine without creating it again",
+      "result": "PASS"
+    },
+    {
+      "check": "definite day-selection failure preserves the routine template and its manual add path",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}

@@ -62,17 +62,17 @@ Pending -> Unsure: toast "Vi kunde inte kontrollera om det sparades" + "Försök
 ## Quick log pattern
 - Primary action visible and reachable, with an accessible label (for example "Logga kiss").
 - Instant visual acknowledgement, reliable persistence, truthful result, undo where possible.
-- Prevent accidental duplicates (repeat tap within about 2 seconds; same category within about 2 minutes asks "Du har redan loggat det här. Lägga till ändå?"). State the thresholds you chose as an assumption.
+- Prevent accidental duplicate writes using the approved task contract and persistence semantics. Do not invent a time threshold or confirmation rule; surface the product decision if duplicate handling is not specified.
 - Detail editing (time, note) is optional and opens after the fast action, in a sheet.
 - Deleting asks for confirmation or offers a working undo. Delete lives behind a menu or in the edit view, not as a text link on every row.
 
 ## Delivery workflow
 1. **Inspect:** affected screens, components, references, acceptance criteria, current behavior.
-2. **Specify (before coding):** write a short UX spec in `docs/plans/<TASK>-ux-spec.md` with user goal, entry point, happy path, all relevant states, feedback, accessibility, and assumptions. For UI work, include a compact comparison: reference element → current difference → token/component/asset → acceptance. List only unresolved deviations from the target image; do not repeat decisions already made in the design contracts.
-3. **Scope:** list intended files and protected areas. Ask before leaving scope.
+2. **Specify (before coding):** put the user goal, entry point, relevant states, feedback and accessibility criteria in the task plan. Reuse an existing approved screen/task contract. Create a separate UX note only when the task plan and linked contracts leave a material UX or visual question unresolved; do not duplicate settled decisions.
+3. **Scope:** follow the task's exact write paths and protected areas. If implementation needs a scope change, stop and report it for approval; do not make the extra change.
 4. **Implement** with existing components and tokens.
-5. **Verify:** run typecheck, lint, tests. Check accessibility behavior. Take screenshots in each state, small and large phone, large text. If there is no baseline or no rendering, mark it NOT TESTABLE. Never claim visual approval from code checks. Physical device or TestFlight testing only when the owner asks for it.
-6. **Review:** a role other than the implementer (for example the Critic or visual QA role defined in AGENTS.md) reviews behavior and perceived quality. The reviewer reports findings and does not silently fix the code under review.
+5. **Verify:** verify the task's acceptance states and approved visual target at the viewport(s) it names. Check relevant accessibility behavior. Record what was rendered or tested and mark unavailable evidence NOT TESTABLE. Never claim visual approval from code checks. Physical device or TestFlight testing only when the owner asks for it.
+6. **Review:** QA and Reviewer do not edit files. A role other than the writer reviews behavior, scope and evidence; it reports findings to the writer and does not silently fix the code under review.
 7. **Report (short):** what changed, files touched, tests run and results, screenshots, assumptions, limitations, and explicit approval requests.
 
 ## Behavior QA checklist

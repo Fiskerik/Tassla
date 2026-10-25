@@ -52,3 +52,12 @@ Detta inventerar den planerade ägarvyn `Insikter`, som kan öppnas från Logga 
 - **Telemetri:** RPC-parametrar och resultat, konto-/ägare-ID, hund-ID, tidszon, antal och råa felobjekt får inte skickas till apptelemetri eller felrapportering. Tekniska fel kan endast rapporteras utan den privata payloaden.
 
 Insikter är ännu en planerad lokal UI-/datakontraktscheckpoint. Implementerad migration/RPC, faktisk åtkomst, tvåkontosisolering, anon/auth-gräns, live-Supabase/RLS och drift är inte verifierade genom denna dokumentändring.
+
+
+## DRIVE-ARTICLES-01 — profil för artikelurval och tilltal
+
+Ägarbeställt: `dogs.expected_homecoming_date` (`date`, nullable) för förberedande artikelurval och fortsatt ägarredigerbar planeringsuppgift; `dogs.sex` (`male/female/null`) enbart för han/hon i artiklar. Båda samlas frivilligt i befintlig registrering/profil, kan ändras/tömmas och ärver hundens owner-RLS och konto-/hundradering. Erik valde uttryckligen att behålla planeringsdatumet efter att det passerat tills han/användaren rättar/raderar uppgiften; gammalt datum aktiverar aldrig en faktisk hemkomst eller rekommendation utanför metadatafönstret. Befintlig betagallring gäller. Dessa två råfält ingår i rättighets-/kopieuttag. De ingår inte i Tassla-pass/PDF, telemetri, externa felpayloads eller partnerdata.
+
+Gemensamma artiklar lagras utan hunduppgifter. Namn/pronomen fylls i lokalt vid visning, inte i sparad artikelbody eller en personlig serverkopia. Hundbyte/kontobyte rensar det tidigare urvalet; köns-/namnbyte påverkar presentation direkt. Google-importen läser bara redaktionella dokument och kan aldrig anropas med hundprofil genom klienten. Riktat artikelurval är automatisk innehållsanpassning; tidigare svepande formuleringar om att profiluppgifter aldrig används för profilering får inte användas för att dölja detta faktiska ändamål. Ingen hälso-/beteendeprofil eller automatiskt beslut med rättslig effekt skapas.
+
+Live databasåtkomst och identiteter är inte verifierade genom lokal implementation; verifiera tvåkontosisolering, nullable skrivning, radering och driftkonfiguration före berörd aktivering.

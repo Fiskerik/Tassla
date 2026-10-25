@@ -1,3 +1,5 @@
+import { DogArticleProfileFields } from './DogArticleProfileFields';
+import { validCalendarDate, type DogSex } from '../../content/article-targeting';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -86,6 +88,8 @@ export function EditDogProfileScreen({
   const [name, setName] = useState(dog.name);
   const [breedId, setBreedId] = useState(dog.breed_id);
   const [birthDate, setBirthDate] = useState(dog.birth_date);
+  const [expectedHomecomingDate, setExpectedHomecomingDate] = useState(dog.expected_homecoming_date ?? '');
+  const [sex, setSex] = useState<DogSex | null>(dog.sex ?? null);
   const [ageDisplayUnit, setAgeDisplayUnit] = useState<AgeDisplayUnit>(dog.age_display_unit);
   const [formError, setFormError] = useState('');
   const [kennelCode, setKennelCode] = useState(attribution?.code ?? '');
@@ -147,7 +151,12 @@ export function EditDogProfileScreen({
       setFormError('Ange ett giltigt födelsedatum som inte ligger i framtiden.');
       return;
     }
+    if (expectedHomecomingDate.trim() !== '' && !validCalendarDate(expectedHomecomingDate.trim())) {
+      setFormError('Ange ett giltigt förväntat hemkomstdatum eller lämna fältet tomt.');
+      return;
+    }
     const changes: OwnedDogProfileChanges = {
+      expected_homecoming_date: expectedHomecomingDate.trim() || null, sex,
       name: normalizedName,
       breed_id: breedId,
       birth_date: normalizedDate,
@@ -173,7 +182,8 @@ export function EditDogProfileScreen({
   const mayKeepMissingSavedBreed = breedId === dog.breed_id && !breeds.some((breed) => breed.id === dog.breed_id);
   const canSaveBreed = breedState === 'ready' && (selectedBreedExists || mayKeepMissingSavedBreed);
   const draftDiffers = name.trim() !== dog.name || breedId !== dog.breed_id || birthDate.trim() !== dog.birth_date
-    || ageDisplayUnit !== dog.age_display_unit;
+    || ageDisplayUnit !== dog.age_display_unit
+    || (expectedHomecomingDate.trim() || null) !== (dog.expected_homecoming_date ?? null) || sex !== (dog.sex ?? null);
   const kennelDraftDiffers = kennelCode.trim() !== (attribution?.code ?? '');
   const dogManagementBlocked = blocked || Boolean(conflict) || attributionBusy || attributionWriteUnresolved;
   const showAttributionDetails = attributionExpanded || attributionState === 'error' || attributionBusy || attributionWriteUnresolved;
@@ -192,8 +202,8 @@ export function EditDogProfileScreen({
 
   const reportExitState = useCallback((profileDirty = draftDiffers, kennelDirty = kennelDraftDiffers) => {
     if (!exitScope) return;
-    onExitStateChange?.({ scope: exitScope, profileDirty, kennelDirty });
-  }, [draftDiffers, exitScope, kennelDraftDiffers, onExitStateChange]);
+    onExitStateChange?.({ scope: exitScope, profileDirty: profileDirty || (expectedHomecomingDate.trim() || null) !== (dog.expected_homecoming_date ?? null) || sex !== (dog.sex ?? null), kennelDirty });
+  }, [draftDiffers, exitScope, kennelDraftDiffers, onExitStateChange, expectedHomecomingDate, dog.expected_homecoming_date, sex, dog.sex]);
 
   useLayoutEffect(() => {
     reportExitState();
@@ -254,6 +264,8 @@ export function EditDogProfileScreen({
         setBirthDate(value);
         reportExitState(name.trim() !== dog.name || breedId !== dog.breed_id || value.trim() !== dog.birth_date || ageDisplayUnit !== dog.age_display_unit, kennelDraftDiffers);
       }} value={birthDate} />
+      <DogArticleProfileFields date={expectedHomecomingDate} sex={sex} disabled={blocked}
+        onDate={setExpectedHomecomingDate} onSex={setSex} />
       <View style={styles.ageUnitField}>
         <Text style={styles.label}>Visa ålder som</Text>
         <View accessibilityRole="radiogroup" accessibilityLabel="Visa ålder som" style={styles.ageUnitOptions}>

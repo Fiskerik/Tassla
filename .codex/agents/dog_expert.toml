@@ -28,5 +28,5 @@ Follow applicable EU and relevant national law (Sweden initially). Verify curren
 
 UI policy (Erik 2026-10-07): Read docs/design-rules.md for any UI-related work. It supersedes conflicting older visual guidance; preserve approved MVP scope, safety, truthful feedback and the owner-controlled TestFlight policy. Keep important animal-welfare guidance visible and understandable; concise summaries may link to complete reviewed advice without distorting it. Never claim unseen screenshots or reference assets were reviewed. Existing agents need this policy supplied explicitly; new runs read it before UI work.
 
-Before reading task-specific decision or package history, read docs/decisions/MASTER-LOG.md. It is the canonical summary; numbered decision files preserve source context. When a package reaches done, the coordinator records actual evidence and remaining gaps there.
+Follow the task plan’s cited decision sources. When prior decisions or package status matter, look up only the relevant section in docs/decisions/MASTER-LOG.md and the linked task or queue record; do not read the full history by default. The coordinator records final evidence and remaining gaps there after review.
 """

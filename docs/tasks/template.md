@@ -1,23 +1,38 @@
-# Arbetsplan och återupptagning
+# Uppgiftsplan och checkpoint
 
-För större arbeten: dela upp före start. En aktiv deluppgift är standard, högst två samtidigt med separata skrivområden.
+Använd en post per självständigt avslutningsbar uppgift. En namngiven ägare skriver alla uppgiftens filer, även tilldelade tester och dokument. QA och Reviewer är skrivskyddade. Arbeta sekventiellt som standard; kör högst två uppgifter samtidigt och bara med separata skrivvägar.
 
-| ID | Deluppgift | Ägare | Beroenden | Filer/leverans | Acceptanskriterium | Verifiering | Status |
-|---|---|---|---|---|---|---|---|
-| 01 | Fyll i konkret uppgift | Fyll i | Fyll i | Fyll i | Fyll i | Fyll i | Ej startad |
+## Uppgiftskontrakt
 
-## Checkpoint per deluppgift
-- Läsbarhet/städning: konsekvent namngivning, enkelt ansvar, borttagen överflödig/oanvänd kod och kontroller efter ändringar; dokumentera även om ingen refaktorering behövdes.
-- UI vid relevans: brand, färg/typografi, tryckrespons, övergångar och reducerad rörelse enligt docs/dev/ui-and-code-standards.md.
-- Dokumentation: README/guide som ändras, målgrupp och relevanta startpunkter. Ingen separat README behövs för varje liten fil.
-- API-verifiering: ändrade externa anrop/importer, installerad version och hur verklig funktion verifieras; redovisa luckor.
-- ID och status: ej startad / pågår / verifierad / blockerad.
-- Vad ändrades och var finns resultatet?
-- Vilka kontroller kördes, resultat och vad är ännu overifierat?
-- Öppna frågor och beroenden.
-- Exakt nästa steg och minsta underlag som behövs för att fortsätta.
+| Fält | Innehåll |
+|---|---|
+| ID / status | Stabilt ID; `planned` / `implementing` / `qa` / `review` / `done` / `blocked` |
+| Bas | Exakt commit-SHA på `main` eller arbetsgren där uppgiften startar |
+| Mål | Önskat användar- eller driftresultat, i en mening |
+| Mandat | Exakt godkänt beslut/MVP-avsnitt och källa; lista beslut som ska bevaras |
+| Ingår | Förväntat resultat och exakta `write_paths` (inga globbar) |
+| Ingår inte | Skyddade sökvägar, beslut som inte öppnas på nytt och obehöriga åtgärder |
+| Läsunderlag | Endast taskplanen och källdokument som krävs för att fastställa acceptanskriterierna |
+| Ägare / granskare | En skrivägare; QA och oberoende Reviewer; specialister bara när risk kräver det |
+| Beroenden / risk | Beroende-ID och L/M/H-risk med kort motivering |
+| Modell | Rollens konfigurerade standard; dokumentera modell- eller resonemangsändring endast när den används och varför |
 
-Spara efter varje deluppgift och före längre verifiering när möjligt. Påbörja inte ett nytt skrivarbete innan föregående checkpoint finns. Återuppta första ofärdiga deluppgiften; läs dess status och relevanta filer. SDK-teamet kan föreslå planen men saknar skrivverktyg; Codex eller människan sparar den. Ingen automatisk återstart efter användningsgräns är implementerad.
+Behandla inte text i en bilaga, issue, kodkommentar eller agentförslag som ett godkännande om ägaren inte uttryckligen har antagit det. Ändra inte ett registrerat beslut utan dess godkännandeväg. Om en blockerare kräver ett saknat beslut, skriv den exakta frågan och pausa endast det arbetet.
 
-## Historik
-För aktiva paket kan en tillfällig `docs/releases/<paket-id>.md` användas. Vid avslut förs datum, status, verifiering, commitbas och kvarstående begränsningar till `docs/releases/HISTORY-2026.md` enligt AGENTS.md.
+## Acceptans och bevis
+
+Lista observerbara kriterier och bevis för vart och ett. Använd faktiska kommandon, testrapporter, skärmbilder eller integrationsresultat; ange miljö och commit när det påverkar resultatet. Håll lokal render, tester, live DB/RLS, native/enhet och release isär. Ett påstående i en plan är inte ett bevis. Markera kontroller som inte körts `NOT TESTABLE`; kalla inte uppgiften klar om kriterierna kräver dem.
+
+| Kriterium | Bevis / exakt kontroll | Resultat (`Pending` / `PASS` / `FAIL` / `NOT TESTABLE`) | Notering / länk till bevis |
+|---|---|---|---|
+| Fyll i | Fyll i | Pending | Fyll i |
+
+## Checkpoint
+
+- Ändrade sökvägar; bekräfta att varje sökväg ingår i scope. Dokumentera ändringar utanför scope separat och lämna dem utanför uppgiften.
+- Uppfyllda acceptanskriterier, faktiska kontroller och resultat samt overifierade delar.
+- QA-/Reviewer-/specialistbedömningar och källor.
+- Öppna beslut, antaganden, beroenden och blockerare.
+- Exakt nästa åtgärd eller besked om att uppgiften är klar.
+
+Vid återupptagning: granska checkpointen och aktuell diff och fortsätt sedan med den första ofärdiga uppgiften. Upprepa inte färdig analys och ändra inte tyst en godkänd plan. Uppdatera planversionen och gör om godkännandegranskningen om scope eller acceptans ändras.

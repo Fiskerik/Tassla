@@ -35,6 +35,11 @@ def home_url(scenario: str = 'ready', daily_mutation: str | None = None, *, imag
     return f'{BASE}/?screen=home&homeScenario={scenario}{mutation}{images}'
 
 
+def first_day_url(day_add: str | None = None) -> str:
+    outcome = f'&firstDayAdd={day_add}' if day_add else ''
+    return f'{BASE}/?screen=home&state=empty&firstDay=true{outcome}'
+
+
 def development_url(*, guides_state: str | None = None, age_scenario: str | None = None) -> str:
     query = ['screen=development']
     if guides_state:
@@ -882,7 +887,119 @@ def verify_progress_views(browser) -> None:
     page.get_by_test_id('daily-progress-complete-note').scroll_into_view_if_needed()
     page.screenshot(path=str(OUT / 'progress-complete-bottom-375.png'), full_page=True)
     page.close()
+    verify_progress_additional_states(browser)
 
+
+def create_first_day_routine(page) -> None:
+    page.get_by_test_id('home-open-checklist').click()
+    expect(page.get_by_test_id('daily-checklist-screen')).to_be_visible()
+    page.get_by_role('button', name='Hantera dagens aktiviteter', exact=True).click()
+    expect(page.get_by_role('dialog')).to_be_visible()
+    page.get_by_role('button', name='Skapa en ny rutin', exact=True).click()
+    page.get_by_role('textbox', name='Namn på rutin', exact=True).fill('Första rundan')
+    page.get_by_role('textbox', name='Checklistepunkt 1', exact=True).fill('Lugn start')
+    page.get_by_role('button', name='Lägg till checklistepunkt sist', exact=True).click()
+    page.get_by_role('textbox', name='Checklistepunkt 2', exact=True).fill('Kort paus')
+    page.get_by_role('button', name='Spara rutin', exact=True).click()
+
+
+def verify_first_day_journey(browser) -> None:
+    for width in (375, 430):
+        page = browser.new_page(viewport={'width': width, 'height': 844})
+        page.goto(first_day_url(), wait_until='networkidle')
+        expect(page.get_by_text('Skapa en rutin eller välj ett träningssteg att ha med idag.', exact=True)).to_be_visible()
+        expect(page.get_by_test_id('home-open-checklist')).to_be_visible()
+        expect(page.get_by_role('progressbar')).to_have_count(0)
+        record(f'first-day empty Home retains the approved compact entry at {width}px',
+               page.get_by_test_id('home-open-checklist').count() == 1
+               and page.get_by_text('Hantera', exact=True).count() == 0
+               and page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+        page.screenshot(path=str(OUT / f'home-first-day-empty-{width}.png'), full_page=True)
+        page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 844})
+    page.goto(first_day_url(), wait_until='networkidle')
+    record('first-day fixture mode is active', page.evaluate('window.__homeFirstDayMode === true'))
+    date_before = page.evaluate('window.__homeFirstDayDate')
+    create_first_day_routine(page)
+    record('first-day create callback ran once', page.evaluate('window.__homeFirstDayMutationCounts.createCalls === 1'),
+           page.evaluate('window.__homeFirstDayMutationCounts'))
+    expect(page.get_by_text('Första rundan', exact=True)).to_be_visible()
+    page.get_by_role('button', name='Klar', exact=True).click()
+    expect(page.get_by_role('checkbox')).to_have_count(2)
+    page.get_by_role('button', name='Tillbaka till Hem', exact=True).click()
+    page.wait_for_timeout(400)
+    first_item = page.get_by_role('checkbox', name='Rutin Första rundan, punkt Lugn start, inte klar', exact=True)
+    expect(first_item).to_have_attribute('aria-checked', 'false')
+    page.screenshot(path=str(OUT / 'home-first-day-created-375.png'), full_page=True)
+    first_item.click()
+    expect(page.get_by_role('checkbox', name='Rutin Första rundan, punkt Lugn start, klar', exact=True)).to_have_attribute('aria-checked', 'true')
+    expect(page.get_by_text('1/2 · Framsteg', exact=True)).to_be_visible()
+    page.get_by_test_id('home-open-progress').click()
+    expect(page.get_by_test_id('daily-progress-screen')).to_be_visible()
+    expect(page.get_by_text('1 av 2 klara', exact=True)).to_be_visible()
+    page.get_by_role('button', name='Tillbaka till Hem', exact=True).click()
+    page.get_by_test_id('home-open-checklist').click()
+    expect(page.get_by_test_id('daily-checklist-screen')).to_be_visible()
+    expect(page.get_by_test_id('daily-checklist-progress')).to_have_attribute('aria-label', '1 av 2 dagsuppgifter klara')
+    expect(page.get_by_role('checkbox', name='Rutin Första rundan, punkt Lugn start, klar', exact=True)).to_have_attribute('aria-checked', 'true')
+    expect(page.get_by_role('checkbox', name='Rutin Första rundan, punkt Kort paus, inte klar', exact=True)).to_have_attribute('aria-checked', 'false')
+    page.get_by_role('button', name='Tillbaka till Hem', exact=True).click()
+    page.wait_for_timeout(400)
+    page.screenshot(path=str(OUT / 'home-first-day-completed-375.png'), full_page=True)
+    page.evaluate('window.__homeFirstDayAdvance()')
+    expect(page.get_by_text('Skapa en rutin eller välj ett träningssteg att ha med idag.', exact=True)).to_be_visible()
+    expect(page.get_by_text('Första rundan', exact=True)).to_have_count(0)
+    expect(page.get_by_role('checkbox')).to_have_count(0)
+    record('first-day routine appears once, completion agrees across Home/Checklistor/Framsteg, and the old day is absent next day',
+           page.evaluate('window.__homeFirstDayDate') != date_before
+           and page.get_by_role('progressbar').count() == 0)
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 844})
+    page.goto(first_day_url('unknown'), wait_until='networkidle')
+    create_first_day_routine(page)
+    expect(page.get_by_text('Rutinen sparades, men vi kunde inte bekräfta om den lades till på den valda dagen. Kontrollera samma ändring innan du fortsätter.', exact=True)).to_be_visible()
+    expect(page.get_by_role('button', name='Kontrollera samma ändring igen', exact=True)).to_be_visible()
+    page.screenshot(path=str(OUT / 'home-first-day-retry-pending-375.png'), full_page=True)
+    counts = page.evaluate('window.__homeFirstDayMutationCounts')
+    page.get_by_role('button', name='Kontrollera samma ändring igen', exact=True).click()
+    expect(page.get_by_role('button', name='Kontrollera samma ändring igen', exact=True)).to_have_count(0)
+    page.get_by_role('button', name='Klar', exact=True).click()
+    expect(page.get_by_role('checkbox')).to_have_count(2)
+    after_retry = page.evaluate('window.__homeFirstDayMutationCounts')
+    record('unknown day-add retry attaches the existing saved routine without creating it again',
+           counts['createCalls'] == 1 and after_retry['createCalls'] == 1
+           and counts['dayAddCalls'] == 1 and after_retry['dayAddCalls'] == 2
+           and counts['routineId'] == after_retry['routineId']
+           and counts['dayRowId'] == after_retry['dayRowId']
+           and counts['mutationId'] == after_retry['mutationId']
+           and counts['dateKey'] == after_retry['dateKey'])
+    page.screenshot(path=str(OUT / 'home-first-day-retry-confirmed-375.png'), full_page=True)
+    page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 844})
+    page.goto(first_day_url('failed'), wait_until='networkidle')
+    create_first_day_routine(page)
+    expect(page.get_by_text('Rutinen sparades, men den kunde inte läggas till på den valda dagen. Öppna Checklistor och lägg till den från rutinhallen.', exact=True)).to_be_visible()
+    page.get_by_role('button', name='Klar', exact=True).click()
+    page.get_by_role('button', name='Tillbaka till Hem', exact=True).click()
+    page.wait_for_timeout(400)
+    expect(page.get_by_role('checkbox')).to_have_count(0)
+    expect(page.get_by_role('progressbar')).to_have_count(0)
+    page.get_by_test_id('home-open-checklist').click()
+    page.get_by_role('button', name='Hantera dagens aktiviteter', exact=True).click()
+    add_saved_routine = page.get_by_role('button', name='Lägg till rutinen Första rundan på Hemskärmen', exact=True)
+    expect(add_saved_routine).to_be_visible()
+    add_saved_routine.click()
+    page.get_by_role('button', name='Klar', exact=True).click()
+    expect(page.get_by_role('checkbox')).to_have_count(2)
+    record('definite day-selection failure preserves the routine template and its manual add path', True)
+    page.screenshot(path=str(OUT / 'home-first-day-manual-recovery-375.png'), full_page=True)
+    page.close()
+
+
+def verify_progress_additional_states(browser) -> None:
     for state, message in (
         ('loading', 'Laddar innehåll'),
         ('error', 'Dagens framsteg kunde inte hämtas. Inget antal visas förrän aktiviteterna har lästs in.'),
@@ -947,6 +1064,21 @@ if os.environ.get('TASSLA_UI_PANEL') == 'progress':
         verify_progress_views(browser)
         browser.close()
     report = {'mode': 'review' if REVIEW else 'public', 'panel': 'progress', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
+if os.environ.get('TASSLA_UI_PANEL') == 'first-day':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_first_day_journey(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'first-day', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
     (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
     raise SystemExit(1 if failures else 0)

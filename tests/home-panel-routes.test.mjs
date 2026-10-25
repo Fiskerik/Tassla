@@ -28,6 +28,6 @@ test('Home child routes keep Home selected in the main navigation', () => {
 });
 
 test('ProductWorkspace scroll scope changes with owner generation, dog identity and review context', () => {
-  assert.match(workspaceSource, /const currentSelectionKey = `\$\{session\?\.user\.id \?\? 'signed-out'\}:\$\{accountGeneration\}:\$\{dog\.id\}:\$\{dog\.breed_id\}:\$\{dog\.birth_date\}:\$\{age \?\? 'unknown-age'\}:\$\{reviewContentEnabled \? 'review' : 'public'\}`/);
+  assert.match(workspaceSource, /const currentSelectionKey = `\$\{session\?\.user\.id \?\? 'signed-out'\}:\$\{accountGeneration\}:\$\{dog\.id\}:\$\{dog\.breed_id\}:\$\{dog\.birth_date\}:\$\{dog\.expected_homecoming_date \?\? ''\}:\$\{homeToday\}:\$\{age \?\? 'unknown-age'\}:\$\{reviewContentEnabled \? 'review' : 'public'\}`/);
   assert.match(workspaceSource, /scrollMemoryScope=\{`\$\{currentSelectionKey\}:\$\{currentDailyLifetime\}`\}/);
 });

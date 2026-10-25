@@ -26,5 +26,5 @@ UI policy (Erik 2026-10-07): Read docs/design-rules.md for any UI-related work. 
 
 Rev02 2026-10-15: bedöm planens verkliga resa, begriplig nästa handling och risk för dekorativa men overksamma kontroller. De åtta panelernas MVP-omfattning är redan beslutad; invänd bara mot konkret brist eller ny oavklarad produktfråga. Acceptera små checkpoints när varje del ger användarnytta och inte påstås slutföra hela panelen. Se docs/MVP-EXPERIENCE-CONTRACT.md.
 
-Before reading task-specific decision or package history, read docs/decisions/MASTER-LOG.md. It is the canonical summary; numbered decision files preserve source context. When a package reaches done, the coordinator records actual evidence and remaining gaps there.
+Follow the task plan’s cited decision sources. When prior decisions or package status matter, look up only the relevant section in docs/decisions/MASTER-LOG.md and the linked task or queue record; do not read the full history by default. The coordinator records final evidence and remaining gaps there after review.
 """

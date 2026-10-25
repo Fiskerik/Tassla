@@ -1,4 +1,4 @@
--- Run after the foundation and puppy-checklists migrations in a dev database.
+-- Run after foundation, puppy-checklists, and Knowledge catalog migrations in a dev database.
 -- Synthetic users only. This probe is transactional and rolls back its fixtures.
 begin;
 insert into auth.users(id, email) values
@@ -13,7 +13,7 @@ begin
   if catalog_count <> 18 then raise exception 'expected 18 review-v1 catalogue items, got %', catalog_count; end if;
   if not exists (select 1 from pg_constraint where conrelid = 'public.dog_checklist_progress'::regclass and contype = 'p') then raise exception 'progress tuple uniqueness missing'; end if;
   if not exists (select 1 from pg_constraint where conrelid = 'public.dog_checklist_custom_items'::regclass and conname = 'dog_checklist_custom_items_title_check') then raise exception 'custom title limit missing'; end if;
-  if has_table_privilege('authenticated', 'public.checklist_templates', 'SELECT') or has_table_privilege('authenticated', 'public.checklist_template_items', 'SELECT') then raise exception 'catalogue is exposed through SQL'; end if;
+  if not has_table_privilege('authenticated', 'public.checklist_templates', 'SELECT') or has_table_privilege('authenticated', 'public.checklist_template_items', 'SELECT') then raise exception 'published-only template mapping read or private key registry grant is incorrect'; end if;
   if has_table_privilege('authenticated', 'public.checklist_templates', 'INSERT') or has_table_privilege('authenticated', 'public.checklist_template_items', 'INSERT') then raise exception 'authenticated catalogue writes were granted'; end if;
   if has_table_privilege('authenticated', 'public.dog_checklist_progress', 'TRUNCATE') or has_table_privilege('authenticated', 'public.dog_checklist_custom_items', 'TRUNCATE') or has_table_privilege('authenticated', 'public.dog_checklist_preferences', 'TRUNCATE') then raise exception 'unexpected TRUNCATE privilege'; end if;
   if has_table_privilege('authenticated', 'public.dog_checklist_progress', 'REFERENCES') or has_table_privilege('authenticated', 'public.dog_checklist_custom_items', 'REFERENCES') or has_table_privilege('authenticated', 'public.dog_checklist_preferences', 'REFERENCES') then raise exception 'unexpected REFERENCES privilege'; end if;
@@ -25,7 +25,13 @@ begin
     if has_table_privilege('anon', relation_name, 'TRUNCATE') or has_table_privilege('anon', relation_name, 'REFERENCES') then raise exception 'anon has an unexpected table privilege on %', relation_name; end if;
   end loop;
   if has_table_privilege('anon', 'public.checklist_templates', 'SELECT') or has_table_privilege('anon', 'public.checklist_template_items', 'SELECT') then raise exception 'anon can read the private review catalogue'; end if;
-  if has_table_privilege('authenticated', 'public.checklist_templates', 'UPDATE') or has_table_privilege('authenticated', 'public.checklist_template_items', 'DELETE') then raise exception 'authenticated can mutate the private review catalogue'; end if;
+  if has_table_privilege('authenticated', 'public.checklist_templates', 'UPDATE') or has_table_privilege('authenticated', 'public.checklist_templates', 'DELETE') or has_table_privilege('authenticated', 'public.checklist_template_items', 'INSERT') or has_table_privilege('authenticated', 'public.checklist_template_items', 'UPDATE') or has_table_privilege('authenticated', 'public.checklist_template_items', 'DELETE') then raise exception 'authenticated can mutate the private review catalogue'; end if;
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'checklist_templates'
+      and policyname = 'checklist_template_published_mapping_read'
+      and qual ilike '%published%'
+  ) then raise exception 'published-only template mapping RLS policy missing'; end if;
   if not exists (select 1 from pg_policies where tablename = 'dog_checklist_progress' and policyname = 'checklist_progress_owner' and qual like '%owns_dog%' and with_check like '%owns_dog%') then raise exception 'progress owner policy missing'; end if;
   if not exists (select 1 from pg_policies where tablename = 'dog_checklist_custom_items' and policyname = 'checklist_custom_owner' and qual like '%owns_dog%' and with_check like '%owns_dog%') then raise exception 'custom owner policy missing'; end if;
   if not exists (select 1 from pg_policies where tablename = 'dog_checklist_preferences' and policyname = 'checklist_preference_owner' and qual like '%owns_dog%' and with_check like '%owns_dog%') then raise exception 'preference owner policy missing'; end if;
@@ -42,6 +48,7 @@ insert into public.dog_checklist_preferences(dog_id, context)
 values (current_setting('test.checklist_dog_a')::uuid, 'first_days');
 do $$ begin
   if (select count(*) from public.dog_checklist_progress where dog_id=current_setting('test.checklist_dog_a')::uuid) <> 1 then raise exception 'owner cannot read own standard progress'; end if;
+  if exists (select 1 from public.checklist_templates) then raise exception 'phase mappings leaked without a published content version'; end if;
   update public.dog_checklist_custom_items set title='Ändrad punkt', completed=true where id='50000000-0000-4000-8000-000000000001';
   if not exists (select 1 from public.dog_checklist_custom_items where id='50000000-0000-4000-8000-000000000001' and title='Ändrad punkt' and completed) then raise exception 'owner cannot update own custom item'; end if;
   update public.dog_checklist_preferences set context='by_age' where dog_id=current_setting('test.checklist_dog_a')::uuid;

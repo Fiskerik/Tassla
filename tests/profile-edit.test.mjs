@@ -31,7 +31,7 @@ test('profile editor keeps transient success feedback in the local action card a
   assert.ok(draftDiffersSource, 'expected the editor draft comparison');
   assert.ok(statusVisibleSource, 'expected the editor status visibility rule');
   const evaluate = (draft, statusMessage, statusError, pending, busy) => {
-    const draftDiffers = new Function('name', 'dog', 'breedId', 'birthDate', 'ageDisplayUnit', `return ${draftDiffersSource};`)(draft.name, profile, draft.breedId, draft.birthDate, draft.ageDisplayUnit ?? profile.age_display_unit);
+    const draftDiffers = new Function('name', 'dog', 'breedId', 'birthDate', 'ageDisplayUnit', 'expectedHomecomingDate', 'sex', `return ${draftDiffersSource};`)(draft.name, profile, draft.breedId, draft.birthDate, draft.ageDisplayUnit ?? profile.age_display_unit, draft.expectedHomecomingDate ?? '', draft.sex ?? null);
     const showStatusMessage = new Function('statusMessage', 'statusError', 'pending', 'busy', 'draftDiffers', `return ${statusVisibleSource};`)(statusMessage, statusError, pending, busy, draftDiffers);
     return { draftDiffers, showStatusMessage };
   };
@@ -84,7 +84,7 @@ test('a profile update may preserve its unchanged breed id when that id is missi
     assert.equal(method, 'PATCH');
     assert.equal(url.searchParams.get('id'), `eq.${dogId}`);
     assert.equal(url.searchParams.get('breed_id'), 'eq.retired-catalog-id');
-    assert.deepEqual(body, { name: 'Nala Rose', breed_id: 'retired-catalog-id', birth_date: '2026-02-15', age_display_unit: 'months' });
+    assert.deepEqual(body, { name: 'Nala Rose', breed_id: 'retired-catalog-id', birth_date: '2026-02-15', age_display_unit: 'months', expected_homecoming_date: null, sex: null });
     return jsonResponse(desiredLegacy);
   });
   try {
@@ -112,7 +112,7 @@ test('update filters the exact dog and all three captured preimage fields and se
     assert.equal(url.searchParams.get('breed_id'), `eq.${profile.breed_id}`);
     assert.equal(url.searchParams.get('birth_date'), `eq.${profile.birth_date}`);
     assert.equal(url.searchParams.get('age_display_unit'), `eq.${profile.age_display_unit}`);
-    assert.deepEqual(body, { name: 'Nala Rose', breed_id: 'mixed', birth_date: '2026-02-15', age_display_unit: 'months' });
+    assert.deepEqual(body, { name: 'Nala Rose', breed_id: 'mixed', birth_date: '2026-02-15', age_display_unit: 'months', expected_homecoming_date: null, sex: null });
     assert.equal(Object.hasOwn(body, 'id'), false);
     assert.equal(Object.hasOwn(body, 'actor_id'), false);
     return jsonResponse(desired);
@@ -226,7 +226,7 @@ test('fetchOwnedDogById is exact-id scoped and validates the returned id', async
   await t.test('matching dog row', async () => {
     const { client, requests } = localClient(({ method, url }) => {
       assert.equal(method, 'GET');
-      assert.equal(url.searchParams.get('select'), 'id,name,breed_id,birth_date,age_display_unit');
+      assert.equal(url.searchParams.get('select'), 'id,name,breed_id,birth_date,age_display_unit,expected_homecoming_date,sex');
       assert.equal(url.searchParams.get('id'), `eq.${dogId}`);
       return jsonResponse(profile);
     });
@@ -251,15 +251,15 @@ test('profile editing keeps the idempotent createDog RPC contract', async () => 
   const requestId = '44000000-0000-4000-8000-000000000002';
   const { client, requests } = localClient(({ method, url, body }) => {
     assert.equal(method, 'POST');
-    assert.equal(url.pathname, '/rest/v1/rpc/create_dog_idempotent');
-    assert.deepEqual(body, { dog_name: 'Nala', dog_breed_id: 'beagle', dog_birth_date: '2026-02-01', kennel_code: null, request_id: requestId });
+    assert.equal(url.pathname, '/rest/v1/rpc/create_dog_with_homecoming');
+    assert.deepEqual(body, { dog_name: 'Nala', dog_breed_id: 'beagle', dog_birth_date: '2026-02-01', kennel_code: null, request_id: requestId, expected_homecoming_date: null, dog_sex: null });
     return jsonResponse(dogId);
   });
   try {
     await appData.createDog(client, { name: ' Nala ', breedId: 'beagle', birthDate: profile.birth_date }, requestId);
     assert.equal(requests.length, 1);
     assert.equal(requests[0].method, 'POST');
-    assert.equal(requests[0].url.pathname, '/rest/v1/rpc/create_dog_idempotent');
+    assert.equal(requests[0].url.pathname, '/rest/v1/rpc/create_dog_with_homecoming');
   } finally { await client.auth.dispose(); }
 });
 
@@ -563,7 +563,7 @@ function buildDerivedEffect({ state, generations, dog, age, selectionKey, homeRe
     reviewContentEnabled: false,
     REVIEW_TRAINING_PROGRAMS: [],
     mounted: { current: true },
-    fetchHomeContent: async (...args) => { requests.content.push({ dog: args[1], age: args[2], signal: args[4] }); return homeResult; },
+    fetchKnowledgeContent: async (...args) => { requests.content.push({ dog: args[1], age: args[2], signal: args[4] }); return homeResult; },
     setContent(value) { state.content = value; },
     setContentSelectionKey(value) { state.contentKey = value; },
     setContentState(value) { state.contentState = value; },

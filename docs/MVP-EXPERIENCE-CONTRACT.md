@@ -1,6 +1,6 @@
 # MVP EXPERIENCE CONTRACT — vision_rev02
 
-Förslag för godkännande · bas `codex/ux-rethink-2026-10-15` @ `2e230be44c1bdd74e74173064fdce5e60e7e9dbc` · 2026-10-15
+Gällande MVP-kontrakt enligt ägarbeslut 2026-10-15. Beslutskälla: [MASTER-LOG.md](decisions/MASTER-LOG.md), avsnittet ”MVP och användarresor”. Historisk arbetsbas: `codex/ux-rethink-2026-10-15` @ `2e230be44c1bdd74e74173064fdce5e60e7e9dbc`.
 
 ## Leveransvillkor
 
@@ -24,6 +24,8 @@ Checkpoint = avgränsad fungerande resa + verifierat repo-läge + köhistorik me
 Hälsa, Tassla-pass, onboarding/profil, notifieringar, kontoradering, samtycken, distribution och mätning kvarstår enligt `docs/mvp.md` och får inte tappas genom rev02-arbete. Nya dataändamål, migrationskörningar, externa tjänster och release följer separata beslut.
 
 ## Risk och prioritering
+
+Prioritetslistan nedan är en ögonblicksbild från 2026-10-15, inte den aktuella taskkön. Följ [queue.json](tasks/dev/queue.json) och den senaste uttryckligen godkända taskplanen för ordning och status. Listan ändrar inte MVP-scope.
 
 P0: återuppta befintliga köposter UX-FIX-BASELINE-MOTION-01 och HOME-ROUTINE-CHECKLIST-01 (nu QA), därefter HOME-ROUTINE-CHECKLIST-RUNTIME-VERIFY-01 och FOUNDATION-DB-VERIFY i utvecklingsmiljö. P1: Hem/daglig Checklista och onboarding; dessa ger riktiga källor för panelerna 2/3. P2: Logga/Träning/Kunskap med fungerande filter och bildroller. P3: Utveckling, Dagens framsteg och Insikter. Prioritet ändrar inte kravet att alla åtta blir funktionella före MVP-klar.
 

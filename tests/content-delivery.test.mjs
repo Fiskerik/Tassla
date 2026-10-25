@@ -134,7 +134,7 @@ test('actual Knowledge source handler opens only user-requested HTTPS and report
 test('actual screen states separate loading, error with retry, and ready-empty', () => {
   assert.match(knowledgeSource, /contentState === 'loading' && <Skeleton/);
   assert.match(knowledgeSource, /contentState === 'error' && <>[\s\S]*?<PrimaryButton title="Försök igen" onPress=\{onRetry\}/);
-  assert.match(knowledgeSource, /contentState === 'ready' && visibleItems\.length === 0/);
+  assert.match(knowledgeSource, /contentState === 'ready' && displayedItems\.length === 0/);
 });
 
 test('guide-body helper renders supported headings and lists as plain text and produces a compact plain preview', () => {
@@ -154,7 +154,7 @@ test('guide-body helper renders supported headings and lists as plain text and p
   assert.match(knowledgeSource, /selectedItem\.isAiGenerated\s*\?\s*<Text[^>]*>AI-genererat innehåll<\/Text>/);
   assert.match(trainingSource, /selectedProgram\?\.is_ai_generated\s*\?\s*<Text[^>]*>AI-genererat innehåll<\/Text>/);
   assert.match(knowledgeSource, /renderGuideCard\(cardItems\[0\], true\)/);
-  assert.match(knowledgeSource, /<Text[^>]*>\{item\.title\}<\/Text>/);
+  assert.match(knowledgeSource, /<Text[^>]*>\{articleText\(item\.title\)\}<\/Text>/);
   assert.doesNotMatch(knowledgeSource, /getGuidePreviewText\(item\.body\)/);
 });
 

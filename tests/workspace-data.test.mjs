@@ -214,6 +214,12 @@ test('training uses published version and server step UUIDs, preserving in-progr
     version: 2,
     title: 'Ny programversion',
   });
+  oldVersion.content_breed_targets = [{ breed_id: 'other-breed' }];
+  const journey = {
+    id: '99999999-9999-4999-8999-999999999991', dog_id: dogId, program_version_id: oldVersion.id,
+    active_step_id: 'cccccccc-cccc-4ccc-8ccc-ccccccccccc2', state: 'paused',
+    last_operation_id: '99999999-9999-4999-8999-999999999992', created_at: '2026-10-01T10:00:00.000Z', updated_at: '2026-10-04T12:00:00.000Z',
+  };
   const finishedStep = {
     dog_id: dogId,
     program_version_id: oldVersion.id,
@@ -230,6 +236,14 @@ test('training uses published version and server step UUIDs, preserving in-progr
       assert.equal(method, 'GET');
       assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
       return jsonResponse([finishedStep]);
+    }
+    if (url.pathname === '/rest/v1/training_journeys') {
+      assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
+      return jsonResponse([journey]);
+    }
+    if (url.pathname === '/rest/v1/training_sessions' || url.pathname === '/rest/v1/training_milestones') {
+      assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
+      return jsonResponse([]);
     }
     if (url.pathname === '/rest/v1/training_steps') {
       assert.equal(method, 'GET');
@@ -267,6 +281,9 @@ test('training uses published version and server step UUIDs, preserving in-progr
     assert.deepEqual(programsById.get(oldVersion.id).completedStepIds, [finishedStep.step_id]);
     assert.deepEqual(programsById.get(oldVersion.id).completedAtByStepId, { [finishedStep.step_id]: finishedStep.completed_at });
     assert.equal(programsById.get(oldVersion.id).currentAgeBreedMatch, false, 'a resumable older version is not described as current-age-matched');
+    assert.ok(programsById.has(oldVersion.id), 'a journey remains available when the dog no longer matches the program breed');
+    assert.equal(result.progression.journeys[0].active_step_id, journey.active_step_id);
+    assert.equal(result.progressionState, 'ready');
     assert.equal(programsById.get(newVersion.id).steps[0].id, 'dddddddd-dddd-4ddd-8ddd-ddddddddddd2');
     assert.deepEqual(result.paused, []);
     assert.ok(requests.every(({ method }) => method === 'GET'));
@@ -286,6 +303,7 @@ test('training workspace stays empty when there are no published programs', asyn
       assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
       return jsonResponse([]);
     }
+    if (url.pathname === '/rest/v1/training_journeys' || url.pathname === '/rest/v1/training_sessions' || url.pathname === '/rest/v1/training_milestones') return jsonResponse([]);
     throw new Error(`Unexpected request ${url.pathname}`);
   });
 
@@ -296,7 +314,7 @@ test('training workspace stays empty when there are no published programs', asyn
       breed_id: 'mixed',
       birth_date: '2026-08-01',
     }, 10);
-    assert.deepEqual(result, { programs: [], paused: [] });
+    assert.deepEqual(result, { programs: [], paused: [], progression: { journeys: [], sessions: [], milestones: [] }, progressionState: 'ready' });
     assert.equal(requests.some(({ url }) => url.pathname === '/rest/v1/training_steps'), false);
   } finally {
     await client.auth.dispose();
@@ -316,6 +334,7 @@ test('keeps progress for a withdrawn or unavailable published version as paused 
       assert.equal(url.searchParams.get('dog_id'), `eq.${dogId}`);
       return jsonResponse(progress);
     }
+    if (url.pathname === '/rest/v1/training_journeys' || url.pathname === '/rest/v1/training_sessions' || url.pathname === '/rest/v1/training_milestones') return jsonResponse([]);
     throw new Error(`Unexpected request ${url.pathname}`);
   });
 
@@ -354,6 +373,7 @@ test('a paused published program keeps its human-readable title and version', as
     assert.equal(method, 'GET');
     if (url.pathname === '/rest/v1/content_versions') return jsonResponse([pausedVersion]);
     if (url.pathname === '/rest/v1/training_progress') return jsonResponse(progress);
+    if (url.pathname === '/rest/v1/training_journeys' || url.pathname === '/rest/v1/training_sessions' || url.pathname === '/rest/v1/training_milestones') return jsonResponse([]);
     throw new Error(`Unexpected request ${method} ${url.pathname}`);
   });
 

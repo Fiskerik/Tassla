@@ -16,6 +16,7 @@ import { homeGreetingAt } from './home-greeting';
 import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
 import { DogProfileSwitcherSheet } from './DogProfileSwitcherSheet';
 import type { RoutineDraft, RoutineDraftConflict, RoutineDraftRecovery } from './daily-activity-recovery';
+import { homeTrainingJourneyDisplay, type HomeTrainingProgressionSummary, type PendingTrainingProgression } from '../training/training-progression';
 
 type Destination = 'log' | 'training' | 'knowledge' | 'health' | 'planned-health';
 type LoadState = 'loading' | 'ready' | 'error';
@@ -40,7 +41,8 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   routineRecovery = null, onRoutineRecoveryChange,
   onOpenChecklist, onOpenProgress, onOpenTrainingStep, onOpenDevelopment,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay,
-  onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, onGo, onOpenContent, onRetryContent }: {
+  onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, onGo, onOpenContent, onRetryContent,
+  trainingProgression, trainingProgressionState = 'ready', pendingProgression, onOpenTrainingJourney, onRetryProgression, onRetryTrainingProgressionRead }: {
   dog: OwnedDog;
   ownedDogs?: readonly OwnedDog[];
   onSelectDog?: (dogId: string) => void;
@@ -60,6 +62,9 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   trainingState?: LoadState;
   nextStep?: string;
   reviewTrainingStep?: boolean;
+  trainingProgression?: HomeTrainingProgressionSummary | null;
+  trainingProgressionState?: 'ready' | 'error';
+  pendingProgression?: PendingTrainingProgression | null;
   dailyFixture?: readonly HomeDailyFixtureItem[];
   dailyState?: 'hidden' | 'loading' | 'ready' | 'partial' | 'error';
   dailyRefreshing?: boolean;
@@ -78,6 +83,9 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   onOpenProgress?: () => void;
   onOpenDevelopment?: () => void;
   onOpenTrainingStep?: (programId: string, stepId: string, returnPage: 'home' | 'checklist') => void;
+  onOpenTrainingJourney?: (programVersionId: string) => void;
+  onRetryProgression?: (programVersionId: string) => void;
+  onRetryTrainingProgressionRead?: () => void;
   onRetryDaily?: () => void;
   onCreateRoutine?: (routine: DailyRoutineCreateInput) => Promise<{ status: 'saved' | 'failed' | 'unknown' } | void>;
   onUpdateRoutine?: (routine: DailyRoutine, label: string, checklist: DailyRoutineChecklistItem[], repeat: DailyRoutineRepeatValues) => Promise<DailyRoutineWriteResult | void>;
@@ -114,6 +122,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   const checklistCoverage = fixtureProgress?.coverage ?? dailyProgress.coverage;
   const checklistTotal = fixtureProgress?.totalCount ?? dailyProgress.totalCount;
   const checklistCompleted = fixtureProgress?.completedCount ?? dailyProgress.completedCount;
+  const trainingJourneyDisplay = homeTrainingJourneyDisplay(trainingProgression ?? null, trainingProgressionState, pendingProgression ?? null);
 
   useEffect(() => {
     if (openDogSwitcherInitially) onDogSwitcherInitiallyOpened?.();
@@ -177,6 +186,38 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
         {contentState === 'error' ? <Button variant="tertiary" label="Hämta guider igen" accessibilityLabel="Hämta guider igen" onPress={onRetryContent} /> : null}
       </View>
     </Card>
+
+    {trainingJourneyDisplay.summary || trainingJourneyDisplay.pending || trainingJourneyDisplay.readError && trainingState === 'ready' ? <Card variant="home" accessibilityLabel="Träningsresan">
+      <View style={styles.trainingJourneyCard}>
+        <View style={styles.trainingJourneyHeading}>
+          <Ionicons name="paw" size={tokens.size.iconSm} color={tokens.colors.home.greenStrong} accessibilityElementsHidden />
+          <Text style={styles.cardHeading}>Träningsresan</Text>
+        </View>
+        {trainingJourneyDisplay.summary ? <>
+          {trainingJourneyDisplay.summary.programTitle ? <Text style={styles.trainingJourneyProgram}>{trainingJourneyDisplay.summary.programTitle}</Text> : null}
+          {trainingJourneyDisplay.summary.activeStepTitle ? <Text style={styles.body}>Aktivt steg: {trainingJourneyDisplay.summary.activeStepTitle}</Text>
+            : <Text style={styles.emptyText}>Det sparade programmet eller steget är inte tillgängligt. Instruktioner visas inte.</Text>}
+          <View style={styles.trainingJourneyCounts}>
+            <Text style={styles.trainingJourneyCount}>{trainingJourneyDisplay.summary.loggedSessions} loggade pass</Text>
+            <Text style={styles.trainingJourneyCount}>{trainingJourneyDisplay.summary.confirmedMilestones} delmål bekräftade av dig</Text>
+          </View>
+          {trainingJourneyDisplay.summary.programTitle && trainingJourneyDisplay.summary.activeStepTitle ? <Button variant="secondary" label="Fortsätt träningsresan"
+            accessibilityLabel={`Fortsätt träningsresan: ${trainingJourneyDisplay.summary.programTitle}, ${trainingJourneyDisplay.summary.activeStepTitle}`}
+            onPress={() => onOpenTrainingJourney?.(trainingJourneyDisplay.summary!.journey.program_version_id)} /> : null}
+        </> : trainingJourneyDisplay.readError && trainingState === 'ready' ? <>
+          <Text style={styles.emptyText}>Träningsresan kunde inte hämtas. Inga framsteg visas som sparade.</Text>
+          {onRetryTrainingProgressionRead ? <Button variant="tertiary" label="Kontrollera träningsresan igen"
+            accessibilityLabel="Kontrollera träningsresan igen" onPress={onRetryTrainingProgressionRead} /> : null}
+        </> : null}
+        {trainingJourneyDisplay.pending?.status === 'pending' ? <Text style={styles.emptyText} accessibilityLiveRegion="polite">Ändringen av träningsresan sparas.</Text> : null}
+        {trainingJourneyDisplay.pending?.status === 'unknown' ? <View style={styles.trainingJourneyPending}>
+          <Text style={styles.emptyText}>Den senaste ändringen behöver kontrolleras. Den räknas inte som sparad ännu.</Text>
+          {onRetryProgression ? <Button variant="tertiary" label="Kontrollera samma ändring igen"
+            accessibilityLabel="Kontrollera samma träningsändring igen"
+            onPress={() => onRetryProgression(trainingJourneyDisplay.pending!.action.programVersionId)} /> : null}
+        </View> : null}
+      </View>
+    </Card> : null}
 
     <Card variant="home" accessibilityLabel="Dagens att göra">
       <View style={styles.dailyCardContent}>
@@ -423,6 +464,12 @@ const styles = StyleSheet.create({
   weekDot: { width: tokens.spacing.xs + 1, height: tokens.spacing.xs + 1, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.border },
   currentWeekDot: { backgroundColor: tokens.colors.home.greenStrong },
   currentCard: { gap: 0 },
+  trainingJourneyCard: { gap: tokens.spacing.sm },
+  trainingJourneyHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
+  trainingJourneyProgram: { ...tokens.typography.label, color: tokens.colors.home.text },
+  trainingJourneyCounts: { gap: tokens.spacing.xs },
+  trainingJourneyCount: { ...tokens.typography.caption, color: tokens.colors.home.greenStrong, fontWeight: '700' },
+  trainingJourneyPending: { gap: tokens.spacing.xs, paddingTop: tokens.spacing.xs },
   cardHeadingRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   cardHeading: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },
   body: { ...tokens.typography.caption, color: tokens.colors.home.text, flexShrink: 1 },

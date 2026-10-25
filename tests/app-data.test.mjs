@@ -111,8 +111,8 @@ test('createDog uses the idempotent RPC, normalizes the optional kennel code, an
   const requestId = '44000000-0000-4000-8000-000000000001';
   try {
     assert.equal(await createDog(client, { name: ' Nala ', breedId: 'beagle', birthDate: '2026-02-01', kennelCode: ' kennel-42 ' }, requestId), '33000000-0000-4000-8000-000000000001');
-    assert.equal(requests[0].url.pathname, '/rest/v1/rpc/create_dog_idempotent');
-    assert.deepEqual(requests[0].body, { dog_name: 'Nala', dog_breed_id: 'beagle', dog_birth_date: '2026-02-01', kennel_code: 'KENNEL-42', request_id: requestId });
+    assert.equal(requests[0].url.pathname, '/rest/v1/rpc/create_dog_with_homecoming');
+    assert.deepEqual(requests[0].body, { dog_name: 'Nala', dog_breed_id: 'beagle', dog_birth_date: '2026-02-01', kennel_code: 'KENNEL-42', request_id: requestId, expected_homecoming_date: null, dog_sex: null });
   } finally { await client.auth.dispose(); }
 });
 
