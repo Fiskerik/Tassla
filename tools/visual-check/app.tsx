@@ -431,7 +431,7 @@ function App(){
    onSave={async(id,type,dueOn,note,reminderEnabled,reminderMinutes,dueTime)=>{setPlans(rows=>id?rows.map(row=>row.id===id?{...row,due_on:dueOn,due_time:dueTime,description:note,reminder_enabled:reminderEnabled,reminder_minutes:reminderMinutes}:row):[{id:'new-plan',dog_id:dog.id,event_type:type,due_on:dueOn,due_time:dueTime,description:note,reminder_enabled:reminderEnabled,reminder_minutes:reminderMinutes,created_at:today},...rows]);return true;}}
    onDelete={async id=>{setPlans(rows=>rows.filter(row=>row.id!==id));return true;}}
  />:null}
- {page==='knowledge'?<KnowledgeScreen dogName={dog.name} dogSex={dog.sex} items={empty?[]:content} contentState={state==='empty'?'ready':state} focusedContentId={focused} onSelectContent={setFocused} onDetailChange={setKnowledgeDetailOpen} client={client as never} dogId={dog.id} ageWeeks={homeAgeInWeeks(dog.birth_date,today)} sessionKey="visual-check" onBack={()=>{setFocused(null);go('home')}}/>:null}
+ {page==='knowledge'?<KnowledgeScreen items={empty?[]:content} contentState={state==='empty'?'ready':state} focusedContentId={focused} onSelectContent={setFocused} onDetailChange={setKnowledgeDetailOpen} client={client as never} dogId={dog.id} ageWeeks={homeAgeInWeeks(dog.birth_date,today)} sessionKey="visual-check" onBack={()=>{setFocused(null);go('home')}}/>:null}
  {page==='training'||page==='home-training-detail'?<PublishedTrainingScreen
   ageWeeks={trainingScenario==='unknown-age'?null:homeAgeInWeeks(dog.birth_date,today)}
   programs={empty||['no-recommendations','paused','paused-unavailable'].includes(trainingScenario)?[]:trainingPrograms}

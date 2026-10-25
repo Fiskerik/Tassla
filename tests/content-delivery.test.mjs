@@ -154,7 +154,9 @@ test('guide-body helper renders supported headings and lists as plain text and p
   assert.match(knowledgeSource, /selectedItem\.isAiGenerated\s*\?\s*<Text[^>]*>AI-genererat innehåll<\/Text>/);
   assert.match(trainingSource, /selectedProgram\?\.is_ai_generated\s*\?\s*<Text[^>]*>AI-genererat innehåll<\/Text>/);
   assert.match(knowledgeSource, /renderGuideCard\(cardItems\[0\], true\)/);
-  assert.match(knowledgeSource, /<Text[^>]*>\{articleText\(item\.title\)\}<\/Text>/);
+  assert.match(knowledgeSource, /<Text[^>]*>\{item\.title\}<\/Text>/);
+  assert.doesNotMatch(knowledgeSource, /articleText|personalizeArticle|dogName|dogSex/);
+  assert.doesNotMatch(workspaceSource, /personalizeArticle/);
   assert.doesNotMatch(knowledgeSource, /getGuidePreviewText\(item\.body\)/);
 });
 

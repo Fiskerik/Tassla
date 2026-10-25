@@ -10,6 +10,13 @@ OUT = Path(os.environ.get('TASSLA_VISUAL_OUT', 'docs/design/evidence/drive-artic
 OUT.mkdir(parents=True, exist_ok=True)
 results, errors, image_ratios = [], [], []
 os.environ.setdefault('XDG_CONFIG_HOME', '/tmp/tassla-chrome-config')
+
+
+def visible_image_frame(image):
+    """Measure the clipped card frame, not the zoomed source image inside it."""
+    return image.locator('xpath=../../..')
+
+
 with sync_playwright() as p:
     browser = p.chromium.launch(executable_path='/usr/bin/chromium', headless=True,
                                args=['--no-sandbox', '--disable-crash-reporter', '--disable-breakpad'])
@@ -17,40 +24,43 @@ with sync_playwright() as p:
     page.on('pageerror', lambda e: errors.append(str(e)))
     for width in [375, 430]:
         page.set_viewport_size({'width': width, 'height': 844})
-        for name, sex, pronoun in [('Nemo', 'male', 'Han'), ('Nala', 'female', 'Hon'), ('Max', '', 'Max')]:
+        for name, sex in [('Nemo', 'male'), ('Nala', 'female'), ('Max', '')]:
             page.goto(f'{BASE}?screen=knowledge&articleFixture=true&dogName={name}&sex={sex}')
             expect(page.get_by_role('button', name='Alla artiklar', exact=True)).to_be_visible()
             page.get_by_role('button', name='Alla artiklar', exact=True).click()
             expect(page.get_by_role('button', name='Läs Första dygnet hemma', exact=True)).to_be_visible()
             guide_cards = page.get_by_role('button', name=re.compile(r'^Läs '))
             assert guide_cards.count() == 3, f'expected three article cards, got {guide_cards.count()}'
-            featured_box = guide_cards.nth(0).locator('img').bounding_box()
+            featured_box = visible_image_frame(guide_cards.nth(0).locator('img')).bounding_box()
             assert featured_box and featured_box['width'] > 0
             featured_ratio = featured_box['height'] / featured_box['width']
             assert 0.54 <= featured_ratio <= 0.58
             secondary_ratios = []
             for index in (1, 2):
-                image_box = guide_cards.nth(index).locator('img').bounding_box()
+                image_box = visible_image_frame(guide_cards.nth(index).locator('img')).bounding_box()
                 assert image_box and image_box['width'] > 0
                 ratio = image_box['height'] / image_box['width']
                 assert 0.70 <= ratio <= 0.80, f'secondary article image is too tall: {ratio:.2f}'
                 secondary_ratios.append(round(ratio, 3))
             page.screenshot(path=str(OUT / f'library-{name}-{width}.png'), full_page=True)
             page.get_by_role('button', name='Läs Första dygnet hemma', exact=True).click()
-            expect(page.get_by_text(f'{pronoun} har lämnat', exact=False)).to_be_visible()
-            hero_box = page.locator('img').first.bounding_box()
+            expect(page.get_by_text('Den har lämnat sin mamma, sina syskon', exact=False)).to_be_visible()
+            hero_box = visible_image_frame(page.locator('img').first).bounding_box()
             assert hero_box and hero_box['width'] > 0
             hero_ratio = hero_box['height'] / hero_box['width']
             assert 0.54 <= hero_ratio <= 0.58
             image_ratios.append({'viewport': width, 'featured': round(featured_ratio, 3), 'secondary': secondary_ratios, 'article': round(hero_ratio, 3)})
             assert '{{dog.' not in page.locator('body').inner_text()
+            page_text = page.locator('body').inner_text()
+            assert name not in page_text, f'profile name {name} leaked into article copy'
+            assert not re.search(r'\b(han|hon|honom|henne)\b', page_text, re.IGNORECASE)
             assert 'KLASSIFICERING' not in page.locator('body').inner_text()
             assert '09_valpsakra' not in page.locator('body').inner_text()
             page.screenshot(path=str(OUT / f'article-{name}-{width}.png'), full_page=True)
-            page.get_by_text(f'Följ {name if name.endswith("x") else name + "s"} rytm', exact=True).scroll_into_view_if_needed()
-            expect(page.get_by_text('Tips i vardagen', exact=True)).to_be_visible()
+            page.get_by_text('Följ valpens rytm', exact=True).scroll_into_view_if_needed()
+            expect(page.get_by_text('Erbjud rastning efter sömn, mat och lek.', exact=False)).to_be_visible()
             page.screenshot(path=str(OUT / f'article-end-{name}-{width}.png'))
-            results.append(f'{name}/{sex or "unset"}: library + personalized full article at {width}')
+            results.append(f'{name}/{sex or "unset"}: library + generic full article at {width}')
         page.goto(f'{BASE}?screen=profile-create&articleFixture=true')
         expect(page.get_by_label('Förväntad hemkomst (valfritt), år-månad-dag')).to_be_visible()
         field = page.get_by_label('Förväntad hemkomst (valfritt), år-månad-dag')

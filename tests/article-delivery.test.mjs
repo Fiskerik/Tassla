@@ -2,14 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { registerHooks } from 'node:module';
 import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
-import { matchesArticleRules, personalizeArticle } from '../src/content/article-targeting.ts';
+import * as articleTargeting from '../src/content/article-targeting.ts';
 import { parseGuideBody } from '../src/features/knowledge/guide-body.ts';
 import { createArticleSyncHandler } from '../supabase/functions/sync-drive-article/handler.ts';
 const resolution = registerHooks({ resolve(s, c, next) { return next(s.startsWith('.') && !/\.[a-z0-9]+$/i.test(s) ? `${s}.ts` : s, c); } });
 const { fetchKnowledgeContent } = await import('../src/data/workspace-data.ts');
 resolution.deregister();
 const articles = JSON.parse(await readFile(new URL('../docs/content/artiklar/drive-articles-v1.json', import.meta.url)));
+const { matchesArticleRules } = articleTargeting;
 
 test('planned homecoming matches Dec 8–15 regardless of the legacy 16-week maximum', () => {
   const rules = articles[0].rules;
@@ -20,20 +22,22 @@ test('planned homecoming matches Dec 8–15 regardless of the legacy 16-week max
   assert.equal(matchesArticleRules(rules, null, '2026-12-15', '2026-12-08'), false);
 });
 
-test('the exact articles expand Nemo/han, Nala/hon and unknown-sex fallback without altering advice or generic plurals', () => {
+test('the three restored Drive articles are generic, unpersonalized and pinned to the original wording', () => {
+  const fingerprints = {
+    'forsta-dygnet-hemma': '1f06f169d0260d72c128f897d33ccff8e4f338d3edeca957e35454c9d6f27d47',
+    rumsrenhet: '49b370eb1230ec4addb52537040de1de0188c726ebcd4bc2bf2d660638990174',
+    'valpens-somn': 'b89cf1a5b2055ba712cdd5109d2cf84cdbd81125dd070493eaeddb7ed03da304',
+  };
   for (const article of articles) {
-    for (const [name, sex] of [['Nemo', 'male'], ['Nala', 'female'], ['Max', null]]) {
-      const rendered = personalizeArticle(article.body, { name, sex });
-      assert.ok(rendered.includes(name));
-      assert.ok(!rendered.includes('{{dog.'));
-      assert.ok(!/\b(hans|hennes)s\b/.test(rendered));
-    }
+    const digest = createHash('sha256').update(article.title + '\0' + article.body).digest('hex');
+    assert.equal(digest, fingerprints[article.slug]);
+    assert.doesNotMatch(article.title + article.body, /\{\{dog\./);
+    assert.doesNotMatch(article.title + article.body, /\b(Nemo|Nala|Max|han|hon|honom|henne)\b/i);
   }
-  assert.match(personalizeArticle(articles[0].body, { name: 'Nemo', sex: 'male' }), /Han har lämnat/);
-  assert.match(personalizeArticle(articles[0].body, { name: 'Nala', sex: 'female' }), /Hon har lämnat/);
-  assert.match(personalizeArticle(articles[0].body, { name: 'Max', sex: null }), /Max har lämnat/);
-  assert.equal(personalizeArticle('Andra hundar och en valp. {{dog.genitive}} bädd.', { name: 'Max' }), 'Andra hundar och en valp. Max bädd.');
-  assert.equal(personalizeArticle('{{dog.name}}', { name: '{{dog.subject}}', sex: 'male' }), '{{dog.subject}}');
+  assert.match(articles[0].body, /Den har lämnat sin mamma, sina syskon/);
+  assert.match(articles[1].title, /valpen att lyckas/);
+  assert.match(articles[2].body, /hur mycket den sover och när på dygnet den brukar vila/);
+  assert.equal('personalizeArticle' in articleTargeting, false);
 });
 
 test('complete library includes nonmatching published articles; recommendations respect rules and breed', async () => {
@@ -53,8 +57,10 @@ test('complete library includes nonmatching published articles; recommendations 
     const result = await fetchKnowledgeContent(client, { id: 'dog', name: 'Nala', breed_id: 'mixed' }, 260);
     assert.equal(result.length, 3);
     assert.ok(result.every((item) => !item.recommended));
-    const puppy = await fetchKnowledgeContent(client, { id: 'dog', name: 'Nala', breed_id: 'mixed' }, 10);
+    const puppy = await fetchKnowledgeContent(client, { id: 'dog-a', name: 'Nala', sex: 'female', breed_id: 'mixed', expected_homecoming_date: null }, 10);
     assert.deepEqual(puppy.map((a) => a.recommended), [false, true, true]);
+    const alternateProfile = await fetchKnowledgeContent(client, { id: 'dog-b', name: 'Nemo', sex: 'male', breed_id: 'mixed', expected_homecoming_date: null }, 10);
+    assert.deepEqual(alternateProfile.map(({ id, title, body }) => ({ id, title, body })), puppy.map(({ id, title, body }) => ({ id, title, body })));
     rows[1].content_breed_targets.push({ breed_id: 'beagle' });
     const otherBreed = await fetchKnowledgeContent(client, { id: 'dog', name: 'Nala', breed_id: 'mixed' }, 10);
     assert.equal(otherBreed[1].recommended, false);
@@ -76,12 +82,12 @@ test('sync endpoint rejects missing/wrong tokens and oversized bodies before pub
 });
 
 
-test('reviewed article tips become explicit styled blocks without duplicating or losing advice', () => {
+test('restored articles preserve source paragraphs and headings without generated callouts', () => {
   for (const article of articles) {
     const blocks = parseGuideBody(article.body);
-    assert.ok(blocks.some((block) => block.type === 'callout' && block.tone === 'tip'));
+    assert.ok(blocks.some((block) => block.type === 'heading'));
     assert.ok(blocks.some((block) => block.type === 'paragraph'));
-    assert.ok(!blocks.some((block) => block.type === 'paragraph' && block.text.startsWith('> ')));
+    assert.ok(!blocks.some((block) => block.type === 'callout'));
   }
   assert.deepEqual(parseGuideBody('> Viktigt: Kontakta veterinär vid oro.'), [
     { type: 'callout', tone: 'important', text: 'Kontakta veterinär vid oro.' },

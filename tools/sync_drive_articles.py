@@ -109,50 +109,6 @@ def rule(fields, key):
                 event_kind=event, start_days=start, end_days=end)
 
 
-def adapt_approved_text(value):
-    """Explicit own-dog references in the three reviewed source texts only."""
-    value = value.replace('hur mycket den sover och när på dygnet den brukar vila', 'när på dygnet den brukar vila')
-    # Match whole Swedish words, keeping plural/general references untouched.
-    value = re.sub(r'\bvalpens\b', '{{dog.genitive}}', value)
-    value = re.sub(r'\bValpens\b', '{{dog.genitive}}', value)
-    value = re.sub(r'\bvalpen\b', '{{dog.name}}', value)
-    value = re.sub(r'\bValpen\b', '{{dog.Subject}}', value)
-    value = value.replace('hundens sömn', '{{dog.genitive}} sömn')
-    value = value.replace('just din valp', '{{dog.name}}')
-    value = value.replace('## Rumsrenhet utvecklas olika snabbt.', 'Rumsrenhet utvecklas olika snabbt.')
-    value = value.replace('Börja gärna använda sömnloggen I Tassla redan från första dagen. Registrera när {{dog.name}} somnar och vaknar, så får du en överblick över när på dygnet den brukar vila.', 'I Tassla kan du logga när {{dog.name}} somnar och se sömnmarkeringarna i historiken.')
-    replacements = {
-        'Den har lämnat': '{{dog.Subject}} har lämnat',
-        'den enda miljö den hittills har känt till': 'den enda miljö {{dog.subject}} hittills har känt till',
-        'så låt den äta': 'så låt {{dog.object}} äta',
-        'hjälpa den att komma ut': 'hjälpa {{dog.object}} att komma ut',
-        'var den ska kissa': 'var {{dog.subject}} ska kissa',
-        'behöver den en extra vilostund': 'behöver {{dog.subject}} en extra vilostund',
-        'där den ska sova': 'där {{dog.subject}} ska sova',
-        'låt den själv söka kontakt': 'låt {{dog.object}} själv söka kontakt',
-        'och låt den sova ostört': 'och låt {{dog.object}} sova ostört',
-        'när den behöver vila': 'när {{dog.subject}} behöver vila',
-        'när den är vaken': 'när {{dog.subject}} är vaken',
-        'du att den brukar': 'du att {{dog.subject}} brukar',
-        'när den kissar eller bajsar': 'när {{dog.subject}} kissar eller bajsar',
-        'När den kissar eller bajsar': 'När {{dog.subject}} kissar eller bajsar',
-        'kan den behöva': 'kan {{dog.subject}} behöva',
-        'kan den lära sig': 'kan {{dog.subject}} lära sig',
-        'den brukar vila': '{{dog.subject}} brukar vila',
-        'den behöver därför': '{{dog.subject}} behöver därför',
-    }
-    for before, after in replacements.items():
-        value = value.replace(before, after)
-    highlighted = []
-    for paragraph in value.split('\n\n'):
-        if paragraph.startswith(('Erbjud rastning efter sömn', 'Gå till en relativt lugn plats', 'Ordna en trygg, lugn sovplats')):
-            paragraph = '> Tips: ' + paragraph
-        elif paragraph.startswith(('Täta små kissningar', 'Kontakta veterinär om')):
-            paragraph = '> Viktigt: ' + paragraph
-        highlighted.append(paragraph)
-    return '\n\n'.join(highlighted)
-
-
 def parse_docx(data, source_id, modified_at, approved=None):
     tables, paragraphs = document(data)
     fields = tables[0]
@@ -209,12 +165,9 @@ def parse_docx(data, source_id, modified_at, approved=None):
     body = '\n\n'.join(parts)
     require(len(body) <= 100000, 'Article text too large')
     tokens = re.findall(r'\{\{[^}]*\}\}', body + title)
-    require(all(t in ('{{dog.name}}','{{dog.genitive}}','{{dog.subject}}','{{dog.Subject}}','{{dog.object}}') for t in tokens), 'Unknown personalization token')
+    require(not tokens, 'Dog-specific article personalization is unsupported')
     if approved:
         result = dict(approved)
-        # Exactly scoped correction to a product claim, approved in task review.
-        body = adapt_approved_text(body)
-        title = adapt_approved_text(title)
         for key in ('body', 'title', 'related_source_refs'):
             result[key] = {'body': body, 'title': title, 'related_source_refs': refs}[key]
         require(result['body'] == approved['body'] and result['title'] == approved['title'], 'Approved app conversion differs')

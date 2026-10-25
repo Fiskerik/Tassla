@@ -1,4 +1,3 @@
-import { personalizeArticle, type DogSex } from '../../content/article-targeting';
 import { useEffect, useRef, useState } from 'react';
 import { Linking, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFonts } from 'expo-font';
@@ -33,8 +32,6 @@ export function KnowledgeScreen({
   onRetry = () => undefined,
   client,
   dogId = '',
-  dogName = '',
-  dogSex = null,
   ageWeeks = 0,
   sessionKey = '',
   checklistPending = null,
@@ -53,8 +50,6 @@ export function KnowledgeScreen({
   onRetry?: () => void;
   client?: SupabaseClient;
   dogId?: string;
-  dogName?: string;
-  dogSex?: DogSex | null;
   ageWeeks?: number | null;
   sessionKey?: string;
   checklistPending?: PendingChecklistMemory | null;
@@ -71,8 +66,6 @@ export function KnowledgeScreen({
   const searchQuery = guideSearchValueForScope(guideViewState, searchScopeKey);
   const hasSearchQuery = normalizeGuideSearchText(searchQuery) !== '';
   const showAllGuides = guideViewState.scopeKey === searchScopeKey && guideViewState.showAll;
-  const articleText = (value: string) => personalizeArticle(value, { name: dogName, sex: dogSex });
-  const dogLabel = dogName.trim() || 'vald hund';
   if (guideViewState.scopeKey !== searchScopeKey) {
     setGuideViewState({ scopeKey: searchScopeKey, value: '', showAll: false });
   }
@@ -88,7 +81,7 @@ export function KnowledgeScreen({
   const recommendedItems = visibleItems.filter((item) => item.recommended !== false);
   const candidates = showAllGuides || hasSearchQuery ? visibleItems : recommendedItems;
   const matchingIds = new Set(searchGuideItems(candidates.map((item) => ({ ...item,
-    title: articleText(item.title), body: articleText(item.body) })), searchQuery).map((item) => item.id));
+    title: item.title, body: item.body })), searchQuery).map((item) => item.id));
   const displayedItems = candidates.filter((item) => matchingIds.has(item.id));
   const cardItems = hasSearchQuery || showAllGuides ? displayedItems : displayedItems.slice(0, 3);
   const hasMoreGuides = !hasSearchQuery && !showAllGuides && recommendedItems.length > 3;
@@ -124,7 +117,7 @@ export function KnowledgeScreen({
     return <MotionPressable
       key={item.id}
       accessibilityRole="button"
-      accessibilityLabel={`Läs ${articleText(item.title)}`}
+      accessibilityLabel={`Läs ${item.title}`}
       onPress={() => openArticle(item.id)}
       style={featured ? styles.featured : styles.smallCard}
     >
@@ -132,7 +125,7 @@ export function KnowledgeScreen({
         <KnowledgeImage source={image} focus={imageFocus} />
       </View> : null}
       <View style={featured ? styles.cardCopy : styles.smallCardCopy}>
-        <Text style={featured ? styles.guideTitle : styles.smallGuideTitle} numberOfLines={featured ? undefined : 3}>{articleText(item.title)}</Text>
+        <Text style={featured ? styles.guideTitle : styles.smallGuideTitle} numberOfLines={featured ? undefined : 3}>{item.title}</Text>
         <View style={styles.metadataRow}>
           <Text style={styles.metadataPill}>{readingMinutes(item.body)} min</Text>
           <Text style={styles.metadataPill}>{item.contentType === 'guide' ? 'Guide' : 'Artikel'}</Text>
@@ -182,7 +175,7 @@ export function KnowledgeScreen({
         <PrimaryButton title="Försök igen" onPress={onRetry} />
       </>}
       {tab === 'För dig' && !selectedItem && contentState === 'ready' && displayedItems.length === 0 && !hasSearchQuery && <MessageCard>
-        {showAllGuides ? 'Inga artiklar är publicerade ännu.' : `Inga rekommenderade artiklar för ${dogLabel} just nu. Du kan läsa alla publicerade artiklar.`}
+        {showAllGuides ? 'Inga artiklar är publicerade ännu.' : 'Inga rekommenderade artiklar för den valda hunden just nu. Du kan läsa alla publicerade artiklar.'}
       </MessageCard>}
       {tab === 'För dig' && !selectedItem && contentState === 'ready' && visibleItems.length > 0 && hasSearchQuery && displayedItems.length === 0
         ? <View style={styles.searchEmpty}>
@@ -206,7 +199,7 @@ export function KnowledgeScreen({
           {selectedImage && selectedImageFocus ? <KnowledgeImage source={selectedImage} focus={selectedImageFocus} /> : null}
         </View>
         <View style={styles.articleCopy}>
-        <Text style={styles.articleTitle} accessibilityRole="header">{articleText(selectedItem.title)}</Text>
+        <Text style={styles.articleTitle} accessibilityRole="header">{selectedItem.title}</Text>
         {selectedItem.isAiGenerated ? <Text style={styles.aiOriginLabel}>AI-genererat innehåll</Text> : null}
         <View style={styles.articleBody}>
           {parseGuideBody(selectedItem.body).map((block, index) => {
@@ -214,7 +207,7 @@ export function KnowledgeScreen({
               key={`${selectedItem.id}:heading:${index}`}
               accessibilityRole="header"
               style={block.level === 2 ? styles.bodyHeading : styles.bodySubheading}
-            >{articleText(block.text)}</Text>;
+            >{block.text}</Text>;
             if (block.type === 'callout') return <View key={`${selectedItem.id}:callout:${index}`}
               style={[styles.callout, block.tone === 'important' && styles.importantCallout]}>
               <View style={styles.calloutHeading}>
@@ -222,12 +215,12 @@ export function KnowledgeScreen({
                   color={block.tone === 'tip' ? tokens.colors.primary : tokens.colors.warning} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}
                 <Text accessibilityRole="header" style={styles.calloutLabel}>{block.tone === 'tip' ? 'Tips i vardagen' : 'Viktigt'}</Text>
               </View>
-              <Text style={styles.calloutText}>{articleText(block.text)}</Text>
+              <Text style={styles.calloutText}>{block.text}</Text>
             </View>;
             if (block.type === 'list') return <View key={`${selectedItem.id}:list:${index}`} style={styles.bodyList}>
-              {block.items.map((item, itemIndex) => <Text key={`${selectedItem.id}:list:${index}:${itemIndex}`} style={styles.bodyListItem}>• {articleText(item)}</Text>)}
+              {block.items.map((item, itemIndex) => <Text key={`${selectedItem.id}:list:${index}:${itemIndex}`} style={styles.bodyListItem}>• {item}</Text>)}
             </View>;
-            return <Text key={`${selectedItem.id}:paragraph:${index}`} style={[styles.bodyParagraph, index === introductionIndex && styles.articleIntro]}>{articleText(block.text)}</Text>;
+            return <Text key={`${selectedItem.id}:paragraph:${index}`} style={[styles.bodyParagraph, index === introductionIndex && styles.articleIntro]}>{block.text}</Text>;
           })}
         </View>
         {selectedItem.sources.length > 0 ? <>

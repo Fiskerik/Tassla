@@ -1,4 +1,3 @@
-import { personalizeArticle } from '../../content/article-targeting';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Alert, AppState, BackHandler } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -3570,8 +3569,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onRetryProgression={(programVersionId) => { void retryProgressionOperation(programVersionId); }}
       onRetryTrainingProgressionRead={() => { void retryTraining(); }}
       reviewTrainingStep={hasReviewTraining}
-      content={visibleGuideContent.filter((item) => item.recommended !== false).map((item) => ({ ...item,
-        title: personalizeArticle(item.title, dog), body: personalizeArticle(item.body, dog) }))}
+      content={visibleGuideContent.filter((item) => item.recommended !== false)}
       contentState={visibleContentState}
       dailyState={dailyStateForView}
       dailyRefreshing={dailyRefreshing}
@@ -3842,7 +3840,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       returnToTraining={knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'training'}
       returnToDevelopment={knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'development'}
       items={visibleGuideContent}
-      dogSex={dog.sex}
       contentState={visibleContentState}
       focusedContentId={focusedKnowledgeContentId}
       onDetailChange={setKnowledgeDetailOpen}
@@ -3854,7 +3851,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onRetry={() => { void retryContent(); }}
       client={client}
       dogId={dog.id}
-      dogName={dog.name}
       ageWeeks={age}
       sessionKey={`${session?.user.id ?? 'signed-out'}:${accountGeneration}`}
       checklistPending={checklistMemoryView?.scope === currentChecklistMemoryScope ? checklistMemoryView.state : null}

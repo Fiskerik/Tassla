@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 import io
 import json
 from pathlib import Path
@@ -12,7 +13,7 @@ sync = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(sync)
 
 
-def source(fields=None, duplicate=False, paragraph='När {{dog.name}} kommer hem behöver {{dog.subject}} vila.'):
+def source(fields=None, duplicate=False, paragraph='När valpen kommer hem behöver den vila.'):
     values = {'metadata_schema_version': '1', 'Format': 'Artikel', 'Appsektion': 'Kunskap',
               'article_key': 'synthetic-article', 'min_age_weeks': '6', 'max_age_weeks': '52',
               'Rasurval': 'Alla raser', 'breed_ids': '', 'topic_code': 'general',
@@ -44,9 +45,10 @@ class DriveArticles(unittest.TestCase):
     def parse(self, data):
         return sync.parse_docx(data, 'synthetic_drive_file_01', '2026-10-24T00:00:00Z')
 
-    def test_readable_body_preserves_tokens_and_separates_metadata(self):
+    def test_readable_body_preserves_generic_copy_and_separates_metadata(self):
         article = self.parse(source())
-        self.assertIn('{{dog.subject}}', article['body'])
+        self.assertEqual(article['body'], 'När valpen kommer hem behöver den vila.')
+        self.assertNotIn('{{dog.', article['body'])
         self.assertNotIn('METADATA', article['body'])
         self.assertNotIn('missing_editorial_ref', article['body'])
         self.assertEqual(article['related_source_refs'], ['missing_editorial_ref'])
@@ -54,8 +56,12 @@ class DriveArticles(unittest.TestCase):
         self.assertFalse(article['is_ai_generated'])
 
     def test_word_tips_preserve_reviewed_text_as_explicit_callouts(self):
-        result = self.parse(source(paragraph='Tips: Låt {{dog.name}} vila ostört.'))
-        self.assertEqual(result['body'], '> Tips: Låt {{dog.name}} vila ostört.')
+        result = self.parse(source(paragraph='Tips: Låt valpen vila ostört.'))
+        self.assertEqual(result['body'], '> Tips: Låt valpen vila ostört.')
+
+    def test_dog_specific_personalization_tokens_are_rejected(self):
+        with self.assertRaisesRegex(ValueError, 'Dog-specific article personalization'):
+            self.parse(source(paragraph='När {{dog.name}} kommer hem behöver den vila.'))
 
     def test_metadata_fails_closed(self):
         for fields in ({'Publiceringsstatus': 'Utkast'}, {'Sakgranskning': ''}, {'new_unknown_field': 'x'},
@@ -89,13 +95,21 @@ class DriveArticles(unittest.TestCase):
 
     def test_initial_migration_exactly_matches_three_reviewed_payloads(self):
         values = json.loads(sync.BUNDLE.read_text())
-        sql = (ROOT / 'supabase/migrations/202610240004_reviewed_drive_articles.sql').read_text()
+        sql = (ROOT / 'supabase/migrations/202610250001_article-review-revisions.sql').read_text()
         self.assertEqual(len(values), 3)
+        source_copy_fingerprints = {
+            'forsta-dygnet-hemma': '1f06f169d0260d72c128f897d33ccff8e4f338d3edeca957e35454c9d6f27d47',
+            'rumsrenhet': '49b370eb1230ec4addb52537040de1de0188c726ebcd4bc2bf2d660638990174',
+            'valpens-somn': 'b89cf1a5b2055ba712cdd5109d2cf84cdbd81125dd070493eaeddb7ed03da304',
+        }
         for article in values:
             self.assertIn(json.dumps(article, ensure_ascii=False, separators=(',', ':')), sql)
-            self.assertIn('{{dog.name}}', article['body'])
+            self.assertNotIn('{{dog.', article['body'])
+            digest = hashlib.sha256(article['title'].encode() + b'\0' + article['body'].encode()).hexdigest()
+            self.assertEqual(digest, source_copy_fingerprints[article['slug']])
+            self.assertTrue(article['review_reference'].startswith('owner-confirmed:2026-10-25:restore-original-generic-copy:'))
             self.assertFalse(article['is_ai_generated'])
-            self.assertNotIn('hur mycket den sover', article['body'])
+        self.assertIn('hur mycket den sover och när på dygnet den brukar vila', values[2]['body'])
         self.assertEqual(values[0]['rules'][0]['start_days'], -7)
         self.assertEqual([v['min_age_weeks'] for v in values], [6, 8, 8])
         self.assertEqual([v['max_age_weeks'] for v in values], [16, 52, 52])

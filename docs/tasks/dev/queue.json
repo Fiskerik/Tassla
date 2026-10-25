@@ -11478,6 +11478,95 @@
           "evidence": "Frozen Reviewer PASS with no findings after independent QA PASS. All ten changed paths match v5 write_paths; disposable PostgreSQL 16 migrations/probes and pnpm check 81/81 PASS; queue/docs consistency and no-live-DB boundary verified. Local schema-only task complete; commit and push checkpoint next."
         }
       ]
+    },
+    {
+      "id": "ARTICLE-COPY-RESTORE-01",
+      "title": "Kunskap: återställ Drive-original och ta bort namn-/könspersonalisering",
+      "mvp_requirement": "Owner decision 2026-10-25; existing DRIVE-ARTICLES-01 source/version contract",
+      "plan": "docs/tasks/dev/ARTICLE-COPY-RESTORE-01.md — v2",
+      "write_paths": [
+        "docs/tasks/dev/ARTICLE-COPY-RESTORE-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/content/artiklar/drive-articles-v1.json",
+        "docs/content/artiklar/README.md",
+        "tools/sync_drive_articles.py",
+        "tests/test_drive_articles.py",
+        "tests/content-delivery.test.mjs",
+        "tests/article-delivery.test.mjs",
+        "src/content/article-targeting.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-drive-articles.py",
+        "supabase/migrations/202610250001_article-review-revisions.sql",
+        "supabase/tests/article-review-revisions.sql"
+      ],
+      "acceptance": [
+        "De tre artiklarnas titel/body återges från Drive-originalen utan profilnamn, könad personalisering eller innehållsomskrivning; rubrikernas Markdown är endast struktur.",
+        "Kundnära Kunskap/Hem-flöden och importen gör ingen hundnamns-/könsersättning och exponerar inga råa personaliseringstokens.",
+        "Forward-only migrationsväg med samma källhash/tid och nyare review-reference skapar ny immutable version, withdraw:ar föregående utan att radera den och återanvänder receipt vid identisk retry.",
+        "Befintligt publiceringsurval, ålder/ras/hemkomstdatum, helbiblioteksläsning och källmetadata bevaras.",
+        "Oberoende QA/Reviewer PASS; varje ändrad path ingår i planen; live Supabase/Drive/TestFlight markeras NOT TESTABLE om det inte körts."
+      ],
+      "checks": [
+        "Architect read-only review av import receipt/re-review design",
+        "Security read-only review av import migration/RPC grants och receipt boundaries",
+        "Critic review av implementation task v1",
+        "Dog Expert review av exakt source restoration; veterinary claim verification remains open",
+        "Focused Python and Node content/import tests",
+        "Disposable PostgreSQL migration and article review/retry probe",
+        "Article render with synthetic profiles; no live data",
+        "pnpm check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "KNOWLEDGE-D3-CATALOG-SCHEMA-01",
+        "VISION-R02-3C"
+      ],
+      "status": "done",
+      "next_step": "Create the local reviewed checkpoint commit; then begin ARTICLE-READING-EXPERIENCE-01 with a fresh UI Critic brief, permanent article-format rule, full-width reader and active-dog related-article carousel.",
+      "priority": "P1",
+      "panels": [
+        "7"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Local implementation checkpoint complete on the approved v2 write paths; QA PASS (including docs recheck), frozen Reviewer PASS, queue done. SQL runtime NOT TESTABLE; no live operations.",
+      "test_evidence": "Implementer and independent QA each ran CI=1 pnpm check PASS (83/83); Python 7/7; RN Web 12/12; queue validation/diff-check PASS. QA also PASS on post-check documentation delta. Security PASS on migration/probe static review; disposable PostgreSQL runtime NOT TESTABLE, no live operations.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v1: Architect APPROVE, Security PASS, Critic PROCEED on 2026-10-25; exact write paths frozen, implementation may start. Product PROCEED and Dog Expert notes recorded in task plan."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Plan v1 implementeras av en skrivare på frysta paths. Kopiera tre Drive-original ordagrant, avlägsna UI-personalisering och skriv forward-only review-revision migration/probe. Ingen live Drive/Supabase."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Plan v2 approved (Critic PROCEED, Architect APPROVE). Implementation and bounded cleanup complete: restored source text, removed personalization, corrected stale regression assertion, Security PASS. CI=1 pnpm check 83/83; Python 7/7; RN Web render 12/12; py_compile, queue validation and diff-check PASS. SQL migration/probe written but runtime NOT TESTABLE (no psql/Supabase CLI; Docker daemon permission denied); no live operation. Independent QA next."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS; QA independently reran CI=1 pnpm check with 83/83 tests passing, verified all changed paths against plan v2 and queue/report consistency. SQL migration/probe static only, runtime NOT TESTABLE; no live operations. Frozen Reviewer is next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS plan v2: all changed paths in plan/queue; exact generic copy and unpersonalized rendering; immutable review receipt/history, retry/no-resurrection, service_role grant/search_path/advisory lock verified. Independent QA PASS including full pnpm check 83/83 and docs recheck. SQL runtime NOT TESTABLE; no live data operations."
+        }
+      ]
     }
   ]
 }
