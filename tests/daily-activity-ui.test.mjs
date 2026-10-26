@@ -124,18 +124,18 @@ test('routine checklist icons are selectable, saved in the model, and shown on C
 test('opening a routine focuses its own editor and keeps manage-all as a named compact action', () => {
   assert.match(manager, /const focusedRoutineOnly = Boolean\(focusRoutineId\)/);
   assert.match(manager, /const visibleRoutines = upcomingRoutineOnly \|\| focusedRoutineOnly \? routines\.filter\(\(routine\) => routine\.id === focusRoutineId\) : routines/);
-  assert.match(manager, /!upcomingRoutineOnly && !focusedRoutineOnly \? <View style=\{styles\.section\}>/);
+  assert.match(manager, /!upcomingRoutineOnly && !focusedRoutineOnly && !formActive && managerSection === 'Träning'/);
   assert.match(dailyChecklist, /accessibilityLabel="Hantera rutiner och aktiviteter" onPress=\{\(\) => openManager\(\)\}/);
   const manageActionStart = dailyChecklist.indexOf('accessibilityLabel="Hantera rutiner och aktiviteter"');
   const manageActionEnd = dailyChecklist.indexOf('</MotionPressable>', manageActionStart);
   assert.ok(manageActionStart >= 0 && manageActionEnd > manageActionStart, 'the gear action remains present');
   assert.doesNotMatch(dailyChecklist.slice(manageActionStart, manageActionEnd), /<Text/, 'the compact gear action has no visible label');
   assert.match(dailyChecklist, /manageAction: \{ minWidth: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin/);
-  assert.match(dailyChecklist, /<Tabs items=\{CHECKLIST_FILTERS\} active=\{filter\} variant="rev02-segmented" activeTone="home" scrollable accessibilityLabel="Filtrera checklistor"/);
-  assert.match(tabs, /const homeGrid = homeSegmented && !scrollable/);
+  assert.match(dailyChecklist, /<Tabs items=\{CHECKLIST_FILTERS\} active=\{filter\} variant="rev02-segmented" activeTone="home" layout="horizontal-scroll" accessibilityLabel="Filtrera checklistor"/);
+  assert.match(tabs, /const horizontalScroll = layout === 'horizontal-scroll' \|\| scrollable/);
   assert.match(tabs, /scrollableTab: \{ flexGrow: 0, flexShrink: 0, flexBasis: 'auto', minWidth: tokens\.size\.touchMin/);
   assert.match(tabs, /scrollableLabel: \{ \.\.\.tokens\.typography\.smallCaption \}/);
-  assert.match(tabs, /onContentSizeChange=\{scrollable \? \(\) => setScrollLayoutRevision/);
+  assert.match(tabs, /onContentSizeChange=\{horizontalScroll \? \(\) => setScrollLayoutRevision/);
   assert.match(workspace, /confirmLabel="Lämna utan att spara" cancelLabel="Fortsätt redigera"/);
   assert.match(workspace, /Ändringarna i Hundprofilen är inte sparade\. Om du lämnar nu går de förlorade\./);
   assert.match(manager, /<Dialog visible=\{showDiscardConfirmation\} title="Kasta ändringar\?"/);
