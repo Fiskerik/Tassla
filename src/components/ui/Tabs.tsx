@@ -4,18 +4,19 @@ import { HorizontalGestureRegion } from './MainSwipeNavigation';
 import { tokens } from '../../theme/tokens';
 export type TabsVariant = 'underline' | 'rev02-segmented';
 export type TabsActiveTone = 'default' | 'home';
-export function Tabs({ items, active, onChange, variant = 'underline', activeTone = 'default', accessibilityLabel = 'Avsnitt' }: { items: readonly string[]; active: string; onChange: (item: string) => void; variant?: TabsVariant; activeTone?: TabsActiveTone; accessibilityLabel?: string }) {
+export function Tabs({ items, active, onChange, variant = 'underline', activeTone = 'default', accessibilityLabel = 'Avsnitt', layout = 'responsive' }: { items: readonly string[]; active: string; onChange: (item: string) => void; variant?: TabsVariant; activeTone?: TabsActiveTone; accessibilityLabel?: string; layout?: 'responsive' | 'horizontal-scroll' }) {
   const segmented = variant === 'rev02-segmented';
   const homeSegmented = segmented && activeTone === 'home';
   const { width, fontScale } = useWindowDimensions();
-  const homeGrid = homeSegmented && items.length >= 4 && (width < 480 || fontScale >= 1.25);
-  return <HorizontalGestureRegion><ScrollView style={[styles.scroll, segmented && styles.segmentedScroll, homeSegmented && styles.homeSegmentedScroll, homeGrid && styles.homeGridScroll]}
+  const homeGrid = layout === 'responsive' && homeSegmented && items.length >= 4 && (width < 480 || fontScale >= 1.25);
+  const horizontalScroll = layout === 'horizontal-scroll';
+  return <HorizontalGestureRegion><ScrollView style={[styles.scroll, segmented && styles.segmentedScroll, homeSegmented && styles.homeSegmentedScroll, (homeGrid || horizontalScroll) && styles.homeGridScroll]}
     horizontal={!homeGrid} showsHorizontalScrollIndicator={false} accessibilityRole="tablist" accessibilityLabel={accessibilityLabel}
-    contentContainerStyle={[styles.tabs, segmented && styles.segmentedTabs, homeSegmented && styles.homeSegmentedTabs, homeGrid && styles.homeGridTabs]}>
+    contentContainerStyle={[styles.tabs, segmented && styles.segmentedTabs, homeSegmented && !horizontalScroll && styles.homeSegmentedTabs, homeGrid && styles.homeGridTabs, horizontalScroll && styles.horizontalScrollTabs]}>
     {items.map((item) => {
       const selected = item === active;
       return <MotionPressable key={item} accessibilityRole="tab" accessibilityLabel={item} accessibilityState={{ selected }} aria-selected={selected} onPress={() => onChange(item)}
-        style={({ pressed }) => [styles.tab, segmented && styles.segmentedTab, homeSegmented && styles.homeSegmentedTab, homeGrid && styles.homeGridTab,
+        style={({ pressed }) => [styles.tab, segmented && styles.segmentedTab, homeSegmented && styles.homeSegmentedTab, homeGrid && styles.homeGridTab, horizontalScroll && styles.horizontalScrollTab,
           selected && segmented && styles.segmentedSelected, selected && homeSegmented && styles.homeSegmentedSelected, pressed && styles.pressed]}>
         <Text style={[styles.label, selected && styles.active, selected && segmented && styles.segmentedActive, selected && homeSegmented && styles.homeSegmentedActive]}>{item}</Text>
         {!segmented ? <View style={[styles.underline, selected && styles.selectedUnderline]} /> : null}
@@ -43,6 +44,10 @@ const styles = StyleSheet.create({
   homeGridScroll: { width: '100%' },
   homeGridTabs: { width: '100%', flexGrow: 1, flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs, padding: tokens.spacing.xs },
   homeGridTab: { flexBasis: '48%', flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: tokens.size.touchMin },
+  horizontalScrollTabs: { flexGrow: 0, flexDirection: 'row', flexWrap: 'nowrap' },
+  horizontalScrollTab: { flex: 0, minWidth: tokens.size.touchMin, paddingHorizontal: tokens.spacing.md },
   homeSegmentedSelected: { backgroundColor: tokens.colors.home.greenStrong },
   homeSegmentedActive: { color: tokens.colors.onPrimary },
 });
+
+

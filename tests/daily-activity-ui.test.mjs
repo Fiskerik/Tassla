@@ -123,7 +123,7 @@ test('routine checklist icons are selectable, saved in the model, and shown on C
 test('opening a routine focuses its own editor and keeps manage-all as a named compact action', () => {
   assert.match(manager, /const focusedRoutineOnly = Boolean\(focusRoutineId\)/);
   assert.match(manager, /const visibleRoutines = upcomingRoutineOnly \|\| focusedRoutineOnly \? routines\.filter\(\(routine\) => routine\.id === focusRoutineId\) : routines/);
-  assert.match(manager, /!upcomingRoutineOnly && !focusedRoutineOnly \? <View style=\{styles\.section\}>/);
+  assert.match(manager, /!upcomingRoutineOnly && !focusedRoutineOnly && !formActive && managerSection === 'Träning'/);
   assert.match(dailyChecklist, /accessibilityLabel="Hantera rutiner och aktiviteter" onPress=\{\(\) => openManager\(\)\}/);
   assert.match(dailyChecklist, /manageActionLabel\}>Hantera<\/Text>/);
   assert.match(manager, /<Dialog visible=\{showDiscardConfirmation\} title="Kasta ändringar\?"/);
@@ -423,3 +423,4 @@ test('daily activity derivation excludes unrelated log, guide, health plan and c
   assert.match(model, /programById\.get\(row\.program_version_id\)/);
   assert.match(model, /program\?\.steps\.find/);
 });
+

@@ -5,6 +5,7 @@ import * as Crypto from 'expo-crypto';
 import { BottomSheet, Button, Dialog } from '../../components/ui';
 import { ThemedIcon } from '../../components/ui/ThemedIcon';
 import { MotionPressable } from '../../components/ui/Motion';
+import { Tabs } from '../../components/ui/Tabs';
 import { tokens } from '../../theme/tokens';
 import { ChecklistIconPickerChoices, ChecklistIconPickerTrigger } from '../checklists/ChecklistIconPicker';
 import { dailyRoutineChecklistDisplayIcon, dailyRoutineChecklistIconTone, isDailyRoutineChecklistIcon, type DailyRoutineChecklistIcon } from './daily-routine-checklist-icons';
@@ -117,6 +118,7 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   const [savingDraft, setSavingDraft] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [showDiscardConfirmation, setShowDiscardConfirmation] = useState(false);
+  const [managerSection, setManagerSection] = useState<'Rutiner' | 'Träning'>('Rutiner');
   const [routineConflict, setRoutineConflictState] = useState<RoutineDraftConflict | null>(() => routineRecovery?.conflict ?? null);
   const recoveryState = useRef({ draft: routineRecovery?.draft ?? null, conflict: routineRecovery?.conflict ?? null });
   const mounted = useRef(true);
@@ -129,14 +131,18 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
   const selectedTraining = upcomingRoutineOnly || focusedRoutineOnly ? [] : activities.filter((item) => item.kind === 'training' && item.trainingSelection);
   const visibleRoutines = upcomingRoutineOnly || focusedRoutineOnly ? routines.filter((routine) => routine.id === focusRoutineId) : routines;
   const draftSource = draft?.mode === 'edit' ? draft.sourceRoutine : null;
-  const routinesForDisplay = draftSource && !visibleRoutines.some((routine) => routine.id === draftSource.id)
-    ? [...visibleRoutines, draftSource] : visibleRoutines;
-  const focusedRoutine = routinesForDisplay.find((routine) => routine.id === (focusRoutineId ?? draft?.routineId));
   const draftHasConflict = routineConflictForDraft(draft, routineConflict, dailyScopeKey ?? '');
   const draftConfirmed = draft && !draftHasConflict ? routineDraftHasReadback(draft, routines) : false;
   const activeDraft = draftConfirmed ? null : draft;
+  const routinesForDisplay = activeDraft?.mode === 'edit'
+    ? [activeDraft.sourceRoutine ?? visibleRoutines.find((routine) => routine.id === activeDraft.routineId)].filter((routine): routine is DailyRoutine => Boolean(routine))
+    : draftSource && !visibleRoutines.some((routine) => routine.id === draftSource.id)
+      ? [...visibleRoutines, draftSource] : visibleRoutines;
+  const focusedRoutine = routinesForDisplay.find((routine) => routine.id === (focusRoutineId ?? draft?.routineId));
   const conflictForDraft = draftHasConflict;
   const creating = activeDraft?.mode === 'create';
+  const editing = activeDraft?.mode === 'edit';
+  const formActive = Boolean(activeDraft);
   const unresolvedMutation = busy || Boolean(mutationError && onRetryMutation);
   const selectionLocked = Boolean(activeDraft) || unresolvedMutation || showDiscardConfirmation;
   const showMutationMessage = Boolean(conflictForDraft) || Boolean(mutationMessage);
@@ -274,20 +280,24 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
       {conflictForDraft ? <Button variant="tertiary" label="Ersätt utkastet med senaste versionen" accessibilityLabel="Ersätt utkastet med senaste versionen"
         disabled={busy || savingDraft} onPress={replaceDraftWithLatestRoutine} /> : null}
     </View> : null}
-    <View style={styles.section}>
-      <View style={styles.sectionHeading}>
+    {!upcomingRoutineOnly && !focusedRoutineOnly && !formActive ? <Tabs items={['Rutiner', 'Träning']} active={managerSection} accessibilityLabel="Hantera aktiviteter" onChange={(value) => {
+      if (value === 'Rutiner' || value === 'Träning') setManagerSection(value);
+    }} /> : null}
+    {(!upcomingRoutineOnly && !focusedRoutineOnly && (formActive || managerSection === 'Rutiner')) || upcomingRoutineOnly || focusedRoutineOnly ? <View style={styles.section}>
+      {editing ? <Text accessibilityRole="header" style={styles.sectionTitle}>Redigera rutin</Text> : null}
+      {!formActive ? <View style={styles.sectionHeading}>
         <Text style={styles.sectionTitle} accessibilityRole="header">{upcomingRoutineOnly ? 'Återkommande rutin' : focusedRoutineOnly ? 'Rutin' : 'Egna rutiner'}</Text>
         {!upcomingRoutineOnly && !focusedRoutineOnly ? <>
           <IconOnlyButton icon="information-circle-outline" accessibilityLabel="Info om rutiner" onPress={() => setHelpOpen((open) => !open)} />
           {!creating ? <ActionButton icon="add-outline" label="Skapa rutin" accessibilityLabel="Skapa en ny rutin"
             disabled={unresolvedMutation || Boolean(draft)} onPress={startCreate} /> : null}
         </> : null}
-      </View>
+      </View> : null}
       {helpOpen && !upcomingRoutineOnly && !focusedRoutineOnly ? <Text style={styles.helpText}>Startar idag. Veckor följer valda veckodagar och månader datumet. Upprepade rutiner kan hoppas över idag. Malländringar gäller nästa gång; engångsrutiner tas bort från dagen.</Text> : null}
       {creating && activeDraft ? <CreateRoutineForm draft={activeDraft} disabled={unresolvedMutation || savingDraft || showDiscardConfirmation}
         iconPickerItemId={iconPickerItemId} onToggleIconPicker={(itemId) => setIconPickerItemId((current) => current === itemId ? null : itemId)}
         onSelectChecklistIcon={selectChecklistIcon} onChange={updateDraft} onSave={() => { void saveDraft(); }} /> : null}
-      {routinesForDisplay.length > 0 ? <View style={styles.routineList}>
+      {(editing || !formActive) && routinesForDisplay.length > 0 ? <View style={styles.routineList}>
         {routinesForDisplay.map((routine, index) => <RoutineTemplateRow key={`${dailyScopeKey ?? ''}:${visible}:${focusRoutineId ?? 'all'}:${routine.id}`}
           routine={routine} selectedDay={selectedRoutines.get(routine.id) ?? null} skippedDay={skippedRoutines.get(routine.id) ?? null}
           draft={activeDraft?.mode === 'edit' && activeDraft.routineId === routine.id ? activeDraft : null}
@@ -304,9 +314,11 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
             if (row) onRemoveRoutineFromDay?.(row, routine);
           }} />)}
       </View> : null}
-    </View>
+      {formActive ? <Button variant="tertiary" label="Tillbaka till rutiner" accessibilityLabel="Tillbaka till rutiner" disabled={unresolvedMutation || savingDraft || showDiscardConfirmation}
+        onPress={() => requestLeave(() => { setDraft(null); setManagerSection('Rutiner'); })} /> : null}
+    </View> : null}
 
-    {!upcomingRoutineOnly && !focusedRoutineOnly ? <View style={styles.section}>
+    {!upcomingRoutineOnly && !focusedRoutineOnly && !formActive && managerSection === 'Träning' ? <View style={styles.section}>
       <Text style={styles.sectionTitle} accessibilityRole="header">Valda träningssteg</Text>
       {selectedTraining.length === 0 ? <Text style={styles.muted}>Inget träningssteg valt idag.</Text> : selectedTraining.map((item) => <View key={item.id} style={styles.selectedRow}>
         <View style={styles.copy}>
@@ -319,7 +331,7 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
       <Button variant="tertiary" label="Öppna Träning" accessibilityLabel="Öppna Träning" disabled={unresolvedMutation || showDiscardConfirmation} onPress={goToTraining} />
     </View> : null}
 
-    {!upcomingRoutineOnly && !focusedRoutineOnly ? <View style={styles.section}>
+    {!upcomingRoutineOnly && !focusedRoutineOnly && !formActive && managerSection === 'Träning' ? <View style={styles.section}>
       <Text style={styles.sectionTitle} accessibilityRole="header">Lägg till ett träningssteg</Text>
       {trainingOptions.length === 0 ? <Text style={styles.muted}>Inget nytt steg finns att välja just nu.</Text> : trainingOptions.map((option) => <View key={`${option.versionId}:${option.stepId}`} style={styles.optionRow}>
         <View style={styles.copy}>
@@ -615,3 +627,4 @@ const styles = StyleSheet.create({
   selectedRow: { gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs, borderBottomWidth: tokens.size.stroke, borderBottomColor: tokens.colors.border },
   copy: { flex: 1, minWidth: 0, gap: tokens.spacing.xs / 2 },
 });
+

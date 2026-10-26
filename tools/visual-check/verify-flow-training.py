@@ -82,6 +82,8 @@ with sync_playwright() as playwright:
     card = page.get_by_role("button", name=re.compile("Öppna nästa övning")).first
     expect(card).to_be_visible()
     card.click()
+    expect(page.get_by_text("Logga utförd aktivitet", exact=True)).to_have_count(0)
+    page.get_by_role("button", name="Aktivitetsmarkeringar i programmet").click()
     expect(page.get_by_text("Logga utförd aktivitet", exact=True)).to_be_visible()
     capture("long-title-exact-exercise-sheet-375x844")
     results.append("tab switching and recommendation open the exact next exercise")
@@ -147,6 +149,17 @@ with sync_playwright() as playwright:
     expect(page.get_by_role("button", name=f"Börja om med {completed_title}")).to_have_count(0)
     capture("reset-confirmed-375x844")
     results.append("confirm resets only the selected fixture program and removes its reset action")
+
+    open_page("&trainingScenario=unstarted&progression=empty")
+    recommendation = page.get_by_role("button", name=re.compile("Öppna nästa övning")).first
+    recommendation.click()
+    start_from_recommendation = page.get_by_role("button", name=re.compile("Starta träningsresa för"))
+    expect(start_from_recommendation).to_have_count(1)
+    start_from_recommendation.click()
+    expect(page.get_by_role("button", name=re.compile("Logga ett träningspass för")).last).to_be_visible()
+    expect(page.get_by_text(re.compile("0 loggade pass · 0 delmål")).first).to_be_visible()
+    capture("recommendation-start-opens-saved-active-step-375x844")
+    results.append("recommendation opens its exact exercise, starts one journey, and waits for the confirmed active step")
 
     open_page("&trainingScenario=unstarted&progression=empty")
     page.get_by_role("tab", name="Alla övningar").click()
@@ -288,3 +301,4 @@ with sync_playwright() as playwright:
 print(f"PASS {len(results)}/{len(results)} training render checks ({'review' if review else 'public'})")
 for result in results:
     print(f"- {result}")
+
