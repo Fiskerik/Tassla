@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { View, Text } from 'react-native';
 import { AppScreen } from '../../src/components/AppPrimitives';
@@ -24,7 +24,6 @@ import type { DogEventInsights, InsightsPeriod } from '../../src/features/puppy-
 import type { InsightsLoadState } from '../../src/features/puppy-log/InsightsScreen';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { localDate } from '../../src/features/onboarding/dog';
-import { tokens } from '../../src/theme/tokens';
 
 const params = new URLSearchParams(location.search);
 const scenario = params.get('homeScenario') ?? 'ready';
@@ -37,6 +36,7 @@ const reviewMode = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
 const imageFixture = params.get('imageFixture') ?? '';
 const profileBreedScenario = params.get('breedScenario') ?? '';
 const profileCreateFixture = params.get('screen') === 'profile-create';
+const profileDeleteFixture = params.get('screen') === 'profile-delete';
 const profileAttributionScenario = params.get('profileAttribution') ?? 'empty';
 const requestedBreedCount = Number(params.get('breedCount') ?? '24');
 const profileBreedCount = Number.isSafeInteger(requestedBreedCount) && requestedBreedCount > 0
@@ -54,6 +54,7 @@ const dog: OwnedDog = {
 };
 const profileDog: OwnedDog = profileBreedScenario === 'legacy' ? { ...dog, breed_id: 'retired-test-breed' } : dog;
 const secondProfileDog: OwnedDog = { ...dog, id: '00000000-0000-4000-8000-000000000022', name: 'Milo', breed_id: 'beagle', birth_date: dateOffset(today, -38) };
+const profileDeleteDogs = params.get('lastDog') === 'true' ? [profileDog] : [profileDog, secondProfileDog];
 const syntheticProfileAttribution = profileAttributionScenario === 'connected' ? { code: 'LUNA2026', name: 'Solgläntans kennel' } : null;
 const syntheticBreedOptions = [
   { id: 'golden', name: 'Golden retriever' },
@@ -246,20 +247,22 @@ function dateInTimeZone(value: Date, timeZone: string): string {
 }
 
 const syntheticProfileClient = {
-  from: (table: string) => ({
-    select: () => ({
-      order: () => ({
-        abortSignal: async () => {
-          if (table !== 'breeds') return { data: null, error: new Error('Unexpected synthetic table') };
-          window.__breedFetchCalls = (window.__breedFetchCalls ?? 0) + 1;
-          if (profileBreedScenario === 'retry' && window.__breedFetchCalls === 1) {
-            return { data: null, error: new Error('Synthetic first request failure') };
-          }
-          return { data: syntheticBreedOptions, error: null };
-        },
-      }),
-    }),
-  }),
+  from: (table: string) => {
+    const query = {
+      select: () => query,
+      order: () => query,
+      abortSignal: async () => {
+        if (table === 'dogs') return { data: profileDeleteDogs, error: null };
+        if (table !== 'breeds') return { data: null, error: new Error('Unexpected synthetic table') };
+        window.__breedFetchCalls = (window.__breedFetchCalls ?? 0) + 1;
+        if (profileBreedScenario === 'retry' && window.__breedFetchCalls === 1) {
+          return { data: null, error: new Error('Synthetic first request failure') };
+        }
+        return { data: syntheticBreedOptions, error: null };
+      },
+    };
+    return query;
+  },
 } as unknown as SupabaseClient;
 
 function makeActivities(dateKey: string, dogId: string, count: number): HomeDailyActivity[] {
@@ -324,7 +327,9 @@ function VisualCheckApp() {
   const [focusedPlanId, setFocusedPlanId] = useState<string | null>(null);
   const [developmentGuideId, setDevelopmentGuideId] = useState<string | null>(() => params.get('articleId'));
   const [openChecklistManager, setOpenChecklistManager] = useState(false);
-  window.__homePanelsChangeScrollScope = (revision: string) => setScrollScopeRevision(revision);
+  useEffect(() => {
+    window.__homePanelsChangeScrollScope = (revision: string) => setScrollScopeRevision(revision);
+  }, []);
   const dailyState = scenario === 'loading' ? 'loading'
     : scenario === 'error' ? 'error'
       : scenario === 'unknown' ? 'hidden'
@@ -363,6 +368,35 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
           onCreated={() => { window.__profileCreateCalls = (window.__profileCreateCalls ?? 0) + 1; }}
         />
       </View>
+    </View>;
+  }
+
+  if (profileDeleteFixture) {
+    const lastDog = profileDeleteDogs.length === 1;
+    return <View style={{ flex: 1, minHeight: 0 }}>
+      <AppScreen footer={<View style={{ paddingBottom: 34 }}><BottomNav active="more" onChange={() => {}} /></View>}>
+        <EditDogProfileScreen
+          client={syntheticProfileClient}
+          dog={profileDog}
+          ownedDogs={profileDeleteDogs}
+          activeDogId={profileDog.id}
+          attributionState="ready"
+          onBack={() => {}}
+          onSave={async () => true}
+          onSaveAttribution={async () => true}
+          onRetryStatus={() => {}}
+          onAcceptCurrent={() => {}}
+          onDeleteDog={async () => {
+            window.__dogDeleteCalls = (window.__dogDeleteCalls ?? 0) + 1;
+            return { status: 'unknown', ownedDogs: profileDeleteDogs };
+          }}
+          onCheckDogDeletionStatus={async () => {
+            window.__dogDeletionReadbackCalls = (window.__dogDeletionReadbackCalls ?? 0) + 1;
+            return { status: 'present', ownedDogs: profileDeleteDogs };
+          }}
+        />
+      </AppScreen>
+      <View testID="dog-delete-fixture" accessibilityLabel={lastDog ? 'Sista hundprofilen' : 'Flera hundprofiler'} />
     </View>;
   }
 
@@ -595,6 +629,8 @@ declare global {
     __profileDogSwitchTarget?: string;
     __profileAddDogCalls?: number;
     __profileExitSnapshot?: { profileDirty: boolean; kennelDirty: boolean };
+    __dogDeleteCalls?: number;
+    __dogDeletionReadbackCalls?: number;
   }
 }
 

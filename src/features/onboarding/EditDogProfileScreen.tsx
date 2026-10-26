@@ -5,7 +5,7 @@ import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-na
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DatePickerField, InfoModal, MessageCard, PrimaryButton } from '../../components/AppPrimitives';
-import { Button } from '../../components/ui';
+import { Button, Dialog } from '../../components/ui';
 import { Toast } from '../../components/ui/Toast';
 import {
   fetchBreeds,
@@ -46,6 +46,8 @@ export function EditDogProfileScreen({
   onRetryAttribution,
   onRetryStatus,
   onAcceptCurrent,
+  onDeleteDog,
+  onCheckDogDeletionStatus,
   ownedDogs = [dog],
   activeDogId = dog.id,
   exitScope,
@@ -81,6 +83,8 @@ export function EditDogProfileScreen({
   onRetryAttribution?: () => void;
   onRetryStatus: () => void;
   onAcceptCurrent: () => void;
+  onDeleteDog: () => Promise<import('../../data/app-data').OwnedDogDeletionOutcome>;
+  onCheckDogDeletionStatus: () => Promise<import('../../data/app-data').OwnedDogDeletionOutcome>;
 }) {
   const [breeds, setBreeds] = useState<BreedOption[]>([]);
   const [breedState, setBreedState] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -100,6 +104,10 @@ export function EditDogProfileScreen({
   const [dogSwitcherVisible, setDogSwitcherVisible] = useState(false);
   const [infoVisible, setInfoVisible] = useState(false);
   const [attributionExpanded, setAttributionExpanded] = useState(false);
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [dogDeletionBusy, setDogDeletionBusy] = useState(false);
+  const [dogDeletionStatus, setDogDeletionStatus] = useState<'idle' | 'deleting' | 'checking' | 'present' | 'unknown'>('idle');
+  const dogDeletionInFlight = useRef(false);
   const confirmedMessage = statusMessage === 'Hundprofilen är sparad.' && !statusError && !pending && !busy
     ? statusMessage : null;
   const blocked = busy || pending;
@@ -199,6 +207,42 @@ export function EditDogProfileScreen({
   });
   const canOpenInsights = insightsDisabledReason === null;
   const showStatusMessage = Boolean(statusMessage) && (statusError || pending || busy);
+  const canDeleteDog = !busy && !pending && !conflict && !attributionBusy && !attributionWriteUnresolved;
+
+  async function confirmDogDeletion() {
+    if (dogDeletionInFlight.current || !canDeleteDog) return;
+    dogDeletionInFlight.current = true;
+    setDogDeletionBusy(true);
+    setDeleteDialogVisible(false);
+    setDogDeletionStatus('deleting');
+    try {
+      const result = await onDeleteDog();
+      if (result.status === 'deleted') return;
+      setDogDeletionStatus(result.status === 'present' ? 'present' : 'unknown');
+    } catch {
+      setDogDeletionStatus('unknown');
+    } finally {
+      dogDeletionInFlight.current = false;
+      setDogDeletionBusy(false);
+    }
+  }
+
+  async function checkDogDeletion() {
+    if (dogDeletionInFlight.current) return;
+    dogDeletionInFlight.current = true;
+    setDogDeletionBusy(true);
+    setDogDeletionStatus('checking');
+    try {
+      const result = await onCheckDogDeletionStatus();
+      if (result.status === 'deleted') return;
+      setDogDeletionStatus(result.status === 'present' ? 'present' : 'unknown');
+    } catch {
+      setDogDeletionStatus('unknown');
+    } finally {
+      dogDeletionInFlight.current = false;
+      setDogDeletionBusy(false);
+    }
+  }
 
   const reportExitState = useCallback((profileDirty = draftDiffers, kennelDirty = kennelDraftDiffers) => {
     if (!exitScope) return;
@@ -347,6 +391,30 @@ export function EditDogProfileScreen({
     <InfoModal visible={infoVisible} title="Om hundens profil" onClose={() => setInfoVisible(false)}>
       <Text style={styles.infoBody}>Hundens historik och träningssteg följer med när du rättar profilen. Namn, ras och födelsedatum hjälper Tassla att visa innehåll som passar er.</Text>
     </InfoModal>
+    {canDeleteDog ? <View style={styles.deleteDogCard}>
+      <Text style={styles.deleteDogTitle} accessibilityRole="header">Ta bort hundprofil</Text>
+      <Text style={styles.deleteDogCopy}>Hundens sparade loggar, hälsouppgifter, rutiner, checklistor och träningsdata tas bort.</Text>
+      {dogDeletionStatus === 'deleting' && <MessageCard>Raderar hundprofilen…</MessageCard>}
+      {dogDeletionStatus === 'checking' && <MessageCard>Kontrollerar hundprofilens status…</MessageCard>}
+      {dogDeletionStatus === 'present' && <MessageCard tone="error">Hundprofilen finns kvar. Ingen radering är bekräftad. Du kan kontrollera statusen igen eller själv starta ett nytt raderingsförsök.</MessageCard>}
+      {dogDeletionStatus === 'unknown' && <MessageCard tone="neutral">Vi kunde inte bekräfta om hundprofilen raderades. Kontrollera statusen innan du försöker igen.</MessageCard>}
+      {dogDeletionStatus === 'unknown' || dogDeletionStatus === 'present' ? <Button variant="secondary"
+        label={dogDeletionStatus === 'present' ? 'Kontrollera raderingsstatus' : 'Kontrollera status'}
+        accessibilityLabel="Kontrollera om hundprofilen har raderats" disabled={dogDeletionBusy}
+        onPress={() => { void checkDogDeletion(); }} /> : null}
+      <Button variant="destructive" label={dogDeletionStatus === 'deleting' ? 'Raderar…' : 'Radera hundprofil'}
+        accessibilityLabel={`Radera hundprofilen för ${dog.name}`} disabled={dogDeletionStatus === 'deleting' || dogDeletionStatus === 'checking' || dogDeletionStatus === 'unknown'}
+        onPress={() => setDeleteDialogVisible(true)} />
+    </View> : null}
+    <Dialog visible={deleteDialogVisible} title={`Radera ${dog.name}?`} confirmLabel="Radera hundprofilen"
+      confirmVariant="destructive" cancelLabel="Behåll hundprofilen" onRequestClose={() => setDeleteDialogVisible(false)}
+      onConfirm={() => { void confirmDogDeletion(); }}>
+      <Text style={styles.infoBody}>
+        Hundens profil och sparade loggar, hälsouppgifter, rutiner, checklistor och träningsdata raderas. Det går inte att ångra.
+        {' '}{ownedDogs.length > 1 ? 'Övriga hundprofiler och Tassla-kontot finns kvar.' : 'Tassla-kontot och din inloggning finns kvar. Du kan lägga till en ny hund efteråt.'}
+        {draftDiffers || kennelDraftDiffers ? ' Osparade ändringar i den här profilen kastas också.' : ''}
+      </Text>
+    </Dialog>
     <DogProfileSwitcherSheet visible={dogSwitcherVisible} dogs={ownedDogs} activeDogId={activeDogId}
       onRequestClose={() => setDogSwitcherVisible(false)} onSelectDog={(dogId) => {
         if (dogId === activeDogId) setDogSwitcherVisible(false);
@@ -402,6 +470,9 @@ const styles = StyleSheet.create({
   ageUnitText: { ...tokens.typography.body, color: tokens.colors.textPrimary },
   ageUnitTextSelected: { color: tokens.colors.primary, fontWeight: '700' },
   infoEntry: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, marginTop: tokens.spacing.md },
+  deleteDogCard: { marginTop: tokens.spacing.xl, padding: tokens.spacing.md, gap: tokens.spacing.sm, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.danger, backgroundColor: tokens.colors.dangerSurface },
+  deleteDogTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
+  deleteDogCopy: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   infoEntryText: { ...tokens.typography.caption, color: tokens.colors.primary },
   infoBody: { ...tokens.typography.body, color: tokens.colors.textPrimary },
 });

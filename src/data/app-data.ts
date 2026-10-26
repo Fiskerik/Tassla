@@ -39,6 +39,20 @@ export interface BreedOption {
 
 export type DogProfileWriteOutcome = { status: 'saved'; value: OwnedDog } | { status: 'failed' | 'unknown' };
 
+export type OwnedDogDeletionOutcome =
+  | { status: 'deleted'; ownedDogs: OwnedDog[] | null }
+  | { status: 'present'; ownedDogs: OwnedDog[] }
+  | { status: 'unknown'; ownedDogs: OwnedDog[] | null };
+
+export class RetiredDogCreationRequestError extends Error {
+  readonly code = 'DOG_CREATION_REQUEST_RETIRED';
+
+  constructor() {
+    super('This dog creation request belongs to a deleted dog profile.');
+    this.name = 'RetiredDogCreationRequestError';
+  }
+}
+
 export interface HomeContent {
   slug?: string;
   recommended?: boolean;
@@ -109,6 +123,64 @@ export async function fetchOwnedDogById(client: SupabaseClient, dogId: string): 
     if (!isOwnedDog(data) || data.id !== dogId) throw new Error('Dog profile status did not match the database contract');
     return data;
   });
+}
+
+export async function deleteOwnedDogProfile(
+  client: SupabaseClient,
+  dogId: string,
+  isCurrentScope: () => boolean = () => true,
+): Promise<OwnedDogDeletionOutcome> {
+  if (!isUuid(dogId) || !isCurrentScope()) return { status: 'unknown', ownedDogs: null };
+
+  let data: unknown;
+  let error: unknown;
+  try {
+    const result = await withRequestDeadline(async (signal) => await client.rpc('delete_owned_dog_profile', {
+      requested_dog_id: dogId,
+    }).abortSignal(signal));
+    data = result.data;
+    error = result.error;
+  } catch (caught) {
+    error = caught;
+  }
+
+  if (!error && data === true) {
+    if (!isCurrentScope()) return { status: 'deleted', ownedDogs: null };
+    let ownedDogs: OwnedDog[] | null = null;
+    try {
+      const readback = await fetchOwnedDogs(client);
+      if (isCurrentScope()) ownedDogs = readback.filter((dog) => dog.id !== dogId);
+    } catch { /* RPC success is authoritative. */ }
+    return { status: 'deleted', ownedDogs };
+  }
+
+  if (!isCurrentScope()) return { status: 'unknown', ownedDogs: null };
+  let ownedDogs: OwnedDog[] | null = null;
+  try {
+    const readback = await fetchOwnedDogs(client);
+    if (isCurrentScope()) ownedDogs = readback;
+  } catch { /* An unknown response must stay unknown without readback. */ }
+  if (!isCurrentScope()) return { status: 'unknown', ownedDogs: null };
+  if (!error && data === false) {
+    if (ownedDogs?.some((dog) => dog.id === dogId)) return { status: 'present', ownedDogs };
+    if (ownedDogs) return { status: 'deleted', ownedDogs };
+    return { status: 'unknown', ownedDogs };
+  }
+  if (ownedDogs && !ownedDogs.some((dog) => dog.id === dogId)) return { status: 'deleted', ownedDogs };
+  return { status: 'unknown', ownedDogs };
+}
+
+export async function checkOwnedDogDeletionStatus(
+  client: SupabaseClient,
+  dogId: string,
+  isCurrentScope: () => boolean = () => true,
+): Promise<OwnedDogDeletionOutcome> {
+  if (!isUuid(dogId) || !isCurrentScope()) return { status: 'unknown', ownedDogs: null };
+  const ownedDogs = await fetchOwnedDogs(client);
+  if (!isCurrentScope()) return { status: 'unknown', ownedDogs: null };
+  return ownedDogs.some((dog) => dog.id === dogId)
+    ? { status: 'present', ownedDogs }
+    : { status: 'deleted', ownedDogs };
 }
 
 export function normalizeDogProfileName(value: string): string | undefined {
@@ -210,6 +282,9 @@ export async function createDog(
     }).abortSignal(signal);
     if (error) {
       if (/invalid kennel code/i.test(error.message)) throw new Error('Invalid kennel code');
+      if (error.code === 'PT001' && error.message === 'Dog creation request has been retired') {
+        throw new RetiredDogCreationRequestError();
+      }
       throw new Error('Could not create the dog profile');
     }
     if (typeof data !== 'string' || !data) throw new Error('Dog profile creation could not be confirmed');

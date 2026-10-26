@@ -98,6 +98,8 @@ import {
   type DailyTrainingSelection,
 } from './daily-activity-data';
 import {
+  checkOwnedDogDeletionStatus,
+  deleteOwnedDogProfile,
   fetchOwnedDogAttribution,
   fetchOwnedDogById,
   fetchBreeds,
@@ -106,6 +108,7 @@ import {
   type BreedOption,
   type DogAttributionWriteOutcome,
   type DogProfileWriteOutcome,
+  type OwnedDogDeletionOutcome,
   type HomeContent,
   type OwnedDog,
   type OwnedDogAttribution,
@@ -245,13 +248,15 @@ function profileExitPrompt(destination: ProfileExitDestination, returnPage: 'mor
   return { title, body: 'Ändringarna i Hundprofilen är inte sparade. Om du lämnar nu går de förlorade. Uppgifter som redan har sparats påverkas inte.' };
 }
 
-export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog], onSelectDog, onAddDog, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened, initialPage = 'home', onInitialPageOpened }: {
+export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog], onSelectDog, onAddDog, dogSelectionGeneration = 0, onDogDeleted, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened, initialPage = 'home', onInitialPageOpened }: {
   client: SupabaseClient;
   dog: OwnedDog;
   onDogUpdated?: (updated: OwnedDog) => void;
   ownedDogs?: readonly OwnedDog[];
   onSelectDog?: (dogId: string) => void;
   onAddDog?: (entryPoint: 'home' | 'settings') => void;
+  dogSelectionGeneration?: number;
+  onDogDeleted?: (dogId: string, selectionGeneration: number, remainingDogs: OwnedDog[] | null) => void;
   openDogSwitcherInitially?: boolean;
   onDogSwitcherInitiallyOpened?: () => void;
   initialPage?: 'home' | 'profile';
@@ -1791,6 +1796,40 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       lifetime: profileLifetime.current,
     };
     return runProfileMutation(mutation);
+  }
+
+  async function removeDogProfile(): Promise<OwnedDogDeletionOutcome> {
+    const ownerId = session?.user.id;
+    // A confirmed delete still belongs to AppFlow if this dog-keyed workspace
+    // unmounts during a dog switch. Only an owner/session change invalidates it.
+    const isCurrentOwner = () => Boolean(ownerId && isCurrentAccount(ownerId, accountGeneration));
+    if (!isCurrentOwner()) return { status: 'unknown', ownedDogs: null };
+    let outcome: OwnedDogDeletionOutcome;
+    try {
+      outcome = await deleteOwnedDogProfile(client, dog.id, isCurrentOwner);
+    } catch {
+      outcome = { status: 'unknown', ownedDogs: null };
+    }
+    if (outcome.status === 'deleted' && isCurrentOwner()) {
+      onDogDeleted?.(dog.id, dogSelectionGeneration, outcome.ownedDogs);
+    }
+    return outcome;
+  }
+
+  async function readDogDeletionStatus(): Promise<OwnedDogDeletionOutcome> {
+    const ownerId = session?.user.id;
+    const isCurrentOwner = () => Boolean(ownerId && isCurrentAccount(ownerId, accountGeneration));
+    if (!isCurrentOwner()) return { status: 'unknown', ownedDogs: null };
+    let outcome: OwnedDogDeletionOutcome;
+    try {
+      outcome = await checkOwnedDogDeletionStatus(client, dog.id, isCurrentOwner);
+    } catch {
+      outcome = { status: 'unknown', ownedDogs: null };
+    }
+    if (outcome.status === 'deleted' && isCurrentOwner()) {
+      onDogDeleted?.(dog.id, dogSelectionGeneration, outcome.ownedDogs);
+    }
+    return outcome;
   }
 
   async function retryDogAttribution() {
@@ -3902,7 +3941,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       }}
       onSaveAttribution={saveDogAttribution} onRetryAttribution={() => { void retryDogAttribution(); }}
       onOpenInsights={openInsightsFromProfile}
-      onRetryStatus={() => { void retryProfileStatus(); }} onAcceptCurrent={() => { void acceptCurrentProfile(); }} />;
+      onRetryStatus={() => { void retryProfileStatus(); }} onAcceptCurrent={() => { void acceptCurrentProfile(); }}
+      onDeleteDog={removeDogProfile} onCheckDogDeletionStatus={readDogDeletionStatus} />;
     return <DogProfileScreen dog={dog} breed={breeds.find((breed) => breed.id === dog.breed_id)?.name} onBack={returnFromProfile} />;
   }
 

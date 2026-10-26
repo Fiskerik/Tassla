@@ -66,6 +66,10 @@ def profile_create_url(*, breed_count: int = 24, breed_scenario: str | None = No
     return f'{BASE}/?screen=profile-create&breedCount={breed_count}{scenario}'
 
 
+def profile_delete_url(*, last_dog: bool = False) -> str:
+    return f'{BASE}/?screen=profile-delete&lastDog={"true" if last_dog else "false"}'
+
+
 def insights_url(*, state: str = 'ready', period: str = 'week', origin: str = 'profile') -> str:
     return f'{BASE}/?screen=insights&origin={origin}&insightsPeriod={period}&insightsState={state}'
 
@@ -686,6 +690,68 @@ def verify_profile_density(browser) -> None:
     page.screenshot(path=str(OUT / 'profile-kennel-error-375x844.png'), full_page=True)
     page.close()
 
+
+def verify_dog_profile_deletion(browser) -> None:
+    for width in (375, 430):
+        page = browser.new_page(viewport={'width': width, 'height': 844})
+        page.goto(profile_delete_url(), wait_until='networkidle')
+        action = page.get_by_role('button', name='Radera hundprofilen för Luna', exact=True)
+        expect(action).to_be_visible()
+        page.screenshot(path=str(OUT / f'dog-profile-delete-profile-{width}x844.png'), full_page=True)
+        action.click()
+        expect(page.get_by_role('heading', name='Radera Luna?', exact=True)).to_be_visible()
+        expect(page.get_by_text('Övriga hundprofiler och Tassla-kontot finns kvar.', exact=False)).to_be_visible()
+        expect(page.get_by_text('Det går inte att ångra.', exact=False)).to_be_visible()
+        if width == 375:
+            page.screenshot(path=str(OUT / 'dog-profile-delete-confirm-375x844.png'), animations='disabled')
+        page.get_by_role('button', name='Behåll hundprofilen', exact=True).click()
+        expect(page.get_by_role('heading', name='Radera Luna?', exact=True)).to_have_count(0)
+        record(f'Dog deletion at {width} pt has a named, dog-only confirmation and a clear cancel path',
+               page.evaluate('window.__dogDeleteCalls ?? 0') == 0)
+
+        action.click()
+        page.get_by_role('button', name='Radera hundprofilen', exact=True).click()
+        expect(page.get_by_text('Vi kunde inte bekräfta om hundprofilen raderades. Kontrollera statusen innan du försöker igen.', exact=True)).to_be_visible()
+        status_check = page.get_by_role('button', name='Kontrollera om hundprofilen har raderats', exact=True)
+        expect(status_check).to_be_visible()
+        expect(action).to_be_disabled()
+        record(f'Dog deletion at {width} pt reports an unknown result without repeating the delete',
+               page.evaluate('window.__dogDeleteCalls ?? 0') == 1 and page.evaluate('window.__dogDeletionReadbackCalls ?? 0') == 0)
+        if width == 375:
+            status_check.scroll_into_view_if_needed()
+            page.screenshot(path=str(OUT / 'dog-profile-delete-unknown-375x844.png'), full_page=True, animations='disabled')
+            unknown_check_box = status_check.bounding_box()
+            footer_box = page.get_by_text('Mer', exact=True).bounding_box()
+            record('Unknown-state status check is scrolled above the fixed bottom navigation',
+                   unknown_check_box is not None and footer_box is not None
+                   and unknown_check_box['y'] + unknown_check_box['height'] <= footer_box['y'],
+                   {'status_check': unknown_check_box, 'bottom_navigation': footer_box})
+        page.get_by_role('button', name='Kontrollera om hundprofilen har raderats', exact=True).click()
+        expect(page.get_by_text('Hundprofilen finns kvar. Ingen radering är bekräftad.', exact=False)).to_be_visible()
+        expect(action).to_be_enabled()
+        record(f'Dog deletion at {width} pt provides a separate owner-list status readback',
+               page.evaluate('window.__dogDeleteCalls ?? 0') == 1 and page.evaluate('window.__dogDeletionReadbackCalls ?? 0') == 1)
+        if width == 375:
+            page.screenshot(path=str(OUT / 'dog-profile-delete-status-present-375x844.png'), full_page=True, animations='disabled')
+            page.evaluate("""() => document.querySelectorAll('[dir="auto"]').forEach((element) => {
+              const style = getComputedStyle(element);
+              element.style.fontSize = (parseFloat(style.fontSize) * 1.4) + 'px';
+              element.style.lineHeight = (parseFloat(style.lineHeight) * 1.4) + 'px';
+            })""")
+            record('Dog deletion profile has no horizontal overflow with a 140% text proxy',
+                   page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+            status_check.scroll_into_view_if_needed()
+            page.screenshot(path=str(OUT / 'dog-profile-delete-text-140-375x844.png'), full_page=True, animations='disabled')
+        page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 667})
+    page.goto(profile_delete_url(last_dog=True), wait_until='networkidle')
+    page.get_by_role('button', name='Radera hundprofilen för Luna', exact=True).click()
+    expect(page.get_by_text('Tassla-kontot och din inloggning finns kvar. Du kan lägga till en ny hund efteråt.', exact=False)).to_be_visible()
+    page.screenshot(path=str(OUT / 'dog-profile-delete-last-dog-375x667.png'), animations='disabled')
+    record('Last-dog confirmation keeps account and sign-in, with the next add-dog path explicit', True)
+    page.close()
+
 def verify_image_diversity(browser, *, include_home_and_training: bool = True) -> None:
     if not REVIEW:
         for width in (375, 430):
@@ -1296,6 +1362,21 @@ if os.environ.get('TASSLA_UI_PANEL') == 'profile-density':
         verify_profile_density(browser)
         browser.close()
     report = {'mode': 'review' if REVIEW else 'public', 'panel': 'profile-density', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
+if os.environ.get('TASSLA_UI_PANEL') == 'dog-profile-delete':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_dog_profile_deletion(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'dog-profile-delete', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
     (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
     raise SystemExit(1 if failures else 0)

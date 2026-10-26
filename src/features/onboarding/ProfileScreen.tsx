@@ -5,7 +5,7 @@ import { BackHandler, Keyboard, Pressable, StyleSheet, Text, View } from 'react-
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AppScreen, DatePickerField, FormField, InfoModal, MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { Button, Dialog } from '../../components/ui';
-import { createDog, fetchBreeds, fetchOwnedDogById, ownedDogAttributionMatches, type BreedOption, type OwnedDog } from '../../data/app-data';
+import { createDog, fetchBreeds, fetchOwnedDogById, ownedDogAttributionMatches, RetiredDogCreationRequestError, type BreedOption, type OwnedDog } from '../../data/app-data';
 import { clearSecurePendingReferral, normalizeKennelCode, readSecurePendingReferral } from '../../onboarding-referral/referral-secure-storage';
 import { clearDogCreationRequest, getOrCreateDogCreationRequestId, readDogCreationRequestId } from './dog-creation-storage';
 import { tokens } from '../../theme/tokens';
@@ -14,7 +14,7 @@ import { BreedPickerField } from './BreedPickerField';
 import { profileRecoveryRequestMatches } from './profile-exit';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export type DogCreationSaveState = 'idle' | 'error' | 'unknown' | 'invalidCode' | 'existingProfile' | 'sourceUnconfirmed' | 'recoveryUnavailable' | 'cleanupError';
+export type DogCreationSaveState = 'idle' | 'error' | 'unknown' | 'invalidCode' | 'existingProfile' | 'sourceUnconfirmed' | 'recoveryUnavailable' | 'cleanupError' | 'retiredRequest';
 export type DogCreationEntryPoint = 'home' | 'settings';
 export type DogCreationRecoverySnapshot = {
   ownerId: string;
@@ -64,6 +64,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   const [sourceExpanded, setSourceExpanded] = useState(Boolean(initialDraft.sourceSelected));
   const [recoveryChecking, setRecoveryChecking] = useState(true);
   const [recoveryMismatch, setRecoveryMismatch] = useState(false);
+  const [retiredRequestResetFailed, setRetiredRequestResetFailed] = useState(false);
   const [cancelDialogVisible, setCancelDialogVisible] = useState(false);
   const [initialExitDialogVisible, setInitialExitDialogVisible] = useState(false);
   const [infoVisible, setInfoVisible] = useState(false);
@@ -75,7 +76,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
     || expectedHomecomingDate !== (formBaseline.expectedHomecomingDate ?? '') || sex !== (formBaseline.sex ?? null)
     || kennelCode !== formBaseline.kennelCode || sourceSelected !== formBaseline.sourceSelected;
   const isRecoveryState = saveState === 'unknown' || saveState === 'sourceUnconfirmed' || saveState === 'existingProfile'
-    || saveState === 'cleanupError' || saveState === 'recoveryUnavailable';
+    || saveState === 'cleanupError' || saveState === 'recoveryUnavailable' || saveState === 'retiredRequest';
 
   function makeRecoverySnapshot(): DogCreationRecoverySnapshot {
     return {
@@ -239,7 +240,9 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
         dogId = await createDog(client, { ...desired, kennelCode: referralCode }, requestId);
       } catch (error) {
         if (!isCurrentAccount(ownerId, accountGeneration)) return;
-        setSaveState(referralCode && error instanceof Error && /invalid kennel code/i.test(error.message) ? 'invalidCode' : 'unknown');
+        setSaveState(error instanceof RetiredDogCreationRequestError
+          ? 'retiredRequest'
+          : referralCode && error instanceof Error && /invalid kennel code/i.test(error.message) ? 'invalidCode' : 'unknown');
         return;
       }
       if (!isCurrentAccount(ownerId, accountGeneration)) return;
@@ -316,13 +319,35 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
     }
   }
 
+  async function clearRetiredCreationRequest() {
+    if (saveState !== 'retiredRequest' || !resolvedRequestId || busy || operationInFlight.current) return;
+    operationInFlight.current = true;
+    setBusy(true);
+    setRetiredRequestResetFailed(false);
+    try {
+      await clearDogCreationRequest(ownerId, resolvedRequestId);
+      if (!isCurrentAccount(ownerId, accountGeneration)) return;
+      setResolvedRequestId(null);
+      setResolvedDog(null);
+      setResolvedShouldClearReferral(true);
+      setSaveState('idle');
+      setRecoveryMismatch(false);
+      onClearRecoverySnapshot?.();
+    } catch {
+      if (isCurrentAccount(ownerId, accountGeneration)) setRetiredRequestResetFailed(true);
+    } finally {
+      operationInFlight.current = false;
+      if (isCurrentAccount(ownerId, accountGeneration)) setBusy(false);
+    }
+  }
+
   function markEdited() {
-    setSaveState((current) => current === 'unknown' || current === 'sourceUnconfirmed' ? current : 'idle');
+    setSaveState((current) => current === 'unknown' || current === 'sourceUnconfirmed' || current === 'retiredRequest' ? current : 'idle');
   }
 
   const exitDialog = mode === 'add' ? cancelDialogVisible : initialExitDialogVisible;
   const requestWasSent = Boolean(resolvedRequestId) || saveState === 'unknown' || saveState === 'sourceUnconfirmed'
-    || saveState === 'existingProfile' || saveState === 'cleanupError';
+    || saveState === 'existingProfile' || saveState === 'cleanupError' || saveState === 'retiredRequest';
 
   function dismissExitDialog() {
     setCancelDialogVisible(false);
@@ -412,6 +437,11 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
       </MessageCard>}
       {saveState === 'error' && <MessageCard tone="error">Profilen kunde inte sparas. Kontrollera uppgifterna och anslutningen innan du försöker igen.</MessageCard>}
       {saveState === 'unknown' && <MessageCard tone="neutral">Vi kunde inte bekräfta sparandet. Din säkra begäran finns kvar. Fyll i samma uppgifter och försök igen så kontrollerar vi just den hunden.</MessageCard>}
+      {saveState === 'retiredRequest' && <MessageCard tone={retiredRequestResetFailed ? 'error' : 'neutral'}>
+        {retiredRequestResetFailed
+          ? 'Den gamla begäran hör till en borttagen hund, men den säkra begäran kunde inte rensas. Ingen ny begäran har skickats.'
+          : 'Den sparade begäran hör till en hundprofil som har tagits bort. Uppgifterna du fyllt i finns kvar. Fortsätt med en ny begäran när du är redo.'}
+      </MessageCard>}
       {saveState === 'recoveryUnavailable' && <MessageCard tone="error">{recoveryMismatch ? 'Återställningen matchar inte den säkra begäran. Öppna hundprofilen igen för att hämta aktuell status.' : 'Vi kunde inte kontrollera den säkra återställningen. Ingen ny begäran skickas innan kontrollen lyckas.'}</MessageCard>}
       {saveState === 'cleanupError' && <MessageCard tone="neutral">{resolvedDog?.name ?? 'Hundprofilen'} är sparad. Den lokala återställningsnyckeln kunde inte rensas ännu.</MessageCard>}
       {saveState === 'existingProfile' ? <>
@@ -423,6 +453,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
           <QuietButton title={busy ? 'Vänta…' : `Öppna ${resolvedDog?.name ?? 'hunden'} utan bekräftad kennelkoppling`} disabled={busy || recoveryChecking || !resolvedDog || !resolvedRequestId} onPress={() => { void openResolvedDog(); }} />
         </>
         : saveState === 'unknown' ? <PrimaryButton title={busy ? 'Kontrollerar…' : 'Försök igen med samma begäran'} disabled={!canSubmit || busy || recoveryChecking || breedsState !== 'ready'} onPress={() => { void createAndConfirm(); }} />
+          : saveState === 'retiredRequest' ? <PrimaryButton title={busy ? 'Rensar säker begäran…' : 'Fortsätt med en ny begäran'} disabled={busy || recoveryChecking || !resolvedRequestId} onPress={() => { void clearRetiredCreationRequest(); }} />
           : <PrimaryButton title={busy ? 'Sparar…' : saveState === 'recoveryUnavailable' ? 'Försök igen' : mode === 'add' ? 'Lägg till hund' : 'Fortsätt'} disabled={!canSubmit || busy || recoveryChecking || breedsState !== 'ready'} onPress={() => { void createAndConfirm(); }} />}
       <Pressable accessibilityRole="button" accessibilityLabel="Om hundens uppgifter" onPress={() => setInfoVisible(true)} style={styles.infoEntry}>
         <Ionicons name="information-circle-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />

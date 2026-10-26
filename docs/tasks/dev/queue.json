@@ -11695,6 +11695,277 @@
           "evidence": "Frozen Reviewer PASS after recheck: 140% CSS text proxy at 375x667 passed with no page-level overflow and horizontally scrollable carousel. UI Critic and QA inspected screenshot; verifier result 13/13. Frozen path, plan/queue/report/Master Log consistency, and NOT TESTABLE limits confirmed."
         }
       ]
+    },
+    {
+      "id": "DOG-PROFILE-DELETE-01",
+      "title": "Hundprofil: radera en hund och behåll kontot",
+      "mvp_requirement": "Owner request 2026-10-25; docs/MVP-EXPERIENCE-CONTRACT.md; existing MULTI-DOG-PROFILE-01",
+      "plan": "docs/tasks/dev/DOG-PROFILE-DELETE-01.md — v5",
+      "write_paths": [
+        "docs/tasks/dev/DOG-PROFILE-DELETE-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/privacy/beta-information.md",
+        "supabase/migrations/202610250002_dog_profile_deletion.sql",
+        "supabase/tests/dog-profile-deletion.sql",
+        "src/data/app-data.ts",
+        "src/features/onboarding/ProfileScreen.tsx",
+        "src/features/onboarding/dog-creation-storage.ts",
+        "src/features/onboarding/EditDogProfileScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/AppFlow.tsx",
+        "src/features/onboarding/README.md",
+        "src/features/home/README.md",
+        "tests/app-data.test.mjs",
+        "tests/profile-screen-policy.test.mjs",
+        "tests/dog-profile-delete.test.mjs",
+        "tests/README.md",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py"
+      ],
+      "acceptance": [
+        "An accessible dog-only destructive action and explicit confirmation remove the selected dog while keeping the account and session.",
+        "An owner-scoped atomic RPC derives identity from auth.uid(), verifies the exact dog membership, uses SECURITY DEFINER with empty search_path and narrow authenticated EXECUTE, and grants no direct table DELETE.",
+        "The delete lock uses auth.users FOR NO KEY UPDATE, allowing child FK KEY SHARE locks while still serializing against create’s FOR UPDATE lock.",
+        "All and only dog-owned child records cascade; other owned dogs, auth user, account-level consent, and account-scoped analytics remain unchanged.",
+        "Deleting the last dog leaves the signed-in owner in the initial dog-profile flow, which can reuse the existing add/create/readback path.",
+        "Ambiguous network results never cause optimistic local deletion or automatic retry; user sees accurate status and can perform safe owner-scoped reconciliation.",
+        "Synthetic UI, data tests, and rollback SQL probe cover two owners, multiple dogs, all child data, anonymous/foreign denial, duplicate/unknown results, and last-dog continuity.",
+        "All writes stay within the exact v5 paths and independent QA/Reviewer pass; live Supabase/TestFlight/native limits are reported as NOT TESTABLE unless actually verified.",
+        "Deleting a dog tombstones its existing create receipt by setting dog_id to NULL; stale request replay is rejected, while a fresh request UUID can create a replacement dog.",
+        "The minimal tombstone retains only owner/request receipt metadata, no dog profile fields, and is removed with account deletion; this retention is documented and security-reviewed.",
+        "Root removes only a server-confirmed deleted/absent dog. Owner/session-generation changes reject stale callbacks; a confirmed response from an older dog-selection generation survives dog-keyed workspace unmount and triggers current-owner-list reconciliation, preserving the current selection when it still exists.",
+        "A stale SecureStore request that receives the server’s specific tombstone outcome has an explicit recovery action that clears only the matching owner/request key, preserves the form draft, and permits the next separate create attempt to use a fresh UUID; ambiguous failures never clear or rotate it.",
+        "Current app uses a fresh create request after deletion; old fixed-ID public create path fails closed and cannot recreate a deleted dog.",
+        "Beta information no longer claims article copy uses dog names/gendered pronouns; it matches the owner’s generic-copy rule and recommendation-only profile targeting."
+      ],
+      "checks": [
+        "Static lock-contract test confirms delete uses FOR NO KEY UPDATE while existing create keeps FOR UPDATE; this is not a concurrency-runtime PASS.",
+        "Two-session concurrency test for FK KEY SHARE writer versus deletion, and create/delete serialization, if disposable PostgreSQL is available; otherwise report concurrency behavior NOT TESTABLE.",
+        "Focused createDog typed-result and ProfileScreen-policy tests prove exact tombstone recovery, preserved draft, fresh UUID after explicit action, and no recovery action on generic unknown.",
+        "Verify dog-creation storage clears only the expected request ID within the owner-scoped SecureStore key.",
+        "Architect review of atomic lock/order, idempotency, cascades, and last-dog AppFlow before implementation.",
+        "Security review of ownership, RLS/grants, indistinguishable absent/foreign responses, and account-level data preservation.",
+        "Product/UI Critic review of confirmation language, recoverability, and accessibility.",
+        "Supabase migration and rollback SQL probe with synthetic two-owner/multi-dog data.",
+        "RN Web public/review render at 375/430, 375x667, and 140% text proxy.",
+        "Focused app-data, workspace handler, AppFlow and screen tests.",
+        "CI=1 pnpm check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check",
+        "SQL rollback probe proves dog deletion preserves a NULL receipt, stale create request cannot recreate, fresh request succeeds, and full account deletion removes receipt.",
+        "Security review of tombstone data minimization and account deletion cascade.",
+        "Verify owner membership before locking target dog; lock and recheck membership; commit delete and tombstone atomically."
+      ],
+      "depends_on": [
+        "MULTI-DOG-HOME-01",
+        "ARTICLE-READING-EXPERIENCE-01"
+      ],
+      "status": "done",
+      "next_step": "Local dog-only deletion implementation checkpoint closed. The remaining image-focus/checklist-affordance audits and account-deletion status verification remain separate tasks; do not deploy or run real-user deletion from this checkpoint.",
+      "priority": "P1",
+      "panels": [
+        "1"
+      ],
+      "risk_class": "H",
+      "checkpoint": "V5 implementation complete within exact 21 paths. UI Critic PASS on confirmation, last-dog, actual unknown state/status recovery and 140% text. Security static PASS including scoped false-result reconciliation and ACL/cascade/tombstone review. QA PASS after race fix: same-account confirmed delete/readback can reach AppFlow after dog-keyed workspace unmount, and stale selection reconciles through owner list while preserving current dog. Frozen Reviewer PASS on implementation, paths, docs and NOT TESTABLE limits. CI=1 pnpm check 84/84; synthetic verifier 9/9. SQL rollback probe/two-session concurrency, live RLS/migration, native accessibility and TestFlight remain NOT TESTABLE.",
+      "test_evidence": "CI=1 pnpm check: typecheck, edge typecheck, lint and Node tests 84/84 PASS. Focused app-data/profile/delete tests PASS. Dog-delete RN Web verifier 9/9 at 375/430, 375x667 and 140% CSS proxy; UI Critic opened stable confirmation, true unknown, last-dog and scrolled 140% screenshots in /tmp/tassla-dog-profile-delete/evidence/. Security static review, independent QA and frozen Reviewer PASS. Switch-during-delete tests execute extracted production ProductWorkspace/AppFlow callbacks and verify owner-list reconciliation, active dog preservation, post-unmount status readback, account-generation fence, and last-dog initial profile route. py_compile, tools/dev_flow.py validate and git diff --check PASS. supabase/tests/dog-profile-deletion.sql is authored and statically asserted but not executed; no PostgreSQL/Supabase runtime, two-session concurrency, live RLS, native VoiceOver/TalkBack or TestFlight test.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v1 Architect review found that FK cascade would erase create idempotency receipt and allow stale create retry to resurrect deleted dog. V2 adds owner/request-only NULL dog_id tombstone, fail-closed stale request behavior, fresh UUID for new dog, legacy fixed-ID fail-closed boundary, and SQL replay probe. No code changed; seek Architect approval on v2."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect review v1 CHANGES: FK cascade would erase `private.dog_creation_requests` and allow an in-flight create retry to recreate deleted dog. V2 records the tombstone remedy and full lock/cascade/client lifecycle conditions. Request v2 approval before code."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Architect v2 CHANGES: a stale dog-create request can be correctly rejected by the tombstone but leaves ProfileScreen trapped retrying the same retired key. Plan v3 adds a typed retired-request response, explicit exact owner/request-key recovery that preserves form state, and focused tests. Request fresh Architect approval; no source or SQL changed."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Architect approved v3 content and advised dropping MULTI-DOG-PROFILE-01 as a dependency: its source paths are already implemented, and its blocker is only native/device, runtime and §14 evidence. V4 removes that queue dependency, retains MULTI-DOG-HOME-01 and ARTICLE-READING-EXPERIENCE-01, and keeps the other task blocked with no evidence claims. Fresh v4 review requested."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "security",
+          "evidence": "Security CHANGES v4: delete auth.users FOR UPDATE can deadlock with a dog writer holding the dog row and awaiting FK KEY SHARE on auth.users. V5 switches delete to FOR NO KEY UPDATE, which allows FK KEY SHARE while conflicting with create FOR UPDATE, and adds a two-session runtime check or honest NOT TESTABLE status. Cascade/tombstone/account-level preservation inventory otherwise PASS; no code or SQL changed."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "DOG-PROFILE-DELETE-01 v5 exact plan approved: Architect APPROVE; Security PASS; Product/UI Critic PROCEED. Security confirms FOR NO KEY UPDATE lock compatibility; concurrency runtime remains NOT TESTABLE without two sessions. Queue paths match the 21 plan paths; dependencies ARTICLE-READING-EXPERIENCE-01 and MULTI-DOG-HOME-01 are done."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin the owner-authorized local dog-only deletion task within the exact v5 write paths. No live Supabase/TestFlight operations, deployment, or real-user deletion."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "V5 implementation complete within the 21 frozen paths. UI Critic PASS on stable confirmation, true unknown state/readback, last-dog, and 140% evidence; Security static PASS. Synthetic RN Web verifier 9/9 (375/430, 375x667, 140% proxy); CI=1 pnpm check 84/84; focused Node, typecheck, edge typecheck, lint, py_compile, queue validation, and diff-check pass. SQL rollback probe and two-session lock runtime were not run; native/live remain NOT TESTABLE. Request independent QA and frozen Reviewer."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS after frozen-race fix and final test-only recheck. Source-extracted ProductWorkspace/AppFlow tests cover dog switch after delete, owner-list refresh preserving active dog, status-readback after unmount, account-generation fencing, and last-dog route. Targeted Node/TS/lint/diff-check pass; final full CI/render/evidence recorded. Await frozen Reviewer."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS after QA PASS and documentation reconciliation. Reviewed the 21-path v5 implementation, scope, owner/session-generation fence, confirmed same-owner stale-selection reconciliation, task/queue/README/Master Log consistency, synthetic screenshots and NOT TESTABLE limits. CI=1 pnpm check 84/84 and RN Web verifier 9/9; queue validation/diff-check pass. SQL/two-session/live/native/TestFlight remain NOT TESTABLE; no real profile/account deleted."
+        }
+      ]
+    },
+    {
+      "id": "ACCOUNT-DELETE-STATUS-01",
+      "title": "Konto: verifiera okänd kontoraderingsstatus och driftsättning",
+      "mvp_requirement": "Owner screenshot/report 2026-10-25; docs/tasks/dev/beta-account.md P10 deployment gate",
+      "plan": "docs/tasks/dev/ACCOUNT-DELETE-STATUS-01.md",
+      "write_paths": [
+        "docs/tasks/dev/ACCOUNT-DELETE-STATUS-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "The specific account deletion result is established from server evidence without retrying or deleting the owner account.",
+        "The delete-account Edge Function deployment state is verified for the TestFlight environment before user-facing availability is claimed.",
+        "Any end-to-end deletion verification uses an explicitly authorized disposable synthetic account in a dedicated test environment; no real owner account is deleted.",
+        "Any future external deploy or real-account deletion receives separate explicit authorization."
+      ],
+      "checks": [
+        "Read-only project/build/environment identification",
+        "Non-destructive Edge Function deployment/status preflight",
+        "Synthetic test-account end-to-end validation only after explicit environment authorization"
+      ],
+      "depends_on": [
+        "MVP-P10-ACCOUNT"
+      ],
+      "status": "blocked",
+      "next_step": "Blocked pending an explicitly authorized target project/build and safe verification environment; do not retry the owner’s request.",
+      "priority": "P1",
+      "panels": [
+        "4"
+      ],
+      "risk_class": "H",
+      "checkpoint": "Screenshot status is unknown. Local README states the Edge Function candidate is not deployed; this likely explains a TestFlight error but the specific request outcome is not established.",
+      "test_evidence": "Read-only inspection of `src/features/account/account-delete.ts`, AccountSettingsScreen, and Edge Function/account README files. No server/log access, request retry, deploy, or account mutation.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Edge Function is documented as undeployed and the screenshot reports unknown status. No project credentials or authorization for deployment/real-account verification; do not repeat the request."
+        }
+      ]
+    },
+    {
+      "id": "KNOWLEDGE-IMAGE-FOCUS-01",
+      "title": "Kunskap: granska fokus för varje artikelbild och fallback",
+      "mvp_requirement": "Owner iPhone screenshots 2026-10-25; docs/design-rules.md §9; article-image focus review",
+      "plan": "docs/tasks/dev/KNOWLEDGE-IMAGE-FOCUS-01.md v1",
+      "write_paths": [
+        "docs/tasks/dev/KNOWLEDGE-IMAGE-FOCUS-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "src/features/knowledge/editorial-image-assignment.ts",
+        "src/features/knowledge/knowledge-image-layout.ts",
+        "src/features/knowledge/KnowledgeImage.tsx",
+        "src/features/knowledge/README.md",
+        "tests/knowledge-image-focus.test.mjs",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "docs/design/evidence/knowledge-image-focus-2026-10-25/"
+      ],
+      "acceptance": [
+        "Every available sanitized published/review content identity, slug override and shared fallback assignment is inventoried with its source asset and focus metadata.",
+        "Every mapped image keeps the dog or relevant subject visible in featured 16:9, small/related 4:3, and full-width reader 16:9 frames at 375/430; short-height 375×667 verifies scroll and clipping.",
+        "No mapped image is unintentionally reduced to a blurred background or cropped away from its main subject.",
+        "Article copy, dog-name/pronoun rule, published status, and active-dog recommendation selection remain unchanged.",
+        "Missing production catalog/build evidence is labeled NOT TESTABLE; no native/TestFlight PASS is claimed without a post-change capture."
+      ],
+      "checks": [
+        "Sanitized catalog-to-image inventory, including each KNOWLEDGE_IMAGE_BY_GUIDE_VERSION identity, slug override, and shared editorial fallback identity.",
+        "Per-mapping RN Web renders at 375×844, 430×844, and 375×667 across featured, related-card and detail crops.",
+        "Focused source/focal-layout test and visual review by UI Critic and independent QA.",
+        "CI=1 pnpm check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "ARTICLE-READING-EXPERIENCE-01"
+      ],
+      "status": "planned",
+      "next_step": "Audit all current sanitized article-image identities and focal mappings; correct only evidenced crops, and request a new TestFlight capture for native verification when available.",
+      "priority": "P2",
+      "panels": [
+        "7"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Critic reviewed current local RN Web evidence: subjects are centered in the sampled fixture, but 10/10 covers only a small synthetic set. All live mappings need explicit review. TestFlight images supplied by owner predate current source; after-change native result remains unverified.",
+      "test_evidence": "Read-only review of editorial-image-assignment.ts, image assets, and current article/knowledge captures. No code changed."
+    },
+    {
+      "id": "CHECKLIST-TOGGLE-AFFORDANCE-01",
+      "title": "Checklistor: granska bockarnas form, storlek och kontrast",
+      "mvp_requirement": "Owner iPhone checklist screenshot 2026-10-25; docs/design-rules.md §2–4",
+      "plan": "docs/tasks/dev/CHECKLIST-TOGGLE-AFFORDANCE-01.md v1",
+      "write_paths": [
+        "docs/tasks/dev/CHECKLIST-TOGGLE-AFFORDANCE-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "tests/checklist-toggle-affordance.test.mjs",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "docs/design/evidence/checklist-toggle-affordance-2026-10-25/"
+      ],
+      "acceptance": [
+        "A populated phase checklist is reviewed against the owner’s circled iPhone affordance; Critic records a clear decision on square/circle, size and contrast.",
+        "Checked and unchecked states remain distinct at 375/430 and 140% text without disrupting text wrapping.",
+        "Each control keeps at least a 44×44 pt touch target and accessible role, label and checked-state.",
+        "Only the checklist completion affordance changes; pill-row scrolling, content, and persistence behavior remain stable.",
+        "Native VoiceOver, physical touch target and TestFlight results are NOT TESTABLE unless separately captured."
+      ],
+      "checks": [
+        "Critic compares square and circular visual treatments on a filled checklist render at 375×844, 430×844, 375×667, and 140% text proxy.",
+        "Focused test for role/state/label and 44×44 pt hit area.",
+        "CI=1 pnpm check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "CHECKLIST-UI-LUNA-DETAIL"
+      ],
+      "status": "planned",
+      "next_step": "Capture the current populated phase checklist and obtain a focused UI Critic decision before changing the toggle affordance.",
+      "priority": "P2",
+      "panels": [
+        "7"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Critic confirmed this is a separate open visual question: current Knowledge toggles are 24 pt square icons while the owner circled larger circles. Current evidence lacks a populated post-complaint phase checklist render; no product code changed.",
+      "test_evidence": "Read-only source and screenshot audit only. Current visual is not accepted/rejected pending Critic render review."
     }
   ]
 }
