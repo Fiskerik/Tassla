@@ -16,6 +16,14 @@ Oberoende Reviewer **PASS** efter QA. Granskaren bekräftade att `aria-checked` 
 
 Kvar att verifiera separat: native VoiceOver/Dynamic Type just för denna nya kontroll, verklig create-persistens, produktionskatalogens fullständighet och live Supabase/RLS. QA använde syntetiska katalog/data och callbacks; detta är inget live- eller telefonbevis. Nästa steg är implementation-commit/push och separat checkpoint för UI-R02-01B (profilens täthet/avslutning).
 
+### KNOWLEDGE-PHASE-CATALOG-01 — faschecklistor, implementation v8 checkpoint 2026-10-26
+
+Den lokala D3-slicen lägger till sex granskade fasversioner och 18 stabila checklistpunkter med separat draft-import/publicerings-SQL, en publicerad-only appadapter och källmetadata. Hundansiktena syns i de låga fasbilderna. Källor visas endast som `1)`/`2)`; efter ägarens önskemål togs extragapet mellan länkar bort utan att minska 44×44 pt-kontrollerna. UI Critic godkände de sex fasbilderna och den slutliga avståndsjusteringen.
+
+Disposable PostgreSQL 16.15 passerade migrationerna och berörda SQL-prober, draft-import två gånger, avvisning av ändrad granskad titel, separat publicering och rollbackad published-only RLS/owner-data-prob. Körningen var nätverksisolerad, utan host ports, med syntetiska data och read-only repo-mount. `python -X utf8 tools/validate_knowledge_catalog.py`, SQL-payload-tamper-test, `pnpm check` (TypeScript, edge TypeScript, ESLint och 85/85 testfiler), dev-flow-validering samt diff/path-audit passerar. UI-verifieraren passerar 128/128 vid 375/430 px. Review-channel `pnpm bundle:ios` exporterade JS och tillgångar till `dist/ios`; signering, installation och fysisk enhet verifierades inte.
+
+Oberoende QA och frozen Reviewer **PASS** på v8; inga blockerande findings. Nästa steg är commit och push av den lokala branchen, därefter en separat FAQ-katalog-task. Ingen live Supabase-migration/import/publicering/readback eller native iPhone/TestFlight/VoiceOver/Dynamic Type-verifiering utfördes; fjärrstatus och produktion är fortsatt utanför denna checkpoint. Artikelpåståenden har inte fått separat veterinärsignoff. Innehåll är draft/review-pending tills separat publiceringsmandat. Se [task, queue och sparad evidens](KNOWLEDGE-PHASE-CATALOG-01.md#checkpoint).
+
 ## DOG-PROFILE — Wikidata-källval och plan v4, 2026-10-13
 
 Erik har beställt sökbar raskatalog, Mix-delraser, Hem-identitet `Namn | Ras` och valbar åldersvisning i veckor, månader och år. Han valde Wikidatas strukturerade data under CC0. Plan v4 låser katalogurvalet till Wikidata `dog breed (Q39367)` och dess underklasser, med svensk etikett och engelsk fallback. Exakt SPARQL-fråga och licenskällor finns i `docs/plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md`.

@@ -1,12 +1,15 @@
 from datetime import datetime, timezone
+import os
 from pathlib import Path
 import json
 import re
+import sys
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / 'docs/design/KNOW-02/evidence'
-BASE = 'http://127.0.0.1:4173/know02/'
+OUT = Path(os.environ.get('TASSLA_UI_EVIDENCE', ROOT / 'docs/design/KNOW-02/evidence'))
+BASE = os.environ.get('TASSLA_UI_BASE_URL', 'http://127.0.0.1:4173/know02/')
+IS_REVIEW = os.environ.get('TASSLA_UI_REVIEW') == 'true'
 OUT.mkdir(parents=True, exist_ok=True)
 PASSES = []
 FAILURES = []
@@ -25,11 +28,40 @@ def wait_ready(page):
 
 
 def open_template(page, label='Första dagarna hemma'):
-    name = f'Öppna {label}, föreslagen fas' if label == 'Första dagarna hemma' else f'Öppna {label}'
-    target = page.get_by_role('button', name=name)
+    target = page.get_by_role('button', name=re.compile(rf'^Öppna {re.escape(label)}(?:, föreslagen fas)?$'))
     target.wait_for(timeout=5000)
     target.click(position={'x': 10, 'y': 10})
     page.get_by_role('progressbar').wait_for(timeout=5000)
+
+
+def check_phase_banner(page, label, phase, width, capture=False):
+    page.goto(f'{BASE}?screen=checklist-overview')
+    page.get_by_text(re.compile(r'\d+ av \d+ genomförda')).first.wait_for(timeout=5000)
+    open_template(page, label)
+    frame = page.get_by_test_id(f'checklist-phase-image-{phase}')
+    frame.wait_for(timeout=3000)
+    box = frame.bounding_box()
+    check(box is not None and 80 <= box['height'] <= 96, f'{phase} decorative banner is 80–96pt high at {width}px')
+    loaded = frame.evaluate("el => { const img = el.querySelector('img'); return Boolean(img && img.complete && img.naturalWidth > 0); }")
+    check(loaded, f'{phase} local image loaded with its focal crop at {width}px')
+    check(no_horizontal_overflow(page), f'{phase} detail has no horizontal overflow at {width}px')
+    if capture:
+        screenshot(page, f'checklist-public-phase-{phase}-{width}.png')
+    links = page.get_by_role('link', name=re.compile(r'Öppna referens \d+:'))
+    check(links.count() > 0, f'{phase} source links remain reachable after scrolling at {width}px')
+    check('Referenser' not in page.locator('body').inner_text(), f'{phase} has no visible reference label at {width}px')
+    links.nth(links.count() - 1).scroll_into_view_if_needed()
+    footer = page.get_by_role('tab', name='Hem').bounding_box()
+    last_reference = links.nth(links.count() - 1).bounding_box()
+    check(footer is not None and last_reference is not None and last_reference['y'] + last_reference['height'] <= footer['y'] + 1,
+          f'{phase} references scroll above the fixed footer at {width}px')
+    for index in range(links.count()):
+        target = links.nth(index).bounding_box()
+        check(target is not None and target['width'] >= 44 and target['height'] >= 44,
+              f'{phase} reference {index + 1} meets 44pt target at {width}px')
+    check(no_horizontal_overflow(page), f'{phase} references have no horizontal overflow at {width}px')
+    if capture:
+        screenshot(page, f'checklist-public-phase-bottom-{phase}-{width}.png')
 
 
 def scroll_top(page):
@@ -39,9 +71,15 @@ def scroll_top(page):
 def no_horizontal_overflow(page):
     return page.evaluate("""() => {
       if (document.documentElement.scrollWidth > innerWidth) return false;
+      const clippedByAncestor = el => {
+        for (let parent = el; parent; parent = parent.parentElement) {
+          if (['hidden', 'clip'].includes(getComputedStyle(parent).overflowX)) return true;
+        }
+        return false;
+      };
       return [...document.querySelectorAll('*')].every(el => {
         const style = getComputedStyle(el);
-        return style.display === 'none' || el.scrollWidth <= el.clientWidth + 1 || style.overflowX === 'auto' || style.overflowX === 'scroll';
+        return style.display === 'none' || el.scrollWidth <= el.clientWidth + 1 || clippedByAncestor(el) || ['auto', 'scroll', 'hidden', 'clip'].includes(style.overflowX);
       });
     }""")
 
@@ -57,6 +95,85 @@ def checkbox_mark(page, label):
 
 with sync_playwright() as p:
     browser = p.chromium.launch(executable_path='/usr/bin/chromium', headless=True, args=['--no-sandbox', '--disable-dev-shm-usage'])
+    if not IS_REVIEW:
+        phases = [
+            ('Inför hemkomsten', 'before_homecoming'),
+            ('Första dagarna hemma', 'first_days'),
+            ('8–12 veckor', '8_12_weeks'),
+            ('3–6 månader', '3_6_months'),
+            ('6–12 månader', '6_12_months'),
+            ('Över ett år', 'over_1_year'),
+        ]
+        for width in (375, 430):
+            page = browser.new_page(viewport={'width': width, 'height': 844}, device_scale_factor=1)
+            page.add_init_script("window.__tasslaOpenedSourceUrl = null; window.open = (url) => { window.__tasslaOpenedSourceUrl = String(url); return null; };")
+            page.on('pageerror', lambda error: PAGE_ERRORS.append(str(error)))
+            page.goto(f'{BASE}?screen=checklist-overview')
+            page.get_by_text(re.compile(r'\d+ av \d+ genomförda')).first.wait_for(timeout=5000)
+            check(no_horizontal_overflow(page), f'Public catalog overview has no horizontal overflow at {width}px')
+            check('Första dagarna hemma' in page.locator('body').inner_text(), f'Public published phase renders at {width}px')
+            screenshot(page, f'checklist-public-overview-{width}.png')
+            open_template(page, 'Inför hemkomsten')
+            frame = page.get_by_test_id('checklist-phase-image-before_homecoming')
+            box = frame.bounding_box()
+            check(box is not None and 80 <= box['height'] <= 96, f'before_homecoming decorative banner is 80–96pt high at {width}px')
+            check(frame.evaluate("el => { const img = el.querySelector('img'); return Boolean(img && img.complete && img.naturalWidth > 0); }"), f'before_homecoming local image loaded with its focal crop at {width}px')
+            item = page.get_by_role('checkbox', name='Ordna en lugn, ostörd viloplats.')
+            item.click()
+            page.get_by_text('1 av 3 genomförda').wait_for(timeout=3000)
+            check('1 av 3 genomförda' in page.locator('body').inner_text(), f'Public checklist item updates confirmed progress at {width}px')
+            item.click()
+            page.get_by_text('0 av 3 genomförda').wait_for(timeout=3000)
+            check('0 av 3 genomförda' in page.locator('body').inner_text(), f'Public checklist item can be unchecked without losing phase identity at {width}px')
+            page.get_by_text('Sparat', exact=True).wait_for(state='hidden', timeout=4000)
+            visible_text = page.locator('body').inner_text()
+            check('Referenser' not in visible_text and 'Caring For Your Puppy' not in visible_text and 'Creating a Good Home' not in visible_text and 'rspca.org.uk' not in visible_text, f'Only numbered links are visible; no label, titles or raw URLs at {width}px')
+            links = page.get_by_role('link', name=re.compile(r'Öppna referens \d+:'))
+            check(links.count() == 2, f'Both reviewed sources are direct numbered links with full accessible names at {width}px')
+            check(page.get_by_role('link', name=re.compile(r'Öppna referens 1: Caring For Your Puppy - 6 weeks to 12 months \(RSPCA\)')).count() == 1, f'Reference 1 keeps its reviewed accessible identity at {width}px')
+            for index in range(links.count()):
+                target = links.nth(index).bounding_box()
+                check(target is not None and target['width'] >= 44 and target['height'] >= 44, f'Reference {index + 1} meets 44pt touch target at {width}px')
+            check(no_horizontal_overflow(page), f'Public catalog detail has no horizontal overflow at {width}px')
+            screenshot(page, f'checklist-public-detail-{width}.png')
+            links.nth(links.count() - 1).scroll_into_view_if_needed()
+            footer = page.get_by_role('tab', name='Hem').bounding_box()
+            last_reference = links.nth(1).bounding_box()
+            check(footer is not None and last_reference is not None and last_reference['y'] + last_reference['height'] <= footer['y'] + 1, f'Numbered references remain above the fixed footer at {width}px')
+            screenshot(page, f'checklist-public-detail-bottom-{width}.png')
+            links.first.click()
+            page.wait_for_function('window.__tasslaOpenedSourceUrl !== null', timeout=3000)
+            check(page.evaluate('window.__tasslaOpenedSourceUrl') == 'https://www.rspca.org.uk/adviceandwelfare/pets/dogs/health/puppycare', f'Numbered reference opens its exact safe source URL at {width}px')
+            for label, phase in phases[1:]:
+                check_phase_banner(page, label, phase, width, capture=True)
+            page.close()
+
+        page = browser.new_page(viewport={'width': 375, 'height': 844})
+        page.on('pageerror', lambda error: PAGE_ERRORS.append(str(error)))
+        page.goto(f'{BASE}?screen=checklist-overview&state=catalog-empty')
+        page.get_by_text('Inga checklistor publicerade ännu.').wait_for(timeout=5000)
+        check('Inför hemkomsten' not in page.locator('body').inner_text(), 'Public empty catalog never falls back to local review fixtures')
+        screenshot(page, 'checklist-public-empty-375.png')
+        page.goto(f'{BASE}?screen=checklist-overview&state=catalog-error')
+        page.get_by_text('Checklistorna kunde inte läsas in.').wait_for(timeout=5000)
+        check(page.get_by_role('button', name='Försök hämta checklistorna igen').count() == 1, 'Public catalog read error is distinct and retryable')
+        screenshot(page, 'checklist-public-error-375.png')
+        page.goto(f'{BASE}?screen=checklist-overview&state=catalog-partial')
+        page.get_by_text('Checklistorna kunde inte läsas in.').wait_for(timeout=5000)
+        check('Inför hemkomsten' not in page.locator('body').inner_text(), 'Partial published catalog never renders a fabricated subset')
+        check(not PAGE_ERRORS, 'No browser page errors in public catalog flows')
+        screenshot(page, 'checklist-public-partial-375.png')
+        browser.close()
+        (OUT / 'browser-results.json').write_text(json.dumps({
+            'passes': PASSES,
+            'failures': FAILURES,
+            'pageErrors': PAGE_ERRORS,
+            'scope': 'Local React Native Web harness with a synthetic published catalog and owner records. It does not verify live Supabase/RLS, native VoiceOver/Dynamic Type, or iPhone behavior.',
+        }, ensure_ascii=False, indent=2) + '\n')
+        for result in PASSES: print('PASS', result)
+        for result in FAILURES: print('FAIL', result)
+        sys.exit(1 if FAILURES else 0)
+
     for width in (375, 430):
         page = browser.new_page(viewport={'width': width, 'height': 844}, device_scale_factor=1)
         page.clock.install(time=datetime(2026, 10, 11, 15, 0, tzinfo=timezone.utc))

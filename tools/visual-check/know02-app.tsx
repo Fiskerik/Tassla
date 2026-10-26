@@ -9,6 +9,7 @@ import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, R
 import { KnowledgeScreen } from '../../src/features/knowledge/KnowledgeScreen';
 import type { PendingChecklistMemory } from '../../src/features/knowledge/PuppyChecklistScreen';
 import { PublishedTrainingScreen } from '../../src/features/training/PublishedTrainingScreen';
+import phaseChecklistBundle from '../../docs/content/knowledge-phase-checklists-v1.json';
 
 const DOG_ID = 'synthetic-dog-know02';
 const FIRST_DAYS = 'review-v1:first-days';
@@ -41,7 +42,41 @@ declare global {
 function makeClient() {
   const completedPresetRows = ['quiet-start', 'routine', 'rest'].map((item_key) => ({ dog_id: DOG_ID, template_id: FIRST_DAYS, item_key }));
   let failDetailRead = initialState === 'detail-error';
+  const sourceById = new Map(phaseChecklistBundle.sources.map((source) => [source.id, source.url]));
+  const roots = phaseChecklistBundle.templates.map((template, index) => ({
+    id: template.template_id,
+    context: template.context,
+    content_item_id: `55000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+  }));
+  const versions = phaseChecklistBundle.templates.map((template, index) => ({
+    id: template.version_id,
+    content_id: roots[index].content_item_id,
+    version: template.version,
+    title: template.title,
+    body: template.body,
+    min_age_weeks: template.min_age_weeks,
+    max_age_weeks: template.max_age_weeks,
+    context: template.context,
+    sources: template.sources.map((source) => sourceById.get(source)),
+    is_ai_generated: true,
+    status: 'published',
+    reviewed_at: '2026-10-26T00:00:00.000Z',
+    review_reference: 'docs/content/knowledge-phase-checklists-review-v1.md',
+  }));
+  const checklistItems = phaseChecklistBundle.templates.flatMap((template) => template.items.map((item) => ({
+    content_version_id: template.version_id,
+    template_id: template.template_id,
+    item_key: item.key,
+    position: item.position,
+    title: item.title,
+  })));
+  const catalogEmpty = initialState === 'catalog-empty';
+  const catalogPartial = initialState === 'catalog-partial';
+  let failCatalogRead = initialState === 'catalog-error';
   const tables: Record<string, Record<string, unknown>[]> = {
+    checklist_templates: catalogEmpty ? [] : catalogPartial ? roots.slice(0, -1) : roots,
+    content_versions: catalogEmpty ? [] : versions,
+    content_version_checklist_items: catalogEmpty ? [] : checklistItems,
     dog_checklist_progress: initialState === 'empty' || initialState === 'zero' ? [] : initialState === 'complete' ? completedPresetRows : [completedPresetRows[0]],
     dog_checklist_custom_items: initialState === 'empty' ? [] : [{ id: CUSTOM_ID, dog_id: DOG_ID, template_id: FIRST_DAYS, title: 'Boka valpkurs', completed: initialState === 'complete', icon: null }],
     dog_checklist_preferences: initialState === 'empty' ? [] : [{ dog_id: DOG_ID, context: 'first_days' }],
@@ -53,7 +88,7 @@ function makeClient() {
     let filters: Record<string, unknown> = {};
     let payload: Record<string, unknown> = {};
     let selected = false;
-    const matches = (row: Record<string, unknown>) => Object.entries(filters).every(([key, value]) => row[key] === value);
+    const matches = (row: Record<string, unknown>) => Object.entries(filters).every(([key, value]) => Array.isArray(value) ? value.includes(row[key]) : row[key] === value);
     async function execute() {
       if (table.startsWith('dog_checklist_')) {
         if (mode === 'select') window.__know02ChecklistReads = (window.__know02ChecklistReads ?? 0) + 1;
@@ -64,10 +99,11 @@ function makeClient() {
       }
       const rows = tables[table] ?? (tables[table] = []);
       let data: unknown = null;
-      if (initialState === 'loading') await new Promise((resolve) => setTimeout(resolve, 1600));
+      if (initialState === 'loading' && table.startsWith('dog_checklist_')) await new Promise((resolve) => setTimeout(resolve, 1600));
       if (mode === 'select' && window.__know02ReadDelayMs) await new Promise((resolve) => setTimeout(resolve, window.__know02ReadDelayMs));
       if (mode !== 'select' && window.__know02WriteDelayMs) await new Promise((resolve) => setTimeout(resolve, window.__know02WriteDelayMs));
-      if (mode === 'select' && failNextRead) { failNextRead = false; return { data: null, error: { message: 'Synthetic read error' } }; }
+      if (mode === 'select' && table === 'checklist_templates' && failCatalogRead) { failCatalogRead = false; return { data: null, error: { message: 'Synthetic catalog read error' } }; }
+      if (mode === 'select' && table.startsWith('dog_checklist_') && failNextRead) { failNextRead = false; return { data: null, error: { message: 'Synthetic read error' } }; }
       if (mode === 'select' && failDetailRead && filters.template_id === FIRST_DAYS) { failDetailRead = false; return { data: null, error: { message: 'Synthetic detail read error' } }; }
       if (mode === 'select' && window.__know02MutationFault === 'unknown-read') {
         window.__know02MutationFault = undefined;
@@ -119,6 +155,7 @@ function makeClient() {
     const chain = {
       select() { selected = true; return chain; },
       eq(key: string, value: unknown) { filters[key] = value; return chain; },
+      in(key: string, value: unknown[]) { filters[key] = value; return chain; },
       is(key: string, value: unknown) { filters[key] = value; return chain; },
       match(values: Record<string, unknown>) { filters = { ...filters, ...values }; return chain; },
       order() { return chain; },

@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "bundle_id": "knowledge-phase-checklists-v1",
+  "status": "reviewed",
+  "sources": [
+    {
+      "id": "rspca-puppy-care",
+      "url": "https://www.rspca.org.uk/adviceandwelfare/pets/dogs/health/puppycare",
+      "title": "Caring For Your Puppy - 6 weeks to 12 months",
+      "accessed_on": "2026-10-26",
+      "scope": "General puppy preparation, calm undisturbed rest, routine, short positive experiences, gradual handling, and finding a vet. UK page; no UK-specific veterinary schedule is carried into Tassla copy."
+    },
+    {
+      "id": "rspca-environment",
+      "url": "https://www.rspca.org.uk/adviceandwelfare/pets/dogs/environment",
+      "title": "Creating a Good Home For Your Dog",
+      "accessed_on": "2026-10-26",
+      "scope": "Supports an undisturbed resting place, access to a safe place to retreat, and a home free from hazards."
+    },
+    {
+      "id": "rspca-left-alone",
+      "url": "https://www.rspca.org.uk/adviceandwelfare/pets/dogs/training/leftalone",
+      "title": "How to Train Your Dog to Stay Home Alone",
+      "accessed_on": "2026-10-26",
+      "scope": "Supports gradual individual progression, avoiding distress, and stepping back to a shorter/easier stage when worried. No fixed timetable or duration is included."
+    },
+    {
+      "id": "rspca-come-when-called",
+      "url": "https://www.rspca.org.uk/adviceandwelfare/pets/dogs/training/come",
+      "title": "Train Your Dog To Come When Called",
+      "accessed_on": "2026-10-26",
+      "scope": "Supports reward-based recall practice, gradually increasing distance, and using a long training lead in safe outdoor practice."
+    },
+    {
+      "id": "dogstrust-routine",
+      "url": "https://www.dogstrust.org.uk/dog-advice/training/home/create-routine",
+      "title": "How to get your dog into a routine",
+      "accessed_on": "2026-10-26",
+      "scope": "Supports a predictable everyday routine for dogs of different ages, with a schedule adapted to the household and including activities such as walks, rest, food and play."
+    },
+    {
+      "id": "avsab-humane-2021",
+      "url": "https://avsab.org/wp-content/uploads/2021/08/AVSAB-Humane-Dog-Training-Position-Statement-2021.pdf",
+      "title": "Position Statement on Humane Dog Training",
+      "accessed_on": "2026-10-26",
+      "scope": "Supports reward-based teaching and avoiding aversive methods. This is a professional position statement, not an individual treatment plan."
+    },
+    {
+      "id": "avsab-socialization",
+      "url": "https://avsab.org/wp-content/uploads/2024/12/Puppy-Socialization-Position-Statement-FINAL.pdf",
+      "title": "AVSAB Puppy Socialization Position Statement",
+      "accessed_on": "2026-10-26",
+      "scope": "Supports safe positive exposure without overstimulation. US-specific vaccine/class timing is not used as Swedish advice."
+    }
+  ],
+  "review": {
+    "dog_expert_status": "passed",
+    "review_reference": "docs/content/knowledge-phase-checklists-review-v1.md",
+    "reviewed_on": "2026-10-26"
+  },
+  "templates": [
+    {
+      "template_id": "review-v1:before-homecoming",
+      "slug": "phase-before-homecoming",
+      "context": "before_homecoming",
+      "version_id": "64000000-0000-4000-8000-000000000001",
+      "version": 1,
+      "title": "Inför hemkomsten",
+      "body": "Förbered det som kan göra starten lugn och trygg.",
+      "min_age_weeks": 0,
+      "max_age_weeks": 7,
+      "status": "draft",
+      "is_ai_generated": true,
+      "sources": ["rspca-puppy-care", "rspca-environment"],
+      "items": [
+        { "key": "safe-space", "position": 1, "title": "Ordna en lugn, ostörd viloplats.", "source_refs": ["rspca-puppy-care", "rspca-environment"] },
+        { "key": "supplies", "position": 2, "title": "Plocka undan sådant som kan skada hunden.", "source_refs": ["rspca-puppy-care", "rspca-environment"] },
+        { "key": "vet-contact", "position": 3, "title": "Ta reda på närmaste veterinär.", "source_refs": ["rspca-puppy-care"] }
+      ]
+    },
+    {
+      "template_id": "review-v1:first-days",
+      "slug": "phase-first-days",
+      "context": "first_days",
+      "version_id": "64000000-0000-4000-8000-000000000002",
+      "version": 1,
+      "title": "Första dagarna hemma",
+      "body": "Låt hunden landa i sin egen takt.",
+      "min_age_weeks": 0,
+      "max_age_weeks": null,
+      "status": "draft",
+      "is_ai_generated": true,
+      "sources": ["rspca-environment", "dogstrust-routine"],
+      "items": [
+        { "key": "quiet-start", "position": 1, "title": "Ge hunden tid att landa i en lugn miljö med ostörd vila.", "source_refs": ["rspca-environment"] },
+        { "key": "routine", "position": 2, "title": "Börja med en enkel vardagsrutin som passar hunden.", "source_refs": ["dogstrust-routine"] },
+        { "key": "rest", "position": 3, "title": "Låt hunden vila ostört på en lugn plats.", "source_refs": ["rspca-environment"] }
+      ]
+    },
+    {
+      "template_id": "review-v1:8-12-weeks",
+      "slug": "phase-8-12-weeks",
+      "context": "by_age",
+      "version_id": "64000000-0000-4000-8000-000000000003",
+      "version": 1,
+      "title": "8–12 veckor",
+      "body": "I läget Efter ålder väljs en lista utifrån hundens ålder. Punkterna är förslag, inte mål.",
+      "min_age_weeks": 8,
+      "max_age_weeks": 12,
+      "status": "draft",
+      "is_ai_generated": true,
+      "sources": ["rspca-puppy-care", "rspca-left-alone", "avsab-humane-2021", "avsab-socialization"],
+      "items": [
+        { "key": "name", "position": 1, "title": "Om ni vill öva på namnet: belöna när hunden söker kontakt.", "source_refs": ["avsab-humane-2021"] },
+        { "key": "handling", "position": 2, "title": "Låt valpen vänja sig vid hantering gradvis. Pausa och gör nästa steg lättare vid tecken på obehag.", "source_refs": ["rspca-puppy-care", "avsab-socialization"] },
+        { "key": "alone", "position": 3, "title": "Börja med mycket korta stunder. Öka bara när hunden verkar lugn; korta stunden och backa vid tecken på oro.", "source_refs": ["rspca-left-alone"] }
+      ]
+    },
+    {
+      "template_id": "review-v1:3-6-months",
+      "slug": "phase-3-6-months",
+      "context": "by_age",
+      "version_id": "64000000-0000-4000-8000-000000000004",
+      "version": 1,
+      "title": "3–6 månader",
+      "body": "I läget Efter ålder väljs en lista utifrån hundens ålder. Punkterna är förslag, inte mål.",
+      "min_age_weeks": 13,
+      "max_age_weeks": 25,
+      "status": "draft",
+      "is_ai_generated": true,
+      "sources": ["rspca-come-when-called", "avsab-humane-2021", "avsab-socialization"],
+      "items": [
+        { "key": "recall", "position": 1, "title": "Om ni vill öva inkallning: börja på en inhägnad plats eller i långlina. Belöna när hunden kommer och öka avståndet stegvis.", "source_refs": ["rspca-come-when-called"] },
+        { "key": "settle", "position": 2, "title": "Belöna när hunden själv kommer till ro; undvik att tvinga fram stillhet.", "source_refs": ["avsab-humane-2021"] },
+        { "key": "walks", "position": 3, "title": "Låt hunden utforska trygga miljöer i sin takt. Öka avståndet till sådant som oroar hunden, eller avsluta mötet vid tecken på rädsla eller överstimulering.", "source_refs": ["avsab-socialization"] }
+      ]
+    },
+    {
+      "template_id": "review-v1:6-12-months",
+      "slug": "phase-6-12-months",
+      "context": "by_age",
+      "version_id": "64000000-0000-4000-8000-000000000005",
+      "version": 1,
+      "title": "6–12 månader",
+      "body": "I läget Efter ålder väljs en lista utifrån hundens ålder. Punkterna är förslag, inte mål.",
+      "min_age_weeks": 26,
+      "max_age_weeks": 51,
+      "status": "draft",
+      "is_ai_generated": true,
+      "sources": ["rspca-puppy-care", "avsab-humane-2021"],
+      "items": [
+        { "key": "review", "position": 1, "title": "Belöna önskade beteenden.", "source_refs": ["avsab-humane-2021"] },
+        { "key": "focus", "position": 2, "title": "Öva korta kontaktövningar i lugn miljö och belöna frivillig kontakt.", "source_refs": ["rspca-puppy-care", "avsab-humane-2021"] },
+        { "key": "breaks", "position": 3, "title": "Planera in pauser under aktivitet.", "source_refs": ["rspca-puppy-care"] }
+      ]
+    },
+    {
+      "template_id": "review-v1:over-1-year",
+      "slug": "phase-over-1-year",
+      "context": "by_age",
+      "version_id": "64000000-0000-4000-8000-000000000006",
+      "version": 1,
+      "title": "Över ett år",
+      "body": "I läget Efter ålder väljs en lista utifrån hundens ålder. Punkterna är förslag, inte mål.",
+      "min_age_weeks": 52,
+      "max_age_weeks": null,
+      "status": "draft",
+      "is_ai_generated": true,
+      "sources": ["rspca-left-alone", "avsab-humane-2021"],
+      "items": [
+        { "key": "enjoy", "position": 1, "title": "Om ni vill, välj en vardagsfärdighet att öva med belöningsbaserade metoder.", "source_refs": ["avsab-humane-2021"] },
+        { "key": "adapt", "position": 2, "title": "Vid ensamhetsträning: anpassa tiden efter hundens reaktion och backa ett steg vid tecken på oro.", "source_refs": ["rspca-left-alone"] },
+        { "key": "play", "position": 3, "title": "Avsluta gärna träningen med en belöning som hunden uppskattar.", "source_refs": ["avsab-humane-2021"] }
+      ]
+    }
+  ]
+}

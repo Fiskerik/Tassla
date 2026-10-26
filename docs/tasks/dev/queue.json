@@ -11966,6 +11966,144 @@
       "risk_class": "M",
       "checkpoint": "Critic confirmed this is a separate open visual question: current Knowledge toggles are 24 pt square icons while the owner circled larger circles. Current evidence lacks a populated post-complaint phase checklist render; no product code changed.",
       "test_evidence": "Read-only source and screenshot audit only. Current visual is not accepted/rejected pending Critic render review."
+    },
+    {
+      "id": "KNOWLEDGE-PHASE-CATALOG-01",
+      "title": "Kunskap: publicerad faschecklistekatalog v1",
+      "mvp_requirement": "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md §2, package 2 / D3; preserve approved D3 schema and progress identity",
+      "plan": "docs/tasks/dev/KNOWLEDGE-PHASE-CATALOG-01.md v8 (full dog-face banners, zero-gap numbered references, SQL payload parity preflight)",
+      "write_paths": [
+        "docs/tasks/dev/KNOWLEDGE-PHASE-CATALOG-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md",
+        "docs/content/README.md",
+        "assets/images/README.md",
+        "docs/content/knowledge-phase-checklists-v1.json",
+        "docs/content/knowledge-phase-checklists-review-v1.md",
+        "tools/validate_knowledge_catalog.py",
+        "supabase/content/knowledge-phase-checklists-v1.sql",
+        "supabase/content/publish-knowledge-phase-checklists-v1.sql",
+        "supabase/tests/knowledge-phase-catalog-content.sql",
+        "src/features/knowledge/checklist-model.ts",
+        "src/features/knowledge/checklist-data.ts",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/source-links.ts",
+        "src/features/knowledge/checklist-phase-visuals.ts",
+        "src/features/knowledge/README.md",
+        "tests/knowledge-catalog-content.test.mjs",
+        "tests/checklist-data.test.mjs",
+        "tests/checklist-ui.test.mjs",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify-know02.py",
+        "docs/design/evidence/knowledge-d3-catalog-v1/results.json",
+        "docs/design/evidence/knowledge-d3-catalog-v1/browser-results.json",
+        "docs/design/evidence/knowledge-d3-catalog-v1/VERIFICATION.md",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-detail-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-detail-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-detail-bottom-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-detail-bottom-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-empty-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-error-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-overview-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-overview-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-partial-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-3_6_months-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-3_6_months-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-6_12_months-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-6_12_months-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-8_12_weeks-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-8_12_weeks-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-3_6_months-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-3_6_months-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-6_12_months-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-6_12_months-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-8_12_weeks-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-8_12_weeks-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-first_days-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-first_days-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-over_1_year-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-over_1_year-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-first_days-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-first_days-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-over_1_year-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-over_1_year-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-review-375.png",
+        "tests/ui-copy-cleanup.test.mjs"
+      ],
+      "acceptance": [
+        "Dog Expert reviews exact Swedish copy and sources for all 18 checklist items; any caveats are applied and no UNSUPPORTED/UNSAFE item becomes publishable.",
+        "Versioned JSON contains exactly six stable phase slugs/contexts and 18 existing template/key pairs, with source and review metadata; approved bundle v1 stays unchanged.",
+        "Draft-import SQL is transactional and refuses mismatches/duplicates; publication SQL is separate, requires all six complete reviewed versions and exact 18 child keys; neither mutates dog-owned rows.",
+        "Before either SQL script runs, the validator parses both embedded payloads and verifies exact imported-field/URL parity and reviewed SHA-256 reference parity with the reviewed JSON; it rejects SQL payload drift.",
+        "Authenticated public app uses the three-read mapping → published versions → child items adapter, validates all six roots and 18 stable keys, never renders review copy, and supports progress/context/custom-item interactions only after validated published load.",
+        "Existing progress, custom items/icons, preference, retry/unknown behavior and cache isolation pass regressions; no progress or preference rows are rewritten.",
+        "Public and review caches are isolated; public cache identity changes with sorted published content_version IDs. Existing progress, custom items/icons, preference, retry/unknown behavior and cache isolation pass regressions.",
+        "Each displayed source URL resolves to its reviewed title and publisher using bundle metadata; sources without a reviewed display entry do not become ambiguous publisher-only links.",
+        "Each phase detail has a low decorative image banner using an existing local asset, with the whole dog face visible and not clipped at the top or sides at 375/430px.",
+        "After checklist actions, only small numbered links such as 1) 2) are visible outside the card; no reference label, source title or URL is printed. Adjacent targets have zero extra gap but the marks remain distinct. Accessible names retain reviewed source identity, unknown URLs fail closed, 44×44 pt targets remain, and every phase’s last reference can scroll above the fixed footer at 375/430px.",
+        "Task docs/queue plan reflect actual checks and limitations; no live DB operation occurs; all changed paths match this frozen write set."
+      ],
+      "checks": [
+        "Dog Expert exact-copy/source review of all six intros and 18 labels; the review records that the coordinator opened the official pages",
+        "Architect static review of the public adapter, stable progress keys, and version-scoped cache",
+        "Security and Architect focused static re-review of both SQL scripts, duplicate/missing-row guards, trusted context and no ACL expansion",
+        "Critic plan review after corrections and UI Critic final review of the six public phase details",
+        "Source metadata lookup test resolves all seven reviewed source URLs to title and publisher; unknown URLs fail closed",
+        "Render all six phases at 375/430px; inspect faces, small numbered-only references, 44×44 targets and bottom-scroll access",
+        "Preflight validator parity test compares both SQL payloads with reviewed JSON and rejects a tampered SQL row",
+        "Disposable PostgreSQL 16.15 import/publication/idempotency/refusal and directly affected checklist SQL probes",
+        "python -X utf8 tools/validate_knowledge_catalog.py; focused Knowledge/content tests; pnpm check",
+        "Review-channel pnpm bundle:ios after app-code changes; this is a JS/assets export, not device validation",
+        "python -X utf8 tools/dev_flow.py validate; JSON parse; git diff --check; changed-path audit",
+        "Independent QA and frozen Reviewer read-only review"
+      ],
+      "depends_on": [
+        "KNOWLEDGE-D3-CATALOG-SCHEMA-01"
+      ],
+      "status": "done",
+      "next_step": "KNOWLEDGE-PHASE-CATALOG-01 is done. Next: commit and push this branch to GitHub, then plan a separate FAQ catalog task.",
+      "priority": "P1",
+      "panels": [
+        "7"
+      ],
+      "risk_class": "H",
+      "checkpoint": "V8 applies the owner-requested zero additional gap between the numbered reference targets. All six face crops pass the 375/430 synthetic render; the latest 375px source row was reviewed by UI Critic and passes with distinct marks, 44x44pt targets and footer clearance. Disposable PostgreSQL 16.15 import/publication/idempotency/refusal and published-only RLS/owner-data probes pass in an isolated synthetic container. No live Supabase operation occurred.",
+      "test_evidence": "Latest public UI verifier: 128 passes, zero failures and zero page errors at 375/430; UI Critic final PASS on all phase crops and separate PASS on the zero-gap adjustment. `python -X utf8 tools/validate_knowledge_catalog.py`, SQL-payload mutation test, Architect/Security static re-review, disposable PostgreSQL 16.15 sequence, `pnpm check` 85/85, review-channel iOS bundle export, queue validation and `git diff --check` pass. Independent QA and frozen Reviewer PASS; reviewer audited all 59 changed paths. Native/iPhone/VoiceOver/Dynamic Type and live Supabase/RLS remain NOT TESTABLE.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v3 approved: Critic APPROVE, Architect APPROVE, Security PASS (2026-10-26). Dog Expert supplied preliminary source-based item copy and confirmed the visible Efter ålder intro; exact combined JSON/source review remains a content gate. No implementation/live DB evidence claimed."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin approved v3 slice on knowledge/d3-catalog-delivery from ff3af0b. First create the structured phase catalog/validator and submit exact combined JSON to Dog Expert before any import/publish script. UI edits remain gated on UI Critic BRIEF."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "V8 implementation is frozen. Plan Critic PROCEED; UI Critic PASS; public UI verifier 128/128 at 375/430; catalog validator, disposable PostgreSQL 16.15 SQL checks, pnpm check 85/85, review-channel iOS bundle export, queue validation, diff and path audit pass. No live Supabase or native device validation. Independent QA recheck of the completed iOS export and final docs requested; Reviewer follows."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS on v8. QA verified the latest renders (all six dog faces; zero-gap reference marks remain distinct), 44x44pt targets/footer clearance, pnpm check 85/85, UI 128/128, disposable PostgreSQL 16.15, review-channel iOS JS/assets export, docs/queue consistency and 59/59 write paths. Live Supabase and native verification remain NOT TESTABLE. Request frozen Reviewer on final diff/docs; no code changes expected."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS: 59/59 changed paths match write_paths; no blocking findings. Reviewer confirmed catalog, SQL guards, zero-gap 44x44pt links, six images, docs and recorded evidence. Live Supabase, production publication, native/device and veterinary limits remain as documented. Next: commit/push, then plan FAQ catalog separately."
+        }
+      ]
     }
   ]
 }
