@@ -3,6 +3,7 @@
 Datum: 2026-10-26
 Branch: `knowledge/d3-catalog-delivery`
 Plan: `docs/tasks/dev/KNOWLEDGE-PHASE-CATALOG-01.md` v9
+GitHub branch confirmed at `e4d6d96fb55474cdb87176aff44e8ba1e2b0fa99`.
 
 ## UI och tillgänglighet
 

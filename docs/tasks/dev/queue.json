@@ -12064,14 +12064,14 @@
         "KNOWLEDGE-D3-CATALOG-SCHEMA-01"
       ],
       "status": "done",
-      "next_step": "V9 is reviewed and ready to commit and push on knowledge/d3-catalog-delivery. After push, plan a separate FAQ catalog task.",
+      "next_step": "V9 is pushed to GitHub on knowledge/d3-catalog-delivery at e4d6d96. Next: plan the separate FAQ catalog task.",
       "priority": "P1",
       "panels": [
         "7"
       ],
       "risk_class": "H",
-      "checkpoint": "V9 removes the reference links' extra horizontal padding at the owner's request. Links meet edge-to-edge with separate 44x44pt targets; the verifier now preserves scroll position for bottom captures. All six face crops pass the 375/430 synthetic render. Independent QA and frozen Reviewer PASS on the updated 375px source row, footer clearance and current in-scope paths. Disposable PostgreSQL 16.15 import/publication/idempotency/refusal and published-only RLS/owner-data probes pass in an isolated synthetic container. No live Supabase operation occurred.",
-      "test_evidence": "Latest public UI verifier: 128 passes, zero failures and zero page errors at 375/430; links have no added padding, accessible full source names, 44x44pt targets and bottom screenshots preserve scroll. Focused checklist UI test and `pnpm check` 85/85 pass. `python -X utf8 tools/validate_knowledge_catalog.py`, SQL-payload mutation test, Architect/Security static re-review, disposable PostgreSQL 16.15 sequence, review-channel iOS bundle export, queue validation and `git diff --check` pass. Independent QA and frozen Reviewer PASS on v9; Reviewer confirmed all current paths remain in scope, links touch edge-to-edge and the scrolled capture is accurate. Prior UI Critic review covers the six image crops and v8's zero-gap treatment. Native/iPhone/VoiceOver/Dynamic Type and live Supabase/RLS remain NOT TESTABLE.",
+      "checkpoint": "V9 removes the reference links' extra horizontal padding at the owner's request. Links meet edge-to-edge with separate 44x44pt targets; the verifier now preserves scroll position for bottom captures. All six face crops pass the 375/430 synthetic render. Independent QA and frozen Reviewer PASS on the updated 375px source row, footer clearance and current in-scope paths. Disposable PostgreSQL 16.15 import/publication/idempotency/refusal and published-only RLS/owner-data probes pass in an isolated synthetic container. Push to GitHub succeeded; `git ls-remote` confirmed knowledge/d3-catalog-delivery at e4d6d96. No live Supabase operation occurred.",
+      "test_evidence": "Latest public UI verifier: 128 passes, zero failures and zero page errors at 375/430; links have no added padding, accessible full source names, 44x44pt targets and bottom screenshots preserve scroll. Focused checklist UI test and `pnpm check` 85/85 pass; the active pre-push hook passed 776 tests and skipped one, then pushed e4d6d96. `python -X utf8 tools/validate_knowledge_catalog.py`, SQL-payload mutation test, Architect/Security static re-review, disposable PostgreSQL 16.15 sequence, review-channel iOS bundle export, queue validation, `git diff --check` and remote branch hash confirmation pass. Independent QA and frozen Reviewer PASS on v9; Reviewer confirmed all current paths remain in scope, links touch edge-to-edge and the scrolled capture is accurate. Prior UI Critic review covers the six image crops and v8's zero-gap treatment. Native/iPhone/VoiceOver/Dynamic Type and live Supabase/RLS remain NOT TESTABLE.",
       "history": [
         {
           "from": "planned",
