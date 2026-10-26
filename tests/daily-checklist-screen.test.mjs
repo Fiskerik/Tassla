@@ -34,7 +34,8 @@ test('Checklist separates routine tap, longpress edit and checkbox actions', () 
   assert.match(screen, /editFocusedRoutineOnOpen=\{editFocusedRoutineOnOpen\}/);
   assert.match(screen, /focusRoutineItemId=\{focusRoutineItemId\}/);
   assert.match(screen, /onClose=\{closeManager\}/);
-  assert.match(screen, /Håll inne på en rutinpunkt för att öppna redigeringen\./);
+  assert.doesNotMatch(screen, /longPressHint/);
+  assert.match(screen, /layout="horizontal-scroll"/);
 });
 
 test('Kommande is read-only, date-grouped and opens exact routine, health and historical training sources', () => {
@@ -60,3 +61,16 @@ test('Checklist local date label is calendar-based and does not shift across dev
   assert.match(screen, /Date\.UTC\(Number\(match\[1\]\), Number\(match\[2\]\) - 1, Number\(match\[3\]\), 12\)/);
   assert.match(screen, /timeZone: 'UTC'/);
 });
+
+
+test('Manager keeps routine and training sections separate and hides all other content during a routine form', async () => {
+  const manager = await readFile(new URL('../src/features/home/DailyActivityManagerSheet.tsx', import.meta.url), 'utf8');
+  assert.match(manager, /items=\{\['Rutiner', 'Träning'\]\}/);
+  assert.match(manager, /editing \? <Text accessibilityRole="header" style=\{styles\.sectionTitle\}>/);
+  assert.match(manager, /\(editing \|\| !formActive\) && routinesForDisplay\.length > 0/);
+  assert.match(manager, /!formActive && managerSection === 'Träning'/);
+  assert.match(manager, /requestLeave\(\(\) => \{ setDraft\(null\); setManagerSection\('Rutiner'\); \}\)/);
+  assert.match(manager, /onPrimaryAction=\{activeDraft \? undefined : closeSheet\}/);
+  assert.match(manager, /requestLeave\(action: \(\) => void\)/);
+});
+

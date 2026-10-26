@@ -43,3 +43,27 @@ test('recommendation photos retain generic assets without temporary badges and u
   assert.match(screen, /training-recommendation-puppy-black-tan-park\.jpg/);
   assert.doesNotMatch(screen, /5 min|10 min|Grundträning|Socialisering/);
 });
+
+
+test('journey is the primary progression path and legacy activity marking is disclosed', () => {
+  assert.match(screen, /renderJourneyOverview\(openProgram\)/);
+  assert.match(screen, /Aktivitetsmarkeringar i programmet/);
+  assert.match(screen, /legacyActivityOpen \? selectedProgram\?\.completedStepIds\.includes\(selectedStep\.id\)/);
+  assert.match(screen, /progression\.journeys\.find\(\(journey\) => journey\.program_version_id === selectedProgram\.id\)\?\.state === 'paused'/);
+  assert.match(screen, /journeyProgress \? <Text style=\{styles\.stepMeta\}>\{progressLabel\}<\/Text> : <Progress/);
+});
+
+test('saved start, next, and back wait for fresh progression props before opening the active step', () => {
+  assert.match(screen, /const awaitRefresh = action\.kind === 'start_or_resume' \|\| action\.kind === 'next' \|\| action\.kind === 'back'/);
+  assert.match(screen, /Ändringen är sparad\. Hämtar det aktiva steget\./);
+  assert.match(screen, /setSelection\(\{ programId: waiting\.programId, stepId: journey\.active_step_id \}\)/);
+  assert.match(screen, /onRetryProgression/);
+});
+
+
+test('open feedback has no competing milestone or step navigation action', () => {
+  assert.match(screen, /!feedbackPickerOpen && view\.canConfirmStep/);
+  assert.match(screen, /!feedbackPickerOpen \? <View style=\{styles\.journeyActions\}>/);
+  assert.match(screen, /Spara återkopplingen för träningspasset/);
+});
+

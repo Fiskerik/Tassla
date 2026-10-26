@@ -137,7 +137,7 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
 
   return <View testID="daily-checklist-screen" style={styles.page}>
     <AppBar mode="Back" title="Checklistor" actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" />
-    <Tabs items={CHECKLIST_FILTERS} active={filter} variant="rev02-segmented" activeTone="home" onChange={(value) => {
+    <Tabs items={CHECKLIST_FILTERS} active={filter} variant="rev02-segmented" activeTone="home" layout="horizontal-scroll" onChange={(value) => {
       if (isChecklistFilter(value)) {
         upcomingRoutineRequest.current += 1;
         setRoutineSourceLoadingId(null);
@@ -189,9 +189,6 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
         accessibilityValue={{ min: 0, max: activities.length, now: completedCount }} style={styles.progressTrack}>
         <View style={[styles.progressFill, { width: (Math.round(completedCount / activities.length * 100) + '%') as import('react-native').DimensionValue }]} />
       </View>
-      {activities.some((activity) => activity.kind === 'routine')
-        ? <Text style={styles.longPressHint}>Håll inne på en rutinpunkt för att öppna redigeringen.</Text>
-        : null}
       <View style={styles.rows}>
         {activities.map((item) => {
           const routineDay = item.routineDay;
@@ -387,5 +384,5 @@ const styles = StyleSheet.create({
   errorText: { color: tokens.colors.danger },
   disabled: { opacity: 0.65 },
   rows: { gap: 0 },
-  longPressHint: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
 });
+
