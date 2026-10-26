@@ -24,6 +24,12 @@ Disposable PostgreSQL 16.15 passerade migrationerna och berörda SQL-prober, dra
 
 Oberoende QA och frozen Reviewer **PASS** på v8; inga blockerande findings. Nästa steg är commit och push av den lokala branchen, därefter en separat FAQ-katalog-task. Ingen live Supabase-migration/import/publicering/readback eller native iPhone/TestFlight/VoiceOver/Dynamic Type-verifiering utfördes; fjärrstatus och produktion är fortsatt utanför denna checkpoint. Artikelpåståenden har inte fått separat veterinärsignoff. Innehåll är draft/review-pending tills separat publiceringsmandat. Se [task, queue och sparad evidens](KNOWLEDGE-PHASE-CATALOG-01.md#checkpoint).
 
+### REPO-PUSH-HOOK-CLEANUP-01 — lokalt implementation checkpoint 2026-10-26
+
+Den första auktoriserade pushen för `knowledge/d3-catalog-delivery` körde `.githooks/pre-push`: `pnpm check` passerade med 776 pass och 1 skip, men full-tree `git diff --check` blockerades av två trailing spaces på `codemagic.yaml:23`. Eftersom branchen ännu saknar remote-ref granskar hooken hela nya trädet. Plan v1 fick Critic **PROCEED** och Architect **APPROVE**; Architect parsade YAML före/efter och bekräftade identiska mappings och `APP_STORE_APPLE_ID`.
+
+Implementationen tar endast bort dessa två slutblanksteg. `git diff --ignore-space-at-eol --exit-code -- codemagic.yaml` och `git diff --check origin/main` passerar. Full `pnpm check` passerar (TypeScript, edge TypeScript, ESLint och 85/85 testfiler). Oberoende QA och frozen Reviewer **PASS**; inga hooks har kringgåtts. Nästa steg är separat whitespace-only commit och nytt pushförsök med hooken aktiv. D3-commit `8cce04f` ligger lokalt och väntar på push.
+
 ## DOG-PROFILE — Wikidata-källval och plan v4, 2026-10-13
 
 Erik har beställt sökbar raskatalog, Mix-delraser, Hem-identitet `Namn | Ras` och valbar åldersvisning i veckor, månader och år. Han valde Wikidatas strukturerade data under CC0. Plan v4 låser katalogurvalet till Wikidata `dog breed (Q39367)` och dess underklasser, med svensk etikett och engelsk fallback. Exakt SPARQL-fråga och licenskällor finns i `docs/plans/VISION-REV02-DOG-PROFILE-UX-SPEC-v2.md`.

@@ -12104,6 +12104,73 @@
           "evidence": "Frozen Reviewer PASS: 59/59 changed paths match write_paths; no blocking findings. Reviewer confirmed catalog, SQL guards, zero-gap 44x44pt links, six images, docs and recorded evidence. Live Supabase, production publication, native/device and veterinary limits remain as documented. Next: commit/push, then plan FAQ catalog separately."
         }
       ]
+    },
+    {
+      "id": "REPO-PUSH-HOOK-CLEANUP-01",
+      "title": "Rensa whitespace som stoppar push av ny branch",
+      "mvp_requirement": "Required to deliver the explicitly authorized GitHub branch push; no product behavior change",
+      "plan": "docs/tasks/dev/REPO-PUSH-HOOK-CLEANUP-01.md v1",
+      "write_paths": [
+        "codemagic.yaml",
+        "docs/tasks/dev/REPO-PUSH-HOOK-CLEANUP-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Remove only the trailing whitespace at codemagic.yaml:23; no YAML value or build behavior changes.",
+        "The local outgoing diff and pnpm check pass. The active pre-push hook must run on the authorized push before a new remote branch exists; it is pending and must not be bypassed.",
+        "All changed paths match the frozen write_paths, and independent QA plus frozen Reviewer pass."
+      ],
+      "checks": [
+        "Critic PROCEED on this exact cleanup plan before editing codemagic.yaml.",
+        "Confirm the code diff contains only trailing whitespace removal and git diff --ignore-space-at-eol is empty for the config edit.",
+        "pnpm check; git diff --check origin/main..HEAD; queue JSON/dev_flow validation and path audit.",
+        "Independent QA and frozen Reviewer read-only review.",
+        "Authorized push on the existing branch, with .githooks/pre-push enabled."
+      ],
+      "depends_on": [
+        "KNOWLEDGE-PHASE-CATALOG-01"
+      ],
+      "status": "done",
+      "next_step": "Frozen Reviewer PASS: five changed paths match write_paths; YAML mappings are identical and only EOL spaces changed. QA PASS; pnpm check, whitespace/full-tree diff checks, queue and path audits pass. Commit the cleanup and retry push with hooks active.",
+      "priority": "P2",
+      "panels": [],
+      "risk_class": "L",
+      "checkpoint": "Local cleanup is complete: only the two EOL spaces after codemagic.yaml:23 were removed; Critic/Architect/QA/Reviewer PASS. Current local checks pass. Queue status done refers to this local cleanup checkpoint; the actual new-ref pre-push hook has not rerun and remains next before the authorized GitHub push.",
+      "test_evidence": "Initial pre-push pnpm check passed (776 pass, 1 skip). Architect parsed YAML before/after whitespace removal and confirmed identical mappings/value. After the edit, pnpm check passes 85/85; git diff --ignore-space-at-eol for codemagic.yaml is empty; git diff --check origin/main, queue JSON/dev_flow validation, and the 5/5 write-path audit pass. Independent QA and frozen Reviewer PASS; full new-ref push hook will run again before push.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v1: Critic PROCEED; Architect APPROVE. The planned edit removes only EOL whitespace after APP_STORE_APPLE_ID. Architect parsed before/after YAML and confirmed identical mappings/value. No file edit yet; implementation is ready."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Plan v1 is Critic PROCEED/Architect APPROVE and the D3 dependency is done. Start the exact whitespace-only cleanup; no YAML values or pipeline behavior may change."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Exact trailing-whitespace cleanup is implemented. The YAML diff is whitespace-only; Architect confirmed parsed values are unchanged. pnpm check 85/85, diff checks, queue validation and 5/5 path audit pass. Request independent QA, then frozen Reviewer; retry push only after both pass."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: only two trailing spaces removed from codemagic.yaml:23; YAML parse unchanged; pnpm check 85/85; diff, queue and 5/5 path audit pass. Frozen Reviewer is the final gate before cleanup commit and retrying the authorized push with hooks active."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS: five changed paths match write_paths; YAML mappings are identical and only EOL spaces changed. QA PASS; pnpm check, whitespace/full-tree diff checks, queue and path audits pass. Commit the cleanup and retry push with hooks active."
+        }
+      ]
     }
   ]
 }
