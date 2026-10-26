@@ -266,17 +266,21 @@ Detta uppdaterar status för den befintliga GAP-listan. Ursprungliga fynd, före
 | G08 Profilens täthet | Klar i 01B enligt ägarens godkännande; aktiv hund/fält tidigt, valfri kennel hopfälld. | Ingen gammal profilspec återinförs. |
 | G09 Hälsans modalram | Löst i 03: en sheet, sammanhållna fält, nåbar Spara för vikt/utfört/planerat. | Ny build/telefonkontroll av berörda editorer. |
 | G10 Datum-/tidsfamilj | Samma befintliga DatePickerField/TimePickerField där syftet är lika; skapa-/ändra-profil samordnad. | Syftets datumgränser och Loggs prickkalender kvar; ingen ny tidszonsmodell. |
-| G11 Val/flikar/checkbox | 04 samordnar Träning/FAQ/Insikter via Tabs, Påminnelser kompakta val; checklistans 2×2-filter bevaras. | Native kontroll av nya kontroller; inga dekorativa filter. |
+| G11 Val/flikar/checkbox | 04 samordnar Träning/FAQ/Insikter via Tabs, Påminnelser kompakta val; checklistans filter visas på en kompakt rad med horisontell scroll efter ägarens återkoppling 2026-10-25. | 44 pt mål och scroll vid större text kontrolleras; inga dekorativa filter. |
 | G12 Detaljheader/info | Kompakt guide/FAQ/checklistheader och en informationsingång i berörda stödvyer. | Inga nya fullpanelanspråk från enbart headerfix. |
 | G13 Upprepad copy | Profil/hälsa komprimerade; Påminnelser förklaring bakom(i); placeholder-/layoutfyllnad borttagen ur aktuella vyer. | Kort ärlig review-/standardbildmärkning och nödvändiga fel/källor behålls. |
 | G14 Checklistans grammatik | 02 ger samma ikon-/titel-/Spara-mönster från båda ingångarna; dags- och fasprogress förblir separata. | D1 samt D3 för publikt Kunskapsinnehåll. |
-| G15 Kunskaps bilder/symboler | Lokalt löst i 04: stor bild + mindre bildkort, skilda bilder, versionsidentitet, FAQ/lista. | D3. Okänd guideversion har ärlig textfallback. |
-| G16 Språk/namn | Berörda handlingar har korta visuella symboler och fulla svenska kontextnamn; navnamn enradiga. | Telefonkontroll av ändrade knappar. |
+| G15 Kunskaps bilder/symboler | 04 lade till stabil bildmappning och varierade foton. iPhone-återkoppling 2026-10-25 återöppnade beskärningen; denna task lägger till bildspecifika fokuspunkter och verifierar kort/läsvy i RN Web vid 375/430. | Native efterbild är inte tillgänglig här och är inte visuellt godkänd; D3/publicerad katalog kvarstår. Okänd guideversion behåller ärlig fallback. |
+| G16 Språk/namn | Berörda handlingar använder svenska kontextnamn; checklistans sekundära hantering visar bara kugghjulet med bevarat hjälpmedelsnamn och minst 44 pt-mål. Profilens lämna-dialog byter till `Lämna utan att spara` och tydlig förklaring. | RN Web-/källkontroll; ny fysisk efterbuild är inte verifierad. Inga andra handlingsnamn tas bort. |
 | **G17 Publik FAQ/faslista** | **ÖPPEN innehållsleverans.** Sökning/läsning/retur och tom-/reviewgränser fungerar; inget osakgranskat innehåll exponeras. | D3: granska/publicera versionsmärkt katalog med bevarad progress/egna punkter. |
 | G18 Status/källor | Uppdaterat mot faktiska brancher, commits och granskningar; denna tabell och paketets verifiering är aktuell status. | Main/TestFlight är inte automatiskt uppdaterade av branchpush. D1/D2/D3/D5 hålls synliga. |
 | G19 Exakt hälsoplan | Löst i 03: två olika exakta planer, rätt källflik/retur och icke-noll-scroll; riktade tester. | Ny telefonrunda på samlad build; plan blir aldrig utförd händelse via layout. |
 
 **Kvar efter UI-paketen:** D1 (nya egna punkt-ikoner), D2 (specifik Insikter-RPC), D3/G17 (publicerat granskat FAQ-/fasinnehåll), D5 (milstolpskällor/sömnintervall), signerad build och riktade telefonprov. Den tidigare separat accepterade Home-fixturmarginalen har inte återbeställts som blockerare. Äldre full raskatalog/Mix, veckomål, widgets/offline/favoriter är fortsatt inte order i denna plan.
+
+### UI/UX-återkoppling och avgränsad uppföljning — 2026-10-25
+
+Eriks iPhone-bilder återöppnade tre visuella/kopypunkter: Kunskapsfotografiernas fokus, checklistfilter som radbryts och profilens osparade-ändringar-copy. Uppföljningen finns i [tasken för öppna punkter](dev/UI-UX-OPEN-POINTS-2026-10-25.md). Filterraden är opt-in horisontell scroll med mindre etiketter, Dagens kugghjul är ikon-only, bilderna får per-källa fokus/zoom och lämna-knappen säger `Lämna utan att spara`. Renderad verifiering: checklistflödet 19/19 vid 375/430 och 140 % text; Kunskap bilder/kort/läsvy 10/10 vid 375/430. Detta är syntetisk RN Web-evidens, inte native telefonbevis. Post-render Critic och oberoende QA gav PASS inom denna gräns; native svep/efterbild är `NOT TESTABLE`. D1/D2/D3/D5 kvarstår. D3:s ämnesfilter och rekommendationsrubrik är backloggade tills riktig taxonomi/urvalsgrund finns.
 
 
 ## Nästa användarresa — ny beställning 2026-10-24

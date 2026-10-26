@@ -34,11 +34,12 @@ def checklist_url(filter_name: str = 'Idag', range_state: str = 'ready', empty: 
 
 
 def tab_metrics(page) -> tuple[dict[str, object], list[dict[str, float] | None]]:
-    tablist = page.get_by_role('tablist', name='Avsnitt')
+    tablist = page.get_by_role('tablist', name='Filtrera checklistor')
     container = tablist.bounding_box()
     tabs = tablist.get_by_role('tab')
     boxes = [tab.bounding_box() for tab in tabs.all()]
-    return {'container': container, 'count': tabs.count()}, boxes
+    scroll = tablist.evaluate('node => ({ scrollWidth: node.scrollWidth, clientWidth: node.clientWidth, scrollHeight: node.scrollHeight, clientHeight: node.clientHeight, overflowX: getComputedStyle(node).overflowX })')
+    return {'container': container, 'count': tabs.count(), 'scroll': scroll}, boxes
 
 
 def screenshot_app(page, name: str) -> None:
@@ -73,18 +74,19 @@ with sync_playwright() as playwright:
             tab.click()
             expect(tab).to_have_attribute('aria-selected', 'true')
             metrics, boxes = tab_metrics(page)
-            selected_count = page.locator('[role="tablist"][aria-label="Avsnitt"] [aria-selected="true"]').count()
+            selected_count = page.locator('[role="tablist"][aria-label="Filtrera checklistor"] [aria-selected="true"]').count()
             container = metrics['container']
-            inside_container = container is not None and all(
-                box is not None and box['x'] >= container['x'] - 1
-                and box['x'] + box['width'] <= container['x'] + container['width'] + 1
-                for box in boxes
-            )
+            selected_box = page.get_by_role('tab', name=filter_name, exact=True).bounding_box()
+            inside_container = (container is not None and selected_box is not None
+                and selected_box['x'] >= container['x'] - 1
+                and selected_box['x'] + selected_box['width'] <= container['x'] + container['width'] + 1)
             touch_ok = all(box is not None and box['width'] >= 44 and box['height'] >= 44 for box in boxes)
             no_overflow = page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             row_count = len({round(box['y']) for box in boxes if box is not None})
-            layout_ok = row_count == 2
-            assert selected_count == 1 and touch_ok and inside_container and no_overflow and layout_ok, boxes
+            layout_ok = row_count == 1
+            scroll = metrics['scroll']
+            horizontal_scroll = scroll['overflowX'] in ('auto', 'scroll') and scroll['scrollHeight'] <= scroll['clientHeight'] + 1
+            assert selected_count == 1 and touch_ok and inside_container and no_overflow and layout_ok and horizontal_scroll, {'tabs': boxes, 'scroll': scroll}
 
             if filter_name == 'Idag':
                 if REVIEW:
@@ -109,7 +111,7 @@ with sync_playwright() as playwright:
                     expect(page.get_by_text('Inget planerat den närmaste veckan', exact=True)).to_be_visible()
 
             record(f'{filter_name} is selected with 44pt controls and fits {width}px', {
-                'segments': boxes, 'container': container, 'selected_count': selected_count,
+                'segments': boxes, 'container': container, 'selected_count': selected_count, 'scroll': scroll,
             })
             screenshot_app(page, f'checklist-{filter_name.lower().replace(" ", "-")}-{width}x{height}.png')
 
@@ -119,15 +121,47 @@ with sync_playwright() as playwright:
 
     if REVIEW:
         page = browser.new_page(viewport={'width': 375, 'height': 667 + 32})
-        page.goto(checklist_url('Kommande'), wait_until='networkidle')
-        tabs = page.get_by_role('tablist', name='Avsnitt').get_by_role('tab')
+        page.goto(checklist_url('Idag'), wait_until='networkidle')
+        tablist = page.get_by_role('tablist', name='Filtrera checklistor')
+        tabs = tablist.get_by_role('tab')
         boxes = [tab.bounding_box() for tab in tabs.all()]
         page.evaluate('''() => {document.querySelectorAll('*').forEach(el => { if (el.children.length) return; const style=getComputedStyle(el); const size=parseFloat(style.fontSize); const line=parseFloat(style.lineHeight); if (Number.isFinite(size)) el.style.fontSize=(size*1.4)+'px'; if (Number.isFinite(line)) el.style.lineHeight=(line*1.4)+'px'; });}''')
         enlarged = [tab.bounding_box() for tab in tabs.all()]
         assert all(box is not None and box['height'] >= 44 for box in enlarged)
-        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-        record('375x667 at 140% text keeps the filter targets reachable without horizontal overflow', {'before': boxes, 'after': enlarged})
+        scroll = tablist.evaluate('node => ({ scrollWidth: node.scrollWidth, clientWidth: node.clientWidth, scrollHeight: node.scrollHeight, clientHeight: node.clientHeight, overflowX: getComputedStyle(node).overflowX })')
+        assert scroll['scrollWidth'] > scroll['clientWidth'] and scroll['scrollHeight'] <= scroll['clientHeight'] + 1
+        tabs.last.scroll_into_view_if_needed()
+        tabs.last.click()
+        expect(tabs.last).to_have_attribute('aria-selected', 'true')
+        last_box = tabs.last.bounding_box()
+        container = tablist.bounding_box()
+        scroll_left = tablist.evaluate('node => node.scrollLeft')
+        document_fits = page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+        horizontal_reachability = (scroll['overflowX'] in ('auto', 'scroll') and scroll_left > 0
+            and last_box is not None and container is not None
+            and last_box['x'] >= container['x'] - 1
+            and last_box['x'] + last_box['width'] <= container['x'] + container['width'] + 1)
+        assert document_fits and horizontal_reachability, {
+            'scroll': scroll, 'scroll_left': scroll_left, 'last_tab': last_box, 'container': container,
+        }
         screenshot_app(page, 'checklist-kommande-375x667-text-140.png')
+        tabs.first.scroll_into_view_if_needed()
+        tabs.first.click()
+        expect(tabs.first).to_have_attribute('aria-selected', 'true')
+        first_box = tabs.first.bounding_box()
+        scroll_left_start = tablist.evaluate('node => node.scrollLeft')
+        return_to_start = (scroll_left_start < scroll_left and first_box is not None and container is not None
+            and first_box['x'] >= container['x'] - 1
+            and first_box['x'] + first_box['width'] <= container['x'] + container['width'] + 1)
+        assert document_fits and horizontal_reachability and return_to_start, {
+            'scroll': scroll, 'scroll_left': scroll_left, 'last_tab': last_box,
+            'scroll_left_start': scroll_left_start, 'first_tab': first_box, 'container': container,
+        }
+        record('375x667 at 140% text scrolls to the final pill and returns to the first filter', {
+            'before': boxes, 'after': enlarged, 'scroll': scroll, 'scroll_left': scroll_left,
+            'last_tab': last_box, 'scroll_left_start': scroll_left_start, 'first_tab': first_box, 'container': container,
+        })
+        screenshot_app(page, 'checklist-kommande-375x667-text-140-start.png')
         page.close()
 
         for range_state, expected_title, retry_label in (

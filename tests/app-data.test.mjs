@@ -11,7 +11,7 @@ const tsResolution = registerHooks({
     return nextResolve(specifier, context);
   },
 });
-const { createDog, fetchBreeds, fetchOwnedDogAttribution, ownedDogAttributionMatches, updateOwnedDogAttribution } = await import('../src/data/app-data.ts');
+const { checkOwnedDogDeletionStatus, createDog, deleteOwnedDogProfile, fetchBreeds, fetchOwnedDogAttribution, ownedDogAttributionMatches, RetiredDogCreationRequestError, updateOwnedDogAttribution } = await import('../src/data/app-data.ts');
 tsResolution.deregister();
 
 const projectUrl = 'https://local-test.supabase.invalid';
@@ -113,6 +113,86 @@ test('createDog uses the idempotent RPC, normalizes the optional kennel code, an
     assert.equal(await createDog(client, { name: ' Nala ', breedId: 'beagle', birthDate: '2026-02-01', kennelCode: ' kennel-42 ' }, requestId), '33000000-0000-4000-8000-000000000001');
     assert.equal(requests[0].url.pathname, '/rest/v1/rpc/create_dog_with_homecoming');
     assert.deepEqual(requests[0].body, { dog_name: 'Nala', dog_breed_id: 'beagle', dog_birth_date: '2026-02-01', kennel_code: 'KENNEL-42', request_id: requestId, expected_homecoming_date: null, dog_sex: null });
+  } finally { await client.auth.dispose(); }
+});
+
+test('dog deletion calls the owner-derived RPC once and reconciles a confirmed delete with the owner dog list', async () => {
+  const dogId = '33000000-0000-4000-8000-000000000001';
+  const remainingDog = { id: '33000000-0000-4000-8000-000000000002', name: 'Bosse', breed_id: 'beagle', birth_date: '2020-02-01', age_display_unit: 'years' };
+  const { client, requests } = localClient((request) => request.url.pathname.endsWith('/delete_owned_dog_profile')
+    ? Response.json(true)
+    : Response.json([remainingDog]));
+  try {
+    assert.deepEqual(await deleteOwnedDogProfile(client, dogId), { status: 'deleted', ownedDogs: [remainingDog] });
+    assert.equal(requests.length, 2);
+    assert.equal(requests[0].method, 'POST');
+    assert.equal(requests[0].url.pathname, '/rest/v1/rpc/delete_owned_dog_profile');
+    assert.deepEqual(requests[0].body, { requested_dog_id: dogId });
+    assert.equal(requests[1].method, 'GET');
+    assert.equal(requests[1].url.pathname, '/rest/v1/dogs');
+    assert.equal(requests[1].url.searchParams.has('user_id'), false, 'ownership is derived by RLS, not a client-supplied owner');
+  } finally { await client.auth.dispose(); }
+});
+
+test('dog deletion never repeats an ambiguous RPC and distinguishes present from unconfirmed status', async () => {
+  const dogId = '33000000-0000-4000-8000-000000000001';
+  const dog = { id: dogId, name: 'Nala', breed_id: 'beagle', birth_date: '2020-02-01', age_display_unit: 'years' };
+  const { client, requests } = localClient((request) => request.url.pathname.endsWith('/delete_owned_dog_profile')
+    ? Response.json({ code: 'XX000', message: 'synthetic timeout' }, { status: 500 })
+    : Response.json([dog]));
+  try {
+    assert.deepEqual(await deleteOwnedDogProfile(client, dogId), { status: 'unknown', ownedDogs: [dog] });
+    assert.equal(requests.filter((request) => request.url.pathname.endsWith('/delete_owned_dog_profile')).length, 1);
+    assert.deepEqual(await checkOwnedDogDeletionStatus(client, dogId), { status: 'present', ownedDogs: [dog] });
+    assert.equal(requests.length, 3);
+    assert.equal(requests[2].url.pathname, '/rest/v1/dogs');
+  } finally { await client.auth.dispose(); }
+});
+
+test('a clean false delete result reconciles to absent only when the owner list confirms it', async () => {
+  const dogId = '33000000-0000-4000-8000-000000000001';
+  const { client, requests } = localClient((request) => request.url.pathname.endsWith('/delete_owned_dog_profile')
+    ? Response.json(false)
+    : Response.json([]));
+  try {
+    assert.deepEqual(await deleteOwnedDogProfile(client, dogId), { status: 'deleted', ownedDogs: [] });
+    assert.equal(requests.filter((request) => request.url.pathname.endsWith('/delete_owned_dog_profile')).length, 1);
+  } finally { await client.auth.dispose(); }
+});
+
+test('dog deletion readback stops when the captured owner/dog scope changes', async () => {
+  const dogId = '33000000-0000-4000-8000-000000000001';
+  let current = true;
+  const { client, requests } = localClient((request) => request.url.pathname.endsWith('/delete_owned_dog_profile')
+    ? Response.json({ code: 'XX000', message: 'synthetic ambiguous failure' }, { status: 500 })
+    : Response.json([]));
+  try {
+    assert.deepEqual(await deleteOwnedDogProfile(client, dogId, () => {
+      if (requests.some((request) => request.url.pathname.endsWith('/delete_owned_dog_profile'))) current = false;
+      return current;
+    }), { status: 'unknown', ownedDogs: null });
+    assert.equal(requests.length, 1, 'a stale scope does not start a list read under a different account');
+  } finally { await client.auth.dispose(); }
+});
+
+test('only the exact retired-create receipt result gets the recoverable typed outcome', async () => {
+  const requestId = '44000000-0000-4000-8000-000000000001';
+  const retiredClient = localClient(() => Response.json({ code: 'PT001', message: 'Dog creation request has been retired' }, { status: 400 }));
+  const unrelatedClient = localClient(() => Response.json({ code: 'PT001', message: 'Different server error' }, { status: 400 }));
+  try {
+    await assert.rejects(createDog(retiredClient.client, { name: 'Nala', breedId: 'beagle', birthDate: '2020-02-01' }, requestId), RetiredDogCreationRequestError);
+    await assert.rejects(createDog(unrelatedClient.client, { name: 'Nala', breedId: 'beagle', birthDate: '2020-02-01' }, requestId), { message: 'Could not create the dog profile' });
+  } finally {
+    await retiredClient.client.auth.dispose();
+    await unrelatedClient.client.auth.dispose();
+  }
+});
+
+test('invalid dog IDs do not send an RPC or list request', async () => {
+  const { client, requests } = localClient(() => Response.json(true));
+  try {
+    assert.deepEqual(await deleteOwnedDogProfile(client, 'not-a-uuid'), { status: 'unknown', ownedDogs: null });
+    assert.deepEqual(requests, []);
   } finally { await client.auth.dispose(); }
 });
 

@@ -73,4 +73,3 @@ test('Manager keeps routine and training sections separate and hides all other c
   assert.match(manager, /onPrimaryAction=\{activeDraft \? undefined : closeSheet\}/);
   assert.match(manager, /requestLeave\(action: \(\) => void\)/);
 });
-

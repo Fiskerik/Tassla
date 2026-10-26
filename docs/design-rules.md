@@ -145,6 +145,12 @@ Förklarande korttext är normalt högst två rader vid standardskrift; Hemmets 
 
 Publicerat, versionsmärkt och ålders-/rasrelevant innehåll driver råd och övningar. ”Tandbyte 20 veckor” i bilden är inte sakgranskat innehåll. Skriv inte ”Milo har blivit tryggare” från loggantal. Återkoppling beskriver registreringen: ”Ni har markerat två aktiviteter idag”.
 
+### Långform: artiklar, guider och träningsläsning
+
+Alla nya och befintliga långformstexter ska vara vänsterställda och stödja snabb skumning i ett F-mönster: bild överst när en relevant redaktionell bild finns, tydlig Tassla-grön titel och feta underrubriker, en kort fet ingress, därefter neutral brödtext i korta stycken och riktiga listor när innehållet kräver dem. Brödtexten får inte centreras eller marginaljusteras. Läsvyn använder sidans normala läsmarginal för text och fyller ut tillgänglig bredd; en artikel får ingen yttre kort-/boxbakgrund eller inre extra textbox. Bilden får fylla appens tillgängliga bredd och ska beskäras mot hunden/ämnets motiv, inte mot en oskarp bakgrundshörna. Använd befintliga Tassla-typografi- och färgtokens; håll färg till rubriker och nödvändiga säkerhets-/Tips/Viktigt-markörer.
+
+Samma publicerade artikel-, guide- och träningscopy visas oavsett vald hund. Skriv aldrig hundens namn eller könade personliga pronomen i redaktionell långform; generiska ord som *valpen*, *hunden* och *den* är tillåtna. Hundens matchning får styra rekommendationsurvalet, aldrig texten. Läsaren visar hela källmärkta innehållet; kort/läsningstid får inte ersätta eller skriva om det. Nya redaktionella texter och ändrade läsvyer ska följa denna regel och granskas vid standardskrift och minst 140 % text.
+
 Tekniska driftord hör hemma i rapporter. Medicinsk säkerhetsinformation och sanningsenlig osäker sparstatus får aldrig döljas för att passa målbilden.
 
 ## 10. Tillstånd och tillgänglighet

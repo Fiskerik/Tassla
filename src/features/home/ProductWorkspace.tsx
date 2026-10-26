@@ -1,4 +1,3 @@
-import { personalizeArticle } from '../../content/article-targeting';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Alert, AppState, BackHandler } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -99,6 +98,8 @@ import {
   type DailyTrainingSelection,
 } from './daily-activity-data';
 import {
+  checkOwnedDogDeletionStatus,
+  deleteOwnedDogProfile,
   fetchOwnedDogAttribution,
   fetchOwnedDogById,
   fetchBreeds,
@@ -107,6 +108,7 @@ import {
   type BreedOption,
   type DogAttributionWriteOutcome,
   type DogProfileWriteOutcome,
+  type OwnedDogDeletionOutcome,
   type HomeContent,
   type OwnedDog,
   type OwnedDogAttribution,
@@ -243,16 +245,18 @@ function profileExitPrompt(destination: ProfileExitDestination, returnPage: 'mor
     : destination.kind === 'addDog' ? 'Lägga till hund?'
       : destination.kind === 'return' ? `Lämna hundprofilen till ${target}?`
         : `Byta till ${target}?`;
-  return { title, body: `Hundprofilens ändringar är inte sparade. ${target} öppnas och de här lokala ändringarna kastas. Sparade uppgifter påverkas inte.` };
+  return { title, body: 'Ändringarna i Hundprofilen är inte sparade. Om du lämnar nu går de förlorade. Uppgifter som redan har sparats påverkas inte.' };
 }
 
-export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog], onSelectDog, onAddDog, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened, initialPage = 'home', onInitialPageOpened }: {
+export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog], onSelectDog, onAddDog, dogSelectionGeneration = 0, onDogDeleted, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened, initialPage = 'home', onInitialPageOpened }: {
   client: SupabaseClient;
   dog: OwnedDog;
   onDogUpdated?: (updated: OwnedDog) => void;
   ownedDogs?: readonly OwnedDog[];
   onSelectDog?: (dogId: string) => void;
   onAddDog?: (entryPoint: 'home' | 'settings') => void;
+  dogSelectionGeneration?: number;
+  onDogDeleted?: (dogId: string, selectionGeneration: number, remainingDogs: OwnedDog[] | null) => void;
   openDogSwitcherInitially?: boolean;
   onDogSwitcherInitiallyOpened?: () => void;
   initialPage?: 'home' | 'profile';
@@ -1792,6 +1796,40 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       lifetime: profileLifetime.current,
     };
     return runProfileMutation(mutation);
+  }
+
+  async function removeDogProfile(): Promise<OwnedDogDeletionOutcome> {
+    const ownerId = session?.user.id;
+    // A confirmed delete still belongs to AppFlow if this dog-keyed workspace
+    // unmounts during a dog switch. Only an owner/session change invalidates it.
+    const isCurrentOwner = () => Boolean(ownerId && isCurrentAccount(ownerId, accountGeneration));
+    if (!isCurrentOwner()) return { status: 'unknown', ownedDogs: null };
+    let outcome: OwnedDogDeletionOutcome;
+    try {
+      outcome = await deleteOwnedDogProfile(client, dog.id, isCurrentOwner);
+    } catch {
+      outcome = { status: 'unknown', ownedDogs: null };
+    }
+    if (outcome.status === 'deleted' && isCurrentOwner()) {
+      onDogDeleted?.(dog.id, dogSelectionGeneration, outcome.ownedDogs);
+    }
+    return outcome;
+  }
+
+  async function readDogDeletionStatus(): Promise<OwnedDogDeletionOutcome> {
+    const ownerId = session?.user.id;
+    const isCurrentOwner = () => Boolean(ownerId && isCurrentAccount(ownerId, accountGeneration));
+    if (!isCurrentOwner()) return { status: 'unknown', ownedDogs: null };
+    let outcome: OwnedDogDeletionOutcome;
+    try {
+      outcome = await checkOwnedDogDeletionStatus(client, dog.id, isCurrentOwner);
+    } catch {
+      outcome = { status: 'unknown', ownedDogs: null };
+    }
+    if (outcome.status === 'deleted' && isCurrentOwner()) {
+      onDogDeleted?.(dog.id, dogSelectionGeneration, outcome.ownedDogs);
+    }
+    return outcome;
   }
 
   async function retryDogAttribution() {
@@ -3439,9 +3477,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const transitionDirection = navigationDirection(previousPage, page);
   const mainTabToMainTab = isMainTabDestination(previousPage) && isMainTabDestination(page);
   const transitionDistance = mainTabToMainTab ? tokens.motion.pageDistance : tokens.motion.distance;
+  const knowledgeRouteContentId = focusedKnowledgeContentId && visibleGuideContent.some((item) => item.id === focusedKnowledgeContentId)
+    ? focusedKnowledgeContentId : undefined;
   const defaultRouteScroll = visiblePage === 'log' ? logViewScrollKeys(logView) : productRouteScrollKeys(visiblePage,
     knowledgeFocus?.selectionKey === currentSelectionKey ? knowledgeFocus.returnPage : undefined,
-    visibleHomeTrainingFocus?.returnPage);
+    visibleHomeTrainingFocus?.returnPage, knowledgeRouteContentId);
   const routeScroll = visiblePage === 'planned-health' && visiblePlannedHealthHealthFocus
     ? { scrollKey: 'planned-health-health-source', preserveScrollKey: visiblePlannedHealthHealthFocus.returnScrollKey }
     : visiblePage === 'planned-health' && visiblePlannedHealthChecklistFocus
@@ -3457,7 +3497,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     onRefresh={page === 'home' || page === 'progress' ? () => { void reloadDailyActivity(true, false); } : page === 'log' && logView === 'today' ? () => { void reloadEvents('refresh'); } : page === 'log' && logView === 'overview' ? refreshInsights : undefined}
     refreshAccessibilityLabel={page === 'log' && logView === 'overview' ? 'Uppdatera insikter' : page === 'log' ? 'Uppdatera loggen' : 'Uppdatera Hem'}>
     <Dialog visible={Boolean(profileExitDialog)} title={pendingProfileExitPrompt?.title ?? 'Lämna hundprofilen?'}
-      confirmLabel="Kasta ändringar" cancelLabel="Fortsätt redigera" confirmVariant="destructive"
+      confirmLabel="Lämna utan att spara" cancelLabel="Fortsätt redigera" confirmVariant="destructive"
       onRequestClose={() => setProfileExitDialog(null)} onConfirm={confirmProfileExit}>
       <MessageCard>{pendingProfileExitPrompt?.body ?? 'Hundprofilens ändringar är inte sparade.'}</MessageCard>
     </Dialog>
@@ -3570,8 +3610,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onRetryProgression={(programVersionId) => { void retryProgressionOperation(programVersionId); }}
       onRetryTrainingProgressionRead={() => { void retryTraining(); }}
       reviewTrainingStep={hasReviewTraining}
-      content={visibleGuideContent.filter((item) => item.recommended !== false).map((item) => ({ ...item,
-        title: personalizeArticle(item.title, dog), body: personalizeArticle(item.body, dog) }))}
+      content={visibleGuideContent.filter((item) => item.recommended !== false)}
       contentState={visibleContentState}
       dailyState={dailyStateForView}
       dailyRefreshing={dailyRefreshing}
@@ -3842,7 +3881,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       returnToTraining={knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'training'}
       returnToDevelopment={knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'development'}
       items={visibleGuideContent}
-      dogSex={dog.sex}
       contentState={visibleContentState}
       focusedContentId={focusedKnowledgeContentId}
       onDetailChange={setKnowledgeDetailOpen}
@@ -3854,7 +3892,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onRetry={() => { void retryContent(); }}
       client={client}
       dogId={dog.id}
-      dogName={dog.name}
       ageWeeks={age}
       sessionKey={`${session?.user.id ?? 'signed-out'}:${accountGeneration}`}
       checklistPending={checklistMemoryView?.scope === currentChecklistMemoryScope ? checklistMemoryView.state : null}
@@ -3904,7 +3941,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       }}
       onSaveAttribution={saveDogAttribution} onRetryAttribution={() => { void retryDogAttribution(); }}
       onOpenInsights={openInsightsFromProfile}
-      onRetryStatus={() => { void retryProfileStatus(); }} onAcceptCurrent={() => { void acceptCurrentProfile(); }} />;
+      onRetryStatus={() => { void retryProfileStatus(); }} onAcceptCurrent={() => { void acceptCurrentProfile(); }}
+      onDeleteDog={removeDogProfile} onCheckDogDeletionStatus={readDogDeletionStatus} />;
     return <DogProfileScreen dog={dog} breed={breeds.find((breed) => breed.id === dog.breed_id)?.name} onBack={returnFromProfile} />;
   }
 

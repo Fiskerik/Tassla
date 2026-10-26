@@ -627,4 +627,3 @@ const styles = StyleSheet.create({
   selectedRow: { gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs, borderBottomWidth: tokens.size.stroke, borderBottomColor: tokens.colors.border },
   copy: { flex: 1, minWidth: 0, gap: tokens.spacing.xs / 2 },
 });
-

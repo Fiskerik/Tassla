@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { View, Text } from 'react-native';
 import { AppScreen } from '../../src/components/AppPrimitives';
@@ -24,7 +24,6 @@ import type { DogEventInsights, InsightsPeriod } from '../../src/features/puppy-
 import type { InsightsLoadState } from '../../src/features/puppy-log/InsightsScreen';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { localDate } from '../../src/features/onboarding/dog';
-import { tokens } from '../../src/theme/tokens';
 
 const params = new URLSearchParams(location.search);
 const scenario = params.get('homeScenario') ?? 'ready';
@@ -37,6 +36,7 @@ const reviewMode = process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true';
 const imageFixture = params.get('imageFixture') ?? '';
 const profileBreedScenario = params.get('breedScenario') ?? '';
 const profileCreateFixture = params.get('screen') === 'profile-create';
+const profileDeleteFixture = params.get('screen') === 'profile-delete';
 const profileAttributionScenario = params.get('profileAttribution') ?? 'empty';
 const requestedBreedCount = Number(params.get('breedCount') ?? '24');
 const profileBreedCount = Number.isSafeInteger(requestedBreedCount) && requestedBreedCount > 0
@@ -54,6 +54,7 @@ const dog: OwnedDog = {
 };
 const profileDog: OwnedDog = profileBreedScenario === 'legacy' ? { ...dog, breed_id: 'retired-test-breed' } : dog;
 const secondProfileDog: OwnedDog = { ...dog, id: '00000000-0000-4000-8000-000000000022', name: 'Milo', breed_id: 'beagle', birth_date: dateOffset(today, -38) };
+const profileDeleteDogs = params.get('lastDog') === 'true' ? [profileDog] : [profileDog, secondProfileDog];
 const syntheticProfileAttribution = profileAttributionScenario === 'connected' ? { code: 'LUNA2026', name: 'Solgläntans kennel' } : null;
 const syntheticBreedOptions = [
   { id: 'golden', name: 'Golden retriever' },
@@ -90,6 +91,17 @@ const knowledgeReviewGuides: HomeContent[] = [
   { id: 'review-v1:training:kontakt', contentId: 'review-v1:training:kontakt', version: 1, title: 'Kontakt och namn', body: 'Lekfulla kontaktövningar i en miljö där valpen kan lyckas.', contentType: 'guide', sources: [], isAiGenerated: false },
   { id: 'review-v1:training:vardagsro', contentId: 'review-v1:training:vardagsro', version: 1, title: 'Vardagsro och hantering', body: 'Frivilliga, korta steg med pauser. Avsluta medan valpen fortfarande är trygg.', contentType: 'guide', sources: [], isAiGenerated: false },
 ];
+const articleReaderReviewContent: HomeContent[] = [
+  { id: 'review-article:first-day:v1', contentId: 'review-article:first-day', version: 1, slug: 'forsta-dygnet-hemma', title: 'Första dygnet hemma', body: 'När ni precis har kommit hem är allt nytt för valpen. De första dygnen behöver ni inte fokusera på självständighet, rumsrenhet eller koppelträning. Nu handlar det om att låta valpen landa och känna sig trygg i sitt nya hem.\n\n## Låt valpen landa\n\nPlanera en stillsam första dag. Låt valpen undersöka ett begränsat, valpsäkrat område i egen takt. Sitt gärna nära och låt den själv söka kontakt.\n\n## Börja med en rastningsplats\n\nGå till en lugn plats där valpen får möjlighet att kissa direkt när ni kommer hem. Beröm stillsamt när det händer ute.\n\n## Mat och vatten\n\nHa alltid färskt vatten tillgängligt. Fråga uppfödaren om valpens foder, mängd och mattider.', contentType: 'article', sources: [], isAiGenerated: false, recommended: true },
+  { id: 'review-article:house-training:v1', contentId: 'review-article:house-training', version: 1, slug: 'rumsrenhet', title: 'Rumsrenhet – så hjälper du valpen att lyckas', body: 'En liten valp kan ännu inte hålla sig som en vuxen hund. Därför behöver du hjälpa den att komma ut i rätt tid.\n\n## När ska ni gå ut?\n\nBörja med att gå ut när valpen vaknar, efter mat eller dryck och efter lek.\n\n## Om det händer inne\n\nSäg inte till eller straffa. Städa och erbjud nästa rastning tidigare.', contentType: 'article', sources: [], isAiGenerated: false, recommended: true },
+  { id: 'review-article:sleep:v1', contentId: 'review-article:sleep', version: 1, slug: 'valpens-somn', title: 'Hur mycket ska en valp sova?', body: 'En valp sover och vilar stora delar av dygnet. Behovet varierar med ålder, individ, aktivitet och nya intryck.\n\n## Sömn kommer i omgångar\n\nEfter lek, träning eller en ny miljö kan valpen behöva återhämta sig.\n\n## Hjälp valpen att komma till ro\n\nOrdna en trygg, lugn sovplats och låt valpen sova ostört.', contentType: 'article', sources: [], isAiGenerated: false, recommended: true },
+  { id: 'review-article:other:v1', contentId: 'review-article:other', version: 1, slug: 'ej-rekommenderad', title: 'En artikel utan hundmatchning', body: 'Det här innehållet finns i biblioteket men saknar matchning för den aktiva hunden.', contentType: 'article', sources: [], isAiGenerated: false, recommended: false },
+  { id: 'review-article:unknown:v1', contentId: 'review-article:unknown', version: 1, slug: 'okand-rekommendation', title: 'En artikel med okänd matchning', body: 'Det här innehållet finns i biblioteket men har ingen bekräftad rekommendation.', contentType: 'article', sources: [], isAiGenerated: false },
+  { id: 'review-v1:training:trygg-start', contentId: 'review-v1:training:trygg-start', version: 1, title: 'Trygg start hemma', body: 'Korta övningar för en lugn start.', contentType: 'guide', sources: [], isAiGenerated: false, recommended: true },
+];
+const articleReaderItems = params.get('relatedMode') === 'none'
+  ? articleReaderReviewContent.map((item) => ({ ...item, recommended: item.id === (params.get('articleId') ?? 'review-article:first-day:v1') }))
+  : articleReaderReviewContent;
 const imageTrainingFixture: PublishedTrainingProgram = {
   id: 'review-v1:training:trygg-start', content_id: 'review-v1:training:trygg-start', version: 1,
   title: 'Trygg start hemma', body: 'Korta övningar för en lugn start. Anpassa tempot efter valpen.',
@@ -235,20 +247,22 @@ function dateInTimeZone(value: Date, timeZone: string): string {
 }
 
 const syntheticProfileClient = {
-  from: (table: string) => ({
-    select: () => ({
-      order: () => ({
-        abortSignal: async () => {
-          if (table !== 'breeds') return { data: null, error: new Error('Unexpected synthetic table') };
-          window.__breedFetchCalls = (window.__breedFetchCalls ?? 0) + 1;
-          if (profileBreedScenario === 'retry' && window.__breedFetchCalls === 1) {
-            return { data: null, error: new Error('Synthetic first request failure') };
-          }
-          return { data: syntheticBreedOptions, error: null };
-        },
-      }),
-    }),
-  }),
+  from: (table: string) => {
+    const query = {
+      select: () => query,
+      order: () => query,
+      abortSignal: async () => {
+        if (table === 'dogs') return { data: profileDeleteDogs, error: null };
+        if (table !== 'breeds') return { data: null, error: new Error('Unexpected synthetic table') };
+        window.__breedFetchCalls = (window.__breedFetchCalls ?? 0) + 1;
+        if (profileBreedScenario === 'retry' && window.__breedFetchCalls === 1) {
+          return { data: null, error: new Error('Synthetic first request failure') };
+        }
+        return { data: syntheticBreedOptions, error: null };
+      },
+    };
+    return query;
+  },
 } as unknown as SupabaseClient;
 
 function makeActivities(dateKey: string, dogId: string, count: number): HomeDailyActivity[] {
@@ -311,9 +325,11 @@ function VisualCheckApp() {
     return requested === 'Denna vecka' || requested === 'Alla' || requested === 'Kommande' ? requested : 'Idag';
   });
   const [focusedPlanId, setFocusedPlanId] = useState<string | null>(null);
-  const [developmentGuideId, setDevelopmentGuideId] = useState<string | null>(null);
+  const [developmentGuideId, setDevelopmentGuideId] = useState<string | null>(() => params.get('articleId'));
   const [openChecklistManager, setOpenChecklistManager] = useState(false);
-  window.__homePanelsChangeScrollScope = (revision: string) => setScrollScopeRevision(revision);
+  useEffect(() => {
+    window.__homePanelsChangeScrollScope = (revision: string) => setScrollScopeRevision(revision);
+  }, []);
   const dailyState = scenario === 'loading' ? 'loading'
     : scenario === 'error' ? 'error'
       : scenario === 'unknown' ? 'hidden'
@@ -355,11 +371,40 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
     </View>;
   }
 
+  if (profileDeleteFixture) {
+    const lastDog = profileDeleteDogs.length === 1;
+    return <View style={{ flex: 1, minHeight: 0 }}>
+      <AppScreen footer={<View style={{ paddingBottom: 34 }}><BottomNav active="more" onChange={() => {}} /></View>}>
+        <EditDogProfileScreen
+          client={syntheticProfileClient}
+          dog={profileDog}
+          ownedDogs={profileDeleteDogs}
+          activeDogId={profileDog.id}
+          attributionState="ready"
+          onBack={() => {}}
+          onSave={async () => true}
+          onSaveAttribution={async () => true}
+          onRetryStatus={() => {}}
+          onAcceptCurrent={() => {}}
+          onDeleteDog={async () => {
+            window.__dogDeleteCalls = (window.__dogDeleteCalls ?? 0) + 1;
+            return { status: 'unknown', ownedDogs: profileDeleteDogs };
+          }}
+          onCheckDogDeletionStatus={async () => {
+            window.__dogDeletionReadbackCalls = (window.__dogDeletionReadbackCalls ?? 0) + 1;
+            return { status: 'present', ownedDogs: profileDeleteDogs };
+          }}
+        />
+      </AppScreen>
+      <View testID="dog-delete-fixture" accessibilityLabel={lastDog ? 'Sista hundprofilen' : 'Flera hundprofiler'} />
+    </View>;
+  }
+
   return <View style={{ flex: 1, minHeight: 0 }}>
     <View testID="review-app-viewport" style={{ flex: 1, minHeight: 0 }}>
       <View style={{ flex: 1, minHeight: 0, paddingTop: 44 }}>
         <AppScreen {...(navigation === 'knowledge'
-          ? productRouteScrollKeys(navigation, 'development') : routeScroll)}
+          ? productRouteScrollKeys(navigation, imageFixture === 'article-reader' ? undefined : 'development', undefined, developmentGuideId) : routeScroll)}
           scrollMemoryScope={`visual-check:owner-generation:account-generation:dog:${dog.id}:breed:${dog.breed_id}:birth-date:${dog.birth_date}:age:${77}:context:${reviewMode ? 'review' : 'public'}:${scrollScopeRevision}`}
           footer={<View style={{ paddingBottom: 34 }}><BottomNav active={activeMainTabDestination(navigation === 'knowledge' && !imageFixture ? 'development' : routePage)} onChange={(destination) => { setDevelopmentGuideId(null); setProfileOrigin(false); setNavigation(destination); }} /></View>}>
           {navigation === 'home' ? <HomeScreen
@@ -437,8 +482,9 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
             onRetryGuides={() => { window.__developmentGuideRetryCalls = (window.__developmentGuideRetryCalls ?? 0) + 1; }}
           /> : navigation === 'knowledge' ? <KnowledgeScreen
             onBack={() => { setDevelopmentGuideId(null); setNavigation('development'); }}
-            returnToDevelopment
-            items={imageFixture === 'knowledge' ? (reviewMode ? knowledgeReviewGuides : []) : developmentGuides}
+            returnToDevelopment={imageFixture !== 'article-reader'}
+            items={imageFixture === 'article-reader' ? (reviewMode ? articleReaderItems : [])
+              : imageFixture === 'knowledge' ? (reviewMode ? knowledgeReviewGuides : []) : developmentGuides}
             contentState="ready"
             focusedContentId={developmentGuideId}
             onSelectContent={setDevelopmentGuideId}
@@ -583,6 +629,8 @@ declare global {
     __profileDogSwitchTarget?: string;
     __profileAddDogCalls?: number;
     __profileExitSnapshot?: { profileDirty: boolean; kennelDirty: boolean };
+    __dogDeleteCalls?: number;
+    __dogDeletionReadbackCalls?: number;
   }
 }
 

@@ -60,7 +60,7 @@ export function profileInsightsDisabledReason(input: {
   return null;
 }
 
-export function productRouteScrollKeys(page: string, knowledgeReturnPage?: string, trainingReturnPage?: string): ProductRouteScrollKeys {
+export function productRouteScrollKeys(page: string, knowledgeReturnPage?: string, trainingReturnPage?: string, knowledgeContentId?: string | null): ProductRouteScrollKeys {
   if (page === 'home') return { scrollKey: 'home-detail-flow', preserveScrollKey: 'home-detail-flow' };
   if (page === 'development') return { scrollKey: 'home-development-flow', preserveScrollKey: 'home-development-flow' };
   if (page === 'progress') return { scrollKey: 'home-progress-flow', preserveScrollKey: 'home-progress-flow' };
@@ -69,9 +69,16 @@ export function productRouteScrollKeys(page: string, knowledgeReturnPage?: strin
   if (page === 'home-training-detail') return { scrollKey: page, preserveScrollKey: 'home-checklist-flow' };
   if (page === 'health') return { scrollKey: 'health-flow', preserveScrollKey: 'health-flow' };
   if (page === 'planned-health') return { scrollKey: 'planned-health', preserveScrollKey: 'planned-health' };
+  if (page === 'knowledge' && knowledgeContentId) {
+    return {
+      scrollKey: `knowledge-article:${knowledgeContentId}`,
+      preserveScrollKey: knowledgeReturnPage === 'development' ? 'home-development-flow' : 'knowledge',
+    };
+  }
   if (page === 'knowledge' && knowledgeReturnPage === 'development') {
     return { scrollKey: 'home-development-guide-detail', preserveScrollKey: 'home-development-flow' };
   }
+  if (page === 'knowledge') return { scrollKey: 'knowledge', preserveScrollKey: 'knowledge' };
   return { scrollKey: page };
 }
 

@@ -138,6 +138,8 @@ test('progress is only reset from inside a program, behind the existing confirma
   assert.match(screen, /resetReviewTrainingProgram\(value, target\.program\.id\)/, 'review mode only changes local review progress');
   assert.match(screen, /if \(completedCount\(program\) === 0 \|\| busyStepKey \|\| resetFlight\.current\) return;/, 'empty/stale progress and an active reset cannot open another confirmation');
   assert.match(screen, /completedCount\(program\) \/ program\.steps\.length \* 100/);
-  assert.match(screen, /label=\{exerciseProgressLabel\(openProgram\)\}/, 'a zero-step program does not show a misleading 0 of 0 progress label');
+  assert.match(screen, /if \(program\.steps\.length === 0\) return ''/, 'a zero-step program does not show a misleading 0 of 0 progress label');
+  const openProgramDetail = screen.slice(screen.indexOf('{openProgram ? <>'), screen.indexOf('</> : <>', screen.indexOf('{openProgram ? <>')));
+  assert.doesNotMatch(openProgramDetail, /<Progress value=/, 'the detail view does not show a zero-step progress bar');
   assert.match(screen, /Övningarna visas här när de är färdiga/);
 });

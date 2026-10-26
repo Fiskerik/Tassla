@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { startTransition, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AppBar, BottomSheet, Button, Card, Dialog, ListRow, Progress, SectionHeader, Tabs, Toast } from '../../components/ui';
@@ -62,6 +62,8 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   const resetFlight = useRef<{ programId: string; sawBusy: boolean } | null>(null);
   const pending = useRef(false);
   const mounted = useRef(true);
+  const progressionRef = useRef(progression);
+  const pendingProgressionsRef = useRef(pendingProgressions);
   const visiblePrograms = reviewMode ? programs.map((program) => ({ ...program, currentAgeBreedMatch: true, completedStepIds: reviewCompleted[program.id] ?? program.completedStepIds })) : programs;
   const openProgram = visiblePrograms.find((program) => program.id === openProgramId) ?? null;
   const currentResetProgram = resetTarget ? visiblePrograms.find((program) => program.id === resetTarget.program.id) : null;
@@ -116,15 +118,22 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     return () => { mounted.current = false; };
   }, []);
 
+  useLayoutEffect(() => {
+    progressionRef.current = progression;
+    pendingProgressionsRef.current = pendingProgressions;
+  }, [pendingProgressions, progression]);
+
   useEffect(() => {
     const waiting = awaitingProgressionRefresh;
     if (!waiting || progressionState !== 'ready' || progressionFingerprint(progression, waiting.programId) === waiting.fingerprint) return;
     const journey = progressionForProgram(progression, waiting.programId).journey;
     const program = visiblePrograms.find((item) => item.id === waiting.programId);
     if (!journey || !program?.steps.some((step) => step.id === journey.active_step_id)) return;
-    setOpenProgramId(waiting.programId);
-    setSelection({ programId: waiting.programId, stepId: journey.active_step_id });
-    setAwaitingProgressionRefresh(null);
+    startTransition(() => {
+      setOpenProgramId(waiting.programId);
+      setSelection({ programId: waiting.programId, stepId: journey.active_step_id });
+      setAwaitingProgressionRefresh(null);
+    });
   }, [awaitingProgressionRefresh, progression, progressionState, visiblePrograms]);
 
   useEffect(() => {
@@ -188,13 +197,13 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   const submitProgressionAction = useCallback(async (programId: string, action: TrainingProgressionAction, confirmation: string) => {
     if (!onApplyProgression) return;
     const awaitRefresh = action.kind === 'start_or_resume' || action.kind === 'next' || action.kind === 'back';
-    const previousFingerprint = awaitRefresh ? progressionFingerprint(progression, programId) : '';
+    const previousFingerprint = awaitRefresh ? progressionFingerprint(progressionRef.current, programId) : '';
     setAwaitingProgressionRefresh(null);
     const outcome = await onApplyProgression(action);
     if (!mounted.current) return;
     if (outcome === 'saved') {
       setProgressionMessage(null);
-      if (awaitRefresh && progressionFingerprint(progression, programId) === previousFingerprint) {
+      if (awaitRefresh && progressionFingerprint(progressionRef.current, programId) === previousFingerprint) {
         setAwaitingProgressionRefresh({ programId, fingerprint: previousFingerprint });
       }
       setSuccessMessage(confirmation);
@@ -210,18 +219,18 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
           : 'Ändringen kunde inte sparas. Försök igen.',
       });
     }
-  }, [onApplyProgression, progression, setFeedbackDraft, setFeedbackPickerOpen, setSuccessMessage, setProgressionMessage]);
+  }, [onApplyProgression, progressionRef, setFeedbackDraft, setFeedbackPickerOpen, setSuccessMessage, setProgressionMessage]);
 
   const retryProgression = useCallback(async (programId: string) => {
     if (!onRetryProgression) return;
-    const action = pendingProgressions[programId]?.action;
+    const action = pendingProgressionsRef.current[programId]?.action;
     const awaitRefresh = action?.kind === 'start_or_resume' || action?.kind === 'next' || action?.kind === 'back';
-    const previousFingerprint = awaitRefresh ? progressionFingerprint(progression, programId) : '';
+    const previousFingerprint = awaitRefresh ? progressionFingerprint(progressionRef.current, programId) : '';
     const outcome = await onRetryProgression(programId);
     if (!mounted.current) return;
     if (outcome === 'saved') {
       setProgressionMessage(null);
-      if (awaitRefresh && progressionFingerprint(progression, programId) === previousFingerprint) {
+      if (awaitRefresh && progressionFingerprint(progressionRef.current, programId) === previousFingerprint) {
         setAwaitingProgressionRefresh({ programId, fingerprint: previousFingerprint });
       }
       setSuccessMessage('Träningsresan är uppdaterad.');
@@ -235,7 +244,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
           : 'Ändringen kunde inte verifieras. Läs in Träning igen.',
       });
     }
-  }, [onRetryProgression, pendingProgressions, progression, setFeedbackDraft, setFeedbackPickerOpen, setSuccessMessage, setProgressionMessage]);
+  }, [onRetryProgression, pendingProgressionsRef, progressionRef, setFeedbackDraft, setFeedbackPickerOpen, setSuccessMessage, setProgressionMessage]);
 
   function renderJourneyOverview(program: PublishedTrainingProgram) {
     if (reviewMode && isReviewTrainingProgram(program.id)) return null;
@@ -703,4 +712,3 @@ const styles = StyleSheet.create({
   confirmedMilestone: { ...tokens.typography.caption, color: tokens.colors.training.accent, fontWeight: '700' },
   progressionMessage: { ...tokens.typography.caption, color: tokens.colors.danger },
 });
-

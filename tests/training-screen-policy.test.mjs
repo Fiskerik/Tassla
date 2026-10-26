@@ -66,4 +66,3 @@ test('open feedback has no competing milestone or step navigation action', () =>
   assert.match(screen, /!feedbackPickerOpen \? <View style=\{styles\.journeyActions\}>/);
   assert.match(screen, /Spara återkopplingen för träningspasset/);
 });
-

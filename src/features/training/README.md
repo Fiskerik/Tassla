@@ -25,4 +25,3 @@ Focused model/data/screen tests are in `tests/training-overview.test.mjs`, `test
 ## Historical record
 
 An earlier local redesign temporarily removed the three views. That decision is superseded by `FLOW-TRAINING-01` and current panel 6 in `vision_rev02.jpg`; it does not govern the active component.
-

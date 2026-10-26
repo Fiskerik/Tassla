@@ -1,24 +1,59 @@
 import { MotionPressable } from './Motion';
+import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import type { LayoutChangeEvent } from 'react-native';
 import { HorizontalGestureRegion } from './MainSwipeNavigation';
 import { tokens } from '../../theme/tokens';
 export type TabsVariant = 'underline' | 'rev02-segmented';
 export type TabsActiveTone = 'default' | 'home';
-export function Tabs({ items, active, onChange, variant = 'underline', activeTone = 'default', accessibilityLabel = 'Avsnitt', layout = 'responsive' }: { items: readonly string[]; active: string; onChange: (item: string) => void; variant?: TabsVariant; activeTone?: TabsActiveTone; accessibilityLabel?: string; layout?: 'responsive' | 'horizontal-scroll' }) {
+export function Tabs({ items, active, onChange, variant = 'underline', activeTone = 'default', accessibilityLabel = 'Avsnitt', layout = 'responsive', scrollable = false }: { items: readonly string[]; active: string; onChange: (item: string) => void; variant?: TabsVariant; activeTone?: TabsActiveTone; accessibilityLabel?: string; layout?: 'responsive' | 'horizontal-scroll'; scrollable?: boolean }) {
   const segmented = variant === 'rev02-segmented';
   const homeSegmented = segmented && activeTone === 'home';
   const { width, fontScale } = useWindowDimensions();
-  const homeGrid = layout === 'responsive' && homeSegmented && items.length >= 4 && (width < 480 || fontScale >= 1.25);
-  const horizontalScroll = layout === 'horizontal-scroll';
+  const horizontalScroll = layout === 'horizontal-scroll' || scrollable;
+  const homeGrid = layout === 'responsive' && !horizontalScroll && homeSegmented && items.length >= 4 && (width < 480 || fontScale >= 1.25);
+  const scrollRef = useRef<ScrollView>(null);
+  const tabLayouts = useRef(new Map<string, { x: number; width: number }>());
+  const scrollOffset = useRef(0);
+  const [scrollViewportWidth, setScrollViewportWidth] = useState(0);
+  const [scrollLayoutRevision, setScrollLayoutRevision] = useState(0);
+
+  useEffect(() => {
+    if (!horizontalScroll || scrollViewportWidth <= 0) return;
+    const tabLayout = tabLayouts.current.get(active);
+    if (!tabLayout) return;
+    const visibleLeft = scrollOffset.current;
+    const visibleRight = visibleLeft + scrollViewportWidth;
+    if (tabLayout.x < visibleLeft) {
+      const x = Math.max(0, tabLayout.x);
+      scrollRef.current?.scrollTo({ x, animated: false });
+    } else if (tabLayout.x + tabLayout.width > visibleRight) {
+      scrollRef.current?.scrollTo({ x: tabLayout.x + tabLayout.width - scrollViewportWidth, animated: false });
+    }
+  }, [active, horizontalScroll, scrollLayoutRevision, scrollViewportWidth]);
+
+  function recordTabLayout(item: string, event: LayoutChangeEvent) {
+    if (!horizontalScroll) return;
+    const { x, width: tabWidth } = event.nativeEvent.layout;
+    tabLayouts.current.set(item, { x, width: tabWidth });
+    setScrollLayoutRevision((revision) => revision + 1);
+  }
+
   return <HorizontalGestureRegion><ScrollView style={[styles.scroll, segmented && styles.segmentedScroll, homeSegmented && styles.homeSegmentedScroll, (homeGrid || horizontalScroll) && styles.homeGridScroll]}
+    ref={horizontalScroll ? scrollRef : undefined}
+    onLayout={horizontalScroll ? (event) => setScrollViewportWidth(event.nativeEvent.layout.width) : undefined}
+    onScroll={horizontalScroll ? (event) => { scrollOffset.current = event.nativeEvent.contentOffset.x; } : undefined}
+    onContentSizeChange={horizontalScroll ? () => setScrollLayoutRevision((revision) => revision + 1) : undefined}
+    scrollEventThrottle={horizontalScroll ? 16 : undefined}
     horizontal={!homeGrid} showsHorizontalScrollIndicator={false} accessibilityRole="tablist" accessibilityLabel={accessibilityLabel}
-    contentContainerStyle={[styles.tabs, segmented && styles.segmentedTabs, homeSegmented && !horizontalScroll && styles.homeSegmentedTabs, homeGrid && styles.homeGridTabs, horizontalScroll && styles.horizontalScrollTabs]}>
+    contentContainerStyle={[styles.tabs, segmented && styles.segmentedTabs, homeSegmented && !horizontalScroll && styles.homeSegmentedTabs, horizontalScroll && styles.scrollableTabs, homeGrid && styles.homeGridTabs]}>
     {items.map((item) => {
       const selected = item === active;
       return <MotionPressable key={item} accessibilityRole="tab" accessibilityLabel={item} accessibilityState={{ selected }} aria-selected={selected} onPress={() => onChange(item)}
-        style={({ pressed }) => [styles.tab, segmented && styles.segmentedTab, homeSegmented && styles.homeSegmentedTab, homeGrid && styles.homeGridTab, horizontalScroll && styles.horizontalScrollTab,
+        onLayout={horizontalScroll ? (event) => recordTabLayout(item, event) : undefined}
+        style={({ pressed }) => [styles.tab, segmented && styles.segmentedTab, homeSegmented && !horizontalScroll && styles.homeSegmentedTab, horizontalScroll && styles.scrollableTab, homeGrid && styles.homeGridTab,
           selected && segmented && styles.segmentedSelected, selected && homeSegmented && styles.homeSegmentedSelected, pressed && styles.pressed]}>
-        <Text style={[styles.label, selected && styles.active, selected && segmented && styles.segmentedActive, selected && homeSegmented && styles.homeSegmentedActive]}>{item}</Text>
+        <Text numberOfLines={horizontalScroll ? 1 : undefined} style={[styles.label, horizontalScroll && styles.scrollableLabel, selected && styles.active, selected && segmented && styles.segmentedActive, selected && homeSegmented && styles.homeSegmentedActive]}>{item}</Text>
         {!segmented ? <View style={[styles.underline, selected && styles.selectedUnderline]} /> : null}
       </MotionPressable>;
     })}
@@ -41,13 +76,12 @@ const styles = StyleSheet.create({
   homeSegmentedScroll: { width: '100%' },
   homeSegmentedTabs: { width: '100%', flexGrow: 1 },
   homeSegmentedTab: { flex: 1, minWidth: 0 },
+  scrollableTabs: { flexGrow: 0, alignSelf: 'flex-start', flexDirection: 'row', flexWrap: 'nowrap' },
+  scrollableTab: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto', minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, paddingHorizontal: tokens.spacing.md },
+  scrollableLabel: { ...tokens.typography.smallCaption },
   homeGridScroll: { width: '100%' },
   homeGridTabs: { width: '100%', flexGrow: 1, flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs, padding: tokens.spacing.xs },
   homeGridTab: { flexBasis: '48%', flexGrow: 1, flexShrink: 0, minWidth: 0, minHeight: tokens.size.touchMin },
-  horizontalScrollTabs: { flexGrow: 0, flexDirection: 'row', flexWrap: 'nowrap' },
-  horizontalScrollTab: { flex: 0, minWidth: tokens.size.touchMin, paddingHorizontal: tokens.spacing.md },
   homeSegmentedSelected: { backgroundColor: tokens.colors.home.greenStrong },
   homeSegmentedActive: { color: tokens.colors.onPrimary },
 });
-
-

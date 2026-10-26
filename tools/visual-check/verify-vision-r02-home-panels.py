@@ -66,12 +66,22 @@ def profile_create_url(*, breed_count: int = 24, breed_scenario: str | None = No
     return f'{BASE}/?screen=profile-create&breedCount={breed_count}{scenario}'
 
 
+def profile_delete_url(*, last_dog: bool = False) -> str:
+    return f'{BASE}/?screen=profile-delete&lastDog={"true" if last_dog else "false"}'
+
+
 def insights_url(*, state: str = 'ready', period: str = 'week', origin: str = 'profile') -> str:
     return f'{BASE}/?screen=insights&origin={origin}&insightsPeriod={period}&insightsState={state}'
 
 
 def image_fixture_url(screen: str) -> str:
     return f'{BASE}/?screen={screen}&imageFixture={screen}'
+
+
+def article_reader_url(article_id: str | None = None, related_mode: str | None = None) -> str:
+    selected = f'&articleId={article_id}' if article_id else ''
+    related = f'&relatedMode={related_mode}' if related_mode else ''
+    return f'{BASE}/?screen=knowledge&imageFixture=article-reader{selected}{related}'
 
 
 def visible_destinations(page) -> list[dict[str, object]]:
@@ -680,7 +690,69 @@ def verify_profile_density(browser) -> None:
     page.screenshot(path=str(OUT / 'profile-kennel-error-375x844.png'), full_page=True)
     page.close()
 
-def verify_image_diversity(browser) -> None:
+
+def verify_dog_profile_deletion(browser) -> None:
+    for width in (375, 430):
+        page = browser.new_page(viewport={'width': width, 'height': 844})
+        page.goto(profile_delete_url(), wait_until='networkidle')
+        action = page.get_by_role('button', name='Radera hundprofilen för Luna', exact=True)
+        expect(action).to_be_visible()
+        page.screenshot(path=str(OUT / f'dog-profile-delete-profile-{width}x844.png'), full_page=True)
+        action.click()
+        expect(page.get_by_role('heading', name='Radera Luna?', exact=True)).to_be_visible()
+        expect(page.get_by_text('Övriga hundprofiler och Tassla-kontot finns kvar.', exact=False)).to_be_visible()
+        expect(page.get_by_text('Det går inte att ångra.', exact=False)).to_be_visible()
+        if width == 375:
+            page.screenshot(path=str(OUT / 'dog-profile-delete-confirm-375x844.png'), animations='disabled')
+        page.get_by_role('button', name='Behåll hundprofilen', exact=True).click()
+        expect(page.get_by_role('heading', name='Radera Luna?', exact=True)).to_have_count(0)
+        record(f'Dog deletion at {width} pt has a named, dog-only confirmation and a clear cancel path',
+               page.evaluate('window.__dogDeleteCalls ?? 0') == 0)
+
+        action.click()
+        page.get_by_role('button', name='Radera hundprofilen', exact=True).click()
+        expect(page.get_by_text('Vi kunde inte bekräfta om hundprofilen raderades. Kontrollera statusen innan du försöker igen.', exact=True)).to_be_visible()
+        status_check = page.get_by_role('button', name='Kontrollera om hundprofilen har raderats', exact=True)
+        expect(status_check).to_be_visible()
+        expect(action).to_be_disabled()
+        record(f'Dog deletion at {width} pt reports an unknown result without repeating the delete',
+               page.evaluate('window.__dogDeleteCalls ?? 0') == 1 and page.evaluate('window.__dogDeletionReadbackCalls ?? 0') == 0)
+        if width == 375:
+            status_check.scroll_into_view_if_needed()
+            page.screenshot(path=str(OUT / 'dog-profile-delete-unknown-375x844.png'), full_page=True, animations='disabled')
+            unknown_check_box = status_check.bounding_box()
+            footer_box = page.get_by_text('Mer', exact=True).bounding_box()
+            record('Unknown-state status check is scrolled above the fixed bottom navigation',
+                   unknown_check_box is not None and footer_box is not None
+                   and unknown_check_box['y'] + unknown_check_box['height'] <= footer_box['y'],
+                   {'status_check': unknown_check_box, 'bottom_navigation': footer_box})
+        page.get_by_role('button', name='Kontrollera om hundprofilen har raderats', exact=True).click()
+        expect(page.get_by_text('Hundprofilen finns kvar. Ingen radering är bekräftad.', exact=False)).to_be_visible()
+        expect(action).to_be_enabled()
+        record(f'Dog deletion at {width} pt provides a separate owner-list status readback',
+               page.evaluate('window.__dogDeleteCalls ?? 0') == 1 and page.evaluate('window.__dogDeletionReadbackCalls ?? 0') == 1)
+        if width == 375:
+            page.screenshot(path=str(OUT / 'dog-profile-delete-status-present-375x844.png'), full_page=True, animations='disabled')
+            page.evaluate("""() => document.querySelectorAll('[dir="auto"]').forEach((element) => {
+              const style = getComputedStyle(element);
+              element.style.fontSize = (parseFloat(style.fontSize) * 1.4) + 'px';
+              element.style.lineHeight = (parseFloat(style.lineHeight) * 1.4) + 'px';
+            })""")
+            record('Dog deletion profile has no horizontal overflow with a 140% text proxy',
+                   page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+            status_check.scroll_into_view_if_needed()
+            page.screenshot(path=str(OUT / 'dog-profile-delete-text-140-375x844.png'), full_page=True, animations='disabled')
+        page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 667})
+    page.goto(profile_delete_url(last_dog=True), wait_until='networkidle')
+    page.get_by_role('button', name='Radera hundprofilen för Luna', exact=True).click()
+    expect(page.get_by_text('Tassla-kontot och din inloggning finns kvar. Du kan lägga till en ny hund efteråt.', exact=False)).to_be_visible()
+    page.screenshot(path=str(OUT / 'dog-profile-delete-last-dog-375x667.png'), animations='disabled')
+    record('Last-dog confirmation keeps account and sign-in, with the next add-dog path explicit', True)
+    page.close()
+
+def verify_image_diversity(browser, *, include_home_and_training: bool = True) -> None:
     if not REVIEW:
         for width in (375, 430):
             page = browser.new_page(viewport={'width': width, 'height': 844})
@@ -708,25 +780,52 @@ def verify_image_diversity(browser) -> None:
         ]
         image_sources: list[str | None] = []
         image_boxes = []
+        image_frame_boxes = []
         for guide in guide_cards:
             expect(guide).to_be_visible()
             image = guide.locator('img').first
             image_sources.append(image.get_attribute('src'))
             image_boxes.append(image.bounding_box())
+            image_frame_boxes.append(image.locator('xpath=../..').bounding_box())
         record(f'Knowledge maps three stable guide identities to three different visible photos at {width}px',
                all(image_sources) and len(set(image_sources)) == 3,
-               {'image_sources': image_sources, 'image_boxes': image_boxes})
+               {'image_sources': image_sources, 'image_boxes': image_boxes, 'image_frame_boxes': image_frame_boxes})
         record(f'Knowledge image crops use the current 16:9 hero and 4:3 guide aspect ratios at {width}px',
-               image_boxes[1] is not None and abs(image_boxes[1]['width'] / image_boxes[1]['height'] - 16 / 9) <= 0.02
-               and all(box is not None and abs(box['width'] / box['height'] - 4 / 3) <= 0.02 for index, box in enumerate(image_boxes) if index != 1),
-               {'image_boxes': image_boxes})
+               image_frame_boxes[1] is not None and abs(image_frame_boxes[1]['width'] / image_frame_boxes[1]['height'] - 16 / 9) <= 0.02
+               and all(box is not None and abs(box['width'] / box['height'] - 4 / 3) <= 0.02 for index, box in enumerate(image_frame_boxes) if index != 1),
+               {'image_frame_boxes': image_frame_boxes})
+        record(f'Knowledge focal crops cover their full image frames at {width}px',
+               all(image_box is not None and frame_box is not None
+                   and image_box['x'] <= frame_box['x'] + 1 and image_box['y'] <= frame_box['y'] + 1
+                   and image_box['x'] + image_box['width'] >= frame_box['x'] + frame_box['width'] - 1
+                   and image_box['y'] + image_box['height'] >= frame_box['y'] + frame_box['height'] - 1
+                   for image_box, frame_box in zip(image_boxes, image_frame_boxes)),
+               {'image_boxes': image_boxes, 'image_frame_boxes': image_frame_boxes})
         page.screenshot(path=str(OUT / f'knowledge-guides-{width}.png'), full_page=True)
-        expect(page.get_by_role('textbox', name='Sök i guider för Luna', exact=True)).to_be_visible()
+        expect(page.get_by_role('textbox', name='Sök bland alla artiklar', exact=True)).to_be_visible()
         expect(page.get_by_role('tablist', name='Huvudmeny').get_by_role('tab', name='Kunskap', exact=True)).to_be_visible()
         record(f'Knowledge guide search and the selected bottom destination remain visible at {width}px',
                not page_errors and page.evaluate('document.documentElement.scrollWidth <= innerWidth'),
                {'page_errors': page_errors})
+        guide_cards[0].click()
+        expect(page.get_by_role('heading', name='Trygg start hemma', exact=True)).to_be_visible()
+        article_image = page.locator('img').first
+        article_image_box = article_image.bounding_box()
+        article_frame_box = article_image.locator('xpath=../..').bounding_box()
+        record(f'Knowledge article image covers its 16:9 frame at {width}px',
+               article_image_box is not None and article_frame_box is not None
+               and abs(article_frame_box['width'] / article_frame_box['height'] - 16 / 9) <= 0.02
+               and article_image_box['x'] <= article_frame_box['x'] + 1
+               and article_image_box['x'] + article_image_box['width'] >= article_frame_box['x'] + article_frame_box['width'] - 1
+               and article_image_box['y'] <= article_frame_box['y'] + 1
+               and article_image_box['y'] + article_image_box['height'] >= article_frame_box['y'] + article_frame_box['height'] - 1
+               and not page_errors,
+               {'image_box': article_image_box, 'image_frame_box': article_frame_box, 'page_errors': page_errors})
+        page.screenshot(path=str(OUT / f'knowledge-article-{width}.png'), full_page=True)
         page.close()
+
+    if not include_home_and_training:
+        return
 
     # Home opens the exact stable guide identity used by Knowledge's image manifest.
     page = browser.new_page(viewport={'width': 375, 'height': 844})
@@ -742,6 +841,8 @@ def verify_image_diversity(browser) -> None:
            page.evaluate("window.__homePanelsOpened === 'content:review-v1:training:trygg-start'") and not page_errors,
            {'page_errors': page_errors})
     page.close()
+
+
 
     # Home's current exercise recommendation opens the exact Training continuation card.
     page = browser.new_page(viewport={'width': 375, 'height': 844})
@@ -817,6 +918,143 @@ def verify_image_diversity(browser) -> None:
                page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
         page.screenshot(path=str(OUT / f'{screen}-text-140-375.png'), full_page=True)
         page.close()
+
+
+def verify_article_reader(browser) -> None:
+    if not REVIEW:
+        page = browser.new_page(viewport={'width': 375, 'height': 844})
+        page.goto(article_reader_url(), wait_until='networkidle')
+        expect(page.get_by_text('Inga rekommenderade artiklar för den valda hunden just nu. Du kan läsa alla publicerade artiklar.', exact=True)).to_be_visible()
+        record('Article-reader fixtures stay hidden outside explicit review mode', True)
+        page.close()
+        return
+
+    for width in (375, 430):
+        page = browser.new_page(viewport={'width': width, 'height': 844})
+        page_errors: list[str] = []
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.goto(article_reader_url('review-article:first-day:v1', 'none'), wait_until='networkidle')
+        expect(page.get_by_role('heading', name='Första dygnet hemma', exact=True)).to_be_visible()
+        expect(page.get_by_text('Fler artiklar för din hund', exact=True)).to_have_count(0)
+        record(f'Article reader hides an empty related-article carousel at {width}px', True)
+        page.close()
+
+        page = browser.new_page(viewport={'width': width, 'height': 844})
+        page_errors: list[str] = []
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.goto(article_reader_url(), wait_until='networkidle')
+        search = page.get_by_role('textbox', name='Sök bland alla artiklar', exact=True)
+        search.fill('En artikel utan hundmatchning')
+        unmatched = page.get_by_role('button', name='Läs En artikel utan hundmatchning', exact=True)
+        expect(unmatched).to_be_visible()
+        unmatched.click()
+        expect(page.get_by_role('heading', name='En artikel utan hundmatchning', exact=True)).to_be_visible()
+        expect(page.get_by_text('Fler artiklar för din hund', exact=True)).to_be_visible()
+        unmatched_related = page.get_by_test_id('knowledge-related-carousel')
+        unmatched_related.scroll_into_view_if_needed()
+        expect(page.get_by_role('button', name='Läs Första dygnet hemma', exact=True)).to_be_visible()
+        page.get_by_role('button', name='Tillbaka till guider', exact=True).click()
+        expect(search).to_have_value('En artikel utan hundmatchning')
+        record(f'Published-library search opens a non-recommended article and preserves search on Back at {width}px', not page_errors,
+               {'page_errors': page_errors})
+        search.fill('')
+        page.get_by_role('button', name='Alla artiklar', exact=True).click()
+
+        lower_article = page.get_by_role('button', name='Läs Rumsrenhet – så hjälper du valpen att lyckas', exact=True)
+        lower_article.scroll_into_view_if_needed()
+        library_position = vertical_scroll_state(page)
+        lower_article.click()
+        expect(page.get_by_role('heading', name='Rumsrenhet – så hjälper du valpen att lyckas', exact=True)).to_be_visible()
+        page.wait_for_timeout(100)
+        article_position = vertical_scroll_state(page)
+        hero = page.get_by_test_id('knowledge-article-hero')
+        hero_box = hero.bounding_box()
+        hero_frame_ratio = hero_box['width'] / hero_box['height'] if hero_box else 0
+        article_container = page.get_by_test_id('knowledge-article-reader')
+        container_style = article_container.evaluate("element => ({ border: getComputedStyle(element).borderWidth, background: getComputedStyle(element).backgroundColor })")
+        intro = page.get_by_text('En liten valp kan ännu inte hålla sig som en vuxen hund.', exact=False).first
+        intro_weight = intro.evaluate('element => getComputedStyle(element).fontWeight')
+        subheading = page.get_by_role('heading', name='När ska ni gå ut?', exact=True)
+        subheading_color = subheading.evaluate('element => getComputedStyle(element).color')
+        record(f'Article detail resets to top, uses an unboxed reader and full-width 16:9 hero at {width}px',
+               article_position is not None and article_position['top'] <= 2
+               and hero_box is not None and abs(hero_box['x']) <= 1 and abs(hero_box['width'] - width) <= 2
+               and abs(hero_frame_ratio - 16 / 9) <= 0.02
+               and container_style['border'] == '0px' and container_style['background'] in ('rgba(0, 0, 0, 0)', 'transparent'),
+               {'scroll': article_position, 'hero': hero_box, 'hero_ratio': hero_frame_ratio, 'container': container_style})
+        record(f'Article lead is bold and subhead uses Tassla green at {width}px',
+               intro_weight in ('700', '800', 'bold') and subheading_color not in ('rgb(0, 0, 0)', 'rgb(28, 48, 39)'))
+        page.screenshot(path=str(OUT / f'article-reader-top-{width}.png'), full_page=True)
+
+        set_vertical_scroll(page, 100000)
+        expect(page.get_by_text('Fler artiklar för din hund', exact=True)).to_be_visible()
+        carousel = page.get_by_test_id('knowledge-related-carousel')
+        carousel_metrics = carousel.evaluate("element => ({clientWidth: element.clientWidth, scrollWidth: element.scrollWidth, scrollLeft: element.scrollLeft})")
+        included = [
+            page.get_by_role('button', name='Läs Första dygnet hemma', exact=True).count() == 1,
+            page.get_by_role('button', name='Läs Hur mycket ska en valp sova?', exact=True).count() == 1,
+        ]
+        excluded = [
+            page.get_by_role('button', name='Läs Rumsrenhet – så hjälper du valpen att lyckas', exact=True).count() == 0,
+            page.get_by_role('button', name='Läs En artikel utan hundmatchning', exact=True).count() == 0,
+            page.get_by_role('button', name='Läs En artikel med okänd matchning', exact=True).count() == 0,
+            page.get_by_role('button', name='Läs Trygg start hemma', exact=True).count() == 0,
+        ]
+        carousel.evaluate('element => { element.scrollLeft = 120; element.dispatchEvent(new Event("scroll", { bubbles: true })); }')
+        page.wait_for_timeout(120)
+        carousel_metrics['scrolledLeft'] = carousel.evaluate('element => element.scrollLeft')
+        record(f'Related carousel includes only other explicitly recommended articles and can scroll horizontally at {width}px',
+               all(included) and all(excluded) and carousel_metrics['scrollWidth'] > carousel_metrics['clientWidth']
+               and carousel_metrics['scrolledLeft'] > 0,
+               {'metrics': carousel_metrics, 'included': included, 'excluded': excluded})
+        page.screenshot(path=str(OUT / f'article-reader-carousel-{width}.png'), full_page=True)
+
+        page.get_by_role('button', name='Läs Första dygnet hemma', exact=True).click()
+        expect(page.get_by_role('heading', name='Första dygnet hemma', exact=True)).to_be_visible()
+        page.wait_for_timeout(100)
+        switched_position = vertical_scroll_state(page)
+        page.get_by_role('button', name='Tillbaka till guider', exact=True).click()
+        expect(page.get_by_role('button', name='För dig', exact=True)).to_be_visible()
+        restored_position = vertical_scroll_state(page)
+        record(f'Switching carousel articles resets to top and Back restores the scrolled library position at {width}px',
+               switched_position is not None and switched_position['top'] <= 2
+               and library_position is not None and restored_position is not None
+               and abs(restored_position['top'] - library_position['top']) <= 5
+               and not page_errors,
+               {'source_library_scroll': library_position, 'switched_article_scroll': switched_position,
+                'restored_library_scroll': restored_position, 'page_errors': page_errors})
+        page.screenshot(path=str(OUT / f'article-reader-library-restored-{width}.png'), full_page=True)
+        page.close()
+
+    page = browser.new_page(viewport={'width': 375, 'height': 667})
+    page.goto(article_reader_url('review-article:first-day:v1'), wait_until='networkidle')
+    scaled_text_count = page.evaluate("""() => {
+      const text = [...document.querySelectorAll('[dir="auto"]')];
+      text.forEach((element) => {
+        const style = getComputedStyle(element);
+        const fontSize = parseFloat(style.fontSize);
+        const lineHeight = parseFloat(style.lineHeight);
+        if (Number.isFinite(fontSize)) element.style.fontSize = `${fontSize * 1.4}px`;
+        if (Number.isFinite(lineHeight)) element.style.lineHeight = `${lineHeight * 1.4}px`;
+      });
+      return text.length;
+    }""")
+    page.wait_for_timeout(100)
+    expect(page.get_by_role('heading', name='Första dygnet hemma', exact=True)).to_be_visible()
+    reader = page.get_by_test_id('knowledge-article-reader')
+    reader.scroll_into_view_if_needed()
+    set_vertical_scroll(page, 100000)
+    related = page.get_by_test_id('knowledge-related-carousel')
+    related.scroll_into_view_if_needed()
+    expect(page.get_by_text('Fler artiklar för din hund', exact=True)).to_be_visible()
+    overflow = page.evaluate('document.documentElement.scrollWidth > innerWidth + 1')
+    carousel_metrics = related.evaluate('element => ({ clientWidth: element.clientWidth, scrollWidth: element.scrollWidth })')
+    page.screenshot(path=str(OUT / 'article-reader-text-140-375x667.png'), full_page=True)
+    record('Article reader remains readable and horizontally contained with 140% text proxy at 375×667',
+           scaled_text_count > 0 and not overflow and carousel_metrics['clientWidth'] > 0
+           and carousel_metrics['scrollWidth'] > carousel_metrics['clientWidth'],
+           {'scaled_text_elements': scaled_text_count, 'document_overflow': overflow, 'carousel': carousel_metrics})
+    page.close()
 
 
 def verify_progress_views(browser) -> None:
@@ -1129,16 +1367,46 @@ if os.environ.get('TASSLA_UI_PANEL') == 'profile-density':
     raise SystemExit(1 if failures else 0)
 
 
-if os.environ.get('TASSLA_UI_PANEL') == 'image-diversity':
+if os.environ.get('TASSLA_UI_PANEL') == 'dog-profile-delete':
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
             headless=True,
             executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
             args=['--no-sandbox'],
         )
-        verify_image_diversity(browser)
+        verify_dog_profile_deletion(browser)
         browser.close()
-    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'image-diversity', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'dog-profile-delete', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
+if os.environ.get('TASSLA_UI_PANEL') == 'article-reader':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_article_reader(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'article-reader', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
+if os.environ.get('TASSLA_UI_PANEL') in ('image-diversity', 'knowledge-images'):
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_image_diversity(browser, include_home_and_training=os.environ.get('TASSLA_UI_PANEL') == 'image-diversity')
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': os.environ.get('TASSLA_UI_PANEL'), 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
     (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
     raise SystemExit(1 if failures else 0)

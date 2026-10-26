@@ -30,18 +30,3 @@ export function matchesArticleRules(rules: unknown, ageWeeks: number | null, exp
 }
 
 export type DogSex = 'male' | 'female';
-const TOKEN = /\{\{dog\.(name|genitive|subject|Subject|object)\}\}/g;
-
-/** Expand explicit editorial tokens once; never replace arbitrary nouns or evaluate markup. */
-export function personalizeArticle(text: string, dog: { name: string; sex?: DogSex | null }): string {
-  const name = dog.name.trim() || 'hunden';
-  const subject = dog.sex === 'male' ? 'han' : dog.sex === 'female' ? 'hon' : name;
-  const values = {
-    name,
-    genitive: /[sxz]$/i.test(name) ? name : `${name}s`,
-    subject,
-    Subject: subject.charAt(0).toLocaleUpperCase('sv-SE') + subject.slice(1),
-    object: dog.sex === 'male' ? 'honom' : dog.sex === 'female' ? 'henne' : name,
-  };
-  return text.replace(TOKEN, (_, key: keyof typeof values) => values[key]);
-}

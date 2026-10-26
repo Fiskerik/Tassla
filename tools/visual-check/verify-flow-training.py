@@ -301,4 +301,3 @@ with sync_playwright() as playwright:
 print(f"PASS {len(results)}/{len(results)} training render checks ({'review' if review else 'public'})")
 for result in results:
     print(f"- {result}")
-
