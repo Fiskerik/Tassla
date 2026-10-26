@@ -735,7 +735,7 @@ const styles = StyleSheet.create({
   phaseImageFrame: { alignSelf: 'stretch', height: 88, overflow: 'hidden', borderRadius: tokens.radius.md, marginBottom: tokens.spacing.sm },
   references: { marginTop: tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, flexWrap: 'wrap' },
   referenceLinks: { flexDirection: 'row', alignItems: 'center', gap: 0 },
-  referenceLink: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.xs },
+  referenceLink: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
   referenceNumber: { ...tokens.typography.smallCaption, color: tokens.colors.primary, textDecorationLine: 'underline' },
   customRow: { gap: tokens.spacing.xs },
   formFieldRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },

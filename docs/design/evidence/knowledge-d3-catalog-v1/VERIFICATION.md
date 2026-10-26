@@ -2,18 +2,19 @@
 
 Datum: 2026-10-26
 Branch: `knowledge/d3-catalog-delivery`
-Plan: `docs/tasks/dev/KNOWLEDGE-PHASE-CATALOG-01.md` v8
+Plan: `docs/tasks/dev/KNOWLEDGE-PHASE-CATALOG-01.md` v9
 
 ## UI och tillgänglighet
 
-`browser-results.json` innehåller **128 PASS, 0 FAIL och 0 browser page errors** från den senaste lokala React Native Web-körningen. Den kontrollerar alla sex fasdetaljer vid 375 och 430 px: bannerhöjd och laddad bild, horisontell overflow, progressändring/återställning, endast synliga numrerade källänkar, inga synliga referensetiketter/titlar/URL:er, tillgängliga källnamn, 44×44 pt länkmål samt att sista länken kan scrollas ovanför den fasta bottenmenyn. Testflöden täcker också tom katalog, read-error med retry och att en ofullständig katalog inte faller tillbaka till lokala review-fixtures.
+`browser-results.json` innehåller **128 PASS, 0 FAIL och 0 browser page errors** från den senaste lokala React Native Web-körningen. Den kontrollerar alla sex fasdetaljer vid 375 och 430 px: bannerhöjd och laddad bild, horisontell overflow, progressändring/återställning, endast synliga numrerade källänkar, inga synliga referensetiketter/titlar/URL:er, tillgängliga källnamn, 44×44 pt länkmål samt att sista länken kan scrollas ovanför den fasta bottenmenyn. Bottom-fångsten behåller nu den scrollposition där länkarna syns. Testflöden täcker också tom katalog, read-error med retry och att en ofullständig katalog inte faller tillbaka till lokala review-fixtures.
 
-UI Critic gav **PASS** för samtliga sex hundansikten vid 375/430 px och därefter en separat **PASS** för användarens spacing-justering. I den nya 375 px-bilden ligger de understrukna `1)`/`2)` nära varandra men visuellt åtskilda; koden behåller separata 44×44 pt-kontroller och länkarna ligger väl ovanför footern. UI Critic noterade att målytan bekräftas av verifieraren och kodinspektion, inte enbart av skärmbilden.
+UI Critic gav tidigare **PASS** för samtliga sex hundansikten vid 375/430 px och v8:s 0-gap-justering. Efter ägarens senaste önskemål tog v9 bort kontrollernas extra sidpadding: märkena ligger nu kant i kant samtidigt som varje länk behåller minst 44×44 pt. Oberoende QA och frozen Reviewer gav **PASS** på v9:s 375 px-bild: numren är läsbara, länkarna ligger nära varandra och raden lämnar synligt fritt utrymme ovanför footern. UI Critic noterade i sin tidigare granskning att målytan bekräftas av verifieraren och kodinspektion, inte enbart av skärmbilden.
 
 Sparade bilder:
 
 - `checklist-public-375.png` — publicerat katalog-fixtureläge.
-- `checklist-public-detail-375.png` — senaste 0-gap render som UI Critic granskade.
+- `checklist-public-phase-bottom-8_12_weeks-375.png` — uppdaterad vy där länkarna syns efter scrollning.
+- `checklist-public-detail-375.png` — tidigare 0-gap render som UI Critic granskade.
 - `checklist-review-375.png` — separat uttryckligt review-fixtureläge.
 - `browser-results.json` — senaste körresultat och avgränsning.
 - `results.json` — föregående körresultat.
@@ -35,4 +36,4 @@ Disposable PostgreSQL **16.15** kördes isolerat med `--network none`, utan host
 
 Ingen migration, import, publicering, RLS-readback eller annan operation har körts mot live Supabase. Inget nytt användarinnehåll har publicerats. Fjärrstatus är okänd.
 
-Oberoende QA och frozen Reviewer gav **PASS** på v8. Reviewer kontrollerade samtliga 59 ändrade paths mot skrivvägarna, D3-adaptern och SQL-grindarna, README-status, 0-gap-länkarna/44×44 pt-målen och bildbevisen. Native iPhone/TestFlight, VoiceOver/TalkBack och Dynamic Type är inte verifierade av RN Web-evidensen.
+Oberoende QA och frozen Reviewer gav **PASS** på v8 och en fokuserad **PASS** på v9:s ändrade filer, länkmål och uppdaterade scrollade bild. Native iPhone/TestFlight, VoiceOver/TalkBack och Dynamic Type är inte verifierade av RN Web-evidensen.

@@ -27,6 +27,7 @@ test('public checklist actions require the complete published catalog while revi
   assert.doesNotMatch(screen, /<Text[^>]*>Referenser<\/Text>/);
   assert.match(screen, /referenceNumber: \{ \.\.\.tokens\.typography\.smallCaption/);
   assert.match(screen, /minWidth: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin/);
+  assert.match(screen, /referenceLink: \{ minWidth: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin, alignItems: 'center', justifyContent: 'center' \}/);
   assert.match(screen, /checklistPhaseVisualFor\(activeTemplate\.phase\)/);
   assert.match(knowledge, /CHECKLIST_DESTINATION_ID/);
   assert.match(knowledge, /FAQ_DESTINATION_ID/);

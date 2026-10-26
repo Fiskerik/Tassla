@@ -11971,7 +11971,7 @@
       "id": "KNOWLEDGE-PHASE-CATALOG-01",
       "title": "Kunskap: publicerad faschecklistekatalog v1",
       "mvp_requirement": "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md §2, package 2 / D3; preserve approved D3 schema and progress identity",
-      "plan": "docs/tasks/dev/KNOWLEDGE-PHASE-CATALOG-01.md v8 (full dog-face banners, zero-gap numbered references, SQL payload parity preflight)",
+      "plan": "docs/tasks/dev/KNOWLEDGE-PHASE-CATALOG-01.md v9 (full dog-face banners, compact adjacent numbered references, SQL payload parity preflight)",
       "write_paths": [
         "docs/tasks/dev/KNOWLEDGE-PHASE-CATALOG-01.md",
         "docs/tasks/dev/queue.json",
@@ -12064,14 +12064,14 @@
         "KNOWLEDGE-D3-CATALOG-SCHEMA-01"
       ],
       "status": "done",
-      "next_step": "KNOWLEDGE-PHASE-CATALOG-01 is done. Next: commit and push this branch to GitHub, then plan a separate FAQ catalog task.",
+      "next_step": "V9 is reviewed and ready to commit and push on knowledge/d3-catalog-delivery. After push, plan a separate FAQ catalog task.",
       "priority": "P1",
       "panels": [
         "7"
       ],
       "risk_class": "H",
-      "checkpoint": "V8 applies the owner-requested zero additional gap between the numbered reference targets. All six face crops pass the 375/430 synthetic render; the latest 375px source row was reviewed by UI Critic and passes with distinct marks, 44x44pt targets and footer clearance. Disposable PostgreSQL 16.15 import/publication/idempotency/refusal and published-only RLS/owner-data probes pass in an isolated synthetic container. No live Supabase operation occurred.",
-      "test_evidence": "Latest public UI verifier: 128 passes, zero failures and zero page errors at 375/430; UI Critic final PASS on all phase crops and separate PASS on the zero-gap adjustment. `python -X utf8 tools/validate_knowledge_catalog.py`, SQL-payload mutation test, Architect/Security static re-review, disposable PostgreSQL 16.15 sequence, `pnpm check` 85/85, review-channel iOS bundle export, queue validation and `git diff --check` pass. Independent QA and frozen Reviewer PASS; reviewer audited all 59 changed paths. Native/iPhone/VoiceOver/Dynamic Type and live Supabase/RLS remain NOT TESTABLE.",
+      "checkpoint": "V9 removes the reference links' extra horizontal padding at the owner's request. Links meet edge-to-edge with separate 44x44pt targets; the verifier now preserves scroll position for bottom captures. All six face crops pass the 375/430 synthetic render. Independent QA and frozen Reviewer PASS on the updated 375px source row, footer clearance and current in-scope paths. Disposable PostgreSQL 16.15 import/publication/idempotency/refusal and published-only RLS/owner-data probes pass in an isolated synthetic container. No live Supabase operation occurred.",
+      "test_evidence": "Latest public UI verifier: 128 passes, zero failures and zero page errors at 375/430; links have no added padding, accessible full source names, 44x44pt targets and bottom screenshots preserve scroll. Focused checklist UI test and `pnpm check` 85/85 pass. `python -X utf8 tools/validate_knowledge_catalog.py`, SQL-payload mutation test, Architect/Security static re-review, disposable PostgreSQL 16.15 sequence, review-channel iOS bundle export, queue validation and `git diff --check` pass. Independent QA and frozen Reviewer PASS on v9; Reviewer confirmed all current paths remain in scope, links touch edge-to-edge and the scrolled capture is accurate. Prior UI Critic review covers the six image crops and v8's zero-gap treatment. Native/iPhone/VoiceOver/Dynamic Type and live Supabase/RLS remain NOT TESTABLE.",
       "history": [
         {
           "from": "planned",
@@ -12102,6 +12102,18 @@
           "to": "done",
           "actor": "reviewer",
           "evidence": "Frozen Reviewer PASS: 59/59 changed paths match write_paths; no blocking findings. Reviewer confirmed catalog, SQL guards, zero-gap 44x44pt links, six images, docs and recorded evidence. Live Supabase, production publication, native/device and veterinary limits remain as documented. Next: commit/push, then plan FAQ catalog separately."
+        },
+        {
+          "from": "done",
+          "to": "review",
+          "actor": "implementer",
+          "evidence": "Owner requested tighter numbered references after v8. V9 removes extra horizontal padding, updates the scrolled screenshot capture, passes 128/128 RN Web checks and pnpm check 85/85, and receives independent QA PASS. Frozen Reviewer is checking the focused v9 diff before commit/push."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Focused v9 Reviewer PASS: paths remain within D3 write_paths, 44x44pt numbered links meet edge-to-edge, the scrolled 375px evidence is accurate/readable and queue/plan agree. Independent QA also PASS. Next: commit and push the reviewed v9 changes, then plan FAQ catalog separately."
         }
       ]
     },

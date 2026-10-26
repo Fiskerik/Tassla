@@ -61,7 +61,7 @@ def check_phase_banner(page, label, phase, width, capture=False):
               f'{phase} reference {index + 1} meets 44pt target at {width}px')
     check(no_horizontal_overflow(page), f'{phase} references have no horizontal overflow at {width}px')
     if capture:
-        screenshot(page, f'checklist-public-phase-bottom-{phase}-{width}.png')
+        screenshot(page, f'checklist-public-phase-bottom-{phase}-{width}.png', reset_scroll=False)
 
 
 def scroll_top(page):
@@ -84,8 +84,9 @@ def no_horizontal_overflow(page):
     }""")
 
 
-def screenshot(page, name):
-    scroll_top(page)
+def screenshot(page, name, reset_scroll=True):
+    if reset_scroll:
+        scroll_top(page)
     page.screenshot(path=str(OUT / name))
 
 
@@ -140,7 +141,7 @@ with sync_playwright() as p:
             footer = page.get_by_role('tab', name='Hem').bounding_box()
             last_reference = links.nth(1).bounding_box()
             check(footer is not None and last_reference is not None and last_reference['y'] + last_reference['height'] <= footer['y'] + 1, f'Numbered references remain above the fixed footer at {width}px')
-            screenshot(page, f'checklist-public-detail-bottom-{width}.png')
+            screenshot(page, f'checklist-public-detail-bottom-{width}.png', reset_scroll=False)
             links.first.click()
             page.wait_for_function('window.__tasslaOpenedSourceUrl !== null', timeout=3000)
             check(page.evaluate('window.__tasslaOpenedSourceUrl') == 'https://www.rspca.org.uk/adviceandwelfare/pets/dogs/health/puppycare', f'Numbered reference opens its exact safe source URL at {width}px')
