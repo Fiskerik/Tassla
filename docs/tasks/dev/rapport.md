@@ -1305,3 +1305,15 @@ UI Critic slutgranskade den korrigerade aktiva-bekräftade raden och gav **PASS*
 `pnpm check` **PASS** (TypeScript, edge TypeScript, ESLint, 87/87 testfiler). Den återställda och utökade `tools/visual-check/verify-flow-training.py` **PASS**: 24 befintliga progression-/Homekontroller och 7 timelinekontroller; inga browserfel. Bilder och `RESULTS.json`/`browser-results.json` finns i `docs/design/evidence/training-timeline-01/`. `git diff --check` och `python -X utf8 tools/dev_flow.py validate` **PASS**; path-audit visar 0 ändringar utanför de två aktiva godkända taskarna.
 
 Native iOS/Android, VoiceOver/TalkBack, fysisk Dynamic Type, live Supabase/PostgREST/JWT/RLS och TestFlight är **NOT TESTABLE** här. Ingen migration, ny dependency, innehållsändring, commit eller push har gjorts.
+
+### TRAINING-LOGGING-UX-01 — lokalt verifierad, slutlig review — 2026-10-27
+
+Utgångspunkt: branch `knowledge/d3-catalog-delivery`, taskplan v2 efter Product Critic **PROCEED** och Architect **APPROVE**. Programkorten visar nu bekräftade delmål som en progressbar separat från loggade pass. Den aktiva träningsresan saknar knapparna Pausa/Underhåll. En pausad resa kan fortsätta med nästa övning och visar vilket sparat steg som återupptas; dess övningsdetalj loggar inte pass innan resan återupptagits. Passåterkopplingen har tre kompakta alternativ och en sparhandling, felmeddelandet visas i centrerad övningsruta, och osäkert skrivresultat återförsöker samma operations-ID. Endast ett sparat positivt pass leder till ett separat, frivilligt delmålsval. Äldre aktivitetssektion döljs i en pågående resa.
+
+Kunskapsartiklar visar täta numrerade källor `1)`–`3)` i stället för råa URL:er och knappar. HTTPS-begränsning, 44×44-träffyta, skärmläsarnamn och textfallback för opaque källvärden är bevarade. Checklistor och träningsprogrammens befintliga källrader ändrades inte. Plan och kö inkluderar alla ändrade test-, fixture- och renderbevispaths.
+
+UI Critic gav först **REVISE**; pausad övning, gammal toast, legacy-sektion och kortbevis justerades. Slutlig UI Critic REVIEW **PASS**. Första QA **REVISE** saknade test av misslyckat/okänt `record_session`; första Reviewer **BLOCK** saknade uppdaterade write paths och färska statusar. Fel-/okäntprov är nu tillagt, same-operation retry och explicit milestone verifierade. Slutlig QA **PASS** och Reviewer **APPROVE**. Pushas till befintlig branch efter commit-hookarnas kontroller.
+
+`pnpm check` **PASS** (TypeScript, edge TypeScript, ESLint, 96/96 testfiler). Träningsflöde RN Web 28/28 PASS vid 375/430, 375×667 och 140 % text; Knowledge article reader 15/15 PASS vid 375/430 och 140 % text; inga browserfel. Bevis och paneljämförelser ligger under `docs/design/evidence/training-logging-ux-01/`; timelinebilderna uppdaterades av samma verifierare.
+
+Ingen migration, dependency, persistence/API-contract eller innehållsråd ändrades. RN Web-fixtures är syntetiska. Live Supabase/RLS, native iOS/Android, VoiceOver/TalkBack, fysisk Dynamic Type och TestFlight är **NOT TESTABLE**. Migrationerna är enligt användaren avklarade, inte live-verifierade här.

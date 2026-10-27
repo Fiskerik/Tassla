@@ -958,8 +958,7 @@ def verify_article_reader(browser) -> None:
         expect(search).to_have_value('En artikel utan hundmatchning')
         record(f'Published-library search opens a non-recommended article and preserves search on Back at {width}px', not page_errors,
                {'page_errors': page_errors})
-        search.fill('')
-        page.get_by_role('button', name='Alla artiklar', exact=True).click()
+        search.fill('Rumsrenhet')
 
         lower_article = page.get_by_role('button', name='Läs Rumsrenhet – så hjälper du valpen att lyckas', exact=True)
         lower_article.scroll_into_view_if_needed()
@@ -977,6 +976,18 @@ def verify_article_reader(browser) -> None:
         intro_weight = intro.evaluate('element => getComputedStyle(element).fontWeight')
         subheading = page.get_by_role('heading', name='När ska ni gå ut?', exact=True)
         subheading_color = subheading.evaluate('element => getComputedStyle(element).color')
+        references = page.get_by_test_id('article-references')
+        reference_links = references.get_by_role('link')
+        expect(reference_links).to_have_count(3)
+        reference_labels = [reference_links.nth(index).inner_text() for index in range(3)]
+        reference_boxes = [reference_links.nth(index).bounding_box() for index in range(3)]
+        visible_article_text = article_container.inner_text()
+        record(f'Article sources render as tightly grouped numbered links at {width}px',
+               reference_labels == ['1)', '2)', '3)']
+               and all(box is not None and box['width'] == 44 and box['height'] == 44 for box in reference_boxes)
+               and all(abs(reference_boxes[index + 1]['x'] - (reference_boxes[index]['x'] + 44)) <= 1 for index in range(2))
+               and 'https://' not in visible_article_text,
+               {'labels': reference_labels, 'link_targets': reference_boxes, 'raw_url_visible': 'https://' in visible_article_text})
         record(f'Article detail resets to top, uses an unboxed reader and full-width 16:9 hero at {width}px',
                article_position is not None and article_position['top'] <= 2
                and hero_box is not None and abs(hero_box['x']) <= 1 and abs(hero_box['width'] - width) <= 2
@@ -988,6 +999,8 @@ def verify_article_reader(browser) -> None:
         page.screenshot(path=str(OUT / f'article-reader-top-{width}.png'), full_page=True)
 
         set_vertical_scroll(page, 100000)
+        references.scroll_into_view_if_needed()
+        page.screenshot(path=str(OUT / f'article-reader-references-{width}.png'), full_page=True)
         expect(page.get_by_text('Fler artiklar för din hund', exact=True)).to_be_visible()
         carousel = page.get_by_test_id('knowledge-related-carousel')
         carousel_metrics = carousel.evaluate("element => ({clientWidth: element.clientWidth, scrollWidth: element.scrollWidth, scrollLeft: element.scrollLeft})")
@@ -1015,7 +1028,7 @@ def verify_article_reader(browser) -> None:
         page.wait_for_timeout(100)
         switched_position = vertical_scroll_state(page)
         page.get_by_role('button', name='Tillbaka till guider', exact=True).click()
-        expect(page.get_by_role('button', name='För dig', exact=True)).to_be_visible()
+        expect(search).to_have_value('Rumsrenhet')
         restored_position = vertical_scroll_state(page)
         record(f'Switching carousel articles resets to top and Back restores the scrolled library position at {width}px',
                switched_position is not None and switched_position['top'] <= 2

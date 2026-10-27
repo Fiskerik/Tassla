@@ -50,7 +50,9 @@ test('journey is the primary progression path and legacy activity marking is dis
   assert.match(screen, /Aktivitetsmarkeringar i programmet/);
   assert.match(screen, /legacyActivityOpen \? selectedProgram\?\.completedStepIds\.includes\(selectedStep\.id\)/);
   assert.match(screen, /progression\.journeys\.find\(\(journey\) => journey\.program_version_id === selectedProgram\.id\)\?\.state === 'paused'/);
-  assert.match(screen, /journeyProgress \? <Text style=\{styles\.stepMeta\}>\{progressLabel\}<\/Text> : <Progress/);
+  assert.match(screen, /<Progress value=\{program\.steps\.length > 0 \? journeyProgress\.confirmedMilestones \/ program\.steps\.length \* 100 : 0\}/);
+  assert.match(screen, /journeyStepProgressLabel\(journeyProgress\.confirmedMilestones, program\.steps\.length\)/);
+  assert.match(screen, /journeySessionCountLabel\(journeyProgress\.loggedSessions\)/);
 });
 
 test('saved start, next, and back wait for fresh progression props before opening the active step', () => {
@@ -61,8 +63,32 @@ test('saved start, next, and back wait for fresh progression props before openin
 });
 
 
+test('session feedback is concise and only the latest positive pass offers an explicit milestone confirmation', () => {
+  assert.match(screen, /\['worked_as_planned', 'Gick som planerat'/);
+  assert.match(screen, /\['practice_more', 'Vi fortsätter öva'/);
+  assert.match(screen, /\['paused_early', 'Vi avslutade tidigare'/);
+  assert.match(screen, /accessibilityRole="radio"/);
+  assert.match(screen, /Spara pass/);
+  assert.match(screen, /progressionMessage\?\.programId === program\.id \? <Text accessibilityLiveRegion="polite" style=\{styles\.progressionMessage\}/);
+  assert.match(screen, /case 'record_session': return 'Träningspasset är loggat\.'/);
+  assert.match(screen, /lastPassWentWell && view\.canConfirmStep/);
+  assert.match(screen, /testID="training-milestone-ready"/);
+  assert.match(screen, /Bekräfta delmålet om övningens mål känns uppnått/);
+  assert.match(screen, /if \(value\) setSuccessMessage\(''\)/);
+  assert.match(screen, /selectedStep && !feedbackPickerOpen && !selectedJourneyView\?\.journey \? <View style=\{styles\.legacySection\}/);
+  assert.doesNotMatch(screen, /Spara återkopplingen för träningspasset/);
+  assert.doesNotMatch(screen, /label="Avbryt"/);
+});
+
+test('a journey has no pause or maintenance controls and only paused journeys offer resume', () => {
+  assert.match(screen, /view\.canStartOrResume \? <>[\s\S]*?Återupptas vid: \{view\.activeStepTitle\}\.[\s\S]*?<Button label="Fortsätt med nästa övning"/);
+  assert.match(screen, /journeyView\?\.journey && !journeyView\.canLogSession \? 'Visa övning' : 'Öva nu'/);
+  assert.doesNotMatch(screen, /label="Pausa träningsresan"/);
+  assert.doesNotMatch(screen, /label="Sätt träningsresan i underhåll"/);
+  assert.doesNotMatch(screen, /label="Pausa"/);
+  assert.doesNotMatch(screen, /label="Underhåll"/);
+});
+
 test('open feedback has no competing milestone or step navigation action', () => {
-  assert.match(screen, /!feedbackPickerOpen && view\.canConfirmStep/);
   assert.match(screen, /!feedbackPickerOpen \? <View style=\{styles\.journeyActions\}>/);
-  assert.match(screen, /Spara återkopplingen för träningspasset/);
 });

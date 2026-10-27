@@ -379,14 +379,17 @@ function App(){
  async function unmarkTrainingFixture(program:PublishedTrainingProgram,stepId:string){const key=`${program.id}:${stepId}:unmark`;setTrainingBusyStepKey(key);setTrainingError('');try{if(trainingUnmarkScenario)await new Promise(resolve=>window.setTimeout(resolve,trainingUnmarkScenario==='pending'?1800:500));if(trainingUnmarkScenario==='failed'){setTrainingError('Steget är fortfarande markerat. Kontrollera anslutningen och försök igen.');return false;}if(trainingUnmarkScenario==='unknown'){setTrainingError('Vi kunde inte bekräfta att steget avmarkerades. Kontrollera statusen innan du försöker på nytt.');return false;}setTrainingPrograms(current=>current.map(item=>item.id===program.id?{...item,completedStepIds:item.completedStepIds.filter(id=>id!==stepId)}:item));return {programId:program.id,stepId};}finally{setTrainingBusyStepKey(null);}}
  async function applyProgressionFixture(action:TrainingProgressionAction):Promise<'saved'|'failed'|'unknown'>{
   const versionId=action.programVersionId;const pending=pendingProgressions[versionId];const operationId=pending?.operationId??`fixture-progression-${++progressionOperationNumber.current}`;
+  const progressionWrite=params.get('progressionWrite');
   progressionOperationLog.current.push({operationId,action});Object.assign(window,{__tasslaTrainingProgressionOperations:progressionOperationLog.current});
   if(trainingBusyStepKey)return 'failed';setTrainingBusyStepKey(`journey:${versionId}`);
   try{
-   if(params.get('progressionWrite')==='pending')await new Promise(resolve=>window.setTimeout(resolve,650));
-   if(params.get('progressionWrite')==='failed'&&!pending)return 'failed';
+   if(progressionWrite==='pending')await new Promise(resolve=>window.setTimeout(resolve,650));
+   if(progressionWrite==='failed'&&!pending)return 'failed';
+   if(progressionWrite==='failed-session'&&action.kind==='record_session'&&!pending)return 'failed';
    const next=applyProgressionFixtureAction(progressionStore.current,trainingPrograms.find(program=>program.id===versionId),action,operationId);
    progressionStore.current=next;
-   if(params.get('progressionWrite')==='unknown-once'&&!progressionUnknownTriggered.current&&!pending){
+   const shouldReturnUnknown=progressionWrite==='unknown-once'||(progressionWrite==='unknown-session-once'&&action.kind==='record_session');
+   if(shouldReturnUnknown&&!progressionUnknownTriggered.current&&!pending){
     progressionUnknownTriggered.current=true;setPendingProgressions(current=>({...current,[versionId]:{action,operationId,status:'unknown'}}));return 'unknown';
    }
    setTrainingProgression(next);setPendingProgressions(current=>{const copy={...current};delete copy[versionId];return copy;});return 'saved';

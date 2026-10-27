@@ -12406,6 +12406,114 @@
         "TRAINING-PROGRESSION-01",
         "UI-MODAL-CENTER-01"
       ]
+    },
+    {
+      "id": "TRAINING-LOGGING-UX-01",
+      "title": "Träning: visualisera delmålsprogress, förenkla passloggning och komprimera källor",
+      "mvp_requirement": "Owner request 2026-10-27; docs/design-rules.md §0–4, §8–9, §14; Panel 6 nearest training reference; existing article footnote rule",
+      "plan": "docs/tasks/dev/TRAINING-LOGGING-UX-01.md v2; Product Critic PROCEED and Architect APPROVE 2026-10-27",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/README.md",
+        "tests/training-progression-ui.test.mjs",
+        "tests/training-overview.test.mjs",
+        "tests/training-screen-policy.test.mjs",
+        "tests/content-delivery.test.mjs",
+        "tests/knowledge-training-empty-feedback.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-training.py",
+        "docs/design/evidence/training-logging-ux-01",
+        "docs/design/evidence/training-timeline-01",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "docs/tasks/dev/TRAINING-LOGGING-UX-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/dev/TRACTION-IMPLEMENTATION-CHECKPOINT.md"
+      ],
+      "acceptance": [
+        "Training list cards visualize owner-confirmed milestones divided by published step count; logged sessions remain separate and no step counts as complete from a session alone.",
+        "Training log choices are short, clear, accessible and saved with one action. Failed writes remain unconfirmed and retryable; unknown writes retry the same operation ID. The milestone is offered only after a saved positive session and remains a distinct, owner-initiated confirmation; partial/early stops do not present completion.",
+        "Active journey overview has no Pause or Maintenance action; paused journeys expose one clear resume/continue action; active state retains an obvious path to the current exercise.",
+        "Knowledge article sources display numbered references instead of long URLs and repeated open buttons; links retain 44pt targets, HTTPS targets and accessible labels work, and opaque source values remain readable. Checklist and Training sources were audited and keep their existing numbered 44pt links.",
+        "Public synthetic renders and behavior checks at 375/430, 375x667 and 140% text have opened screenshot review; UI Critic REVIEW, QA and Reviewer outcomes are recorded separately.",
+        "All changed paths match the approved scope; no migration, dependency, content advice or backend contract changes."
+      ],
+      "checks": [
+        "Focused progression UI, screen-policy and knowledge source tests",
+        "pnpm check",
+        "python -X utf8 tools/visual-check/verify-flow-training.py",
+        "Public RN Web render at 375/430, 375x667 and 140% text; open screenshots and review against panel 6/style contract",
+        "UI Critic REVIEW, independent QA, independent Reviewer",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "TRAINING-TIMELINE-01",
+        "ARTICLE-READING-EXPERIENCE-01"
+      ],
+      "status": "done",
+      "next_step": "Efter push till origin/knowledge/d3-catalog-delivery: bygg och prova träningsflödet på iPhone vid behov. Live Supabase/RLS och native tillgänglighet är fortsatt separata, overifierade kontroller.",
+      "priority": "P1",
+      "panels": [
+        "6",
+        "7"
+      ],
+      "risk_class": "M",
+      "checkpoint": "UI Critic final REVIEW PASS, independent QA PASS och Reviewer APPROVE. pnpm check 96/96, training UI 28/28, article UI 15/15, queue validation, git diff --check och 64/64 path-audit PASS. Commit/push till befintlig knowledge/d3-catalog-delivery återstår; inga nya brancher eller worktrees.",
+      "test_evidence": "pnpm check PASS: typecheck, edge typecheck, lint och 96/96 testfiler. TASSLA_UI_BASE_URL=http://127.0.0.1:4394/ TASSLA_UI_EVIDENCE=docs/design/evidence/training-logging-ux-01/public python -X utf8 tools/visual-check/verify-flow-training.py PASS 28/28. TASSLA_UI_PANEL=article-reader TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:4395 TASSLA_UI_EVIDENCE=docs/design/evidence/training-logging-ux-01/article-reader python -X utf8 tools/visual-check/verify-vision-r02-home-panels.py PASS 15/15. UI Critic final REVIEW PASS, independent QA PASS, Reviewer APPROVE. python -X utf8 tools/dev_flow.py validate PASS, git diff --check PASS, 64/64 ändrade paths inom godkända write_paths. Live Supabase/RLS och native verifiering är NOT TESTABLE.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1 after source-inventory clarification; no schema/API/dependency changes. Product Critic PROCEED v1; UI Critic BRIEF recorded in task plan. Erik authorized scope in chat 2026-10-27."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement v1: only PublishedTrainingScreen and KnowledgeScreen UI presentation plus existing targeted tests/verifier/docs; preserve passage and milestone RPC contracts, no migrations."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Owner-requested source-density correction extends v1 audit to tighten the existing Checklist and Training number-link rows; plan/queue v2 updated and renewed Critic/Architect review requested before final acceptance."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Plan v2 corrected the proposed touch target after independent review: retain 44×44 pt across all source links; compact only the new Knowledge source presentation. Checklist/Training already meet numbered-link pattern and remain unchanged."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "architect",
+          "evidence": "Plan v2 REVIEW: Product Critic PROCEED; Architect APPROVE. 44×44 pt source links retained, Checklist/Training unchanged, synthetic Knowledge source rendering added."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "UI Critic first REVIEW REVISE; addressed paused-step copy, stale toast, unrelated activity section and progress-card visual evidence. UI Critic final REVIEW PASS on panel composites and updated session states."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "Independent QA REVISE found missing failed/unknown record_session verification. Added retryable failed state, unknown same-operation retry, exactly-one session and explicit milestone checks; 28/28 training renders pass. Independent Reviewer BLOCK found paths and result fields stale; added the test/fixture/evidence paths and reconciled validation results. Final QA/Reviewer re-review pending."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Final UI Critic PASS, QA PASS and Reviewer APPROVE; pnpm check 96/96, training UI 28/28, article UI 15/15, queue validation and diff check PASS, all 64 paths within write_paths. Commit/push remains the delivery step."
+        }
+      ]
     }
   ]
 }

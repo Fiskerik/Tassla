@@ -1,0 +1,232 @@
+{
+  "mode": "review",
+  "panel": "article-reader",
+  "evidence_dir": "docs/design/evidence/training-logging-ux-01/article-reader",
+  "results": [
+    {
+      "check": "Article reader hides an empty related-article carousel at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Published-library search opens a non-recommended article and preserves search on Back at 375px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Article sources render as tightly grouped numbered links at 375px",
+      "result": "PASS",
+      "labels": [
+        "1)",
+        "2)",
+        "3)"
+      ],
+      "link_targets": [
+        {
+          "x": 24,
+          "y": 718.9375,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "x": 68,
+          "y": 718.9375,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "x": 112,
+          "y": 718.9375,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "raw_url_visible": false
+    },
+    {
+      "check": "Article detail resets to top, uses an unboxed reader and full-width 16:9 hero at 375px",
+      "result": "PASS",
+      "scroll": {
+        "top": 0,
+        "max": 392,
+        "client": 707,
+        "scroll": 1099
+      },
+      "hero": {
+        "x": 0,
+        "y": 108,
+        "width": 375,
+        "height": 210.9375
+      },
+      "hero_ratio": 1.7777777777777777,
+      "container": {
+        "border": "0px",
+        "background": "rgba(0, 0, 0, 0)"
+      }
+    },
+    {
+      "check": "Article lead is bold and subhead uses Tassla green at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Related carousel includes only other explicitly recommended articles and can scroll horizontally at 375px",
+      "result": "PASS",
+      "metrics": {
+        "clientWidth": 375,
+        "scrollWidth": 540,
+        "scrollLeft": 0,
+        "scrolledLeft": 120
+      },
+      "included": [
+        true,
+        true
+      ],
+      "excluded": [
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "check": "Switching carousel articles resets to top and Back restores the scrolled library position at 375px",
+      "result": "PASS",
+      "source_library_scroll": {
+        "top": 111,
+        "max": 318,
+        "client": 707,
+        "scroll": 1025
+      },
+      "switched_article_scroll": {
+        "top": 0,
+        "max": 580,
+        "client": 707,
+        "scroll": 1287
+      },
+      "restored_library_scroll": {
+        "top": 111,
+        "max": 318,
+        "client": 707,
+        "scroll": 1025
+      },
+      "page_errors": []
+    },
+    {
+      "check": "Article reader hides an empty related-article carousel at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Published-library search opens a non-recommended article and preserves search on Back at 430px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Article sources render as tightly grouped numbered links at 430px",
+      "result": "PASS",
+      "labels": [
+        "1)",
+        "2)",
+        "3)"
+      ],
+      "link_targets": [
+        {
+          "x": 24,
+          "y": 749.875,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "x": 68,
+          "y": 749.875,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "x": 112,
+          "y": 749.875,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "raw_url_visible": false
+    },
+    {
+      "check": "Article detail resets to top, uses an unboxed reader and full-width 16:9 hero at 430px",
+      "result": "PASS",
+      "scroll": {
+        "top": 0,
+        "max": 423,
+        "client": 707,
+        "scroll": 1130
+      },
+      "hero": {
+        "x": 0,
+        "y": 108,
+        "width": 430,
+        "height": 241.875
+      },
+      "hero_ratio": 1.7777777777777777,
+      "container": {
+        "border": "0px",
+        "background": "rgba(0, 0, 0, 0)"
+      }
+    },
+    {
+      "check": "Article lead is bold and subhead uses Tassla green at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Related carousel includes only other explicitly recommended articles and can scroll horizontally at 430px",
+      "result": "PASS",
+      "metrics": {
+        "clientWidth": 430,
+        "scrollWidth": 540,
+        "scrollLeft": 0,
+        "scrolledLeft": 110
+      },
+      "included": [
+        true,
+        true
+      ],
+      "excluded": [
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "check": "Switching carousel articles resets to top and Back restores the scrolled library position at 430px",
+      "result": "PASS",
+      "source_library_scroll": {
+        "top": 159,
+        "max": 366,
+        "client": 707,
+        "scroll": 1073
+      },
+      "switched_article_scroll": {
+        "top": 0,
+        "max": 539,
+        "client": 707,
+        "scroll": 1246
+      },
+      "restored_library_scroll": {
+        "top": 159,
+        "max": 366,
+        "client": 707,
+        "scroll": 1073
+      },
+      "page_errors": []
+    },
+    {
+      "check": "Article reader remains readable and horizontally contained with 140% text proxy at 375×667",
+      "result": "PASS",
+      "scaled_text_elements": 27,
+      "document_overflow": false,
+      "carousel": {
+        "clientWidth": 375,
+        "scrollWidth": 540
+      }
+    }
+  ],
+  "failures": []
+}
