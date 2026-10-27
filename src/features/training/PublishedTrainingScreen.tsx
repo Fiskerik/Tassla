@@ -330,7 +330,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
         <Text style={styles.body}>Den sparade träningsresan finns kvar, men det publicerade programmet kan inte öppnas just nu.</Text>
       </View> : <View style={styles.journeyCard}>
         <View style={styles.journeySummaryLine}>
-          <Ionicons name={view.journey.state === 'paused' ? 'play-circle-outline' : view.journey.state === 'maintenance' ? 'shield-checkmark-outline' : 'navigate-circle-outline'} size={tokens.size.iconMd} color={tokens.colors.training.accent} />
+          <Ionicons name={view.journey.state === 'paused' ? 'play-circle-outline' : 'navigate-circle-outline'} size={tokens.size.iconMd} color={tokens.colors.training.accent} />
           <Text style={styles.journeySummaryText}>{view.stateLabel} · {view.loggedSessions} pass · {view.confirmedMilestones} delmål</Text>
         </View>
         {view.canStartOrResume ? <>
@@ -814,7 +814,7 @@ function progressionFingerprint(workspace: TrainingProgressionWorkspace, program
 
 function percentage(program: PublishedTrainingProgram) { return program.steps.length ? completedCount(program) / program.steps.length * 100 : 0; }
 function trainingJourneyStateLabel(state: 'active' | 'paused' | 'maintenance') {
-  return state === 'paused' ? 'Resan är pausad' : state === 'maintenance' ? 'Underhåll' : 'Träningsresa pågår';
+  return state === 'paused' ? 'Pausad' : 'Pågår';
 }
 function programResetFingerprint(program: PublishedTrainingProgram) {
   return JSON.stringify({ id: program.id, content_id: program.content_id, version: program.version, title: program.title,

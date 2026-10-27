@@ -1317,3 +1317,9 @@ UI Critic gav först **REVISE**; pausad övning, gammal toast, legacy-sektion oc
 `pnpm check` **PASS** (TypeScript, edge TypeScript, ESLint, 96/96 testfiler). Träningsflöde RN Web 28/28 PASS vid 375/430, 375×667 och 140 % text; Knowledge article reader 15/15 PASS vid 375/430 och 140 % text; inga browserfel. Bevis och paneljämförelser ligger under `docs/design/evidence/training-logging-ux-01/`; timelinebilderna uppdaterades av samma verifierare.
 
 Ingen migration, dependency, persistence/API-contract eller innehållsråd ändrades. RN Web-fixtures är syntetiska. Live Supabase/RLS, native iOS/Android, VoiceOver/TalkBack, fysisk Dynamic Type och TestFlight är **NOT TESTABLE**. Migrationerna är enligt användaren avklarade, inte live-verifierade här.
+
+### TRAINING-LOGGING-UX-01 — ägaruppföljning av resestatus, 2026-10-27
+
+Eriks nya skärmbild visar en äldre vy med `Pausa` och `Underhåll`. Den aktuella branchen saknar redan de två åtgärderna: aktiva resor visar bara övningsflödet, pausade resor visar `Fortsätt med nästa övning` och destinationen som återupptas. Uppföljningen normaliserar också äldre sparade `maintenance`-tillstånd till användarstatusen `Pågår`, utan att ändra lagrat tillstånd eller API-kontrakt.
+
+`pnpm check` **PASS** (TypeScript, edge TypeScript, ESLint, 96/96 tester). Egen RN Web-kontroll med syntetiska fixtures **PASS**: aktiv resa har ingen paus-/underhållsåtgärd och kan öppna sitt steg; pausad resa erbjuder återupptagning och inga paus-/underhållsåtgärder. UI Critic REVIEW **PASS** och oberoende Reviewer **PASS** för den avgränsade ändringen. Den kompletta äldre `verify-flow-training.py` stannade vid rad 159 efter resetbekräftelse, där dess förväntade startknapp saknades; detta är inte det ändrade resestatusflödet och har inte analyserats eller åtgärdats här. Live-data/RLS och native iOS är inte verifierade.

@@ -124,6 +124,10 @@ test('a saved session never advances skill; confirmation stays separate and navi
   assert.equal(paused.canStartOrResume, true);
   assert.equal(paused.canLogSession, false);
   assert.equal(paused.canGoNext, false);
+
+  const legacyMaintenance = model.trainingProgressionPresentation({ journeys: [{ ...journeyA, state: 'maintenance', active_step_id: 'step-1' }], sessions: [], milestones: [] }, versionA, steps);
+  assert.equal(legacyMaintenance.stateLabel, 'Pågående');
+  assert.equal(legacyMaintenance.canLogSession, true);
 });
 
 test('operation result parser rejects unknown server actions and malformed saved results', () => {

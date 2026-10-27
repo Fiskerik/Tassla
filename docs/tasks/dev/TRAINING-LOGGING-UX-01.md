@@ -53,3 +53,9 @@ Public-fixture renderades mot panel 6 som närmaste träningsreferens; artikelvy
 - Ingen schema-/API-/persistensändring eller migration. Live Supabase/RLS, native iOS/Android, VoiceOver/TalkBack, faktisk Dynamic Type och TestFlight är inte verifierade här. Migrationernas status är användarrapporterat klar.
 
 Commit `9a5317484286e731d9d43734a7d0881e9c37bf4f` är pushad till `origin/knowledge/d3-catalog-delivery`. Erik kan bygga samma branch och prova passflödet på iPhone vid behov. Migrationerna är enligt ägarens rapport avklarade; live RLS/runtime-status ska inte blandas ihop med lokal render.
+
+## Ägaruppföljning 2026-10-27 — statusraden för resan
+
+Eriks nya iPhone-bild visar de tidigare `Pausa`/`Underhåll`-åtgärderna. De finns redan borttagna i den pushade implementationen: en aktiv resa visar övningsflödet utan statusknappar, och en pausad resa erbjuder endast `Fortsätt med nästa övning`. Uppföljningen ändrar visningen av kvarvarande äldre `maintenance`-data till `Pågår`, utan databas- eller API-ändring.
+
+UI Critic REVIEW **PASS** på panel-6-jämförelsebilden som närmaste mönster: detaljvyn är lugn, statuskortet saknar åtgärdsrad och aktiv övning dominerar. Skärmbild, kompositjämförelse och JSON-resultat: `docs/design/evidence/training-logging-ux-01/status-followup-2026-10-27/`. Oberoende Reviewer **PASS** verifierade diff, testsäkerhet, legacy-state-kompatibilitet och dokumentation. `pnpm check` **PASS** (96/96 tester); riktad Playwright-kontroll av aktiv och pausad resa **PASS**. Den äldre fullständiga `verify-flow-training.py` verifieraren stoppade efter resetbekräftelse vid sitt förväntade startknappsnamn; det flödet är inte ändrat i denna uppföljning. Detta lokala reviewresultat ersätter inte native/TestFlight-verifiering.

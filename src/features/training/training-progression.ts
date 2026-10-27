@@ -147,7 +147,9 @@ export function trainingProgressionPresentation(
   const canPractice = journey.state !== 'paused' && stepIndex >= 0;
   return {
     journey,
-    stateLabel: journey.state === 'paused' ? 'Pausad' : journey.state === 'maintenance' ? 'Underhåll' : 'Pågående',
+    // Older saved journeys may still carry the legacy maintenance state. Keep
+    // the user-facing status focused on whether the journey can be resumed.
+    stateLabel: journey.state === 'paused' ? 'Pausad' : 'Pågående',
     activeStepId: stepIndex >= 0 ? journey.active_step_id : null,
     activeStepTitle: stepIndex >= 0 ? steps[stepIndex].title : null,
     loggedSessions: selected.sessions.length,
