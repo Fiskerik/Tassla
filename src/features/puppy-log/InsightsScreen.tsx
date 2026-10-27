@@ -24,6 +24,7 @@ export type InsightsLoadState =
   | { status: 'ready'; data: DogEventInsights };
 
 const PERIOD_OPTIONS: readonly { key: InsightsPeriod; label: string }[] = [
+  { key: 'today', label: 'Idag' },
   { key: 'week', label: 'Vecka' },
   { key: 'month', label: 'Månad' },
   { key: 'since_first_log', label: 'Sedan första loggen' },
@@ -92,7 +93,7 @@ export function InsightsScreen({
     <Text style={styles.subtitle}>Registreringar över tid med {dogName}.</Text>
 
     <Tabs items={PERIOD_OPTIONS.map((option) => option.label)} active={PERIOD_OPTIONS.find((option) => option.key === period)?.label ?? PERIOD_OPTIONS[0].label}
-      accessibilityLabel="Period för insikter" variant="rev02-segmented"
+      accessibilityLabel="Period för insikter" variant="rev02-segmented" layout="horizontal-scroll"
       onChange={(label) => { const selected = PERIOD_OPTIONS.find((option) => option.label === label); if (selected) onPeriodChange(selected.key); }} />
 
     {state.status === 'loading' ? <Card accessibilityLabel="Hämtar insikter">
@@ -107,9 +108,9 @@ export function InsightsScreen({
 
     {data ? <>
       <View style={styles.periodSummary} accessible accessibilityRole="text"
-        accessibilityLabel={`${insightsDateRange(data)}. Visar data till och med ${formatInsightsDate(data.observedThroughLocal, true)}. ${data.period === 'week' ? 'Veckan pågår.' : `${formatInsightsMonth(data.observedThroughLocal.slice(0, 7))} pågår.`}`}>
+        accessibilityLabel={`${insightsDateRange(data)}. Visar data till och med ${formatInsightsDate(data.observedThroughLocal, true)}. ${data.period === 'today' ? 'Dagen pågår.' : data.period === 'week' ? 'Veckan pågår.' : `${formatInsightsMonth(data.observedThroughLocal.slice(0, 7))} pågår.`}`}>
         <Text style={styles.rangeLabel}>{insightsDateRange(data)}</Text>
-        <Text style={styles.coverageLabel}>Visar data till och med {formatInsightsDate(data.observedThroughLocal, true)} · {data.period === 'week' ? 'veckan pågår' : `${formatInsightsMonth(data.observedThroughLocal.slice(0, 7))} pågår`}</Text>
+        <Text style={styles.coverageLabel}>Visar data till och med {formatInsightsDate(data.observedThroughLocal, true)} · {data.period === 'today' ? 'dagen pågår' : data.period === 'week' ? 'veckan pågår' : `${formatInsightsMonth(data.observedThroughLocal.slice(0, 7))} pågår`}</Text>
       </View>
 
       {data.period === 'since_first_log' && data.days.length === 0 ? <Card>

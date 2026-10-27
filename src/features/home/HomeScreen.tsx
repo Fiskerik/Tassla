@@ -11,9 +11,10 @@ import { selectDailyProgress, type DailyProgressCoverage, type HomeDailyActivity
 import { tokens } from '../../theme/tokens';
 import { automaticDogAge, localDate } from '../onboarding/dog';
 import type { LogEvent } from '../puppy-log/log-model';
-import { homeAgeMarkerLabel, homeAgeStrip } from './home-today';
+import { homeAgeInWeeks, homeAgeMarkerLabel, homeAgeStrip } from './home-today';
 import { homeGreetingAt } from './home-greeting';
-import { latestHomeReflection } from './home-reflection';
+import { latestHomeReflection, type TrainingReflection } from './home-reflection';
+import { generalDevelopmentMilestones } from './development-milestones';
 import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
 import { DogProfileSwitcherSheet } from './DogProfileSwitcherSheet';
 import type { RoutineDraft, RoutineDraftConflict, RoutineDraftRecovery } from './daily-activity-recovery';
@@ -44,7 +45,7 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
   onOpenChecklist, onOpenProgress, onOpenTrainingStep, onOpenDevelopment,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay,
   onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, onGo, onOpenContent, onRetryContent,
-  trainingProgression, trainingProgressionState = 'ready', pendingProgression, nextTrainingSuggestion, onOpenTrainingJourney, onRetryProgression, onRetryTrainingProgressionRead }: {
+  trainingProgression, trainingProgressionState = 'ready', pendingProgression, trainingReflection = null, nextTrainingSuggestion, onOpenTrainingJourney, onRetryProgression, onRetryTrainingProgressionRead }: {
   dog: OwnedDog;
   ownedDogs?: readonly OwnedDog[];
   onSelectDog?: (dogId: string) => void;
@@ -68,6 +69,7 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
   trainingProgression?: HomeTrainingProgressionSummary | null;
   trainingProgressionState?: 'ready' | 'error';
   pendingProgression?: PendingTrainingProgression | null;
+  trainingReflection?: TrainingReflection | null;
   nextTrainingSuggestion?: { programId: string; programTitle: string; stepTitle: string } | null;
   dailyFixture?: readonly HomeDailyFixtureItem[];
   dailyState?: 'hidden' | 'loading' | 'ready' | 'partial' | 'error';
@@ -135,9 +137,14 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
     ? trainingJourneyDisplay.summary : null;
   const showJustNowTraining = Boolean(nextStep && trainingState === 'ready' && !suggestedTraining);
   const reflection = logState === 'ready' && !logPendingOrUnknown ? latestHomeReflection(events, dog.id) : null;
-  const reflectionMessage = logState === 'loading' ? 'Historiken hämtas.' : logState === 'error'
+  const latestLogTime = reflection ? Date.parse(reflection.occurredAt) : -Infinity;
+  const showTrainingReflection = Boolean(trainingReflection && onOpenTrainingJourney && Date.parse(trainingReflection.occurredAt) > latestLogTime);
+  const fallbackMilestone = !reflection && !trainingReflection && logState === 'ready' && !logPendingOrUnknown
+    && trainingState === 'ready' && trainingProgressionState === 'ready' && !pendingProgression && onOpenDevelopment && dog.birth_date
+    ? generalDevelopmentMilestones(homeAgeInWeeks(dog.birth_date, today))[0] : null;
+  const reflectionMessage = showTrainingReflection && trainingReflection ? `${trainingReflection.kind === 'milestone' ? 'Bekräftat delmål' : 'Tränat'}: ${trainingReflection.label} · ${trainingReflection.date}` : logState === 'loading' ? 'Historiken hämtas.' : logState === 'error'
     ? 'Historiken kunde inte hämtas just nu.' : logPendingOrUnknown ? 'En ändring i loggen behöver kontrolleras.' : reflection
-      ? `Senast loggat: ${reflection.label} · ${reflection.date}` : 'När ni loggar en händelse syns den här.';
+      ? `Senast loggat: ${reflection.label} · ${reflection.date}` : fallbackMilestone ? `Förslag för den här åldern: ${fallbackMilestone.title}` : 'När ni loggar en händelse syns den här.';
 
   useEffect(() => {
     if (openDogSwitcherInitially) onDogSwitcherInitiallyOpened?.();
@@ -263,11 +270,11 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
       </View>
     </Card> : null}
 
-    <Card variant="home" onPress={() => onGo('log')} accessibilityLabel={`Titta vad ni redan har gjort. ${reflectionMessage} Öppna Logga.`}>
+    <Card variant="home" onPress={() => { if (showTrainingReflection && trainingReflection) onOpenTrainingJourney?.(trainingReflection.programVersionId); else if (fallbackMilestone) onOpenDevelopment?.(); else onGo('log'); }} accessibilityLabel={`${fallbackMilestone ? 'Utforska utvecklingen' : 'Titta vad ni redan har gjort'}. ${reflectionMessage} ${showTrainingReflection ? 'Öppna träningsresan.' : fallbackMilestone ? 'Öppna utveckling.' : 'Öppna Logga.'}`}>
       <View style={styles.reflectionCard} testID="home-reflection">
         <View style={styles.cardHeadingRow}>
           <Ionicons name="time-outline" size={tokens.size.iconSm} color={tokens.colors.home.greenStrong} accessibilityElementsHidden />
-          <Text style={styles.cardHeading}>Titta vad ni redan har gjort</Text>
+          <Text style={styles.cardHeading}>{fallbackMilestone ? 'Utforska utvecklingen' : 'Titta vad ni redan har gjort'}</Text>
           <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
         </View>
         {logState === 'loading' ? <Skeleton shape="line" lines={1} /> : <Text style={styles.body}>{reflectionMessage}</Text>}

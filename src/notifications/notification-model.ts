@@ -1,4 +1,5 @@
 import type { PlannedHealthRecord } from '../data/workspace-data';
+import { addMonthsClamped, automaticDogAge } from '../features/onboarding/dog';
 
 export const REMINDER_FEATURE = 'tassla-reminders-v1' as const;
 export const MAX_HEALTH_REMINDERS = 40;
@@ -11,11 +12,14 @@ export interface NotificationPreferences {
   enabled: boolean;
   trainingEnabled: boolean;
   trainingMinutes: number;
+  routineEnabled?: boolean;
+  routineMinutes?: number;
+  phaseEnabled?: boolean;
 }
 export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   version: 1, enabled: false, trainingEnabled: false, trainingMinutes: 9 * 60,
 };
-export type ReminderTarget = 'health' | 'training';
+export type ReminderTarget = 'health' | 'training' | 'routine' | 'phase';
 export interface ReminderPayload {
   feature: typeof REMINDER_FEATURE;
   ownerId: string;
@@ -37,7 +41,11 @@ export function isReminderMinutes(value: unknown): value is number {
 export function isNotificationPreferences(value: unknown): value is NotificationPreferences {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const row = value as Record<string, unknown>;
-  return Object.keys(row).sort().join(',') === 'enabled,trainingEnabled,trainingMinutes,version'
+  const keys = Object.keys(row).sort().join(',');
+  const legacy = keys === 'enabled,trainingEnabled,trainingMinutes,version';
+  const extended = keys === 'enabled,phaseEnabled,routineEnabled,routineMinutes,trainingEnabled,trainingMinutes,version'
+    && typeof row.phaseEnabled === 'boolean' && typeof row.routineEnabled === 'boolean' && isReminderMinutes(row.routineMinutes);
+  return (legacy || extended)
     && row.version === 1 && typeof row.enabled === 'boolean' && typeof row.trainingEnabled === 'boolean'
     && isReminderMinutes(row.trainingMinutes);
 }
@@ -50,8 +58,8 @@ export function reminderLogicalKey(payload: ReminderPayload): string | null {
   if (payload.target === 'health' && isUuid(payload.planId)) {
     return REMINDER_FEATURE + ':health:' + payload.ownerId.toLowerCase() + ':' + payload.dogId.toLowerCase() + ':' + payload.planId.toLowerCase();
   }
-  if (payload.target === 'training' && payload.planId === undefined) {
-    return REMINDER_FEATURE + ':training:' + payload.ownerId.toLowerCase() + ':' + payload.dogId.toLowerCase();
+  if ((payload.target === 'training' || payload.target === 'routine' || payload.target === 'phase') && payload.planId === undefined) {
+    return REMINDER_FEATURE + ':' + payload.target + ':' + payload.ownerId.toLowerCase() + ':' + payload.dogId.toLowerCase();
   }
   return null;
 }
@@ -63,8 +71,8 @@ export function parseReminderPayload(value: unknown): ReminderPayload | null {
   if (row.target === 'health' && keys === 'dogId,feature,ownerId,planId,target' && isUuid(row.planId)) {
     return { feature: REMINDER_FEATURE, ownerId: row.ownerId, dogId: row.dogId, target: 'health', planId: row.planId };
   }
-  if (row.target === 'training' && keys === 'dogId,feature,ownerId,target') {
-    return { feature: REMINDER_FEATURE, ownerId: row.ownerId, dogId: row.dogId, target: 'training' };
+  if ((row.target === 'training' || row.target === 'routine' || row.target === 'phase') && keys === 'dogId,feature,ownerId,target') {
+    return { feature: REMINDER_FEATURE, ownerId: row.ownerId, dogId: row.dogId, target: row.target };
   }
   return null;
 }
@@ -93,6 +101,22 @@ export function planReminderPayload(ownerId: string, dogId: string, planId: stri
 export function trainingReminderPayload(ownerId: string, dogId: string): ReminderPayload | null {
   const payload: ReminderPayload = { feature: REMINDER_FEATURE, ownerId, dogId, target: 'training' };
   return reminderLogicalKey(payload) ? payload : null;
+}
+export function otherReminderPayload(ownerId: string, dogId: string, target: 'routine' | 'phase'): ReminderPayload | null {
+  const payload: ReminderPayload = { feature: REMINDER_FEATURE, ownerId, dogId, target };
+  return reminderLogicalKey(payload) ? payload : null;
+}
+/** App life stages are approximate calendar labels, never achievements. */
+export function nextPhaseFireTime(birthDate: string | null | undefined, now: Date): LocalFireTime {
+  const today = `${now.getFullYear().toString().padStart(4, '0')}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+  if (!birthDate || !automaticDogAge(birthDate, today)) return { status: 'unrepresentable' };
+  for (const months of [6, 24]) {
+    const day = addMonthsClamped(birthDate, months);
+    if (day < today) continue;
+    const fireTime = createLocalFireTime(day, 9 * 60, now);
+    if (fireTime.status !== 'passed-time') return fireTime;
+  }
+  return { status: 'passed-time' };
 }
 export function futureFireTimeForPlan(record: PlannedHealthRecord, now = new Date()): LocalFireTime {
   if (!record.reminder_enabled || record.reminder_minutes === null) return { status: 'unrepresentable' };

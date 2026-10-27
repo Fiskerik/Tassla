@@ -26,11 +26,11 @@ const workspaceSource = await readFile(new URL('../src/features/home/ProductWork
 const weightScreenSource = await readFile(new URL('../src/features/health/WeightScreen.tsx', import.meta.url), 'utf8');
 const primitivesSource = await readFile(new URL('../src/components/AppPrimitives.tsx', import.meta.url), 'utf8');
 
-test('date input shrinks while the calendar target and time field keep their existing geometry', () => {
+test('date and time inputs shrink while picker targets keep their touch geometry', () => {
   const datePickerSource = primitivesSource.slice(primitivesSource.indexOf('export function DatePickerField'), primitivesSource.indexOf('export function TimePickerField'));
   const timePickerSource = primitivesSource.slice(primitivesSource.indexOf('export function TimePickerField'), primitivesSource.indexOf('\nfunction parseDateValue'));
   assert.match(datePickerSource, /style=\{\[styles\.datePickerInput, \{ minWidth: 0 \}\]\}/);
-  assert.doesNotMatch(timePickerSource, /minWidth: 0/);
+  assert.match(timePickerSource, /style=\{\[styles\.datePickerInput, \{ minWidth: 0 \}\]\}/);
   assert.match(primitivesSource, /pickerButton: \{[^}]*width: tokens\.size\.touchMin, minWidth: tokens\.size\.touchMin, minHeight: 52/s);
 });
 

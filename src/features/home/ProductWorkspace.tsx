@@ -94,6 +94,7 @@ import {
   type DailyActivityRangeSnapshot,
   type DailyRoutine,
   type DailyRoutineCreateInput,
+  type DailyRoutineDay,
   type DailyRoutineDayDraft,
   type DailyRoutineWriteResult,
   type DailyTrainingSelection,
@@ -116,6 +117,7 @@ import {
   type OwnedDogProfileChanges,
 } from '../../data/app-data';
 import { localDate } from '../onboarding/dog';
+import { latestTrainingReflection } from './home-reflection';
 import { calendarMarkerScopeKey } from '../puppy-log/log-calendar-model';
 import { acquireTrainingMutationLease, homeAgeInWeeks, ownsTrainingMutationLease, releaseTrainingMutationLease, type TrainingMutationLease } from './home-today';
 import { canStartDailyMutation, clearDailyMutationForLifetimeChange, createdRoutineDaySelectionRecoveryCopy, dailyMutationBlocksAccountDeletion, dailyMutationForOwner, dailyMutationStore, recoverDailyMutation, resolvedDailyMutation, routineConflictAfterWrite, routineDraftStore, type DailyMutationRecoveryCopy, type PendingDailyMutation } from './daily-activity-recovery';
@@ -484,12 +486,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const plannedHealthReadQueue = useRef<Promise<void>>(Promise.resolve());
   const { signOut, session, accountGeneration, isCurrentAccount, signOutCurrentAccountLocally,
     reportNotificationCleanupFailure, reportDeletedAccountCleanupFailure } = useAuth();
+  const analyticsOwnerId = session?.user.id ?? null;
   const analyticsService = useMemo(() => createAnalyticsService(async (name, args) => {
+    if (!analyticsOwnerId || !isCurrentAccount(analyticsOwnerId, accountGeneration)) return { data: null, error: new Error('Account changed') };
     const result = await client.rpc(name, args as never);
     return { data: result.data, error: result.error };
-    // A new account scope must not inherit the previous service's cached consent.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [client, session?.user.id, accountGeneration]);
+  }), [client, analyticsOwnerId, accountGeneration, isCurrentAccount]);
 
   useEffect(() => {
     let active = true;
@@ -508,6 +510,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   useEffect(() => {
     if (page === 'home' && analyticsConsent === true) void analyticsService.track('home_viewed');
+  }, [analyticsConsent, analyticsService, page]);
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && page === 'home' && analyticsConsent === true) void analyticsService.track('home_viewed');
+    });
+    return () => subscription.remove();
   }, [analyticsConsent, analyticsService, page]);
   useEffect(() => {
     if (page !== 'home' && page !== 'checklist' && page !== 'training' && !(page === 'log' && logView === 'overview')) return undefined;
@@ -1032,7 +1040,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         plans = selection.records;
         overCap = selection.overCap;
       }
-      const result = await reminderService.reconcile({ ...context, preferences: notificationPreferences, plans, now, overCap, blockedPlanIds });
+      const result = await reminderService.reconcile({ ...context, preferences: notificationPreferences, plans, now, overCap, blockedPlanIds, birthDate: dog.birth_date });
       if (!mounted.current || !reminderService.isCurrent(context)) return;
       setReminderResult(result);
       if (result.status === 'permission-denied') setNotificationPermission('denied');
@@ -1053,7 +1061,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setNotificationMessage('Påminnelserna kunde inte stämmas av. Försök igen när anslutningen fungerar.');
       setNotificationMessageError(true);
     }
-  }, [client, dog.id, notificationPreferences, notificationPreferencesReady, plannedHealthBusy, plannedHealthState]);
+  }, [client, dog.id, dog.birth_date, notificationPreferences, notificationPreferencesReady, plannedHealthBusy, plannedHealthState]);
 
   const reloadTraining = useCallback(async (options: { force?: boolean; supersede?: boolean; publishToDaily?: boolean; deferCommit?: boolean } = {}): Promise<TrainingWorkspaceSnapshot> => {
     const { force = false, supersede = false, publishToDaily = false, deferCommit = false } = options;
@@ -1283,6 +1291,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       if (payload.target === 'training') {
         if (!reminderService.isCurrent(context)) return;
         setPage('training');
+      } else if (payload.target === 'routine' || payload.target === 'phase') {
+        if (!reminderService.isCurrent(context)) return;
+        setPage(payload.target === 'routine' ? 'checklist' : 'development');
       } else {
         const plan = await fetchPlannedHealthById(client, context.dogId, payload.planId!);
         if (!reminderService.isCurrent(context)) return;
@@ -3214,6 +3225,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     return outcome;
   }
 
+  async function completeRoutineAndMeasure(row: DailyRoutineDay, itemId: string, completed: boolean) {
+    const lifetime = dailyLifetime.current;
+    const ownerId = session?.user.id;
+    const generation = accountGeneration;
+    const result = await runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed));
+    if (completed && result?.status === 'saved' && mounted.current && dailyLifetime.current === lifetime
+      && ownerId && isCurrentAccount(ownerId, generation)) {
+      void analyticsService.track('routine_completed');
+    }
+  }
+
   async function createRoutineForToday(input: DailyRoutineCreateInput): Promise<{ status: 'saved' | 'failed' | 'unknown' } | undefined> {
     const routine = { ...input, dog_id: dog.id, checklist: input.checklist.map((item) => ({ ...item })) };
     const capturedScope = { ownerScope: currentDailyOwnerScope, selectionKey: currentSelectionKey, lifetime: currentDailyLifetime };
@@ -3540,7 +3562,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onRetryMutation={pendingDailyWriteForOwner?.phase === 'unknown' ? retryDailyMutation : undefined}
       onManage={() => openHomeChecklist(true)} onOpenChecklist={() => openHomeChecklist()}
       onOpenTrainingStep={(programId, stepId) => openHomeTrainingStep(programId, stepId, 'progress')}
-      onSetRoutineCompletion={(row, itemId, completed) => { void runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed)); }} />;
+      onSetRoutineCompletion={(row, itemId, completed) => { void completeRoutineAndMeasure(row, itemId, completed); }} />;
     if (page === 'checklist') return <DailyChecklistScreen key={`${currentDailyLifetime}:checklist:${homeChecklistScope?.openManagerOnEntry ? 'manager' : 'list'}`}
       dateKey={dailyDateKey ?? ''} dailyScopeKey={currentDailyLifetime} routineRecovery={routineRecovery}
       onRoutineRecoveryChange={(draft, conflict) => routineDraftStore.update(currentDailyOwnerScope, dog.id, currentDailyLifetime, draft, conflict, routineDraftOwnerGeneration)}
@@ -3558,7 +3580,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onOpenUpcomingRoutine={openUpcomingRoutine} onOpenPlannedHealth={openUpcomingHealthPlan}
       upcomingRoutines={checklistRangeView?.scope === currentChecklistRangeScope ? checklistRangeView.routines ?? [] : []}
       onSetRoutineCompletion={(row, itemId, completed) => {
-        void runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed));
+        void completeRoutineAndMeasure(row, itemId, completed);
       }}
       routines={dailySnapshotForView?.routines ?? []} routineDaySkips={dailySnapshotForView?.routineDaySkips ?? []}
       trainingOptions={dailyTrainingOptions}
@@ -3612,6 +3634,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       nextStep={visibleTrainingState === 'ready' ? nextStep?.title : undefined}
       trainingState={visibleTrainingState}
       trainingProgression={trainingProgressionSummary}
+      trainingReflection={visibleTrainingState === 'ready' && training.progressionState === 'ready'
+        ? latestTrainingReflection(training.progression, training.programs, dog.id, new Set(Object.keys(progressionPendingByVersion))) : null}
       trainingProgressionState={training.progressionState}
       pendingProgression={homeProgressionPending}
       nextTrainingSuggestion={nextTrainingSuggestion}
@@ -3666,7 +3690,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         const mutationId = ExpoCrypto.randomUUID();
         void runDailyMutation(`remove-routine:${row.id}`, () => removeRoutineFromDay(client, row, routine, mutationId));
       }}
-      onSetRoutineCompletion={(row, itemId, completed) => { void runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed)); }}
+      onSetRoutineCompletion={(row, itemId, completed) => { void completeRoutineAndMeasure(row, itemId, completed); }}
       onAddTrainingToDay={(option) => {
         if (!dailyDateKey) return;
         const row: DailyTrainingSelection = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, program_version_id: option.versionId, step_id: option.stepId, date_key: dailyDateKey, time_zone: dailyTimeZone };
@@ -3791,7 +3815,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onDeleteAccount={handleAccountDeletion} onSignOutLocally={signOutDeletedLocally} />;
     if (page === 'beta-info') return <BetaInfoScreen onBack={() => setPage('account-settings')} />;
     if (page === 'notification-settings') return <NotificationSettingsScreen
-      key={JSON.stringify(notificationPreferences)} onBack={() => setPage('more')} preferences={notificationPreferences}
+      key={JSON.stringify(notificationPreferences)} onBack={() => setPage('more')} preferences={notificationPreferences} birthDate={dog.birth_date}
       saved={notificationSaved && !notificationStorageError} busy={notificationBusy || !notificationPreferencesReady}
       statusMessage={notificationStorageError ? 'Påminnelsevalen kunde inte läsas säkert. Inga nya påminnelser schemaläggs.' : notificationMessage}
       statusError={notificationStorageError || notificationMessageError} permissionState={notificationPermission}
@@ -3977,7 +4001,7 @@ function reminderStatusSummary(result: ReminderReconcileResult | null, preferenc
   if (permission === 'denied' || result?.status === 'permission-denied') return 'Enheten nekar notiser; Tassla fungerar ändå.';
   if (result?.status === 'unknown') return 'Vi kunde inte kontrollera om en plan sparades. Påminnelsen väntar tills du har kontrollerat ändringen.';
   if (result?.status === 'failed') return 'Påminnelserna kunde inte stämmas av.';
-  if (result?.status === 'over-cap') return 'Schemalagda högst 40 planer och en träningspåminnelse. Ytterligare planer schemaläggs inte.';
+  if (result?.status === 'over-cap') return 'Högst 40 hälsoplaner schemaläggs. Ytterligare planer får ingen påminnelse.';
   if (result?.status === 'scheduled') return result.scheduledCount + ' lokala påminnelser schemalagda i ' + result.timezone + '. Schemaläggning är ingen leveransbekräftelse.';
   return 'Påminnelsernas status kontrolleras.';
 }

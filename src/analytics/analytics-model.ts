@@ -1,9 +1,12 @@
 export const ANALYTICS_EVENT_TYPES = [
+  'onboarding_opened',
+  'referral_opened',
   'dog_created',
   'home_viewed',
   'first_log',
   'training_started',
   'training_completed',
+  'routine_completed',
   'meaningful_return',
 ] as const;
 

@@ -12,6 +12,7 @@ import { tokens } from '../../theme/tokens';
 import { ageInWeeks, localDate } from './dog';
 import { BreedPickerField } from './BreedPickerField';
 import { profileRecoveryRequestMatches } from './profile-exit';
+import { OnboardingMetricsChoice } from './OnboardingMetricsChoice';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type DogCreationSaveState = 'idle' | 'error' | 'unknown' | 'invalidCode' | 'existingProfile' | 'sourceUnconfirmed' | 'recoveryUnavailable' | 'cleanupError' | 'retiredRequest';
@@ -63,6 +64,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   const [kennelCode, setKennelCode] = useState(initialDraft.kennelCode);
   const [sourceSelected, setSourceSelected] = useState(initialDraft.sourceSelected);
   const [sourceExpanded, setSourceExpanded] = useState(Boolean(initialDraft.sourceSelected));
+  const [hasSecureReferral, setHasSecureReferral] = useState(false);
   const [recoveryChecking, setRecoveryChecking] = useState(true);
   const [recoveryMismatch, setRecoveryMismatch] = useState(false);
   const [retiredRequestResetFailed, setRetiredRequestResetFailed] = useState(false);
@@ -136,6 +138,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   useEffect(() => {
     let active = true;
     void readSecurePendingReferral().then((referral) => {
+      if (active) setHasSecureReferral(Boolean(referral));
       if (active && referral && !validRecoverySnapshot) {
         setKennelCode(referral.code);
         setFormBaseline((baseline) => ({ ...baseline, kennelCode: referral.code }));
@@ -430,9 +433,11 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
             <View style={[styles.checkbox, sourceSelected && styles.checkboxSelected]}>{sourceSelected && <Text style={styles.checkboxMark}>✓</Text>}</View>
             <Text style={styles.sourceChoiceText}>Koppla koden till min profil</Text>
           </Pressable>
-          {kennelCode ? <Button variant="icon" iconName="trash-outline" label="Ta bort kod" accessibilityLabel="Ta bort kennelkod" disabled={busy} onPress={() => { setKennelCode(''); setSourceSelected(false); markEdited(); void clearSecurePendingReferral().catch(() => undefined); }} /> : null}
+          {kennelCode ? <Button variant="icon" iconName="trash-outline" label="Ta bort kod" accessibilityLabel="Ta bort kennelkod" disabled={busy} onPress={() => { setKennelCode(''); setSourceSelected(false); setHasSecureReferral(false); markEdited(); void clearSecurePendingReferral().catch(() => undefined); }} /> : null}
         </View> : null}
       </View>
+      {mode === 'initial' ? <OnboardingMetricsChoice client={client} ownerId={ownerId} accountGeneration={accountGeneration}
+        isCurrentAccount={isCurrentAccount} hasReferral={hasSecureReferral} /> : null}
       {sourceSelected && !normalizeKennelCode(kennelCode) && <MessageCard tone="error">Skriv en giltig kennelkod eller ta bort kennelkälla.</MessageCard>}
       {recoveryChecking && <MessageCard>Kontrollerar om ett tidigare försök behöver återställas…</MessageCard>}
       {saveState === 'invalidCode' && <MessageCard tone="error">Koden känns inte igen eller är inte aktiv. Rätta den eller ta bort kennelkälla och fortsätt utan.</MessageCard>}

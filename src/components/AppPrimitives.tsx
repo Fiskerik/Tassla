@@ -234,7 +234,7 @@ export function TimePickerField({ label, value, onChangeText, disabled = false }
   return <View style={styles.datePickerField}>
     <Text style={styles.fieldLabel}>{label}</Text>
     <View style={styles.datePickerRow}><TextInput accessibilityLabel={`${label}, timmar och minuter`} editable={!disabled} keyboardType="numbers-and-punctuation" maxLength={5}
-      onChangeText={onChangeText} placeholder="09:00" placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.datePickerInput} value={value} />
+      onChangeText={onChangeText} placeholder="09:00" placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={[styles.datePickerInput, { minWidth: 0 }]} value={value} />
       <Pressable accessibilityRole="button" accessibilityLabel={`Öppna tidsväljare för ${label}`} disabled={disabled} onPress={() => { setDraft(value); setVisible(true); }} style={styles.pickerButton}><Ionicons name="time-outline" size={tokens.size.iconMd} color={theme.colors.accent} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /></Pressable>
     </View>
     <Modal visible={visible} transparent animationType={reducedMotion ? 'none' : 'fade'} onRequestClose={() => setVisible(false)} accessibilityViewIsModal>

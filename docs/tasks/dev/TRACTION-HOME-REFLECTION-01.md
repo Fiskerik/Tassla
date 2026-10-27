@@ -4,7 +4,7 @@ Status: implementerad lokalt; visuell och funktionell kontroll i RN Web genomfö
 
 ## Omfattning
 
-På `knowledge/d3-catalog-delivery@0723cd3`, ovanpå de befintliga lokala modal- och träningsändringarna, visas ett kompakt återblickskort på Hem. Det använder endast den senaste hämtade, bekräftade logghändelsen för den aktiva hunden. Framtida och ogiltiga datum och andra hundars händelser utesluts. Saknad historik, laddning och läsfel visas separat; ingen slutsats om hundens utveckling skapas. Kortet öppnar Logga, inte en specifik händelse. Händelser som inte ingår i den hämtade sidan av loggen hävdas inte vara genomgångna.
+På `knowledge/d3-catalog-delivery` visas ett kompakt återblickskort på Hem. Det väljer mellan den senaste hämtade logghändelsen och den senaste sparade, daterade träningsaktiviteten eller delmålsbekräftelsen för den aktiva hunden. Framtida och ogiltiga datum, andra hundar, otillgängliga programversioner och versioner med pågående/osäker ändring utesluts. Saknas historik visas ett tydligt märkt generellt åldersförslag när sådant finns; det räknas inte som genomfört. Laddning och läsfel visas separat. Kortet öppnar Logga, rätt träningsprogram eller Utveckling enligt innehållet. Händelser som inte ingår i den hämtade sidan av loggen hävdas inte vara genomgångna.
 
 Ändrade produkt- och kontrollfiler: `src/features/home/HomeScreen.tsx`, `src/features/home/home-reflection.ts`, `tests/home-reflection.test.mjs` och `docs/design/evidence/traction-home-reflection-01/`. Ingen databasmigration eller ny dependency.
 

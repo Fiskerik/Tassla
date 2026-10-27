@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from pathlib import Path
 import os
+import re
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -42,6 +43,21 @@ with sync_playwright() as playwright:
     page.goto(f'{base}?screen=home&reflectionPending=unknown')
     expect(page.get_by_test_id('home-reflection').get_by_text('En ändring i loggen behöver kontrolleras.')).to_be_visible()
     expect(page.get_by_test_id('home-reflection').get_by_text('Senast loggat:', exact=False)).to_have_count(0)
+    page.clock.install(time=datetime(2026, 10, 26, 18, 0, tzinfo=timezone.utc))
+    page.goto(f'{base}?screen=home&homeScenario=reflection-training&trainingScenario=unstarted&progression=empty&today=2026-10-25')
+    reflection = page.get_by_role('button', name='Titta vad ni redan har gjort. Bekräftat delmål: Utforska i egen takt · 26 oktober Öppna träningsresan.')
+    expect(reflection).to_be_visible()
+    reflection.scroll_into_view_if_needed()
+    page.screenshot(path=str(out / 'reflection-training-375.png'))
+    reflection.click()
+    expect(page.get_by_role('heading', name='Trygg vardagsstart')).to_be_visible()
+    page.goto(f'{base}?screen=home&homeScenario=reflection-fallback&state=empty&ageExample=week20')
+    fallback = page.get_by_role('button', name=re.compile('Utforska utvecklingen.*Förslag för den här åldern'))
+    expect(fallback).to_be_visible()
+    fallback.scroll_into_view_if_needed()
+    page.screenshot(path=str(out / 'reflection-age-fallback-375.png'))
+    fallback.click()
+    expect(page.get_by_test_id('development-screen')).to_be_visible()
     page.close()
 
     page = browser.new_page(viewport={'width': 375, 'height': 667})
