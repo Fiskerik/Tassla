@@ -12431,7 +12431,8 @@
         "docs/tasks/dev/TRAINING-LOGGING-UX-01.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
-        "docs/tasks/dev/TRACTION-IMPLEMENTATION-CHECKPOINT.md"
+        "docs/tasks/dev/TRACTION-IMPLEMENTATION-CHECKPOINT.md",
+        "docs/releases/HISTORY-2026.md"
       ],
       "acceptance": [
         "Training list cards visualize owner-confirmed milestones divided by published step count; logged sessions remain separate and no step counts as complete from a session alone.",
@@ -12455,15 +12456,15 @@
         "ARTICLE-READING-EXPERIENCE-01"
       ],
       "status": "done",
-      "next_step": "Efter push till origin/knowledge/d3-catalog-delivery: bygg och prova träningsflödet på iPhone vid behov. Live Supabase/RLS och native tillgänglighet är fortsatt separata, overifierade kontroller.",
+      "next_step": "Implementationen är pushad. Erik kan bygga och prova samma branch på iPhone vid behov; fortsätt därefter med nästa kvarvarande punkt i actionplanen. Live Supabase/RLS och native tillgänglighet är separata, overifierade kontroller.",
       "priority": "P1",
       "panels": [
         "6",
         "7"
       ],
       "risk_class": "M",
-      "checkpoint": "UI Critic final REVIEW PASS, independent QA PASS och Reviewer APPROVE. pnpm check 96/96, training UI 28/28, article UI 15/15, queue validation, git diff --check och 64/64 path-audit PASS. Commit/push till befintlig knowledge/d3-catalog-delivery återstår; inga nya brancher eller worktrees.",
-      "test_evidence": "pnpm check PASS: typecheck, edge typecheck, lint och 96/96 testfiler. TASSLA_UI_BASE_URL=http://127.0.0.1:4394/ TASSLA_UI_EVIDENCE=docs/design/evidence/training-logging-ux-01/public python -X utf8 tools/visual-check/verify-flow-training.py PASS 28/28. TASSLA_UI_PANEL=article-reader TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:4395 TASSLA_UI_EVIDENCE=docs/design/evidence/training-logging-ux-01/article-reader python -X utf8 tools/visual-check/verify-vision-r02-home-panels.py PASS 15/15. UI Critic final REVIEW PASS, independent QA PASS, Reviewer APPROVE. python -X utf8 tools/dev_flow.py validate PASS, git diff --check PASS, 64/64 ändrade paths inom godkända write_paths. Live Supabase/RLS och native verifiering är NOT TESTABLE.",
+      "checkpoint": "UI Critic final REVIEW PASS, independent QA PASS och Reviewer APPROVE. Implementation commit 9a5317484286e731d9d43734a7d0881e9c37bf4f är pushad till origin/knowledge/d3-catalog-delivery. Commit- och push-hookar körde pnpm check (824 pass, 1 skip), git diff --check PASS; träningsflöde 28/28 och artikelläsare 15/15. Implementationens 64 paths var inom scope; separat releasehistorik-closeout är tillagd inom utökad docs-scope.",
+      "test_evidence": "Pre-commit och pre-push pnpm check PASS: typecheck, edge typecheck, lint, 824 test pass och 1 skip. TASSLA_UI_BASE_URL=http://127.0.0.1:4394/ TASSLA_UI_EVIDENCE=docs/design/evidence/training-logging-ux-01/public python -X utf8 tools/visual-check/verify-flow-training.py PASS 28/28. TASSLA_UI_PANEL=article-reader TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:4395 TASSLA_UI_EVIDENCE=docs/design/evidence/training-logging-ux-01/article-reader python -X utf8 tools/visual-check/verify-vision-r02-home-panels.py PASS 15/15. UI Critic final REVIEW PASS, independent QA PASS, Reviewer APPROVE. python -X utf8 tools/dev_flow.py validate PASS, git diff --check PASS, 64 implementation-paths inom godkända write_paths; separat releasehistorik-closeout också inom utökad docs-scope. Commit 9a5317484286e731d9d43734a7d0881e9c37bf4f pushad till origin/knowledge/d3-catalog-delivery. Live Supabase/RLS och native verifiering är NOT TESTABLE.",
       "history": [
         {
           "from": "planned",
@@ -12511,7 +12512,7 @@
           "from": "review",
           "to": "done",
           "actor": "reviewer",
-          "evidence": "Final UI Critic PASS, QA PASS and Reviewer APPROVE; pnpm check 96/96, training UI 28/28, article UI 15/15, queue validation and diff check PASS, all 64 paths within write_paths. Commit/push remains the delivery step."
+          "evidence": "Final UI Critic PASS, QA PASS and Reviewer APPROVE; pnpm check 96/96, training UI 28/28, article UI 15/15, queue validation and diff check PASS, all 64 paths within write_paths. Implementation commit 9a5317484286e731d9d43734a7d0881e9c37bf4f pushed to origin/knowledge/d3-catalog-delivery; hooks passed 824 tests (1 skipped)."
         }
       ]
     }

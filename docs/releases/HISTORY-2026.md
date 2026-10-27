@@ -32,6 +32,7 @@ Avslutade paketnotiser har samlats här. Varje post bevarar ursprunglig status o
 | [HOME-ROUTINE-CHECKLIST-01](#home-routine-checklist-01) | 2026-10-15 | lokal UI-slice klar; QA/Reviewer PASS; live DB/native ej verifierat | `fix: clarify routine deletion cascade` på `codex/ux-rethink-2026-10-15` |
 | [P04-CONTENT](#p04-content) | okänt | `published` i bundlen, medan onboarding-only-versionen förblir `draft` för att inte läcka till den vanliga åldersbaserade feeden | ej angivet |
 | [UI-TRAINING-OVERVIEW-01](#ui-training-overview-01) | 2026-10-19 | implementerad, lokalt verifierad och pushad; QA/Reviewer PASS; native/live-data ej verifierat | `b59169c` |
+| [TRAINING-LOGGING-UX-01](#training-logging-ux-01) | 2026-10-27 | implementerad, lokalt verifierad och pushad till `knowledge/d3-catalog-delivery`; UI Critic/QA/Reviewer PASS | `9a5317484286e731d9d43734a7d0881e9c37bf4f` |
 
 ## APP-01-PHONE
 
@@ -676,3 +677,12 @@ Kodcommit `348530a332584d0dcec8f30296c88a05f3f9b0cf` på `codex/agent-workflow-s
 Lokal leveransgranskning: Architect APPROVE, Critic PROCEED, Dog Expert PASS, Compliance APPROVE, Security PASS, oberoende QA PASS, Reviewer PASS. pnpm check82/82, Python6/6, fem PostgreSQL16-prober efter hela migrationskedjan, render12scenarier och public iOS-export PASS. [Kontrakt/evidens och driftinstruktion](../content/artiklar/README.md#drive-articles-01--implementation-2026-10-24).
 
 Öppet: applicera migration003/004 i Supabase, verifiera live-åtkomst/readback, driftsätt endpoint och konfigurera skyddad Drive/GitHub-miljö; faktisk synk och signerad/TestFlight-build är inte genomförda. Inga live-migrationer eller Drive-skrivningar gjordes i uppgiften. Artikeldata följer inte automatiskt med enbart genom nytt bygge.
+
+
+## TRAINING-LOGGING-UX-01 — progression, passloggning och artikelkällor, 2026-10-27
+
+Commit `9a5317484286e731d9d43734a7d0881e9c37bf4f` (`Polish training progress and article references`) är pushad till `origin/knowledge/d3-catalog-delivery`. Träningskort visar ägarbekräftade delmål som progress och håller passräknaren separat. Pausa/Underhåll-knapparna togs bort; pausad resa erbjuder en tydlig fortsättning till sparat steg. Passloggningen förenklades och delmål kräver separat ägarbekräftelse. Artikelläsarens källor visas som kompakta numrerade länkar.
+
+UI Critic REVIEW PASS, oberoende QA PASS och Reviewer APPROVE. Pre-commit och pre-push körde `pnpm check`: TypeScript, edge TypeScript, ESLint och 824 tester PASS, 1 skip; `git diff --check` PASS. Träningens RN Web-verifiering 28/28 och artikelläsaren 15/15 PASS. [Taskplan och evidens](../tasks/dev/TRAINING-LOGGING-UX-01.md).
+
+Ingen migration, dependency, API/persistence-kontrakt eller träningsråd ändrades. RN Web-fixtures använder syntetiska data; live Supabase/RLS, native iOS/Android, VoiceOver/TalkBack, fysisk Dynamic Type och TestFlight är inte verifierade här. Migrationerna är enligt användarens rapport avklarade.

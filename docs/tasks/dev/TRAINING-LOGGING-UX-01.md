@@ -25,7 +25,7 @@ QA första granskning **REVISE**: saknade fel/okänt `record_session`-prov. Scen
 - `tests/training-progression-ui.test.mjs`, `tests/training-screen-policy.test.mjs`, `tests/training-overview.test.mjs`, `tests/content-delivery.test.mjs` och `tests/knowledge-training-empty-feedback.test.mjs`: täck ny text-/renderpolicy och justera föråldrade skärmassertioner utan att ta bort säkerhets-/länkprov.
 - `tools/visual-check/app.tsx` och `tools/visual-check/verify-flow-training.py`: verifiera lyckad, misslyckad och okänd passkrivning, samma operations-ID vid återförsök, feedbackval och explicit delmålsbekräftelse; uppdatera resans paus-/fortsättningskontroller.
 - `tools/visual-check/vision-r02-home-panels-app.tsx` och `tools/visual-check/verify-vision-r02-home-panels.py`: lägg syntetiska källor i artikelfixturen och verifiera synliga `1)`/`2)`/`3)`, 44×44 pt-mål och att URL:erna inte skrivs ut i läsarvyn.
-- `docs/tasks/dev/TRAINING-LOGGING-UX-01.md`, `docs/tasks/dev/queue.json`, `docs/tasks/dev/rapport.md`, `docs/tasks/dev/TRACTION-IMPLEMENTATION-CHECKPOINT.md`.
+- `docs/tasks/dev/TRAINING-LOGGING-UX-01.md`, `docs/tasks/dev/queue.json`, `docs/tasks/dev/rapport.md`, `docs/tasks/dev/TRACTION-IMPLEMENTATION-CHECKPOINT.md`, `docs/releases/HISTORY-2026.md` (delivery closeout).
 - `docs/design/evidence/training-logging-ux-01/` och uppdaterade `docs/design/evidence/training-timeline-01/`: aktuella renderbilder, verifieringsresultat och §14-underlag från samma träningsskärm.
 
 ## Ingår inte
@@ -41,7 +41,7 @@ Ingen schemaändring eller migration; inga ändringar i RPC-/workspace-API, trä
 | Pausa och Underhåll saknas som reseknappar. En pausad resa förklarar vilken övning som återupptas, går tillbaka till samma steg och spärrar passloggning tills resan återupptagits; aktiv resa leder till aktuell övning utan extra statusknappar. | Skärmtest och verifierare för aktiv/pausad state. | Verifierat lokalt |
 | Artikelkällor visas tätt som `1)`/`2)` utan rubrik, rå URL eller per-källa CTA; länkarna följer 44×44 pt-minimum, har destinationsnamn för hjälpmedel och bevarar opaka källvärden som text. Checklistor och Träning har redan numrerade källor och bevaras. | Knowledge-test och 375/430 rendering med 3 HTTPS-referenser; källlänkar, fallback och 140 %-textproxy. | Verifierat lokalt |
 | Ändrade UI-ytor är läsbara vid 375/430, 375×667 och 140 % text; inga klippta val eller modal-/navigationsoverlap. | RN Web render/flow och öppnade jämförelser; UI Critic, QA och Reviewer. | PASS, PASS, APPROVE |
-| Bara listade sökvägar ändras; inga migrationer/dependencies. | Diff/path-audit, `pnpm check`, `git diff --check`, queue validation. | 64 ändrade sökvägar inom scope; alla kontroller och slutliga granskningar godkända |
+| Bara listade sökvägar ändras; inga migrationer/dependencies. | Diff/path-audit, `pnpm check`, `git diff --check`, queue validation. | 64 implementation-sökvägar inom scope; releasehistorik-closeout är separat dokumentändring inom utökad docs-scope. Alla kontroller och slutliga granskningar godkända |
 
 ## Arbetsgång och verifieringsstatus
 
@@ -52,4 +52,4 @@ Public-fixture renderades mot panel 6 som närmaste träningsreferens; artikelvy
 - `pnpm check` **PASS** (TypeScript, edge TypeScript, lint, 96/96 testfiler). UI Critic slutlig REVIEW **PASS**, QA **PASS**, Reviewer **APPROVE**. Kövalidering, `git diff --check` och 64/64 sökvägar inom godkänd scope **PASS**.
 - Ingen schema-/API-/persistensändring eller migration. Live Supabase/RLS, native iOS/Android, VoiceOver/TalkBack, faktisk Dynamic Type och TestFlight är inte verifierade här. Migrationernas status är användarrapporterat klar.
 
-Efter push är nästa steg att bygga samma branch och prova passflödet på iPhone. Migrationerna är enligt ägarens rapport avklarade; live RLS/runtime-status ska inte blandas ihop med lokal render.
+Commit `9a5317484286e731d9d43734a7d0881e9c37bf4f` är pushad till `origin/knowledge/d3-catalog-delivery`. Erik kan bygga samma branch och prova passflödet på iPhone vid behov. Migrationerna är enligt ägarens rapport avklarade; live RLS/runtime-status ska inte blandas ihop med lokal render.
