@@ -90,7 +90,7 @@ with sync_playwright() as playwright:
             title = page.get_by_role('textbox', name='Punkt', exact=True)
             title.fill('Osparad ändring')
             page.get_by_role('button', name='Stäng', exact=True).last.click()
-            discard = page.get_by_role('alert', name='Kasta ändringar?', exact=True)
+            discard = page.get_by_role('alert', name='Lämna utan att spara?', exact=True)
             expect(discard).to_be_visible()
             expect(discard.get_by_text('Dina ändringar på ”Osparad ändring” sparas inte.')).to_be_visible()
             page.wait_for_timeout(300)
@@ -98,7 +98,7 @@ with sync_playwright() as playwright:
             page.get_by_role('button', name='Fortsätt redigera', exact=True).click()
             expect(page.get_by_role('textbox', name='Punkt')).to_have_value('Osparad ändring')
             page.get_by_role('button', name='Stäng', exact=True).last.click()
-            page.get_by_role('button', name='Kasta', exact=True).click()
+            page.get_by_role('button', name='Lämna utan att spara', exact=True).click()
             expect(page.get_by_role('checkbox', name='Första veterinärbesöket')).to_be_visible()
             passed('Dirty close confirms discard and retains the form when the owner continues editing')
 

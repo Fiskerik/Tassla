@@ -131,8 +131,9 @@ def verify_development_views(browser) -> None:
         page.get_by_role('button', name='Visa utveckling för Luna', exact=True).click()
         expect(page.get_by_test_id('development-screen')).to_be_visible()
         expect(page.get_by_text('11 veckor · Valp', exact=True)).to_be_visible()
-        expect(page.get_by_text('Nästa milstolpar', exact=True)).to_be_visible()
-        expect(page.get_by_text('Granskade milstolpar är inte tillgängliga ännu', exact=True)).to_be_visible()
+        expect(page.get_by_text('Hållpunkter i utvecklingen', exact=True)).to_be_visible()
+        expect(page.get_by_text('Ungefärliga hållpunkter – varje hund utvecklas i sin egen takt.', exact=True)).to_be_visible()
+        expect(page.get_by_role('link', name='Tandömsning. Läs källan i webbläsaren')).to_be_visible()
         expect(page.get_by_text('Standardbild', exact=True)).to_have_count(0)
         age_pill = page.get_by_test_id('development-age-pill')
         age_pill_box = age_pill.bounding_box()
@@ -1478,7 +1479,7 @@ with sync_playwright() as playwright:
             expect(page.get_by_role('button', name='Öppna Checklistor', exact=True)).to_be_visible()
         else:
             expect(page.get_by_text('Skapa en rutin eller välj ett träningssteg att ha med idag.', exact=True)).to_be_visible()
-            record(f'public empty day has no 0/0 progress at {width}px', page.get_by_role('progressbar').count() == 0)
+            record(f'public empty day has no 0/0 progress at {width}px', page.locator('[role="progressbar"][aria-label$="dagsuppgifter klara"]').count() == 0)
         page.screenshot(path=str(OUT / f'home-default-{width}.png'), full_page=True)
 
         # The arrow opens the full Checklistor route.
@@ -1558,7 +1559,7 @@ with sync_playwright() as playwright:
         if message:
             expect(page.get_by_text(message, exact=True)).to_be_visible()
         if scenario in ('empty', 'unknown', 'partial'):
-            record(f'{scenario} daily source does not show 0/0', page.get_by_role('progressbar').count() == 0)
+            record(f'{scenario} daily source does not show 0/0', page.locator('[role="progressbar"][aria-label$="dagsuppgifter klara"]').count() == 0)
         if scenario == 'error':
             expect(page.get_by_role('button', name='Hämta dagens uppgifter igen', exact=True)).to_be_visible()
         if scenario in ('unknown', 'partial'):
@@ -1568,7 +1569,7 @@ with sync_playwright() as playwright:
         record(f'{scenario} state keeps one checklist control', True)
 
     if REVIEW:
-        # Seven items preserve the total while the compact Home preview stays at five.
+        # Seven items preserve the total while the compact Home preview stays at three.
         page = browser.new_page(viewport={'width': 375, 'height': 876})
         page.goto(home_url('seven'), wait_until='networkidle')
         expect(page.get_by_text('2/7 · Framsteg', exact=True)).to_be_visible()

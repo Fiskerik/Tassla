@@ -11,11 +11,12 @@ import {DailyProgressScreen} from '../../src/features/home/DailyProgressScreen';
 import type {HomeDailyFixtureItem} from '../../src/features/home/HomeScreen';
 import type {ChecklistFilter,HomeDailyActivity} from '../../src/features/home/daily-activity-model';
 import type {DailyRoutine,DailyRoutineChecklistItem,DailyRoutineCreateInput,DailyRoutineDay,DailyRoutineDaySkip,DailyRoutineRepeatValues} from '../../src/features/home/daily-activity-data';
-import {isRoutineDueOnDate,isoWeekdayForDateKey} from '../../src/features/home/daily-activity-model';
+import {checklistFilterRange,deriveUpcomingActivities,isRoutineDueOnDate,isoWeekdayForDateKey} from '../../src/features/home/daily-activity-model';
 import {dailyRoutineChecklistDisplayIcon} from '../../src/features/home/daily-routine-checklist-icons';
 import {LogScreen} from '../../src/features/puppy-log/LogScreen';
 import type {AccidentKind,AccidentLogIntent,LogEvent,LogEventChanges,LogEventType} from '../../src/features/puppy-log/log-model';
 import {ComponentGalleryScreen} from '../../src/components/ui/ComponentGalleryScreen';
+import {ActionMenu} from '../../src/components/ui/ActionMenu';
 import {HealthScreen, type HealthTab} from '../../src/features/health/HealthScreen';
 import {PlannedHealthScreen} from '../../src/features/health/PlannedHealthScreen';
 import type {WeightEditorRecovery} from '../../src/features/health/WeightScreen';
@@ -42,6 +43,7 @@ import {MainSwipeNavigation} from '../../src/components/ui/MainSwipeNavigation';
 import {isMainTabDestination,nextMainTabDestination} from '../../src/features/home/main-navigation';
 import {workspaceSnapshotReadDecision} from '../../src/data/workspace-data';
 import {emptyTrainingProgression,latestHomeTrainingSummary,type PendingTrainingProgression,type TrainingProgressionAction,type TrainingProgressionWorkspace} from '../../src/features/training/training-progression';
+import recallDraft from '../../docs/content/recall-program-v1.json';
 type FixtureLogMutation={kind:'add'|'update'|'delete'|'undo';id:string;mutationId:string;type:LogEventType;occurredAt:string;status:'pending'|'failed'|'unsure'|'saved';accidentKinds?:AccidentKind[]|null};
 window.__tasslaAccountDeleteCalls=0;
 const today=new URLSearchParams(location.search).get('today')||localDate();
@@ -121,6 +123,13 @@ const publicTrainingFixture:PublishedTrainingProgram[]=[
 ];
 function trainingScenarioFixture(scenario:string,reviewMode:boolean):PublishedTrainingProgram[]{
  const source=reviewMode?[...REVIEW_TRAINING_PROGRAMS]:publicTrainingFixture;
+ if(scenario==='recall-draft')return [{id:recallDraft.version_id,content_id:recallDraft.content_id,version:recallDraft.version,title:recallDraft.title,body:recallDraft.body,sources:recallDraft.sources,is_ai_generated:true,currentAgeBreedMatch:true,completedStepIds:[],completedAtByStepId:{},steps:recallDraft.steps.map(step=>({id:step.id,position:step.position,title:step.title,instruction:step.instruction}))}];
+ if(scenario==='structured')return source.map((program,index)=>index===0?{...program,completedStepIds:[],steps:program.steps.map((step,stepIndex)=>stepIndex===0?{...step,instruction:'Öva lugnt och belöna frivillig kontakt.\n\n## Du behöver\nEn belöning.\n\n## Så gör ni\n1. Välj en lugn plats.\n2. Belöna när hunden kommer.'}:step)}:program);
+ if(scenario==='timeline')return source.map((program,index)=>index===0?{...program,
+  completedStepIds:['trygg-1','trygg-3'],
+  completedAtByStepId:{'trygg-1':'2026-08-15T12:00:00.000Z','trygg-3':'2026-10-01T12:00:00.000Z'},
+  steps:program.steps.map((step,stepIndex)=>stepIndex===0?{...step,instruction:'Börja på en lugn plats och låt hunden utforska i egen takt.'}:stepIndex===1?{...step,instruction:'Erbjud en kort paus och belöna lugn kontakt. Avsluta medan det fortfarande känns tryggt.'}:{...step,instruction:'Gör nästa övning kort och följ hundens signaler.'})
+ }:program);
  if(scenario==='unknown-age'&&reviewMode)return source.map((program,index)=>({...program,completedStepIds:index===0&&program.steps.length?[program.steps[0].id]:[]}));
  if(scenario==='unstarted')return source.map(program=>({...program,completedStepIds:[]}));
  if(scenario==='half')return source.map((program,index)=>({...program,completedStepIds:index===1&&program.steps.length?[program.steps[0].id]:[]}));
@@ -135,13 +144,13 @@ function initialProgressionFixture(scenario:string,programs:readonly PublishedTr
   const journey={id:'journey-withdrawn',dog_id:dog.id,program_version_id:'withdrawn-fixture-version',active_step_id:'withdrawn-fixture-step',state:'paused' as const,last_operation_id:'fixture-seed-operation',created_at:'2026-10-24T10:00:00.000Z',updated_at:'2026-10-24T10:00:00.000Z'};
   return {journeys:[journey],sessions:[{id:'fixture-withdrawn-session',journey_id:journey.id,dog_id:dog.id,program_version_id:journey.program_version_id,step_id:journey.active_step_id,operation_id:'fixture-withdrawn-session-operation',feedback:'paused_early',performed_at:'2026-10-24T10:01:00.000Z'}],milestones:[]};
  }
- const program=programs[0];const firstStep=program?.steps[0];if(!program||!firstStep||!['active','paused','confirmed'].includes(scenario))return emptyTrainingProgression();
- const journey={id:`journey-${program.id}`,dog_id:dog.id,program_version_id:program.id,active_step_id:firstStep.id,state:scenario==='paused'?'paused' as const:'active' as const,
+ const program=programs[0];const firstStep=program?.steps[0];if(!program||!firstStep||!['active','paused','confirmed','timeline'].includes(scenario))return emptyTrainingProgression();
+ const journey={id:`journey-${program.id}`,dog_id:dog.id,program_version_id:program.id,active_step_id:scenario==='timeline'?program.steps[1]?.id??firstStep.id:firstStep.id,state:scenario==='paused'?'paused' as const:'active' as const,
   last_operation_id:'fixture-seed-operation',created_at:'2026-10-24T10:00:00.000Z',updated_at:'2026-10-24T10:00:00.000Z'};
- const sessions=scenario==='confirmed'?[{id:'fixture-seed-session',journey_id:journey.id,dog_id:dog.id,program_version_id:program.id,step_id:firstStep.id,
+ const sessions=['confirmed','timeline'].includes(scenario)?[{id:'fixture-seed-session',journey_id:journey.id,dog_id:dog.id,program_version_id:program.id,step_id:scenario==='timeline'?journey.active_step_id:firstStep.id,
   operation_id:'fixture-seed-session-operation',feedback:'worked_as_planned' as const,performed_at:'2026-10-24T10:01:00.000Z'}]:[];
- const milestones=scenario==='confirmed'?[{id:'fixture-seed-milestone',journey_id:journey.id,dog_id:dog.id,program_version_id:program.id,step_id:firstStep.id,
-  confirmation_operation_id:'fixture-seed-confirm-operation',confirmed_at:'2026-10-24T10:02:00.000Z'}]:[];
+ const milestones=['confirmed','timeline'].includes(scenario)?[{id:'fixture-seed-milestone',journey_id:journey.id,dog_id:dog.id,program_version_id:program.id,step_id:firstStep.id,
+  confirmation_operation_id:'fixture-seed-confirm-operation',confirmed_at:scenario==='timeline'?'2026-08-15T12:00:00.000Z':'2026-10-24T10:02:00.000Z'}]:[];
  return {journeys:[journey],sessions,milestones};
 }
 function applyProgressionFixtureAction(workspace:TrainingProgressionWorkspace,program:PublishedTrainingProgram|undefined,action:TrainingProgressionAction,operationId:string):TrainingProgressionWorkspace{
@@ -161,6 +170,10 @@ function applyProgressionFixtureAction(workspace:TrainingProgressionWorkspace,pr
   const milestones=workspace.milestones.some(row=>row.journey_id===journey.id&&row.step_id===action.stepId)?workspace.milestones:[...workspace.milestones,{id:`milestone-${operationId}`,journey_id:journey.id,dog_id:dog.id,program_version_id:program.id,step_id:action.stepId,confirmation_operation_id:operationId,confirmed_at:now}];
   return {...workspace,journeys:workspace.journeys.map(row=>row.id===journey.id?journey:row),milestones};
  }
+ if(action.kind==='undo_step'){
+  if(!workspace.milestones.some(row=>row.id===action.expectedMilestoneId&&row.journey_id===journey.id&&row.step_id===action.stepId))return workspace;
+  return {...workspace,journeys:workspace.journeys.map(row=>row.id===journey.id?journey:row),milestones:workspace.milestones.filter(row=>row.id!==action.expectedMilestoneId)};
+ }
  if(action.kind==='next'&&workspace.milestones.some(row=>row.journey_id===journey.id&&row.step_id===action.stepId)&&stepIndex<program.steps.length-1)journey={...journey,active_step_id:program.steps[stepIndex+1].id};
  else if(action.kind==='back'&&stepIndex>0)journey={...journey,active_step_id:program.steps[stepIndex-1].id};
  else if(action.kind==='pause')journey={...journey,state:'paused'};
@@ -171,6 +184,18 @@ function fixtureQuery(table){const query={eq(){return query;},order(){return que
 const client={from:table=>({select:()=>fixtureQuery(table)})};
 const profileClient={from:()=>({select:()=>({order:()=>({abortSignal:async()=>{const scenario=new URLSearchParams(location.search).get('profileScenario');if(scenario==='loading')await new Promise(resolve=>setTimeout(resolve,1400));if(scenario==='error')return {data:null,error:{message:'synthetic read error'}};return {data:[{id:'golden',name:'Golden retriever'}],error:null};}})})})};
 function isFixtureAccountCurrent(){return true;}
+function ActionMenuContractFixture(){
+ const [visible,setVisible]=useState(false);
+ const calls=useRef({close:0,edit:0,delete:0});
+ Object.assign(window,{__tasslaActionMenuCalls:calls.current});
+ function record(key:'close'|'edit'|'delete'){calls.current[key]+=1;Object.assign(window,{__tasslaActionMenuCalls:{...calls.current}});}
+ return <View style={{flex:1,alignItems:'center',justifyContent:'center',gap:tokens.spacing.md,backgroundColor:tokens.colors.background}}>
+  <Text style={{...tokens.typography.heading,color:tokens.colors.textPrimary}}>ActionMenu testyta</Text>
+  <ActionMenu visible={visible} label="Testa åtgärdsmenyn" objectLabel="testpost"
+   onOpen={()=>setVisible(true)} onClose={()=>{record('close');setVisible(false);}}
+   onEdit={()=>record('edit')} onDelete={()=>record('delete')}/>
+ </View>;
+}
 function WorkspaceRetentionFixture({review}:{review:boolean}){
  const [result,setResult]=useState<{requests:number;joined:number;cacheHits:number;trips:number;trace:string[]}|null>(null);
  function runTrace(){
@@ -211,14 +236,17 @@ function WorkspaceRetentionFixture({review}:{review:boolean}){
  </View>;
 }
 function App(){
- const params=new URLSearchParams(location.search);const state=params.get('state')||'ready';const firstDayMode=params.get('firstDay')==='true';const logScenario=params.get('logScenario')||'ready';const calendarScenario=params.get('calendarScenario')||'loading';const usesSplitLogFixture=['split-day','split-day-error'].includes(logScenario);const reviewFixtureEnabled=process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT==='true';
+ const params=new URLSearchParams(location.search);const state=params.get('state')||'ready';const firstDayMode=params.get('firstDay')==='true';const logScenario=params.get('logScenario')||'ready';const calendarScenario=params.get('calendarScenario')||'loading';const usesSplitLogFixture=['split-day','split-day-error'].includes(logScenario);const insightsPaged=logScenario==='insights-paged';const reviewFixtureEnabled=process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT==='true';
  const [fixtureDate,setFixtureDate]=useState(today);
+ const [fixtureChecklistPlanFocus,setFixtureChecklistPlanFocus]=useState(false);
+ const [fixtureHistoricalFocus,setFixtureHistoricalFocus]=useState(false);
  const [page,setPage]=useState(new URLSearchParams(location.search).get('screen')||'home');const [knowledgeDetailOpen,setKnowledgeDetailOpen]=useState(false);const [focusedChecklistStep,setFocusedChecklistStep]=useState<{programId:string;stepId:string}|null>(null);const [checklistFilter,setChecklistFilter]=useState<ChecklistFilter>(()=>{const requested=params.get('checklistFilter');return requested==='Denna vecka'||requested==='Alla'||requested==='Kommande'?requested:'Idag';});
  const [fixtureScopeChanged,setFixtureScopeChanged]=useState(false);const fixtureDog=fixtureScopeChanged?{...dog,id:'fixture-dog-b',name:'Milo'}:dog;
  const workspaceState=params.get('workspaceState')||'';
  const mutationScenario=['pending','failed','unsure'].includes(params.get('mutation'));const accidentMutationScenario=logScenario==='accident-pending';const initialMutationStatus=accidentMutationScenario?'pending':mutationScenario?params.get('mutation'):null;
- const initialLogEvents=accidentEditFixtures[logScenario]??(usesSplitLogFixture?logSplitPage:initialEvents);const visualLogEvents=logScenario==='palette'?[...initialLogEvents,logEvent('fixture-water',today,13*60,'water'),logEvent('fixture-accident',today,14*60,'accident'),logEvent('fixture-yesterday',shiftFixtureDate(today,-1),7*60+30,'awake'),logEvent('fixture-marker-five-days-ago',shiftFixtureDate(today,-5),8*60,'water')]:initialLogEvents;
- const [events]=useState(initialEvents);const [logEvents,setLogEvents]=useState<LogEvent[]>(visualLogEvents);const [logHasMore,setLogHasMore]=useState(usesSplitLogFixture);const [logLoadingMore,setLogLoadingMore]=useState(false);const [logLoadMoreError,setLogLoadMoreError]=useState(false);const [logLoadAttempt,setLogLoadAttempt]=useState(0);const [mutation,setMutation]=useState<FixtureLogMutation|null>(()=>initialMutationStatus?{kind:'add',id:'fixture-pending',mutationId:'fixture-pending',type:accidentMutationScenario?'accident':'food',occurredAt:accidentMutationScenario?`${today}T08:11:00.000Z`:new Date().toISOString(),status:initialMutationStatus as FixtureLogMutation['status'],accidentKinds:accidentMutationScenario?['pee']:null}:null);const [pendingLogUpdate,setPendingLogUpdate]=useState<{id:string;changes:LogEventChanges}|null>(null);const [failNextLogUpdate,setFailNextLogUpdate]=useState(['failed','unsure'].includes(params.get('editScenario')||''));const [focused,setFocused]=useState(null);const [plans,setPlans]=useState(healthRouteRoundTrip?healthRoutePlans:initialPlan);const [healthTab,setHealthTab]=useState<HealthTab>('Översikt');const [healthFocus,setHealthFocus]=useState<{planId:string|null;returnTab:HealthTab}|null>(null);const [historyError,setHistoryError]=useState(new URLSearchParams(location.search).get('state')==='error');const [plannedState,setPlannedState]=useState<'loading'|'ready'|'error'>(()=>state==='empty'?'ready':state==='loading'?'loading':state==='error'?'error':'ready');const [plannedScenario,setPlannedScenario]=useState(params.get('plannedScenario')||'');
+ const initialLogEvents=insightsPaged?Array.from({length:10},(_,i)=>logEvent(`insights-page-${i}`,today,12*60-i*10,'pee')):logScenario==='insights'?[logEvent('fixture-insights-pee',today,8*60,'pee')]:accidentEditFixtures[logScenario]??(usesSplitLogFixture?logSplitPage:initialEvents);const visualLogEvents=logScenario==='palette'?[...initialLogEvents,logEvent('fixture-water',today,13*60,'water'),logEvent('fixture-accident',today,14*60,'accident'),logEvent('fixture-yesterday',shiftFixtureDate(today,-1),7*60+30,'awake'),logEvent('fixture-marker-five-days-ago',shiftFixtureDate(today,-5),8*60,'water')]:initialLogEvents;
+ const [fixtureLogView,setFixtureLogView]=useState<'today'|'overview'>(logScenario==='insights'||insightsPaged?'overview':'today');
+ const [events]=useState(initialEvents);const [logEvents,setLogEvents]=useState<LogEvent[]>(visualLogEvents);const [logHasMore,setLogHasMore]=useState(usesSplitLogFixture||insightsPaged);const [logLoadingMore,setLogLoadingMore]=useState(false);const [logLoadMoreError,setLogLoadMoreError]=useState(false);const [logLoadAttempt,setLogLoadAttempt]=useState(0);const [mutation,setMutation]=useState<FixtureLogMutation|null>(()=>initialMutationStatus?{kind:'add',id:'fixture-pending',mutationId:'fixture-pending',type:accidentMutationScenario?'accident':'food',occurredAt:accidentMutationScenario?`${today}T08:11:00.000Z`:new Date().toISOString(),status:initialMutationStatus as FixtureLogMutation['status'],accidentKinds:accidentMutationScenario?['pee']:null}:null);const [pendingLogUpdate,setPendingLogUpdate]=useState<{id:string;changes:LogEventChanges}|null>(null);const [failNextLogUpdate,setFailNextLogUpdate]=useState(['failed','unsure'].includes(params.get('editScenario')||''));const [focused,setFocused]=useState(null);const [plans,setPlans]=useState(healthRouteRoundTrip?healthRoutePlans:initialPlan);const [healthTab,setHealthTab]=useState<HealthTab>('Översikt');const [healthFocus,setHealthFocus]=useState<{planId:string|null;returnTab:HealthTab}|null>(null);const [historyError,setHistoryError]=useState(new URLSearchParams(location.search).get('state')==='error');const [plannedState,setPlannedState]=useState<'loading'|'ready'|'error'>(()=>state==='empty'?'ready':state==='loading'?'loading':state==='error'?'error':'ready');const [plannedScenario,setPlannedScenario]=useState(params.get('plannedScenario')||'');
  const [weightRows,setWeightRows]=useState(weights);const [weightRecovery,setWeightRecovery]=useState<WeightEditorRecovery|null>(null);const [pendingWeightDelete,setPendingWeightDelete]=useState<string|null>(null);
  const [dailyMutationMode,setDailyMutationMode]=useState(params.get('dailyMutation')||'');
  const homeScenario=params.get('homeScenario')||'ready';
@@ -252,7 +280,7 @@ function App(){
  const conflictReturned=useRef(false);
  function addLogFixture(type:LogEventType,intent?:AccidentLogIntent){if(type==='accident'&&!intent)return;const event:LogEvent={id:intent?.id??crypto.randomUUID(),dogId:dog.id,type,occurredAt:intent?.occurredAt??new Date().toISOString(),note:null,origin:'local-test',accidentKinds:intent?.accidentKinds??null};const status=logScenario==='accident-failed'?'failed':logScenario==='accident-unsure'?'unsure':'saved';if(status==='saved')setLogEvents(rows=>[event,...rows]);setMutation({kind:'add',id:event.id,mutationId:event.id,type:event.type,occurredAt:event.occurredAt,accidentKinds:event.accidentKinds,status});}
  function retryLogFixture(){if(mutation?.kind==='update'&&pendingLogUpdate){setLogEvents(rows=>rows.map(row=>row.id===pendingLogUpdate.id?{...row,...pendingLogUpdate.changes}:row));setMutation({...mutation,type:pendingLogUpdate.changes.type,occurredAt:pendingLogUpdate.changes.occurredAt,accidentKinds:pendingLogUpdate.changes.accidentKinds,status:'saved'});setPendingLogUpdate(null);return true;}if(mutation?.kind!=='add')return true;const event:LogEvent={id:mutation.id,dogId:dog.id,type:mutation.type,occurredAt:mutation.occurredAt,note:null,origin:'local-test',accidentKinds:mutation.accidentKinds??null};setLogEvents(rows=>rows.some(row=>row.id===event.id)?rows:[event,...rows]);setMutation({...mutation,status:'saved'});return true;}
- function loadMoreLog(){if(logLoadingMore||!logHasMore)return;setLogLoadingMore(true);setLogLoadMoreError(false);window.setTimeout(()=>{setLogLoadingMore(false);if(logScenario==='split-day-error'&&logLoadAttempt===0){setLogLoadAttempt(1);setLogLoadMoreError(true);return;}setLogEvents(rows=>[...rows,...logSplitContinuation.filter(next=>!rows.some(row=>row.id===next.id))]);setLogHasMore(false);},650);}
+ function loadMoreLog(){if(logLoadingMore||!logHasMore)return;setLogLoadingMore(true);setLogLoadMoreError(false);window.setTimeout(()=>{setLogLoadingMore(false);if((logScenario==='split-day-error'||insightsPaged)&&logLoadAttempt===0){setLogLoadAttempt(1);setLogLoadMoreError(true);return;}setLogEvents(rows=>[...rows,...(insightsPaged?[logEvent('insights-older',shiftFixtureDate(today,-1),8*60,'food')]:logSplitContinuation).filter(next=>!rows.some(row=>row.id===next.id))]);setLogHasMore(false);},650);}
  const scenarioStep=homeScenario==='review-training'?process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT==='true'?homeDenseFixture.trainingStep:undefined:homeScenario==='ready'?homeDenseFixture.trainingStep:undefined;
  const empty=state==='empty';const records=empty?[]:history;
  const main=['home','log','training','knowledge'].includes(page)?page:['checklist','progress','home-training-detail','workspace-retention'].includes(page)?'home':'more';
@@ -284,9 +312,16 @@ function App(){
   ...(visualTraining?[{...visualTraining,id:'visual-history-training-1',label:'Träna sitt',completed:true,dateKey:shiftFixtureDate(today,-1)}]:[]),
   {...checklistVisualActivities[2],id:'visual-history-environment-1',dateKey:shiftFixtureDate(today,-3)},
   {...checklistVisualActivities[4],id:'visual-history-evening-1',dateKey:shiftFixtureDate(today,-5)},
- ]:fixtureChecklistActivities.map((item,index)=>({...item,id:'fixture-history-'+index,dateKey:shiftFixtureDate(today,-(index<2?1:index+1))}));
+ ]:fixtureChecklistActivities.map((item,index)=>({...item,id:'fixture-history-'+index,dateKey:shiftFixtureDate(today,-(index<2?1:index>=5?index-4:index+1))}));
  const requestedChecklistRangeState=params.get('checklistRangeState')||'ready';
  const checklistRangeState=requestedChecklistRangeState==='loading'||requestedChecklistRangeState==='partial'||requestedChecklistRangeState==='error'?requestedChecklistRangeState:'ready';
+ const fixtureRange=checklistFilter==='Idag'?null:checklistFilterRange(checklistFilter,today);
+ const fixtureRangeActivities=!fixtureRange||params.get('checklistRangeEmpty')==='true'?[]:checklistFilter==='Kommande'
+  ?deriveUpcomingActivities(fixtureRoutines,[{id:'fixture-upcoming-vaccine',dog_id:dog.id,event_type:'vaccination',due_on:shiftFixtureDate(today,2)}],dog.id,fixtureRange.from,fixtureRange.to)
+  :checklistRangeActivities.filter(item=>item.dateKey&&item.dateKey>=fixtureRange.from&&item.dateKey<=fixtureRange.to);
+ const historicalProgram=trainingPrograms.find(program=>program.id===focusedChecklistStep?.programId);
+ const historicalStep=historicalProgram?.steps.find(step=>step.id===focusedChecklistStep?.stepId);
+ const historicalActivity=fixtureRangeActivities.find(item=>item.programId===focusedChecklistStep?.programId&&item.stepId===focusedChecklistStep?.stepId);
  async function createRoutineFixture(input:DailyRoutineCreateInput){const routine:DailyRoutine={...input,dog_id:dog.id,checklist_revision:1,legacy_single_item:false,repeat_anchor_date:input.repeat_unit?fixtureDate:null};setFixtureRoutines(rows=>[routine,...rows]);return {status:'saved' as const,value:routine};}
  function publishFirstDayCounts(){Object.assign(window,{__homeFirstDayMutationCounts:{...firstDayMutationCounts.current}});}
  function addRoutineFixture(routine:DailyRoutine,dateKey=fixtureDate,dayId=crypto.randomUUID()){
@@ -361,7 +396,7 @@ function App(){
  async function deleteRoutineFixture(routine:DailyRoutine){setFixtureRoutines(rows=>rows.filter(row=>row.id!==routine.id));setFixtureRoutineDays(rows=>rows.filter(row=>row.routine_id!==routine.id));return {status:'saved' as const};}
  function removeRoutineFixture(row:DailyRoutineDay){const routine=fixtureRoutines.find(item=>item.id===row.routine_id);if(routine&&(row.is_recurring_occurrence||isRoutineDueOnDate(routine,row.date_key))){const {id,...snapshot}=row;setFixtureRoutineSkips(rows=>[...rows.filter(item=>item.routine_id!==row.routine_id||item.date_key!==row.date_key),{...snapshot,day_id:id,routine_day_revision:row.routine_day_revision+1,last_state_mutation_id:crypto.randomUUID()}]);}setFixtureRoutineDays(rows=>rows.filter(item=>item.id!==row.id));}
  function setRoutineItemFixture(row:DailyRoutineDay,itemId:string,completed:boolean){setFixtureRoutineDays(rows=>rows.map(item=>{if(item.id!==row.id)return item;const ids=item.checklist_snapshot.map(checklistItem=>checklistItem.id).filter(id=>id===itemId?completed:item.completed_item_ids.includes(id));return {...item,completed_item_ids:ids,completed_at:ids.length===item.checklist_snapshot.length?new Date().toISOString():null,routine_day_revision:item.routine_day_revision+1,last_state_mutation_id:crypto.randomUUID()};}));}
- const visibleRoutineActivities=firstDayMode?fixtureActivities:reviewFixtureEnabled&&state==='ready'&&['ready','product-daily'].includes(homeScenario)?fixtureActivities:[];
+ const visibleRoutineActivities=firstDayMode?fixtureActivities:reviewFixtureEnabled&&state==='ready'&&homeScenario==='product-daily'?fixtureChecklistActivities:reviewFixtureEnabled&&state==='ready'&&homeScenario==='ready'?fixtureActivities:[];
  const firstDayHasActivity=firstDayMode&&fixtureRoutineDays.some(row=>row.date_key===fixtureDate);
  const firstDayMutationMessage=dailyMutationMode==='day-add-failed'?createdRoutineDaySelectionRecoveryCopy.failedMessage:dailyMutationMode==='day-add-unknown'?createdRoutineDaySelectionRecoveryCopy.unknownMessage:dailyMutationMode==='failed'?'Ändringen sparades inte. Försök igen.':dailyMutationMode==='unknown'?'Vi kunde inte bekräfta om ändringen sparades. Ingen ny bock visas. Kontrollera samma ändring innan du fortsätter.':dailyMutationMode==='readback'?'Ändringen sparades, men dagens lista kunde inte hämtas. Status räknas först efter en ny avläsning.':'';
  const firstDayMutationError=['failed','unknown','readback','day-add-failed','day-add-unknown'].includes(dailyMutationMode);
@@ -370,16 +405,18 @@ function App(){
  <View style={styles.appViewport} testID="review-app-viewport">
  {['sign-in','profile-create','auth-callback'].includes(page)?<>
  {page==='sign-in'?<SignInScreenView cancelGoogleSignIn={()=>{}} googlePending={params.get('signinScenario')==='google-pending'} sendMagicLink={async()=>params.get('signinScenario')!=='magic-error'} signInWithGoogle={async()=>params.get('signinScenario')!=='google-error'} signOutWarning={params.get('signinScenario')==='signout-warning'?'Du är utloggad på den här enheten. Servern kunde inte bekräfta att sessionen har återkallats.':null} status={params.get('signinScenario')==='unavailable'?'unavailable':'signedOut'}/>:null}
- {page==='profile-create'?<ProfileScreen client={profileClient as never} ownerId="00000000-0000-4000-8000-000000000002" accountGeneration={1} isCurrentAccount={isFixtureAccountCurrent} onCreated={()=>{}}/>:null}
+ {page==='profile-create'?<ProfileScreen client={profileClient as never} ownerId="00000000-0000-4000-8000-000000000002" accountGeneration={1} isCurrentAccount={isFixtureAccountCurrent} onCreated={()=>{}} mode={params.get('profileMode')==='add'?'add':'initial'} onCancel={()=>setPage('home')}/>:null}
  {page==='auth-callback'?<AuthCallbackView mode={params.get('callbackScenario')==='error'?'error':params.get('callbackScenario')==='preview'?'preview':'pending'} pendingMessage={params.get('callbackScenario')==='returned'?'Vi slutför inloggningen…':'Vänta medan länken öppnas…'} onReturn={()=>go('home')}/>:null}
  </>:<AppScreen scrollKey={page==='checklist'?'checklist-flow':page==='health'?'health-flow':page==='planned'&&healthFocus?'planned-health-health-source':page} preserveScrollKey={page==='checklist'||page==='home-training-detail'?'checklist-flow':page==='health'||(page==='planned'&&healthFocus)?'health-flow':undefined} footer={<BottomNav active={main} onChange={go}/>}><MainSwipeNavigation enabled={isMainTabDestination(page)&&!(page==='knowledge'&&knowledgeDetailOpen)} onSwipe={direction=>{const destination=nextMainTabDestination(page,direction);if(destination)navigateMainTab(destination);}}><ScreenTransition transitionKey={page}>
  {page==='workspace-retention'?<WorkspaceRetentionFixture review={reviewFixtureEnabled}/>:null}
+ {page==='action-menu-contract'?<ActionMenuContractFixture/>:null}
  {page==='home'?<HomeScreen today={fixtureDate} dog={fixtureScopeChanged?fixtureDog:homeScenario==='stale-selection'?{...dog,id:'new-dog',name:'Milo'}:dog} breed={fixtureBreed}
   events={empty?[]:events} healthHistory={records} healthHistoryState={historyError?'error':state==='loading'?'loading':'ready'}
   plans={empty?[]:[...plans,homeDenseFixture.plan]} content={empty||homeScenario==='review-training'?[]:content} contentState={state==='empty'?'ready':state}
-  logState={state==='empty'?'ready':state} planState={state==='empty'?'ready':state} trainingState={homeScenario==='loading'?'loading':homeScenario==='error'?'error':'ready'}
+  logState={state==='empty'?'ready':state} logPendingOrUnknown={params.get('reflectionPending')==='unknown'} planState={state==='empty'?'ready':state} trainingState={homeScenario==='loading'?'loading':homeScenario==='error'?'error':'ready'}
   trainingProgression={progressionReadState==='ready'?latestHomeTrainingSummary(trainingProgression,trainingPrograms):null} trainingProgressionState={progressionReadState}
-  pendingProgression={Object.values(pendingProgressions)[0]??null} onOpenTrainingJourney={versionId=>{setTrainingProgramFocus(versionId);setPage('training')}}
+  nextTrainingSuggestion={homeScenario==='next-step'?{programId:'fixture-training:trygg-start',programTitle:'Trygg vardagsstart',stepTitle:'Utforska i egen takt'}:null}
+  pendingProgression={params.get('suggestionPending')==='unknown'?{action:{kind:'start_or_resume',programVersionId:'fixture-training:trygg-start'},operationId:'fixture-unknown',status:'unknown'}:Object.values(pendingProgressions)[0]??null} onOpenTrainingJourney={versionId=>{setTrainingProgramFocus(versionId);setPage('training')}}
   onRetryProgression={retryProgressionFixture} onRetryTrainingProgressionRead={()=>setProgressionReadState('ready')}
   nextStep={scenarioStep} reviewTrainingStep={homeScenario==='review-training'&&reviewFixtureEnabled}
   dailyFixture={reviewFixtureEnabled&&homeScenario==='ready'&&state==='ready'?homeReviewFixture:undefined}
@@ -401,22 +438,29 @@ function App(){
   onSetRoutineCompletion={setRoutineItemFixture}/>:null}
  {page==='checklist'?<DailyChecklistScreen dateKey={fixtureDate} state={state==='loading'?'loading':state==='error'?'error':'ready'}
   activities={state==='empty'&&!firstDayHasActivity?[]:checklistActivities} refreshing={workspaceState==='refreshing'} refreshError={workspaceState==='refresh-error'}
-  filter={checklistFilter} onChangeFilter={setChecklistFilter} rangeState={checklistRangeState} rangeActivities={checklistRangeActivities}
+  filter={checklistFilter} onChangeFilter={setChecklistFilter} rangeState={checklistRangeState} rangeActivities={fixtureRangeActivities}
   onRetryRange={()=>{}}
   mutationBusy={dailyMutationMode==='pending'} mutationKey={dailyMutationMode?'complete-routine:day-morning:00000000-0000-4000-8000-000000000001':''}
   mutationMessage={firstDayMutationMessage}
   mutationError={firstDayMutationError} onBack={()=>setPage('home')} onRetry={()=>setDailyMutationMode('')} onRetryMutation={['unknown','day-add-unknown'].includes(dailyMutationMode)?retryDailyFixtureMutation:undefined}
-  onOpenTrainingStep={(programId,stepId)=>{setFocusedChecklistStep({programId,stepId});setPage('home-training-detail')}} onSetRoutineCompletion={setRoutineItemFixture}
+  onOpenTrainingStep={(programId,stepId)=>{setFixtureHistoricalFocus(false);setFocusedChecklistStep({programId,stepId});setPage('home-training-detail')}} onSetRoutineCompletion={setRoutineItemFixture}
+  onOpenHistoricalTrainingStep={(programId,stepId)=>{setFixtureHistoricalFocus(true);setFocusedChecklistStep({programId,stepId});setPage('home-training-detail')}}
+  onOpenUpcomingRoutine={async routineId=>{const routine=fixtureRoutines.find(item=>item.id===routineId);return routine?{status:'ready',routine}:{status:'missing'};}} upcomingRoutines={fixtureRoutines}
+  onOpenPlannedHealth={()=>{setFixtureChecklistPlanFocus(true);setPage('planned');}}
   routines={fixtureRoutines} routineDaySkips={fixtureRoutineSkips} trainingOptions={firstDayMode?[]:reviewTrainingOptions} onCreateRoutine={firstDayMode?createRoutineForTodayFixture:createRoutineFixture} onUpdateRoutine={updateRoutineFixture} onDeleteRoutine={deleteRoutineFixture}
   onAddRoutineToDay={addRoutineFixture} onRemoveRoutineFromDay={removeRoutineFixture} onAddTrainingToDay={()=>{}} onRemoveTrainingFromDay={()=>{}} onGoTraining={()=>go('training')}/>:null}
  {page==='checklist'&&params.get('checklistScopeReset')==='true'?<View style={{padding:16}}><Button label="Byt hund i testfixture" accessibilityLabel="Byt hund i testfixture" onPress={()=>{setFixtureScopeChanged(true);setChecklistFilter('Idag');setPage('home')}}/></View>:null}
- {page==='log'?<LogScreen mode="cloud" persistLayout={false} events={state==='empty'?[]:logEvents} mutation={mutation} loading={state==='loading'} loadError={state==='error'} onReload={()=>{}} loadMoreError={logLoadMoreError} onLoadMore={loadMoreLog} hasMore={state==='empty'?false:logHasMore} loadingMore={logLoadingMore} calendarMarkerMonth={calendarScenario==='loading-month'?'':today.slice(0,7)} calendarMarkers={calendarScenario==='markers'?[today,shiftFixtureDate(today,-1),shiftFixtureDate(today,-5)]:[]} calendarStatus={calendarScenario==='loading'?'loading':calendarScenario==='error'?'error':'ready'} onLoadCalendarMonth={()=>{}} onAdd={addLogFixture} onRetry={retryLogFixture} onCancel={()=>{setMutation(null);setPendingLogUpdate(null);}} onUpdate={(id,changes)=>{if(failNextLogUpdate){setFailNextLogUpdate(false);setPendingLogUpdate({id,changes});setMutation({kind:'update',id,mutationId:id,type:changes.type,occurredAt:changes.occurredAt,accidentKinds:changes.accidentKinds,status:params.get('editScenario')==='unsure'?'unsure':'failed'});return false;}setLogEvents(rows=>rows.map(e=>e.id===id?{...e,...changes}:e));return true;}} onDelete={id=>setLogEvents(rows=>rows.filter(e=>e.id!==id))} onUndo={id=>{setLogEvents(rows=>rows.filter(e=>e.id!==id));setMutation(null);}}/>:null}
+ {page==='log'?<LogScreen mode="cloud" persistLayout={false} events={state==='empty'?[]:logEvents} view={fixtureLogView} onViewChange={setFixtureLogView}
+  insightsState={logScenario==='insights'||insightsPaged?{status:'ready',data:{period:'week',timezone:'Europe/Stockholm',asOf:`${today}T23:59:59.000Z`,periodStartLocal:shiftFixtureDate(today,-6),periodEndExclusiveLocal:shiftFixtureDate(today,1),observedThroughLocal:today,firstLogDay:today,bucket:'day',days:[{date:today,peeCount:1,poopCount:0,unclassifiedAccidentCount:0,sleepCount:0,awakeCount:0}]}}:undefined}
+  mutation={mutation} loading={state==='loading'} loadError={state==='error'} onReload={()=>{}} loadMoreError={logLoadMoreError} onLoadMore={loadMoreLog} hasMore={state==='empty'?false:logHasMore} loadingMore={logLoadingMore} calendarMarkerMonth={calendarScenario==='loading-month'?'':today.slice(0,7)} calendarMarkers={calendarScenario==='markers'?[today,shiftFixtureDate(today,-1),shiftFixtureDate(today,-5)]:[]} calendarStatus={calendarScenario==='loading'?'loading':calendarScenario==='error'?'error':'ready'} onLoadCalendarMonth={()=>{}} onAdd={addLogFixture} onRetry={retryLogFixture} onCancel={()=>{setMutation(null);setPendingLogUpdate(null);}} onUpdate={(id,changes)=>{if(failNextLogUpdate){setFailNextLogUpdate(false);setPendingLogUpdate({id,changes});setMutation({kind:'update',id,mutationId:id,type:changes.type,occurredAt:changes.occurredAt,accidentKinds:changes.accidentKinds,status:params.get('editScenario')==='unsure'?'unsure':'failed'});return false;}setLogEvents(rows=>rows.map(e=>e.id===id?{...e,...changes}:e));return true;}} onDelete={id=>setLogEvents(rows=>rows.filter(e=>e.id!==id))} onUndo={id=>{setLogEvents(rows=>rows.filter(e=>e.id!==id));setMutation(null);}}/>:null}
  {page==='components'?<ComponentGalleryScreen onBack={()=>go('home')}/>:null}
  {page==='health'?<HealthScreen onBack={()=>go('more')} activeTab={healthTab} onActiveTabChange={tab=>setHealthTab(tab as HealthTab)} records={empty?[]:weightRows} loadState="ready" weightEditorRecovery={weightRecovery} onWeightEditorRecoveryChange={setWeightRecovery} pendingStatus={Boolean(pendingWeightDelete)} blocked={Boolean(pendingWeightDelete)} statusError={Boolean(pendingWeightDelete)} statusMessage={pendingWeightDelete?'Vi kunde inte kontrollera om viktändringen sparades.':''} onRetryPending={()=>{const id=pendingWeightDelete;if(!id)return;setWeightRows(rows=>rows.filter(row=>row.id!==id));setWeightRecovery(current=>current?.id===id?null:current);setPendingWeightDelete(null);}} onDelete={async id=>{if(params.get('weightScenario')==='unknown-delete'){setPendingWeightDelete(id);return false;}setWeightRows(rows=>rows.filter(row=>row.id!==id));return true;}} historyRecords={records} historyLoadState={historyError?'error':state==='empty'?'ready':state} plannedRecords={empty?[]:plans} plannedLoadState={plannedState} onRetryHistory={()=>setHistoryError(false)} onRetryPlannedHealth={()=>setPlannedState('ready')} onSave={async()=>true} onSaveHistory={async()=>true} onOpenPlannedHealth={(planId,returnTab)=>{setHealthTab(returnTab);setHealthFocus({planId,returnTab});setPage('planned');}} onCreatePlannedHealth={returnTab=>{setHealthTab(returnTab);setHealthFocus({planId:null,returnTab});setPage('planned');}}/>:null}
  {page==='planned'?<PlannedHealthScreen
-   onBack={()=>{if(healthFocus){setHealthTab(healthFocus.returnTab);setHealthFocus(null);}go('health')}}
-   backLabel="Hälsa"
+   onBack={()=>{if(fixtureChecklistPlanFocus){setFixtureChecklistPlanFocus(false);setPage('checklist');return;}if(healthFocus){setHealthTab(healthFocus.returnTab);setHealthFocus(null);}go('health')}}
+   backLabel={fixtureChecklistPlanFocus?'Checklistan':'Hälsa'}
    records={empty?[]:plans}
+   checklistFocusState={fixtureChecklistPlanFocus?'ready':'idle'}
+   checklistFocusRecord={fixtureChecklistPlanFocus?{id:'fixture-upcoming-vaccine',dog_id:dog.id,event_type:'vaccination',due_on:shiftFixtureDate(today,2),due_time:null,description:null,reminder_enabled:false,reminder_minutes:null,created_at:today}:null}
    healthFocusActive={Boolean(healthFocus)}
    healthFocusPlanId={healthFocus?.planId ?? null}
    reminderSummary={healthRouteRoundTrip?'Påminnelser av på den här enheten. Sparade planval finns kvar.':''}
@@ -439,8 +483,9 @@ function App(){
   progression={trainingProgression} progressionState={progressionReadState} pendingProgressions={pendingProgressions}
   onApplyProgression={applyProgressionFixture} onRetryProgression={retryProgressionFixture}
   initialProgramId={trainingProgramFocus} onInitialProgramFocusApplied={()=>setTrainingProgramFocus(null)}
-  focusStep={page==='home-training-detail'&&focusedChecklistStep?{...focusedChecklistStep,returnPage:'checklist'}:undefined}
-  onCloseStep={()=>setPage('checklist')}
+  focusStep={page==='home-training-detail'&&focusedChecklistStep?{...focusedChecklistStep,returnPage:'checklist',readOnly:fixtureHistoricalFocus,dateKey:historicalActivity?.dateKey,completed:historicalActivity?.completed}:undefined}
+  historicalDetail={fixtureHistoricalFocus&&historicalProgram&&historicalStep?{status:'ready',detail:{programVersionId:historicalProgram.id,programTitle:historicalProgram.title,stepId:historicalStep.id,stepTitle:historicalStep.title,instruction:historicalStep.instruction,sources:[...historicalProgram.sources],isAiGenerated:historicalProgram.is_ai_generated}}:undefined}
+  onCloseStep={()=>{setFixtureHistoricalFocus(false);setPage('checklist')}}
   onCompleteStep={async(p,id)=>{setTrainingPrograms(current=>current.map(program=>program.id===p.id?{...program,completedStepIds:program.completedStepIds.includes(id)?program.completedStepIds:[...program.completedStepIds,id]}:program));return {programId:p.id,stepId:id};}}
   onUnmarkStep={unmarkTrainingFixture} onContinue={()=>{if(page==='home-training-detail')setPage('checklist')}}
   onResetProgram={program=>setTrainingPrograms(current=>current.map(item=>item.id===program.id?{...item,completedStepIds:[]}:item))}

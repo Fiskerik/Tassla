@@ -27,13 +27,14 @@ const routineIcons = await readFile(new URL('../src/features/home/daily-routine-
 const iconMigration = await readFile(new URL('../supabase/migrations/202610220001_daily_routine_checklist_icons.sql', import.meta.url), 'utf8');
 const recoverySource = await readFile(new URL('../src/features/home/daily-activity-recovery.ts', import.meta.url), 'utf8');
 
-test('Home offers one permanent checklist entry while keeping its compact summary to five rows', () => {
+test('Home offers one permanent checklist entry while keeping its compact summary to three rows', () => {
   assert.match(home, /selectDailyProgress\(dailyActivities, dailyState === 'hidden' \? 'unknown' : dailyState\)/);
   assert.match(home, /dailyHeading/);
   assert.match(home, /<ProgressControl coverage=\{checklistCoverage\} completed=\{checklistCompleted\} total=\{checklistTotal\} onPress=\{onOpenProgress\} \/>/);
   assert.match(home, /accessibilityLabel=\{complete \? `\$\{completed\} av \$\{total\} dagsuppgifter klara\. Se dagens framsteg`/);
   assert.match(home, /accessibilityLabel=\{`\$\{dailyProgress\.completedCount\} av \$\{dailyProgress\.totalCount\} dagsuppgifter klara`\}/);
-  assert.match(home, /dailyProgress\.activities\.slice\(0, 5\)/);
+  assert.match(home, /const HOME_DAILY_PREVIEW_LIMIT = 3/);
+  assert.match(home, /dailyProgress\.activities\.slice\(0, HOME_DAILY_PREVIEW_LIMIT\)/);
   assert.equal((home.match(/testID="home-open-checklist"/g) ?? []).length, 1, 'the Home card exposes one full-checklist control');
   assert.match(home, /accessibilityLabel="Öppna Checklistor"/);
   assert.match(home, /checklistInline/);
@@ -138,7 +139,7 @@ test('opening a routine focuses its own editor and keeps manage-all as a named c
   assert.match(tabs, /onContentSizeChange=\{horizontalScroll \? \(\) => setScrollLayoutRevision/);
   assert.match(workspace, /confirmLabel="Lämna utan att spara" cancelLabel="Fortsätt redigera"/);
   assert.match(workspace, /Ändringarna i Hundprofilen är inte sparade\. Om du lämnar nu går de förlorade\./);
-  assert.match(manager, /<Dialog visible=\{showDiscardConfirmation\} title="Kasta ändringar\?"/);
+  assert.match(manager, /<Dialog visible=\{showDiscardConfirmation\} title="Lämna utan att spara\?"/);
   assert.doesNotMatch(manager, /ChecklistIconPickerTrigger[\s\S]{0,300}popover/);
   const createForm = manager.slice(manager.indexOf('function CreateRoutineForm'), manager.indexOf('function RepeatRuleControls'));
   assert.doesNotMatch(createForm, /label="Avbryt"/);

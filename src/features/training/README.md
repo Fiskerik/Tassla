@@ -16,7 +16,19 @@ An exercise is saved with its published version ID and step ID through insert/re
 
 The separate progression journey in a program detail is bound to one dog and one published version. A logged session uses one of three fixed feedback choices; a milestone requires a separate owner action after at least one saved session. Only the owner’s explicit `Fortsätt` action changes the saved step. Repeat, back, pause and maintenance preserve sessions and confirmed milestones. Unknown writes can be checked with the same operation ID. These counts remain separate from the older activity marks and Home’s daily list.
 
+Exercise details use the shared centered, rounded `BottomSheet` over the dimmed training screen. Instructions and the fixed primary action remain inside its scrollable card; the sheet keeps its existing close guards and drag handle.
+
 `TrainingScreen.tsx` and `training-model.ts` are local preview fixtures only. They are not production references. Review fixtures are memory-only; a real fetch error never falls back to examples. A real published-content read and RLS verification need a development Supabase environment.
+
+## TRAINING-TIMELINE-01 — history and progress in the program view
+
+The opened program uses a short decorative dog banner, a compact journey status row, and a vertical timeline. The active exercise is rendered only once in the timeline; earlier and future steps open as readable previews. Future steps are muted while keeping readable contrast and a 44 pt target. Journey history and upcoming previews have no write controls. Only the active step exposes journey actions.
+
+Completion dates come only from `training_milestones.confirmed_at`. Older `training_progress.completed_at` remains a separate “Aktivitet markerad” date; on a future step it never replaces the primary “Kommande” state. Session `performed_at` stays a practice record and is not shown as the date a skill was completed. Missing or invalid timestamps are omitted. Date text uses the device timezone and includes a year when it differs from the current local year.
+
+The current overview summarizes journey state and counts, then shows the step path without a second active-step card. Full instructions and pause guidance remain in the step detail. The banner reuses `training-recommendation-puppy-black-tan-park.jpg` with a vertical focus adjustment that keeps the generic dog's face and ears visible; it is decorative, not a photo of the owner's dog.
+
+The synthetic RN Web flow is verified with `python -X utf8 tools/visual-check/verify-flow-training.py`. Evidence lives in `docs/design/evidence/training-timeline-01/`. This does not verify native iOS/Android rendering, VoiceOver/Dynamic Type, live Supabase/RLS, or TestFlight.
 
 ## Verification
 

@@ -13,6 +13,7 @@ import { automaticDogAge, localDate } from '../onboarding/dog';
 import type { LogEvent } from '../puppy-log/log-model';
 import { homeAgeMarkerLabel, homeAgeStrip } from './home-today';
 import { homeGreetingAt } from './home-greeting';
+import { latestHomeReflection } from './home-reflection';
 import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
 import { DogProfileSwitcherSheet } from './DogProfileSwitcherSheet';
 import type { RoutineDraft, RoutineDraftConflict, RoutineDraftRecovery } from './daily-activity-recovery';
@@ -20,6 +21,7 @@ import { homeTrainingJourneyDisplay, type HomeTrainingProgressionSummary, type P
 
 type Destination = 'log' | 'training' | 'knowledge' | 'health' | 'planned-health';
 type LoadState = 'loading' | 'ready' | 'error';
+const HOME_DAILY_PREVIEW_LIMIT = 3;
 export type HomeDailyTrainingOption = { programId: string; versionId: string; stepId: string; programTitle: string; stepTitle: string };
 export type HomeDailyFixtureItem = {
   id: string;
@@ -33,7 +35,7 @@ export type HomeDailyFixtureItem = {
   routineLabel?: string;
 };
 
-export function HomeScreen({ dog, breed, content, contentState, trainingState = 'loading', nextStep, reviewTrainingStep = false, today: todayValue,
+export function HomeScreen({ dog, breed, content, contentState, events, logState = 'loading', logPendingOrUnknown = false, trainingState = 'loading', nextStep, reviewTrainingStep = false, today: todayValue,
   ownedDogs = [dog], onSelectDog, onAddDog, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened,
   dailyFixture, dailyState = 'hidden', dailyDateKey = '', dailyScopeKey, dailyActivities = [], routineTemplates = [], routineDaySkips = [], dailyTrainingOptions = [],
   dailyRefreshing = false, dailyRefreshError = false,
@@ -42,7 +44,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   onOpenChecklist, onOpenProgress, onOpenTrainingStep, onOpenDevelopment,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay,
   onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, onGo, onOpenContent, onRetryContent,
-  trainingProgression, trainingProgressionState = 'ready', pendingProgression, onOpenTrainingJourney, onRetryProgression, onRetryTrainingProgressionRead }: {
+  trainingProgression, trainingProgressionState = 'ready', pendingProgression, nextTrainingSuggestion, onOpenTrainingJourney, onRetryProgression, onRetryTrainingProgressionRead }: {
   dog: OwnedDog;
   ownedDogs?: readonly OwnedDog[];
   onSelectDog?: (dogId: string) => void;
@@ -58,6 +60,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   content: readonly HomeContent[];
   contentState: LoadState;
   logState?: LoadState;
+  logPendingOrUnknown?: boolean;
   planState?: LoadState;
   trainingState?: LoadState;
   nextStep?: string;
@@ -65,6 +68,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   trainingProgression?: HomeTrainingProgressionSummary | null;
   trainingProgressionState?: 'ready' | 'error';
   pendingProgression?: PendingTrainingProgression | null;
+  nextTrainingSuggestion?: { programId: string; programTitle: string; stepTitle: string } | null;
   dailyFixture?: readonly HomeDailyFixtureItem[];
   dailyState?: 'hidden' | 'loading' | 'ready' | 'partial' | 'error';
   dailyRefreshing?: boolean;
@@ -123,6 +127,17 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
   const checklistTotal = fixtureProgress?.totalCount ?? dailyProgress.totalCount;
   const checklistCompleted = fixtureProgress?.completedCount ?? dailyProgress.completedCount;
   const trainingJourneyDisplay = homeTrainingJourneyDisplay(trainingProgression ?? null, trainingProgressionState, pendingProgression ?? null);
+  const suggestedTraining = trainingState === 'ready' && trainingProgressionState === 'ready'
+    && !trainingJourneyDisplay.summary && !trainingJourneyDisplay.pending && onOpenTrainingJourney
+    ? nextTrainingSuggestion : null;
+  const compactJourney = trainingJourneyDisplay.summary && !trainingJourneyDisplay.pending
+    && trainingJourneyDisplay.summary.programTitle && trainingJourneyDisplay.summary.activeStepTitle && onOpenTrainingJourney
+    ? trainingJourneyDisplay.summary : null;
+  const showJustNowTraining = Boolean(nextStep && trainingState === 'ready' && !suggestedTraining);
+  const reflection = logState === 'ready' && !logPendingOrUnknown ? latestHomeReflection(events, dog.id) : null;
+  const reflectionMessage = logState === 'loading' ? 'Historiken hämtas.' : logState === 'error'
+    ? 'Historiken kunde inte hämtas just nu.' : logPendingOrUnknown ? 'En ändring i loggen behöver kontrolleras.' : reflection
+      ? `Senast loggat: ${reflection.label} · ${reflection.date}` : 'När ni loggar en händelse syns den här.';
 
   useEffect(() => {
     if (openDogSwitcherInitially) onDogSwitcherInitiallyOpened?.();
@@ -166,40 +181,69 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
       {age ? <HomeAgeStrip key={`${dog.id}:${age.unit}`} birthDate={dog.birth_date} today={today} unit={age.unit} portraitFrame={portraitFrame} /> : null}
     </View>
 
-    <Card variant="home" onPress={relevantContent ? () => onOpenContent(relevantContent.id) : nextStep && trainingState === 'ready' ? () => onGo('training') : undefined}
-      accessibilityLabel={`Just nu med ${dog.name}${age ? `, ${age.label}` : ''}${relevantContent ? `: ${relevantContent.title}` : nextStep && trainingState === 'ready' ? `: ${nextStep}` : ''}`}>
+    <Card variant="home" onPress={relevantContent ? () => onOpenContent(relevantContent.id) : showJustNowTraining ? () => onGo('training') : undefined}
+      accessibilityLabel={`Just nu med ${dog.name}${age ? `, ${age.label}` : ''}${relevantContent ? `: ${relevantContent.title}` : showJustNowTraining ? `: ${nextStep}` : ''}`}>
       <View style={styles.currentCard}>
         <View style={styles.cardHeadingRow}>
           <Ionicons name="bulb" size={tokens.size.iconSm} color={tokens.colors.home.bulb} accessibilityElementsHidden />
           <Text style={styles.cardHeading}>Just nu med {dog.name}{age ? ` · ${age.label}` : ''}</Text>
-          {relevantContent || (nextStep && trainingState === 'ready') ? <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden /> : null}
+          {relevantContent || showJustNowTraining ? <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden /> : null}
         </View>
         {contentState === 'loading' ? <Skeleton shape="line" lines={2} /> : null}
         {contentState === 'error' ? <Text style={styles.body}>Artiklarna kunde inte hämtas just nu.</Text> : null}
         {relevantContent ? <Text numberOfLines={3} style={styles.body}>{preview}</Text> : null}
         {!relevantContent && contentState === 'ready' && trainingState === 'loading' ? <Skeleton shape="line" lines={2} /> : null}
         {!relevantContent && contentState === 'ready' && trainingState === 'error' ? <Text style={styles.body}>Träningen kunde inte hämtas just nu. Öppna Träna för att försöka igen.</Text> : null}
-        {!relevantContent && contentState === 'ready' && trainingState === 'ready' && nextStep ? <>
+        {!relevantContent && contentState === 'ready' && showJustNowTraining ? <>
           <Text numberOfLines={2} style={styles.body}>{nextStep}</Text>
         </> : null}
-        {!relevantContent && contentState === 'ready' && trainingState === 'ready' && !nextStep ? <Text style={styles.body}>Inget nytt innehåll att visa just nu.</Text> : null}
+        {!relevantContent && contentState === 'ready' && trainingState === 'ready' && !showJustNowTraining ? <Text style={styles.body}>Inget nytt innehåll att visa just nu.</Text> : null}
         {contentState === 'error' ? <Button variant="tertiary" label="Hämta guider igen" accessibilityLabel="Hämta guider igen" onPress={onRetryContent} /> : null}
       </View>
     </Card>
 
-    {trainingJourneyDisplay.summary || trainingJourneyDisplay.pending || trainingJourneyDisplay.readError && trainingState === 'ready' ? <Card variant="home" accessibilityLabel="Träningsresan">
+    {suggestedTraining ? <Card variant="home" onPress={() => onOpenTrainingJourney?.(suggestedTraining.programId)}
+      accessibilityLabel={`Visa träningen ${suggestedTraining.programTitle}, ${suggestedTraining.stepTitle}`}>
+      <View style={styles.reflectionCard}>
+        <View style={styles.cardHeadingRow}>
+          <Ionicons name="paw" size={tokens.size.iconSm} color={tokens.colors.home.greenStrong} accessibilityElementsHidden />
+          <Text style={styles.cardHeading}>Förslag på nästa steg</Text>
+          <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
+        </View>
+        <Text style={styles.body}>{suggestedTraining.programTitle} · {suggestedTraining.stepTitle}</Text>
+      </View>
+    </Card> : null}
+
+    {compactJourney ? <Card variant="home"
+      onPress={() => onOpenTrainingJourney?.(compactJourney.journey.program_version_id)}
+      accessibilityLabel={`Fortsätt träningsresan: ${compactJourney.programTitle}, ${compactJourney.activeStepTitle}. ${loggedSessionsLabel(compactJourney.loggedSessions)}, ${milestonesLabel(compactJourney.confirmedMilestones)}.`}>
+      <View style={styles.reflectionCard}>
+        <View style={styles.cardHeadingRow}>
+          <Ionicons name="paw" size={tokens.size.iconSm} color={tokens.colors.home.greenStrong} accessibilityElementsHidden />
+          <Text style={styles.cardHeading}>Nästa steg i er resa</Text>
+          <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
+        </View>
+        <Text style={styles.body}>{compactJourney.programTitle} · {compactJourney.activeStepTitle}</Text>
+        <View style={styles.trainingJourneyCountsInline}>
+          <Text style={styles.trainingJourneyCount}>{loggedSessionsLabel(compactJourney.loggedSessions)}</Text>
+          <Text style={styles.trainingJourneyCount}>{milestonesLabel(compactJourney.confirmedMilestones)}</Text>
+        </View>
+      </View>
+    </Card> : null}
+
+    {!compactJourney && (trainingJourneyDisplay.summary || trainingJourneyDisplay.pending || trainingJourneyDisplay.readError && trainingState === 'ready') ? <Card variant="home" accessibilityLabel="Nästa steg i er resa">
       <View style={styles.trainingJourneyCard}>
         <View style={styles.trainingJourneyHeading}>
           <Ionicons name="paw" size={tokens.size.iconSm} color={tokens.colors.home.greenStrong} accessibilityElementsHidden />
-          <Text style={styles.cardHeading}>Träningsresan</Text>
+          <Text style={styles.cardHeading}>Nästa steg i er resa</Text>
         </View>
         {trainingJourneyDisplay.summary ? <>
           {trainingJourneyDisplay.summary.programTitle ? <Text style={styles.trainingJourneyProgram}>{trainingJourneyDisplay.summary.programTitle}</Text> : null}
           {trainingJourneyDisplay.summary.activeStepTitle ? <Text style={styles.body}>Aktivt steg: {trainingJourneyDisplay.summary.activeStepTitle}</Text>
             : <Text style={styles.emptyText}>Det sparade programmet eller steget är inte tillgängligt. Instruktioner visas inte.</Text>}
           <View style={styles.trainingJourneyCounts}>
-            <Text style={styles.trainingJourneyCount}>{trainingJourneyDisplay.summary.loggedSessions} loggade pass</Text>
-            <Text style={styles.trainingJourneyCount}>{trainingJourneyDisplay.summary.confirmedMilestones} delmål bekräftade av dig</Text>
+            <Text style={styles.trainingJourneyCount}>{loggedSessionsLabel(trainingJourneyDisplay.summary.loggedSessions)}</Text>
+            <Text style={styles.trainingJourneyCount}>{milestonesLabel(trainingJourneyDisplay.summary.confirmedMilestones)}</Text>
           </View>
           {trainingJourneyDisplay.summary.programTitle && trainingJourneyDisplay.summary.activeStepTitle ? <Button variant="secondary" label="Fortsätt träningsresan"
             accessibilityLabel={`Fortsätt träningsresan: ${trainingJourneyDisplay.summary.programTitle}, ${trainingJourneyDisplay.summary.activeStepTitle}`}
@@ -218,6 +262,17 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
         </View> : null}
       </View>
     </Card> : null}
+
+    <Card variant="home" onPress={() => onGo('log')} accessibilityLabel={`Titta vad ni redan har gjort. ${reflectionMessage} Öppna Logga.`}>
+      <View style={styles.reflectionCard} testID="home-reflection">
+        <View style={styles.cardHeadingRow}>
+          <Ionicons name="time-outline" size={tokens.size.iconSm} color={tokens.colors.home.greenStrong} accessibilityElementsHidden />
+          <Text style={styles.cardHeading}>Titta vad ni redan har gjort</Text>
+          <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
+        </View>
+        {logState === 'loading' ? <Skeleton shape="line" lines={1} /> : <Text style={styles.body}>{reflectionMessage}</Text>}
+      </View>
+    </Card>
 
     <Card variant="home" accessibilityLabel="Dagens att göra">
       <View style={styles.dailyCardContent}>
@@ -256,7 +311,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
           </View>
           {dailyRefreshing ? <ActivityIndicator accessibilityRole="progressbar" accessibilityLabel="Dagens uppgifter uppdateras" size="small" color={tokens.colors.home.textMuted} /> : null}
           <View style={styles.dailyList}>
-                {dailyProgress.activities.slice(0, 5).map((item) => {
+                {dailyProgress.activities.slice(0, HOME_DAILY_PREVIEW_LIMIT).map((item) => {
                   const routineDay = item.routineDay;
                   const itemMutationKey = routineDay && item.routineItemId ? `complete-routine:${routineDay.id}:${item.routineItemId}` : '';
                   const itemMutation = Boolean(itemMutationKey && dailyMutationKey === itemMutationKey);
@@ -278,8 +333,7 @@ export function HomeScreen({ dog, breed, content, contentState, trainingState = 
       </View>
     </Card>
 
-    <View style={styles.actionsSection}>
-      <Text style={styles.actionsHeading} accessibilityRole="header">Vad vill du göra nu?</Text>
+    <View style={styles.actionsSection} accessibilityLabel="Vad vill du göra nu?">
       <View style={styles.actions}>
         <DestinationTile destination="log" compact variant="home" onPress={() => onGo('log')} />
         <DestinationTile destination="training" compact variant="home" onPress={() => onGo('training')} />
@@ -312,7 +366,7 @@ function ReviewDailyFixture({ items, completion, refreshing, onCompletionChange,
       accessibilityValue={{ min: 0, max: progress.totalCount, now: progress.completedCount }} style={styles.progressTrack}>
       <View style={[styles.progressFill, { width: `${Math.round(progress.completedCount / progress.totalCount * 100)}%` }]} />
     </View>
-    <View style={styles.activityRows}>{items.map((item) => <DailyActivityItem key={item.id} variant="home"
+    <View style={styles.activityRows}>{items.slice(0, HOME_DAILY_PREVIEW_LIMIT).map((item) => <DailyActivityItem key={item.id} variant="home"
       kind={item.kind ?? 'routine'} label={item.label} accessibilityLabel={item.label}
       completed={completion[item.id] ?? item.completed}
       onToggle={item.kind === 'training' ? undefined : () => onCompletionChange((current) => ({ ...current, [item.id]: !(current[item.id] ?? item.completed) }))}
@@ -345,6 +399,14 @@ function ProgressControl({ coverage, completed, total, onPress }: {
     <Ionicons name="stats-chart-outline" size={tokens.spacing.md} color={tokens.colors.home.greenStrong} accessibilityElementsHidden />
     <Text style={styles.progressControlText}>{complete ? `${completed}/${total} · Framsteg` : 'Se framsteg'}</Text>
   </MotionPressable>;
+}
+
+function loggedSessionsLabel(count: number): string {
+  return `${count} ${count === 1 ? 'loggat' : 'loggade'} pass`;
+}
+
+function milestonesLabel(count: number): string {
+  return `${count} delmål ${count === 1 ? 'bekräftat' : 'bekräftade'} av dig`;
 }
 
 function previewText(body: string): string {
@@ -468,8 +530,10 @@ const styles = StyleSheet.create({
   trainingJourneyHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   trainingJourneyProgram: { ...tokens.typography.label, color: tokens.colors.home.text },
   trainingJourneyCounts: { gap: tokens.spacing.xs },
+  trainingJourneyCountsInline: { flexDirection: 'row', flexWrap: 'wrap', columnGap: tokens.spacing.sm, rowGap: tokens.spacing.xs },
   trainingJourneyCount: { ...tokens.typography.caption, color: tokens.colors.home.greenStrong, fontWeight: '700' },
   trainingJourneyPending: { gap: tokens.spacing.xs, paddingTop: tokens.spacing.xs },
+  reflectionCard: { gap: tokens.spacing.xs },
   cardHeadingRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   cardHeading: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },
   body: { ...tokens.typography.caption, color: tokens.colors.home.text, flexShrink: 1 },
@@ -489,6 +553,5 @@ const styles = StyleSheet.create({
   dailyRefreshError: { gap: tokens.spacing.xs },
   emptyText: { ...tokens.typography.caption, color: tokens.colors.home.textMuted, paddingVertical: tokens.spacing.xs },
   actionsSection: { gap: tokens.spacing.xs },
-  actionsHeading: { ...tokens.typography.caption, fontWeight: '700', color: tokens.colors.home.text },
   actions: { flexDirection: 'row', gap: tokens.spacing.sm },
 });

@@ -75,7 +75,9 @@ test('BottomSheet gesture is limited to the handle and heading and respects redu
   assert.ok(dragArea > 0 && dragArea < scroll, 'pan handlers sit above the scrolling content');
   assert.equal(sheetSource.match(/\{\.\.\.drag\.panHandlers\}/g)?.length, 1, 'only one drag surface');
   assert.match(dragSource, /inputs\.reduced\) \{ translateY\.setValue\(0\)/, 'no spring animation with reduced motion');
-  assert.match(sheetSource, /animationType=\{reduced \? 'none' : 'slide'\}/);
+  assert.match(sheetSource, /animationType=\{reduced \? 'none' : 'fade'\}/);
+  assert.match(sheetSource, /modalFrame: \{[^}]*alignItems: 'center', justifyContent: 'center'/);
+  assert.match(sheetSource, /sheet: \{[^}]*maxWidth: 560[^}]*borderRadius: tokens\.radius\.lg/);
 });
 
 test('the gesture controller stays stable per mount and is cleaned up on unmount', () => {

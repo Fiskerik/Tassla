@@ -1,7 +1,8 @@
 import { startTransition, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import type { ComponentProps } from 'react';
+import { Animated, Image, Linking, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { AppBar, BottomSheet, Button, Card, Dialog, ListRow, Progress, SectionHeader, Tabs, Toast } from '../../components/ui';
+import { AppBar, BottomSheet, Button, Card, Dialog, Progress, SectionHeader, Tabs, Toast } from '../../components/ui';
 import type { HistoricalTrainingStepDetail, PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
 import {
   emptyTrainingProgression,
@@ -14,7 +15,11 @@ import {
 } from './training-progression';
 import { completeReviewTrainingStep, completeTrainingStepForMode, isReviewTrainingProgram, resetReviewTrainingProgram, unmarkReviewTrainingStep, unmarkTrainingStepForMode } from './review-training-state';
 import { tokens } from '../../theme/tokens';
+import { useReducedMotion } from '../../components/ui/Motion';
 import { allProgramsComplete, completedCount, exerciseCountLabel, pickNextExercise, programStatus, programStatusWord, programsWithProgress, recommendedPrograms, sortPrograms, stepStates } from './training-overview';
+import { buildTrainingTimeline } from './training-timeline-model';
+import { parseTrainingInstruction, trainingInstructionPreview } from './training-instruction';
+import { getSafeContentSourceUrl } from '../knowledge/source-links';
 
 function exerciseProgressLabel(program: PublishedTrainingProgram): string {
   if (program.steps.length === 0) return '';
@@ -45,6 +50,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   const [selectedView, setSelectedView] = useState<'recommended' | 'all' | 'mine'>('recommended');
   const [legacyActivityOpen, setLegacyActivityOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [sourceMessage, setSourceMessage] = useState('');
   const [progressionMessage, setProgressionMessage] = useState<{ programId: string; message: string } | null>(null);
   const [awaitingProgressionRefresh, setAwaitingProgressionRefresh] = useState<{ programId: string; fingerprint: string } | null>(null);
   const selectionKey = `${openProgramId ?? ''}:${selection?.programId ?? ''}:${selection?.stepId ?? ''}`;
@@ -57,6 +63,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   const [reviewCompleted, setReviewCompleted] = useState<Record<string, string[]>>({});
   const [resetTarget, setResetTarget] = useState<{ program: PublishedTrainingProgram; fingerprint: string } | null>(null);
   const [recommendationCopyHeight, setRecommendationCopyHeight] = useState<{ key: string; height: number } | null>(null);
+  const [journeyBannerWidth, setJourneyBannerWidth] = useState(0);
   const [animateCompleteTarget, setAnimateCompleteTarget] = useState<{ key: string; programId: string; stepId: string } | null>(null);
   const animationSequence = useRef(0);
   const resetFlight = useRef<{ programId: string; sawBusy: boolean } | null>(null);
@@ -72,6 +79,25 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   if (resetTarget && !resetTargetIsCurrent) setResetTarget(null);
   const selectedProgram = visiblePrograms.find((program) => program.id === (focusStep?.programId ?? selection?.programId));
   const selectedStep = selectedProgram?.steps.find((step) => step.id === (focusStep?.stepId ?? selection?.stepId));
+  const selectedJourneyView = selectedProgram && progressionState === 'ready'
+    ? trainingProgressionPresentation(progression, selectedProgram.id, selectedProgram.steps) : null;
+  const selectedJourneyData = selectedProgram && selectedJourneyView?.journey
+    ? progressionForProgram(progression, selectedProgram.id) : null;
+  const selectedConfirmedAt = Object.fromEntries((selectedJourneyData?.milestones ?? []).map((milestone) => [milestone.step_id, milestone.confirmed_at]));
+  const selectedTimelineEntry = selectedProgram && selectedStep ? buildTrainingTimeline(
+    selectedProgram.steps,
+    selectedJourneyView?.activeStepId ?? selectedProgram.steps[stepStates(selectedProgram).indexOf('current')]?.id ?? null,
+    selectedConfirmedAt,
+    selectedProgram.completedAtByStepId,
+    new Set(selectedProgram.completedStepIds),
+    undefined,
+    undefined,
+    selectedJourneyView?.journey ? 'Aktivt steg' : 'Nästa övning',
+  ).find((entry) => entry.step.id === selectedStep.id) : null;
+  const selectedTimelineReadOnly = Boolean(selectedTimelineEntry && (
+    selectedTimelineEntry.state === 'upcoming'
+    || (selectedJourneyView?.journey && selectedTimelineEntry.state !== 'active')
+  ));
   const waitingForSelectedRefresh = Boolean(selectedProgram && awaitingProgressionRefresh?.programId === selectedProgram.id
     && awaitingProgressionRefresh.fingerprint === progressionFingerprint(progression, selectedProgram.id));
   const nextStep = selectedProgram?.steps.find((step) => !selectedProgram.completedStepIds.includes(step.id));
@@ -112,7 +138,6 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   const consumeCompletionAnimation = useCallback((key: string) => {
     setAnimateCompleteTarget((current) => current?.key === key ? null : current);
   }, []);
-
   useEffect(() => {
     mounted.current = true;
     return () => { mounted.current = false; };
@@ -254,6 +279,18 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     const waitingForRefresh = awaitingProgressionRefresh?.programId === program.id
       && awaitingProgressionRefresh.fingerprint === progressionFingerprint(progression, program.id);
     return <View style={styles.journeySection} testID={`training-journey-${program.id}`}>
+      <View style={styles.journeyBanner} testID="training-journey-banner" onLayout={(event) => {
+        const width = Math.round(event.nativeEvent.layout.width);
+        if (width > 0 && width !== journeyBannerWidth) setJourneyBannerWidth(width);
+      }}>
+        <Image source={require('../../../assets/images/training-recommendation-puppy-black-tan-park.jpg')}
+          style={journeyBannerWidth > 0 ? [styles.journeyBannerImage, {
+            width: journeyBannerWidth,
+            height: journeyBannerWidth * 0.75,
+            top: styles.journeyBanner.height / 2 - journeyBannerWidth * 0.75 * 0.36,
+          }] : styles.journeyBannerImage}
+          resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
+      </View>
 {waitingForRefresh ? <View style={styles.emptyCard}><Text style={styles.body}>Ändringen är sparad. Hämtar det aktiva steget.</Text></View> : progressionState === 'error' ? <View style={styles.emptyCard}>
         <Text style={styles.body}>Träningsresan kunde inte hämtas just nu. Aktivitetsmarkeringarna finns kvar.</Text>
         <Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta träningsresan igen" onPress={onRetry} />
@@ -262,7 +299,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
         <Button variant="secondary" label="Kontrollera samma ändring igen" accessibilityLabel="Kontrollera samma träningsändring igen" loading={busy}
           disabled={Boolean(busyStepKey)} onPress={() => { void retryProgression(program.id); }} />
       </View> : !view.journey ? <View style={styles.journeyCard}>
-        <Text style={styles.note}>Loggade pass och delmål bedömda av dig sparas separat.</Text>
+        <View style={styles.journeySummaryLine}><Ionicons name="navigate-circle-outline" size={tokens.size.iconMd} color={tokens.colors.training.accent} /><Text style={styles.journeySummaryText}>Börja med en övning i taget</Text></View>
         <Button label="Starta träningsresa" accessibilityLabel={`Starta träningsresa för ${program.title}`} loading={busy}
           disabled={Boolean(busyStepKey) || !view.canStartOrResume || !onApplyProgression}
           onPress={() => { void submitProgressionAction(program.id, { kind: 'start_or_resume', programVersionId: program.id }, 'Träningsresan är startad.'); }} />
@@ -270,13 +307,13 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
         <Text style={styles.emptyTitle}>Övningen är inte tillgänglig</Text>
         <Text style={styles.body}>Den sparade träningsresan finns kvar, men det publicerade programmet kan inte öppnas just nu.</Text>
       </View> : <View style={styles.journeyCard}>
-        <Text style={styles.stepMeta}>{view.stateLabel} · {program.title}</Text>
-        <Text style={styles.programTitle}>{view.activeStepTitle}</Text>
-        <Text style={styles.stepMeta}>{view.loggedSessions} Tränat · {view.confirmedMilestones} delmål</Text>
+        <View style={styles.journeySummaryLine}>
+          <Ionicons name={view.journey.state === 'paused' ? 'pause-circle-outline' : view.journey.state === 'maintenance' ? 'shield-checkmark-outline' : 'navigate-circle-outline'} size={tokens.size.iconMd} color={tokens.colors.training.accent} />
+          <Text style={styles.journeySummaryText}>{view.stateLabel} · {view.loggedSessions} pass · {view.confirmedMilestones} delmål</Text>
+        </View>
         {view.canStartOrResume ? <Button label="Återuppta träningsresan" accessibilityLabel={`Återuppta träningsresan för ${program.title}`} loading={busy}
           disabled={Boolean(busyStepKey) || !onApplyProgression}
-          onPress={() => { void submitProgressionAction(program.id, { kind: 'start_or_resume', programVersionId: program.id }, 'Träningsresan är återupptagen.'); }} /> : <Button label="Öva på aktivt steg" accessibilityLabel={`Öva på ${view.activeStepTitle}`} variant="secondary"
-          disabled={Boolean(busyStepKey)} onPress={() => setSelection({ programId: program.id, stepId: view.activeStepId! })} />}
+          onPress={() => { void submitProgressionAction(program.id, { kind: 'start_or_resume', programVersionId: program.id }, 'Träningsresan är återupptagen.'); }} /> : null}
         {view.canPause ? <View style={styles.journeyActions}>
           <Button variant="tertiary" compact label="Pausa" accessibilityLabel="Pausa träningsresan" disabled={Boolean(busyStepKey) || !onApplyProgression}
             onPress={() => { void submitProgressionAction(program.id, { kind: 'pause', programVersionId: program.id, stepId: view.activeStepId! }, 'Träningsresan är pausad.'); }} />
@@ -302,11 +339,12 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     const busy = busyStepKey === `journey:${program.id}`;
     const waitingForRefresh = awaitingProgressionRefresh?.programId === program.id
       && awaitingProgressionRefresh.fingerprint === progressionFingerprint(progression, program.id);
-    const sessionsForStep = progressionForProgram(progression, program.id).sessions.filter((session) => session.step_id === stepId).length;
-    const milestone = view.currentStepConfirmed;
+    const currentProgression = progressionForProgram(progression, program.id);
+    const sessionsForStep = currentProgression.sessions.filter((session) => session.step_id === stepId).length;
+    const currentMilestone = currentProgression.milestones.find((item) => item.step_id === stepId);
+    const milestone = Boolean(currentMilestone);
     return <View style={styles.journeySection} testID={`training-journey-step-${program.id}-${stepId}`}>
-      <Text style={styles.stepMeta}>{view.loggedSessions} Tränat · {view.confirmedMilestones} delmål</Text>
-      <Text style={styles.note}>Ett loggat pass blir inte automatiskt ett färdighetsmål. Du bedömer steget själv.</Text>
+      <Text style={styles.noteCompact}>Pass och bekräftade delmål räknas separat.</Text>
       {waitingForRefresh ? <View style={styles.emptyCard}><Text style={styles.body}>Ändringen är sparad. Hämtar det aktiva steget.</Text></View> : pendingOperation?.status === 'unknown' ? <View style={styles.emptyCard}>
         <Text style={styles.body}>{progressionMessage?.programId === program.id ? progressionMessage.message : 'Den senaste ändringen behöver kontrolleras innan ni fortsätter.'}</Text>
         <Button variant="secondary" label="Kontrollera samma ändring igen" accessibilityLabel="Kontrollera samma träningsändring igen" loading={busy}
@@ -316,7 +354,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
           <Text style={styles.stepMeta}>Hur gick passet enligt dig?</Text>
           {([
             ['worked_as_planned', 'Vi kom dit vi tänkt oss.'],
-            ['practice_more', 'Vi fortsätter öva.'],
+            ['practice_more', 'Delvis – vi fortsätter öva'],
             ['paused_early', 'Vi tog en paus.'],
           ] as const).map(([feedback, label]) => <Button key={feedback} variant={feedbackDraft === feedback ? 'secondary' : 'tertiary'} compact
             label={label} accessibilityLabel={label} disabled={Boolean(busyStepKey) || !onApplyProgression} onPress={() => setFeedbackDraft(feedback)} />)}
@@ -333,7 +371,13 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
           <Button variant="secondary" label="Bekräfta delmål" accessibilityLabel={`Bekräfta delmålet för ${selectedStep?.title ?? stepId}`} loading={busy}
             disabled={Boolean(busyStepKey) || !onApplyProgression}
             onPress={() => { void submitProgressionAction(program.id, { kind: 'confirm_step', programVersionId: program.id, stepId }, 'Delmålet är bekräftat av dig.'); }} />
-        </View> : !feedbackPickerOpen && milestone ? <Text style={styles.confirmedMilestone}>Delmålet är bekräftat av dig.</Text>
+        </View> : !feedbackPickerOpen && currentMilestone ? <View style={styles.milestonePrompt}>
+          <Text style={styles.confirmedMilestone}>Delmålet är bekräftat av dig.</Text>
+          <Text style={styles.noteCompact}>{view.canGoNext ? 'Loggade pass finns kvar. Ångrar du behöver du bekräfta igen för att gå vidare.' : 'Loggade pass finns kvar om du ångrar.'}</Text>
+          <Button variant="tertiary" compact label="Ångra bekräftelse" accessibilityLabel={`Ångra bekräftelsen för ${selectedStep?.title ?? stepId}`}
+            disabled={Boolean(busyStepKey) || !onApplyProgression}
+            onPress={() => { void submitProgressionAction(program.id, { kind: 'undo_step', programVersionId: program.id, stepId, expectedMilestoneId: currentMilestone.id }, 'Bekräftelsen är ångrad.'); }} />
+        </View>
           : !feedbackPickerOpen && sessionsForStep === 0 ? <Text style={styles.stepMeta}>Efter ett loggat pass kan du själv bekräfta delmålet.</Text> : null}
         {!feedbackPickerOpen ? <View style={styles.journeyActions}>
           {view.canGoBack ? <Button variant="tertiary" compact label="Backa" accessibilityLabel="Backa till föregående träningssteg" disabled={Boolean(busyStepKey) || !onApplyProgression}
@@ -353,31 +397,67 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   function stepRows(program: PublishedTrainingProgram) {
     const states = stepStates(program);
     const journeyView = progressionState === 'ready' ? trainingProgressionPresentation(progression, program.id, program.steps) : null;
-    const journeyIndex = journeyView?.activeStepId ? program.steps.findIndex((step) => step.id === journeyView.activeStepId) : -1;
-    const currentIndex = journeyIndex >= 0 ? journeyIndex : states.indexOf('current');
-    const confirmedJourneySteps = new Set(journeyView?.journey
-      ? progressionForProgram(progression, program.id).milestones.map((milestone) => milestone.step_id) : []);
-    return <View style={styles.path}>{program.steps.map((step, index) => {
-      const state = journeyIndex >= 0 ? index === journeyIndex ? 'current' : confirmedJourneySteps.has(step.id) ? 'done' : 'upcoming'
-        : index === currentIndex ? 'current' : states[index];
-      const legacyActivityMarked = program.completedStepIds.includes(step.id);
-      if (state === 'current') return <View key={step.id} style={styles.currentStep}>
-        <Text style={styles.stepMeta} testID={journeyIndex >= 0 ? 'training-active-journey-step' : undefined}>{journeyIndex >= 0 ? 'Aktivt steg i träningsresan' : 'Nästa övning'}</Text>
-        <Text style={styles.stepMeta}>{`Övning ${index + 1} av ${program.steps.length}`}</Text>
-        <Text style={styles.sheetHeading}>{step.title}</Text>
-        <Text style={styles.body} numberOfLines={3}>{step.instruction}</Text>
-        <Button variant={journeyView?.journey && journeyView.journey.state !== 'paused' && selection?.programId !== program.id ? 'primary' : 'secondary'}
-          label="Öva nu" accessibilityLabel={`Nästa övning: ${step.title}, övning ${index + 1} av ${program.steps.length}`} onPress={() => setSelection({ programId: program.id, stepId: step.id })} />
+    const journeyData = journeyView?.journey ? progressionForProgram(progression, program.id) : null;
+    const activeStepId = journeyView?.activeStepId ?? program.steps[states.indexOf('current')]?.id ?? null;
+    const confirmedAtByStepId = Object.fromEntries((journeyData?.milestones ?? []).map((milestone) => [milestone.step_id, milestone.confirmed_at]));
+    const entries = buildTrainingTimeline(
+      program.steps,
+      activeStepId,
+      confirmedAtByStepId,
+      program.completedAtByStepId,
+      new Set(program.completedStepIds),
+      undefined,
+      undefined,
+      journeyView?.journey ? 'Aktivt steg' : 'Nästa övning',
+    );
+    const activeIndex = entries.findIndex((entry) => entry.state === 'active');
+    return <View style={styles.timeline} testID="training-journey-timeline">{entries.map((entry) => {
+      const step = entry.step;
+      const active = entry.state === 'active';
+      const future = entry.state === 'upcoming';
+      const confirmed = entry.state === 'confirmed';
+      const tint = confirmed ? tokens.colors.success : active ? tokens.colors.training.accent : tokens.colors.borderStrong;
+      const legacyActivityMarked = Boolean(entry.legacyActivityLabel);
+      const stateIcon = confirmed ? 'checkmark-circle' : active ? 'radio-button-on' : entry.state === 'previous' && legacyActivityMarked ? 'checkmark-circle-outline' : 'ellipse-outline';
+      const legacyLabel = entry.legacyActivityLabel;
+      const timelineAccessibilityLabel = active
+        ? journeyView?.journey ? `Aktivt steg i träningsresan: ${step.title}` : `Nästa övning: ${step.title}, övning ${entry.index + 1} av ${entries.length}`
+        : future ? `Kommande övning: ${step.title}, kommer efter övning ${Math.max(1, activeIndex + 1)}${legacyLabel ? `, ${legacyLabel}` : ''}`
+          : confirmed ? `Delmål bekräftat: ${step.title}` : `Tidigare steg: ${step.title}${legacyLabel ? `, ${legacyLabel}` : ''}`;
+      const completeAnimationKey = animateCompleteTarget?.programId === program.id && animateCompleteTarget.stepId === step.id ? animateCompleteTarget.key : undefined;
+      if (active) return <View key={step.id} testID={`training-timeline-step-${step.id}`} style={[styles.timelineRow, styles.timelineActiveRow]}>
+        <View style={styles.timelineRail}>
+          {entry.index < entries.length - 1 ? <View style={[styles.timelineConnector, { backgroundColor: entry.state === 'confirmed' ? tokens.colors.success : tokens.colors.border }]} /> : null}
+          <TrainingTimelineStatusIcon name={stateIcon} size={tokens.size.iconSm} color={tint}
+            animateCompleteKey={animateCompleteTarget?.programId === program.id && animateCompleteTarget.stepId === step.id ? animateCompleteTarget.key : undefined}
+            onCompleteAnimationStart={consumeCompletionAnimation} />
+        </View>
+        <View style={styles.timelineCopy}>
+          <Text style={styles.timelineStatus}>{entry.statusLabel} · {entry.index + 1}/{entries.length}</Text>
+          <Text style={styles.timelineTitle}>{step.title}</Text>
+          {entry.milestoneLabel ? <Text style={styles.timelineStatus}>{entry.milestoneLabel}</Text> : null}
+          <Text style={styles.timelineInstruction} numberOfLines={2}>{trainingInstructionPreview(step.instruction)}</Text>
+          <Button variant="secondary" compact label="Öva nu" accessibilityLabel={`Öppna ${journeyView?.journey ? 'aktivt' : 'nästa'} steg: ${step.title}`}
+            onPress={() => setSelection({ programId: program.id, stepId: step.id })} />
+        </View>
+        <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tint} />
       </View>;
-      return <ListRow key={step.id} category="training" title={step.title} titleSize="compact"
-        meta={confirmedJourneySteps.has(step.id)
-          ? legacyActivityMarked ? 'Delmål bekräftat · aktivitet markerad' : 'Delmål bekräftat av dig'
-          : legacyActivityMarked ? 'Aktivitet markerad' : journeyIndex >= 0 && index < journeyIndex ? 'Tidigare steg' : `Kommande · efter övning ${currentIndex + 1}`}
-        accessibilityLabel={confirmedJourneySteps.has(step.id)
-          ? `Delmål bekräftat: ${step.title}${legacyActivityMarked ? ', aktivitet markerad' : ''}`
-          : legacyActivityMarked ? `Aktivitet markerad: ${step.title}` : journeyIndex >= 0 && index < journeyIndex ? `Tidigare steg: ${step.title}` : `Kommande övning: ${step.title}, kommer efter övning ${currentIndex + 1}`}
-        complete={state === 'done' || confirmedJourneySteps.has(step.id)} animateCompleteKey={animateCompleteTarget?.programId === program.id && animateCompleteTarget.stepId === step.id ? animateCompleteTarget.key : undefined} onCompleteAnimationStart={consumeCompletionAnimation}
-        onPress={() => setSelection({ programId: program.id, stepId: step.id })} />;
+      return <Pressable key={step.id} testID={`training-timeline-step-${step.id}`} accessibilityRole="button"
+        accessibilityLabel={timelineAccessibilityLabel} accessibilityHint="Öppnar övningsinstruktionen. Kommande steg är endast förhandsvisningar."
+        onPress={() => setSelection({ programId: program.id, stepId: step.id })}
+        style={({ pressed }) => [styles.timelineRow, future && styles.timelineUpcomingRow, pressed && styles.pressed]}>
+        <View style={styles.timelineRail}>
+          {entry.index < entries.length - 1 ? <View style={[styles.timelineConnector, { backgroundColor: entry.state === 'confirmed' ? tokens.colors.success : tokens.colors.border }]} /> : null}
+          <TrainingTimelineStatusIcon name={stateIcon} size={tokens.size.iconSm} color={tint}
+            animateCompleteKey={completeAnimationKey} onCompleteAnimationStart={consumeCompletionAnimation} />
+        </View>
+        <View style={styles.timelineCopy}>
+          <Text style={[styles.timelineStatus, future && styles.timelineUpcomingText]}>{entry.statusLabel} · {entry.index + 1}/{entries.length}</Text>
+          <Text style={[styles.timelineTitle, future && styles.timelineUpcomingText]}>{step.title}</Text>
+          {legacyLabel ? <Text style={[styles.timelineStatus, future && styles.timelineUpcomingText]}>{legacyLabel}</Text> : null}
+        </View>
+        <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tint} />
+      </Pressable>;
     })}</View>;
   }
 
@@ -420,7 +500,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       <Text style={styles.stepMeta}>{historicalDetail.detail.programTitle} · {formatHistoricalDate(focusStep.dateKey)}</Text>
       <Text accessibilityRole="header" style={styles.sheetHeading}>{historicalDetail.detail.stepTitle}</Text>
       {historicalDetail.detail.isAiGenerated ? <Text style={styles.note}>AI-genererat innehåll</Text> : null}
-      <Text style={styles.body}>{historicalDetail.detail.instruction}</Text>
+      <TrainingInstruction instruction={historicalDetail.detail.instruction} />
       <Text style={styles.note}>{focusStep.completed ? 'Markerad som genomförd' : 'Inte markerad för den dagen'} · Endast läsning</Text>
     </View>}
   </View>;
@@ -437,7 +517,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       <Text style={styles.stepMeta}>{selectedProgram.title}</Text>
       <Text accessibilityRole="header" style={styles.sheetHeading}>{selectedStep.title}</Text>
       {selectedProgram.is_ai_generated ? <Text style={styles.note}>AI-genererat innehåll</Text> : null}
-      <Text style={styles.body}>{selectedStep.instruction}</Text>
+      <TrainingInstruction instruction={selectedStep.instruction} />
       <Text style={styles.note}>Anpassa efter din hund och pausa när det behövs.</Text>
       {selectedProgram.completedStepIds.includes(selectedStep.id) ? <>
         <Text style={styles.note}>Aktiviteten är markerad. Färdighet bedömer du separat i träningsresan.</Text>
@@ -464,7 +544,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
         ? <View style={styles.emptyCard}><Text style={styles.emptyTitle}>Inga övningar tillgängliga ännu</Text><Text style={styles.body}>Övningarna visas här när de är färdiga.</Text></View>
         : stepRows(openProgram)}
       <View style={styles.programActions}>
-        <Pressable accessibilityRole="button" accessibilityLabel={`Läs om ${openProgram.title} och dess källor`} onPress={() => setSelection({ programId: openProgram.id, stepId: '' })} style={({ pressed }) => [styles.programInfoAction, pressed && styles.pressed]}>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Läs om ${openProgram.title} och dess källor`} onPress={() => { setSourceMessage(''); setSelection({ programId: openProgram.id, stepId: '' }); }} style={({ pressed }) => [styles.programInfoAction, pressed && styles.pressed]}>
           <Ionicons name="information-circle-outline" size={tokens.size.iconSm} color={tokens.colors.training.accent} />
           <Text style={styles.programInfoLabel}>Om programmet och källor</Text>
         </Pressable>
@@ -611,12 +691,26 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       {waitingForSelectedRefresh ? <View style={styles.emptyCard}><Text style={styles.body}>Ändringen är sparad. Hämtar det aktiva steget.</Text></View> : <>
       <Text style={styles.sheetHeading}>{selectedStep?.title ?? selectedProgram?.title}</Text>
       {selectedProgram?.is_ai_generated ? <Text style={styles.note}>AI-genererat innehåll</Text> : null}
-      <Text style={styles.body}>{selectedStep?.instruction ?? selectedProgram?.body}</Text>
+      {selectedStep && !selectedTimelineReadOnly ? <Text style={styles.noteCompact}>Bläddra nedåt för fler val.</Text> : null}
+      {selectedStep ? <TrainingInstruction instruction={selectedStep.instruction} /> : <Text style={styles.body}>{selectedProgram?.body}</Text>}
       <Text style={styles.note}>Anpassa efter din hund och pausa när det behövs.</Text>
-      {!selectedStep ? <><SectionHeader title="Källor" />{selectedProgram?.sources.map((source) => <Text key={source} style={styles.note}>{source}</Text>)}</> : null}
-      {selectedProgram && selectedStep && (progressionState !== 'ready' || !progression.journeys.some((journey) => journey.program_version_id === selectedProgram.id) || progression.journeys.find((journey) => journey.program_version_id === selectedProgram.id)?.state === 'paused') ? renderJourneyOverview(selectedProgram) : null}
+      {!selectedStep && selectedProgram ? <>
+        <View style={styles.referenceLinks}>{selectedProgram.sources.map((source, index) => {
+          const url = getSafeContentSourceUrl(source);
+          if (!url) return <Text key={`${index}:${source}`} style={styles.note}>{source}</Text>;
+          return <Pressable key={`${index}:${source}`} accessibilityRole="link" accessibilityLabel={`Öppna referens ${index + 1}: ${new URL(url).hostname}`}
+            style={styles.referenceLink} onPress={() => { void Linking.openURL(url).then(() => setSourceMessage('')).catch(() => setSourceMessage('Källan kunde inte öppnas. Försök igen.')); }}>
+            <Text style={styles.referenceNumber}>{index + 1})</Text>
+          </Pressable>;
+        })}</View>
+        {sourceMessage ? <Text accessibilityLiveRegion="polite" style={styles.note}>{sourceMessage}</Text> : null}
+      </> : null}
+      {selectedProgram && selectedStep && !selectedTimelineReadOnly && (progressionState !== 'ready' || !progression.journeys.some((journey) => journey.program_version_id === selectedProgram.id) || progression.journeys.find((journey) => journey.program_version_id === selectedProgram.id)?.state === 'paused') ? renderJourneyOverview(selectedProgram) : null}
       {selectedProgram && selectedStep ? renderJourneyExercise(selectedProgram, selectedStep.id) : null}
-      {selectedStep ? <View style={styles.legacySection}>
+      {selectedStep && selectedTimelineReadOnly ? <View style={styles.readOnlyNotice} testID="training-step-read-only">
+        <Ionicons name="eye-outline" size={tokens.size.iconSm} color={tokens.colors.textSecondary} />
+        <Text style={styles.noteCompact}>{selectedTimelineEntry?.state === 'upcoming' ? 'Kommande steg · endast förhandsvisning' : 'Tidigare steg · endast läsning'}</Text>
+      </View> : selectedStep ? <View style={styles.legacySection}>
         {selectedProgram?.completedStepIds.includes(selectedStep.id) ? <Text style={styles.stepMeta}>Aktiviteten är markerad.</Text> : nextStep?.id !== selectedStep.id ? <Text style={styles.note}>Börja med {nextStep?.title} innan du markerar den här övningen.</Text> : null}
         <Pressable accessibilityRole="button" accessibilityState={{ expanded: legacyActivityOpen }} onPress={() => setLegacyActivityOpen((open) => !open)} style={styles.legacyDisclosure}>
           <Text style={styles.stepMeta}>Aktivitetsmarkeringar i programmet</Text><Ionicons name={legacyActivityOpen ? 'chevron-up' : 'chevron-down'} size={tokens.size.iconSm} color={tokens.colors.textSecondary} />
@@ -635,6 +729,39 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       <Text style={styles.resetDialogBody}>Markeringarna i det här programmet tas bort. Du får ett meddelande om allt inte går att rensa.</Text>
     </Dialog>
   </View>;
+}
+
+function TrainingInstruction({ instruction }: { instruction: string }) {
+  return <View style={styles.instructionBlocks}>{parseTrainingInstruction(instruction).map((block, index) => {
+    if (block.type === 'heading') return <Text key={`heading-${index}`} accessibilityRole="header" style={styles.instructionHeading}>{block.text}</Text>;
+    if (block.type === 'ordered') return <View key={`list-${index}`} style={styles.instructionList}>{block.items.map((item, itemIndex) =>
+      <Text key={`${item.number}-${itemIndex}`} style={styles.body}>{item.number}. {item.text}</Text>)}</View>;
+    return <Text key={`paragraph-${index}`} style={styles.body}>{block.text}</Text>;
+  })}</View>;
+}
+
+function TrainingTimelineStatusIcon({ name, size, color, animateCompleteKey, onCompleteAnimationStart }: {
+  name: ComponentProps<typeof Ionicons>['name'];
+  size: number;
+  color: string;
+  animateCompleteKey?: string;
+  onCompleteAnimationStart?: (key: string) => void;
+}) {
+  const reducedMotion = useReducedMotion();
+  const [scale] = useState(() => new Animated.Value(1));
+  const playedKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (!animateCompleteKey || playedKey.current === animateCompleteKey) return;
+    playedKey.current = animateCompleteKey;
+    onCompleteAnimationStart?.(animateCompleteKey);
+    scale.stopAnimation();
+    if (reducedMotion) { scale.setValue(1); return; }
+    scale.setValue(0.72);
+    Animated.spring(scale, { toValue: 1, speed: 24, bounciness: 4, useNativeDriver: true }).start();
+  }, [animateCompleteKey, onCompleteAnimationStart, reducedMotion, scale]);
+  return <Animated.View style={{ transform: [{ scale }] }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+    <Ionicons name={name} size={size} color={color} />
+  </Animated.View>;
 }
 
 function progressionFingerprint(workspace: TrainingProgressionWorkspace, programId: string) {
@@ -660,6 +787,9 @@ function formatHistoricalDate(dateKey?: string): string {
 }
 
 const styles = StyleSheet.create({
+  referenceLinks: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
+  referenceLink: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
+  referenceNumber: { ...tokens.typography.smallCaption, color: tokens.colors.primary, textDecorationLine: 'underline' },
   focusedPage: { gap: tokens.spacing.md, paddingBottom: tokens.spacing.xl },
   focusedCard: { padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.training.continueSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   screenTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
@@ -686,8 +816,26 @@ const styles = StyleSheet.create({
   recommendationTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
   continuationSection: { marginTop: tokens.spacing.md },
   continuationCard: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md },
-  path: { gap: tokens.spacing.xs },
-  currentStep: { padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.surface, borderWidth: tokens.size.stroke * 2, borderColor: tokens.colors.primary },
+  timeline: { gap: 0, marginTop: tokens.spacing.sm },
+  timelineRow: { minHeight: tokens.size.touchMin + tokens.spacing.md, flexDirection: 'row', alignItems: 'stretch', gap: tokens.spacing.sm, paddingVertical: tokens.spacing.sm, paddingHorizontal: tokens.spacing.xs, borderRadius: tokens.radius.md },
+  timelineActiveRow: { backgroundColor: tokens.colors.training.continueSurface, borderWidth: tokens.size.stroke * 2, borderColor: tokens.colors.primary, paddingHorizontal: tokens.spacing.sm },
+  timelineUpcomingRow: { backgroundColor: 'transparent' },
+  timelineRail: { width: tokens.size.touchMin / 2, alignItems: 'center', position: 'relative', paddingTop: tokens.spacing.xs },
+  timelineConnector: { position: 'absolute', width: tokens.size.stroke * 2, top: tokens.spacing.xl, bottom: -tokens.spacing.md, left: tokens.size.touchMin / 4 - tokens.size.stroke, zIndex: -1 },
+  timelineCopy: { flex: 1, minWidth: 0, gap: tokens.spacing.xs },
+  timelineStatus: { ...tokens.typography.smallCaption, color: tokens.colors.training.accent, fontWeight: '700' },
+  timelineUpcomingText: { color: tokens.colors.textSecondary },
+  timelineTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, flexShrink: 1 },
+  timelineInstruction: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  instructionBlocks: { gap: tokens.spacing.sm, alignItems: 'stretch' },
+  instructionHeading: { ...tokens.typography.label, color: tokens.colors.training.accent, textAlign: 'left' },
+  instructionList: { gap: tokens.spacing.xs },
+  journeyBanner: { height: 112, width: '100%', borderRadius: tokens.radius.md, overflow: 'hidden', backgroundColor: tokens.colors.training.card, position: 'relative' },
+  journeyBannerImage: { position: 'absolute', width: '100%', height: '100%', left: 0, top: 0 },
+  journeySummaryLine: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
+  journeySummaryText: { ...tokens.typography.caption, color: tokens.colors.textPrimary, fontWeight: '700', flexShrink: 1 },
+  readOnlyNotice: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs },
+  noteCompact: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginVertical: 0 },
   nextImage: { width: tokens.size.trainingImage, height: tokens.size.trainingImage, borderRadius: tokens.radius.md, flexShrink: 0 },
   nextCopy: { flex: 1, minWidth: 0, gap: tokens.spacing.sm },
   stepMeta: { ...tokens.typography.caption, color: tokens.colors.textSecondary },

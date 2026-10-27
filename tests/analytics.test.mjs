@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { ANALYTICS_EVENT_TYPES } from '../src/analytics/analytics-model.ts';
 import { createAnalyticsService, createSyntheticAnalyticsAdapter } from '../src/analytics/analytics-service.ts';
 
@@ -65,6 +66,11 @@ test('production adapter requires server consent and sends only an allowlisted e
   assert.deepEqual(calls.at(-1), { name: 'record_product_event', args: { p_event_type: 'first_log' } });
   assert.equal(await service.setConsent(false), true);
   assert.equal(await service.track('meaningful_return'), false);
+});
+
+test('workspace renews its cached analytics consent when account scope changes', async () => {
+  const source = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
+  assert.match(source, /const analyticsService = useMemo\(\(\) => createAnalyticsService\([\s\S]*?\}\), \[client, session\?\.user\.id, accountGeneration\]\)/);
 });
 
 test('production adapter fails open when RPC rejects or returns an error', async () => {

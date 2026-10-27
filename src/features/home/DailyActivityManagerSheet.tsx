@@ -343,8 +343,8 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
       </View>)}
     </View> : null}
     </BottomSheet>
-    <Dialog visible={showDiscardConfirmation} title="Kasta ändringar?" onRequestClose={cancelDiscard} onConfirm={confirmDiscard}
-      confirmLabel="Kasta" cancelLabel="Fortsätt redigera" confirmVariant="destructive" compactActions>
+    <Dialog visible={showDiscardConfirmation} title="Lämna utan att spara?" onRequestClose={cancelDiscard} onConfirm={confirmDiscard}
+      confirmLabel="Lämna utan att spara" cancelLabel="Fortsätt redigera" confirmVariant="destructive" compactActions>
       <Text style={styles.body}>Dina osparade ändringar försvinner.</Text>
     </Dialog>
   </>;

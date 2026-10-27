@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Linking, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AppBar, Button, Skeleton } from '../../components/ui';
 import { MessageCard } from '../../components/AppPrimitives';
@@ -7,6 +7,8 @@ import { MotionPressable } from '../../components/ui/Motion';
 import type { HomeContent } from '../../data/app-data';
 import { tokens } from '../../theme/tokens';
 import { automaticDogAge } from '../onboarding/dog';
+import { homeAgeInWeeks } from './home-today';
+import { generalDevelopmentMilestones } from './development-milestones';
 
 type GuideState = 'loading' | 'ready' | 'error';
 
@@ -23,6 +25,7 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
   const age = useMemo(() => automaticDogAge(birthDate, today), [birthDate, today]);
   const ageProgress = useMemo(() => age && age.stage !== 'VUXEN' ? progressToAdultStage(birthDate, today) : null, [age, birthDate, today]);
   const phaseLabel = age ? formatStage(age.stage) : null;
+  const milestones = useMemo(() => generalDevelopmentMilestones(homeAgeInWeeks(birthDate, today)), [birthDate, today]);
 
   return <View style={styles.page} testID="development-screen">
     <AppBar mode="Back" title={`${dogName}s utveckling`} actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" />
@@ -53,15 +56,20 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
     </View>
 
     <View style={styles.sectionHeading}>
-      <Text style={styles.sectionTitle} accessibilityRole="header">Nästa milstolpar</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">Hållpunkter i utvecklingen</Text>
     </View>
-    <View style={styles.milestoneCard}>
+    <Text style={styles.milestoneBody}>Ungefärliga hållpunkter – varje hund utvecklas i sin egen takt.</Text>
+    {milestones.map((milestone) => <MotionPressable key={milestone.id} accessibilityRole="link"
+      accessibilityLabel={`${milestone.title}. Läs källan i webbläsaren`}
+      onPress={() => { void Linking.openURL(milestone.sourceUrl).catch(() => Alert.alert('Källan kunde inte öppnas', 'Försök igen när anslutningen fungerar.')); }} style={styles.milestoneCard}>
       <View style={styles.milestoneIcon}><Ionicons name="sparkles-outline" size={tokens.size.iconMd} color={tokens.colors.home.greenStrong} accessibilityElementsHidden /></View>
       <View style={styles.milestoneCopy}>
-        <Text style={styles.milestoneTitle}>Granskade milstolpar är inte tillgängliga ännu</Text>
-        <Text style={styles.milestoneBody}>Här visas milstolpar när de finns granskade för rätt ålder.</Text>
+        <Text style={styles.milestoneTitle}>{milestone.title}</Text>
+        <Text style={styles.milestoneBody}>{milestone.description}</Text>
+        <Text style={styles.sourceLink}>Läs källan</Text>
       </View>
-    </View>
+    </MotionPressable>)}
+    {milestones.length === 0 ? <Text style={styles.milestoneBody}>{age ? 'Inga generella hållpunkter för den här åldern just nu.' : 'Hållpunkter visas när ett giltigt födelsedatum finns.'}</Text> : null}
 
     <View style={styles.guideSection}>
       <View style={styles.sectionHeading}>
@@ -219,6 +227,7 @@ const styles = StyleSheet.create({
   milestoneCopy: { flex: 1, gap: tokens.spacing.xs },
   milestoneTitle: { ...tokens.typography.label, color: tokens.colors.home.text },
   milestoneBody: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
+  sourceLink: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
   guideSection: { gap: tokens.spacing.xs },
   guideCount: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
   loadingGuides: { gap: tokens.spacing.sm },

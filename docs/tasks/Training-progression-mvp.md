@@ -135,3 +135,11 @@ SQL-verifieringen har även körts med **samtliga 21 migrationer**, följt av ny
 
 Slutkontroll 2026-10-24: **pnpm check PASS** (typecheck, edge-account-typecheck, lint utan varningar och 78 testfiler), **git diff --check PASS**. Sparad kodlogg: `docs/design/evidence/training-progression-mvp/code-check.txt`. Oberoende omgranskning efter återhämtningsrättningen: PASS. Alla ändringar ligger i arbetsytan; ingen commit, push eller distribution utförd.
 ~~~
+
+## TRAINING-TIMELINE-01 — UI amendment (2026-10-26)
+
+The opened program presents a low dog-image banner, compact journey status and clickable vertical timeline. Past steps remain readable, the active step has the strongest emphasis, and future steps are muted while remaining legible. The overview shows the active exercise once. Full instructions and pause guidance remain in the detail view. Past/future journey previews are read-only; only the active step has journey write actions. This is a presentation change: it adds no database fields, backfill, automatic advancement, or published training copy.
+
+Show a milestone date only from `training_milestones.confirmed_at`. Show legacy `training_progress.completed_at` separately as an activity-marked date, and never treat `training_sessions.performed_at` as a skill-completion date. Use the device timezone, include the year for a different local calendar year, and omit missing/invalid dates. Future status remains “Kommande” even if stale legacy activity is present.
+
+Local evidence is produced by `tools/visual-check/verify-flow-training.py` at 375×844, 430×844, 375×667 and a 140% text proxy. Native rendering/accessibility, live Supabase/RLS and TestFlight remain separate verification boundaries.

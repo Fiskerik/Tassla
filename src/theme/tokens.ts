@@ -67,7 +67,6 @@ export const categoryColors = {
 
 const logCategoryColors = {
   ...categoryColors,
-  pee: { fg: primitives.amber700, bg: primitives.amber100 },
   food: { fg: primitives.brown700, bg: '#F4E5D4' },
 } as const;
 

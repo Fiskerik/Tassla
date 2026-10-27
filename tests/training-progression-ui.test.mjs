@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
 const model = await import('../src/features/training/training-progression.ts');
+const screen = await readFile(new URL('../src/features/training/PublishedTrainingScreen.tsx', import.meta.url), 'utf8');
+const timelineModel = await readFile(new URL('../src/features/training/training-timeline-model.ts', import.meta.url), 'utf8');
 
 test('Home hides journey counts when progression readback is unavailable', () => {
   const summary = {
@@ -31,4 +34,25 @@ test('Home retains exact saved counts and exposes same-operation retry without i
   assert.equal(display.summary.confirmedMilestones, 0);
   assert.equal(display.summary.activeStepTitle, null);
   assert.equal(display.pending.operationId, 'pending-operation');
+});
+
+test('journey overview shows one active step in a clickable timeline with a face-focused banner', () => {
+  assert.match(screen, /testID="training-journey-banner"/);
+  assert.match(screen, /buildTrainingTimeline\(/);
+  assert.match(screen, /testID="training-journey-timeline"/);
+  assert.match(screen, /accessibilityHint="Öppnar övningsinstruktionen\. Kommande steg är endast förhandsvisningar\."/);
+  assert.match(screen, /training-timeline-step-\$\{step\.id\}/);
+  assert.doesNotMatch(screen, /label="Öva på aktivt steg"/);
+});
+
+test('future and historical journey previews hide progression and legacy write controls', () => {
+  assert.match(screen, /selectedTimelineReadOnly = Boolean\(selectedTimelineEntry/);
+  assert.match(screen, /selectedStep && selectedTimelineReadOnly \? <View style=\{styles\.readOnlyNotice\}/);
+  assert.match(screen, /Kommande steg · endast förhandsvisning/);
+  assert.match(screen, /Tidigare steg · endast läsning/);
+});
+
+test('a confirmed milestone can still be the active step after moving back in a journey', () => {
+  assert.match(timelineModel, /step\.id === activeStepId/);
+  assert.match(screen, /entry\.milestoneLabel \? <Text style=\{styles\.timelineStatus\}>\{entry\.milestoneLabel\}/);
 });

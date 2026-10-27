@@ -235,3 +235,33 @@ Begränsningar: referensen har statusfält och telefonram, renderingen har inte 
 Standardreferensen är `vision_rev02.jpg` (PNG används bara om JPG saknas); `--ref` väljer ett annat ark. Ogiltig bredd, trimning och beskärning avvisas. `--out` får inte skriva över referensen eller en rendering.
 
 Bilden är underlag till agenten `ui_critic` och till QA/reviewer. Den ersätter inte checklistan i §14 och ger inget visuellt godkännande.
+
+## UI-MODAL-CENTER-01 — centrerade modaler
+
+`verify-flow-modals.py` mäter produktionskomponenter i RN Web vid 320/375/430/768 px. Den täcker planerad hälsas inforuta, datumväljare, formulär och nästlad påminnelsetid, Loggs "Lägg till händelse", hälsohistorik, notisinställningar, fasta footers och backdrop-stängning. Den korta viewporten mäter responsivitet; 140 %-textproxy gäller planerad-hälsa-formuläret, medan checklistans separata verifierare täcker dess egen sheet. `?screen=action-menu-contract` är en dev-fixture som räknar Edit/Delete/close-callbacks. Komponentgalleriet används endast för isolerade Dialog/BottomSheet/ActionMenu-prov. Galleriet är en utvecklingsvy och dess skelettplatshållare är inte produktdesign. Bilder från riktiga skärmar och testfixturer namnges separat i `docs/design/evidence/ui-modal-center-01/`.
+
+```sh
+TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/modal/public node tools/visual-check/build.cjs
+python -m http.server 4382 --bind 127.0.0.1 --directory /tmp/tassla-preview/modal/public
+TASSLA_UI_BASE_URL=http://127.0.0.1:4382/ TASSLA_UI_EVIDENCE=docs/design/evidence/ui-modal-center-01 python -X utf8 tools/visual-check/verify-flow-modals.py
+```
+
+Checklistans redigerarvy använder en separat KNOW-02-fixture för de 20 egna ikonvalen. Den äldre verifieraren kan sparas in i taskens evidensmapp:
+
+```sh
+TASSLA_UI_ENTRY=tools/visual-check/know02-app.tsx TASSLA_UI_REVIEW=true TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/modal/knowledge node tools/visual-check/build.cjs
+python -m http.server 4383 --bind 127.0.0.1 --directory /tmp/tassla-preview/modal/knowledge
+TASSLA_UI_BASE_URL=http://127.0.0.1:4383/ TASSLA_UI_EVIDENCE=docs/design/evidence/ui-modal-center-01/checklist-icons python -X utf8 tools/visual-check/verify-checklist-custom-icons.py
+```
+
+Detta är webbrendering med syntetiska fixtures. Den kan inte intyga iOS/Android-native overlay, verkligt software keyboard, safe-area-insets, VoiceOver/TalkBack, Dynamic Type eller TestFlight. Ett 375×667-fönster och 140 %-text är responsivitetstester, inte native-keyboardtest.
+
+## TRAINING-TIMELINE-01 — journey history and step previews
+
+`verify-flow-training.py` renders the production `PublishedTrainingScreen` with synthetic data. `?screen=training&trainingScenario=timeline&progression=timeline` seeds a confirmed past milestone, an active exercise, and a future step with stale legacy activity so its main status and separate activity label can be checked together. It verifies the 112 pt dog banner, milestone date, active-step uniqueness, read-only historic/future previews, zero progression mutations from future previews, target size, 375/430 pt widths, short viewport, and a 140% text proxy. This is a development-only fixture, not an app route or production data.
+
+```sh
+TASSLA_UI_REVIEW=false TASSLA_UI_TOOLS=/tmp/tassla-ui-tools TASSLA_UI_OUTPUT=/tmp/tassla-preview/training-timeline node tools/visual-check/build.cjs
+python -m http.server 4384 --bind 127.0.0.1 --directory /tmp/tassla-preview/training-timeline
+TASSLA_UI_BASE_URL=http://127.0.0.1:4384/ TASSLA_UI_EVIDENCE=docs/design/evidence/training-timeline-01 python -X utf8 tools/visual-check/verify-flow-training.py
+```

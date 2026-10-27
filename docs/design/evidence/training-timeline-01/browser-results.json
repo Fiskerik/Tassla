@@ -1,0 +1,12 @@
+{
+  "passes": [
+    "timeline statuses, one active title, date sources, dog banner, and 44pt hit targets at 375x844",
+    "future preview is read-only and produces zero progression operations",
+    "active step alone exposes practice and milestone controls",
+    "confirmed historic step opens as read-only detail",
+    "timeline statuses, one active title, date sources, dog banner, and 44pt hit targets at 430x844",
+    "timeline statuses, one active title, date sources, dog banner, and 44pt hit targets at 375x667-large-text",
+    "active step remains reachable above bottom navigation after vertical scroll at 140% text"
+  ],
+  "scope": "Synthetic React Native Web review fixture. Native accessibility, native iOS/Android, live Supabase/RLS and TestFlight are not verified."
+}

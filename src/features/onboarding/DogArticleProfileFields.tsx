@@ -12,7 +12,7 @@ export function DogArticleProfileFields({ date, sex, disabled = false, onDate, o
 }) {
   return <View style={styles.fields}>
     <DatePickerField label="Förväntad hemkomst (valfritt)" value={date} onChangeText={onDate} disabled={disabled} />
-    <Text style={styles.help}>När tror du att hunden kommer hem till dig? Datumet styr när förberedande artiklar visas. Du kan ändra eller ta bort det.</Text>
+    <Text style={styles.help}>Datumet hjälper oss att visa förberedelser i rätt tid.</Text>
     {date !== '' ? <QuietButton title="Ta bort förväntat hemkomstdatum" disabled={disabled} onPress={() => onDate('')} /> : null}
     <Text style={styles.label}>Kön (valfritt)</Text>
     <View accessibilityRole="radiogroup" accessibilityLabel="Hundens kön" style={styles.options}>
@@ -23,7 +23,7 @@ export function DogArticleProfileFields({ date, sex, disabled = false, onDate, o
           <Text style={styles.optionText}>{option.label}</Text>
         </Pressable>)}
     </View>
-    <Text style={styles.help}>Används för han eller hon i artiklar. Om du inte anger kön använder vi hundens namn.</Text>
+    <Text style={styles.help}>Uppgiften sparas i hundens profil och kan ändras senare.</Text>
   </View>;
 }
 const styles = StyleSheet.create({

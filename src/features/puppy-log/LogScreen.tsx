@@ -179,7 +179,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   }, [layoutOwnerId, persistLayout]);
 
   useEffect(() => {
-    if (!needsDatePage || loadingMore || !onLoadMore) {
+    if (view !== 'today' || !needsDatePage || loadingMore || !onLoadMore) {
       if (!loadingMore) autoLoadAnchor.current = '';
       return;
     }
@@ -187,7 +187,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     if (autoLoadAnchor.current === anchor) return;
     autoLoadAnchor.current = anchor;
     onLoadMore();
-  }, [displayedEvents, loadingMore, loadError, loadMoreError, needsDatePage, onLoadMore, oldestLoadedEvent, selectedDate]);
+  }, [displayedEvents, loadingMore, loadError, loadMoreError, needsDatePage, onLoadMore, oldestLoadedEvent, selectedDate, view]);
 
   function selectType(type: LogEventType, timestamp: number, force = false) {
     setAddEventVisible(false);
@@ -367,6 +367,9 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       <InsightsScreen period={insightsPeriod} onPeriodChange={(period) => onInsightsPeriodChange?.(period)}
         state={insightsState} onRefresh={() => onRefreshInsights?.()}
         onOpenLog={() => { setSelectedDate(localDate()); onViewChange?.('today'); }}
+        events={events} eventsAvailable={!loading && !loadError && !refreshError && !busy && mutation?.status !== 'unsure'}
+        hasMore={hasMore} loadingMore={loadingMore} loadMoreError={loadMoreError} onLoadMore={onLoadMore}
+        onOpenEvent={(event) => { setSelectedDate(localDateTimeParts(event.occurredAt).date); setEditingId(event.id); setEditorMinimized(false); onViewChange?.('today'); }}
         onBack={profileOrigin ? () => onReturnToProfile?.() : () => onViewChange?.('today')}
         backLabel={profileOrigin ? 'Tillbaka till Hundprofil' : 'Tillbaka till Logga'} dogName={dogName} />
     </View>;
@@ -451,7 +454,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         {deleteTarget ? <Dialog visible title="Radera loggpost?" compactActions onRequestClose={() => setDeleteTarget(null)} onConfirm={confirmDelete}>
           <MessageCard>{deleteTarget ? `${LOG_EVENT_LABELS[deleteTarget.type]} · ${localDateTimeParts(deleteTarget.occurredAt).date} tas bort.` : ''}</MessageCard>
         </Dialog> : null}
-        {discardEditorVisible ? <Dialog visible title="Kasta ändringen?" confirmLabel="Kasta ändring" compactActions onRequestClose={() => setDiscardEditorVisible(false)} onConfirm={discardEditor}>
+        {discardEditorVisible ? <Dialog visible title="Lämna utan att spara?" confirmLabel="Lämna utan att spara" compactActions onRequestClose={() => setDiscardEditorVisible(false)} onConfirm={discardEditor}>
           <MessageCard>Ändringen är inte sparad. Dina tidigare loggposter påverkas inte.</MessageCard>
         </Dialog> : null}
       </BottomSheet> : null}

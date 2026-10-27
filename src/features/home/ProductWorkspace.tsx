@@ -4,6 +4,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
 import * as ExpoCrypto from 'expo-crypto';
 import * as Notifications from 'expo-notifications';
+import { progressionAnalyticsEvent } from '../../analytics/training-progression-events';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { AppScreen, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import {
@@ -129,6 +130,7 @@ import { checklistMemoryScope, keepChecklistMemoryForScope, updateChecklistMemor
 import { checklistReadCacheScope, clearChecklistReadCache, keepChecklistReadCacheForScope } from '../knowledge/checklist-data';
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, REVIEW_TRAINING_PROGRAMS } from '../knowledge/review-content';
 import { HomeScreen, type HomeDailyTrainingOption } from './HomeScreen';
+import { selectNextHomeTraining } from './home-training-suggestion';
 import { DevelopmentScreen } from './DevelopmentScreen';
 import { DailyProgressScreen } from './DailyProgressScreen';
 import { DailyChecklistScreen } from './DailyChecklistScreen';
@@ -485,7 +487,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const analyticsService = useMemo(() => createAnalyticsService(async (name, args) => {
     const result = await client.rpc(name, args as never);
     return { data: result.data, error: result.error };
-  }), [client]);
+    // A new account scope must not inherit the previous service's cached consent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [client, session?.user.id, accountGeneration]);
 
   useEffect(() => {
     let active = true;
@@ -1718,6 +1722,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const calendarDataMonth = calendarDataIsCurrent ? logCalendarData.key.slice(calendarKeyPrefix.length) : '';
   const nextProgram = training.programs.find((program) => program.steps.some((step) => !program.completedStepIds.includes(step.id)));
   const nextStep = nextProgram?.steps.find((step) => !nextProgram.completedStepIds.includes(step.id));
+  const nextTrainingSuggestion = selectNextHomeTraining(training.programs);
   const trainingProgressionSummary = training.progressionState === 'ready'
     ? latestHomeTrainingSummary(training.progression, training.programs) : null;
   const progressionPendingPrefix = `${currentTrainingOwnerDogScope}:`;
@@ -2951,6 +2956,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   async function applyProgressionAction(action: TrainingProgressionAction): Promise<'saved' | 'failed' | 'unknown'> {
     if (accountDeletionInvalidated.current) return 'failed';
+    const analyticsSnapshot = training.progressionState === 'ready' ? training.progression : null;
     const ownerDogScope = currentTrainingOwnerDogScope;
     const pendingKey = `${ownerDogScope}:${action.programVersionId}`;
     const existing = pendingTrainingProgressions[pendingKey];
@@ -2973,7 +2979,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         });
         if (isTrainingMutationCurrent(lease) && currentTrainingOwnerDogScope === ownerDogScope) {
           try {
-            await reloadTraining({ force: true, supersede: true, publishToDaily: true });
+            const refreshed = await reloadTraining({ force: true, supersede: true, publishToDaily: true });
+            if (analyticsSnapshot && refreshed.progressionState === 'ready' && isTrainingMutationCurrent(lease)) {
+              const analyticsEvent = progressionAnalyticsEvent(analyticsSnapshot, refreshed.progression, dog.id, action, operationId);
+              if (analyticsEvent) void analyticsService.track(analyticsEvent);
+            }
           } catch {
             setTrainingError('Ändringen sparades, men den uppdaterade träningsresan kunde inte hämtas. Försök igen.');
           }
@@ -3597,12 +3607,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       healthHistoryState={healthHistoryState}
       plans={plannedHealth}
       logState={visibleLogState}
+      logPendingOrUnknown={quickLogMutation?.status === 'pending' || quickLogMutation?.status === 'unsure'}
       planState={plannedHealthState}
       nextStep={visibleTrainingState === 'ready' ? nextStep?.title : undefined}
       trainingState={visibleTrainingState}
       trainingProgression={trainingProgressionSummary}
       trainingProgressionState={training.progressionState}
       pendingProgression={homeProgressionPending}
+      nextTrainingSuggestion={nextTrainingSuggestion}
       onOpenTrainingJourney={(programVersionId) => {
         setTrainingProgramFocus(programVersionId);
         navigateMainTab('training');

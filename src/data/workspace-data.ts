@@ -1329,19 +1329,22 @@ export async function applyTrainingProgressionOperation(
   let failure: unknown = null;
   let result: TrainingProgressionResult | null = null;
   try {
-    const response = await withRequestDeadline(async (signal) => await client.rpc('apply_training_operation', {
-      p_dog_id: dogId,
-      p_program_version_id: action.programVersionId,
-      p_operation_id: operationId,
-      p_action: action.kind,
-      p_step_id: 'stepId' in action ? action.stepId : null,
-      p_feedback: action.kind === 'record_session' ? action.feedback : null,
-    }).abortSignal(signal), timeoutMs);
+    const response = await withRequestDeadline(async (signal) => action.kind === 'undo_step'
+      ? await client.rpc('undo_training_milestone', {
+        p_dog_id: dogId, p_program_version_id: action.programVersionId, p_operation_id: operationId,
+        p_step_id: action.stepId, p_expected_milestone_id: action.expectedMilestoneId,
+      }).abortSignal(signal)
+      : await client.rpc('apply_training_operation', {
+        p_dog_id: dogId, p_program_version_id: action.programVersionId, p_operation_id: operationId,
+        p_action: action.kind, p_step_id: 'stepId' in action ? action.stepId : null,
+        p_feedback: action.kind === 'record_session' ? action.feedback : null,
+      }).abortSignal(signal), timeoutMs);
     if (!response.error && isTrainingProgressionResult(response.data)
       && response.data.operation_id === operationId
       && response.data.dog_id === dogId
       && response.data.program_version_id === action.programVersionId
-      && response.data.action === action.kind) {
+      && response.data.action === action.kind
+      && (action.kind !== 'undo_step' || (response.data.milestone_id === action.expectedMilestoneId && response.data.active_step_id === action.stepId))) {
       result = response.data;
     } else {
       failure = response.error ?? new Error('Training operation response did not match the request');

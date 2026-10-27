@@ -1,9 +1,11 @@
 import { ScrollView, StyleSheet, Text, View, Pressable, ActivityIndicator } from 'react-native';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Card, Tabs } from '../../components/ui';
+import { Button, Card, Tabs } from '../../components/ui';
 import { MessageCard, PrimaryButton } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
+import { LOG_EVENT_LABELS, type LogEvent } from './log-model';
+import { insightPeriodLoaded, loadedInsightEvents } from './insights-events';
 import {
   formatInsightsDate,
   formatInsightsMonth,
@@ -38,6 +40,13 @@ export function InsightsScreen({
   onBack,
   backLabel,
   dogName,
+  events,
+  eventsAvailable,
+  onOpenEvent,
+  hasMore,
+  loadingMore,
+  loadMoreError,
+  onLoadMore,
 }: {
   period: InsightsPeriod;
   onPeriodChange: (period: InsightsPeriod) => void;
@@ -47,10 +56,22 @@ export function InsightsScreen({
   onBack: () => void;
   backLabel: string;
   dogName: string;
+  events: readonly LogEvent[];
+  eventsAvailable: boolean;
+  onOpenEvent: (event: LogEvent) => void;
+  hasMore: boolean;
+  loadingMore: boolean;
+  loadMoreError: boolean;
+  onLoadMore?: () => void;
 }) {
+  const [visibility, setVisibility] = useState({ period, count: 8 });
+  const visibleCount = visibility.period === period ? visibility.count : 8;
   const data = state.status === 'ready' ? state.data : null;
   const totals = data ? insightVisibleTotals(data.days) : null;
   const historyEntries = data?.period === 'since_first_log' ? historyMonthEntries(data) : null;
+  const periodEvents = data && eventsAvailable ? loadedInsightEvents(events, data) : [];
+  const recentEvents = periodEvents.slice(0, visibleCount);
+  const periodLoaded = Boolean(data && eventsAvailable && insightPeriodLoaded(events, data, hasMore));
   const visibleBackLabel = backLabel === 'Tillbaka till Hundprofil' ? 'Hundprofil'
     : backLabel === 'Tillbaka till Logga' ? 'Logga' : backLabel;
 
@@ -103,7 +124,7 @@ export function InsightsScreen({
           entries={data.period === 'since_first_log' ? (historyEntries ?? []) : data.days.map((item) => ({ kind: 'month' as const, item }))}
           period={data.period}
           series={[
-            { key: 'peeCount', label: 'Kiss', color: tokens.colors.home.greenFill },
+            { key: 'peeCount', label: 'Kiss', color: tokens.colors.log.category.pee.fg },
             { key: 'poopCount', label: 'Bajs', color: tokens.colors.log.category.poop.fg },
           ]}
           emptyText="Inga kiss-, bajs- eller olycksmarkeringar i perioden."
@@ -120,14 +141,38 @@ export function InsightsScreen({
           entries={data.period === 'since_first_log' ? (historyEntries ?? []) : data.days.map((item) => ({ kind: 'month' as const, item }))}
           period={data.period}
           series={[
-            { key: 'sleepCount', label: 'Sömn', color: tokens.colors.category.pee.fg },
-            { key: 'awakeCount', label: 'Vaken', color: tokens.colors.category.sleep.fg },
+            { key: 'sleepCount', label: 'Sömn', color: tokens.colors.category.sleep.fg },
+            { key: 'awakeCount', label: 'Vaken', color: tokens.colors.category.pee.fg },
           ]}
           emptyText="Inga sömn- eller vakenmarkeringar i perioden."
           showOtherTypesNote={false}
           observedThrough={data.observedThroughLocal}
         />
       </>}
+      {data.days.length > 0 ? <Card>
+        <Text accessibilityRole="header" style={styles.cardTitle}>Händelser i perioden</Text>
+        <Text style={styles.cardSubtitle}>{!eventsAvailable ? 'Händelserna visas när loggen är tillgänglig igen.'
+          : loadMoreError ? 'Fler händelser kunde inte hämtas. Försök igen.'
+          : !periodLoaded ? 'Fler händelser kan finnas i perioden.'
+          : periodEvents.length === 0 ? 'Inga hämtade händelser i perioden.'
+          : `Visar ${recentEvents.length} av ${periodEvents.length} hämtade händelser.`}</Text>
+        {recentEvents.map((event) => {
+          const time = new Intl.DateTimeFormat('sv-SE', { timeZone: data.timezone, day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(event.occurredAt));
+          return <Pressable key={event.id} accessibilityRole="button" accessibilityLabel={`Öppna ${LOG_EVENT_LABELS[event.type]}, ${time}`}
+            onPress={() => onOpenEvent(event)} style={({ pressed }) => [styles.eventRow, pressed && styles.pressed]}>
+            <Ionicons name="time-outline" size={tokens.size.iconMd} color={tokens.colors.primary} accessibilityElementsHidden />
+            <Text style={styles.eventLabel}>{LOG_EVENT_LABELS[event.type]}</Text>
+            <Text style={styles.eventTime}>{time}</Text>
+            <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.textSecondary} accessibilityElementsHidden />
+          </Pressable>;
+        })}
+        {eventsAvailable && periodEvents.length > visibleCount ? <Button variant="tertiary" label="Visa fler händelser" accessibilityLabel="Visa fler händelser" onPress={() => setVisibility({ period, count: visibleCount + 8 })} /> : null}
+        {eventsAvailable && periodEvents.length <= visibleCount && !periodLoaded && onLoadMore ? <Button variant="tertiary"
+          label={loadingMore ? 'Hämtar händelser…' : loadMoreError ? 'Försök hämta igen' : 'Hämta fler händelser'}
+          accessibilityLabel={loadingMore ? 'Hämtar händelser' : loadMoreError ? 'Försök hämta händelser igen' : 'Hämta fler händelser'}
+          disabled={loadingMore} loading={loadingMore} onPress={onLoadMore} /> : null}
+        <Button variant="tertiary" label="Visa Logga" accessibilityLabel="Öppna Logga" onPress={onOpenLog} />
+      </Card> : null}
     </> : null}
   </View>;
 }
@@ -275,4 +320,7 @@ const styles = StyleSheet.create({
   otherTypes: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.sm },
   emptyIcon: { width: tokens.size.chipLg, height: tokens.size.chipLg, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.selectedSurface, marginBottom: tokens.spacing.sm },
   actionGap: { marginTop: tokens.spacing.md },
+  eventRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
+  eventLabel: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1 },
+  eventTime: { ...tokens.typography.caption, color: tokens.colors.textSecondary, flexShrink: 1 },
 });

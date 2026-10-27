@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Crypto from 'expo-crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { AppBar, BottomSheet, Button, Card, ChecklistItem, Dialog, Field, Progress, SectionHeader, Toast } from '../../components/ui';
-import { ChecklistIconPicker } from '../checklists/ChecklistIconPicker';
+import { ChecklistIconPickerChoices, ChecklistIconPickerTrigger } from '../checklists/ChecklistIconPicker';
 import { checklistIconTone, type ChecklistIcon } from '../checklists/checklist-icons';
 import { CHECKLIST_TEMPLATES } from './checklist-content';
 import { addChecklistCustomItem, cacheChecklistOverview, cacheChecklistPreference, cacheChecklistTemplateState, checklistCatalogReadCacheScope, checklistOverviewSnapshot, checklistTemplateSnapshot, deleteChecklistCustomItem, fetchChecklistOverview, fetchChecklistState, fetchPublishedChecklistCatalog, setChecklistItem, setChecklistPreference, updateChecklistCustomItem, type PublishedChecklistCatalog } from './checklist-data';
@@ -685,11 +685,18 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
       {uncertain && message ? <View style={styles.formStatus}><Text style={styles.contextStatusText}>{message} Ditt utkast och samma sparåtgärd finns kvar.</Text><Button variant="secondary" label={busy ? 'Kontrollerar…' : 'Kontrollera'} accessibilityLabel="Kontrollera om ändringen sparades" disabled={busy} onPress={retry} /></View> : null}
       {busy && pendingOperation && ['add', 'update', 'delete'].includes(pendingOperation.kind) ? <Text accessibilityLiveRegion="polite" style={styles.contextPending}>{pendingOperation.kind === 'delete' ? 'Tar bort punkten…' : 'Sparar punkten…'}</Text> : null}
       {!uncertain && messageTone === 'error' && message ? <Toast visible tone="error" message={message} onRetry={retry} /> : null}
+      <View style={styles.formFieldStack}>
       <View style={styles.formFieldRow}>
         <Field containerStyle={styles.formTitleField} label="Punkt" value={form.title} onChangeText={(title) => { setForm((current) => current ? { ...current, title } : current); setFormError(''); }} error={formError} help={formError ? undefined : 'Högst 160 tecken.'} state={busy || uncertain || failedFormAction === 'delete' ? 'disabled' : 'default'} />
-        <ChecklistIconPicker value={form.icon} label={form.title || 'egen punkt'} expanded={iconPickerOpen} popover
+        <ChecklistIconPickerTrigger value={form.icon} label={form.title || 'egen punkt'} expanded={iconPickerOpen}
           disabled={busy || uncertain || failedFormAction === 'delete'} testIDPrefix="knowledge-checklist" itemKey={form.id ?? 'new'}
-          onToggle={() => setIconPickerOpen((open) => !open)} onSelect={(icon) => { setForm((current) => current ? { ...current, icon } : current); setIconPickerOpen(false); }} />
+          onToggle={() => setIconPickerOpen((open) => !open)} />
+      </View>
+      {iconPickerOpen ? <View style={styles.formIconChoices}>
+        <ChecklistIconPickerChoices value={form.icon} label={form.title || 'egen punkt'} expanded={iconPickerOpen}
+          disabled={busy || uncertain || failedFormAction === 'delete'} testIDPrefix="knowledge-checklist"
+          onSelect={(icon) => { setForm((current) => current ? { ...current, icon } : current); setIconPickerOpen(false); }} />
+      </View> : null}
       </View>
       {form.id ? <View style={styles.formIconActions}>
         <Button variant="icon" iconName={form.completed ? 'checkbox' : 'square-outline'} label="Klar" accessibilityLabel={form.completed ? 'Markera punkten som inte klar' : 'Markera punkten som klar'} disabled={busy || uncertain || failedFormAction === 'delete'} onPress={() => setForm((current) => current ? { ...current, completed: !current.completed } : current)} />
@@ -698,8 +705,8 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
       </View> : null}
       </> : null}
     </BottomSheet>
-    <Dialog visible={discardFormOpen} title="Kasta ändringar?" onRequestClose={() => setDiscardFormOpen(false)} onConfirm={confirmDiscardForm}
-      confirmLabel="Kasta" cancelLabel="Fortsätt redigera" compactActions>
+    <Dialog visible={discardFormOpen} title="Lämna utan att spara?" onRequestClose={() => setDiscardFormOpen(false)} onConfirm={confirmDiscardForm}
+      confirmLabel="Lämna utan att spara" cancelLabel="Fortsätt redigera" compactActions>
       <Text style={styles.body}>Dina ändringar på {form?.title.trim() ? `”${form.title.trim()}”` : 'punkten'} sparas inte.</Text>
     </Dialog>
     <Dialog visible={Boolean(deleteTarget)} title="Radera punkten?" onRequestClose={() => setDeleteTarget(null)} onConfirm={() => { const item = deleteTarget; setDeleteTarget(null); if (item) void removeCustom(item); }}
@@ -739,6 +746,8 @@ const styles = StyleSheet.create({
   referenceNumber: { ...tokens.typography.smallCaption, color: tokens.colors.primary, textDecorationLine: 'underline' },
   customRow: { gap: tokens.spacing.xs },
   formFieldRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
+  formFieldStack: { gap: tokens.spacing.xs },
+  formIconChoices: { borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.training.card },
   formTitleField: { flex: 1, minWidth: 0 },
   formIconActions: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   formActionSpacer: { flex: 1 },

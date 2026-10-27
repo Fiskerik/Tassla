@@ -1,0 +1,12 @@
+{
+  "passes": [
+    "Knowledge icon picker has 20 named 44pt choices, no horizontal overflow, and reachable Save at 375x844",
+    "Chosen icon is written with the new custom point",
+    "Chosen icon survives exact readback and editor reopen",
+    "Dirty close confirms discard and retains the form when the owner continues editing",
+    "Delete confirmation names the point, Cancel preserves it, Confirm removes it",
+    "Knowledge icon picker has 20 named 44pt choices, no horizontal overflow, and reachable Save at 430x844",
+    "Knowledge icon picker has 20 named 44pt choices, no horizontal overflow, and reachable Save at 375x667 with 140% text"
+  ],
+  "scope": "Synthetic React Native Web review fixture. Does not verify native VoiceOver/Dynamic Type, live Supabase/RLS, migration application, or TestFlight."
+}

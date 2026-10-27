@@ -1,0 +1,20 @@
+{
+  "passes": [
+    "Development component gallery: ActionMenu, Dialog, BottomSheet at 320x570; 44pt actions and bounded card",
+    "Development component gallery: ActionMenu, Dialog, BottomSheet at 375x844; 44pt actions and bounded card",
+    "Development component gallery: ActionMenu, Dialog, BottomSheet at 430x844; 44pt actions and bounded card",
+    "Development component gallery: ActionMenu, Dialog, BottomSheet at 768x844; 44pt actions and bounded card",
+    "ActionMenu backdrop, Edit and Delete each invoke only their own one-shot callback and close once",
+    "Production Planned Health: info, date picker, nested reminder TimePicker and parent recovery at 320x570",
+    "Production Planned Health: info, date picker, nested reminder TimePicker and parent recovery at 375x844",
+    "Production Planned Health: info, date picker, nested reminder TimePicker and parent recovery at 430x844",
+    "Production Planned Health: info, date picker, nested reminder TimePicker and parent recovery at 768x844",
+    "Production Log Add Event sheet is centered and its existing actions remain available",
+    "Production Health history choice and editor sheets are centered with save action reachable",
+    "Production Notification Settings TimePicker is centered and cancellable",
+    "Notification TimePicker stays centered at 375x667 with its confirm action reachable",
+    "Planned Health form remains centered, scrollable and keeps its fixed save action at 140% text/375x667 proxy"
+  ],
+  "pageErrors": [],
+  "scope": "React Native Web rendering of production screens and shared primitives; component gallery is development-only and is not product UI; native keyboard, system overlays and device accessibility are NOT TESTABLE"
+}

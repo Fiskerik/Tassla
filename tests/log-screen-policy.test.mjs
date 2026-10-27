@@ -70,7 +70,7 @@ test('legacy row editing and deletion remain reachable from workspace and previe
   assert.match(screen, /LOG_ENTRY_TYPES\.map/);
   assert.match(screen, /<BottomSheet visible title="Ändra händelse" keyboardAware footer=\{/);
   assert.match(screen, /const closeEditor = useCallback\(\(\) => \{[\s\S]*?if \(editorActionState\.dirty\) \{ setDiscardEditorVisible\(true\); return; \}/);
-  assert.match(screen, /\{discardEditorVisible \? <Dialog visible title="Kasta ändringen\?"/);
+  assert.match(screen, /\{discardEditorVisible \? <Dialog visible title="Lämna utan att spara\?"/);
   assert.match(screen, /DatePickerField/);
   assert.match(screen, /TimePickerField/);
   assert.match(screen, /Anteckning \(valfri\)/);
@@ -116,7 +116,7 @@ test('quick add labels, rapid-tap guard, retry propagation and Swedish decimal f
 test('delete and discard confirmations are conditionally owned by the mounted editor sheet', () => {
   const editor = screen.slice(screen.indexOf('{editingEvent && !editorMinimized'), screen.indexOf('{editorRecovery && mutation'));
   assert.match(editor, /\{deleteTarget \? <Dialog visible title="Radera loggpost\?"/);
-  assert.match(editor, /\{discardEditorVisible \? <Dialog visible title="Kasta ändringen\?"/);
+  assert.match(editor, /\{discardEditorVisible \? <Dialog visible title="Lämna utan att spara\?"/);
   assert.match(editor, /onRequestClose=\{\(\) => setDeleteTarget\(null\)\} onConfirm=\{confirmDelete\}/);
   assert.match(editor, /onRequestClose=\{\(\) => setDiscardEditorVisible\(false\)\} onConfirm=\{discardEditor\}/);
   assert.match(editor, /<LogEventEditor key=\{editingEvent.id\}/);

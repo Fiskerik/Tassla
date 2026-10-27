@@ -12,11 +12,11 @@ function contrast(first, second) {
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 }
 
-test('pee uses only the Logga amber token and keeps required icon/text contrast', async () => {
+test('pee uses the blue category token and keeps required icon/text contrast', async () => {
   const source = await readFile(new URL('../src/theme/tokens.ts', import.meta.url), 'utf8');
-  assert.match(source, /const logCategoryColors = \{\s*\.\.\.categoryColors,\s*pee: \{ fg: primitives\.amber700, bg: primitives\.amber100 \}/);
+  assert.match(source, /const logCategoryColors = \{\s*\.\.\.categoryColors,\s*food:/);
   assert.match(source, /export const categoryColors = \{\s*pee: \{ fg: primitives\.blue700, bg: primitives\.blue100 \}/);
-  const pee = { fg: '#785716', bg: '#F5E7BF' };
+  const pee = { fg: '#246A98', bg: '#E4EEF4' };
   const water = { fg: '#246A98', bg: '#E4EEF4' };
   assert.ok(contrast(pee.fg, pee.bg) >= 4.5);
   assert.ok(contrast(water.fg, water.bg) >= 3);

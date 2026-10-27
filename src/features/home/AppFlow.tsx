@@ -11,6 +11,7 @@ import { ProductWorkspace } from './ProductWorkspace';
 import { useAuth } from '../account/AuthProvider';
 import { cleanupStalePassportFiles } from '../passport/passport-export';
 import { captureSecureKennelJoinUrl } from '../../onboarding-referral/referral-secure-storage';
+import { createAnalyticsService } from '../../analytics/analytics-service';
 
 export function AppFlow() {
   const [referralReady, setReferralReady] = useState(false);
@@ -119,6 +120,17 @@ function DogWorkspace({ client, ownerId, accountGeneration, isCurrentAccount }: 
 
   function acceptCreatedDog(created: OwnedDog) {
     if (!isCurrentAccount(ownerId, accountGeneration)) return;
+    // Only confirmed creations are counted, and only if this account has opted in.
+    if (!dogsRef.current.some((dog) => dog.id === created.id)) {
+      const analytics = createAnalyticsService(async (name, args) => {
+        if (!isCurrentAccount(ownerId, accountGeneration)) return { data: null, error: new Error('Account changed') };
+        const result = await client.rpc(name, args as never);
+        return { data: result.data, error: result.error };
+      });
+      void analytics.getConsent().then((consented) => {
+        if (consented && isCurrentAccount(ownerId, accountGeneration)) void analytics.track('dog_created');
+      });
+    }
     setDogs((current) => current.some((dog) => dog.id === created.id)
       ? current.map((dog) => dog.id === created.id ? created : dog)
       : [...current, created]);

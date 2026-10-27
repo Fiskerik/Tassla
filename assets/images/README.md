@@ -50,6 +50,8 @@ ImageMagick-kommandot för den spårade nedskalningen var `magick <original> -re
 
 `training-hero-shiba-park.jpg` skapades med `image_gen` 2026-10-21 för Träning. Den visar en rödvit Shiba Inu i en lugn sittövning i en svensk stadspark. Originalet är 1024×1536 px, 2,487,380 byte och finns kvar i `/workspace/generated_images/exec-4d10ad03-a255-4dfa-87bd-274dc2498514.png`. Spårad JPEG är 1024×1536 px och 266,336 byte (kvalitet 86, metadata borttagna). Generisk dekorativ standardbild, inte användarens hund eller bevis på genomförd träning; reserverad tills panelens bildyta är godkänd.
 
+`training-recommendation-puppy-black-tan-park.jpg` (1448×1086 px, 270,862 byte) används också som dekorativ banner på cirka 112 pt hög i träningsresans programvy. Den är en generisk hundbild, inte ägarens hund eller ett träningsresultat. Den låga `cover`-ytan justerar den vertikala bildplaceringen så att valpens ansikte och öron syns; kontrollera den faktiska renderingen vid 375, 430 pt och kortare viewport innan ändringar av crop eller höjd.
+
 ## VISION-R02 panel 8: Insikter
 
 `insights-hero-senior-schnauzer.jpg` skapades med `image_gen` 2026-10-21 för Insikter. Den visar en äldre grå schnauzer i ett varmt hemmaljus. Originalet är 1024×1536 px, 2,401,566 byte och finns kvar i `/workspace/generated_images/exec-639ebfb6-63b7-4f4d-850a-a327d746cb1f.png`. Spårad JPEG är 1024×1536 px och 266,278 byte (kvalitet 86, metadata borttagna). Generisk dekorativ standardbild, inte en användares hund, hälsodata eller bevis på ett mönster; reserverad tills panelens bildyta är godkänd.

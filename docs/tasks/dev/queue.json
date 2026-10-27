@@ -12183,6 +12183,229 @@
           "evidence": "Frozen Reviewer PASS: five changed paths match write_paths; YAML mappings are identical and only EOL spaces changed. QA PASS; pnpm check, whitespace/full-tree diff checks, queue and path audits pass. Commit the cleanup and retry push with hooks active."
         }
       ]
+    },
+    {
+      "id": "UI-MODAL-CENTER-01",
+      "title": "UI: centrera modal- och popupytor",
+      "mvp_requirement": "Delad app-UI: modaler/popuper visas centrerat i synlig skärmyta med intakta stängnings- och formulärflöden.",
+      "plan": "docs/tasks/dev/UI-MODAL-CENTER-01.md v1",
+      "write_paths": [
+        "src/components/ui/BottomSheet.tsx",
+        "src/components/ui/ActionMenu.tsx",
+        "src/components/AppPrimitives.tsx",
+        "src/components/README.md",
+        "src/features/training/README.md",
+        "src/features/puppy-log/README.md",
+        "tests/sheet-dismiss.test.mjs",
+        "tests/ui-modal-centering.test.mjs",
+        "tests/planned-health-time.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-modals.py",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "docs/tasks/dev/UI-MODAL-CENTER-01.md",
+        "docs/tasks/dev/TRAINING-TIMELINE-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/design/evidence/ui-modal-center-01",
+        "src/features/checklists/ChecklistIconPicker.tsx",
+        "src/features/checklists/README.md",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "tests/checklist-ui.test.mjs",
+        "tests/daily-activity-ui.test.mjs"
+      ],
+      "acceptance": [
+        "BottomSheet, TimePicker och ActionMenu är centrerade som fullt rundade kort vid 320/375/430/768 pt och kort viewport; bred vy verifierar maxbredd. 140%-textproxy är separat belagd för planerad-hälsa-sheeten och checklist-sheeten, inte varje modalkomponent.",
+        "Dialog, InfoModal och datumväljaren förblir centrerade.",
+        "Scroll, footer, keyboard-aware wiring, swipe-handle, reducerad rörelse, backdrop, X och caller guards bevaras. Kort viewport är en webproxy; native keyboard-, safe-area- och Android-back-geometri markeras NOT TESTABLE.",
+        "ActionMenu har verifierad fokusordning/stängning; dess testfixture bekräftar att Edit/Delete var för sig kör exakt en action callback och en close callback.",
+        "Kunskapens ikonval är in-flow i formuläret och inte längre en off-center overlay-popover; radiogrupp och val bevaras.",
+        "Representativa BottomSheet-anrop för logg, hälsa, profil/ras, Hem/checklista, Kunskap, pass och träning fungerar i RN Web.",
+        "Endast godkända write_paths ändras; inga data- eller dependenciesändringar."
+      ],
+      "checks": [
+        "Riktad ui-modal-centering policytest, checklistpicker-policytest och BottomSheet-gest/stängningstester",
+        "python -X utf8 tools/visual-check/verify-flow-modals.py",
+        "RN Web: loggredigering, Lägg till händelse, planerad hälsa med påminnelse aktiverad och nästlad tidsväljare, hälsohistorik, notisinställningar, profil/ras, Hem/checklista, Kunskap, pass och träning",
+        "pnpm check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Ägarens uttryckliga modalcentreringsbeställning 2026-10-26. Delad BottomSheet-, tidsväljare- och popup-meny påverkar många vyer; separat task skapad före tränings-timeline. Väntar på UX Critic PROCEED och UI Critic BRIEF."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Arkitektgranskning krävde explicit coverage för ChecklistIconPicker-popovern, safe-area/tangentbordsmätt yta och actionmenu-callbacks. Plan v1 kompletterad med inline ikonval, TimePicker-fade, 768px maxbredd och riktiga notification/health-history-flöden; inväntar förnyad UX Critic och Architect review."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "UX Critic PROCEED och UI Critic BRIEF mottagna 2026-10-26. Critic lade till Logg/Lägg till händelse samt tidsväljaren nästlad i planerad hälsa med påminnelse aktiverad; detta lades till plan v1 och kökontrakt. Arkitekt bekräftar regressionstäckningen före ready."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "UX Critic PROCEED och UI Critic BRIEF sparade i UI-MODAL-CENTER-01 v1; Architect APPROVE efter callsite, tangentbord, safe-area, ActionMenu och ikonpopover-ändringar. Plan och kö skrivvägar är identiska."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Codex tar enda skrivansvaret för godkända UI-MODAL-CENTER-01 v1 paths; ändringar endast i delade presentationsytor, checklistans ikonlayout, tester och visual evidence."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete in approved v1 paths; pnpm check 86/86, RN Web modal verifier 14/14 and Knowledge icon verifier 7/7 pass. UI Critic final REVIEW PASS; requested callback-count coverage was added and rechecked. Ready for independent QA."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS after plan/queue status and acceptance reconciliation. Exact write_paths 23/23 match, all current changed files remain in scope, modal evidence 14/14 and checklist evidence 7/7 confirmed; native keyboard/safe-area limits and 140% proxy scope are accurate."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS after final wording reconciliation. Plan/queue status and 23/23 paths match; all 38 changed paths are authorized. UI Critic PASS, independent QA PASS, modal RN Web verifier 14/14, checklist verifier 7/7, pnpm check 86/86, diff/path/queue validation pass. Native keyboard, safe-area, Android and device accessibility remain NOT TESTABLE."
+        }
+      ],
+      "next_step": "UI-MODAL-CENTER-01 is done. Proceed to re-review TRAINING-TIMELINE-01 v2 plan; implementation starts after the Architect ready gate.",
+      "priority": "P1",
+      "panels": [
+        "shared-ui"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Implementation completed on approved v1 paths. UI Critic PASS, independent QA PASS and Frozen Reviewer PASS. 14 RN Web modal-flow checks, checklist 7/7, pnpm check 86/86, queue/path/diff validation pass. Native keyboard, safe-area, Android-back and device accessibility remain NOT TESTABLE.",
+      "test_evidence": [
+        "RN Web modal verifier 14/14: centered ActionMenu, Dialog, BottomSheet, InfoModal, date picker and TimePicker at 320/375/430/768; nested planned-health reminder; Log Add Event; health history; Notification Settings; 375x667 short viewport and planned-health 140% text proxy; zero page errors.",
+        "Dedicated ActionMenu dev fixture tests backdrop, Edit and Delete separately; counters verify exactly one close and only the intended one-shot action per activation.",
+        "Existing Knowledge custom-icon verifier 7/7 at 375x844, 430x844 and 375x667/140%; in-flow radio group, save/readback, dirty close and delete flow.",
+        "pnpm check passes: typecheck, edge typecheck, lint and 86/86 test files; focused modal and planned-health tests pass.",
+        "python -X utf8 tools/dev_flow.py validate, Python verifier compile, approved write-path audit and git diff --check pass.",
+        "RN Web does not verify native keyboard, physical safe-area insets, Android back, VoiceOver/TalkBack, Dynamic Type or TestFlight."
+      ],
+      "related_tasks": [
+        "TRAINING-TIMELINE-01"
+      ]
+    },
+    {
+      "id": "TRAINING-TIMELINE-01",
+      "title": "Träning: visa steg, historik och bekräftelsedatum som tidslinje",
+      "mvp_requirement": "Panel 6: hitta, öppna och förstå aktivt, tidigare och kommande träningssteg utan falsk completion.",
+      "plan": "docs/tasks/dev/TRAINING-TIMELINE-01.md v2",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/training-timeline-model.ts",
+        "src/features/training/README.md",
+        "assets/images/README.md",
+        "tests/training-timeline-model.test.mjs",
+        "tests/training-progression-ui.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-training.py",
+        "tools/visual-check/README.md",
+        "docs/tasks/Training-progression-mvp.md",
+        "docs/tasks/dev/TRAINING-TIMELINE-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/design/evidence/training-timeline-01"
+      ],
+      "acceptance": [
+        "Tidslinjen skiljer tidigare, aktivt och framtida steg; framtida steg går att öppna men saknar skrivhandlingar.",
+        "Aktiv övning visas en gång med en tydlig primär handling; den dubblerade sammanfattningen är borta.",
+        "Delmålsdatum kommer från confirmed_at; gammal aktivitetsmarkering använder separat completed_at-copy; passdatum ger aldrig färdigstatus.",
+        "Historik är endast läsbar och aktiv progression behåller spar-, retry- och okändbeteende.",
+        "Låg bildyta visar hundansiktet; layouten fungerar vid 375x844, 430x844, 375x667 och 140 procent text.",
+        "Träningsresans översikt undviker upprepade sammanfattningar och har meningsfull bild/statusikon med tillgänglig text; full instruktion och pausråd bevaras."
+      ],
+      "checks": [
+        "Fokuserade modell- och träningsprogressionstester",
+        "python -X utf8 tools/visual-check/verify-flow-training.py",
+        "pnpm check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "UI-MODAL-CENTER-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v1 skapad på knowledge/d3-catalog-delivery@0723cd3 efter ägarens tidslinje- och färdigdatumstyrning. Ingen kod före UX Critic PROCEED och UI Critic BRIEF."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v2 efter ägarens tillägg om mindre repetitiv text och meningsfull bild-/ikonhjälp. Global modalcentrering delas upp i UI-MODAL-CENTER-01 som beroende; UX Critic granskar v2 före kod."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "UX Critic PROCEED och Architect APPROVE för plan v2 mottagna 2026-10-26. 14 write_paths matchar; UI-MODAL-CENTER-01 är done; timestamp-semantik och framtida read-only previews godkända."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Codex implementerar den uttryckligen begärda Träningsresan inom plan v2:s 14 godkända paths efter modalberoendet."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete in approved v2 paths; UI Critic PASS; pnpm check 87/87; original training progression verifier preserved and extended, 24/24 progression plus 7 timeline checks PASS; RN Web evidence saved. Independent QA is next."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: plan/queue status and checkpoint reconcile, 14/14 write_paths match, future/history remain read-only, the active confirmed step retains its date, 24+7 RN Web checks and pnpm check 87/87 pass. Frozen Reviewer is next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS: plan/queue match at 14/14 paths, no out-of-scope changes, original progression verifier retained with 24 existing + 7 timeline checks, 0 failures/browser errors; active-confirmed back/date screenshot, read-only future/history and NOT TESTABLE limits verified."
+        }
+      ],
+      "next_step": "Lokalt slutförd; commit/push har inte gjorts.",
+      "priority": "P1",
+      "panels": [
+        "6"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Lokalt färdig efter UI Critic PASS, independent QA PASS och Frozen Reviewer PASS. pnpm check 87/87; RN Web progression/timeline 24+7 PASS; 14 plan paths matchar och inga utanför scope. Inte committad eller pushad.",
+      "test_evidence": [
+        "pnpm check PASS: TypeScript, edge TypeScript, ESLint och 87/87 testfiler.",
+        "TASSLA_UI_BASE_URL=http://127.0.0.1:4384/ TASSLA_UI_EVIDENCE=docs/design/evidence/training-timeline-01 python -X utf8 tools/visual-check/verify-flow-training.py PASS: 24 befintliga progression-/Homekontroller och 7 timelinekontroller, 0 browserfel.",
+        "RN Web vid 375x844, 430x844, 375x667/140%; framtida preview har 0 write controls/0 progression operations; backad bekräftad aktiv övning visar fortsatt confirmed_at-datum.",
+        "UI Critic final REVIEW PASS: hundansiktet syns; aktiv rad, datum och handling tydliga i journey-back-to-confirmed-step-375x844.png.",
+        "Live Supabase/PostgREST/JWT/RLS, native iOS/Android, VoiceOver/TalkBack, fysisk Dynamic Type och TestFlight: NOT TESTABLE.",
+        "Independent QA PASS: 14/14 write_paths matchar; modalbaslinje, timeline/date semantics, back-beteende, screenshots, 24+7 render checks och pnpm check 87/87 verifierade.",
+        "Frozen Reviewer PASS: granskade 14 godkända paths, verifierare 24+7, 0 failures/browser errors, aktivt bekräftat datum efter backning, read-only framtid/historik och NOT TESTABLE-gränser."
+      ],
+      "related_tasks": [
+        "TRAINING-PROGRESSION-01",
+        "UI-MODAL-CENTER-01"
+      ]
     }
   ]
 }

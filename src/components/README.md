@@ -9,6 +9,7 @@
 - `DailyActivityItem` visar en kategori, beskrivning och två separata kontroller: valfri completion-toggle och detaljnavigation. Hem använder den bara för sin lokala syntetiska review-fixture; den skapar eller sparar ingen produktprogress.
 - `DestinationTile` visar destinationsikoner för Logg, Träning eller Kunskap och skickar navigation via sin callback. Kategoriernas aktivitetsikoner används inte som genvägsikoner.
 - `ComponentGalleryScreen` visar svenska exempel och tillstånd, inklusive de två nya hemkomponenterna. Den nås endast från den redan flaggade `DevelopmentPreview`; ingen produktionsroute används.
+- `BottomSheet`, `TimePickerField` och `ActionMenu` visas som centrerade, fullt rundade kort över en nedtonad appvy. Sheets och menyer har separat backdrop som kan stänga kortet, säkra sidmarginaler och begränsad maxbredd; sheetens formulärinnehåll scrollar innanför kortet och en fast footer ligger kvar. `Dialog`, `InfoModal` och datumväljaren var redan centrerade och behåller sin placering. Statusfeedback (`Toast`/`ActionFeedbackModal`) är inte en dialog och förblir inline.
 - `MainSwipeNavigation` ger ett dependencyfritt svepresponderlager för de fem huvudflikarna. Den fångar tydligt vågräta rörelser tidigt, lämnar lodrät scroll till sidans `ScrollView` och respekterar exkluderingar från inre horisontella kontroller. En ren regelmodul hanterar fångst- och flikbyteströsklar; komponenten äger ingen sidstate. Riktade regler och källkontrakt testas med `node --experimental-strip-types --test tests/main-swipe-rules.test.mjs tests/main-swipe-navigation-policy.test.mjs`.
 - Komponentprops går direkt från den sammansättande vyn till nativekontrollerna. Biblioteket lagrar inte data.
 
@@ -24,7 +25,7 @@ Datum- och tidsfält behåller manuell textinmatning och har modalväljare för 
 
 `AppScreen` lägger inte längre en extra logotyp ovanför varje sida. Sidans `AppBar` äger rubrik/navigation. Bakåt finns bara till vänster, stäng bara till höger. `MotionPressable` använder native-driven skala, och `ScreenTransition` en kort toning/förflyttning; tider finns i `tokens.motion`. Stilfunktionen utvärderas före Animated-komponenten så både native och web får layoutstilarna. Reducerad rörelse tar bort skala/förflyttning.
 
-`HeroCard` använder befintlig lokal hundbild och mörk textyta, inte generiska färgblock. `Progress.light` har ett mörkt spår. `BottomSheet` tar hänsyn till reducerad rörelse, tangentbord och safe-area. Återhämtning för en mutation ska ligga inne i sheeten där den utförs.
+`HeroCard` använder befintlig lokal hundbild och mörk textyta, inte generiska färgblock. `Progress.light` har ett mörkt spår. Delade BottomSheet-, tidsväljare- och ActionMenu-ytor är centrerade kort med säkra marginaler; långt innehåll scrollas i kortet och keyboard-aware footers hålls nåbara. `BottomSheet` behåller nedåtsvep från handtaget, reducerad rörelse och ägarens `onRequestClose`-guard. Återhämtning för en mutation ska ligga i samma modal där den utförs.
 
 ## Rörelse enligt MOTION
 
