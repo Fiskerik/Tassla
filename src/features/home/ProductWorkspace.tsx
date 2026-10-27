@@ -15,6 +15,7 @@ import {
   deleteTrainingProgress,
   fetchDogEventById,
   fetchDogEvents,
+  dogEventCursor,
   fetchDogEventInsights,
   fetchDogLogMonthMarkers,
   fetchHealthWeightById,
@@ -53,6 +54,7 @@ import {
   type DogEventOperation,
   type DogEventChanges,
   type DogEventRecord,
+  type DogEventCursor,
   type HealthWeightChanges,
   type HealthWeightOperation,
   type HealthWeightRecord,
@@ -193,7 +195,7 @@ type PendingProfileMutation = { previous: OwnedDog; changes: OwnedDogProfileChan
 const PAGE_SIZE = 40;
 const WORKSPACE_REFRESH_AFTER_MS = 60_000;
 
-function mergeConfirmedLogRows(fetched: readonly DogEventRecord[], baseline: readonly DogEventRecord[], current: readonly DogEventRecord[]): DogEventRecord[] {
+function mergeConfirmedLogRows(fetched: readonly DogEventRecord[], baseline: readonly DogEventRecord[], current: readonly DogEventRecord[], pinnedIds: ReadonlySet<string> = new Set()): DogEventRecord[] {
   const baselineById = new Map(baseline.map((row) => [row.id, row]));
   const currentById = new Map(current.map((row) => [row.id, row]));
   const deletedLocally = new Set(baseline.filter((row) => !currentById.has(row.id)).map((row) => row.id));
@@ -201,6 +203,9 @@ function mergeConfirmedLogRows(fetched: readonly DogEventRecord[], baseline: rea
   const merged = new Map<string, DogEventRecord>();
   for (const row of fetched) {
     if (!deletedLocally.has(row.id)) merged.set(row.id, changedLocally.get(row.id) ?? row);
+  }
+  for (const row of current) {
+    if (pinnedIds.has(row.id) && !merged.has(row.id)) merged.set(row.id, row);
   }
   for (const row of changedLocally.values()) merged.set(row.id, row);
   return [...merged.values()].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
@@ -479,6 +484,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const logReadFlight = useRef<LogReadFlight | null>(null);
   const logPaginationGeneration = useRef(0);
   const logPaginationFlight = useRef<LogPaginationFlight | null>(null);
+  const logPageCursor = useRef<DogEventCursor | null>(null);
+  const logHasMore = useRef(false);
+  const logPinnedEventIds = useRef(new Set<string>());
+  const logActiveEditorId = useRef<string | null>(null);
+  const [logLoadedThrough, setLogLoadedThrough] = useState<DogEventCursor | null>(null);
   const logCalendarGeneration = useRef(0);
   const logCalendarFlight = useRef<{ key: string; controller: AbortController } | null>(null);
   const healthReadQueue = useRef<Promise<void>>(Promise.resolve());
@@ -591,6 +601,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         setLogRefreshError(false);
         setLogState('loading');
       }
+      logPageCursor.current = null;
+      logHasMore.current = false;
+      logPinnedEventIds.current.clear();
+      logActiveEditorId.current = null;
+      setLogLoadedThrough(null);
       setLogStateLifetime(currentLogLifetime);
     }
     previousLogLifetime.current = currentLogLifetime;
@@ -706,7 +721,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     }
   }, [accountGeneration, currentSelectionKey, dog.id, insightsOrigin, page, session?.user.id]);
 
-  const changeLogView = useCallback((next: 'today' | 'overview') => {
+  const changeLogView = useCallback((next: 'today' | 'overview', options?: { preserveEventId?: string }) => {
     if (next === 'overview') {
       if (!insightsOrigin || insightsOrigin.kind !== 'profile') setInsightsOrigin({ kind: 'log' });
       insightsRequestGeneration.current += 1;
@@ -716,13 +731,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setLogView('overview');
       return;
     }
+    if (options?.preserveEventId && logLifetime.current === currentLogLifetime
+      && eventRows.current.some((row) => row.id === options.preserveEventId)) logPinnedEventIds.current.add(options.preserveEventId);
     insightsRequestGeneration.current += 1;
     insightsFlight.current?.controller.abort();
     insightsFlight.current = null;
     setInsightsState({ status: 'loading' });
     setLogView('today');
     if (insightsOrigin?.kind === 'log') setInsightsOrigin(null);
-  }, [insightsOrigin]);
+  }, [currentLogLifetime, insightsOrigin]);
 
   const changeInsightsPeriod = useCallback((period: InsightsPeriod) => {
     if (period === insightsPeriod) return;
@@ -916,6 +933,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   const reloadEvents = useCallback((intent: 'initial' | 'refresh' = 'initial'): Promise<boolean> => {
     const scope = currentLogLifetime;
+    if (intent === 'refresh' && logPaginationFlight.current?.scope === scope) {
+      logPaginationGeneration.current += 1;
+      logPaginationFlight.current.controller.abort();
+      logPaginationFlight.current = null;
+      setLoadingMore(false);
+      setLoadMoreError(false);
+    }
     const existing = logReadFlight.current;
     if (existing?.scope === scope) {
       if (intent === 'refresh') {
@@ -944,15 +968,22 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     }
     const isCurrent = () => mounted.current && !controller.signal.aborted
       && logReadGeneration.current === generation && logLifetime.current === scope && logReadFlight.current === flight;
-    const promise = serializeEventRead(() => fetchDogEvents(client, dog.id, 0, PAGE_SIZE, undefined, controller.signal)).then((rows) => {
+    const promise = serializeEventRead(() => fetchDogEvents(client, dog.id, null, PAGE_SIZE, undefined, controller.signal)).then((rows) => {
       if (!isCurrent()) return false;
-      const merged = mergeConfirmedLogRows(rows, flight.baseline, eventRows.current);
+      const nextCursor = rows.length ? dogEventCursor(rows[rows.length - 1]) : null;
+      const pinnedIds = new Set(logPinnedEventIds.current);
+      if (logActiveEditorId.current) pinnedIds.add(logActiveEditorId.current);
+      const merged = mergeConfirmedLogRows(rows, flight.baseline, eventRows.current, pinnedIds);
+      logPinnedEventIds.current.clear();
+      logPageCursor.current = nextCursor;
+      setLogLoadedThrough(nextCursor);
       eventRows.current = merged;
       setEvents(merged);
       logDataLifetimeRef.current = scope;
       setLogDataLifetime(scope);
       setLogStateLifetime(scope);
-      setHasMore(rows.length === PAGE_SIZE);
+      logHasMore.current = rows.length === PAGE_SIZE;
+      setHasMore(logHasMore.current);
       setLogState('ready');
       setLogRefreshError(false);
       return true;
@@ -976,6 +1007,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     logReadFlight.current = flight;
     return promise;
   }, [client, currentLogLifetime, dog.id, serializeEventRead]);
+
+  const refreshInsightsAndEvents = useCallback(() => {
+    refreshInsights();
+    void reloadEvents('refresh');
+  }, [refreshInsights, reloadEvents]);
+
+  const setActiveLogEditor = useCallback((id: string | null) => {
+    if (logLifetime.current === currentLogLifetime) logActiveEditorId.current = id;
+  }, [currentLogLifetime]);
 
   const serializeHealthRead = useCallback(<T,>(read: () => Promise<T>): Promise<T> => {
     const request = healthReadQueue.current.catch(() => undefined).then(read);
@@ -1440,11 +1480,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   useEffect(() => {
     if (page !== 'log' || logView !== 'overview') return undefined;
+    const timer = setTimeout(() => { void reloadEvents(logDataLifetimeRef.current === currentLogLifetime ? 'refresh' : 'initial'); }, 0);
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') refreshInsights();
+      if (state === 'active') refreshInsightsAndEvents();
     });
-    return () => subscription.remove();
-  }, [logView, page, refreshInsights]);
+    return () => { clearTimeout(timer); subscription.remove(); };
+  }, [currentLogLifetime, logView, page, refreshInsightsAndEvents, reloadEvents]);
 
   useEffect(() => {
     if (page !== 'log' || logView !== 'overview' || logBusy) return undefined;
@@ -2023,7 +2064,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   async function loadMoreEvents() {
     const lifetime = logLifetime.current;
     const existing = logPaginationFlight.current;
-    if (existing?.scope === lifetime || loadingMore || !hasMore) return;
+    if (existing?.scope === lifetime || loadingMore || !logHasMore.current) return;
     if (existing) {
       logPaginationGeneration.current += 1;
       existing.controller.abort();
@@ -2039,13 +2080,28 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     setLoadingMore(true);
     setLoadMoreError(false);
     try {
-      const next = await serializeEventRead(() => fetchDogEvents(client, dog.id, eventRows.current.length, PAGE_SIZE, undefined, controller.signal));
+      const { next, baseline, cursor } = await serializeEventRead(async () => {
+        if (!logHasMore.current) return { next: null, baseline: null, cursor: null };
+        const cursor = logPageCursor.current;
+        if (!cursor) throw new Error('Log pagination cursor is unavailable');
+        const baseline = eventRows.current.slice();
+        const next = await fetchDogEvents(client, dog.id, cursor, PAGE_SIZE, undefined, controller.signal);
+        return { next, baseline, cursor };
+      });
       if (!isCurrent()) return;
+      if (!next || !baseline || !cursor) return;
+      const nextCursor = next.length ? dogEventCursor(next[next.length - 1]) : logPageCursor.current;
+      if (next.length && nextCursor?.occurredAt === cursor.occurredAt && nextCursor.id === cursor.id) {
+        throw new Error('Log pagination did not advance');
+      }
       setLoadMoreError(false);
-      const merged = [...eventRows.current, ...next.filter((row) => !eventRows.current.some((existing) => existing.id === row.id))];
+      const merged = mergeConfirmedLogRows([...baseline, ...next], baseline, eventRows.current);
+      logPageCursor.current = nextCursor;
+      setLogLoadedThrough(nextCursor);
       eventRows.current = merged;
       setEvents(merged);
-      setHasMore(next.length === PAGE_SIZE);
+      logHasMore.current = next.length === PAGE_SIZE;
+      setHasMore(logHasMore.current);
     } catch {
       if (!isCurrent()) return;
       setLoadMoreError(true);
@@ -2087,6 +2143,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         if (mutation.kind === 'insert') {
           const confirmedEvent = outcome.value;
           if (confirmedEvent) {
+            logPinnedEventIds.current.add(confirmedEvent.id);
             const localEvent = toLogEvent(confirmedEvent);
             const merged = [...eventRows.current.filter((event) => event.id !== localEvent.id), confirmedEvent].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
             eventRows.current = merged;
@@ -2096,6 +2153,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         }
         if (mutation.kind === 'update') {
           if (outcome.value) {
+            logPinnedEventIds.current.add(outcome.value.id);
             eventRows.current = [...eventRows.current.filter((event) => event.id !== mutation.id), outcome.value].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
             setEvents(eventRows.current);
           }
@@ -2225,6 +2283,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         if (!isCurrent()) return false;
         if (found) {
           pendingLogMutation.current = null;
+          logPinnedEventIds.current.add(found.id);
           const merged = [...eventRows.current.filter((event) => event.id !== found.id), found].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
           eventRows.current = merged;
           setEvents(merged);
@@ -3525,8 +3584,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     ? 'development' : visiblePage;
   return <AppScreen scrollKey={routeScroll.scrollKey} preserveScrollKey={routeScroll.preserveScrollKey} scrollMemoryScope={`${currentSelectionKey}:${currentDailyLifetime}`}
     footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={activeMainTabDestination(activeTabPage)} onChange={navigateMainTab} />}
-    refreshing={page === 'home' || page === 'progress' ? dailyRefreshing : page === 'log' && logView === 'today' ? logRefreshing : page === 'log' && logView === 'overview' ? insightsState.status === 'loading' : false}
-    onRefresh={page === 'home' || page === 'progress' ? () => { void reloadDailyActivity(true, false); } : page === 'log' && logView === 'today' ? () => { void reloadEvents('refresh'); } : page === 'log' && logView === 'overview' ? refreshInsights : undefined}
+    refreshing={page === 'home' || page === 'progress' ? dailyRefreshing : page === 'log' && logView === 'today' ? logRefreshing : page === 'log' && logView === 'overview' ? insightsState.status === 'loading' || logRefreshing : false}
+    onRefresh={page === 'home' || page === 'progress' ? () => { void reloadDailyActivity(true, false); } : page === 'log' && logView === 'today' ? () => { void reloadEvents('refresh'); } : page === 'log' && logView === 'overview' ? refreshInsightsAndEvents : undefined}
     refreshAccessibilityLabel={page === 'log' && logView === 'overview' ? 'Uppdatera insikter' : page === 'log' ? 'Uppdatera loggen' : 'Uppdatera Hem'}>
     <Dialog visible={Boolean(profileExitDialog)} title={pendingProfileExitPrompt?.title ?? 'Lämna hundprofilen?'}
       confirmLabel="Lämna utan att spara" cancelLabel="Fortsätt redigera" confirmVariant="destructive"
@@ -3728,17 +3787,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (page === 'log') return <LogScreen events={displayEvents} onAdd={addEvent}
       onUpdate={updateEvent} onDelete={(id) => deleteEvent(id)} mode="cloud"
       editorRecovery={visibleLogEditorRecovery} onEditorRecoveryChange={onLogEditorRecoveryChange}
+      onActiveEditorChange={setActiveLogEditor}
       calendarMarkerMonth={calendarDataMonth} calendarMarkers={calendarDataIsCurrent ? logCalendarData.markers : []}
       calendarStatus={calendarDataIsCurrent ? logCalendarData.status : 'loading'}
       onLoadCalendarMonth={(month) => { void loadLogCalendarMarkers(month); }} onCancelCalendarRead={cancelLogCalendarRead}
       layoutOwnerId={session?.user.id}
-      loading={visibleLogState === 'loading'} loadError={visibleLogState === 'error'} refreshError={logRefreshError} onReload={() => { void retryEvents(); }}
+      loading={visibleLogState === 'loading'} refreshing={logRefreshing} loadError={visibleLogState === 'error'} refreshError={logRefreshError} onReload={() => { void retryEvents(); }}
       busy={logBusy} mutation={quickLogMutation} loadMoreError={loadMoreError} onRetry={retryLogMutation} onCancel={cancelLogMutation}
-      onUndo={(id) => { void undoQuickLog(id); }} hasMore={hasMore} loadingMore={loadingMore}
+      onUndo={(id) => { void undoQuickLog(id); }} hasMore={hasMore} loadingMore={loadingMore} loadedThrough={logLoadedThrough}
       onLoadMore={() => { void loadMoreEvents(); }} view={logView} onViewChange={changeLogView}
       profileOrigin={profileInsightsOriginMatches(insightsOrigin, currentSelectionKey, accountGeneration, dog.id)}
       onReturnToProfile={returnToProfileFromInsights} insightsPeriod={insightsPeriod} onInsightsPeriodChange={changeInsightsPeriod}
-      insightsState={insightsState} onRefreshInsights={refreshInsights} dogName={dog.name} />;
+      insightsState={insightsState} onRefreshInsights={refreshInsightsAndEvents} dogName={dog.name} />;
     if (page === 'training') return <>
       {visibleTrainingState === 'loading' && <PageHeading title="Träning" description="Hämtar publicerade program…" />}
       {visibleTrainingState === 'error' && <>

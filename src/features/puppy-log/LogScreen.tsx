@@ -13,13 +13,14 @@ import { LogDateCalendar } from './LogDateCalendar';
 import { localMonthKey } from './log-calendar-model';
 import { InsightsScreen, type InsightsLoadState } from './InsightsScreen';
 import type { InsightsPeriod } from './insights-model';
+import type { DogEventCursor } from '../../data/workspace-data';
 
 export type QuickLogMutationView = { kind: 'add' | 'update' | 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; accidentKinds?: readonly AccidentKind[] | null; status: 'pending' | 'failed' | 'unsure' | 'saved' };
 export type LogEventEditorDraft = { type: LogEventType; accidentKinds: AccidentKind[]; preserveLegacyUnknownAccident: boolean; date: string; time: string; note: string };
 export type LogEditorRecovery = { eventId: string; draft: LogEventEditorDraft };
 type EditorActionState = { canSave: boolean; saving: boolean; dirty: boolean };
 
-export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, refreshError = false, onReload, mutation, editorRecovery, onEditorRecoveryChange, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore, calendarMarkerMonth = '', calendarMarkers = [], calendarStatus = 'ready', onLoadCalendarMonth, onCancelCalendarRead, view = 'today', onViewChange, profileOrigin = false, onReturnToProfile, insightsPeriod = 'week', onInsightsPeriodChange, insightsState, onRefreshInsights, dogName = 'hunden' }: {
+export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, refreshing = false, loadError = false, refreshError = false, onReload, mutation, editorRecovery, onEditorRecoveryChange, onActiveEditorChange, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, loadedThrough = null, onLoadMore, calendarMarkerMonth = '', calendarMarkers = [], calendarStatus = 'ready', onLoadCalendarMonth, onCancelCalendarRead, view = 'today', onViewChange, profileOrigin = false, onReturnToProfile, insightsPeriod = 'week', onInsightsPeriodChange, insightsState, onRefreshInsights, dogName = 'hunden' }: {
   events: readonly LogEvent[];
   onAdd: (type: LogEventType, intent?: AccidentLogIntent) => void;
   onUpdate?: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
@@ -29,18 +30,21 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   persistLayout?: boolean;
   busy?: boolean;
   loading?: boolean;
+  refreshing?: boolean;
   loadError?: boolean;
   refreshError?: boolean;
   onReload?: () => void;
   mutation?: QuickLogMutationView | null;
   editorRecovery?: LogEditorRecovery | null;
   onEditorRecoveryChange?: (recovery: LogEditorRecovery | null) => void;
+  onActiveEditorChange?: (id: string | null) => void;
   loadMoreError?: boolean;
   onRetry?: () => boolean | void | Promise<boolean | void>;
   onCancel?: () => void;
   onUndo?: (id: string) => void;
   hasMore?: boolean;
   loadingMore?: boolean;
+  loadedThrough?: DogEventCursor | null;
   onLoadMore?: () => void;
   calendarMarkerMonth?: string;
   calendarMarkers?: readonly string[];
@@ -48,7 +52,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   onLoadCalendarMonth?: (month: string) => void;
   onCancelCalendarRead?: () => void;
   view?: 'today' | 'overview';
-  onViewChange?: (view: 'today' | 'overview') => void;
+  onViewChange?: (view: 'today' | 'overview', options?: { preserveEventId?: string }) => void;
   profileOrigin?: boolean;
   onReturnToProfile?: () => void;
   insightsPeriod?: InsightsPeriod;
@@ -95,8 +99,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const selectedDateEvents = useMemo(() => displayedEvents
     .filter((event) => localDateTimeParts(event.occurredAt).date === selectedDate)
     .sort((a, b) => Date.parse(a.occurredAt) - Date.parse(b.occurredAt) || a.id.localeCompare(b.id)), [displayedEvents, selectedDate]);
-  const oldestLoadedEvent = useMemo(() => displayedEvents.reduce<LogEvent | null>((current, event) => !current || Date.parse(event.occurredAt) < Date.parse(current.occurredAt) ? event : current, null), [displayedEvents]);
-  const oldestLoadedDate = oldestLoadedEvent ? localDateTimeParts(oldestLoadedEvent.occurredAt).date : null;
+  const oldestLoadedDate = loadedThrough && Number.isFinite(Date.parse(loadedThrough.occurredAt)) ? localDateTimeParts(loadedThrough.occurredAt).date : null;
   const hasOlderDateBoundary = oldestLoadedDate !== null && oldestLoadedDate < selectedDate;
   const dayReadComplete = !hasMore || hasOlderDateBoundary;
   const pendingAdd = mutation?.kind === 'add' && mutation.status === 'pending'
@@ -111,6 +114,10 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const needsDatePage = hasMore && !hasOlderDateBoundary && !loadMoreError && !loadError && !loading;
   const patterns = useMemo(() => summarizePottyPatterns(events).filter((item) => item.count >= 2), [events]);
   const editingEvent = events.find((event) => event.id === editingId) ?? null;
+  useEffect(() => {
+    onActiveEditorChange?.(editingId);
+    return () => onActiveEditorChange?.(null);
+  }, [editingId, onActiveEditorChange]);
   const editLocked = busy || Boolean(editingEvent && mutation?.id === editingEvent.id && mutation.status !== 'saved');
   const recoveryForEditor = editorRecovery?.eventId === editingId ? editorRecovery : null;
   const unresolvedEditorMutation = Boolean(recoveryForEditor && mutation?.id === recoveryForEditor.eventId && (mutation.status === 'pending' || mutation.status === 'unsure'));
@@ -183,11 +190,11 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       if (!loadingMore) autoLoadAnchor.current = '';
       return;
     }
-    const anchor = `${selectedDate}:${displayedEvents.length}:${oldestLoadedEvent?.id ?? 'empty'}`;
+    const anchor = `${selectedDate}:${loadedThrough?.occurredAt ?? 'empty'}:${loadedThrough?.id ?? 'empty'}`;
     if (autoLoadAnchor.current === anchor) return;
     autoLoadAnchor.current = anchor;
     onLoadMore();
-  }, [displayedEvents, loadingMore, loadError, loadMoreError, needsDatePage, onLoadMore, oldestLoadedEvent, selectedDate, view]);
+  }, [loadingMore, loadError, loadMoreError, needsDatePage, onLoadMore, loadedThrough, selectedDate, view]);
 
   function selectType(type: LogEventType, timestamp: number, force = false) {
     setAddEventVisible(false);
@@ -367,9 +374,10 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       <InsightsScreen period={insightsPeriod} onPeriodChange={(period) => onInsightsPeriodChange?.(period)}
         state={insightsState} onRefresh={() => onRefreshInsights?.()}
         onOpenLog={() => { setSelectedDate(localDate()); onViewChange?.('today'); }}
-        events={events} eventsAvailable={!loading && !loadError && !refreshError && !busy && mutation?.status !== 'unsure'}
+        events={events} eventsAvailable={!loading && !refreshing && !loadError && !refreshError && !busy && mutation?.status !== 'unsure'}
         hasMore={hasMore} loadingMore={loadingMore} loadMoreError={loadMoreError} onLoadMore={onLoadMore}
-        onOpenEvent={(event) => { setSelectedDate(localDateTimeParts(event.occurredAt).date); setEditingId(event.id); setEditorMinimized(false); onViewChange?.('today'); }}
+        loadedThrough={loadedThrough?.occurredAt ?? null}
+        onOpenEvent={(event) => { setSelectedDate(localDateTimeParts(event.occurredAt).date); setEditingId(event.id); setEditorMinimized(false); onViewChange?.('today', { preserveEventId: event.id }); }}
         onBack={profileOrigin ? () => onReturnToProfile?.() : () => onViewChange?.('today')}
         backLabel={profileOrigin ? 'Tillbaka till Hundprofil' : 'Tillbaka till Logga'} dogName={dogName} />
     </View>;

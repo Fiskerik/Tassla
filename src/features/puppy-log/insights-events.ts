@@ -15,11 +15,10 @@ export function loadedInsightEvents(events: readonly LogEvent[], data: DogEventI
 }
 
 /** A descending page has crossed the period boundary, or the server has no further pages. */
-export function insightPeriodLoaded(events: readonly LogEvent[], data: DogEventInsights, hasMore: boolean): boolean {
+export function insightPeriodLoaded(serverCursor: string | null, data: DogEventInsights, hasMore: boolean): boolean {
   if (!data.periodStartLocal || !data.periodEndExclusiveLocal || !Number.isFinite(Date.parse(data.asOf))) return false;
   if (!hasMore) return true;
-  return events.some((event) => {
-    const time = Date.parse(event.occurredAt);
-    return Number.isFinite(time) && localDateAtTimeZone(new Date(time), data.timezone) < data.periodStartLocal!;
-  });
+  if (!serverCursor) return false;
+  const time = Date.parse(serverCursor);
+  return Number.isFinite(time) && localDateAtTimeZone(new Date(time), data.timezone) < data.periodStartLocal;
 }

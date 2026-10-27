@@ -16,6 +16,8 @@ Migration `202610270003_traction_metrics.sql` lägger till dessa event och `beta
 
 Femgränsen döljer små värden i ett enskilt svar men anonymiserar inte resultatet: en betrodd rapportläsare kan jämföra överlappande intervall och härleda skillnader. Rapportåtkomst förblir därför begränsad till service-role; dela inte nyckeln med klienten.
 
+En betrodd administratör kan läsa den aggregerade rapporten lokalt med `node tools/traction-report.mjs`, efter att ha satt `SUPABASE_URL` och `SUPABASE_SERVICE_ROLE_KEY` i processens miljö med en säker metod. Ange aldrig service-role-nyckeln i appen eller i Git. Standardintervallet är de tillåtna UTC-startdatumen 21–9 dagar före idag; två datumargument `YYYY-MM-DD YYYY-MM-DD` väljer ett kortare intervall. Databasfunktionen måste vara installerad i det valda projektet. Rapporten visar bara aggregerade fält, och undertryckta värden kan även bero på att hela kohorten är för liten.
+
 Mätposter rensas äldre än 30 dagar när nya events skrivs och genom en separat daglig Supabase `pg_cron`-uppgift. Tillämpa migrationen och kör `supabase/beta-metrics-retention-job.sql` efter att `pg_cron` aktiverats i utvecklingsprojektet. Scheduler-installation och SQL-testet måste verifieras där innan produktionsinsamling slås på.
 
 `createSyntheticAnalyticsAdapter` är en separat processlokal testhjälp, avstängd som standard och utan nätverks-/databasåtkomst. SQL-test och Node-test använder endast syntetiska data.

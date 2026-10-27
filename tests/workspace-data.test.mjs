@@ -37,13 +37,14 @@ test('dog-event history filters the supported everyday types and has determinist
     const order = url.searchParams.get('order')?.split(',') ?? [];
     assert.ok(order.includes('occurred_at.desc'));
     assert.ok(order.some((value) => /^id\.(asc|desc)$/.test(value)), 'stable event ID tie-breaker is required');
-    assert.equal(url.searchParams.get('offset'), '40');
+    assert.equal(url.searchParams.has('offset'), false);
+    assert.equal(url.searchParams.get('or'), '(occurred_at.lt."2026-10-04T10:00:00.123456Z",and(occurred_at.eq."2026-10-04T10:00:00.123456Z",id.lt.33333333-3333-4333-8333-333333333333))');
     assert.equal(url.searchParams.get('limit'), '20');
     return jsonResponse([event]);
   });
 
   try {
-    assert.deepEqual(await workspaceData.fetchDogEvents(client, dogId, 40, 20), [event]);
+    assert.deepEqual(await workspaceData.fetchDogEvents(client, dogId, { occurredAt: '2026-10-04T10:00:00.123456Z', id: '33333333-3333-4333-8333-333333333333' }, 20), [event]);
     assert.equal(requests.length, 1);
   } finally {
     await client.auth.dispose();

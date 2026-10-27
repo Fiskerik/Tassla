@@ -21,10 +21,10 @@ test('loaded insight events respect timezone, period, observation time and order
 
 test('period completeness requires a prior local day or exhausted pages', () => {
   const data = { timezone: 'Europe/Stockholm', asOf: '2026-10-22T12:00:00Z', periodStartLocal: '2026-10-19', periodEndExclusiveLocal: '2026-10-26' };
-  assert.equal(insightPeriodLoaded([{ occurredAt: '2026-10-18T22:00:00Z' }], data, true), false);
-  assert.equal(insightPeriodLoaded([{ occurredAt: '2026-10-18T21:59:59Z' }], data, true), true);
-  assert.equal(insightPeriodLoaded([], data, true), false);
-  assert.equal(insightPeriodLoaded([], data, false), true);
-  assert.equal(insightPeriodLoaded([], { ...data, periodStartLocal: null }, false), false);
+  assert.equal(insightPeriodLoaded('2026-10-18T22:00:00Z', data, true), false);
+  assert.equal(insightPeriodLoaded('2026-10-18T21:59:59Z', data, true), true);
+  assert.equal(insightPeriodLoaded(null, data, true), false);
+  assert.equal(insightPeriodLoaded(null, data, false), true);
+  assert.equal(insightPeriodLoaded(null, { ...data, periodStartLocal: null }, false), false);
   assert.equal(loadedInsightEvents(Array.from({ length: 12 }, (_, id) => ({ id: String(id), occurredAt: '2026-10-20T08:00:00Z' })), data).length, 12);
 });

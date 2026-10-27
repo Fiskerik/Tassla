@@ -48,6 +48,7 @@ export function InsightsScreen({
   loadingMore,
   loadMoreError,
   onLoadMore,
+  loadedThrough,
 }: {
   period: InsightsPeriod;
   onPeriodChange: (period: InsightsPeriod) => void;
@@ -64,6 +65,7 @@ export function InsightsScreen({
   loadingMore: boolean;
   loadMoreError: boolean;
   onLoadMore?: () => void;
+  loadedThrough: string | null;
 }) {
   const [visibility, setVisibility] = useState({ period, count: 8 });
   const visibleCount = visibility.period === period ? visibility.count : 8;
@@ -72,7 +74,7 @@ export function InsightsScreen({
   const historyEntries = data?.period === 'since_first_log' ? historyMonthEntries(data) : null;
   const periodEvents = data && eventsAvailable ? loadedInsightEvents(events, data) : [];
   const recentEvents = periodEvents.slice(0, visibleCount);
-  const periodLoaded = Boolean(data && eventsAvailable && insightPeriodLoaded(events, data, hasMore));
+  const periodLoaded = Boolean(data && eventsAvailable && insightPeriodLoaded(loadedThrough, data, hasMore));
   const visibleBackLabel = backLabel === 'Tillbaka till Hundprofil' ? 'Hundprofil'
     : backLabel === 'Tillbaka till Logga' ? 'Logga' : backLabel;
 

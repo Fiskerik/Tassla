@@ -13,8 +13,9 @@ const [primitives, workspace, logScreen] = await Promise.all([
 test('native refresh is opt-in and ProductWorkspace opts in only on Home and Log', () => {
   assert.match(primitives, /refreshControl=\{onRefresh \? <RefreshControl/);
   assert.match(primitives, /refreshing=\{refreshing\} onRefresh=\{onRefresh\}/);
-  assert.match(workspace, /refreshing=\{page === 'home' \|\| page === 'progress' \? dailyRefreshing : page === 'log' && logView === 'today' \? logRefreshing : page === 'log' && logView === 'overview' \? insightsState\.status === 'loading' : false\}/);
-  assert.match(workspace, /page === 'home' \|\| page === 'progress' \? \(\) => \{ void reloadDailyActivity\(true, false\); \} : page === 'log' && logView === 'today' \? \(\) => \{ void reloadEvents\('refresh'\); \} : page === 'log' && logView === 'overview' \? refreshInsights : undefined/);
+  assert.match(workspace, /refreshing=\{page === 'home' \|\| page === 'progress' \? dailyRefreshing : page === 'log' && logView === 'today' \? logRefreshing : page === 'log' && logView === 'overview' \? insightsState\.status === 'loading' \|\| logRefreshing : false\}/);
+  assert.match(workspace, /page === 'home' \|\| page === 'progress' \? \(\) => \{ void reloadDailyActivity\(true, false\); \} : page === 'log' && logView === 'today' \? \(\) => \{ void reloadEvents\('refresh'\); \} : page === 'log' && logView === 'overview' \? refreshInsightsAndEvents : undefined/);
+  assert.match(workspace, /const refreshInsightsAndEvents = useCallback\(\(\) => \{\s*refreshInsights\(\);\s*void reloadEvents\('refresh'\)/);
   assert.match(workspace, /refreshAccessibilityLabel=\{page === 'log' && logView === 'overview' \? 'Uppdatera insikter' : page === 'log' \? 'Uppdatera loggen' : 'Uppdatera Hem'\}/);
 });
 
@@ -37,10 +38,15 @@ test('Log refresh joins one scoped read and fences completion, failure and spinn
 test('Log pagination aborts on scope change and fences stale completion and spinner cleanup', () => {
   assert.match(workspace, /type LogPaginationFlight = \{ scope: string; generation: number; controller: AbortController \}/);
   assert.match(workspace, /const paginationFlight = logPaginationFlight\.current;\s*if \(paginationFlight\) \{\s*logPaginationGeneration\.current \+= 1;\s*paginationFlight\.controller\.abort\(\);\s*logPaginationFlight\.current = null;/);
-  assert.match(workspace, /fetchDogEvents\(client, dog\.id, eventRows\.current\.length, PAGE_SIZE, undefined, controller\.signal\)/);
+  assert.match(workspace, /fetchDogEvents\(client, dog\.id, cursor, PAGE_SIZE, undefined, controller\.signal\)/);
+  assert.match(workspace, /intent === 'refresh' && logPaginationFlight\.current\?\.scope === scope[\s\S]{0,200}logPaginationFlight\.current\.controller\.abort\(\)/);
+  assert.match(workspace, /const baseline = eventRows\.current\.slice\(\);\s*const next = await fetchDogEvents\(client, dog\.id, cursor/);
   assert.match(workspace, /const isCurrent = \(\) => mounted\.current && !controller\.signal\.aborted\s*&& logPaginationGeneration\.current === generation && logLifetime\.current === lifetime\s*&& logPaginationFlight\.current === flight/);
   assert.match(workspace, /if \(logPaginationFlight\.current === flight\) \{\s*logPaginationFlight\.current = null;\s*if \(mounted\.current && !controller\.signal\.aborted && logPaginationGeneration\.current === generation\s*&& logLifetime\.current === lifetime\) setLoadingMore\(false\);/);
   assert.match(workspace, /paginationFlight\?\.scope === currentLogLifetime\)[\s\S]{0,200}paginationFlight\.controller\.abort\(\)/);
+  assert.match(logScreen, /onOpenEvent=\{\(event\) => \{[\s\S]*?onViewChange\?\.\('today', \{ preserveEventId: event\.id \}\)/);
+  assert.match(logScreen, /onActiveEditorChange\?\.\(editingId\)/);
+  assert.match(workspace, /if \(logActiveEditorId\.current\) pinnedIds\.add\(logActiveEditorId\.current\)/);
 });
 
 test('refresh reconciliation preserves confirmed local inserts, updates and deletes during the read', () => {
@@ -62,6 +68,15 @@ test('refresh reconciliation preserves confirmed local inserts, updates and dele
   assert.deepEqual(Array.from(merged, (row) => row.id), ['added', 'old', 'remote']);
   assert.equal(merged.find((row) => row.id === 'old'), updated);
   assert.equal(merged.find((row) => row.id === 'remote'), remote);
+  const older = { id: 'older', occurred_at: '2026-10-18T10:00:00Z', description: 'new page' };
+  const pageMerged = context.merge([old, deleted, older], [old, deleted], [updated, added]);
+  assert.deepEqual(Array.from(pageMerged, (row) => row.id), ['added', 'old', 'older']);
+  assert.equal(pageMerged.find((row) => row.id === 'old'), updated);
+  const fetchedFirstPage = [{ id: 'newer', occurred_at: '2026-10-26T08:00:00Z' }];
+  const pinned = context.merge(fetchedFirstPage, [older], [older], new Set([older.id]));
+  assert.deepEqual(Array.from(pinned, (row) => row.id), ['newer', 'older']);
+  const removedWhileReading = context.merge(fetchedFirstPage, [older], [], new Set([older.id]));
+  assert.deepEqual(Array.from(removedWhileReading, (row) => row.id), ['newer']);
 });
 
 test('refresh failure remains distinct from initial failure and offers a same-scope retry', () => {

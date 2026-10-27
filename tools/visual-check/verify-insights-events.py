@@ -47,6 +47,16 @@ with sync_playwright() as playwright:
     expect(page.get_by_text('Inga hämtade händelser i perioden.')).to_be_visible()
     page.get_by_role('button', name='Öppna Logga').click()
     expect(page.get_by_role('heading', name='Händelser i perioden')).to_have_count(0)
+    page.goto(f'{base}?screen=log&logScenario=insights-local-older')
+    expect(page.get_by_text('Fler händelser kan finnas i perioden.')).to_be_visible()
+    expect(page.get_by_role('button', name='Hämta fler händelser')).to_be_visible()
+    page.goto(f'{base}?screen=log&logScenario=insights-many')
+    for _ in range(5):
+        page.get_by_role('button', name='Visa fler händelser').click()
+    older = page.get_by_role('button', name=re.compile('Öppna Kiss,')).last
+    older.click()
+    expect(page.get_by_test_id('center-modal-bottom-sheet').get_by_text('Ändra händelse', exact=True)).to_be_visible()
+    assert page.evaluate('window.__tasslaLogViewOptions.preserveEventId') == 'fixture-many-0'
     page.goto(f'{base}?screen=log&logScenario=insights-paged')
     expect(page.get_by_text('Fler händelser kan finnas i perioden.')).to_be_visible()
     expect(page.get_by_role('button', name='Visa fler händelser')).to_be_visible()

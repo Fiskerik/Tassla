@@ -386,24 +386,41 @@ export async function withRequestDeadline<T>(
   }
 }
 
+export type DogEventCursor = { occurredAt: string; id: string };
+
+/** Keep the raw Postgres timestamp: Date would truncate its microseconds. */
+export function dogEventCursor(row: Pick<DogEventRecord, 'occurred_at' | 'id'>): DogEventCursor {
+  const timestamp = row.occurred_at;
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}(?::?\d{2})?)$/.test(timestamp)
+    || !Number.isFinite(Date.parse(timestamp)) || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.id)) {
+    throw new Error('Invalid log pagination cursor');
+  }
+  return { occurredAt: timestamp, id: row.id };
+}
+
 export async function fetchDogEvents(
   client: SupabaseClient,
   dogId: string,
-  offset = 0,
+  cursor: DogEventCursor | null = null,
   limit = WORKSPACE_PAGE_SIZE,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   parentSignal?: AbortSignal,
 ): Promise<DogEventRecord[]> {
   return withRequestDeadline(async (signal) => {
-    const { data, error } = await client.from('dog_events')
+    let query = client.from('dog_events')
       .select(EVENT_COLUMNS)
       .eq('dog_id', dogId)
-      .in('event_type', [...LOG_EVENT_TYPES])
+      .in('event_type', [...LOG_EVENT_TYPES]);
+    if (cursor !== null) {
+      const safe = dogEventCursor({ occurred_at: cursor.occurredAt, id: cursor.id });
+      query = query.or(`occurred_at.lt."${safe.occurredAt}",and(occurred_at.eq."${safe.occurredAt}",id.lt.${safe.id})`);
+    }
+    const { data, error } = await query
       .order('occurred_at', { ascending: false })
       .order('id', { ascending: false })
-      .range(offset, offset + limit - 1)
+      .limit(limit)
       .abortSignal(signal);
-    if (error || !Array.isArray(data) || !data.every(isDogEventRecord)) throw new Error('Could not load dog events');
+    if (error || !Array.isArray(data) || !data.every((row) => isDogEventRecord(row) && row.dog_id === dogId)) throw new Error('Could not load dog events');
     return data;
   }, timeoutMs, parentSignal);
 }
