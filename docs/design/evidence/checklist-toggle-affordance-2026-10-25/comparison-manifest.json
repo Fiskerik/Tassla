@@ -1,0 +1,35 @@
+{
+  "fixture": "Public synthetic published phase catalog; first item confirmed, remaining two open.",
+  "comparisonCaptures": [
+    {
+      "viewport": "375x844",
+      "square_before": "square-375x844.png",
+      "circle_28_candidate": "circle-28-candidate-375x844.png",
+      "production_after": "final-375x844.png"
+    },
+    {
+      "viewport": "430x844",
+      "square_before": "square-430x844.png",
+      "circle_28_candidate": "circle-28-candidate-430x844.png",
+      "production_after": "final-430x844.png"
+    },
+    {
+      "viewport": "375x667",
+      "square_before": "square-375x667.png",
+      "circle_28_candidate": "circle-28-candidate-375x667.png",
+      "production_after": "final-375x667.png"
+    }
+  ],
+  "additionalFinalRender": {
+    "viewport": "375x667 with RN Web CSS zoom 1.4",
+    "production_after": "final-375x667-css-zoom140.png",
+    "purpose": "Text/layout robustness after implementation; not a pre/post shape comparison."
+  },
+  "candidate": "Browser-only DOM overlay using the installed Ionicons ellipse-outline/checkmark-circle glyphs at 28 px; not product code.",
+  "critic_decision": "Use a 28 pt circle for Knowledge phase checklist completion: filled green with check when done, outline in secondary text color when open. Keep Home routine checks square.",
+  "limitations": [
+    "RN Web evidence, not native iOS/Android.",
+    "The 1.4 root CSS zoom is a text/layout proxy that scales the rendered page; it is not native Dynamic Type.",
+    "The >=44x44 target is measured in CSS px before zoom; physical iPhone target remains NOT TESTABLE."
+  ]
+}

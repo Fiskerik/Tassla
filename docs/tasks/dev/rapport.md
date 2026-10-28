@@ -1375,3 +1375,11 @@ UI Critic REVIEW, oberoende QA och Frozen Reviewer **PASS**. Public/review verif
 Alla 20 checklistikoner använder nu Logg-panelens tvåtonsbehandling: 20 pt glyph på 32 pt färgad rundel, konsekvent i ikonväljare, vald trigger och sparade Hem-/Kunskapspunkter. Neutral `list-outline` använder mörk text på en mjuk grön yta. Ikonnycklar, val/lagring/readback och befintliga Loggfärger är bevarade.
 
 Architect **APPROVE**, UI Critic BRIEF/REVIEW **PASS**, oberoende QA **PASS**, Frozen Reviewer **PASS** efter en korrigering av stale checkpointdokumentation. Public/review-ikonväljare **37/37** och Kunskapens egna checklistpunkt **7/7** vardera, utan browserfel; `CI=1 pnpm check` **PASS** (98/98 testfiler); py_compile, kövalidering och diff-check **PASS**. Formell Architect-logg kom efter att ett ägarbegärt lokalt utkast redan fanns; taskacceptans hölls tills Träning stängdes och v2 godkändes. En gemensam commit/push på samma branch följer. Native tillgänglighet och live Supabase/RLS är **NOT TESTABLE**.
+
+### CHECKLIST-TOGGLE-AFFORDANCE-01 v3 — slutgranskad, 2026-10-28
+
+Faschecklistans completion-markör är 28 pt cirkel i Kunskap: fylld grön med vit bock när punkten är klar och öppen sekundärfärgad cirkel annars. Hemmets grupperade rutinlista behåller fyrkantiga markörer; standardformen i den delade komponenten, persistence, label/state och progressflöde är bevarade.
+
+Frozen Reviewer v2 blockerade först stängning eftersom en screenshot felaktigt märktes 140 % utan zoom. V3 korrigerade verifieraren: RN Web-root zoom 1.4 assertas, den ≥44×44 CSS-px stora radytan mäts före zoom, och gamla oskalade `text140`-bilder togs bort. Slutverifieraren har **53 PASS**, 0 fel och 0 browserfel över 375×844, 430×844, 375×667 och 375×667 CSS-zoomproxy. Fokuserade tester **2/2**; `CI=1 pnpm check` **PASS** (840 tester, 1 skip). UI Critic, oberoende QA och Frozen Reviewer v3 **PASS**. Kömetadata, plan och evidens är synkade; alla ändrade filposter ligger inom de godkända skrivvägarna.
+
+Native VoiceOver, Dynamic Type, fysisk iPhone-träffyta, TestFlight och live Supabase/RLS är **NOT TESTABLE**. Commit/push följer på befintlig branch `knowledge/d3-catalog-delivery`.

@@ -11966,28 +11966,35 @@
       "id": "CHECKLIST-TOGGLE-AFFORDANCE-01",
       "title": "Checklistor: granska bockarnas form, storlek och kontrast",
       "mvp_requirement": "Owner iPhone checklist screenshot 2026-10-25; docs/design-rules.md §2–4",
-      "plan": "docs/tasks/dev/CHECKLIST-TOGGLE-AFFORDANCE-01.md v1",
+      "plan": "docs/tasks/dev/CHECKLIST-TOGGLE-AFFORDANCE-01.md v3",
       "write_paths": [
         "docs/tasks/dev/CHECKLIST-TOGGLE-AFFORDANCE-01.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
         "docs/decisions/MASTER-LOG.md",
+        "src/components/ui/ChecklistItem.tsx",
         "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/README.md",
+        "src/theme/tokens.ts",
+        "src/theme/README.md",
         "tests/checklist-toggle-affordance.test.mjs",
-        "tools/visual-check/vision-r02-home-panels-app.tsx",
-        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "tests/checklist-ui.test.mjs",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify-know02.py",
+        "tools/visual-check/verify-checklist-toggle-affordance.py",
         "docs/design/evidence/checklist-toggle-affordance-2026-10-25/"
       ],
       "acceptance": [
-        "A populated phase checklist is reviewed against the owner’s circled iPhone affordance; Critic records a clear decision on square/circle, size and contrast.",
-        "Checked and unchecked states remain distinct at 375/430 and 140% text without disrupting text wrapping.",
-        "Each control keeps at least a 44×44 pt touch target and accessible role, label and checked-state.",
-        "Only the checklist completion affordance changes; pill-row scrolling, content, and persistence behavior remain stable.",
-        "Native VoiceOver, physical touch target and TestFlight results are NOT TESTABLE unless separately captured."
+        "Endast faschecklistans completion-markör blir rund och 28 pt; Home behåller kvadratisk form",
+        "Markerad och omarkerad status är tydlig utan att förlita sig bara på färg",
+        "Punkttext utan overflow vid 375/430 px, kort vy och RN Web CSS-zoom/text-layoutproxy 1.4; native Dynamic Type ej verifierad",
+        "Checkbox-roll/state/label; RN Web-radmål minst 44×44 CSS px och progress/readback bevaras; native fysisk träffyta NOT TESTABLE",
+        "Oberoende QA och Reviewer godkänner fryst diff inom aktuell v3 write_paths"
       ],
       "checks": [
-        "Critic compares square and circular visual treatments on a filled checklist render at 375×844, 430×844, 375×667, and 140% text proxy.",
-        "Focused test for role/state/label and 44×44 pt hit area.",
+        "UI Critic jämför fyrkant 24 pt med cirkel 28 pt; 375×667-fallet sätter och kontrollerar RN Web documentElement CSS zoom 1.4.",
+        "Fokuserat automatiskt test för form, role/state/label och defaultbeteende",
+        "Visuell verifierare mäter >=44×44 CSS px RN Web-radmål och 140% CSS-zoom/text-layoutproxy",
         "CI=1 pnpm check",
         "python -X utf8 tools/dev_flow.py validate",
         "git diff --check"
@@ -11995,15 +12002,83 @@
       "depends_on": [
         "CHECKLIST-UI-LUNA-DETAIL"
       ],
-      "status": "planned",
-      "next_step": "Capture the current populated phase checklist and obtain a focused UI Critic decision before changing the toggle affordance.",
+      "status": "done",
+      "next_step": "Frozen Reviewer v3 PASS: scope, Knowledge-only circle variant, Home defaults, CSS-zoom evidence, queue/docs, CI=1 pnpm check (840 pass/1 skip), visual 53/53, QA and native limits verified. Commit/push to existing branch.",
       "priority": "P2",
       "panels": [
         "7"
       ],
       "risk_class": "M",
-      "checkpoint": "Critic confirmed this is a separate open visual question: current Knowledge toggles are 24 pt square icons while the owner circled larger circles. Current evidence lacks a populated post-complaint phase checklist render; no product code changed.",
-      "test_evidence": "Read-only source and screenshot audit only. Current visual is not accepted/rejected pending Critic render review."
+      "checkpoint": "UI Critic PASS, independent QA PASS, plan/queue consistent. Ready for frozen review; only web evidence is verified; native device cases remain NOT TESTABLE.",
+      "test_evidence": "verify-checklist-toggle-affordance.py: 53 PASS, 0 FAIL, 0 page errors across 375x844, 430x844, 375x667, and 375x667 with computed zoom=1.4. Focused Node tests 2/2. CI=1 pnpm check: 840 pass, 1 skip, 0 fail. Native Dynamic Type, VoiceOver, physical target and TestFlight remain NOT TESTABLE.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v2: scoped completionShape opt-in and shared 28 pt iconLg token; Critic comparison saved in docs/design/evidence/checklist-toggle-affordance-2026-10-25/"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement opt-in round 28 pt completion marker for Knowledge phase checklist only; preserve Home grouped square behavior and all existing persistence/progress semantics."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete; CI=1 pnpm check passes (840 tests, 1 skipped), focused and visual checks pass 52/52, git diff --check and queue validation pass. Independent QA evidence reviewed in toggle-results.json; native checks remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: opt-in circular Knowledge mark, square Home defaults, 44 pt target, accessibility state, restore-progress flow and four viewport renders verified; native VoiceOver, Dynamic Type and device behavior remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer BLOCK: the 375x667-text140 case never scales text or layout, so its screenshot and pass claims are unsupported; queue checkpoint/test_evidence are stale. Implementation scope itself passes. Correct verification evidence before review."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Replan the evidence correction only: use the repository CSS zoom proxy for the 140% case, assert it is applied, recapture the screenshot/results, update current queue checkpoint/test evidence, then rerun QA and Reviewer. Product code behavior stays unchanged."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v3: RN Web CSS zoom 1.4 is verified as a text/layout proxy; visual verifier owns >=44x44 CSS-px target measurement; native Dynamic Type and physical target remain NOT TESTABLE."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement the approved v3 evidence correction in the visual verifier and evidence only; no checklist product behavior changes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v3 verifier correction complete: 53/53 visual assertions including computed CSS zoom 1.4, target measured before zoom in CSS px; focused tests 2/2; CI=1 pnpm check 840 pass/1 skip; UI Critic PASS. Native Dynamic Type/device remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA v3 PASS after reviewer-block fix: exact CSS zoom assertion, pre-zoom CSS-px target, 53/53 render checks, focused 2/2, queue/docs aligned; native limitations accurate."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer v3 PASS: scope, Knowledge-only circle variant, Home defaults, CSS-zoom evidence, queue/docs, CI=1 pnpm check (840 pass/1 skip), visual 53/53, QA and native limits verified. Commit/push to existing branch."
+        }
+      ]
     },
     {
       "id": "KNOWLEDGE-PHASE-CATALOG-01",

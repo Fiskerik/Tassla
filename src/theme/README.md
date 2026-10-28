@@ -1,6 +1,6 @@
 # Theme tokens
 
-`tokens.ts` is the source for all new shared UI color, spacing, radius, sizing, category and type values. New components import `tokens`; existing screens may continue using the exact `theme` legacy alias until a separately approved migration.
+`tokens.ts` is the source for all new shared UI color, spacing, radius, sizing, category and type values. New components import `tokens`; existing screens may continue using the exact `theme` legacy alias until a separately approved migration. `size.iconLg` is the 28 pt large icon size, used only when a reviewed screen needs a more prominent symbol than `iconMd`.
 
 The app uses the operating system's system font. `typography.display` currently aliases `typography.title` because no independent Display value was specified. The primitive and semantic primary remain `#186A4D`, matching the current app and the design plan.
 

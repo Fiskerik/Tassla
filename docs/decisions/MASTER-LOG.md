@@ -367,3 +367,7 @@ Appägda modaler kan avfärdas med horisontellt svep från dedikerad yta via sam
 Checklistans ikonväljare, valda trigger och sparade Hem-/Kunskapspunkter använder nu samma tvåtonsikonstil som Logg-panel 5, med en semantiskt färgad symbol på mjuk rundel. Alla 20 persisted ikonnycklar, touch targets, valmarkering och readback bevaras; neutral fallback har en generell grön yta.
 
 Architect **APPROVE**, UI Critic BRIEF/REVIEW **PASS**, oberoende QA **PASS**, Frozen Reviewer **PASS**. Public/review körningar visar 37 ikonval och 7 Kunskapflöden vardera utan browserfel; `CI=1 pnpm check` **PASS** (98/98 testfiler). Native accessibility och live Supabase/RLS är **NOT TESTABLE**. Tasken är lokal och stängd; commit/push samlas med de andra verifierade ändringarna på `knowledge/d3-catalog-delivery`.
+
+### 2026-10-28 — CHECKLIST-TOGGLE-AFFORDANCE-01
+
+Kunskapens faschecklistor använder nu en tydligare 28 pt rund färdigmarkör; Hem behåller sina fyrkantiga dagliga rutor. En fryst granskning hittade felmärkt 140 %-evidens, vilket rättades innan closeout: verifieraren assertar nu RN Web CSS zoom 1.4 och mäter radens CSS-pixelmål före zoom. UI Critic, oberoende QA och Frozen Reviewer PASS. Full kontroll: 840 tester PASS, 1 skip; visuell kontroll 53/53. Native Dynamic Type och fysisk träffyta är fortsatt NOT TESTABLE. Se taskplanen och `docs/design/evidence/checklist-toggle-affordance-2026-10-25/`.
