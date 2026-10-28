@@ -50,7 +50,8 @@ test('calendar month controls are labeled icon buttons and date layout fits seve
   assert.match(source, /variant="icon" label="Nästa månad" accessibilityLabel={`Visa månaden efter \$\{monthLabel\}`}/);
   assert.match(source, /setMonth\(\(currentMonth\) => shiftCalendarMonth\(currentMonth, -1\)\)/);
   assert.match(source, /setMonth\(\(currentMonth\) => shiftCalendarMonth\(currentMonth, 1\)\)/);
-  assert.match(source, /<View style=\{styles\.dateModalBackdrop\}><View testID="center-modal-date-picker" style=\{styles\.dateModalCard\}>/);
+  assert.match(source, /<View style=\{styles\.dateModalBackdrop\}><Animated\.View testID="center-modal-date-picker" style=\{\[styles\.dateModalCard, \{ transform: \[\{ translateX: swipe\.translateX \}\] \}\]\}>/);
+  assert.match(source, /<ModalSwipeHandle panHandlers=\{swipe\.panHandlers\} \/>/);
   assert.match(source, /dateModalBackdrop: \{[^}]*justifyContent: 'center'/);
   assert.match(source, /dateModalBackdrop: \{[^}]*paddingHorizontal: tokens\.spacing\.sm/s);
   assert.match(source, /dateModalCard: \{[^}]*padding: tokens\.spacing\.sm/s);

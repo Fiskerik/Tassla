@@ -6,12 +6,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReducedMotion } from './Motion';
 import { Button } from './Button';
 import { createSheetDrag } from './sheet-drag';
+import { ModalSwipeHandle, useModalSwipeDismiss } from './modal-swipe-dismiss';
 
 export function BottomSheet({ visible, title, children, onRequestClose, onPrimaryAction, primaryLabel = 'Klar', footer, keyboardAware = false, scrollContent = true }: { visible: boolean; title: string; children: ReactNode; onRequestClose: () => void; onPrimaryAction?: () => void; primaryLabel?: string; footer?: ReactNode; keyboardAware?: boolean; scrollContent?: boolean }) {
   const reduced = useReducedMotion();
   const insets = useSafeAreaInsets();
   const [translateY] = useState(() => new Animated.Value(0));
   const [drag] = useState(() => createSheetDrag(translateY));
+  const swipe = useModalSwipeDismiss(visible, onRequestClose, reduced);
   // Commit current guards before the next gesture can run.
   useLayoutEffect(() => { drag.update({ visible, reduced, onRequestClose }); });
   useEffect(() => () => drag.dispose(), [drag]);
@@ -25,11 +27,11 @@ export function BottomSheet({ visible, title, children, onRequestClose, onPrimar
           accessibilityRole="summary"
           accessibilityLabel={title}
           testID="center-modal-bottom-sheet"
-          style={[styles.sheet, keyboardAware && styles.keyboardAwareSheet, { transform: [{ translateY }] }]}
+          style={[styles.sheet, keyboardAware && styles.keyboardAwareSheet, { transform: [{ translateX: swipe.translateX }, { translateY }] }]}
         >
           {/* Keep dragging separate from the scrollable content. */}
           <View {...drag.panHandlers} style={styles.grabArea}>
-            <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.grabber} />
+            <ModalSwipeHandle panHandlers={swipe.panHandlers} style={styles.swipeHandle} />
             <View style={styles.heading}>
               <Text accessibilityRole="header" style={styles.title}>{title}</Text>
               <Pressable accessibilityRole="button" accessibilityLabel="Stäng" onPress={onRequestClose} style={styles.close}>
@@ -54,7 +56,7 @@ const styles = StyleSheet.create({
   sheet: { alignSelf: 'center', width: '100%', maxWidth: 560, maxHeight: '90%', padding: tokens.spacing.lg, gap: tokens.spacing.md, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface },
   keyboardAwareSheet: { height: '90%', minHeight: 0, overflow: 'hidden' },
   grabArea: { marginTop: -tokens.spacing.sm, gap: tokens.spacing.xs },
-  grabber: { alignSelf: 'center', width: tokens.size.touchMin, height: tokens.spacing.xs, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.textSecondary, opacity: 0.35 },
+  swipeHandle: { minHeight: tokens.size.touchMin },
   heading: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm },
   title: { ...tokens.typography.heading, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 },
   close: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },

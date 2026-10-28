@@ -73,8 +73,8 @@ export function MotionPressable({ style, onPressIn, onPressOut, onHoverIn, onHov
     style={[resolvedStyle, { transform: [{ scale }] }]} />;
 }
 
-export function ScreenTransition({ children, transitionKey, direction = 'forward', axis = 'y', distance = tokens.motion.distance }: {
-  children: ReactNode; transitionKey: string; direction?: 'forward' | 'backward'; axis?: 'x' | 'y'; distance?: number;
+export function ScreenTransition({ children, transitionKey, direction = 'forward', axis = 'y', distance = tokens.motion.distance, duration = tokens.motion.enter, opacityFrom = 0 }: {
+  children: ReactNode; transitionKey: string; direction?: 'forward' | 'backward'; axis?: 'x' | 'y'; distance?: number; duration?: number; opacityFrom?: number;
 }) {
   const reduced = useReducedMotion();
   const [progress] = useState(() => new Animated.Value(1));
@@ -85,11 +85,12 @@ export function ScreenTransition({ children, transitionKey, direction = 'forward
     previousTransitionKey.current = transitionKey;
     if (!keyChanged || reduced) { progress.setValue(1); return; }
     progress.setValue(0);
-    const animation = Animated.timing(progress, { toValue: 1, duration: tokens.motion.enter, easing: Easing.out(Easing.cubic), useNativeDriver: true });
+    const animation = Animated.timing(progress, { toValue: 1, duration, easing: Easing.out(Easing.cubic), useNativeDriver: true });
     animation.start();
     return () => animation.stop();
-  }, [progress, reduced, transitionKey]);
+  }, [duration, progress, reduced, transitionKey]);
   const shift = direction === 'forward' ? distance : -distance;
   const translation = reduced ? 0 : progress.interpolate({ inputRange: [0, 1], outputRange: [shift, 0] });
-  return <Animated.View key={transitionKey} style={{ opacity: progress, transform: [axis === 'x' ? { translateX: translation } : { translateY: translation }] }}>{children}</Animated.View>;
+  const opacity = reduced ? 1 : progress.interpolate({ inputRange: [0, 1], outputRange: [opacityFrom, 1] });
+  return <Animated.View key={transitionKey} testID="screen-transition" style={{ opacity, transform: [axis === 'x' ? { translateX: translation } : { translateY: translation }] }}>{children}</Animated.View>;
 }

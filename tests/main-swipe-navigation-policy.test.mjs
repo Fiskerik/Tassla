@@ -10,12 +10,15 @@ test('main swipe is enabled only on main tabs and outside knowledge details', ()
   assert.match(workspace, /MainSwipeNavigation enabled=\{isMainTabDestination\(page\) && !\(page === 'knowledge' && knowledgeDetailOpen\)\}/);
 });
 
-test('only main-tab changes receive the named page transition distance', () => {
+test('only main-tab changes receive the dedicated duration, distance and light fade', () => {
   const workspace = read('src/features/home/ProductWorkspace.tsx');
   const tokens = read('src/theme/tokens.ts');
   assert.match(workspace, /const mainTabToMainTab = isMainTabDestination\(previousPage\) && isMainTabDestination\(page\)/);
-  assert.match(workspace, /const transitionDistance = mainTabToMainTab \? tokens\.motion\.pageDistance : tokens\.motion\.distance/);
-  assert.match(workspace, /<ScreenTransition transitionKey=\{page\} direction=\{transitionDirection\} axis="x" distance=\{transitionDistance\}>/);
+  assert.match(workspace, /const transitionDistance = mainTabToMainTab \? tokens\.motion\.mainTabDistance : tokens\.motion\.distance/);
+  assert.match(workspace, /const transitionDuration = mainTabToMainTab \? tokens\.motion\.mainTabEnter : tokens\.motion\.enter/);
+  assert.match(workspace, /const transitionOpacityFrom = mainTabToMainTab \? tokens\.motion\.mainTabOpacityFrom : 0/);
+  assert.match(workspace, /<ScreenTransition transitionKey=\{page\} direction=\{transitionDirection\} axis="x" distance=\{transitionDistance\}[\s\S]*?duration=\{transitionDuration\} opacityFrom=\{transitionOpacityFrom\}>/);
+  assert.match(tokens, /mainTabEnter: 300, mainTabDistance: 44, mainTabOpacityFrom: 0\.9/);
   assert.match(tokens, /pageDistance: 28/);
 });
 

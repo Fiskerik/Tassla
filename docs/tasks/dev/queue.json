@@ -12705,6 +12705,582 @@
       "test_evidence": [
         "Fynd och jämförelse beskrivna i docs/design/evidence/development-progress-affordance-01/REVIEWS.md."
       ]
+    },
+    {
+      "id": "TRAINING-EXERCISE-MODAL-UX-01",
+      "title": "Träning: omforma övningsmodalen för tydligare progression och handlingar",
+      "mvp_requirement": "Ägarens återkoppling 2026-10-28: modalens bekräftelsestatus och hela popup-UI:t har för mycket text och för långa val.",
+      "plan": "docs/tasks/dev/TRAINING-EXERCISE-MODAL-UX-01.md v6",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "tests/training-progression-ui.test.mjs",
+        "tests/training-screen-policy.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-training.py",
+        "docs/tasks/dev/TRAINING-EXERCISE-MODAL-UX-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/training-exercise-modal-ux-01"
+      ],
+      "acceptance": [
+        "The modal shows the existing generic decorative training banner with a visible dog face, correct step position and confirmed-milestone progress separately, and the full left-aligned instruction. A compact AI-origin disclosure remains on AI-generated opened content.",
+        "Confirmed milestone uses compact Klart status and compact Ångra icon/action with full accessibility label and 44pt target; Next/Previous labels remain short and truthful.",
+        "Nästa/Föregående har korta synliga etiketter och ikoner, minst 44pt träffyta; sista steget saknar falsk Next.",
+        "confirm_step, undo_step, next, back, confirmed_at, failed/unknown retry och sparsemantik är oförändrade och sanningsenliga.",
+        "Public/review render vid 375/430, 375x667 och 140% text; §§14 visuella dimensioner kontrolleras utan anspråk på full panel 6-paritet.",
+        "Endast declared write_paths ändras; ingen schema/RPC/content/dependency/navigation semantic change."
+      ],
+      "checks": [
+        "Focused training progression UI and screen policy tests",
+        "CI=1 pnpm check",
+        "python -X utf8 tools/visual-check/verify-flow-training.py for confirmed, failed/unknown, first/middle/last-step states",
+        "Public/review RN Web captures at 375/430, 375x667 and 140% text; open and compare",
+        "UI Critic BRIEF/REVIEW, independent QA and Frozen Reviewer",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check and exact write-path audit"
+      ],
+      "depends_on": [
+        "TRAINING-LOGGING-UX-01",
+        "TRAINING-TIMELINE-01",
+        "UI-MODAL-CENTER-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Ägarens bild och uttryckliga återkoppling 2026-10-28: nuvarande knappplacering och ordval efter bekräftat delmål är svåra att förstå. Plan v1 avgränsar status-/knapphierarkin, bevarar befintliga progression operations och väntar på UI Critic BRIEF + Architect APPROVE före kod."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v2 efter öppnad baseline `confirmed-exercise-baseline-375x844.png`: den sparade delmålsstatusen visas både i rutan och som separat success-message. Planen kräver en enda beständig statusrad med polite announcement efter sparad confirm_step; fel/okänt behåller retry-copy. Scope och 11 write_paths oförändrade."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "ui_critic",
+          "evidence": "UI Critic BRIEF PROCEED on v2 after opening the 798x1069 panel-6 composite and 375x844 baseline. Recommended: `Nästa övning` as sole full-width primary; `Föregående övning` as separate low-emphasis row with left arrow; status `Delmål markerat som klart`; undo `Ångra färdigmarkering`; 16/8 pt rhythm; keep font size and hit areas. These were added to plan v3."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect CHANGES on v2: add named writer/read inputs/dependencies; make failed confirm visible while preserving its action; concretely verify no next action on final step and preserve undo/back/confirmed_at. Corrections added to v3; re-review required before implementation."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v3; UI Critic PROCEED v3; 11 plan/queue write_paths match. Plan covers sole primary/secondary labels, duplicate success suppression, visible failed-confirm feedback, same-operation unknown retry, explicit last-step no-next test, and preserves existing progression payloads. Begin implementation only in declared paths."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Single writer starts approved v3 in the exact 11 write_paths on knowledge/d3-catalog-delivery. No new branch/worktree, backend/schema/RPC/content/dependency or progression semantic changes. Add stacked labels/status, suppress duplicate confirmed toast, display existing failed-confirm error, extend synthetic fixtures/verifier/tests and save public/review renders."
+        },
+        {
+          "from": "implementing",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Ägaren utökade uppgiften till en fullständig, bild- och progressförsedd modal med kompakt status/ånger och korta knappetiketter. v3-koden finns kvar som utkast; nya v4 behöver UI Critic PROCEED och Architect APPROVE innan fortsatt implementation."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "UI Critic CHANGES v4 incorporated: show `Steg 2/3` as selected position, reserve the green line for confirmed milestone count, keep visible `Ångra` beside `Klart`, and preserve a single primary Next action. Exact v5 Architect/Critic approval pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "ui_critic",
+          "evidence": "UI Critic PROCEED v5: active step position is separate from confirmed milestone progress; always-visible Ångra fits the status group and keeps a 44pt target. Architect v5 remains pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect CHANGES v5: preserve required AI-origin disclosure from CONTENT-PUBLISH-LABEL-01; document generic decorative banner (no per-program image field); synchronize UI-MODAL-CENTER-01 dependency; record model defaults. Incorporated in v6."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v6: exact 11 plan/queue paths, base SHA, model defaults and dependency match; mandatory AI-origin disclosure and generic decorative banner are explicit. UI Critic BRIEF PROCEED v5 remains valid. Existing v3 code is a draft; proceed with approved v6 scope on this branch."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start approved plan v6 on knowledge/d3-catalog-delivery. UI Critic BRIEF PROCEED v5, Architect APPROVE v6, and exact 11-path parity are recorded. Continue the existing draft only within declared paths; preserve progression semantics, confirmed_at, retry/unknown handling and mandatory AI-origin disclosure."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation v6 is complete in the exact declared 11 paths. Public/review RN Web training verifier rerun with task-scoped timeline evidence: 30/30 each, zero errors; CI=1 pnpm check passed (839 tests, 838 pass, 1 skipped); previous timeline evidence restored after a verifier path issue. UI Critic REVIEW PASS; independent QA requested before frozen review. Native remains NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS v6: focused training progression/screen policy tests and CI=1 pnpm check pass; opened public/review evidence confirms visible face, separate step/completion progress, compact Klart/Ångra and large-text scroll with no horizontal overflow. Existing visual verifier results are 30/30 per mode. Native behavior NOT TESTABLE; saved evidence reviewed after sandbox Chromium rerun SIGTRAP."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS v6: exact declared scope, queue/checks, public/review 30/30 evidence and restored timeline evidence validated. UI Critic REVIEW and independent QA PASS; native remains NOT TESTABLE. Review details in task evidence REVIEWS.md."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS v6: exact declared scope, queue/checks, public/review 30/30 evidence and restored timeline evidence validated. UI Critic REVIEW and independent QA PASS; native remains NOT TESTABLE. Review details in task evidence REVIEWS.md.",
+      "priority": "P1",
+      "panels": [
+        "6"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Plan v6 väntar på slutlig Architect-bekräftelse; v3-produktkod ligger kvar som arbetsutkast.",
+      "test_evidence": [],
+      "related_tasks": [
+        "TRAINING-LOGGING-UX-01",
+        "TRAINING-TIMELINE-01",
+        "UI-MODAL-CENTER-01",
+        "UI-GESTURE-MOTION-01"
+      ]
+    },
+    {
+      "id": "UI-GESTURE-MOTION-01",
+      "title": "UI: svepstängning för appmodaler och tydligare flikövergång",
+      "mvp_requirement": "Ägarens återkoppling 2026-10-28: modaler ska kunna svepas bort sidledes och fungerande huvudflikssvep behöver en synligare övergång.",
+      "plan": "docs/tasks/dev/UI-GESTURE-MOTION-01.md v4",
+      "write_paths": [
+        "src/components/ui/modal-swipe-dismiss.ts",
+        "src/components/ui/BottomSheet.tsx",
+        "src/components/ui/Dialog.tsx",
+        "src/components/ui/ActionMenu.tsx",
+        "src/components/AppPrimitives.tsx",
+        "src/components/ui/Motion.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/theme/tokens.ts",
+        "src/components/README.md",
+        "tests/modal-swipe-dismiss.test.mjs",
+        "tests/sheet-dismiss.test.mjs",
+        "tests/ui-modal-centering.test.mjs",
+        "tests/planned-health-time.test.mjs",
+        "tests/main-swipe-navigation-policy.test.mjs",
+        "tests/motion-policy.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-modals.py",
+        "docs/tasks/dev/UI-GESTURE-MOTION-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/ui-gesture-motion-01"
+      ],
+      "acceptance": [
+        "Main-tab swipe preserves existing direction/bounds/no-wrap and receives its own tokenized 280–320 ms slide/light fade; support routes keep existing 240ms/8pt; no blank frame; reduced motion is respected.",
+        "BottomSheet, Dialog, InfoModal, TimePicker, DatePicker och ActionMenu kan avfärdas med tydligt horisontellt svep via samma guarded onRequestClose.",
+        "Gesten skiljer avsiktlig horisontell rörelse från vertikal/diagonal scroll, tap och text-/formulärinteraktion.",
+        "Dirty draft, busy/pending, destructive confirmation, X, backdrop, Android-back och BottomSheet drag ned behåller sina befintliga guards och semantik.",
+        "UI Critic/QA testar RN Web; native gesture arbitration redovisas NOT TESTABLE utan enhet."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/modal-swipe-dismiss.test.mjs tests/sheet-dismiss.test.mjs tests/ui-modal-centering.test.mjs tests/main-swipe-navigation-policy.test.mjs tests/motion-policy.test.mjs",
+        "CI=1 pnpm check",
+        "python -X utf8 tools/visual-check/verify-flow-modals.py",
+        "Public/review builds and opened modal/tab transition evidence",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check and exact write-path audit"
+      ],
+      "depends_on": [
+        "UI-MODAL-CENTER-01",
+        "UI-MAIN-SWIPE-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Ägarens rättelse: huvudflikssvep fungerar; den saknade delen är sidövergångens animation. Utökad beställning om horisontell dismiss för samtliga appägda modaler; plan v1 väntar på UI Critic och Architect före kod."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "UI Critic CHANGES v1 incorporated: dismiss only from a dedicated top handle with equivalent surfaces for modal types lacking one; never capture close buttons or content controls. Animation issue is distinct from swipe logic. Exact v2 Architect/Critic approval pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "ui_critic",
+          "evidence": "UI Critic PROCEED v2: dedicated top handle keeps form controls and scrolling usable; no new persistent hint text. Native gesture arbitration remains NOT TESTABLE without device. Architect v2 remains pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect CHANGES v2: full base SHA/model defaults, mark VISION-R02-GESTURES as related nonblocking context, and isolate longer transition duration to main-tab caller/token rather than shared motion. Added ProductWorkspace path in v3."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v3: 21 plan/queue write paths match; guarded close semantics and downward sheet drag are preserved; longer transition is scoped to main tabs. Native gesture arbitration remains NOT TESTABLE without a device. Next: implement on the existing branch."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start approved plan v3 on the existing knowledge/d3-catalog-delivery branch. Implement shared horizontal modal-dismiss from dedicated handle strips and a clearer tokenized main-tab slide/fade, preserving caller guards, scroll/keyboard behavior, reduced motion, route bounds and sheet downward drag."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "Plan v4 adds tests/planned-health-time.test.mjs, whose DatePicker structure assertion now accounts for the Animated.View and dedicated swipe handle. Architect APPROVE v4 confirms exact 22-path parity and appropriate scope. The RN Web verification exercises left/right modal dismiss and samples main-tab transition frames."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "ui_critic",
+          "evidence": "UI Critic review found no design defects, but requested 430px forward/reverse/reduced-motion transition samples. Added start/middle/end and reverse-middle frames with measurements for 375/430 in both public and review; final UI Critic PASS v4."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "qa",
+          "evidence": "Independent QA PASS v4 on exact 22-path scope, guard-preserving gesture behavior, scrolling, reduced motion and public/review evidence. Final recheck confirms both browser results at 27/27 with zero errors and all 375/430 transition frames."
+        },
+        {
+          "from": "implementing",
+          "to": "done",
+          "actor": "frozen_reviewer",
+          "evidence": "Frozen Reviewer PASS v4: exact 22 paths, 98/98 CI test files, public/review 27/27, guard-preserving gestures, reduced motion, §14/§14.16, and attribution of shared hunks to the three declared task scopes all verified."
+        }
+      ],
+      "next_step": "Lokal checkpoint är stängd. Nästa avgränsade UI-slice är CHECKLIST-POLYCHROME-ICONS-01; planreview krävs före implementation.",
+      "priority": "P1",
+      "panels": [
+        "shared-ui"
+      ],
+      "risk_class": "M",
+      "checkpoint": "UI-GESTURE-MOTION-01 v4 lokalt klar på befintlig branch. Architect APPROVE, UI Critic REVIEW PASS, oberoende QA PASS, Frozen Reviewer PASS; `CI=1 pnpm check` 98/98 och public/review verifiering 27/27. Push väntar på att övriga ändringar på samma branch får sina egna godkända checkpoints.",
+      "related_tasks": [
+        "TRAINING-EXERCISE-MODAL-UX-01",
+        "UI-MODAL-CENTER-01",
+        "UI-MAIN-SWIPE-01",
+        "VISION-R02-GESTURES"
+      ]
+    },
+    {
+      "id": "CHECKLIST-POLYCHROME-ICONS-01",
+      "title": "Checklistor: enhetliga tvåtonsikoner i väljare och punkter",
+      "mvp_requirement": "Ägarens återkoppling 2026-10-28: använd trevligare polykroma ikoner liknande panel 5 och samma ikonstil vid ikonval i exempelvis checklistor.",
+      "plan": "docs/tasks/dev/CHECKLIST-POLYCHROME-ICONS-01.md v2",
+      "write_paths": [
+        "src/components/ui/ThemedIcon.tsx",
+        "src/components/ui/ChecklistItem.tsx",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/checklists/ChecklistIconPicker.tsx",
+        "src/features/checklists/checklist-icons.ts",
+        "src/components/README.md",
+        "src/features/checklists/README.md",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/checklist-ui.test.mjs",
+        "tests/daily-routine-checklist-icons.test.mjs",
+        "tests/ui-library-policy.test.mjs",
+        "tools/visual-check/verify-checklist-icons.py",
+        "tools/visual-check/verify-checklist-custom-icons.py",
+        "docs/tasks/dev/CHECKLIST-POLYCHROME-ICONS-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/checklist-polychrome-icons-01"
+      ],
+      "acceptance": [
+        "Checklistens öppnare, ikonval, radiogrupp och sparade punkt återanvänder samma tvåtonsikon/renderare och semantiska fg/bg-ton; panel 5 Loggs befintliga kategorier är referensen.",
+        "Samtliga 20 tillåtna ikonval behåller sina persisted Ionicons keys, svenska etiketter, radiogrupp/selected state och minst 44 pt tryckyta; fallback list-outline lagras inte och SQL allowlist är oförändrad.",
+        "Vald ikon skrivs/läses tillbaka och visas identiskt i både Hemmets rutinflöde och Kunskapens egna checklistpunkt; Loggas befintliga färger och symbolutseende förblir oförändrade.",
+        "Public/review verifiering vid 375x844, 430x844 och 375x667 med 140% textproxy: alla val synliga, Save nåbar, ingen overflow; visuellt underlag jämförs med panel 5.",
+        "Semantiska tonpar har minst 3:1 glyph/surface kontrast och normal text minst 4.5:1; vald/fokuserad radio kan urskiljas även med färgade ytor.",
+        "Endast deklarerade sökvägar ändras; ingen schema-, dependency-, navigations- eller native-verifieringsclaim."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/checklist-ui.test.mjs tests/daily-activity-ui.test.mjs tests/daily-routine-checklist-icons.test.mjs tests/ui-library-policy.test.mjs",
+        "CI=1 pnpm check",
+        "python -X utf8 tools/visual-check/verify-checklist-icons.py against public and review RN Web builds",
+        "python -X utf8 tools/visual-check/verify-checklist-custom-icons.py against public and review RN Web builds",
+        "UI Critic BRIEF before code and REVIEW after opened public/review screenshots; independent QA and Frozen Reviewer",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check and exact write-path audit"
+      ],
+      "depends_on": [
+        "LOG-POTTY-ICON-PATTERN-01",
+        "KNOWLEDGE-PHASE-CATALOG-01"
+      ],
+      "status": "done",
+      "next_step": "Frozen Reviewer PASS v2 on re-review: synchronized plan/queue/test evidence; exact scoped diff with zero unclaimed icon paths; public/review evidence and reviews align. Native accessibility/live RLS remain NOT TESTABLE. Commit/push remains batched with other closed tasks on the same branch.",
+      "priority": "P1",
+      "panels": [
+        "5",
+        "7"
+      ],
+      "risk_class": "L",
+      "checkpoint": "Plan v2 Architect APPROVE after TRAINING-EXERCISE-MODAL-UX-01 closed. Owner-requested icon draft existed before formal approval; acceptance was held until sequencing and neutral-token concerns were resolved. Code is within declared icon paths. UI Critic REVIEW and independent QA PASS. Public/review each report 37 icon-picker checks and 7 Knowledge custom-icon checks, zero browser errors; CI=1 pnpm check passed 98/98 test files. First Frozen Reviewer attempt BLOCKED only stale task/queue records; code scope passed with zero unclaimed files. Plan status/checkpoint/next_step/evidence are now synchronized. Frozen Reviewer re-review pending. Native accessibility and live RLS NOT TESTABLE.",
+      "related_tasks": [
+        "LOG-POTTY-ICON-PATTERN-01",
+        "TRAINING-EXERCISE-MODAL-UX-01",
+        "UI-GESTURE-MOTION-01"
+      ],
+      "history": [
+        {
+          "from": "",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Owner asks for friendly polychrome icons like panel 5 and consistent treatment in checklist icon selection. Plan v1 created; no product changes."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "ui_critic",
+          "evidence": "BRIEF v1 CHANGES: map all 20 choices; use 32pt roundel and 20pt glyph; define a neutral fallback and 3:1 icon contrast; inspect both Home routine and Knowledge checklist flows, including selection/readback. Incorporated into v2."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Review v1 CHANGES: explicit fg/bg surfaces required in picker and saved rows; 12/20 current tones are neutral; Home manager and Knowledge flows need visual coverage; serialize implementation until ready Training task closes due shared queue/report/Master Log write paths. Incorporated into v2."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v2: training task is now done; neutral list-outline uses generic textPrimary/selectedSurface tokens, and this task leaves tokens.ts outside its write paths. UI Critic BRIEF PROCEED v2 remains valid. Review is recorded in evidence/REVIEWS.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume owner-requested icon task in formal sequence after training closed and Architect APPROVE v2. Implementation draft already existed locally before this final approval; acceptance had been held. No task commit/push yet; continue only within declared paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation scope frozen: public/review icon picker and Knowledge custom-item verifiers rerun after neutral-token correction (37/37 and 7/7 per mode, no browser errors), CI=1 pnpm check passed (98/98 test files), diff/path review prepared. UI Critic REVIEW PASS; independent QA and Frozen Reviewer now required."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS v2: four focused tests, public/review visual results 37 icon + 7 Knowledge checks each with zero browser errors, target/Save reachability, screenshot review, exact path attribution, Python compilation, diff-check and queue validation. Native accessibility and live Supabase/RLS NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS v2 on re-review: synchronized plan/queue/test evidence; exact scoped diff with zero unclaimed icon paths; public/review evidence and reviews align. Native accessibility/live RLS remain NOT TESTABLE. Commit/push remains batched with other closed tasks on the same branch."
+        }
+      ],
+      "test_evidence": [
+        "Baseline opened: vision_rev02.jpg 1214x1295, Logg panel-5 RN Web 375x844, checklist picker 375x844. UI Critic and Architect v1 findings recorded in the plan; no new render or code changes.",
+        "UI Critic opened the panel 5 reference (1214x1295), current Knowledge picker (375x844) and Logg public/history renders. BRIEF v2 PROCEED; no code/render changed.",
+        "Architect APPROVE v2 after training task closed; neutral list-outline fallback uses generic textPrimary/selectedSurface; icon task does not modify tokens.ts.",
+        "UI Critic REVIEW PASS on updated public/review 375/430 and short 375 with 140% text: 20-choice picker, selected trigger/radio, saved Home routine, Knowledge custom row and neutral fallback match Logg panel 5 two-tone treatment.",
+        "verify-checklist-icons.py public/review: 37 checks each, zero browser errors; verify-checklist-custom-icons.py public/review: 7 checks each, zero browser errors; all 20 targets and Save reachable at 375/430, 375x667 with 140% text.",
+        "CI=1 pnpm check PASS: TypeScript, edge typecheck, ESLint and 98/98 test files; four focused icon tests pass; Python compilation, dev_flow validate and git diff --check pass.",
+        "Independent QA PASS; native VoiceOver/TalkBack/Dynamic Type and live Supabase/RLS remain NOT TESTABLE.",
+        "Frozen Reviewer first attempt BLOCKED only on stale queue/plan records; code scope had zero unclaimed files. Synchronization was completed; re-review pending.",
+        "Frozen Reviewer PASS on re-review after plan/queue synchronization: status, checkpoint, next step and test evidence current; code scope has zero unclaimed files; tokens.ts correctly belongs to Log/Gesture; public/review results and other reviews align. First docs-only block and its correction are recorded."
+      ]
+    },
+    {
+      "id": "LOG-POTTY-ICON-PATTERN-01",
+      "title": "Logga: skilj Kiss från Vatten, gör Mat grön och förbättra mönsterkortet",
+      "mvp_requirement": "Ägarens återkoppling 2026-10-28: Kiss ska ha gul yta och en tydlig tre-droppssymbol (inte streck), konsekvent i Logga. Mat ska ha grön kategoriaccent. Senaste mönstren ska ha en trevligare sammanfattning.",
+      "plan": "docs/tasks/dev/LOG-POTTY-ICON-PATTERN-01.md v5",
+      "write_paths": [
+        "src/components/ui/IconChip.tsx",
+        "src/components/ui/ListRow.tsx",
+        "src/theme/tokens.ts",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/README.md",
+        "tests/log-screen-policy.test.mjs",
+        "tests/log-calendar-policy.test.mjs",
+        "tests/ui-library-policy.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-log.py",
+        "docs/tasks/dev/LOG-POTTY-ICON-PATTERN-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/log-potty-icon-pattern-01"
+      ],
+      "acceptance": [
+        "Kiss använder gul/amber yta och tre tydliga fyllda droppsilhuetter som inte ser ut som streck; Vatten behåller en blå droppe.",
+        "Mat använder Logg-lokala green700/green100 i snabbval, historik, typväljare och layoutredigering; inga globala färger eller andra vyer ändras.",
+        "Samma Kiss-symbol och Logg-kategorifärg visas i snabbval, historik, typval och långtrycksedigering via opt-in ListRow.iconVariant.",
+        "Patternkortet visar per kategori en tydlig ikon/etikett, antal och ungefärligt medianintervall.",
+        "count >= 2 filter, lokal datakälla, summarizePottyPatterns, interval math and ordering are unchanged.",
+        "375/430/short viewport/140% renders remain accessible with no clipping or horizontal overflow.",
+        "The pattern section stays hidden when no category meets count >= 2."
+      ],
+      "checks": [
+        "Focused log model, LogScreen, calendar and UI library policy tests including Kiss glyph shape and Mat category token",
+        "CI=1 pnpm check",
+        "python -X utf8 tools/visual-check/verify-flow-log.py",
+        "Public/review RN Web captures at 375/430, 375x667 and 140% text; open and inspect icon silhouettes/colors",
+        "§14 checklist and separate §14.16 visual-dimension assessment",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check and exact write-path audit"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Ägarens återkoppling 2026-10-28: Kiss ska vara gul med separat tre-dropparsymbol, konsekvent i vanlig vy och långtrycksedigering; mönsteruträkningen får ett läsbart visuellt kort. Plan v1 väntar på UI Critic och Architect."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "UI Critic PROCEED v1 recommendations incorporated: two-line rows, dark amber with measured symbol contrast, and the same three-drop glyph at small sizes. Exact v2 Architect/Critic approval pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "ui_critic",
+          "evidence": "UI Critic PROCEED v2: consistent three-drop glyph, dark amber contrast, and two-tier pattern rows are clear. Runtime visuals still require review after implementation. Architect v2 remains pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect CHANGES v2: full base SHA/model defaults; UI-MODAL-CENTER-01 and blocked LOGGA-QUICK are nonblocking related tasks; define opt-in ListRow.iconVariant wiring and hidden empty/sparse state. Incorporated in v3."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v3: 14 plan/queue write paths match; Logg-only iconVariant, sparse hidden state, and nonblocking related tasks are explicit. Next: implement on the existing branch."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start approved Logg icon/pattern task v3 on knowledge/d3-catalog-delivery. Implement only declared 14 paths; preserve event data and pattern calculation semantics. First checkpoint: inspect existing icon/color mappings, long-press ListRow flow, summary component, test/visual fixture."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Full CI found a stale assertion for the old pee ground glyph in tests/log-calendar-policy.test.mjs; this file is outside v3 write_paths. Pause code edits; add the required test fix to v4 and obtain Architect re-approval before touching it."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Plan v4 adds tests/log-calendar-policy.test.mjs because full CI found its old peeGround assertion no longer matches the approved three-drop icon. No write to that file until Architect APPROVE v4. UI Critic visual/accessibility review is recorded; refreshed evidence unchanged."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Architect APPROVE v4: all 15 plan/queue paths match; the stale calendar assertion update is narrowly scoped. UI Critic REVIEW v4 PASS after accessibility fix. Return to plan lifecycle to re-open implementation gate."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v4 confirms all 15 declared paths match. UI Critic REVIEW v4 PASS; icon accessibility names remain on parent controls and Olycka retains type labels. Resume the approved Logg implementation."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume approved v4 after replacing the obsolete peeGround assertion with tests for the three-drop Kiss placement, Water single-drop path, default token colors and contrast. The only new path is tests/log-calendar-policy.test.mjs; then rerun focused tests, full CI, visual QA, path audit and independent reviews."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation v4 complete. Focused tests and full CI pass (831 pass, 1 skip); updated public/review visual checks each 22/22 with 0 page errors, including the event-type selector; UI Critic REVIEW PASS. RESULTS.json and full §14/§14.16 evidence were added after QA/Frozen findings. Re-review requested; native checks remain NOT TESTABLE. Other active branch changes are separately attributed to their approved task plans and will not be included in a Log-only commit."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Owner expanded the UI brief: make Mat green and replace the current stroke-like Kiss mark with three recognizable droplets. v4 review is paused; create plan v5 and obtain fresh UI Critic BRIEF and Architect APPROVE before product-code edits."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v5 drafted for owner-requested green Mat category styling and visibly droplet-shaped three-drop Kiss icon. v4 approvals do not cover these additions; request fresh UI Critic BRIEF and Architect approval before implementation."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v5: exact 15 queue/write paths match; react-native-svg 15.15.4 is already installed; Logg-only green Mat and upright filled Kiss droplet paths preserve global colors and all existing log calculations/state semantics. UI Critic BRIEF v5 PROCEED incorporated. Begin implementation on the existing branch."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start approved v5 implementation on knowledge/d3-catalog-delivery. Replace the Logg-only Kiss mark with three upright filled teardrop paths and change only Logg Mat to green700/green100. Preserve the approved v4 pattern card and existing events, counts, order and persistence; use only the 15 declared paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Plan v5 implemented after UI Critic PROCEED and Architect APPROVE: Logg Mat uses green700/green100 and Kiss uses three upright filled droplets across quick/history/layout/type selector and Olycka. CI passes (831 tests, 1 skipped); public and review verifier each pass 22/22 with zero page errors; v5 comparison and §14/§14.16 evidence updated. UI Critic REVIEW PASS. Next: independent behavior/visual QA and Frozen Reviewer."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent behavior/visual QA v5 PASS: 15 paths, consistent visuals, unchanged pattern logic, evidence, queue and diff check verified. Frozen Reviewer v5 PASS: path/queue scope, stable captures, allowed §14 statuses and attribution verified. UI Critic PASS; CI 831 pass/1 skip; browser public/review 22/22 each. Next: final closeout review."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer v5 PASS after final independent QA PASS: all declared Log paths, queue state, stable captures and checklist statuses verified; no findings. UI Critic REVIEW PASS; full CI and public/review visual runs pass. See docs/design/evidence/log-potty-icon-pattern-01/REVIEWS.md and VERIFICATION.md. Native device/accessibility checks remain NOT TESTABLE."
+        }
+      ],
+      "next_step": "Frozen Reviewer v5 PASS after final independent QA PASS: all declared Log paths, queue state, stable captures and checklist statuses verified; no findings. UI Critic REVIEW PASS; full CI and public/review visual runs pass. See docs/design/evidence/log-potty-icon-pattern-01/REVIEWS.md and VERIFICATION.md. Native device/accessibility checks remain NOT TESTABLE.",
+      "priority": "P1",
+      "panels": [
+        "5"
+      ],
+      "risk_class": "L",
+      "checkpoint": "Plan v5 includes Erik’s green Mat and clearer Kiss droplet requests. UI Critic BRIEF v5 PROCEED: upright filled teardrops and Logg-only green700/green100. Architect approval is pending before implementation. V4 baseline evidence is recorded; final v5 CI, browser renders, QA and Frozen review remain outstanding.",
+      "related_tasks": [
+        "LOGGA-QUICK",
+        "UI-MODAL-CENTER-01"
+      ],
+      "test_evidence": [
+        "V4 baseline CI=1 pnpm check: PASS; TypeScript, Edge TypeScript, ESLint, 831 tests pass, 1 skip.",
+        "V4 baseline public verify-flow-log.py: 22/22, 0 page errors; includes settled event-type selector; evidence docs/design/evidence/log-potty-icon-pattern-01/public/.",
+        "V4 baseline review verify-flow-log.py: 22/22, 0 page errors; includes settled event-type selector; evidence docs/design/evidence/log-potty-icon-pattern-01/review/.",
+        "V4 baseline aggregate RESULTS.json, full §14 checklist and separate §14.16 visual dimensions: docs/design/evidence/log-potty-icon-pattern-01/.",
+        "V4 UI Critic focused event-type selector re-review: PASS. V5 UI Critic BRIEF: PROCEED; recommends upright filled teardrops and green Mat; contrast 5.59:1.",
+        "V5 Architect review: PENDING before implementation.",
+        "V4 baseline amber Kiss foreground/surface contrast: 5.38:1; native checks and final v5 visual outcomes are not yet verified.",
+        "python -X utf8 tools/dev_flow.py validate, Python compilation and git diff --check: PASS for current plan/evidence state."
+      ]
     }
   ]
 }

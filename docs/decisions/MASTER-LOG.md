@@ -343,3 +343,27 @@ Architect **APPROVE** v3 och UI Critic REVIEW **PASS**. Hemmets fasrad är nu en
 RN Web public **32/32** och review **32/32**; early/normal/midpoint progresslängd växer monotont, adult/missing/invalid/future har ingen båge, och fasraden klarar 375/430, UNGHUND vid 375 samt 140 % CSS-text utan porträttöverlapp. `CI=1 pnpm check` **PASS**: 829 test PASS och 1 skip. Oberoende beteende/visuell QA **PASS** för den begärda ändringen; en scope-audit räknade 66 ändrade/nya filer och fann samtliga inom de 12 deklarerade skrivvägarna. Slutbilder, jämförelse, `RESULTS.json` och review finns i `docs/design/evidence/development-progress-affordance-01/`.
 
 QA håller helpanelens komposition/bildspråk/innehållstäthet **ÖPPNA**: referensens stora hundporträtt och båge ingår i en tätare layout, medan nuvarande appvy har separat bildremsa, båge och efterföljande block. Backlog `DEVELOPMENT-PANEL-COMPOSITION-01` skapad för separat planering; den är inte blockerare för den avgränsade ändringen. Frozen Reviewer **PASS**; commit/push på befintlig branch följer. Native VoiceOver, Dynamic Type och TestFlight är **NOT TESTABLE**.
+
+
+### 2026-10-28 — LOG-POTTY-ICON-PATTERN-01 v4 implementation checkpoint
+
+Logg visar nu Kiss med gul yta och tre små droppar; Vatten behåller sin blå en-dropsymbol. Samma variant används i snabbval, historik, typval, långtrycksedigering och mönstersammanfattning. Kiss-ikonerna döljs för skärmläsare där en tydlig föräldraetikett redan finns, medan Olyckas typinformation bevaras. Sammanfattningen visar kategori/antal och ungefärligt medianintervall i två nivåer. Räkning, filter och källhändelser ändras inte.
+
+UI Critic REVIEW **PASS**; amberkontrast är 5,38:1. Uppdaterad RN Web public/review verifiering 22/22 vardera, 0 page errors, inklusive öppnad typväljare. `CI=1 pnpm check` 831 pass, 1 skip. Full §14-checklist, separat §14.16-dimensionsbedömning och aggregerade resultat finns i `docs/design/evidence/log-potty-icon-pattern-01/`. QA/Frozen hittade först evidensformat och ett för tidigt typväljarscreenshot; dessa har korrigerats. Erik utökade därefter v5 med grön Mat och tydligare droppsilhuetter för Kiss. V5 BRIEF/Architect-godkännande krävs före de nya kodändringarna; native accessibility är NOT TESTABLE i denna miljö.
+
+### 2026-10-28 — LOG-POTTY-ICON-PATTERN-01 v5 verifieringscheckpoint
+
+Mat är grön endast i Logg; Kiss visar tre upprätta fyllda droppar i snabbval, historik, layoutredigering, typväljare och Olycka. Vatten behåller en blå droppe. UI Critic BRIEF **PROCEED**, Architect **APPROVE**, UI Critic REVIEW **PASS**, oberoende QA **PASS** och Frozen Reviewer **PASS**. Kiss-kontrast 5,38:1; Logg Mat 5,59:1. Public/review RN Web verifiering **22/22** vardera utan browserfel; `CI=1 pnpm check` **PASS** (831 test, 1 skip). §14/§14.16, `RESULTS.json` och v5-jämförelsen är uppdaterade i `docs/design/evidence/log-potty-icon-pattern-01/`. Tasken är stängd på befintlig branch. Inga schema-, data-, dependency- eller innehållsändringar; native accessibility, Dynamic Type och enhetskontroll är **NOT TESTABLE**.
+### 2026-10-28 — UI-GESTURE-MOTION-01 lokal checkpoint
+
+Appägda modaler kan avfärdas med horisontellt svep från dedikerad yta via samma close-guards; befintligt nedåtdrag, scroll och osparat-formulärbeteende bevaras. Huvudfliksvep behåller riktning/gränser och får en tydligare tokeniserad slide/fade, medan stödvyer och reducerad rörelse behåller sina kontrakt. Architect, UI Critic, oberoende QA och Frozen Reviewer **PASS**. `CI=1 pnpm check` **PASS** (98/98 testfiler); public/review-verifiering **27/27** vardera. Native gestkonkurrens, tangentbord och assistive tech är **NOT TESTABLE** utan enhet. Lokalt avslutad på befintlig branch; push väntar på att övriga aktiva tasks verifieras. Se `docs/tasks/dev/UI-GESTURE-MOTION-01.md` och `docs/design/evidence/ui-gesture-motion-01/`.
+
+### 2026-10-28 — TRAINING-EXERCISE-MODAL-UX-01
+
+Övningsmodalen visar kort hundbild med synligt ansikte, separat steg-/delmålsprogress och kompakta status- och navigeringshandlingar; hela instruktionen finns kvar. Public/review **30/30**, `CI=1 pnpm check` **PASS** (98/98 testfiler), UI Critic/QA/Frozen Reviewer **PASS**. Native/live backend är **NOT TESTABLE**. Se taskplan och evidensmapp.
+
+### 2026-10-28 — CHECKLIST-POLYCHROME-ICONS-01
+
+Checklistans ikonväljare, valda trigger och sparade Hem-/Kunskapspunkter använder nu samma tvåtonsikonstil som Logg-panel 5, med en semantiskt färgad symbol på mjuk rundel. Alla 20 persisted ikonnycklar, touch targets, valmarkering och readback bevaras; neutral fallback har en generell grön yta.
+
+Architect **APPROVE**, UI Critic BRIEF/REVIEW **PASS**, oberoende QA **PASS**, Frozen Reviewer **PASS**. Public/review körningar visar 37 ikonval och 7 Kunskapflöden vardera utan browserfel; `CI=1 pnpm check` **PASS** (98/98 testfiler). Native accessibility och live Supabase/RLS är **NOT TESTABLE**. Tasken är lokal och stängd; commit/push samlas med de andra verifierade ändringarna på `knowledge/d3-catalog-delivery`.

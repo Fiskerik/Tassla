@@ -91,7 +91,7 @@ function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, icon, sh
       <MotionPressable accessibilityRole="button" accessibilityLabel={`Öppna ${routineItemLabel}`} accessibilityHint={accessibilityHint}
         onPress={onOpen} onLongPress={onLongPress}
         style={({ pressed }) => [styles.homeDetailTarget, pressed && styles.pressed]}>
-        {showRoutineIcon && icon ? <ThemedIcon name={icon} tone={dailyRoutineChecklistIconTone(icon)}
+        {showRoutineIcon && icon ? <ThemedIcon name={icon} tone={dailyRoutineChecklistIconTone(icon)} size="medium"
           testID={`checklist-routine-icon-${icon}`} style={styles.checklistRoutineIcon} /> : null}
         <View style={styles.homeCopy}>
           <Text style={styles.homeLabel}>{label}</Text>

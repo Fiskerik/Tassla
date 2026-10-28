@@ -13,7 +13,8 @@ export function ThemedIcon({ name, tone = 'neutral', size = 'medium', surface = 
   testID?: string;
   style?: StyleProp<ViewStyle>;
 }) {
-  const color = tone === 'neutral' ? null : tokens.colors.category[tone];
+  const neutralColor = { fg: tokens.colors.textPrimary, bg: tokens.colors.selectedSurface };
+  const color = tone === 'neutral' ? neutralColor : tokens.colors.log.category[tone];
   const dimension = size === 'medium' ? tokens.size.chipMd : tokens.size.iconMd + tokens.spacing.xs;
   const glyphSize = size === 'medium' ? tokens.size.iconSm : tokens.size.iconSm - tokens.spacing.xs;
   return <View testID={testID} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"

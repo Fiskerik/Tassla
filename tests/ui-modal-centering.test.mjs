@@ -12,7 +12,7 @@ const [bottomSheet, actionMenu, appPrimitives, dialog, iconPicker, knowledge] = 
   read('src/features/knowledge/PuppyChecklistScreen.tsx'),
 ]);
 
-test('BottomSheet is a centered, bounded card and keeps guarded close and drag behavior', () => {
+test('BottomSheet is centered and bounded, with horizontal and vertical gestures on the safe handle', () => {
   assert.match(bottomSheet, /testID="center-modal-bottom-sheet"/);
   assert.match(bottomSheet, /pointerEvents="box-none" style=\{\[styles\.modalFrame/);
   assert.match(bottomSheet, /modalFrame: \{[^}]*alignItems: 'center', justifyContent: 'center'/);
@@ -21,6 +21,8 @@ test('BottomSheet is a centered, bounded card and keeps guarded close and drag b
   assert.match(bottomSheet, /onRequestClose=\{onRequestClose\}/);
   assert.match(bottomSheet, /StyleSheet\.absoluteFill/);
   assert.match(bottomSheet, /\{\.\.\.drag\.panHandlers\}/);
+  assert.match(bottomSheet, /ModalSwipeHandle panHandlers=\{swipe\.panHandlers\}/);
+  assert.match(bottomSheet, /useModalSwipeDismiss\(visible, onRequestClose, reduced\)/);
 });
 
 test('ActionMenu is centered while edit/delete remain separate one-shot menu actions', () => {
@@ -33,6 +35,8 @@ test('ActionMenu is centered while edit/delete remain separate one-shot menu act
   assert.match(actionMenu, /accessibilityRole="menuitem" accessibilityLabel=\{`Ändra/);
   assert.match(actionMenu, /accessibilityRole="menuitem" accessibilityLabel=\{`Radera/);
   assert.match(actionMenu, /width: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin/);
+  assert.match(actionMenu, /ModalSwipeHandle panHandlers=\{swipe\.panHandlers\}/);
+  assert.match(actionMenu, /animationType=\{reduced \? 'none' : 'fade'\}/);
 });
 
 test('TimePicker is centered with reduced-motion-aware fade and bounded scrollable content', () => {
@@ -41,8 +45,9 @@ test('TimePicker is centered with reduced-motion-aware fade and bounded scrollab
   assert.match(appPrimitives, /animationType=\{reducedMotion \? 'none' : 'fade'\}/);
   assert.match(appPrimitives, /timeModalFrame: \{[^}]*alignItems: 'center', justifyContent: 'center'/);
   assert.match(appPrimitives, /timeModalCard: \{[^}]*maxWidth: 560[^}]*maxHeight: '100%'/);
-  assert.match(appPrimitives, /<ScrollView style=\{styles\.timeModalList\}/);
+  assert.match(appPrimitives, /<ScrollView testID="time-picker-options" style=\{styles\.timeModalList\}/);
   assert.match(appPrimitives, /onRequestClose=\{\(\) => setVisible\(false\)\}/);
+  assert.match(appPrimitives, /ModalSwipeHandle panHandlers=\{swipe\.panHandlers\}/);
 });
 
 test('existing Dialog, InfoModal and date picker retain centered layouts', () => {
@@ -51,6 +56,11 @@ test('existing Dialog, InfoModal and date picker retain centered layouts', () =>
   assert.match(appPrimitives, /dateModalBackdrop: \{[^}]*justifyContent: 'center'/);
   assert.match(appPrimitives, /testID="center-modal-info"/);
   assert.match(appPrimitives, /testID="center-modal-date-picker"/);
+  assert.match(appPrimitives, /ModalSwipeHandle panHandlers=\{swipe\.panHandlers\}/);
+  assert.match(appPrimitives, /<Animated\.View testID="center-modal-info"/);
+  assert.match(appPrimitives, /<Animated\.View testID="center-modal-date-picker"/);
+  assert.match(dialog, /ModalSwipeHandle panHandlers=\{swipe\.panHandlers\}/);
+  assert.match(dialog, /animationType=\{reduced \? 'none' : 'fade'\}/);
 });
 
 test('Knowledge icon choices expand in the form flow rather than a positioned popover', () => {

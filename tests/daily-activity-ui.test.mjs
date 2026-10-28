@@ -64,6 +64,7 @@ test('routine and training rows expose separate accessible actions and truthful 
   const homeVariant = item.slice(item.indexOf('function HomeDailyActivityItem'), item.indexOf('const styles'));
   assert.doesNotMatch(homeVariant, /<IconChip|list-outline|school-outline/);
   assert.match(homeVariant, /showRoutineIcon && icon/);
+  assert.match(homeVariant, /<ThemedIcon name=\{icon\} tone=\{dailyRoutineChecklistIconTone\(icon\)\} size="medium"/);
   assert.match(dailyChecklist, /showRoutineIcon=\{item\.kind === 'routine'\}/);
   assert.match(homeVariant, /homeTrainingStatusCell/);
   assert.match(homeVariant, /homeTrainingStatusChecked/);
@@ -114,6 +115,7 @@ test('routine checklist icons are selectable, saved in the model, and shown on C
   assert.match(manager, /startEdit\(focusedRoutine, focusRoutineItemId\)/);
   assert.match(dailyChecklist, /routineLabel=\{item\.routineLabel\}[\s\S]*?icon=\{item\.icon\} showRoutineIcon=\{item\.kind === 'routine'\}/);
   assert.match(dailyChecklist, /const icon = item\.icon \?\? 'list-outline';/);
+  assert.match(dailyChecklist, /<ThemedIcon name=\{icon\} tone=\{dailyRoutineChecklistIconTone\(icon\)\} size="medium"/);
   assert.match(routineIcons, /'water-outline'/);
   assert.match(iconMigration, /create or replace function private\.valid_daily_routine_checklist/);
   assert.match(iconMigration, /v_item ->> 'icon' not in/);

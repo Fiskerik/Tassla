@@ -3567,7 +3567,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const pageContent = renderPage();
   const transitionDirection = navigationDirection(previousPage, page);
   const mainTabToMainTab = isMainTabDestination(previousPage) && isMainTabDestination(page);
-  const transitionDistance = mainTabToMainTab ? tokens.motion.pageDistance : tokens.motion.distance;
+  const transitionDistance = mainTabToMainTab ? tokens.motion.mainTabDistance : tokens.motion.distance;
+  const transitionDuration = mainTabToMainTab ? tokens.motion.mainTabEnter : tokens.motion.enter;
+  const transitionOpacityFrom = mainTabToMainTab ? tokens.motion.mainTabOpacityFrom : 0;
   const knowledgeRouteContentId = focusedKnowledgeContentId && visibleGuideContent.some((item) => item.id === focusedKnowledgeContentId)
     ? focusedKnowledgeContentId : undefined;
   const defaultRouteScroll = visiblePage === 'log' ? logViewScrollKeys(logView) : productRouteScrollKeys(visiblePage,
@@ -3606,7 +3608,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       }} /> : null}
     </> : null}
     <MainSwipeNavigation enabled={isMainTabDestination(page) && !(page === 'knowledge' && knowledgeDetailOpen)} onSwipe={handleMainSwipe}>
-      <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x" distance={transitionDistance}>{pageContent}</ScreenTransition>
+      <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x" distance={transitionDistance}
+        duration={transitionDuration} opacityFrom={transitionOpacityFrom}>{pageContent}</ScreenTransition>
     </MainSwipeNavigation>
   </AppScreen>;
 

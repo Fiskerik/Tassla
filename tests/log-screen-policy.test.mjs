@@ -61,6 +61,21 @@ test('quick log hides sparse patterns and keeps edit/delete inside the row edito
   assert.doesNotMatch(screen, /SPARAD|ActionFeedbackModal/);
 });
 
+test('Logg uses the same opt-in kiss icon in the editor and a two-level pattern summary', () => {
+  assert.match(screen, /<ListRow key=\{`primary-\$\{type\}`\} category=\{type\} iconVariant="rev02-log"/);
+  assert.match(screen, /<ListRow key=\{`more-\$\{type\}`\} category=\{type\} iconVariant="rev02-log"/);
+  assert.match(screen, /<IconChip category=\{item\.type\} variant="rev02-log"\s*\/>/);
+  assert.match(screen, /<IconChip category=\{type\} size="medium" variant="rev02-log"\s*\/>/);
+  assert.match(screen, /<IconChip category=\{option\} size="medium" variant="rev02-log"\s*\/>/);
+  assert.match(screen, /accessibilityLabel=\{`Logga \$\{LOG_EVENT_LABELS\[type\]\.toLocaleLowerCase\('sv-SE'\)\}`\}/);
+  assert.match(screen, /patternCategory: \{[^}]*textPrimary/);
+  assert.match(screen, /patternCount: \{[^}]*typography\.caption/);
+  assert.match(screen, /patternInterval: \{[^}]*textSecondary/);
+  assert.match(screen, /item\.medianIntervalMinutes === null \? null : <Text style=\{styles\.patternInterval\}>Ungefär \{formatInterval/);
+  assert.match(screen, /patternDivider: \{/);
+  assert.match(screen, /accessibilityLabel=\{`Dina senaste mönster:/);
+});
+
 test('legacy row editing and deletion remain reachable from workspace and preview', () => {
   assert.match(screen, /onPress=\{deleting \? undefined : \(\) => \{ firstUseTip\.dismiss\(\); editorSubmitRef\.current = null; setEditorActionState\(\{ canSave: false, saving: false, dirty: false \}\); setEditingId\(event\.id\); setEditorMinimized\(false\); \}\}/);
   assert.match(screen, /function LogEventEditor/);
@@ -74,7 +89,8 @@ test('legacy row editing and deletion remain reachable from workspace and previe
   assert.match(screen, /DatePickerField/);
   assert.match(screen, /TimePickerField/);
   assert.match(screen, /Anteckning \(valfri\)/);
-  assert.match(listRow, /const content = isLogTimeline \? <>[\s\S]*?<View style=\{styles\.logTimeColumn\}>\{time \? <Text style=\{styles\.logTime\}>\{time\}<\/Text> : null\}<\/View>[\s\S]*?<IconChip category=\{category\} variant="rev02-log"[\s\S]*?<View style=\{styles\.copy\}><View style=\{styles\.headline\}>\{titleText\}<\/View>/);
+  assert.match(listRow, /const rowIconVariant = isLogTimeline \? 'rev02-log' : iconVariant/);
+  assert.match(listRow, /<IconChip category=\{category\} variant=\{rowIconVariant\} accidentKinds=\{accidentKinds\} \/>/);
   assert.match(screen, /tryck för att ändra/);
 });
 

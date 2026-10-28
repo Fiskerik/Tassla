@@ -503,8 +503,18 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       </BottomSheet>
       {patterns.length > 0 ? <>
         <SectionHeader title="Dina senaste mönster" />
-        <Card accessibilityLabel="Dina senaste mönster för Kiss och Bajs">
-          {patterns.map((item) => <Text key={item.type} style={styles.patternText}>{LOG_EVENT_LABELS[item.type]}: {item.count} gånger{item.medianIntervalMinutes === null ? '' : ` · ungefär ${formatInterval(item.medianIntervalMinutes)}`}</Text>)}
+        <Card accessibilityLabel={`Dina senaste mönster: ${patterns.map((item) => `${LOG_EVENT_LABELS[item.type]}, ${item.count} gånger${item.medianIntervalMinutes === null ? '' : `, ungefär ${formatInterval(item.medianIntervalMinutes)}`}`).join('. ')}`}>
+          <View style={styles.patternList}>
+            {patterns.map((item, index) => <View key={item.type} style={styles.patternRow}>
+              <View style={styles.patternMain}>
+                <IconChip category={item.type} variant="rev02-log" />
+                <Text style={styles.patternCategory}>{LOG_EVENT_LABELS[item.type]}</Text>
+                <Text style={styles.patternCount}>{item.count} gånger</Text>
+              </View>
+              {item.medianIntervalMinutes === null ? null : <Text style={styles.patternInterval}>Ungefär {formatInterval(item.medianIntervalMinutes)}</Text>}
+              {index < patterns.length - 1 ? <View style={styles.patternDivider} /> : null}
+            </View>)}
+          </View>
         </Card>
       </> : null}
 
@@ -754,7 +764,13 @@ const styles = StyleSheet.create({
   grid: { gap: tokens.spacing.sm }, gridRow: { flexDirection: 'row', gap: tokens.spacing.sm }, moreRow: { marginTop: tokens.spacing.sm }, moreIcon: { width: tokens.size.chipLg, minHeight: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.selectedSurface },
   addEventButton: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.primary, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.primary }, addEventPressed: { backgroundColor: tokens.colors.primaryPressed, borderColor: tokens.colors.primaryPressed }, addEventDisabled: { opacity: 0.55 }, addEventLabel: { ...tokens.typography.label, color: tokens.colors.onPrimary }, addEventHelp: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   loadingOlder: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.sm }, loadingOlderText: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
-  patternText: { ...tokens.typography.body, color: tokens.colors.textPrimary, paddingVertical: tokens.spacing.xs },
+  patternList: { gap: tokens.spacing.xs },
+  patternRow: { gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs },
+  patternMain: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: tokens.spacing.sm },
+  patternCategory: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  patternCount: { ...tokens.typography.caption, color: tokens.colors.textPrimary, marginLeft: 'auto' },
+  patternInterval: { ...tokens.typography.caption, color: tokens.colors.textSecondary, paddingLeft: tokens.size.chipMd + tokens.spacing.sm },
+  patternDivider: { height: tokens.size.stroke, backgroundColor: tokens.colors.border, marginTop: tokens.spacing.xs },
   empty: { padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, gap: tokens.spacing.xs },
   emptyTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary }, emptyBody: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   refreshErrorState: { gap: tokens.spacing.xs },
@@ -786,9 +802,9 @@ function LayoutEditor({ layout, onMove, onDone, error }: { layout: QuickLogLayou
     <Text style={styles.layoutTitle} accessibilityRole="header">Ändra snabbval</Text>
     <Text style={styles.layoutBody}>Tryck på en ruta för att flytta den mellan snabbval och Mer.</Text>
     <Text style={styles.layoutGroupTitle}>Visas först</Text>
-    {layout.primary.map((type) => <ListRow key={`primary-${type}`} category={type} title={LOG_EVENT_LABELS[type]} meta="Flytta till Mer" onPress={() => onMove(type, 'more')} />)}
+    {layout.primary.map((type) => <ListRow key={`primary-${type}`} category={type} iconVariant="rev02-log" title={LOG_EVENT_LABELS[type]} meta="Flytta till Mer" onPress={() => onMove(type, 'more')} />)}
     <Text style={styles.layoutGroupTitle}>Under Mer</Text>
-    {layout.more.map((type) => <ListRow key={`more-${type}`} category={type} title={LOG_EVENT_LABELS[type]} meta="Visa bland snabbval" onPress={() => onMove(type, 'primary')} />)}
+    {layout.more.map((type) => <ListRow key={`more-${type}`} category={type} iconVariant="rev02-log" title={LOG_EVENT_LABELS[type]} meta="Visa bland snabbval" onPress={() => onMove(type, 'primary')} />)}
     {error ? <MessageCard tone="error">Snabbvalen kunde inte sparas på enheten.</MessageCard> : null}
     <Button variant="tertiary" label="Klar" accessibilityLabel="Klar med snabbval" onPress={onDone} />
   </View>;

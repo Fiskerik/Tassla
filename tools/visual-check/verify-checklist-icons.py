@@ -20,14 +20,23 @@ token_source = (repo / 'src/theme/tokens.ts').read_text()
 tone_body = re.search(r'export const CHECKLIST_ICON_TONES[^=]*=\s*\{([\s\S]*?)\n\};', icon_source)
 primitive_body = re.search(r'const primitives\s*=\s*\{([\s\S]*?)\}\s+as const;', token_source)
 category_body = re.search(r'export const categoryColors\s*=\s*\{([\s\S]*?)\}\s+as const;', token_source)
-vision_body = re.search(r'const visionRev02Colors\s*=\s*\{([\s\S]*?)\}\s+as const;', token_source)
-assert tone_body and primitive_body and category_body and vision_body, 'icon or theme token source could not be parsed'
-icon_tones = dict(re.findall(r"'([^']+)':\s*'([^']+)'", tone_body.group(1)))
+log_category_body = re.search(r'const logCategoryColors\s*=\s*\{([\s\S]*?)\}\s+as const;', token_source)
+semantic_body = re.search(r'const semanticColors\s*=\s*\{([\s\S]*?)\}\s+as const;', token_source)
+icon_list_body = re.search(r'export const CHECKLIST_ICONS\s*=\s*\[([\s\S]*?)\]\s*as const;', icon_source)
+assert tone_body and primitive_body and category_body and log_category_body and semantic_body and icon_list_body, 'icon or theme token source could not be parsed'
+icon_tones = {
+    quoted_key or plain_key: tone
+    for quoted_key, plain_key, tone in re.findall(r"(?:'([^']+)'|(\w+)):\s*'([^']+)'", tone_body.group(1))
+}
+checklist_icons = re.findall(r"'([^']+)'", icon_list_body.group(1))
 primitives = dict(re.findall(r"(\w+):\s*'(#(?:[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8}))'", primitive_body.group(1)))
 categories = {}
 for match in re.finditer(r"(\w+):\s*\{\s*fg:\s*primitives\.(\w+),\s*bg:\s*primitives\.(\w+)\s*\}", category_body.group(1)):
     categories[match.group(1)] = (primitives[match.group(2)], primitives[match.group(3)])
-vision_colors = dict(re.findall(r"(\w+):\s*'(#(?:[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8}))'", vision_body.group(1)))
+for match in re.finditer(r"(\w+):\s*\{\s*fg:\s*primitives\.(\w+),\s*bg:\s*primitives\.(\w+)\s*\}", log_category_body.group(1)):
+    categories[match.group(1)] = (primitives[match.group(2)], primitives[match.group(3)])
+semantic_refs = dict(re.findall(r"(\w+):\s*primitives\.(\w+)", semantic_body.group(1)))
+assert len(checklist_icons) == 20 and all(icon in icon_tones for icon in checklist_icons), 'every selectable icon needs one explicit visual tone'
 
 
 def as_rgb(value):
@@ -53,7 +62,7 @@ def contrast_ratio(foreground, background):
 
 def expected_tone_colors(tone):
     if tone == 'neutral':
-        return token_rgb(vision_colors['textMuted']), None
+        return token_rgb(primitives[semantic_refs['textPrimary']]), token_rgb(primitives[semantic_refs['selectedSurface']])
     foreground, background = categories[tone]
     return token_rgb(foreground), token_rgb(background)
 
@@ -98,7 +107,7 @@ with sync_playwright() as playwright:
             const iconView = element.getAttribute('role') === 'radio'
                 ? [...element.querySelectorAll('*')].find((node) => {
                     const style = getComputedStyle(node);
-                    return style.display === 'flex' && style.width === '28px' && style.height === '28px';
+                    return style.display === 'flex' && style.width === '32px' && style.height === '32px';
                 }) ?? element
                 : element;
             const inheritedColor = getComputedStyle(iconView).color;
@@ -143,7 +152,7 @@ with sync_playwright() as playwright:
         open_checklist(width, height)
         if width == 375 and height == 844:
             for icon, tone in [
-                ('paw', 'neutral'), ('water-outline', 'water'), ('walk-outline', 'walk'),
+                ('paw', 'training'), ('water-outline', 'water'), ('walk-outline', 'walk'),
             ]:
                 check_icon_style(f'checklist-routine-icon-{icon}', tone, surface=True)
         long_press_kissa()
@@ -155,6 +164,9 @@ with sync_playwright() as playwright:
         radios = picker.get_by_role('radio')
         expect(radios).to_have_count(20)
         expect(page.get_by_text('Välj ikon', exact=False)).to_have_count(0)
+        if width == 375 and height == 844:
+            for icon in checklist_icons:
+                check_icon_style(f'routine-icon-choice-symbol-{icon}', icon_tones[icon], surface=True)
         page.screenshot(path=str(out / f'checklist-icon-picker-{width}x{height}.png'))
         for index in range(20):
             choice = radios.nth(index)
@@ -173,7 +185,7 @@ with sync_playwright() as playwright:
         passed(f'Long-press opens Kissa icon picker at {width}x{height}; all 20 choices are reachable while scrolling and have 44px targets')
 
         if width == 375 and height == 844:
-            check_icon_style('routine-icon-choice-icon-water-outline', 'water', surface=False)
+            check_icon_style('routine-icon-choice-symbol-water-outline', 'water', surface=True)
             picker.get_by_role('radio', name='Vatten', exact=True).click()
             icon_button = page.get_by_role('button', name='Välj ikon för Kissa. Aktuell ikon: Vatten', exact=True)
             icon_button.click()
@@ -210,6 +222,7 @@ with sync_playwright() as playwright:
             expect(page.get_by_role('button', name='Hantera rutiner och aktiviteter', exact=True)).to_be_visible()
             expect(page.get_by_role('checkbox', name=re.compile(r'Rutin Morgonrutin, punkt Kissa, inte klar'))).to_have_attribute('aria-checked', 'false')
             page.screenshot(path=str(out / 'checklist-icon-saved-template-375x844.png'))
+            check_icon_style('checklist-routine-icon-water-outline', 'water', surface=True)
             page.get_by_role('button', name='Hantera rutiner och aktiviteter', exact=True).click()
             page.get_by_role('button', name='Redigera rutin Morgonrutin', exact=True).click()
             persisted_picker_trigger = page.get_by_role('button', name='Välj ikon för Kissa. Aktuell ikon: Vatten', exact=True)
@@ -281,7 +294,7 @@ with sync_playwright() as playwright:
     assert not errors, errors
     passed('Checklist icon and routine action render has no browser errors')
     browser.close()
-    (out / 'browser-results.json').write_text(json.dumps({
+    (out / 'icon-picker-results.json').write_text(json.dumps({
         'passes': results,
         'pageErrors': errors,
         'scope': 'A02 checklist icons and routine action confirmations; synthetic React Native Web fixture, not native/database certification',

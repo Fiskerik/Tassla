@@ -25,7 +25,7 @@ export function ChecklistIconPickerTrigger({ value, label, expanded, disabled = 
     accessibilityState={{ expanded, disabled }} aria-expanded={expanded} disabled={disabled} onPress={onToggle}
     testID={`${testIDPrefix}-icon-picker-trigger-${itemKey}`}
     style={({ pressed }) => [styles.trigger, expanded && styles.selected, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
-    <ThemedIcon name={displayIcon} tone={checklistIconTone(displayIcon)} size="small" surface={false} />
+    <ThemedIcon name={displayIcon} tone={checklistIconTone(displayIcon)} size="medium" testID={`${testIDPrefix}-icon-picker-symbol-${itemKey}`} />
     <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={tokens.spacing.sm} color={tokens.colors.textSecondary} />
   </MotionPressable>;
 }
@@ -40,7 +40,7 @@ export function ChecklistIconPickerChoices({ label, value, expanded, disabled = 
           testID={`${testIDPrefix}-icon-choice-icon-${icon}`}
           style={({ pressed }) => [styles.choice, selected && styles.choiceSelected, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
           <View style={styles.choiceContents} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <ThemedIcon name={icon} tone={checklistIconTone(icon)} size="small" surface={false} />
+            <ThemedIcon name={icon} tone={checklistIconTone(icon)} size="medium" testID={`${testIDPrefix}-icon-choice-symbol-${icon}`} />
             {selected ? <Ionicons name="checkmark-circle" size={tokens.spacing.md} color={tokens.colors.primary} style={styles.checkmark} /> : null}
           </View>
         </MotionPressable>;
@@ -49,7 +49,7 @@ export function ChecklistIconPickerChoices({ label, value, expanded, disabled = 
 }
 
 const styles = StyleSheet.create({
-  trigger: { minWidth: tokens.size.touchMin, width: tokens.size.touchMin, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs / 2, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },
+  trigger: { minWidth: tokens.size.touchMin + tokens.size.stroke * 2, width: tokens.size.touchMin + tokens.size.stroke * 2, minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs / 2, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },
   selected: { borderColor: tokens.colors.primary, backgroundColor: tokens.colors.selectedSurface },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs, padding: tokens.spacing.sm, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },
   choice: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.surface },

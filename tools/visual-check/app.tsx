@@ -42,7 +42,7 @@ import {tokens} from '../../src/theme/tokens';
 import {createRoutineAndSelectForToday} from '../../src/features/home/daily-activity-data';
 import {createdRoutineDaySelectionRecoveryCopy} from '../../src/features/home/daily-activity-recovery';
 import {MainSwipeNavigation} from '../../src/components/ui/MainSwipeNavigation';
-import {isMainTabDestination,nextMainTabDestination} from '../../src/features/home/main-navigation';
+import {isMainTabDestination,mainTabTransitionDirection,nextMainTabDestination} from '../../src/features/home/main-navigation';
 import {workspaceSnapshotReadDecision} from '../../src/data/workspace-data';
 import {emptyTrainingProgression,latestHomeTrainingSummary,type PendingTrainingProgression,type TrainingProgressionAction,type TrainingProgressionWorkspace} from '../../src/features/training/training-progression';
 import recallDraft from '../../docs/content/recall-program-v1.json';
@@ -65,6 +65,10 @@ const accidentEditFixtures:Record<string,LogEvent[]>={
  'accident-edit-long-note':[logEvent('accident-long-note',localDateKey(),8*60+11,'accident','Efter en lång och lite stökig promenad runt kvarteret valde Luna en plats nära porten, och vi vill kunna läsa anteckningen utan att den tränger ihop tiden eller olyckssymbolen.',['pee'])],
  'accident-patterns':[logEvent('pattern-pee-old',localDateKey(),8*60,'pee'),logEvent('pattern-pee-accident',localDateKey(),8*60+12,'accident',null,['pee']),logEvent('pattern-poop-old',localDateKey(-1),8*60+11,'poop'),logEvent('pattern-poop-accident',localDateKey(),6*60+11,'accident',null,['poop'])],
  'accident-duplicate':[logEvent('accident-recent',localDateKey(),new Date().getHours()*60+new Date().getMinutes(),'accident',null,['pee'])],
+ 'potty-patterns-both':[logEvent('pattern-pee-1',localDateKey(-1),8*60,'pee'),logEvent('pattern-pee-2',localDateKey(),7*60+30,'pee'),logEvent('pattern-pee-accident',localDateKey(),11*60,'accident',null,['pee']),logEvent('pattern-poop-1',localDateKey(-1),10*60,'poop'),logEvent('pattern-poop-accident',localDateKey(),9*60,'accident',null,['poop']),logEvent('pattern-food',localDateKey(),12*60+5,'food','Åt allt'),logEvent('pattern-water',localDateKey(),13*60,'water')],
+ 'potty-patterns-pee':[logEvent('pattern-pee-1',localDateKey(-1),8*60,'pee'),logEvent('pattern-pee-2',localDateKey(),7*60+30,'pee'),logEvent('pattern-pee-3',localDateKey(),11*60,'pee')],
+ 'potty-patterns-poop':[logEvent('pattern-poop-1',localDateKey(-1),10*60,'poop'),logEvent('pattern-poop-2',localDateKey(),9*60,'poop')],
+ 'potty-patterns-sparse':[logEvent('pattern-pee-sparse',localDateKey(),8*60,'pee')],
 };
 const ageUnitParam=new URLSearchParams(location.search).get('ageUnit');
 const ageDisplayUnit=ageUnitParam==='months'?'months':ageUnitParam==='years'?'years':'weeks';
@@ -127,11 +131,18 @@ function trainingScenarioFixture(scenario:string,reviewMode:boolean):PublishedTr
  const source=reviewMode?[...REVIEW_TRAINING_PROGRAMS]:publicTrainingFixture;
  if(scenario==='recall-draft')return [{id:recallDraft.version_id,content_id:recallDraft.content_id,version:recallDraft.version,title:recallDraft.title,body:recallDraft.body,sources:recallDraft.sources,is_ai_generated:true,currentAgeBreedMatch:true,completedStepIds:[],completedAtByStepId:{},steps:recallDraft.steps.map(step=>({id:step.id,position:step.position,title:step.title,instruction:step.instruction}))}];
  if(scenario==='structured')return source.map((program,index)=>index===0?{...program,completedStepIds:[],steps:program.steps.map((step,stepIndex)=>stepIndex===0?{...step,instruction:'Öva lugnt och belöna frivillig kontakt.\n\n## Du behöver\nEn belöning.\n\n## Så gör ni\n1. Välj en lugn plats.\n2. Belöna när hunden kommer.'}:step)}:program);
- if(scenario==='timeline')return source.map((program,index)=>index===0?{...program,
-  completedStepIds:['trygg-1','trygg-3'],
-  completedAtByStepId:{'trygg-1':'2026-08-15T12:00:00.000Z','trygg-3':'2026-10-01T12:00:00.000Z'},
-  steps:program.steps.map((step,stepIndex)=>stepIndex===0?{...step,instruction:'Börja på en lugn plats och låt hunden utforska i egen takt.'}:stepIndex===1?{...step,instruction:'Erbjud en kort paus och belöna lugn kontakt. Avsluta medan det fortfarande känns tryggt.'}:{...step,instruction:'Gör nästa övning kort och följ hundens signaler.'})
- }:program);
+ if(scenario==='timeline')return source.map((program,index)=>{
+  if(index!==0)return program;
+  const steps=program.steps.map((step,stepIndex)=>stepIndex===0?{...step,instruction:'Börja på en lugn plats och låt hunden utforska i egen takt.'}:stepIndex===1?{...step,instruction:'Erbjud en kort paus och belöna lugn kontakt. Avsluta medan det fortfarande känns tryggt.'}:{...step,instruction:'Gör nästa övning kort och följ hundens signaler.'});
+  if(steps.length<3&&steps[1])steps.push({...steps[1],id:`${steps[1].id}:three`,position:3,title:'Avsluta i lugn takt',instruction:'Gör nästa övning kort och följ hundens signaler.'});
+  return {...program,completedStepIds:[steps[0].id,steps[2].id],completedAtByStepId:{[steps[0].id]:'2026-08-15T12:00:00.000Z',[steps[2].id]:'2026-10-01T12:00:00.000Z'},steps};
+ });
+ if(scenario==='modal-detail')return source.map((program,index)=>{
+  if(index!==0)return program;
+  const steps=program.steps.map((step,stepIndex)=>stepIndex===1?{...step,instruction:'När hunden är lugn kan den själv få nosa eller närma sig samma sak. Belöna lugn nyfikenhet. Om den tvekar, stanna på lättare avstånd i stället för att föra den fram.'}:step);
+  if(steps.length<3&&steps[1])steps.push({...steps[1],id:`${steps[1].id}:three`,position:3,title:'Avsluta i lugn takt',instruction:'Avsluta övningen när hunden fortfarande känner sig trygg.'});
+  return {...program,is_ai_generated:true,completedStepIds:[],steps};
+ });
  if(scenario==='unknown-age'&&reviewMode)return source.map((program,index)=>({...program,completedStepIds:index===0&&program.steps.length?[program.steps[0].id]:[]}));
  if(scenario==='unstarted')return source.map(program=>({...program,completedStepIds:[]}));
  if(scenario==='half')return source.map((program,index)=>({...program,completedStepIds:index===1&&program.steps.length?[program.steps[0].id]:[]}));
@@ -146,13 +157,15 @@ function initialProgressionFixture(scenario:string,programs:readonly PublishedTr
   const journey={id:'journey-withdrawn',dog_id:dog.id,program_version_id:'withdrawn-fixture-version',active_step_id:'withdrawn-fixture-step',state:'paused' as const,last_operation_id:'fixture-seed-operation',created_at:'2026-10-24T10:00:00.000Z',updated_at:'2026-10-24T10:00:00.000Z'};
   return {journeys:[journey],sessions:[{id:'fixture-withdrawn-session',journey_id:journey.id,dog_id:dog.id,program_version_id:journey.program_version_id,step_id:journey.active_step_id,operation_id:'fixture-withdrawn-session-operation',feedback:'paused_early',performed_at:'2026-10-24T10:01:00.000Z'}],milestones:[]};
  }
- const program=programs[0];const firstStep=program?.steps[0];if(!program||!firstStep||!['active','paused','confirmed','timeline'].includes(scenario))return emptyTrainingProgression();
- const journey={id:`journey-${program.id}`,dog_id:dog.id,program_version_id:program.id,active_step_id:scenario==='timeline'?program.steps[1]?.id??firstStep.id:firstStep.id,state:scenario==='paused'?'paused' as const:'active' as const,
+ const program=programs[0];const firstStep=program?.steps[0];if(!program||!firstStep||!['active','paused','confirmed','timeline','confirmed-current','confirmable'].includes(scenario))return emptyTrainingProgression();
+ const journey={id:`journey-${program.id}`,dog_id:dog.id,program_version_id:program.id,active_step_id:['timeline','confirmed-current','confirmable'].includes(scenario)?program.steps[1]?.id??firstStep.id:firstStep.id,state:scenario==='paused'?'paused' as const:'active' as const,
   last_operation_id:'fixture-seed-operation',created_at:'2026-10-24T10:00:00.000Z',updated_at:'2026-10-24T10:00:00.000Z'};
- const sessions=['confirmed','timeline'].includes(scenario)?[{id:'fixture-seed-session',journey_id:journey.id,dog_id:dog.id,program_version_id:program.id,step_id:scenario==='timeline'?journey.active_step_id:firstStep.id,
+ const sessions=['confirmed','timeline','confirmed-current','confirmable'].includes(scenario)?[{id:'fixture-seed-session',journey_id:journey.id,dog_id:dog.id,program_version_id:program.id,step_id:['timeline','confirmed-current','confirmable'].includes(scenario)?journey.active_step_id:firstStep.id,
   operation_id:'fixture-seed-session-operation',feedback:'worked_as_planned' as const,performed_at:'2026-10-24T10:01:00.000Z'}]:[];
- const milestones=['confirmed','timeline'].includes(scenario)?[{id:'fixture-seed-milestone',journey_id:journey.id,dog_id:dog.id,program_version_id:program.id,step_id:firstStep.id,
-  confirmation_operation_id:'fixture-seed-confirm-operation',confirmed_at:scenario==='timeline'?'2026-08-15T12:00:00.000Z':'2026-10-24T10:02:00.000Z'}]:[];
+ const milestones=['confirmed','timeline','confirmed-current','confirmable'].includes(scenario)?[{id:'fixture-seed-milestone',journey_id:journey.id,dog_id:dog.id,program_version_id:program.id,step_id:firstStep.id,
+  confirmation_operation_id:'fixture-seed-confirm-operation',confirmed_at:scenario==='timeline'?'2026-08-15T12:00:00.000Z':'2026-10-24T10:02:00.000Z'},
+  ...(scenario==='confirmed-current'&&program.steps[1]? [{id:'fixture-current-milestone',journey_id:journey.id,dog_id:dog.id,program_version_id:program.id,step_id:program.steps[1].id,
+    confirmation_operation_id:'fixture-current-confirm-operation',confirmed_at:'2026-10-25T10:02:00.000Z'}]:[])]:[];
  return {journeys:[journey],sessions,milestones};
 }
 function applyProgressionFixtureAction(workspace:TrainingProgressionWorkspace,program:PublishedTrainingProgram|undefined,action:TrainingProgressionAction,operationId:string):TrainingProgressionWorkspace{
@@ -264,6 +277,7 @@ function App(){
  const progressionOperationNumber=useRef(0);
  const progressionOperationLog=useRef<{operationId:string;action:TrainingProgressionAction}[]>([]);
  const progressionUnknownTriggered=useRef(false);
+ const progressionConfirmFailureUsed=useRef(false);
  const [trainingProgramFocus,setTrainingProgramFocus]=useState<string|null>(null);
  const [progressionReadState,setProgressionReadState]=useState<'ready'|'error'>(()=>params.get('progressionRead')==='error'?'error':'ready');
  const pausedTraining:PausedTrainingProgress[]=trainingScenario==='paused'?[{versionId:'fixture-training:previous-version',title:'Vardagsro och hantering',versionNumber:1,completedCount:2}]:trainingScenario==='paused-unavailable'?[{versionId:'fixture-training:unavailable-version',title:null,versionNumber:null,completedCount:2}]:[];
@@ -287,8 +301,14 @@ function App(){
  const scenarioStep=homeScenario==='review-training'?process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT==='true'?homeDenseFixture.trainingStep:undefined:homeScenario==='ready'?homeDenseFixture.trainingStep:undefined;
  const empty=state==='empty';const records=empty?[]:history;
  const main=['home','log','training','knowledge'].includes(page)?page:['checklist','progress','home-training-detail','workspace-retention'].includes(page)?'home':'more';
- const navigateMainTab=(destination)=>{const enteringKnowledge=page!=='knowledge'&&destination==='knowledge';const leavingKnowledge=page==='knowledge'&&destination!=='knowledge';if(enteringKnowledge||leavingKnowledge){setFocused(null);setKnowledgeDetailOpen(false);}setPage(destination);};
- const go=(p)=>{const destination=p==='profile'?'passport':p==='notification-settings'?'more':p==='planned-health'?'planned':p;if(isMainTabDestination(destination))navigateMainTab(destination);else setPage(destination);};
+ const previousPageForTransition=useRef(page);
+ const navigateMainTab=(destination)=>{const enteringKnowledge=page!=='knowledge'&&destination==='knowledge';const leavingKnowledge=page==='knowledge'&&destination!=='knowledge';if(enteringKnowledge||leavingKnowledge){setFocused(null);setKnowledgeDetailOpen(false);}previousPageForTransition.current=page;setPage(destination);};
+ const go=(p)=>{const destination=p==='profile'?'passport':p==='notification-settings'?'more':p==='planned-health'?'planned':p;if(isMainTabDestination(destination))navigateMainTab(destination);else{previousPageForTransition.current=page;setPage(destination);}};
+ const mainTabToMainTab=isMainTabDestination(previousPageForTransition.current)&&isMainTabDestination(page);
+ const transitionDirection=mainTabTransitionDirection(previousPageForTransition.current,page);
+ const transitionDistance=mainTabToMainTab?tokens.motion.mainTabDistance:tokens.motion.distance;
+ const transitionDuration=mainTabToMainTab?tokens.motion.mainTabEnter:tokens.motion.enter;
+ const transitionOpacityFrom=mainTabToMainTab?tokens.motion.mainTabOpacityFrom:0;
  const fixtureActivities=fixtureDailyActivities(fixtureRoutines,fixtureRoutineDays,fixtureDate,!firstDayMode);
  const routineChecklistActivities=fixtureActivities.filter(activity=>activity.kind==='routine');
  const trainingChecklistActivities=checklistTrainingSelections.flatMap(selection=>{
@@ -386,6 +406,7 @@ function App(){
    if(progressionWrite==='pending')await new Promise(resolve=>window.setTimeout(resolve,650));
    if(progressionWrite==='failed'&&!pending)return 'failed';
    if(progressionWrite==='failed-session'&&action.kind==='record_session'&&!pending)return 'failed';
+   if(progressionWrite==='failed-confirm-once'&&action.kind==='confirm_step'&&!progressionConfirmFailureUsed.current){progressionConfirmFailureUsed.current=true;return 'failed';}
    const next=applyProgressionFixtureAction(progressionStore.current,trainingPrograms.find(program=>program.id===versionId),action,operationId);
    progressionStore.current=next;
    const shouldReturnUnknown=progressionWrite==='unknown-once'||(progressionWrite==='unknown-session-once'&&action.kind==='record_session');
@@ -413,7 +434,7 @@ function App(){
  {page==='sign-in'?<SignInScreenView cancelGoogleSignIn={()=>{}} googlePending={params.get('signinScenario')==='google-pending'} sendMagicLink={async()=>params.get('signinScenario')!=='magic-error'} signInWithGoogle={async()=>params.get('signinScenario')!=='google-error'} signOutWarning={params.get('signinScenario')==='signout-warning'?'Du är utloggad på den här enheten. Servern kunde inte bekräfta att sessionen har återkallats.':null} status={params.get('signinScenario')==='unavailable'?'unavailable':'signedOut'}/>:null}
  {page==='profile-create'?<ProfileScreen client={profileClient as never} ownerId="00000000-0000-4000-8000-000000000002" accountGeneration={1} isCurrentAccount={isFixtureAccountCurrent} onCreated={()=>{}} mode={params.get('profileMode')==='add'?'add':'initial'} onCancel={()=>setPage('home')}/>:null}
  {page==='auth-callback'?<AuthCallbackView mode={params.get('callbackScenario')==='error'?'error':params.get('callbackScenario')==='preview'?'preview':'pending'} pendingMessage={params.get('callbackScenario')==='returned'?'Vi slutför inloggningen…':'Vänta medan länken öppnas…'} onReturn={()=>go('home')}/>:null}
- </>:<AppScreen scrollKey={page==='checklist'?'checklist-flow':page==='health'?'health-flow':page==='planned'&&healthFocus?'planned-health-health-source':page} preserveScrollKey={page==='checklist'||page==='home-training-detail'?'checklist-flow':page==='health'||(page==='planned'&&healthFocus)?'health-flow':undefined} footer={<BottomNav active={main} onChange={go}/>}><MainSwipeNavigation enabled={isMainTabDestination(page)&&!(page==='knowledge'&&knowledgeDetailOpen)} onSwipe={direction=>{const destination=nextMainTabDestination(page,direction);if(destination)navigateMainTab(destination);}}><ScreenTransition transitionKey={page}>
+ </>:<AppScreen scrollKey={page==='checklist'?'checklist-flow':page==='health'?'health-flow':page==='planned'&&healthFocus?'planned-health-health-source':page} preserveScrollKey={page==='checklist'||page==='home-training-detail'?'checklist-flow':page==='health'||(page==='planned'&&healthFocus)?'health-flow':undefined} footer={<BottomNav active={main} onChange={go}/>}><MainSwipeNavigation enabled={isMainTabDestination(page)&&!(page==='knowledge'&&knowledgeDetailOpen)} onSwipe={direction=>{const destination=nextMainTabDestination(page,direction);if(destination)navigateMainTab(destination);}}><ScreenTransition transitionKey={page} direction={transitionDirection} axis="x" distance={transitionDistance} duration={transitionDuration} opacityFrom={transitionOpacityFrom}>
  {page==='workspace-retention'?<WorkspaceRetentionFixture review={reviewFixtureEnabled}/>:null}
  {page==='development'?<DevelopmentScreen dogName={dog.name} birthDate={dog.birth_date} today={fixtureDate} guides={[]} guidesState="ready" onBack={()=>go('home')} onOpenGuide={()=>{}} onRetryGuides={()=>{}}/>:null}
  {page==='metrics-fixture'?<OnboardingMetricsChoice client={profileClient as never} ownerId="00000000-0000-4000-8000-000000000002" accountGeneration={1} isCurrentAccount={isFixtureAccountCurrent} hasReferral />:null}

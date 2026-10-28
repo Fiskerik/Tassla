@@ -1,0 +1,33 @@
+{
+  "passes": [
+    "Development component gallery: ActionMenu, Dialog, BottomSheet at 320x570; 44pt actions and bounded card",
+    "ActionMenu horizontal swipe dismisses from its dedicated handle",
+    "Dialog horizontal swipe uses its guarded close callback",
+    "BottomSheet horizontal swipe closes without replacing its vertical drag handle",
+    "Development component gallery: ActionMenu, Dialog, BottomSheet at 375x844; 44pt actions and bounded card",
+    "Development component gallery: ActionMenu, Dialog, BottomSheet at 430x844; 44pt actions and bounded card",
+    "Development component gallery: ActionMenu, Dialog, BottomSheet at 768x844; 44pt actions and bounded card",
+    "ActionMenu backdrop, Edit and Delete each invoke only their own one-shot callback and close once",
+    "Production Planned Health: info, date picker, nested reminder TimePicker and parent recovery at 320x570",
+    "InfoModal horizontal swipe closes through its existing onClose handler",
+    "DatePicker horizontal swipe dismisses while preserving its parent form",
+    "Nested TimePicker keeps its options list vertically scrollable",
+    "Nested TimePicker horizontal swipe dismisses to the still-open parent form",
+    "Production Planned Health: info, date picker, nested reminder TimePicker and parent recovery at 375x844",
+    "Production Planned Health: info, date picker, nested reminder TimePicker and parent recovery at 430x844",
+    "Production Planned Health: info, date picker, nested reminder TimePicker and parent recovery at 768x844",
+    "Production Log Add Event sheet is centered and its existing actions remain available",
+    "Production Health history choice and editor sheets are centered with save action reachable",
+    "Production Notification Settings TimePicker is centered and cancellable",
+    "Notification TimePicker stays centered at 375x667 with its confirm action reachable",
+    "Forward main-tab transition 375px sampled start/middle/end: {'x': 23.9655, 'y': 0, 'opacity': 0.945533} → {'x': 0.773344, 'y': 0, 'opacity': 0.998242} → {'x': 0, 'y': 0, 'opacity': 1}",
+    "Backward main-tab transition 375px sampled start/middle/end: {'x': -26.3907, 'y': 0, 'opacity': 0.940021} → {'x': -1.03654, 'y': 0, 'opacity': 0.997644} → {'x': 0, 'y': 0, 'opacity': 1}",
+    "Reduced-motion preference skips the 375px main-tab transition: {'x': 0, 'y': 0, 'opacity': 1}",
+    "Forward main-tab transition 430px sampled start/middle/end: {'x': 21.4203, 'y': 0, 'opacity': 0.951318} → {'x': 0.773344, 'y': 0, 'opacity': 0.998242} → {'x': 0, 'y': 0, 'opacity': 1}",
+    "Backward main-tab transition 430px sampled start/middle/end: {'x': -24.8567, 'y': 0, 'opacity': 0.943507} → {'x': -0.0640509, 'y': 0, 'opacity': 0.999854} → {'x': 0, 'y': 0, 'opacity': 1}",
+    "Reduced-motion preference skips the 430px main-tab transition: {'x': 0, 'y': 0, 'opacity': 1}",
+    "Planned Health form remains centered, scrollable and keeps its fixed save action at 140% text/375x667 proxy"
+  ],
+  "pageErrors": [],
+  "scope": "React Native Web rendering of production screens and shared primitives; component gallery is development-only and is not product UI; native keyboard, system overlays and device accessibility are NOT TESTABLE"
+}

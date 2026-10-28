@@ -1341,3 +1341,37 @@ Ingen produktkod, artikeltext, asset, rekommendation, publiceringsstatus eller l
 Architect **APPROVE** v3; UI Critic REVIEW **PASS** efter att ha öppnat panel 2-jämförelsen, normal/mittpunktsbågen, Home-knappen normalt/140 % och Doos-rubriken. Oberoende beteende/visuell QA **PASS** för den begärda ändringen. RN Web public **32/32** och review **32/32** vid 375/430; båglängden ökar monotont för early/normal/midpoint och båge saknas för adult/missing/invalid/future. UNGHUND-knappen har 44 pt target och fri yta till porträttet vid 375/430. `CI=1 pnpm check` **PASS**: TypeScript, Edge TypeScript, ESLint, 829 test PASS och 1 skip; riktat test och Python-kompilering PASS. En scope-audit räknade 66 ändrade/nya filer, alla inom planens 12 deklarerade skrivvägar. Resultat och bilder ligger i `docs/design/evidence/development-progress-affordance-01/`.
 
 QA noterade att hela panel 2 fortfarande avviker i komposition: målbildens stora hundporträtt/åldersbåge är integrerade med en tätare milstolpslayout, medan appen visar separat bildremsa, båge och efterföljande block. Helpanelens komposition/bildspråk/innehållstäthet är därför **ÖPPNA** och följs upp i backlog `DEVELOPMENT-PANEL-COMPOSITION-01`; detta paket gör inget anspråk på full visuell panelmatchning. Frozen Reviewer **PASS** på scoped ändring efter att den obligatoriska §14/§14.16-checklistan lades till. Tasken är redo för commit/push på befintlig branch. Native VoiceOver, Dynamic Type och TestFlight är **NOT TESTABLE**.
+
+
+### LOG-POTTY-ICON-PATTERN-01 — v4 implementation checkpoint, 2026-10-28
+
+Kiss uses the Logg-only amber token and a custom three-drop icon in quick logging, history, type selection, the long-press layout editor and the pattern summary. Water remains blue with one droplet. `ListRow.iconVariant` is opt-in, so other rows retain their existing appearance. Logg pee icons are decorative in the accessibility tree where the parent already supplies the full label; Olycka keeps its meaningful type label.
+
+The lower `Dina senaste mönster` card now uses a clear category/count row and a secondary approximate median interval, with a divider between categories. The existing `count >= 2` filter and `summarizePottyPatterns` calculation/order/data are unchanged. Kiss/water contrast is checked by tokens; amber symbol/surface ratio is 5.38:1.
+
+`CI=1 pnpm check` **PASS**: typecheck, Edge typecheck, lint, 831 tests pass and 1 skip. Updated public and review `verify-flow-log.py` each **PASS 22/22**, 0 page errors; captures cover quick logging, history, layout editor, settled event-type selector, 375/430, 375×667, 140% text, Kiss-only, Bajs-only, both and sparse hidden state. Aggregate `RESULTS.json`, the full §14 checklist and separate §14.16 dimensions are in `docs/design/evidence/log-potty-icon-pattern-01/`. V4's selector/render and checklist findings are corrected; its final closeout was superseded when Erik expanded the task. Other open task changes on the branch are attributed to their own approved plans and will not be included as Log-only scope. Native VoiceOver/TalkBack, Dynamic Type and physical iPhone hit targets remain **NOT TESTABLE**.
+
+### LOG-POTTY-ICON-PATTERN-01 — v5 implementation och verifiering, 2026-10-28
+
+Ägarens tillägg är implementerat på samma branch. Mat använder nu Logg-lokala `green700`/`green100` i snabbval, historik, händelsetypväljare och layoutredigerare. Kiss använder tre upprätta, fyllda droppsilhuetter i samma lägen och i den mindre Olycka-markören; Vatten behåller en blå droppe. Patternkortets räkning, filter, medianintervall och ordning är oförändrade. Ingen dependency, schema, persistens eller global färgtoken ändrades.
+
+UI Critic BRIEF v5 **PROCEED**, Architect **APPROVE**, och UI Critic REVIEW **PASS**. Critic granskade `v5-result.png`, öppnade public/review-renderingar och 140 %-textproxy; den bekräftade tydliga droppformer, grön Mat och oförändrad blå Vattenikon. `CI=1 pnpm check` **PASS**: 831 test PASS, 1 skip. Logg public och review verifiering **22/22 PASS vardera**, 0 browserfel. Kisskontrast är 5,38:1 och Logg Mat-kontrast 5,59:1. Uppdaterad §14/§14.16, bilder och aggregerade resultat finns i `docs/design/evidence/log-potty-icon-pattern-01/`.
+
+Oberoende QA **PASS** och Frozen Reviewer **PASS**; tasken är stängd. Native VoiceOver/TalkBack, fysisk Dynamic Type och träffytor är **NOT TESTABLE** här. Övriga aktiva Träning- och svepändringar tillhör sina egna godkända taskar på samma branch.
+### UI-GESTURE-MOTION-01 — lokal avslutad, 2026-10-28
+
+Horisontella svep stänger nu appens modaler genom befintliga close-guards, och huvudfliksbyten använder en synligare riktad övergång med reducerad rörelse respekterad. UI Critic, oberoende QA och Frozen Reviewer gav PASS. `CI=1 pnpm check` passerade 98/98 testfiler; public/review-verifiering passerade 27/27 vardera. Evidens finns i `docs/design/evidence/ui-gesture-motion-01/`. Native gestkonkurrens, tangentbord och assistive tech är **NOT TESTABLE** utan fysisk enhet. Tasken är stängd lokalt på befintlig branch; push avvaktar att övriga ändringar på branchen får sina separata checkpoints.
+
+Nästa UI-arbete är `CHECKLIST-POLYCHROME-ICONS-01`: göra checklistans ikonväljare och valda ikon visuellt konsekventa med Logg-panelens tvåtons kategorichips. Plan v1 är skapad; UI Critic BRIEF och Architect APPROVE krävs före implementation.
+
+### 2026-10-28 — TRAINING-EXERCISE-MODAL-UX-01 lokal checkpoint
+
+Övningsmodalen visar en låg hundbild med synligt ansikte, aktivt steg separat från bekräftad delmålsprogress, en kompakt AI-ursprungsmarkering samt korta Klart/Ångra/Nästa/Föregående-handlingar. Full vänsterställd instruktion finns kvar och scrollar vid kort viewport/större text.
+
+UI Critic REVIEW, oberoende QA och Frozen Reviewer **PASS**. Public/review verifierare **30/30 vardera**; `CI=1 pnpm check` **PASS** (typecheck, edge typecheck, lint, 98/98 testfiler); riktade progression-/policytester, `git diff --check` och kövalidering **PASS**. Frosen granskningen verifierade att tidigare överskrivna tidslinjefiler återställdes och ny evidens sparas under taskens egna mappar. Native iOS/Android, VoiceOver/Dynamic Type och live backend är **NOT TESTABLE**. Lokalt klar på befintlig branch; push följer efter checklistikontaskens closeout.
+
+### 2026-10-28 — CHECKLIST-POLYCHROME-ICONS-01 lokal checkpoint
+
+Alla 20 checklistikoner använder nu Logg-panelens tvåtonsbehandling: 20 pt glyph på 32 pt färgad rundel, konsekvent i ikonväljare, vald trigger och sparade Hem-/Kunskapspunkter. Neutral `list-outline` använder mörk text på en mjuk grön yta. Ikonnycklar, val/lagring/readback och befintliga Loggfärger är bevarade.
+
+Architect **APPROVE**, UI Critic BRIEF/REVIEW **PASS**, oberoende QA **PASS**, Frozen Reviewer **PASS** efter en korrigering av stale checkpointdokumentation. Public/review-ikonväljare **37/37** och Kunskapens egna checklistpunkt **7/7** vardera, utan browserfel; `CI=1 pnpm check` **PASS** (98/98 testfiler); py_compile, kövalidering och diff-check **PASS**. Formell Architect-logg kom efter att ett ägarbegärt lokalt utkast redan fanns; taskacceptans hölls tills Träning stängdes och v2 godkändes. En gemensam commit/push på samma branch följer. Native tillgänglighet och live Supabase/RLS är **NOT TESTABLE**.

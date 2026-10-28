@@ -1,0 +1,29 @@
+{
+  "passes": [
+    "Logga quick actions and Fler at 360px; calendar gap 20.4px and centered date",
+    "Logga quick actions and Fler at 375px; calendar gap 27.9px and centered date",
+    "Logga quick actions and Fler at 430px; calendar gap 55.4px and centered date",
+    "Pattern summary renders both categories at 375x844",
+    "Pattern summary renders both categories at 430x844",
+    "Pattern summary renders both categories at 375x667",
+    "Pattern summary wraps at 140% text without horizontal overflow",
+    "Pattern summary renders potty-patterns-pee at 375px",
+    "Pattern summary renders potty-patterns-poop at 375px",
+    "Sparse pattern data keeps the full section hidden",
+    "Kiss uses the same amber surface in quick tile, history, and long-press layout editor",
+    "Kiss keeps the same amber three-drop icon in the event type trigger and selector",
+    "AppScreen scroll-bottom clearance with Fler open: 32.00px",
+    "140% text, grayscale and no horizontal overflow at 360x844",
+    "140% text, grayscale and no horizontal overflow at 375x844",
+    "140% text, grayscale and no horizontal overflow at 430x844",
+    "140% text, grayscale and no horizontal overflow at 375x667",
+    "Calendar markers state at 375px",
+    "Calendar empty state at 375px",
+    "Calendar loading state at 375px",
+    "Calendar error state at 375px",
+    "Rendered calendar day target at 360px: 44.00×44.00px"
+  ],
+  "pageErrors": [],
+  "reviewFixture": false,
+  "scope": "Production LogScreen in RN Web with synthetic data; not native, backend or RLS certification"
+}

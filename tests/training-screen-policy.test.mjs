@@ -92,3 +92,22 @@ test('a journey has no pause or maintenance controls and only paused journeys of
 test('open feedback has no competing milestone or step navigation action', () => {
   assert.match(screen, /!feedbackPickerOpen \? <View style=\{styles\.journeyActions\}>/);
 });
+
+test('confirmed exercise status is concise, confirmation does not duplicate a success toast, and next is primary', () => {
+  assert.match(screen, /accessibilityLabel="Delmål markerat som klart"/);
+  assert.match(screen, /styles\.confirmedMilestone\}>Klart<\/Text>/);
+  assert.match(screen, /accessibilityLabel=\{`Ångra färdigmarkering för \$\{selectedStep\?\.title \?\? stepId\}`\}/);
+  assert.match(screen, /styles\.undoLabel\}>Ångra<\/Text>/);
+  assert.match(screen, /setSuccessMessage\(action\.kind === 'confirm_step' \? '' : confirmation\)/);
+  assert.match(screen, /setSuccessMessage\(action\?\.kind === 'confirm_step' \? '' : progressionRetrySuccessMessage\(action\)\)/);
+  assert.match(screen, /journeyActions: \{ flexDirection: 'column', alignItems: 'stretch'/);
+  assert.match(screen, /accessibilityLabel="Fortsätt till nästa träningssteg"[\s\S]*?styles\.journeyNextText\}>Nästa<\/Text>/);
+  assert.match(screen, /journeyPreviousAction: \{ minHeight: tokens\.size\.touchMin/);
+  assert.match(screen, /accessibilityLabel="Backa till föregående träningssteg"[\s\S]*?styles\.journeyPreviousText\}>Föregående<\/Text>/);
+  assert.match(screen, /testID="training-exercise-banner"/);
+  assert.match(screen, /testID="training-exercise-step-position" style=\{styles\.timelineStatus\}>Steg/);
+  assert.match(screen, /label=\{journeyStepProgressLabel\(selectedJourneyData\.milestones\.length, selectedProgram\.steps\.length\)\}/);
+  assert.match(screen, /testID="training-ai-origin"/);
+  assert.match(screen, /!selectedStep \? <Text style=\{styles\.note\}>Anpassa efter din hund och pausa när det behövs\.<\/Text>/);
+  assert.match(screen, /progressionMessage\?\.programId === program\.id \? <Text accessibilityLiveRegion="polite" style=\{styles\.progressionMessage\}/);
+});

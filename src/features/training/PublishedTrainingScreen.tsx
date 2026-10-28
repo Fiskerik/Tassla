@@ -1,6 +1,6 @@
 import { startTransition, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentProps } from 'react';
-import { Animated, Image, Linking, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Animated, Image, Linking, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AppBar, BottomSheet, Button, Card, Dialog, Progress, SectionHeader, Tabs, Toast } from '../../components/ui';
 import type { HistoricalTrainingStepDetail, PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
@@ -100,6 +100,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     && programResetFingerprint(currentResetProgram) === resetTarget.fingerprint);
   if (resetTarget && !resetTargetIsCurrent) setResetTarget(null);
   const selectedProgram = visiblePrograms.find((program) => program.id === (focusStep?.programId ?? selection?.programId));
+  const aiOriginText = selectedProgram?.is_ai_generated ? <Text style={styles.aiDisclosureText}>AI-genererat innehåll</Text> : null;
   const selectedStep = selectedProgram?.steps.find((step) => step.id === (focusStep?.stepId ?? selection?.stepId));
   const selectedJourneyView = selectedProgram && progressionState === 'ready'
     ? trainingProgressionPresentation(progression, selectedProgram.id, selectedProgram.steps) : null;
@@ -253,7 +254,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       if (awaitRefresh && progressionFingerprint(progressionRef.current, programId) === previousFingerprint) {
         setAwaitingProgressionRefresh({ programId, fingerprint: previousFingerprint });
       }
-      setSuccessMessage(confirmation);
+      setSuccessMessage(action.kind === 'confirm_step' ? '' : confirmation);
       if (action.kind === 'record_session') {
         setFeedbackDraft(null);
         setFeedbackPickerOpen(false);
@@ -280,7 +281,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       if (awaitRefresh && progressionFingerprint(progressionRef.current, programId) === previousFingerprint) {
         setAwaitingProgressionRefresh({ programId, fingerprint: previousFingerprint });
       }
-      setSuccessMessage(progressionRetrySuccessMessage(action));
+      setSuccessMessage(action?.kind === 'confirm_step' ? '' : progressionRetrySuccessMessage(action));
       setFeedbackDraft(null);
       setFeedbackPickerOpen(false);
     } else {
@@ -396,6 +397,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
             <Text style={styles.milestoneTitle}>Redo att gå vidare?</Text>
           </View>
           <Text style={styles.noteCompact}>Bekräfta delmålet om övningens mål känns uppnått.</Text>
+        {progressionMessage?.programId === program.id ? <Text accessibilityLiveRegion="polite" style={styles.progressionMessage}>{progressionMessage.message}</Text> : null}
           <Button label="Bekräfta delmål" accessibilityLabel={`Bekräfta delmålet för ${selectedStep?.title ?? stepId}`} loading={busy}
             disabled={Boolean(busyStepKey) || !onApplyProgression}
             onPress={() => { void submitProgressionAction(program.id, { kind: 'confirm_step', programVersionId: program.id, stepId }, 'Delmålet är bekräftat av dig.'); }} />
@@ -404,17 +406,40 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
         </View> : !milestone ? <Button label="Logga träningspass"
           accessibilityLabel={`Logga ett träningspass för ${selectedStep?.title ?? stepId}`} disabled={Boolean(busyStepKey) || !onApplyProgression} onPress={() => setFeedbackPickerOpen(true)} /> : null}
         {!feedbackPickerOpen && currentMilestone ? <View style={styles.milestonePrompt}>
-          <Text style={styles.confirmedMilestone}>Delmålet är bekräftat av dig.</Text>
-          <Button variant="tertiary" compact label="Ångra bekräftelse" accessibilityLabel={`Ångra bekräftelsen för ${selectedStep?.title ?? stepId}`}
-            disabled={Boolean(busyStepKey) || !onApplyProgression}
-            onPress={() => { void submitProgressionAction(program.id, { kind: 'undo_step', programVersionId: program.id, stepId, expectedMilestoneId: currentMilestone.id }, 'Bekräftelsen är ångrad.'); }} />
+          <View style={styles.confirmedMilestoneRow}>
+            <View style={styles.confirmedBadge}>
+              <Ionicons name="checkmark-circle" size={tokens.size.iconSm} color={tokens.colors.training.accent} accessibilityElementsHidden />
+              <Text accessibilityRole="text" accessibilityLabel="Delmål markerat som klart" accessibilityLiveRegion="polite" style={styles.confirmedMilestone}>Klart</Text>
+            </View>
+            <Pressable accessibilityRole="button" accessibilityLabel={`Ångra färdigmarkering för ${selectedStep?.title ?? stepId}`}
+              accessibilityHint="Ångrar bekräftelsen av delmålet." accessibilityState={{ disabled: Boolean(busyStepKey) || !onApplyProgression, busy }}
+              disabled={Boolean(busyStepKey) || !onApplyProgression}
+              style={({ pressed }) => [styles.undoAction, pressed && !busyStepKey && styles.pressed, busyStepKey && styles.disabledAction]}
+              onPress={() => { void submitProgressionAction(program.id, { kind: 'undo_step', programVersionId: program.id, stepId, expectedMilestoneId: currentMilestone.id }, 'Bekräftelsen är ångrad.'); }}>
+              <Ionicons name="arrow-undo-outline" size={tokens.size.iconSm} color={tokens.colors.training.accent} accessibilityElementsHidden />
+              <Text style={styles.undoLabel}>Ångra</Text>
+            </Pressable>
+          </View>
         </View> : null}
         {!feedbackPickerOpen ? <View style={styles.journeyActions}>
-          {view.canGoBack ? <Button variant="tertiary" compact label="Backa" accessibilityLabel="Backa till föregående träningssteg" disabled={Boolean(busyStepKey) || !onApplyProgression}
-            onPress={() => { void submitProgressionAction(program.id, { kind: 'back', programVersionId: program.id, stepId }, 'Ni är tillbaka på föregående steg.'); }} /> : null}
-          {view.canGoNext ? <Button label="Fortsätt till nästa steg" accessibilityLabel="Fortsätt till nästa träningssteg" loading={busy}
+          {view.canGoNext ? <Pressable accessibilityRole="button" accessibilityLabel="Fortsätt till nästa träningssteg"
+            accessibilityState={{ disabled: Boolean(busyStepKey) || !onApplyProgression, busy }}
             disabled={Boolean(busyStepKey) || !onApplyProgression}
-            onPress={() => { void submitProgressionAction(program.id, { kind: 'next', programVersionId: program.id, stepId }, 'Nästa steg är sparat.'); }} /> : null}
+            style={({ pressed }) => [styles.journeyNextAction, pressed && !busyStepKey && styles.pressedPrimary, busyStepKey && styles.disabledAction]}
+            onPress={() => { void submitProgressionAction(program.id, { kind: 'next', programVersionId: program.id, stepId }, 'Nästa steg är sparat.'); }}>
+            {busy ? <ActivityIndicator color={tokens.colors.onPrimary} /> : <>
+              <Text style={styles.journeyNextText}>Nästa</Text>
+              <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.onPrimary} accessibilityElementsHidden />
+            </>}
+          </Pressable> : null}
+          {view.canGoBack ? <Pressable accessibilityRole="button" accessibilityLabel="Backa till föregående träningssteg"
+            accessibilityHint="Visar föregående övning i träningsresan." accessibilityState={{ disabled: Boolean(busyStepKey) || !onApplyProgression }}
+            disabled={Boolean(busyStepKey) || !onApplyProgression}
+            style={({ pressed }) => [styles.journeyPreviousAction, pressed && !busyStepKey && styles.pressed]}
+            onPress={() => { void submitProgressionAction(program.id, { kind: 'back', programVersionId: program.id, stepId }, 'Ni är tillbaka på föregående steg.'); }}>
+            <Ionicons name="chevron-back" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
+            <Text style={styles.journeyPreviousText}>Föregående</Text>
+          </Pressable> : null}
           {milestone && !view.canGoNext ? <Button variant="tertiary" compact label="Logga ett pass till" accessibilityLabel="Logga ett träningspass till för det här steget" disabled={Boolean(busyStepKey) || !onApplyProgression}
             onPress={() => { setFeedbackDraft(null); setFeedbackPickerOpen(true); }} /> : null}
         </View> : null}
@@ -733,10 +758,22 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
 
     <BottomSheet visible={Boolean(selectedProgram)} title={waitingForSelectedRefresh ? 'Träning' : selectedStep ? 'Övning' : 'Om programmet'} onRequestClose={() => { if (!busyStepKey && !waitingForSelectedRefresh) setSelection(null); }}>
       {waitingForSelectedRefresh ? <View style={styles.emptyCard}><Text style={styles.body}>Ändringen är sparad. Hämtar det aktiva steget.</Text></View> : <>
+      {selectedStep ? <View style={styles.exerciseBanner} testID="training-exercise-banner">
+        <Image source={require('../../../assets/images/training-recommendation-puppy-black-tan-park.jpg')}
+          style={styles.exerciseBannerImage} resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+      </View> : null}
       <Text style={styles.sheetHeading}>{selectedStep?.title ?? selectedProgram?.title}</Text>
-      {selectedProgram?.is_ai_generated ? <Text style={styles.note}>AI-genererat innehåll</Text> : null}
+      {selectedStep && selectedTimelineEntry ? <View style={styles.exerciseProgress}>
+        <Text testID="training-exercise-step-position" style={styles.timelineStatus}>Steg {selectedTimelineEntry.index + 1}/{selectedProgram?.steps.length ?? 0}</Text>
+        {selectedJourneyData && selectedProgram ? <Progress value={selectedProgram.steps.length > 0 ? selectedJourneyData.milestones.length / selectedProgram.steps.length * 100 : 0}
+          label={journeyStepProgressLabel(selectedJourneyData.milestones.length, selectedProgram.steps.length)} /> : null}
+      </View> : null}
+      {selectedProgram?.is_ai_generated ? <View testID="training-ai-origin" style={styles.aiDisclosure}>
+        <Ionicons name="sparkles-outline" size={tokens.size.iconSm} color={tokens.colors.training.accent} accessibilityElementsHidden />
+        {aiOriginText}
+      </View> : null}
       {selectedStep ? <TrainingInstruction instruction={selectedStep.instruction} /> : <Text style={styles.body}>{selectedProgram?.body}</Text>}
-      <Text style={styles.note}>Anpassa efter din hund och pausa när det behövs.</Text>
+      {!selectedStep ? <Text style={styles.note}>Anpassa efter din hund och pausa när det behövs.</Text> : null}
       {!selectedStep && selectedProgram ? <>
         <View style={styles.referenceLinks}>{selectedProgram.sources.map((source, index) => {
           const url = getSafeContentSourceUrl(source);
@@ -897,15 +934,29 @@ const styles = StyleSheet.create({
   journeyCard: { padding: tokens.spacing.md, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.training.card, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   legacySection: { gap: tokens.spacing.xs },
   legacyDisclosure: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  journeyActions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: tokens.spacing.xs },
+  journeyActions: { flexDirection: 'column', alignItems: 'stretch', gap: tokens.spacing.xs, marginTop: tokens.spacing.md },
+  journeyNextAction: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.lg, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.primary },
+  journeyNextText: { ...tokens.typography.label, color: tokens.colors.onPrimary },
+  journeyPreviousAction: { minHeight: tokens.size.touchMin, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.xs },
+  journeyPreviousText: { ...tokens.typography.label, color: tokens.colors.primary },
+  pressedPrimary: { opacity: 0.88, backgroundColor: tokens.colors.primaryPressed },
   feedbackChoices: { gap: tokens.spacing.xs, padding: tokens.spacing.md, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.training.card, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   feedbackHeading: { ...tokens.typography.label, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.xs },
   feedbackOption: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.sm, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   feedbackOptionSelected: { borderColor: tokens.colors.training.accent, backgroundColor: tokens.colors.training.continueSurface },
   feedbackOptionText: { ...tokens.typography.body, color: tokens.colors.textPrimary, flex: 1 },
-  milestonePrompt: { gap: tokens.spacing.xs, paddingVertical: tokens.spacing.sm, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.training.continueSurface },
-  milestonePromptHeading: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
+  milestonePrompt: { alignSelf: 'stretch', gap: tokens.spacing.xs },
+  milestonePromptHeading: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs },
   milestoneTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  confirmedMilestoneRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm },
+  confirmedBadge: { minHeight: tokens.size.touchMin - tokens.spacing.xs * 2, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.training.continueSurface },
   confirmedMilestone: { ...tokens.typography.caption, color: tokens.colors.training.accent, fontWeight: '700' },
+  undoAction: { minHeight: tokens.size.touchMin, minWidth: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.training.continueSurface },
+  undoLabel: { ...tokens.typography.label, color: tokens.colors.training.accent },
+  exerciseBanner: { height: 112, width: '100%', borderRadius: tokens.radius.md, overflow: 'hidden', backgroundColor: tokens.colors.training.card },
+  exerciseBannerImage: { width: '100%', height: '100%' },
+  exerciseProgress: { gap: tokens.spacing.xs },
+  aiDisclosure: { alignSelf: 'flex-start', minHeight: tokens.size.touchMin - tokens.spacing.xs * 2, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.training.continueSurface },
+  aiDisclosureText: { ...tokens.typography.smallCaption, color: tokens.colors.training.accent, fontWeight: '700' },
   progressionMessage: { ...tokens.typography.caption, color: tokens.colors.danger },
 });

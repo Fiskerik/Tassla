@@ -11,6 +11,7 @@ const resolution = registerHooks({
   },
 });
 const icons = await import('../src/features/home/daily-routine-checklist-icons.ts');
+const checklistIcons = await import('../src/features/checklists/checklist-icons.ts');
 resolution.deregister();
 
 const require = createRequire(import.meta.url);
@@ -57,29 +58,30 @@ test('display uses a saved icon first, then a suggestion, then the neutral icon 
   assert.equal(icons.isDailyRoutineChecklistIcon('list-outline'), false);
 });
 
-test('only clear subject icons receive a category tone; generic choices stay neutral', () => {
+test('all saved checklist icons keep a clear semantic polychrome tone', () => {
   const expected = {
-    paw: 'neutral',
+    paw: 'training',
     'water-outline': 'water',
     'walk-outline': 'walk',
     'bed-outline': 'sleep',
-    'sunny-outline': 'neutral',
-    'leaf-outline': 'neutral',
-    'heart-outline': 'neutral',
-    'flower-outline': 'neutral',
-    'brush-outline': 'neutral',
+    'sunny-outline': 'walk',
+    'leaf-outline': 'training',
+    'heart-outline': 'vaccination',
+    'flower-outline': 'sleep',
+    'brush-outline': 'veterinary',
     'bandage-outline': 'vaccination',
     'medkit-outline': 'veterinary',
     'restaurant-outline': 'food',
     'moon-outline': 'sleep',
-    'football-outline': 'neutral',
+    'football-outline': 'walk',
     'fitness-outline': 'training',
-    'sparkles-outline': 'neutral',
-    'home-outline': 'neutral',
+    'sparkles-outline': 'veterinary',
+    'home-outline': 'training',
     'school-outline': 'training',
-    'rose-outline': 'neutral',
-    'star-outline': 'neutral',
+    'rose-outline': 'sleep',
+    'star-outline': 'walk',
     'list-outline': 'neutral',
   };
+  assert.deepEqual(checklistIcons.CHECKLIST_ICON_TONES, expected);
   for (const [icon, tone] of Object.entries(expected)) assert.equal(icons.dailyRoutineChecklistIconTone(icon), tone, icon);
 });

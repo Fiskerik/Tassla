@@ -53,9 +53,11 @@ test('every review template point has a verified Ionicons glyph and custom or un
   assert.match(screen, /leadingIcon=\{item\.icon \?\? 'list-outline'\}/);
   assert.match(screen, /leadingIconTone=\{checklistIconTone\(item\.icon \?\? 'list-outline'\)\}/);
   assert.match(picker, /accessibilityRole="radio" accessibilityLabel=\{CHECKLIST_ICON_LABELS\[icon\]\}/);
+  assert.match(picker, /<ThemedIcon name=\{displayIcon\} tone=\{checklistIconTone\(displayIcon\)\} size="medium" testID=/);
+  assert.match(picker, /<ThemedIcon name=\{icon\} tone=\{checklistIconTone\(icon\)\} size="medium" testID=/);
   assert.match(iconModel, /export const CHECKLIST_ICONS = \[/);
   assert.match(checklistItem, /leadingIcon\?: ChecklistIcon/);
-  assert.match(checklistItem, /\{leadingIcon \? leadingIconTone \? <ThemedIcon name=\{leadingIcon\}/);
+  assert.match(checklistItem, /\{leadingIcon \? <ThemedIcon name=\{leadingIcon\} tone=\{leadingIconTone \?\? 'neutral'\} size="medium" testID=\{`checklist-item-icon-/);
 });
 
 test('navigation invalidates and aborts the current read/write before changing checklist view', () => {

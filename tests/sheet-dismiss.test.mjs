@@ -25,6 +25,7 @@ const { SHEET_DISMISS_DISTANCE, SHEET_DISMISS_MIN_FLICK_DISTANCE, SHEET_DISMISS_
 const read = (file) => readFileSync(path.join(process.cwd(), 'src/components/ui', file), 'utf8');
 const sheetSource = read('BottomSheet.tsx');
 const dragSource = read('sheet-drag.ts');
+const modalSwipeSource = read('modal-swipe-dismiss.ts');
 
 test('drag starts only for a clearly vertical downward movement', () => {
   assert.equal(shouldStartSheetDrag(0, SHEET_DRAG_START), false, 'must exceed the start threshold');
@@ -163,9 +164,10 @@ test('controller: only a vertical downward move claims the touch, so taps and th
   assert.equal(handlers.onMoveShouldSetPanResponder({}, gesture(30)), true);
 });
 
-test('the decorative handle is hidden from screen readers and uses tokens only', () => {
-  assert.match(sheetSource, /accessibilityElementsHidden importantForAccessibility="no-hide-descendants"/);
-  assert.doesNotMatch(sheetSource, /#[\da-f]{3,8}\b/i);
+test('the dedicated swipe handle is hidden from screen readers and uses tokens only', () => {
+  assert.match(modalSwipeSource, /accessibilityElementsHidden/);
+  assert.match(modalSwipeSource, /importantForAccessibility: 'no-hide-descendants'/);
+  assert.doesNotMatch(modalSwipeSource, /#[\da-f]{3,8}\b/i);
 });
 
 

@@ -5,7 +5,8 @@
 ## Entry points och dataflöde
 
 - `ui/index.ts` exporterar knappar, AppBar/BottomNav, kort/rader, kategori-chip, formulär, återkoppling, ActionMenu, Skeleton, modaler, förstaanvändningstips och `DailyActivityItem`/`DestinationTile`.
-- `IconChip` äger kategoriikonernas och kategorifärgernas gemensamma mappning. `ThemedIcon` visar en Ionicon med befintlig semantisk kategorifärg och diskret yta; neutral eller tvetydig ikon får ingen färgad yta. `PoopIcon` ritar bajsikonen med React Native-vyer eftersom ikonbiblioteket saknar motivet.
+- `IconChip` äger kategoriikonernas och kategorifärgernas gemensamma mappning. `ThemedIcon` visar en Ionicon med befintlig semantisk kategorifärg och diskret yta. Neutral checklistfallback får en mjuk grön yta. `PoopIcon` ritar bajsikonen med React Native-vyer eftersom ikonbiblioteket saknar motivet.
+- Checklistornas `ThemedIcon` återanvänder Loggans tvåtonspalett: en 20 pt symbol på en 32 pt färgad rundel. Ikonknappen, de 20 valen och den sparade checklistpunkten använder samma tonmappning; den osparade listfallbacken visas diskret grönt.
 - `DailyActivityItem` visar en kategori, beskrivning och två separata kontroller: valfri completion-toggle och detaljnavigation. Hem använder den bara för sin lokala syntetiska review-fixture; den skapar eller sparar ingen produktprogress.
 - `DestinationTile` visar destinationsikoner för Logg, Träning eller Kunskap och skickar navigation via sin callback. Kategoriernas aktivitetsikoner används inte som genvägsikoner.
 - `ComponentGalleryScreen` visar svenska exempel och tillstånd, inklusive de två nya hemkomponenterna. Den nås endast från den redan flaggade `DevelopmentPreview`; ingen produktionsroute används.
@@ -29,11 +30,13 @@ Datum- och tidsfält behåller manuell textinmatning och har modalväljare för 
 
 ## Rörelse enligt MOTION
 
-`MotionPressable` och `ScreenTransition` är befintliga delade animationer. Nya animationer använder React Native `Animated`, durations från `tokens.motion` och `useReducedMotion`. `ScreenTransition` spelar inte vid första mount, tar valfri rörelseväg och avbryter föregående animation när nyckeln ändras. Huvudfliksbyten använder riktad `pageDistance` på 28pt; stödskärmar behåller standardavståndet 8pt. Reducerad rörelse byter direkt. Rörelse signalerar aldrig osparad framgång och är aldrig enda återkopplingen. Toast, Progress och ChecklistItem animerar bara ändringar efter mount; text och tillgänglighetsvärden behåller betydelsen med reducerad rörelse. Se `docs/design-rules.md` §15–17.
+`MotionPressable` och `ScreenTransition` är befintliga delade animationer. Nya animationer använder React Native `Animated`, durations från `tokens.motion` och `useReducedMotion`. `ScreenTransition` spelar inte vid första mount, tar valfri rörelseväg och avbryter föregående animation när nyckeln ändras. Huvudfliksbyten använder riktad `mainTabDistance` på 44pt, `mainTabEnter` på 300ms och en lätt fade från 0,9; stödskärmar behåller standardavståndet 8pt och 240ms. Reducerad rörelse byter direkt. Rörelse signalerar aldrig osparad framgång och är aldrig enda återkopplingen. Toast, Progress och ChecklistItem animerar bara ändringar efter mount; text och tillgänglighetsvärden behåller betydelsen med reducerad rörelse. Se `docs/design-rules.md` §15–17.
 
 `Toast` har en stabil ägarplats och kräver `visible`. Dold plats returnerar ingen yta. Ägaren behåller meddelandet tills `onExitComplete`; `autoDismissMs` räknas efter entrén och `onAutoDismiss` begär utgång. Dold och utgående Toast annonseras inte. Synliga och utgående toastar har gemensamt vertikalt avstånd från `tokens.spacing.md`. `Progress` visar startvärdet direkt och animerar bara senare värdeändringar. `ChecklistItem.confirmed` måste vara sant efter sparning för att en ny bock ska få positiv rörelse; befintlig lokal förhandsvisning skickar inte prop:en.
 
 `TimePickerField` håller ett separat utkast medan modalväljaren är öppen. Alternativ och textinmatning uppdaterar utkastet; `Bekräfta tid` lämnar över ett giltigt HH:mm eller ett tomt val. Stängning och system-back avbryter. Modalrörelsen följer reducerad rörelse.
+
+Modalerna har en separat, visuellt diskret 44 pt handtagsremsa högst upp som kan svepas åt vänster eller höger för att stänga. Den använder samma guarded close-handler som X, backdrop och Android-back. Svepet fångas först efter tydlig horisontell rörelse och stör inte formulär, listscroll eller BottomSheetens nedåtsvep. Huvudflikarnas innehåll använder en riktad 300 ms/44 pt slide med lätt fade; stödvyer behåller den kortare standardövergången. Båda följer systemets inställning för reducerad rörelse.
 
 Aktuella webbskärmbilder finns i `docs/design/UI-RESET`; native begränsningar kvarstår enligt verifieringsrapporten där.
 

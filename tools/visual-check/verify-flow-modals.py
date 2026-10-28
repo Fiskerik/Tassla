@@ -39,6 +39,35 @@ def gallery(page, width, height):
     page.wait_for_timeout(120)
 
 
+def swipe_to_close(page, card, name, delta=110):
+    handle = card.get_by_test_id("modal-swipe-dismiss-handle")
+    expect(handle).to_be_visible()
+    box = handle.bounding_box()
+    assert box and box["height"] >= 44, f"{name}: swipe handle must provide a 44pt target: {box}"
+    start_x = box["x"] + box["width"] / 2
+    start_y = box["y"] + box["height"] / 2
+    page.mouse.move(start_x, start_y)
+    page.mouse.down()
+    for step in range(1, 7):
+        page.mouse.move(start_x + delta * step / 6, start_y, steps=1)
+    page.mouse.up()
+    page.wait_for_timeout(220)
+    expect(card).to_be_hidden()
+
+
+def transition_frame(page, output, name):
+    transition = page.get_by_test_id("screen-transition")
+    expect(transition).to_be_visible()
+    frame = transition.evaluate("""element => {
+      const style = getComputedStyle(element);
+      const matrix = new DOMMatrixReadOnly(style.transform);
+      return { x: matrix.m41, y: matrix.m42, opacity: Number(style.opacity) };
+    }""")
+    width = page.viewport_size["width"]
+    page.screenshot(path=str(output / f"main-tab-transition-{name}-{width}.png"))
+    return frame
+
+
 with sync_playwright() as playwright:
     browser = playwright.chromium.launch(
         headless=True,
@@ -66,8 +95,11 @@ with sync_playwright() as playwright:
             assert active_label == expected, f"ActionMenu keyboard order expected {expected}, received {active_label}"
         if width == 375:
             page.screenshot(path=str(output / "development-gallery-action-menu-375.png"))
-        page.get_by_role("button", name="Stäng meny", exact=True).click(position={"x": 12, "y": 12})
-        expect(menu).to_be_hidden()
+            swipe_to_close(page, menu, "ActionMenu")
+            passed("ActionMenu horizontal swipe dismisses from its dedicated handle")
+        else:
+            page.get_by_role("button", name="Stäng meny", exact=True).click(position={"x": 12, "y": 12})
+            expect(menu).to_be_hidden()
         page.wait_for_timeout(350)
 
         page.get_by_role("button", name="Visa dialog", exact=True).click()
@@ -75,7 +107,10 @@ with sync_playwright() as playwright:
         centered(page, dialog, f"Dialog {width}x{height}")
         if width == 375:
             page.screenshot(path=str(output / "development-gallery-dialog-375.png"))
-        page.get_by_role("button", name="Avbryt", exact=True).click()
+            swipe_to_close(page, dialog, "Dialog")
+            passed("Dialog horizontal swipe uses its guarded close callback")
+        else:
+            page.get_by_role("button", name="Avbryt", exact=True).click()
         page.wait_for_timeout(350)
 
         page.get_by_role("button", name="Visa panel", exact=True).click()
@@ -85,8 +120,11 @@ with sync_playwright() as playwright:
         expect(sheet.get_by_text("En kort överblick för veterinärbesöket. Dela som PDF.", exact=True)).to_be_visible()
         if width == 375:
             page.screenshot(path=str(output / "development-gallery-bottom-sheet-375.png"))
-        page.mouse.click(12, 12)
-        expect(sheet).to_be_hidden()
+            swipe_to_close(page, sheet, "BottomSheet")
+            passed("BottomSheet horizontal swipe closes without replacing its vertical drag handle")
+        else:
+            page.mouse.click(12, 12)
+            expect(sheet).to_be_hidden()
         page.wait_for_timeout(350)
         passed(f"Development component gallery: ActionMenu, Dialog, BottomSheet at {width}x{height}; 44pt actions and bounded card")
 
@@ -118,10 +156,14 @@ with sync_playwright() as playwright:
         page.goto(f"{base_url}?screen=planned&state=ready&plannedScenario=ready")
         page.wait_for_timeout(120)
         page.get_by_role("button", name="Visa information om planerade hälsohändelser", exact=True).click()
-        centered(page, page.get_by_test_id("center-modal-info"), f"Planned Health info {width}x{height}")
+        info = page.get_by_test_id("center-modal-info")
+        centered(page, info, f"Planned Health info {width}x{height}")
         if width == 375:
             page.screenshot(path=str(output / "planned-health-info-375.png"))
-        page.get_by_role("button", name="Stäng information", exact=True).click()
+            swipe_to_close(page, info, "InfoModal")
+            passed("InfoModal horizontal swipe closes through its existing onClose handler")
+        else:
+            page.get_by_role("button", name="Stäng information", exact=True).click()
         page.wait_for_timeout(350)
 
         page.get_by_role("button", name="Planera en hälsohändelse", exact=True).click()
@@ -132,7 +174,10 @@ with sync_playwright() as playwright:
         centered(page, page.get_by_test_id("center-modal-date-picker"), f"DatePicker {width}x{height}")
         if width == 375:
             page.screenshot(path=str(output / "planned-health-date-picker-375.png"))
-        page.get_by_role("button", name="Stäng kalender", exact=True).click()
+            swipe_to_close(page, page.get_by_test_id("center-modal-date-picker"), "DatePicker")
+            passed("DatePicker horizontal swipe dismisses while preserving its parent form")
+        else:
+            page.get_by_role("button", name="Stäng kalender", exact=True).click()
         page.wait_for_timeout(350)
         expect(parent).to_be_visible()
 
@@ -142,8 +187,21 @@ with sync_playwright() as playwright:
         centered(page, time_picker, f"Nested TimePicker {width}x{height}", max_width=True)
         expect(time_picker.get_by_role("button", name="Bekräfta tid", exact=True)).to_be_visible()
         if width == 375:
+            options = time_picker.get_by_test_id("time-picker-options")
+            options.evaluate("element => { element.scrollTop = 0; }")
+            option_box = options.bounding_box()
+            assert option_box, "TimePicker options list must be measurable"
+            page.mouse.move(option_box["x"] + option_box["width"] / 2, option_box["y"] + option_box["height"] / 2)
+            page.mouse.wheel(0, 480)
+            page.wait_for_timeout(100)
+            assert options.evaluate("element => element.scrollTop") > 0, "Vertical scrolling inside TimePicker must remain available"
+            expect(time_picker).to_be_visible()
+            passed("Nested TimePicker keeps its options list vertically scrollable")
             page.screenshot(path=str(output / "planned-health-nested-time-picker-375.png"))
-        page.get_by_role("button", name="Avbryt tid", exact=True).click()
+            swipe_to_close(page, time_picker, "TimePicker")
+            passed("Nested TimePicker horizontal swipe dismisses to the still-open parent form")
+        else:
+            page.get_by_role("button", name="Avbryt tid", exact=True).click()
         page.wait_for_timeout(350)
         expect(parent).to_be_visible()
         if width == 375:
@@ -190,6 +248,41 @@ with sync_playwright() as playwright:
     page.get_by_role("button", name="Avbryt tid", exact=True).click()
     page.wait_for_timeout(350)
     passed("Notification TimePicker stays centered at 375x667 with its confirm action reachable")
+
+    # Main-tab transitions use a 300ms light slide/fade; nested routes keep their shorter default.
+    for width in (375, 430):
+        page.emulate_media(reduced_motion="no-preference")
+        page.set_viewport_size({"width": width, "height": 844})
+        page.goto(f"{base_url}?screen=home&state=ready")
+        page.wait_for_timeout(180)
+        page.get_by_role("tab", name="Logg", exact=True).click()
+        start_frame = transition_frame(page, output, "start")
+        page.wait_for_timeout(110)
+        middle_frame = transition_frame(page, output, "middle")
+        page.wait_for_timeout(230)
+        end_frame = transition_frame(page, output, "end")
+        assert start_frame["x"] > 2 and start_frame["opacity"] < 1, f"Forward main-tab transition should begin with a visible slide/fade: {start_frame}"
+        assert middle_frame["x"] < start_frame["x"], f"Forward main-tab transition should advance toward rest: start={start_frame}, middle={middle_frame}"
+        assert abs(end_frame["x"]) < 1.5 and end_frame["opacity"] > 0.99, f"Forward main-tab transition should settle cleanly: {end_frame}"
+        passed(f"Forward main-tab transition {width}px sampled start/middle/end: {start_frame} → {middle_frame} → {end_frame}")
+
+        page.get_by_role("tab", name="Hem", exact=True).click()
+        reverse_start = transition_frame(page, output, "reverse-start")
+        page.wait_for_timeout(110)
+        reverse_middle = transition_frame(page, output, "reverse-middle")
+        page.wait_for_timeout(230)
+        reverse_end = transition_frame(page, output, "reverse-end")
+        assert reverse_start["x"] < -2 and reverse_start["opacity"] < 1, f"Backward main-tab transition should begin from the opposite direction: {reverse_start}"
+        assert reverse_middle["x"] > reverse_start["x"], f"Backward main-tab transition should advance toward rest: start={reverse_start}, middle={reverse_middle}"
+        assert abs(reverse_end["x"]) < 1.5 and reverse_end["opacity"] > 0.99, f"Backward main-tab transition should settle cleanly: {reverse_end}"
+        passed(f"Backward main-tab transition {width}px sampled start/middle/end: {reverse_start} → {reverse_middle} → {reverse_end}")
+
+        page.emulate_media(reduced_motion="reduce")
+        page.wait_for_timeout(100)
+        page.get_by_role("tab", name="Logg", exact=True).click()
+        reduced_frame = transition_frame(page, output, "reduced-motion")
+        assert abs(reduced_frame["x"]) < 1.5 and reduced_frame["opacity"] > 0.99, f"Reduced motion should skip the slide/fade: {reduced_frame}"
+        passed(f"Reduced-motion preference skips the {width}px main-tab transition: {reduced_frame}")
 
     page.set_viewport_size({"width": 375, "height": 667})
     page.goto(f"{base_url}?screen=planned&state=ready&plannedScenario=ready")

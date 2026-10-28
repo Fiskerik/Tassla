@@ -76,6 +76,147 @@ with sync_playwright() as playwright:
         page.screenshot(path=str(output / f"log-more-{width}.png"))
         passed(f"Logga quick actions and Fler at {width}px; calendar gap {gap:.1f}px and centered date")
 
+    # The retrospective pattern card handles both categories at supported widths and sparse data.
+    for width, height in ((375, 844), (430, 844), (375, 667)):
+        page.set_viewport_size({"width": width, "height": height})
+        page.goto(f"{base_url}?screen=log&today=2026-10-11&calendarScenario=markers&logScenario=potty-patterns-both")
+        page.wait_for_timeout(350)
+        scroll_to_bottom(page)
+        card = page.get_by_role("region", name=re.compile("Dina senaste mönster:"))
+        expect(card).to_be_visible()
+        for label in ("Kiss", "Bajs"):
+            expect(card.get_by_text(label, exact=True)).to_be_visible()
+        expect(card.get_by_text(re.compile(r"\d+ gånger")).first).to_be_visible()
+        expect(card.get_by_text(re.compile(r"Ungefär var")).first).to_be_visible()
+        page.screenshot(path=str(output / f"log-patterns-both-{width}x{height}.png"))
+        passed(f"Pattern summary renders both categories at {width}x{height}")
+
+    # Stress the same summary at 140% text and confirm that it wraps without page overflow.
+    page.set_viewport_size({"width": 375, "height": 667})
+    page.goto(f"{base_url}?screen=log&today=2026-10-11&calendarScenario=markers&logScenario=potty-patterns-both")
+    page.wait_for_timeout(350)
+    page.evaluate("""() => document.querySelectorAll('[dir="auto"]').forEach((node) => {
+      if (node.closest('[role="tablist"], [data-testid="review-log-banner"]')) return;
+      const style = getComputedStyle(node);
+      node.style.fontSize = `${parseFloat(style.fontSize) * 1.4}px`;
+      node.style.lineHeight = `${parseFloat(style.lineHeight) * 1.4}px`;
+    })""")
+    scroll_to_bottom(page)
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "Pattern summary overflows at 140% text"
+    expect(page.get_by_role("region", name=re.compile("Dina senaste mönster:"))).to_be_visible()
+    page.screenshot(path=str(output / "log-patterns-both-140pct-375x667.png"))
+    passed("Pattern summary wraps at 140% text without horizontal overflow")
+
+    # Each sparse fixture retains only the category with sufficient history; below-threshold data hides the card.
+    for scenario, labels in (("potty-patterns-pee", ("Kiss",)), ("potty-patterns-poop", ("Bajs",))):
+        page.set_viewport_size({"width": 375, "height": 844})
+        page.goto(f"{base_url}?screen=log&today=2026-10-11&calendarScenario=markers&logScenario={scenario}")
+        page.wait_for_timeout(350)
+        scroll_to_bottom(page)
+        card = page.get_by_role("region", name=re.compile("Dina senaste mönster:"))
+        expect(card).to_be_visible()
+        for label in labels:
+            expect(card.get_by_text(label, exact=True)).to_be_visible()
+        expect(card.get_by_text(re.compile(r"\d+ gånger")).first).to_be_visible()
+        expect(card.get_by_text(re.compile(r"Ungefär var")).first).to_be_visible()
+        page.screenshot(path=str(output / f"log-patterns-{scenario}-375.png"))
+        passed(f"Pattern summary renders {scenario} at 375px")
+
+    page.set_viewport_size({"width": 375, "height": 667})
+    page.goto(f"{base_url}?screen=log&today=2026-10-11&calendarScenario=markers&logScenario=potty-patterns-sparse")
+    page.wait_for_timeout(350)
+    scroll_to_bottom(page)
+    expect(page.get_by_role("heading", name="Dina senaste mönster", exact=True)).to_have_count(0)
+    page.screenshot(path=str(output / "log-patterns-sparse-375x667.png"))
+    passed("Sparse pattern data keeps the full section hidden")
+
+    # Long-press layout editing uses the same category-colored icon variant as the quick tile.
+    page.set_viewport_size({"width": 375, "height": 844})
+    page.goto(f"{base_url}?screen=log&today=2026-10-11&calendarScenario=markers&logScenario=potty-patterns-both")
+    page.wait_for_timeout(350)
+    quick_kiss = page.get_by_role("button", name="Logga kiss", exact=True)
+    history_kiss = page.get_by_role("button", name=re.compile(r"^Kiss 07:30"))
+    expect(quick_kiss.get_by_role("img", name="Kiss-ikon")).to_have_count(0)
+    expect(history_kiss.get_by_role("img", name="Kiss-ikon")).to_have_count(0)
+
+    def assert_pee_glyph(container, location):
+        icon = container.evaluate("""element => {
+          const nodes = [element, ...element.querySelectorAll('*')];
+          const backgrounds = nodes.map(node => getComputedStyle(node).backgroundColor);
+          const paths = [...element.querySelectorAll('svg path')];
+          const drops = paths.map(path => {
+            const bounds = path.getBBox();
+            return {fill: getComputedStyle(path).fill, d: path.getAttribute('d'), width: bounds.width, height: bounds.height};
+          });
+          return {backgrounds, drops};
+        }""")
+        assert len(icon["drops"]) == 3, f"Kiss needs exactly three filled drop paths in {location}: {icon}"
+        assert all(" C" in drop["d"] and " A" in drop["d"] and drop["height"] > drop["width"] for drop in icon["drops"]), f"Kiss paths must read as upright teardrops in {location}: {icon}"
+        return icon
+
+    def assert_pee_icon(container, location):
+        icon = assert_pee_glyph(container, location)
+        assert 'rgb(245, 231, 191)' in icon["backgrounds"], f"Kiss amber surface missing in {location}: {icon}"
+        assert all(drop["fill"] == 'rgb(120, 87, 22)' for drop in icon["drops"]), f"Kiss amber drop fill missing in {location}: {icon}"
+
+    def assert_food_green(container, location):
+        result = container.evaluate("""element => {
+          const nodes = [element, ...element.querySelectorAll('*')];
+          return {
+            backgrounds: nodes.map(node => getComputedStyle(node).backgroundColor),
+            colors: nodes.map(node => getComputedStyle(node).color),
+          };
+        }""")
+        assert 'rgb(232, 239, 232)' in result["backgrounds"], f"Mat green surface missing in {location}: {result}"
+        assert 'rgb(24, 106, 77)' in result["colors"], f"Mat green icon missing in {location}: {result}"
+
+    assert_pee_icon(quick_kiss, "quick tile")
+    assert_pee_icon(history_kiss, "history")
+    quick_mat = page.get_by_role("button", name="Logga mat", exact=True)
+    history_mat = page.get_by_role("button", name=re.compile(r"^Mat 12:05"))
+    assert_food_green(quick_mat, "quick tile")
+    assert_food_green(history_mat, "history")
+    water_row = page.get_by_role("button", name=re.compile(r"^Vatten 13:00"))
+    expect(water_row.get_by_role("img", name="Vatten-ikon")).to_be_visible()
+    assert 'rgb(228, 238, 244)' in water_row.evaluate("element => [element, ...element.querySelectorAll('*')].map(node => getComputedStyle(node).backgroundColor)"), "Water must keep its blue surface"
+    quick_bounds = quick_kiss.bounding_box()
+    assert quick_bounds is not None
+    page.mouse.move(quick_bounds["x"] + quick_bounds["width"] / 2, quick_bounds["y"] + quick_bounds["height"] / 2)
+    page.mouse.down()
+    page.wait_for_timeout(700)
+    page.mouse.up()
+    expect(page.get_by_role("heading", name="Ändra snabbval", exact=True)).to_be_visible()
+    layout_kiss = page.get_by_role("button", name="Kiss, Flytta till Mer", exact=True)
+    layout_mat = page.get_by_role("button", name="Mat, Flytta till Mer", exact=True)
+    expect(layout_kiss).to_be_visible()
+    expect(layout_mat).to_be_visible()
+    expect(layout_kiss.get_by_role("img", name="Kiss-ikon")).to_have_count(0)
+    assert_pee_icon(layout_kiss, "long-press layout editor")
+    assert_food_green(layout_mat, "long-press layout editor")
+    accident_with_pee = page.get_by_role("button", name=re.compile(r"^Olycka 11:00"))
+    expect(accident_with_pee).to_be_visible()
+    assert_pee_glyph(accident_with_pee, "small Kiss mark inside Olycka")
+    page.screenshot(path=str(output / "log-layout-editor-kiss-375.png"))
+    passed("Kiss uses the same amber surface in quick tile, history, and long-press layout editor")
+
+    # The event-type picker inside the edit sheet must use that same category icon too.
+    page.get_by_role("button", name="Klar med snabbval", exact=True).click()
+    history_kiss.click()
+    page.wait_for_timeout(350)
+    expect(page.get_by_role("heading", name="Ändra händelse", exact=True)).to_be_visible()
+    type_trigger = page.get_by_role("button", name="Händelsetyp: Kiss", exact=True)
+    assert_pee_icon(type_trigger, "event type trigger")
+    type_trigger.click()
+    page.wait_for_timeout(120)
+    kiss_option = page.get_by_role("radio", name="Kiss", exact=True)
+    expect(kiss_option).to_be_visible()
+    expect(kiss_option.get_by_role("img", name="Kiss-ikon")).to_have_count(0)
+    assert_pee_icon(kiss_option, "event type selector")
+    food_option = page.get_by_role("radio", name="Mat", exact=True)
+    assert_food_green(food_option, "event type selector")
+    page.screenshot(path=str(output / "log-event-type-selector-kiss-375.png"))
+    passed("Kiss keeps the same amber three-drop icon in the event type trigger and selector")
+
     # Check actual scroll-bottom clearance with the final action and expanded quick actions.
     open_log(page, 360)
     page.get_by_role("button", name="Visa fler loggtyper", exact=True).click()

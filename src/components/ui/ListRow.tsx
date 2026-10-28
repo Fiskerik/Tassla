@@ -3,22 +3,23 @@ import { Animated, Easing, StyleSheet, Text, View, type AccessibilityState } fro
 import { MotionPressable, useReducedMotion } from './Motion';
 import { Ionicons } from '@expo/vector-icons';
 import { tokens } from '../../theme/tokens';
-import { IconChip, type IconCategory } from './IconChip';
+import { IconChip, type IconCategory, type IconChipVariant } from './IconChip';
 
-export function ListRow({ title, meta, detail, time, category, accidentKinds, onPress, accessibilityLabel, accessibilityState, disabled = false, complete = false, animateCompleteKey, onCompleteAnimationStart, chevron = true, titleSize = 'standard', variant = 'default', showDivider = false }: { title: string; meta?: string; detail?: string; time?: string; category: IconCategory; accidentKinds?: readonly ('pee' | 'poop')[] | null; onPress?: () => void; accessibilityLabel?: string; accessibilityState?: AccessibilityState; disabled?: boolean; complete?: boolean; animateCompleteKey?: string; onCompleteAnimationStart?: (key: string) => void; chevron?: boolean; titleSize?: 'standard' | 'compact'; variant?: 'default' | 'log-timeline'; showDivider?: boolean }) {
+export function ListRow({ title, meta, detail, time, category, accidentKinds, iconVariant, onPress, accessibilityLabel, accessibilityState, disabled = false, complete = false, animateCompleteKey, onCompleteAnimationStart, chevron = true, titleSize = 'standard', variant = 'default', showDivider = false }: { title: string; meta?: string; detail?: string; time?: string; category: IconCategory; accidentKinds?: readonly ('pee' | 'poop')[] | null; iconVariant?: IconChipVariant; onPress?: () => void; accessibilityLabel?: string; accessibilityState?: AccessibilityState; disabled?: boolean; complete?: boolean; animateCompleteKey?: string; onCompleteAnimationStart?: (key: string) => void; chevron?: boolean; titleSize?: 'standard' | 'compact'; variant?: 'default' | 'log-timeline'; showDivider?: boolean }) {
   const secondary = detail ?? meta;
   const baseLabel = accessibilityLabel ?? [title, time, secondary].filter(Boolean).join(', ');
   const label = complete ? `${baseLabel}, Genomförd` : baseLabel;
   const isLogTimeline = variant === 'log-timeline';
+  const rowIconVariant = isLogTimeline ? 'rev02-log' : iconVariant;
   const titleText = titleSize === 'compact' ? <Text style={styles.titleCompact}>{title}</Text> : <Text style={styles.title}>{title}</Text>;
   const content = isLogTimeline ? <>
     <View style={styles.logTimeColumn}>{time ? <Text style={styles.logTime}>{time}</Text> : null}</View>
-    <IconChip category={category} variant="rev02-log" accidentKinds={accidentKinds} />
+    <IconChip category={category} variant={rowIconVariant} accidentKinds={accidentKinds} />
     <View style={styles.copy}><View style={styles.headline}>{titleText}</View>{secondary ? <Text style={styles.meta}>{secondary}</Text> : null}</View>
     {complete ? <CompletionMark animateKey={animateCompleteKey} onAnimationStart={onCompleteAnimationStart} /> : null}
     {chevron && onPress ? <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}
   </> : <>
-    <IconChip category={category} />
+    <IconChip category={category} variant={rowIconVariant} />
     <View style={styles.copy}><View style={styles.headline}>{time ? <Text style={styles.time}>{time}</Text> : null}{titleText}</View>{secondary ? <Text style={styles.meta}>{secondary}</Text> : null}</View>
     {complete ? <CompletionMark animateKey={animateCompleteKey} onAnimationStart={onCompleteAnimationStart} /> : null}
     {chevron && onPress ? <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}
