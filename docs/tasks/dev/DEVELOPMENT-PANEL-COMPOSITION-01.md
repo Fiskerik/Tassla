@@ -66,8 +66,8 @@ Den tillfälliga milestone-datan/källorna saknar fortfarande dokumenterad exter
 - Slutlig UI Critic REVIEW: **PASS**. Critic bekräftar hundansiktet, bågens slut vid markören, tre urskiljbara rader och 140 % scroll/åtkomlighet i public/reviewbilder.
 - Oberoende QA första kontroll: **PASS** på implementationen och de 78 dåvarande paths. Supplemental QA efter closeoutdokumenten: **PASS**, 81 nuvarande paths och alla inom samma 17 deklarerade; queue, bevis och loggar synkade.
 - Frozen Reviewer första kontroll: **BLOCK**, endast stale antal/saknade slutposter efter att nya dokument lagts till efter QA; inga produkt- eller bildfynd. Dokumentationen synkades och kompletterande QA verifierade 81 paths.
-- Frozen Reviewer slutlig re-review: **APPROVE/PASS**, inga kvarstående fynd. Commit/push på samma branch återstår. Redaktionell källgranskning och native-verifiering är avgränsade, fortsatt öppna punkter.
+- Frozen Reviewer slutlig re-review: **APPROVE/PASS**, inga kvarstående fynd. Commit `1aa0768` är pushad till `origin/knowledge/d3-catalog-delivery`; push-hookens `pnpm check` passerade (842 PASS, 1 skip). Redaktionell källgranskning och native-verifiering är avgränsade, fortsatt öppna punkter.
 
 ## Checkpoint
 
-Tasken är **done** för den avgränsade lokala UI-/renderleveransen. UI Critic, supplemental QA och slutlig Frozen Reviewer PASS; `CI=1 pnpm check` passerade 99/99 testfiler, public/review verifiering 52/52 och 60/60, fokustester 3/3 och 81 ändrade/nya paths inom 17 deklarerade. Commit/push på `knowledge/d3-catalog-delivery` återstår. Redaktionell granskning av milstolpskällorna samt native tillgänglighet förblir separata och öppna.
+Tasken är **done** för den avgränsade lokala UI-/renderleveransen. UI Critic, supplemental QA och slutlig Frozen Reviewer PASS; `CI=1 pnpm check` passerade 99/99 testfiler, public/review verifiering 52/52 och 60/60, fokustester 3/3 och 81 ändrade/nya paths inom 17 deklarerade. Commit `1aa0768` är pushad till `origin/knowledge/d3-catalog-delivery`; push-hookens `pnpm check` passerade (842 PASS, 1 skip). Redaktionell granskning av milstolpskällorna samt native tillgänglighet förblir separata och öppna.

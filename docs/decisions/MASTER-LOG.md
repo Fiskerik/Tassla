@@ -68,7 +68,7 @@ Följande är lokala köstatusar på 2e230be, inte ett påstående om live datab
 | VISION-R02-2 | done | Ägarvalda dagsrutiner och källhärledd träningsprogress. Lokala public/review-renderingar verifierades; Supabase/RLS och native kvarstår. |
 | VISION-R02-3 / 3B / 3C | done | Logga, Träning och Kunskap har avgränsade visuella migrationsposter. De stänger inte automatiskt hela panelresan. |
 | VISION-R02-4A–4H | done | Stödskärmar har rev02-migreringar, bland annat hälsa, pass, profil, påminnelser, konto och onboarding. |
-| DEVELOPMENT-PANEL-COMPOSITION-01 | done, lokal UI-/rendercheckpoint | Panel 2:s Utveckling: hundporträtt med överlagrad grön kronologisk båge, opt-in 24/30 pt titel och grupperade milstolpar. Critic, QA och Frozen Reviewer PASS; extern källgranskning/native/produktionsdata är separata. Commit/push återstår; se taskrapport och evidens. |
+| DEVELOPMENT-PANEL-COMPOSITION-01 | done, pushad | Panel 2:s Utveckling: hundporträtt med överlagrad grön kronologisk båge, opt-in 24/30 pt titel och grupperade milstolpar. Critic, QA och Frozen Reviewer PASS; commit `1aa0768` pushad till `origin/knowledge/d3-catalog-delivery`. Extern källgranskning/native/produktionsdata är separata; se taskrapport och evidens. |
 | UX-CONTINUE-CARD-01 | done | Panel 6:s fortsättkort renderat och granskat; native/Dynamic Type och liveprogress är separata kontroller. |
 | UX-LOG-EDITOR-01 | done | Loggeditor, återhämtning, legacy-status och delta-review passerade lokala kontroller; native och live RLS ej testade. |
 | UX-WORKSPACE-RETENTION-01 | done | Scopead in-memory data mellan flikar; lokal QA/Reviewer enligt rapport. Detta bevisar inte live databasretention. |
@@ -92,9 +92,9 @@ Tidigare MVP- och byggpaket har detaljerad historik i [HISTORY-2026.md](../relea
 
 Följande behålls för spårbarhet. Läs sammanfattningen ovan först; originalen är inte separata aktuella instruktioner:
 
-## DEVELOPMENT-PANEL-COMPOSITION-01 — lokal closeout (2026-10-28)
+## DEVELOPMENT-PANEL-COMPOSITION-01 — leveranscloseout (2026-10-28)
 
-På `knowledge/d3-catalog-delivery` har panel 2:s Utvecklingsvy fått ett dominant hundporträtt med överlagrad grön kronologisk åldersbåge, kort fasförklaring, större opt-in rubrik och kompakt grupperad milstolpsyta. UI Critic, supplemental oberoende QA och Frozen Reviewer **PASS**; `CI=1 pnpm check` 99/99 testfiler; public/review 52/52 och 60/60. QA bekräftade 81 paths inom 17 deklarerade samt slutliga statusar. Den första Frozen Reviewer-blockeringen gällde enbart synkad dokumentationsräkning och loggposter, åtgärdat före slutligt PASS. Tasken är done som lokal UI-/rendercheckpoint; commit/push återstår. Milstolparnas externa sakgranskning och native tillgänglighet förblir separata/öppna.
+På `knowledge/d3-catalog-delivery` har panel 2:s Utvecklingsvy fått ett dominant hundporträtt med överlagrad grön kronologisk åldersbåge, kort fasförklaring, större opt-in rubrik och kompakt grupperad milstolpsyta. UI Critic, supplemental oberoende QA och Frozen Reviewer **PASS**; `CI=1 pnpm check` 99/99 testfiler; public/review 52/52 och 60/60. QA bekräftade 81 paths inom 17 deklarerade samt slutliga statusar. Den första Frozen Reviewer-blockeringen gällde enbart synkad dokumentationsräkning och loggposter, åtgärdat före slutligt PASS. Tasken är done som UI-/rendercheckpoint. Commit `1aa0768` pushad till `origin/knowledge/d3-catalog-delivery`; push-hooken passerade `pnpm check` (842 PASS, 1 skip). Milstolparnas externa sakgranskning och native tillgänglighet förblir separata/öppna.
 
 - [0001-stack.md](0001-stack.md)
 - [0003-auth.md](0003-auth.md)
