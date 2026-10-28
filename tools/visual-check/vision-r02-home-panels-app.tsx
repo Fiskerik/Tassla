@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { View, Text } from 'react-native';
+import { ScrollView, View, Text } from 'react-native';
 import { AppScreen } from '../../src/components/AppPrimitives';
 import { BottomNav } from '../../src/components/ui';
 import { HomeScreen } from '../../src/features/home/HomeScreen';
@@ -11,6 +11,9 @@ import { DailyChecklistScreen } from '../../src/features/home/DailyChecklistScre
 import { DailyProgressScreen } from '../../src/features/home/DailyProgressScreen';
 import { DevelopmentScreen } from '../../src/features/home/DevelopmentScreen';
 import { KnowledgeScreen } from '../../src/features/knowledge/KnowledgeScreen';
+import { KnowledgeImage } from '../../src/features/knowledge/KnowledgeImage';
+import { editorialImageForGuide, knowledgeImageForGuide, knowledgeImageFocusForGuide } from '../../src/features/knowledge/editorial-image-assignment';
+import knowledgeImageFocusInventory from '../../docs/design/evidence/knowledge-image-focus-2026-10-25/image-focus-inventory.json';
 import { PlannedHealthScreen } from '../../src/features/health/PlannedHealthScreen';
 import { PublishedTrainingScreen } from '../../src/features/training/PublishedTrainingScreen';
 import { activeMainTabDestination, logViewScrollKeys, productRouteScrollKeys } from '../../src/features/home/main-navigation';
@@ -305,6 +308,44 @@ const initialProgressCount = requestedProgressCount !== null && /^\d+$/.test(req
 const initialCompletion = initialProgressCount === null ? {}
   : Object.fromEntries(rows.map((activity, index) => [activity.id, index < initialProgressCount]));
 
+const knowledgeImageFocusAuditItems = knowledgeImageFocusInventory.mappings.map(({ key, label, contentId, version, slug, asset }) => ({
+  key,
+  label,
+  expectedSource: asset,
+  item: { contentId, version, ...(slug ? { slug } : {}) },
+}));
+
+function KnowledgeImageFocusAudit() {
+  const requestedItem = params.get('focusItem');
+  const contactSheet = params.get('focusContactSheet') === 'true';
+  const visibleItems = requestedItem ? knowledgeImageFocusAuditItems.filter((row) => row.key === requestedItem) : knowledgeImageFocusAuditItems;
+  return <ScrollView testID="knowledge-image-focus-audit" style={{ flex: 1, backgroundColor: '#f5f0e5' }} contentContainerStyle={{ padding: 16, gap: 12,
+    flexDirection: contactSheet ? 'row' : 'column', flexWrap: contactSheet ? 'wrap' : 'nowrap' }}>
+    <Text style={{ width: contactSheet ? '100%' : undefined, fontSize: 18, fontWeight: '700', color: '#183c30' }}>Artikelbilder · fokusgranskning</Text>
+    {visibleItems.map(({ key, label, item, expectedSource }) => {
+      const source = knowledgeImageForGuide(item) ?? editorialImageForGuide(item);
+      const focus = knowledgeImageFocusForGuide(item, source);
+      const frames = [
+        { key: 'featured', name: 'Featured 16:9', ratio: 16 / 9 },
+        { key: 'related', name: 'Relaterad 4:3', ratio: 4 / 3 },
+        { key: 'reader', name: 'Läsare 16:9', ratio: 16 / 9 },
+      ];
+      return <View key={key} testID={`knowledge-image-focus-row-${key}`} style={{ width: contactSheet ? '48%' : '100%', padding: 10, borderRadius: 12, backgroundColor: '#fffdf8', gap: 8 }}>
+        <Text style={{ fontSize: 12, fontWeight: '700', color: '#183c30' }}>{label}</Text>
+        <Text testID={`knowledge-image-focus-meta-${key}`} style={{ fontSize: 10, color: '#58645e' }}>{item.contentId} · v{item.version} · {item.slug ?? 'no slug'} · {expectedSource} · x {focus.x.toFixed(2)} · y {focus.y.toFixed(2)} · zoom {focus.zoom.toFixed(2)}</Text>
+        <View style={{ flexDirection: 'row', gap: 6 }}>
+          {frames.map(({ key: frameKey, name, ratio }) => <View key={frameKey} style={{ width: '32%', gap: 4 }}>
+            <View testID={`knowledge-image-focus-${key}-${frameKey}`} style={{ width: '100%', aspectRatio: ratio, overflow: 'hidden', borderRadius: 8, backgroundColor: '#e8e2d6' }}>
+              <KnowledgeImage source={source} focus={focus} />
+            </View>
+            <Text style={{ fontSize: 9, color: '#58645e' }}>{name}</Text>
+          </View>)}
+        </View>
+      </View>;
+    })}
+  </ScrollView>;
+}
+
 function VisualCheckApp() {
   const [scrollScopeRevision, setScrollScopeRevision] = useState('base');
   const [completion, setCompletion] = useState<Record<string, boolean>>(initialCompletion);
@@ -356,6 +397,8 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
   const insightsLoadState: InsightsLoadState = insightsScenario === 'loading' ? { status: 'loading' }
     : insightsScenario === 'error' ? { status: 'error' }
       : { status: 'ready', data: insightsFixture(insightsPeriod) };
+
+  if (imageFixture === 'image-focus-audit') return <KnowledgeImageFocusAudit />;
 
   if (profileCreateFixture) {
     return <View style={{ flex: 1, minHeight: 0 }}>

@@ -1,0 +1,1929 @@
+{
+  "mode": "review",
+  "panel": "knowledge-image-focus",
+  "evidence_dir": "docs/design/evidence/knowledge-image-focus-2026-10-25/review",
+  "results": [
+    {
+      "check": "Knowledge focus audit includes the complete local mapping set at 375px",
+      "result": "PASS",
+      "count": 24,
+      "expected_count": 24,
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "check": "editorial-fallback-34: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-cocker-coast.jpg",
+      "rendered_focus": [
+        0.34,
+        0.36,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "editorial-fallback-50: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "editorial-fallback-66: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-featured-puppy-lagotto-forest.jpg",
+      "rendered_focus": [
+        0.66,
+        0.32,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "generic-guide-fixture: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-featured-puppy-lagotto-forest.jpg",
+      "rendered_focus": [
+        0.66,
+        0.32,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "legacy-fixture-handling: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-cocker-coast.jpg",
+      "rendered_focus": [
+        0.34,
+        0.36,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "legacy-fixture-rest: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "legacy-fixture-start: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-featured-puppy-lagotto-forest.jpg",
+      "rendered_focus": [
+        0.66,
+        0.32,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "published-alone: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "puppy-resting-carousel.png",
+      "rendered_focus": [
+        0.61,
+        0.55,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./puppy-resting-carousel-V3NV5HVZ.png",
+          "expected_source": "puppy-resting-carousel.png",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./puppy-resting-carousel-V3NV5HVZ.png",
+          "expected_source": "puppy-resting-carousel.png",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./puppy-resting-carousel-V3NV5HVZ.png",
+          "expected_source": "puppy-resting-carousel.png",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "published-daily-log: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-cocker-coast.jpg",
+      "rendered_focus": [
+        0.34,
+        0.36,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "published-first-week: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "published-handling: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-guide-handling.jpg",
+      "rendered_focus": [
+        0.66,
+        0.62,
+        1.3
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-handling-NUVDMRB5.jpg",
+          "expected_source": "knowledge-guide-handling.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-handling-NUVDMRB5.jpg",
+          "expected_source": "knowledge-guide-handling.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-handling-NUVDMRB5.jpg",
+          "expected_source": "knowledge-guide-handling.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "published-health: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-guide-vet.jpg",
+      "rendered_focus": [
+        0.5,
+        0.5,
+        1.15
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-vet-PWKRP5PE.jpg",
+          "expected_source": "knowledge-guide-vet.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-vet-PWKRP5PE.jpg",
+          "expected_source": "knowledge-guide-vet.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-vet-PWKRP5PE.jpg",
+          "expected_source": "knowledge-guide-vet.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "published-weight: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-guide-weight.jpg",
+      "rendered_focus": [
+        0.4,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-weight-BOZHMKKV.jpg",
+          "expected_source": "knowledge-guide-weight.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-weight-BOZHMKKV.jpg",
+          "expected_source": "knowledge-guide-weight.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-weight-BOZHMKKV.jpg",
+          "expected_source": "knowledge-guide-weight.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-article-first-day: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-featured-puppy-lagotto-forest.jpg",
+      "rendered_focus": [
+        0.66,
+        0.32,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-article-house-training: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-cocker-coast.jpg",
+      "rendered_focus": [
+        0.34,
+        0.36,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-article-sleep: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-article-unknown: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-article-unmatched: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-contact: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-everyday-calm: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-cocker-coast.jpg",
+      "rendered_focus": [
+        0.34,
+        0.36,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-start: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-featured-puppy-lagotto-forest.jpg",
+      "rendered_focus": [
+        0.66,
+        0.32,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "slug-first-day: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-featured-puppy-lagotto-forest.jpg",
+      "rendered_focus": [
+        0.66,
+        0.32,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "slug-house-training: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-cocker-coast.jpg",
+      "rendered_focus": [
+        0.34,
+        0.36,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "slug-sleep: face-focused source and all three crop frames at 375px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3334005240878855,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.778225806451613,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "Knowledge focus audit has no horizontal overflow or browser errors at 375px",
+      "result": "PASS",
+      "overflow": false,
+      "page_errors": []
+    },
+    {
+      "check": "Knowledge focus audit includes the complete local mapping set at 430px",
+      "result": "PASS",
+      "count": 24,
+      "expected_count": 24,
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "check": "editorial-fallback-34: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-cocker-coast.jpg",
+      "rendered_focus": [
+        0.34,
+        0.36,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "editorial-fallback-50: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "editorial-fallback-66: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-featured-puppy-lagotto-forest.jpg",
+      "rendered_focus": [
+        0.66,
+        0.32,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "generic-guide-fixture: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-featured-puppy-lagotto-forest.jpg",
+      "rendered_focus": [
+        0.66,
+        0.32,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "legacy-fixture-handling: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-cocker-coast.jpg",
+      "rendered_focus": [
+        0.34,
+        0.36,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "legacy-fixture-rest: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "legacy-fixture-start: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-featured-puppy-lagotto-forest.jpg",
+      "rendered_focus": [
+        0.66,
+        0.32,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "published-alone: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "puppy-resting-carousel.png",
+      "rendered_focus": [
+        0.61,
+        0.55,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./puppy-resting-carousel-V3NV5HVZ.png",
+          "expected_source": "puppy-resting-carousel.png",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./puppy-resting-carousel-V3NV5HVZ.png",
+          "expected_source": "puppy-resting-carousel.png",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./puppy-resting-carousel-V3NV5HVZ.png",
+          "expected_source": "puppy-resting-carousel.png",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "published-daily-log: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-cocker-coast.jpg",
+      "rendered_focus": [
+        0.34,
+        0.36,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "published-first-week: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "published-handling: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-guide-handling.jpg",
+      "rendered_focus": [
+        0.66,
+        0.62,
+        1.3
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-handling-NUVDMRB5.jpg",
+          "expected_source": "knowledge-guide-handling.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-handling-NUVDMRB5.jpg",
+          "expected_source": "knowledge-guide-handling.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-handling-NUVDMRB5.jpg",
+          "expected_source": "knowledge-guide-handling.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "published-health: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-guide-vet.jpg",
+      "rendered_focus": [
+        0.5,
+        0.5,
+        1.15
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-vet-PWKRP5PE.jpg",
+          "expected_source": "knowledge-guide-vet.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-vet-PWKRP5PE.jpg",
+          "expected_source": "knowledge-guide-vet.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-vet-PWKRP5PE.jpg",
+          "expected_source": "knowledge-guide-vet.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "published-weight: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-guide-weight.jpg",
+      "rendered_focus": [
+        0.4,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-weight-BOZHMKKV.jpg",
+          "expected_source": "knowledge-guide-weight.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-weight-BOZHMKKV.jpg",
+          "expected_source": "knowledge-guide-weight.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-guide-weight-BOZHMKKV.jpg",
+          "expected_source": "knowledge-guide-weight.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-article-first-day: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-featured-puppy-lagotto-forest.jpg",
+      "rendered_focus": [
+        0.66,
+        0.32,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-article-house-training: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-cocker-coast.jpg",
+      "rendered_focus": [
+        0.34,
+        0.36,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-article-sleep: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-article-unknown: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-article-unmatched: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-contact: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-everyday-calm: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-cocker-coast.jpg",
+      "rendered_focus": [
+        0.34,
+        0.36,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "review-start: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-featured-puppy-lagotto-forest.jpg",
+      "rendered_focus": [
+        0.66,
+        0.32,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "slug-first-day: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-featured-puppy-lagotto-forest.jpg",
+      "rendered_focus": [
+        0.66,
+        0.32,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+          "expected_source": "knowledge-featured-puppy-lagotto-forest.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "slug-house-training: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-cocker-coast.jpg",
+      "rendered_focus": [
+        0.34,
+        0.36,
+        1.35
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg",
+          "expected_source": "knowledge-card-puppy-cocker-coast.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "slug-sleep: face-focused source and all three crop frames at 430px",
+      "result": "PASS",
+      "source": "knowledge-card-puppy-sheltie-window.jpg",
+      "rendered_focus": [
+        0.5,
+        0.4,
+        1.2
+      ],
+      "frames": [
+        {
+          "frame": "featured",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "related",
+          "ratio": 1.3335055986218778,
+          "target_ratio": 1.3333333333333333,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        },
+        {
+          "frame": "reader",
+          "ratio": 1.7779053743683968,
+          "target_ratio": 1.7777777777777777,
+          "image_loaded": true,
+          "actual_src": "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+          "expected_source": "knowledge-card-puppy-sheltie-window.jpg",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "check": "Knowledge focus audit has no horizontal overflow or browser errors at 430px",
+      "result": "PASS",
+      "overflow": false,
+      "page_errors": []
+    },
+    {
+      "check": "Knowledge image rows remain reachable without horizontal overflow at 375×667",
+      "result": "PASS",
+      "scroll": {
+        "clientHeight": 667,
+        "scrollHeight": 4265,
+        "scrollTop": 0,
+        "scrollTopAfterLastRow": 3598
+      },
+      "horizontal_overflow": false
+    },
+    {
+      "check": "Contact sheet renders every audited mapping with three crop ratios",
+      "result": "PASS",
+      "mapping_count": 24,
+      "viewport": {
+        "width": 1000,
+        "height": 2300
+      }
+    }
+  ],
+  "failures": [],
+  "catalog_status": "NOT TESTABLE: no sanitized snapshot of the live published catalog is available in this workspace"
+}

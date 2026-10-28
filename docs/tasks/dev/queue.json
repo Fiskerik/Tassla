@@ -11881,7 +11881,7 @@
       "id": "KNOWLEDGE-IMAGE-FOCUS-01",
       "title": "Kunskap: granska fokus för varje artikelbild och fallback",
       "mvp_requirement": "Owner iPhone screenshots 2026-10-25; docs/design-rules.md §9; article-image focus review",
-      "plan": "docs/tasks/dev/KNOWLEDGE-IMAGE-FOCUS-01.md v1",
+      "plan": "docs/tasks/dev/KNOWLEDGE-IMAGE-FOCUS-01.md v2",
       "write_paths": [
         "docs/tasks/dev/KNOWLEDGE-IMAGE-FOCUS-01.md",
         "docs/tasks/dev/queue.json",
@@ -11904,7 +11904,7 @@
         "Missing production catalog/build evidence is labeled NOT TESTABLE; no native/TestFlight PASS is claimed without a post-change capture."
       ],
       "checks": [
-        "Sanitized catalog-to-image inventory, including each KNOWLEDGE_IMAGE_BY_GUIDE_VERSION identity, slug override, and shared editorial fallback identity.",
+        "Sanitized catalog-to-image inventory reconciled against KNOWLEDGE_IMAGE_BY_GUIDE_VERSION, GUIDE_IMAGE_FOCUS_BY_VERSION, REVIEW_IMAGE_BY_GUIDE_VERSION, every source asset, slug override, and shared editorial fallback identity.",
         "Per-mapping RN Web renders at 375×844, 430×844, and 375×667 across featured, related-card and detail crops.",
         "Focused source/focal-layout test and visual review by UI Critic and independent QA.",
         "CI=1 pnpm check",
@@ -11914,15 +11914,47 @@
       "depends_on": [
         "ARTICLE-READING-EXPERIENCE-01"
       ],
-      "status": "planned",
-      "next_step": "Audit all current sanitized article-image identities and focal mappings; correct only evidenced crops, and request a new TestFlight capture for native verification when available.",
+      "status": "done",
+      "next_step": "Frozen Reviewer PASS: all changed paths in v2 write_paths; no product code/assets changed; source-map tests cover all maps/assets; 54/54 visual audit results, contact sheet subjects visible; UI Critic and QA evidence saved; pnpm check 828 PASS, 1 skip; live catalog/native remain NOT TESTABLE. Local task checkpoint complete; proceed to Erik’s newly reported training modal copy/layout feedback.",
       "priority": "P2",
       "panels": [
         "7"
       ],
       "risk_class": "M",
-      "checkpoint": "Critic reviewed current local RN Web evidence: subjects are centered in the sampled fixture, but 10/10 covers only a small synthetic set. All live mappings need explicit review. TestFlight images supplied by owner predate current source; after-change native result remains unverified.",
-      "test_evidence": "Read-only review of editorial-image-assignment.ts, image assets, and current article/knowledge captures. No code changed."
+      "checkpoint": "Frozen Reviewer PASS. UI Critic and independent QA PASS. Inventory covers 24 sanitized local identities and 7 assets; source-map completeness is automated. Local image-focus audit is done; deployed catalog, missing Drive runtime IDs and native/TestFlight remain NOT TESTABLE.",
+      "test_evidence": "docs/design/evidence/knowledge-image-focus-2026-10-25/review/RESULTS.json: 54/54 render checks across 375/430 px, all 24 mappings, three crop ratios; 375x667 scroll probe passes. Focused geometry/source-map test, CI=1 pnpm check PASS (TypeScript, Edge TypeScript, ESLint, 828 passed, 1 skipped), py_compile, dev_flow validate and diff-check pass.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE KNOWLEDGE-IMAGE-FOCUS-01 plan v2. Inventory completeness is checked directly against the three source maps and all image asset references; deployed catalog/native remain NOT TESTABLE."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Plan v2 approved. Local audit tooling, source-map completeness guard, evidence and review are in progress; no product image or copy changes without concrete visual defect."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "54/54 local image renders pass across all 24 inventory mappings and 375/430 px; focused geometry and source-map completeness test PASS; full direct TypeScript, Edge TypeScript, ESLint and 97-test suite passed before the final focused-test-only guard refinement; focused test and ESLint pass after it. Queue validation, py_compile and diff-check pass. pnpm check preflight is unavailable because registry requests return EPERM; no product files changed."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS for source-map coverage, 54/54 render captures, short viewport, scope and NOT TESTABLE limits. Initial queue-plan/path metadata findings were corrected; QA recheck confirmed plan v2/status alignment, real RESULTS.json path and dev_flow validation exit 0. Frozen Reviewer pending."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS: all changed paths in v2 write_paths; no product code/assets changed; source-map tests cover all maps/assets; 54/54 visual audit results, contact sheet subjects visible; UI Critic and QA evidence saved; pnpm check 828 PASS, 1 skip; live catalog/native remain NOT TESTABLE. Local task checkpoint complete; proceed to Erik’s newly reported training modal copy/layout feedback."
+        }
+      ]
     },
     {
       "id": "CHECKLIST-TOGGLE-AFFORDANCE-01",

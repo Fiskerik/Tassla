@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 
 from playwright.sync_api import expect, sync_playwright
 
 
 ROOT = Path(__file__).resolve().parents[2]
+IMAGE_FOCUS_INVENTORY = json.loads((ROOT / 'docs/design/evidence/knowledge-image-focus-2026-10-25/image-focus-inventory.json').read_text(encoding='utf-8'))
 DAILY_CHECKLIST_SOURCE = (ROOT / 'src/features/home/DailyChecklistScreen.tsx').read_text(encoding='utf-8')
 DAILY_ACTIVITY_SOURCE = (ROOT / 'src/components/ui/DailyActivityItem.tsx').read_text(encoding='utf-8')
 REVIEW = os.environ.get('TASSLA_UI_REVIEW') == 'true'
@@ -82,6 +84,87 @@ def article_reader_url(article_id: str | None = None, related_mode: str | None =
     selected = f'&articleId={article_id}' if article_id else ''
     related = f'&relatedMode={related_mode}' if related_mode else ''
     return f'{BASE}/?screen=knowledge&imageFixture=article-reader{selected}{related}'
+
+
+def verify_knowledge_image_focus(browser) -> None:
+    expected = {item['key']: item for item in IMAGE_FOCUS_INVENTORY['mappings']}
+    for width, height in ((375, 844), (430, 844)):
+        page = browser.new_page(viewport={'width': width, 'height': height})
+        page_errors: list[str] = []
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.goto(f'{BASE.rstrip("/")}/?screen=knowledge&imageFixture=image-focus-audit', wait_until='networkidle')
+        audit = page.get_by_test_id('knowledge-image-focus-audit')
+        expect(audit).to_be_visible()
+        row_ids = audit.locator('[data-testid^="knowledge-image-focus-row-"]').evaluate_all(
+            "nodes => nodes.map(node => node.getAttribute('data-testid').replace('knowledge-image-focus-row-', ''))")
+        record(f'Knowledge focus audit includes the complete local mapping set at {width}px',
+               len(row_ids) == len(expected) and set(row_ids) == set(expected),
+               {'count': len(row_ids), 'expected_count': len(expected), 'missing': sorted(set(expected) - set(row_ids)),
+                'unexpected': sorted(set(row_ids) - set(expected))})
+        width_results = []
+        for key in sorted(expected):
+            mapping = expected[key]
+            row = page.get_by_test_id(f'knowledge-image-focus-row-{key}')
+            expect(row).to_be_visible()
+            meta_text = page.get_by_test_id(f'knowledge-image-focus-meta-{key}').inner_text()
+            meta = [part.strip() for part in meta_text.split('·')]
+            source = mapping['asset']
+            focus = IMAGE_FOCUS_INVENTORY['assets'][source]['focus']
+            parts_match = len(meta) >= 7 and meta[0] == mapping['contentId'] and meta[1] == f"v{mapping['version']}"
+            if mapping.get('slug'):
+                parts_match = parts_match and meta[2] == mapping['slug']
+            else:
+                parts_match = parts_match and meta[2] == 'no slug'
+            parts_match = parts_match and meta[3] == source
+            actual_focus = [float(re.search(r'[-+]?\d*\.?\d+', meta[index]).group()) for index in (4, 5, 6)] if len(meta) >= 7 else []
+            expected_focus = [focus['x'], focus['y'], focus['zoom']]
+            row_ok = parts_match and len(actual_focus) == 3 and all(abs(actual - target) < 0.005 for actual, target in zip(actual_focus, expected_focus))
+            frames = []
+            for frame_key, target_ratio in (('featured', 16 / 9), ('related', 4 / 3), ('reader', 16 / 9)):
+                frame = page.get_by_test_id(f'knowledge-image-focus-{key}-{frame_key}')
+                box = frame.bounding_box()
+                image = frame.locator('img')
+                src = image.get_attribute('src') if image.count() else None
+                loaded = image.evaluate('(node) => node.complete && node.naturalWidth > 0') if image.count() else False
+                ratio = box['width'] / box['height'] if box and box['height'] else 0
+                frame_ok = box is not None and abs(ratio - target_ratio) < 0.025 and loaded and bool(src) and source.rsplit('.', 1)[0] in src
+                row_ok = row_ok and frame_ok
+                frames.append({'frame': frame_key, 'ratio': ratio, 'target_ratio': target_ratio, 'image_loaded': loaded,
+                               'actual_src': src, 'expected_source': source, 'pass': frame_ok})
+            row_result = {'key': key, 'content_id': mapping['contentId'], 'version': mapping['version'], 'slug': mapping.get('slug'),
+                          'asset': source, 'focus': focus, 'rendered_focus': actual_focus, 'pass': row_ok, 'frames': frames}
+            width_results.append(row_result)
+            record(f'{key}: face-focused source and all three crop frames at {width}px', row_ok,
+                   {'source': source, 'rendered_focus': actual_focus, 'frames': frames})
+            row.scroll_into_view_if_needed()
+            row.screenshot(path=str(OUT / f'knowledge-image-focus-{key}-{width}.png'))
+        no_overflow = page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+        record(f'Knowledge focus audit has no horizontal overflow or browser errors at {width}px', no_overflow and not page_errors,
+               {'overflow': not no_overflow, 'page_errors': page_errors})
+        (OUT / f'knowledge-image-focus-{width}-results.json').write_text(json.dumps(width_results, ensure_ascii=False, indent=2) + '\n')
+        page.close()
+
+    short_page = browser.new_page(viewport={'width': 375, 'height': 667})
+    short_page.goto(f'{BASE.rstrip("/")}/?screen=knowledge&imageFixture=image-focus-audit', wait_until='networkidle')
+    short_page.wait_for_timeout(100)
+    scroll = short_page.get_by_test_id('knowledge-image-focus-audit').evaluate(
+        '(node) => ({clientHeight: node.clientHeight, scrollHeight: node.scrollHeight, scrollTop: node.scrollTop})')
+    short_page.get_by_test_id(f"knowledge-image-focus-row-{IMAGE_FOCUS_INVENTORY['mappings'][-1]['key']}").scroll_into_view_if_needed()
+    scroll['scrollTopAfterLastRow'] = short_page.get_by_test_id('knowledge-image-focus-audit').evaluate('(node) => node.scrollTop')
+    short_overflow = short_page.evaluate('document.documentElement.scrollWidth > innerWidth + 1')
+    short_page.screenshot(path=str(OUT / 'knowledge-image-focus-short-375x667.png'), full_page=True)
+    record('Knowledge image rows remain reachable without horizontal overflow at 375×667',
+           scroll['scrollHeight'] > scroll['clientHeight'] and scroll['scrollTopAfterLastRow'] > 0 and not short_overflow,
+           {'scroll': scroll, 'horizontal_overflow': short_overflow})
+    short_page.close()
+
+    contact = browser.new_page(viewport={'width': 1000, 'height': 2300})
+    contact.goto(f'{BASE.rstrip("/")}/?screen=knowledge&imageFixture=image-focus-audit&focusContactSheet=true', wait_until='networkidle')
+    contact.screenshot(path=str(OUT / 'knowledge-image-focus-contact-sheet.png', ), full_page=True)
+    record('Contact sheet renders every audited mapping with three crop ratios',
+           contact.get_by_test_id('knowledge-image-focus-audit').locator('[data-testid^="knowledge-image-focus-row-"]').count() == len(expected),
+           {'mapping_count': len(expected), 'viewport': {'width': 1000, 'height': 2300}})
+    contact.close()
 
 
 def visible_destinations(page) -> list[dict[str, object]]:
@@ -1406,6 +1489,23 @@ if os.environ.get('TASSLA_UI_PANEL') == 'article-reader':
         verify_article_reader(browser)
         browser.close()
     report = {'mode': 'review' if REVIEW else 'public', 'panel': 'article-reader', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
+if os.environ.get('TASSLA_UI_PANEL') == 'knowledge-image-focus':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_knowledge_image_focus(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'knowledge-image-focus',
+              'evidence_dir': str(OUT), 'results': results, 'failures': failures,
+              'catalog_status': IMAGE_FOCUS_INVENTORY['catalog_snapshot']['deployed_catalog']}
     (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
     raise SystemExit(1 if failures else 0)
