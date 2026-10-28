@@ -52,7 +52,8 @@ const dog: OwnedDog = {
   name: 'Luna',
   breed_id: 'golden',
   birth_date: ageScenario === 'missing' ? null : ageScenario === 'invalid' ? '2026-02-30'
-    : ageScenario === 'future' ? dateOffset(today, 30) : dateOffset(today, -77),
+    : ageScenario === 'future' ? dateOffset(today, 30) : ageScenario === 'early' ? dateOffset(today, -30)
+      : ageScenario === 'midpoint' ? dateOffset(today, -365) : ageScenario === 'adult' ? dateOffset(today, -900) : dateOffset(today, -77),
   age_display_unit: 'weeks',
 };
 const profileDog: OwnedDog = profileBreedScenario === 'legacy' ? { ...dog, breed_id: 'retired-test-breed' } : dog;
@@ -515,7 +516,7 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
               if (activity) setCompletion((current) => ({ ...current, [activity.id]: completed }));
             }}
           /> : navigation === 'development' ? <DevelopmentScreen
-            dogName={dog.name}
+            dogName={params.get('developmentDogName') ?? dog.name}
             birthDate={dog.birth_date}
             today={today}
             guides={reviewMode ? developmentGuides : []}

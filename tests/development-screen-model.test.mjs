@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { automaticDogAge } from '../src/features/onboarding/dog.ts';
+import { developmentTitle } from '../src/features/home/development-title.ts';
+
+test('development title does not duplicate a trailing s in the dog name', () => {
+  assert.equal(developmentTitle('Doos'), 'Doos utveckling');
+  assert.equal(developmentTitle('Luna'), 'Lunas utveckling');
+});
 
 test('development uses the chronological age and broad phase from the dog profile dates', () => {
   assert.deepEqual(automaticDogAge('2026-01-01', '2026-03-19'), {

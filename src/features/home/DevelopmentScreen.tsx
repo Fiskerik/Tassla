@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Alert, Image, Linking, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import Svg, { Path } from 'react-native-svg';
 import { AppBar, Button, Skeleton } from '../../components/ui';
 import { MessageCard } from '../../components/AppPrimitives';
 import { MotionPressable } from '../../components/ui/Motion';
@@ -9,6 +10,7 @@ import { tokens } from '../../theme/tokens';
 import { automaticDogAge } from '../onboarding/dog';
 import { homeAgeInWeeks } from './home-today';
 import { generalDevelopmentMilestones } from './development-milestones';
+import { developmentTitle } from './development-title';
 
 type GuideState = 'loading' | 'ready' | 'error';
 
@@ -28,7 +30,7 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
   const milestones = useMemo(() => generalDevelopmentMilestones(homeAgeInWeeks(birthDate, today)), [birthDate, today]);
 
   return <View style={styles.page} testID="development-screen">
-    <AppBar mode="Back" title={`${dogName}s utveckling`} actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" />
+    <AppBar mode="Back" title={developmentTitle(dogName)} actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" />
 
     <View style={styles.hero} testID="development-hero">
       <Image source={require('../../../assets/images/development-hero-puppy-black-tan-forest-wide.jpg')} style={styles.heroImage} resizeMode="cover"
@@ -99,6 +101,9 @@ function AgeArc({ progress, currentAge, stage }: { progress: number; currentAge:
   const bubbleWidth = tokens.size.developmentAgeMarkerWidth;
   const markerX = Math.max(markerSize / 2, Math.min(diameter - markerSize / 2, radius * (1 - Math.cos(progress * Math.PI))));
   const markerY = Math.max(markerSize / 2, Math.min(radius - markerSize / 2, radius * (1 - Math.sin(progress * Math.PI))));
+  const arcRadius = radius - tokens.size.developmentAgeArcStroke / 2;
+  const arcLength = Math.PI * arcRadius;
+  const arcPath = `M ${tokens.size.developmentAgeArcStroke / 2} ${radius} A ${arcRadius} ${arcRadius} 0 0 1 ${diameter - tokens.size.developmentAgeArcStroke / 2} ${radius}`;
   const bubbleLeft = Math.max(0, Math.min(diameter - bubbleWidth, markerX - bubbleWidth / 2));
   const bubbleTop = markerY < tokens.size.chipMd + tokens.spacing.xs ? markerY + tokens.spacing.md : markerY - tokens.size.chipMd - tokens.spacing.xs;
   const bubbleHitWidth = bubbleWidth + 16;
@@ -111,11 +116,18 @@ function AgeArc({ progress, currentAge, stage }: { progress: number; currentAge:
   return <View style={styles.arcBlock}>
     <View style={styles.arcAccessible}>
       <View style={styles.arcClip}>
-        <View style={styles.arcTrack} />
+        <Svg accessible={false} importantForAccessibility="no-hide-descendants" pointerEvents="none"
+          width={diameter} height={diameter / 2} viewBox={`0 0 ${diameter} ${diameter / 2}`} style={styles.arcSvg}>
+          <Path testID="development-age-arc-track" d={arcPath} fill="none" stroke={tokens.colors.home.progressTrack}
+            strokeWidth={tokens.size.developmentAgeArcStroke} strokeLinecap="round" />
+          {progress > 0 ? <Path testID="development-age-progress" d={arcPath} fill="none" stroke={tokens.colors.home.greenStrong}
+            strokeWidth={tokens.size.developmentAgeArcStroke} strokeDasharray={`${arcLength * progress} ${arcLength}`}
+            strokeLinecap="round" /> : null}
+        </Svg>
         {[0.25, 0.5, 0.75].map((tick) => {
           const left = radius * (1 - Math.cos(tick * Math.PI));
           const top = Math.max(3, radius * (1 - Math.sin(tick * Math.PI)));
-          return <View key={tick} style={[styles.arcTick, { left: left - 3, top: top - 3 }]} />;
+          return <View key={tick} style={[styles.arcTick, progress >= tick && styles.arcTickReached, { left: left - 3, top: top - 3 }]} />;
         })}
         {ageLabelVisible ? <View style={[styles.arcCurrent, { width: markerSize, height: markerSize, borderRadius: markerSize / 2,
           left: markerX - markerSize / 2, top: markerY - markerSize / 2 }]} /> : null}
@@ -200,8 +212,9 @@ const styles = StyleSheet.create({
   arcBlock: { alignItems: 'center', gap: tokens.spacing.xs / 2 },
   arcAccessible: { width: tokens.size.developmentAgeArcDiameter, height: tokens.size.developmentAgeArcDiameter / 2, overflow: 'visible' },
   arcClip: { position: 'relative', width: tokens.size.developmentAgeArcDiameter, height: tokens.size.developmentAgeArcDiameter / 2, overflow: 'hidden' },
-  arcTrack: { position: 'absolute', top: 0, left: 0, width: tokens.size.developmentAgeArcDiameter, height: tokens.size.developmentAgeArcDiameter, borderRadius: tokens.size.developmentAgeArcDiameter / 2, borderWidth: tokens.size.developmentAgeArcStroke, borderColor: tokens.colors.home.progressTrack },
+  arcSvg: { position: 'absolute', top: 0, left: 0 },
   arcTick: { position: 'absolute', width: 6, height: 6, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.borderStrong },
+  arcTickReached: { backgroundColor: tokens.colors.home.greenStrong },
   arcCurrent: { position: 'absolute', borderWidth: 2, borderColor: tokens.colors.home.card, backgroundColor: tokens.colors.home.greenStrong },
   ageBubbleTouch: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   ageBubble: { width: tokens.size.developmentAgeMarkerWidth, minHeight: tokens.size.chipMd, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.greenStrong },

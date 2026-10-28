@@ -164,11 +164,11 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
             <Ionicons name="sunny" size={tokens.size.iconSm} color={tokens.colors.home.sun} accessibilityElementsHidden />
           </View>
           <Text style={styles.dogMeta}>{dog.name}{age ? ` · ${age.label}` : ` · ${breedLabel}`}</Text>
-          {age ? <MotionPressable accessibilityRole="button" accessibilityLabel={`Visa utveckling för ${dog.name}`}
+          {age ? <MotionPressable testID="home-development-phase" accessibilityRole="button" accessibilityLabel={`Visa utveckling för ${dog.name}`}
             accessibilityHint="Öppnar ålder och ungefärlig utvecklingsfas."
             onPress={onOpenDevelopment} style={({ pressed }) => [styles.dogPhaseAction, pressed && styles.headingPressed]}>
             <Text style={styles.dogPhase}>Ungefärlig fas: {age.stage}</Text>
-            <Ionicons name="chevron-forward" size={tokens.size.iconSm - tokens.spacing.xs} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
+            <Ionicons name="chevron-forward" size={tokens.size.iconSm - tokens.spacing.xs} color={tokens.colors.home.greenStrong} accessibilityElementsHidden />
           </MotionPressable> : null}
         </View>
       </View>
@@ -515,8 +515,8 @@ const styles = StyleSheet.create({
   greetingTitle: { ...tokens.typography.heading, color: tokens.colors.home.text, fontWeight: '600' },
   dogMeta: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700' },
   dogAge: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
-  dogPhaseAction: { minHeight: tokens.size.touchMin, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, marginVertical: -tokens.spacing.xs / 2, paddingHorizontal: tokens.spacing.xs, marginLeft: -tokens.spacing.xs, borderRadius: tokens.radius.sm },
-  dogPhase: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
+  dogPhaseAction: { minHeight: tokens.size.touchMin, maxWidth: '100%', alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm, paddingVertical: tokens.spacing.xs / 2, borderWidth: tokens.size.stroke, borderColor: tokens.colors.home.greenStrong, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.home.card },
+  dogPhase: { ...tokens.typography.caption, color: tokens.colors.home.greenStrong, fontWeight: '700', flexShrink: 1, flexWrap: 'wrap' },
   dogPortrait: { position: 'absolute', top: 0, right: 0, zIndex: 1, width: portraitSize, height: portraitSize, borderRadius: tokens.radius.full },
   portraitPressed: { opacity: 0.84, transform: [{ scale: 0.98 }] },
   portraitPhotoClip: { width: portraitSize, height: portraitSize, overflow: 'hidden', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.canvas },

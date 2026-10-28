@@ -11915,13 +11915,13 @@
         "ARTICLE-READING-EXPERIENCE-01"
       ],
       "status": "done",
-      "next_step": "Frozen Reviewer PASS: all changed paths in v2 write_paths; no product code/assets changed; source-map tests cover all maps/assets; 54/54 visual audit results, contact sheet subjects visible; UI Critic and QA evidence saved; pnpm check 828 PASS, 1 skip; live catalog/native remain NOT TESTABLE. Local task checkpoint complete; proceed to Erik’s newly reported training modal copy/layout feedback.",
+      "next_step": "Proceed to the separate user-requested Training modal copy/layout checkpoint after DEVELOPMENT-PROGRESS-AFFORDANCE-01 closes.",
       "priority": "P2",
       "panels": [
         "7"
       ],
       "risk_class": "M",
-      "checkpoint": "Frozen Reviewer PASS. UI Critic and independent QA PASS. Inventory covers 24 sanitized local identities and 7 assets; source-map completeness is automated. Local image-focus audit is done; deployed catalog, missing Drive runtime IDs and native/TestFlight remain NOT TESTABLE.",
+      "checkpoint": "Frozen Reviewer PASS. Commit dd38a3d is present on knowledge/d3-catalog-delivery and pushed to origin on 2026-10-28. Local source-map audit complete; live catalog and native/TestFlight remain NOT TESTABLE.",
       "test_evidence": "docs/design/evidence/knowledge-image-focus-2026-10-25/review/RESULTS.json: 54/54 render checks across 375/430 px, all 24 mappings, three crop ratios; 375x667 scroll probe passes. Focused geometry/source-map test, CI=1 pnpm check PASS (TypeScript, Edge TypeScript, ESLint, 828 passed, 1 skipped), py_compile, dev_flow validate and diff-check pass.",
       "history": [
         {
@@ -11953,6 +11953,12 @@
           "to": "done",
           "actor": "reviewer",
           "evidence": "Frozen Reviewer PASS: all changed paths in v2 write_paths; no product code/assets changed; source-map tests cover all maps/assets; 54/54 visual audit results, contact sheet subjects visible; UI Critic and QA evidence saved; pnpm check 828 PASS, 1 skip; live catalog/native remain NOT TESTABLE. Local task checkpoint complete; proceed to Erik’s newly reported training modal copy/layout feedback."
+        },
+        {
+          "from": "done",
+          "to": "done",
+          "actor": "coordinator",
+          "evidence": "Push status reconciled: origin/knowledge/d3-catalog-delivery points to dd38a3d (2026-10-28). Previous “commit/push pending” wording corrected; no product change."
         }
       ]
     },
@@ -12546,6 +12552,158 @@
           "actor": "reviewer",
           "evidence": "Final UI Critic PASS, QA PASS and Reviewer APPROVE; pnpm check 96/96, training UI 28/28, article UI 15/15, queue validation and diff check PASS, all 64 paths within write_paths. Implementation commit 9a5317484286e731d9d43734a7d0881e9c37bf4f pushed to origin/knowledge/d3-catalog-delivery; hooks passed 824 tests (1 skipped)."
         }
+      ]
+    },
+    {
+      "id": "DEVELOPMENT-PROGRESS-AFFORDANCE-01",
+      "title": "Utveckling: grön åldersbåge, tydlig faslänk och korrekt hundnamn",
+      "mvp_requirement": "Panel 2 — förstå aktuell kronologisk ålder och öppna utvecklingsvyn från Hem.",
+      "plan": "docs/tasks/dev/DEVELOPMENT-PROGRESS-AFFORDANCE-01.md v3",
+      "write_paths": [
+        "src/features/home/DevelopmentScreen.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/development-title.ts",
+        "tests/development-screen-model.test.mjs",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "src/features/home/README.md",
+        "docs/tasks/dev/DEVELOPMENT-PROGRESS-AFFORDANCE-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/development-progress-affordance-01/"
+      ],
+      "acceptance": [
+        "Den passerade delen av halvcirkeln är grön fram till markören och resten neutral.",
+        "Early, normal, midpoint age yield monotonically longer chronological progress toward 24 months; adult/missing/invalid/future show no age arc.",
+        "Fasraden på Hem är en tydlig outlineknapp, minst 44×44 pt, med bevarad label/hint/navigation; 375px UNGHUND-fixture ryms utan porträttöverlapp.",
+        "Rubriken är Doos utveckling för Doos och Lunas utveckling för Luna.",
+        "Riktad visuell och beteendemässig evidens finns för 375/430 pt; native/Dynamic Type-luckor är ärligt NOT TESTABLE.",
+        "Endast write_paths ändras; inga nya dependencies eller datakontrakt."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/development-screen-model.test.mjs",
+        "RN Web development verifier: early/normal/midpoint/adult/missing/invalid/future, 375/430 and short viewport; open images and compare with panel 2",
+        "CI=1 pnpm check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check; faktisk diff mot write_paths"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Ägarens uttryckliga besked 2026-10-28: gör passerad del av hundens halvcirkel grön, gör Hemmets ”Ungefärlig fas” synligt tryckbar och rätta Dooss till Doos. Separat, tidigare beställd träningsmodal-copy/layout hålls i nästa avgränsade task. Väntar på Architect planreview och UI Critic BRIEF."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Architect review of plan v1 returned CHANGES: existing harness could not verify arc growth or adult state. Plan v2 adds early, midpoint and adult fixtures and monotonic progress-length assertions; no UI scope or meaning changed. Re-review required before implementation."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect APPROVE DEVELOPMENT-PROGRESS-AFFORDANCE-01 v2. Early/normal/midpoint/adult/unknown fixtures suffice; verifier must compare rendered progress value and visibility. Existing SVG dependency and chronological-age meaning are confirmed. UI Critic BRIEF still pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "ui_critic",
+          "evidence": "UI Critic BRIEF granskade den öppnade panel 2-jämförelsen 798×1069 och Hem-baslinjen 375×844. Rekommenderade greenStrong 8pt-båge, kompakt home.card-outlineknapp med min 44pt, 8pt padding, greenStrong-label/chevron, och UNGHUND-kontroll vid 375px. Detta infördes i plan v3; Doos ska synas i slutrender."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect APPROVE DEVELOPMENT-PROGRESS-AFFORDANCE-01 v3 after UI Critic BRIEF. Existing SVG path and tokens preserve age semantics/navigation; 375pt UNGHUND wrap and portrait clearance are explicit; plan/queue write_paths match."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v3; UI Critic BRIEF included; exact 12 write_paths match plan."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Codex is sole writer for approved v3 paths; only Home/Development presentation, focused test, harness and docs/evidence."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation v3 complete; UI Critic REVIEW PASS; public/review development verifier 32/32 each; pnpm check 829 PASS, 1 skip; focused title/age test, py_compile, git diff --check and 12-path scope audit pass. Request independent QA."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende beteende/visuell QA PASS inom ändringens scope: båge, Hemknapp, Doos; public/review 32/32; 66 filer inom 12 deklarerade skrivvägar. Helpanelens komposition/bildspråk/täthet förblir öppen separat: jämförelsen visar nuvarande separat bildremsa, båge och block mot referensens integrerade porträtt/tätare layout. Körningarna, gränserna och evidensen är dokumenterade. Nästa steg: Frozen Reviewer; därefter commit/push på befintlig branch."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS after second review. Confirmed scoped green chronological-age arc, neutral remainder, Home phase-button affordance/route/accessibility, Doos title, public/review 32/32, exact 12 write paths, queue validation and diff check. Full-panel composition remains explicitly open in DEVELOPMENT-PANEL-COMPOSITION-01; native VoiceOver, Dynamic Type and physical hit targets NOT TESTABLE. Next: commit/push this branch."
+        }
+      ],
+      "next_step": "Commit and push on the existing knowledge/d3-catalog-delivery branch. Keep whole-panel composition as separate planned follow-up.",
+      "priority": "P1",
+      "panels": [
+        "1",
+        "2"
+      ],
+      "risk_class": "L",
+      "checkpoint": "Frozen Reviewer PASS on scoped change after reviewing full §14 checklist. Architect APPROVE, UI Critic PASS, independent QA PASS. Public/review 32/32; pnpm check 829 pass/1 skip; 66 changed/new files within 12 declared write paths. Full-panel composition gap remains open in DEVELOPMENT-PANEL-COMPOSITION-01.",
+      "test_evidence": [
+        "Public RN Web DEVELOPMENT verifier: 32/32 PASS at 375/430; early/normal/midpoint monotonic green-arc length, adult/missing/invalid/future no-arc, Doos title, 44pt phase-button target, phase navigation and 140% text/portrait clearance. Evidence: docs/design/evidence/development-progress-affordance-01/public/RESULTS.json.",
+        "Review RN Web DEVELOPMENT verifier: 32/32 PASS at 375/430 with synthetic loading/error and same scoped interactions. Evidence: docs/design/evidence/development-progress-affordance-01/review/RESULTS.json.",
+        "UI Critic REVIEW PASS after opening five final captures; independent behavioral/visual QA PASS for scoped changes. Both record full panel composition as an open follow-up. Evidence: docs/design/evidence/development-progress-affordance-01/REVIEWS.md and panel 2 side-by-side composite.",
+        "CI=1 pnpm check PASS: TypeScript, Edge TypeScript, ESLint; 829 tests passed, 1 skipped. Focused development model/title test and Python py_compile PASS.",
+        "Independent scope audit: 66 changed/new files, all under the exact 12 declared write paths. git diff --check and python -X utf8 tools/dev_flow.py validate PASS after QA. Native iOS VoiceOver/Dynamic Type/physical target and TestFlight NOT TESTABLE.",
+        "Frozen Reviewer second pass PASS after adding full docs/design-rules.md §14 checklist and separate §14.16 matrix. Evidence: docs/design/evidence/development-progress-affordance-01/REVIEWS.md. Native VoiceOver, Dynamic Type and physical iPhone target NOT TESTABLE."
+      ]
+    },
+    {
+      "id": "DEVELOPMENT-PANEL-COMPOSITION-01",
+      "title": "Utveckling: stäm av helvyns komposition mot panel 2",
+      "mvp_requirement": "QA-fynd från DEVELOPMENT-PROGRESS-AFFORDANCE-01: helvyns stora hundporträtt, åldersbåge och milstolpslayout skiljer sig från målpanelens integrerade komposition.",
+      "plan": "docs/tasks/dev/DEVELOPMENT-PANEL-COMPOSITION-01.md v1 (ska avgränsas och granskas innan ready)",
+      "write_paths": [],
+      "acceptance": [
+        "UI Critic och Architect granskar öppnad panel 2-jämförelse och bestämmer minsta korrigering för bild/båge/milstolpskomposition.",
+        "Ingen helpanel beskrivs som visuellt matchad innan renderad jämförelse klarar godkänd brief."
+      ],
+      "checks": [
+        "Skapa separat plan med exakta skrivvägar innan implementation.",
+        "RN Web rendera 375/430 och öppna paneljämförelsen; dokumentera native-begränsningar."
+      ],
+      "depends_on": [
+        "DEVELOPMENT-PROGRESS-AFFORDANCE-01"
+      ],
+      "status": "planned",
+      "history": [
+        {
+          "from": "",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Oberoende QA såg en kvarstående helpanelsskillnad: referensens stora porträtt/åldersbåge ingår i en tätare milstolpslayout, medan appen visar separat bildremsa, båge och efterföljande block. Skapad som separat visuell backlog; ingen produktändring är godkänd här."
+        }
+      ],
+      "next_step": "Skriv avgränsad plan och låt Architect/UI Critic granska jämförelsen före implementering.",
+      "priority": "P2",
+      "panels": [
+        "2"
+      ],
+      "risk_class": "L",
+      "checkpoint": "Planerad efter QA-fynd. Ingen implementation startad; exakta write_paths ska godkännas i separat plan.",
+      "test_evidence": [
+        "Fynd och jämförelse beskrivna i docs/design/evidence/development-progress-affordance-01/REVIEWS.md."
       ]
     }
   ]
