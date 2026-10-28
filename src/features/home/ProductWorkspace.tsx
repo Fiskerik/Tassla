@@ -29,6 +29,7 @@ import {
   fetchPlannedHealthChecklistRange,
   fetchExactPublishedTrainingStep,
   fetchKnowledgeContent,
+  fetchPublishedFaqs,
   fetchTrainingWorkspace,
   fetchExactHistoricalTrainingSources,
   applyTrainingProgressionOperation,
@@ -67,6 +68,7 @@ import {
   type PlannedHealthRecord,
   type PlannedHealthType,
   type PublishedTrainingProgram,
+  type PublishedFaq,
   type HistoricalTrainingSource,
   type HistoricalTrainingStepDetail,
   type WriteOutcome,
@@ -325,6 +327,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [content, setContent] = useState<HomeContent[]>([]);
   const [contentState, setContentState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [contentSelectionKey, setContentSelectionKey] = useState<string | null>(null);
+  const [faqRead, setFaqRead] = useState<{ selectionKey: string; state: 'loading' | 'ready' | 'error'; items: PublishedFaq[] } | null>(null);
+  const [faqRetry, setFaqRetry] = useState(0);
   const [knowledgeFocus, setKnowledgeFocus] = useState<{ selectionKey: string; contentId: string | null; returnPage: 'home' | 'more' | 'training' | 'development' } | null>(null);
   const [developmentFocus, setDevelopmentFocus] = useState<{ selectionKey: string } | null>(null);
   const [knowledgeDetailOpen, setKnowledgeDetailOpen] = useState(false);
@@ -617,6 +621,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const profileLifetime = useRef('');
   const previousProfileLifetime = useRef('');
   const contentGeneration = useRef(0);
+  const faqGeneration = useRef(0);
   const trainingGeneration = useRef(0);
   const homeToday = localDate();
   // An unknown date has no age-based content selection and must not crash Home.
@@ -1542,6 +1547,22 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [age, client, currentSelectionKey, dog]);
 
   useEffect(() => {
+    const generation = ++faqGeneration.current;
+    const controller = new AbortController();
+    const isCurrent = () => mounted.current && !controller.signal.aborted
+      && faqGeneration.current === generation && currentSelectionKeyRef.current === currentSelectionKey;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- FAQ read state is scoped to this dog/session selection.
+    setFaqRead({ selectionKey: currentSelectionKey, state: reviewContentEnabled ? 'ready' : 'loading', items: [] });
+    if (reviewContentEnabled) return () => controller.abort();
+    void fetchPublishedFaqs(client, undefined, controller.signal).then((items) => {
+      if (isCurrent()) setFaqRead({ selectionKey: currentSelectionKey, state: 'ready', items });
+    }).catch(() => {
+      if (isCurrent()) setFaqRead({ selectionKey: currentSelectionKey, state: 'error', items: [] });
+    });
+    return () => controller.abort();
+  }, [client, currentSelectionKey, faqRetry]);
+
+  useEffect(() => {
     const needsDailyRefresh = page === 'home' || page === 'progress' || page === 'training'
       || page === 'checklist' && checklistFilter === 'Idag'
       || page === 'home-training-detail' && !homeTrainingFocus?.readOnly;
@@ -1715,6 +1736,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [client, currentDailyLifetime, currentPlannedHealthLifetime, currentSelectionKey, dog.id, page, plannedHealthChecklistFocus, plannedHealthChecklistRetry, reloadPlannedHealth, serializePlannedHealthRead]);
 
   const visibleContent = contentSelectionKey === currentSelectionKey ? content : [];
+  const visibleFaqItems = faqRead?.selectionKey === currentSelectionKey ? faqRead.items : [];
+  const visibleFaqState = faqRead?.selectionKey === currentSelectionKey ? faqRead.state : 'loading';
   const visibleHealthWeights = healthWeightDataLifetime === currentHealthWeightLifetime ? healthWeights : [];
   const visibleHealthState = healthWeightDataLifetime === currentHealthWeightLifetime ? healthState : 'loading';
   const visibleHealthPending = healthPending;
@@ -3981,6 +4004,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       returnToDevelopment={knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'development'}
       items={visibleGuideContent}
       contentState={visibleContentState}
+      faqItems={visibleFaqItems}
+      faqState={visibleFaqState}
+      onRetryFaq={() => setFaqRetry((value) => value + 1)}
       focusedContentId={focusedKnowledgeContentId}
       onDetailChange={setKnowledgeDetailOpen}
       onSelectContent={(contentId) => setKnowledgeFocus({

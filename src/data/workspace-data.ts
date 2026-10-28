@@ -6,6 +6,7 @@ import { isCanonicalAccidentKinds, LOG_EVENT_TYPES, type AccidentKind, type LogE
 import { dedupeLocalDateMarkers, localMonthRange } from '../features/puppy-log/log-calendar-model';
 import type { HomeContent, OwnedDog } from './app-data';
 import type { InsightsPeriod } from '../features/puppy-log/insights-model';
+import { isChecklistContext, type ChecklistContext } from '../features/knowledge/checklist-model';
 import {
   emptyTrainingProgression,
   isTrainingProgressionResult,
@@ -351,6 +352,31 @@ interface PublishedVersionRow {
   is_ai_generated: boolean;
   content_items: { slug: string; content_type: string };
   content_breed_targets: { breed_id: string }[];
+}
+
+export interface PublishedFaq {
+  id: string;
+  contentId: string;
+  version: number;
+  slug: string;
+  context: ChecklistContext;
+  question: string;
+  answer: string;
+  sources: string[];
+  isAiGenerated: boolean;
+}
+
+interface PublishedFaqRow {
+  id: string;
+  content_id: string;
+  version: number;
+  status: string;
+  title: string;
+  body: string;
+  context: unknown;
+  sources: unknown;
+  is_ai_generated: unknown;
+  content_items: { slug: string; content_type: string };
 }
 
 interface ProgressRow {
@@ -1143,6 +1169,36 @@ export async function fetchPublishedContentVersions(
   }, timeoutMs, parentSignal);
 }
 
+/** Read only published FAQ versions; FAQ data never enters HomeContent. */
+export async function fetchPublishedFaqs(
+  client: SupabaseClient,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  parentSignal?: AbortSignal,
+): Promise<PublishedFaq[]> {
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.from('content_versions')
+      .select('id,content_id,version,status,title,body,context,sources,is_ai_generated,content_items!inner(slug,content_type)')
+      .eq('status', 'published')
+      .eq('content_items.content_type', 'faq')
+      .setHeader('X-Client-Info', 'tassla-faq/1')
+      .abortSignal(signal);
+    const rows: unknown = data;
+    if (error || !Array.isArray(rows) || !rows.every(isPublishedFaqRow)) throw new Error('Could not load published FAQs');
+    const slugs = new Set<string>();
+    const ids = new Set<string>();
+    return (rows as PublishedFaqRow[]).map((row) => {
+      if (slugs.has(row.content_items.slug) || ids.has(row.id)) throw new Error('Duplicate published FAQ identity');
+      slugs.add(row.content_items.slug);
+      ids.add(row.id);
+      return {
+        id: row.id, contentId: row.content_id, version: row.version, slug: row.content_items.slug,
+        context: row.context as ChecklistContext, question: row.title, answer: row.body,
+        sources: row.sources as string[], isAiGenerated: row.is_ai_generated as boolean,
+      };
+    });
+  }, timeoutMs, parentSignal);
+}
+
 /** Complete published library with recommendation flags; filters never gate reading. */
 export async function fetchKnowledgeContent(
   client: SupabaseClient, dog: OwnedDog, ageWeeks: number | null,
@@ -1589,6 +1645,25 @@ function isPublishedVersionRow(value: unknown): value is PublishedVersionRow {
     && typeof (parent as Record<string, unknown>).content_type === 'string'
     && Array.isArray(targets) && targets.every((target) => Boolean(target) && typeof target === 'object'
       && typeof (target as Record<string, unknown>).breed_id === 'string');
+}
+
+function isPublishedFaqRow(value: unknown): value is PublishedFaqRow {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  const parent = row.content_items;
+  return typeof row.id === 'string' && typeof row.content_id === 'string'
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.id)
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.content_id)
+    && typeof row.version === 'number' && Number.isInteger(row.version) && row.version > 0
+    && row.status === 'published' && typeof row.title === 'string' && row.title.trim().length > 0
+    && typeof row.body === 'string' && row.body.trim().length > 0
+    && isChecklistContext(row.context)
+    && Array.isArray(row.sources) && row.sources.every((source) => typeof source === 'string')
+    && typeof row.is_ai_generated === 'boolean'
+    && Boolean(parent) && typeof parent === 'object' && !Array.isArray(parent)
+    && typeof (parent as Record<string, unknown>).slug === 'string'
+    && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test((parent as Record<string, unknown>).slug as string)
+    && (parent as Record<string, unknown>).content_type === 'faq';
 }
 
 function isProgressRow(value: unknown): value is ProgressRow {

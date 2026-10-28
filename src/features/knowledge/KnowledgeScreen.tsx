@@ -3,6 +3,7 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } fro
 import { useFonts } from 'expo-font';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { HomeContent } from '../../data/app-data';
+import type { PublishedFaq } from '../../data/workspace-data';
 import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { AppBar, Card, SectionHeader, Skeleton } from '../../components/ui';
 import { tokens } from '../../theme/tokens';
@@ -27,6 +28,9 @@ export function KnowledgeScreen({
   onBack,
   items = [],
   contentState = 'ready',
+  faqItems = [],
+  faqState = 'loading',
+  onRetryFaq = () => undefined,
   focusedContentId = null,
   onSelectContent = () => undefined,
   onRetry = () => undefined,
@@ -45,6 +49,9 @@ export function KnowledgeScreen({
   returnToDevelopment?: boolean;
   items?: readonly HomeContent[];
   contentState?: ContentState;
+  faqItems?: readonly PublishedFaq[];
+  faqState?: ContentState;
+  onRetryFaq?: () => void;
   focusedContentId?: string | null;
   onSelectContent?: (id: string | null) => void;
   onRetry?: () => void;
@@ -211,7 +218,8 @@ export function KnowledgeScreen({
       {tab === 'För dig' && !selectedItem && contentState === 'ready' && hasSearchQuery && displayedItems.length > 0
         ? <Text style={styles.searchCount} accessibilityLiveRegion="polite">{displayedItems.length === 1 ? '1 träff' : `${displayedItems.length} träffar`}</Text>
         : null}
-      {tab === 'FAQ' && !selectedItem ? <FAQScreen context="by_age" reviewEnabled={reviewEnabled} /> : null}
+      {tab === 'FAQ' && !selectedItem ? <FAQScreen context="by_age" reviewEnabled={reviewEnabled} items={faqItems}
+        state={faqState} onRetry={onRetryFaq} onOpenSource={openSource} sourceMessage={sourceMessage} /> : null}
 
       {showGuideScreen && !selectedItem && contentState === 'ready' && visibleItems.length > 0 && displayedItems.length > 0 ? <View style={styles.guideList}>
         {cardItems[0] ? renderGuideCard(cardItems[0], true) : null}

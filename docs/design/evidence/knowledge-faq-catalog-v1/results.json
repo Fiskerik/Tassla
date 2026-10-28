@@ -1,0 +1,78 @@
+{
+  "task": "KNOWLEDGE-FAQ-CATALOG-01",
+  "planVersion": "v5",
+  "date": "2026-10-28",
+  "branch": "knowledge/d3-catalog-delivery",
+  "base": "150d6bbbf1adf66677b343cfdd154eb568d07aeb",
+  "state": "done",
+  "content": {
+    "sha256": "170d70410e1a7bf121fc7ef16c338d4eb79e7f023fd3ba4c3f96cc5661cd3288",
+    "faqVersions": 4,
+    "sources": 6,
+    "dogExpert": "PASS WITH CONDITIONS",
+    "limitations": [
+      "Granskningen använde källsammanfattningar; ingen självständig URL-hämtning av Dog Expert",
+      "Ingen veterinärsignoff"
+    ]
+  },
+  "visual": {
+    "comparison": "panel7-faq-comparison.png",
+    "public": {
+      "passed": 152,
+      "failed": 0,
+      "pageErrors": 0,
+      "evidence": "public/browser-results.json"
+    },
+    "review": {
+      "passed": 62,
+      "failed": 0,
+      "pageErrors": 0,
+      "evidence": "review/browser-results.json"
+    },
+    "viewports": [
+      "375x844",
+      "430x844",
+      "375x667",
+      "140% CSS text proxy"
+    ],
+    "states": [
+      "public",
+      "review",
+      "empty",
+      "error",
+      "retry",
+      "source navigation",
+      "back navigation"
+    ],
+    "sourceLinks": "Numbered visual 1); full reviewed title/publisher in accessible name; 44x44 px RN Web targets",
+    "uiCritic": "REVIEW PASS after selected-tab visibility fix; FAQ component only"
+  },
+  "checks": {
+    "ci": "PASS: final CI=1 pnpm check, typecheck, edge typecheck, ESLint, 100/100 test files",
+    "testFilesPassed": 100,
+    "testFilesFailed": 0,
+    "knowledgeFaqValidator": "PASS",
+    "sqlParity": "PASS",
+    "disposablePostgres16": "PASS: documented synthetic run; see postgres-probe.log (exact commands, tampering method and minor version omitted)",
+    "pythonCompilation": "PASS",
+    "gitDiffCheck": "PASS on final docs and queue",
+    "securityStaticReview": "PASS, no blocking findings; before live publication inspect for unrelated existing published FAQ roots because the script only guards the four scoped slugs",
+    "disposablePostgresTranscript": "postgres-probe.log",
+    "faqTabVisibility": "PASS: all tabs fit at public 375/430 and review 375; at 140% text, tab bar scrolls to reveal both active and last context",
+    "scopeAudit": "PASS: 34 changed paths within 36 declared write paths"
+  },
+  "reviews": {
+    "uiCritic": "REVIEW PASS for selected-tab visibility fix; scoped FAQ only, no full panel-7 approval",
+    "independentQa": "PASS after selected-tab visibility fix; labels fit at 375/430, horizontal scroll at 140% reaches last context",
+    "frozenReviewer": "PASS, no findings; full diff, path scope, comparison and six FAQ screenshots inspected"
+  },
+  "notTestable": [
+    "Live Supabase/RLS and production catalog readback",
+    "Live FAQ import or publication",
+    "Native VoiceOver/TalkBack and physical Dynamic Type",
+    "Physical iPhone behavior and native touch metrics",
+    "Trusted-role SQL guards under real Supabase roles/privileges",
+    "Exact shell/psql command reconstruction from the captured disposable PostgreSQL transcript"
+  ],
+  "scope": "Four Dog-Expert-reviewed FAQ answers exposed through a separate published-only adapter and separate reviewed/import/publish SQL. FAQ does not enter HomeContent or dog-personalized article/training guidance. No live database operation was performed."
+}

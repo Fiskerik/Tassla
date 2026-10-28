@@ -16,6 +16,7 @@ const REVIEWED_SOURCE_TITLES: Readonly<Record<string, string>> = {
   'https://www.rspca.org.uk/adviceandwelfare/pets/dogs/training/leftalone': 'How to Train Your Dog to Stay Home Alone',
   'https://www.rspca.org.uk/adviceandwelfare/pets/dogs/training/come': 'Train Your Dog To Come When Called',
   'https://www.dogstrust.org.uk/dog-advice/training/home/create-routine': 'How to get your dog into a routine',
+  'https://www.dogstrust.org.uk/dog-advice/getting-dog/dog-ready/when-you-have-children': 'Getting a dog when you have children',
   'https://avsab.org/wp-content/uploads/2021/08/AVSAB-Humane-Dog-Training-Position-Statement-2021.pdf': 'Position Statement on Humane Dog Training',
   'https://avsab.org/wp-content/uploads/2024/12/Puppy-Socialization-Position-Statement-FINAL.pdf': 'AVSAB Puppy Socialization Position Statement',
 };

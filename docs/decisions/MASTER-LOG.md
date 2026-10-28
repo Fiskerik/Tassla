@@ -376,3 +376,11 @@ Architect **APPROVE**, UI Critic BRIEF/REVIEW **PASS**, oberoende QA **PASS**, F
 ### 2026-10-28 — CHECKLIST-TOGGLE-AFFORDANCE-01
 
 Kunskapens faschecklistor använder nu en tydligare 28 pt rund färdigmarkör; Hem behåller sina fyrkantiga dagliga rutor. En fryst granskning hittade felmärkt 140 %-evidens, vilket rättades innan closeout: verifieraren assertar nu RN Web CSS zoom 1.4 och mäter radens CSS-pixelmål före zoom. UI Critic, oberoende QA och Frozen Reviewer PASS. Full kontroll: 840 tester PASS, 1 skip; visuell kontroll 53/53. Native Dynamic Type och fysisk träffyta är fortsatt NOT TESTABLE. Se taskplanen och `docs/design/evidence/checklist-toggle-affordance-2026-10-25/`.
+
+
+### 2026-10-28 — KNOWLEDGE-FAQ-CATALOG-01 Frozen Reviewer PASS
+
+Frozen Reviewer gav PASS utan fynd för hela diffen på knowledge/d3-catalog-delivery mot 150d6bbbf1adf66677b343cfdd154eb568d07aeb. Granskaren verifierade alla 33 ändrade sökvägar mot de 36 deklarerade skrivvägarna, v5-kriterierna, public FAQ-adaptern, isoleringen från HomeContent/review-fixtures, import-/publicerings-SQL, tester och checkpoints. Den öppnade jämförelsebilden och samtliga sex FAQ-renderbilder och bekräftade de tre kontextetiketterna, 140 %-scrollen samt public/review/empty/error-lägena. Den noterade att den sparade PostgreSQL-loggen inte kördes om i slutreview; aktuell körning är endast dokumenterad syntetisk evidence. Full slutlig CI hade separat körts av koordinatorn och passerade TypeScript, Edge TypeScript, ESLint och 100/100 testfiler. FAQ-validator, Python-kompilering, kövalidering, diff-check och scope-audit passerade. Live Supabase/RLS/publicering, trusted-role SQL guards, native hjälpmedel och fysisk Dynamic Type är fortsatt NOT TESTABLE. Nästa steg är commit och push till samma branch; ingen liveimport/publicering.
+
+
+Supplemental slutreview efter att closeout-loggen och whitespace-fixen lagts till: Frozen Reviewer kontrollerade den slutliga staged diffen med 34 paths av 36 deklarerade. Enbart dokumentationslogg och trailing/EOF-whitespace ändrades sedan den första PASS-granskningen; inga produktändringar. Reviewer bekräftade att granskningen fortfarande är PASS utan fynd. git diff --cached --check PASS.
