@@ -1,6 +1,10 @@
 # KNOWLEDGE-FAQ-CATALOG-01 — public FAQ-katalog v1
 
-Planversion: **v5**. Avgränsad fortsättning efter `KNOWLEDGE-PHASE-CATALOG-01`. Vid taskstart fanns befintliga FAQ-fixtures bara i granskningsläge och den publika FAQ-vyn saknade svar. D3-schemat stödjer redan FAQ-innehåll och kontext. Den här uppgiften använder det schemat utan ny tabell, kolumn eller RLS-ändring. V4 hade Architect/Critic APPROVE. Efter två exakta Dog Expert-rundor har copy inga öppna ändringar, men slutverdictet är `PASS WITH CONDITIONS`; v5 gör det accepterade verifieringsutfallet och dess gränser uttryckliga.
+Planversion: **v6 (closeout extension; implementation acceptance remains v5)**. Avgränsad fortsättning efter `KNOWLEDGE-PHASE-CATALOG-01`. Vid taskstart fanns befintliga FAQ-fixtures bara i granskningsläge och den publika FAQ-vyn saknade svar. D3-schemat stödjer redan FAQ-innehåll och kontext. Den här uppgiften använder det schemat utan ny tabell, kolumn eller RLS-ändring. V4 hade Architect/Critic APPROVE. Efter två exakta Dog Expert-rundor har copy inga öppna ändringar, men slutverdictet är `PASS WITH CONDITIONS`; v5 gör det accepterade verifieringsutfallet och dess gränser uttryckliga.
+
+## Slutlogg — v6, dokumentationsenbart closeout
+
+Implementationen, QA och slutreview v5 är redan godkända och pushade. Detta är ett administrativt tillägg efter slutförd v5, inte ett nytt acceptanskriterium eller en återöppning av produkttasken. Tillägget registrerar den redan pushade commiten i obligatorisk releasehistorik; det ändrar inte produktkod, SQL, säkerhetsgrindar eller tidigare verifieringsanspråk. Critic v6 PROCEED och Frozen Reviewer supplemental PASS: historiksökvägen ingår i både plan och kö; v5:s produktacceptans, verifiering och godkännanden är oförändrade.
 
 ## Uppgiftskontrakt
 
@@ -63,6 +67,7 @@ Granskningsfixtures är inte godkännande. Publiceringsfilen använder endast de
 - `docs/design/evidence/knowledge-faq-catalog-v1/review-faq-375.png`
 - `docs/design/evidence/knowledge-faq-catalog-v1/public-faq-empty-375.png`
 - `docs/design/evidence/knowledge-faq-catalog-v1/public-faq-error-375.png`
+- `docs/releases/HISTORY-2026.md` (endast administrativt post-completion tillägg)
 
 ## Acceptans och verifiering
 
@@ -87,4 +92,4 @@ Granskningsfixtures är inte godkännande. Publiceringsfilen använder endast de
 - Public RN Web `verify-know02.py`: **146/146**, 0 browserfel. Review RN Web: **55/55**, 0 browserfel. Renderaren uppdaterades till appens aktuella träningsresa, checklistdialog och Kunskapsgenvägar; kort 375×667/140 %-text, källnavigation och tillbakaresa passerade.
 - Frozen Reviewer hittade därefter att `Efter ålder`-fliken kapades i 375 px-rendern. `FAQScreen` använder nu befintlig `Tabs`-horisontalscroll och korta men tydliga UI-etiketter `Hemkomst`, `Första dagarna`, `Efter ålder`; det persistenta `ChecklistContext`-värdet och FAQ-filtreringen ändrades inte. Playwright bekräftar hela etikettgruppen vid 375/430 px och att sista fliken kan scrollas fram vid 140 % text. Uppdaterade resultat: public **152/152**, review **62/62**, 0 browserfel. UI Critic REVIEW och oberoende QA PASS efter rättningen.
 - Security statisk granskning: inga blockerande fynd; publicerad adapter kräver publicerad FAQ-version/context och håller FAQ utanför `HomeContent`. Före eventuell livepublicering inventeras FAQ-katalogen i målmiljön eftersom publiceringsskriptet inte gör en global kontroll av orelaterade publicerade roots. Disposable PostgreSQL 16 med syntetiska fixturer passerade import/retry, vägran vid payloaddrift, separat publicering och published-only/owner-data-prob; körlogg finns i `postgres-probe.log`. Ingen live Supabase kördes.
-- Slutlig lokal kodcheck PASS, oberoende QA PASS, scope-audit 34 ändrade paths inom 36 deklarerade och Frozen Reviewer PASS utan fynd; utfallet redovisas i `docs/design/evidence/knowledge-faq-catalog-v1/VERIFICATION.md` och `results.json`. Oberoende QA PASS: lokal FAQ-scope godkänd; syntetisk PostgreSQL-körlogg godkänd som dokumenterad körning men saknar exakta kommandon, tamperingmetod och minorversion. Live Supabase/RLS, native hjälpmedel och faktisk publicering är fortsatt NOT TESTABLE. Tasken stängs efter Frozen Reviewers slutliga PASS.
+- Slutlig lokal kodcheck PASS, oberoende QA PASS, scope-audit 35 ändrade paths inom 37 deklarerade och Frozen Reviewer PASS utan fynd; utfallet redovisas i `docs/design/evidence/knowledge-faq-catalog-v1/VERIFICATION.md` och `results.json`. Oberoende QA PASS: lokal FAQ-scope godkänd; syntetisk PostgreSQL-körlogg godkänd som dokumenterad körning men saknar exakta kommandon, tamperingmetod och minorversion. Live Supabase/RLS, native hjälpmedel och faktisk publicering är fortsatt NOT TESTABLE. Tasken stängs efter Frozen Reviewers slutliga PASS.

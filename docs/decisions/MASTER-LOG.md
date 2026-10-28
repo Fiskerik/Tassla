@@ -384,3 +384,11 @@ Frozen Reviewer gav PASS utan fynd för hela diffen på knowledge/d3-catalog-del
 
 
 Supplemental slutreview efter att closeout-loggen och whitespace-fixen lagts till: Frozen Reviewer kontrollerade den slutliga staged diffen med 34 paths av 36 deklarerade. Enbart dokumentationslogg och trailing/EOF-whitespace ändrades sedan den första PASS-granskningen; inga produktändringar. Reviewer bekräftade att granskningen fortfarande är PASS utan fynd. git diff --cached --check PASS.
+
+
+### 2026-10-28 — KNOWLEDGE-FAQ-CATALOG-01 post-completion release history
+
+After v5 commit f75279f6b71fa2a224297a9ffc05150244d84c8c was pushed to origin/knowledge/d3-catalog-delivery, the required history entry was added to HISTORY-2026.md. Critic reviewed the v6 closeout-only path addition and returned PROCEED; the product scope, v5 acceptance and review statuses did not change. The added history record reports only the already verified local/database/native status.
+
+
+Supplemental closeout review: Frozen Reviewer PASS utan nya fynd efter att HISTORY-2026.md och v6-planvägen lagts till. Slutlig task-base audit omfattar 35 paths inom 37 deklarerade paths. Commit f75279f6b71fa2a224297a9ffc05150244d84c8c är bekräftad på origin/knowledge/d3-catalog-delivery; inga produkt- eller live-databasändringar efter den.

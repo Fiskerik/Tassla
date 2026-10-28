@@ -13462,7 +13462,7 @@
       "id": "KNOWLEDGE-FAQ-CATALOG-01",
       "title": "Kunskap: public FAQ-katalog och källänkade svar",
       "mvp_requirement": "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md §2 — D3 publicerad FAQ; approved D3 v5 contract",
-      "plan": "docs/tasks/dev/KNOWLEDGE-FAQ-CATALOG-01.md v5",
+      "plan": "docs/tasks/dev/KNOWLEDGE-FAQ-CATALOG-01.md v6 (closeout extension; implementation v5)",
       "write_paths": [
         "docs/tasks/dev/KNOWLEDGE-FAQ-CATALOG-01.md",
         "docs/tasks/dev/queue.json",
@@ -13499,7 +13499,8 @@
         "docs/design/evidence/knowledge-faq-catalog-v1/public-faq-short-375x667-140.png",
         "docs/design/evidence/knowledge-faq-catalog-v1/review-faq-375.png",
         "docs/design/evidence/knowledge-faq-catalog-v1/public-faq-empty-375.png",
-        "docs/design/evidence/knowledge-faq-catalog-v1/public-faq-error-375.png"
+        "docs/design/evidence/knowledge-faq-catalog-v1/public-faq-error-375.png",
+        "docs/releases/HISTORY-2026.md"
       ],
       "acceptance": [
         "Exakt fyra FAQ-poster använder nuvarande teman/D3-context, kort neutral copy och full claim→source-map; Dog Expert PASS eller PASS WITH CONDITIONS accepteras bara när inga copy-/säkerhetsändringar återstår och exakt digest, underlag och begränsningar sparas; ingen veterinärsignoff eller oberoende URL-fetch påstås.",
@@ -13507,7 +13508,7 @@
         "Separat PublishedFaq-adapter validerar FAQ-typ, published-status och context; review-fixtures stannar bakom reviewflaggan; FAQ kommer inte in i HomeContent.",
         "Expanderat svar visar full text och kompakta fungerande 1)-källänkar; alla tre sammanhangsflikar är hela vid 375/430 px och scroll når sista fliken med 140 %-text. Tillbakaflöde och 44×44 pt-träffytor fungerar.",
         "Befintliga guider, faslistor, Hem-innehåll och checklistors egna punkter/progress är oförändrade; public/review RN Web-bevis, UI Critic, oberoende QA och Frozen Reviewer är sparade.",
-        "Status skiljer lokal/disposable kontroll från live Supabase/RLS, faktisk publicering och native/VoiceOver; alla ändrade paths ryms i godkänd plan v5."
+        "Status skiljer lokal/disposable kontroll från live Supabase/RLS, faktisk publicering och native/VoiceOver; alla implementationspaths ryms i v5; HISTORY-raden är endast administrativ v6-closeout."
       ],
       "checks": [
         "Critic/Architect re-review av plan v5; exact-copy Dog Expert PASS WITH CONDITIONS och begränsningar registrerade",
@@ -13516,14 +13517,15 @@
         "Disposable PostgreSQL import retry, mismatch refusal, separate publish and published-only RLS probe",
         "Focused Knowledge/workspace tests and CI=1 pnpm check",
         "RN Web public/review/empty/error renders at 375/430, 375x667 with 140% text; accessibility/source link targets",
-        "python -X utf8 tools/dev_flow.py validate and git diff --check; changed-path audit"
+        "python -X utf8 tools/dev_flow.py validate and git diff --check; changed-path audit",
+        "Critic review of v6 closeout-only write-path extension; history entry cross-checked against origin branch commit"
       ],
       "depends_on": [
         "KNOWLEDGE-D3-CATALOG-SCHEMA-01",
         "KNOWLEDGE-PHASE-CATALOG-01"
       ],
       "status": "done",
-      "next_step": "Frozen Reviewer PASS without findings on final diff; reviewed 33/36 paths, acceptance, SQL/adapter/tests and opened comparison plus six final FAQ screenshots. CI=1 pnpm check, validator, QA public/review runs, queue/path/diff checks passed; live/native limits are recorded.",
+      "next_step": "V5-produkttasken är done och pushad. V6-historikposten är registrerad och granskad; inga produkt- eller live DB-åtgärder återstår i denna task.",
       "priority": "P1",
       "panels": [
         "7"
@@ -13597,7 +13599,7 @@
           "evidence": "Frozen Reviewer PASS without findings on final diff; reviewed 33/36 paths, acceptance, SQL/adapter/tests and opened comparison plus six final FAQ screenshots. CI=1 pnpm check, validator, QA public/review runs, queue/path/diff checks passed; live/native limits are recorded."
         }
       ],
-      "checkpoint": "Lokal FAQ-slice på knowledge/d3-catalog-delivery från 150d6bbbf1adf66677b343cfdd154eb568d07aeb. Fyra neutrala FAQ-versioner; digest 170d70410e1a7bf121fc7ef16c338d4eb79e7f023fd3ba4c3f96cc5661cd3288; Dog Expert PASS WITH CONDITIONS utan kvarvarande copyändringar, men utan oberoende URL-fetch/veterinärsignoff. Separat PublishedFaq-adapter och separata reviewed import/publicerings-SQL. CI=1 pnpm check PASS på slutlig kod: TypeScript, edge TypeScript, ESLint och 100/100 testfiler. Disposable PostgreSQL 16 syntetisk import/retry/drift refusal/separate publish/published-only rollback probe PASS; postgres-probe.log saknar exakta kommandon, tamperingmetod och minorversion. Public RN Web 152/152 och review 62/62, noll browserfel. Reviewer identifierade att Efter ålder kapades; flikarna har nu kortare etiketter, scrollar horisontellt och sista fliken kan nås vid 140 % text. UI Critic REVIEW PASS och oberoende QA PASS efter fix. Scope audit: 34 changed paths within 36 declared write paths. FAQ validator, Python compilation, queue validation and git diff --check PASS. Native/live-gränser kvarstår. Frozen Reviewer PASS utan fynd efter att ha granskat full diff, 33/36 paths och jämförelsebild plus sex slutbilder. Nästa: commit/push till befintlig branch; ingen liveimport/publicering.",
+      "checkpoint": "Lokal FAQ-slice på knowledge/d3-catalog-delivery från 150d6bbbf1adf66677b343cfdd154eb568d07aeb. Fyra neutrala FAQ-versioner; digest 170d70410e1a7bf121fc7ef16c338d4eb79e7f023fd3ba4c3f96cc5661cd3288; Dog Expert PASS WITH CONDITIONS utan kvarvarande copyändringar, men utan oberoende URL-fetch/veterinärsignoff. Separat PublishedFaq-adapter och separata reviewed import/publicerings-SQL. CI=1 pnpm check PASS på slutlig kod: TypeScript, edge TypeScript, ESLint och 100/100 testfiler. Disposable PostgreSQL 16 syntetisk import/retry/drift refusal/separate publish/published-only rollback probe PASS; postgres-probe.log saknar exakta kommandon, tamperingmetod och minorversion. Public RN Web 152/152 och review 62/62, noll browserfel. Reviewer identifierade att Efter ålder kapades; flikarna har nu kortare etiketter, scrollar horisontellt och sista fliken kan nås vid 140 % text. UI Critic REVIEW PASS och oberoende QA PASS efter fix. Scope audit: 35 changed paths within 37 declared write paths. FAQ validator, Python compilation, queue validation and git diff --check PASS. Native/live-gränser kvarstår. Frozen Reviewer PASS utan fynd efter att ha granskat full diff, 33/36 paths och jämförelsebild plus sex slutbilder. v5 commit f75279f6b71fa2a224297a9ffc05150244d84c8c finns på origin/knowledge/d3-catalog-delivery. v6 administrativ historikrad är inskriven efter Critic PROCEED och Frozen Reviewer supplemental PASS; den refererar till den verifierade, pushade v5-commiten. Slutlig scope audit: 35 ändrade paths inom 37 deklarerade. Ingen liveimport/publicering.",
       "test_evidence": [
         "Dog Expert PASS WITH CONDITIONS on exact content SHA 170d70410e1a7bf121fc7ef16c338d4eb79e7f023fd3ba4c3f96cc5661cd3288; conditions and source-summary limitation saved; no veterinary signoff or independent URL fetch claimed.",
         "python tools/validate_knowledge_faq.py PASS: 4 reviewed FAQ versions, 6 source entries, exact digest and SQL payload parity.",
@@ -13606,7 +13608,8 @@
         "Public RN Web verify-know02.py PASS 152/152, 0 browser errors; review RN Web PASS 62/62, 0 browser errors. All context labels fully visible at public 375/430 and review 375; at 140% CSS text the tab bar scrolls to reveal the final context. Covers public/review/empty/error/retry, source/back navigation and 44px targets.",
         "UI Critic REVIEW PASS after the tab visibility correction, on panel7-faq-comparison.png and the 375/430/review/short-viewport renders; scoped FAQ only, no full panel-7 approval.",
         "Static Security review: no blocking findings; public adapter requires FAQ parent type, published version and supported context, and FAQ does not enter HomeContent. Before any live publication, inspect for unrelated existing published FAQ roots; the script guards the four scoped slugs rather than globally.",
-        "Independent QA PASS after tab visibility correction for the local FAQ slice, screenshots, 44px targets, tab labels and horizontal scroll at 140% text, plus the documented synthetic PostgreSQL run. PostgreSQL transcript is accepted as evidence of the logged run but omits exact commands, tampering method and minor version; §14.8 measured contrast and §14.15 native behavior remain NOT TESTABLE."
+        "Independent QA PASS after tab visibility correction for the local FAQ slice, screenshots, 44px targets, tab labels and horizontal scroll at 140% text, plus the documented synthetic PostgreSQL run. PostgreSQL transcript is accepted as evidence of the logged run but omits exact commands, tampering method and minor version; §14.8 measured contrast and §14.15 native behavior remain NOT TESTABLE.",
+        "V6 closeout Critic PROCEED and Frozen Reviewer supplemental PASS; history commit cross-checked against origin. Final task-base audit: 35 paths within 37 declared."
       ]
     }
   ]

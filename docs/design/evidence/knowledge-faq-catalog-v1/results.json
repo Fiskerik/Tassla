@@ -59,7 +59,7 @@
     "securityStaticReview": "PASS, no blocking findings; before live publication inspect for unrelated existing published FAQ roots because the script only guards the four scoped slugs",
     "disposablePostgresTranscript": "postgres-probe.log",
     "faqTabVisibility": "PASS: all tabs fit at public 375/430 and review 375; at 140% text, tab bar scrolls to reveal both active and last context",
-    "scopeAudit": "PASS: 34 changed paths within 36 declared write paths"
+    "scopeAudit": "PASS: final task-base diff 35 paths within 37 declared paths (v6 administrative HISTORY closeout)"
   },
   "reviews": {
     "uiCritic": "REVIEW PASS for selected-tab visibility fix; scoped FAQ only, no full panel-7 approval",
@@ -74,5 +74,7 @@
     "Trusted-role SQL guards under real Supabase roles/privileges",
     "Exact shell/psql command reconstruction from the captured disposable PostgreSQL transcript"
   ],
-  "scope": "Four Dog-Expert-reviewed FAQ answers exposed through a separate published-only adapter and separate reviewed/import/publish SQL. FAQ does not enter HomeContent or dog-personalized article/training guidance. No live database operation was performed."
+  "scope": "Four Dog-Expert-reviewed FAQ answers exposed through a separate published-only adapter and separate reviewed/import/publish SQL. FAQ does not enter HomeContent or dog-personalized article/training guidance. No live database operation was performed.",
+  "closeoutPlanCritic": "PROCEED: history entry is administrative post-completion; v5 product acceptance unchanged",
+  "closeoutReviewer": "PASS, no new issue; verified history entry, v6 plan/queue alignment, commit on origin and 35/37 path scope"
 }
