@@ -34,7 +34,7 @@ const semanticColors = {
 const visionRev02Colors = {
   canvas: '#F5F0E8',
   card: '#FFFCF7',
-  heroOverlay: '#FFFCF7F2',
+  heroOverlay: '#FFFCF7B0',
   text: '#20262D',
   textMuted: '#626871',
   greenFill: '#35875A',
@@ -90,6 +90,7 @@ const supportColors = {
 
 const typography = {
   title: { fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }), fontSize: 24, lineHeight: 32, fontWeight: '800' as const },
+  screenTitle: { fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }), fontSize: 24, lineHeight: 30, fontWeight: '700' as const },
   heading: { fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }), fontSize: 20, lineHeight: 28, fontWeight: '700' as const },
   body: { fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }), fontSize: 16, lineHeight: 24, fontWeight: '400' as const },
   caption: { fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }), fontSize: 14, lineHeight: 20, fontWeight: '400' as const },
@@ -104,7 +105,7 @@ export const tokens = {
   spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 },
   layout: { headingGap: 8, listGap: 12, cardPadding: 16, pageInset: 24, sectionGap: 24 },
   radius: { sm: 8, md: 14, lg: 20, full: 999 },
-  size: { quickLogHeight: 104, quickLogCompactHeight: 76, homeDestinationTile: 76, homeCheckbox: 20, touchMin: 44, buttonHeight: 56, navHeight: 56, iconSm: 20, iconMd: 24, iconLg: 28, chipMd: 32, chipLg: 44, stroke: 1, progress: 4, heroHeight: 200, developmentHeroHeight: 320, developmentAgeArcDiameter: 240, developmentAgeArcStroke: 8, developmentAgeMarkerWidth: 112, developmentAgeJourneyHeight: 152, homeProgressRingDiameter: 248, homeProgressRingStroke: 12, trainingImage: 88, trainingContinueImageWidth: 84, trainingContinueImageHeight: 76 },
+  size: { quickLogHeight: 104, quickLogCompactHeight: 76, homeDestinationTile: 76, homeCheckbox: 20, touchMin: 44, buttonHeight: 56, navHeight: 56, iconSm: 20, iconMd: 24, iconLg: 28, chipMd: 32, chipLg: 44, stroke: 1, progress: 4, heroHeight: 200, developmentHeroHeight: 320, developmentHeroAspectRatio: 1.45, developmentAgeArcWidth: 296, developmentAgeArcHeight: 64, developmentAgeArcStroke: 8, developmentAgeMarkerWidth: 112, developmentAgeJourneyHeight: 108, homeProgressRingDiameter: 248, homeProgressRingStroke: 12, trainingImage: 88, trainingContinueImageWidth: 84, trainingContinueImageHeight: 76 },
   motion: { press: 120, enter: 240, mainTabEnter: 300, mainTabDistance: 44, mainTabOpacityFrom: 0.9, release: 180, progress: 220, toastEnter: 240, toastExit: 180, check: 180, distance: 8, pageDistance: 28, pressedScale: 0.98 },
   typography: { ...typography, display: typography.title },
 } as const;

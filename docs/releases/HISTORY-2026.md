@@ -33,6 +33,7 @@ Avslutade paketnotiser har samlats här. Varje post bevarar ursprunglig status o
 | [P04-CONTENT](#p04-content) | okänt | `published` i bundlen, medan onboarding-only-versionen förblir `draft` för att inte läcka till den vanliga åldersbaserade feeden | ej angivet |
 | [UI-TRAINING-OVERVIEW-01](#ui-training-overview-01) | 2026-10-19 | implementerad, lokalt verifierad och pushad; QA/Reviewer PASS; native/live-data ej verifierat | `b59169c` |
 | [TRAINING-LOGGING-UX-01](#training-logging-ux-01) | 2026-10-27 | implementerad, lokalt verifierad och pushad till `knowledge/d3-catalog-delivery`; UI Critic/QA/Reviewer PASS | `9a5317484286e731d9d43734a7d0881e9c37bf4f` |
+| [DEVELOPMENT-PANEL-COMPOSITION-01](#development-panel-composition-01) | 2026-10-28 | avgränsad implementation/QA/Reviewer klar lokalt; commit/push återstår | ej skapat |
 
 ## APP-01-PHONE
 
@@ -686,3 +687,9 @@ Commit `9a5317484286e731d9d43734a7d0881e9c37bf4f` (`Polish training progress and
 UI Critic REVIEW PASS, oberoende QA PASS och Reviewer APPROVE. Pre-commit och pre-push körde `pnpm check`: TypeScript, edge TypeScript, ESLint och 824 tester PASS, 1 skip; `git diff --check` PASS. Träningens RN Web-verifiering 28/28 och artikelläsaren 15/15 PASS. [Taskplan och evidens](../tasks/dev/TRAINING-LOGGING-UX-01.md).
 
 Ingen migration, dependency, API/persistence-kontrakt eller träningsråd ändrades. RN Web-fixtures använder syntetiska data; live Supabase/RLS, native iOS/Android, VoiceOver/TalkBack, fysisk Dynamic Type och TestFlight är inte verifierade här. Migrationerna är enligt användarens rapport avklarade.
+
+## DEVELOPMENT-PANEL-COMPOSITION-01
+
+Lokal implementation på `knowledge/d3-catalog-delivery` från `ce610cb`. Utvecklingsvyn använder ett större responsivt hundporträtt, en grön kronologisk åldersbåge som slutar vid markören, en kort kalenderåldersförklaring och en grupperad milstolpsyta med polykroma ämnesikoner och kompakta källnummer. Architect plan v2/v3 APPROVE, UI Critic REVIEW PASS och oberoende QA PASS, inklusive supplemental dokument-/path-audit. `CI=1 pnpm check` **PASS** (99/99 testfiler); public/review **52/52** och **60/60**; fokustester 3/3. Initial QA scope-audit var 78 ändrade/nya paths; efter slutdokumentationen bekräftade supplemental QA **81 paths**, alla inom 17 godkända.
+
+Efter de tre slutdokumenten bekräftade supplemental QA 81 ändrade/nya paths inom de 17 godkända. Första Frozen Reviewer-granskningen blockerade endast på stale count/slutposter; synkroniserad slutlig re-review gav därefter **APPROVE/PASS**. Den avgränsade tasken är **done** som lokal UI-/rendercheckpoint; commit-ID är ännu inte skapat och push återstår. Detta är inte full panel 2-, sakgransknings-, native-, RLS- eller TestFlight-acceptans. Slutlig commitreferens och pushstatus kompletteras när commit/push har utförts.

@@ -6,4 +6,6 @@ The app uses the operating system's system font. `typography.display` currently 
 
 No setup is needed. Verify with `pnpm typecheck` and `node --experimental-strip-types --test tests/ui-library-policy.test.mjs`. Native font rendering and visual contrast still require device/screenshot review.
 
+`typography.screenTitle` är en opt-in 24/30 pt skärmrubrik för AppBar. Utvecklingsvyn använder `developmentHeroAspectRatio` och de avgränsade `developmentAgeArcWidth`/`developmentAgeArcHeight`-måtten för porträtt och grön progressbåge. Det äldre `developmentHeroHeight`-måttet behålls eftersom andra befintliga vyer fortfarande använder det.
+
 `tokens.motion` är enda källa för rörelse-durationer: tryck (120 ms), återgång (180 ms), sidinträde (240 ms), progress (220 ms), Toast in (240 ms), Toast ut (180 ms) och checklistbock (180 ms). React Native `Animated` och `useReducedMotion` används utan ny dependency. `size.quickLogHeight` är 104 pt. Figma-bibliotekets befintliga färg- och kategoritokens behålls. Fotokort och kompakta listor följer målbildens hierarki.

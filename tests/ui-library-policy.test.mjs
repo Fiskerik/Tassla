@@ -66,6 +66,17 @@ test('checklist themed icons use the Log palette and keep one 20pt glyph on a 32
   assert.match(checklist, /'list-outline': 'neutral'/);
 });
 
+test('AppBar screen-title sizing is opt-in and reads the shared title token', () => {
+  const appBar = source('AppBar.tsx');
+  const tokenSource = readFileSync(path.join(root, 'src/theme/tokens.ts'), 'utf8');
+  assert.match(appBar, /titleVariant = 'default'/);
+  assert.match(appBar, /titleVariant === 'screen' && styles\.screenTitle/);
+  assert.match(appBar, /screenTitle: \{ \.\.\.tokens\.typography\.screenTitle \}/);
+  assert.match(appBar, /titleVariant === 'screen' && styles\.screenTitleBar/);
+  assert.match(appBar, /screenTitleBar: \{ marginBottom: 0 \}/);
+  assert.match(tokenSource, /screenTitle: \{[\s\S]*?fontSize: 24, lineHeight: 30, fontWeight: '700'/);
+});
+
 test('index exports the requested shared component families', () => {
   const index = readFileSync(path.join(uiDir, 'index.ts'), 'utf8');
   for (const component of ['Button', 'AppBar', 'Tabs', 'ListRow', 'Card', 'HeroCard', 'QuickLogTile', 'DailyActivityItem', 'DestinationTile', 'ChecklistItem', 'Progress', 'Toast', 'IconChip', 'Field', 'CheckboxCard', 'Dialog', 'BottomSheet', 'EmptyState', 'SectionHeader', 'StatusBadge']) {

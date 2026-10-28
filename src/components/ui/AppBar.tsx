@@ -5,7 +5,8 @@ import { MotionPressable } from './Motion';
 
 type Mode = 'Home' | 'Back' | 'Close' | 'Title';
 type AppBarVariant = 'default' | 'compact';
-export function AppBar({ mode, title, onAction, actionLabel, disabled = false, variant = 'default' }: { mode: Mode; title: string; onAction?: () => void; actionLabel?: string; disabled?: boolean; variant?: AppBarVariant }) {
+type AppBarTitleVariant = 'default' | 'screen';
+export function AppBar({ mode, title, onAction, actionLabel, disabled = false, variant = 'default', titleVariant = 'default' }: { mode: Mode; title: string; onAction?: () => void; actionLabel?: string; disabled?: boolean; variant?: AppBarVariant; titleVariant?: AppBarTitleVariant }) {
   const control = (icon: 'chevron-back' | 'close' | 'notifications-outline', label: string) => (
     <MotionPressable accessibilityRole="button" accessibilityLabel={actionLabel ?? label} accessibilityState={{ disabled }} disabled={disabled} onPress={onAction} style={({ pressed }) => [styles.action, pressed && !disabled && styles.pressed]}>
       <Ionicons name={icon} size={tokens.size.iconMd} color={tokens.colors.textPrimary} />
@@ -18,11 +19,11 @@ export function AppBar({ mode, title, onAction, actionLabel, disabled = false, v
     <View style={styles.side}>{onAction ? control('notifications-outline', actionLabel ?? 'Påminnelser') : null}</View>
   </View>;
 
-  return <View style={[styles.bar, styles.titleBar]}>
+  return <View style={[styles.bar, styles.titleBar, titleVariant === 'screen' && styles.screenTitleBar]}>
     {variant === 'default' ? <Text style={styles.brand} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">Tassla</Text> : null}
     <View style={styles.titleRow}>
       <View style={styles.side}>{mode === 'Back' ? control('chevron-back', 'Tillbaka') : null}</View>
-      <Text accessibilityRole="header" style={styles.title}>{title}</Text>
+      <Text accessibilityRole="header" style={[styles.title, titleVariant === 'screen' && styles.screenTitle]}>{title}</Text>
       <View style={styles.side}>{mode === 'Close' ? control('close', 'Stäng') : null}</View>
     </View>
   </View>;
@@ -31,11 +32,13 @@ const styles = StyleSheet.create({
   bar: { marginBottom: tokens.spacing.md },
   homeBar: { minHeight: tokens.size.navHeight, flexDirection: 'row', alignItems: 'center' },
   titleBar: { gap: tokens.spacing.xs },
+  screenTitleBar: { marginBottom: 0 },
   brand: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'center' },
   homeBrand: { ...tokens.typography.caption, color: tokens.colors.textSecondary, textAlign: 'center', flex: 1 },
   titleRow: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center' },
   side: { width: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
   action: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center' },
   title: { ...tokens.typography.label, color: tokens.colors.textPrimary, textAlign: 'center', flex: 1 },
+  screenTitle: { ...tokens.typography.screenTitle },
   pressed: { backgroundColor: tokens.colors.selectedSurface },
 });

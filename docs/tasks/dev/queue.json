@@ -12748,37 +12748,138 @@
       "id": "DEVELOPMENT-PANEL-COMPOSITION-01",
       "title": "Utveckling: stäm av helvyns komposition mot panel 2",
       "mvp_requirement": "QA-fynd från DEVELOPMENT-PROGRESS-AFFORDANCE-01: helvyns stora hundporträtt, åldersbåge och milstolpslayout skiljer sig från målpanelens integrerade komposition.",
-      "plan": "docs/tasks/dev/DEVELOPMENT-PANEL-COMPOSITION-01.md v1 (ska avgränsas och granskas innan ready)",
-      "write_paths": [],
+      "plan": "docs/tasks/dev/DEVELOPMENT-PANEL-COMPOSITION-01.md v3",
+      "write_paths": [
+        "src/features/home/DevelopmentScreen.tsx",
+        "src/features/home/development-milestones.ts",
+        "src/components/ui/AppBar.tsx",
+        "src/theme/tokens.ts",
+        "src/components/README.md",
+        "src/theme/README.md",
+        "src/features/home/README.md",
+        "tests/development-milestones.test.mjs",
+        "tests/development-screen-model.test.mjs",
+        "tests/ui-library-policy.test.mjs",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "docs/tasks/dev/DEVELOPMENT-PANEL-COMPOSITION-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/design/evidence/development-panel-composition-01"
+      ],
       "acceptance": [
-        "UI Critic och Architect granskar öppnad panel 2-jämförelse och bestämmer minsta korrigering för bild/båge/milstolpskomposition.",
-        "Ingen helpanel beskrivs som visuellt matchad innan renderad jämförelse klarar godkänd brief."
+        "Panel 2:s porträtt dominerar; den gröna kronologiska åldersbågen ligger över bildens nederkant och hundens ansikte är helt synligt vid 375/430. Bågen går från födelsedatum till +24 kalendermånader och är 64–80 pt hög; progresssegmentet slutar exakt vid markören.",
+        "AppBar har en opt-in skärmtitel 24/30, vikt 700, och endast Development använder den; tillbaka-knapp minst 44 pt.",
+        "Kort fasförklaring behåller skillnaden mellan kalenderålder och färdighet utan överflödig text.",
+        "Nästa milstolpar visas i en gemensam grupperad yta med ämnesfärgade ikoner, diskreta separatorer och kompakta klickbara nummerkällor; befintliga länkmål bevaras.",
+        "Public/review render vid 375/430, kort viewport och 140% CSS-textproxy visar ingen klippning, överlapp eller navskymning; fulla skärmar granskas enligt designreglerna §14/§14.16.",
+        "Layoutgranskningen gör inget anspråk på sakgranskning/publicering av de tillfälliga generella milstolpskällorna; källmognad för panel 2 hålls separat och öppen.",
+        "Endast deklarerade sökvägar ändras; kronologisk ålder, navigering, innehållsmodell, lagring, källmål och vuxen/okända tillstånd är oförändrade."
       ],
       "checks": [
-        "Skapa separat plan med exakta skrivvägar innan implementation.",
-        "RN Web rendera 375/430 och öppna paneljämförelsen; dokumentera native-begränsningar."
+        "Focused development milestone and screen model tests.",
+        "CI=1 pnpm check.",
+        "python -X utf8 tools/visual-check/verify-vision-r02-home-panels.py for public/review at 375/430, 375x667 and 140% text proxy.",
+        "Render/open compare_panel.py --panel 2 screenshot and complete design-rules §14/§14.16.",
+        "UI Critic BRIEF/REVIEW, independent behavior/visual QA, and Frozen Reviewer.",
+        "python -X utf8 tools/dev_flow.py validate; py_compile; git diff --check; exact write-path audit."
       ],
       "depends_on": [
         "DEVELOPMENT-PROGRESS-AFFORDANCE-01"
       ],
-      "status": "planned",
-      "history": [
-        {
-          "from": "",
-          "to": "planned",
-          "actor": "coordinator",
-          "evidence": "Oberoende QA såg en kvarstående helpanelsskillnad: referensens stora porträtt/åldersbåge ingår i en tätare milstolpslayout, medan appen visar separat bildremsa, båge och efterföljande block. Skapad som separat visuell backlog; ingen produktändring är godkänd här."
-        }
-      ],
-      "next_step": "Skriv avgränsad plan och låt Architect/UI Critic granska jämförelsen före implementering.",
+      "status": "done",
+      "next_step": "Frozen Reviewer APPROVE/PASS on synchronized plan v3, implementation, 81-path scope, public/review evidence, §14/§14.16 and final logs. No findings; editorial source approval and native/runtime limits remain open. Next: commit and push on knowledge/d3-catalog-delivery.",
       "priority": "P2",
       "panels": [
         "2"
       ],
       "risk_class": "L",
-      "checkpoint": "Planerad efter QA-fynd. Ingen implementation startad; exakta write_paths ska godkännas i separat plan.",
+      "checkpoint": "Plan v2/v3 godkänd av Architect; implementationen är genomförd på ce610cb. Plan v3 lägger endast till HISTORY-2026.md. UI Critic PASS, första QA PASS på 78 paths, supplemental QA PASS på slutliga 81 paths inom 17 deklarerade och Frozen Reviewer slutlig PASS. Omfång och dokumentation är synkade; tasken är done som lokal UI-/rendercheckpoint. Commit/push till knowledge/d3-catalog-delivery återstår.",
       "test_evidence": [
-        "Fynd och jämförelse beskrivna i docs/design/evidence/development-progress-affordance-01/REVIEWS.md."
+        "QA-fynd/jämförelse: docs/design/evidence/development-progress-affordance-01/REVIEWS.md och public/compare-panel2-development-progress-midpoint-375.png.",
+        "Godkänd plan v3 och slutlig §14/§14.16-granskning: docs/tasks/dev/DEVELOPMENT-PANEL-COMPOSITION-01.md och docs/design/evidence/development-panel-composition-01/VERIFICATION.md.",
+        "Aktuell granskningslogg och public/review-resultat: docs/design/evidence/development-panel-composition-01/REVIEWS.md, public/RESULTS.json och review/RESULTS.json; sida-vid-sida-jämförelser under public/compare-panel2-development-375.png och review/compare-panel2-development-375.png."
+      ],
+      "history": [
+        {
+          "from": "",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Oberoende QA såg en kvarstående helpanelsskillnad: referensens stora porträtt/åldersbåge ingår i en tätare milstolpslayout, medan appen visar separat bildremsa, båge och efterföljande block. Skapad som separat visuell backlog."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "ui_critic",
+          "evidence": "Öppnade compare-panel2-development-progress-midpoint-375.png. Rangordnade fyra skillnader: dominant porträtt med överlagrad båge; grupperad milstolpeyte/tätare lista; 24/30 skärmtitel; 12–16pt header-gap. Noterade att referensens Milo 12 veckor och renderns Luna 12 månader inte ger jämförbart copyunderlag."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v1 med exakta write_paths, kompakt länkreferenskontrakt och beviskrav skapad. Implementation väntar på Architect APPROVE."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "CHANGES v1: ange bågens spann 0→24 kalendermånader, 64–80pt elliptisk höjd och exakt markör/fyllnadskoordinering; redaktionell källmognad är separat från layoutacceptans. Opt-in AppBar är kompatibel och en milestone-rad med nummerkällan ska vara en enda länk. Förtydligat i plan v2."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v2 uppdaterad; invänta Architect APPROVE före kod."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v2. Defines 0 to +24 calendar-month age span, 64-80pt shallow ellipse with aligned marker/fill, separate source-review limit, opt-in AppBar title, and all 16 exact write paths."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Architect APPROVE plan v2. Coordinator starts the exact 16 declared paths; age/data/routes remain unchanged and source-review maturity stays open."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "Plan v3 adds only the mandatory docs/releases/HISTORY-2026.md write path for the final local checkpoint. Product scope, implementation, tests and acceptance are unchanged; Architect review required for the exact-path extension."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "architect",
+          "evidence": "APPROVE plan v3: adds only docs/releases/HISTORY-2026.md as a required closeout path. Product scope and acceptance are unchanged; release-code wording was clarified."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation, focus tests, 99/99 pnpm test files, public 52/52, review 60/60, py_compile, queue validation, diff-check, scope audit and UI Critic REVIEW PASS are recorded. Next: independent QA of final diff and §14 evidence."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: accepted plan v3, opened panel comparison and public/review captures, verified 52/52 and 60/60 visual runs, focused tests 3/3, py_compile, queue/diff checks and all 78 changed/new paths within 17 declared write paths. Next: Frozen Reviewer final diff review."
+        },
+        {
+          "from": "review",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Supplemental read-only QA PASS after closeout-document updates: current 81 changed/new paths all within 17 declared paths; docs, queue and evidence consistency verified; public/review results 52/52 and 60/60; dev_flow validation and diff-check PASS. Next: Frozen Reviewer re-review of synchronized diff."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer APPROVE/PASS on synchronized plan v3, implementation, 81-path scope, public/review evidence, §14/§14.16 and final logs. No findings; editorial source approval and native/runtime limits remain open. Next: commit and push on knowledge/d3-catalog-delivery."
+        }
       ]
     },
     {

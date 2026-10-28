@@ -6,6 +6,7 @@
 
 - `ui/index.ts` exporterar knappar, AppBar/BottomNav, kort/rader, kategori-chip, formulär, återkoppling, ActionMenu, Skeleton, modaler, förstaanvändningstips och `DailyActivityItem`/`DestinationTile`.
 - `IconChip` äger kategoriikonernas och kategorifärgernas gemensamma mappning. `ThemedIcon` visar en Ionicon med befintlig semantisk kategorifärg och diskret yta. Neutral checklistfallback får en mjuk grön yta. `PoopIcon` ritar bajsikonen med React Native-vyer eftersom ikonbiblioteket saknar motivet.
+- `AppBar.titleVariant="screen"` är en opt-in skärmrubrik på 24/30 pt. Standardvarianten och dess avstånd bevaras; använd den endast där skärmkontraktet anger den.
 - Checklistornas `ThemedIcon` återanvänder Loggans tvåtonspalett: en 20 pt symbol på en 32 pt färgad rundel. Ikonknappen, de 20 valen och den sparade checklistpunkten använder samma tonmappning; den osparade listfallbacken visas diskret grönt.
 - `DailyActivityItem` visar en kategori, beskrivning och två separata kontroller: valfri completion-toggle och detaljnavigation. Hem använder den bara för sin lokala syntetiska review-fixture; den skapar eller sparar ingen produktprogress.
 - `DestinationTile` visar destinationsikoner för Logg, Träning eller Kunskap och skickar navigation via sin callback. Kategoriernas aktivitetsikoner används inte som genvägsikoner.

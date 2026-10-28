@@ -5,6 +5,7 @@ import Svg, { Path } from 'react-native-svg';
 import { AppBar, Button, Skeleton } from '../../components/ui';
 import { MessageCard } from '../../components/AppPrimitives';
 import { MotionPressable } from '../../components/ui/Motion';
+import { ThemedIcon } from '../../components/ui/ThemedIcon';
 import type { HomeContent } from '../../data/app-data';
 import { tokens } from '../../theme/tokens';
 import { automaticDogAge } from '../onboarding/dog';
@@ -30,21 +31,23 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
   const milestones = useMemo(() => generalDevelopmentMilestones(homeAgeInWeeks(birthDate, today)), [birthDate, today]);
 
   return <View style={styles.page} testID="development-screen">
-    <AppBar mode="Back" title={developmentTitle(dogName)} actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" />
+    <View style={styles.heroSection}>
+      <AppBar mode="Back" title={developmentTitle(dogName)} actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" titleVariant="screen" />
 
-    <View style={styles.hero} testID="development-hero">
-      <Image source={require('../../../assets/images/development-hero-puppy-black-tan-forest-wide.jpg')} style={styles.heroImage} resizeMode="cover"
-        accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
-      <View style={styles.ageJourney}>
-        {ageProgress !== null && age && age.stage !== 'VUXEN' ? <AgeArc progress={ageProgress} currentAge={age.label} stage={age.stage} />
-          : age?.stage === 'VUXEN' ? <View style={styles.matureAge}>
-          <Text style={styles.matureAgeLabel}>KRONOLOGISK ÅLDER</Text>
-          <Text style={styles.matureAgeValue}>{age.label}</Text>
-          <View style={styles.phasePill}><View style={styles.phaseDot} /><Text style={styles.phaseText}>Vuxen</Text></View>
-        </View> : <View style={styles.unknownAge}>
-          <Ionicons name="calendar-outline" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
-          <Text style={styles.unknownAgeText}>Åldersresan visas när ett giltigt födelsedatum finns.</Text>
-        </View>}
+      <View style={styles.hero} testID="development-hero">
+        <Image source={require('../../../assets/images/development-hero-puppy-black-tan-forest-wide.jpg')} style={styles.heroImage} resizeMode="cover"
+          accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
+        <View style={styles.ageJourney} testID="development-age-journey">
+          {ageProgress !== null && age && age.stage !== 'VUXEN' ? <AgeArc progress={ageProgress} currentAge={age.label} stage={age.stage} />
+            : age?.stage === 'VUXEN' ? <View style={styles.matureAge}>
+            <Text style={styles.matureAgeLabel}>KRONOLOGISK ÅLDER</Text>
+            <Text style={styles.matureAgeValue}>{age.label}</Text>
+            <View style={styles.phasePill}><View style={styles.phaseDot} /><Text style={styles.phaseText}>Vuxen</Text></View>
+          </View> : <View style={styles.unknownAge}>
+            <Ionicons name="calendar-outline" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
+            <Text style={styles.unknownAgeText}>Åldersresan visas när ett giltigt födelsedatum finns.</Text>
+          </View>}
+        </View>
       </View>
     </View>
 
@@ -53,25 +56,31 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
       <View style={styles.currentStageCopy}>
         <Text style={styles.currentStageEyebrow}>DU ÄR HÄR</Text>
         <Text style={styles.currentStageTitle}>{age ? `${age.label} · ${phaseLabel}` : 'Ålder och fas'}</Text>
-        <Text style={styles.currentStageBody}>Åldern räknas från födelsedatumet. Fasindelningen är ungefärlig och beskriver kalenderålder, inte färdigheter.</Text>
+        <Text style={styles.currentStageBody}>Ungefärlig kalenderålder, inte färdighet.</Text>
       </View>
     </View>
 
-    <View style={styles.sectionHeading}>
-      <Text style={styles.sectionTitle} accessibilityRole="header">Hållpunkter i utvecklingen</Text>
+    <View style={styles.milestoneCard} testID="development-milestones">
+      <Text style={styles.sectionTitle} accessibilityRole="header">Nästa milstolpar</Text>
+      <Text style={styles.milestoneCaption}>Ungefärligt – hundar utvecklas olika.</Text>
+      {milestones.map((milestone, index) => <View key={milestone.id}>
+        {index > 0 ? <View style={styles.milestoneDivider} /> : null}
+        <MotionPressable testID={`development-milestone-${milestone.id}`} accessibilityRole="link"
+          accessibilityLabel={`Öppna källa ${index + 1}: ${milestone.title}`}
+          onPress={() => { void Linking.openURL(milestone.sourceUrl).catch(() => Alert.alert('Källan kunde inte öppnas', 'Försök igen när anslutningen fungerar.')); }} style={styles.milestoneRow}>
+          <ThemedIcon name={milestone.icon} tone={milestone.tone} size="medium" testID={`development-milestone-icon-${milestone.id}`} />
+          <View style={styles.milestoneCopy}>
+            <View style={styles.milestoneTitleRow}>
+              <Text style={styles.milestoneTitle}>{milestone.title}</Text>
+              <Text style={styles.sourceNumber} accessibilityElementsHidden>{index + 1})</Text>
+            </View>
+            <Text style={styles.milestoneDescription}>{milestone.description}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
+        </MotionPressable>
+      </View>)}
+      {milestones.length === 0 ? <Text style={styles.milestoneDescription}>{age ? 'Inga generella hållpunkter för den här åldern just nu.' : 'Hållpunkter visas när ett giltigt födelsedatum finns.'}</Text> : null}
     </View>
-    <Text style={styles.milestoneBody}>Ungefärliga hållpunkter – varje hund utvecklas i sin egen takt.</Text>
-    {milestones.map((milestone) => <MotionPressable key={milestone.id} accessibilityRole="link"
-      accessibilityLabel={`${milestone.title}. Läs källan i webbläsaren`}
-      onPress={() => { void Linking.openURL(milestone.sourceUrl).catch(() => Alert.alert('Källan kunde inte öppnas', 'Försök igen när anslutningen fungerar.')); }} style={styles.milestoneCard}>
-      <View style={styles.milestoneIcon}><Ionicons name="sparkles-outline" size={tokens.size.iconMd} color={tokens.colors.home.greenStrong} accessibilityElementsHidden /></View>
-      <View style={styles.milestoneCopy}>
-        <Text style={styles.milestoneTitle}>{milestone.title}</Text>
-        <Text style={styles.milestoneBody}>{milestone.description}</Text>
-        <Text style={styles.sourceLink}>Läs källan</Text>
-      </View>
-    </MotionPressable>)}
-    {milestones.length === 0 ? <Text style={styles.milestoneBody}>{age ? 'Inga generella hållpunkter för den här åldern just nu.' : 'Hållpunkter visas när ett giltigt födelsedatum finns.'}</Text> : null}
 
     <View style={styles.guideSection}>
       <View style={styles.sectionHeading}>
@@ -95,41 +104,46 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
 
 function AgeArc({ progress, currentAge, stage }: { progress: number; currentAge: string; stage: 'VALP' | 'UNGHUND' }) {
   const [ageLabelVisible, setAgeLabelVisible] = useState(true);
-  const diameter = tokens.size.developmentAgeArcDiameter;
-  const radius = diameter / 2;
+  const width = tokens.size.developmentAgeArcWidth;
+  const height = tokens.size.developmentAgeArcHeight;
+  const centerY = height - tokens.size.developmentAgeArcStroke / 2;
+  const radiusX = (width - tokens.size.developmentAgeArcStroke) / 2;
+  const radiusY = centerY - (tokens.size.developmentAgeArcStroke + 10) / 2;
   const markerSize = tokens.size.developmentAgeArcStroke + 10;
   const bubbleWidth = tokens.size.developmentAgeMarkerWidth;
-  const markerX = Math.max(markerSize / 2, Math.min(diameter - markerSize / 2, radius * (1 - Math.cos(progress * Math.PI))));
-  const markerY = Math.max(markerSize / 2, Math.min(radius - markerSize / 2, radius * (1 - Math.sin(progress * Math.PI))));
-  const arcRadius = radius - tokens.size.developmentAgeArcStroke / 2;
-  const arcLength = Math.PI * arcRadius;
-  const arcPath = `M ${tokens.size.developmentAgeArcStroke / 2} ${radius} A ${arcRadius} ${arcRadius} 0 0 1 ${diameter - tokens.size.developmentAgeArcStroke / 2} ${radius}`;
-  const bubbleLeft = Math.max(0, Math.min(diameter - bubbleWidth, markerX - bubbleWidth / 2));
+  const angle = (1 - progress) * Math.PI;
+  const markerX = width / 2 + radiusX * Math.cos(angle);
+  const markerY = centerY - radiusY * Math.sin(angle);
+  const startX = tokens.size.developmentAgeArcStroke / 2;
+  const endX = width - tokens.size.developmentAgeArcStroke / 2;
+  const arcPath = `M ${startX} ${centerY} A ${radiusX} ${radiusY} 0 0 1 ${endX} ${centerY}`;
+  const progressPath = progress > 0 ? `M ${startX} ${centerY} A ${radiusX} ${radiusY} 0 0 1 ${markerX} ${markerY}` : null;
+  const bubbleLeft = Math.max(0, Math.min(width - bubbleWidth, markerX - bubbleWidth / 2));
   const bubbleTop = markerY < tokens.size.chipMd + tokens.spacing.xs ? markerY + tokens.spacing.md : markerY - tokens.size.chipMd - tokens.spacing.xs;
   const bubbleHitWidth = bubbleWidth + 16;
-  const bubbleButtonLeft = Math.max(0, Math.min(diameter - bubbleHitWidth, bubbleLeft - 8));
-  const bubbleButtonTop = Math.max(0, Math.min(diameter / 2 - tokens.size.touchMin, bubbleTop - 6));
+  const bubbleButtonLeft = Math.max(0, Math.min(width - bubbleHitWidth, bubbleLeft - 8));
+  const bubbleButtonTop = Math.max(0, Math.min(height - tokens.size.touchMin, bubbleTop - 6));
   const markerHitSize = tokens.size.touchMin;
   const markerButtonLeft = markerX - markerHitSize / 2;
   const markerButtonTop = markerY - markerHitSize / 2;
   const phaseName = formatStage(stage);
   return <View style={styles.arcBlock}>
     <View style={styles.arcAccessible}>
-      <View style={styles.arcClip}>
-        <Svg accessible={false} importantForAccessibility="no-hide-descendants" pointerEvents="none"
-          width={diameter} height={diameter / 2} viewBox={`0 0 ${diameter} ${diameter / 2}`} style={styles.arcSvg}>
+      <View testID="development-age-arc-clip" style={styles.arcClip}>
+        <Svg testID="development-age-arc-svg" accessible={false} importantForAccessibility="no-hide-descendants" pointerEvents="none"
+          width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={styles.arcSvg}>
           <Path testID="development-age-arc-track" d={arcPath} fill="none" stroke={tokens.colors.home.progressTrack}
             strokeWidth={tokens.size.developmentAgeArcStroke} strokeLinecap="round" />
-          {progress > 0 ? <Path testID="development-age-progress" d={arcPath} fill="none" stroke={tokens.colors.home.greenStrong}
-            strokeWidth={tokens.size.developmentAgeArcStroke} strokeDasharray={`${arcLength * progress} ${arcLength}`}
-            strokeLinecap="round" /> : null}
+          {progressPath ? <Path testID="development-age-progress" d={progressPath} fill="none" stroke={tokens.colors.home.greenStrong}
+            strokeWidth={tokens.size.developmentAgeArcStroke} strokeLinecap="round" /> : null}
         </Svg>
         {[0.25, 0.5, 0.75].map((tick) => {
-          const left = radius * (1 - Math.cos(tick * Math.PI));
-          const top = Math.max(3, radius * (1 - Math.sin(tick * Math.PI)));
+          const tickAngle = (1 - tick) * Math.PI;
+          const left = width / 2 + radiusX * Math.cos(tickAngle);
+          const top = centerY - radiusY * Math.sin(tickAngle);
           return <View key={tick} style={[styles.arcTick, progress >= tick && styles.arcTickReached, { left: left - 3, top: top - 3 }]} />;
         })}
-        {ageLabelVisible ? <View style={[styles.arcCurrent, { width: markerSize, height: markerSize, borderRadius: markerSize / 2,
+        {ageLabelVisible ? <View testID="development-age-marker" style={[styles.arcCurrent, { width: markerSize, height: markerSize, borderRadius: markerSize / 2,
           left: markerX - markerSize / 2, top: markerY - markerSize / 2 }]} /> : null}
       </View>
       {ageLabelVisible ? <MotionPressable testID="development-age-pill" accessibilityRole="button"
@@ -196,12 +210,13 @@ function formatStage(stage: 'VALP' | 'UNGHUND' | 'VUXEN'): string {
 }
 
 const styles = StyleSheet.create({
-  page: { gap: tokens.spacing.md, paddingBottom: tokens.spacing.xl, marginHorizontal: -tokens.layout.pageInset, paddingHorizontal: tokens.layout.pageInset, backgroundColor: tokens.colors.home.canvas },
-  hero: { position: 'relative', alignSelf: 'stretch', height: tokens.size.developmentHeroHeight, borderRadius: tokens.radius.lg, overflow: 'hidden', backgroundColor: tokens.colors.home.progressTrack },
+  page: { gap: tokens.spacing.sm, paddingBottom: tokens.spacing.xl, marginHorizontal: -tokens.layout.pageInset, paddingHorizontal: tokens.layout.pageInset, backgroundColor: tokens.colors.home.canvas },
+  heroSection: { alignSelf: 'stretch' },
+  hero: { position: 'relative', alignSelf: 'stretch', aspectRatio: tokens.size.developmentHeroAspectRatio, borderRadius: tokens.radius.lg, overflow: 'hidden', backgroundColor: tokens.colors.home.progressTrack },
   heroImage: { width: '100%', height: '100%' },
   ageJourney: { position: 'absolute', bottom: 0, left: 0, right: 0, minHeight: tokens.size.developmentAgeJourneyHeight, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.xs, backgroundColor: tokens.colors.home.heroOverlay },
-  currentStage: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.spacing.md, paddingVertical: tokens.spacing.sm },
-  currentStageIcon: { width: tokens.size.buttonHeight, height: tokens.size.buttonHeight, borderRadius: tokens.radius.md, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card },
+  currentStage: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.spacing.md },
+  currentStageIcon: { width: tokens.size.touchMin, height: tokens.size.touchMin, borderRadius: tokens.radius.md, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card },
   currentStageCopy: { flex: 1, gap: tokens.spacing.xs },
   currentStageEyebrow: { ...tokens.typography.eyebrow, color: tokens.colors.home.textMuted },
   currentStageTitle: { ...tokens.typography.heading, color: tokens.colors.home.text },
@@ -210,8 +225,8 @@ const styles = StyleSheet.create({
   phaseDot: { width: 7, height: 7, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.onPrimary },
   phaseText: { ...tokens.typography.caption, lineHeight: 18, fontWeight: '700', color: tokens.colors.onPrimary },
   arcBlock: { alignItems: 'center', gap: tokens.spacing.xs / 2 },
-  arcAccessible: { width: tokens.size.developmentAgeArcDiameter, height: tokens.size.developmentAgeArcDiameter / 2, overflow: 'visible' },
-  arcClip: { position: 'relative', width: tokens.size.developmentAgeArcDiameter, height: tokens.size.developmentAgeArcDiameter / 2, overflow: 'hidden' },
+  arcAccessible: { width: tokens.size.developmentAgeArcWidth, height: tokens.size.developmentAgeArcHeight + tokens.spacing.md + tokens.spacing.xs, overflow: 'visible' },
+  arcClip: { position: 'relative', width: tokens.size.developmentAgeArcWidth, height: tokens.size.developmentAgeArcHeight + tokens.spacing.md + tokens.spacing.xs, overflow: 'visible' },
   arcSvg: { position: 'absolute', top: 0, left: 0 },
   arcTick: { position: 'absolute', width: 6, height: 6, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.borderStrong },
   arcTickReached: { backgroundColor: tokens.colors.home.greenStrong },
@@ -221,7 +236,7 @@ const styles = StyleSheet.create({
   markerToggle: { position: 'absolute', alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card, borderWidth: 1, borderColor: tokens.colors.home.greenStrong },
   markerToggleDot: { borderWidth: 2, borderColor: tokens.colors.home.card, backgroundColor: tokens.colors.home.greenStrong },
   ageBubbleText: { ...tokens.typography.smallCaption, fontWeight: '700', color: tokens.colors.onPrimary },
-  phaseLegend: { width: tokens.size.developmentAgeArcDiameter + tokens.spacing.xxl, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', columnGap: tokens.spacing.md, rowGap: tokens.spacing.xs },
+  phaseLegend: { width: tokens.size.developmentAgeArcWidth, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', columnGap: tokens.spacing.md, rowGap: tokens.spacing.xs },
   phaseLegendGroup: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', flexShrink: 1, gap: tokens.spacing.xs },
   phaseLegendDot: { width: 8, height: 8, borderRadius: tokens.radius.full },
   puppyLegendDot: { backgroundColor: tokens.colors.category.walk.fg },
@@ -235,12 +250,15 @@ const styles = StyleSheet.create({
   unknownAgeText: { ...tokens.typography.caption, color: tokens.colors.home.textMuted, flex: 1 },
   sectionHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   sectionTitle: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },
-  milestoneCard: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.spacing.md, padding: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.home.card },
-  milestoneIcon: { width: tokens.size.buttonHeight, height: tokens.size.buttonHeight, borderRadius: tokens.radius.md, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.selectedSurface },
-  milestoneCopy: { flex: 1, gap: tokens.spacing.xs },
+  milestoneCard: { gap: tokens.spacing.xs, padding: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.home.card },
+  milestoneCaption: { ...tokens.typography.smallCaption, color: tokens.colors.home.textMuted },
+  milestoneRow: { minHeight: tokens.size.touchMin + tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingVertical: tokens.spacing.xs },
+  milestoneDivider: { height: tokens.size.stroke, marginLeft: tokens.size.chipMd + tokens.spacing.sm, backgroundColor: tokens.colors.border },
+  milestoneCopy: { flex: 1, gap: tokens.spacing.xs / 2 },
+  milestoneTitleRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   milestoneTitle: { ...tokens.typography.label, color: tokens.colors.home.text },
-  milestoneBody: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
-  sourceLink: { ...tokens.typography.caption, color: tokens.colors.primary, fontWeight: '700' },
+  sourceNumber: { ...tokens.typography.smallCaption, color: tokens.colors.home.greenStrong, fontWeight: '700' },
+  milestoneDescription: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
   guideSection: { gap: tokens.spacing.xs },
   guideCount: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
   loadingGuides: { gap: tokens.spacing.sm },

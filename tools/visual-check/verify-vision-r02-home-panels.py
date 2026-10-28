@@ -220,10 +220,26 @@ def verify_development_views(browser) -> None:
         page.get_by_role('button', name='Visa utveckling för Luna', exact=True).click()
         expect(page.get_by_test_id('development-screen')).to_be_visible()
         expect(page.get_by_text('11 veckor · Valp', exact=True)).to_be_visible()
-        expect(page.get_by_text('Hållpunkter i utvecklingen', exact=True)).to_be_visible()
-        expect(page.get_by_text('Ungefärliga hållpunkter – varje hund utvecklas i sin egen takt.', exact=True)).to_be_visible()
-        expect(page.get_by_role('link', name='Tandömsning. Läs källan i webbläsaren')).to_be_visible()
+        expect(page.get_by_text('Nästa milstolpar', exact=True)).to_be_visible()
+        expect(page.get_by_text('Ungefärligt – hundar utvecklas olika.', exact=True)).to_be_visible()
+        expect(page.get_by_role('link', name='Öppna källa 2: Tandömsning')).to_be_visible()
         expect(page.get_by_text('Standardbild', exact=True)).to_have_count(0)
+        milestone_rows = page.locator('[data-testid^="development-milestone-"]:not([data-testid*="-icon-"])')
+        milestone_count = milestone_rows.count()
+        milestone_icons = [page.get_by_test_id(f'development-milestone-icon-{key}').is_visible()
+                           for key in ('new-experiences', 'teething', 'adolescence')]
+        record(f'Development shows three distinct milestone icon rows at {width}px',
+               milestone_count == 3 and all(milestone_icons),
+               {'row_count': milestone_count, 'icons_visible': milestone_icons})
+        screen_title = page.get_by_role('heading', name='Lunas utveckling', exact=True)
+        title_box = screen_title.bounding_box()
+        hero_box = page.get_by_test_id('development-hero').bounding_box()
+        title_style = screen_title.evaluate("element => { const style = getComputedStyle(element); return { fontSize: style.fontSize, lineHeight: style.lineHeight, fontWeight: style.fontWeight }; }")
+        title_gap = hero_box['y'] - (title_box['y'] + title_box['height']) if title_box and hero_box else None
+        record(f'Development uses a 24/30 bold title with compact portrait spacing at {width}px',
+               title_style == {'fontSize': '24px', 'lineHeight': '30px', 'fontWeight': '700'}
+               and title_gap is not None and 12 <= title_gap <= 20,
+               {'title_style': title_style, 'title_box': title_box, 'hero_box': hero_box, 'gap_pt': title_gap})
         age_pill = page.get_by_test_id('development-age-pill')
         age_pill_box = age_pill.bounding_box()
         record(f'Development age pill has a 44pt touch target at {width}px',
@@ -249,7 +265,8 @@ def verify_development_views(browser) -> None:
         record(f'Development age pill toggles off and back on from the marker at {width}px', True,
                {'initial_pill': age_pill_box})
         image = page.get_by_test_id('development-screen').locator('img').first.bounding_box()
-        image_is_prominent = image is not None and image['height'] >= 260
+        image_ratio = image['height'] / image['width'] if image and image['width'] else 0
+        image_is_prominent = image is not None and image['height'] >= 210 and 0.65 <= image_ratio <= 0.72
         record(f'Development hero retains its large unique generic image at {width}px', image_is_prominent, {'image_box': image})
         if REVIEW:
             guide = page.get_by_role('button', name='Öppna guide: Så bygger ni lugna rutiner', exact=True)
@@ -274,6 +291,38 @@ def verify_development_views(browser) -> None:
                {'page_errors': page_errors})
         page.close()
 
+    short_page = browser.new_page(viewport={'width': 375, 'height': 667})
+    short_page.goto(development_url(), wait_until='networkidle')
+    expect(short_page.get_by_test_id('development-milestones')).to_be_visible()
+    short_page.screenshot(path=str(OUT / 'development-short-375x667.png'), full_page=True)
+    short_page.evaluate("""() => document.querySelectorAll('[dir="auto"]').forEach((element) => {
+      const style = getComputedStyle(element);
+      const size = parseFloat(style.fontSize);
+      const line = parseFloat(style.lineHeight);
+      if (Number.isFinite(size)) element.style.fontSize = `${size * 1.4}px`;
+      if (Number.isFinite(line)) element.style.lineHeight = `${line * 1.4}px`;
+    })""")
+    large_text_no_overflow = short_page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    short_page.screenshot(path=str(OUT / 'development-text-140-375x667.png'), full_page=True)
+    record('Development short viewport scrolls with no horizontal overflow at 140% text proxy',
+           large_text_no_overflow,
+           {'horizontal_overflow': not large_text_no_overflow,
+            'scroll_height': short_page.evaluate('document.documentElement.scrollHeight')})
+    short_page.close()
+
+    last_row_page = browser.new_page(viewport={'width': 375, 'height': 844})
+    last_row_page.goto(development_url(), wait_until='networkidle')
+    last_row = last_row_page.get_by_test_id('development-milestone-adolescence')
+    last_row.scroll_into_view_if_needed()
+    last_row_box = last_row.bounding_box()
+    bottom_nav_box = last_row_page.get_by_role('tablist', name='Huvudmeny').bounding_box()
+    row_reachable = last_row_box is not None and bottom_nav_box is not None and last_row_box['height'] >= 44 \
+        and last_row_box['y'] + last_row_box['height'] <= bottom_nav_box['y']
+    record('Last milestone link remains fully reachable above fixed navigation after scrolling', row_reachable,
+           {'row': last_row_box, 'bottom_nav': bottom_nav_box})
+    last_row_page.screenshot(path=str(OUT / 'development-last-milestone-reachable-375.png'), full_page=True)
+    last_row_page.close()
+
 
     if not REVIEW:
         return
@@ -282,7 +331,7 @@ def verify_development_views(browser) -> None:
     # changes only its memory-scope token; ProductWorkspace's real scope fields are
     # separately asserted by the Node route test.
     page = browser.new_page(viewport={'width': 375, 'height': 699})
-    page.goto(home_url(), wait_until='networkidle')
+    page.goto(home_url('seven'), wait_until='networkidle')
     expect(page.get_by_test_id('review-app-viewport')).to_be_visible()
     set_vertical_scroll(page, 82)
     development_entry = page.get_by_role('button', name='Visa utveckling för Luna', exact=True)
@@ -433,19 +482,27 @@ def verify_development_progress(browser) -> None:
             page.goto(development_url(age_scenario=scenario), wait_until='networkidle')
             progress = page.get_by_test_id('development-age-progress')
             track = page.get_by_test_id('development-age-arc-track')
+            arc_clip = page.get_by_test_id('development-age-arc-clip')
+            marker = page.get_by_test_id('development-age-marker')
             expect(progress).to_be_visible()
             expect(track).to_be_visible()
-            progress_attributes = progress.evaluate("element => ({ stroke: element.getAttribute('stroke'), dasharray: element.getAttribute('stroke-dasharray'), linecap: element.getAttribute('stroke-linecap'), d: element.getAttribute('d') })")
+            progress_attributes = progress.evaluate("element => ({ stroke: element.getAttribute('stroke'), linecap: element.getAttribute('stroke-linecap'), d: element.getAttribute('d'), length: element.getTotalLength() })")
             track_attributes = track.evaluate("element => ({ stroke: element.getAttribute('stroke'), d: element.getAttribute('d') })")
-            dash_length = float((progress_attributes['dasharray'] or '').split()[0])
+            endpoint = progress.evaluate("element => { const values = element.getAttribute('d').match(/[-+]?(?:\\d*\\.)?\\d+(?:e[-+]?\\d+)?/gi).map(Number); return values.slice(-2); }")
+            clip_box = arc_clip.bounding_box()
+            marker_box = marker.bounding_box()
+            marker_center = [marker_box['x'] + marker_box['width'] / 2 - clip_box['x'], marker_box['y'] + marker_box['height'] / 2 - clip_box['y']] if clip_box and marker_box else None
+            marker_error = max(abs(endpoint[index] - marker_center[index]) for index in (0, 1)) if marker_center else None
             record(f'{scenario} age renders a green progress arc over a neutral track at {width}px',
                    progress_attributes['stroke'] in ('#217448', 'rgb(33, 116, 72)')
                    and track_attributes['stroke'] in ('#E9E5DE', 'rgb(233, 229, 222)')
-                   and progress_attributes['d'] == track_attributes['d']
-                   and progress_attributes['linecap'] == 'round',
-                   {'progress': progress_attributes, 'track': track_attributes})
+                   and progress_attributes['d'] != track_attributes['d']
+                   and progress_attributes['linecap'] == 'round'
+                   and marker_error is not None and marker_error < 1.5,
+                   {'progress': progress_attributes, 'track': track_attributes, 'progress_endpoint': endpoint,
+                    'marker_center_in_arc': marker_center, 'endpoint_error_pt': marker_error})
             if width == 375:
-                progress_lengths[scenario] = dash_length
+                progress_lengths[scenario] = float(progress_attributes['length'])
             page.screenshot(path=str(OUT / f'development-progress-{scenario}-{width}.png'), full_page=True)
             if scenario == 'normal':
                 age_label = page.get_by_test_id('development-age-pill')
@@ -1512,6 +1569,7 @@ if os.environ.get('TASSLA_UI_PANEL') == 'development':
             executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
             args=['--no-sandbox'],
         )
+        verify_development_views(browser)
         verify_development_states(browser)
         verify_development_progress(browser)
         browser.close()
