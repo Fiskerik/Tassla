@@ -1,5 +1,9 @@
 # FOUNDATION — leveransrapport 2026-10-04
 
+### BUILD-PUBLIC-TESTFLIGHT-01 — public TestFlight, 2026-10-29
+
+Ordinarie `tassla-ios` använder nu public/false och heter `Tassla iOS — public TestFlight build`. Workflow-ID, signering, buildnummer och distributionsinställningar bevaras. PyYAML-paritet, riktig guard/metadata för båda workflows, befintliga guard-tester och full `CI=1 pnpm check` (100/100 testfiler) PASS. Frozen Reviewer PASS utan fynd. Kontoraderingsfelet är separat och fortfarande okänt; ny ägarrapport är sparad. Ingen Codemagic-körning, serverändring eller radering gjordes.
+
 ### KNOWLEDGE-PANEL7-VISUAL-01 — Kunskapsöversikt mot panel 7, slutcheckpoint 2026-10-29
 
 Guideöversikten har nu en tydlig tvålägesväxel (`För dig` / `Alla artiklar`), rekommendationsrubrik, neutral ingress ur befintlig artikeltext och mindre 16:9-bildkort. Hela biblioteket och sökning når även innehåll som inte rekommenderas för hunden; rekommendationsrubriken döljs under sökning. FAQ och Checklistor är fortsatt separata destinationer. UI Critic REVIEW **PASS** efter att avståndet minskades till cirka 24 pt mellan växeln och rekommendationsrubriken samt 12 pt mellan rubrik och huvudbild; alla sex visuella dimensioner bedömdes godkända.

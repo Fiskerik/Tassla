@@ -6,6 +6,10 @@ Skärmbilden från Erik 2026-10-25 visar meddelandet att servern inte kunde bekr
 
 Repoets `supabase/functions/delete-account/README.md`, `supabase/functions/README.md` och `src/features/account/README.md` säger att Edge Function-kandidaten inte är driftsatt/verifierad mot verkligt konto. Detta kan förklara felet i en TestFlight-miljö, men screenshoten innehåller ingen endpoint-/serverlogg som fastställer vad den specifika begäran gjorde. Konto-raderingsmarkören och instruktionen att inte försöka igen ska lämnas intakta tills status är verifierad.
 
+### Ägarrapport 2026-10-29
+
+Erik rapporterar att hundradering fungerar i senaste Main-bygget men att kontoradering fortfarande inte fungerar. Den nya iPhone-bilden visar åter ett okänt kontoraderingsutfall, inte ett fastställt serverfel eller bekräftad radering. Exakt buildnummer och bygg-SHA är inte angivna. Byggkanalen ändras separat till `public`; det driftsätter inte Edge Function och löser inte i sig kontoraderingsproblemet. Ingen ny raderingsbegäran eller serverändring har gjorts i denna uppföljning.
+
 ## Nästa säkra steg
 
 Ägaren behöver ange vilket Supabase-projekt/build som används och uttryckligen godkänna en driftsättnings-/verifieringsplan innan externa ändringar. Därefter ska funktionen verifieras utan att radera Eriks riktiga konto, först med serverstatus/preflight och sedan med en särskild syntetisk testidentitet i en avsedd testmiljö. Logga inga tokens, användar-ID:n eller raderingspayloads. Faktisk radering av ett konto kräver separat uttrycklig begäran för den kontoinnehavaren.

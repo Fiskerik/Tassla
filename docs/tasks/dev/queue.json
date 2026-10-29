@@ -13680,6 +13680,59 @@
         }
       ],
       "next_step": "Stängt efter QA PASS och Frozen Reviewer PASS. Commit 2486b0b8a8322526c8d075b0a15f10df8fc2e0dd pushad till origin/knowledge/panel7-visual-alignment; ej mergad och ingen TestFlight-build verifierad."
+    },
+    {
+      "id": "BUILD-PUBLIC-TESTFLIGHT-01",
+      "title": "Ordinarie Codemagic TestFlight-flöde använder public-innehåll",
+      "mvp_requirement": "Eriks uttryckliga kanalbyte 2026-10-29; docs/dev/review-content-builds.md",
+      "plan": "docs/tasks/dev/BUILD-PUBLIC-TESTFLIGHT-01.md v1",
+      "write_paths": [
+        "codemagic.yaml",
+        "docs/dev/review-content-builds.md",
+        "docs/tasks/dev/ACCOUNT-DELETE-STATUS-01.md",
+        "docs/tasks/dev/BUILD-PUBLIC-TESTFLIGHT-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Standardworkflow-ID bevarat; namn och miljövärden använder public utan review-fixtures.",
+        "YAML-paritet utanför tre värden och verklig guard/metadata verifieras för båda workflows.",
+        "Kontoraderingsrapport skiljs från kanaländring; ingen backend eller build startas.",
+        "Riktad QA, full check och oberoende Reviewer före slutcheckpoint."
+      ],
+      "checks": [
+        "PyYAML parse/paritet och verklig content-build guard",
+        "node --experimental-strip-types --test tests/content-release-guard.test.mjs",
+        "CI=1 pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "risk": "L: befintliga byggvariabler och visningsnamn; signering och distribution ändras inte.",
+      "status": "done",
+      "history": [
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation klar. PyYAML-paritet exakt tre värden, båda workflows verkliga guard public/false, guard-test och full pnpm check 100/100 PASS."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "L-risk riktad QA PASS: endast avsedda YAML-värden ändrade, metadata och befintliga guards verifierade; full check PASS. Oberoende slutreview av komplett dokumenterad diff återstår."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS: exakt tre YAML-värden, oförändrad pipeline/distribution; samtliga åtta paths inom plan; PyYAML/guard/fullcheck och diffcheck PASS. Ingen hosted build eller kontoradering verifierad."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS: exakt tre YAML-värden, oförändrad pipeline/distribution; samtliga åtta paths inom plan; PyYAML/guard/fullcheck och diffcheck PASS. Ingen hosted build eller kontoradering verifierad."
     }
   ]
 }

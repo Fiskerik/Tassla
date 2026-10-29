@@ -704,3 +704,7 @@ Plan v5 Critic/Architect APPROVE, Dog Expert PASS WITH CONDITIONS utan kvarvaran
 PostgreSQL-provet använde en disposable lokal PostgreSQL med syntetiska tabeller/roller och rollback; körloggen saknar exakta kommandon, tampermetod och minorversion. Inget live Supabase/RLS, faktisk FAQ-import/publicering, trusted-role guard, native VoiceOver/TalkBack, Dynamic Type på enhet eller TestFlight verifierades. Veterinärsignoff görs inte anspråk på. Se [tasken](../tasks/dev/KNOWLEDGE-FAQ-CATALOG-01.md) och [verifieringen](../design/evidence/knowledge-faq-catalog-v1/VERIFICATION.md).
 
 Administrativt closeout v6: Critic PROCEED för denna historikrad som post-completion-tillägg; v5:s produktacceptans är oförändrad.
+
+## BUILD-PUBLIC-TESTFLIGHT-01 — public TestFlight, 2026-10-29
+
+Lokalt implementerat och verifierat på `fix/mvp-build-feedback`, bas `be2efa60ad6cdbbd6bf209194425b2fd03d1679e`; Frozen Reviewer PASS utan fynd. Ordinarie TestFlight-workflow använder public/false och tydligt public-namn. Signering, buildnummer och distributionsval är oförändrade. Riktig content guard och full check PASS (100/100 testfiler). Ingen signerad build eller faktisk distribution verifierad. Kontoraderingsproblemet är fortsatt separat öppet.

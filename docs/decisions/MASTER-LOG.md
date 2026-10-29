@@ -392,3 +392,7 @@ After v5 commit f75279f6b71fa2a224297a9ffc05150244d84c8c was pushed to origin/kn
 
 
 Supplemental closeout review: Frozen Reviewer PASS utan nya fynd efter att HISTORY-2026.md och v6-planvägen lagts till. Slutlig task-base audit omfattar 35 paths inom 37 deklarerade paths. Commit f75279f6b71fa2a224297a9ffc05150244d84c8c är bekräftad på origin/knowledge/d3-catalog-delivery; inga produkt- eller live-databasändringar efter den.
+
+## 2026-10-29 — ordinarie Codemagic-flöde till public
+
+Erik beställde uttryckligen public i stället för review i Codemagic. `tassla-ios` behåller ID, signering, buildnummer och TestFlight-publicering men använder public/false och public i namnet. Riktad konfigurations-QA och full check PASS; Frozen Reviewer PASS utan fynd. Ägaren rapporterar fungerande hundradering och fortsatt okänd kontoradering i senaste Main-bygget; exakt buildnummer är okänt. Ingen serverändring eller raderingsbegäran utfördes.
