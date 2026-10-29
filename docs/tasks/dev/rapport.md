@@ -1,5 +1,13 @@
 # FOUNDATION — leveransrapport 2026-10-04
 
+### KNOWLEDGE-PANEL7-VISUAL-01 — Kunskapsöversikt mot panel 7, slutcheckpoint 2026-10-28
+
+Guideöversikten har nu en tydlig tvålägesväxel (`För dig` / `Alla artiklar`), rekommendationsrubrik, neutral ingress ur befintlig artikeltext och mindre 16:9-bildkort. Hela biblioteket och sökning når även innehåll som inte rekommenderas för hunden; rekommendationsrubriken döljs under sökning. FAQ och Checklistor är fortsatt separata destinationer. UI Critic REVIEW **PASS** efter att avståndet minskades till cirka 24 pt mellan växeln och rekommendationsrubriken samt 12 pt mellan rubrik och huvudbild; alla sex visuella dimensioner bedömdes godkända.
+
+Plan v4 lägger till `tests/knowledge-search-screen.test.mjs` i både task- och queue-scope efter att QA hittade den saknad i v3; Critic gav **PROCEED**, Architect **APPROVE**. Oberoende QA **PASS** på v4:s deklarerade scope och Frozen Reviewer **PASS** på slutdiff, API-användning, panelhierarki och sparad evidens. `CI=1 pnpm check` passerar TypeScript, edge TypeScript, ESLint och 100/100 testfiler. Separat verifierare passerar public 4/4 och review 23/23 vid 375/430 px samt 375×667 med 140 %-textproxy; granskar även fullbibliotekssökning, FAQ-öppning och checklistans returväg. Riktade tester är 29/29; Python syntax, `git diff --check` och dev-flow passerar.
+
+Arbetskortet är stängt. Beviset är lokal RN Web och syntetiska fixtureposter; native Dynamic Type/VoiceOver, fysisk iPhone och live Supabase/data är inte verifierade. Ändringarna ligger lokalt på `knowledge/panel7-visual-alignment`; commit/push är inte utförd.
+
 ### KNOWLEDGE-FAQ-CATALOG-01 — public FAQ-katalog v1, slutreview-checkpoint 2026-10-28
 
 Fyra korta, källspårade FAQ-svar är nu tillgängliga lokalt via separat publicerad-FAQ-adapter. Review-fixtures hålls avskilda; FAQ-data går inte in i `HomeContent`. Granskat innehåll och separata reviewed-import-/publish-SQL matchar exakt digest `170d70410e1a7bf121fc7ef16c338d4eb79e7f023fd3ba4c3f96cc5661cd3288`. Dog Expert gav **PASS WITH CONDITIONS**; granskningen använde verifierade källsammanfattningar, inte självständig URL-hämtning, och är inte veterinärsignoff.

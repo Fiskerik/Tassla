@@ -30,7 +30,7 @@ test('Knowledge uses semantic destination icons and compact detail headers witho
   assert.match(knowledge, /selectedItem \? <AppBar[\s\S]*variant="compact"/);
   assert.match(knowledge, /tab === 'FAQ' \? <AppBar[\s\S]*variant="compact"/);
   assert.match(knowledge, /knowledgeImageForGuide\(item\)/);
-  assert.doesNotMatch(knowledge, /getGuidePreviewText\(item\.body\)/);
+  assert.match(knowledge, /getGuidePreviewText\(item\.body, 120\)/);
   assert.match(knowledge, /selectedItem\.sources\.length > 0/);
 });
 

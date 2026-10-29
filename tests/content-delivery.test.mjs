@@ -159,7 +159,7 @@ test('guide-body helper renders supported headings and lists as plain text and p
   assert.match(knowledgeSource, /<Text[^>]*>\{item\.title\}<\/Text>/);
   assert.doesNotMatch(knowledgeSource, /articleText|personalizeArticle|dogName|dogSex/);
   assert.doesNotMatch(workspaceSource, /personalizeArticle/);
-  assert.doesNotMatch(knowledgeSource, /getGuidePreviewText\(item\.body\)/);
+  assert.match(knowledgeSource, /getGuidePreviewText\(item\.body, 120\)/);
 });
 
 test('Home opens the exact fetched version and Knowledge resolves that exact row without a reload', () => {

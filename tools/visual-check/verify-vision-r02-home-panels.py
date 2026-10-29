@@ -1014,7 +1014,11 @@ def verify_image_diversity(browser, *, include_home_and_training: bool = True) -
         for width in (375, 430):
             page = browser.new_page(viewport={'width': width, 'height': 844})
             page.goto(image_fixture_url('knowledge'), wait_until='networkidle')
-            expect(page.get_by_text('Inga guider är publicerade för Luna ännu.', exact=True)).to_be_visible()
+            expect(page.get_by_text('Inga rekommenderade artiklar för den valda hunden just nu. Du kan läsa alla publicerade artiklar.', exact=True)).to_be_visible()
+            page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='Alla artiklar', exact=True).click()
+            expect(page.get_by_text('Inga artiklar är publicerade ännu.', exact=True)).to_be_visible()
+            record(f'Public Knowledge keeps recommendations and the full-library empty state distinct at {width}px',
+                   page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='Alla artiklar', exact=True).get_attribute('aria-selected') == 'true', {})
             page.screenshot(path=str(OUT / f'knowledge-empty-{width}.png'), full_page=True)
             page.goto(image_fixture_url('training'), wait_until='networkidle')
             expect(page.get_by_text('Inga övningar tillgängliga ännu', exact=True)).to_be_visible()
@@ -1047,9 +1051,22 @@ def verify_image_diversity(browser, *, include_home_and_training: bool = True) -
         record(f'Knowledge maps three stable guide identities to three different visible photos at {width}px',
                all(image_sources) and len(set(image_sources)) == 3,
                {'image_sources': image_sources, 'image_boxes': image_boxes, 'image_frame_boxes': image_frame_boxes})
-        record(f'Knowledge image crops use the current 16:9 hero and 4:3 guide aspect ratios at {width}px',
-               image_frame_boxes[1] is not None and abs(image_frame_boxes[1]['width'] / image_frame_boxes[1]['height'] - 16 / 9) <= 0.02
-               and all(box is not None and abs(box['width'] / box['height'] - 4 / 3) <= 0.02 for index, box in enumerate(image_frame_boxes) if index != 1),
+        record(f'Knowledge uses a real two-option recommendation/library switch at {width}px',
+               page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='För dig', exact=True).get_attribute('aria-selected') == 'true'
+               and page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='Alla artiklar', exact=True).get_attribute('aria-selected') == 'false'
+               and page.get_by_role('heading', name='Rekommenderat för er just nu', exact=True).is_visible(),
+               {'tabs': page.get_by_role('tablist', name='Visa artiklar').inner_text()})
+        tabs_box = page.get_by_role('tablist', name='Visa artiklar').bounding_box()
+        recommendation_box = page.get_by_role('heading', name='Rekommenderat för er just nu', exact=True).bounding_box()
+        featured_box = page.get_by_role('button', name='Läs Kontakt och namn', exact=True).bounding_box()
+        tabs_to_heading = recommendation_box['y'] - (tabs_box['y'] + tabs_box['height']) if tabs_box and recommendation_box else None
+        heading_to_feature = featured_box['y'] - (recommendation_box['y'] + recommendation_box['height']) if recommendation_box and featured_box else None
+        record(f'Knowledge keeps recommendation spacing compact at {width}px',
+               tabs_to_heading is not None and 18 <= tabs_to_heading <= 30
+               and heading_to_feature is not None and 6 <= heading_to_feature <= 18,
+               {'tabs_to_heading': tabs_to_heading, 'heading_to_feature': heading_to_feature})
+        record(f'Knowledge image crops use the 16:9 editorial ratio for hero and smaller cards at {width}px',
+               all(box is not None and abs(box['width'] / box['height'] - 16 / 9) <= 0.02 for box in image_frame_boxes),
                {'image_frame_boxes': image_frame_boxes})
         record(f'Knowledge focal crops cover their full image frames at {width}px',
                all(image_box is not None and frame_box is not None
@@ -1064,6 +1081,23 @@ def verify_image_diversity(browser, *, include_home_and_training: bool = True) -
         record(f'Knowledge guide search and the selected bottom destination remain visible at {width}px',
                not page_errors and page.evaluate('document.documentElement.scrollWidth <= innerWidth'),
                {'page_errors': page_errors})
+        expect(page.get_by_role('button', name='Läs En artikel utan hundmatchning', exact=True)).to_have_count(0)
+        page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='Alla artiklar', exact=True).click()
+        expect(page.get_by_role('button', name='Läs En artikel utan hundmatchning', exact=True)).to_be_visible()
+        record(f'All articles includes library content outside dog recommendations at {width}px',
+               page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='Alla artiklar', exact=True).get_attribute('aria-selected') == 'true', {})
+        page.screenshot(path=str(OUT / f'knowledge-library-{width}.png'), full_page=True)
+        page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='För dig', exact=True).click()
+        expect(page.get_by_role('button', name='Läs En artikel utan hundmatchning', exact=True)).to_have_count(0)
+        page.get_by_role('textbox', name='Sök bland alla artiklar', exact=True).fill('utan hundmatchning')
+        expect(page.get_by_role('button', name='Läs En artikel utan hundmatchning', exact=True)).to_be_visible()
+        expect(page.get_by_role('heading', name='Rekommenderat för er just nu', exact=True)).to_have_count(0)
+        record(f'Knowledge search reaches non-recommended library content without a false recommendation heading at {width}px',
+               page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='För dig', exact=True).get_attribute('aria-selected') == 'true'
+               and page.get_by_role('button', name='Läs En artikel utan hundmatchning', exact=True).is_visible()
+               and page.get_by_role('heading', name='Rekommenderat för er just nu', exact=True).count() == 0, {})
+        page.get_by_role('textbox', name='Sök bland alla artiklar', exact=True).fill('')
+        page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='För dig', exact=True).click()
         guide_cards[0].click()
         expect(page.get_by_role('heading', name='Trygg start hemma', exact=True)).to_be_visible()
         article_image = page.locator('img').first
@@ -1080,6 +1114,51 @@ def verify_image_diversity(browser, *, include_home_and_training: bool = True) -
                {'image_box': article_image_box, 'image_frame_box': article_frame_box, 'page_errors': page_errors})
         page.screenshot(path=str(OUT / f'knowledge-article-{width}.png'), full_page=True)
         page.close()
+
+    # A short viewport plus enlarged text proxy checks wrapping and access to the persistent destination bar.
+    page = browser.new_page(viewport={'width': 375, 'height': 667})
+    page_errors: list[str] = []
+    page.on('pageerror', lambda error: page_errors.append(str(error)))
+    page.goto(image_fixture_url('knowledge'), wait_until='networkidle')
+    page.evaluate("""() => {
+      const text = [...document.querySelectorAll('*')]
+        .filter(element => [...element.childNodes].some(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim()));
+      const sizes = text.map(element => parseFloat(getComputedStyle(element).fontSize));
+      const lines = text.map(element => parseFloat(getComputedStyle(element).lineHeight));
+      text.forEach((element, index) => {
+        if (Number.isFinite(sizes[index])) element.style.fontSize = `${sizes[index] * 1.4}px`;
+        if (Number.isFinite(lines[index])) element.style.lineHeight = `${lines[index] * 1.4}px`;
+      });
+    }""")
+    expect(page.get_by_role('heading', name='Rekommenderat för er just nu', exact=True)).to_be_visible()
+    expect(page.get_by_role('tablist', name='Huvudmeny').get_by_role('tab', name='Kunskap', exact=True)).to_be_visible()
+    short_view_ok = page.evaluate('document.documentElement.scrollWidth <= innerWidth') and not page_errors
+    record('Knowledge stays readable and avoids horizontal overflow at 375×667 with a 140% text-size proxy', short_view_ok,
+           {'page_errors': page_errors, 'viewport': {'width': 375, 'height': 667}})
+    page.screenshot(path=str(OUT / 'knowledge-guides-375x667-text140.png'), full_page=True)
+    nav_box = page.get_by_role('tablist', name='Huvudmeny').bounding_box()
+    for label in ('Öppna Checklistor', 'Öppna Vanliga frågor'):
+        entry = page.get_by_role('button', name=label, exact=True)
+        entry.scroll_into_view_if_needed()
+        entry_box = entry.bounding_box()
+        reachable = entry_box is not None and nav_box is not None and entry_box['height'] >= 44
+        reachable = reachable and entry_box['x'] >= -1 and entry_box['x'] + entry_box['width'] <= 376
+        reachable = reachable and entry_box['y'] + entry_box['height'] <= nav_box['y'] + 1
+        record(f'{label} stays reachable above the bottom bar at 375×667 and 140% text', reachable,
+               {'entry_box': entry_box, 'nav_box': nav_box})
+    page.get_by_role('button', name='Öppna Vanliga frågor', exact=True).click()
+    expect(page.get_by_role('heading', name='Vanliga frågor', exact=True)).to_be_visible()
+    expect(page.get_by_role('button', name='När passar en valpkurs?, visa svar', exact=True)).to_be_visible()
+    record('Knowledge opens FAQ and displays its review-gated content from the guide overview', True)
+    page.get_by_role('button', name='Tillbaka till guider', exact=True).click()
+    expect(page.get_by_role('textbox', name='Sök bland alla artiklar', exact=True)).to_be_visible()
+    page.get_by_role('button', name='Öppna Checklistor', exact=True).click()
+    expect(page.get_by_role('button', name='Tillbaka till guider', exact=True)).to_be_visible()
+    record('Knowledge enters the Checklistor destination and retains its return path', True)
+    page.get_by_role('button', name='Tillbaka till guider', exact=True).click()
+    expect(page.get_by_role('heading', name='Rekommenderat för er just nu', exact=True)).to_be_visible()
+    page.screenshot(path=str(OUT / 'knowledge-shortcuts-375x667-text140.png'), full_page=True)
+    page.close()
 
     if not include_home_and_training:
         return

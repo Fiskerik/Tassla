@@ -1,0 +1,24 @@
+{
+  "mode": "public",
+  "panel": "knowledge-images",
+  "evidence_dir": "docs/design/evidence/knowledge-panel7-visual-01/public",
+  "results": [
+    {
+      "check": "Public Knowledge keeps recommendations and the full-library empty state distinct at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Public Knowledge and Training use honest empty content at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Public Knowledge keeps recommendations and the full-library empty state distinct at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Public Knowledge and Training use honest empty content at 430px",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}

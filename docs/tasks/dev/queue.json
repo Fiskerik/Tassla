@@ -13611,6 +13611,75 @@
         "Independent QA PASS after tab visibility correction for the local FAQ slice, screenshots, 44px targets, tab labels and horizontal scroll at 140% text, plus the documented synthetic PostgreSQL run. PostgreSQL transcript is accepted as evidence of the logged run but omits exact commands, tampering method and minor version; §14.8 measured contrast and §14.15 native behavior remain NOT TESTABLE.",
         "V6 closeout Critic PROCEED and Frozen Reviewer supplemental PASS; history commit cross-checked against origin. Final task-base audit: 35 paths within 37 declared."
       ]
+    },
+    {
+      "id": "KNOWLEDGE-PANEL7-VISUAL-01",
+      "title": "Kunskap: gör guideöversikten mer lik panel 7",
+      "mvp_requirement": "docs/design/vision-rev02-screen-contracts.md §7; ägarens beställning 2026-10-28",
+      "plan": "docs/tasks/dev/KNOWLEDGE-PANEL7-VISUAL-01.md v4",
+      "write_paths": [
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/README.md",
+        "tests/content-delivery.test.mjs",
+        "tests/knowledge-search-screen.test.mjs",
+        "tests/ui-r02-04-panelhelhet.test.mjs",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "docs/design/evidence/knowledge-panel7-visual-01",
+        "docs/tasks/dev/KNOWLEDGE-PANEL7-VISUAL-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md"
+      ],
+      "acceptance": [
+        "Kunskapsöversiktens sökfält, två verkliga vyfilter, rekommendationsrubrik, ett stort bildkort och två kompakta bildkort följer panel 7:s ordning och hierarki.",
+        "För dig visar bara befintligt rekommenderat innehåll; Alla artiklar visar biblioteket; sökning når även en träff med recommended=false utan rekommendationsrubrik.",
+        "Kortutdrag återanvänder neutral text, korten öppnar rätt artikel och återgång/search/FAQ/checklistdestinationerna fungerar.",
+        "Bildfokus håller hundens ansikte synligt vid 375/430 px; stora/små bildkort och selected state ger ingen horisontell overflow.",
+        "Public/review RN Web, 375x667 och 140%-textproxy provas; QA, UI Critic REVIEW och Reviewer bedömer aktuella skärmbilder och diff separat."
+      ],
+      "checks": [
+        "TASSLA_UI_PANEL=knowledge-images TASSLA_UI_REVIEW=false|true python tools/visual-check/verify-vision-r02-home-panels.py",
+        "CI=1 pnpm check",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "KNOWLEDGE-FAQ-CATALOG-01"
+      ],
+      "risk": "M: lokal vyfiltrering och rekommendationsurval; ingen persistens eller backend ändras.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v3: uses existing Tabs, recommendation flag, guide preview helper, focus mapping and destinations; no data/API/schema changes."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement scoped panel-7 Knowledge overview after Critic PROCEED plan v3 and UI Critic BRIEF; preserve full-library search and hide recommendation heading during search."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation and final UI Critic REVIEW complete; reviewer confirmed compact spacing and PASS across six visual dimensions. RN Web review 21/21 and public 4/4; final CI check in progress. Next: independent QA then Reviewer."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Final QA PASS on v4 declared paths: path audit clean; CI 100/100; review RN Web 23/23, public 4/4; targeted tests 29/29; dev-flow, Python syntax and diff check pass. Next: independent Reviewer on final diff and screenshots."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS: declared v4 diff stays in task/queue paths; APIs and panel-7 hierarchy match implementation; screenshots cover recommendation/search semantics, card crops, short viewport, FAQ/checklist returns. Residual limits: synthetic RN Web only; native accessibility, physical iPhone, and live Supabase untested."
+        }
+      ],
+      "next_step": "Stängt efter QA PASS och Frozen Reviewer PASS. Ändringen är lokal på knowledge/panel7-visual-alignment; ingen commit eller push har gjorts."
     }
   ]
 }
