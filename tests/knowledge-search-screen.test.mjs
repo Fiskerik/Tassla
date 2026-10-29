@@ -37,7 +37,7 @@ test('guide metadata comes from published fields and secondary destinations stay
   assert.match(screen, /readingMinutes\(item\.body\)/);
   assert.match(screen, /item\.contentType === 'guide' \? 'Guide' : 'Artikel'/);
   assert.match(screen, /featuredImageFrame: \{ width: '100%', aspectRatio: 16 \/ 9, overflow: 'hidden'/);
-  assert.match(screen, /smallImageFrame: \{ width: '100%', aspectRatio: 4 \/ 3, overflow: 'hidden'/);
+  assert.match(screen, /smallImageFrame: \{ width: '100%', aspectRatio: 16 \/ 9, overflow: 'hidden'/);
   assert.match(screen, /<KnowledgeImage source=\{image\} focus=\{imageFocus\} \/>/);
   assert.match(imageComponent, /knowledgeImageLayout\(frame\.width, frame\.height, focus\.aspectRatio, 1, focus\)/);
   assert.match(imageComponent, /resizeMode=\{crop \? 'stretch' : 'cover'\}/);
@@ -52,7 +52,7 @@ test('scope changes clear the prior query and expanded guide view', async () => 
   assert.match(screen, /if \(guideViewState\.scopeKey !== searchScopeKey\) \{\s*setGuideViewState\(\{ scopeKey: searchScopeKey, value: '', showAll: false \}\);\s*\}/);
 });
 
-test('Visa alla expands the same Swedish title-sorted view; search reaches every match without recommendation claims', async () => {
+test('recommendations are labeled, library view and search include unmatched content without recommendation claims', async () => {
   const screen = await readFile(screenPath, 'utf8');
   assert.match(screen, /function compareGuideTitle\(left: HomeContent, right: HomeContent\)/);
   assert.match(screen, /localeCompare\(right\.title, 'sv-SE'\)/);
@@ -61,7 +61,12 @@ test('Visa alla expands the same Swedish title-sorted view; search reaches every
   assert.match(screen, /const hasMoreGuides = !hasSearchQuery && !showAllGuides && recommendedItems\.length > 3/);
   assert.match(screen, /title="Visa alla artiklar"/);
   assert.match(screen, /displayedItems\.length === 1 \? '1 träff' : `\$\{displayedItems\.length\} träffar`/);
-  assert.doesNotMatch(screen, /REKOMMENDERAT FÖR ER|REKOMMENDERAD/);
+  assert.match(screen, /<Tabs[\s\S]*items=\{\['För dig', 'Alla artiklar'\]\}[\s\S]*accessibilityLabel="Visa artiklar"/);
+  assert.match(screen, /!hasSearchQuery && !showAllGuides \? <Text accessibilityRole="header" style=\{styles\.recommendationHeading\}>Rekommenderat för er just nu/);
+  assert.match(screen, /recommendationHeading: \{ \.\.\.tokens\.typography\.label, color: tokens\.colors\.textPrimary/);
+  assert.match(screen, /hasSearchQuery \|\| showAllGuides\s*\? <View style=\{styles\.articleGrid\}>/);
+  assert.match(screen, /getGuidePreviewText\(item\.body, 120\)/);
+  assert.doesNotMatch(screen, /getGuidePreviewText\(item\.body\)/);
 });
 
 test('published guide versions retain explicit images and library cards use an editorial fallback', async () => {

@@ -1,0 +1,373 @@
+{
+  "mode": "review",
+  "panel": "knowledge-images",
+  "evidence_dir": "docs/design/evidence/knowledge-panel7-visual-01/final",
+  "results": [
+    {
+      "check": "Knowledge maps three stable guide identities to three different visible photos at 375px",
+      "result": "PASS",
+      "image_sources": [
+        "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+        "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+        "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg"
+      ],
+      "image_boxes": [
+        {
+          "x": -29.59375,
+          "y": 580.390625,
+          "width": 210.59375,
+          "height": 140.390625
+        },
+        {
+          "x": -7.5,
+          "y": 256.5,
+          "width": 390,
+          "height": 260
+        },
+        {
+          "x": 194.5,
+          "y": 574.78125,
+          "width": 210.59375,
+          "height": 140.390625
+        }
+      ],
+      "image_frame_boxes": [
+        {
+          "x": 25,
+          "y": 581.8125,
+          "width": 155.5,
+          "height": 87.46875
+        },
+        {
+          "x": 25,
+          "y": 269,
+          "width": 325,
+          "height": 182.8125
+        },
+        {
+          "x": 194.5,
+          "y": 581.8125,
+          "width": 155.5,
+          "height": 87.46875
+        }
+      ]
+    },
+    {
+      "check": "Knowledge uses a real two-option recommendation/library switch at 375px",
+      "result": "PASS",
+      "tabs": "För dig\nAlla artiklar"
+    },
+    {
+      "check": "Knowledge keeps recommendation spacing compact at 375px",
+      "result": "PASS",
+      "tabs_to_heading": 24,
+      "heading_to_feature": 12
+    },
+    {
+      "check": "Knowledge image crops use the 16:9 editorial ratio for hero and smaller cards at 375px",
+      "result": "PASS",
+      "image_frame_boxes": [
+        {
+          "x": 25,
+          "y": 581.8125,
+          "width": 155.5,
+          "height": 87.46875
+        },
+        {
+          "x": 25,
+          "y": 269,
+          "width": 325,
+          "height": 182.8125
+        },
+        {
+          "x": 194.5,
+          "y": 581.8125,
+          "width": 155.5,
+          "height": 87.46875
+        }
+      ]
+    },
+    {
+      "check": "Knowledge focal crops cover their full image frames at 375px",
+      "result": "PASS",
+      "image_boxes": [
+        {
+          "x": -29.59375,
+          "y": 580.390625,
+          "width": 210.59375,
+          "height": 140.390625
+        },
+        {
+          "x": -7.5,
+          "y": 256.5,
+          "width": 390,
+          "height": 260
+        },
+        {
+          "x": 194.5,
+          "y": 574.78125,
+          "width": 210.59375,
+          "height": 140.390625
+        }
+      ],
+      "image_frame_boxes": [
+        {
+          "x": 25,
+          "y": 581.8125,
+          "width": 155.5,
+          "height": 87.46875
+        },
+        {
+          "x": 25,
+          "y": 269,
+          "width": 325,
+          "height": 182.8125
+        },
+        {
+          "x": 194.5,
+          "y": 581.8125,
+          "width": 155.5,
+          "height": 87.46875
+        }
+      ]
+    },
+    {
+      "check": "Knowledge guide search and the selected bottom destination remain visible at 375px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "All articles includes library content outside dog recommendations at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Knowledge search reaches non-recommended library content without a false recommendation heading at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Knowledge article image covers its 16:9 frame at 375px",
+      "result": "PASS",
+      "image_box": {
+        "x": -131.25,
+        "y": 105.5,
+        "width": 506.25,
+        "height": 337.5
+      },
+      "image_frame_box": {
+        "x": 0,
+        "y": 108,
+        "width": 375,
+        "height": 210.9375
+      },
+      "page_errors": []
+    },
+    {
+      "check": "Knowledge maps three stable guide identities to three different visible photos at 430px",
+      "result": "PASS",
+      "image_sources": [
+        "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+        "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+        "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg"
+      ],
+      "image_boxes": [
+        {
+          "x": -39.046875,
+          "y": 591.546875,
+          "width": 247.046875,
+          "height": 164.6875
+        },
+        {
+          "x": -13,
+          "y": 254.40625,
+          "width": 456,
+          "height": 304
+        },
+        {
+          "x": 222,
+          "y": 584.96875,
+          "width": 247.046875,
+          "height": 164.6875
+        }
+      ],
+      "image_frame_boxes": [
+        {
+          "x": 25,
+          "y": 592.75,
+          "width": 183,
+          "height": 102.9375
+        },
+        {
+          "x": 25,
+          "y": 269,
+          "width": 380,
+          "height": 213.75
+        },
+        {
+          "x": 222,
+          "y": 592.75,
+          "width": 183,
+          "height": 102.9375
+        }
+      ]
+    },
+    {
+      "check": "Knowledge uses a real two-option recommendation/library switch at 430px",
+      "result": "PASS",
+      "tabs": "För dig\nAlla artiklar"
+    },
+    {
+      "check": "Knowledge keeps recommendation spacing compact at 430px",
+      "result": "PASS",
+      "tabs_to_heading": 24,
+      "heading_to_feature": 12
+    },
+    {
+      "check": "Knowledge image crops use the 16:9 editorial ratio for hero and smaller cards at 430px",
+      "result": "PASS",
+      "image_frame_boxes": [
+        {
+          "x": 25,
+          "y": 592.75,
+          "width": 183,
+          "height": 102.9375
+        },
+        {
+          "x": 25,
+          "y": 269,
+          "width": 380,
+          "height": 213.75
+        },
+        {
+          "x": 222,
+          "y": 592.75,
+          "width": 183,
+          "height": 102.9375
+        }
+      ]
+    },
+    {
+      "check": "Knowledge focal crops cover their full image frames at 430px",
+      "result": "PASS",
+      "image_boxes": [
+        {
+          "x": -39.046875,
+          "y": 591.546875,
+          "width": 247.046875,
+          "height": 164.6875
+        },
+        {
+          "x": -13,
+          "y": 254.40625,
+          "width": 456,
+          "height": 304
+        },
+        {
+          "x": 222,
+          "y": 584.96875,
+          "width": 247.046875,
+          "height": 164.6875
+        }
+      ],
+      "image_frame_boxes": [
+        {
+          "x": 25,
+          "y": 592.75,
+          "width": 183,
+          "height": 102.9375
+        },
+        {
+          "x": 25,
+          "y": 269,
+          "width": 380,
+          "height": 213.75
+        },
+        {
+          "x": 222,
+          "y": 592.75,
+          "width": 183,
+          "height": 102.9375
+        }
+      ]
+    },
+    {
+      "check": "Knowledge guide search and the selected bottom destination remain visible at 430px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "All articles includes library content outside dog recommendations at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Knowledge search reaches non-recommended library content without a false recommendation heading at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Knowledge article image covers its 16:9 frame at 430px",
+      "result": "PASS",
+      "image_box": {
+        "x": -150.5,
+        "y": 105.171875,
+        "width": 580.5,
+        "height": 387
+      },
+      "image_frame_box": {
+        "x": 0,
+        "y": 108,
+        "width": 430,
+        "height": 241.875
+      },
+      "page_errors": []
+    },
+    {
+      "check": "Knowledge stays readable and avoids horizontal overflow at 375×667 with a 140% text-size proxy",
+      "result": "PASS",
+      "page_errors": [],
+      "viewport": {
+        "width": 375,
+        "height": 667
+      }
+    },
+    {
+      "check": "Öppna Checklistor stays reachable above the bottom bar at 375×667 and 140% text",
+      "result": "PASS",
+      "entry_box": {
+        "x": 24,
+        "y": 386.859375,
+        "width": 159.5,
+        "height": 103.59375
+      },
+      "nav_box": {
+        "x": 0,
+        "y": 555.59375,
+        "width": 375,
+        "height": 77.40625
+      }
+    },
+    {
+      "check": "Öppna Vanliga frågor stays reachable above the bottom bar at 375×667 and 140% text",
+      "result": "PASS",
+      "entry_box": {
+        "x": 191.5,
+        "y": 386.859375,
+        "width": 159.5,
+        "height": 137.1875
+      },
+      "nav_box": {
+        "x": 0,
+        "y": 555.59375,
+        "width": 375,
+        "height": 77.40625
+      }
+    },
+    {
+      "check": "Knowledge opens FAQ and displays its review-gated content from the guide overview",
+      "result": "PASS"
+    },
+    {
+      "check": "Knowledge enters the Checklistor destination and retains its return path",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}

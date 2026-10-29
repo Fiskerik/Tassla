@@ -5,11 +5,11 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { HomeContent } from '../../data/app-data';
 import type { PublishedFaq } from '../../data/workspace-data';
 import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
-import { AppBar, Card, SectionHeader, Skeleton } from '../../components/ui';
+import { AppBar, Card, SectionHeader, Skeleton, Tabs } from '../../components/ui';
 import { tokens } from '../../theme/tokens';
 import { MotionPressable } from '../../components/ui/Motion';
 import { getSafeContentSourceUrl } from './source-links';
-import { parseGuideBody } from './guide-body';
+import { getGuidePreviewText, parseGuideBody } from './guide-body';
 import { guideSearchScopeKey, guideSearchValueForScope, normalizeGuideSearchText, searchGuideItems, type ScopedGuideSearchState } from './guide-search';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { PuppyChecklistScreen } from './PuppyChecklistScreen';
@@ -136,6 +136,7 @@ export function KnowledgeScreen({
       </View> : null}
       <View style={featured ? styles.cardCopy : styles.smallCardCopy}>
         <Text style={featured ? styles.guideTitle : styles.smallGuideTitle} numberOfLines={featured ? undefined : 3}>{item.title}</Text>
+        <Text style={featured ? styles.guidePreview : styles.smallGuidePreview} numberOfLines={2}>{getGuidePreviewText(item.body, 120)}</Text>
         <View style={styles.metadataRow}>
           <Text style={styles.metadataPill}>{readingMinutes(item.body)} min</Text>
           <Text style={styles.metadataPill}>{item.contentType === 'guide' ? 'Guide' : 'Artikel'}</Text>
@@ -197,9 +198,14 @@ export function KnowledgeScreen({
         </View>
       </View> : null}
 
-      {tab === 'För dig' && !selectedItem && <QuietButton
-        title={showAllGuides ? 'För dig' : 'Alla artiklar'}
-        onPress={() => setGuideViewState((current) => ({ ...current, scopeKey: searchScopeKey, showAll: !showAllGuides }))} /> }
+      {tab === 'För dig' && !selectedItem ? <Tabs
+        items={['För dig', 'Alla artiklar']}
+        active={showAllGuides ? 'Alla artiklar' : 'För dig'}
+        variant="rev02-segmented"
+        activeTone="home"
+        accessibilityLabel="Visa artiklar"
+        onChange={(value) => setGuideViewState((current) => ({ ...current, scopeKey: searchScopeKey, showAll: value === 'Alla artiklar' }))}
+      /> : null}
 
       {showGuideScreen && contentState === 'loading' && <Skeleton shape="card" lines={4} />}
       {showGuideScreen && contentState === 'error' && <>
@@ -222,8 +228,13 @@ export function KnowledgeScreen({
         state={faqState} onRetry={onRetryFaq} onOpenSource={openSource} sourceMessage={sourceMessage} /> : null}
 
       {showGuideScreen && !selectedItem && contentState === 'ready' && visibleItems.length > 0 && displayedItems.length > 0 ? <View style={styles.guideList}>
-        {cardItems[0] ? renderGuideCard(cardItems[0], true) : null}
-        {cardItems.length > 1 ? <View style={styles.articleGrid}>{cardItems.slice(1).map((item) => renderGuideCard(item, false))}</View> : null}
+        {!hasSearchQuery && !showAllGuides ? <Text accessibilityRole="header" style={styles.recommendationHeading}>Rekommenderat för er just nu</Text> : null}
+        {hasSearchQuery || showAllGuides
+          ? <View style={styles.articleGrid}>{cardItems.map((item) => renderGuideCard(item, false))}</View>
+          : <>
+            {cardItems[0] ? renderGuideCard(cardItems[0], true) : null}
+            {cardItems.length > 1 ? <View style={styles.articleGrid}>{cardItems.slice(1).map((item) => renderGuideCard(item, false))}</View> : null}
+          </>}
         {hasMoreGuides ? <QuietButton title="Visa alla artiklar" onPress={() => setGuideViewState((current) => ({ ...current, scopeKey: searchScopeKey, showAll: true }))} /> : null}
       </View> : null}
 
@@ -327,6 +338,7 @@ const styles = StyleSheet.create({
   searchEmpty: { gap: tokens.spacing.xs },
   searchCount: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   pageTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
+  recommendationHeading: { ...tokens.typography.label, color: tokens.colors.textPrimary, textAlign: 'left' },
   shortcuts: { gap: tokens.spacing.xs, marginTop: tokens.spacing.sm },
   categoryLinks: { flexDirection: 'row', gap: tokens.spacing.sm },
   categoryCard: { flex: 1, minWidth: 0 },
@@ -342,10 +354,12 @@ const styles = StyleSheet.create({
   metadataPill: { ...tokens.typography.caption, color: tokens.colors.textSecondary, backgroundColor: tokens.colors.background, borderRadius: tokens.radius.full, paddingHorizontal: tokens.spacing.sm, paddingVertical: tokens.spacing.xs },
   articleGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.md },
   smallCard: { flexGrow: 1, flexBasis: '45%', backgroundColor: tokens.colors.home.card, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, overflow: 'hidden' },
-  smallImageFrame: { width: '100%', aspectRatio: 4 / 3, overflow: 'hidden', backgroundColor: tokens.colors.destination.knowledge.surface },
-  guideList: { gap: tokens.spacing.xs },
-  guideTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary },
+  smallImageFrame: { width: '100%', aspectRatio: 16 / 9, overflow: 'hidden', backgroundColor: tokens.colors.destination.knowledge.surface },
+  guideList: { gap: tokens.spacing.md },
+  guideTitle: { ...tokens.typography.body, fontWeight: '700', color: tokens.colors.textPrimary },
   smallGuideTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  guidePreview: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  smallGuidePreview: { ...tokens.typography.smallCaption, color: tokens.colors.textSecondary },
   article: { alignSelf: 'stretch' },
   articleImageFrame: { alignSelf: 'stretch', aspectRatio: 16 / 9, marginTop: -tokens.spacing.md, marginHorizontal: -tokens.layout.pageInset, overflow: 'hidden', backgroundColor: tokens.colors.destination.knowledge.surface },
   articleCopy: { paddingTop: tokens.spacing.md },

@@ -1,0 +1,286 @@
+{
+  "mode": "review",
+  "panel": "knowledge-images",
+  "evidence_dir": "/tmp/tassla-preview/knowledge-baseline/evidence",
+  "results": [
+    {
+      "check": "Knowledge maps three stable guide identities to three different visible photos at 375px",
+      "result": "PASS",
+      "image_sources": [
+        "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+        "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+        "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg"
+      ],
+      "image_boxes": [
+        {
+          "x": -53.359375,
+          "y": 489.8125,
+          "width": 236.921875,
+          "height": 157.9375
+        },
+        {
+          "x": -7.5,
+          "y": 212.5,
+          "width": 390,
+          "height": 260
+        },
+        {
+          "x": 191.953125,
+          "y": 489.8125,
+          "width": 236.921875,
+          "height": 157.9375
+        }
+      ],
+      "image_frame_boxes": [
+        {
+          "x": 25,
+          "y": 489.8125,
+          "width": 155.5,
+          "height": 116.625
+        },
+        {
+          "x": 25,
+          "y": 225,
+          "width": 325,
+          "height": 182.8125
+        },
+        {
+          "x": 194.5,
+          "y": 489.8125,
+          "width": 155.5,
+          "height": 116.625
+        }
+      ]
+    },
+    {
+      "check": "Knowledge image crops use the current 16:9 hero and 4:3 guide aspect ratios at 375px",
+      "result": "PASS",
+      "image_frame_boxes": [
+        {
+          "x": 25,
+          "y": 489.8125,
+          "width": 155.5,
+          "height": 116.625
+        },
+        {
+          "x": 25,
+          "y": 225,
+          "width": 325,
+          "height": 182.8125
+        },
+        {
+          "x": 194.5,
+          "y": 489.8125,
+          "width": 155.5,
+          "height": 116.625
+        }
+      ]
+    },
+    {
+      "check": "Knowledge focal crops cover their full image frames at 375px",
+      "result": "PASS",
+      "image_boxes": [
+        {
+          "x": -53.359375,
+          "y": 489.8125,
+          "width": 236.921875,
+          "height": 157.9375
+        },
+        {
+          "x": -7.5,
+          "y": 212.5,
+          "width": 390,
+          "height": 260
+        },
+        {
+          "x": 191.953125,
+          "y": 489.8125,
+          "width": 236.921875,
+          "height": 157.9375
+        }
+      ],
+      "image_frame_boxes": [
+        {
+          "x": 25,
+          "y": 489.8125,
+          "width": 155.5,
+          "height": 116.625
+        },
+        {
+          "x": 25,
+          "y": 225,
+          "width": 325,
+          "height": 182.8125
+        },
+        {
+          "x": 194.5,
+          "y": 489.8125,
+          "width": 155.5,
+          "height": 116.625
+        }
+      ]
+    },
+    {
+      "check": "Knowledge guide search and the selected bottom destination remain visible at 375px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Knowledge article image covers its 16:9 frame at 375px",
+      "result": "PASS",
+      "image_box": {
+        "x": -131.25,
+        "y": 105.5,
+        "width": 506.25,
+        "height": 337.5
+      },
+      "image_frame_box": {
+        "x": 0,
+        "y": 108,
+        "width": 375,
+        "height": 210.9375
+      },
+      "page_errors": []
+    },
+    {
+      "check": "Knowledge maps three stable guide identities to three different visible photos at 430px",
+      "result": "PASS",
+      "image_sources": [
+        "./knowledge-featured-puppy-lagotto-forest-X25OOH4Q.jpg",
+        "./knowledge-card-puppy-sheltie-window-Y23MMTMV.jpg",
+        "./knowledge-card-puppy-cocker-coast-NY3LK32H.jpg"
+      ],
+      "image_boxes": [
+        {
+          "x": -66.59375,
+          "y": 520.75,
+          "width": 277.421875,
+          "height": 184.9375
+        },
+        {
+          "x": -13,
+          "y": 210.40625,
+          "width": 456,
+          "height": 304
+        },
+        {
+          "x": 219.1875,
+          "y": 520.75,
+          "width": 277.421875,
+          "height": 184.9375
+        }
+      ],
+      "image_frame_boxes": [
+        {
+          "x": 25,
+          "y": 520.75,
+          "width": 183,
+          "height": 137.25
+        },
+        {
+          "x": 25,
+          "y": 225,
+          "width": 380,
+          "height": 213.75
+        },
+        {
+          "x": 222,
+          "y": 520.75,
+          "width": 183,
+          "height": 137.25
+        }
+      ]
+    },
+    {
+      "check": "Knowledge image crops use the current 16:9 hero and 4:3 guide aspect ratios at 430px",
+      "result": "PASS",
+      "image_frame_boxes": [
+        {
+          "x": 25,
+          "y": 520.75,
+          "width": 183,
+          "height": 137.25
+        },
+        {
+          "x": 25,
+          "y": 225,
+          "width": 380,
+          "height": 213.75
+        },
+        {
+          "x": 222,
+          "y": 520.75,
+          "width": 183,
+          "height": 137.25
+        }
+      ]
+    },
+    {
+      "check": "Knowledge focal crops cover their full image frames at 430px",
+      "result": "PASS",
+      "image_boxes": [
+        {
+          "x": -66.59375,
+          "y": 520.75,
+          "width": 277.421875,
+          "height": 184.9375
+        },
+        {
+          "x": -13,
+          "y": 210.40625,
+          "width": 456,
+          "height": 304
+        },
+        {
+          "x": 219.1875,
+          "y": 520.75,
+          "width": 277.421875,
+          "height": 184.9375
+        }
+      ],
+      "image_frame_boxes": [
+        {
+          "x": 25,
+          "y": 520.75,
+          "width": 183,
+          "height": 137.25
+        },
+        {
+          "x": 25,
+          "y": 225,
+          "width": 380,
+          "height": 213.75
+        },
+        {
+          "x": 222,
+          "y": 520.75,
+          "width": 183,
+          "height": 137.25
+        }
+      ]
+    },
+    {
+      "check": "Knowledge guide search and the selected bottom destination remain visible at 430px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Knowledge article image covers its 16:9 frame at 430px",
+      "result": "PASS",
+      "image_box": {
+        "x": -150.5,
+        "y": 105.171875,
+        "width": 580.5,
+        "height": 387
+      },
+      "image_frame_box": {
+        "x": 0,
+        "y": 108,
+        "width": 430,
+        "height": 241.875
+      },
+      "page_errors": []
+    }
+  ],
+  "failures": []
+}
